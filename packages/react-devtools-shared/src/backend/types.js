@@ -90,7 +90,6 @@ export type GetDisplayNameForElementID = (id: number) => string | null;
 
 export type GetElementIDForHostInstance = (
   component: HostInstance,
-  findNearestUnfilteredAncestor?: boolean,
 ) => number | null;
 export type FindHostInstancesForElementID = (
   id: number,
@@ -358,9 +357,7 @@ export type RendererInterface = {
   findHostInstancesForElementID: FindHostInstancesForElementID,
   flushInitialOperations: () => void,
   getBestMatchForTrackedPath: () => PathMatch | null,
-  getNearestMountedHostInstance: (
-    component: HostInstance,
-  ) => HostInstance | null,
+  getNearestMountedDOMNode: (component: Element) => Element | null,
   getElementIDForHostInstance: GetElementIDForHostInstance,
   getDisplayNameForElementID: GetDisplayNameForElementID,
   getInstanceAndStyle(id: number): InstanceAndStyle,

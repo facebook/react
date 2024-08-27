@@ -145,15 +145,13 @@ export function attach(
   let getElementIDForHostInstance: GetElementIDForHostInstance =
     ((null: any): GetElementIDForHostInstance);
   let findHostInstanceForInternalID: (id: number) => ?HostInstance;
-  let getNearestMountedHostInstance = (
-    node: HostInstance,
-  ): null | HostInstance => {
+  let getNearestMountedDOMNode = (node: Element): null | Element => {
     // Not implemented.
     return null;
   };
 
   if (renderer.ComponentTree) {
-    getElementIDForHostInstance = (node, findNearestUnfilteredAncestor) => {
+    getElementIDForHostInstance = node => {
       const internalInstance =
         renderer.ComponentTree.getClosestInstanceFromNode(node);
       return internalInstanceToIDMap.get(internalInstance) || null;
@@ -162,9 +160,7 @@ export function attach(
       const internalInstance = idToInternalInstanceMap.get(id);
       return renderer.ComponentTree.getNodeFromInstance(internalInstance);
     };
-    getNearestMountedHostInstance = (
-      node: HostInstance,
-    ): null | HostInstance => {
+    getNearestMountedDOMNode = (node: Element): null | Element => {
       const internalInstance =
         renderer.ComponentTree.getClosestInstanceFromNode(node);
       if (internalInstance != null) {
@@ -173,7 +169,7 @@ export function attach(
       return null;
     };
   } else if (renderer.Mount.getID && renderer.Mount.getNode) {
-    getElementIDForHostInstance = (node, findNearestUnfilteredAncestor) => {
+    getElementIDForHostInstance = node => {
       // Not implemented.
       return null;
     };
@@ -1126,7 +1122,7 @@ export function attach(
     flushInitialOperations,
     getBestMatchForTrackedPath,
     getDisplayNameForElementID,
-    getNearestMountedHostInstance,
+    getNearestMountedDOMNode,
     getElementIDForHostInstance,
     getInstanceAndStyle,
     findHostInstancesForElementID: (id: number) => {

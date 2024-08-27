@@ -812,11 +812,17 @@ function releaseHostResource(
       if (resourceInstances.size === 0) {
         hostResourceToDevToolsInstanceMap.delete(publicInstance);
         publicInstanceToDevToolsInstanceMap.delete(publicInstance);
-      } else if (publicInstanceToDevToolsInstanceMap.get(publicInstance) === nearestInstance) {
+      } else if (
+        publicInstanceToDevToolsInstanceMap.get(publicInstance) ===
+        nearestInstance
+      ) {
         // This was the first one. Store the next first one in the main map for easy access.
         // eslint-disable-next-line no-for-of-loops/no-for-of-loops
         for (const firstInstance of resourceInstances) {
-          publicInstanceToDevToolsInstanceMap.set(firstInstance, nearestInstance);
+          publicInstanceToDevToolsInstanceMap.set(
+            firstInstance,
+            nearestInstance,
+          );
           break;
         }
       }
@@ -3862,9 +3868,7 @@ export function attach(
     }
   }
 
-  function getNearestMountedHostInstance(
-    publicInstance: HostInstance,
-  ): null | HostInstance {
+  function getNearestMountedDOMNode(publicInstance: Element): null | Element {
     // TODO: Remove dependency on findFiberByHostInstance.
     const mountedFiber = renderer.findFiberByHostInstance(publicInstance);
     if (mountedFiber != null) {
@@ -5822,7 +5826,7 @@ export function attach(
     flushInitialOperations,
     getBestMatchForTrackedPath,
     getDisplayNameForElementID,
-    getNearestMountedHostInstance,
+    getNearestMountedDOMNode,
     getElementIDForHostInstance,
     getInstanceAndStyle,
     getOwnersList,
