@@ -2,7 +2,7 @@
   "private": true,
   "name": "webpack-prod-fixture",
   "dependencies": {
-    "webpack": "^1.14.0"
+    "webpack": "^5.94.0"
   },
   "scripts": {
     "build": "rm -f output.js && webpack --config config.js"
