@@ -149,7 +149,6 @@ type FiberInstance = {
   id: number,
   parent: null | DevToolsInstance, // filtered parent, including virtual
   firstChild: null | DevToolsInstance, // filtered first child, including virtual
-  previousSibling: null | DevToolsInstance, // filtered next sibling, including virtual
   nextSibling: null | DevToolsInstance, // filtered next sibling, including virtual
   flags: number, // Force Error/Suspense
   componentStack: null | string,
@@ -164,7 +163,6 @@ function createFiberInstance(fiber: Fiber): FiberInstance {
     id: getUID(),
     parent: null,
     firstChild: null,
-    previousSibling: null,
     nextSibling: null,
     flags: 0,
     componentStack: null,
@@ -184,7 +182,6 @@ type VirtualInstance = {
   id: number,
   parent: null | DevToolsInstance, // filtered parent, including virtual
   firstChild: null | DevToolsInstance, // filtered first child, including virtual
-  previousSibling: null | DevToolsInstance, // filtered next sibling, including virtual
   nextSibling: null | DevToolsInstance, // filtered next sibling, including virtual
   flags: number,
   componentStack: null | string,
@@ -206,7 +203,6 @@ function createVirtualInstance(
     id: getUID(),
     parent: null,
     firstChild: null,
-    previousSibling: null,
     nextSibling: null,
     flags: 0,
     componentStack: null,
@@ -1075,8 +1071,6 @@ export function attach(
         '  '.repeat(indent) + '- ' + instance.id + ' (' + name + ')',
         'parent',
         instance.parent === null ? ' ' : instance.parent.id,
-        'prev',
-        instance.previousSibling === null ? ' ' : instance.previousSibling.id,
         'next',
         instance.nextSibling === null ? ' ' : instance.nextSibling.id,
       );
@@ -2314,21 +2308,25 @@ export function attach(
     if (previouslyReconciledSibling === null) {
       previouslyReconciledSibling = instance;
       parentInstance.firstChild = instance;
-      instance.previousSibling = null;
     } else {
       previouslyReconciledSibling.nextSibling = instance;
-      instance.previousSibling = previouslyReconciledSibling;
       previouslyReconciledSibling = instance;
     }
     instance.nextSibling = null;
   }
 
-  function moveChild(instance: DevToolsInstance): void {
-    removeChild(instance);
+  function moveChild(
+    instance: DevToolsInstance,
+    previousSibling: null | DevToolsInstance,
+  ): void {
+    removeChild(instance, previousSibling);
     insertChild(instance);
   }
 
-  function removeChild(instance: DevToolsInstance): void {
+  function removeChild(
+    instance: DevToolsInstance,
+    previousSibling: null | DevToolsInstance,
+  ): void {
     if (instance.parent === null) {
       if (remainingReconcilingChildren === instance) {
         throw new Error(
@@ -2336,8 +2334,6 @@ export function attach(
         );
       } else if (instance.nextSibling !== null) {
         throw new Error('A deleted instance should not have next siblings');
-      } else if (instance.previousSibling !== null) {
-        throw new Error('A deleted instance should not have previous siblings');
       }
       // Already deleted.
       return;
@@ -2353,7 +2349,7 @@ export function attach(
     }
     // Remove an existing child from its current position, which we assume is in the
     // remainingReconcilingChildren set.
-    if (instance.previousSibling === null) {
+    if (previousSibling === null) {
       // We're first in the remaining set. Remove us.
       if (remainingReconcilingChildren !== instance) {
         throw new Error(
@@ -2362,13 +2358,9 @@ export function attach(
       }
       remainingReconcilingChildren = instance.nextSibling;
     } else {
-      instance.previousSibling.nextSibling = instance.nextSibling;
-    }
-    if (instance.nextSibling !== null) {
-      instance.nextSibling.previousSibling = instance.previousSibling;
+      previousSibling.nextSibling = instance.nextSibling;
     }
     instance.nextSibling = null;
-    instance.previousSibling = null;
     instance.parent = null;
   }
 
@@ -2652,7 +2644,7 @@ export function attach(
     } else {
       recordVirtualUnmount(instance);
     }
-    removeChild(instance);
+    removeChild(instance, null);
   }
 
   function recordProfilingDurations(fiber: Fiber) {
@@ -2851,6 +2843,7 @@ export function attach(
                   );
                 }
               }
+              let previousSiblingOfBestMatch = null;
               let bestMatch = remainingReconcilingChildren;
               if (componentInfo.key != null) {
                 // If there is a key try to find a matching key in the set.
@@ -2862,6 +2855,7 @@ export function attach(
                   ) {
                     break;
                   }
+                  previousSiblingOfBestMatch = bestMatch;
                   bestMatch = bestMatch.nextSibling;
                 }
               }
@@ -2876,7 +2870,7 @@ export function attach(
                 // with the same name, then we claim it and reuse it for this update.
                 // Update it with the latest entry.
                 bestMatch.data = componentInfo;
-                moveChild(bestMatch);
+                moveChild(bestMatch, previousSiblingOfBestMatch);
                 previousVirtualInstance = bestMatch;
                 previousVirtualInstanceWasMount = false;
               } else {
@@ -2943,6 +2937,7 @@ export function attach(
           // Fiber pair.
           prevChild = nextChild.alternate;
         }
+        let previousSiblingOfExistingInstance = null;
         let existingInstance = null;
         if (prevChild !== null) {
           existingInstance = remainingReconcilingChildren;
@@ -2950,6 +2945,7 @@ export function attach(
             if (existingInstance.data === prevChild) {
               break;
             }
+            previousSiblingOfExistingInstance = existingInstance;
             existingInstance = existingInstance.nextSibling;
           }
         }
@@ -2969,7 +2965,7 @@ export function attach(
 
           // Update the Fiber so we that we always keep the current Fiber on the data.
           fiberInstance.data = nextChild;
-          moveChild(fiberInstance);
+          moveChild(fiberInstance, previousSiblingOfExistingInstance);
 
           if (
             updateFiberRecursively(
