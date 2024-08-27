@@ -738,35 +738,85 @@ const fiberToFiberInstanceMap: Map<Fiber, FiberInstance> = new Map();
 // operations that should be the same whether the current and work-in-progress Fiber is used.
 const idToDevToolsInstanceMap: Map<number, DevToolsInstance> = new Map();
 
-// Map of resource DOM nodes to all the Fibers that depend on it.
-const hostResourceToFiberMap: Map<HostInstance, Set<Fiber>> = new Map();
+// Map of canonical HostInstances to the nearest parent DevToolsInstance.
+const publicInstanceToDevToolsInstanceMap: Map<HostInstance, DevToolsInstance> =
+  new Map();
+// Map of resource DOM nodes to all the nearest DevToolsInstances that depend on it.
+const hostResourceToDevToolsInstanceMap: Map<
+  HostInstance,
+  Set<DevToolsInstance>,
+> = new Map();
+
+function getPublicInstance(instance: HostInstance): HostInstance {
+  // Typically the PublicInstance and HostInstance is the same thing but not in Fabric.
+  // So we need to detect this and use that as the public instance.
+  return typeof instance === 'object' &&
+    instance !== null &&
+    typeof instance.canonical === 'object'
+    ? (instance.canonical: any)
+    : instance;
+}
+
+function aquireHostInstance(
+  nearestInstance: DevToolsInstance,
+  hostInstance: HostInstance,
+): void {
+  const publicInstance = getPublicInstance(hostInstance);
+  publicInstanceToDevToolsInstanceMap.set(publicInstance, nearestInstance);
+}
+
+function releaseHostInstance(
+  nearestInstance: DevToolsInstance,
+  hostInstance: HostInstance,
+): void {
+  const publicInstance = getPublicInstance(hostInstance);
+  if (
+    publicInstanceToDevToolsInstanceMap.get(publicInstance) === nearestInstance
+  ) {
+    publicInstanceToDevToolsInstanceMap.delete(publicInstance);
+  }
+}
 
 function aquireHostResource(
-  fiber: Fiber,
+  nearestInstance: DevToolsInstance,
   resource: ?{instance?: HostInstance},
 ): void {
   const hostInstance = resource && resource.instance;
   if (hostInstance) {
-    let resourceFibers = hostResourceToFiberMap.get(hostInstance);
-    if (resourceFibers === undefined) {
-      resourceFibers = new Set();
-      hostResourceToFiberMap.set(hostInstance, resourceFibers);
+    const publicInstance = getPublicInstance(hostInstance);
+    let resourceInstances =
+      hostResourceToDevToolsInstanceMap.get(publicInstance);
+    if (resourceInstances === undefined) {
+      resourceInstances = new Set();
+      hostResourceToDevToolsInstanceMap.set(publicInstance, resourceInstances);
+      // Store the first match in the main map for quick access when selecting DOM node.
+      publicInstanceToDevToolsInstanceMap.set(publicInstance, nearestInstance);
     }
-    resourceFibers.add(fiber);
+    resourceInstances.add(nearestInstance);
   }
 }
 
 function releaseHostResource(
-  fiber: Fiber,
+  nearestInstance: DevToolsInstance,
   resource: ?{instance?: HostInstance},
 ): void {
   const hostInstance = resource && resource.instance;
   if (hostInstance) {
-    const resourceFibers = hostResourceToFiberMap.get(hostInstance);
-    if (resourceFibers !== undefined) {
-      resourceFibers.delete(fiber);
-      if (resourceFibers.size === 0) {
-        hostResourceToFiberMap.delete(hostInstance);
+    const publicInstance = getPublicInstance(hostInstance);
+    const resourceInstances =
+      hostResourceToDevToolsInstanceMap.get(publicInstance);
+    if (resourceInstances !== undefined) {
+      resourceInstances.delete(nearestInstance);
+      if (resourceInstances.size === 0) {
+        hostResourceToDevToolsInstanceMap.delete(publicInstance);
+        publicInstanceToDevToolsInstanceMap.delete(publicInstance);
+      } else if (publicInstanceToDevToolsInstanceMap.get(publicInstance) === nearestInstance) {
+        // This was the first one. Store the next first one in the main map for easy access.
+        // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+        for (const firstInstance of resourceInstances) {
+          publicInstanceToDevToolsInstanceMap.set(firstInstance, nearestInstance);
+          break;
+        }
       }
     }
   }
@@ -1512,6 +1562,18 @@ export function attach(
       if (fiberToFiberInstanceMap.get(alternate) === fiberInstance) {
         fiberToFiberInstanceMap.delete(alternate);
       }
+    }
+
+    // TODO: This is not enough if this Fiber was filtered since we don't end up
+    // untracking it. We could use a WeakMap but that doesn't work for Paper tags.
+    if (fiber.tag === HostHoistable) {
+      releaseHostResource(fiberInstance, fiber.memoizedState);
+    } else if (
+      fiber.tag === HostComponent ||
+      fiber.tag === HostText ||
+      fiber.tag === HostSingleton
+    ) {
+      releaseHostInstance(fiberInstance, fiber.stateNode);
     }
   }
 
@@ -2670,7 +2732,21 @@ export function attach(
       }
 
       if (fiber.tag === HostHoistable) {
-        aquireHostResource(fiber, fiber.memoizedState);
+        const nearestInstance = reconcilingParent;
+        if (nearestInstance === null) {
+          throw new Error('Did not expect a host hoistable to be the root');
+        }
+        aquireHostResource(nearestInstance, fiber.memoizedState);
+      } else if (
+        fiber.tag === HostComponent ||
+        fiber.tag === HostText ||
+        fiber.tag === HostSingleton
+      ) {
+        const nearestInstance = reconcilingParent;
+        if (nearestInstance === null) {
+          throw new Error('Did not expect a host hoistable to be the root');
+        }
+        aquireHostInstance(nearestInstance, fiber.stateNode);
       }
 
       if (fiber.tag === SuspenseComponent) {
@@ -3291,8 +3367,12 @@ export function attach(
     }
     try {
       if (nextFiber.tag === HostHoistable) {
-        releaseHostResource(prevFiber, prevFiber.memoizedState);
-        aquireHostResource(nextFiber, nextFiber.memoizedState);
+        const nearestInstance = reconcilingParent;
+        if (nearestInstance === null) {
+          throw new Error('Did not expect a host hoistable to be the root');
+        }
+        releaseHostResource(nearestInstance, prevFiber.memoizedState);
+        aquireHostResource(nearestInstance, nextFiber.memoizedState);
       }
 
       const isSuspense = nextFiber.tag === SuspenseComponent;
@@ -3781,81 +3861,33 @@ export function attach(
   }
 
   function getNearestMountedHostInstance(
-    hostInstance: HostInstance,
+    publicInstance: HostInstance,
   ): null | HostInstance {
-    const mountedFiber = renderer.findFiberByHostInstance(hostInstance);
+    // TODO: Remove dependency on findFiberByHostInstance.
+    const mountedFiber = renderer.findFiberByHostInstance(publicInstance);
     if (mountedFiber != null) {
-      if (mountedFiber.stateNode !== hostInstance) {
+      if (mountedFiber.stateNode !== publicInstance) {
         // If it's not a perfect match the specific one might be a resource.
         // We don't need to look at any parents because host resources don't have
         // children so it won't be in any parent if it's not this one.
-        if (hostResourceToFiberMap.has(hostInstance)) {
-          return hostInstance;
+        if (publicInstanceToDevToolsInstanceMap.has(publicInstance)) {
+          return publicInstance;
         }
       }
       return mountedFiber.stateNode;
     }
-    if (hostResourceToFiberMap.has(hostInstance)) {
-      return hostInstance;
-    }
-    return null;
-  }
-
-  function findNearestUnfilteredElementID(searchFiber: Fiber) {
-    let fiber: null | Fiber = searchFiber;
-    while (fiber !== null) {
-      const fiberInstance = getFiberInstanceUnsafe(fiber);
-      if (fiberInstance !== null) {
-        // TODO: Ideally we would not have any filtered FiberInstances which
-        // would make this logic much simpler. Unfortunately, we sometimes
-        // eagerly add to the map and some times don't eagerly clean it up.
-        // TODO: If the fiber is filtered, the FiberInstance wouldn't really
-        // exist which would mean that we also don't have a way to get to the
-        // VirtualInstances.
-        if (!shouldFilterFiber(fiberInstance.data)) {
-          return fiberInstance.id;
-        }
-        // We couldn't use this Fiber but we might have a VirtualInstance
-        // that is the nearest unfiltered instance.
-        const parentInstance = fiberInstance.parent;
-        if (
-          parentInstance !== null &&
-          parentInstance.kind === VIRTUAL_INSTANCE
-        ) {
-          // Virtual Instances only exist if they're unfiltered.
-          return parentInstance.id;
-        }
-        // If we find a parent Fiber, it might not be the nearest parent
-        // so we break out and continue walking the Fiber tree instead.
-      }
-      fiber = fiber.return;
+    if (publicInstanceToDevToolsInstanceMap.has(publicInstance)) {
+      return publicInstance;
     }
     return null;
   }
 
   function getElementIDForHostInstance(
-    hostInstance: HostInstance,
-    findNearestUnfilteredAncestor: boolean = false,
+    publicInstance: HostInstance,
   ): number | null {
-    const resourceFibers = hostResourceToFiberMap.get(hostInstance);
-    if (resourceFibers !== undefined) {
-      // This is a resource. Find the first unfiltered instance.
-      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-      for (const resourceFiber of resourceFibers) {
-        const elementID = findNearestUnfilteredElementID(resourceFiber);
-        if (elementID !== null) {
-          return elementID;
-        }
-      }
-      // If we don't find one, fallthrough to select the parent instead.
-    }
-    const fiber = renderer.findFiberByHostInstance(hostInstance);
-    if (fiber != null) {
-      if (!findNearestUnfilteredAncestor) {
-        // TODO: Remove this option. It's not used.
-        return getFiberIDThrows(fiber);
-      }
-      return findNearestUnfilteredElementID(fiber);
+    const instance = publicInstanceToDevToolsInstanceMap.get(publicInstance);
+    if (instance !== undefined) {
+      return instance.id;
     }
     return null;
   }
