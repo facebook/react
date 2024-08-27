@@ -101,6 +101,14 @@ import {
 import {enableStyleXFeatures} from 'react-devtools-feature-flags';
 import is from 'shared/objectIs';
 import hasOwnProperty from 'shared/hasOwnProperty';
+
+// $FlowFixMe[method-unbinding]
+const toString = Object.prototype.toString;
+
+function isError(object: mixed) {
+  return toString.call(object) === '[object Error]';
+}
+
 import {getStyleXData} from '../StyleX/utils';
 import {createProfilingHooks} from '../profilingHooks';
 
@@ -131,7 +139,8 @@ import type {
   Plugins,
 } from 'react-devtools-shared/src/frontend/types';
 import type {Source} from 'react-devtools-shared/src/shared/types';
-import {getStackByFiberInDevAndProd} from './DevToolsFiberComponentStack';
+import {getSourceLocationByFiber} from './DevToolsFiberComponentStack';
+import {formatOwnerStack} from '../shared/DevToolsOwnerStack';
 
 // Kinds
 const FIBER_INSTANCE = 0;
@@ -152,7 +161,7 @@ type FiberInstance = {
   previousSibling: null | DevToolsInstance, // filtered next sibling, including virtual
   nextSibling: null | DevToolsInstance, // filtered next sibling, including virtual
   flags: number, // Force Error/Suspense
-  componentStack: null | string,
+  source: null | string | Error | Source, // source location of this component function, or owned child stack
   errors: null | Map<string, number>, // error messages and count
   warnings: null | Map<string, number>, // warning messages and count
   data: Fiber, // one of a Fiber pair
@@ -167,7 +176,7 @@ function createFiberInstance(fiber: Fiber): FiberInstance {
     previousSibling: null,
     nextSibling: null,
     flags: 0,
-    componentStack: null,
+    source: null,
     errors: null,
     warnings: null,
     data: fiber,
@@ -187,7 +196,7 @@ type VirtualInstance = {
   previousSibling: null | DevToolsInstance, // filtered next sibling, including virtual
   nextSibling: null | DevToolsInstance, // filtered next sibling, including virtual
   flags: number,
-  componentStack: null | string,
+  source: null | string | Error | Source, // source location of this server component, or owned child stack
   // Errors and Warnings happen per ReactComponentInfo which can appear in
   // multiple places but we track them per stateful VirtualInstance so
   // that old errors/warnings don't disappear when the instance is refreshed.
@@ -209,7 +218,7 @@ function createVirtualInstance(
     previousSibling: null,
     nextSibling: null,
     flags: 0,
-    componentStack: null,
+    source: null,
     errors: null,
     warnings: null,
     data: debugEntry,
@@ -2154,6 +2163,16 @@ export function attach(
         parentInstance,
         debugOwner,
       );
+      if (
+        ownerInstance !== null &&
+        debugOwner === fiber._debugOwner &&
+        fiber._debugStack != null &&
+        ownerInstance.source === null
+      ) {
+        // The new Fiber is directly owned by the ownerInstance. Therefore somewhere on
+        // the debugStack will be a stack frame inside the ownerInstance's source.
+        ownerInstance.source = fiber._debugStack;
+      }
       const ownerID = ownerInstance === null ? 0 : ownerInstance.id;
       const parentID = parentInstance ? parentInstance.id : 0;
 
@@ -2228,6 +2247,16 @@ export function attach(
     // away so maybe it's not so bad.
     const debugOwner = getUnfilteredOwner(componentInfo);
     const ownerInstance = findNearestOwnerInstance(parentInstance, debugOwner);
+    if (
+      ownerInstance !== null &&
+      debugOwner === componentInfo.owner &&
+      componentInfo.debugStack != null &&
+      ownerInstance.source === null
+    ) {
+      // The new Fiber is directly owned by the ownerInstance. Therefore somewhere on
+      // the debugStack will be a stack frame inside the ownerInstance's source.
+      ownerInstance.source = componentInfo.debugStack;
+    }
     const ownerID = ownerInstance === null ? 0 : ownerInstance.id;
     const parentID = parentInstance ? parentInstance.id : 0;
 
@@ -4324,7 +4353,7 @@ export function attach(
 
     let source = null;
     if (canViewSource) {
-      source = getSourceForFiber(fiber);
+      source = getSourceForFiberInstance(fiberInstance);
     }
 
     return {
@@ -4398,7 +4427,8 @@ export function attach(
   function inspectVirtualInstanceRaw(
     virtualInstance: VirtualInstance,
   ): InspectedElement | null {
-    const canViewSource = false;
+    const canViewSource = true;
+    const source = getSourceForInstance(virtualInstance);
 
     const componentInfo = virtualInstance.data;
     const key =
@@ -4437,9 +4467,6 @@ export function attach(
     const plugins: Plugins = {
       stylex: null,
     };
-
-    // TODO: Support getting the source location from the owner stack.
-    const source = null;
 
     return {
       id: virtualInstance.id,
@@ -5664,39 +5691,63 @@ export function attach(
     return idToDevToolsInstanceMap.has(id);
   }
 
-  function getComponentStackForFiber(fiber: Fiber): string | null {
-    // TODO: This should really just take an DevToolsInstance directly.
-    let fiberInstance = fiberToFiberInstanceMap.get(fiber);
-    if (fiberInstance === undefined && fiber.alternate !== null) {
-      fiberInstance = fiberToFiberInstanceMap.get(fiber.alternate);
-    }
-    if (fiberInstance === undefined) {
-      // We're no longer tracking this instance.
-      return null;
-    }
-    if (fiberInstance.componentStack !== null) {
-      // Cached entry.
-      return fiberInstance.componentStack;
+  function getSourceForFiberInstance(
+    fiberInstance: FiberInstance,
+  ): Source | null {
+    const unresolvedSource = fiberInstance.source;
+    if (
+      unresolvedSource !== null &&
+      typeof unresolvedSource === 'object' &&
+      !isError(unresolvedSource)
+    ) {
+      // $FlowFixMe: isError should have refined it.
+      return unresolvedSource;
     }
     const dispatcherRef = getDispatcherRef(renderer);
-    if (dispatcherRef == null) {
-      return null;
+    const stackFrame =
+      dispatcherRef == null
+        ? null
+        : getSourceLocationByFiber(
+            ReactTypeOfWork,
+            fiberInstance.data,
+            dispatcherRef,
+          );
+    if (stackFrame === null) {
+      // If we don't find a source location by throwing, try to get one
+      // from an owned child if possible. This is the same branch as
+      // for virtual instances.
+      return getSourceForInstance(fiberInstance);
     }
-
-    return (fiberInstance.componentStack = getStackByFiberInDevAndProd(
-      ReactTypeOfWork,
-      fiber,
-      dispatcherRef,
-    ));
+    const source = parseSourceFromComponentStack(stackFrame);
+    fiberInstance.source = source;
+    return source;
   }
 
-  function getSourceForFiber(fiber: Fiber): Source | null {
-    const componentStack = getComponentStackForFiber(fiber);
-    if (componentStack == null) {
+  function getSourceForInstance(instance: DevToolsInstance): Source | null {
+    let unresolvedSource = instance.source;
+    if (unresolvedSource === null) {
+      // We don't have any source yet. We can try again later in case an owned child mounts later.
+      // TODO: We won't have any information here if the child is filtered.
       return null;
     }
 
-    return parseSourceFromComponentStack(componentStack);
+    // If we have the debug stack (the creation stack of the JSX) for any owned child of this
+    // component, then at the bottom of that stack will be a stack frame that is somewhere within
+    // the component's function body. Typically it would be the callsite of the JSX unless there's
+    // any intermediate utility functions. This won't point to the top of the component function
+    // but it's at least somewhere within it.
+    if (isError(unresolvedSource)) {
+      unresolvedSource = formatOwnerStack((unresolvedSource: any));
+    }
+    if (typeof unresolvedSource === 'string') {
+      const idx = unresolvedSource.lastIndexOf('\n');
+      const lastLine =
+        idx === -1 ? unresolvedSource : unresolvedSource.slice(idx + 1);
+      return (instance.source = parseSourceFromComponentStack(lastLine));
+    }
+
+    // $FlowFixMe: refined.
+    return unresolvedSource;
   }
 
   return {
