@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<910e9cdd92ed9d02290c129d90bc78da>>
+ * @generated SignedSource<<2cd628012cf99d53f3979135098c7c40>>
  */
 
 "use strict";
@@ -9459,6 +9459,9 @@ __DEV__ &&
             renderLanes &&
             (workInProgress.child.flags |= 8192);
           scheduleRetryEffect(workInProgress, workInProgress.updateQueue);
+          null !== workInProgress.updateQueue &&
+            null != workInProgress.memoizedProps.suspenseCallback &&
+            (workInProgress.flags |= 4);
           bubbleProperties(workInProgress);
           0 !== (workInProgress.mode & 2) &&
             renderLanes &&
@@ -10511,6 +10514,10 @@ __DEV__ &&
                 )));
           break;
         case 18:
+          finishedRoot = finishedRoot.hydrationCallbacks;
+          null !== finishedRoot &&
+            (finishedRoot = finishedRoot.onDeleted) &&
+            finishedRoot(deletedFiber.stateNode);
           null !== hostParent &&
             (hostParentIsContainer
               ? clearSuspenseBoundaryFromContainer()
@@ -10904,11 +10911,30 @@ __DEV__ &&
               : _instance2 &&
                 !current &&
                 (globalMostRecentFallbackTime = now$1()));
-          flags & 4 &&
-            ((flags = finishedWork.updateQueue),
+          if (flags & 4) {
+            try {
+              if (null !== finishedWork.memoizedState) {
+                var suspenseCallback =
+                  finishedWork.memoizedProps.suspenseCallback;
+                if ("function" === typeof suspenseCallback) {
+                  var retryQueue = finishedWork.updateQueue;
+                  null !== retryQueue && suspenseCallback(new Set(retryQueue));
+                } else
+                  void 0 !== suspenseCallback &&
+                    error$jscomp$0("Unexpected type for suspenseCallback.");
+              }
+            } catch (error$31) {
+              captureCommitPhaseError(
+                finishedWork,
+                finishedWork.return,
+                error$31
+              );
+            }
+            flags = finishedWork.updateQueue;
             null !== flags &&
               ((finishedWork.updateQueue = null),
-              attachSuspenseRetryListeners(finishedWork, flags)));
+              attachSuspenseRetryListeners(finishedWork, flags));
+          }
           break;
         case 22:
           flags & 512 &&
@@ -10916,17 +10942,15 @@ __DEV__ &&
             safelyDetachRef(current, current.return);
           viewConfig = null !== finishedWork.memoizedState;
           updatePayload = null !== current && null !== current.memoizedState;
-          if (finishedWork.mode & 1) {
-            var prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden,
-              prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
-            offscreenSubtreeIsHidden =
-              prevOffscreenSubtreeIsHidden || viewConfig;
-            offscreenSubtreeWasHidden =
-              prevOffscreenSubtreeWasHidden || updatePayload;
-            recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-            offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
-            offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
-          } else recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+          finishedWork.mode & 1
+            ? ((suspenseCallback = offscreenSubtreeIsHidden),
+              (retryQueue = offscreenSubtreeWasHidden),
+              (offscreenSubtreeIsHidden = suspenseCallback || viewConfig),
+              (offscreenSubtreeWasHidden = retryQueue || updatePayload),
+              recursivelyTraverseMutationEffects(root, finishedWork, lanes),
+              (offscreenSubtreeWasHidden = retryQueue),
+              (offscreenSubtreeIsHidden = suspenseCallback))
+            : recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           commitReconciliationEffects(finishedWork);
           root = finishedWork.stateNode;
           root._current = finishedWork;
@@ -14035,6 +14059,7 @@ __DEV__ &&
       this.onRecoverableError = onRecoverableError;
       this.pooledCache = null;
       this.pooledCacheLanes = 0;
+      this.hydrationCallbacks = null;
       this.formState = formState;
       this.incompleteTransitions = new Map();
       this.passiveEffectDuration = this.effectDuration = 0;
@@ -17080,11 +17105,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.0.0-native-fb-ee7f6757-20240823" !== isomorphicReactPackageVersion)
+    if ("19.0.0-native-fb-246d7bfe-20240826" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.0.0-native-fb-ee7f6757-20240823\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.0.0-native-fb-246d7bfe-20240826\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17110,11 +17135,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-ee7f6757-20240823",
+        version: "19.0.0-native-fb-246d7bfe-20240826",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromTag,
-        reconcilerVersion: "19.0.0-native-fb-ee7f6757-20240823"
+        reconcilerVersion: "19.0.0-native-fb-246d7bfe-20240826"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
@@ -17240,6 +17265,7 @@ __DEV__ &&
           onRecoverableError,
           null
         );
+        options.hydrationCallbacks = null;
         root = 0;
         isDevToolsPresent && (root |= 2);
         root = createFiber(3, null, null, root);

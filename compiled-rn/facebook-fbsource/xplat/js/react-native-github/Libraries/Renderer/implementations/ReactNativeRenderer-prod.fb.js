@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d1831aa27352266c13f0b56ba5de0dd8>>
+ * @generated SignedSource<<3ed1274650439125a256d0c3a5edcb53>>
  */
 
 "use strict";
@@ -7653,6 +7653,9 @@ function completeWork(current, workInProgress, renderLanes) {
         renderLanes &&
         (workInProgress.child.flags |= 8192);
       scheduleRetryEffect(workInProgress, workInProgress.updateQueue);
+      null !== workInProgress.updateQueue &&
+        null != workInProgress.memoizedProps.suspenseCallback &&
+        (workInProgress.flags |= 4);
       bubbleProperties(workInProgress);
       return null;
     case 4:
@@ -8395,6 +8398,10 @@ function commitDeletionEffectsOnFiber(
             )));
       break;
     case 18:
+      finishedRoot = finishedRoot.hydrationCallbacks;
+      null !== finishedRoot &&
+        (finishedRoot = finishedRoot.onDeleted) &&
+        finishedRoot(deletedFiber.stateNode);
       null !== hostParent && shim$1();
       break;
     case 4:
@@ -8688,11 +8695,23 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
         alwaysThrottleRetries
           ? newProps !== current && (globalMostRecentFallbackTime = now())
           : newProps && !current && (globalMostRecentFallbackTime = now()));
-      flags & 4 &&
-        ((flags = finishedWork.updateQueue),
+      if (flags & 4) {
+        try {
+          if (null !== finishedWork.memoizedState) {
+            var suspenseCallback = finishedWork.memoizedProps.suspenseCallback;
+            if ("function" === typeof suspenseCallback) {
+              var retryQueue = finishedWork.updateQueue;
+              null !== retryQueue && suspenseCallback(new Set(retryQueue));
+            }
+          }
+        } catch (error$132) {
+          captureCommitPhaseError(finishedWork, finishedWork.return, error$132);
+        }
+        flags = finishedWork.updateQueue;
         null !== flags &&
           ((finishedWork.updateQueue = null),
-          attachSuspenseRetryListeners(finishedWork, flags)));
+          attachSuspenseRetryListeners(finishedWork, flags));
+      }
       break;
     case 22:
       flags & 512 &&
@@ -8700,16 +8719,15 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
         safelyDetachRef(current, current.return);
       viewConfig = null !== finishedWork.memoizedState;
       updatePayload = null !== current && null !== current.memoizedState;
-      if (finishedWork.mode & 1) {
-        var prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden,
-          prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
-        offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden || viewConfig;
-        offscreenSubtreeWasHidden =
-          prevOffscreenSubtreeWasHidden || updatePayload;
-        recursivelyTraverseMutationEffects(root, finishedWork);
-        offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
-        offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
-      } else recursivelyTraverseMutationEffects(root, finishedWork);
+      finishedWork.mode & 1
+        ? ((suspenseCallback = offscreenSubtreeIsHidden),
+          (retryQueue = offscreenSubtreeWasHidden),
+          (offscreenSubtreeIsHidden = suspenseCallback || viewConfig),
+          (offscreenSubtreeWasHidden = retryQueue || updatePayload),
+          recursivelyTraverseMutationEffects(root, finishedWork),
+          (offscreenSubtreeWasHidden = retryQueue),
+          (offscreenSubtreeIsHidden = suspenseCallback))
+        : recursivelyTraverseMutationEffects(root, finishedWork);
       commitReconciliationEffects(finishedWork);
       root = finishedWork.stateNode;
       root._current = finishedWork;
@@ -10858,6 +10876,7 @@ function FiberRootNode(
   this.onRecoverableError = onRecoverableError;
   this.pooledCache = null;
   this.pooledCacheLanes = 0;
+  this.hydrationCallbacks = null;
   this.formState = formState;
   this.incompleteTransitions = new Map();
 }
@@ -10946,11 +10965,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.0.0-native-fb-ee7f6757-20240823" !== isomorphicReactPackageVersion)
+if ("19.0.0-native-fb-246d7bfe-20240826" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.0.0-native-fb-ee7f6757-20240823\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.0.0-native-fb-246d7bfe-20240826\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -10997,27 +11016,27 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1217 = {
+  internals$jscomp$inline_1222 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-ee7f6757-20240823",
+    version: "19.0.0-native-fb-246d7bfe-20240826",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromTag,
-    reconcilerVersion: "19.0.0-native-fb-ee7f6757-20240823"
+    reconcilerVersion: "19.0.0-native-fb-246d7bfe-20240826"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1217.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1222.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1483 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1488 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1483.isDisabled &&
-    hook$jscomp$inline_1483.supportsFiber
+    !hook$jscomp$inline_1488.isDisabled &&
+    hook$jscomp$inline_1488.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1483.inject(
-        internals$jscomp$inline_1217
+      (rendererID = hook$jscomp$inline_1488.inject(
+        internals$jscomp$inline_1222
       )),
-        (injectedHook = hook$jscomp$inline_1483);
+        (injectedHook = hook$jscomp$inline_1488);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
@@ -11089,6 +11108,7 @@ exports.render = function (element, containerTag, callback, options) {
       onRecoverableError,
       null
     );
+    options.hydrationCallbacks = null;
     root = createFiber(3, null, null, 0);
     options.current = root;
     root.stateNode = options;

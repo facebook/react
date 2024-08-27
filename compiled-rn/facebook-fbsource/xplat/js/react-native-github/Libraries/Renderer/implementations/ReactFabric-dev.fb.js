@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<746002f099c7204907e443cbabc48477>>
+ * @generated SignedSource<<554f420a6fa3f25ed0f068fc6a103bef>>
  */
 
 "use strict";
@@ -9487,6 +9487,9 @@ __DEV__ &&
             newProps &&
             (workInProgress.child.flags |= 8192);
           scheduleRetryEffect(workInProgress, workInProgress.updateQueue);
+          null !== workInProgress.updateQueue &&
+            null != workInProgress.memoizedProps.suspenseCallback &&
+            (workInProgress.flags |= 4);
           bubbleProperties(workInProgress);
           0 !== (workInProgress.mode & 2) &&
             newProps &&
@@ -10414,6 +10417,10 @@ __DEV__ &&
           );
           break;
         case 18:
+          finishedRoot = finishedRoot.hydrationCallbacks;
+          null !== finishedRoot &&
+            (finishedRoot = finishedRoot.onDeleted) &&
+            finishedRoot(deletedFiber.stateNode);
           break;
         case 4:
           var containerInfo = deletedFiber.stateNode.containerInfo,
@@ -10736,35 +10743,50 @@ __DEV__ &&
         case 13:
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           commitReconciliationEffects(finishedWork);
-          if (finishedWork.child.flags & 8192) {
-            var isShowingFallback = null !== finishedWork.memoizedState;
-            current = null !== current && null !== current.memoizedState;
+          finishedWork.child.flags & 8192 &&
+            ((root = null !== finishedWork.memoizedState),
+            (current = null !== current && null !== current.memoizedState),
             alwaysThrottleRetries
-              ? isShowingFallback !== current &&
-                (globalMostRecentFallbackTime = now$1())
-              : isShowingFallback &&
-                !current &&
-                (globalMostRecentFallbackTime = now$1());
-          }
-          flags & 4 &&
-            ((flags = finishedWork.updateQueue),
+              ? root !== current && (globalMostRecentFallbackTime = now$1())
+              : root && !current && (globalMostRecentFallbackTime = now$1()));
+          if (flags & 4) {
+            try {
+              if (null !== finishedWork.memoizedState) {
+                var suspenseCallback =
+                  finishedWork.memoizedProps.suspenseCallback;
+                if ("function" === typeof suspenseCallback) {
+                  var retryQueue = finishedWork.updateQueue;
+                  null !== retryQueue && suspenseCallback(new Set(retryQueue));
+                } else
+                  void 0 !== suspenseCallback &&
+                    error$jscomp$0("Unexpected type for suspenseCallback.");
+              }
+            } catch (error$28) {
+              captureCommitPhaseError(
+                finishedWork,
+                finishedWork.return,
+                error$28
+              );
+            }
+            flags = finishedWork.updateQueue;
             null !== flags &&
               ((finishedWork.updateQueue = null),
-              attachSuspenseRetryListeners(finishedWork, flags)));
+              attachSuspenseRetryListeners(finishedWork, flags));
+          }
           break;
         case 22:
           flags & 512 &&
             null !== current &&
             safelyDetachRef(current, current.return);
-          var isHidden = null !== finishedWork.memoizedState;
-          isShowingFallback =
-            null !== current && null !== current.memoizedState;
+          retryQueue = null !== finishedWork.memoizedState;
+          suspenseCallback = null !== current && null !== current.memoizedState;
           if (finishedWork.mode & 1) {
             var prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden,
               prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
-            offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden || isHidden;
+            offscreenSubtreeIsHidden =
+              prevOffscreenSubtreeIsHidden || retryQueue;
             offscreenSubtreeWasHidden =
-              prevOffscreenSubtreeWasHidden || isShowingFallback;
+              prevOffscreenSubtreeWasHidden || suspenseCallback;
             recursivelyTraverseMutationEffects(root, finishedWork, lanes);
             offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
             offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
@@ -10775,13 +10797,13 @@ __DEV__ &&
           root._visibility &= -3;
           root._visibility |= root._pendingVisibility & 2;
           flags & 8192 &&
-            ((root._visibility = isHidden
+            ((root._visibility = retryQueue
               ? root._visibility & -2
               : root._visibility | 1),
-            isHidden &&
+            retryQueue &&
               ((root = offscreenSubtreeIsHidden || offscreenSubtreeWasHidden),
               null === current ||
-                isShowingFallback ||
+                suspenseCallback ||
                 root ||
                 (0 !== (finishedWork.mode & 1) &&
                   recursivelyTraverseDisappearLayoutEffects(finishedWork))));
@@ -13750,6 +13772,7 @@ __DEV__ &&
       this.onRecoverableError = onRecoverableError;
       this.pooledCache = null;
       this.pooledCacheLanes = 0;
+      this.hydrationCallbacks = null;
       this.formState = formState;
       this.incompleteTransitions = new Map();
       this.passiveEffectDuration = this.effectDuration = 0;
@@ -16929,11 +16952,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-ee7f6757-20240823",
+        version: "19.0.0-native-fb-246d7bfe-20240826",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-native-fb-ee7f6757-20240823"
+        reconcilerVersion: "19.0.0-native-fb-246d7bfe-20240826"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
@@ -17076,6 +17099,7 @@ __DEV__ &&
           onRecoverableError,
           null
         );
+        options.hydrationCallbacks = null;
         concurrentRoot = 1 === concurrentRoot ? 1 : 0;
         isDevToolsPresent && (concurrentRoot |= 2);
         concurrentRoot = createFiber(3, null, null, concurrentRoot);

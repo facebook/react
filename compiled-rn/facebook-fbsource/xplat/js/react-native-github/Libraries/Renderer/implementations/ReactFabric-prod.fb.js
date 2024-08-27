@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<db1b3e4888cd5a4a67a1990a17195bf0>>
+ * @generated SignedSource<<29f175ffe3a5d88a87ee965eaba00742>>
  */
 
 "use strict";
@@ -7529,6 +7529,9 @@ function completeWork(current, workInProgress, renderLanes) {
         newChildSet !== oldProps && (renderLanes.flags |= 2048));
       newProps !== current && newProps && (workInProgress.child.flags |= 8192);
       scheduleRetryEffect(workInProgress, workInProgress.updateQueue);
+      null !== workInProgress.updateQueue &&
+        null != workInProgress.memoizedProps.suspenseCallback &&
+        (workInProgress.flags |= 4);
       bubbleProperties(workInProgress);
       return null;
     case 4:
@@ -8147,6 +8150,10 @@ function commitDeletionEffectsOnFiber(
       );
       break;
     case 18:
+      finishedRoot = finishedRoot.hydrationCallbacks;
+      null !== finishedRoot &&
+        (finishedRoot = finishedRoot.onDeleted) &&
+        finishedRoot(deletedFiber.stateNode);
       break;
     case 4:
       var containerInfo = deletedFiber.stateNode.containerInfo,
@@ -8385,34 +8392,42 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
     case 13:
       recursivelyTraverseMutationEffects(root, finishedWork);
       commitReconciliationEffects(finishedWork);
-      if (finishedWork.child.flags & 8192) {
-        var isShowingFallback = null !== finishedWork.memoizedState;
-        current = null !== current && null !== current.memoizedState;
+      finishedWork.child.flags & 8192 &&
+        ((root = null !== finishedWork.memoizedState),
+        (current = null !== current && null !== current.memoizedState),
         alwaysThrottleRetries
-          ? isShowingFallback !== current &&
-            (globalMostRecentFallbackTime = now())
-          : isShowingFallback &&
-            !current &&
-            (globalMostRecentFallbackTime = now());
-      }
-      flags & 4 &&
-        ((flags = finishedWork.updateQueue),
+          ? root !== current && (globalMostRecentFallbackTime = now())
+          : root && !current && (globalMostRecentFallbackTime = now()));
+      if (flags & 4) {
+        try {
+          if (null !== finishedWork.memoizedState) {
+            var suspenseCallback = finishedWork.memoizedProps.suspenseCallback;
+            if ("function" === typeof suspenseCallback) {
+              var retryQueue = finishedWork.updateQueue;
+              null !== retryQueue && suspenseCallback(new Set(retryQueue));
+            }
+          }
+        } catch (error$126) {
+          captureCommitPhaseError(finishedWork, finishedWork.return, error$126);
+        }
+        flags = finishedWork.updateQueue;
         null !== flags &&
           ((finishedWork.updateQueue = null),
-          attachSuspenseRetryListeners(finishedWork, flags)));
+          attachSuspenseRetryListeners(finishedWork, flags));
+      }
       break;
     case 22:
       flags & 512 &&
         null !== current &&
         safelyDetachRef(current, current.return);
-      var isHidden = null !== finishedWork.memoizedState;
-      isShowingFallback = null !== current && null !== current.memoizedState;
+      retryQueue = null !== finishedWork.memoizedState;
+      suspenseCallback = null !== current && null !== current.memoizedState;
       if (finishedWork.mode & 1) {
         var prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden,
           prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
-        offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden || isHidden;
+        offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden || retryQueue;
         offscreenSubtreeWasHidden =
-          prevOffscreenSubtreeWasHidden || isShowingFallback;
+          prevOffscreenSubtreeWasHidden || suspenseCallback;
         recursivelyTraverseMutationEffects(root, finishedWork);
         offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
         offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
@@ -8423,13 +8438,13 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       root._visibility &= -3;
       root._visibility |= root._pendingVisibility & 2;
       flags & 8192 &&
-        ((root._visibility = isHidden
+        ((root._visibility = retryQueue
           ? root._visibility & -2
           : root._visibility | 1),
-        isHidden &&
+        retryQueue &&
           ((root = offscreenSubtreeIsHidden || offscreenSubtreeWasHidden),
           null === current ||
-            isShowingFallback ||
+            suspenseCallback ||
             root ||
             (0 !== (finishedWork.mode & 1) &&
               recursivelyTraverseDisappearLayoutEffects(finishedWork))));
@@ -10446,6 +10461,7 @@ function FiberRootNode(
   this.onRecoverableError = onRecoverableError;
   this.pooledCache = null;
   this.pooledCacheLanes = 0;
+  this.hydrationCallbacks = null;
   this.formState = formState;
   this.incompleteTransitions = new Map();
 }
@@ -10834,27 +10850,27 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1146 = {
+  internals$jscomp$inline_1151 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-ee7f6757-20240823",
+    version: "19.0.0-native-fb-246d7bfe-20240826",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromNode,
-    reconcilerVersion: "19.0.0-native-fb-ee7f6757-20240823"
+    reconcilerVersion: "19.0.0-native-fb-246d7bfe-20240826"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1146.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1151.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1402 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1407 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1402.isDisabled &&
-    hook$jscomp$inline_1402.supportsFiber
+    !hook$jscomp$inline_1407.isDisabled &&
+    hook$jscomp$inline_1407.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1402.inject(
-        internals$jscomp$inline_1146
+      (rendererID = hook$jscomp$inline_1407.inject(
+        internals$jscomp$inline_1151
       )),
-        (injectedHook = hook$jscomp$inline_1402);
+        (injectedHook = hook$jscomp$inline_1407);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
@@ -10948,6 +10964,7 @@ exports.render = function (
       onRecoverableError,
       null
     );
+    options.hydrationCallbacks = null;
     concurrentRoot = createFiber(3, null, null, 1 === concurrentRoot ? 1 : 0);
     options.current = concurrentRoot;
     concurrentRoot.stateNode = options;
