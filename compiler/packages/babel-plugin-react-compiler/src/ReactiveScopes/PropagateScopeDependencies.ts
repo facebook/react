@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import prettyFormat from 'pretty-format';
 import {CompilerError} from '../CompilerError';
 import {Environment} from '../HIR';
 import {
@@ -923,7 +924,7 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
     }
     // The final value is the conditional portion following the `?`
     context.enterConditional(() => {
-      this.visitReactiveValue(context, id, inner.value, lvalue);
+      this.visitReactiveValue(context, id, inner.value, null);
     });
   }
 
@@ -941,7 +942,7 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
       case 'LogicalExpression': {
         this.visitReactiveValue(context, id, value.left, null);
         context.enterConditional(() => {
-          this.visitReactiveValue(context, id, value.right, lvalue);
+          this.visitReactiveValue(context, id, value.right, null);
         });
         break;
       }
@@ -964,7 +965,7 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
         for (const instr of value.instructions) {
           this.visitInstruction(instr, context);
         }
-        this.visitInstructionValue(context, id, value.value, lvalue);
+        this.visitInstructionValue(context, id, value.value, null);
         break;
       }
       case 'FunctionExpression': {
