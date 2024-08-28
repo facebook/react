@@ -116,7 +116,7 @@ function prettyPrintScopeDependency(val: ReactiveScopeDependency): string {
   } else {
     rootStr = '[unnamed]';
   }
-  return `${rootStr}${val.path.length > 0 ? '.' : ''}${val.path.join('.')}`;
+  return `${rootStr}${val.path.map(v => `${v.optional ? '?.' : '.'}${v.property}`).join('')}`;
 }
 
 enum CompareDependencyResult {

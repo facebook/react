@@ -1500,10 +1500,13 @@ export type ReactiveScopeDependency = {
 export function areEqualPaths(a: DependencyPath, b: DependencyPath): boolean {
   return (
     a.length === b.length &&
-    a.every((item, ix) => item.property === b[ix].property)
+    a.every(
+      (item, ix) =>
+        item.property === b[ix].property && item.optional === b[ix].optional,
+    )
   );
 }
-export type DependencyPath = Array<{property: string}>;
+export type DependencyPath = Array<{property: string; optional: boolean}>;
 
 /*
  * Simulated opaque type for BlockIds to prevent using normal numbers as block ids
