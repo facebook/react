@@ -135,17 +135,7 @@ export function registerRenderer(
   renderer: ReactRenderer,
   onErrorOrWarning?: OnErrorOrWarning,
 ): void {
-  const {
-    currentDispatcherRef,
-    getCurrentFiber,
-    findFiberByHostInstance,
-    version,
-  } = renderer;
-
-  // Ignore React v15 and older because they don't expose a component stack anyway.
-  if (typeof findFiberByHostInstance !== 'function') {
-    return;
-  }
+  const {currentDispatcherRef, getCurrentFiber, version} = renderer;
 
   // currentDispatcherRef gets injected for v16.8+ to support hooks inspection.
   // getCurrentFiber gets injected for v16.9+.

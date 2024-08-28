@@ -105,10 +105,11 @@ export type Lane = number;
 export type Lanes = number;
 
 export type ReactRenderer = {
-  findFiberByHostInstance: (hostInstance: HostInstance) => Fiber | null,
   version: string,
   rendererPackageName: string,
   bundleType: BundleType,
+  // 16.0+ - To be removed in future versions.
+  findFiberByHostInstance?: (hostInstance: HostInstance) => Fiber | null,
   // 16.9+
   overrideHookState?: ?(
     fiber: Object,
