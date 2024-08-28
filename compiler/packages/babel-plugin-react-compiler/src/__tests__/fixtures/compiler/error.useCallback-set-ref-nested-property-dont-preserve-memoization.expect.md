@@ -33,7 +33,7 @@ export const FIXTURE_ENTRYPOINT = {
   11 |   });
   12 |
 > 13 |   ref.current.inner = null;
-     |   ^^^^^^^^^^^ InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef) (13:13)
+     |   ^^^^^^^^^^^ InvalidRefInRender: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef) (13:13)
   14 |
   15 |   return <input onChange={onChange} />;
   16 | }

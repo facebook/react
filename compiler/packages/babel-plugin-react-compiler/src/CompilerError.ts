@@ -19,10 +19,10 @@ export enum ErrorSeverity {
    */
   InvalidReact = 'InvalidReact',
   /**
-   * Code that breaks the rules of React, but which should not be reported in ESLint due to
-   * false positives.
+   * Like InvalidReact, but this specific error is still in testing w some false positives
+   * so we special-case it to suppress in ESLint.
    */
-  SilentInvalidReact = 'SilentInvalidReact',
+  InvalidRefInRender = 'InvalidRefInRender',
   /**
    * Incorrect configuration of the compiler.
    */
@@ -237,7 +237,7 @@ export class CompilerError extends Error {
         case ErrorSeverity.InvalidJS:
         case ErrorSeverity.InvalidReact:
         case ErrorSeverity.InvalidConfig:
-        case ErrorSeverity.SilentInvalidReact:
+        case ErrorSeverity.InvalidRefInRender:
           return true;
         case ErrorSeverity.CannotPreserveMemoization:
         case ErrorSeverity.Todo:
