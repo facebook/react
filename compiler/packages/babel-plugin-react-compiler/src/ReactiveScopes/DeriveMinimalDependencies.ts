@@ -6,7 +6,7 @@
  */
 
 import {CompilerError} from '../CompilerError';
-import {Identifier, ReactiveScopeDependency} from '../HIR';
+import {DependencyPath, Identifier, ReactiveScopeDependency} from '../HIR';
 import {printIdentifier} from '../HIR/PrintHIR';
 import {assertExhaustive} from '../Utils/utils';
 
@@ -252,7 +252,7 @@ type DependencyNode = {
 };
 
 type ReduceResultNode = {
-  relativePath: Array<{property: string}>;
+  relativePath: DependencyPath;
   accessType: PropertyAccessType;
 };
 
@@ -283,7 +283,10 @@ function deriveMinimalDependenciesInSubtree(
     const childResult = deriveMinimalDependenciesInSubtree(childNode).map(
       ({relativePath, accessType}) => {
         return {
-          relativePath: [{property: childName}, ...relativePath],
+          relativePath: [
+            {property: childName, optional: false},
+            ...relativePath,
+          ],
           accessType,
         };
       },

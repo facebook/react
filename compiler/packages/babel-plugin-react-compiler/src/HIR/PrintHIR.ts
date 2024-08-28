@@ -869,7 +869,7 @@ export function printManualMemoDependency(
       ? val.root.value.identifier.name.value
       : printIdentifier(val.root.value.identifier);
   }
-  return `${rootStr}${val.path.length > 0 ? '.' : ''}${val.path.join('.')}`;
+  return `${rootStr}${val.path.map(v => `${v.optional ? '?.' : '.'}${v.property}`).join('')}`;
 }
 export function printType(type: Type): string {
   if (type.kind === 'Type') return '';
