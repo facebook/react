@@ -104,6 +104,15 @@ const tests: CompilerTestCases = {
         }
       `,
     },
+    {
+      name: 'Ref access in render (invalid, but suppressed internally)',
+      code: normalizeIndent`
+        function foo(x, y) {
+          const ref = useRef();
+          return ref.current;
+        }
+      `,
+    },
   ],
   invalid: [
     {
