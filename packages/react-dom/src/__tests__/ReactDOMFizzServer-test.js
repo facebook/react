@@ -8677,4 +8677,65 @@ describe('ReactDOMFizzServer', () => {
       '\n    in Bar (at **)' + '\n    in Foo (at **)',
     );
   });
+
+  it('can recover from very deep trees to avoid stack overflow', async () => {
+    function Recursive({n}) {
+      if (n > 0) {
+        return <Recursive n={n - 1} />;
+      }
+      return <span>hi</span>;
+    }
+
+    // Recursively render a component tree deep enough to trigger stack overflow.
+    // Don't make this too short to not hit the limit but also not too deep to slow
+    // down the test.
+    await act(() => {
+      const {pipe} = renderToPipeableStream(
+        <div>
+          <Recursive n={1000} />
+        </div>,
+      );
+      pipe(writable);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>hi</span>
+      </div>,
+    );
+  });
+
+  it('handles stack overflows inside components themselves', async () => {
+    function StackOverflow() {
+      // This component is recursive inside itself and is therefore an error.
+      // Assuming no tail-call optimizations.
+      function recursive(n, a0, a1, a2, a3) {
+        if (n > 0) {
+          return recursive(n - 1, a0, a1, a2, a3) + a0 + a1 + a2 + a3;
+        }
+        return a0;
+      }
+      return recursive(10000, 'should', 'not', 'resolve', 'this');
+    }
+
+    let caughtError;
+
+    await expect(async () => {
+      await act(() => {
+        const {pipe} = renderToPipeableStream(
+          <div>
+            <StackOverflow />
+          </div>,
+          {
+            onError(error, errorInfo) {
+              caughtError = error;
+            },
+          },
+        );
+        pipe(writable);
+      });
+    }).rejects.toThrow('Maximum call stack size exceeded');
+
+    expect(caughtError.message).toBe('Maximum call stack size exceeded');
+  });
 });
