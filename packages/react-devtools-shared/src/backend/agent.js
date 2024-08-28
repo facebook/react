@@ -220,8 +220,6 @@ export default class Agent extends EventEmitter<{
       this.updateConsolePatchSettings,
     );
     bridge.addListener('updateComponentFilters', this.updateComponentFilters);
-    bridge.addListener('viewAttributeSource', this.viewAttributeSource);
-    bridge.addListener('viewElementSource', this.viewElementSource);
 
     // Temporarily support older standalone front-ends sending commands to newer embedded backends.
     // We do this because React Native embeds the React DevTools backend,
@@ -815,24 +813,6 @@ export default class Agent extends EventEmitter<{
         renderer.updateComponentFilters(componentFilters);
       }
     };
-
-  viewAttributeSource: CopyElementParams => void = ({id, path, rendererID}) => {
-    const renderer = this._rendererInterfaces[rendererID];
-    if (renderer == null) {
-      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
-    } else {
-      renderer.prepareViewAttributeSource(id, path);
-    }
-  };
-
-  viewElementSource: ElementAndRendererID => void = ({id, rendererID}) => {
-    const renderer = this._rendererInterfaces[rendererID];
-    if (renderer == null) {
-      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
-    } else {
-      renderer.prepareViewElementSource(id);
-    }
-  };
 
   onTraceUpdates: (nodes: Set<HostInstance>) => void = nodes => {
     this.emit('traceUpdates', nodes);
