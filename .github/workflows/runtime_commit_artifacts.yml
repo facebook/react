@@ -87,7 +87,7 @@ jobs:
             build/oss-experimental/react-refresh/cjs/react-refresh-babel.development.js
       - name: Insert @headers into eslint plugin and react-refresh
         run: |
-          sed -i -e 's/ LICENSE file in the root directory of this source tree./ LICENSE file in the root directory of this source tree.\n * \n * @noformat\n * @nolint\n * @lightSyntaxTransform\n * @preventMunge\n * @oncall react_core/' \
+          sed -i -e 's/ LICENSE file in the root directory of this source tree./ LICENSE file in the root directory of this source tree.\n *\n * @noformat\n * @nolint\n * @lightSyntaxTransform\n * @preventMunge\n * @oncall react_core/' \
             build/oss-experimental/eslint-plugin-react-hooks/cjs/eslint-plugin-react-hooks.development.js \
             build/oss-experimental/react-refresh/cjs/react-refresh-babel.development.js
       - name: Move relevant files for React in www into compiled
