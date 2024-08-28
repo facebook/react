@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactComponentInfo} from 'shared/ReactTypes';
+import type {ReactComponentInfo, ReactDebugInfo} from 'shared/ReactTypes';
 
 import {
   ComponentFilterDisplayName,
@@ -2207,6 +2207,7 @@ export function attach(
   function recordVirtualMount(
     instance: VirtualInstance,
     parentInstance: DevToolsInstance | null,
+    secondaryEnv: null | string,
   ): void {
     const id = instance.id;
 
@@ -2220,6 +2221,9 @@ export function attach(
     let displayName = componentInfo.name || '';
     if (typeof env === 'string') {
       // We model environment as an HoC name for now.
+      if (secondaryEnv !== null) {
+        displayName = secondaryEnv + '(' + displayName + ')';
+      }
       displayName = env + '(' + displayName + ')';
     }
     const elementType = ElementTypeVirtual;
@@ -2419,6 +2423,25 @@ export function attach(
     pendingRealUnmountedIDs.push(id);
   }
 
+  function getSecondaryEnvironmentName(
+    debugInfo: ?ReactDebugInfo,
+    index: number,
+  ): null | string {
+    if (debugInfo != null) {
+      const componentInfo: ReactComponentInfo = (debugInfo[index]: any);
+      for (let i = index + 1; i < debugInfo.length; i++) {
+        const debugEntry = debugInfo[i];
+        if (typeof debugEntry.env === 'string') {
+          // If the next environment is different then this component was the boundary
+          // and it changed before entering the next component. So we assign this
+          // component a secondary environment.
+          return componentInfo.env !== debugEntry.env ? debugEntry.env : null;
+        }
+      }
+    }
+    return null;
+  }
+
   function mountVirtualChildrenRecursively(
     firstChild: Fiber,
     lastChild: null | Fiber, // non-inclusive
@@ -2439,6 +2462,7 @@ export function attach(
             // Not a Component. Some other Debug Info.
             continue;
           }
+          // Scan up until the next Component to see if this component changed environment.
           const componentInfo: ReactComponentInfo = (debugEntry: any);
           if (level === virtualLevel) {
             if (
@@ -2458,7 +2482,15 @@ export function attach(
                 );
               }
               previousVirtualInstance = createVirtualInstance(componentInfo);
-              recordVirtualMount(previousVirtualInstance, reconcilingParent);
+              const secondaryEnv = getSecondaryEnvironmentName(
+                fiber._debugInfo,
+                i,
+              );
+              recordVirtualMount(
+                previousVirtualInstance,
+                reconcilingParent,
+                secondaryEnv,
+              );
               insertChild(previousVirtualInstance);
               previousVirtualInstanceFirstFiber = fiber;
             }
@@ -2914,7 +2946,15 @@ export function attach(
               } else {
                 // Otherwise we create a new instance.
                 const newVirtualInstance = createVirtualInstance(componentInfo);
-                recordVirtualMount(newVirtualInstance, reconcilingParent);
+                const secondaryEnv = getSecondaryEnvironmentName(
+                  nextChild._debugInfo,
+                  i,
+                );
+                recordVirtualMount(
+                  newVirtualInstance,
+                  reconcilingParent,
+                  secondaryEnv,
+                );
                 insertChild(newVirtualInstance);
                 previousVirtualInstance = newVirtualInstance;
                 previousVirtualInstanceWasMount = true;
