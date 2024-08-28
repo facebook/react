@@ -140,7 +140,7 @@ export function alignReactiveScopesToBlockScopesHIR(fn: HIRFunction): void {
     }
 
     const fallthrough = terminalFallthrough(terminal);
-    if (fallthrough !== null) {
+    if (fallthrough !== null && terminal.kind !== 'branch') {
       /*
        * Any currently active scopes that overlaps the block-fallthrough range
        * need their range extended to at least the first instruction of the

@@ -167,7 +167,10 @@ function compareDeps(
 
   let isSubpath = true;
   for (let i = 0; i < Math.min(inferred.path.length, source.path.length); i++) {
-    if (inferred.path[i].property !== source.path[i].property) {
+    if (
+      inferred.path[i].property !== source.path[i].property ||
+      inferred.path[i].optional !== source.path[i].optional
+    ) {
       isSubpath = false;
       break;
     }
@@ -339,7 +342,11 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
         return null;
       }
       default: {
-        const dep = collectMaybeMemoDependencies(value, this.temporaries);
+        const dep = collectMaybeMemoDependencies(
+          value,
+          this.temporaries,
+          false,
+        );
         if (value.kind === 'StoreLocal' || value.kind === 'StoreContext') {
           const storeTarget = value.lvalue.place;
           state.manualMemoState?.decls.add(
