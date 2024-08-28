@@ -68,7 +68,7 @@ export function collectMaybeMemoDependencies(
       if (object != null) {
         return {
           root: object.root,
-          path: [...object.path, value.property],
+          path: [...object.path, {property: value.property}],
         };
       }
       break;

@@ -167,7 +167,7 @@ function compareDeps(
 
   let isSubpath = true;
   for (let i = 0; i < Math.min(inferred.path.length, source.path.length); i++) {
-    if (inferred.path[i] !== source.path[i]) {
+    if (inferred.path[i].property !== source.path[i].property) {
       isSubpath = false;
       break;
     }
@@ -177,14 +177,14 @@ function compareDeps(
     isSubpath &&
     (source.path.length === inferred.path.length ||
       (inferred.path.length >= source.path.length &&
-        !inferred.path.includes('current')))
+        !inferred.path.some(token => token.property === 'current')))
   ) {
     return CompareDependencyResult.Ok;
   } else {
     if (isSubpath) {
       if (
-        source.path.includes('current') ||
-        inferred.path.includes('current')
+        source.path.some(token => token.property === 'current') ||
+        inferred.path.some(token => token.property === 'current')
       ) {
         return CompareDependencyResult.RefAccessDifference;
       } else {

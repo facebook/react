@@ -113,7 +113,7 @@ export function printDependency(dependency: ReactiveScopeDependency): string {
   const identifier =
     printIdentifier(dependency.identifier) +
     printType(dependency.identifier.type);
-  return `${identifier}${dependency.path.map(prop => `.${prop}`).join('')}`;
+  return `${identifier}${dependency.path.map(token => `.${token.property}`).join('')}`;
 }
 
 export function printReactiveInstructions(
