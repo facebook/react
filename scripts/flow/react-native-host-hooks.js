@@ -47,21 +47,21 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
   ): boolean;
   declare export function deepFreezeAndThrowOnMutationInDev<T>(obj: T): T;
   declare export function flattenStyle(style: any): any;
-  declare export const RCTEventEmitter: {
+  declare export let RCTEventEmitter: {
     register: (eventEmitter: mixed) => void,
     ...
   };
-  declare export const TextInputState: {
+  declare export let TextInputState: {
     blurTextInput: (object: any) => void,
     focusTextInput: (object: any) => void,
     ...
   };
-  declare export const ReactFiberErrorDialog: {
+  declare export let ReactFiberErrorDialog: {
     showErrorDialog: (error: __CapturedError) => boolean,
     ...
   };
-  declare export const Platform: {OS: string, ...};
-  declare export const UIManager: {
+  declare export let Platform: {OS: string, ...};
+  declare export let UIManager: {
     customBubblingEventTypes: Object,
     customDirectEventTypes: Object,
     createView: (
@@ -121,15 +121,15 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
     ) => void,
     ...
   };
-  declare export const legacySendAccessibilityEvent: (
+  declare export let legacySendAccessibilityEvent: (
     reactTag: number,
     eventTypeName: string,
   ) => void;
-  declare export const BatchedBridge: {
+  declare export let BatchedBridge: {
     registerCallableModule: (name: string, module: Object) => void,
     ...
   };
-  declare export const ReactNativeViewConfigRegistry: {
+  declare export let ReactNativeViewConfigRegistry: {
     customBubblingEventTypes: Object,
     customDirectEventTypes: Object,
 
@@ -137,7 +137,7 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
     get: (name: string) => __ReactNativeBaseComponentViewConfig,
     ...
   };
-  declare export const RawEventEmitter: {
+  declare export let RawEventEmitter: {
     emit: (channel: string, event: RawEventEmitterEvent) => string,
     ...
   };
@@ -166,12 +166,12 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInitialize
 }
 
 // eslint-disable-next-line no-unused-vars
-declare const RN$enableMicrotasksInReact: boolean;
+declare let RN$enableMicrotasksInReact: boolean;
 
 // This is needed for a short term solution.
 // See https://github.com/facebook/react/pull/15490 for more info
 // eslint-disable-next-line no-unused-vars
-declare const nativeFabricUIManager: {
+declare let nativeFabricUIManager: {
   createNode: (
     reactTag: number,
     viewName: string,
