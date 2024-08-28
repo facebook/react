@@ -170,7 +170,7 @@ function compareDeps(
     if (inferred.path[i].property !== source.path[i].property) {
       isSubpath = false;
       break;
-    } else if (inferred.path[i].optional && !source.path[i].optional) {
+    } else if (inferred.path[i].optional !== source.path[i].optional) {
       /**
        * The inferred path must be at least as precise as the manual path:
        * if the inferred path is optional, then the source path must have

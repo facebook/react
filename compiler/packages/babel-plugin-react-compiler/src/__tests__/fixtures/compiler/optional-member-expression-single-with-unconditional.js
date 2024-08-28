@@ -6,6 +6,6 @@ function Component(props) {
     x.push(props?.items);
     x.push(props.items);
     return x;
-  }, [props?.items]);
-  return <ValidateMemoization inputs={[props?.items]} output={data} />;
+  }, [props.items]);
+  return <ValidateMemoization inputs={[props.items]} output={data} />;
 }

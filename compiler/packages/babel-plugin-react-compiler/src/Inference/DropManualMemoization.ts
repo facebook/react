@@ -488,7 +488,7 @@ export function dropManualMemoization(func: HIRFunction): void {
 function findOptionalPlaces(fn: HIRFunction): Set<IdentifierId> {
   const optionals = new Set<IdentifierId>();
   for (const [, block] of fn.body.blocks) {
-    if (block.terminal.kind === 'optional') {
+    if (block.terminal.kind === 'optional' && block.terminal.optional) {
       const optionalTerminal = block.terminal;
       let testBlock = fn.body.blocks.get(block.terminal.test)!;
       loop: while (true) {
