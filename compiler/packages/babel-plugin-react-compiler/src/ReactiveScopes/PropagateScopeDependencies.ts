@@ -764,7 +764,7 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
       loc: sequence.loc,
     });
     /**
-     * Base case: inner `<variable> "." or "?."" <property>`
+     * Base case: inner `<variable> "?." <property>`
      *```
      * <lvalue> = OptionalExpression optional=true (`optionalValue` is here)
      *  Sequence (`sequence` is here)
@@ -776,8 +776,8 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
      */
     if (
       sequence.instructions.length === 1 &&
-      sequence.instructions[0].value.kind === 'LoadLocal' &&
       sequence.instructions[0].lvalue !== null &&
+      sequence.instructions[0].value.kind === 'LoadLocal' &&
       sequence.instructions[0].value.place.identifier.name !== null &&
       !context.isUsedOutsideDeclaringScope(sequence.instructions[0].lvalue) &&
       sequence.value.kind === 'SequenceExpression' &&
@@ -803,7 +803,83 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
       };
     }
     /**
-     * Composed case: `<base-case> "." or "?." <property>`
+     * Base case 2: inner `<variable> "." <property1> "?." <property2>
+     * ```
+     * <lvalue> = OptionalExpression optional=true (`optionalValue` is here)
+     *  Sequence (`sequence` is here)
+     *    t0 = Sequence
+     *      t1 = LoadLocal <variable>
+     *      ... // see note
+     *      PropertyLoad t1 . <property1>
+     *    [46] Sequence
+     *      t2 = PropertyLoad t0 . <property2>
+     *      [46] LoadLocal t2
+     * ```
+     *
+     * Note that it's possible to have additional inner chained non-optional
+     * property loads at "...", from an expression like `a?.b.c.d.e`. We could
+     * expand to support this case by relaxing the check on the inner sequence
+     * length, ensuring all instructions after the first LoadLocal are PropertyLoad
+     * and then iterating to ensure that the lvalue of the previous is always
+     * the object of the next PropertyLoad, w the final lvalue as the object
+     * of the sequence.value's object.
+     *
+     * But this case is likely rare in practice, usually once you're optional
+     * chaining all property accesses are optional (not `a?.b.c` but `a?.b?.c`).
+     * Also, HIR-based PropagateScopeDeps will handle this case so it doesn't
+     * seem worth it to optimize for that edge-case here.
+     */
+    if (
+      sequence.instructions.length === 1 &&
+      sequence.instructions[0].lvalue !== null &&
+      sequence.instructions[0].value.kind === 'SequenceExpression' &&
+      sequence.instructions[0].value.instructions.length === 1 &&
+      sequence.instructions[0].value.instructions[0].lvalue !== null &&
+      sequence.instructions[0].value.instructions[0].value.kind ===
+        'LoadLocal' &&
+      sequence.instructions[0].value.instructions[0].value.place.identifier
+        .name !== null &&
+      !context.isUsedOutsideDeclaringScope(
+        sequence.instructions[0].value.instructions[0].lvalue,
+      ) &&
+      sequence.instructions[0].value.value.kind === 'PropertyLoad' &&
+      sequence.instructions[0].value.value.object.identifier.id ===
+        sequence.instructions[0].value.instructions[0].lvalue.identifier.id &&
+      sequence.value.kind === 'SequenceExpression' &&
+      sequence.value.instructions.length === 1 &&
+      sequence.value.instructions[0].lvalue !== null &&
+      sequence.value.instructions[0].value.kind === 'PropertyLoad' &&
+      sequence.value.instructions[0].value.object.identifier.id ===
+        sequence.instructions[0].lvalue.identifier.id &&
+      sequence.value.value.kind === 'LoadLocal' &&
+      sequence.value.value.place.identifier.id ===
+        sequence.value.instructions[0].lvalue.identifier.id
+    ) {
+      // LoadLocal <variable>
+      context.declareTemporary(
+        sequence.instructions[0].value.instructions[0].lvalue,
+        sequence.instructions[0].value.instructions[0].value.place,
+      );
+      // PropertyLoad <variable> . <property1> (the inner non-optional property)
+      context.declareProperty(
+        sequence.instructions[0].lvalue,
+        sequence.instructions[0].value.value.object,
+        sequence.instructions[0].value.value.property,
+        false,
+      );
+      const propertyLoad = sequence.value.instructions[0].value;
+      return {
+        lvalue,
+        object: propertyLoad.object,
+        property: propertyLoad.property,
+        optional: optionalValue.optional,
+      };
+    }
+
+    /**
+     * Composed case:
+     * - `<base-case>      "." or "?."  <property>`
+     * - `<composed-case>  "." or "?>"  <property>`
      *
      * This case is convoluted, note how `t0` appears as an lvalue *twice*
      * and then is an operand of an intermediate LoadLocal and then the
