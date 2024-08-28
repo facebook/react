@@ -3320,9 +3320,8 @@ function spawnNewSuspendedReplayTask(
   request: Request,
   task: ReplayTask,
   thenableState: ThenableState | null,
-  x: Wakeable,
-): void {
-  const newTask = createReplayTask(
+): ReplayTask {
+  return createReplayTask(
     request,
     thenableState,
     task.replay,
@@ -3340,17 +3339,13 @@ function spawnNewSuspendedReplayTask(
     !disableLegacyContext ? task.legacyContext : emptyContextObject,
     __DEV__ && enableOwnerStacks ? task.debugTask : null,
   );
-
-  const ping = newTask.ping;
-  x.then(ping, ping);
 }
 
 function spawnNewSuspendedRenderTask(
   request: Request,
   task: RenderTask,
   thenableState: ThenableState | null,
-  x: Wakeable,
-): void {
+): RenderTask {
   // Something suspended, we'll need to create a new segment and resolve it later.
   const segment = task.blockedSegment;
   const insertionIndex = segment.chunks.length;
@@ -3367,7 +3362,7 @@ function spawnNewSuspendedRenderTask(
   segment.children.push(newSegment);
   // Reset lastPushedText for current Segment since the new Segment "consumed" it
   segment.lastPushedText = false;
-  const newTask = createRenderTask(
+  return createRenderTask(
     request,
     thenableState,
     task.node,
@@ -3385,9 +3380,6 @@ function spawnNewSuspendedRenderTask(
     !disableLegacyContext ? task.legacyContext : emptyContextObject,
     __DEV__ && enableOwnerStacks ? task.debugTask : null,
   );
-
-  const ping = newTask.ping;
-  x.then(ping, ping);
 }
 
 // This is a non-destructive form of rendering a node. If it suspends it spawns
@@ -3436,13 +3428,47 @@ function renderNode(
         if (typeof x.then === 'function') {
           const wakeable: Wakeable = (x: any);
           const thenableState = getThenableStateAfterSuspending();
-          spawnNewSuspendedReplayTask(
+          const newTask = spawnNewSuspendedReplayTask(
             request,
             // $FlowFixMe: Refined.
             task,
             thenableState,
-            wakeable,
           );
+          const ping = newTask.ping;
+          wakeable.then(ping, ping);
+
+          // Restore the context. We assume that this will be restored by the inner
+          // functions in case nothing throws so we don't use "finally" here.
+          task.formatContext = previousFormatContext;
+          if (!disableLegacyContext) {
+            task.legacyContext = previousLegacyContext;
+          }
+          task.context = previousContext;
+          task.keyPath = previousKeyPath;
+          task.treeContext = previousTreeContext;
+          task.componentStack = previousComponentStack;
+          if (__DEV__ && enableOwnerStacks) {
+            task.debugTask = previousDebugTask;
+          }
+          // Restore all active ReactContexts to what they were before.
+          switchContext(previousContext);
+          return;
+        }
+        if (x.message === 'Maximum call stack size exceeded') {
+          // This was a stack overflow. We do a lot of recursion in React by default for
+          // performance but it can lead to stack overflows in extremely deep trees.
+          // We do have the ability to create a trampoile if this happens which makes
+          // this kind of zero-cost.
+          const thenableState = getThenableStateAfterSuspending();
+          const newTask = spawnNewSuspendedReplayTask(
+            request,
+            // $FlowFixMe: Refined.
+            task,
+            thenableState,
+          );
+
+          // Immediately schedule the task for retrying.
+          request.pingedTasks.push(newTask);
 
           // Restore the context. We assume that this will be restored by the inner
           // functions in case nothing throws so we don't use "finally" here.
@@ -3493,13 +3519,14 @@ function renderNode(
         if (typeof x.then === 'function') {
           const wakeable: Wakeable = (x: any);
           const thenableState = getThenableStateAfterSuspending();
-          spawnNewSuspendedRenderTask(
+          const newTask = spawnNewSuspendedRenderTask(
             request,
             // $FlowFixMe: Refined.
             task,
             thenableState,
-            wakeable,
           );
+          const ping = newTask.ping;
+          wakeable.then(ping, ping);
 
           // Restore the context. We assume that this will be restored by the inner
           // functions in case nothing throws so we don't use "finally" here.
@@ -3539,6 +3566,39 @@ function renderNode(
             thrownInfo,
           );
           trackPostpone(request, trackedPostpones, task, postponedSegment);
+
+          // Restore the context. We assume that this will be restored by the inner
+          // functions in case nothing throws so we don't use "finally" here.
+          task.formatContext = previousFormatContext;
+          if (!disableLegacyContext) {
+            task.legacyContext = previousLegacyContext;
+          }
+          task.context = previousContext;
+          task.keyPath = previousKeyPath;
+          task.treeContext = previousTreeContext;
+          task.componentStack = previousComponentStack;
+          if (__DEV__ && enableOwnerStacks) {
+            task.debugTask = previousDebugTask;
+          }
+          // Restore all active ReactContexts to what they were before.
+          switchContext(previousContext);
+          return;
+        }
+        if (x.message === 'Maximum call stack size exceeded') {
+          // This was a stack overflow. We do a lot of recursion in React by default for
+          // performance but it can lead to stack overflows in extremely deep trees.
+          // We do have the ability to create a trampoile if this happens which makes
+          // this kind of zero-cost.
+          const thenableState = getThenableStateAfterSuspending();
+          const newTask = spawnNewSuspendedRenderTask(
+            request,
+            // $FlowFixMe: Refined.
+            task,
+            thenableState,
+          );
+
+          // Immediately schedule the task for retrying.
+          request.pingedTasks.push(newTask);
 
           // Restore the context. We assume that this will be restored by the inner
           // functions in case nothing throws so we don't use "finally" here.
