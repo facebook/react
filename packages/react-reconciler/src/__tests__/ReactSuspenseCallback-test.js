@@ -46,7 +46,7 @@ describe('ReactSuspense', () => {
 
   // Warning don't fire in production, so this test passes in prod even if
   // the suspenseCallback feature is not enabled
-  // @gate www || !__DEV__
+  // @gate enableSuspenseCallback || !__DEV__
   it('check type', async () => {
     const {PromiseComp} = createThenable();
 
@@ -71,7 +71,7 @@ describe('ReactSuspense', () => {
     await expect(async () => await waitForAll([])).toErrorDev([]);
   });
 
-  // @gate www
+  // @gate enableSuspenseCallback
   it('1 then 0 suspense callback', async () => {
     const {promise, resolve, PromiseComp} = createThenable();
 
@@ -98,7 +98,7 @@ describe('ReactSuspense', () => {
     expect(ops).toEqual([]);
   });
 
-  // @gate www
+  // @gate enableSuspenseCallback
   it('2 then 1 then 0 suspense callback', async () => {
     const {
       promise: promise1,
@@ -145,7 +145,7 @@ describe('ReactSuspense', () => {
     expect(ops).toEqual([]);
   });
 
-  // @gate www
+  // @gate enableSuspenseCallback
   it('nested suspense promises are reported only for their tier', async () => {
     const {promise, PromiseComp} = createThenable();
 
@@ -177,7 +177,7 @@ describe('ReactSuspense', () => {
     expect(ops2).toEqual([new Set([promise])]);
   });
 
-  // @gate www
+  // @gate enableSuspenseCallback
   it('competing suspense promises', async () => {
     const {
       promise: promise1,

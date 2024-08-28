@@ -394,11 +394,11 @@ export type RendererInterface = {
     value: any,
   ) => void,
   patchConsoleForStrictMode: () => void,
-  prepareViewAttributeSource: (
+  getElementAttributeByPath: (
     id: number,
     path: Array<string | number>,
-  ) => void,
-  prepareViewElementSource: (id: number) => void,
+  ) => mixed,
+  getElementSourceFunctionById: (id: number) => null | Function,
   renamePath: (
     type: Type,
     id: number,
