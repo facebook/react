@@ -1446,9 +1446,19 @@ function codegenDependency(
   dependency: ReactiveScopeDependency,
 ): t.Expression {
   let object: t.Expression = convertIdentifier(dependency.identifier);
-  if (dependency.path !== null) {
+  if (dependency.path.length !== 0) {
+    const hasOptional = dependency.path.some(path => path.optional);
     for (const path of dependency.path) {
-      object = t.memberExpression(object, t.identifier(path.property));
+      if (hasOptional) {
+        object = t.optionalMemberExpression(
+          object,
+          t.identifier(path.property),
+          false,
+          path.optional,
+        );
+      } else {
+        object = t.memberExpression(object, t.identifier(path.property));
+      }
     }
   }
   return object;
