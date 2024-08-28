@@ -21,6 +21,8 @@ import {
   setBrowserSelectionFromReact,
   setReactSelectionFromBrowser,
 } from './elementSelection';
+import {viewAttributeSource} from './sourceSelection';
+
 import {startReactPolling} from './reactPolling';
 import cloneStyleTags from './cloneStyleTags';
 import fetchFileWithCaching from './fetchFileWithCaching';
@@ -113,19 +115,7 @@ function createBridgeAndStore() {
   const viewAttributeSourceFunction = (id, path) => {
     const rendererID = store.getRendererIDForElement(id);
     if (rendererID != null) {
-      // Ask the renderer interface to find the specified attribute,
-      // and store it as a global variable on the window.
-      bridge.send('viewAttributeSource', {id, path, rendererID});
-
-      setTimeout(() => {
-        // Ask Chrome to display the location of the attribute,
-        // assuming the renderer found a match.
-        chrome.devtools.inspectedWindow.eval(`
-                if (window.$attribute != null) {
-                  inspect(window.$attribute);
-                }
-              `);
-      }, 100);
+      viewAttributeSource(rendererID, id, path);
     }
   };
 
