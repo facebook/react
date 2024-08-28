@@ -103,9 +103,9 @@ describe('DebugTracing', () => {
     );
 
     expect(logs).toEqual([
-      `group: ⚛️ render (${SYNC_LANE_STRING})`,
-      'log: ⚛️ Example suspended',
-      `groupEnd: ⚛️ render (${SYNC_LANE_STRING})`,
+      `group: ⚛ render (${SYNC_LANE_STRING})`,
+      'log: ⚛ Example suspended',
+      `groupEnd: ⚛ render (${SYNC_LANE_STRING})`,
     ]);
 
     logs.splice(0);
@@ -113,7 +113,7 @@ describe('DebugTracing', () => {
     resolveFakeSuspensePromise();
     await waitForAll([]);
 
-    expect(logs).toEqual(['log: ⚛️ Example resolved']);
+    expect(logs).toEqual(['log: ⚛ Example resolved']);
   });
 
   // @gate experimental && build === 'development' && enableDebugTracing && enableCPUSuspense && !disableLegacyMode
@@ -139,9 +139,9 @@ describe('DebugTracing', () => {
     );
 
     expect(logs).toEqual([
-      `group: ⚛️ render (${SYNC_LANE_STRING})`,
+      `group: ⚛ render (${SYNC_LANE_STRING})`,
       'log: <Wrapper/>',
-      `groupEnd: ⚛️ render (${SYNC_LANE_STRING})`,
+      `groupEnd: ⚛ render (${SYNC_LANE_STRING})`,
     ]);
 
     logs.splice(0);
@@ -149,9 +149,9 @@ describe('DebugTracing', () => {
     await waitForPaint([]);
 
     expect(logs).toEqual([
-      `group: ⚛️ render (${RETRY_LANE_STRING})`,
+      `group: ⚛ render (${RETRY_LANE_STRING})`,
       'log: <Example/>',
-      `groupEnd: ⚛️ render (${RETRY_LANE_STRING})`,
+      `groupEnd: ⚛ render (${RETRY_LANE_STRING})`,
     ]);
   });
 
@@ -184,15 +184,15 @@ describe('DebugTracing', () => {
     );
 
     expect(logs).toEqual([
-      `group: ⚛️ render (${DEFAULT_LANE_STRING})`,
-      'log: ⚛️ Example suspended',
-      `groupEnd: ⚛️ render (${DEFAULT_LANE_STRING})`,
+      `group: ⚛ render (${DEFAULT_LANE_STRING})`,
+      'log: ⚛ Example suspended',
+      `groupEnd: ⚛ render (${DEFAULT_LANE_STRING})`,
     ]);
 
     logs.splice(0);
 
     await act(async () => await resolveFakeSuspensePromise());
-    expect(logs).toEqual(['log: ⚛️ Example resolved']);
+    expect(logs).toEqual(['log: ⚛ Example resolved']);
   });
 
   // @gate experimental && build === 'development' && enableDebugTracing && enableCPUSuspense
@@ -220,12 +220,12 @@ describe('DebugTracing', () => {
     );
 
     expect(logs).toEqual([
-      `group: ⚛️ render (${DEFAULT_LANE_STRING})`,
+      `group: ⚛ render (${DEFAULT_LANE_STRING})`,
       'log: <Wrapper/>',
-      `groupEnd: ⚛️ render (${DEFAULT_LANE_STRING})`,
-      `group: ⚛️ render (${RETRY_LANE_STRING})`,
+      `groupEnd: ⚛ render (${DEFAULT_LANE_STRING})`,
+      `group: ⚛ render (${RETRY_LANE_STRING})`,
       'log: <Example/>',
-      `groupEnd: ⚛️ render (${RETRY_LANE_STRING})`,
+      `groupEnd: ⚛ render (${RETRY_LANE_STRING})`,
     ]);
   });
 
@@ -250,11 +250,11 @@ describe('DebugTracing', () => {
     );
 
     expect(logs).toEqual([
-      `group: ⚛️ commit (${DEFAULT_LANE_STRING})`,
-      `group: ⚛️ layout effects (${DEFAULT_LANE_STRING})`,
-      `log: ⚛️ Example updated state (${SYNC_LANE_STRING})`,
-      `groupEnd: ⚛️ layout effects (${DEFAULT_LANE_STRING})`,
-      `groupEnd: ⚛️ commit (${DEFAULT_LANE_STRING})`,
+      `group: ⚛ commit (${DEFAULT_LANE_STRING})`,
+      `group: ⚛ layout effects (${DEFAULT_LANE_STRING})`,
+      `log: ⚛ Example updated state (${SYNC_LANE_STRING})`,
+      `groupEnd: ⚛ layout effects (${DEFAULT_LANE_STRING})`,
+      `groupEnd: ⚛ commit (${DEFAULT_LANE_STRING})`,
     ]);
   });
 
@@ -283,9 +283,9 @@ describe('DebugTracing', () => {
     );
 
     expect(logs).toEqual([
-      `group: ⚛️ render (${DEFAULT_LANE_STRING})`,
-      `log: ⚛️ Example updated state (${DEFAULT_LANE_STRING})`,
-      `groupEnd: ⚛️ render (${DEFAULT_LANE_STRING})`,
+      `group: ⚛ render (${DEFAULT_LANE_STRING})`,
+      `log: ⚛ Example updated state (${DEFAULT_LANE_STRING})`,
+      `groupEnd: ⚛ render (${DEFAULT_LANE_STRING})`,
     ]);
   });
 
@@ -308,11 +308,11 @@ describe('DebugTracing', () => {
     );
 
     expect(logs).toEqual([
-      `group: ⚛️ commit (${DEFAULT_LANE_STRING})`,
-      `group: ⚛️ layout effects (${DEFAULT_LANE_STRING})`,
-      `log: ⚛️ Example updated state (${SYNC_LANE_STRING})`,
-      `groupEnd: ⚛️ layout effects (${DEFAULT_LANE_STRING})`,
-      `groupEnd: ⚛️ commit (${DEFAULT_LANE_STRING})`,
+      `group: ⚛ commit (${DEFAULT_LANE_STRING})`,
+      `group: ⚛ layout effects (${DEFAULT_LANE_STRING})`,
+      `log: ⚛ Example updated state (${SYNC_LANE_STRING})`,
+      `groupEnd: ⚛ layout effects (${DEFAULT_LANE_STRING})`,
+      `groupEnd: ⚛ commit (${DEFAULT_LANE_STRING})`,
     ]);
   });
 
@@ -334,9 +334,9 @@ describe('DebugTracing', () => {
       );
     });
     expect(logs).toEqual([
-      `group: ⚛️ passive effects (${DEFAULT_LANE_STRING})`,
-      `log: ⚛️ Example updated state (${DEFAULT_LANE_STRING})`,
-      `groupEnd: ⚛️ passive effects (${DEFAULT_LANE_STRING})`,
+      `group: ⚛ passive effects (${DEFAULT_LANE_STRING})`,
+      `log: ⚛ Example updated state (${DEFAULT_LANE_STRING})`,
+      `groupEnd: ⚛ passive effects (${DEFAULT_LANE_STRING})`,
     ]);
   });
 
@@ -359,9 +359,9 @@ describe('DebugTracing', () => {
     });
 
     expect(logs).toEqual([
-      `group: ⚛️ render (${DEFAULT_LANE_STRING})`,
-      `log: ⚛️ Example updated state (${DEFAULT_LANE_STRING})`,
-      `groupEnd: ⚛️ render (${DEFAULT_LANE_STRING})`,
+      `group: ⚛ render (${DEFAULT_LANE_STRING})`,
+      `log: ⚛ Example updated state (${DEFAULT_LANE_STRING})`,
+      `groupEnd: ⚛ render (${DEFAULT_LANE_STRING})`,
     ]);
   });
 
@@ -381,9 +381,9 @@ describe('DebugTracing', () => {
     );
 
     expect(logs).toEqual([
-      `group: ⚛️ render (${DEFAULT_LANE_STRING})`,
+      `group: ⚛ render (${DEFAULT_LANE_STRING})`,
       'log: Hello from user code',
-      `groupEnd: ⚛️ render (${DEFAULT_LANE_STRING})`,
+      `groupEnd: ⚛ render (${DEFAULT_LANE_STRING})`,
     ]);
   });
 
