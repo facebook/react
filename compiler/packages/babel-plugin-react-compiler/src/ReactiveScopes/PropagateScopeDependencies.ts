@@ -7,6 +7,7 @@
 
 import {CompilerError} from '../CompilerError';
 import {
+  areEqualPaths,
   BlockId,
   DeclarationId,
   GeneratedSource,
@@ -35,7 +36,6 @@ import {
   ReactiveScopeDependencyTree,
   ReactiveScopePropertyDependency,
 } from './DeriveMinimalDependencies';
-import {areEqualPaths} from './MergeReactiveScopesThatInvalidateTogether';
 import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
 
 /*
@@ -465,7 +465,6 @@ class Context {
   #getProperty(
     object: Place,
     property: string,
-    isConditional: boolean,
   ): ReactiveScopePropertyDependency {
     const resolvedObject = this.resolveTemporary(object);
     const resolvedDependency = this.#properties.get(resolvedObject.identifier);
@@ -478,36 +477,21 @@ class Context {
       objectDependency = {
         identifier: resolvedObject.identifier,
         path: [],
-        optionalPath: [],
       };
     } else {
       objectDependency = {
         identifier: resolvedDependency.identifier,
         path: [...resolvedDependency.path],
-        optionalPath: [...resolvedDependency.optionalPath],
       };
     }
 
-    // (2) Determine whether property is an optional access
-    if (objectDependency.optionalPath.length > 0) {
-      /*
-       * If the base property dependency represents a optional member expression,
-       * property is on the optionalPath (regardless of whether this PropertyLoad
-       * itself was conditional)
-       * e.g. for `a.b?.c.d`, `d` should be added to optionalPath
-       */
-      objectDependency.optionalPath.push(property);
-    } else if (isConditional) {
-      objectDependency.optionalPath.push(property);
-    } else {
-      objectDependency.path.push(property);
-    }
+    objectDependency.path.push({property});
 
     return objectDependency;
   }
 
   declareProperty(lvalue: Place, object: Place, property: string): void {
-    const nextDependency = this.#getProperty(object, property, false);
+    const nextDependency = this.#getProperty(object, property);
     this.#properties.set(lvalue.identifier, nextDependency);
   }
 
@@ -516,7 +500,7 @@ class Context {
     // ref.current access is not a valid dep
     if (
       isUseRefType(maybeDependency.identifier) &&
-      maybeDependency.path.at(0) === 'current'
+      maybeDependency.path.at(0)?.property === 'current'
     ) {
       return false;
     }
@@ -577,7 +561,6 @@ class Context {
     let dependency: ReactiveScopePropertyDependency = {
       identifier: resolved.identifier,
       path: [],
-      optionalPath: [],
     };
     if (resolved.identifier.name === null) {
       const propertyDependency = this.#properties.get(resolved.identifier);
@@ -589,7 +572,7 @@ class Context {
   }
 
   visitProperty(object: Place, property: string): void {
-    const nextDependency = this.#getProperty(object, property, false);
+    const nextDependency = this.#getProperty(object, property);
     this.visitDependency(nextDependency);
   }
 
