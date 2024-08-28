@@ -239,8 +239,6 @@ export type OwnersList = {
 export type InspectedElement = {
   id: number,
 
-  displayName: string | null,
-
   // Does the current renderer support editable hooks and function props?
   canEditHooks: boolean,
   canEditFunctionProps: boolean,
