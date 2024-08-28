@@ -476,3 +476,12 @@ export function dropManualMemoization(func: HIRFunction): void {
     }
   }
 }
+
+function findOptionalPlaces(fn: HIRFunction): Set<IdentifierId> {
+  const optionals = new Set<IdentifierId>();
+  for (const [, block] of fn.body.blocks) {
+    if (block.terminal.kind === 'optional') {
+    }
+  }
+  return optionals;
+}
