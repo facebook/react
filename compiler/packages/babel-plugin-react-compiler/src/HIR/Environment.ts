@@ -230,7 +230,7 @@ const EnvironmentConfigSchema = z.object({
    * just `props`. With this flag enabled, we'll infer that full path as
    * the dependency.
    */
-  enableOptionalDependencies: z.boolean().default(false),
+  enableOptionalDependencies: z.boolean().default(true),
 
   /*
    * Enable validation of hooks to partially check that the component honors the rules of hooks.
