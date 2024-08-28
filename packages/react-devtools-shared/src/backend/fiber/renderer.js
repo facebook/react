@@ -3869,23 +3869,12 @@ export function attach(
   }
 
   function getNearestMountedDOMNode(publicInstance: Element): null | Element {
-    // TODO: Remove dependency on findFiberByHostInstance.
-    const mountedFiber = renderer.findFiberByHostInstance(publicInstance);
-    if (mountedFiber != null) {
-      if (mountedFiber.stateNode !== publicInstance) {
-        // If it's not a perfect match the specific one might be a resource.
-        // We don't need to look at any parents because host resources don't have
-        // children so it won't be in any parent if it's not this one.
-        if (publicInstanceToDevToolsInstanceMap.has(publicInstance)) {
-          return publicInstance;
-        }
-      }
-      return mountedFiber.stateNode;
+    let domNode: null | Element = publicInstance;
+    while (domNode && !publicInstanceToDevToolsInstanceMap.has(domNode)) {
+      // $FlowFixMe: In practice this is either null or Element.
+      domNode = domNode.parentNode;
     }
-    if (publicInstanceToDevToolsInstanceMap.has(publicInstance)) {
-      return publicInstance;
-    }
-    return null;
+    return domNode;
   }
 
   function getElementIDForHostInstance(
