@@ -907,30 +907,31 @@ export function attach(
     }
   }
 
-  function prepareViewAttributeSource(
+  function getElementAttributeByPath(
     id: number,
     path: Array<string | number>,
-  ): void {
+  ): mixed {
     const inspectedElement = inspectElementRaw(id);
     if (inspectedElement !== null) {
-      window.$attribute = getInObject(inspectedElement, path);
+      return getInObject(inspectedElement, path);
     }
+    return undefined;
   }
 
-  function prepareViewElementSource(id: number): void {
+  function getElementSourceFunctionById(id: number): null | Function {
     const internalInstance = idToInternalInstanceMap.get(id);
     if (internalInstance == null) {
       console.warn(`Could not find instance with id "${id}"`);
-      return;
+      return null;
     }
 
     const element = internalInstance._currentElement;
     if (element == null) {
       console.warn(`Could not find element with id "${id}"`);
-      return;
+      return null;
     }
 
-    global.$type = element.type;
+    return element.type;
   }
 
   function deletePath(
@@ -1141,8 +1142,8 @@ export function attach(
     overrideValueAtPath,
     renamePath,
     patchConsoleForStrictMode,
-    prepareViewAttributeSource,
-    prepareViewElementSource,
+    getElementAttributeByPath,
+    getElementSourceFunctionById,
     renderer,
     setTraceUpdatesEnabled,
     setTrackedPath,
