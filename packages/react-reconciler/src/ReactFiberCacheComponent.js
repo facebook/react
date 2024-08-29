@@ -90,7 +90,7 @@ export function createCache(): Cache {
   }
   const cache: Cache = {
     controller: new AbortControllerLocal(),
-    data: new Map(),
+    data: new WeakMap(),
     refCount: 0,
   };
 

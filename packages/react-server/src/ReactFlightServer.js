@@ -359,7 +359,7 @@ export type Request = {
   fatalError: mixed,
   destination: null | Destination,
   bundlerConfig: ClientManifest,
-  cache: Map<Function, mixed>,
+  cache: WeakMap<Function, mixed>,
   nextChunkId: number,
   pendingChunks: number,
   hints: Hints,
@@ -470,7 +470,7 @@ function RequestInstance(
   this.fatalError = null;
   this.destination = null;
   this.bundlerConfig = bundlerConfig;
-  this.cache = new Map();
+  this.cache = new WeakMap();
   this.nextChunkId = 0;
   this.pendingChunks = 0;
   this.hints = hints;
@@ -989,7 +989,7 @@ export function getHints(request: Request): Hints {
   return request.hints;
 }
 
-export function getCache(request: Request): Map<Function, mixed> {
+export function getCache(request: Request): WeakMap<Function, mixed> {
   return request.cache;
 }
 

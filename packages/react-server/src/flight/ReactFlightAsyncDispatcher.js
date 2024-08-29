@@ -23,12 +23,12 @@ import {resolveOwner} from './ReactFlightCurrentOwner';
 
 const previousAsyncDispatcher = ReactSharedInternals.A;
 
-function resolveCache(): Map<Function, mixed> {
+function resolveCache(): WeakMap<Function, mixed> {
   const request = resolveRequest();
   if (request) {
     return getCache(request);
   }
-  return new Map();
+  return new WeakMap();
 }
 
 function getActiveCache(): AsyncCache {

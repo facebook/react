@@ -39,10 +39,6 @@ type CacheNode<T> =
   | UnterminatedCacheNode<T>
   | ErroredCacheNode<T>;
 
-function createCacheRoot<T>(): WeakMap<Function | Object, CacheNode<T>> {
-  return new WeakMap();
-}
-
 function createCacheNode<T>(): CacheNode<T> {
   return {
     s: UNTERMINATED, // status, represents whether the cached computation returned a value or threw an error
@@ -61,19 +57,11 @@ export function cache<A: Iterable<mixed>, T>(fn: (...A) => T): (...A) => T {
       return fn.apply(null, arguments);
     }
     const activeCache = dispatcher.getActiveCache();
-    let fnMap: WeakMap<any, CacheNode<T>> | void = (activeCache.get(
-      createCacheRoot,
-    ): any);
-    if (fnMap === undefined) {
-      fnMap = createCacheRoot();
-      // TODO: Warn if undefined?
-      activeCache.set(createCacheRoot, fnMap);
-    }
-    const fnNode = fnMap.get(fn);
+    const fnNode: CacheNode<T> | void = (activeCache.get(fn): any);
     let cacheNode: CacheNode<T>;
     if (fnNode === undefined) {
       cacheNode = createCacheNode();
-      fnMap.set(fn, cacheNode);
+      activeCache.set(fn, cacheNode);
     } else {
       cacheNode = fnNode;
     }
