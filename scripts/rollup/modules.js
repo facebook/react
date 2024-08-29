@@ -22,6 +22,9 @@ const importSideEffects = Object.freeze({
   'react-dom': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   url: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   ReactNativeInternalFeatureFlags: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  'webpack-sources/lib/helpers/createMappingsSerializer.js':
+    HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  'webpack-sources/lib/helpers/readMappings.js': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
 });
 
 // Bundles exporting globals that other modules rely on.

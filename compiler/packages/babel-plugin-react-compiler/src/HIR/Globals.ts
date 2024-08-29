@@ -9,6 +9,7 @@ import {Effect, ValueKind, ValueReason} from './HIR';
 import {
   BUILTIN_SHAPES,
   BuiltInArrayId,
+  BuiltInMixedReadonlyId,
   BuiltInUseActionStateId,
   BuiltInUseContextHookId,
   BuiltInUseEffectHookId,
@@ -18,12 +19,15 @@ import {
   BuiltInUseReducerId,
   BuiltInUseRefId,
   BuiltInUseStateId,
+  BuiltInUseTransitionId,
   ShapeRegistry,
   addFunction,
   addHook,
   addObject,
 } from './ObjectShape';
 import {BuiltInType, PolyType} from './Types';
+import {TypeConfig} from './TypeSchema';
+import {assertExhaustive} from '../Utils/utils';
 
 /*
  * This file exports types and defaults for JavaScript global objects.
@@ -128,6 +132,57 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
       [
         'max',
         // Math.max(value0, ..., valueN)
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [],
+          restParam: Effect.Read,
+          returnType: {kind: 'Primitive'},
+          calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Primitive,
+        }),
+      ],
+      [
+        'min',
+        // Math.min(value0, ..., valueN)
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [],
+          restParam: Effect.Read,
+          returnType: {kind: 'Primitive'},
+          calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Primitive,
+        }),
+      ],
+      [
+        'trunc',
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [],
+          restParam: Effect.Read,
+          returnType: {kind: 'Primitive'},
+          calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Primitive,
+        }),
+      ],
+      [
+        'ceil',
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [],
+          restParam: Effect.Read,
+          returnType: {kind: 'Primitive'},
+          calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Primitive,
+        }),
+      ],
+      [
+        'floor',
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [],
+          restParam: Effect.Read,
+          returnType: {kind: 'Primitive'},
+          calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Primitive,
+        }),
+      ],
+      [
+        'pow',
         addFunction(DEFAULT_SHAPES, [], {
           positionalParams: [],
           restParam: Effect.Read,
@@ -375,6 +430,17 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
     ),
   ],
   [
+    'useTransition',
+    addHook(DEFAULT_SHAPES, {
+      positionalParams: [],
+      restParam: null,
+      returnType: {kind: 'Object', shapeId: BuiltInUseTransitionId},
+      calleeEffect: Effect.Read,
+      hookKind: 'useTransition',
+      returnValueKind: ValueKind.Frozen,
+    }),
+  ],
+  [
     'use',
     addFunction(
       DEFAULT_SHAPES,
@@ -455,11 +521,88 @@ for (const [name, type_] of TYPED_GLOBALS) {
   DEFAULT_GLOBALS.set(name, type_);
 }
 
-// Recursive global type
+// Recursive global types
 DEFAULT_GLOBALS.set(
   'globalThis',
   addObject(DEFAULT_SHAPES, 'globalThis', TYPED_GLOBALS),
 );
+DEFAULT_GLOBALS.set(
+  'global',
+  addObject(DEFAULT_SHAPES, 'global', TYPED_GLOBALS),
+);
+
+export function installTypeConfig(
+  globals: GlobalRegistry,
+  shapes: ShapeRegistry,
+  typeConfig: TypeConfig,
+): Global {
+  switch (typeConfig.kind) {
+    case 'type': {
+      switch (typeConfig.name) {
+        case 'Array': {
+          return {kind: 'Object', shapeId: BuiltInArrayId};
+        }
+        case 'MixedReadonly': {
+          return {kind: 'Object', shapeId: BuiltInMixedReadonlyId};
+        }
+        case 'Primitive': {
+          return {kind: 'Primitive'};
+        }
+        case 'Ref': {
+          return {kind: 'Object', shapeId: BuiltInUseRefId};
+        }
+        case 'Any': {
+          return {kind: 'Poly'};
+        }
+        default: {
+          assertExhaustive(
+            typeConfig.name,
+            `Unexpected type '${(typeConfig as any).name}'`,
+          );
+        }
+      }
+    }
+    case 'function': {
+      return addFunction(shapes, [], {
+        positionalParams: typeConfig.positionalParams,
+        restParam: typeConfig.restParam,
+        calleeEffect: typeConfig.calleeEffect,
+        returnType: installTypeConfig(globals, shapes, typeConfig.returnType),
+        returnValueKind: typeConfig.returnValueKind,
+        noAlias: typeConfig.noAlias === true,
+        mutableOnlyIfOperandsAreMutable:
+          typeConfig.mutableOnlyIfOperandsAreMutable === true,
+      });
+    }
+    case 'hook': {
+      return addHook(shapes, {
+        hookKind: 'Custom',
+        positionalParams: typeConfig.positionalParams ?? [],
+        restParam: typeConfig.restParam ?? Effect.Freeze,
+        calleeEffect: Effect.Read,
+        returnType: installTypeConfig(globals, shapes, typeConfig.returnType),
+        returnValueKind: typeConfig.returnValueKind ?? ValueKind.Frozen,
+        noAlias: typeConfig.noAlias === true,
+      });
+    }
+    case 'object': {
+      return addObject(
+        shapes,
+        null,
+        Object.entries(typeConfig.properties ?? {}).map(([key, value]) => [
+          key,
+          installTypeConfig(globals, shapes, value),
+        ]),
+      );
+    }
+    default: {
+      assertExhaustive(
+        typeConfig,
+        `Unexpected type kind '${(typeConfig as any).kind}'`,
+      );
+    }
+  }
+}
 
 export function installReAnimatedTypes(
   globals: GlobalRegistry,

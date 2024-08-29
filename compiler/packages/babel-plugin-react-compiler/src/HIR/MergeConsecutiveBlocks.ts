@@ -25,8 +25,6 @@ import {terminalFallthrough, terminalHasFallthrough} from './visitors';
  * Note that this pass leaves value/loop blocks alone because they cannot
  * be merged without breaking the structure of the high-level terminals
  * that reference them.
- *
- * TODO @josephsavona make value blocks explicit (eg a `kind` on Block).
  */
 export function mergeConsecutiveBlocks(fn: HIRFunction): void {
   const merged = new MergedBlocks();

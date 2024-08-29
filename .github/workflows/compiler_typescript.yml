@@ -6,7 +6,7 @@ on:
   pull_request:
     paths:
       - compiler/**
-      - .github/workflows/compiler-typescript.yml
+      - .github/workflows/compiler_typescript.yml
 
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles

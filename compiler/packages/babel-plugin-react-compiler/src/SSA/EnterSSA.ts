@@ -192,7 +192,6 @@ class SSABuilder {
       kind: 'Phi',
       id: newId,
       operands: predDefs,
-      type: makeType(),
     };
 
     block.phis.add(phi);

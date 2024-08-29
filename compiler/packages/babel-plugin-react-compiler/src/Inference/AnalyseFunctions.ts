@@ -13,9 +13,7 @@ import {
   IdentifierName,
   LoweredFunction,
   Place,
-  ReactiveScopeDependency,
-  isRefValueType,
-  isUseRefType,
+  isRefOrRefValue,
   makeInstructionId,
 } from '../HIR';
 import {deadCodeElimination} from '../Optimization';
@@ -26,9 +24,14 @@ import {inferMutableContextVariables} from './InferMutableContextVariables';
 import {inferMutableRanges} from './InferMutableRanges';
 import inferReferenceEffects from './InferReferenceEffects';
 
+type Dependency = {
+  identifier: Identifier;
+  path: Array<string>;
+};
+
 // Helper class to track indirections such as LoadLocal and PropertyLoad.
 export class IdentifierState {
-  properties: Map<Identifier, ReactiveScopeDependency> = new Map();
+  properties: Map<Identifier, Dependency> = new Map();
 
   resolve(identifier: Identifier): Identifier {
     const resolved = this.properties.get(identifier);
@@ -40,7 +43,7 @@ export class IdentifierState {
 
   declareProperty(lvalue: Place, object: Place, property: string): void {
     const objectDependency = this.properties.get(object.identifier);
-    let nextDependency: ReactiveScopeDependency;
+    let nextDependency: Dependency;
     if (objectDependency === undefined) {
       nextDependency = {identifier: object.identifier, path: [property]};
     } else {
@@ -53,9 +56,7 @@ export class IdentifierState {
   }
 
   declareTemporary(lvalue: Place, value: Place): void {
-    const resolved: ReactiveScopeDependency = this.properties.get(
-      value.identifier,
-    ) ?? {
+    const resolved: Dependency = this.properties.get(value.identifier) ?? {
       identifier: value.identifier,
       path: [],
     };
@@ -139,7 +140,7 @@ function infer(
       name = dep.identifier.name;
     }
 
-    if (isUseRefType(dep.identifier) || isRefValueType(dep.identifier)) {
+    if (isRefOrRefValue(dep.identifier)) {
       /*
        * TODO: this is a hack to ensure we treat functions which reference refs
        * as having a capture and therefore being considered mutable. this ensures

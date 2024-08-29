@@ -12,6 +12,7 @@ import {assertExhaustive} from '../Utils/utils';
 import {Environment, ReactFunctionType} from './Environment';
 import {HookKind} from './ObjectShape';
 import {Type, makeType} from './Types';
+import {z} from 'zod';
 
 /*
  * *******************************************************************************************
@@ -284,7 +285,8 @@ export type HIRFunction = {
   fnType: ReactFunctionType;
   env: Environment;
   params: Array<Place | SpreadPattern>;
-  returnType: t.FlowType | t.TSType | null;
+  returnTypeAnnotation: t.FlowType | t.TSType | null;
+  returnType: Type;
   context: Array<Place>;
   effects: Array<FunctionEffect> | null;
   body: HIR;
@@ -489,7 +491,7 @@ export type BranchTerminal = {
   alternate: BlockId;
   id: InstructionId;
   loc: SourceLocation;
-  fallthrough?: never;
+  fallthrough: BlockId;
 };
 
 export type SwitchTerminal = {
@@ -741,6 +743,9 @@ export enum InstructionKind {
 
   // hoisted const declarations
   HoistedConst = 'HoistedConst',
+
+  // hoisted const declarations
+  HoistedLet = 'HoistedLet',
 }
 
 function _staticInvariantInstructionValueHasLocation(
@@ -754,7 +759,6 @@ export type Phi = {
   kind: 'Phi';
   id: Identifier;
   operands: Map<BlockId, Identifier>;
-  type: Type;
 };
 
 /**
@@ -772,7 +776,7 @@ export type ManualMemoDependency = {
         value: Place;
       }
     | {kind: 'Global'; identifierName: string};
-  path: Array<string>;
+  path: DependencyPath;
 };
 
 export type StartMemoize = {
@@ -858,7 +862,10 @@ export type InstructionValue =
   | {
       kind: 'DeclareContext';
       lvalue: {
-        kind: InstructionKind.Let | InstructionKind.HoistedConst;
+        kind:
+          | InstructionKind.Let
+          | InstructionKind.HoistedConst
+          | InstructionKind.HoistedLet;
         place: Place;
       };
       loc: SourceLocation;
@@ -1354,6 +1361,15 @@ export enum ValueKind {
   Context = 'context',
 }
 
+export const ValueKindSchema = z.enum([
+  ValueKind.MaybeFrozen,
+  ValueKind.Frozen,
+  ValueKind.Primitive,
+  ValueKind.Global,
+  ValueKind.Mutable,
+  ValueKind.Context,
+]);
+
 // The effect with which a value is modified.
 export enum Effect {
   // Default value: not allowed after lifetime inference
@@ -1382,6 +1398,15 @@ export enum Effect {
   // This reference may alias to (mutate) the value
   Store = 'store',
 }
+
+export const EffectSchema = z.enum([
+  Effect.Read,
+  Effect.Mutate,
+  Effect.ConditionallyMutate,
+  Effect.Capture,
+  Effect.Store,
+  Effect.Freeze,
+]);
 
 export function isMutableEffect(
   effect: Effect,
@@ -1469,8 +1494,19 @@ export type ReactiveScopeDeclaration = {
 
 export type ReactiveScopeDependency = {
   identifier: Identifier;
-  path: Array<string>;
+  path: DependencyPath;
 };
+
+export function areEqualPaths(a: DependencyPath, b: DependencyPath): boolean {
+  return (
+    a.length === b.length &&
+    a.every(
+      (item, ix) =>
+        item.property === b[ix].property && item.optional === b[ix].optional,
+    )
+  );
+}
+export type DependencyPath = Array<{property: string; optional: boolean}>;
 
 /*
  * Simulated opaque type for BlockIds to prevent using normal numbers as block ids
@@ -1585,6 +1621,10 @@ export function isUseStateType(id: Identifier): boolean {
   return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInUseState';
 }
 
+export function isRefOrRefValue(id: Identifier): boolean {
+  return isUseRefType(id) || isRefValueType(id);
+}
+
 export function isSetStateType(id: Identifier): boolean {
   return id.type.kind === 'Function' && id.type.shapeId === 'BuiltInSetState';
 }
@@ -1592,6 +1632,12 @@ export function isSetStateType(id: Identifier): boolean {
 export function isUseActionStateType(id: Identifier): boolean {
   return (
     id.type.kind === 'Object' && id.type.shapeId === 'BuiltInUseActionState'
+  );
+}
+
+export function isStartTransitionType(id: Identifier): boolean {
+  return (
+    id.type.kind === 'Function' && id.type.shapeId === 'BuiltInStartTransition'
   );
 }
 
@@ -1610,7 +1656,13 @@ export function isDispatcherType(id: Identifier): boolean {
 }
 
 export function isStableType(id: Identifier): boolean {
-  return isSetStateType(id) || isSetActionStateType(id) || isDispatcherType(id);
+  return (
+    isSetStateType(id) ||
+    isSetActionStateType(id) ||
+    isDispatcherType(id) ||
+    isUseRefType(id) ||
+    isStartTransitionType(id)
+  );
 }
 
 export function isUseEffectHookType(id: Identifier): boolean {

@@ -104,6 +104,8 @@ import {validateLocalsNotReassignedAfterRender} from '../Validation/ValidateLoca
 import {outlineFunctions} from '../Optimization/OutlineFunctions';
 import {propagatePhiTypes} from '../TypeInference/PropagatePhiTypes';
 import {lowerContextAccess} from '../Optimization/LowerContextAccess';
+import {validateNoSetStateInPassiveEffects} from '../Validation/ValidateNoSetStateInPassiveEffects';
+import {validateNoJSXInTryStatement} from '../Validation/ValidateNoJSXInTryStatement';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -242,6 +244,14 @@ function* runWithEnvironment(
 
   if (env.config.validateNoSetStateInRender) {
     validateNoSetStateInRender(hir);
+  }
+
+  if (env.config.validateNoSetStateInPassiveEffects) {
+    validateNoSetStateInPassiveEffects(hir);
+  }
+
+  if (env.config.validateNoJSXInTryStatements) {
+    validateNoJSXInTryStatement(hir);
   }
 
   inferReactivePlaces(hir);
@@ -452,17 +462,17 @@ function* runWithEnvironment(
     value: reactiveFunction,
   });
 
-  promoteUsedTemporaries(reactiveFunction);
-  yield log({
-    kind: 'reactive',
-    name: 'PromoteUsedTemporaries',
-    value: reactiveFunction,
-  });
-
   pruneUnusedLValues(reactiveFunction);
   yield log({
     kind: 'reactive',
     name: 'PruneUnusedLValues',
+    value: reactiveFunction,
+  });
+
+  promoteUsedTemporaries(reactiveFunction);
+  yield log({
+    kind: 'reactive',
+    name: 'PromoteUsedTemporaries',
     value: reactiveFunction,
   });
 

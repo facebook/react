@@ -35,6 +35,7 @@ export const {
   retryLaneExpirationMs,
   syncLaneExpirationMs,
   transitionLaneExpirationMs,
+  enableSiblingPrerendering,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -77,6 +78,8 @@ export const enableAsyncIterableChildren = false;
 export const enableTaint = false;
 
 export const enablePostpone = false;
+
+export const enableHalt = false;
 
 export const enableContextProfiling = true;
 

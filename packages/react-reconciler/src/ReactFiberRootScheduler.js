@@ -8,7 +8,7 @@
  */
 
 import type {FiberRoot} from './ReactInternalTypes';
-import type {Lane} from './ReactFiberLane';
+import type {Lane, Lanes} from './ReactFiberLane';
 import type {PriorityLevel} from 'scheduler/src/SchedulerPriorities';
 import type {BatchConfigTransition} from './ReactFiberTracingMarkerComponent';
 
@@ -24,8 +24,8 @@ import {
   getNextLanes,
   includesSyncLane,
   markStarvedLanesAsExpired,
-  upgradePendingLaneToSync,
   claimNextTransitionLane,
+  getNextLanesToFlushSync,
 } from './ReactFiberLane';
 import {
   CommitContext,
@@ -145,18 +145,21 @@ export function ensureRootIsScheduled(root: FiberRoot): void {
 export function flushSyncWorkOnAllRoots() {
   // This is allowed to be called synchronously, but the caller should check
   // the execution context first.
-  flushSyncWorkAcrossRoots_impl(false);
+  flushSyncWorkAcrossRoots_impl(NoLanes, false);
 }
 
 export function flushSyncWorkOnLegacyRootsOnly() {
   // This is allowed to be called synchronously, but the caller should check
   // the execution context first.
   if (!disableLegacyMode) {
-    flushSyncWorkAcrossRoots_impl(true);
+    flushSyncWorkAcrossRoots_impl(NoLanes, true);
   }
 }
 
-function flushSyncWorkAcrossRoots_impl(onlyLegacy: boolean) {
+function flushSyncWorkAcrossRoots_impl(
+  syncTransitionLanes: Lanes | Lane,
+  onlyLegacy: boolean,
+) {
   if (isFlushingWork) {
     // Prevent reentrancy.
     // TODO: Is this overly defensive? The callers must check the execution
@@ -179,17 +182,28 @@ function flushSyncWorkAcrossRoots_impl(onlyLegacy: boolean) {
       if (onlyLegacy && (disableLegacyMode || root.tag !== LegacyRoot)) {
         // Skip non-legacy roots.
       } else {
-        const workInProgressRoot = getWorkInProgressRoot();
-        const workInProgressRootRenderLanes =
-          getWorkInProgressRootRenderLanes();
-        const nextLanes = getNextLanes(
-          root,
-          root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes,
-        );
-        if (includesSyncLane(nextLanes)) {
-          // This root has pending sync work. Flush it now.
-          didPerformSomeWork = true;
-          performSyncWorkOnRoot(root, nextLanes);
+        if (syncTransitionLanes !== NoLanes) {
+          const nextLanes = getNextLanesToFlushSync(root, syncTransitionLanes);
+          if (nextLanes !== NoLanes) {
+            // This root has pending sync work. Flush it now.
+            didPerformSomeWork = true;
+            performSyncWorkOnRoot(root, nextLanes);
+          }
+        } else {
+          const workInProgressRoot = getWorkInProgressRoot();
+          const workInProgressRootRenderLanes =
+            getWorkInProgressRootRenderLanes();
+          const nextLanes = getNextLanes(
+            root,
+            root === workInProgressRoot
+              ? workInProgressRootRenderLanes
+              : NoLanes,
+          );
+          if (includesSyncLane(nextLanes)) {
+            // This root has pending sync work. Flush it now.
+            didPerformSomeWork = true;
+            performSyncWorkOnRoot(root, nextLanes);
+          }
         }
       }
       root = root.next;
@@ -209,23 +223,23 @@ function processRootScheduleInMicrotask() {
   // We'll recompute this as we iterate through all the roots and schedule them.
   mightHavePendingSyncWork = false;
 
+  let syncTransitionLanes = NoLanes;
+  if (currentEventTransitionLane !== NoLane) {
+    if (shouldAttemptEagerTransition()) {
+      // A transition was scheduled during an event, but we're going to try to
+      // render it synchronously anyway. We do this during a popstate event to
+      // preserve the scroll position of the previous page.
+      syncTransitionLanes = currentEventTransitionLane;
+    }
+    currentEventTransitionLane = NoLane;
+  }
+
   const currentTime = now();
 
   let prev = null;
   let root = firstScheduledRoot;
   while (root !== null) {
     const next = root.next;
-
-    if (
-      currentEventTransitionLane !== NoLane &&
-      shouldAttemptEagerTransition()
-    ) {
-      // A transition was scheduled during an event, but we're going to try to
-      // render it synchronously anyway. We do this during a popstate event to
-      // preserve the scroll position of the previous page.
-      upgradePendingLaneToSync(root, currentEventTransitionLane);
-    }
-
     const nextLanes = scheduleTaskForRootDuringMicrotask(root, currentTime);
     if (nextLanes === NoLane) {
       // This root has no more pending work. Remove it from the schedule. To
@@ -248,18 +262,27 @@ function processRootScheduleInMicrotask() {
     } else {
       // This root still has work. Keep it in the list.
       prev = root;
-      if (includesSyncLane(nextLanes)) {
+
+      // This is a fast-path optimization to early exit from
+      // flushSyncWorkOnAllRoots if we can be certain that there is no remaining
+      // synchronous work to perform. Set this to true if there might be sync
+      // work left.
+      if (
+        // Skip the optimization if syncTransitionLanes is set
+        syncTransitionLanes !== NoLanes ||
+        // Common case: we're not treating any extra lanes as synchronous, so we
+        // can just check if the next lanes are sync.
+        includesSyncLane(nextLanes)
+      ) {
         mightHavePendingSyncWork = true;
       }
     }
     root = next;
   }
 
-  currentEventTransitionLane = NoLane;
-
   // At the end of the microtask, flush any pending synchronous work. This has
   // to come at the end, because it does actual rendering work that might throw.
-  flushSyncWorkOnAllRoots();
+  flushSyncWorkAcrossRoots_impl(syncTransitionLanes, false);
 }
 
 function scheduleTaskForRootDuringMicrotask(

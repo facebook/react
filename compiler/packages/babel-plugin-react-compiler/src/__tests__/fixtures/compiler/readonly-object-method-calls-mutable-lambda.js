@@ -1,3 +1,5 @@
+import {useFragment} from 'shared-runtime';
+
 function Component(props) {
   const x = makeObject();
   const user = useFragment(

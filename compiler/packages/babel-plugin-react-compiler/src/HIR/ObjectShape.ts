@@ -126,6 +126,7 @@ export type HookKind =
   | 'useInsertionEffect'
   | 'useMemo'
   | 'useCallback'
+  | 'useTransition'
   | 'Custom';
 
 /*
@@ -209,6 +210,8 @@ export const BuiltInUseOperatorId = 'BuiltInUseOperator';
 export const BuiltInUseReducerId = 'BuiltInUseReducer';
 export const BuiltInDispatchId = 'BuiltInDispatch';
 export const BuiltInUseContextHookId = 'BuiltInUseContextHook';
+export const BuiltInUseTransitionId = 'BuiltInUseTransition';
+export const BuiltInStartTransitionId = 'BuiltInStartTransition';
 
 // ShapeRegistry with default definitions for built-ins.
 export const BUILTIN_SHAPES: ShapeRegistry = new Map();
@@ -299,6 +302,23 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
   ],
   [
     'map',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.ConditionallyMutate,
+      returnType: {kind: 'Object', shapeId: BuiltInArrayId},
+      /*
+       * callee is ConditionallyMutate because items of the array
+       * flow into the lambda and may be mutated there, even though
+       * the array object itself is not modified
+       */
+      calleeEffect: Effect.ConditionallyMutate,
+      returnValueKind: ValueKind.Mutable,
+      noAlias: true,
+      mutableOnlyIfOperandsAreMutable: true,
+    }),
+  ],
+  [
+    'flatMap',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.ConditionallyMutate,
@@ -444,6 +464,25 @@ addObject(BUILTIN_SHAPES, BuiltInUseStateId, [
   ],
 ]);
 
+addObject(BUILTIN_SHAPES, BuiltInUseTransitionId, [
+  ['0', {kind: 'Primitive'}],
+  [
+    '1',
+    addFunction(
+      BUILTIN_SHAPES,
+      [],
+      {
+        positionalParams: [],
+        restParam: null,
+        returnType: PRIMITIVE_TYPE,
+        calleeEffect: Effect.Read,
+        returnValueKind: ValueKind.Primitive,
+      },
+      BuiltInStartTransitionId,
+    ),
+  ],
+]);
+
 addObject(BUILTIN_SHAPES, BuiltInUseActionStateId, [
   ['0', {kind: 'Poly'}],
   [
@@ -503,6 +542,17 @@ addObject(BUILTIN_SHAPES, BuiltInMixedReadonlyId, [
   ],
   [
     'map',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: {kind: 'Object', shapeId: BuiltInArrayId},
+      calleeEffect: Effect.ConditionallyMutate,
+      returnValueKind: ValueKind.Mutable,
+      noAlias: true,
+    }),
+  ],
+  [
+    'flatMap',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.Read,

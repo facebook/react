@@ -30,8 +30,7 @@ import {
   isArrayType,
   isMutableEffect,
   isObjectType,
-  isRefValueType,
-  isUseRefType,
+  isRefOrRefValue,
 } from '../HIR/HIR';
 import {FunctionSignature} from '../HIR/ObjectShape';
 import {
@@ -454,6 +453,37 @@ class InferenceState {
     }
   }
 
+  freezeValues(values: Set<InstructionValue>, reason: Set<ValueReason>): void {
+    for (const value of values) {
+      this.#values.set(value, {
+        kind: ValueKind.Frozen,
+        reason,
+        context: new Set(),
+      });
+      if (value.kind === 'FunctionExpression') {
+        if (
+          this.#env.config.enablePreserveExistingMemoizationGuarantees ||
+          this.#env.config.enableTransitivelyFreezeFunctionExpressions
+        ) {
+          if (value.kind === 'FunctionExpression') {
+            /*
+             * We want to freeze the captured values, not mark the operands
+             * themselves as frozen. There could be mutations that occur
+             * before the freeze we are processing, and it would be invalid
+             * to overwrite those mutations as a freeze.
+             */
+            for (const operand of eachInstructionValueOperand(value)) {
+              const operandValues = this.#variables.get(operand.identifier.id);
+              if (operandValues !== undefined) {
+                this.freezeValues(operandValues, reason);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
   reference(
     place: Place,
     effectKind: Effect,
@@ -483,29 +513,7 @@ class InferenceState {
             reason: reasonSet,
             context: new Set(),
           };
-          values.forEach(value => {
-            this.#values.set(value, {
-              kind: ValueKind.Frozen,
-              reason: reasonSet,
-              context: new Set(),
-            });
-
-            if (
-              this.#env.config.enablePreserveExistingMemoizationGuarantees ||
-              this.#env.config.enableTransitivelyFreezeFunctionExpressions
-            ) {
-              if (value.kind === 'FunctionExpression') {
-                for (const operand of eachInstructionValueOperand(value)) {
-                  this.referenceAndRecordEffects(
-                    operand,
-                    Effect.Freeze,
-                    ValueReason.Other,
-                    [],
-                  );
-                }
-              }
-            }
-          });
+          this.freezeValues(values, reasonSet);
         } else {
           effect = Effect.Read;
         }
@@ -523,10 +531,7 @@ class InferenceState {
         break;
       }
       case Effect.Mutate: {
-        if (
-          isRefValueType(place.identifier) ||
-          isUseRefType(place.identifier)
-        ) {
+        if (isRefOrRefValue(place.identifier)) {
           // no-op: refs are validate via ValidateNoRefAccessInRender
         } else if (valueKind.kind === ValueKind.Context) {
           functionEffect = {
@@ -567,10 +572,7 @@ class InferenceState {
         break;
       }
       case Effect.Store: {
-        if (
-          isRefValueType(place.identifier) ||
-          isUseRefType(place.identifier)
-        ) {
+        if (isRefOrRefValue(place.identifier)) {
           // no-op: refs are validate via ValidateNoRefAccessInRender
         } else if (valueKind.kind === ValueKind.Context) {
           functionEffect = {
@@ -1248,6 +1250,7 @@ function inferBlock(
       case 'ObjectMethod':
       case 'FunctionExpression': {
         let hasMutableOperand = false;
+        const mutableOperands: Array<Place> = [];
         for (const operand of eachInstructionOperand(instr)) {
           state.referenceAndRecordEffects(
             operand,
@@ -1255,6 +1258,9 @@ function inferBlock(
             ValueReason.Other,
             [],
           );
+          if (isMutableEffect(operand.effect, operand.loc)) {
+            mutableOperands.push(operand);
+          }
           hasMutableOperand ||= isMutableEffect(operand.effect, operand.loc);
 
           /**

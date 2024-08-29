@@ -994,6 +994,13 @@ function codegenTerminal(
             loc: iterableItem.loc,
             suggestions: null,
           });
+        case InstructionKind.HoistedLet:
+          CompilerError.invariant(false, {
+            reason: 'Unexpected HoistedLet variable in for..in collection',
+            description: null,
+            loc: iterableItem.loc,
+            suggestions: null,
+          });
         default:
           assertExhaustive(
             iterableItem.value.lvalue.kind,
@@ -1085,6 +1092,13 @@ function codegenTerminal(
         case InstructionKind.HoistedConst:
           CompilerError.invariant(false, {
             reason: 'Unexpected HoistedConst variable in for..of collection',
+            description: null,
+            loc: iterableItem.loc,
+            suggestions: null,
+          });
+        case InstructionKind.HoistedLet:
+          CompilerError.invariant(false, {
+            reason: 'Unexpected HoistedLet variable in for..of collection',
             description: null,
             loc: iterableItem.loc,
             suggestions: null,
@@ -1209,7 +1223,7 @@ function codegenInstructionNullable(
       value = null;
     } else {
       lvalue = instr.value.lvalue.pattern;
-      let hasReasign = false;
+      let hasReassign = false;
       let hasDeclaration = false;
       for (const place of eachPatternOperand(lvalue)) {
         if (
@@ -1219,10 +1233,10 @@ function codegenInstructionNullable(
           cx.temp.set(place.identifier.declarationId, null);
         }
         const isDeclared = cx.hasDeclared(place.identifier);
-        hasReasign ||= isDeclared;
+        hasReassign ||= isDeclared;
         hasDeclaration ||= !isDeclared;
       }
-      if (hasReasign && hasDeclaration) {
+      if (hasReassign && hasDeclaration) {
         CompilerError.invariant(false, {
           reason:
             'Encountered a destructuring operation where some identifiers are already declared (reassignments) but others are not (declarations)',
@@ -1230,7 +1244,7 @@ function codegenInstructionNullable(
           loc: instr.loc,
           suggestions: null,
         });
-      } else if (hasReasign) {
+      } else if (hasReassign) {
         kind = InstructionKind.Reassign;
       }
       value = codegenPlaceToExpression(cx, instr.value.value);
@@ -1288,6 +1302,15 @@ function codegenInstructionNullable(
       }
       case InstructionKind.Catch: {
         return t.emptyStatement();
+      }
+      case InstructionKind.HoistedLet: {
+        CompilerError.invariant(false, {
+          reason:
+            'Expected HoistedLet to have been pruned in PruneHoistedContexts',
+          description: null,
+          loc: instr.loc,
+          suggestions: null,
+        });
       }
       case InstructionKind.HoistedConst: {
         CompilerError.invariant(false, {
@@ -1388,7 +1411,7 @@ function printDependencyComment(dependency: ReactiveScopeDependency): string {
   let name = identifier.name;
   if (dependency.path !== null) {
     for (const path of dependency.path) {
-      name += `.${path}`;
+      name += `.${path.property}`;
     }
   }
   return name;
@@ -1423,9 +1446,19 @@ function codegenDependency(
   dependency: ReactiveScopeDependency,
 ): t.Expression {
   let object: t.Expression = convertIdentifier(dependency.identifier);
-  if (dependency.path !== null) {
+  if (dependency.path.length !== 0) {
+    const hasOptional = dependency.path.some(path => path.optional);
     for (const path of dependency.path) {
-      object = t.memberExpression(object, t.identifier(path));
+      if (hasOptional) {
+        object = t.optionalMemberExpression(
+          object,
+          t.identifier(path.property),
+          false,
+          path.optional,
+        );
+      } else {
+        object = t.memberExpression(object, t.identifier(path.property));
+      }
     }
   }
   return object;
