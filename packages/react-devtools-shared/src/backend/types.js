@@ -416,6 +416,7 @@ export type RendererInterface = {
   ) => void,
   unpatchConsoleForStrictMode: () => void,
   updateComponentFilters: (componentFilters: Array<ComponentFilter>) => void,
+  getEnvironmentNames: () => Array<string>,
 
   // Timeline profiler interface
 

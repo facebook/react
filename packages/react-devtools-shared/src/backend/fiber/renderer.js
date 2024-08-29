@@ -1226,6 +1226,10 @@ export function attach(
     flushPendingEvents();
   }
 
+  function getEnvironmentNames(): Array<string> {
+    return Array.from(knownEnvironmentNames);
+  }
+
   function shouldFilterVirtual(
     data: ReactComponentInfo,
     secondaryEnv: null | string,
@@ -5801,5 +5805,6 @@ export function attach(
     storeAsGlobal,
     unpatchConsoleForStrictMode,
     updateComponentFilters,
+    getEnvironmentNames,
   };
 }

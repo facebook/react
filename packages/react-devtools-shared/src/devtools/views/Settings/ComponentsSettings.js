@@ -15,6 +15,7 @@ import {
   useMemo,
   useRef,
   useState,
+  use,
 } from 'react';
 import {
   LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
@@ -58,7 +59,11 @@ import type {
 
 const vscodeFilepath = 'vscode://file/{path}:{line}';
 
-export default function ComponentsSettings(_: {}): React.Node {
+export default function ComponentsSettings({
+  environmentNames,
+}: {
+  environmentNames: Promise<Array<string>>,
+}): React.Node {
   const store = useContext(StoreContext);
   const {parseHookNames, setParseHookNames} = useContext(SettingsContext);
 
@@ -102,6 +107,30 @@ export default function ComponentsSettings(_: {}): React.Node {
   const [componentFilters, setComponentFilters] = useState<
     Array<ComponentFilter>,
   >(() => [...store.componentFilters]);
+
+  const usedEnvironmentNames = use(environmentNames);
+
+  const resolvedEnvironmentNames = useMemo(() => {
+    const set = new Set(usedEnvironmentNames);
+    // If there are other filters already specified but are not currently
+    // on the page, we still allow them as options.
+    for (let i = 0; i < componentFilters.length; i++) {
+      const filter = componentFilters[i];
+      if (filter.type === ComponentFilterEnvironmentName) {
+        set.add(filter.value);
+      }
+    }
+    // Client is special and is always available as a default.
+    if (set.size > 0) {
+      // Only show any options at all if there's any other option already
+      // used by a filter or if any environments are used by the page.
+      // Note that "Client" can have been added above which would mean
+      // that we should show it as an option regardless if it's the only
+      // option.
+      set.add('Client');
+    }
+    return Array.from(set).sort();
+  }, [usedEnvironmentNames, componentFilters]);
 
   const addFilter = useCallback(() => {
     setComponentFilters(prevComponentFilters => {
@@ -417,9 +446,11 @@ export default function ComponentsSettings(_: {}): React.Node {
                   <option value={ComponentFilterDisplayName}>name</option>
                   <option value={ComponentFilterElementType}>type</option>
                   <option value={ComponentFilterHOC}>hoc</option>
-                  <option value={ComponentFilterEnvironmentName}>
-                    environment
-                  </option>
+                  {resolvedEnvironmentNames.length > 0 && (
+                    <option value={ComponentFilterEnvironmentName}>
+                      environment
+                    </option>
+                  )}
                 </select>
               </td>
               <td className={styles.TableCell}>
@@ -479,8 +510,11 @@ export default function ComponentsSettings(_: {}): React.Node {
                         currentTarget.value,
                       )
                     }>
-                    <option value={'Client'}>Client</option>
-                    <option value={'Server'}>Server</option>
+                    {resolvedEnvironmentNames.map(name => (
+                      <option key={name} value={name}>
+                        {name}
+                      </option>
+                    ))}
                   </select>
                 )}
               </td>
