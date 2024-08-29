@@ -1216,7 +1216,26 @@ export function attach(
   }
 
   function shouldFilterVirtual(data: ReactComponentInfo): boolean {
-    // TODO: Apply filters to VirtualInstances.
+    // For purposes of filtering Server Components are always Function Components.
+    // Environment will be used to filter Server vs Client.
+    // Technically they can be forwardRef and memo too but those filters will go away
+    // as those become just plain user space function components like any HoC.
+    if (hideElementsWithTypes.has(ElementTypeFunction)) {
+      return true;
+    }
+
+    if (hideElementsWithDisplayNames.size > 0) {
+      const displayName = data.name;
+      if (displayName != null) {
+        // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+        for (const displayNameRegExp of hideElementsWithDisplayNames) {
+          if (displayNameRegExp.test(displayName)) {
+            return true;
+          }
+        }
+      }
+    }
+
     return false;
   }
 
@@ -2446,6 +2465,10 @@ export function attach(
             continue;
           }
           const componentInfo: ReactComponentInfo = (debugEntry: any);
+          if (shouldFilterVirtual(componentInfo)) {
+            // Skip.
+            continue;
+          }
           if (level === virtualLevel) {
             if (
               previousVirtualInstance === null ||
@@ -2864,6 +2887,9 @@ export function attach(
             continue;
           }
           const componentInfo: ReactComponentInfo = (debugEntry: any);
+          if (shouldFilterVirtual(componentInfo)) {
+            continue;
+          }
           if (level === virtualLevel) {
             if (
               previousVirtualInstance === null ||
@@ -3686,19 +3712,16 @@ export function attach(
         }
         // We couldn't use this Fiber but we might have a VirtualInstance
         // that is the nearest unfiltered instance.
-        let parentInstance = fiberInstance.parent;
-        while (parentInstance !== null) {
-          if (parentInstance.kind === FIBER_INSTANCE) {
-            // If we find a parent Fiber, it might not be the nearest parent
-            // so we break out and continue walking the Fiber tree instead.
-            break;
-          } else {
-            if (!shouldFilterVirtual(parentInstance.data)) {
-              return parentInstance.id;
-            }
-          }
-          parentInstance = parentInstance.parent;
+        const parentInstance = fiberInstance.parent;
+        if (
+          parentInstance !== null &&
+          parentInstance.kind === VIRTUAL_INSTANCE
+        ) {
+          // Virtual Instances only exist if they're unfiltered.
+          return parentInstance.id;
         }
+        // If we find a parent Fiber, it might not be the nearest parent
+        // so we break out and continue walking the Fiber tree instead.
       }
       fiber = fiber.return;
     }
