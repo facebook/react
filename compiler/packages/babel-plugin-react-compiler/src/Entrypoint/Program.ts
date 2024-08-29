@@ -383,29 +383,27 @@ export function compileProgram(
       );
     }
 
-    /**
-     * Note that Babel does not attach comment nodes to nodes; they are dangling off of the
-     * Program node itself. We need to figure out whether an eslint suppression range
-     * applies to this function first.
-     */
-    const suppressionsInFunction = filterSuppressionsThatAffectFunction(
-      suppressions,
-      fn,
-    );
-    if (suppressionsInFunction.length > 0) {
-      const lintError = suppressionsToCompilerError(suppressionsInFunction);
-      if (optOutDirectives.length > 0) {
-        logError(lintError, pass, fn.node.loc ?? null);
-      } else {
-        handleError(lintError, pass, fn.node.loc ?? null);
-      }
-      if (isCriticalError(lintError)) {
-        return null;
-      }
-    }
-
     let compiledFn: CodegenFunction;
     try {
+      /**
+       * Note that Babel does not attach comment nodes to nodes; they are dangling off of the
+       * Program node itself. We need to figure out whether an eslint suppression range
+       * applies to this function first.
+       */
+      const suppressionsInFunction = filterSuppressionsThatAffectFunction(
+        suppressions,
+        fn,
+      );
+      if (suppressionsInFunction.length > 0) {
+        const lintError = suppressionsToCompilerError(suppressionsInFunction);
+        if (optOutDirectives.length > 0) {
+          logError(lintError, pass, fn.node.loc ?? null);
+        } else {
+          handleError(lintError, pass, fn.node.loc ?? null);
+        }
+        return null;
+      }
+
       compiledFn = compileFn(
         fn,
         environment,
