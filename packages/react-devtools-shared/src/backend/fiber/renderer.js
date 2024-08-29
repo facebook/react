@@ -14,6 +14,7 @@ import {
   ComponentFilterElementType,
   ComponentFilterHOC,
   ComponentFilterLocation,
+  ComponentFilterEnvironmentName,
   ElementTypeClass,
   ElementTypeContext,
   ElementTypeFunction,
@@ -1099,6 +1100,7 @@ export function attach(
   const hideElementsWithDisplayNames: Set<RegExp> = new Set();
   const hideElementsWithPaths: Set<RegExp> = new Set();
   const hideElementsWithTypes: Set<ElementType> = new Set();
+  const hideElementsWithEnvs: Set<string> = new Set();
 
   // Highlight updates
   let traceUpdatesEnabled: boolean = false;
@@ -1108,6 +1110,7 @@ export function attach(
     hideElementsWithTypes.clear();
     hideElementsWithDisplayNames.clear();
     hideElementsWithPaths.clear();
+    hideElementsWithEnvs.clear();
 
     componentFilters.forEach(componentFilter => {
       if (!componentFilter.isEnabled) {
@@ -1132,6 +1135,9 @@ export function attach(
           break;
         case ComponentFilterHOC:
           hideElementsWithDisplayNames.add(new RegExp('\\('));
+          break;
+        case ComponentFilterEnvironmentName:
+          hideElementsWithEnvs.add(componentFilter.value);
           break;
         default:
           console.warn(
@@ -1215,7 +1221,10 @@ export function attach(
     flushPendingEvents();
   }
 
-  function shouldFilterVirtual(data: ReactComponentInfo): boolean {
+  function shouldFilterVirtual(
+    data: ReactComponentInfo,
+    secondaryEnv: null | string,
+  ): boolean {
     // For purposes of filtering Server Components are always Function Components.
     // Environment will be used to filter Server vs Client.
     // Technically they can be forwardRef and memo too but those filters will go away
@@ -1234,6 +1243,14 @@ export function attach(
           }
         }
       }
+    }
+
+    if (
+      (data.env == null || hideElementsWithEnvs.has(data.env)) &&
+      (secondaryEnv === null || hideElementsWithEnvs.has(secondaryEnv))
+    ) {
+      // If a Component has two environments, you have to filter both for it not to appear.
+      return true;
     }
 
     return false;
@@ -1291,6 +1308,26 @@ export function attach(
             return true;
           }
         }
+      }
+    }
+
+    if (hideElementsWithEnvs.has('Client')) {
+      // If we're filtering out the Client environment we should filter out all
+      // "Client Components". Technically that also includes the built-ins but
+      // since that doesn't actually include any additional code loading it's
+      // useful to not filter out the built-ins. Those can be filtered separately.
+      // There's no other way to filter out just Function components on the Client.
+      // Therefore, this only filters Class and Function components.
+      switch (tag) {
+        case ClassComponent:
+        case IncompleteClassComponent:
+        case IncompleteFunctionComponent:
+        case FunctionComponent:
+        case IndeterminateComponent:
+        case ForwardRef:
+        case MemoComponent:
+        case SimpleMemoComponent:
+          return true;
       }
     }
 
@@ -2489,7 +2526,8 @@ export function attach(
           }
           // Scan up until the next Component to see if this component changed environment.
           const componentInfo: ReactComponentInfo = (debugEntry: any);
-          if (shouldFilterVirtual(componentInfo)) {
+          const secondaryEnv = getSecondaryEnvironmentName(fiber._debugInfo, i);
+          if (shouldFilterVirtual(componentInfo, secondaryEnv)) {
             // Skip.
             continue;
           }
@@ -2511,10 +2549,6 @@ export function attach(
                 );
               }
               previousVirtualInstance = createVirtualInstance(componentInfo);
-              const secondaryEnv = getSecondaryEnvironmentName(
-                fiber._debugInfo,
-                i,
-              );
               recordVirtualMount(
                 previousVirtualInstance,
                 reconcilingParent,
@@ -2919,7 +2953,11 @@ export function attach(
             continue;
           }
           const componentInfo: ReactComponentInfo = (debugEntry: any);
-          if (shouldFilterVirtual(componentInfo)) {
+          const secondaryEnv = getSecondaryEnvironmentName(
+            nextChild._debugInfo,
+            i,
+          );
+          if (shouldFilterVirtual(componentInfo, secondaryEnv)) {
             continue;
           }
           if (level === virtualLevel) {
@@ -2983,10 +3021,6 @@ export function attach(
               } else {
                 // Otherwise we create a new instance.
                 const newVirtualInstance = createVirtualInstance(componentInfo);
-                const secondaryEnv = getSecondaryEnvironmentName(
-                  nextChild._debugInfo,
-                  i,
-                );
                 recordVirtualMount(
                   newVirtualInstance,
                   reconcilingParent,
@@ -3925,7 +3959,7 @@ export function attach(
         owner = ownerFiber._debugOwner;
       } else {
         const ownerInfo: ReactComponentInfo = (owner: any); // Refined
-        if (!shouldFilterVirtual(ownerInfo)) {
+        if (!shouldFilterVirtual(ownerInfo, null)) {
           return ownerInfo;
         }
         owner = ownerInfo.owner;
