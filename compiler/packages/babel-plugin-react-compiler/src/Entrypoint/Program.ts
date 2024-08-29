@@ -399,6 +399,8 @@ export function compileProgram(
       } else {
         handleError(lintError, pass, fn.node.loc ?? null);
       }
+      // Skip compiling functions that are covered by a suppression comment
+      return null;
     }
 
     let compiledFn: CodegenFunction;
