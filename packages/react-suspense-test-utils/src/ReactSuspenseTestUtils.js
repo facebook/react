@@ -16,15 +16,6 @@ export function waitForSuspense<T>(fn: () => T): Promise<T> {
     getActiveCache() {
       return cache;
     },
-    getCacheForType<R>(resourceType: () => R): R {
-      let entry: R | void = (cache.get(resourceType): any);
-      if (entry === undefined) {
-        entry = resourceType();
-        // TODO: Warn if undefined?
-        cache.set(resourceType, entry);
-      }
-      return entry;
-    },
     getOwner(): null {
       return null;
     },

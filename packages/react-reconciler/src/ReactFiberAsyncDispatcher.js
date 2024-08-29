@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {AsyncDispatcher, Fiber} from './ReactInternalTypes';
+import type {AsyncCache, AsyncDispatcher, Fiber} from './ReactInternalTypes';
 import type {Cache} from './ReactFiberCacheComponent';
 
 import {enableCache} from 'shared/ReactFeatureFlags';
@@ -18,28 +18,18 @@ import {disableStringRefs} from 'shared/ReactFeatureFlags';
 
 import {current as currentOwner} from './ReactCurrentFiber';
 
-function getActiveCache(): Map<Function, mixed> {
+function getActiveCache(): AsyncCache {
+  if (!enableCache) {
+    throw new Error('Not implemented.');
+  }
+
   const cache: Cache = readContext(CacheContext);
 
   return cache.data;
 }
 
-function getCacheForType<T>(resourceType: () => T): T {
-  if (!enableCache) {
-    throw new Error('Not implemented.');
-  }
-  const cache = getActiveCache();
-  let cacheForType: T | void = (cache.get(resourceType): any);
-  if (cacheForType === undefined) {
-    cacheForType = resourceType();
-    cache.set(resourceType, cacheForType);
-  }
-  return cacheForType;
-}
-
 export const DefaultAsyncDispatcher: AsyncDispatcher = ({
   getActiveCache,
-  getCacheForType,
 }: any);
 
 if (__DEV__ || !disableStringRefs) {

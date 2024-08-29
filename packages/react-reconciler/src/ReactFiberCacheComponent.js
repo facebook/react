@@ -8,7 +8,7 @@
  */
 
 import type {ReactContext} from 'shared/ReactTypes';
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
+import type {AsyncCache, Fiber} from 'react-reconciler/src/ReactInternalTypes';
 
 import {enableCache} from 'shared/ReactFeatureFlags';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
@@ -42,7 +42,7 @@ const AbortControllerLocal: typeof AbortController = enableCache
 
 export type Cache = {
   controller: AbortController,
-  data: Map<() => mixed, mixed>,
+  data: AsyncCache,
   refCount: number,
 };
 

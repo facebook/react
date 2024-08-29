@@ -9,7 +9,10 @@
 
 import type {ReactComponentInfo} from 'shared/ReactTypes';
 
-import type {AsyncDispatcher} from 'react-reconciler/src/ReactInternalTypes';
+import type {
+  AsyncCache,
+  AsyncDispatcher,
+} from 'react-reconciler/src/ReactInternalTypes';
 
 import {resolveRequest, getCache} from '../ReactFlightServer';
 import ReactSharedInternals from '../ReactSharedInternalsServer';
@@ -28,38 +31,42 @@ function resolveCache(): Map<Function, mixed> {
   return new Map();
 }
 
-export const DefaultAsyncDispatcher: AsyncDispatcher = ({
-  getActiveCache(): Map<Function, mixed> | null {
-    const request = resolveRequest();
-    if (request) {
-      return getCache(request);
-    }
-    return null;
-  },
-  getCacheForType<T>(resourceType: () => T): T {
-    const outerCache: Map<Function, mixed> | null =
-      previousAsyncDispatcher !== null
-        ? previousAsyncDispatcher.getActiveCache()
-        : null;
-    if (outerCache !== null) {
-      const entry: T | void = (outerCache.get(resourceType): any);
-      if (entry !== undefined) {
-        return entry;
-      }
-    }
+function getActiveCache(): AsyncCache {
+  const outerCache: AsyncCache | null =
+    previousAsyncDispatcher !== null
+      ? previousAsyncDispatcher.getActiveCache()
+      : null;
 
-    const cache = resolveCache();
-    let entry: T | void = (cache.get(resourceType): any);
-    if (entry === undefined) {
-      entry = resourceType();
-      // TODO: Warn if undefined?
-      cache.set(resourceType, entry);
-    }
-    if (outerCache !== null) {
-      outerCache.set(resourceType, entry);
-    }
-    return entry;
-  },
+  const innerCache = resolveCache();
+
+  if (outerCache === null) {
+    return innerCache;
+  }
+
+  // If both caches are active, reads will prefer the outer cache
+  // Writes will go into both caches.
+  const chainedCache: AsyncCache = {
+    get(resourceType: Function) {
+      const outerEntry = outerCache.get(resourceType);
+      if (outerEntry !== undefined) {
+        return outerEntry;
+      }
+      return innerCache.get(resourceType);
+    },
+    set(resourceType: Function, value: mixed) {
+      if (outerCache !== null) {
+        outerCache.set(resourceType, value);
+      }
+      innerCache.set(resourceType, value);
+      return chainedCache;
+    },
+  };
+
+  return chainedCache;
+}
+
+export const DefaultAsyncDispatcher: AsyncDispatcher = ({
+  getActiveCache,
 }: any);
 
 if (__DEV__) {
