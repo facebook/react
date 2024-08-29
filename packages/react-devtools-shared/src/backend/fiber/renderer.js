@@ -2266,16 +2266,11 @@ export function attach(
       debug('recordUnmount()', fiber, null);
     }
 
-    if (trackedPathMatchFiber !== null) {
+    if (trackedPathMatchInstance === fiberInstance) {
       // We're in the process of trying to restore previous selection.
       // If this fiber matched but is being unmounted, there's no use trying.
       // Reset the state so we don't keep holding onto it.
-      if (
-        fiber === trackedPathMatchFiber ||
-        fiber === trackedPathMatchFiber.alternate
-      ) {
-        setTrackedPath(null);
-      }
+      setTrackedPath(null);
     }
 
     const id = fiberInstance.id;
@@ -2386,6 +2381,14 @@ export function attach(
     traceNearestHostComponentUpdate: boolean,
     virtualLevel: number, // the nth level of virtual instances
   ): void {
+    // If we have the tree selection from previous reload, try to match this Instance.
+    // Also remember whether to do the same for siblings.
+    const mightSiblingsBeOnTrackedPath =
+      updateVirtualTrackedPathStateBeforeMount(
+        virtualInstance,
+        reconcilingParent,
+      );
+
     const stashedParent = reconcilingParent;
     const stashedPrevious = previouslyReconciledSibling;
     const stashedRemaining = remainingReconcilingChildren;
@@ -2406,13 +2409,16 @@ export function attach(
       reconcilingParent = stashedParent;
       previouslyReconciledSibling = stashedPrevious;
       remainingReconcilingChildren = stashedRemaining;
+      updateTrackedPathStateAfterMount(mightSiblingsBeOnTrackedPath);
     }
   }
 
   function recordVirtualUnmount(instance: VirtualInstance) {
-    if (trackedPathMatchFiber !== null) {
+    if (trackedPathMatchInstance === instance) {
       // We're in the process of trying to restore previous selection.
-      // TODO: Handle virtual instances on the tracked path.
+      // If this fiber matched but is being unmounted, there's no use trying.
+      // Reset the state so we don't keep holding onto it.
+      setTrackedPath(null);
     }
 
     const id = instance.id;
@@ -2521,17 +2527,20 @@ export function attach(
       debug('mountFiberRecursively()', fiber, reconcilingParent);
     }
 
-    // If we have the tree selection from previous reload, try to match this Fiber.
-    // Also remember whether to do the same for siblings.
-    const mightSiblingsBeOnTrackedPath =
-      updateTrackedPathStateBeforeMount(fiber);
-
     const shouldIncludeInTree = !shouldFilterFiber(fiber);
     let newInstance = null;
     if (shouldIncludeInTree) {
       newInstance = recordMount(fiber, reconcilingParent);
       insertChild(newInstance);
     }
+
+    // If we have the tree selection from previous reload, try to match this Fiber.
+    // Also remember whether to do the same for siblings.
+    const mightSiblingsBeOnTrackedPath = updateTrackedPathStateBeforeMount(
+      fiber,
+      newInstance,
+    );
+
     const stashedParent = reconcilingParent;
     const stashedPrevious = previouslyReconciledSibling;
     const stashedRemaining = remainingReconcilingChildren;
@@ -2570,14 +2579,15 @@ export function attach(
           const fallbackChildFragment = primaryChildFragment
             ? primaryChildFragment.sibling
             : null;
-          const fallbackChild = fallbackChildFragment
-            ? fallbackChildFragment.child
-            : null;
-          if (fallbackChild !== null) {
-            mountChildrenRecursively(
-              fallbackChild,
-              traceNearestHostComponentUpdate,
-            );
+          if (fallbackChildFragment) {
+            const fallbackChild = fallbackChildFragment.child;
+            if (fallbackChild !== null) {
+              updateTrackedPathStateBeforeMount(fallbackChildFragment, null);
+              mountChildrenRecursively(
+                fallbackChild,
+                traceNearestHostComponentUpdate,
+              );
+            }
           }
         } else {
           let primaryChild: Fiber | null = null;
@@ -2587,6 +2597,7 @@ export function attach(
             primaryChild = fiber.child;
           } else if (fiber.child !== null) {
             primaryChild = fiber.child.child;
+            updateTrackedPathStateBeforeMount(fiber.child, null);
           }
           if (primaryChild !== null) {
             mountChildrenRecursively(
@@ -5262,13 +5273,15 @@ export function attach(
   // Remember if we're trying to restore the selection after reload.
   // In that case, we'll do some extra checks for matching mounts.
   let trackedPath: Array<PathFrame> | null = null;
-  let trackedPathMatchFiber: Fiber | null = null;
+  let trackedPathMatchFiber: Fiber | null = null; // This is the deepest unfiltered match of a Fiber.
+  let trackedPathMatchInstance: DevToolsInstance | null = null; // This is the deepest matched filtered Instance.
   let trackedPathMatchDepth = -1;
   let mightBeOnTrackedPath = false;
 
   function setTrackedPath(path: Array<PathFrame> | null) {
     if (path === null) {
       trackedPathMatchFiber = null;
+      trackedPathMatchInstance = null;
       trackedPathMatchDepth = -1;
       mightBeOnTrackedPath = false;
     }
@@ -5278,7 +5291,10 @@ export function attach(
   // We call this before traversing a new mount.
   // It remembers whether this Fiber is the next best match for tracked path.
   // The return value signals whether we should keep matching siblings or not.
-  function updateTrackedPathStateBeforeMount(fiber: Fiber): boolean {
+  function updateTrackedPathStateBeforeMount(
+    fiber: Fiber,
+    fiberInstance: null | FiberInstance,
+  ): boolean {
     if (trackedPath === null || !mightBeOnTrackedPath) {
       // Fast path: there's nothing to track so do nothing and ignore siblings.
       return false;
@@ -5306,6 +5322,9 @@ export function attach(
       ) {
         // We have our next match.
         trackedPathMatchFiber = fiber;
+        if (fiberInstance !== null) {
+          trackedPathMatchInstance = fiberInstance;
+        }
         trackedPathMatchDepth++;
         // Are we out of frames to match?
         // $FlowFixMe[incompatible-use] found when upgrading Flow
@@ -5322,7 +5341,63 @@ export function attach(
         return false;
       }
     }
+    if (trackedPathMatchFiber === null && fiberInstance === null) {
+      // We're now looking for a Virtual Instance. It might be inside filtered Fibers
+      // so we keep looking below.
+      return true;
+    }
     // This Fiber's parent is on the path, but this Fiber itself isn't.
+    // There's no need to check its children--they won't be on the path either.
+    mightBeOnTrackedPath = false;
+    // However, one of its siblings may be on the path so keep searching.
+    return true;
+  }
+
+  function updateVirtualTrackedPathStateBeforeMount(
+    virtualInstance: VirtualInstance,
+    parentInstance: null | DevToolsInstance,
+  ): boolean {
+    if (trackedPath === null || !mightBeOnTrackedPath) {
+      // Fast path: there's nothing to track so do nothing and ignore siblings.
+      return false;
+    }
+    // Check if we've matched our nearest unfiltered parent so far.
+    if (trackedPathMatchInstance === parentInstance) {
+      const actualFrame = getVirtualPathFrame(virtualInstance);
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
+      const expectedFrame = trackedPath[trackedPathMatchDepth + 1];
+      if (expectedFrame === undefined) {
+        throw new Error('Expected to see a frame at the next depth.');
+      }
+      if (
+        actualFrame.index === expectedFrame.index &&
+        actualFrame.key === expectedFrame.key &&
+        actualFrame.displayName === expectedFrame.displayName
+      ) {
+        // We have our next match.
+        trackedPathMatchFiber = null; // Don't bother looking in Fibers anymore. We're deeper now.
+        trackedPathMatchInstance = virtualInstance;
+        trackedPathMatchDepth++;
+        // Are we out of frames to match?
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
+        if (trackedPathMatchDepth === trackedPath.length - 1) {
+          // There's nothing that can possibly match afterwards.
+          // Don't check the children.
+          mightBeOnTrackedPath = false;
+        } else {
+          // Check the children, as they might reveal the next match.
+          mightBeOnTrackedPath = true;
+        }
+        // In either case, since we have a match, we don't need
+        // to check the siblings. They'll never match.
+        return false;
+      }
+    }
+    if (trackedPathMatchFiber !== null) {
+      // We're still looking for a Fiber which might be underneath this instance.
+      return true;
+    }
+    // This Instance's parent is on the path, but this Instance itself isn't.
     // There's no need to check its children--they won't be on the path either.
     mightBeOnTrackedPath = false;
     // However, one of its siblings may be on the path so keep searching.
@@ -5428,6 +5503,14 @@ export function attach(
     };
   }
 
+  function getVirtualPathFrame(virtualInstance: VirtualInstance): PathFrame {
+    return {
+      displayName: virtualInstance.data.name || '',
+      key: virtualInstance.data.key == null ? null : virtualInstance.data.key,
+      index: -1, // We use -1 to indicate that this is a virtual path frame.
+    };
+  }
+
   // Produces a serializable representation that does a best effort
   // of identifying a particular Fiber between page reloads.
   // The return path will contain Fibers that are "invisible" to the store
@@ -5437,13 +5520,20 @@ export function attach(
     if (devtoolsInstance === undefined) {
       return null;
     }
-    if (devtoolsInstance.kind !== FIBER_INSTANCE) {
-      // TODO: Handle VirtualInstance.
-      return null;
+
+    const keyPath = [];
+
+    let inst: DevToolsInstance = devtoolsInstance;
+    while (inst.kind === VIRTUAL_INSTANCE) {
+      keyPath.push(getVirtualPathFrame(inst));
+      if (inst.parent === null) {
+        // This is a bug but non-essential. We should've found a root instance.
+        return null;
+      }
+      inst = inst.parent;
     }
 
-    let fiber: null | Fiber = devtoolsInstance.data;
-    const keyPath = [];
+    let fiber: null | Fiber = inst.data;
     while (fiber !== null) {
       // $FlowFixMe[incompatible-call] found when upgrading Flow
       keyPath.push(getPathFrame(fiber));
@@ -5459,20 +5549,12 @@ export function attach(
       // Nothing to match.
       return null;
     }
-    if (trackedPathMatchFiber === null) {
+    if (trackedPathMatchInstance === null) {
       // We didn't find anything.
       return null;
     }
-    // Find the closest Fiber store is aware of.
-    let fiber: null | Fiber = trackedPathMatchFiber;
-    while (fiber !== null && shouldFilterFiber(fiber)) {
-      fiber = fiber.return;
-    }
-    if (fiber === null) {
-      return null;
-    }
     return {
-      id: getFiberIDThrows(fiber),
+      id: trackedPathMatchInstance.id,
       // $FlowFixMe[incompatible-use] found when upgrading Flow
       isFullMatch: trackedPathMatchDepth === trackedPath.length - 1,
     };
