@@ -4212,7 +4212,6 @@ export function attach(
 
       key: key != null ? key : null,
 
-      displayName: getDisplayNameForFiber(fiber),
       type: elementType,
 
       // Inspectable properties.
@@ -4251,13 +4250,6 @@ export function attach(
     const key =
       typeof componentInfo.key === 'string' ? componentInfo.key : null;
     const props = null; // TODO: Track props on ReactComponentInfo;
-
-    const env = componentInfo.env;
-    let displayName = componentInfo.name || '';
-    if (typeof env === 'string') {
-      // We model environment as an HoC name for now.
-      displayName = env + '(' + displayName + ')';
-    }
 
     const owners: null | Array<SerializedElement> =
       getOwnersListFromInstance(virtualInstance);
@@ -4311,7 +4303,6 @@ export function attach(
 
       key: key,
 
-      displayName: displayName,
       type: ElementTypeVirtual,
 
       // Inspectable properties.
@@ -4675,10 +4666,12 @@ export function attach(
       return;
     }
 
+    const displayName = getDisplayNameForElementID(id);
+
     const supportsGroup = typeof console.groupCollapsed === 'function';
     if (supportsGroup) {
       console.groupCollapsed(
-        `[Click to expand] %c<${result.displayName || 'Component'} />`,
+        `[Click to expand] %c<${displayName || 'Component'} />`,
         // --dom-tag-name-color is the CSS variable Chrome styles HTML elements with in the console.
         'color: var(--dom-tag-name-color); font-weight: normal;',
       );

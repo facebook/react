@@ -775,7 +775,7 @@ export function attach(
       return null;
     }
 
-    const {displayName, key} = getData(internalInstance);
+    const {key} = getData(internalInstance);
     const type = getElementType(internalInstance);
 
     let context = null;
@@ -842,8 +842,6 @@ export function attach(
       // Only legacy context exists in legacy versions.
       hasLegacyContext: true,
 
-      displayName: displayName,
-
       type: type,
 
       key: key != null ? key : null,
@@ -876,10 +874,12 @@ export function attach(
       return;
     }
 
+    const displayName = getDisplayNameForElementID(id);
+
     const supportsGroup = typeof console.groupCollapsed === 'function';
     if (supportsGroup) {
       console.groupCollapsed(
-        `[Click to expand] %c<${result.displayName || 'Component'} />`,
+        `[Click to expand] %c<${displayName || 'Component'} />`,
         // --dom-tag-name-color is the CSS variable Chrome styles HTML elements with in the console.
         'color: var(--dom-tag-name-color); font-weight: normal;',
       );
