@@ -17,6 +17,7 @@ import {
   Global,
   GlobalRegistry,
   installReAnimatedTypes,
+  installTypeConfig,
 } from './Globals';
 import {
   BlockId,
@@ -28,6 +29,7 @@ import {
   NonLocalBinding,
   PolyType,
   ScopeId,
+  SourceLocation,
   Type,
   ValidatedIdentifier,
   ValueKind,
@@ -45,6 +47,7 @@ import {
   addHook,
 } from './ObjectShape';
 import {Scope as BabelScope} from '@babel/traverse';
+import {TypeSchema} from './TypeSchema';
 
 export const ExternalFunctionSchema = z.object({
   // Source for the imported module that exports the `importSpecifierName` functions
@@ -66,6 +69,20 @@ export const InstrumentationSchema = z
   );
 
 export type ExternalFunction = z.infer<typeof ExternalFunctionSchema>;
+
+export const MacroMethodSchema = z.union([
+  z.object({type: z.literal('wildcard')}),
+  z.object({type: z.literal('name'), name: z.string()}),
+]);
+
+// Would like to change this to drop the string option, but breaks compatibility with existing configs
+export const MacroSchema = z.union([
+  z.string(),
+  z.tuple([z.string(), z.array(MacroMethodSchema)]),
+]);
+
+export type Macro = z.infer<typeof MacroSchema>;
+export type MacroMethod = z.infer<typeof MacroMethodSchema>;
 
 const HookSchema = z.object({
   /*
@@ -124,6 +141,12 @@ const EnvironmentConfigSchema = z.object({
   customHooks: z.map(z.string(), HookSchema).optional().default(new Map()),
 
   /**
+   * A function that, given the name of a module, can optionally return a description
+   * of that module's type signature.
+   */
+  moduleTypeProvider: z.nullable(z.function().args(z.string())).default(null),
+
+  /**
    * A list of functions which the application compiles as macros, where
    * the compiler must ensure they are not compiled to rename the macro or separate the
    * "function" from its argument.
@@ -133,7 +156,7 @@ const EnvironmentConfigSchema = z.object({
    * plugin since it looks specifically for the name of the function being invoked, not
    * following aliases.
    */
-  customMacros: z.nullable(z.array(z.string())).default(null),
+  customMacros: z.nullable(z.array(MacroSchema)).default(null),
 
   /**
    * Enable a check that resets the memoization cache when the source code of the file changes.
@@ -201,6 +224,14 @@ const EnvironmentConfigSchema = z.object({
 
   enableReactiveScopesInHIR: z.boolean().default(true),
 
+  /**
+   * Enables inference of optional dependency chains. Without this flag
+   * a property chain such as `props?.items?.foo` will infer as a dep on
+   * just `props`. With this flag enabled, we'll infer that full path as
+   * the dependency.
+   */
+  enableOptionalDependencies: z.boolean().default(true),
+
   /*
    * Enable validation of hooks to partially check that the component honors the rules of hooks.
    * When disabled, the component is assumed to follow the rules (though the Babel plugin looks
@@ -209,13 +240,25 @@ const EnvironmentConfigSchema = z.object({
   validateHooksUsage: z.boolean().default(true),
 
   // Validate that ref values (`ref.current`) are not accessed during render.
-  validateRefAccessDuringRender: z.boolean().default(false),
+  validateRefAccessDuringRender: z.boolean().default(true),
 
   /*
    * Validates that setState is not unconditionally called during render, as it can lead to
    * infinite loops.
    */
   validateNoSetStateInRender: z.boolean().default(true),
+
+  /**
+   * Validates that setState is not called directly within a passive effect (useEffect).
+   * Scheduling a setState (with an event listener, subscription, etc) is valid.
+   */
+  validateNoSetStateInPassiveEffects: z.boolean().default(false),
+
+  /**
+   * Validates against creating JSX within a try block and recommends using an error boundary
+   * instead.
+   */
+  validateNoJSXInTryStatements: z.boolean().default(false),
 
   /**
    * Validates that the dependencies of all effect hooks are memoized. This helps ensure
@@ -238,6 +281,7 @@ const EnvironmentConfigSchema = z.object({
    * this option to the empty array.
    */
   validateNoCapitalizedCalls: z.nullable(z.array(z.string())).default(null),
+  validateBlocklistedImports: z.nullable(z.array(z.string())).default(null),
 
   /*
    * When enabled, the compiler assumes that hooks follow the Rules of React:
@@ -489,7 +533,19 @@ export function parseConfigPragma(pragma: string): EnvironmentConfig {
     }
 
     if (key === 'customMacros' && val) {
-      maybeConfig[key] = [val];
+      const valSplit = val.split('.');
+      if (valSplit.length > 0) {
+        const props = [];
+        for (const elt of valSplit.slice(1)) {
+          if (elt === '*') {
+            props.push({type: 'wildcard'});
+          } else if (elt.length > 0) {
+            props.push({type: 'name', name: elt});
+          }
+        }
+        console.log([valSplit[0], props.map(x => x.name ?? '*').join('.')]);
+        maybeConfig[key] = [[valSplit[0], props]];
+      }
       continue;
     }
 
@@ -538,6 +594,7 @@ export function printFunctionType(type: ReactFunctionType): string {
 export class Environment {
   #globals: GlobalRegistry;
   #shapes: ShapeRegistry;
+  #moduleTypes: Map<string, Global | null> = new Map();
   #nextIdentifer: number = 0;
   #nextBlock: number = 0;
   #nextScope: number = 0;
@@ -659,7 +716,40 @@ export class Environment {
     return this.#outlinedFunctions;
   }
 
-  getGlobalDeclaration(binding: NonLocalBinding): Global | null {
+  #resolveModuleType(moduleName: string, loc: SourceLocation): Global | null {
+    if (this.config.moduleTypeProvider == null) {
+      return null;
+    }
+    let moduleType = this.#moduleTypes.get(moduleName);
+    if (moduleType === undefined) {
+      const unparsedModuleConfig = this.config.moduleTypeProvider(moduleName);
+      if (unparsedModuleConfig != null) {
+        const parsedModuleConfig = TypeSchema.safeParse(unparsedModuleConfig);
+        if (!parsedModuleConfig.success) {
+          CompilerError.throwInvalidConfig({
+            reason: `Could not parse module type, the configured \`moduleTypeProvider\` function returned an invalid module description`,
+            description: parsedModuleConfig.error.toString(),
+            loc,
+          });
+        }
+        const moduleConfig = parsedModuleConfig.data;
+        moduleType = installTypeConfig(
+          this.#globals,
+          this.#shapes,
+          moduleConfig,
+        );
+      } else {
+        moduleType = null;
+      }
+      this.#moduleTypes.set(moduleName, moduleType);
+    }
+    return moduleType;
+  }
+
+  getGlobalDeclaration(
+    binding: NonLocalBinding,
+    loc: SourceLocation,
+  ): Global | null {
     if (this.config.hookPattern != null) {
       const match = new RegExp(this.config.hookPattern).exec(binding.name);
       if (
@@ -697,6 +787,17 @@ export class Environment {
             (isHookName(binding.imported) ? this.#getCustomHookType() : null)
           );
         } else {
+          const moduleType = this.#resolveModuleType(binding.module, loc);
+          if (moduleType !== null) {
+            const importedType = this.getPropertyType(
+              moduleType,
+              binding.imported,
+            );
+            if (importedType != null) {
+              return importedType;
+            }
+          }
+
           /**
            * For modules we don't own, we look at whether the original name or import alias
            * are hook-like. Both of the following are likely hooks so we would return a hook
@@ -719,6 +820,17 @@ export class Environment {
             (isHookName(binding.name) ? this.#getCustomHookType() : null)
           );
         } else {
+          const moduleType = this.#resolveModuleType(binding.module, loc);
+          if (moduleType !== null) {
+            if (binding.kind === 'ImportDefault') {
+              const defaultType = this.getPropertyType(moduleType, 'default');
+              if (defaultType !== null) {
+                return defaultType;
+              }
+            } else {
+              return moduleType;
+            }
+          }
           return isHookName(binding.name) ? this.#getCustomHookType() : null;
         }
       }
@@ -728,9 +840,7 @@ export class Environment {
   #isKnownReactModule(moduleName: string): boolean {
     return (
       moduleName.toLowerCase() === 'react' ||
-      moduleName.toLowerCase() === 'react-dom' ||
-      (this.config.enableSharedRuntime__testonly &&
-        moduleName === 'shared-runtime')
+      moduleName.toLowerCase() === 'react-dom'
     );
   }
 

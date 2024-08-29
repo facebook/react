@@ -7,8 +7,6 @@
  * @flow
  */
 
-import memoize from 'memoize-one';
-import throttle from 'lodash.throttle';
 import Agent from 'react-devtools-shared/src/backend/agent';
 import {hideOverlay, showOverlay} from './Highlighter';
 
@@ -189,18 +187,12 @@ export default function setupHighlighter(
     event.stopPropagation();
   }
 
-  const selectElementForNode = throttle(
-    memoize((node: HTMLElement) => {
-      const id = agent.getIDForHostInstance(node);
-      if (id !== null) {
-        bridge.send('selectElement', id);
-      }
-    }),
-    200,
-    // Don't change the selection in the very first 200ms
-    // because those are usually unintentional as you lift the cursor.
-    {leading: false},
-  );
+  const selectElementForNode = (node: HTMLElement) => {
+    const id = agent.getIDForHostInstance(node);
+    if (id !== null) {
+      bridge.send('selectElement', id);
+    }
+  };
 
   function getEventTarget(event: MouseEvent): HTMLElement {
     if (event.composed) {

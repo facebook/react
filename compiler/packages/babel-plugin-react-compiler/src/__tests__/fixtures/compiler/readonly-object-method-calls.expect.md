@@ -2,6 +2,8 @@
 ## Input
 
 ```javascript
+import {useFragment} from 'shared-runtime';
+
 function Component(props) {
   const user = useFragment(
     graphql`
@@ -26,6 +28,8 @@ function Component(props) {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime";
+import { useFragment } from "shared-runtime";
+
 function Component(props) {
   const $ = _c(5);
   const user = useFragment(

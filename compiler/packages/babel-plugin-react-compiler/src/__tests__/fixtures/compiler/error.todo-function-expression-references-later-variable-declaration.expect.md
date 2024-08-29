@@ -20,7 +20,7 @@ function Component() {
   1 | function Component() {
   2 |   let callback = () => {
 > 3 |     onClick = () => {};
-    |     ^^^^^^^^^^^^^^^^^^ Todo: Handle non-const declarations for hoisting. variable "onClick" declared with let (3:3)
+    |     ^^^^^^^ InvalidReact: Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead. Variable `onClick` cannot be reassigned after render (3:3)
   4 |   };
   5 |   let onClick;
   6 |

@@ -87,6 +87,8 @@ export const enableTaint = __EXPERIMENTAL__;
 
 export const enablePostpone = __EXPERIMENTAL__;
 
+export const enableHalt = __EXPERIMENTAL__;
+
 /**
  * Switches the Fabric API from doing layout in commit work instead of complete work.
  */
@@ -145,6 +147,8 @@ export const enableAddPropertiesFastPath = false;
 export const enableOwnerStacks = __EXPERIMENTAL__;
 
 export const enableShallowPropDiffing = false;
+
+export const enableSiblingPrerendering = __EXPERIMENTAL__;
 
 /**
  * Enables an expiration time for retry lanes to avoid starvation.

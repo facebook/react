@@ -30,7 +30,7 @@ let Suspense;
 let ReactServerScheduler;
 let reactServerAct;
 
-describe('ReactFlightDOM', () => {
+describe('ReactFlightTurbopackDOM', () => {
   beforeEach(() => {
     // For this first reset we are going to load the dom-node version of react-server-dom-turbopack/server
     // This can be thought of as essentially being the React Server Components scope with react-server
@@ -43,7 +43,7 @@ describe('ReactFlightDOM', () => {
 
     // Simulate the condition resolution
     jest.mock('react-server-dom-turbopack/server', () =>
-      require('react-server-dom-turbopack/server.node.unbundled'),
+      require('react-server-dom-turbopack/server.node'),
     );
     jest.mock('react', () => require('react/react.react-server'));
 

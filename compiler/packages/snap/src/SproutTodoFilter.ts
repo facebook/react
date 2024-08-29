@@ -390,11 +390,12 @@ const skipFilter = new Set([
   'template-literal',
   'multi-arrow-expr-export-default-gating-test',
 
-  // TODO: we should be able to support these
-  'component-declaration-basic.flow',
-  'hook-declaration-basic.flow',
+  // works, but appears differently when printing
+  // due to optional function argument
   'nested-function-with-param-as-captured-dep',
   'deeply-nested-function-expressions-with-params',
+
+  // TODO: we should be able to support these
   'readonly-object-method-calls',
   'readonly-object-method-calls-mutable-lambda',
   'preserve-memo-validation/useMemo-with-refs.flow',
@@ -483,7 +484,6 @@ const skipFilter = new Set([
   'rules-of-hooks/rules-of-hooks-69521d94fa03',
 
   // bugs
-  'bug-renaming-jsx-tag-lowercase',
   'fbt/bug-fbt-plural-multiple-function-calls',
   'fbt/bug-fbt-plural-multiple-mixed-call-tag',
   'bug-invalid-hoisting-functionexpr',
@@ -493,12 +493,15 @@ const skipFilter = new Set([
 
   // 'react-compiler-runtime' not yet supported
   'flag-enable-emit-hook-guards',
-
   'fast-refresh-refresh-on-const-changes-dev',
   'useState-pruned-dependency-change-detect',
   'useState-unpruned-dependency',
   'useState-and-other-hook-unpruned-dependency',
   'change-detect-reassign',
+
+  // Depends on external functions
+  'idx-method-no-outlining-wildcard',
+  'idx-method-no-outlining',
 
   // needs to be executed as a module
   'meta-property',

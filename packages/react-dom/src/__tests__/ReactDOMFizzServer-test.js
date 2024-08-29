@@ -7727,7 +7727,6 @@ describe('ReactDOMFizzServer', () => {
 
     const prerendered = await pendingPrerender;
 
-    expect(prerendered.postponed).toBe(null);
     expect(errors).toEqual([]);
     expect(postpones).toEqual(['manufactured', 'manufactured']);
 
@@ -7742,6 +7741,112 @@ describe('ReactDOMFizzServer', () => {
         </p>
         <p>
           <span>Loading again too...</span>
+        </p>
+      </div>,
+    );
+  });
+
+  // @gate enableHalt
+  it('can resume a prerender that was aborted', async () => {
+    const promise = new Promise(r => {});
+
+    let prerendering = true;
+
+    function Wait() {
+      if (prerendering) {
+        return React.use(promise);
+      } else {
+        return 'Hello';
+      }
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <p>
+              <span>
+                <Suspense fallback="Loading again...">
+                  <Wait />
+                </Suspense>
+              </span>
+            </p>
+            <p>
+              <span>
+                <Suspense fallback="Loading again too...">
+                  <Wait />
+                </Suspense>
+              </span>
+            </p>
+          </Suspense>
+        </div>
+      );
+    }
+
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    const errors = [];
+    function onError(error) {
+      errors.push(error);
+    }
+    let pendingPrerender;
+    await act(() => {
+      pendingPrerender = ReactDOMFizzStatic.prerenderToNodeStream(<App />, {
+        signal,
+        onError,
+      });
+    });
+    controller.abort('boom');
+
+    const prerendered = await pendingPrerender;
+
+    expect(errors).toEqual(['boom', 'boom']);
+
+    const preludeWritable = new Stream.PassThrough();
+    preludeWritable.setEncoding('utf8');
+    preludeWritable.on('data', chunk => {
+      writable.write(chunk);
+    });
+
+    await act(() => {
+      prerendered.prelude.pipe(preludeWritable);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>
+          <span>Loading again...</span>
+        </p>
+        <p>
+          <span>Loading again too...</span>
+        </p>
+      </div>,
+    );
+
+    prerendering = false;
+
+    errors.length = 0;
+    const resumed = await ReactDOMFizzServer.resumeToPipeableStream(
+      <App />,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
+      {
+        onError,
+      },
+    );
+
+    await act(() => {
+      resumed.pipe(writable);
+    });
+
+    expect(errors).toEqual([]);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>
+          <span>Hello</span>
+        </p>
+        <p>
+          <span>Hello</span>
         </p>
       </div>,
     );
@@ -8377,6 +8482,48 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
+  it('can support throwing after aborting during a render', async () => {
+    function App() {
+      return (
+        <div>
+          <Suspense fallback={<p>loading...</p>}>
+            <ComponentThatAborts />
+          </Suspense>
+        </div>
+      );
+    }
+
+    function ComponentThatAborts() {
+      abortRef.current('boom');
+      throw new Error('bam');
+    }
+
+    const abortRef = {current: null};
+    let finished = false;
+    const errors = [];
+    await act(() => {
+      const {pipe, abort} = renderToPipeableStream(<App />, {
+        onError(err) {
+          errors.push(err);
+        },
+      });
+      abortRef.current = abort;
+      writable.on('finish', () => {
+        finished = true;
+      });
+      pipe(writable);
+    });
+
+    expect(errors).toEqual(['boom']);
+
+    expect(finished).toBe(true);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>loading...</p>
+      </div>,
+    );
+  });
+
   it('should warn for using generators as children props', async () => {
     function* getChildren() {
       yield <h1 key="1">Hello</h1>;
@@ -8529,5 +8676,66 @@ describe('ReactDOMFizzServer', () => {
     expect(normalizeCodeLocInfo(ownerStack)).toBe(
       '\n    in Bar (at **)' + '\n    in Foo (at **)',
     );
+  });
+
+  it('can recover from very deep trees to avoid stack overflow', async () => {
+    function Recursive({n}) {
+      if (n > 0) {
+        return <Recursive n={n - 1} />;
+      }
+      return <span>hi</span>;
+    }
+
+    // Recursively render a component tree deep enough to trigger stack overflow.
+    // Don't make this too short to not hit the limit but also not too deep to slow
+    // down the test.
+    await act(() => {
+      const {pipe} = renderToPipeableStream(
+        <div>
+          <Recursive n={1000} />
+        </div>,
+      );
+      pipe(writable);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>hi</span>
+      </div>,
+    );
+  });
+
+  it('handles stack overflows inside components themselves', async () => {
+    function StackOverflow() {
+      // This component is recursive inside itself and is therefore an error.
+      // Assuming no tail-call optimizations.
+      function recursive(n, a0, a1, a2, a3) {
+        if (n > 0) {
+          return recursive(n - 1, a0, a1, a2, a3) + a0 + a1 + a2 + a3;
+        }
+        return a0;
+      }
+      return recursive(10000, 'should', 'not', 'resolve', 'this');
+    }
+
+    let caughtError;
+
+    await expect(async () => {
+      await act(() => {
+        const {pipe} = renderToPipeableStream(
+          <div>
+            <StackOverflow />
+          </div>,
+          {
+            onError(error, errorInfo) {
+              caughtError = error;
+            },
+          },
+        );
+        pipe(writable);
+      });
+    }).rejects.toThrow('Maximum call stack size exceeded');
+
+    expect(caughtError.message).toBe('Maximum call stack size exceeded');
   });
 });

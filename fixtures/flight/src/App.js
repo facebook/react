@@ -23,7 +23,7 @@ const promisedText = new Promise(resolve =>
   setTimeout(() => resolve('deferred text'), 100)
 );
 
-export default async function App() {
+export default async function App({prerender}) {
   const res = await fetch('http://localhost:3001/todos');
   const todos = await res.json();
   return (
@@ -35,6 +35,11 @@ export default async function App() {
       </head>
       <body>
         <Container>
+          {prerender ? (
+            <meta data-testid="prerendered" name="prerendered" content="true" />
+          ) : (
+            <meta content="when not prerendering we render this meta tag. When prerendering you will expect to see this tag and the one with data-testid=prerendered because we SSR one and hydrate the other" />
+          )}
           <h1>{getServerState()}</h1>
           <React.Suspense fallback={null}>
             <div data-testid="promise-as-a-child-test">

@@ -33,7 +33,6 @@
 untyped-type-import=error
 
 [options]
-%CI_MAX_WORKERS%
 munge_underscores=false
 
 # Substituted by createFlowConfig.js:

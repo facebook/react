@@ -1306,6 +1306,40 @@ describe('ReactFabric', () => {
     );
   });
 
+  it('findNodeHandle errors when called from render', async () => {
+    class TestComponent extends React.Component {
+      render() {
+        ReactFabric.findNodeHandle(this);
+        return null;
+      }
+    }
+    await expect(async () => {
+      await act(() => {
+        ReactFabric.render(<TestComponent />, 11, null, true);
+      });
+    }).toErrorDev([
+      'TestComponent is accessing findNodeHandle inside its render(). ' +
+        'render() should be a pure function of props and state. It should ' +
+        'never access something that requires stale data from the previous ' +
+        'render, such as refs. Move this logic to componentDidMount and ' +
+        'componentDidUpdate instead.',
+    ]);
+  });
+
+  it("findNodeHandle doesn't error when called outside render", async () => {
+    class TestComponent extends React.Component {
+      render() {
+        return null;
+      }
+      componentDidMount() {
+        ReactFabric.findNodeHandle(this);
+      }
+    }
+    await act(() => {
+      ReactFabric.render(<TestComponent />, 11, null, true);
+    });
+  });
+
   it('should no-op if calling sendAccessibilityEvent on unmounted refs', async () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},

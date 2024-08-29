@@ -20,13 +20,18 @@ import type {
   PluginOptions,
 } from 'babel-plugin-react-compiler/src/Entrypoint';
 import type {Effect, ValueKind} from 'babel-plugin-react-compiler/src/HIR';
-import type {parseConfigPragma as ParseConfigPragma} from 'babel-plugin-react-compiler/src/HIR/Environment';
+import type {
+  Macro,
+  MacroMethod,
+  parseConfigPragma as ParseConfigPragma,
+} from 'babel-plugin-react-compiler/src/HIR/Environment';
 import * as HermesParser from 'hermes-parser';
 import invariant from 'invariant';
 import path from 'path';
 import prettier from 'prettier';
 import SproutTodoFilter from './SproutTodoFilter';
 import {isExpectError} from './fixture-utils';
+import {makeSharedRuntimeTypeProvider} from './sprout/shared-runtime-type-provider';
 export function parseLanguage(source: string): 'flow' | 'typescript' {
   return source.indexOf('@flow') !== -1 ? 'flow' : 'typescript';
 }
@@ -34,6 +39,8 @@ export function parseLanguage(source: string): 'flow' | 'typescript' {
 function makePluginOptions(
   firstLine: string,
   parseConfigPragmaFn: typeof ParseConfigPragma,
+  EffectEnum: typeof Effect,
+  ValueKindEnum: typeof ValueKind,
 ): [PluginOptions, Array<{filename: string | null; event: LoggerEvent}>] {
   let gating = null;
   let enableEmitInstrumentForget = null;
@@ -46,7 +53,8 @@ function makePluginOptions(
   // TODO(@mofeiZ) rewrite snap fixtures to @validatePreserveExistingMemo:false
   let validatePreserveExistingMemoizationGuarantees = false;
   let enableChangeDetectionForDebugging = null;
-  let customMacros = null;
+  let customMacros: null | Array<Macro> = null;
+  let validateBlocklistedImports = null;
 
   if (firstLine.indexOf('@compilationMode(annotation)') !== -1) {
     assert(
@@ -149,7 +157,37 @@ function makePluginOptions(
     customMacrosMatch.length > 1 &&
     customMacrosMatch[1].trim().length > 0
   ) {
-    customMacros = customMacrosMatch[1]
+    const customMacrosStrs = customMacrosMatch[1]
+      .split(' ')
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+    if (customMacrosStrs.length > 0) {
+      customMacros = [];
+      for (const customMacroStr of customMacrosStrs) {
+        const props: Array<MacroMethod> = [];
+        const customMacroSplit = customMacroStr.split('.');
+        if (customMacroSplit.length > 0) {
+          for (const elt of customMacroSplit.slice(1)) {
+            if (elt === '*') {
+              props.push({type: 'wildcard'});
+            } else if (elt.length > 0) {
+              props.push({type: 'name', name: elt});
+            }
+          }
+          customMacros.push([customMacroSplit[0], props]);
+        }
+      }
+    }
+  }
+
+  const validateBlocklistedImportsMatch =
+    /@validateBlocklistedImports\(([^)]+)\)/.exec(firstLine);
+  if (
+    validateBlocklistedImportsMatch &&
+    validateBlocklistedImportsMatch.length > 1 &&
+    validateBlocklistedImportsMatch[1].trim().length > 0
+  ) {
+    validateBlocklistedImports = validateBlocklistedImportsMatch[1]
       .split(' ')
       .map(s => s.trim())
       .filter(s => s.length > 0);
@@ -177,35 +215,10 @@ function makePluginOptions(
   const options = {
     environment: {
       ...config,
-      customHooks: new Map([
-        [
-          'useFreeze',
-          {
-            valueKind: 'frozen' as ValueKind,
-            effectKind: 'freeze' as Effect,
-            transitiveMixedData: false,
-            noAlias: false,
-          },
-        ],
-        [
-          'useFragment',
-          {
-            valueKind: 'frozen' as ValueKind,
-            effectKind: 'freeze' as Effect,
-            transitiveMixedData: true,
-            noAlias: true,
-          },
-        ],
-        [
-          'useNoAlias',
-          {
-            valueKind: 'mutable' as ValueKind,
-            effectKind: 'read' as Effect,
-            transitiveMixedData: false,
-            noAlias: true,
-          },
-        ],
-      ]),
+      moduleTypeProvider: makeSharedRuntimeTypeProvider({
+        EffectEnum,
+        ValueKindEnum,
+      }),
       customMacros,
       enableEmitFreeze,
       enableEmitInstrumentForget,
@@ -216,6 +229,7 @@ function makePluginOptions(
       validatePreserveExistingMemoizationGuarantees,
       enableChangeDetectionForDebugging,
       lowerContextAccess,
+      validateBlocklistedImports,
     },
     compilationMode,
     logger,
@@ -347,6 +361,8 @@ export async function transformFixtureInput(
   parseConfigPragmaFn: typeof ParseConfigPragma,
   plugin: BabelCore.PluginObj,
   includeEvaluator: boolean,
+  EffectEnum: typeof Effect,
+  ValueKindEnum: typeof ValueKind,
 ): Promise<{kind: 'ok'; value: TransformResult} | {kind: 'err'; msg: string}> {
   // Extract the first line to quickly check for custom test directives
   const firstLine = input.substring(0, input.indexOf('\n'));
@@ -369,7 +385,12 @@ export async function transformFixtureInput(
   /**
    * Get Forget compiled code
    */
-  const [options, logs] = makePluginOptions(firstLine, parseConfigPragmaFn);
+  const [options, logs] = makePluginOptions(
+    firstLine,
+    parseConfigPragmaFn,
+    EffectEnum,
+    ValueKindEnum,
+  );
   const forgetResult = transformFromAstSync(inputAst, input, {
     filename: virtualFilepath,
     highlightCode: false,

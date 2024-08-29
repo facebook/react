@@ -40,6 +40,7 @@ export const enableFilterEmptyStringAttributesDOM = true;
 export const enableFizzExternalRuntime = true;
 export const enableFlightReadableStream = true;
 export const enableGetInspectorDataForInstanceInProduction = false;
+export const enableHalt = false;
 export const enableInfiniteRenderLoopDetection = true;
 export const enableLazyContextPropagation = false;
 export const enableContextProfiling = false;
@@ -79,6 +80,7 @@ export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
 export const useModernStrictMode = true;
 export const enableFabricCompleteRootInCommitPhase = false;
+export const enableSiblingPrerendering = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

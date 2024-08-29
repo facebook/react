@@ -11,6 +11,7 @@ import type {parseConfigPragma as ParseConfigPragma} from 'babel-plugin-react-co
 import {TransformResult, transformFixtureInput} from './compiler';
 import {
   COMPILER_PATH,
+  COMPILER_INDEX_PATH,
   LOGGER_PATH,
   PARSE_CONFIG_PRAGMA_PATH,
 } from './constants';
@@ -60,6 +61,9 @@ async function compile(
     const {default: BabelPluginReactCompiler} = require(COMPILER_PATH) as {
       default: PluginObj;
     };
+    const {Effect: EffectEnum, ValueKind: ValueKindEnum} = require(
+      COMPILER_INDEX_PATH,
+    );
     const {toggleLogging} = require(LOGGER_PATH);
     const {parseConfigPragma} = require(PARSE_CONFIG_PRAGMA_PATH) as {
       parseConfigPragma: typeof ParseConfigPragma;
@@ -74,6 +78,8 @@ async function compile(
       parseConfigPragma,
       BabelPluginReactCompiler,
       includeEvaluator,
+      EffectEnum,
+      ValueKindEnum,
     );
 
     if (result.kind === 'err') {

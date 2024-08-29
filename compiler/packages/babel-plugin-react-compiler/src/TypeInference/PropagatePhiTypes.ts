@@ -76,7 +76,6 @@ export function propagatePhiTypes(fn: HIRFunction): void {
       }
       if (type !== null) {
         phi.id.type = type;
-        phi.type = type;
         propagated.add(phi.id.id);
       }
     }

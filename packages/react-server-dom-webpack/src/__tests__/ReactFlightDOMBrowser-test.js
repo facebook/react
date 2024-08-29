@@ -29,6 +29,7 @@ let ReactDOM;
 let ReactDOMClient;
 let ReactDOMFizzServer;
 let ReactServerDOMServer;
+let ReactServerDOMStaticServer;
 let ReactServerDOMClient;
 let Suspense;
 let use;
@@ -60,7 +61,13 @@ describe('ReactFlightDOMBrowser', () => {
     serverExports = WebpackMock.serverExports;
     webpackMap = WebpackMock.webpackMap;
     webpackServerMap = WebpackMock.webpackServerMap;
-    ReactServerDOMServer = require('react-server-dom-webpack/server.browser');
+    ReactServerDOMServer = require('react-server-dom-webpack/server');
+    if (__EXPERIMENTAL__) {
+      jest.mock('react-server-dom-webpack/static', () =>
+        require('react-server-dom-webpack/static.browser'),
+      );
+      ReactServerDOMStaticServer = require('react-server-dom-webpack/static');
+    }
 
     __unmockReact();
     jest.resetModules();
@@ -1386,8 +1393,20 @@ describe('ReactFlightDOMBrowser', () => {
           const body = await ReactServerDOMClient.encodeReply(args);
           return callServer(ref, body);
         },
+        undefined,
+        undefined,
+        'upper',
       ),
     };
+
+    expect(ServerModuleBImportedOnClient.upper.name).toBe(
+      __DEV__ ? 'upper' : 'action',
+    );
+    if (__DEV__) {
+      expect(ServerModuleBImportedOnClient.upper.toString()).toBe(
+        '(...args) => server(...args)',
+      );
+    }
 
     function Client({action}) {
       // Client side pass a Server Reference into an action.
@@ -2331,5 +2350,132 @@ describe('ReactFlightDOMBrowser', () => {
     }
     expect(error.digest).toBe('aborted');
     expect(errors).toEqual([reason]);
+  });
+
+  // @gate experimental
+  it('can prerender', async () => {
+    let resolveGreeting;
+    const greetingPromise = new Promise(resolve => {
+      resolveGreeting = resolve;
+    });
+
+    function App() {
+      return (
+        <div>
+          <Greeting />
+        </div>
+      );
+    }
+
+    async function Greeting() {
+      await greetingPromise;
+      return 'hello world';
+    }
+
+    const {pendingResult} = await serverAct(async () => {
+      // destructure trick to avoid the act scope from awaiting the returned value
+      return {
+        pendingResult: ReactServerDOMStaticServer.prerender(
+          <App />,
+          webpackMap,
+        ),
+      };
+    });
+
+    resolveGreeting();
+    const {prelude} = await pendingResult;
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const response = ReactServerDOMClient.createFromReadableStream(
+      passThrough(prelude),
+    );
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(<ClientRoot response={response} />);
+    });
+    expect(container.innerHTML).toBe('<div>hello world</div>');
+  });
+
+  // @gate enableHalt
+  it('does not propagate abort reasons errors when aborting a prerender', async () => {
+    let resolveGreeting;
+    const greetingPromise = new Promise(resolve => {
+      resolveGreeting = resolve;
+    });
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="loading...">
+            <Greeting />
+          </Suspense>
+        </div>
+      );
+    }
+
+    async function Greeting() {
+      await greetingPromise;
+      return 'hello world';
+    }
+
+    const controller = new AbortController();
+    const errors = [];
+    const {pendingResult} = await serverAct(async () => {
+      // destructure trick to avoid the act scope from awaiting the returned value
+      return {
+        pendingResult: ReactServerDOMStaticServer.prerender(
+          <App />,
+          webpackMap,
+          {
+            signal: controller.signal,
+            onError(err) {
+              errors.push(err);
+            },
+          },
+        ),
+      };
+    });
+
+    controller.abort('boom');
+    resolveGreeting();
+    const {prelude} = await pendingResult;
+    expect(errors).toEqual(['boom']);
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const response = ReactServerDOMClient.createFromReadableStream(
+      passThrough(prelude),
+    );
+    const container = document.createElement('div');
+    errors.length = 0;
+    const root = ReactDOMClient.createRoot(container, {
+      onUncaughtError(err) {
+        errors.push(err);
+      },
+    });
+
+    await act(() => {
+      root.render(<ClientRoot response={response} />);
+    });
+
+    if (__DEV__) {
+      expect(errors).toEqual([new Error('Connection closed.')]);
+      expect(container.innerHTML).toBe('');
+    } else {
+      // This is likely a bug. In Dev we get a connection closed error
+      // because the debug info creates a chunk that has a pending status
+      // and when the stream finishes we error if any chunks are still pending.
+      // In production there is no debug info so the missing chunk is never instantiated
+      // because nothing triggers model evaluation before the stream completes
+      expect(errors).toEqual([]);
+      expect(container.innerHTML).toBe('<div>loading...</div>');
+    }
   });
 });
