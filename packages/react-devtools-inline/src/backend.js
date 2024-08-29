@@ -6,7 +6,7 @@ import {initBackend} from 'react-devtools-shared/src/backend';
 import {installConsoleFunctionsToWindow} from 'react-devtools-shared/src/backend/console';
 import {installHook} from 'react-devtools-shared/src/hook';
 import setupNativeStyleEditor from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
-import {attach} from 'react-devtools-shared/src/backend/renderer';
+import {attach} from 'react-devtools-shared/src/backend/fiber/renderer';
 import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
 import {SESSION_STORAGE_RELOAD_AND_PROFILE_KEY} from 'react-devtools-shared/src/constants';
 
