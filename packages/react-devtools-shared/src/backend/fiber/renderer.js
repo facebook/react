@@ -722,6 +722,11 @@ export function getInternalReactConstants(version: string): {
   };
 }
 
+// All environment names we've seen so far. This lets us create a list of filters to apply.
+// This should ideally include env of filtered Components too so that you can add those as
+// filters at the same time as removing some other filter.
+const knownEnvironmentNames: Set<string> = new Set();
+
 // Map of one or more Fibers in a pair to their unique id number.
 // We track both Fibers to support Fast Refresh,
 // which may forcefully replace one of the pair as part of hot reloading.
@@ -2527,6 +2532,12 @@ export function attach(
           // Scan up until the next Component to see if this component changed environment.
           const componentInfo: ReactComponentInfo = (debugEntry: any);
           const secondaryEnv = getSecondaryEnvironmentName(fiber._debugInfo, i);
+          if (componentInfo.env != null) {
+            knownEnvironmentNames.add(componentInfo.env);
+          }
+          if (secondaryEnv !== null) {
+            knownEnvironmentNames.add(secondaryEnv);
+          }
           if (shouldFilterVirtual(componentInfo, secondaryEnv)) {
             // Skip.
             continue;
@@ -2957,6 +2968,12 @@ export function attach(
             nextChild._debugInfo,
             i,
           );
+          if (componentInfo.env != null) {
+            knownEnvironmentNames.add(componentInfo.env);
+          }
+          if (secondaryEnv !== null) {
+            knownEnvironmentNames.add(secondaryEnv);
+          }
           if (shouldFilterVirtual(componentInfo, secondaryEnv)) {
             continue;
           }
