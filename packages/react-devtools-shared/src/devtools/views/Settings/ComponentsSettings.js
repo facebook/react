@@ -31,6 +31,7 @@ import {
   ComponentFilterElementType,
   ComponentFilterHOC,
   ComponentFilterLocation,
+  ComponentFilterEnvironmentName,
   ElementTypeClass,
   ElementTypeContext,
   ElementTypeFunction,
@@ -52,6 +53,7 @@ import type {
   ElementType,
   ElementTypeComponentFilter,
   RegExpComponentFilter,
+  EnvironmentNameComponentFilter,
 } from 'react-devtools-shared/src/frontend/types';
 
 const vscodeFilepath = 'vscode://file/{path}:{line}';
@@ -146,6 +148,13 @@ export default function ComponentsSettings(_: {}): React.Node {
               isEnabled: componentFilter.isEnabled,
               isValid: true,
             };
+          } else if (type === ComponentFilterEnvironmentName) {
+            cloned[index] = {
+              type: ComponentFilterEnvironmentName,
+              isEnabled: componentFilter.isEnabled,
+              isValid: true,
+              value: 'Client',
+            };
           }
         }
         return cloned;
@@ -210,6 +219,29 @@ export default function ComponentsSettings(_: {}): React.Node {
     [],
   );
 
+  const updateFilterValueEnvironmentName = useCallback(
+    (componentFilter: ComponentFilter, value: string) => {
+      if (componentFilter.type !== ComponentFilterEnvironmentName) {
+        throw Error('Invalid value for environment name filter');
+      }
+
+      setComponentFilters(prevComponentFilters => {
+        const cloned: Array<ComponentFilter> = [...prevComponentFilters];
+        if (componentFilter.type === ComponentFilterEnvironmentName) {
+          const index = prevComponentFilters.indexOf(componentFilter);
+          if (index >= 0) {
+            cloned[index] = {
+              ...componentFilter,
+              value,
+            };
+          }
+        }
+        return cloned;
+      });
+    },
+    [],
+  );
+
   const removeFilter = useCallback((index: number) => {
     setComponentFilters(prevComponentFilters => {
       const cloned: Array<ComponentFilter> = [...prevComponentFilters];
@@ -244,6 +276,11 @@ export default function ComponentsSettings(_: {}): React.Node {
           } else if (componentFilter.type === ComponentFilterHOC) {
             cloned[index] = {
               ...((cloned[index]: any): BooleanComponentFilter),
+              isEnabled,
+            };
+          } else if (componentFilter.type === ComponentFilterEnvironmentName) {
+            cloned[index] = {
+              ...((cloned[index]: any): EnvironmentNameComponentFilter),
               isEnabled,
             };
           }
@@ -380,10 +417,14 @@ export default function ComponentsSettings(_: {}): React.Node {
                   <option value={ComponentFilterDisplayName}>name</option>
                   <option value={ComponentFilterElementType}>type</option>
                   <option value={ComponentFilterHOC}>hoc</option>
+                  <option value={ComponentFilterEnvironmentName}>
+                    environment
+                  </option>
                 </select>
               </td>
               <td className={styles.TableCell}>
-                {componentFilter.type === ComponentFilterElementType &&
+                {(componentFilter.type === ComponentFilterElementType ||
+                  componentFilter.type === ComponentFilterEnvironmentName) &&
                   'equals'}
                 {(componentFilter.type === ComponentFilterLocation ||
                   componentFilter.type === ComponentFilterDisplayName) &&
@@ -427,6 +468,20 @@ export default function ComponentsSettings(_: {}): React.Node {
                     }
                     value={componentFilter.value}
                   />
+                )}
+                {componentFilter.type === ComponentFilterEnvironmentName && (
+                  <select
+                    className={styles.Select}
+                    value={componentFilter.value}
+                    onChange={({currentTarget}) =>
+                      updateFilterValueEnvironmentName(
+                        componentFilter,
+                        currentTarget.value,
+                      )
+                    }>
+                    <option value={'Client'}>Client</option>
+                    <option value={'Server'}>Server</option>
+                  </select>
                 )}
               </td>
               <td className={styles.TableCell}>
