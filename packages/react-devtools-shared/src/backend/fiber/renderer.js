@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactComponentInfo} from 'shared/ReactTypes';
+import type {ReactComponentInfo, ReactDebugInfo} from 'shared/ReactTypes';
 
 import {
   ComponentFilterDisplayName,
@@ -101,6 +101,14 @@ import {
 import {enableStyleXFeatures} from 'react-devtools-feature-flags';
 import is from 'shared/objectIs';
 import hasOwnProperty from 'shared/hasOwnProperty';
+
+// $FlowFixMe[method-unbinding]
+const toString = Object.prototype.toString;
+
+function isError(object: mixed) {
+  return toString.call(object) === '[object Error]';
+}
+
 import {getStyleXData} from '../StyleX/utils';
 import {createProfilingHooks} from '../profilingHooks';
 
@@ -131,7 +139,8 @@ import type {
   Plugins,
 } from 'react-devtools-shared/src/frontend/types';
 import type {Source} from 'react-devtools-shared/src/shared/types';
-import {getStackByFiberInDevAndProd} from './DevToolsFiberComponentStack';
+import {getSourceLocationByFiber} from './DevToolsFiberComponentStack';
+import {formatOwnerStack} from '../shared/DevToolsOwnerStack';
 
 // Kinds
 const FIBER_INSTANCE = 0;
@@ -149,12 +158,12 @@ type FiberInstance = {
   id: number,
   parent: null | DevToolsInstance, // filtered parent, including virtual
   firstChild: null | DevToolsInstance, // filtered first child, including virtual
-  previousSibling: null | DevToolsInstance, // filtered next sibling, including virtual
   nextSibling: null | DevToolsInstance, // filtered next sibling, including virtual
   flags: number, // Force Error/Suspense
-  componentStack: null | string,
+  source: null | string | Error | Source, // source location of this component function, or owned child stack
   errors: null | Map<string, number>, // error messages and count
   warnings: null | Map<string, number>, // warning messages and count
+  treeBaseDuration: number, // the profiled time of the last render of this subtree
   data: Fiber, // one of a Fiber pair
 };
 
@@ -164,12 +173,12 @@ function createFiberInstance(fiber: Fiber): FiberInstance {
     id: getUID(),
     parent: null,
     firstChild: null,
-    previousSibling: null,
     nextSibling: null,
     flags: 0,
-    componentStack: null,
+    source: null,
     errors: null,
     warnings: null,
+    treeBaseDuration: 0,
     data: fiber,
   };
 }
@@ -184,15 +193,15 @@ type VirtualInstance = {
   id: number,
   parent: null | DevToolsInstance, // filtered parent, including virtual
   firstChild: null | DevToolsInstance, // filtered first child, including virtual
-  previousSibling: null | DevToolsInstance, // filtered next sibling, including virtual
   nextSibling: null | DevToolsInstance, // filtered next sibling, including virtual
   flags: number,
-  componentStack: null | string,
+  source: null | string | Error | Source, // source location of this server component, or owned child stack
   // Errors and Warnings happen per ReactComponentInfo which can appear in
   // multiple places but we track them per stateful VirtualInstance so
   // that old errors/warnings don't disappear when the instance is refreshed.
   errors: null | Map<string, number>, // error messages and count
   warnings: null | Map<string, number>, // warning messages and count
+  treeBaseDuration: number, // the profiled time of the last render of this subtree
   // The latest info for this instance. This can be updated over time and the
   // same info can appear in more than once ServerComponentInstance.
   data: ReactComponentInfo,
@@ -206,12 +215,12 @@ function createVirtualInstance(
     id: getUID(),
     parent: null,
     firstChild: null,
-    previousSibling: null,
     nextSibling: null,
     flags: 0,
-    componentStack: null,
+    source: null,
     errors: null,
     warnings: null,
+    treeBaseDuration: 0,
     data: debugEntry,
   };
 }
@@ -1075,8 +1084,6 @@ export function attach(
         '  '.repeat(indent) + '- ' + instance.id + ' (' + name + ')',
         'parent',
         instance.parent === null ? ' ' : instance.parent.id,
-        'prev',
-        instance.previousSibling === null ? ' ' : instance.previousSibling.id,
         'next',
         instance.nextSibling === null ? ' ' : instance.nextSibling.id,
       );
@@ -1209,7 +1216,26 @@ export function attach(
   }
 
   function shouldFilterVirtual(data: ReactComponentInfo): boolean {
-    // TODO: Apply filters to VirtualInstances.
+    // For purposes of filtering Server Components are always Function Components.
+    // Environment will be used to filter Server vs Client.
+    // Technically they can be forwardRef and memo too but those filters will go away
+    // as those become just plain user space function components like any HoC.
+    if (hideElementsWithTypes.has(ElementTypeFunction)) {
+      return true;
+    }
+
+    if (hideElementsWithDisplayNames.size > 0) {
+      const displayName = data.name;
+      if (displayName != null) {
+        // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+        for (const displayNameRegExp of hideElementsWithDisplayNames) {
+          if (displayNameRegExp.test(displayName)) {
+            return true;
+          }
+        }
+      }
+    }
+
     return false;
   }
 
@@ -1345,16 +1371,6 @@ export function attach(
         }
     }
   }
-
-  // When profiling is supported, we store the latest tree base durations for each Fiber.
-  // This is so that we can quickly capture a snapshot of those values if profiling starts.
-  // If we didn't store these values, we'd have to crawl the tree when profiling started,
-  // and use a slow path to find each of the current Fibers.
-  const idToTreeBaseDurationMap: Map<number, number> = new Map();
-
-  // When profiling is supported, we store the latest tree base durations for each Fiber.
-  // This map enables us to filter these times by root when sending them to the frontend.
-  const idToRootMap: Map<number, number> = new Map();
 
   // When a mount or update is in progress, this value tracks the root that is being operated on.
   let currentRootID: number = -1;
@@ -2154,6 +2170,16 @@ export function attach(
         parentInstance,
         debugOwner,
       );
+      if (
+        ownerInstance !== null &&
+        debugOwner === fiber._debugOwner &&
+        fiber._debugStack != null &&
+        ownerInstance.source === null
+      ) {
+        // The new Fiber is directly owned by the ownerInstance. Therefore somewhere on
+        // the debugStack will be a stack frame inside the ownerInstance's source.
+        ownerInstance.source = fiber._debugStack;
+      }
       const ownerID = ownerInstance === null ? 0 : ownerInstance.id;
       const parentID = parentInstance ? parentInstance.id : 0;
 
@@ -2192,9 +2218,7 @@ export function attach(
     }
 
     if (isProfilingSupported) {
-      idToRootMap.set(id, currentRootID);
-
-      recordProfilingDurations(fiber);
+      recordProfilingDurations(fiberInstance);
     }
     return fiberInstance;
   }
@@ -2202,12 +2226,11 @@ export function attach(
   function recordVirtualMount(
     instance: VirtualInstance,
     parentInstance: DevToolsInstance | null,
+    secondaryEnv: null | string,
   ): void {
     const id = instance.id;
 
     idToDevToolsInstanceMap.set(id, instance);
-
-    const isProfilingSupported = false; // TODO: Support Tree Base Duration Based on Children.
 
     const componentInfo = instance.data;
 
@@ -2217,6 +2240,9 @@ export function attach(
     let displayName = componentInfo.name || '';
     if (typeof env === 'string') {
       // We model environment as an HoC name for now.
+      if (secondaryEnv !== null) {
+        displayName = secondaryEnv + '(' + displayName + ')';
+      }
       displayName = env + '(' + displayName + ')';
     }
     const elementType = ElementTypeVirtual;
@@ -2228,6 +2254,16 @@ export function attach(
     // away so maybe it's not so bad.
     const debugOwner = getUnfilteredOwner(componentInfo);
     const ownerInstance = findNearestOwnerInstance(parentInstance, debugOwner);
+    if (
+      ownerInstance !== null &&
+      debugOwner === componentInfo.owner &&
+      componentInfo.debugStack != null &&
+      ownerInstance.source === null
+    ) {
+      // The new Fiber is directly owned by the ownerInstance. Therefore somewhere on
+      // the debugStack will be a stack frame inside the ownerInstance's source.
+      ownerInstance.source = componentInfo.debugStack;
+    }
     const ownerID = ownerInstance === null ? 0 : ownerInstance.id;
     const parentID = parentInstance ? parentInstance.id : 0;
 
@@ -2245,12 +2281,6 @@ export function attach(
     pushOperation(ownerID);
     pushOperation(displayNameStringID);
     pushOperation(keyStringID);
-
-    if (isProfilingSupported) {
-      idToRootMap.set(id, currentRootID);
-      // TODO: Include tree base duration of children somehow.
-      // recordProfilingDurations(...);
-    }
   }
 
   function recordUnmount(fiberInstance: FiberInstance): void {
@@ -2259,16 +2289,11 @@ export function attach(
       debug('recordUnmount()', fiber, null);
     }
 
-    if (trackedPathMatchFiber !== null) {
+    if (trackedPathMatchInstance === fiberInstance) {
       // We're in the process of trying to restore previous selection.
       // If this fiber matched but is being unmounted, there's no use trying.
       // Reset the state so we don't keep holding onto it.
-      if (
-        fiber === trackedPathMatchFiber ||
-        fiber === trackedPathMatchFiber.alternate
-      ) {
-        setTrackedPath(null);
-      }
+      setTrackedPath(null);
     }
 
     const id = fiberInstance.id;
@@ -2285,12 +2310,6 @@ export function attach(
     }
 
     untrackFiber(fiberInstance);
-
-    const isProfilingSupported = fiber.hasOwnProperty('treeBaseDuration');
-    if (isProfilingSupported) {
-      idToRootMap.delete(id);
-      idToTreeBaseDurationMap.delete(id);
-    }
   }
 
   // Running state of the remaining children from the previous version of this parent that
@@ -2314,21 +2333,25 @@ export function attach(
     if (previouslyReconciledSibling === null) {
       previouslyReconciledSibling = instance;
       parentInstance.firstChild = instance;
-      instance.previousSibling = null;
     } else {
       previouslyReconciledSibling.nextSibling = instance;
-      instance.previousSibling = previouslyReconciledSibling;
       previouslyReconciledSibling = instance;
     }
     instance.nextSibling = null;
   }
 
-  function moveChild(instance: DevToolsInstance): void {
-    removeChild(instance);
+  function moveChild(
+    instance: DevToolsInstance,
+    previousSibling: null | DevToolsInstance,
+  ): void {
+    removeChild(instance, previousSibling);
     insertChild(instance);
   }
 
-  function removeChild(instance: DevToolsInstance): void {
+  function removeChild(
+    instance: DevToolsInstance,
+    previousSibling: null | DevToolsInstance,
+  ): void {
     if (instance.parent === null) {
       if (remainingReconcilingChildren === instance) {
         throw new Error(
@@ -2336,8 +2359,6 @@ export function attach(
         );
       } else if (instance.nextSibling !== null) {
         throw new Error('A deleted instance should not have next siblings');
-      } else if (instance.previousSibling !== null) {
-        throw new Error('A deleted instance should not have previous siblings');
       }
       // Already deleted.
       return;
@@ -2353,7 +2374,7 @@ export function attach(
     }
     // Remove an existing child from its current position, which we assume is in the
     // remainingReconcilingChildren set.
-    if (instance.previousSibling === null) {
+    if (previousSibling === null) {
       // We're first in the remaining set. Remove us.
       if (remainingReconcilingChildren !== instance) {
         throw new Error(
@@ -2362,13 +2383,9 @@ export function attach(
       }
       remainingReconcilingChildren = instance.nextSibling;
     } else {
-      instance.previousSibling.nextSibling = instance.nextSibling;
-    }
-    if (instance.nextSibling !== null) {
-      instance.nextSibling.previousSibling = instance.previousSibling;
+      previousSibling.nextSibling = instance.nextSibling;
     }
     instance.nextSibling = null;
-    instance.previousSibling = null;
     instance.parent = null;
   }
 
@@ -2387,6 +2404,14 @@ export function attach(
     traceNearestHostComponentUpdate: boolean,
     virtualLevel: number, // the nth level of virtual instances
   ): void {
+    // If we have the tree selection from previous reload, try to match this Instance.
+    // Also remember whether to do the same for siblings.
+    const mightSiblingsBeOnTrackedPath =
+      updateVirtualTrackedPathStateBeforeMount(
+        virtualInstance,
+        reconcilingParent,
+      );
+
     const stashedParent = reconcilingParent;
     const stashedPrevious = previouslyReconciledSibling;
     const stashedRemaining = remainingReconcilingChildren;
@@ -2401,27 +2426,45 @@ export function attach(
         traceNearestHostComponentUpdate,
         virtualLevel + 1,
       );
+      // Must be called after all children have been appended.
+      recordVirtualProfilingDurations(virtualInstance);
     } finally {
       reconcilingParent = stashedParent;
       previouslyReconciledSibling = stashedPrevious;
       remainingReconcilingChildren = stashedRemaining;
+      updateTrackedPathStateAfterMount(mightSiblingsBeOnTrackedPath);
     }
   }
 
   function recordVirtualUnmount(instance: VirtualInstance) {
-    if (trackedPathMatchFiber !== null) {
+    if (trackedPathMatchInstance === instance) {
       // We're in the process of trying to restore previous selection.
-      // TODO: Handle virtual instances on the tracked path.
+      // If this fiber matched but is being unmounted, there's no use trying.
+      // Reset the state so we don't keep holding onto it.
+      setTrackedPath(null);
     }
 
     const id = instance.id;
     pendingRealUnmountedIDs.push(id);
+  }
 
-    const isProfilingSupported = false; // TODO: Profiling support.
-    if (isProfilingSupported) {
-      idToRootMap.delete(id);
-      idToTreeBaseDurationMap.delete(id);
+  function getSecondaryEnvironmentName(
+    debugInfo: ?ReactDebugInfo,
+    index: number,
+  ): null | string {
+    if (debugInfo != null) {
+      const componentInfo: ReactComponentInfo = (debugInfo[index]: any);
+      for (let i = index + 1; i < debugInfo.length; i++) {
+        const debugEntry = debugInfo[i];
+        if (typeof debugEntry.env === 'string') {
+          // If the next environment is different then this component was the boundary
+          // and it changed before entering the next component. So we assign this
+          // component a secondary environment.
+          return componentInfo.env !== debugEntry.env ? debugEntry.env : null;
+        }
+      }
     }
+    return null;
   }
 
   function mountVirtualChildrenRecursively(
@@ -2444,7 +2487,12 @@ export function attach(
             // Not a Component. Some other Debug Info.
             continue;
           }
+          // Scan up until the next Component to see if this component changed environment.
           const componentInfo: ReactComponentInfo = (debugEntry: any);
+          if (shouldFilterVirtual(componentInfo)) {
+            // Skip.
+            continue;
+          }
           if (level === virtualLevel) {
             if (
               previousVirtualInstance === null ||
@@ -2463,7 +2511,15 @@ export function attach(
                 );
               }
               previousVirtualInstance = createVirtualInstance(componentInfo);
-              recordVirtualMount(previousVirtualInstance, reconcilingParent);
+              const secondaryEnv = getSecondaryEnvironmentName(
+                fiber._debugInfo,
+                i,
+              );
+              recordVirtualMount(
+                previousVirtualInstance,
+                reconcilingParent,
+                secondaryEnv,
+              );
               insertChild(previousVirtualInstance);
               previousVirtualInstanceFirstFiber = fiber;
             }
@@ -2526,17 +2582,20 @@ export function attach(
       debug('mountFiberRecursively()', fiber, reconcilingParent);
     }
 
-    // If we have the tree selection from previous reload, try to match this Fiber.
-    // Also remember whether to do the same for siblings.
-    const mightSiblingsBeOnTrackedPath =
-      updateTrackedPathStateBeforeMount(fiber);
-
     const shouldIncludeInTree = !shouldFilterFiber(fiber);
     let newInstance = null;
     if (shouldIncludeInTree) {
       newInstance = recordMount(fiber, reconcilingParent);
       insertChild(newInstance);
     }
+
+    // If we have the tree selection from previous reload, try to match this Fiber.
+    // Also remember whether to do the same for siblings.
+    const mightSiblingsBeOnTrackedPath = updateTrackedPathStateBeforeMount(
+      fiber,
+      newInstance,
+    );
+
     const stashedParent = reconcilingParent;
     const stashedPrevious = previouslyReconciledSibling;
     const stashedRemaining = remainingReconcilingChildren;
@@ -2575,14 +2634,15 @@ export function attach(
           const fallbackChildFragment = primaryChildFragment
             ? primaryChildFragment.sibling
             : null;
-          const fallbackChild = fallbackChildFragment
-            ? fallbackChildFragment.child
-            : null;
-          if (fallbackChild !== null) {
-            mountChildrenRecursively(
-              fallbackChild,
-              traceNearestHostComponentUpdate,
-            );
+          if (fallbackChildFragment) {
+            const fallbackChild = fallbackChildFragment.child;
+            if (fallbackChild !== null) {
+              updateTrackedPathStateBeforeMount(fallbackChildFragment, null);
+              mountChildrenRecursively(
+                fallbackChild,
+                traceNearestHostComponentUpdate,
+              );
+            }
           }
         } else {
           let primaryChild: Fiber | null = null;
@@ -2592,6 +2652,7 @@ export function attach(
             primaryChild = fiber.child;
           } else if (fiber.child !== null) {
             primaryChild = fiber.child.child;
+            updateTrackedPathStateBeforeMount(fiber.child, null);
           }
           if (primaryChild !== null) {
             mountChildrenRecursively(
@@ -2652,14 +2713,15 @@ export function attach(
     } else {
       recordVirtualUnmount(instance);
     }
-    removeChild(instance);
+    removeChild(instance, null);
   }
 
-  function recordProfilingDurations(fiber: Fiber) {
-    const id = getFiberIDThrows(fiber);
+  function recordProfilingDurations(fiberInstance: FiberInstance) {
+    const id = fiberInstance.id;
+    const fiber = fiberInstance.data;
     const {actualDuration, treeBaseDuration} = fiber;
 
-    idToTreeBaseDurationMap.set(id, treeBaseDuration || 0);
+    fiberInstance.treeBaseDuration = treeBaseDuration || 0;
 
     if (isProfiling) {
       const {alternate} = fiber;
@@ -2720,6 +2782,38 @@ export function attach(
         }
       }
     }
+  }
+
+  function recordVirtualProfilingDurations(virtualInstance: VirtualInstance) {
+    const id = virtualInstance.id;
+
+    let treeBaseDuration = 0;
+    // Add up the base duration of the child instances. The virtual base duration
+    // will be the same as children's duration since we don't take up any render
+    // time in the virtual instance.
+    for (
+      let child = virtualInstance.firstChild;
+      child !== null;
+      child = child.nextSibling
+    ) {
+      treeBaseDuration += child.treeBaseDuration;
+    }
+
+    if (isProfiling) {
+      const previousTreeBaseDuration = virtualInstance.treeBaseDuration;
+      if (treeBaseDuration !== previousTreeBaseDuration) {
+        // Tree base duration updates are included in the operations typed array.
+        // So we have to convert them from milliseconds to microseconds so we can send them as ints.
+        const convertedTreeBaseDuration = Math.floor(
+          (treeBaseDuration || 0) * 1000,
+        );
+        pushOperation(TREE_OPERATION_UPDATE_TREE_BASE_DURATION);
+        pushOperation(id);
+        pushOperation(convertedTreeBaseDuration);
+      }
+    }
+
+    virtualInstance.treeBaseDuration = treeBaseDuration;
   }
 
   function recordResetChildren(parentInstance: DevToolsInstance) {
@@ -2789,6 +2883,8 @@ export function attach(
       ) {
         recordResetChildren(virtualInstance);
       }
+      // Must be called after all children have been appended.
+      recordVirtualProfilingDurations(virtualInstance);
     } finally {
       unmountRemainingChildren();
       reconcilingParent = stashedParent;
@@ -2823,6 +2919,9 @@ export function attach(
             continue;
           }
           const componentInfo: ReactComponentInfo = (debugEntry: any);
+          if (shouldFilterVirtual(componentInfo)) {
+            continue;
+          }
           if (level === virtualLevel) {
             if (
               previousVirtualInstance === null ||
@@ -2851,8 +2950,7 @@ export function attach(
                   );
                 }
               }
-              // TODO: Find the best matching existing child based on the key if defined.
-
+              let previousSiblingOfBestMatch = null;
               let bestMatch = remainingReconcilingChildren;
               if (componentInfo.key != null) {
                 // If there is a key try to find a matching key in the set.
@@ -2864,6 +2962,7 @@ export function attach(
                   ) {
                     break;
                   }
+                  previousSiblingOfBestMatch = bestMatch;
                   bestMatch = bestMatch.nextSibling;
                 }
               }
@@ -2878,13 +2977,21 @@ export function attach(
                 // with the same name, then we claim it and reuse it for this update.
                 // Update it with the latest entry.
                 bestMatch.data = componentInfo;
-                moveChild(bestMatch);
+                moveChild(bestMatch, previousSiblingOfBestMatch);
                 previousVirtualInstance = bestMatch;
                 previousVirtualInstanceWasMount = false;
               } else {
                 // Otherwise we create a new instance.
                 const newVirtualInstance = createVirtualInstance(componentInfo);
-                recordVirtualMount(newVirtualInstance, reconcilingParent);
+                const secondaryEnv = getSecondaryEnvironmentName(
+                  nextChild._debugInfo,
+                  i,
+                );
+                recordVirtualMount(
+                  newVirtualInstance,
+                  reconcilingParent,
+                  secondaryEnv,
+                );
                 insertChild(newVirtualInstance);
                 previousVirtualInstance = newVirtualInstance;
                 previousVirtualInstanceWasMount = true;
@@ -2927,26 +3034,59 @@ export function attach(
           }
           previousVirtualInstance = null;
         }
+
         // We've reached the end of the virtual levels, but not beyond,
         // and now continue with the regular fiber.
+
+        // Do a fast pass over the remaining children to find the previous instance.
+        // TODO: This doesn't have the best O(n) for a large set of children that are
+        // reordered. Consider using a temporary map if it's not the very next one.
+        let prevChild;
         if (prevChildAtSameIndex === nextChild) {
           // This set is unchanged. We're just going through it to place all the
           // children again.
-          if (
-            updateFiberRecursively(
-              nextChild,
-              nextChild,
-              traceNearestHostComponentUpdate,
-            )
-          ) {
-            throw new Error('Updating the same fiber should not cause reorder');
+          prevChild = nextChild;
+        } else {
+          // We don't actually need to rely on the alternate here. We could also
+          // reconcile against stateNode, key or whatever. Doesn't have to be same
+          // Fiber pair.
+          prevChild = nextChild.alternate;
+        }
+        let previousSiblingOfExistingInstance = null;
+        let existingInstance = null;
+        if (prevChild !== null) {
+          existingInstance = remainingReconcilingChildren;
+          while (existingInstance !== null) {
+            if (existingInstance.data === prevChild) {
+              break;
+            }
+            previousSiblingOfExistingInstance = existingInstance;
+            existingInstance = existingInstance.nextSibling;
           }
-        } else if (nextChild.alternate) {
-          const prevChild = nextChild.alternate;
+        }
+        if (existingInstance !== null) {
+          // Common case. Match in the same parent.
+          const fiberInstance: FiberInstance = (existingInstance: any); // Only matches if it's a Fiber.
+
+          // We keep track if the order of the children matches the previous order.
+          // They are always different referentially, but if the instances line up
+          // conceptually we'll want to know that.
+          if (prevChild !== prevChildAtSameIndex) {
+            shouldResetChildren = true;
+          }
+
+          // Register the new alternate in case it's not already in.
+          fiberToFiberInstanceMap.set(nextChild, fiberInstance);
+
+          // Update the Fiber so we that we always keep the current Fiber on the data.
+          fiberInstance.data = nextChild;
+          moveChild(fiberInstance, previousSiblingOfExistingInstance);
+
           if (
             updateFiberRecursively(
+              fiberInstance,
               nextChild,
-              prevChild,
+              (prevChild: any),
               traceNearestHostComponentUpdate,
             )
           ) {
@@ -2955,14 +3095,32 @@ export function attach(
             // propagate the need to reset child order upwards to this Fiber.
             shouldResetChildren = true;
           }
-          // However we also keep track if the order of the children matches
-          // the previous order. They are always different referentially, but
-          // if the instances line up conceptually we'll want to know that.
-          if (prevChild !== prevChildAtSameIndex) {
+        } else if (prevChild !== null && shouldFilterFiber(nextChild)) {
+          // If this Fiber should be filtered, we need to still update its children.
+          // This relies on an alternate since we don't have an Instance with the previous
+          // child on it. Ideally, the reconciliation wouldn't need previous Fibers that
+          // are filtered from the tree.
+          if (
+            updateFiberRecursively(
+              null,
+              nextChild,
+              prevChild,
+              traceNearestHostComponentUpdate,
+            )
+          ) {
             shouldResetChildren = true;
           }
         } else {
+          // It's possible for a FiberInstance to be reparented when virtual parents
+          // get their sequence split or change structure with the same render result.
+          // In this case we unmount the and remount the FiberInstances.
+          // This might cause us to lose the selection but it's an edge case.
+
+          // We let the previous instance remain in the "remaining queue" it is
+          // in to be deleted at the end since it'll have no match.
+
           mountFiberRecursively(nextChild, traceNearestHostComponentUpdate);
+          // Need to mark the parent set to remount the new instance.
           shouldResetChildren = true;
         }
       }
@@ -3021,6 +3179,7 @@ export function attach(
 
   // Returns whether closest unfiltered fiber parent needs to reset its child list.
   function updateFiberRecursively(
+    fiberInstance: null | FiberInstance, // null if this should be filtered
     nextFiber: Fiber,
     prevFiber: Fiber,
     traceNearestHostComponentUpdate: boolean,
@@ -3054,34 +3213,10 @@ export function attach(
       }
     }
 
-    let fiberInstance: null | FiberInstance = null;
-    const shouldIncludeInTree = !shouldFilterFiber(nextFiber);
-    if (shouldIncludeInTree) {
-      const entry = fiberToFiberInstanceMap.get(prevFiber);
-      if (entry !== undefined && entry.parent === reconcilingParent) {
-        // Common case. Match in the same parent.
-        fiberInstance = entry;
-        // Register the new alternate in case it's not already in.
-        fiberToFiberInstanceMap.set(nextFiber, fiberInstance);
-
-        // Update the Fiber so we that we always keep the current Fiber on the data.
-        fiberInstance.data = nextFiber;
-        moveChild(fiberInstance);
-      } else {
-        // It's possible for a FiberInstance to be reparented when virtual parents
-        // get their sequence split or change structure with the same render result.
-        // In this case we unmount the and remount the FiberInstances.
-        // This might cause us to lose the selection but it's an edge case.
-
-        // We let the previous instance remain in the "remaining queue" it is
-        // in to be deleted at the end since it'll have no match.
-
-        mountFiberRecursively(nextFiber, traceNearestHostComponentUpdate);
-
-        // Need to mark the parent set to remount the new instance.
-        return true;
-      }
-
+    const stashedParent = reconcilingParent;
+    const stashedPrevious = previouslyReconciledSibling;
+    const stashedRemaining = remainingReconcilingChildren;
+    if (fiberInstance !== null) {
       if (
         mostRecentlyInspectedElement !== null &&
         mostRecentlyInspectedElement.id === fiberInstance.id &&
@@ -3091,12 +3226,6 @@ export function attach(
         // If it is inspected again, it may need to be re-run to obtain updated hooks values.
         hasElementUpdatedSinceLastInspected = true;
       }
-    }
-
-    const stashedParent = reconcilingParent;
-    const stashedPrevious = previouslyReconciledSibling;
-    const stashedRemaining = remainingReconcilingChildren;
-    if (fiberInstance !== null) {
       // Push a new DevTools instance parent while reconciling this subtree.
       reconcilingParent = fiberInstance;
       previouslyReconciledSibling = null;
@@ -3151,7 +3280,7 @@ export function attach(
         if (
           nextFallbackChildSet != null &&
           prevFallbackChildSet != null &&
-          updateFiberRecursively(
+          updateChildrenRecursively(
             nextFallbackChildSet,
             prevFallbackChildSet,
             traceNearestHostComponentUpdate,
@@ -3236,20 +3365,18 @@ export function attach(
         }
       }
 
-      if (shouldIncludeInTree) {
+      if (fiberInstance !== null) {
         const isProfilingSupported =
           nextFiber.hasOwnProperty('treeBaseDuration');
         if (isProfilingSupported) {
-          recordProfilingDurations(nextFiber);
+          recordProfilingDurations(fiberInstance);
         }
       }
       if (shouldResetChildren) {
         // We need to crawl the subtree for closest non-filtered Fibers
         // so that we can display them in a flat children set.
-        if (shouldIncludeInTree) {
-          if (reconcilingParent !== null) {
-            recordResetChildren(reconcilingParent);
-          }
+        if (fiberInstance !== null) {
+          recordResetChildren(fiberInstance);
           // We've handled the child order change for this Fiber.
           // Since it's included, there's no need to invalidate parent child order.
           return false;
@@ -3261,7 +3388,7 @@ export function attach(
         return false;
       }
     } finally {
-      if (shouldIncludeInTree) {
+      if (fiberInstance !== null) {
         unmountRemainingChildren();
         reconcilingParent = stashedParent;
         previouslyReconciledSibling = stashedPrevious;
@@ -3451,7 +3578,7 @@ export function attach(
         mountFiberRecursively(current, false);
       } else if (wasMounted && isMounted) {
         // Update an existing root.
-        updateFiberRecursively(current, alternate, false);
+        updateFiberRecursively(rootInstance, current, alternate, false);
       } else if (wasMounted && !isMounted) {
         // Unmount an existing root.
         removeRootPseudoKey(currentRootID);
@@ -3512,7 +3639,7 @@ export function attach(
     fiberInstance: FiberInstance,
   ): $ReadOnlyArray<HostInstance> {
     const hostInstances = [];
-    const fiber = findCurrentFiberUsingSlowPathByFiberInstance(fiberInstance);
+    const fiber = fiberInstance.data;
     if (!fiber) {
       return hostInstances;
     }
@@ -3563,8 +3690,7 @@ export function attach(
         // TODO: Handle VirtualInstance.
         return null;
       }
-      const fiber =
-        findCurrentFiberUsingSlowPathByFiberInstance(devtoolsInstance);
+      const fiber = devtoolsInstance.data;
       if (fiber === null) {
         return null;
       }
@@ -3626,19 +3752,16 @@ export function attach(
         }
         // We couldn't use this Fiber but we might have a VirtualInstance
         // that is the nearest unfiltered instance.
-        let parentInstance = fiberInstance.parent;
-        while (parentInstance !== null) {
-          if (parentInstance.kind === FIBER_INSTANCE) {
-            // If we find a parent Fiber, it might not be the nearest parent
-            // so we break out and continue walking the Fiber tree instead.
-            break;
-          } else {
-            if (!shouldFilterVirtual(parentInstance.data)) {
-              return parentInstance.id;
-            }
-          }
-          parentInstance = parentInstance.parent;
+        const parentInstance = fiberInstance.parent;
+        if (
+          parentInstance !== null &&
+          parentInstance.kind === VIRTUAL_INSTANCE
+        ) {
+          // Virtual Instances only exist if they're unfiltered.
+          return parentInstance.id;
         }
+        // If we find a parent Fiber, it might not be the nearest parent
+        // so we break out and continue walking the Fiber tree instead.
       }
       fiber = fiber.return;
     }
@@ -3672,229 +3795,28 @@ export function attach(
     return null;
   }
 
-  // This function is copied from React and should be kept in sync:
-  // https://github.com/facebook/react/blob/main/packages/react-reconciler/src/ReactFiberTreeReflection.js
-  function assertIsMounted(fiber: Fiber) {
-    if (getNearestMountedFiber(fiber) !== fiber) {
-      throw new Error('Unable to find node on an unmounted component.');
-    }
-  }
-
-  // This function is copied from React and should be kept in sync:
-  // https://github.com/facebook/react/blob/main/packages/react-reconciler/src/ReactFiberTreeReflection.js
-  function getNearestMountedFiber(fiber: Fiber): null | Fiber {
-    let node = fiber;
-    let nearestMounted: null | Fiber = fiber;
-    if (!fiber.alternate) {
-      // If there is no alternate, this might be a new tree that isn't inserted
-      // yet. If it is, then it will have a pending insertion effect on it.
-      let nextNode: Fiber = node;
-      do {
-        node = nextNode;
-        // TODO: This function, and these flags, are a leaked implementation
-        // detail. Once we start releasing DevTools in lockstep with React, we
-        // should import a function from the reconciler instead.
-        const Placement = 0b000000000000000000000000010;
-        const Hydrating = 0b000000000000001000000000000;
-        if ((node.flags & (Placement | Hydrating)) !== 0) {
-          // This is an insertion or in-progress hydration. The nearest possible
-          // mounted fiber is the parent but we need to continue to figure out
-          // if that one is still mounted.
-          nearestMounted = node.return;
-        }
-        // $FlowFixMe[incompatible-type] we bail out when we get a null
-        nextNode = node.return;
-      } while (nextNode);
-    } else {
-      while (node.return) {
-        node = node.return;
-      }
-    }
-    if (node.tag === HostRoot) {
-      // TODO: Check if this was a nested HostRoot when used with
-      // renderContainerIntoSubtree.
-      return nearestMounted;
-    }
-    // If we didn't hit the root, that means that we're in an disconnected tree
-    // that has been unmounted.
-    return null;
-  }
-
-  // This function is copied from React and should be kept in sync:
-  // https://github.com/facebook/react/blob/main/packages/react-reconciler/src/ReactFiberTreeReflection.js
-  // It would be nice if we updated React to inject this function directly (vs just indirectly via findDOMNode).
-  // BEGIN copied code
-  function findCurrentFiberUsingSlowPathByFiberInstance(
-    fiberInstance: FiberInstance,
-  ): Fiber | null {
-    const fiber = fiberInstance.data;
-    const alternate = fiber.alternate;
-    if (!alternate) {
-      // If there is no alternate, then we only need to check if it is mounted.
-      const nearestMounted = getNearestMountedFiber(fiber);
-
-      if (nearestMounted === null) {
-        throw new Error('Unable to find node on an unmounted component.');
-      }
-
-      if (nearestMounted !== fiber) {
-        return null;
-      }
-      return fiber;
-    }
-    // If we have two possible branches, we'll walk backwards up to the root
-    // to see what path the root points to. On the way we may hit one of the
-    // special cases and we'll deal with them.
-    let a: Fiber = fiber;
-    let b: Fiber = alternate;
-    while (true) {
-      const parentA = a.return;
-      if (parentA === null) {
-        // We're at the root.
-        break;
-      }
-      const parentB = parentA.alternate;
-      if (parentB === null) {
-        // There is no alternate. This is an unusual case. Currently, it only
-        // happens when a Suspense component is hidden. An extra fragment fiber
-        // is inserted in between the Suspense fiber and its children. Skip
-        // over this extra fragment fiber and proceed to the next parent.
-        const nextParent = parentA.return;
-        if (nextParent !== null) {
-          a = b = nextParent;
-          continue;
-        }
-        // If there's no parent, we're at the root.
-        break;
-      }
-
-      // If both copies of the parent fiber point to the same child, we can
-      // assume that the child is current. This happens when we bailout on low
-      // priority: the bailed out fiber's child reuses the current child.
-      if (parentA.child === parentB.child) {
-        let child = parentA.child;
-        while (child) {
-          if (child === a) {
-            // We've determined that A is the current branch.
-            assertIsMounted(parentA);
-            return fiber;
-          }
-          if (child === b) {
-            // We've determined that B is the current branch.
-            assertIsMounted(parentA);
-            return alternate;
-          }
-          child = child.sibling;
-        }
-
-        // We should never have an alternate for any mounting node. So the only
-        // way this could possibly happen is if this was unmounted, if at all.
-        throw new Error('Unable to find node on an unmounted component.');
-      }
-
-      if (a.return !== b.return) {
-        // The return pointer of A and the return pointer of B point to different
-        // fibers. We assume that return pointers never criss-cross, so A must
-        // belong to the child set of A.return, and B must belong to the child
-        // set of B.return.
-        a = parentA;
-        b = parentB;
-      } else {
-        // The return pointers point to the same fiber. We'll have to use the
-        // default, slow path: scan the child sets of each parent alternate to see
-        // which child belongs to which set.
-        //
-        // Search parent A's child set
-        let didFindChild = false;
-        let child = parentA.child;
-        while (child) {
-          if (child === a) {
-            didFindChild = true;
-            a = parentA;
-            b = parentB;
-            break;
-          }
-          if (child === b) {
-            didFindChild = true;
-            b = parentA;
-            a = parentB;
-            break;
-          }
-          child = child.sibling;
-        }
-        if (!didFindChild) {
-          // Search parent B's child set
-          child = parentB.child;
-          while (child) {
-            if (child === a) {
-              didFindChild = true;
-              a = parentB;
-              b = parentA;
-              break;
-            }
-            if (child === b) {
-              didFindChild = true;
-              b = parentB;
-              a = parentA;
-              break;
-            }
-            child = child.sibling;
-          }
-
-          if (!didFindChild) {
-            throw new Error(
-              'Child was not found in either parent set. This indicates a bug ' +
-                'in React related to the return pointer. Please file an issue.',
-            );
-          }
-        }
-      }
-
-      if (a.alternate !== b) {
-        throw new Error(
-          "Return fibers should always be each others' alternates. " +
-            'This error is likely caused by a bug in React. Please file an issue.',
-        );
-      }
-    }
-
-    // If the root is not a host container, we're in a disconnected tree. I.e.
-    // unmounted.
-    if (a.tag !== HostRoot) {
-      throw new Error('Unable to find node on an unmounted component.');
-    }
-
-    if (a.stateNode.current === a) {
-      // We've determined that A is the current branch.
-      return fiber;
-    }
-    // Otherwise B has to be current branch.
-    return alternate;
-  }
-
-  // END copied code
-
-  function prepareViewAttributeSource(
+  function getElementAttributeByPath(
     id: number,
     path: Array<string | number>,
-  ): void {
+  ): mixed {
     if (isMostRecentlyInspectedElement(id)) {
-      window.$attribute = getInObject(
+      return getInObject(
         ((mostRecentlyInspectedElement: any): InspectedElement),
         path,
       );
     }
+    return undefined;
   }
 
-  function prepareViewElementSource(id: number): void {
+  function getElementSourceFunctionById(id: number): null | Function {
     const devtoolsInstance = idToDevToolsInstanceMap.get(id);
     if (devtoolsInstance === undefined) {
       console.warn(`Could not find DevToolsInstance with id "${id}"`);
-      return;
+      return null;
     }
     if (devtoolsInstance.kind !== FIBER_INSTANCE) {
       // TODO: Handle VirtualInstance.
-      return;
+      return null;
     }
     const fiber = devtoolsInstance.data;
 
@@ -3906,21 +3828,16 @@ export function attach(
       case IncompleteFunctionComponent:
       case IndeterminateComponent:
       case FunctionComponent:
-        global.$type = type;
-        break;
+        return type;
       case ForwardRef:
-        global.$type = type.render;
-        break;
+        return type.render;
       case MemoComponent:
       case SimpleMemoComponent:
-        global.$type =
-          elementType != null && elementType.type != null
-            ? elementType.type
-            : type;
-        break;
+        return elementType != null && elementType.type != null
+          ? elementType.type
+          : type;
       default:
-        global.$type = null;
-        break;
+        return null;
     }
   }
 
@@ -4062,8 +3979,7 @@ export function attach(
       return {instance, style};
     }
 
-    const fiber =
-      findCurrentFiberUsingSlowPathByFiberInstance(devtoolsInstance);
+    const fiber = devtoolsInstance.data;
     if (fiber !== null) {
       instance = fiber.stateNode;
 
@@ -4119,7 +4035,7 @@ export function attach(
   function inspectFiberInstanceRaw(
     fiberInstance: FiberInstance,
   ): InspectedElement | null {
-    const fiber = findCurrentFiberUsingSlowPathByFiberInstance(fiberInstance);
+    const fiber = fiberInstance.data;
     if (fiber == null) {
       return null;
     }
@@ -4328,7 +4244,7 @@ export function attach(
 
     let source = null;
     if (canViewSource) {
-      source = getSourceForFiber(fiber);
+      source = getSourceForFiberInstance(fiberInstance);
     }
 
     return {
@@ -4370,7 +4286,6 @@ export function attach(
 
       key: key != null ? key : null,
 
-      displayName: getDisplayNameForFiber(fiber),
       type: elementType,
 
       // Inspectable properties.
@@ -4402,19 +4317,13 @@ export function attach(
   function inspectVirtualInstanceRaw(
     virtualInstance: VirtualInstance,
   ): InspectedElement | null {
-    const canViewSource = false;
+    const canViewSource = true;
+    const source = getSourceForInstance(virtualInstance);
 
     const componentInfo = virtualInstance.data;
     const key =
       typeof componentInfo.key === 'string' ? componentInfo.key : null;
     const props = null; // TODO: Track props on ReactComponentInfo;
-
-    const env = componentInfo.env;
-    let displayName = componentInfo.name || '';
-    if (typeof env === 'string') {
-      // We model environment as an HoC name for now.
-      displayName = env + '(' + displayName + ')';
-    }
 
     const owners: null | Array<SerializedElement> =
       getOwnersListFromInstance(virtualInstance);
@@ -4442,9 +4351,6 @@ export function attach(
       stylex: null,
     };
 
-    // TODO: Support getting the source location from the owner stack.
-    const source = null;
-
     return {
       id: virtualInstance.id,
 
@@ -4471,7 +4377,6 @@ export function attach(
 
       key: key,
 
-      displayName: displayName,
       type: ElementTypeVirtual,
 
       // Inspectable properties.
@@ -4835,10 +4740,12 @@ export function attach(
       return;
     }
 
+    const displayName = getDisplayNameForElementID(id);
+
     const supportsGroup = typeof console.groupCollapsed === 'function';
     if (supportsGroup) {
       console.groupCollapsed(
-        `[Click to expand] %c<${result.displayName || 'Component'} />`,
+        `[Click to expand] %c<${displayName || 'Component'} />`,
         // --dom-tag-name-color is the CSS variable Chrome styles HTML elements with in the console.
         'color: var(--dom-tag-name-color); font-weight: normal;',
       );
@@ -4881,8 +4788,7 @@ export function attach(
       // TODO: Handle VirtualInstance.
       return;
     }
-    const fiber =
-      findCurrentFiberUsingSlowPathByFiberInstance(devtoolsInstance);
+    const fiber = devtoolsInstance.data;
     if (fiber !== null) {
       const instance = fiber.stateNode;
 
@@ -4947,8 +4853,7 @@ export function attach(
       // TODO: Handle VirtualInstance.
       return;
     }
-    const fiber =
-      findCurrentFiberUsingSlowPathByFiberInstance(devtoolsInstance);
+    const fiber = devtoolsInstance.data;
     if (fiber !== null) {
       const instance = fiber.stateNode;
 
@@ -5023,8 +4928,7 @@ export function attach(
       // TODO: Handle VirtualInstance.
       return;
     }
-    const fiber =
-      findCurrentFiberUsingSlowPathByFiberInstance(devtoolsInstance);
+    const fiber = devtoolsInstance.data;
     if (fiber !== null) {
       const instance = fiber.stateNode;
 
@@ -5098,8 +5002,8 @@ export function attach(
   let currentCommitProfilingMetadata: CommitProfilingData | null = null;
   let displayNamesByRootID: DisplayNamesByRootID | null = null;
   let idToContextsMap: Map<number, any> | null = null;
-  let initialTreeBaseDurationsMap: Map<number, number> | null = null;
-  let initialIDToRootMap: Map<number, number> | null = null;
+  let initialTreeBaseDurationsMap: Map<number, Array<[number, number]>> | null =
+    null;
   let isProfiling: boolean = false;
   let profilingStartTime: number = 0;
   let recordChangeDescriptions: boolean = false;
@@ -5118,24 +5022,15 @@ export function attach(
     rootToCommitProfilingMetadataMap.forEach(
       (commitProfilingMetadata, rootID) => {
         const commitData: Array<CommitDataBackend> = [];
-        const initialTreeBaseDurations: Array<[number, number]> = [];
 
         const displayName =
           (displayNamesByRootID !== null && displayNamesByRootID.get(rootID)) ||
           'Unknown';
 
-        if (initialTreeBaseDurationsMap != null) {
-          initialTreeBaseDurationsMap.forEach((treeBaseDuration, id) => {
-            if (
-              initialIDToRootMap != null &&
-              initialIDToRootMap.get(id) === rootID
-            ) {
-              // We don't need to convert milliseconds to microseconds in this case,
-              // because the profiling summary is JSON serialized.
-              initialTreeBaseDurations.push([id, treeBaseDuration]);
-            }
-          });
-        }
+        const initialTreeBaseDurations: Array<[number, number]> =
+          (initialTreeBaseDurationsMap !== null &&
+            initialTreeBaseDurationsMap.get(rootID)) ||
+          [];
 
         commitProfilingMetadata.forEach((commitProfilingData, commitIndex) => {
           const {
@@ -5222,6 +5117,22 @@ export function attach(
     };
   }
 
+  function snapshotTreeBaseDurations(
+    instance: DevToolsInstance,
+    target: Array<[number, number]>,
+  ) {
+    // We don't need to convert milliseconds to microseconds in this case,
+    // because the profiling summary is JSON serialized.
+    target.push([instance.id, instance.treeBaseDuration]);
+    for (
+      let child = instance.firstChild;
+      child !== null;
+      child = child.nextSibling
+    ) {
+      snapshotTreeBaseDurations(child, target);
+    }
+  }
+
   function startProfiling(shouldRecordChangeDescriptions: boolean) {
     if (isProfiling) {
       return;
@@ -5234,16 +5145,19 @@ export function attach(
     // since either of these may change during the profiling session
     // (e.g. when a fiber is re-rendered or when a fiber gets removed).
     displayNamesByRootID = new Map();
-    initialTreeBaseDurationsMap = new Map(idToTreeBaseDurationMap);
-    initialIDToRootMap = new Map(idToRootMap);
+    initialTreeBaseDurationsMap = new Map();
     idToContextsMap = new Map();
 
     hook.getFiberRoots(rendererID).forEach(root => {
-      const rootID = getFiberIDThrows(root.current);
+      const rootInstance = getFiberInstanceThrows(root.current);
+      const rootID = rootInstance.id;
       ((displayNamesByRootID: any): DisplayNamesByRootID).set(
         rootID,
         getDisplayNameForRoot(root.current),
       );
+      const initialTreeBaseDurations: Array<[number, number]> = [];
+      snapshotTreeBaseDurations(rootInstance, initialTreeBaseDurations);
+      (initialTreeBaseDurationsMap: any).set(rootID, initialTreeBaseDurations);
 
       if (shouldRecordChangeDescriptions) {
         // Record all contexts at the time profiling is started.
@@ -5422,13 +5336,15 @@ export function attach(
   // Remember if we're trying to restore the selection after reload.
   // In that case, we'll do some extra checks for matching mounts.
   let trackedPath: Array<PathFrame> | null = null;
-  let trackedPathMatchFiber: Fiber | null = null;
+  let trackedPathMatchFiber: Fiber | null = null; // This is the deepest unfiltered match of a Fiber.
+  let trackedPathMatchInstance: DevToolsInstance | null = null; // This is the deepest matched filtered Instance.
   let trackedPathMatchDepth = -1;
   let mightBeOnTrackedPath = false;
 
   function setTrackedPath(path: Array<PathFrame> | null) {
     if (path === null) {
       trackedPathMatchFiber = null;
+      trackedPathMatchInstance = null;
       trackedPathMatchDepth = -1;
       mightBeOnTrackedPath = false;
     }
@@ -5438,7 +5354,10 @@ export function attach(
   // We call this before traversing a new mount.
   // It remembers whether this Fiber is the next best match for tracked path.
   // The return value signals whether we should keep matching siblings or not.
-  function updateTrackedPathStateBeforeMount(fiber: Fiber): boolean {
+  function updateTrackedPathStateBeforeMount(
+    fiber: Fiber,
+    fiberInstance: null | FiberInstance,
+  ): boolean {
     if (trackedPath === null || !mightBeOnTrackedPath) {
       // Fast path: there's nothing to track so do nothing and ignore siblings.
       return false;
@@ -5466,6 +5385,9 @@ export function attach(
       ) {
         // We have our next match.
         trackedPathMatchFiber = fiber;
+        if (fiberInstance !== null) {
+          trackedPathMatchInstance = fiberInstance;
+        }
         trackedPathMatchDepth++;
         // Are we out of frames to match?
         // $FlowFixMe[incompatible-use] found when upgrading Flow
@@ -5482,7 +5404,63 @@ export function attach(
         return false;
       }
     }
+    if (trackedPathMatchFiber === null && fiberInstance === null) {
+      // We're now looking for a Virtual Instance. It might be inside filtered Fibers
+      // so we keep looking below.
+      return true;
+    }
     // This Fiber's parent is on the path, but this Fiber itself isn't.
+    // There's no need to check its children--they won't be on the path either.
+    mightBeOnTrackedPath = false;
+    // However, one of its siblings may be on the path so keep searching.
+    return true;
+  }
+
+  function updateVirtualTrackedPathStateBeforeMount(
+    virtualInstance: VirtualInstance,
+    parentInstance: null | DevToolsInstance,
+  ): boolean {
+    if (trackedPath === null || !mightBeOnTrackedPath) {
+      // Fast path: there's nothing to track so do nothing and ignore siblings.
+      return false;
+    }
+    // Check if we've matched our nearest unfiltered parent so far.
+    if (trackedPathMatchInstance === parentInstance) {
+      const actualFrame = getVirtualPathFrame(virtualInstance);
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
+      const expectedFrame = trackedPath[trackedPathMatchDepth + 1];
+      if (expectedFrame === undefined) {
+        throw new Error('Expected to see a frame at the next depth.');
+      }
+      if (
+        actualFrame.index === expectedFrame.index &&
+        actualFrame.key === expectedFrame.key &&
+        actualFrame.displayName === expectedFrame.displayName
+      ) {
+        // We have our next match.
+        trackedPathMatchFiber = null; // Don't bother looking in Fibers anymore. We're deeper now.
+        trackedPathMatchInstance = virtualInstance;
+        trackedPathMatchDepth++;
+        // Are we out of frames to match?
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
+        if (trackedPathMatchDepth === trackedPath.length - 1) {
+          // There's nothing that can possibly match afterwards.
+          // Don't check the children.
+          mightBeOnTrackedPath = false;
+        } else {
+          // Check the children, as they might reveal the next match.
+          mightBeOnTrackedPath = true;
+        }
+        // In either case, since we have a match, we don't need
+        // to check the siblings. They'll never match.
+        return false;
+      }
+    }
+    if (trackedPathMatchFiber !== null) {
+      // We're still looking for a Fiber which might be underneath this instance.
+      return true;
+    }
+    // This Instance's parent is on the path, but this Instance itself isn't.
     // There's no need to check its children--they won't be on the path either.
     mightBeOnTrackedPath = false;
     // However, one of its siblings may be on the path so keep searching.
@@ -5588,6 +5566,14 @@ export function attach(
     };
   }
 
+  function getVirtualPathFrame(virtualInstance: VirtualInstance): PathFrame {
+    return {
+      displayName: virtualInstance.data.name || '',
+      key: virtualInstance.data.key == null ? null : virtualInstance.data.key,
+      index: -1, // We use -1 to indicate that this is a virtual path frame.
+    };
+  }
+
   // Produces a serializable representation that does a best effort
   // of identifying a particular Fiber between page reloads.
   // The return path will contain Fibers that are "invisible" to the store
@@ -5597,13 +5583,20 @@ export function attach(
     if (devtoolsInstance === undefined) {
       return null;
     }
-    if (devtoolsInstance.kind !== FIBER_INSTANCE) {
-      // TODO: Handle VirtualInstance.
-      return null;
+
+    const keyPath = [];
+
+    let inst: DevToolsInstance = devtoolsInstance;
+    while (inst.kind === VIRTUAL_INSTANCE) {
+      keyPath.push(getVirtualPathFrame(inst));
+      if (inst.parent === null) {
+        // This is a bug but non-essential. We should've found a root instance.
+        return null;
+      }
+      inst = inst.parent;
     }
 
-    let fiber: null | Fiber = devtoolsInstance.data;
-    const keyPath = [];
+    let fiber: null | Fiber = inst.data;
     while (fiber !== null) {
       // $FlowFixMe[incompatible-call] found when upgrading Flow
       keyPath.push(getPathFrame(fiber));
@@ -5619,20 +5612,12 @@ export function attach(
       // Nothing to match.
       return null;
     }
-    if (trackedPathMatchFiber === null) {
+    if (trackedPathMatchInstance === null) {
       // We didn't find anything.
       return null;
     }
-    // Find the closest Fiber store is aware of.
-    let fiber: null | Fiber = trackedPathMatchFiber;
-    while (fiber !== null && shouldFilterFiber(fiber)) {
-      fiber = fiber.return;
-    }
-    if (fiber === null) {
-      return null;
-    }
     return {
-      id: getFiberIDThrows(fiber),
+      id: trackedPathMatchInstance.id,
       // $FlowFixMe[incompatible-use] found when upgrading Flow
       isFullMatch: trackedPathMatchDepth === trackedPath.length - 1,
     };
@@ -5668,39 +5653,63 @@ export function attach(
     return idToDevToolsInstanceMap.has(id);
   }
 
-  function getComponentStackForFiber(fiber: Fiber): string | null {
-    // TODO: This should really just take an DevToolsInstance directly.
-    let fiberInstance = fiberToFiberInstanceMap.get(fiber);
-    if (fiberInstance === undefined && fiber.alternate !== null) {
-      fiberInstance = fiberToFiberInstanceMap.get(fiber.alternate);
-    }
-    if (fiberInstance === undefined) {
-      // We're no longer tracking this instance.
-      return null;
-    }
-    if (fiberInstance.componentStack !== null) {
-      // Cached entry.
-      return fiberInstance.componentStack;
+  function getSourceForFiberInstance(
+    fiberInstance: FiberInstance,
+  ): Source | null {
+    const unresolvedSource = fiberInstance.source;
+    if (
+      unresolvedSource !== null &&
+      typeof unresolvedSource === 'object' &&
+      !isError(unresolvedSource)
+    ) {
+      // $FlowFixMe: isError should have refined it.
+      return unresolvedSource;
     }
     const dispatcherRef = getDispatcherRef(renderer);
-    if (dispatcherRef == null) {
-      return null;
+    const stackFrame =
+      dispatcherRef == null
+        ? null
+        : getSourceLocationByFiber(
+            ReactTypeOfWork,
+            fiberInstance.data,
+            dispatcherRef,
+          );
+    if (stackFrame === null) {
+      // If we don't find a source location by throwing, try to get one
+      // from an owned child if possible. This is the same branch as
+      // for virtual instances.
+      return getSourceForInstance(fiberInstance);
     }
-
-    return (fiberInstance.componentStack = getStackByFiberInDevAndProd(
-      ReactTypeOfWork,
-      fiber,
-      dispatcherRef,
-    ));
+    const source = parseSourceFromComponentStack(stackFrame);
+    fiberInstance.source = source;
+    return source;
   }
 
-  function getSourceForFiber(fiber: Fiber): Source | null {
-    const componentStack = getComponentStackForFiber(fiber);
-    if (componentStack == null) {
+  function getSourceForInstance(instance: DevToolsInstance): Source | null {
+    let unresolvedSource = instance.source;
+    if (unresolvedSource === null) {
+      // We don't have any source yet. We can try again later in case an owned child mounts later.
+      // TODO: We won't have any information here if the child is filtered.
       return null;
     }
 
-    return parseSourceFromComponentStack(componentStack);
+    // If we have the debug stack (the creation stack of the JSX) for any owned child of this
+    // component, then at the bottom of that stack will be a stack frame that is somewhere within
+    // the component's function body. Typically it would be the callsite of the JSX unless there's
+    // any intermediate utility functions. This won't point to the top of the component function
+    // but it's at least somewhere within it.
+    if (isError(unresolvedSource)) {
+      unresolvedSource = formatOwnerStack((unresolvedSource: any));
+    }
+    if (typeof unresolvedSource === 'string') {
+      const idx = unresolvedSource.lastIndexOf('\n');
+      const lastLine =
+        idx === -1 ? unresolvedSource : unresolvedSource.slice(idx + 1);
+      return (instance.source = parseSourceFromComponentStack(lastLine));
+    }
+
+    // $FlowFixMe: refined.
+    return unresolvedSource;
   }
 
   return {
@@ -5727,8 +5736,8 @@ export function attach(
     inspectElement,
     logElementToConsole,
     patchConsoleForStrictMode,
-    prepareViewAttributeSource,
-    prepareViewElementSource,
+    getElementAttributeByPath,
+    getElementSourceFunctionById,
     overrideError,
     overrideSuspense,
     overrideValueAtPath,

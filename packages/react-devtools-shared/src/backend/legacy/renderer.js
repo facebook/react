@@ -775,7 +775,7 @@ export function attach(
       return null;
     }
 
-    const {displayName, key} = getData(internalInstance);
+    const {key} = getData(internalInstance);
     const type = getElementType(internalInstance);
 
     let context = null;
@@ -842,8 +842,6 @@ export function attach(
       // Only legacy context exists in legacy versions.
       hasLegacyContext: true,
 
-      displayName: displayName,
-
       type: type,
 
       key: key != null ? key : null,
@@ -876,10 +874,12 @@ export function attach(
       return;
     }
 
+    const displayName = getDisplayNameForElementID(id);
+
     const supportsGroup = typeof console.groupCollapsed === 'function';
     if (supportsGroup) {
       console.groupCollapsed(
-        `[Click to expand] %c<${result.displayName || 'Component'} />`,
+        `[Click to expand] %c<${displayName || 'Component'} />`,
         // --dom-tag-name-color is the CSS variable Chrome styles HTML elements with in the console.
         'color: var(--dom-tag-name-color); font-weight: normal;',
       );
@@ -907,30 +907,31 @@ export function attach(
     }
   }
 
-  function prepareViewAttributeSource(
+  function getElementAttributeByPath(
     id: number,
     path: Array<string | number>,
-  ): void {
+  ): mixed {
     const inspectedElement = inspectElementRaw(id);
     if (inspectedElement !== null) {
-      window.$attribute = getInObject(inspectedElement, path);
+      return getInObject(inspectedElement, path);
     }
+    return undefined;
   }
 
-  function prepareViewElementSource(id: number): void {
+  function getElementSourceFunctionById(id: number): null | Function {
     const internalInstance = idToInternalInstanceMap.get(id);
     if (internalInstance == null) {
       console.warn(`Could not find instance with id "${id}"`);
-      return;
+      return null;
     }
 
     const element = internalInstance._currentElement;
     if (element == null) {
       console.warn(`Could not find element with id "${id}"`);
-      return;
+      return null;
     }
 
-    global.$type = element.type;
+    return element.type;
   }
 
   function deletePath(
@@ -1141,8 +1142,8 @@ export function attach(
     overrideValueAtPath,
     renamePath,
     patchConsoleForStrictMode,
-    prepareViewAttributeSource,
-    prepareViewElementSource,
+    getElementAttributeByPath,
+    getElementSourceFunctionById,
     renderer,
     setTraceUpdatesEnabled,
     setTrackedPath,

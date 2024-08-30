@@ -14,6 +14,7 @@ import {
   ErrorSeverity,
 } from '../CompilerError';
 import {assertExhaustive} from '../Utils/utils';
+import {GeneratedSource} from '../HIR';
 
 /**
  * Captures the start and end range of a pair of eslint-disable ... eslint-enable comments. In the
@@ -148,10 +149,11 @@ export function findProgramSuppressions(
 
 export function suppressionsToCompilerError(
   suppressionRanges: Array<SuppressionRange>,
-): CompilerError | null {
-  if (suppressionRanges.length === 0) {
-    return null;
-  }
+): CompilerError {
+  CompilerError.invariant(suppressionRanges.length !== 0, {
+    reason: `Expected at least suppression comment source range`,
+    loc: GeneratedSource,
+  });
   const error = new CompilerError();
   for (const suppressionRange of suppressionRanges) {
     if (

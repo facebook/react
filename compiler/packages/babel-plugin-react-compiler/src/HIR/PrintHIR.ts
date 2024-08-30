@@ -191,7 +191,7 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
     case 'branch': {
       value = `[${terminal.id}] Branch (${printPlace(terminal.test)}) then:bb${
         terminal.consequent
-      } else:bb${terminal.alternate}`;
+      } else:bb${terminal.alternate} fallthrough:bb${terminal.fallthrough}`;
       break;
     }
     case 'logical': {
@@ -869,7 +869,7 @@ export function printManualMemoDependency(
       ? val.root.value.identifier.name.value
       : printIdentifier(val.root.value.identifier);
   }
-  return `${rootStr}${val.path.length > 0 ? '.' : ''}${val.path.join('.')}`;
+  return `${rootStr}${val.path.map(v => `${v.optional ? '?.' : '.'}${v.property}`).join('')}`;
 }
 export function printType(type: Type): string {
   if (type.kind === 'Type') return '';

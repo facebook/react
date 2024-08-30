@@ -180,8 +180,8 @@ class Visitor extends ReactiveFunctionVisitor<CreateUpdate> {
     [...scope.scope.dependencies].forEach(ident => {
       let target: undefined | IdentifierId =
         this.aliases.find(ident.identifier.id) ?? ident.identifier.id;
-      ident.path.forEach(key => {
-        target &&= this.paths.get(target)?.get(key);
+      ident.path.forEach(token => {
+        target &&= this.paths.get(target)?.get(token.property);
       });
       if (target && this.map.get(target) === 'Create') {
         scope.scope.dependencies.delete(ident);
