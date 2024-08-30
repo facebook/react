@@ -246,7 +246,7 @@ function validateNoRefAccessInRenderImpl(
             // Report a more precise error when calling a local function that accesses a ref
             if (state.refAccessingFunctions.has(callee.identifier.id)) {
               errors.push({
-                severity: ErrorSeverity.InvalidReact,
+                severity: ErrorSeverity.InvalidRefInRender,
                 reason:
                   'This function accesses a ref value (the `current` property), which may not be accessed during render. (https://react.dev/reference/react/useRef)',
                 loc: callee.loc,
@@ -351,7 +351,7 @@ function validateNoRefValueAccess(
     state.refAccessingFunctions.has(operand.identifier.id)
   ) {
     errors.push({
-      severity: ErrorSeverity.InvalidReact,
+      severity: ErrorSeverity.InvalidRefInRender,
       reason:
         'Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)',
       loc: state.refValues.get(operand.identifier.id) ?? operand.loc,
@@ -377,7 +377,7 @@ function validateNoRefAccess(
     state.refAccessingFunctions.has(operand.identifier.id)
   ) {
     errors.push({
-      severity: ErrorSeverity.InvalidReact,
+      severity: ErrorSeverity.InvalidRefInRender,
       reason:
         'Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)',
       loc: loc,
@@ -398,7 +398,7 @@ function validateNoDirectRefValueAccess(
 ): void {
   if (state.refValues.has(operand.identifier.id)) {
     errors.push({
-      severity: ErrorSeverity.InvalidReact,
+      severity: ErrorSeverity.InvalidRefInRender,
       reason:
         'Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)',
       loc: state.refValues.get(operand.identifier.id) ?? operand.loc,

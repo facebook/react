@@ -19,6 +19,11 @@ export enum ErrorSeverity {
    */
   InvalidReact = 'InvalidReact',
   /**
+   * Like InvalidReact, but this specific error is still in testing w some false positives
+   * so we special-case it to suppress in ESLint.
+   */
+  InvalidRefInRender = 'InvalidRefInRender',
+  /**
    * Incorrect configuration of the compiler.
    */
   InvalidConfig = 'InvalidConfig',
@@ -232,6 +237,7 @@ export class CompilerError extends Error {
         case ErrorSeverity.InvalidJS:
         case ErrorSeverity.InvalidReact:
         case ErrorSeverity.InvalidConfig:
+        case ErrorSeverity.InvalidRefInRender:
           return true;
         case ErrorSeverity.CannotPreserveMemoization:
         case ErrorSeverity.Todo:

@@ -22,7 +22,7 @@ component Component(disableLocalRef, ref) {
    5 |   const localRef = useFooRef();
    6 |   const mergedRef = useMemo(() => {
 >  7 |     return disableLocalRef ? ref : identity(ref, localRef);
-     |                                             ^^^ InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef) (7:7)
+     |                                             ^^^ InvalidRefInRender: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef) (7:7)
    8 |   }, [disableLocalRef, ref, localRef]);
    9 |   return <div ref={mergedRef} />;
   10 | }

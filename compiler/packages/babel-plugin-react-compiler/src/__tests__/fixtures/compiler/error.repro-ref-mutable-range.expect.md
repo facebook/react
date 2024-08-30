@@ -31,7 +31,7 @@ export const FIXTURE_ENTRYPOINT = {
    9 |   mutate(value);
   10 |   if (CONST_TRUE) {
 > 11 |     return <Stringify ref={identity(ref)} />;
-     |                                     ^^^ InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef) (11:11)
+     |                                     ^^^ InvalidRefInRender: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef) (11:11)
   12 |   }
   13 |   return value;
   14 | }
