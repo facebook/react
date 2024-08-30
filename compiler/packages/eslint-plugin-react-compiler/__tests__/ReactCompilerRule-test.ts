@@ -104,47 +104,21 @@ const tests: CompilerTestCases = {
         }
       `,
     },
-    {
-      name: 'Ref access in render (invalid, but suppressed internally)',
-      code: normalizeIndent`
-        function Component(props) {
-          const ref = useRef(props.init);
-          return <div>{ref.current}</div>;
-        }
-      `,
-    },
   ],
   invalid: [
-    // {
-    //   name: '[InvalidInput] Ref access during render',
-    //   code: normalizeIndent`
-    //     function Component(props) {
-    //       const ref = useRef(null);
-    //       const value = ref.current;
-    //       return value;
-    //     }
-    //   `,
-    //   errors: [
-    //     {
-    //       message:
-    //         'Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)',
-    //     },
-    //   ],
-    // },
     {
-      name: '[InvalidInput] Conditional hook',
+      name: '[InvalidInput] Ref access during render',
       code: normalizeIndent`
         function Component(props) {
-          if (props.cond) {
-            useHook();
-          }
-          return <div>{props.value}</div>;
+          const ref = useRef(null);
+          const value = ref.current;
+          return value;
         }
       `,
       errors: [
         {
           message:
-            'Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)',
+            'Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)',
         },
       ],
     },
