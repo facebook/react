@@ -310,8 +310,6 @@ export function compileProgram(
     pass.opts.eslintSuppressionRules ?? DEFAULT_ESLINT_SUPPRESSIONS,
     pass.opts.flowSuppressions,
   );
-  const lintError = suppressionsToCompilerError(suppressions);
-  let hasCriticalError = lintError != null;
   const queue: Array<{
     kind: 'original' | 'outlined';
     fn: BabelFn;
@@ -385,7 +383,8 @@ export function compileProgram(
       );
     }
 
-    if (lintError != null) {
+    let compiledFn: CodegenFunction;
+    try {
       /**
        * Note that Babel does not attach comment nodes to nodes; they are dangling off of the
        * Program node itself. We need to figure out whether an eslint suppression range
@@ -396,16 +395,15 @@ export function compileProgram(
         fn,
       );
       if (suppressionsInFunction.length > 0) {
+        const lintError = suppressionsToCompilerError(suppressionsInFunction);
         if (optOutDirectives.length > 0) {
           logError(lintError, pass, fn.node.loc ?? null);
         } else {
           handleError(lintError, pass, fn.node.loc ?? null);
         }
+        return null;
       }
-    }
 
-    let compiledFn: CodegenFunction;
-    try {
       compiledFn = compileFn(
         fn,
         environment,
@@ -436,7 +434,6 @@ export function compileProgram(
           return null;
         }
       }
-      hasCriticalError ||= isCriticalError(err);
       handleError(err, pass, fn.node.loc ?? null);
       return null;
     }
@@ -470,7 +467,7 @@ export function compileProgram(
       return null;
     }
 
-    if (!pass.opts.noEmit && !hasCriticalError) {
+    if (!pass.opts.noEmit) {
       return compiledFn;
     }
     return null;
