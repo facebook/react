@@ -106,6 +106,7 @@ import {propagatePhiTypes} from '../TypeInference/PropagatePhiTypes';
 import {lowerContextAccess} from '../Optimization/LowerContextAccess';
 import {validateNoSetStateInPassiveEffects} from '../Validation/ValidateNoSetStateInPassiveEffects';
 import {validateNoJSXInTryStatement} from '../Validation/ValidateNoJSXInTryStatement';
+import {inlineJsxTransform} from '../Optimization/InlineJSXTransform';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -347,6 +348,21 @@ function* runWithEnvironment(
     });
     assertTerminalSuccessorsExist(hir);
     assertTerminalPredsExist(hir);
+  }
+
+  if (
+    env.config.enableInlineJsxTransform &&
+    // adding multiple instructions (after creating scopes)
+    // is only safe when enableReactiveScopesInHIR, where we
+    // can update the scope ranges after modifying instructions
+    env.config.enableReactiveScopesInHIR
+  ) {
+    inlineJsxTransform(hir);
+    yield log({
+      kind: 'hir',
+      name: 'InlineJsxTransform',
+      value: hir,
+    });
   }
 
   const reactiveFunction = buildReactiveFunction(hir);
