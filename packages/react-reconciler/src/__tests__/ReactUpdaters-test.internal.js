@@ -49,6 +49,15 @@ describe('updaters', () => {
           schedulerTags.push(fiber.tag);
           schedulerTypes.push(fiber.elementType);
         });
+        fiberRoot.pendingUpdatersLaneMap.forEach((pendingUpdaters, index) => {
+          if (pendingUpdaters.size > 0) {
+            // TODO: Is it ever ok to have dangling pending updaters or is this always a bug?
+            // const lane = 1 << index;
+            // throw new Error(
+            //   `Lane ${lane} has pending updaters. Either you didn't assert on all updates in your test or React is leaking updaters.`,
+            // );
+          }
+        });
         allSchedulerTags.push(schedulerTags);
         allSchedulerTypes.push(schedulerTypes);
       }),
@@ -266,9 +275,6 @@ describe('updaters', () => {
     await waitForAll([]);
   });
 
-  // This test should be convertable to createRoot but the allScheduledTypes assertions are no longer the same
-  // So I'm leaving it in legacy mode for now and just disabling if legacy mode is turned off
-  // @gate !disableLegacyMode
   it('should cover suspense pings', async () => {
     let data = null;
     let resolver = null;
@@ -303,10 +309,11 @@ describe('updaters', () => {
       }
     };
 
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
     await act(() => {
-      ReactDOM.render(<Parent />, document.createElement('div'));
-      assertLog(['onCommitRoot']);
+      root.render(<Parent />);
     });
+    assertLog(['onCommitRoot']);
     expect(setShouldSuspend).not.toBeNull();
     expect(allSchedulerTypes).toEqual([[null]]);
 
