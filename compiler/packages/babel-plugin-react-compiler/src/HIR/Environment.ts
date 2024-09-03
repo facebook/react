@@ -233,6 +233,13 @@ const EnvironmentConfigSchema = z.object({
    */
   enableOptionalDependencies: z.boolean().default(true),
 
+  /**
+   * Enables inlining ReactElement object literals in place of JSX
+   * An alternative to the standard JSX transform which replaces JSX with React's jsxProd() runtime
+   * Currently a prod-only optimization, requiring Fast JSX dependencies
+   */
+  enableInlineJsxTransform: z.boolean().default(false),
+
   /*
    * Enable validation of hooks to partially check that the component honors the rules of hooks.
    * When disabled, the component is assumed to follow the rules (though the Babel plugin looks
