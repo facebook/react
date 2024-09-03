@@ -2773,6 +2773,17 @@ export function attach(
     ) {
       // If the parent is a Virtual Instance and we filtered this Fiber we include a
       // hidden node.
+
+      if (
+        reconcilingParent.data === fiber._debugOwner &&
+        fiber._debugStack != null &&
+        reconcilingParent.source === null
+      ) {
+        // The new Fiber is directly owned by the parent. Therefore somewhere on the
+        // debugStack will be a stack frame inside parent that we can use as its soruce.
+        reconcilingParent.source = fiber._debugStack;
+      }
+
       newInstance = createFilteredFiberInstance(fiber);
       insertChild(newInstance);
     }
