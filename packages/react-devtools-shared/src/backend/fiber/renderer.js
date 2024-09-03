@@ -754,7 +754,9 @@ function getPublicInstance(instance: HostInstance): HostInstance {
     instance !== null &&
     typeof instance.canonical === 'object'
     ? (instance.canonical: any)
-    : instance;
+    : typeof instance._nativeTag === 'number'
+      ? instance._nativeTag
+      : instance;
 }
 
 function aquireHostInstance(
