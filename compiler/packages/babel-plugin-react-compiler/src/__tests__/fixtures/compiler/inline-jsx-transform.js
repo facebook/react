@@ -24,9 +24,9 @@ function ParentAndRefAndKey(props) {
 function ParentAndChildren(props) {
   return (
     <Parent>
-      <Child key="a" />
+      <Child key="a" {...props} />
       <Child key="b">
-        <GrandChild className={props.foo} />
+        <GrandChild className={props.foo} {...props} />
       </Child>
     </Parent>
   );
@@ -34,7 +34,12 @@ function ParentAndChildren(props) {
 
 const propsToSpread = {a: 'a', b: 'b', c: 'c'};
 function PropsSpread() {
-  return <Test {...propsToSpread} />;
+  return (
+    <>
+      <Test {...propsToSpread} />
+      <Test {...propsToSpread} a="z" />
+    </>
+  );
 }
 
 export const FIXTURE_ENTRYPOINT = {

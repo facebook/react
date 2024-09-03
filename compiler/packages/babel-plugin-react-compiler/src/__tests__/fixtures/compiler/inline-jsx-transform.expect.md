@@ -28,9 +28,9 @@ function ParentAndRefAndKey(props) {
 function ParentAndChildren(props) {
   return (
     <Parent>
-      <Child key="a" />
+      <Child key="a" {...props} />
       <Child key="b">
-        <GrandChild className={props.foo} />
+        <GrandChild className={props.foo} {...props} />
       </Child>
     </Parent>
   );
@@ -38,7 +38,12 @@ function ParentAndChildren(props) {
 
 const propsToSpread = {a: 'a', b: 'b', c: 'c'};
 function PropsSpread() {
-  return <Test {...propsToSpread} />;
+  return (
+    <>
+      <Test {...propsToSpread} />
+      <Test {...propsToSpread} a="z" />
+    </>
+  );
 }
 
 export const FIXTURE_ENTRYPOINT = {
@@ -146,54 +151,59 @@ function ParentAndRefAndKey(props) {
 }
 
 function ParentAndChildren(props) {
-  const $ = _c2(3);
+  const $ = _c2(7);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] !== props) {
     t0 = {
       $$typeof: Symbol.for("react.transitional.element"),
       type: Child,
       ref: null,
       key: "a",
-      props: {},
+      props: props,
     };
-    $[0] = t0;
+    $[0] = props;
+    $[1] = t0;
   } else {
-    t0 = $[0];
+    t0 = $[1];
   }
   let t1;
-  if ($[1] !== props.foo) {
+  if ($[2] !== props) {
     t1 = {
+      $$typeof: Symbol.for("react.transitional.element"),
+      type: Child,
+      ref: null,
+      key: "b",
+      props: {
+        children: {
+          $$typeof: Symbol.for("react.transitional.element"),
+          type: GrandChild,
+          ref: null,
+          key: null,
+          props: { className: props.foo, ...props },
+        },
+      },
+    };
+    $[2] = props;
+    $[3] = t1;
+  } else {
+    t1 = $[3];
+  }
+  let t2;
+  if ($[4] !== t0 || $[5] !== t1) {
+    t2 = {
       $$typeof: Symbol.for("react.transitional.element"),
       type: Parent,
       ref: null,
       key: null,
-      props: {
-        children: [
-          t0,
-          {
-            $$typeof: Symbol.for("react.transitional.element"),
-            type: Child,
-            ref: null,
-            key: "b",
-            props: {
-              children: {
-                $$typeof: Symbol.for("react.transitional.element"),
-                type: GrandChild,
-                ref: null,
-                key: null,
-                props: { className: props.foo },
-              },
-            },
-          },
-        ],
-      },
+      props: { children: [t0, t1] },
     };
-    $[1] = props.foo;
-    $[2] = t1;
+    $[4] = t0;
+    $[5] = t1;
+    $[6] = t2;
   } else {
-    t1 = $[2];
+    t2 = $[6];
   }
-  return t1;
+  return t2;
 }
 
 const propsToSpread = { a: "a", b: "b", c: "c" };
@@ -203,10 +213,27 @@ function PropsSpread() {
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = {
       $$typeof: Symbol.for("react.transitional.element"),
-      type: Test,
+      type: Symbol.for("react.fragment"),
       ref: null,
       key: null,
-      props: { ...propsToSpread },
+      props: {
+        children: [
+          {
+            $$typeof: Symbol.for("react.transitional.element"),
+            type: Test,
+            ref: null,
+            key: null,
+            props: propsToSpread,
+          },
+          {
+            $$typeof: Symbol.for("react.transitional.element"),
+            type: Test,
+            ref: null,
+            key: null,
+            props: { ...propsToSpread, a: "z" },
+          },
+        ],
+      },
     };
     $[0] = t0;
   } else {
