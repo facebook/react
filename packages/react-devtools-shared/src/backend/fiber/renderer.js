@@ -1525,63 +1525,30 @@ export function attach(
 
   // Removes a Fiber (and its alternate) from the Maps used to track their id.
   // This method should always be called when a Fiber is unmounting.
-  function untrackFiber(fiberInstance: FiberInstance) {
+  function untrackFiber(nearestInstance: DevToolsInstance, fiber: Fiber) {
     if (__DEBUG__) {
-      debug('untrackFiber()', fiberInstance.data, null);
+      debug('untrackFiber()', fiber, null);
     }
+    // TODO: Consider using a WeakMap instead. The only thing where that doesn't work
+    // is React Native Paper which tracks tags but that support is eventually going away
+    // and can use the old findFiberByHostInstance strategy.
 
-    idToDevToolsInstanceMap.delete(fiberInstance.id);
-
-    const fiber = fiberInstance.data;
-
-    // Restore any errors/warnings associated with this fiber to the pending
-    // map. I.e. treat it as before we tracked the instances. This lets us
-    // restore them if we remount the same Fibers later. Otherwise we rely
-    // on the GC of the Fibers to clean them up.
-    if (fiberInstance.errors !== null) {
-      pendingFiberToErrorsMap.set(fiber, fiberInstance.errors);
-      fiberInstance.errors = null;
-    }
-    if (fiberInstance.warnings !== null) {
-      pendingFiberToWarningsMap.set(fiber, fiberInstance.warnings);
-      fiberInstance.warnings = null;
-    }
-
-    if (fiberInstance.flags & FORCE_ERROR) {
-      fiberInstance.flags &= ~FORCE_ERROR;
-      forceErrorCount--;
-      if (forceErrorCount === 0 && setErrorHandler != null) {
-        setErrorHandler(shouldErrorFiberAlwaysNull);
-      }
-    }
-    if (fiberInstance.flags & FORCE_SUSPENSE_FALLBACK) {
-      fiberInstance.flags &= ~FORCE_SUSPENSE_FALLBACK;
-      forceFallbackCount--;
-      if (forceFallbackCount === 0 && setSuspenseHandler != null) {
-        setSuspenseHandler(shouldSuspendFiberAlwaysFalse);
-      }
-    }
-
-    if (fiberToFiberInstanceMap.get(fiber) === fiberInstance) {
-      fiberToFiberInstanceMap.delete(fiber);
-    }
-    const {alternate} = fiber;
-    if (alternate !== null) {
-      if (fiberToFiberInstanceMap.get(alternate) === fiberInstance) {
-        fiberToFiberInstanceMap.delete(alternate);
-      }
-    }
-
-    // TODO: This is not enough if this Fiber was filtered since we don't end up
-    // untracking it. We could use a WeakMap but that doesn't work for Paper tags.
     if (fiber.tag === HostHoistable) {
-      releaseHostResource(fiberInstance, fiber.memoizedState);
+      releaseHostResource(nearestInstance, fiber.memoizedState);
     } else if (
       fiber.tag === HostComponent ||
       fiber.tag === HostText ||
       fiber.tag === HostSingleton
     ) {
-      releaseHostInstance(fiberInstance, fiber.stateNode);
+      releaseHostInstance(nearestInstance, fiber.stateNode);
+    }
+
+    // Recursively clean up any filtered Fibers below this one as well since
+    // we won't recordUnmount on those.
+    for (let child = fiber.child; child !== null; child = child.sibling) {
+      if (shouldFilterFiber(child)) {
+        untrackFiber(nearestInstance, child);
+      }
     }
   }
 
@@ -2425,7 +2392,47 @@ export function attach(
       pendingRealUnmountedIDs.push(id);
     }
 
-    untrackFiber(fiberInstance);
+    idToDevToolsInstanceMap.delete(fiberInstance.id);
+
+    // Restore any errors/warnings associated with this fiber to the pending
+    // map. I.e. treat it as before we tracked the instances. This lets us
+    // restore them if we remount the same Fibers later. Otherwise we rely
+    // on the GC of the Fibers to clean them up.
+    if (fiberInstance.errors !== null) {
+      pendingFiberToErrorsMap.set(fiber, fiberInstance.errors);
+      fiberInstance.errors = null;
+    }
+    if (fiberInstance.warnings !== null) {
+      pendingFiberToWarningsMap.set(fiber, fiberInstance.warnings);
+      fiberInstance.warnings = null;
+    }
+
+    if (fiberInstance.flags & FORCE_ERROR) {
+      fiberInstance.flags &= ~FORCE_ERROR;
+      forceErrorCount--;
+      if (forceErrorCount === 0 && setErrorHandler != null) {
+        setErrorHandler(shouldErrorFiberAlwaysNull);
+      }
+    }
+    if (fiberInstance.flags & FORCE_SUSPENSE_FALLBACK) {
+      fiberInstance.flags &= ~FORCE_SUSPENSE_FALLBACK;
+      forceFallbackCount--;
+      if (forceFallbackCount === 0 && setSuspenseHandler != null) {
+        setSuspenseHandler(shouldSuspendFiberAlwaysFalse);
+      }
+    }
+
+    if (fiberToFiberInstanceMap.get(fiber) === fiberInstance) {
+      fiberToFiberInstanceMap.delete(fiber);
+    }
+    const {alternate} = fiber;
+    if (alternate !== null) {
+      if (fiberToFiberInstanceMap.get(alternate) === fiberInstance) {
+        fiberToFiberInstanceMap.delete(alternate);
+      }
+    }
+
+    untrackFiber(fiberInstance, fiber);
   }
 
   // Running state of the remaining children from the previous version of this parent that
