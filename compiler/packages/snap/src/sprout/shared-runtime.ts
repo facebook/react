@@ -6,7 +6,7 @@
  */
 
 import {IntlVariations, IntlViewerContext, init} from 'fbt';
-import React, {FunctionComponent} from 'react';
+import React, {FunctionComponent, useMemo} from 'react';
 
 /**
  * This file is meant for use by `runner-evaluator` and fixture tests.
@@ -355,4 +355,14 @@ export function typedArrayPush<T>(array: Array<T>, item: T): void {
 export function typedLog(...values: Array<any>): void {
   console.log(...values);
 }
+
+export function useArrayConcatNotTypedAsHook<T>(
+  array1: Array<T>,
+  array2: Array<T>,
+): Array<T> {
+  return useMemo(() => {
+    return [...array1, ...array2];
+  }, [array1, array2]);
+}
+
 export default typedLog;

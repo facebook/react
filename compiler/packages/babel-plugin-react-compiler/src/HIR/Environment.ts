@@ -33,6 +33,8 @@ import {
   Type,
   ValidatedIdentifier,
   ValueKind,
+  getHookKind,
+  getHookKindForType,
   makeBlockId,
   makeIdentifierId,
   makeIdentifierName,
@@ -788,14 +790,9 @@ export class Environment {
           );
         } else {
           const moduleType = this.#resolveModuleType(binding.module, loc);
+          let propertyType: Type | null = null;
           if (moduleType !== null) {
-            const importedType = this.getPropertyType(
-              moduleType,
-              binding.imported,
-            );
-            if (importedType != null) {
-              return importedType;
-            }
+            propertyType = this.getPropertyType(moduleType, binding.imported);
           }
 
           /**
@@ -806,9 +803,18 @@ export class Environment {
            * `import {useHook as foo} ...`
            * `import {foo as useHook} ...`
            */
-          return isHookName(binding.imported) || isHookName(binding.name)
-            ? this.#getCustomHookType()
-            : null;
+          const expectHook =
+            isHookName(binding.imported) || isHookName(binding.name);
+          if (expectHook) {
+            if (
+              propertyType &&
+              getHookKindForType(this, propertyType) !== null
+            ) {
+              return propertyType;
+            }
+            return this.#getCustomHookType();
+          }
+          return propertyType;
         }
       }
       case 'ImportDefault':
@@ -821,17 +827,27 @@ export class Environment {
           );
         } else {
           const moduleType = this.#resolveModuleType(binding.module, loc);
+          let importedType: Type | null = null;
           if (moduleType !== null) {
             if (binding.kind === 'ImportDefault') {
               const defaultType = this.getPropertyType(moduleType, 'default');
               if (defaultType !== null) {
-                return defaultType;
+                importedType = defaultType;
               }
             } else {
-              return moduleType;
+              importedType = moduleType;
             }
           }
-          return isHookName(binding.name) ? this.#getCustomHookType() : null;
+          if (isHookName(binding.name)) {
+            if (
+              importedType !== null &&
+              getHookKindForType(this, importedType) !== null
+            ) {
+              return importedType;
+            }
+            return this.#getCustomHookType();
+          }
+          return importedType;
         }
       }
     }
