@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9fd63ef3b1c7300e9c6d203ae91a8b08>>
+ * @generated SignedSource<<f2db4f138a96e7535db3c704161f2a6d>>
  */
 
 "use strict";
@@ -3676,6 +3676,14 @@ __DEV__ &&
     }
     function finishRenderingHooks(current, workInProgress) {
       workInProgress._debugHookTypes = hookTypesDev;
+      null === workInProgress.dependencies
+        ? null !== thenableState &&
+          (workInProgress.dependencies = {
+            lanes: 0,
+            firstContext: null,
+            _debugThenableState: thenableState
+          })
+        : (workInProgress.dependencies._debugThenableState = thenableState);
       ReactSharedInternals.H = ContextOnlyDispatcher;
       var didRenderTooFewHooks =
         null !== currentHook && null !== currentHook.next;
@@ -7796,7 +7804,11 @@ __DEV__ &&
               "Context can only be read while React is rendering. In classes, you can read it in the render method or getDerivedStateFromProps. In function components, you can read it directly in the function body, but not inside Hooks like useReducer() or useMemo()."
             );
           lastContextDependency = context;
-          consumer.dependencies = { lanes: 0, firstContext: context };
+          consumer.dependencies = {
+            lanes: 0,
+            firstContext: context,
+            _debugThenableState: null
+          };
         } else lastContextDependency = lastContextDependency.next = context;
       return value;
     }
@@ -12230,7 +12242,8 @@ __DEV__ &&
           ? null
           : {
               lanes: pendingProps.lanes,
-              firstContext: pendingProps.firstContext
+              firstContext: pendingProps.firstContext,
+              _debugThenableState: pendingProps._debugThenableState
             };
       workInProgress.sibling = current.sibling;
       workInProgress.index = current.index;
@@ -12283,7 +12296,8 @@ __DEV__ &&
               ? null
               : {
                   lanes: renderLanes.lanes,
-                  firstContext: renderLanes.firstContext
+                  firstContext: renderLanes.firstContext,
+                  _debugThenableState: renderLanes._debugThenableState
                 }),
           (workInProgress.selfBaseDuration = current.selfBaseDuration),
           (workInProgress.treeBaseDuration = current.treeBaseDuration));
@@ -14938,11 +14952,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-246d7bfe-20240826",
+        version: "19.0.0-native-fb-8d68da3f-20240903",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-native-fb-246d7bfe-20240826"
+        reconcilerVersion: "19.0.0-native-fb-8d68da3f-20240903"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15087,5 +15101,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.0.0-native-fb-246d7bfe-20240826";
+    exports.version = "19.0.0-native-fb-8d68da3f-20240903";
   })();
