@@ -90,7 +90,6 @@ export type GetDisplayNameForElementID = (id: number) => string | null;
 
 export type GetElementIDForHostInstance = (
   component: HostInstance,
-  findNearestUnfilteredAncestor?: boolean,
 ) => number | null;
 export type FindHostInstancesForElementID = (
   id: number,
@@ -106,10 +105,11 @@ export type Lane = number;
 export type Lanes = number;
 
 export type ReactRenderer = {
-  findFiberByHostInstance: (hostInstance: HostInstance) => Fiber | null,
   version: string,
   rendererPackageName: string,
   bundleType: BundleType,
+  // 16.0+ - To be removed in future versions.
+  findFiberByHostInstance?: (hostInstance: HostInstance) => Fiber | null,
   // 16.9+
   overrideHookState?: ?(
     fiber: Object,
@@ -358,9 +358,7 @@ export type RendererInterface = {
   findHostInstancesForElementID: FindHostInstancesForElementID,
   flushInitialOperations: () => void,
   getBestMatchForTrackedPath: () => PathMatch | null,
-  getNearestMountedHostInstance: (
-    component: HostInstance,
-  ) => HostInstance | null,
+  getNearestMountedDOMNode: (component: Element) => Element | null,
   getElementIDForHostInstance: GetElementIDForHostInstance,
   getDisplayNameForElementID: GetDisplayNameForElementID,
   getInstanceAndStyle(id: number): InstanceAndStyle,

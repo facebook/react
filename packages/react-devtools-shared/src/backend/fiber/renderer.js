@@ -738,35 +738,93 @@ const fiberToFiberInstanceMap: Map<Fiber, FiberInstance> = new Map();
 // operations that should be the same whether the current and work-in-progress Fiber is used.
 const idToDevToolsInstanceMap: Map<number, DevToolsInstance> = new Map();
 
-// Map of resource DOM nodes to all the Fibers that depend on it.
-const hostResourceToFiberMap: Map<HostInstance, Set<Fiber>> = new Map();
+// Map of canonical HostInstances to the nearest parent DevToolsInstance.
+const publicInstanceToDevToolsInstanceMap: Map<HostInstance, DevToolsInstance> =
+  new Map();
+// Map of resource DOM nodes to all the nearest DevToolsInstances that depend on it.
+const hostResourceToDevToolsInstanceMap: Map<
+  HostInstance,
+  Set<DevToolsInstance>,
+> = new Map();
+
+function getPublicInstance(instance: HostInstance): HostInstance {
+  // Typically the PublicInstance and HostInstance is the same thing but not in Fabric.
+  // So we need to detect this and use that as the public instance.
+  return typeof instance === 'object' &&
+    instance !== null &&
+    typeof instance.canonical === 'object'
+    ? (instance.canonical: any)
+    : typeof instance._nativeTag === 'number'
+      ? instance._nativeTag
+      : instance;
+}
+
+function aquireHostInstance(
+  nearestInstance: DevToolsInstance,
+  hostInstance: HostInstance,
+): void {
+  const publicInstance = getPublicInstance(hostInstance);
+  publicInstanceToDevToolsInstanceMap.set(publicInstance, nearestInstance);
+}
+
+function releaseHostInstance(
+  nearestInstance: DevToolsInstance,
+  hostInstance: HostInstance,
+): void {
+  const publicInstance = getPublicInstance(hostInstance);
+  if (
+    publicInstanceToDevToolsInstanceMap.get(publicInstance) === nearestInstance
+  ) {
+    publicInstanceToDevToolsInstanceMap.delete(publicInstance);
+  }
+}
 
 function aquireHostResource(
-  fiber: Fiber,
+  nearestInstance: DevToolsInstance,
   resource: ?{instance?: HostInstance},
 ): void {
   const hostInstance = resource && resource.instance;
   if (hostInstance) {
-    let resourceFibers = hostResourceToFiberMap.get(hostInstance);
-    if (resourceFibers === undefined) {
-      resourceFibers = new Set();
-      hostResourceToFiberMap.set(hostInstance, resourceFibers);
+    const publicInstance = getPublicInstance(hostInstance);
+    let resourceInstances =
+      hostResourceToDevToolsInstanceMap.get(publicInstance);
+    if (resourceInstances === undefined) {
+      resourceInstances = new Set();
+      hostResourceToDevToolsInstanceMap.set(publicInstance, resourceInstances);
+      // Store the first match in the main map for quick access when selecting DOM node.
+      publicInstanceToDevToolsInstanceMap.set(publicInstance, nearestInstance);
     }
-    resourceFibers.add(fiber);
+    resourceInstances.add(nearestInstance);
   }
 }
 
 function releaseHostResource(
-  fiber: Fiber,
+  nearestInstance: DevToolsInstance,
   resource: ?{instance?: HostInstance},
 ): void {
   const hostInstance = resource && resource.instance;
   if (hostInstance) {
-    const resourceFibers = hostResourceToFiberMap.get(hostInstance);
-    if (resourceFibers !== undefined) {
-      resourceFibers.delete(fiber);
-      if (resourceFibers.size === 0) {
-        hostResourceToFiberMap.delete(hostInstance);
+    const publicInstance = getPublicInstance(hostInstance);
+    const resourceInstances =
+      hostResourceToDevToolsInstanceMap.get(publicInstance);
+    if (resourceInstances !== undefined) {
+      resourceInstances.delete(nearestInstance);
+      if (resourceInstances.size === 0) {
+        hostResourceToDevToolsInstanceMap.delete(publicInstance);
+        publicInstanceToDevToolsInstanceMap.delete(publicInstance);
+      } else if (
+        publicInstanceToDevToolsInstanceMap.get(publicInstance) ===
+        nearestInstance
+      ) {
+        // This was the first one. Store the next first one in the main map for easy access.
+        // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+        for (const firstInstance of resourceInstances) {
+          publicInstanceToDevToolsInstanceMap.set(
+            firstInstance,
+            nearestInstance,
+          );
+          break;
+        }
       }
     }
   }
@@ -1467,50 +1525,29 @@ export function attach(
 
   // Removes a Fiber (and its alternate) from the Maps used to track their id.
   // This method should always be called when a Fiber is unmounting.
-  function untrackFiber(fiberInstance: FiberInstance) {
+  function untrackFiber(nearestInstance: DevToolsInstance, fiber: Fiber) {
     if (__DEBUG__) {
-      debug('untrackFiber()', fiberInstance.data, null);
+      debug('untrackFiber()', fiber, null);
+    }
+    // TODO: Consider using a WeakMap instead. The only thing where that doesn't work
+    // is React Native Paper which tracks tags but that support is eventually going away
+    // and can use the old findFiberByHostInstance strategy.
+
+    if (fiber.tag === HostHoistable) {
+      releaseHostResource(nearestInstance, fiber.memoizedState);
+    } else if (
+      fiber.tag === HostComponent ||
+      fiber.tag === HostText ||
+      fiber.tag === HostSingleton
+    ) {
+      releaseHostInstance(nearestInstance, fiber.stateNode);
     }
 
-    idToDevToolsInstanceMap.delete(fiberInstance.id);
-
-    const fiber = fiberInstance.data;
-
-    // Restore any errors/warnings associated with this fiber to the pending
-    // map. I.e. treat it as before we tracked the instances. This lets us
-    // restore them if we remount the same Fibers later. Otherwise we rely
-    // on the GC of the Fibers to clean them up.
-    if (fiberInstance.errors !== null) {
-      pendingFiberToErrorsMap.set(fiber, fiberInstance.errors);
-      fiberInstance.errors = null;
-    }
-    if (fiberInstance.warnings !== null) {
-      pendingFiberToWarningsMap.set(fiber, fiberInstance.warnings);
-      fiberInstance.warnings = null;
-    }
-
-    if (fiberInstance.flags & FORCE_ERROR) {
-      fiberInstance.flags &= ~FORCE_ERROR;
-      forceErrorCount--;
-      if (forceErrorCount === 0 && setErrorHandler != null) {
-        setErrorHandler(shouldErrorFiberAlwaysNull);
-      }
-    }
-    if (fiberInstance.flags & FORCE_SUSPENSE_FALLBACK) {
-      fiberInstance.flags &= ~FORCE_SUSPENSE_FALLBACK;
-      forceFallbackCount--;
-      if (forceFallbackCount === 0 && setSuspenseHandler != null) {
-        setSuspenseHandler(shouldSuspendFiberAlwaysFalse);
-      }
-    }
-
-    if (fiberToFiberInstanceMap.get(fiber) === fiberInstance) {
-      fiberToFiberInstanceMap.delete(fiber);
-    }
-    const {alternate} = fiber;
-    if (alternate !== null) {
-      if (fiberToFiberInstanceMap.get(alternate) === fiberInstance) {
-        fiberToFiberInstanceMap.delete(alternate);
+    // Recursively clean up any filtered Fibers below this one as well since
+    // we won't recordUnmount on those.
+    for (let child = fiber.child; child !== null; child = child.sibling) {
+      if (shouldFilterFiber(child)) {
+        untrackFiber(nearestInstance, child);
       }
     }
   }
@@ -2355,7 +2392,47 @@ export function attach(
       pendingRealUnmountedIDs.push(id);
     }
 
-    untrackFiber(fiberInstance);
+    idToDevToolsInstanceMap.delete(fiberInstance.id);
+
+    // Restore any errors/warnings associated with this fiber to the pending
+    // map. I.e. treat it as before we tracked the instances. This lets us
+    // restore them if we remount the same Fibers later. Otherwise we rely
+    // on the GC of the Fibers to clean them up.
+    if (fiberInstance.errors !== null) {
+      pendingFiberToErrorsMap.set(fiber, fiberInstance.errors);
+      fiberInstance.errors = null;
+    }
+    if (fiberInstance.warnings !== null) {
+      pendingFiberToWarningsMap.set(fiber, fiberInstance.warnings);
+      fiberInstance.warnings = null;
+    }
+
+    if (fiberInstance.flags & FORCE_ERROR) {
+      fiberInstance.flags &= ~FORCE_ERROR;
+      forceErrorCount--;
+      if (forceErrorCount === 0 && setErrorHandler != null) {
+        setErrorHandler(shouldErrorFiberAlwaysNull);
+      }
+    }
+    if (fiberInstance.flags & FORCE_SUSPENSE_FALLBACK) {
+      fiberInstance.flags &= ~FORCE_SUSPENSE_FALLBACK;
+      forceFallbackCount--;
+      if (forceFallbackCount === 0 && setSuspenseHandler != null) {
+        setSuspenseHandler(shouldSuspendFiberAlwaysFalse);
+      }
+    }
+
+    if (fiberToFiberInstanceMap.get(fiber) === fiberInstance) {
+      fiberToFiberInstanceMap.delete(fiber);
+    }
+    const {alternate} = fiber;
+    if (alternate !== null) {
+      if (fiberToFiberInstanceMap.get(alternate) === fiberInstance) {
+        fiberToFiberInstanceMap.delete(alternate);
+      }
+    }
+
+    untrackFiber(fiberInstance, fiber);
   }
 
   // Running state of the remaining children from the previous version of this parent that
@@ -2670,7 +2747,21 @@ export function attach(
       }
 
       if (fiber.tag === HostHoistable) {
-        aquireHostResource(fiber, fiber.memoizedState);
+        const nearestInstance = reconcilingParent;
+        if (nearestInstance === null) {
+          throw new Error('Did not expect a host hoistable to be the root');
+        }
+        aquireHostResource(nearestInstance, fiber.memoizedState);
+      } else if (
+        fiber.tag === HostComponent ||
+        fiber.tag === HostText ||
+        fiber.tag === HostSingleton
+      ) {
+        const nearestInstance = reconcilingParent;
+        if (nearestInstance === null) {
+          throw new Error('Did not expect a host hoistable to be the root');
+        }
+        aquireHostInstance(nearestInstance, fiber.stateNode);
       }
 
       if (fiber.tag === SuspenseComponent) {
@@ -3291,8 +3382,12 @@ export function attach(
     }
     try {
       if (nextFiber.tag === HostHoistable) {
-        releaseHostResource(prevFiber, prevFiber.memoizedState);
-        aquireHostResource(nextFiber, nextFiber.memoizedState);
+        const nearestInstance = reconcilingParent;
+        if (nearestInstance === null) {
+          throw new Error('Did not expect a host hoistable to be the root');
+        }
+        releaseHostResource(nearestInstance, prevFiber.memoizedState);
+        aquireHostResource(nearestInstance, nextFiber.memoizedState);
       }
 
       const isSuspense = nextFiber.tag === SuspenseComponent;
@@ -3780,82 +3875,21 @@ export function attach(
     }
   }
 
-  function getNearestMountedHostInstance(
-    hostInstance: HostInstance,
-  ): null | HostInstance {
-    const mountedFiber = renderer.findFiberByHostInstance(hostInstance);
-    if (mountedFiber != null) {
-      if (mountedFiber.stateNode !== hostInstance) {
-        // If it's not a perfect match the specific one might be a resource.
-        // We don't need to look at any parents because host resources don't have
-        // children so it won't be in any parent if it's not this one.
-        if (hostResourceToFiberMap.has(hostInstance)) {
-          return hostInstance;
-        }
-      }
-      return mountedFiber.stateNode;
+  function getNearestMountedDOMNode(publicInstance: Element): null | Element {
+    let domNode: null | Element = publicInstance;
+    while (domNode && !publicInstanceToDevToolsInstanceMap.has(domNode)) {
+      // $FlowFixMe: In practice this is either null or Element.
+      domNode = domNode.parentNode;
     }
-    if (hostResourceToFiberMap.has(hostInstance)) {
-      return hostInstance;
-    }
-    return null;
-  }
-
-  function findNearestUnfilteredElementID(searchFiber: Fiber) {
-    let fiber: null | Fiber = searchFiber;
-    while (fiber !== null) {
-      const fiberInstance = getFiberInstanceUnsafe(fiber);
-      if (fiberInstance !== null) {
-        // TODO: Ideally we would not have any filtered FiberInstances which
-        // would make this logic much simpler. Unfortunately, we sometimes
-        // eagerly add to the map and some times don't eagerly clean it up.
-        // TODO: If the fiber is filtered, the FiberInstance wouldn't really
-        // exist which would mean that we also don't have a way to get to the
-        // VirtualInstances.
-        if (!shouldFilterFiber(fiberInstance.data)) {
-          return fiberInstance.id;
-        }
-        // We couldn't use this Fiber but we might have a VirtualInstance
-        // that is the nearest unfiltered instance.
-        const parentInstance = fiberInstance.parent;
-        if (
-          parentInstance !== null &&
-          parentInstance.kind === VIRTUAL_INSTANCE
-        ) {
-          // Virtual Instances only exist if they're unfiltered.
-          return parentInstance.id;
-        }
-        // If we find a parent Fiber, it might not be the nearest parent
-        // so we break out and continue walking the Fiber tree instead.
-      }
-      fiber = fiber.return;
-    }
-    return null;
+    return domNode;
   }
 
   function getElementIDForHostInstance(
-    hostInstance: HostInstance,
-    findNearestUnfilteredAncestor: boolean = false,
+    publicInstance: HostInstance,
   ): number | null {
-    const resourceFibers = hostResourceToFiberMap.get(hostInstance);
-    if (resourceFibers !== undefined) {
-      // This is a resource. Find the first unfiltered instance.
-      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-      for (const resourceFiber of resourceFibers) {
-        const elementID = findNearestUnfilteredElementID(resourceFiber);
-        if (elementID !== null) {
-          return elementID;
-        }
-      }
-      // If we don't find one, fallthrough to select the parent instead.
-    }
-    const fiber = renderer.findFiberByHostInstance(hostInstance);
-    if (fiber != null) {
-      if (!findNearestUnfilteredAncestor) {
-        // TODO: Remove this option. It's not used.
-        return getFiberIDThrows(fiber);
-      }
-      return findNearestUnfilteredElementID(fiber);
+    const instance = publicInstanceToDevToolsInstanceMap.get(publicInstance);
+    if (instance !== undefined) {
+      return instance.id;
     }
     return null;
   }
@@ -5788,7 +5822,7 @@ export function attach(
     flushInitialOperations,
     getBestMatchForTrackedPath,
     getDisplayNameForElementID,
-    getNearestMountedHostInstance,
+    getNearestMountedDOMNode,
     getElementIDForHostInstance,
     getInstanceAndStyle,
     getOwnersList,
