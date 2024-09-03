@@ -33,7 +33,6 @@ import {
   Type,
   ValidatedIdentifier,
   ValueKind,
-  getHookKind,
   getHookKindForType,
   makeBlockId,
   makeIdentifierId,
