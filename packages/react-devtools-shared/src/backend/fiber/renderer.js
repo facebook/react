@@ -3393,6 +3393,18 @@ export function attach(
             // I.e. we just restore them by undoing what we did above.
             fiberInstance.firstChild = remainingReconcilingChildren;
             remainingReconcilingChildren = null;
+
+            if (traceUpdatesEnabled) {
+              // If we're tracing updates and we've bailed out before reaching a host node,
+              // we should fall back to recursively marking the nearest host descendants for highlight.
+              if (traceNearestHostComponentUpdate) {
+                const hostInstances =
+                  findAllCurrentHostInstances(fiberInstance);
+                hostInstances.forEach(hostInstance => {
+                  traceUpdatesForNodes.add(hostInstance);
+                });
+              }
+            }
           } else {
             // If this fiber is filtered there might be changes to this set elsewhere so we have
             // to visit each child to place it back in the set. We let the child bail out instead.
@@ -3402,19 +3414,6 @@ export function attach(
               throw new Error(
                 'The children should not have changed if we pass in the same set.',
               );
-            }
-          }
-
-          if (traceUpdatesEnabled) {
-            // If we're tracing updates and we've bailed out before reaching a host node,
-            // we should fall back to recursively marking the nearest host descendants for highlight.
-            if (traceNearestHostComponentUpdate) {
-              const hostInstances = findAllCurrentHostInstances(
-                getFiberInstanceThrows(nextFiber),
-              );
-              hostInstances.forEach(hostInstance => {
-                traceUpdatesForNodes.add(hostInstance);
-              });
             }
           }
         }
@@ -3690,15 +3689,31 @@ export function attach(
     return null;
   }
 
-  function findAllCurrentHostInstances(
-    fiberInstance: FiberInstance,
-  ): $ReadOnlyArray<HostInstance> {
-    const hostInstances = [];
-    const fiber = fiberInstance.data;
-    if (!fiber) {
-      return hostInstances;
+  function appendHostInstancesByDevToolsInstance(
+    devtoolsInstance: DevToolsInstance,
+    hostInstances: Array<HostInstance>,
+  ) {
+    if (devtoolsInstance.kind === FIBER_INSTANCE) {
+      const fiber = devtoolsInstance.data;
+      appendHostInstancesByFiber(fiber, hostInstances);
+      return;
     }
+    // Search the tree for the nearest child Fiber and add all its host instances.
+    // TODO: If the true nearest Fiber is filtered, we might skip it and instead include all
+    // the children below it. In the extreme case, searching the whole tree.
+    for (
+      let child = devtoolsInstance.firstChild;
+      child !== null;
+      child = child.nextSibling
+    ) {
+      appendHostInstancesByDevToolsInstance(child, hostInstances);
+    }
+  }
 
+  function appendHostInstancesByFiber(
+    fiber: Fiber,
+    hostInstances: Array<HostInstance>,
+  ): void {
     // Next we'll drill down this component to find all HostComponent/Text.
     let node: Fiber = fiber;
     while (true) {
@@ -3718,19 +3733,24 @@ export function attach(
         continue;
       }
       if (node === fiber) {
-        return hostInstances;
+        return;
       }
       while (!node.sibling) {
         if (!node.return || node.return === fiber) {
-          return hostInstances;
+          return;
         }
         node = node.return;
       }
       node.sibling.return = node.return;
       node = node.sibling;
     }
-    // Flow needs the return here, but ESLint complains about it.
-    // eslint-disable-next-line no-unreachable
+  }
+
+  function findAllCurrentHostInstances(
+    devtoolsInstance: DevToolsInstance,
+  ): $ReadOnlyArray<HostInstance> {
+    const hostInstances: Array<HostInstance> = [];
+    appendHostInstancesByDevToolsInstance(devtoolsInstance, hostInstances);
     return hostInstances;
   }
 
@@ -3741,17 +3761,7 @@ export function attach(
         console.warn(`Could not find DevToolsInstance with id "${id}"`);
         return null;
       }
-      if (devtoolsInstance.kind !== FIBER_INSTANCE) {
-        // TODO: Handle VirtualInstance.
-        return null;
-      }
-      const fiber = devtoolsInstance.data;
-      if (fiber === null) {
-        return null;
-      }
-
-      const hostInstances = findAllCurrentHostInstances(devtoolsInstance);
-      return hostInstances;
+      return findAllCurrentHostInstances(devtoolsInstance);
     } catch (err) {
       // The fiber might have unmounted by now.
       return null;
