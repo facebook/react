@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9ef28de841583eb0dc8a86a45dee3b60>>
+ * @generated SignedSource<<c45c09b72c4bf573045f0f9ed76c8735>>
  */
 
 "use strict";
@@ -12135,20 +12135,28 @@ __DEV__ &&
       current = null;
       if (thrownValue === SuspenseException) {
         thrownValue = getSuspendedThenable();
-        var handler = suspenseHandlerStackCursor.current;
+        var JSCompiler_temp;
+        if ((JSCompiler_temp = !enableSiblingPrerendering))
+          (JSCompiler_temp = suspenseHandlerStackCursor.current),
+            (JSCompiler_temp =
+              null === JSCompiler_temp
+                ? !0
+                : (workInProgressRootRenderLanes & 4194176) ===
+                    workInProgressRootRenderLanes
+                  ? null === shellBoundary
+                    ? !0
+                    : !1
+                  : (workInProgressRootRenderLanes & 62914560) ===
+                        workInProgressRootRenderLanes ||
+                      0 !== (workInProgressRootRenderLanes & 536870912)
+                    ? JSCompiler_temp === shellBoundary
+                    : !1);
         workInProgressSuspendedReason =
-          (null !== handler &&
-            ((workInProgressRootRenderLanes & 4194176) ===
-            workInProgressRootRenderLanes
-              ? null !== shellBoundary
-              : ((workInProgressRootRenderLanes & 62914560) !==
-                  workInProgressRootRenderLanes &&
-                  0 === (workInProgressRootRenderLanes & 536870912)) ||
-                handler !== shellBoundary)) ||
-          0 !== (workInProgressRootSkippedLanes & 134217727) ||
-          0 !== (workInProgressRootInterleavedUpdatedLanes & 134217727)
-            ? SuspendedOnImmediate
-            : SuspendedOnData;
+          JSCompiler_temp &&
+          0 === (workInProgressRootSkippedLanes & 134217727) &&
+          0 === (workInProgressRootInterleavedUpdatedLanes & 134217727)
+            ? SuspendedOnData
+            : SuspendedOnImmediate;
       } else
         thrownValue === SuspenseyCommitException
           ? ((thrownValue = getSuspendedThenable()),
@@ -12162,8 +12170,8 @@ __DEV__ &&
                   ? SuspendedOnDeprecatedThrowPromise
                   : SuspendedOnError);
       workInProgressThrownValue = thrownValue;
-      handler = workInProgress;
-      if (null === handler)
+      JSCompiler_temp = workInProgress;
+      if (null === JSCompiler_temp)
         (workInProgressRootExitStatus = RootFatalErrored),
           logUncaughtError(
             root,
@@ -12171,8 +12179,8 @@ __DEV__ &&
           );
       else
         switch (
-          (handler.mode & 2 &&
-            stopProfilerTimerIfRunningAndRecordDelta(handler, !0),
+          (JSCompiler_temp.mode & 2 &&
+            stopProfilerTimerIfRunningAndRecordDelta(JSCompiler_temp, !0),
           markComponentRenderStopped(),
           workInProgressSuspendedReason)
         ) {
@@ -12181,7 +12189,7 @@ __DEV__ &&
               "function" ===
                 typeof injectedProfilingHooks.markComponentErrored &&
               injectedProfilingHooks.markComponentErrored(
-                handler,
+                JSCompiler_temp,
                 thrownValue,
                 workInProgressRootRenderLanes
               );
@@ -12194,7 +12202,7 @@ __DEV__ &&
               "function" ===
                 typeof injectedProfilingHooks.markComponentSuspended &&
               injectedProfilingHooks.markComponentSuspended(
-                handler,
+                JSCompiler_temp,
                 thrownValue,
                 workInProgressRootRenderLanes
               );
@@ -14239,6 +14247,7 @@ __DEV__ &&
         dynamicFlagsUntyped.passChildrenWhenCloningPersistedNodes,
       enableLazyContextPropagation =
         dynamicFlagsUntyped.enableLazyContextPropagation,
+      enableSiblingPrerendering = dynamicFlagsUntyped.enableSiblingPrerendering,
       REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_ELEMENT_TYPE = REACT_LEGACY_ELEMENT_TYPE,
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
@@ -16966,11 +16975,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-8d68da3f-20240903",
+        version: "19.0.0-native-fb-8b4c54c0-20240904",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-native-fb-8d68da3f-20240903"
+        reconcilerVersion: "19.0.0-native-fb-8b4c54c0-20240904"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

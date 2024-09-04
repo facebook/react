@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<acaa31fb9763a1810659aacab7dd2a6f>>
+ * @generated SignedSource<<701a1703314df38ee706d756e6e3248d>>
  */
 
 "use strict";
@@ -29,6 +29,7 @@ var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/R
     dynamicFlagsUntyped.passChildrenWhenCloningPersistedNodes,
   enableLazyContextPropagation =
     dynamicFlagsUntyped.enableLazyContextPropagation,
+  enableSiblingPrerendering = dynamicFlagsUntyped.enableSiblingPrerendering,
   ReactSharedInternals =
     React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
@@ -9494,20 +9495,28 @@ function handleThrow(root, thrownValue) {
   ReactSharedInternals.H = ContextOnlyDispatcher;
   if (thrownValue === SuspenseException) {
     thrownValue = getSuspendedThenable();
-    var handler = suspenseHandlerStackCursor.current;
+    var JSCompiler_temp;
+    if ((JSCompiler_temp = !enableSiblingPrerendering))
+      (JSCompiler_temp = suspenseHandlerStackCursor.current),
+        (JSCompiler_temp =
+          null === JSCompiler_temp
+            ? !0
+            : (workInProgressRootRenderLanes & 4194176) ===
+                workInProgressRootRenderLanes
+              ? null === shellBoundary
+                ? !0
+                : !1
+              : (workInProgressRootRenderLanes & 62914560) ===
+                    workInProgressRootRenderLanes ||
+                  0 !== (workInProgressRootRenderLanes & 536870912)
+                ? JSCompiler_temp === shellBoundary
+                : !1);
     workInProgressSuspendedReason =
-      (null !== handler &&
-        ((workInProgressRootRenderLanes & 4194176) ===
-        workInProgressRootRenderLanes
-          ? null !== shellBoundary
-          : ((workInProgressRootRenderLanes & 62914560) !==
-              workInProgressRootRenderLanes &&
-              0 === (workInProgressRootRenderLanes & 536870912)) ||
-            handler !== shellBoundary)) ||
-      0 !== (workInProgressRootSkippedLanes & 134217727) ||
-      0 !== (workInProgressRootInterleavedUpdatedLanes & 134217727)
-        ? 3
-        : 2;
+      JSCompiler_temp &&
+      0 === (workInProgressRootSkippedLanes & 134217727) &&
+      0 === (workInProgressRootInterleavedUpdatedLanes & 134217727)
+        ? 2
+        : 3;
   } else
     thrownValue === SuspenseyCommitException
       ? ((thrownValue = getSuspendedThenable()),
@@ -10852,11 +10861,11 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1151 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-8d68da3f-20240903",
+    version: "19.0.0-native-fb-8b4c54c0-20240904",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromNode,
-    reconcilerVersion: "19.0.0-native-fb-8d68da3f-20240903"
+    reconcilerVersion: "19.0.0-native-fb-8b4c54c0-20240904"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1151.rendererConfig = extraDevToolsConfig);

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<66f469fe8d1e9d3359bff291d6b8e511>>
+ * @generated SignedSource<<6ffe18738e0ea1f4805fa47e84a02551>>
  */
 
 "use strict";
@@ -23,6 +23,7 @@ var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/R
     dynamicFlagsUntyped.enablePersistedModeClonedFlag,
   enableLazyContextPropagation =
     dynamicFlagsUntyped.enableLazyContextPropagation,
+  enableSiblingPrerendering = dynamicFlagsUntyped.enableSiblingPrerendering,
   ReactSharedInternals =
     React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
@@ -9909,20 +9910,28 @@ function handleThrow(root, thrownValue) {
   ReactSharedInternals.H = ContextOnlyDispatcher;
   if (thrownValue === SuspenseException) {
     thrownValue = getSuspendedThenable();
-    var handler = suspenseHandlerStackCursor.current;
+    var JSCompiler_temp;
+    if ((JSCompiler_temp = !enableSiblingPrerendering))
+      (JSCompiler_temp = suspenseHandlerStackCursor.current),
+        (JSCompiler_temp =
+          null === JSCompiler_temp
+            ? !0
+            : (workInProgressRootRenderLanes & 4194176) ===
+                workInProgressRootRenderLanes
+              ? null === shellBoundary
+                ? !0
+                : !1
+              : (workInProgressRootRenderLanes & 62914560) ===
+                    workInProgressRootRenderLanes ||
+                  0 !== (workInProgressRootRenderLanes & 536870912)
+                ? JSCompiler_temp === shellBoundary
+                : !1);
     workInProgressSuspendedReason =
-      (null !== handler &&
-        ((workInProgressRootRenderLanes & 4194176) ===
-        workInProgressRootRenderLanes
-          ? null !== shellBoundary
-          : ((workInProgressRootRenderLanes & 62914560) !==
-              workInProgressRootRenderLanes &&
-              0 === (workInProgressRootRenderLanes & 536870912)) ||
-            handler !== shellBoundary)) ||
-      0 !== (workInProgressRootSkippedLanes & 134217727) ||
-      0 !== (workInProgressRootInterleavedUpdatedLanes & 134217727)
-        ? 3
-        : 2;
+      JSCompiler_temp &&
+      0 === (workInProgressRootSkippedLanes & 134217727) &&
+      0 === (workInProgressRootInterleavedUpdatedLanes & 134217727)
+        ? 2
+        : 3;
   } else
     thrownValue === SuspenseyCommitException
       ? ((thrownValue = getSuspendedThenable()),
@@ -10965,11 +10974,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.0.0-native-fb-8d68da3f-20240903" !== isomorphicReactPackageVersion)
+if ("19.0.0-native-fb-8b4c54c0-20240904" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.0.0-native-fb-8d68da3f-20240903\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.0.0-native-fb-8b4c54c0-20240904\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11018,11 +11027,11 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1222 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-8d68da3f-20240903",
+    version: "19.0.0-native-fb-8b4c54c0-20240904",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromTag,
-    reconcilerVersion: "19.0.0-native-fb-8d68da3f-20240903"
+    reconcilerVersion: "19.0.0-native-fb-8b4c54c0-20240904"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1222.rendererConfig = extraDevToolsConfig);
