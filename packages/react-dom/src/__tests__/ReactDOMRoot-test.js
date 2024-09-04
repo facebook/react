@@ -407,6 +407,36 @@ describe('ReactDOMRoot', () => {
     );
   });
 
+  it('warn if element is passed as options to hydrateRoot', async () => {
+    expect(() =>
+      ReactDOMClient.hydrateRoot(
+        container,
+        <div>
+          <span />
+        </div>,
+        <div>
+          <span />
+        </div>,
+      ),
+    ).toErrorDev(
+      'You passed a JSX element as an options to hydrateRoot. You probably meant to ' +
+        'call root.render instead. ',
+      {withoutStack: true},
+    );
+  });
+
+  it('should not warn if a React element is passed as the second argument', () => {
+    expect(() =>
+      ReactDOMClient.hydrateRoot(container, <div />),
+    ).not.toErrorDev();
+  });
+
+  it('should not warn if a valid options object is passed as the third argument', () => {
+    expect(() =>
+      ReactDOMClient.hydrateRoot(container, <div />, {hydrate: true}),
+    ).not.toErrorDev();
+  });
+
   it('warns when given a function', () => {
     function Component() {
       return <div />;
