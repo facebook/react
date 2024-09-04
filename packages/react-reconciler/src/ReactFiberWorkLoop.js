@@ -161,6 +161,7 @@ import {
   SyncUpdateLanes,
   UpdateLanes,
   claimNextTransitionLane,
+  checkIfRootIsPrerendering,
 } from './ReactFiberLane';
 import {
   DiscreteEventPriority,
@@ -328,6 +329,15 @@ const SuspendedOnHydration: SuspendedReason = 8;
 // immediately instead of unwinding the stack.
 let workInProgressSuspendedReason: SuspendedReason = NotSuspended;
 let workInProgressThrownValue: mixed = null;
+
+// Tracks whether any siblings were skipped during the unwind phase after
+// something suspends. Used to determine whether to schedule another render
+// to prewarm the skipped siblings.
+let workInProgressRootDidSkipSuspendedSiblings: boolean = false;
+// Whether the work-in-progress render is the result of a prewarm/prerender.
+// This tells us whether or not we should render the siblings after
+// something suspends.
+let workInProgressRootIsPrerendering: boolean = false;
 
 // Whether a ping listener was attached during this render. This is slightly
 // different that whether something suspended, because we don't add multiple
@@ -731,6 +741,7 @@ export function scheduleUpdateOnFiber(
       root,
       workInProgressRootRenderLanes,
       workInProgressDeferredLane,
+      workInProgressRootDidSkipSuspendedSiblings,
     );
   }
 
@@ -797,6 +808,7 @@ export function scheduleUpdateOnFiber(
           root,
           workInProgressRootRenderLanes,
           workInProgressDeferredLane,
+          workInProgressRootDidSkipSuspendedSiblings,
         );
       }
     }
@@ -909,7 +921,12 @@ export function performConcurrentWorkOnRoot(
         // The render unwound without completing the tree. This happens in special
         // cases where need to exit the current render without producing a
         // consistent tree or committing.
-        markRootSuspended(root, lanes, NoLane);
+        markRootSuspended(
+          root,
+          lanes,
+          NoLane,
+          workInProgressRootDidSkipSuspendedSiblings,
+        );
       } else {
         // The render completed.
 
@@ -965,7 +982,12 @@ export function performConcurrentWorkOnRoot(
         }
         if (exitStatus === RootFatalErrored) {
           prepareFreshStack(root, NoLanes);
-          markRootSuspended(root, lanes, NoLane);
+          markRootSuspended(
+            root,
+            lanes,
+            NoLane,
+            workInProgressRootDidSkipSuspendedSiblings,
+          );
           break;
         }
 
@@ -1088,7 +1110,12 @@ function finishConcurrentRender(
         // This is a transition, so we should exit without committing a
         // placeholder and without scheduling a timeout. Delay indefinitely
         // until we receive more data.
-        markRootSuspended(root, lanes, workInProgressDeferredLane);
+        markRootSuspended(
+          root,
+          lanes,
+          workInProgressDeferredLane,
+          workInProgressRootDidSkipSuspendedSiblings,
+        );
         return;
       }
       // Commit the placeholder.
@@ -1132,7 +1159,12 @@ function finishConcurrentRender(
 
       // Don't bother with a very short suspense time.
       if (msUntilTimeout > 10) {
-        markRootSuspended(root, lanes, workInProgressDeferredLane);
+        markRootSuspended(
+          root,
+          lanes,
+          workInProgressDeferredLane,
+          workInProgressRootDidSkipSuspendedSiblings,
+        );
 
         const nextLanes = getNextLanes(root, NoLanes);
         if (nextLanes !== NoLanes) {
@@ -1156,6 +1188,7 @@ function finishConcurrentRender(
             workInProgressRootDidIncludeRecursiveRenderUpdate,
             lanes,
             workInProgressDeferredLane,
+            workInProgressRootDidSkipSuspendedSiblings,
           ),
           msUntilTimeout,
         );
@@ -1170,6 +1203,7 @@ function finishConcurrentRender(
       workInProgressRootDidIncludeRecursiveRenderUpdate,
       lanes,
       workInProgressDeferredLane,
+      workInProgressRootDidSkipSuspendedSiblings,
     );
   }
 }
@@ -1182,6 +1216,7 @@ function commitRootWhenReady(
   didIncludeRenderPhaseUpdate: boolean,
   lanes: Lanes,
   spawnedLane: Lane,
+  didSkipSuspendedSiblings: boolean,
 ) {
   // TODO: Combine retry throttling with Suspensey commits. Right now they run
   // one after the other.
@@ -1221,7 +1256,7 @@ function commitRootWhenReady(
           didIncludeRenderPhaseUpdate,
         ),
       );
-      markRootSuspended(root, lanes, spawnedLane);
+      markRootSuspended(root, lanes, spawnedLane, didSkipSuspendedSiblings);
       return;
     }
   }
@@ -1333,6 +1368,7 @@ function markRootSuspended(
   root: FiberRoot,
   suspendedLanes: Lanes,
   spawnedLane: Lane,
+  didSkipSuspendedSiblings: boolean,
 ) {
   // When suspending, we should always exclude lanes that were pinged or (more
   // rarely, since we try to avoid it) updated during the render phase.
@@ -1341,7 +1377,12 @@ function markRootSuspended(
     suspendedLanes,
     workInProgressRootInterleavedUpdatedLanes,
   );
-  _markRootSuspended(root, suspendedLanes, spawnedLane);
+  _markRootSuspended(
+    root,
+    suspendedLanes,
+    spawnedLane,
+    didSkipSuspendedSiblings,
+  );
 }
 
 // This is the entry point for synchronous tasks that don't go
@@ -1393,7 +1434,7 @@ export function performSyncWorkOnRoot(root: FiberRoot, lanes: Lanes): null {
 
   if (exitStatus === RootFatalErrored) {
     prepareFreshStack(root, NoLanes);
-    markRootSuspended(root, lanes, NoLane);
+    markRootSuspended(root, lanes, NoLane, false);
     ensureRootIsScheduled(root);
     return null;
   }
@@ -1402,7 +1443,12 @@ export function performSyncWorkOnRoot(root: FiberRoot, lanes: Lanes): null {
     // The render unwound without completing the tree. This happens in special
     // cases where need to exit the current render without producing a
     // consistent tree or committing.
-    markRootSuspended(root, lanes, workInProgressDeferredLane);
+    markRootSuspended(
+      root,
+      lanes,
+      workInProgressDeferredLane,
+      workInProgressRootDidSkipSuspendedSiblings,
+    );
     ensureRootIsScheduled(root);
     return null;
   }
@@ -1636,6 +1682,8 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   workInProgressRootRenderLanes = lanes;
   workInProgressSuspendedReason = NotSuspended;
   workInProgressThrownValue = null;
+  workInProgressRootDidSkipSuspendedSiblings = false;
+  workInProgressRootIsPrerendering = checkIfRootIsPrerendering(root, lanes);
   workInProgressRootDidAttachPingListener = false;
   workInProgressRootExitStatus = RootInProgress;
   workInProgressRootSkippedLanes = NoLanes;
@@ -1940,6 +1988,7 @@ export function renderDidSuspendDelayIfPossible(): void {
       workInProgressRoot,
       workInProgressRootRenderLanes,
       workInProgressDeferredLane,
+      workInProgressRootDidSkipSuspendedSiblings,
     );
   }
 }
@@ -2589,7 +2638,30 @@ function throwAndUnwindWorkLoop(
 
   if (unitOfWork.flags & Incomplete) {
     // Unwind the stack until we reach the nearest boundary.
-    unwindUnitOfWork(unitOfWork);
+    let skipSiblings;
+    if (!enableSiblingPrerendering) {
+      skipSiblings = true;
+    } else {
+      if (
+        // The current algorithm for both hydration and error handling assumes
+        // that the tree is rendered sequentially. So we always skip the siblings.
+        getIsHydrating() ||
+        workInProgressSuspendedReason === SuspendedOnError
+      ) {
+        skipSiblings = true;
+        // We intentionally don't set workInProgressRootDidSkipSuspendedSiblings,
+        // because we don't want to trigger another prerender attempt.
+      } else if (!workInProgressRootIsPrerendering) {
+        // This is not a prerender. Skip the siblings during this render. A
+        // separate prerender will be scheduled for later.
+        skipSiblings = true;
+        workInProgressRootDidSkipSuspendedSiblings = true;
+      } else {
+        // This is a prerender. Don't skip the siblings.
+        skipSiblings = false;
+      }
+    }
+    unwindUnitOfWork(unitOfWork, skipSiblings);
   } else {
     // Although the fiber suspended, we're intentionally going to commit it in
     // an inconsistent state. We can do this safely in cases where we know the
@@ -2625,15 +2697,16 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
   // sibling. If there are no more siblings, return to the parent fiber.
   let completedWork: Fiber = unitOfWork;
   do {
-    if (__DEV__) {
-      if ((completedWork.flags & Incomplete) !== NoFlags) {
-        // NOTE: If we re-enable sibling prerendering in some cases, this branch
-        // is where we would switch to the unwinding path.
-        console.error(
-          'Internal React error: Expected this fiber to be complete, but ' +
-            "it isn't. It should have been unwound. This is a bug in React.",
-        );
-      }
+    if ((completedWork.flags & Incomplete) !== NoFlags) {
+      // This fiber did not complete, because one of its children did not
+      // complete. Switch to unwinding the stack instead of completing it.
+      //
+      // The reason "unwind" and "complete" is interleaved is because when
+      // something suspends, we continue rendering the siblings even though
+      // they will be replaced by a fallback.
+      const skipSiblings = workInProgressRootDidSkipSuspendedSiblings;
+      unwindUnitOfWork(completedWork, skipSiblings);
+      return;
     }
 
     // The current, flushed, state of this fiber is the alternate. Ideally
@@ -2697,7 +2770,7 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
   }
 }
 
-function unwindUnitOfWork(unitOfWork: Fiber): void {
+function unwindUnitOfWork(unitOfWork: Fiber, skipSiblings: boolean): void {
   let incompleteWork: Fiber = unitOfWork;
   do {
     // The current, flushed, state of this fiber is the alternate. Ideally
@@ -2754,9 +2827,14 @@ function unwindUnitOfWork(unitOfWork: Fiber): void {
       returnFiber.deletions = null;
     }
 
-    // NOTE: If we re-enable sibling prerendering in some cases, here we
-    // would switch to the normal completion path: check if a sibling
-    // exists, and if so, begin work on it.
+    if (!skipSiblings) {
+      const siblingFiber = incompleteWork.sibling;
+      if (siblingFiber !== null) {
+        // This branch will return us to the normal work loop.
+        workInProgress = siblingFiber;
+        return;
+      }
+    }
 
     // Otherwise, return to the parent
     // $FlowFixMe[incompatible-type] we bail out when we get a null

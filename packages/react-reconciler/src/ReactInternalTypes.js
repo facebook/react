@@ -256,6 +256,7 @@ type BaseFiberRootProperties = {
   pendingLanes: Lanes,
   suspendedLanes: Lanes,
   pingedLanes: Lanes,
+  warmLanes: Lanes,
   expiredLanes: Lanes,
   errorRecoveryDisabledLanes: Lanes,
   shellSuspendCounter: number,

@@ -148,7 +148,15 @@ describe('ReactCache', () => {
       error = e;
     }
     expect(error.message).toMatch('Failed to load: Hi');
-    assertLog(['Promise rejected [Hi]', 'Error! [Hi]', 'Error! [Hi]']);
+    assertLog([
+      'Promise rejected [Hi]',
+      'Error! [Hi]',
+      'Error! [Hi]',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['Error! [Hi]', 'Error! [Hi]']
+        : []),
+    ]);
 
     // Should throw again on a subsequent read
     root.render(<App />);
@@ -191,6 +199,7 @@ describe('ReactCache', () => {
     }
   });
 
+  // @gate enableSiblingPrerendering
   it('evicts least recently used values', async () => {
     ReactCache.unstable_setGlobalCacheLimit(3);
 
@@ -206,15 +215,13 @@ describe('ReactCache', () => {
     await waitForAll(['Suspend! [1]', 'Loading...']);
     jest.advanceTimersByTime(100);
     assertLog(['Promise resolved [1]']);
-    await waitForAll([1, 'Suspend! [2]']);
+    await waitForAll([1, 'Suspend! [2]', 1, 'Suspend! [2]', 'Suspend! [3]']);
 
     jest.advanceTimersByTime(100);
-    assertLog(['Promise resolved [2]']);
-    await waitForAll([1, 2, 'Suspend! [3]']);
+    assertLog(['Promise resolved [2]', 'Promise resolved [3]']);
+    await waitForAll([1, 2, 3]);
 
     await act(() => jest.advanceTimersByTime(100));
-    assertLog(['Promise resolved [3]', 1, 2, 3]);
-
     expect(root).toMatchRenderedOutput('123');
 
     // Render 1, 4, 5
@@ -231,6 +238,9 @@ describe('ReactCache', () => {
     await act(() => jest.advanceTimersByTime(100));
     assertLog([
       'Promise resolved [4]',
+      1,
+      4,
+      'Suspend! [5]',
       1,
       4,
       'Suspend! [5]',
@@ -264,6 +274,9 @@ describe('ReactCache', () => {
     await act(() => jest.advanceTimersByTime(100));
     assertLog([
       'Promise resolved [2]',
+      1,
+      2,
+      'Suspend! [3]',
       1,
       2,
       'Suspend! [3]',
