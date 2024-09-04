@@ -510,7 +510,11 @@ export function commitClassCallbacks(finishedWork: Fiber) {
     // but instead we rely on them being set during last render.
     // TODO: revisit this when we implement resuming.
     try {
-      commitCallbacks(updateQueue, instance);
+      if (__DEV__) {
+        runWithFiberInDEV(finishedWork, commitCallbacks, updateQueue, instance);
+      } else {
+        commitCallbacks(updateQueue, instance);
+      }
     } catch (error) {
       captureCommitPhaseError(finishedWork, finishedWork.return, error);
     }
@@ -525,7 +529,16 @@ export function commitClassHiddenCallbacks(finishedWork: Fiber) {
   if (updateQueue !== null) {
     const instance = finishedWork.stateNode;
     try {
-      commitHiddenCallbacks(updateQueue, instance);
+      if (__DEV__) {
+        runWithFiberInDEV(
+          finishedWork,
+          commitHiddenCallbacks,
+          updateQueue,
+          instance,
+        );
+      } else {
+        commitHiddenCallbacks(updateQueue, instance);
+      }
     } catch (error) {
       captureCommitPhaseError(finishedWork, finishedWork.return, error);
     }
@@ -551,7 +564,11 @@ export function commitRootCallbacks(finishedWork: Fiber) {
       }
     }
     try {
-      commitCallbacks(updateQueue, instance);
+      if (__DEV__) {
+        runWithFiberInDEV(finishedWork, commitCallbacks, updateQueue, instance);
+      } else {
+        commitCallbacks(updateQueue, instance);
+      }
     } catch (error) {
       captureCommitPhaseError(finishedWork, finishedWork.return, error);
     }
@@ -561,6 +578,14 @@ export function commitRootCallbacks(finishedWork: Fiber) {
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
   didWarnAboutUndefinedSnapshotBeforeUpdate = new Set();
+}
+
+function callGetSnapshotBeforeUpdates(
+  instance: any,
+  prevProps: any,
+  prevState: any,
+) {
+  return instance.getSnapshotBeforeUpdate(prevProps, prevState);
 }
 
 export function commitClassSnapshot(finishedWork: Fiber, current: Fiber) {
@@ -599,15 +624,20 @@ export function commitClassSnapshot(finishedWork: Fiber, current: Fiber) {
     }
   }
   try {
-    const snapshot = instance.getSnapshotBeforeUpdate(
-      resolveClassComponentProps(
-        finishedWork.type,
-        prevProps,
-        finishedWork.elementType === finishedWork.type,
-      ),
-      prevState,
+    const resolvedPrevProps = resolveClassComponentProps(
+      finishedWork.type,
+      prevProps,
+      finishedWork.elementType === finishedWork.type,
     );
+    let snapshot;
     if (__DEV__) {
+      snapshot = runWithFiberInDEV(
+        finishedWork,
+        callGetSnapshotBeforeUpdates,
+        instance,
+        resolvedPrevProps,
+        prevState,
+      );
       const didWarnSet =
         ((didWarnAboutUndefinedSnapshotBeforeUpdate: any): Set<mixed>);
       if (snapshot === undefined && !didWarnSet.has(finishedWork.type)) {
@@ -618,6 +648,12 @@ export function commitClassSnapshot(finishedWork: Fiber, current: Fiber) {
           getComponentNameFromFiber(finishedWork),
         );
       }
+    } else {
+      snapshot = callGetSnapshotBeforeUpdates(
+        instance,
+        resolvedPrevProps,
+        prevState,
+      );
     }
     instance.__reactInternalSnapshotBeforeUpdate = snapshot;
   } catch (error) {
@@ -730,7 +766,11 @@ export function safelyAttachRef(
   nearestMountedAncestor: Fiber | null,
 ) {
   try {
-    commitAttachRef(current);
+    if (__DEV__) {
+      runWithFiberInDEV(current, commitAttachRef, current);
+    } else {
+      commitAttachRef(current);
+    }
   } catch (error) {
     captureCommitPhaseError(current, nearestMountedAncestor, error);
   }
@@ -749,12 +789,20 @@ export function safelyDetachRef(
         if (shouldProfile(current)) {
           try {
             startLayoutEffectTimer();
-            refCleanup();
+            if (__DEV__) {
+              runWithFiberInDEV(current, refCleanup);
+            } else {
+              refCleanup();
+            }
           } finally {
             recordLayoutEffectDuration(current);
           }
         } else {
-          refCleanup();
+          if (__DEV__) {
+            runWithFiberInDEV(current, refCleanup);
+          } else {
+            refCleanup();
+          }
         }
       } catch (error) {
         captureCommitPhaseError(current, nearestMountedAncestor, error);
@@ -771,12 +819,20 @@ export function safelyDetachRef(
         if (shouldProfile(current)) {
           try {
             startLayoutEffectTimer();
-            ref(null);
+            if (__DEV__) {
+              (runWithFiberInDEV(current, ref, null): void);
+            } else {
+              ref(null);
+            }
           } finally {
             recordLayoutEffectDuration(current);
           }
         } else {
-          ref(null);
+          if (__DEV__) {
+            (runWithFiberInDEV(current, ref, null): void);
+          } else {
+            ref(null);
+          }
         }
       } catch (error) {
         captureCommitPhaseError(current, nearestMountedAncestor, error);
@@ -810,6 +866,44 @@ export function safelyCallDestroy(
   }
 }
 
+function commitProfiler(
+  finishedWork: Fiber,
+  current: Fiber | null,
+  commitTime: number,
+  effectDuration: number,
+) {
+  const {onCommit, onRender} = finishedWork.memoizedProps;
+
+  let phase = current === null ? 'mount' : 'update';
+  if (enableProfilerNestedUpdatePhase) {
+    if (isCurrentUpdateNested()) {
+      phase = 'nested-update';
+    }
+  }
+
+  if (typeof onRender === 'function') {
+    onRender(
+      finishedWork.memoizedProps.id,
+      phase,
+      finishedWork.actualDuration,
+      finishedWork.treeBaseDuration,
+      finishedWork.actualStartTime,
+      commitTime,
+    );
+  }
+
+  if (enableProfilerCommitHooks) {
+    if (typeof onCommit === 'function') {
+      onCommit(
+        finishedWork.memoizedProps.id,
+        phase,
+        effectDuration,
+        commitTime,
+      );
+    }
+  }
+}
+
 export function commitProfilerUpdate(
   finishedWork: Fiber,
   current: Fiber | null,
@@ -818,35 +912,17 @@ export function commitProfilerUpdate(
 ) {
   if (enableProfilerTimer && getExecutionContext() & CommitContext) {
     try {
-      const {onCommit, onRender} = finishedWork.memoizedProps;
-
-      let phase = current === null ? 'mount' : 'update';
-      if (enableProfilerNestedUpdatePhase) {
-        if (isCurrentUpdateNested()) {
-          phase = 'nested-update';
-        }
-      }
-
-      if (typeof onRender === 'function') {
-        onRender(
-          finishedWork.memoizedProps.id,
-          phase,
-          finishedWork.actualDuration,
-          finishedWork.treeBaseDuration,
-          finishedWork.actualStartTime,
+      if (__DEV__) {
+        runWithFiberInDEV(
+          finishedWork,
+          commitProfiler,
+          finishedWork,
+          current,
           commitTime,
+          effectDuration,
         );
-      }
-
-      if (enableProfilerCommitHooks) {
-        if (typeof onCommit === 'function') {
-          onCommit(
-            finishedWork.memoizedProps.id,
-            phase,
-            effectDuration,
-            commitTime,
-          );
-        }
+      } else {
+        commitProfiler(finishedWork, current, commitTime, effectDuration);
       }
     } catch (error) {
       captureCommitPhaseError(finishedWork, finishedWork.return, error);
