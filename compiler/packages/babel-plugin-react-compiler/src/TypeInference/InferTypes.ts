@@ -250,6 +250,7 @@ function* generateInstructionTypes(
     }
 
     case 'CallExpression': {
+      const returnType = makeType();
       /*
        * TODO: callee could be a hook or a function, so this type equation isn't correct.
        * We should change Hook to a subtype of Function or change unifier logic.
@@ -258,8 +259,25 @@ function* generateInstructionTypes(
       yield equation(value.callee.identifier.type, {
         kind: 'Function',
         shapeId: null,
-        return: left,
+        return: returnType,
       });
+      yield equation(left, returnType);
+      break;
+    }
+
+    case 'TaggedTemplateExpression': {
+      const returnType = makeType();
+      /*
+       * TODO: callee could be a hook or a function, so this type equation isn't correct.
+       * We should change Hook to a subtype of Function or change unifier logic.
+       * (see https://github.com/facebook/react-forget/pull/1427)
+       */
+      yield equation(value.tag.identifier.type, {
+        kind: 'Function',
+        shapeId: null,
+        return: returnType,
+      });
+      yield equation(left, returnType);
       break;
     }
 
@@ -392,7 +410,6 @@ function* generateInstructionTypes(
     case 'MetaProperty':
     case 'ComputedStore':
     case 'ComputedLoad':
-    case 'TaggedTemplateExpression':
     case 'Await':
     case 'GetIterator':
     case 'IteratorNext':

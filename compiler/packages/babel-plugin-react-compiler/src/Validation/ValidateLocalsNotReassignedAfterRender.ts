@@ -161,6 +161,14 @@ function getContextReassignment(
             if (signature?.noAlias) {
               operands = [value.receiver, value.property];
             }
+          } else if (value.kind === 'TaggedTemplateExpression') {
+            const signature = getFunctionCallSignature(
+              fn.env,
+              value.tag.identifier.type,
+            );
+            if (signature?.noAlias) {
+              operands = [value.tag];
+            }
           }
           for (const operand of operands) {
             CompilerError.invariant(operand.effect !== Effect.Unknown, {
