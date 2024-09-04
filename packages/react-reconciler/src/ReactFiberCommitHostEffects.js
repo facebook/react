@@ -52,12 +52,25 @@ import {
 } from './ReactFiberConfig';
 import {captureCommitPhaseError} from './ReactFiberWorkLoop';
 
+import {runWithFiberInDEV} from './ReactCurrentFiber';
+
 export function commitHostMount(finishedWork: Fiber) {
   const type = finishedWork.type;
   const props = finishedWork.memoizedProps;
   const instance: Instance = finishedWork.stateNode;
   try {
-    commitMount(instance, type, props, finishedWork);
+    if (__DEV__) {
+      runWithFiberInDEV(
+        finishedWork,
+        commitMount,
+        instance,
+        type,
+        props,
+        finishedWork,
+      );
+    } else {
+      commitMount(instance, type, props, finishedWork);
+    }
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }
@@ -69,13 +82,25 @@ export function commitHostUpdate(
   oldProps: any,
 ) {
   try {
-    commitUpdate(
-      finishedWork.stateNode,
-      finishedWork.type,
-      oldProps,
-      newProps,
-      finishedWork,
-    );
+    if (__DEV__) {
+      runWithFiberInDEV(
+        finishedWork,
+        commitUpdate,
+        finishedWork.stateNode,
+        finishedWork.type,
+        oldProps,
+        newProps,
+        finishedWork,
+      );
+    } else {
+      commitUpdate(
+        finishedWork.stateNode,
+        finishedWork.type,
+        oldProps,
+        newProps,
+        finishedWork,
+      );
+    }
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }
@@ -88,7 +113,17 @@ export function commitHostTextUpdate(
 ) {
   const textInstance: TextInstance = finishedWork.stateNode;
   try {
-    commitTextUpdate(textInstance, oldText, newText);
+    if (__DEV__) {
+      runWithFiberInDEV(
+        finishedWork,
+        commitTextUpdate,
+        textInstance,
+        oldText,
+        newText,
+      );
+    } else {
+      commitTextUpdate(textInstance, oldText, newText);
+    }
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }
@@ -97,7 +132,11 @@ export function commitHostTextUpdate(
 export function commitHostResetTextContent(finishedWork: Fiber) {
   const instance: Instance = finishedWork.stateNode;
   try {
-    resetTextContent(instance);
+    if (__DEV__) {
+      runWithFiberInDEV(finishedWork, resetTextContent, instance);
+    } else {
+      resetTextContent(instance);
+    }
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }
@@ -107,9 +146,22 @@ export function commitShowHideHostInstance(node: Fiber, isHidden: boolean) {
   try {
     const instance = node.stateNode;
     if (isHidden) {
-      hideInstance(instance);
+      if (__DEV__) {
+        runWithFiberInDEV(node, hideInstance, instance);
+      } else {
+        hideInstance(instance);
+      }
     } else {
-      unhideInstance(node.stateNode, node.memoizedProps);
+      if (__DEV__) {
+        runWithFiberInDEV(
+          node,
+          unhideInstance,
+          node.stateNode,
+          node.memoizedProps,
+        );
+      } else {
+        unhideInstance(node.stateNode, node.memoizedProps);
+      }
     }
   } catch (error) {
     captureCommitPhaseError(node, node.return, error);
@@ -120,9 +172,22 @@ export function commitShowHideHostTextInstance(node: Fiber, isHidden: boolean) {
   try {
     const instance = node.stateNode;
     if (isHidden) {
-      hideTextInstance(instance);
+      if (__DEV__) {
+        runWithFiberInDEV(node, hideTextInstance, instance);
+      } else {
+        hideTextInstance(instance);
+      }
     } else {
-      unhideTextInstance(instance, node.memoizedProps);
+      if (__DEV__) {
+        runWithFiberInDEV(
+          node,
+          unhideTextInstance,
+          instance,
+          node.memoizedProps,
+        );
+      } else {
+        unhideTextInstance(instance, node.memoizedProps);
+      }
     }
   } catch (error) {
     captureCommitPhaseError(node, node.return, error);
@@ -332,7 +397,11 @@ function commitPlacement(finishedWork: Fiber): void {
 
 export function commitHostPlacement(finishedWork: Fiber) {
   try {
-    commitPlacement(finishedWork);
+    if (__DEV__) {
+      runWithFiberInDEV(finishedWork, commitPlacement, finishedWork);
+    } else {
+      commitPlacement(finishedWork);
+    }
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }
@@ -345,7 +414,16 @@ export function commitHostRemoveChildFromContainer(
   hostInstance: Instance | TextInstance,
 ) {
   try {
-    removeChildFromContainer(parentContainer, hostInstance);
+    if (__DEV__) {
+      runWithFiberInDEV(
+        deletedFiber,
+        removeChildFromContainer,
+        parentContainer,
+        hostInstance,
+      );
+    } else {
+      removeChildFromContainer(parentContainer, hostInstance);
+    }
   } catch (error) {
     captureCommitPhaseError(deletedFiber, nearestMountedAncestor, error);
   }
@@ -358,7 +436,16 @@ export function commitHostRemoveChild(
   hostInstance: Instance | TextInstance,
 ) {
   try {
-    removeChild(parentInstance, hostInstance);
+    if (__DEV__) {
+      runWithFiberInDEV(
+        deletedFiber,
+        removeChild,
+        parentInstance,
+        hostInstance,
+      );
+    } else {
+      removeChild(parentInstance, hostInstance);
+    }
   } catch (error) {
     captureCommitPhaseError(deletedFiber, nearestMountedAncestor, error);
   }
@@ -371,7 +458,16 @@ export function commitHostRootContainerChildren(
   const containerInfo = root.containerInfo;
   const pendingChildren = root.pendingChildren;
   try {
-    replaceContainerChildren(containerInfo, pendingChildren);
+    if (__DEV__) {
+      runWithFiberInDEV(
+        finishedWork,
+        replaceContainerChildren,
+        containerInfo,
+        pendingChildren,
+      );
+    } else {
+      replaceContainerChildren(containerInfo, pendingChildren);
+    }
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }
@@ -388,7 +484,16 @@ export function commitHostPortalContainerChildren(
 ) {
   const containerInfo = portal.containerInfo;
   try {
-    replaceContainerChildren(containerInfo, pendingChildren);
+    if (__DEV__) {
+      runWithFiberInDEV(
+        finishedWork,
+        replaceContainerChildren,
+        containerInfo,
+        pendingChildren,
+      );
+    } else {
+      replaceContainerChildren(containerInfo, pendingChildren);
+    }
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }
@@ -399,7 +504,15 @@ export function commitHostHydratedContainer(
   finishedWork: Fiber,
 ) {
   try {
-    commitHydratedContainer(root.containerInfo);
+    if (__DEV__) {
+      runWithFiberInDEV(
+        finishedWork,
+        commitHydratedContainer,
+        root.containerInfo,
+      );
+    } else {
+      commitHydratedContainer(root.containerInfo);
+    }
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }
@@ -410,7 +523,15 @@ export function commitHostHydratedSuspense(
   finishedWork: Fiber,
 ) {
   try {
-    commitHydratedSuspenseInstance(suspenseInstance);
+    if (__DEV__) {
+      runWithFiberInDEV(
+        finishedWork,
+        commitHydratedSuspenseInstance,
+        suspenseInstance,
+      );
+    } else {
+      commitHydratedSuspenseInstance(suspenseInstance);
+    }
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }
@@ -423,7 +544,23 @@ export function commitHostSingleton(finishedWork: Fiber) {
   try {
     // This was a new mount, we need to clear and set initial properties
     clearSingleton(singleton);
-    acquireSingletonInstance(finishedWork.type, props, singleton, finishedWork);
+    if (__DEV__) {
+      runWithFiberInDEV(
+        finishedWork,
+        acquireSingletonInstance,
+        finishedWork.type,
+        props,
+        singleton,
+        finishedWork,
+      );
+    } else {
+      acquireSingletonInstance(
+        finishedWork.type,
+        props,
+        singleton,
+        finishedWork,
+      );
+    }
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }
