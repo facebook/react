@@ -75,6 +75,8 @@ import {
   callDestroyInDEV,
 } from './ReactFiberCallUserSpace';
 
+import {runWithFiberInDEV} from './ReactCurrentFiber';
+
 function shouldProfile(current: Fiber): boolean {
   return (
     enableProfilerTimer &&
@@ -128,7 +130,7 @@ export function commitHookEffectListMount(
             if ((flags & HookInsertion) !== NoHookEffect) {
               setIsRunningInsertionEffect(true);
             }
-            destroy = callCreateInDEV(effect);
+            destroy = runWithFiberInDEV(finishedWork, callCreateInDEV, effect);
             if ((flags & HookInsertion) !== NoHookEffect) {
               setIsRunningInsertionEffect(false);
             }
@@ -330,7 +332,12 @@ export function commitClassLayoutLifecycles(
     if (shouldProfile(finishedWork)) {
       startLayoutEffectTimer();
       if (__DEV__) {
-        callComponentDidMountInDEV(finishedWork, instance);
+        runWithFiberInDEV(
+          finishedWork,
+          callComponentDidMountInDEV,
+          finishedWork,
+          instance,
+        );
       } else {
         try {
           instance.componentDidMount();
@@ -341,7 +348,12 @@ export function commitClassLayoutLifecycles(
       recordLayoutEffectDuration(finishedWork);
     } else {
       if (__DEV__) {
-        callComponentDidMountInDEV(finishedWork, instance);
+        runWithFiberInDEV(
+          finishedWork,
+          callComponentDidMountInDEV,
+          finishedWork,
+          instance,
+        );
       } else {
         try {
           instance.componentDidMount();
@@ -391,7 +403,9 @@ export function commitClassLayoutLifecycles(
     if (shouldProfile(finishedWork)) {
       startLayoutEffectTimer();
       if (__DEV__) {
-        callComponentDidUpdateInDEV(
+        runWithFiberInDEV(
+          finishedWork,
+          callComponentDidUpdateInDEV,
           finishedWork,
           instance,
           prevProps,
@@ -412,7 +426,9 @@ export function commitClassLayoutLifecycles(
       recordLayoutEffectDuration(finishedWork);
     } else {
       if (__DEV__) {
-        callComponentDidUpdateInDEV(
+        runWithFiberInDEV(
+          finishedWork,
+          callComponentDidUpdateInDEV,
           finishedWork,
           instance,
           prevProps,
@@ -439,7 +455,12 @@ export function commitClassDidMount(finishedWork: Fiber) {
   const instance = finishedWork.stateNode;
   if (typeof instance.componentDidMount === 'function') {
     if (__DEV__) {
-      callComponentDidMountInDEV(finishedWork, instance);
+      runWithFiberInDEV(
+        finishedWork,
+        callComponentDidMountInDEV,
+        finishedWork,
+        instance,
+      );
     } else {
       try {
         instance.componentDidMount();
@@ -619,7 +640,13 @@ export function safelyCallComponentWillUnmount(
   if (shouldProfile(current)) {
     startLayoutEffectTimer();
     if (__DEV__) {
-      callComponentWillUnmountInDEV(current, nearestMountedAncestor, instance);
+      runWithFiberInDEV(
+        current,
+        callComponentWillUnmountInDEV,
+        current,
+        nearestMountedAncestor,
+        instance,
+      );
     } else {
       try {
         instance.componentWillUnmount();
@@ -630,7 +657,13 @@ export function safelyCallComponentWillUnmount(
     recordLayoutEffectDuration(current);
   } else {
     if (__DEV__) {
-      callComponentWillUnmountInDEV(current, nearestMountedAncestor, instance);
+      runWithFiberInDEV(
+        current,
+        callComponentWillUnmountInDEV,
+        current,
+        nearestMountedAncestor,
+        instance,
+      );
     } else {
       try {
         instance.componentWillUnmount();
@@ -761,7 +794,13 @@ export function safelyCallDestroy(
   destroy: () => void,
 ) {
   if (__DEV__) {
-    callDestroyInDEV(current, nearestMountedAncestor, destroy);
+    runWithFiberInDEV(
+      current,
+      callDestroyInDEV,
+      current,
+      nearestMountedAncestor,
+      destroy,
+    );
   } else {
     try {
       destroy();
