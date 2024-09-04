@@ -671,12 +671,11 @@ function computeMemoizationInputs(
         ],
       };
     }
-    case 'CallExpression': {
+    case 'TaggedTemplateExpression': {
       const signature = getFunctionCallSignature(
         env,
-        value.callee.identifier.type,
+        value.tag.identifier.type,
       );
-      const operands = [...eachReactiveValueOperand(value)];
       let lvalues = [];
       if (lvalue !== null) {
         lvalues.push({place: lvalue, level: MemoizationLevel.Memoized});
@@ -687,6 +686,33 @@ function computeMemoizationInputs(
           rvalues: [],
         };
       }
+      const operands = [...eachReactiveValueOperand(value)];
+      lvalues.push(
+        ...operands
+          .filter(operand => isMutableEffect(operand.effect, operand.loc))
+          .map(place => ({place, level: MemoizationLevel.Memoized})),
+      );
+      return {
+        lvalues,
+        rvalues: operands,
+      };
+    }
+    case 'CallExpression': {
+      const signature = getFunctionCallSignature(
+        env,
+        value.callee.identifier.type,
+      );
+      let lvalues = [];
+      if (lvalue !== null) {
+        lvalues.push({place: lvalue, level: MemoizationLevel.Memoized});
+      }
+      if (signature?.noAlias === true) {
+        return {
+          lvalues,
+          rvalues: [],
+        };
+      }
+      const operands = [...eachReactiveValueOperand(value)];
       lvalues.push(
         ...operands
           .filter(operand => isMutableEffect(operand.effect, operand.loc))
@@ -702,7 +728,6 @@ function computeMemoizationInputs(
         env,
         value.property.identifier.type,
       );
-      const operands = [...eachReactiveValueOperand(value)];
       let lvalues = [];
       if (lvalue !== null) {
         lvalues.push({place: lvalue, level: MemoizationLevel.Memoized});
@@ -713,6 +738,7 @@ function computeMemoizationInputs(
           rvalues: [],
         };
       }
+      const operands = [...eachReactiveValueOperand(value)];
       lvalues.push(
         ...operands
           .filter(operand => isMutableEffect(operand.effect, operand.loc))
@@ -726,7 +752,6 @@ function computeMemoizationInputs(
     case 'RegExpLiteral':
     case 'ObjectMethod':
     case 'FunctionExpression':
-    case 'TaggedTemplateExpression':
     case 'ArrayExpression':
     case 'NewExpression':
     case 'ObjectExpression':

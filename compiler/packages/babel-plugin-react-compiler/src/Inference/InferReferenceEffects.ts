@@ -1180,18 +1180,6 @@ function inferBlock(
         };
         break;
       }
-      case 'TaggedTemplateExpression': {
-        valueKind = {
-          kind: ValueKind.Mutable,
-          reason: new Set([ValueReason.Other]),
-          context: new Set(),
-        };
-        effect = {
-          kind: Effect.ConditionallyMutate,
-          reason: ValueReason.Other,
-        };
-        break;
-      }
       case 'TemplateLiteral': {
         /*
          * template literal (with no tag function) always produces
@@ -1310,6 +1298,47 @@ function inferBlock(
         });
         state.define(instr.lvalue, instrValue);
         instr.lvalue.effect = Effect.Store;
+        continue;
+      }
+      case 'TaggedTemplateExpression': {
+        const operands = [...eachInstructionValueOperand(instrValue)];
+        if (operands.length !== 1) {
+          // future-proofing to make sure we update this case when we support interpolation
+          CompilerError.throwTodo({
+            reason: 'Support tagged template expressions with interpolations',
+            loc: instrValue.loc,
+          });
+        }
+        const signature = getFunctionCallSignature(
+          env,
+          instrValue.tag.identifier.type,
+        );
+        let calleeEffect =
+          signature?.calleeEffect ?? Effect.ConditionallyMutate;
+        const returnValueKind: AbstractValue =
+          signature !== null
+            ? {
+                kind: signature.returnValueKind,
+                reason: new Set([
+                  signature.returnValueReason ??
+                    ValueReason.KnownReturnSignature,
+                ]),
+                context: new Set(),
+              }
+            : {
+                kind: ValueKind.Mutable,
+                reason: new Set([ValueReason.Other]),
+                context: new Set(),
+              };
+        state.referenceAndRecordEffects(
+          instrValue.tag,
+          calleeEffect,
+          ValueReason.Other,
+          functionEffects,
+        );
+        state.initialize(instrValue, returnValueKind);
+        state.define(instr.lvalue, instrValue);
+        instr.lvalue.effect = Effect.ConditionallyMutate;
         continue;
       }
       case 'CallExpression': {

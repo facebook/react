@@ -32,6 +32,14 @@ export function makeSharedRuntimeTypeProvider({
           returnType: {kind: 'type', name: 'Primitive'},
           returnValueKind: ValueKindEnum.Primitive,
         },
+        graphql: {
+          kind: 'function',
+          calleeEffect: EffectEnum.Read,
+          positionalParams: [],
+          restParam: EffectEnum.Read,
+          returnType: {kind: 'type', name: 'Primitive'},
+          returnValueKind: ValueKindEnum.Primitive,
+        },
         typedArrayPush: {
           kind: 'function',
           calleeEffect: EffectEnum.Read,
