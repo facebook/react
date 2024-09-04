@@ -114,7 +114,7 @@ import {getStyleXData} from '../StyleX/utils';
 import {createProfilingHooks} from '../profilingHooks';
 
 import type {GetTimelineData, ToggleProfilingStatus} from '../profilingHooks';
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
+import type {Fiber, FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   ChangeDescription,
   CommitDataBackend,
@@ -727,6 +727,9 @@ export function getInternalReactConstants(version: string): {
 // filters at the same time as removing some other filter.
 const knownEnvironmentNames: Set<string> = new Set();
 
+// Map of FiberRoot to their root FiberInstance.
+const rootToFiberInstanceMap: Map<FiberRoot, FiberInstance> = new Map();
+
 // Map of one or more Fibers in a pair to their unique id number.
 // We track both Fibers to support Fast Refresh,
 // which may forcefully replace one of the pair as part of hot reloading.
@@ -1243,9 +1246,15 @@ export function attach(
 
     // Recursively unmount all roots.
     hook.getFiberRoots(rendererID).forEach(root => {
-      const rootInstance = getFiberInstanceThrows(root.current);
+      const rootInstance = rootToFiberInstanceMap.get(root);
+      if (rootInstance === undefined) {
+        throw new Error(
+          'Expected the root instance to already exist when applying filters',
+        );
+      }
       currentRootID = rootInstance.id;
       unmountInstanceRecursively(rootInstance);
+      rootToFiberInstanceMap.delete(root);
       flushPendingEvents(root);
       currentRootID = -1;
     });
@@ -1260,6 +1269,7 @@ export function attach(
       const current = root.current;
       const alternate = current.alternate;
       const newRoot = createFiberInstance(current);
+      rootToFiberInstanceMap.set(root, newRoot);
       idToDevToolsInstanceMap.set(newRoot.id, newRoot);
       fiberToFiberInstanceMap.set(current, newRoot);
       if (alternate) {
@@ -1478,17 +1488,6 @@ export function attach(
 
   // When a mount or update is in progress, this value tracks the root that is being operated on.
   let currentRootID: number = -1;
-
-  // Returns a FiberInstance if one has already been generated for the Fiber or throws.
-  function getFiberInstanceThrows(fiber: Fiber): FiberInstance {
-    const fiberInstance = getFiberInstanceUnsafe(fiber);
-    if (fiberInstance !== null) {
-      return fiberInstance;
-    }
-    throw Error(
-      `Could not find ID for Fiber "${getDisplayNameForFiber(fiber) || ''}"`,
-    );
-  }
 
   function getFiberIDThrows(fiber: Fiber): number {
     const fiberInstance = getFiberInstanceUnsafe(fiber);
@@ -2181,7 +2180,7 @@ export function attach(
     const isRoot = fiber.tag === HostRoot;
     let fiberInstance;
     if (isRoot) {
-      const entry = fiberToFiberInstanceMap.get(fiber);
+      const entry = rootToFiberInstanceMap.get(fiber.stateNode);
       if (entry === undefined) {
         throw new Error('The root should have been registered at this point');
       }
@@ -3591,6 +3590,7 @@ export function attach(
         const current = root.current;
         const alternate = current.alternate;
         const newRoot = createFiberInstance(current);
+        rootToFiberInstanceMap.set(root, newRoot);
         idToDevToolsInstanceMap.set(newRoot.id, newRoot);
         fiberToFiberInstanceMap.set(current, newRoot);
         if (alternate) {
@@ -3657,15 +3657,17 @@ export function attach(
     }
   }
 
-  function handleCommitFiberRoot(root: any, priorityLevel: void | number) {
+  function handleCommitFiberRoot(
+    root: FiberRoot,
+    priorityLevel: void | number,
+  ) {
     const current = root.current;
     const alternate = current.alternate;
 
-    let rootInstance =
-      fiberToFiberInstanceMap.get(current) ||
-      (alternate && fiberToFiberInstanceMap.get(alternate));
+    let rootInstance = rootToFiberInstanceMap.get(root);
     if (!rootInstance) {
       rootInstance = createFiberInstance(current);
+      rootToFiberInstanceMap.set(root, rootInstance);
       idToDevToolsInstanceMap.set(rootInstance.id, rootInstance);
       fiberToFiberInstanceMap.set(current, rootInstance);
       if (alternate) {
@@ -3730,8 +3732,9 @@ export function attach(
         updateFiberRecursively(rootInstance, current, alternate, false);
       } else if (wasMounted && !isMounted) {
         // Unmount an existing root.
-        removeRootPseudoKey(currentRootID);
         unmountInstanceRecursively(rootInstance);
+        removeRootPseudoKey(currentRootID);
+        rootToFiberInstanceMap.delete(root);
       }
     } else {
       // Mount a new root.
@@ -5248,7 +5251,12 @@ export function attach(
     idToContextsMap = new Map();
 
     hook.getFiberRoots(rendererID).forEach(root => {
-      const rootInstance = getFiberInstanceThrows(root.current);
+      const rootInstance = rootToFiberInstanceMap.get(root);
+      if (rootInstance === undefined) {
+        throw new Error(
+          'Expected the root instance to already exist when starting profiling',
+        );
+      }
       const rootID = rootInstance.id;
       ((displayNamesByRootID: any): DisplayNamesByRootID).set(
         rootID,
@@ -5645,8 +5653,13 @@ export function attach(
       case HostRoot:
         // Roots don't have a real displayName, index, or key.
         // Instead, we'll use the pseudo key (childDisplayName:indexWithThatName).
-        const id = getFiberIDThrows(fiber);
-        const pseudoKey = rootPseudoKeys.get(id);
+        const rootInstance = rootToFiberInstanceMap.get(fiber.stateNode);
+        if (rootInstance === undefined) {
+          throw new Error(
+            'Expected the root instance to exist when computing a path',
+          );
+        }
+        const pseudoKey = rootPseudoKeys.get(rootInstance.id);
         if (pseudoKey === undefined) {
           throw new Error('Expected mounted root to have known pseudo key.');
         }
