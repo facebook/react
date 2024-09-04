@@ -1488,20 +1488,10 @@ describe('ReactLazy', () => {
     React.startTransition(() => {
       root.update(<Parent swap={true} />);
     });
-    await waitForAll([
-      'Init B2',
-      'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Loading...'] : []),
-    ]);
+    await waitForAll(['Init B2', 'Loading...']);
     await act(() => resolveFakeImport(ChildB2));
     // We need to flush to trigger the second one to load.
-    assertLog([
-      'Init A2',
-      'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Loading...'] : []),
-    ]);
+    assertLog(['Init A2', 'Loading...']);
     await act(() => resolveFakeImport(ChildA2));
     assertLog(['b', 'a', 'Did update: b', 'Did update: a']);
     expect(root).toMatchRenderedOutput('ba');

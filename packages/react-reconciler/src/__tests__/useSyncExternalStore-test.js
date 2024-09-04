@@ -275,9 +275,7 @@ describe('useSyncExternalStore', () => {
         // this test, this causes A to suspend.
         'Suspend A',
 
-        ...(gate('enableSiblingPrerendering')
-          ? ['Suspend A', 'B: Updated']
-          : []),
+        ...(gate('enableSiblingPrerendering') ? ['B: Updated'] : []),
       ]);
       // Nothing has committed, because A suspended and no fallback
       // was provided.

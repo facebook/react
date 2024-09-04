@@ -1666,7 +1666,7 @@ function mountSyncExternalStore<T>(
     }
 
     const rootRenderLanes = getWorkInProgressRootRenderLanes();
-    if (!includesBlockingLane(root, rootRenderLanes)) {
+    if (!includesBlockingLane(rootRenderLanes)) {
       pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
     }
   }
@@ -1778,7 +1778,7 @@ function updateSyncExternalStore<T>(
       );
     }
 
-    if (!isHydrating && !includesBlockingLane(root, renderLanes)) {
+    if (!isHydrating && !includesBlockingLane(renderLanes)) {
       pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
     }
   }

@@ -420,8 +420,6 @@ describe('ReactDeferredValue', () => {
         // The initial value suspended, so we attempt the final value, which
         // also suspends.
         'Suspend! [Final]',
-
-        ...(gate('enableSiblingPrerendering') ? ['Suspend! [Final]'] : []),
       ]);
       expect(root).toMatchRenderedOutput(null);
 
@@ -461,8 +459,6 @@ describe('ReactDeferredValue', () => {
         // The initial value suspended, so we attempt the final value, which
         // also suspends.
         'Suspend! [Final]',
-
-        ...(gate('enableSiblingPrerendering') ? ['Suspend! [Final]'] : []),
       ]);
       expect(root).toMatchRenderedOutput(null);
 
@@ -535,8 +531,6 @@ describe('ReactDeferredValue', () => {
         // The initial value suspended, so we attempt the final value, which
         // also suspends.
         'Suspend! [Final]',
-
-        ...(gate('enableSiblingPrerendering') ? ['Suspend! [Final]'] : []),
       ]);
       expect(root).toMatchRenderedOutput(null);
 
@@ -546,8 +540,6 @@ describe('ReactDeferredValue', () => {
         'Loading...',
         // Still waiting for the final value.
         'Suspend! [Final]',
-
-        ...(gate('enableSiblingPrerendering') ? ['Suspend! [Final]'] : []),
       ]);
       expect(root).toMatchRenderedOutput('Loading...');
 
@@ -592,8 +584,6 @@ describe('ReactDeferredValue', () => {
         // boundaries work, where we always prefer to show the innermost
         // loading state.)
         'Suspend! [Content]',
-
-        ...(gate('enableSiblingPrerendering') ? ['Suspend! [Content]'] : []),
       ]);
       // Still showing the App preview state because the inner
       // content suspended.

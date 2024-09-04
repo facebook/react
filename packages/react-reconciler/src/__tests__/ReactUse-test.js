@@ -1885,10 +1885,6 @@ describe('ReactUse', () => {
       'A component was suspended by an uncached promise. Creating ' +
         'promises inside a Client Component or hook is not yet ' +
         'supported, except via a Suspense-compatible library or framework.',
-
-      ...(gate('enableSiblingPrerendering')
-        ? ['A component was suspended by an uncached promise.']
-        : []),
     ]);
 
     assertLog(['Async text requested [World]']);
@@ -1940,10 +1936,6 @@ describe('ReactUse', () => {
       'A component was suspended by an uncached promise. Creating ' +
         'promises inside a Client Component or hook is not yet ' +
         'supported, except via a Suspense-compatible library or framework.',
-
-      ...(gate('enableSiblingPrerendering')
-        ? ['A component was suspended by an uncached promise.']
-        : []),
     ]);
 
     assertLog(['Async text requested [World]']);
