@@ -93,19 +93,11 @@ export function commitHookLayoutEffects(
   // e.g. a destroy function in one component should never override a ref set
   // by a create function in another component during the same commit.
   if (shouldProfile(finishedWork)) {
-    try {
-      startLayoutEffectTimer();
-      commitHookEffectListMount(hookFlags, finishedWork);
-    } catch (error) {
-      captureCommitPhaseError(finishedWork, finishedWork.return, error);
-    }
+    startLayoutEffectTimer();
+    commitHookEffectListMount(hookFlags, finishedWork);
     recordLayoutEffectDuration(finishedWork);
   } else {
-    try {
-      commitHookEffectListMount(hookFlags, finishedWork);
-    } catch (error) {
-      captureCommitPhaseError(finishedWork, finishedWork.return, error);
-    }
+    commitHookEffectListMount(hookFlags, finishedWork);
   }
 }
 
@@ -113,93 +105,97 @@ export function commitHookEffectListMount(
   flags: HookFlags,
   finishedWork: Fiber,
 ) {
-  const updateQueue: FunctionComponentUpdateQueue | null =
-    (finishedWork.updateQueue: any);
-  const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
-  if (lastEffect !== null) {
-    const firstEffect = lastEffect.next;
-    let effect = firstEffect;
-    do {
-      if ((effect.tag & flags) === flags) {
-        if (enableSchedulingProfiler) {
-          if ((flags & HookPassive) !== NoHookEffect) {
-            markComponentPassiveEffectMountStarted(finishedWork);
-          } else if ((flags & HookLayout) !== NoHookEffect) {
-            markComponentLayoutEffectMountStarted(finishedWork);
-          }
-        }
-
-        // Mount
-        let destroy;
-        if (__DEV__) {
-          if ((flags & HookInsertion) !== NoHookEffect) {
-            setIsRunningInsertionEffect(true);
-          }
-          destroy = callCreateInDEV(effect);
-          if ((flags & HookInsertion) !== NoHookEffect) {
-            setIsRunningInsertionEffect(false);
-          }
-        } else {
-          const create = effect.create;
-          const inst = effect.inst;
-          destroy = create();
-          inst.destroy = destroy;
-        }
-
-        if (enableSchedulingProfiler) {
-          if ((flags & HookPassive) !== NoHookEffect) {
-            markComponentPassiveEffectMountStopped();
-          } else if ((flags & HookLayout) !== NoHookEffect) {
-            markComponentLayoutEffectMountStopped();
-          }
-        }
-
-        if (__DEV__) {
-          if (destroy !== undefined && typeof destroy !== 'function') {
-            let hookName;
-            if ((effect.tag & HookLayout) !== NoFlags) {
-              hookName = 'useLayoutEffect';
-            } else if ((effect.tag & HookInsertion) !== NoFlags) {
-              hookName = 'useInsertionEffect';
-            } else {
-              hookName = 'useEffect';
+  try {
+    const updateQueue: FunctionComponentUpdateQueue | null =
+      (finishedWork.updateQueue: any);
+    const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
+    if (lastEffect !== null) {
+      const firstEffect = lastEffect.next;
+      let effect = firstEffect;
+      do {
+        if ((effect.tag & flags) === flags) {
+          if (enableSchedulingProfiler) {
+            if ((flags & HookPassive) !== NoHookEffect) {
+              markComponentPassiveEffectMountStarted(finishedWork);
+            } else if ((flags & HookLayout) !== NoHookEffect) {
+              markComponentLayoutEffectMountStarted(finishedWork);
             }
-            let addendum;
-            if (destroy === null) {
-              addendum =
-                ' You returned null. If your effect does not require clean ' +
-                'up, return undefined (or nothing).';
-            } else if (typeof destroy.then === 'function') {
-              addendum =
-                '\n\nIt looks like you wrote ' +
-                hookName +
-                '(async () => ...) or returned a Promise. ' +
-                'Instead, write the async function inside your effect ' +
-                'and call it immediately:\n\n' +
-                hookName +
-                '(() => {\n' +
-                '  async function fetchData() {\n' +
-                '    // You can await here\n' +
-                '    const response = await MyAPI.getData(someId);\n' +
-                '    // ...\n' +
-                '  }\n' +
-                '  fetchData();\n' +
-                `}, [someId]); // Or [] if effect doesn't need props or state\n\n` +
-                'Learn more about data fetching with Hooks: https://react.dev/link/hooks-data-fetching';
-            } else {
-              addendum = ' You returned: ' + destroy;
+          }
+
+          // Mount
+          let destroy;
+          if (__DEV__) {
+            if ((flags & HookInsertion) !== NoHookEffect) {
+              setIsRunningInsertionEffect(true);
             }
-            console.error(
-              '%s must not return anything besides a function, ' +
-                'which is used for clean-up.%s',
-              hookName,
-              addendum,
-            );
+            destroy = callCreateInDEV(effect);
+            if ((flags & HookInsertion) !== NoHookEffect) {
+              setIsRunningInsertionEffect(false);
+            }
+          } else {
+            const create = effect.create;
+            const inst = effect.inst;
+            destroy = create();
+            inst.destroy = destroy;
+          }
+
+          if (enableSchedulingProfiler) {
+            if ((flags & HookPassive) !== NoHookEffect) {
+              markComponentPassiveEffectMountStopped();
+            } else if ((flags & HookLayout) !== NoHookEffect) {
+              markComponentLayoutEffectMountStopped();
+            }
+          }
+
+          if (__DEV__) {
+            if (destroy !== undefined && typeof destroy !== 'function') {
+              let hookName;
+              if ((effect.tag & HookLayout) !== NoFlags) {
+                hookName = 'useLayoutEffect';
+              } else if ((effect.tag & HookInsertion) !== NoFlags) {
+                hookName = 'useInsertionEffect';
+              } else {
+                hookName = 'useEffect';
+              }
+              let addendum;
+              if (destroy === null) {
+                addendum =
+                  ' You returned null. If your effect does not require clean ' +
+                  'up, return undefined (or nothing).';
+              } else if (typeof destroy.then === 'function') {
+                addendum =
+                  '\n\nIt looks like you wrote ' +
+                  hookName +
+                  '(async () => ...) or returned a Promise. ' +
+                  'Instead, write the async function inside your effect ' +
+                  'and call it immediately:\n\n' +
+                  hookName +
+                  '(() => {\n' +
+                  '  async function fetchData() {\n' +
+                  '    // You can await here\n' +
+                  '    const response = await MyAPI.getData(someId);\n' +
+                  '    // ...\n' +
+                  '  }\n' +
+                  '  fetchData();\n' +
+                  `}, [someId]); // Or [] if effect doesn't need props or state\n\n` +
+                  'Learn more about data fetching with Hooks: https://react.dev/link/hooks-data-fetching';
+              } else {
+                addendum = ' You returned: ' + destroy;
+              }
+              console.error(
+                '%s must not return anything besides a function, ' +
+                  'which is used for clean-up.%s',
+                hookName,
+                addendum,
+              );
+            }
           }
         }
-      }
-      effect = effect.next;
-    } while (effect !== firstEffect);
+        effect = effect.next;
+      } while (effect !== firstEffect);
+    }
+  } catch (error) {
+    captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }
 }
 
@@ -208,50 +204,54 @@ export function commitHookEffectListUnmount(
   finishedWork: Fiber,
   nearestMountedAncestor: Fiber | null,
 ) {
-  const updateQueue: FunctionComponentUpdateQueue | null =
-    (finishedWork.updateQueue: any);
-  const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
-  if (lastEffect !== null) {
-    const firstEffect = lastEffect.next;
-    let effect = firstEffect;
-    do {
-      if ((effect.tag & flags) === flags) {
-        // Unmount
-        const inst = effect.inst;
-        const destroy = inst.destroy;
-        if (destroy !== undefined) {
-          inst.destroy = undefined;
-          if (enableSchedulingProfiler) {
-            if ((flags & HookPassive) !== NoHookEffect) {
-              markComponentPassiveEffectUnmountStarted(finishedWork);
-            } else if ((flags & HookLayout) !== NoHookEffect) {
-              markComponentLayoutEffectUnmountStarted(finishedWork);
+  try {
+    const updateQueue: FunctionComponentUpdateQueue | null =
+      (finishedWork.updateQueue: any);
+    const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
+    if (lastEffect !== null) {
+      const firstEffect = lastEffect.next;
+      let effect = firstEffect;
+      do {
+        if ((effect.tag & flags) === flags) {
+          // Unmount
+          const inst = effect.inst;
+          const destroy = inst.destroy;
+          if (destroy !== undefined) {
+            inst.destroy = undefined;
+            if (enableSchedulingProfiler) {
+              if ((flags & HookPassive) !== NoHookEffect) {
+                markComponentPassiveEffectUnmountStarted(finishedWork);
+              } else if ((flags & HookLayout) !== NoHookEffect) {
+                markComponentLayoutEffectUnmountStarted(finishedWork);
+              }
             }
-          }
 
-          if (__DEV__) {
-            if ((flags & HookInsertion) !== NoHookEffect) {
-              setIsRunningInsertionEffect(true);
+            if (__DEV__) {
+              if ((flags & HookInsertion) !== NoHookEffect) {
+                setIsRunningInsertionEffect(true);
+              }
             }
-          }
-          safelyCallDestroy(finishedWork, nearestMountedAncestor, destroy);
-          if (__DEV__) {
-            if ((flags & HookInsertion) !== NoHookEffect) {
-              setIsRunningInsertionEffect(false);
+            safelyCallDestroy(finishedWork, nearestMountedAncestor, destroy);
+            if (__DEV__) {
+              if ((flags & HookInsertion) !== NoHookEffect) {
+                setIsRunningInsertionEffect(false);
+              }
             }
-          }
 
-          if (enableSchedulingProfiler) {
-            if ((flags & HookPassive) !== NoHookEffect) {
-              markComponentPassiveEffectUnmountStopped();
-            } else if ((flags & HookLayout) !== NoHookEffect) {
-              markComponentLayoutEffectUnmountStopped();
+            if (enableSchedulingProfiler) {
+              if ((flags & HookPassive) !== NoHookEffect) {
+                markComponentPassiveEffectUnmountStopped();
+              } else if ((flags & HookLayout) !== NoHookEffect) {
+                markComponentLayoutEffectUnmountStopped();
+              }
             }
           }
         }
-      }
-      effect = effect.next;
-    } while (effect !== firstEffect);
+        effect = effect.next;
+      } while (effect !== firstEffect);
+    }
+  } catch (error) {
+    captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }
 }
 
@@ -261,18 +261,10 @@ export function commitHookPassiveMountEffects(
 ) {
   if (shouldProfile(finishedWork)) {
     startPassiveEffectTimer();
-    try {
-      commitHookEffectListMount(hookFlags, finishedWork);
-    } catch (error) {
-      captureCommitPhaseError(finishedWork, finishedWork.return, error);
-    }
+    commitHookEffectListMount(hookFlags, finishedWork);
     recordPassiveEffectDuration(finishedWork);
   } else {
-    try {
-      commitHookEffectListMount(hookFlags, finishedWork);
-    } catch (error) {
-      captureCommitPhaseError(finishedWork, finishedWork.return, error);
-    }
+    commitHookEffectListMount(hookFlags, finishedWork);
   }
 }
 
