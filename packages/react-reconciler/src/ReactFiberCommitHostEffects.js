@@ -47,6 +47,8 @@ import {
   commitHydratedSuspenseInstance,
   removeChildFromContainer,
   removeChild,
+  clearSingleton,
+  acquireSingletonInstance,
 } from './ReactFiberConfig';
 import {captureCommitPhaseError} from './ReactFiberWorkLoop';
 
@@ -409,6 +411,19 @@ export function commitHostHydratedSuspense(
 ) {
   try {
     commitHydratedSuspenseInstance(suspenseInstance);
+  } catch (error) {
+    captureCommitPhaseError(finishedWork, finishedWork.return, error);
+  }
+}
+
+export function commitHostSingleton(finishedWork: Fiber) {
+  const singleton = finishedWork.stateNode;
+  const props = finishedWork.memoizedProps;
+
+  try {
+    // This was a new mount, we need to clear and set initial properties
+    clearSingleton(singleton);
+    acquireSingletonInstance(finishedWork.type, props, singleton, finishedWork);
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }

@@ -121,8 +121,6 @@ import {
   prepareForCommit,
   beforeActiveInstanceBlur,
   detachDeletedInstance,
-  clearSingleton,
-  acquireSingletonInstance,
   releaseSingletonInstance,
   getHoistableRoot,
   acquireResource,
@@ -210,6 +208,7 @@ import {
   commitHostHydratedSuspense,
   commitHostRemoveChildFromContainer,
   commitHostRemoveChild,
+  commitHostSingleton,
 } from './ReactFiberCommitHostEffects';
 
 // Used during the commit phase to track the state of the Offscreen component stack.
@@ -1852,16 +1851,7 @@ function commitMutationEffectsOnFiber(
         if (flags & Update) {
           const previousWork = finishedWork.alternate;
           if (previousWork === null) {
-            const singleton = finishedWork.stateNode;
-            const props = finishedWork.memoizedProps;
-            // This was a new mount, we need to clear and set initial properties
-            clearSingleton(singleton);
-            acquireSingletonInstance(
-              finishedWork.type,
-              props,
-              singleton,
-              finishedWork,
-            );
+            commitHostSingleton(finishedWork);
           }
         }
       }
