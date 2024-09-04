@@ -1,5 +1,5 @@
 import {useMemo} from 'react';
-import {useHoook, ValidateMemoization} from 'shared-runtime';
+import {useHook, ValidateMemoization} from 'shared-runtime';
 
 export function Component({a, b}) {
   const item1 = useMemo(() => ({a}), [a]);

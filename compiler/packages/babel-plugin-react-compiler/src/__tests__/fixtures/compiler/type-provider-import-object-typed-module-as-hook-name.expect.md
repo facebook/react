@@ -18,6 +18,20 @@ export function Component({a, b}) {
   );
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{a: 0, b: 0}],
+  sequentialRenders: [
+    {a: 0, b: 0},
+    {a: 1, b: 0},
+    {a: 1, b: 1},
+    {a: 1, b: 2},
+    {a: 2, b: 2},
+    {a: 3, b: 2},
+    {a: 0, b: 0},
+  ],
+};
+
 ```
 
 ## Code
@@ -104,7 +118,28 @@ export function Component(t0) {
   return t9;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{ a: 0, b: 0 }],
+  sequentialRenders: [
+    { a: 0, b: 0 },
+    { a: 1, b: 0 },
+    { a: 1, b: 1 },
+    { a: 1, b: 2 },
+    { a: 2, b: 2 },
+    { a: 3, b: 2 },
+    { a: 0, b: 0 },
+  ],
+};
+
 ```
       
 ### Eval output
-(kind: exception) Fixture not implemented
+(kind: ok) [[ (exception in render) ReferenceError: ValidateMemoization is not defined ]]
+[[ (exception in render) ReferenceError: ValidateMemoization is not defined ]]
+[[ (exception in render) ReferenceError: ValidateMemoization is not defined ]]
+[[ (exception in render) ReferenceError: ValidateMemoization is not defined ]]
+[[ (exception in render) ReferenceError: ValidateMemoization is not defined ]]
+[[ (exception in render) ReferenceError: ValidateMemoization is not defined ]]
+[[ (exception in render) ReferenceError: ValidateMemoization is not defined ]]
+logs: [{ a: 0 },{ b: 0 },{ a: 0 },{ b: 0 },{ a: 1 },{ b: 1 },{ a: 1 },{ b: 2 },{ a: 2 },{ b: 2 },{ a: 3 },{ b: 2 },{ a: 0 },{ b: 0 }]
