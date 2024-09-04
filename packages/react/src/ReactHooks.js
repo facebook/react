@@ -54,11 +54,14 @@ export function getCacheForType<T>(resourceType: () => T): T {
     return resourceType();
   }
   const activeCache = dispatcher.getActiveCache();
-  let entry: T | void = (activeCache.get(resourceType): any);
+  let entry: T | void =
+    activeCache !== null ? (activeCache.get(resourceType): any) : undefined;
   if (entry === undefined) {
     entry = resourceType();
-    // TODO: Warn if undefined?
-    activeCache.set(resourceType, entry);
+    if (activeCache !== null) {
+      // TODO: Warn if undefined?
+      activeCache.set(resourceType, entry);
+    }
   }
   return entry;
 }

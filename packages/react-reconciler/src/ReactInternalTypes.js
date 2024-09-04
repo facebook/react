@@ -457,7 +457,7 @@ export interface AsyncCache {
 }
 
 export type AsyncDispatcher = {
-  getActiveCache: () => AsyncCache,
+  getActiveCache: () => AsyncCache | null,
   // DEV-only (or !disableStringRefs)
   getOwner: () => null | Fiber | ReactComponentInfo | ComponentStackNode,
 };

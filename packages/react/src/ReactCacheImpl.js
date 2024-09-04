@@ -61,13 +61,16 @@ export function cache<A: Iterable<mixed>, T>(fn: (...A) => T): (...A) => T {
       return fn.apply(null, arguments);
     }
     const activeCache = dispatcher.getActiveCache();
-    let fnMap: WeakMap<any, CacheNode<T>> | void = (activeCache.get(
-      createCacheRoot,
-    ): any);
+    let fnMap: WeakMap<any, CacheNode<T>> | void =
+      activeCache !== null
+        ? (activeCache.get(createCacheRoot): any)
+        : undefined;
     if (fnMap === undefined) {
       fnMap = createCacheRoot();
-      // TODO: Warn if undefined?
-      activeCache.set(createCacheRoot, fnMap);
+      if (activeCache !== null) {
+        // TODO: Warn if undefined?
+        activeCache.set(createCacheRoot, fnMap);
+      }
     }
     const fnNode = fnMap.get(fn);
     let cacheNode: CacheNode<T>;

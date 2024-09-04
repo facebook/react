@@ -306,10 +306,10 @@ if (!__EXPERIMENTAL__) {
         gate(flags => flags.enableOwnerStacks)
           ? [
               __DEV__
-                ? '\n' +
-                  //
-                  '    in Indirection (at **)\n' +
-                  '    in App (at **)'
+                ? '\n    in Indirection (at **)' +
+                  '\n    in App (at **)' +
+                  '\n    in Preview (at **)' +
+                  '\n    in PreviewApp (at **)'
                 : null,
             ]
           : [],

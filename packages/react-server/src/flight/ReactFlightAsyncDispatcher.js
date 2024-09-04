@@ -15,54 +15,17 @@ import type {
 } from 'react-reconciler/src/ReactInternalTypes';
 
 import {resolveRequest, getCache} from '../ReactFlightServer';
-import ReactSharedInternals from '../ReactSharedInternalsServer';
 
 import {disableStringRefs} from 'shared/ReactFeatureFlags';
 
 import {resolveOwner} from './ReactFlightCurrentOwner';
 
-const previousAsyncDispatcher = ReactSharedInternals.A;
-
-function resolveCache(): Map<Function, mixed> {
+function getActiveCache(): AsyncCache | null {
   const request = resolveRequest();
   if (request) {
     return getCache(request);
   }
-  return new Map();
-}
-
-function getActiveCache(): AsyncCache {
-  const outerCache: AsyncCache | null =
-    previousAsyncDispatcher !== null
-      ? previousAsyncDispatcher.getActiveCache()
-      : null;
-
-  const innerCache = resolveCache();
-
-  if (outerCache === null) {
-    return innerCache;
-  }
-
-  // If both caches are active, reads will prefer the outer cache
-  // Writes will go into both caches.
-  const chainedCache: AsyncCache = {
-    get(resourceType: Function) {
-      const outerEntry = outerCache.get(resourceType);
-      if (outerEntry !== undefined) {
-        return outerEntry;
-      }
-      return innerCache.get(resourceType);
-    },
-    set(resourceType: Function, value: mixed) {
-      if (outerCache !== null) {
-        outerCache.set(resourceType, value);
-      }
-      innerCache.set(resourceType, value);
-      return chainedCache;
-    },
-  };
-
-  return chainedCache;
+  return null;
 }
 
 export const DefaultAsyncDispatcher: AsyncDispatcher = ({

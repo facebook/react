@@ -17,7 +17,7 @@ import {disableStringRefs} from 'shared/ReactFeatureFlags';
 
 import {currentTaskInDEV} from './ReactFizzCurrentTask';
 
-function getActiveCache(): AsyncCache {
+function getActiveCache(): AsyncCache | null {
   throw new Error('Not implemented.');
 }
 
