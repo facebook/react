@@ -4356,9 +4356,6 @@ export function attach(
     const owners: null | Array<SerializedElement> =
       getOwnersListFromInstance(fiberInstance);
 
-    const isTimedOutSuspense =
-      tag === SuspenseComponent && memoizedState !== null;
-
     let hooks = null;
     if (usesHooks) {
       const originalConsoleMethods: {[string]: $FlowFixMe} = {};
@@ -4388,13 +4385,24 @@ export function attach(
 
     let rootType = null;
     let current = fiber;
+    let hasErrorBoundary = false;
+    let hasSuspenseBoundary = false;
     while (current.return !== null) {
+      const temp = current;
       current = current.return;
+      if (temp.tag === SuspenseComponent) {
+        hasSuspenseBoundary = true;
+      } else if (isErrorBoundary(temp)) {
+        hasErrorBoundary = true;
+      }
     }
     const fiberRoot = current.stateNode;
     if (fiberRoot != null && fiberRoot._debugRootType !== null) {
       rootType = fiberRoot._debugRootType;
     }
+
+    const isTimedOutSuspense =
+      tag === SuspenseComponent && memoizedState !== null;
 
     let isErrored = false;
     if (isErrorBoundary(fiber)) {
@@ -4446,12 +4454,13 @@ export function attach(
       canEditFunctionPropsRenamePaths:
         typeof overridePropsRenamePath === 'function',
 
-      canToggleError: supportsTogglingError,
+      canToggleError: supportsTogglingError && hasErrorBoundary,
       // Is this error boundary in error state.
       isErrored,
 
       canToggleSuspense:
         supportsTogglingSuspense &&
+        hasSuspenseBoundary &&
         // If it's showing the real content, we can always flip fallback.
         (!isTimedOutSuspense ||
           // If it's showing fallback because we previously forced it to,
@@ -4512,20 +4521,24 @@ export function attach(
       getOwnersListFromInstance(virtualInstance);
 
     let rootType = null;
-    let parent = virtualInstance.parent;
-    while (parent !== null) {
-      if (parent.kind !== VIRTUAL_INSTANCE) {
-        let current = parent.data;
-        while (current.return !== null) {
-          current = current.return;
+    let hasErrorBoundary = false;
+    let hasSuspenseBoundary = false;
+    const nearestFiber = getNearestFiber(virtualInstance);
+    if (nearestFiber !== null) {
+      let current = nearestFiber;
+      while (current.return !== null) {
+        const temp = current;
+        current = current.return;
+        if (temp.tag === SuspenseComponent) {
+          hasSuspenseBoundary = true;
+        } else if (isErrorBoundary(temp)) {
+          hasErrorBoundary = true;
         }
-        const fiberRoot = current.stateNode;
-        if (fiberRoot != null && fiberRoot._debugRootType !== null) {
-          rootType = fiberRoot._debugRootType;
-        }
-        break;
       }
-      parent = parent.parent;
+      const fiberRoot = current.stateNode;
+      if (fiberRoot != null && fiberRoot._debugRootType !== null) {
+        rootType = fiberRoot._debugRootType;
+      }
     }
 
     const plugins: Plugins = {
@@ -4543,10 +4556,10 @@ export function attach(
       canEditFunctionPropsDeletePaths: false,
       canEditFunctionPropsRenamePaths: false,
 
-      canToggleError: supportsTogglingError,
+      canToggleError: supportsTogglingError && hasErrorBoundary,
       isErrored: false,
 
-      canToggleSuspense: supportsTogglingSuspense,
+      canToggleSuspense: supportsTogglingSuspense && hasSuspenseBoundary,
 
       // Can view component source location.
       canViewSource,
