@@ -184,9 +184,16 @@ export function commitHookEffectListMount(
               } else {
                 addendum = ' You returned: ' + destroy;
               }
-              console.error(
-                '%s must not return anything besides a function, ' +
-                  'which is used for clean-up.%s',
+              runWithFiberInDEV(
+                finishedWork,
+                (n, a) => {
+                  console.error(
+                    '%s must not return anything besides a function, ' +
+                      'which is used for clean-up.%s',
+                    n,
+                    a,
+                  );
+                },
                 hookName,
                 addendum,
               );
@@ -642,11 +649,13 @@ export function commitClassSnapshot(finishedWork: Fiber, current: Fiber) {
         ((didWarnAboutUndefinedSnapshotBeforeUpdate: any): Set<mixed>);
       if (snapshot === undefined && !didWarnSet.has(finishedWork.type)) {
         didWarnSet.add(finishedWork.type);
-        console.error(
-          '%s.getSnapshotBeforeUpdate(): A snapshot value (or null) ' +
-            'must be returned. You have returned undefined.',
-          getComponentNameFromFiber(finishedWork),
-        );
+        runWithFiberInDEV(finishedWork, () => {
+          console.error(
+            '%s.getSnapshotBeforeUpdate(): A snapshot value (or null) ' +
+              'must be returned. You have returned undefined.',
+            getComponentNameFromFiber(finishedWork),
+          );
+        });
       }
     } else {
       snapshot = callGetSnapshotBeforeUpdates(
