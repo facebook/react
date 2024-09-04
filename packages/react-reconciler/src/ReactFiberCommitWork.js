@@ -107,13 +107,8 @@ import {
   startLayoutEffectTimer,
 } from './ReactProfilerTimer';
 import {ConcurrentMode, NoMode, ProfileMode} from './ReactTypeOfMode';
+import {deferHiddenCallbacks} from './ReactFiberClassUpdateQueue';
 import {
-  deferHiddenCallbacks,
-  commitHiddenCallbacks,
-  commitCallbacks,
-} from './ReactFiberClassUpdateQueue';
-import {
-  getPublicInstance,
   supportsMutation,
   supportsPersistence,
   supportsHydration,
@@ -208,13 +203,16 @@ import {
   commitHookPassiveMountEffects,
   commitHookPassiveUnmountEffects,
   commitClassLayoutLifecycles,
+  commitClassDidMount,
   commitClassCallbacks,
+  commitClassHiddenCallbacks,
   commitClassSnapshot,
   safelyCallComponentWillUnmount,
   safelyAttachRef,
   safelyDetachRef,
   safelyCallDestroy,
   commitProfilerUpdate,
+  commitRootCallbacks,
 } from './ReactFiberCommitEffects';
 
 // Used during the commit phase to track the state of the Offscreen component stack.
@@ -519,29 +517,7 @@ function commitLayoutEffectOnFiber(
         committedLanes,
       );
       if (flags & Callback) {
-        // TODO: I think this is now always non-null by the time it reaches the
-        // commit phase. Consider removing the type check.
-        const updateQueue: UpdateQueue<mixed> | null =
-          (finishedWork.updateQueue: any);
-        if (updateQueue !== null) {
-          let instance = null;
-          if (finishedWork.child !== null) {
-            switch (finishedWork.child.tag) {
-              case HostSingleton:
-              case HostComponent:
-                instance = getPublicInstance(finishedWork.child.stateNode);
-                break;
-              case ClassComponent:
-                instance = finishedWork.child.stateNode;
-                break;
-            }
-          }
-          try {
-            commitCallbacks(updateQueue, instance);
-          } catch (error) {
-            captureCommitPhaseError(finishedWork, finishedWork.return, error);
-          }
-        }
+        commitRootCallbacks(finishedWork);
       }
       break;
     }
@@ -2713,23 +2689,9 @@ export function reappearLayoutEffects(
         includeWorkInProgressEffects,
       );
 
-      // TODO: Check for LayoutStatic flag
-      const instance = finishedWork.stateNode;
-      if (typeof instance.componentDidMount === 'function') {
-        try {
-          instance.componentDidMount();
-        } catch (error) {
-          captureCommitPhaseError(finishedWork, finishedWork.return, error);
-        }
-      }
+      commitClassDidMount(finishedWork);
 
-      // Commit any callbacks that would have fired while the component
-      // was hidden.
-      const updateQueue: UpdateQueue<mixed> | null =
-        (finishedWork.updateQueue: any);
-      if (updateQueue !== null) {
-        commitHiddenCallbacks(updateQueue, instance);
-      }
+      commitClassHiddenCallbacks(finishedWork);
 
       // If this is newly finished work, check for setState callbacks
       if (includeWorkInProgressEffects && flags & Callback) {
@@ -4072,14 +4034,7 @@ export function invokeLayoutEffectMountInDEV(fiber: Fiber): void {
         break;
       }
       case ClassComponent: {
-        const instance = fiber.stateNode;
-        if (typeof instance.componentDidMount === 'function') {
-          try {
-            instance.componentDidMount();
-          } catch (error) {
-            captureCommitPhaseError(fiber, fiber.return, error);
-          }
-        }
+        commitClassDidMount(fiber);
         break;
       }
     }

@@ -21,6 +21,7 @@ import {
   disableStringRefs,
 } from 'shared/ReactFeatureFlags';
 import {
+  ClassComponent,
   HostComponent,
   HostHoistable,
   HostSingleton,
@@ -37,7 +38,10 @@ import {
   isCurrentUpdateNested,
 } from './ReactProfilerTimer';
 import {NoMode, ProfileMode} from './ReactTypeOfMode';
-import {commitCallbacks} from './ReactFiberClassUpdateQueue';
+import {
+  commitCallbacks,
+  commitHiddenCallbacks,
+} from './ReactFiberClassUpdateQueue';
 import {getPublicInstance} from './ReactFiberConfig';
 import {
   captureCommitPhaseError,
@@ -438,6 +442,22 @@ export function commitClassLayoutLifecycles(
   }
 }
 
+export function commitClassDidMount(finishedWork: Fiber) {
+  // TODO: Check for LayoutStatic flag
+  const instance = finishedWork.stateNode;
+  if (typeof instance.componentDidMount === 'function') {
+    if (__DEV__) {
+      callComponentDidMountInDEV(finishedWork, instance);
+    } else {
+      try {
+        instance.componentDidMount();
+      } catch (error) {
+        captureCommitPhaseError(finishedWork, finishedWork.return, error);
+      }
+    }
+  }
+}
+
 export function commitClassCallbacks(finishedWork: Fiber) {
   // TODO: I think this is now always non-null by the time it reaches the
   // commit phase. Consider removing the type check.
@@ -476,6 +496,47 @@ export function commitClassCallbacks(finishedWork: Fiber) {
     // We could update instance props and state here,
     // but instead we rely on them being set during last render.
     // TODO: revisit this when we implement resuming.
+    try {
+      commitCallbacks(updateQueue, instance);
+    } catch (error) {
+      captureCommitPhaseError(finishedWork, finishedWork.return, error);
+    }
+  }
+}
+
+export function commitClassHiddenCallbacks(finishedWork: Fiber) {
+  // Commit any callbacks that would have fired while the component
+  // was hidden.
+  const updateQueue: UpdateQueue<mixed> | null =
+    (finishedWork.updateQueue: any);
+  if (updateQueue !== null) {
+    const instance = finishedWork.stateNode;
+    try {
+      commitHiddenCallbacks(updateQueue, instance);
+    } catch (error) {
+      captureCommitPhaseError(finishedWork, finishedWork.return, error);
+    }
+  }
+}
+
+export function commitRootCallbacks(finishedWork: Fiber) {
+  // TODO: I think this is now always non-null by the time it reaches the
+  // commit phase. Consider removing the type check.
+  const updateQueue: UpdateQueue<mixed> | null =
+    (finishedWork.updateQueue: any);
+  if (updateQueue !== null) {
+    let instance = null;
+    if (finishedWork.child !== null) {
+      switch (finishedWork.child.tag) {
+        case HostSingleton:
+        case HostComponent:
+          instance = getPublicInstance(finishedWork.child.stateNode);
+          break;
+        case ClassComponent:
+          instance = finishedWork.child.stateNode;
+          break;
+      }
+    }
     try {
       commitCallbacks(updateQueue, instance);
     } catch (error) {
