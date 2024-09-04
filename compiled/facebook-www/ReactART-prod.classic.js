@@ -83,6 +83,7 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   retryLaneExpirationMs = dynamicFeatureFlags.retryLaneExpirationMs,
   syncLaneExpirationMs = dynamicFeatureFlags.syncLaneExpirationMs,
   transitionLaneExpirationMs = dynamicFeatureFlags.transitionLaneExpirationMs,
+  enableSiblingPrerendering = dynamicFeatureFlags.enableSiblingPrerendering,
   disableLegacyMode = dynamicFeatureFlags.disableLegacyMode,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_ELEMENT_TYPE = renameElementSymbol
@@ -9415,20 +9416,28 @@ function handleThrow(root, thrownValue) {
   current = null;
   if (thrownValue === SuspenseException) {
     thrownValue = getSuspendedThenable();
-    var handler = suspenseHandlerStackCursor.current;
+    var JSCompiler_temp;
+    if ((JSCompiler_temp = !enableSiblingPrerendering))
+      (JSCompiler_temp = suspenseHandlerStackCursor.current),
+        (JSCompiler_temp =
+          null === JSCompiler_temp
+            ? !0
+            : (workInProgressRootRenderLanes & 4194176) ===
+                workInProgressRootRenderLanes
+              ? null === shellBoundary
+                ? !0
+                : !1
+              : (workInProgressRootRenderLanes & 62914560) ===
+                    workInProgressRootRenderLanes ||
+                  0 !== (workInProgressRootRenderLanes & 536870912)
+                ? JSCompiler_temp === shellBoundary
+                : !1);
     workInProgressSuspendedReason =
-      (null !== handler &&
-        ((workInProgressRootRenderLanes & 4194176) ===
-        workInProgressRootRenderLanes
-          ? null !== shellBoundary
-          : ((workInProgressRootRenderLanes & 62914560) !==
-              workInProgressRootRenderLanes &&
-              0 === (workInProgressRootRenderLanes & 536870912)) ||
-            handler !== shellBoundary)) ||
-      0 !== (workInProgressRootSkippedLanes & 134217727) ||
-      0 !== (workInProgressRootInterleavedUpdatedLanes & 134217727)
-        ? 3
-        : 2;
+      JSCompiler_temp &&
+      0 === (workInProgressRootSkippedLanes & 134217727) &&
+      0 === (workInProgressRootInterleavedUpdatedLanes & 134217727)
+        ? 2
+        : 3;
   } else
     thrownValue === SuspenseyCommitException
       ? ((thrownValue = getSuspendedThenable()),
@@ -10638,13 +10647,13 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1371 = {
   bundleType: 0,
-  version: "19.0.0-www-classic-8d68da3f-20240903",
+  version: "19.0.0-www-classic-8b4c54c0-20240904",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: function () {
     return null;
   },
-  reconcilerVersion: "19.0.0-www-classic-8d68da3f-20240903"
+  reconcilerVersion: "19.0.0-www-classic-8b4c54c0-20240904"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1372 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -10670,4 +10679,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.0.0-www-classic-8d68da3f-20240903";
+exports.version = "19.0.0-www-classic-8b4c54c0-20240904";

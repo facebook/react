@@ -14316,6 +14316,7 @@ __DEV__ &&
       thrownValue === SuspenseException
         ? ((thrownValue = getSuspendedThenable()),
           (workInProgressSuspendedReason =
+            !enableSiblingPrerendering &&
             shouldRemainOnPreviousScreen() &&
             0 === (workInProgressRootSkippedLanes & 134217727) &&
             0 === (workInProgressRootInterleavedUpdatedLanes & 134217727)
@@ -16328,6 +16329,7 @@ __DEV__ &&
       syncLaneExpirationMs = dynamicFeatureFlags.syncLaneExpirationMs,
       transitionLaneExpirationMs =
         dynamicFeatureFlags.transitionLaneExpirationMs,
+      enableSiblingPrerendering = dynamicFeatureFlags.enableSiblingPrerendering,
       enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler,
       disableLegacyMode = dynamicFeatureFlags.disableLegacyMode,
       REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
@@ -19036,7 +19038,7 @@ __DEV__ &&
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-www-classic-8d68da3f-20240903"
+        reconcilerVersion: "19.0.0-www-classic-8b4c54c0-20240904"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

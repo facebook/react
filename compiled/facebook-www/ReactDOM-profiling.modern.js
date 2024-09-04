@@ -62,6 +62,7 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   retryLaneExpirationMs = dynamicFeatureFlags.retryLaneExpirationMs,
   syncLaneExpirationMs = dynamicFeatureFlags.syncLaneExpirationMs,
   transitionLaneExpirationMs = dynamicFeatureFlags.transitionLaneExpirationMs,
+  enableSiblingPrerendering = dynamicFeatureFlags.enableSiblingPrerendering,
   enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_ELEMENT_TYPE = renameElementSymbol
@@ -11399,6 +11400,7 @@ function handleThrow(root, thrownValue) {
   thrownValue === SuspenseException
     ? ((thrownValue = getSuspendedThenable()),
       (workInProgressSuspendedReason =
+        !enableSiblingPrerendering &&
         shouldRemainOnPreviousScreen() &&
         0 === (workInProgressRootSkippedLanes & 134217727) &&
         0 === (workInProgressRootInterleavedUpdatedLanes & 134217727)
@@ -17323,14 +17325,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1814 = React.version;
 if (
-  "19.0.0-www-modern-8d68da3f-20240903" !==
+  "19.0.0-www-modern-8b4c54c0-20240904" !==
   isomorphicReactPackageVersion$jscomp$inline_1814
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1814,
-      "19.0.0-www-modern-8d68da3f-20240903"
+      "19.0.0-www-modern-8b4c54c0-20240904"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17348,11 +17350,11 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_1816 = {
   bundleType: 0,
-  version: "19.0.0-www-modern-8d68da3f-20240903",
+  version: "19.0.0-www-modern-8b4c54c0-20240904",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-www-modern-8d68da3f-20240903"
+  reconcilerVersion: "19.0.0-www-modern-8b4c54c0-20240904"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_1816.getLaneLabelMap = getLaneLabelMap),
@@ -17718,7 +17720,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-8d68da3f-20240903";
+exports.version = "19.0.0-www-modern-8b4c54c0-20240904";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

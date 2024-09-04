@@ -15675,6 +15675,7 @@ __DEV__ &&
       thrownValue === SuspenseException
         ? ((thrownValue = getSuspendedThenable()),
           (workInProgressSuspendedReason =
+            !enableSiblingPrerendering &&
             shouldRemainOnPreviousScreen() &&
             0 === (workInProgressRootSkippedLanes & 134217727) &&
             0 === (workInProgressRootInterleavedUpdatedLanes & 134217727)
@@ -23214,6 +23215,7 @@ __DEV__ &&
       syncLaneExpirationMs = dynamicFeatureFlags.syncLaneExpirationMs,
       transitionLaneExpirationMs =
         dynamicFeatureFlags.transitionLaneExpirationMs,
+      enableSiblingPrerendering = dynamicFeatureFlags.enableSiblingPrerendering,
       enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler,
       REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_ELEMENT_TYPE = renameElementSymbol
@@ -26974,11 +26976,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.0.0-www-modern-8d68da3f-20240903" !== isomorphicReactPackageVersion)
+      if ("19.0.0-www-modern-8b4c54c0-20240904" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.0.0-www-modern-8d68da3f-20240903\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.0.0-www-modern-8b4c54c0-20240904\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -27021,11 +27023,11 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.0.0-www-modern-8d68da3f-20240903",
+          version: "19.0.0-www-modern-8b4c54c0-20240904",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
           findFiberByHostInstance: getClosestInstanceFromNode,
-          reconcilerVersion: "19.0.0-www-modern-8d68da3f-20240903"
+          reconcilerVersion: "19.0.0-www-modern-8b4c54c0-20240904"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -27796,5 +27798,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.0.0-www-modern-8d68da3f-20240903";
+    exports.version = "19.0.0-www-modern-8b4c54c0-20240904";
   })();
