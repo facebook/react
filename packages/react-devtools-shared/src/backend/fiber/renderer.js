@@ -5496,7 +5496,14 @@ export function attach(
       return;
     }
     if (devtoolsInstance.kind === FIBER_INSTANCE) {
-      const fiber = devtoolsInstance.data;
+      let fiber = devtoolsInstance.data;
+      while (fiber.tag !== SuspenseComponent) {
+        if (fiber.return === null) {
+          return;
+        }
+        fiber = fiber.return;
+      }
+
       if (fiber.alternate !== null) {
         // We only need one of the Fibers in the set.
         forceFallbackForFibers.delete(fiber.alternate);
