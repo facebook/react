@@ -5382,6 +5382,25 @@ export function attach(
     );
   }
 
+  function getNearestFiber(devtoolsInstance: DevToolsInstance): null | Fiber {
+    if (devtoolsInstance.kind === VIRTUAL_INSTANCE) {
+      let inst: DevToolsInstance = devtoolsInstance;
+      while (inst.kind === VIRTUAL_INSTANCE) {
+        // For virtual instances, we search deeper until we find a Fiber instance.
+        // Then we search upwards from that Fiber. That's because Virtual Instances
+        // will always have an Fiber child filtered or not. If we searched its parents
+        // we might skip through a filtered Error Boundary before we hit a FiberInstance.
+        if (inst.firstChild === null) {
+          return null;
+        }
+        inst = inst.firstChild;
+      }
+      return inst.data.return;
+    } else {
+      return devtoolsInstance.data;
+    }
+  }
+
   // React will switch between these implementations depending on whether
   // we have any manually suspended/errored-out Fibers or not.
   function shouldErrorFiberAlwaysNull() {
@@ -5446,27 +5465,27 @@ export function attach(
     if (devtoolsInstance === undefined) {
       return;
     }
-    if (devtoolsInstance.kind === FIBER_INSTANCE) {
-      let fiber = devtoolsInstance.data;
-      while (!isErrorBoundary(fiber)) {
-        if (fiber.return === null) {
-          return;
-        }
-        fiber = fiber.return;
-      }
-      forceErrorForFibers.set(fiber, forceError);
-      if (fiber.alternate !== null) {
-        // We only need one of the Fibers in the set.
-        forceErrorForFibers.delete(fiber.alternate);
-      }
-      if (forceErrorForFibers.size === 1) {
-        // First override is added. Switch React to slower path.
-        setErrorHandler(shouldErrorFiberAccordingToMap);
-      }
-      scheduleUpdate(fiber);
-    } else {
-      // TODO: Handle VirtualInstance.
+    const nearestFiber = getNearestFiber(devtoolsInstance);
+    if (nearestFiber === null) {
+      return;
     }
+    let fiber = nearestFiber;
+    while (!isErrorBoundary(fiber)) {
+      if (fiber.return === null) {
+        return;
+      }
+      fiber = fiber.return;
+    }
+    forceErrorForFibers.set(fiber, forceError);
+    if (fiber.alternate !== null) {
+      // We only need one of the Fibers in the set.
+      forceErrorForFibers.delete(fiber.alternate);
+    }
+    if (forceErrorForFibers.size === 1) {
+      // First override is added. Switch React to slower path.
+      setErrorHandler(shouldErrorFiberAccordingToMap);
+    }
+    scheduleUpdate(fiber);
   }
 
   function shouldSuspendFiberAlwaysFalse() {
@@ -5495,36 +5514,36 @@ export function attach(
     if (devtoolsInstance === undefined) {
       return;
     }
-    if (devtoolsInstance.kind === FIBER_INSTANCE) {
-      let fiber = devtoolsInstance.data;
-      while (fiber.tag !== SuspenseComponent) {
-        if (fiber.return === null) {
-          return;
-        }
-        fiber = fiber.return;
-      }
-
-      if (fiber.alternate !== null) {
-        // We only need one of the Fibers in the set.
-        forceFallbackForFibers.delete(fiber.alternate);
-      }
-      if (forceFallback) {
-        forceFallbackForFibers.add(fiber);
-        if (forceFallbackForFibers.size === 1) {
-          // First override is added. Switch React to slower path.
-          setSuspenseHandler(shouldSuspendFiberAccordingToSet);
-        }
-      } else {
-        forceFallbackForFibers.delete(fiber);
-        if (forceFallbackForFibers.size === 0) {
-          // Last override is gone. Switch React back to fast path.
-          setSuspenseHandler(shouldSuspendFiberAlwaysFalse);
-        }
-      }
-      scheduleUpdate(fiber);
-    } else {
-      // TODO: Handle VirtualInstance.
+    const nearestFiber = getNearestFiber(devtoolsInstance);
+    if (nearestFiber === null) {
+      return;
     }
+    let fiber = nearestFiber;
+    while (fiber.tag !== SuspenseComponent) {
+      if (fiber.return === null) {
+        return;
+      }
+      fiber = fiber.return;
+    }
+
+    if (fiber.alternate !== null) {
+      // We only need one of the Fibers in the set.
+      forceFallbackForFibers.delete(fiber.alternate);
+    }
+    if (forceFallback) {
+      forceFallbackForFibers.add(fiber);
+      if (forceFallbackForFibers.size === 1) {
+        // First override is added. Switch React to slower path.
+        setSuspenseHandler(shouldSuspendFiberAccordingToSet);
+      }
+    } else {
+      forceFallbackForFibers.delete(fiber);
+      if (forceFallbackForFibers.size === 0) {
+        // Last override is gone. Switch React back to fast path.
+        setSuspenseHandler(shouldSuspendFiberAlwaysFalse);
+      }
+    }
+    scheduleUpdate(fiber);
   }
 
   // Remember if we're trying to restore the selection after reload.
