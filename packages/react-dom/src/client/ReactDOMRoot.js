@@ -276,7 +276,7 @@ export function hydrateRoot(
       typeof initialChildren === 'object' &&
       initialChildren !== null &&
       (!('$$typeof' in initialChildren) ||
-        (initialChildren as any).$$typeof !== REACT_ELEMENT_TYPE)
+        (initialChildren: any).$$typeof !== REACT_ELEMENT_TYPE)
     ) {
       console.error(
         'Warning: You passed an options object as the second argument to `hydrateRoot(...)`, did you forget to pass a React element?',
@@ -286,7 +286,7 @@ export function hydrateRoot(
     if (
       typeof options === 'object' &&
       options !== null &&
-      (options as any).$$typeof === REACT_ELEMENT_TYPE
+      (options: any).$$typeof === REACT_ELEMENT_TYPE
     ) {
       console.error(
         'You passed a JSX element as an options to hydrateRoot. You probably meant to ' +
