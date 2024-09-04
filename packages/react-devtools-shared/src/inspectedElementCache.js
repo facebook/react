@@ -7,10 +7,7 @@
  * @flow
  */
 
-import {
-  unstable_getCacheForType as getCacheForType,
-  startTransition,
-} from 'react';
+import {cache, startTransition} from 'react';
 import Store from 'react-devtools-shared/src/devtools/store';
 import {inspectElement as inspectElementMutableSource} from 'react-devtools-shared/src/inspectedElementMutableSource';
 import ElementPollingCancellationError from 'react-devtools-shared/src//errors/ElementPollingCancellationError';
@@ -61,9 +58,7 @@ function createMap(): InspectedElementMap {
   return new WeakMap();
 }
 
-function getRecordMap(): WeakMap<Element, Record<InspectedElementFrontend>> {
-  return getCacheForType(createMap);
-}
+const getRecordMap = cache(createMap);
 
 function createCacheSeed(
   element: Element,
