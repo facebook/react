@@ -49,6 +49,15 @@ describe('updaters', () => {
           schedulerTags.push(fiber.tag);
           schedulerTypes.push(fiber.elementType);
         });
+        fiberRoot.pendingUpdatersLaneMap.forEach((pendingUpdaters, index) => {
+          if (pendingUpdaters.size > 0) {
+            // TODO: Is it ever ok to have dangling pending updaters or is this always a bug?
+            // const lane = 1 << index;
+            // throw new Error(
+            //   `Lane ${lane} has pending updaters. Either you didn't assert on all updates in your test or React is leaking updaters.`,
+            // );
+          }
+        });
         allSchedulerTags.push(schedulerTags);
         allSchedulerTypes.push(schedulerTypes);
       }),
@@ -266,10 +275,7 @@ describe('updaters', () => {
     await waitForAll([]);
   });
 
-  // This test should be convertable to createRoot but the allScheduledTypes assertions are no longer the same
-  // So I'm leaving it in legacy mode for now and just disabling if legacy mode is turned off
-  // @gate !disableLegacyMode
-  it('should cover suspense pings', async () => {
+  it('should cover suspense pings after update', async () => {
     let data = null;
     let resolver = null;
     let promise = null;
@@ -303,10 +309,11 @@ describe('updaters', () => {
       }
     };
 
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
     await act(() => {
-      ReactDOM.render(<Parent />, document.createElement('div'));
-      assertLog(['onCommitRoot']);
+      root.render(<Parent />);
     });
+    assertLog(['onCommitRoot']);
     expect(setShouldSuspend).not.toBeNull();
     expect(allSchedulerTypes).toEqual([[null]]);
 
@@ -328,7 +335,63 @@ describe('updaters', () => {
     await waitForAll([]);
   });
 
+  it('should cover suspense pings after mount', async () => {
+    const {HostRoot} = require('react-reconciler/src/ReactWorkTags');
+    let data = null;
+    let resolver = null;
+    let promise = null;
+    const fakeCacheRead = () => {
+      if (data === null) {
+        promise = new Promise(resolve => {
+          resolver = resolvedData => {
+            data = resolvedData;
+            resolve(resolvedData);
+          };
+        });
+        throw promise;
+      } else {
+        return data;
+      }
+    };
+    const Parent = () => (
+      <React.Suspense fallback={<Fallback />}>
+        <Suspender />
+      </React.Suspense>
+    );
+    const Fallback = () => null;
+    const Suspender = ({suspend}) => {
+      return fakeCacheRead();
+    };
+
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    await act(() => {
+      root.render(<Parent />);
+    });
+    assertLog(['onCommitRoot']);
+    expect(allSchedulerTags).toEqual([[HostRoot]]);
+    expect(allSchedulerTypes).toEqual([[null]]);
+    expect(resolver).not.toBeNull();
+
+    allSchedulerTags.length = 0;
+    allSchedulerTypes.length = 0;
+    await act(() => {
+      resolver('abc');
+      return promise;
+    });
+    assertLog(['onCommitRoot']);
+    expect(allSchedulerTypes).toEqual([
+      [
+        // Should be Suspender. `null` will consider the host root as the updater.
+        null,
+      ],
+    ]);
+
+    // Verify no outstanding flushes
+    await waitForAll([]);
+  });
+
   it('should cover error handling', async () => {
+    const {HostRoot} = require('react-reconciler/src/ReactWorkTags');
     let triggerError = null;
 
     const Parent = () => {
@@ -370,14 +433,20 @@ describe('updaters', () => {
     });
     assertLog(['initial', 'onCommitRoot']);
     expect(triggerError).not.toBeNull();
+    expect(allSchedulerTags).toEqual([[HostRoot]]);
+    expect(allSchedulerTypes).toEqual([[null]]);
 
-    allSchedulerTypes.splice(0);
+    allSchedulerTags.length = 0;
+    allSchedulerTypes.length = 0;
     onCommitRootShouldYield = true;
 
     await act(() => {
       triggerError();
     });
+    // TODO: Why the double commit? Isn't this a single commit?
     assertLog(['onCommitRoot', 'error', 'onCommitRoot']);
+    // TODO: If this was a single commit, ErrorBoundary shouldn't be in here.
+    // We only set state in Parent so that should be the only updater
     expect(allSchedulerTypes).toEqual([[Parent], [ErrorBoundary]]);
 
     // Verify no outstanding flushes
