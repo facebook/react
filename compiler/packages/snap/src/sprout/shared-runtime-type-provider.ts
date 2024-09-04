@@ -48,14 +48,6 @@ export function makeSharedRuntimeTypeProvider({
           returnType: {kind: 'type', name: 'Primitive'},
           returnValueKind: ValueKindEnum.Primitive,
         },
-        useArrayConcatNotTypedAsHook: {
-          kind: 'function',
-          calleeEffect: EffectEnum.Read,
-          positionalParams: [],
-          restParam: EffectEnum.Capture,
-          returnType: {kind: 'type', name: 'Array'},
-          returnValueKind: ValueKindEnum.Primitive,
-        },
         useFreeze: {
           kind: 'hook',
           returnType: {kind: 'type', name: 'Any'},
