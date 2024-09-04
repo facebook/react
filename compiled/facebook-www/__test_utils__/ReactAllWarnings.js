@@ -177,7 +177,6 @@ export default [
   "Internal React error: A listener was unexpectedly attached to a \"noop\" thenable. This is a bug in React. Please file an issue.",
   "Internal React error: Attempted to capture a commit phase error inside a detached tree. This indicates a bug in React. Potential causes include deleting the same fiber more than once, committing an already-finished tree, or an inconsistent return pointer.\n\nError message:\n\n%s",
   "Internal React error: Expected static flag was missing. Please notify the React team.",
-  "Internal React error: Expected this fiber to be complete, but it isn't. It should have been unwound. This is a bug in React.",
   "Internal error: Expected work-in-progress queue to be a clone. This is a bug in React.",
   "Invalid ARIA attribute `%s`. ARIA attributes follow the pattern aria-* and must be lowercase.",
   "Invalid ARIA attribute `%s`. Did you mean `%s`?",

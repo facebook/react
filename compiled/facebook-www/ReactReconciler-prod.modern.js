@@ -487,28 +487,37 @@ module.exports = function ($$$config) {
     var pendingLanes = root.pendingLanes;
     if (0 === pendingLanes) return 0;
     var nextLanes = 0,
-      suspendedLanes = root.suspendedLanes;
-    root = root.pingedLanes;
+      suspendedLanes = root.suspendedLanes,
+      pingedLanes = root.pingedLanes;
+    root = root.warmLanes;
     var nonIdlePendingLanes = pendingLanes & 134217727;
     0 !== nonIdlePendingLanes
       ? ((pendingLanes = nonIdlePendingLanes & ~suspendedLanes),
         0 !== pendingLanes
           ? (nextLanes = getHighestPriorityLanes(pendingLanes))
-          : ((root &= nonIdlePendingLanes),
-            0 !== root && (nextLanes = getHighestPriorityLanes(root))))
-      : ((pendingLanes &= ~suspendedLanes),
-        0 !== pendingLanes
-          ? (nextLanes = getHighestPriorityLanes(pendingLanes))
-          : 0 !== root && (nextLanes = getHighestPriorityLanes(root)));
+          : ((pingedLanes &= nonIdlePendingLanes),
+            0 !== pingedLanes
+              ? (nextLanes = getHighestPriorityLanes(pingedLanes))
+              : ((pingedLanes = nonIdlePendingLanes & ~root),
+                0 !== pingedLanes &&
+                  (nextLanes = getHighestPriorityLanes(pingedLanes)))))
+      : ((nonIdlePendingLanes = pendingLanes & ~suspendedLanes),
+        0 !== nonIdlePendingLanes
+          ? (nextLanes = getHighestPriorityLanes(nonIdlePendingLanes))
+          : 0 !== pingedLanes
+            ? (nextLanes = getHighestPriorityLanes(pingedLanes))
+            : ((pingedLanes = pendingLanes & ~root),
+              0 !== pingedLanes &&
+                (nextLanes = getHighestPriorityLanes(pingedLanes))));
     return 0 === nextLanes
       ? 0
       : 0 !== wipLanes &&
           wipLanes !== nextLanes &&
           0 === (wipLanes & suspendedLanes) &&
           ((suspendedLanes = nextLanes & -nextLanes),
-          (root = wipLanes & -wipLanes),
-          suspendedLanes >= root ||
-            (32 === suspendedLanes && 0 !== (root & 4194176)))
+          (pingedLanes = wipLanes & -wipLanes),
+          suspendedLanes >= pingedLanes ||
+            (32 === suspendedLanes && 0 !== (pingedLanes & 4194176)))
         ? wipLanes
         : nextLanes;
   }
@@ -581,6 +590,7 @@ module.exports = function ($$$config) {
     root.pendingLanes = remainingLanes;
     root.suspendedLanes = 0;
     root.pingedLanes = 0;
+    root.warmLanes = 0;
     root.expiredLanes &= remainingLanes;
     root.entangledLanes &= remainingLanes;
     root.errorRecoveryDisabledLanes &= remainingLanes;
@@ -592,18 +602,18 @@ module.exports = function ($$$config) {
       0 < noLongerPendingLanes;
 
     ) {
-      var index$7 = 31 - clz32(noLongerPendingLanes),
-        lane = 1 << index$7;
-      remainingLanes[index$7] = 0;
-      expirationTimes[index$7] = -1;
-      var hiddenUpdatesForLane = hiddenUpdates[index$7];
+      var index$8 = 31 - clz32(noLongerPendingLanes),
+        lane = 1 << index$8;
+      remainingLanes[index$8] = 0;
+      expirationTimes[index$8] = -1;
+      var hiddenUpdatesForLane = hiddenUpdates[index$8];
       if (null !== hiddenUpdatesForLane)
         for (
-          hiddenUpdates[index$7] = null, index$7 = 0;
-          index$7 < hiddenUpdatesForLane.length;
-          index$7++
+          hiddenUpdates[index$8] = null, index$8 = 0;
+          index$8 < hiddenUpdatesForLane.length;
+          index$8++
         ) {
-          var update = hiddenUpdatesForLane[index$7];
+          var update = hiddenUpdatesForLane[index$8];
           null !== update && (update.lane &= -536870913);
         }
       noLongerPendingLanes &= ~lane;
@@ -623,21 +633,21 @@ module.exports = function ($$$config) {
   function markRootEntangled(root, entangledLanes) {
     var rootEntangledLanes = (root.entangledLanes |= entangledLanes);
     for (root = root.entanglements; rootEntangledLanes; ) {
-      var index$8 = 31 - clz32(rootEntangledLanes),
-        lane = 1 << index$8;
-      (lane & entangledLanes) | (root[index$8] & entangledLanes) &&
-        (root[index$8] |= entangledLanes);
+      var index$9 = 31 - clz32(rootEntangledLanes),
+        lane = 1 << index$9;
+      (lane & entangledLanes) | (root[index$9] & entangledLanes) &&
+        (root[index$9] |= entangledLanes);
       rootEntangledLanes &= ~lane;
     }
   }
   function getTransitionsForLanes(root, lanes) {
     if (!enableTransitionTracing) return null;
     for (var transitionsForLanes = []; 0 < lanes; ) {
-      var index$11 = 31 - clz32(lanes),
-        lane = 1 << index$11;
-      index$11 = root.transitionLanes[index$11];
-      null !== index$11 &&
-        index$11.forEach(function (transition) {
+      var index$12 = 31 - clz32(lanes),
+        lane = 1 << index$12;
+      index$12 = root.transitionLanes[index$12];
+      null !== index$12 &&
+        index$12.forEach(function (transition) {
           transitionsForLanes.push(transition);
         });
       lanes &= ~lane;
@@ -647,10 +657,10 @@ module.exports = function ($$$config) {
   function clearTransitionsForLanes(root, lanes) {
     if (enableTransitionTracing)
       for (; 0 < lanes; ) {
-        var index$12 = 31 - clz32(lanes),
-          lane = 1 << index$12;
-        null !== root.transitionLanes[index$12] &&
-          (root.transitionLanes[index$12] = null);
+        var index$13 = 31 - clz32(lanes),
+          lane = 1 << index$13;
+        null !== root.transitionLanes[index$13] &&
+          (root.transitionLanes[index$13] = null);
         lanes &= ~lane;
       }
   }
@@ -1019,12 +1029,12 @@ module.exports = function ($$$config) {
       0 < pendingLanes;
 
     ) {
-      var index$5 = 31 - clz32(pendingLanes),
-        lane = 1 << index$5,
-        expirationTime = expirationTimes[index$5];
+      var index$6 = 31 - clz32(pendingLanes),
+        lane = 1 << index$6,
+        expirationTime = expirationTimes[index$6];
       if (-1 === expirationTime) {
         if (0 === (lane & suspendedLanes) || 0 !== (lane & pingedLanes))
-          expirationTimes[index$5] = computeExpirationTime(lane, currentTime);
+          expirationTimes[index$6] = computeExpirationTime(lane, currentTime);
       } else expirationTime <= currentTime && (root.expiredLanes |= lane);
       pendingLanes &= ~lane;
     }
@@ -1272,20 +1282,20 @@ module.exports = function ($$$config) {
         ? (firstBaseUpdate = firstPendingUpdate)
         : (lastBaseUpdate.next = firstPendingUpdate);
       lastBaseUpdate = lastPendingUpdate;
-      var current$19 = workInProgress$jscomp$0.alternate;
-      null !== current$19 &&
-        ((current$19 = current$19.updateQueue),
-        (pendingQueue = current$19.lastBaseUpdate),
+      var current$20 = workInProgress$jscomp$0.alternate;
+      null !== current$20 &&
+        ((current$20 = current$20.updateQueue),
+        (pendingQueue = current$20.lastBaseUpdate),
         pendingQueue !== lastBaseUpdate &&
           (null === pendingQueue
-            ? (current$19.firstBaseUpdate = firstPendingUpdate)
+            ? (current$20.firstBaseUpdate = firstPendingUpdate)
             : (pendingQueue.next = firstPendingUpdate),
-          (current$19.lastBaseUpdate = lastPendingUpdate)));
+          (current$20.lastBaseUpdate = lastPendingUpdate)));
     }
     if (null !== firstBaseUpdate) {
       var newState = queue.baseState;
       lastBaseUpdate = 0;
-      current$19 = firstPendingUpdate = lastPendingUpdate = null;
+      current$20 = firstPendingUpdate = lastPendingUpdate = null;
       pendingQueue = firstBaseUpdate;
       do {
         var updateLane = pendingQueue.lane & -536870913,
@@ -1298,8 +1308,8 @@ module.exports = function ($$$config) {
           0 !== updateLane &&
             updateLane === currentEntangledLane &&
             (didReadFromEntangledAsyncAction = !0);
-          null !== current$19 &&
-            (current$19 = current$19.next =
+          null !== current$20 &&
+            (current$20 = current$20.next =
               {
                 lane: 0,
                 tag: pendingQueue.tag,
@@ -1356,10 +1366,10 @@ module.exports = function ($$$config) {
             callback: pendingQueue.callback,
             next: null
           }),
-            null === current$19
-              ? ((firstPendingUpdate = current$19 = isHiddenUpdate),
+            null === current$20
+              ? ((firstPendingUpdate = current$20 = isHiddenUpdate),
                 (lastPendingUpdate = newState))
-              : (current$19 = current$19.next = isHiddenUpdate),
+              : (current$20 = current$20.next = isHiddenUpdate),
             (lastBaseUpdate |= updateLane);
         pendingQueue = pendingQueue.next;
         if (null === pendingQueue)
@@ -1372,10 +1382,10 @@ module.exports = function ($$$config) {
               (queue.lastBaseUpdate = isHiddenUpdate),
               (queue.shared.pending = null);
       } while (1);
-      null === current$19 && (lastPendingUpdate = newState);
+      null === current$20 && (lastPendingUpdate = newState);
       queue.baseState = lastPendingUpdate;
       queue.firstBaseUpdate = firstPendingUpdate;
-      queue.lastBaseUpdate = current$19;
+      queue.lastBaseUpdate = current$20;
       null === firstBaseUpdate && (queue.shared.lanes = 0);
       workInProgressRootSkippedLanes |= lastBaseUpdate;
       workInProgress$jscomp$0.lanes = lastBaseUpdate;
@@ -2246,9 +2256,9 @@ module.exports = function ($$$config) {
         push(suspenseHandlerStackCursor, fiber),
         null === shellBoundary)
       ) {
-        var current$53 = fiber.alternate;
-        null !== current$53 &&
-          null !== current$53.memoizedState &&
+        var current$54 = fiber.alternate;
+        null !== current$54 &&
+          null !== current$54.memoizedState &&
           (shellBoundary = fiber);
       }
     } else reuseSuspenseHandlerOnStack(fiber);
@@ -2508,16 +2518,16 @@ module.exports = function ($$$config) {
       updateQueue = currentlyRenderingFiber$1.updateQueue;
     null !== updateQueue && (memoCache = updateQueue.memoCache);
     if (null == memoCache) {
-      var current$55 = currentlyRenderingFiber$1.alternate;
-      null !== current$55 &&
-        ((current$55 = current$55.updateQueue),
-        null !== current$55 &&
-          ((current$55 = current$55.memoCache),
-          null != current$55 &&
+      var current$56 = currentlyRenderingFiber$1.alternate;
+      null !== current$56 &&
+        ((current$56 = current$56.updateQueue),
+        null !== current$56 &&
+          ((current$56 = current$56.memoCache),
+          null != current$56 &&
             (memoCache = {
               data: enableNoCloningMemoCache
-                ? current$55.data
-                : current$55.data.map(function (array) {
+                ? current$56.data
+                : current$56.data.map(function (array) {
                     return array.slice();
                   }),
               index: 0
@@ -2532,11 +2542,11 @@ module.exports = function ($$$config) {
     if (void 0 === updateQueue)
       for (
         updateQueue = memoCache.data[memoCache.index] = Array(size),
-          current$55 = 0;
-        current$55 < size;
-        current$55++
+          current$56 = 0;
+        current$56 < size;
+        current$56++
       )
-        updateQueue[current$55] = REACT_MEMO_CACHE_SENTINEL;
+        updateQueue[current$56] = REACT_MEMO_CACHE_SENTINEL;
     memoCache.index++;
     return updateQueue;
   }
@@ -2569,7 +2579,7 @@ module.exports = function ($$$config) {
       var newBaseQueueFirst = (baseFirst = null),
         newBaseQueueLast = null,
         update = current,
-        didReadFromEntangledAsyncAction$56 = !1;
+        didReadFromEntangledAsyncAction$57 = !1;
       do {
         var updateLane = update.lane & -536870913;
         if (
@@ -2590,11 +2600,11 @@ module.exports = function ($$$config) {
                   next: null
                 }),
               updateLane === currentEntangledLane &&
-                (didReadFromEntangledAsyncAction$56 = !0);
+                (didReadFromEntangledAsyncAction$57 = !0);
           else if ((renderLanes & revertLane) === revertLane) {
             update = update.next;
             revertLane === currentEntangledLane &&
-              (didReadFromEntangledAsyncAction$56 = !0);
+              (didReadFromEntangledAsyncAction$57 = !0);
             continue;
           } else
             (updateLane = {
@@ -2640,7 +2650,7 @@ module.exports = function ($$$config) {
       if (
         !objectIs(pendingQueue, hook.memoizedState) &&
         ((didReceiveUpdate = !0),
-        didReadFromEntangledAsyncAction$56 &&
+        didReadFromEntangledAsyncAction$57 &&
           ((reducer = currentEntangledActionThenable), null !== reducer))
       )
         throw reducer;
@@ -2839,8 +2849,8 @@ module.exports = function ($$$config) {
       try {
         (prevTransition = action(prevState, payload)),
           handleActionReturnValue(actionQueue, node, prevTransition);
-      } catch (error$60) {
-        onActionError(actionQueue, node, error$60);
+      } catch (error$61) {
+        onActionError(actionQueue, node, error$61);
       }
   }
   function handleActionReturnValue(actionQueue, node, returnValue) {
@@ -3436,9 +3446,9 @@ module.exports = function ($$$config) {
       (disableDefaultPropsExceptForClasses || !alreadyResolvedDefaultProps)
     ) {
       newProps === baseProps && (newProps = assign({}, newProps));
-      for (var propName$62 in Component)
-        void 0 === newProps[propName$62] &&
-          (newProps[propName$62] = Component[propName$62]);
+      for (var propName$63 in Component)
+        void 0 === newProps[propName$63] &&
+          (newProps[propName$63] = Component[propName$63]);
     }
     return newProps;
   }
@@ -6136,44 +6146,44 @@ module.exports = function ($$$config) {
         needsVisibilityToggle = needsVisibilityToggle.sibling;
       }
     else if (supportsPersistence)
-      for (var node$107 = workInProgress.child; null !== node$107; ) {
-        if (5 === node$107.tag) {
-          var instance = node$107.stateNode;
+      for (var node$108 = workInProgress.child; null !== node$108; ) {
+        if (5 === node$108.tag) {
+          var instance = node$108.stateNode;
           needsVisibilityToggle &&
             isHidden &&
             (instance = cloneHiddenInstance(
               instance,
-              node$107.type,
-              node$107.memoizedProps
+              node$108.type,
+              node$108.memoizedProps
             ));
           appendInitialChild(parent, instance);
-        } else if (6 === node$107.tag)
-          (instance = node$107.stateNode),
+        } else if (6 === node$108.tag)
+          (instance = node$108.stateNode),
             needsVisibilityToggle &&
               isHidden &&
               (instance = cloneHiddenTextInstance(
                 instance,
-                node$107.memoizedProps
+                node$108.memoizedProps
               )),
             appendInitialChild(parent, instance);
-        else if (4 !== node$107.tag)
-          if (22 === node$107.tag && null !== node$107.memoizedState)
-            (instance = node$107.child),
-              null !== instance && (instance.return = node$107),
-              appendAllChildren(parent, node$107, !0, !0);
-          else if (null !== node$107.child) {
-            node$107.child.return = node$107;
-            node$107 = node$107.child;
+        else if (4 !== node$108.tag)
+          if (22 === node$108.tag && null !== node$108.memoizedState)
+            (instance = node$108.child),
+              null !== instance && (instance.return = node$108),
+              appendAllChildren(parent, node$108, !0, !0);
+          else if (null !== node$108.child) {
+            node$108.child.return = node$108;
+            node$108 = node$108.child;
             continue;
           }
-        if (node$107 === workInProgress) break;
-        for (; null === node$107.sibling; ) {
-          if (null === node$107.return || node$107.return === workInProgress)
+        if (node$108 === workInProgress) break;
+        for (; null === node$108.sibling; ) {
+          if (null === node$108.return || node$108.return === workInProgress)
             return;
-          node$107 = node$107.return;
+          node$108 = node$108.return;
         }
-        node$107.sibling.return = node$107.return;
-        node$107 = node$107.sibling;
+        node$108.sibling.return = node$108.return;
+        node$108 = node$108.sibling;
       }
   }
   function appendAllChildrenToContainer(
@@ -6246,31 +6256,31 @@ module.exports = function ($$$config) {
       current.memoizedProps !== newProps && markUpdate(workInProgress);
     else if (supportsPersistence) {
       var currentInstance = current.stateNode,
-        oldProps$110 = current.memoizedProps;
+        oldProps$111 = current.memoizedProps;
       if (
         (current = doesRequireClone(current, workInProgress)) ||
-        oldProps$110 !== newProps
+        oldProps$111 !== newProps
       ) {
         var currentHostContext = contextStackCursor.current;
-        oldProps$110 = cloneInstance(
+        oldProps$111 = cloneInstance(
           currentInstance,
           type,
-          oldProps$110,
+          oldProps$111,
           newProps,
           !current,
           null
         );
-        oldProps$110 === currentInstance
+        oldProps$111 === currentInstance
           ? (workInProgress.stateNode = currentInstance)
           : (finalizeInitialChildren(
-              oldProps$110,
+              oldProps$111,
               type,
               newProps,
               currentHostContext
             ) && markUpdate(workInProgress),
-            (workInProgress.stateNode = oldProps$110),
+            (workInProgress.stateNode = oldProps$111),
             current
-              ? appendAllChildren(oldProps$110, workInProgress, !1, !1)
+              ? appendAllChildren(oldProps$111, workInProgress, !1, !1)
               : markUpdate(workInProgress));
       } else workInProgress.stateNode = currentInstance;
     }
@@ -6320,15 +6330,15 @@ module.exports = function ($$$config) {
           break;
         case "collapsed":
           lastTailNode = renderState.tail;
-          for (var lastTailNode$112 = null; null !== lastTailNode; )
+          for (var lastTailNode$113 = null; null !== lastTailNode; )
             null !== lastTailNode.alternate &&
-              (lastTailNode$112 = lastTailNode),
+              (lastTailNode$113 = lastTailNode),
               (lastTailNode = lastTailNode.sibling);
-          null === lastTailNode$112
+          null === lastTailNode$113
             ? hasRenderedATailFallback || null === renderState.tail
               ? (renderState.tail = null)
               : (renderState.tail.sibling = null)
-            : (lastTailNode$112.sibling = null);
+            : (lastTailNode$113.sibling = null);
       }
   }
   function bubbleProperties(completedWork) {
@@ -6338,19 +6348,19 @@ module.exports = function ($$$config) {
       newChildLanes = 0,
       subtreeFlags = 0;
     if (didBailout)
-      for (var child$113 = completedWork.child; null !== child$113; )
-        (newChildLanes |= child$113.lanes | child$113.childLanes),
-          (subtreeFlags |= child$113.subtreeFlags & 31457280),
-          (subtreeFlags |= child$113.flags & 31457280),
-          (child$113.return = completedWork),
-          (child$113 = child$113.sibling);
+      for (var child$114 = completedWork.child; null !== child$114; )
+        (newChildLanes |= child$114.lanes | child$114.childLanes),
+          (subtreeFlags |= child$114.subtreeFlags & 31457280),
+          (subtreeFlags |= child$114.flags & 31457280),
+          (child$114.return = completedWork),
+          (child$114 = child$114.sibling);
     else
-      for (child$113 = completedWork.child; null !== child$113; )
-        (newChildLanes |= child$113.lanes | child$113.childLanes),
-          (subtreeFlags |= child$113.subtreeFlags),
-          (subtreeFlags |= child$113.flags),
-          (child$113.return = completedWork),
-          (child$113 = child$113.sibling);
+      for (child$114 = completedWork.child; null !== child$114; )
+        (newChildLanes |= child$114.lanes | child$114.childLanes),
+          (subtreeFlags |= child$114.subtreeFlags),
+          (subtreeFlags |= child$114.flags),
+          (child$114.return = completedWork),
+          (child$114 = child$114.sibling);
     completedWork.subtreeFlags |= subtreeFlags;
     completedWork.childLanes = newChildLanes;
     return didBailout;
@@ -6623,11 +6633,11 @@ module.exports = function ($$$config) {
             null !== newProps.alternate.memoizedState &&
             null !== newProps.alternate.memoizedState.cachePool &&
             (nextResource = newProps.alternate.memoizedState.cachePool.pool);
-          var cache$126 = null;
+          var cache$127 = null;
           null !== newProps.memoizedState &&
             null !== newProps.memoizedState.cachePool &&
-            (cache$126 = newProps.memoizedState.cachePool.pool);
-          cache$126 !== nextResource && (newProps.flags |= 2048);
+            (cache$127 = newProps.memoizedState.cachePool.pool);
+          cache$127 !== nextResource && (newProps.flags |= 2048);
         }
         renderLanes !== current &&
           (enableTransitionTracing && (workInProgress.child.flags |= 2048),
@@ -6663,8 +6673,8 @@ module.exports = function ($$$config) {
         if (null === nextResource)
           return bubbleProperties(workInProgress), null;
         newProps = 0 !== (workInProgress.flags & 128);
-        cache$126 = nextResource.rendering;
-        if (null === cache$126)
+        cache$127 = nextResource.rendering;
+        if (null === cache$127)
           if (newProps) cutOffTailIfNeeded(nextResource, !1);
           else {
             if (
@@ -6672,11 +6682,11 @@ module.exports = function ($$$config) {
               (null !== current && 0 !== (current.flags & 128))
             )
               for (current = workInProgress.child; null !== current; ) {
-                cache$126 = findFirstSuspended(current);
-                if (null !== cache$126) {
+                cache$127 = findFirstSuspended(current);
+                if (null !== cache$127) {
                   workInProgress.flags |= 128;
                   cutOffTailIfNeeded(nextResource, !1);
-                  current = cache$126.updateQueue;
+                  current = cache$127.updateQueue;
                   workInProgress.updateQueue = current;
                   scheduleRetryEffect(workInProgress, current);
                   workInProgress.subtreeFlags = 0;
@@ -6705,7 +6715,7 @@ module.exports = function ($$$config) {
           }
         else {
           if (!newProps)
-            if (((current = findFirstSuspended(cache$126)), null !== current)) {
+            if (((current = findFirstSuspended(cache$127)), null !== current)) {
               if (
                 ((workInProgress.flags |= 128),
                 (newProps = !0),
@@ -6715,7 +6725,7 @@ module.exports = function ($$$config) {
                 cutOffTailIfNeeded(nextResource, !0),
                 null === nextResource.tail &&
                   "hidden" === nextResource.tailMode &&
-                  !cache$126.alternate &&
+                  !cache$127.alternate &&
                   !isHydrating)
               )
                 return bubbleProperties(workInProgress), null;
@@ -6728,13 +6738,13 @@ module.exports = function ($$$config) {
                 cutOffTailIfNeeded(nextResource, !1),
                 (workInProgress.lanes = 4194304));
           nextResource.isBackwards
-            ? ((cache$126.sibling = workInProgress.child),
-              (workInProgress.child = cache$126))
+            ? ((cache$127.sibling = workInProgress.child),
+              (workInProgress.child = cache$127))
             : ((current = nextResource.last),
               null !== current
-                ? (current.sibling = cache$126)
-                : (workInProgress.child = cache$126),
-              (nextResource.last = cache$126));
+                ? (current.sibling = cache$127)
+                : (workInProgress.child = cache$127),
+              (nextResource.last = cache$127));
         }
         if (null !== nextResource.tail)
           return (
@@ -7009,8 +7019,8 @@ module.exports = function ($$$config) {
       else if ("function" === typeof ref)
         try {
           ref(null);
-        } catch (error$143) {
-          captureCommitPhaseError(current, nearestMountedAncestor, error$143);
+        } catch (error$144) {
+          captureCommitPhaseError(current, nearestMountedAncestor, error$144);
         }
       else ref.current = null;
   }
@@ -7233,11 +7243,11 @@ module.exports = function ($$$config) {
                 current,
                 finishedRoot.__reactInternalSnapshotBeforeUpdate
               );
-            } catch (error$144) {
+            } catch (error$145) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$144
+                error$145
               );
             }
           }
@@ -7794,19 +7804,19 @@ module.exports = function ($$$config) {
   }
   function commitSuspenseHydrationCallbacks(finishedRoot, finishedWork) {
     if (supportsHydration && null === finishedWork.memoizedState) {
-      var current$155 = finishedWork.alternate;
+      var current$156 = finishedWork.alternate;
       if (
-        null !== current$155 &&
-        ((current$155 = current$155.memoizedState),
-        null !== current$155 &&
-          ((current$155 = current$155.dehydrated), null !== current$155))
+        null !== current$156 &&
+        ((current$156 = current$156.memoizedState),
+        null !== current$156 &&
+          ((current$156 = current$156.dehydrated), null !== current$156))
       )
         try {
-          commitHydratedSuspenseInstance(current$155);
+          commitHydratedSuspenseInstance(current$156);
           var hydrationCallbacks = finishedRoot.hydrationCallbacks;
           if (null !== hydrationCallbacks) {
             var onHydrated = hydrationCallbacks.onHydrated;
-            onHydrated && onHydrated(current$155);
+            onHydrated && onHydrated(current$156);
           }
         } catch (error) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error);
@@ -7925,11 +7935,11 @@ module.exports = function ($$$config) {
           }
           try {
             commitHookEffectListUnmount(5, finishedWork, finishedWork.return);
-          } catch (error$157) {
+          } catch (error$158) {
             captureCommitPhaseError(
               finishedWork,
               finishedWork.return,
-              error$157
+              error$158
             );
           }
         }
@@ -8007,11 +8017,11 @@ module.exports = function ($$$config) {
                   finishedWork.memoizedProps,
                   finishedWork
                 );
-              } catch (error$158) {
+              } catch (error$159) {
                 captureCommitPhaseError(
                   finishedWork,
                   finishedWork.return,
-                  error$158
+                  error$159
                 );
               }
           break;
@@ -8043,11 +8053,11 @@ module.exports = function ($$$config) {
             root = finishedWork.stateNode;
             try {
               resetTextContent(root);
-            } catch (error$159) {
+            } catch (error$160) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$159
+                error$160
               );
             }
           }
@@ -8057,11 +8067,11 @@ module.exports = function ($$$config) {
             props = finishedWork.type;
             try {
               commitUpdate(root, props, current, hoistableRoot, finishedWork);
-            } catch (error$161) {
+            } catch (error$162) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$161
+                error$162
               );
             }
           }
@@ -8079,11 +8089,11 @@ module.exports = function ($$$config) {
           current = null !== current ? current.memoizedProps : root;
           try {
             commitTextUpdate(flags, current, root);
-          } catch (error$162) {
+          } catch (error$163) {
             captureCommitPhaseError(
               finishedWork,
               finishedWork.return,
-              error$162
+              error$163
             );
           }
         }
@@ -8106,11 +8116,11 @@ module.exports = function ($$$config) {
           )
             try {
               commitHydratedContainer(root.containerInfo);
-            } catch (error$163) {
+            } catch (error$164) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$163
+                error$164
               );
             }
           if (supportsPersistence) {
@@ -8118,11 +8128,11 @@ module.exports = function ($$$config) {
             current = root.pendingChildren;
             try {
               replaceContainerChildren(flags, current);
-            } catch (error$164) {
+            } catch (error$165) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$164
+                error$165
               );
             }
           }
@@ -8147,11 +8157,11 @@ module.exports = function ($$$config) {
           current = current.pendingChildren;
           try {
             replaceContainerChildren(flags, current);
-          } catch (error$168) {
+          } catch (error$169) {
             captureCommitPhaseError(
               finishedWork,
               finishedWork.return,
-              error$168
+              error$169
             );
           }
         }
@@ -8175,11 +8185,11 @@ module.exports = function ($$$config) {
                 null !== retryQueue && suspenseCallback(new Set(retryQueue));
               }
             }
-          } catch (error$169) {
+          } catch (error$170) {
             captureCommitPhaseError(
               finishedWork,
               finishedWork.return,
-              error$169
+              error$170
             );
           }
           flags = finishedWork.updateQueue;
@@ -8251,11 +8261,11 @@ module.exports = function ($$$config) {
                       suspenseCallback
                         ? hideTextInstance(props)
                         : unhideTextInstance(props, root.memoizedProps);
-                  } catch (error$146) {
+                  } catch (error$147) {
                     captureCommitPhaseError(
                       finishedWork,
                       finishedWork.return,
-                      error$146
+                      error$147
                     );
                   }
               } else if (
@@ -8341,21 +8351,21 @@ module.exports = function ($$$config) {
                 break;
               }
             case 5:
-              var parent$147 = JSCompiler_inline_result.stateNode;
+              var parent$148 = JSCompiler_inline_result.stateNode;
               JSCompiler_inline_result.flags & 32 &&
-                (resetTextContent(parent$147),
+                (resetTextContent(parent$148),
                 (JSCompiler_inline_result.flags &= -33));
-              var before$148 = getHostSibling(finishedWork);
-              insertOrAppendPlacementNode(finishedWork, before$148, parent$147);
+              var before$149 = getHostSibling(finishedWork);
+              insertOrAppendPlacementNode(finishedWork, before$149, parent$148);
               break;
             case 3:
             case 4:
-              var parent$149 = JSCompiler_inline_result.stateNode.containerInfo,
-                before$150 = getHostSibling(finishedWork);
+              var parent$150 = JSCompiler_inline_result.stateNode.containerInfo,
+                before$151 = getHostSibling(finishedWork);
               insertOrAppendPlacementNodeIntoContainer(
                 finishedWork,
-                before$150,
-                parent$149
+                before$151,
+                parent$150
               );
               break;
             default:
@@ -8433,7 +8443,7 @@ module.exports = function ($$$config) {
     includeWorkInProgressEffects =
       includeWorkInProgressEffects && 0 !== (parentFiber.subtreeFlags & 8772);
     for (parentFiber = parentFiber.child; null !== parentFiber; ) {
-      var current$173 = parentFiber.alternate,
+      var current$174 = parentFiber.alternate,
         finishedRoot = finishedRoot$jscomp$0,
         finishedWork = parentFiber,
         flags = finishedWork.flags;
@@ -8461,16 +8471,16 @@ module.exports = function ($$$config) {
             } catch (error) {
               captureCommitPhaseError(finishedWork, finishedWork.return, error);
             }
-          current$173 = finishedWork.updateQueue;
-          if (null !== current$173) {
-            var hiddenCallbacks = current$173.shared.hiddenCallbacks;
+          current$174 = finishedWork.updateQueue;
+          if (null !== current$174) {
+            var hiddenCallbacks = current$174.shared.hiddenCallbacks;
             if (null !== hiddenCallbacks)
               for (
-                current$173.shared.hiddenCallbacks = null, current$173 = 0;
-                current$173 < hiddenCallbacks.length;
-                current$173++
+                current$174.shared.hiddenCallbacks = null, current$174 = 0;
+                current$174 < hiddenCallbacks.length;
+                current$174++
               )
-                callCallback(hiddenCallbacks[current$173], finishedRoot);
+                callCallback(hiddenCallbacks[current$174], finishedRoot);
           }
           includeWorkInProgressEffects &&
             flags & 64 &&
@@ -8486,7 +8496,7 @@ module.exports = function ($$$config) {
             includeWorkInProgressEffects
           );
           includeWorkInProgressEffects &&
-            null === current$173 &&
+            null === current$174 &&
             flags & 4 &&
             commitHostComponentMount(finishedWork);
           safelyAttachRef(finishedWork, finishedWork.return);
@@ -8829,9 +8839,9 @@ module.exports = function ($$$config) {
             );
           break;
         case 22:
-          var instance$179 = finishedWork.stateNode;
+          var instance$180 = finishedWork.stateNode;
           null !== finishedWork.memoizedState
-            ? instance$179._visibility & 4
+            ? instance$180._visibility & 4
               ? recursivelyTraverseReconnectPassiveEffects(
                   finishedRoot,
                   finishedWork,
@@ -8843,7 +8853,7 @@ module.exports = function ($$$config) {
                   finishedRoot,
                   finishedWork
                 )
-            : ((instance$179._visibility |= 4),
+            : ((instance$180._visibility |= 4),
               recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork,
@@ -8856,7 +8866,7 @@ module.exports = function ($$$config) {
             commitOffscreenPassiveMountEffects(
               finishedWork.alternate,
               finishedWork,
-              instance$179
+              instance$180
             );
           break;
         case 24:
@@ -9410,7 +9420,8 @@ module.exports = function ($$$config) {
         markRootSuspended(
           root,
           workInProgressRootRenderLanes,
-          workInProgressDeferredLane
+          workInProgressDeferredLane,
+          workInProgressRootDidSkipSuspendedSiblings
         );
     markRootUpdated(root, lane);
     if (0 === (executionContext & 2) || root !== workInProgressRoot) {
@@ -9423,11 +9434,11 @@ module.exports = function ($$$config) {
           enableTransitionTracing))
       ) {
         var transitionLanesMap = root.transitionLanes,
-          index$10 = 31 - clz32(lane),
-          transitions = transitionLanesMap[index$10];
+          index$11 = 31 - clz32(lane),
+          transitions = transitionLanesMap[index$11];
         null === transitions && (transitions = new Set());
         transitions.add(fiber);
-        transitionLanesMap[index$10] = transitions;
+        transitionLanesMap[index$11] = transitions;
       }
       root === workInProgressRoot &&
         (0 === (executionContext & 2) &&
@@ -9436,7 +9447,8 @@ module.exports = function ($$$config) {
           markRootSuspended(
             root,
             workInProgressRootRenderLanes,
-            workInProgressDeferredLane
+            workInProgressDeferredLane,
+            workInProgressRootDidSkipSuspendedSiblings
           ));
       ensureRootIsScheduled(root);
     }
@@ -9460,7 +9472,13 @@ module.exports = function ($$$config) {
     if (0 !== exitStatus) {
       var renderWasConcurrent = didTimeout;
       do {
-        if (6 === exitStatus) markRootSuspended(root, lanes, 0);
+        if (6 === exitStatus)
+          markRootSuspended(
+            root,
+            lanes,
+            0,
+            workInProgressRootDidSkipSuspendedSiblings
+          );
         else {
           didTimeout = root.current.alternate;
           if (
@@ -9492,7 +9510,12 @@ module.exports = function ($$$config) {
           }
           if (1 === exitStatus) {
             prepareFreshStack(root, 0);
-            markRootSuspended(root, lanes, 0);
+            markRootSuspended(
+              root,
+              lanes,
+              0,
+              workInProgressRootDidSkipSuspendedSiblings
+            );
             break;
           }
           root.finishedWork = didTimeout;
@@ -9508,7 +9531,8 @@ module.exports = function ($$$config) {
                   markRootSuspended(
                     renderWasConcurrent,
                     lanes,
-                    workInProgressDeferredLane
+                    workInProgressDeferredLane,
+                    workInProgressRootDidSkipSuspendedSiblings
                   );
                   break a;
                 }
@@ -9531,7 +9555,8 @@ module.exports = function ($$$config) {
               markRootSuspended(
                 renderWasConcurrent,
                 lanes,
-                workInProgressDeferredLane
+                workInProgressDeferredLane,
+                workInProgressRootDidSkipSuspendedSiblings
               );
               if (0 !== getNextLanes(renderWasConcurrent, 0)) break a;
               renderWasConcurrent.timeoutHandle = scheduleTimeout(
@@ -9543,7 +9568,8 @@ module.exports = function ($$$config) {
                   workInProgressTransitions,
                   workInProgressRootDidIncludeRecursiveRenderUpdate,
                   lanes,
-                  workInProgressDeferredLane
+                  workInProgressDeferredLane,
+                  workInProgressRootDidSkipSuspendedSiblings
                 ),
                 exitStatus
               );
@@ -9556,7 +9582,8 @@ module.exports = function ($$$config) {
               workInProgressTransitions,
               workInProgressRootDidIncludeRecursiveRenderUpdate,
               lanes,
-              workInProgressDeferredLane
+              workInProgressDeferredLane,
+              workInProgressRootDidSkipSuspendedSiblings
             );
           }
         }
@@ -9611,7 +9638,8 @@ module.exports = function ($$$config) {
     transitions,
     didIncludeRenderPhaseUpdate,
     lanes,
-    spawnedLane
+    spawnedLane,
+    didSkipSuspendedSiblings
   ) {
     var subtreeFlags = finishedWork.subtreeFlags;
     if (subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408))
@@ -9630,7 +9658,7 @@ module.exports = function ($$$config) {
             didIncludeRenderPhaseUpdate
           )
         );
-        markRootSuspended(root, lanes, spawnedLane);
+        markRootSuspended(root, lanes, spawnedLane, didSkipSuspendedSiblings);
         return;
       }
     commitRoot(
@@ -9678,26 +9706,29 @@ module.exports = function ($$$config) {
   function markRootUpdated(root, updatedLanes) {
     root.pendingLanes |= updatedLanes;
     268435456 !== updatedLanes &&
-      ((root.suspendedLanes = 0), (root.pingedLanes = 0));
+      ((root.suspendedLanes = 0), (root.pingedLanes = 0), (root.warmLanes = 0));
     enableInfiniteRenderLoopDetection &&
       (executionContext & 2
         ? (workInProgressRootDidIncludeRecursiveRenderUpdate = !0)
         : executionContext & 4 && (didIncludeCommitPhaseUpdate = !0),
       throwIfInfiniteUpdateLoopDetected());
   }
-  function markRootSuspended(root, suspendedLanes, spawnedLane) {
+  function markRootSuspended(
+    root,
+    suspendedLanes,
+    spawnedLane,
+    didSkipSuspendedSiblings
+  ) {
     suspendedLanes &= ~workInProgressRootPingedLanes;
     suspendedLanes &= ~workInProgressRootInterleavedUpdatedLanes;
     root.suspendedLanes |= suspendedLanes;
     root.pingedLanes &= ~suspendedLanes;
-    for (
-      var expirationTimes = root.expirationTimes, lanes = suspendedLanes;
-      0 < lanes;
-
-    ) {
-      var index$6 = 31 - clz32(lanes),
-        lane = 1 << index$6;
-      expirationTimes[index$6] = -1;
+    didSkipSuspendedSiblings || (root.warmLanes |= suspendedLanes);
+    didSkipSuspendedSiblings = root.expirationTimes;
+    for (var lanes = suspendedLanes; 0 < lanes; ) {
+      var index$7 = 31 - clz32(lanes),
+        lane = 1 << index$7;
+      didSkipSuspendedSiblings[index$7] = -1;
       lanes &= ~lane;
     }
     0 !== spawnedLane &&
@@ -9724,13 +9755,18 @@ module.exports = function ($$$config) {
     if (1 === exitStatus)
       return (
         prepareFreshStack(root, 0),
-        markRootSuspended(root, lanes, 0),
+        markRootSuspended(root, lanes, 0, !1),
         ensureRootIsScheduled(root),
         null
       );
     if (6 === exitStatus)
       return (
-        markRootSuspended(root, lanes, workInProgressDeferredLane),
+        markRootSuspended(
+          root,
+          lanes,
+          workInProgressDeferredLane,
+          workInProgressRootDidSkipSuspendedSiblings
+        ),
         ensureRootIsScheduled(root),
         null
       );
@@ -9783,6 +9819,10 @@ module.exports = function ($$$config) {
     workInProgressRootRenderLanes = lanes;
     workInProgressSuspendedReason = 0;
     workInProgressThrownValue = null;
+    workInProgressRootDidSkipSuspendedSiblings = !1;
+    workInProgressRootIsPrerendering =
+      0 ===
+      (root.pendingLanes & ~(root.suspendedLanes & ~root.pingedLanes) & lanes);
     workInProgressRootDidAttachPingListener = !1;
     workInProgressDeferredLane =
       workInProgressRootPingedLanes =
@@ -9801,9 +9841,9 @@ module.exports = function ($$$config) {
         0 < allEntangledLanes;
 
       ) {
-        var index$4 = 31 - clz32(allEntangledLanes),
-          lane = 1 << index$4;
-        lanes |= root[index$4];
+        var index$5 = 31 - clz32(allEntangledLanes),
+          lane = 1 << index$5;
+        lanes |= root[index$5];
         allEntangledLanes &= ~lane;
       }
     entangledRenderLanes = lanes;
@@ -9875,7 +9915,8 @@ module.exports = function ($$$config) {
       markRootSuspended(
         workInProgressRoot,
         workInProgressRootRenderLanes,
-        workInProgressDeferredLane
+        workInProgressDeferredLane,
+        workInProgressRootDidSkipSuspendedSiblings
       );
   }
   function renderRootSync(root, lanes) {
@@ -9910,8 +9951,8 @@ module.exports = function ($$$config) {
         }
         workLoopSync();
         break;
-      } catch (thrownValue$193) {
-        handleThrow(root, thrownValue$193);
+      } catch (thrownValue$194) {
+        handleThrow(root, thrownValue$194);
       }
     while (1);
     lanes && root.shellSuspendCounter++;
@@ -10026,8 +10067,8 @@ module.exports = function ($$$config) {
         }
         workLoopConcurrent();
         break;
-      } catch (thrownValue$195) {
-        handleThrow(root, thrownValue$195);
+      } catch (thrownValue$196) {
+        handleThrow(root, thrownValue$196);
       }
     while (1);
     resetContextDependencies();
@@ -10143,31 +10184,27 @@ module.exports = function ($$$config) {
       workInProgress = null;
       return;
     }
-    if (unitOfWork.flags & 32768)
-      a: {
-        root = unitOfWork;
-        do {
-          unitOfWork = unwindWork(root.alternate, root);
-          if (null !== unitOfWork) {
-            unitOfWork.flags &= 32767;
-            workInProgress = unitOfWork;
-            break a;
-          }
-          root = root.return;
-          null !== root &&
-            ((root.flags |= 32768),
-            (root.subtreeFlags = 0),
-            (root.deletions = null));
-          workInProgress = root;
-        } while (null !== root);
-        workInProgressRootExitStatus = 6;
-        workInProgress = null;
-      }
-    else completeUnitOfWork(unitOfWork);
+    unitOfWork.flags & 32768
+      ? (enableSiblingPrerendering
+          ? isHydrating || 1 === workInProgressSuspendedReason
+            ? (root = !0)
+            : workInProgressRootIsPrerendering
+              ? (root = !1)
+              : (workInProgressRootDidSkipSuspendedSiblings = root = !0)
+          : (root = !0),
+        unwindUnitOfWork(unitOfWork, root))
+      : completeUnitOfWork(unitOfWork);
   }
   function completeUnitOfWork(unitOfWork) {
     var completedWork = unitOfWork;
     do {
+      if (0 !== (completedWork.flags & 32768)) {
+        unwindUnitOfWork(
+          completedWork,
+          workInProgressRootDidSkipSuspendedSiblings
+        );
+        return;
+      }
       unitOfWork = completedWork.return;
       var next = completeWork(
         completedWork.alternate,
@@ -10186,6 +10223,31 @@ module.exports = function ($$$config) {
       workInProgress = completedWork = unitOfWork;
     } while (null !== completedWork);
     0 === workInProgressRootExitStatus && (workInProgressRootExitStatus = 5);
+  }
+  function unwindUnitOfWork(unitOfWork, skipSiblings) {
+    do {
+      var next = unwindWork(unitOfWork.alternate, unitOfWork);
+      if (null !== next) {
+        next.flags &= 32767;
+        workInProgress = next;
+        return;
+      }
+      next = unitOfWork.return;
+      null !== next &&
+        ((next.flags |= 32768),
+        (next.subtreeFlags = 0),
+        (next.deletions = null));
+      if (
+        !skipSiblings &&
+        ((unitOfWork = unitOfWork.sibling), null !== unitOfWork)
+      ) {
+        workInProgress = unitOfWork;
+        return;
+      }
+      workInProgress = unitOfWork = next;
+    } while (null !== unitOfWork);
+    workInProgressRootExitStatus = 6;
+    workInProgress = null;
   }
   function commitRoot(
     root,
@@ -10258,12 +10320,12 @@ module.exports = function ($$$config) {
       setCurrentUpdatePriority(2);
       var prevExecutionContext = executionContext;
       executionContext |= 4;
-      var shouldFireAfterActiveInstanceBlur$201 = commitBeforeMutationEffects(
+      var shouldFireAfterActiveInstanceBlur$202 = commitBeforeMutationEffects(
         root,
         finishedWork
       );
       commitMutationEffectsOnFiber(finishedWork, root);
-      shouldFireAfterActiveInstanceBlur$201 && afterActiveInstanceBlur();
+      shouldFireAfterActiveInstanceBlur$202 && afterActiveInstanceBlur();
       resetAfterCommit(root.containerInfo);
       root.current = finishedWork;
       commitLayoutEffectOnFiber(root, finishedWork.alternate, finishedWork);
@@ -10456,6 +10518,7 @@ module.exports = function ($$$config) {
     var pingCache = root.pingCache;
     null !== pingCache && pingCache.delete(wakeable);
     root.pingedLanes |= root.suspendedLanes & pingedLanes;
+    root.warmLanes &= ~pingedLanes;
     enableInfiniteRenderLoopDetection &&
       (executionContext & 2
         ? (workInProgressRootDidIncludeRecursiveRenderUpdate = !0)
@@ -10895,6 +10958,7 @@ module.exports = function ($$$config) {
       this.errorRecoveryDisabledLanes =
       this.finishedLanes =
       this.expiredLanes =
+      this.warmLanes =
       this.pingedLanes =
       this.suspendedLanes =
       this.pendingLanes =
@@ -11789,6 +11853,8 @@ module.exports = function ($$$config) {
     workInProgressRootRenderLanes = 0,
     workInProgressSuspendedReason = 0,
     workInProgressThrownValue = null,
+    workInProgressRootDidSkipSuspendedSiblings = !1,
+    workInProgressRootIsPrerendering = !1,
     workInProgressRootDidAttachPingListener = !1,
     entangledRenderLanes = 0,
     workInProgressRootExitStatus = 0,
@@ -12162,7 +12228,7 @@ module.exports = function ($$$config) {
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
       findFiberByHostInstance: getInstanceFromNode,
-      reconcilerVersion: "19.0.0-www-modern-8b4c54c0-20240904"
+      reconcilerVersion: "19.0.0-www-modern-e10e8681-20240904"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

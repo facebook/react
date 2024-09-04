@@ -956,28 +956,37 @@ __DEV__ &&
       var pendingLanes = root.pendingLanes;
       if (0 === pendingLanes) return 0;
       var nextLanes = 0,
-        suspendedLanes = root.suspendedLanes;
-      root = root.pingedLanes;
+        suspendedLanes = root.suspendedLanes,
+        pingedLanes = root.pingedLanes;
+      root = root.warmLanes;
       var nonIdlePendingLanes = pendingLanes & 134217727;
       0 !== nonIdlePendingLanes
         ? ((pendingLanes = nonIdlePendingLanes & ~suspendedLanes),
           0 !== pendingLanes
             ? (nextLanes = getHighestPriorityLanes(pendingLanes))
-            : ((root &= nonIdlePendingLanes),
-              0 !== root && (nextLanes = getHighestPriorityLanes(root))))
-        : ((pendingLanes &= ~suspendedLanes),
-          0 !== pendingLanes
-            ? (nextLanes = getHighestPriorityLanes(pendingLanes))
-            : 0 !== root && (nextLanes = getHighestPriorityLanes(root)));
+            : ((pingedLanes &= nonIdlePendingLanes),
+              0 !== pingedLanes
+                ? (nextLanes = getHighestPriorityLanes(pingedLanes))
+                : ((pingedLanes = nonIdlePendingLanes & ~root),
+                  0 !== pingedLanes &&
+                    (nextLanes = getHighestPriorityLanes(pingedLanes)))))
+        : ((nonIdlePendingLanes = pendingLanes & ~suspendedLanes),
+          0 !== nonIdlePendingLanes
+            ? (nextLanes = getHighestPriorityLanes(nonIdlePendingLanes))
+            : 0 !== pingedLanes
+              ? (nextLanes = getHighestPriorityLanes(pingedLanes))
+              : ((pingedLanes = pendingLanes & ~root),
+                0 !== pingedLanes &&
+                  (nextLanes = getHighestPriorityLanes(pingedLanes))));
       return 0 === nextLanes
         ? 0
         : 0 !== wipLanes &&
             wipLanes !== nextLanes &&
             0 === (wipLanes & suspendedLanes) &&
             ((suspendedLanes = nextLanes & -nextLanes),
-            (root = wipLanes & -wipLanes),
-            suspendedLanes >= root ||
-              (32 === suspendedLanes && 0 !== (root & 4194176)))
+            (pingedLanes = wipLanes & -wipLanes),
+            suspendedLanes >= pingedLanes ||
+              (32 === suspendedLanes && 0 !== (pingedLanes & 4194176)))
           ? wipLanes
           : nextLanes;
     }
@@ -1058,6 +1067,7 @@ __DEV__ &&
       root.pendingLanes = remainingLanes;
       root.suspendedLanes = 0;
       root.pingedLanes = 0;
+      root.warmLanes = 0;
       root.expiredLanes &= remainingLanes;
       root.entangledLanes &= remainingLanes;
       root.errorRecoveryDisabledLanes &= remainingLanes;
@@ -15758,7 +15768,8 @@ __DEV__ &&
           markRootSuspended(
             root,
             workInProgressRootRenderLanes,
-            workInProgressDeferredLane
+            workInProgressDeferredLane,
+            workInProgressRootDidSkipSuspendedSiblings
           );
       markRootUpdated(root, lane);
       if (
@@ -15816,7 +15827,8 @@ __DEV__ &&
             markRootSuspended(
               root,
               workInProgressRootRenderLanes,
-              workInProgressDeferredLane
+              workInProgressDeferredLane,
+              workInProgressRootDidSkipSuspendedSiblings
             ));
         ensureRootIsScheduled(root);
         2 !== lane ||
@@ -15851,7 +15863,12 @@ __DEV__ &&
         var renderWasConcurrent = shouldTimeSlice;
         do {
           if (didTimeout === RootDidNotComplete)
-            markRootSuspended(root, lanes, 0);
+            markRootSuspended(
+              root,
+              lanes,
+              0,
+              workInProgressRootDidSkipSuspendedSiblings
+            );
           else {
             shouldTimeSlice = root.current.alternate;
             if (
@@ -15883,7 +15900,12 @@ __DEV__ &&
             }
             if (didTimeout === RootFatalErrored) {
               prepareFreshStack(root, 0);
-              markRootSuspended(root, lanes, 0);
+              markRootSuspended(
+                root,
+                lanes,
+                0,
+                workInProgressRootDidSkipSuspendedSiblings
+              );
               break;
             }
             root.finishedWork = shouldTimeSlice;
@@ -15899,7 +15921,8 @@ __DEV__ &&
                     markRootSuspended(
                       renderWasConcurrent,
                       lanes,
-                      workInProgressDeferredLane
+                      workInProgressDeferredLane,
+                      workInProgressRootDidSkipSuspendedSiblings
                     );
                     break a;
                   }
@@ -15934,7 +15957,8 @@ __DEV__ &&
                   markRootSuspended(
                     renderWasConcurrent,
                     lanes,
-                    workInProgressDeferredLane
+                    workInProgressDeferredLane,
+                    workInProgressRootDidSkipSuspendedSiblings
                   );
                   if (0 !== getNextLanes(renderWasConcurrent, 0)) break a;
                   renderWasConcurrent.timeoutHandle = scheduleTimeout(
@@ -15946,7 +15970,8 @@ __DEV__ &&
                       workInProgressTransitions,
                       workInProgressRootDidIncludeRecursiveRenderUpdate,
                       lanes,
-                      workInProgressDeferredLane
+                      workInProgressDeferredLane,
+                      workInProgressRootDidSkipSuspendedSiblings
                     ),
                     didTimeout
                   );
@@ -15959,7 +15984,8 @@ __DEV__ &&
                   workInProgressTransitions,
                   workInProgressRootDidIncludeRecursiveRenderUpdate,
                   lanes,
-                  workInProgressDeferredLane
+                  workInProgressDeferredLane,
+                  workInProgressRootDidSkipSuspendedSiblings
                 );
               }
             }
@@ -16014,7 +16040,8 @@ __DEV__ &&
       transitions,
       didIncludeRenderPhaseUpdate,
       lanes,
-      spawnedLane
+      spawnedLane,
+      didSkipSuspendedSiblings
     ) {
       var subtreeFlags = finishedWork.subtreeFlags;
       if (subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408))
@@ -16033,7 +16060,7 @@ __DEV__ &&
               didIncludeRenderPhaseUpdate
             )
           );
-          markRootSuspended(root, lanes, spawnedLane);
+          markRootSuspended(root, lanes, spawnedLane, didSkipSuspendedSiblings);
           return;
         }
       commitRoot(
@@ -16081,7 +16108,9 @@ __DEV__ &&
     function markRootUpdated(root, updatedLanes) {
       root.pendingLanes |= updatedLanes;
       268435456 !== updatedLanes &&
-        ((root.suspendedLanes = 0), (root.pingedLanes = 0));
+        ((root.suspendedLanes = 0),
+        (root.pingedLanes = 0),
+        (root.warmLanes = 0));
       enableInfiniteRenderLoopDetection &&
         (executionContext & RenderContext
           ? (workInProgressRootDidIncludeRecursiveRenderUpdate = !0)
@@ -16089,19 +16118,22 @@ __DEV__ &&
             (didIncludeCommitPhaseUpdate = !0),
         throwIfInfiniteUpdateLoopDetected());
     }
-    function markRootSuspended(root, suspendedLanes, spawnedLane) {
+    function markRootSuspended(
+      root,
+      suspendedLanes,
+      spawnedLane,
+      didSkipSuspendedSiblings
+    ) {
       suspendedLanes &= ~workInProgressRootPingedLanes;
       suspendedLanes &= ~workInProgressRootInterleavedUpdatedLanes;
       root.suspendedLanes |= suspendedLanes;
       root.pingedLanes &= ~suspendedLanes;
-      for (
-        var expirationTimes = root.expirationTimes, lanes = suspendedLanes;
-        0 < lanes;
-
-      ) {
+      didSkipSuspendedSiblings || (root.warmLanes |= suspendedLanes);
+      didSkipSuspendedSiblings = root.expirationTimes;
+      for (var lanes = suspendedLanes; 0 < lanes; ) {
         var index = 31 - clz32(lanes),
           lane = 1 << index;
-        expirationTimes[index] = -1;
+        didSkipSuspendedSiblings[index] = -1;
         lanes &= ~lane;
       }
       0 !== spawnedLane &&
@@ -16131,13 +16163,18 @@ __DEV__ &&
       if (exitStatus === RootFatalErrored)
         return (
           prepareFreshStack(root, 0),
-          markRootSuspended(root, lanes, 0),
+          markRootSuspended(root, lanes, 0, !1),
           ensureRootIsScheduled(root),
           null
         );
       if (exitStatus === RootDidNotComplete)
         return (
-          markRootSuspended(root, lanes, workInProgressDeferredLane),
+          markRootSuspended(
+            root,
+            lanes,
+            workInProgressDeferredLane,
+            workInProgressRootDidSkipSuspendedSiblings
+          ),
           ensureRootIsScheduled(root),
           null
         );
@@ -16204,6 +16241,12 @@ __DEV__ &&
       workInProgressRootRenderLanes = lanes;
       workInProgressSuspendedReason = NotSuspended;
       workInProgressThrownValue = null;
+      workInProgressRootDidSkipSuspendedSiblings = !1;
+      workInProgressRootIsPrerendering =
+        0 ===
+        (root.pendingLanes &
+          ~(root.suspendedLanes & ~root.pingedLanes) &
+          lanes);
       workInProgressRootDidAttachPingListener = !1;
       workInProgressRootExitStatus = RootInProgress;
       workInProgressDeferredLane =
@@ -16329,7 +16372,8 @@ __DEV__ &&
         markRootSuspended(
           workInProgressRoot,
           workInProgressRootRenderLanes,
-          workInProgressDeferredLane
+          workInProgressDeferredLane,
+          workInProgressRootDidSkipSuspendedSiblings
         );
     }
     function renderRootSync(root, lanes) {
@@ -16679,43 +16723,27 @@ __DEV__ &&
         workInProgress = null;
         return;
       }
-      if (unitOfWork.flags & 32768)
-        a: {
-          root = unitOfWork;
-          do {
-            unitOfWork = unwindWork(root.alternate, root);
-            if (null !== unitOfWork) {
-              unitOfWork.flags &= 32767;
-              workInProgress = unitOfWork;
-              break a;
-            }
-            if ((root.mode & ProfileMode) !== NoMode) {
-              stopProfilerTimerIfRunningAndRecordDelta(root, !1);
-              unitOfWork = root.actualDuration;
-              for (thrownValue = root.child; null !== thrownValue; )
-                (unitOfWork += thrownValue.actualDuration),
-                  (thrownValue = thrownValue.sibling);
-              root.actualDuration = unitOfWork;
-            }
-            root = root.return;
-            null !== root &&
-              ((root.flags |= 32768),
-              (root.subtreeFlags = 0),
-              (root.deletions = null));
-            workInProgress = root;
-          } while (null !== root);
-          workInProgressRootExitStatus = RootDidNotComplete;
-          workInProgress = null;
-        }
-      else completeUnitOfWork(unitOfWork);
+      unitOfWork.flags & 32768
+        ? (enableSiblingPrerendering
+            ? isHydrating || workInProgressSuspendedReason === SuspendedOnError
+              ? (root = !0)
+              : workInProgressRootIsPrerendering
+                ? (root = !1)
+                : (workInProgressRootDidSkipSuspendedSiblings = root = !0)
+            : (root = !0),
+          unwindUnitOfWork(unitOfWork, root))
+        : completeUnitOfWork(unitOfWork);
     }
     function completeUnitOfWork(unitOfWork) {
       var completedWork = unitOfWork;
       do {
-        0 !== (completedWork.flags & 32768) &&
-          error$jscomp$0(
-            "Internal React error: Expected this fiber to be complete, but it isn't. It should have been unwound. This is a bug in React."
+        if (0 !== (completedWork.flags & 32768)) {
+          unwindUnitOfWork(
+            completedWork,
+            workInProgressRootDidSkipSuspendedSiblings
           );
+          return;
+        }
         var current = completedWork.alternate;
         unitOfWork = completedWork.return;
         (completedWork.mode & ProfileMode) === NoMode
@@ -16748,6 +16776,38 @@ __DEV__ &&
       } while (null !== completedWork);
       workInProgressRootExitStatus === RootInProgress &&
         (workInProgressRootExitStatus = RootCompleted);
+    }
+    function unwindUnitOfWork(unitOfWork, skipSiblings) {
+      do {
+        var next = unwindWork(unitOfWork.alternate, unitOfWork);
+        if (null !== next) {
+          next.flags &= 32767;
+          workInProgress = next;
+          return;
+        }
+        if ((unitOfWork.mode & ProfileMode) !== NoMode) {
+          stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, !1);
+          next = unitOfWork.actualDuration;
+          for (var child = unitOfWork.child; null !== child; )
+            (next += child.actualDuration), (child = child.sibling);
+          unitOfWork.actualDuration = next;
+        }
+        next = unitOfWork.return;
+        null !== next &&
+          ((next.flags |= 32768),
+          (next.subtreeFlags = 0),
+          (next.deletions = null));
+        if (
+          !skipSiblings &&
+          ((unitOfWork = unitOfWork.sibling), null !== unitOfWork)
+        ) {
+          workInProgress = unitOfWork;
+          return;
+        }
+        workInProgress = unitOfWork = next;
+      } while (null !== unitOfWork);
+      workInProgressRootExitStatus = RootDidNotComplete;
+      workInProgress = null;
     }
     function commitRoot(
       root,
@@ -17168,6 +17228,7 @@ __DEV__ &&
       var pingCache = root.pingCache;
       null !== pingCache && pingCache.delete(wakeable);
       root.pingedLanes |= root.suspendedLanes & pingedLanes;
+      root.warmLanes &= ~pingedLanes;
       enableInfiniteRenderLoopDetection &&
         (executionContext & RenderContext
           ? (workInProgressRootDidIncludeRecursiveRenderUpdate = !0)
@@ -17979,6 +18040,7 @@ __DEV__ &&
         this.errorRecoveryDisabledLanes =
         this.finishedLanes =
         this.expiredLanes =
+        this.warmLanes =
         this.pingedLanes =
         this.suspendedLanes =
         this.pendingLanes =
@@ -27041,6 +27103,8 @@ __DEV__ &&
       SuspendedOnHydration = 8,
       workInProgressSuspendedReason = NotSuspended,
       workInProgressThrownValue = null,
+      workInProgressRootDidSkipSuspendedSiblings = !1,
+      workInProgressRootIsPrerendering = !1,
       workInProgressRootDidAttachPingListener = !1,
       entangledRenderLanes = 0,
       workInProgressRootExitStatus = RootInProgress,
@@ -27891,11 +27955,11 @@ __DEV__ &&
         : flushSyncErrorInBuildsThatSupportLegacyMode;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.0.0-www-classic-8b4c54c0-20240904" !== isomorphicReactPackageVersion)
+      if ("19.0.0-www-classic-e10e8681-20240904" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.0.0-www-classic-8b4c54c0-20240904\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.0.0-www-classic-e10e8681-20240904\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -27939,11 +28003,11 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.0.0-www-classic-8b4c54c0-20240904",
+          version: "19.0.0-www-classic-e10e8681-20240904",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
           findFiberByHostInstance: getClosestInstanceFromNode,
-          reconcilerVersion: "19.0.0-www-classic-8b4c54c0-20240904"
+          reconcilerVersion: "19.0.0-www-classic-e10e8681-20240904"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -28762,5 +28826,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.0.0-www-classic-8b4c54c0-20240904";
+    exports.version = "19.0.0-www-classic-e10e8681-20240904";
   })();
