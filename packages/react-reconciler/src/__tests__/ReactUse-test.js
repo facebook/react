@@ -558,6 +558,7 @@ describe('ReactUse', () => {
     }
   });
 
+  // @gate enableSuspendingDuringWorkLoop
   it('during a transition, can unwrap async operations even if nothing is cached', async () => {
     function App() {
       return <Text text={use(getAsyncText('Async'))} />;
@@ -593,6 +594,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('Async');
   });
 
+  // @gate enableSuspendingDuringWorkLoop
   it("does not prevent a Suspense fallback from showing if it's a new boundary, even during a transition", async () => {
     function App() {
       return <Text text={use(getAsyncText('Async'))} />;
@@ -635,6 +637,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('Async');
   });
 
+  // @gate enableSuspendingDuringWorkLoop
   it('when waiting for data to resolve, a fresh update will trigger a restart', async () => {
     function App() {
       return <Text text={use(getAsyncText('Will never resolve'))} />;
@@ -666,6 +669,7 @@ describe('ReactUse', () => {
     assertLog(['Something different']);
   });
 
+  // @gate enableSuspendingDuringWorkLoop
   it('when waiting for data to resolve, an update on a different root does not cause work to be dropped', async () => {
     const promise = getAsyncText('Hi');
 
@@ -708,6 +712,7 @@ describe('ReactUse', () => {
     expect(root1).toMatchRenderedOutput('Hi');
   });
 
+  // @gate enableSuspendingDuringWorkLoop
   it('while suspended, hooks cannot be called (i.e. current dispatcher is unset correctly)', async () => {
     function App() {
       return <Text text={use(getAsyncText('Will never resolve'))} />;
@@ -845,6 +850,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('(empty)');
   });
 
+  // @gate enableSuspendingDuringWorkLoop
   it('when replaying a suspended component, reuses the hooks computed during the previous attempt (Memo)', async () => {
     function ExcitingText({text}) {
       // This computes the uppercased version of some text. Pretend it's an
@@ -894,6 +900,7 @@ describe('ReactUse', () => {
     ]);
   });
 
+  // @gate enableSuspendingDuringWorkLoop
   it('when replaying a suspended component, reuses the hooks computed during the previous attempt (State)', async () => {
     let _setFruit;
     let _setVegetable;
@@ -950,6 +957,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('banana dill');
   });
 
+  // @gate enableSuspendingDuringWorkLoop
   it('when replaying a suspended component, reuses the hooks computed during the previous attempt (DebugValue+State)', async () => {
     // Make sure we don't get a Hook mismatch warning on updates if there were non-stateful Hooks before the use().
     let _setLawyer;
@@ -991,6 +999,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('aguacate avocat');
   });
 
+  // @gate enableSuspendingDuringWorkLoop
   it(
     'wrap an async function with useMemo to skip running the function ' +
       'twice when loading new data',
@@ -1073,6 +1082,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('ABC');
   });
 
+  // @gate enableSuspendingDuringWorkLoop
   it('load multiple nested Suspense boundaries (uncached requests)', async () => {
     // This the same as the previous test, except the requests are not cached.
     // The tree should still eventually resolve, despite the
@@ -1196,6 +1206,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('Hi');
   });
 
+  // @gate enableSuspendingDuringWorkLoop
   it('basic async component', async () => {
     async function App() {
       await getAsyncText('Hi');
@@ -1220,6 +1231,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('Hi');
   });
 
+  // @gate enableSuspendingDuringWorkLoop
   it('async child of a non-function component (e.g. a class)', async () => {
     class App extends React.Component {
       async render() {
