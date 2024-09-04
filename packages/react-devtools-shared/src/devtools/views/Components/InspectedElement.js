@@ -105,8 +105,6 @@ export default function InspectedElementWrapper(_: Props): React.Node {
   }, [bridge, inspectedElementID, store]);
 
   const isErrored = inspectedElement != null && inspectedElement.isErrored;
-  const targetErrorBoundaryID =
-    inspectedElement != null ? inspectedElement.targetErrorBoundaryID : null;
 
   const isSuspended =
     element !== null &&
@@ -137,29 +135,23 @@ export default function InspectedElementWrapper(_: Props): React.Node {
   );
 
   const toggleErrored = useCallback(() => {
-    if (inspectedElement == null || targetErrorBoundaryID == null) {
+    if (inspectedElement == null) {
       return;
     }
 
-    const rendererID = store.getRendererIDForElement(targetErrorBoundaryID);
+    const rendererID = store.getRendererIDForElement(inspectedElement.id);
     if (rendererID !== null) {
-      if (targetErrorBoundaryID !== inspectedElement.id) {
-        // Update tree selection so that if we cause a component to error,
-        // the nearest error boundary will become the newly selected thing.
-        dispatch({
-          type: 'SELECT_ELEMENT_BY_ID',
-          payload: targetErrorBoundaryID,
-        });
-      }
-
       // Toggle error.
+      // Because triggering an error will always delete the children, we'll
+      // automatically select the nearest still mounted instance which will be
+      // the error boundary.
       bridge.send('overrideError', {
-        id: targetErrorBoundaryID,
+        id: inspectedElement.id,
         rendererID,
         forceError: !isErrored,
       });
     }
-  }, [bridge, dispatch, isErrored, targetErrorBoundaryID]);
+  }, [bridge, dispatch, isErrored, inspectedElement]);
 
   // TODO (suspense toggle) Would be nice to eventually use a two setState pattern here as well.
   const toggleSuspended = useCallback(() => {

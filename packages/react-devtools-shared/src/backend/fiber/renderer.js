@@ -4202,18 +4202,6 @@ export function attach(
     }
   }
 
-  function getNearestErrorBoundaryID(fiber: Fiber): number | null {
-    let parent = fiber.return;
-    while (parent !== null) {
-      if (isErrorBoundary(parent)) {
-        // TODO: If this boundary is filtered it won't have an ID.
-        return getFiberIDUnsafe(parent);
-      }
-      parent = parent.return;
-    }
-    return null;
-  }
-
   function inspectElementRaw(id: number): InspectedElement | null {
     const devtoolsInstance = idToDevToolsInstanceMap.get(id);
     if (devtoolsInstance === undefined) {
@@ -4409,7 +4397,6 @@ export function attach(
     }
 
     let isErrored = false;
-    let targetErrorBoundaryID;
     if (isErrorBoundary(fiber)) {
       // if the current inspected element is an error boundary,
       // either that we want to use it to toggle off error state
@@ -4423,13 +4410,8 @@ export function attach(
       isErrored =
         (fiber.flags & DidCapture) !== 0 ||
         forceErrorForFibers.get(fiber) === true ||
-          (fiber.alternate !== null &&
-            forceErrorForFibers.get(fiber.alternate) === true);
-      targetErrorBoundaryID = isErrored
-        ? fiberInstance.id
-        : getNearestErrorBoundaryID(fiber);
-    } else {
-      targetErrorBoundaryID = getNearestErrorBoundaryID(fiber);
+        (fiber.alternate !== null &&
+          forceErrorForFibers.get(fiber.alternate) === true);
     }
 
     const plugins: Plugins = {
@@ -4464,10 +4446,9 @@ export function attach(
       canEditFunctionPropsRenamePaths:
         typeof overridePropsRenamePath === 'function',
 
-      canToggleError: supportsTogglingError && targetErrorBoundaryID != null,
+      canToggleError: supportsTogglingError,
       // Is this error boundary in error state.
       isErrored,
-      targetErrorBoundaryID,
 
       canToggleSuspense:
         supportsTogglingSuspense &&
@@ -4531,11 +4512,9 @@ export function attach(
       getOwnersListFromInstance(virtualInstance);
 
     let rootType = null;
-    let targetErrorBoundaryID = null;
     let parent = virtualInstance.parent;
     while (parent !== null) {
       if (parent.kind !== VIRTUAL_INSTANCE) {
-        targetErrorBoundaryID = getNearestErrorBoundaryID(parent.data);
         let current = parent.data;
         while (current.return !== null) {
           current = current.return;
@@ -4564,9 +4543,8 @@ export function attach(
       canEditFunctionPropsDeletePaths: false,
       canEditFunctionPropsRenamePaths: false,
 
-      canToggleError: supportsTogglingError && targetErrorBoundaryID != null,
+      canToggleError: supportsTogglingError,
       isErrored: false,
-      targetErrorBoundaryID,
 
       canToggleSuspense: supportsTogglingSuspense,
 
@@ -5469,7 +5447,13 @@ export function attach(
       return;
     }
     if (devtoolsInstance.kind === FIBER_INSTANCE) {
-      const fiber = devtoolsInstance.data;
+      let fiber = devtoolsInstance.data;
+      while (!isErrorBoundary(fiber)) {
+        if (fiber.return === null) {
+          return;
+        }
+        fiber = fiber.return;
+      }
       forceErrorForFibers.set(fiber, forceError);
       if (fiber.alternate !== null) {
         // We only need one of the Fibers in the set.
