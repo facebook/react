@@ -45,6 +45,8 @@ import {
   unhideTextInstance,
   commitHydratedContainer,
   commitHydratedSuspenseInstance,
+  removeChildFromContainer,
+  removeChild,
 } from './ReactFiberConfig';
 import {captureCommitPhaseError} from './ReactFiberWorkLoop';
 
@@ -334,6 +336,32 @@ export function commitHostPlacement(finishedWork: Fiber) {
   }
 }
 
+export function commitHostRemoveChildFromContainer(
+  deletedFiber: Fiber,
+  nearestMountedAncestor: Fiber,
+  parentContainer: Container,
+  hostInstance: Instance | TextInstance,
+) {
+  try {
+    removeChildFromContainer(parentContainer, hostInstance);
+  } catch (error) {
+    captureCommitPhaseError(deletedFiber, nearestMountedAncestor, error);
+  }
+}
+
+export function commitHostRemoveChild(
+  deletedFiber: Fiber,
+  nearestMountedAncestor: Fiber,
+  parentInstance: Instance,
+  hostInstance: Instance | TextInstance,
+) {
+  try {
+    removeChild(parentInstance, hostInstance);
+  } catch (error) {
+    captureCommitPhaseError(deletedFiber, nearestMountedAncestor, error);
+  }
+}
+
 export function commitHostRootContainerChildren(
   root: FiberRoot,
   finishedWork: Fiber,
@@ -354,9 +382,9 @@ export function commitHostPortalContainerChildren(
     ...
   },
   finishedWork: Fiber,
+  pendingChildren: ChildSet,
 ) {
   const containerInfo = portal.containerInfo;
-  const pendingChildren = portal.pendingChildren;
   try {
     replaceContainerChildren(containerInfo, pendingChildren);
   } catch (error) {

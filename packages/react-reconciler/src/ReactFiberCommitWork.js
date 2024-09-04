@@ -12,7 +12,6 @@ import type {
   TextInstance,
   SuspenseInstance,
   Container,
-  ChildSet,
   HoistableRoot,
   FormInstance,
 } from './ReactFiberConfig';
@@ -114,11 +113,8 @@ import {
   supportsHydration,
   supportsResources,
   supportsSingletons,
-  removeChild,
-  removeChildFromContainer,
   clearSuspenseBoundary,
   clearSuspenseBoundaryFromContainer,
-  replaceContainerChildren,
   createContainerChildSet,
   clearContainer,
   prepareScopeUpdate,
@@ -212,6 +208,8 @@ import {
   commitHostPortalContainerChildren,
   commitHostHydratedContainer,
   commitHostHydratedSuspense,
+  commitHostRemoveChildFromContainer,
+  commitHostRemoveChild,
 } from './ReactFiberCommitHostEffects';
 
 // Used during the commit phase to track the state of the Offscreen component stack.
@@ -1064,21 +1062,6 @@ function detachFiberAfterEffects(fiber: Fiber) {
   fiber.updateQueue = null;
 }
 
-function emptyPortalContainer(current: Fiber) {
-  if (!supportsPersistence) {
-    return;
-  }
-
-  const portal: {
-    containerInfo: Container,
-    pendingChildren: ChildSet,
-    ...
-  } = current.stateNode;
-  const {containerInfo} = portal;
-  const emptyChildSet = createContainerChildSet();
-  replaceContainerChildren(containerInfo, emptyChildSet);
-}
-
 // These are tracked on the stack as we recursively traverse a
 // deleted subtree.
 // TODO: Update these during the whole mutation phase, not just during
@@ -1249,12 +1232,16 @@ function commitDeletionEffectsOnFiber(
           // Now that all the child effects have unmounted, we can remove the
           // node from the tree.
           if (hostParentIsContainer) {
-            removeChildFromContainer(
+            commitHostRemoveChildFromContainer(
+              deletedFiber,
+              nearestMountedAncestor,
               ((hostParent: any): Container),
               (deletedFiber.stateNode: Instance | TextInstance),
             );
           } else {
-            removeChild(
+            commitHostRemoveChild(
+              deletedFiber,
+              nearestMountedAncestor,
               ((hostParent: any): Instance),
               (deletedFiber.stateNode: Instance | TextInstance),
             );
@@ -1273,9 +1260,17 @@ function commitDeletionEffectsOnFiber(
       if (enableSuspenseCallback) {
         const hydrationCallbacks = finishedRoot.hydrationCallbacks;
         if (hydrationCallbacks !== null) {
-          const onDeleted = hydrationCallbacks.onDeleted;
-          if (onDeleted) {
-            onDeleted((deletedFiber.stateNode: SuspenseInstance));
+          try {
+            const onDeleted = hydrationCallbacks.onDeleted;
+            if (onDeleted) {
+              onDeleted((deletedFiber.stateNode: SuspenseInstance));
+            }
+          } catch (error) {
+            captureCommitPhaseError(
+              deletedFiber,
+              nearestMountedAncestor,
+              error,
+            );
           }
         }
       }
@@ -1315,7 +1310,13 @@ function commitDeletionEffectsOnFiber(
         hostParent = prevHostParent;
         hostParentIsContainer = prevHostParentIsContainer;
       } else {
-        emptyPortalContainer(deletedFiber);
+        if (supportsPersistence) {
+          commitHostPortalContainerChildren(
+            deletedFiber.stateNode,
+            deletedFiber,
+            createContainerChildSet(),
+          );
+        }
 
         recursivelyTraverseDeletionEffects(
           finishedRoot,
@@ -2006,6 +2007,7 @@ function commitMutationEffectsOnFiber(
           commitHostPortalContainerChildren(
             finishedWork.stateNode,
             finishedWork,
+            finishedWork.stateNode.pendingChildren,
           );
         }
       }
