@@ -227,6 +227,7 @@ function mayAllocate(env: Environment, instruction: Instruction): boolean {
     case 'StoreGlobal': {
       return false;
     }
+    case 'TaggedTemplateExpression':
     case 'CallExpression':
     case 'MethodCall': {
       return instruction.lvalue.identifier.type.kind !== 'Primitive';
@@ -241,8 +242,7 @@ function mayAllocate(env: Environment, instruction: Instruction): boolean {
     case 'ObjectExpression':
     case 'UnsupportedNode':
     case 'ObjectMethod':
-    case 'FunctionExpression':
-    case 'TaggedTemplateExpression': {
+    case 'FunctionExpression': {
       return true;
     }
     default: {

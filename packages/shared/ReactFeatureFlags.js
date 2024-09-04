@@ -134,7 +134,7 @@ export const alwaysThrottleRetries = true;
 
 export const passChildrenWhenCloningPersistedNodes = false;
 
-export const enableServerComponentLogs = __EXPERIMENTAL__;
+export const enableServerComponentLogs = true;
 
 /**
  * Enables a new Fiber flag used in persisted mode to reduce the number
