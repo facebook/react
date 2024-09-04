@@ -60,19 +60,6 @@ function createMap(): InspectedElementMap {
 
 const getRecordMap = cache(createMap);
 
-function createCacheSeed(
-  element: Element,
-  inspectedElement: InspectedElementFrontend,
-): [CacheSeedKey, InspectedElementMap] {
-  const newRecord: Record<InspectedElementFrontend> = {
-    status: Resolved,
-    value: inspectedElement,
-  };
-  const map = createMap();
-  map.set(element, newRecord);
-  return [createMap, map];
-}
-
 /**
  * Fetches element props and state from the backend for inspection.
  * This method should be called during render; it will suspend if data has not yet been fetched.
@@ -191,8 +178,8 @@ export function checkForUpdate({
     ]) => {
       if (responseType === 'full-data') {
         startTransition(() => {
-          const [key, value] = createCacheSeed(element, inspectedElement);
-          refresh(key, value);
+          // TODO: We should ideally seed with the new data here but we can't do that anymore.
+          refresh();
         });
       }
     },
@@ -280,7 +267,6 @@ export function startElementUpdatesPolling({
 
 export function clearCacheBecauseOfError(refresh: RefreshFunction): void {
   startTransition(() => {
-    const map = createMap();
-    refresh(createMap, map);
+    refresh();
   });
 }
