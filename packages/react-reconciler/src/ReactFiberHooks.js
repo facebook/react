@@ -1103,9 +1103,9 @@ if (enableUseMemoCacheHook) {
   };
 }
 
-const resetFunctionComponentUpdateQueue = (
+function resetFunctionComponentUpdateQueue(
   updateQueue: FunctionComponentUpdateQueue,
-) => {
+): void {
   updateQueue.lastEffect = null;
   updateQueue.events = null;
   updateQueue.stores = null;
@@ -1117,7 +1117,7 @@ const resetFunctionComponentUpdateQueue = (
       updateQueue.memoCache.index = 0;
     }
   }
-};
+}
 
 function useThenable<T>(thenable: Thenable<T>): T {
   // Track the position of the thenable within this fiber.
