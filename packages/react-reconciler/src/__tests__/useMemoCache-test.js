@@ -16,7 +16,6 @@ let assertLog;
 let useMemo;
 let useState;
 let useMemoCache;
-let waitForThrow;
 let MemoCacheSentinel;
 let ErrorBoundary;
 
@@ -32,7 +31,6 @@ describe('useMemoCache()', () => {
     useMemo = React.useMemo;
     useMemoCache = require('react/compiler-runtime').c;
     useState = React.useState;
-    waitForThrow = require('internal-test-utils').waitForThrow;
     MemoCacheSentinel = Symbol.for('react.memo_cache_sentinel');
 
     class _ErrorBoundary extends React.Component {
