@@ -26,7 +26,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
-      - run: yarn install --frozen-lockfile
+      - run: corepack enable
+      - run: yarn
       - run: yarn prettier-check
 
   eslint:
@@ -44,7 +45,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
-      - run: yarn install --frozen-lockfile
+      - run: corepack enable
+      - run: yarn
       - run: node ./scripts/tasks/eslint
 
   check_license:
@@ -62,7 +64,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
-      - run: yarn install --frozen-lockfile
+      - run: corepack enable
+      - run: yarn
       - run: ./scripts/ci/check_license.sh
 
   test_print_warnings:
@@ -80,5 +83,6 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
-      - run: yarn install --frozen-lockfile
+      - run: corepack enable
+      - run: yarn
       - run: ./scripts/ci/test_print_warnings.sh

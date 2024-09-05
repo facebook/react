@@ -41,8 +41,9 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock', 'scripts/release/yarn.lock') }}
-      - run: yarn install --frozen-lockfile
-      - run: yarn install --frozen-lockfile
+      - run: corepack enable
+      - run: yarn
+      - run: yarn
         working-directory: scripts/release
       - run: |
           scripts/release/prepare-release-from-ci.js --skipTests -r ${{ inputs.release_channel }} --commit=${{ inputs.commit_sha }}

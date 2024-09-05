@@ -44,7 +44,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('compiler/**/yarn.lock') }}
-      - run: yarn install --frozen-lockfile
+      - run: corepack enable
+      - run: yarn
       - run: yarn workspace babel-plugin-react-compiler lint
 
   # Hardcoded to improve parallelism
@@ -64,7 +65,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('compiler/**/yarn.lock') }}
-      - run: yarn install --frozen-lockfile
+      - run: corepack enable
+      - run: yarn
       - run: yarn workspace babel-plugin-react-compiler jest
 
   test:
@@ -88,5 +90,6 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('compiler/**/yarn.lock') }}
-      - run: yarn install --frozen-lockfile
+      - run: corepack enable
+      - run: yarn
       - run: yarn workspace ${{ matrix.workspace_name }} test

@@ -49,7 +49,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
-      - run: yarn install --frozen-lockfile
+      - run: corepack enable
+      - run: yarn
       - run: node ./scripts/tasks/flow-ci ${{ matrix.flow_inline_config_shortname }}
 
   # ----- FIZZ -----
@@ -69,7 +70,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
-      - run: yarn install --frozen-lockfile
+      - run: corepack enable
+      - run: yarn
       - run: |
           yarn generate-inline-fizz-runtime
           git diff --quiet || (echo "There was a change to the Fizz runtime. Run `yarn generate-inline-fizz-runtime` and check in the result." && false)
@@ -91,7 +93,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
-      - run: yarn install --frozen-lockfile
+      - run: corepack enable
+      - run: yarn
       - run: yarn flags
 
   # ----- TESTS -----
@@ -140,7 +143,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
-      - run: yarn install --frozen-lockfile
+      - run: corepack enable
+      - run: yarn
       - run: yarn test ${{ matrix.params }} --ci --shard=${{ matrix.shard }}
 
   # ----- BUILD -----
@@ -169,7 +173,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
-      - run: yarn install --frozen-lockfile
+      - run: corepack enable
+      - run: yarn
       - run: yarn build --index=${{ matrix.worker_id }} --total=20 --r=${{ matrix.release_channel }} --ci
         env:
           CI: github
@@ -239,7 +244,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
-      - run: yarn install --frozen-lockfile
+      - run: corepack enable
+      - run: yarn
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
@@ -267,7 +273,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
-      - run: yarn install --frozen-lockfile
+      - run: corepack enable
+      - run: yarn
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
@@ -310,7 +317,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
-      - run: yarn install --frozen-lockfile
+      - run: corepack enable
+      - run: yarn
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
@@ -341,7 +349,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
-      - run: yarn install --frozen-lockfile
+      - run: corepack enable
+      - run: yarn
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
@@ -369,8 +378,9 @@ jobs:
         with:
           path: "**/node_modules"
           key: v2-yarn_cache_fixtures_dom-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-      - run: yarn install --frozen-lockfile
-      - run: yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+      - run: corepack enable
+      - run: yarn
+      - run: yarn
         working-directory: fixtures/dom
       - name: Restore archived build
         uses: actions/download-artifact@v4
@@ -409,7 +419,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: v2-yarn_cache_fixtures_flight-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-      - run: yarn install --frozen-lockfile
+      - run: corepack enable
+      - run: yarn
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
@@ -421,9 +432,9 @@ jobs:
       - name: Install fixture dependencies
         working-directory: fixtures/flight
         run: |
-          yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+          yarn
           if [ $? -ne 0 ]; then
-            yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+            yarn
           fi
       - name: Playwright install deps
         working-directory: fixtures/flight
@@ -465,7 +476,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
-      - run: yarn install --frozen-lockfile
+      - run: corepack enable
+      - run: yarn
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
@@ -511,7 +523,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
-      - run: yarn install --frozen-lockfile
+      - run: corepack enable
+      - run: yarn
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
@@ -543,8 +556,9 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock', 'scripts/release/yarn.lock') }}
-      - run: yarn install --frozen-lockfile
-      - run: yarn install --frozen-lockfile
+      - run: corepack enable
+      - run: yarn
+      - run: yarn
         working-directory: scripts/release
       - name: Download artifacts for base revision
         run: |
@@ -582,7 +596,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
-      - run: yarn install --frozen-lockfile
+      - run: corepack enable
+      - run: yarn
       - name: Restore archived build for PR
         uses: actions/download-artifact@v4
         with:

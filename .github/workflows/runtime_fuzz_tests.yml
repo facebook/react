@@ -20,8 +20,9 @@ jobs:
       with:
         node-version-file: '.nvmrc'
         cache: 'yarn'
+    - run: corepack enable
     - name: Install dependencies
-      run: yarn install --frozen-lockfile
+      run: yarn
       env:
         ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
       shell: bash

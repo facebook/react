@@ -31,8 +31,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock', 'scripts/release/yarn.lock') }}
-      - run: yarn install --frozen-lockfile
-      - run: yarn install --frozen-lockfile
+      - run: corepack enable
+      - run: yarn
         working-directory: scripts/release
       - name: Download react-devtools artifacts for base revision
         run: |
@@ -63,7 +63,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
-      - run: yarn install --frozen-lockfile
+      - run: corepack enable
+      - run: yarn
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
@@ -117,7 +118,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
-      - run: yarn install --frozen-lockfile
+      - run: corepack enable
+      - run: yarn
       - name: Restore all archived build artifacts
         uses: actions/download-artifact@v4
       - name: Display structure of build
@@ -151,7 +153,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
-      - run: yarn install --frozen-lockfile
+      - run: corepack enable
+      - run: yarn
       - name: Restore all archived build artifacts
         uses: actions/download-artifact@v4
       - name: Display structure of build
