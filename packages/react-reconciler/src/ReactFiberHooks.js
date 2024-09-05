@@ -1103,7 +1103,7 @@ if (enableUseMemoCacheHook) {
   };
 }
 
-// NOTE: this function intentionally does not reset memoCache. We reuse updateQueue for the memo
+// NOTE: this function intentionally does not reset memoCache data. We reuse updateQueue for the memo
 // cache to avoid increasing the size of fibers that don't need a cache, but we don't want to reset
 // the cache when other properties are reset.
 const clearFunctionComponentUpdateQueue = (
@@ -1112,8 +1112,10 @@ const clearFunctionComponentUpdateQueue = (
   updateQueue.lastEffect = null;
   updateQueue.events = null;
   updateQueue.stores = null;
-  if (updateQueue.memoCache != null) {
-    updateQueue.memoCache.index = 0;
+  if (enableUseMemoCacheHook) {
+    if (updateQueue.memoCache != null) {
+      updateQueue.memoCache.index = 0;
+    }
   }
 };
 
