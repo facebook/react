@@ -1098,7 +1098,10 @@ export function attach(
     // even if objects are different
     const message = formatConsoleArgumentsToSingleString(...args);
     if (__DEBUG__) {
-      debug('onErrorOrWarning', fiber, null, `${type}: "${message}"`);
+      const fiberInstance = fiberToFiberInstanceMap.get(fiber);
+      if (fiberInstance !== undefined) {
+        debug('onErrorOrWarning', fiberInstance, null, `${type}: "${message}"`);
+      }
     }
 
     // Mark this Fiber as needed its warning/error count updated during the next flush.
@@ -1134,32 +1137,37 @@ export function attach(
   // It relies on the extension to pass the preference through via the global.
   patchConsoleUsingWindowValues();
 
-  const debug = (
+  function debug(
     name: string,
-    fiber: Fiber,
+    instance: DevToolsInstance,
     parentInstance: null | DevToolsInstance,
     extraString: string = '',
-  ): void => {
+  ): void {
     if (__DEBUG__) {
       const displayName =
-        fiber.tag + ':' + (getDisplayNameForFiber(fiber) || 'null');
+        instance.kind === VIRTUAL_INSTANCE
+          ? instance.data.name || 'null'
+          : instance.data.tag +
+            ':' +
+            (getDisplayNameForFiber(instance.data) || 'null');
 
-      const maybeID = getFiberIDUnsafe(fiber) || '<no id>';
+      const maybeID =
+        instance.kind === FILTERED_FIBER_INSTANCE ? '<no id>' : instance.id;
 
-      let parentDisplayName;
-      let maybeParentID;
-      if (parentInstance !== null && parentInstance.kind === FIBER_INSTANCE) {
-        const parentFiber = parentInstance.data;
-        parentDisplayName =
-          parentFiber.tag +
-          ':' +
-          (getDisplayNameForFiber(parentFiber) || 'null');
-        maybeParentID = String(parentInstance.id);
-      } else {
-        // TODO: Handle VirtualInstance
-        parentDisplayName = '';
-        maybeParentID = '<no-id>';
-      }
+      const parentDisplayName =
+        parentInstance === null
+          ? ''
+          : parentInstance.kind === VIRTUAL_INSTANCE
+            ? parentInstance.data.name || 'null'
+            : parentInstance.data.tag +
+              ':' +
+              (getDisplayNameForFiber(parentInstance.data) || 'null');
+
+      const maybeParentID =
+        parentInstance === null ||
+        parentInstance.kind === FILTERED_FIBER_INSTANCE
+          ? '<no id>'
+          : parentInstance.id;
 
       console.groupCollapsed(
         `[renderer] %c${name} %c${displayName} (${maybeID}) %c${
@@ -1173,7 +1181,7 @@ export function attach(
       console.log(new Error().stack.split('\n').slice(1).join('\n'));
       console.groupEnd();
     }
-  };
+  }
 
   // eslint-disable-next-line no-unused-vars
   function debugTree(instance: DevToolsInstance, indent: number = 0) {
@@ -1569,9 +1577,6 @@ export function attach(
   // Removes a Fiber (and its alternate) from the Maps used to track their id.
   // This method should always be called when a Fiber is unmounting.
   function untrackFiber(nearestInstance: DevToolsInstance, fiber: Fiber) {
-    if (__DEBUG__) {
-      debug('untrackFiber()', fiber, null);
-    }
     // TODO: Consider using a WeakMap instead. The only thing where that doesn't work
     // is React Native Paper which tracks tags but that support is eventually going away
     // and can use the old findFiberByHostInstance strategy.
@@ -2245,7 +2250,7 @@ export function attach(
     const id = fiberInstance.id;
 
     if (__DEBUG__) {
-      debug('recordMount()', fiber, parentInstance);
+      debug('recordMount()', fiberInstance, parentInstance);
     }
 
     const isProfilingSupported = fiber.hasOwnProperty('treeBaseDuration');
@@ -2422,7 +2427,7 @@ export function attach(
   function recordUnmount(fiberInstance: FiberInstance): void {
     const fiber = fiberInstance.data;
     if (__DEBUG__) {
-      debug('recordUnmount()', fiber, null);
+      debug('recordUnmount()', fiberInstance, reconcilingParent);
     }
 
     if (trackedPathMatchInstance === fiberInstance) {
@@ -2757,15 +2762,14 @@ export function attach(
     fiber: Fiber,
     traceNearestHostComponentUpdate: boolean,
   ): void {
-    if (__DEBUG__) {
-      debug('mountFiberRecursively()', fiber, reconcilingParent);
-    }
-
     const shouldIncludeInTree = !shouldFilterFiber(fiber);
     let newInstance = null;
     if (shouldIncludeInTree) {
       newInstance = recordMount(fiber, reconcilingParent);
       insertChild(newInstance);
+      if (__DEBUG__) {
+        debug('mountFiberRecursively()', newInstance, reconcilingParent);
+      }
     } else if (
       reconcilingParent !== null &&
       reconcilingParent.kind === VIRTUAL_INSTANCE
@@ -2785,6 +2789,9 @@ export function attach(
 
       newInstance = createFilteredFiberInstance(fiber);
       insertChild(newInstance);
+      if (__DEBUG__) {
+        debug('mountFiberRecursively()', newInstance, reconcilingParent);
+      }
     }
 
     // If we have the tree selection from previous reload, try to match this Fiber.
@@ -2898,9 +2905,7 @@ export function attach(
   // when we switch from primary to fallback, or deleting a subtree.
   function unmountInstanceRecursively(instance: DevToolsInstance) {
     if (__DEBUG__) {
-      if (instance.kind === FIBER_INSTANCE) {
-        debug('unmountInstanceRecursively()', instance.data, null);
-      }
+      debug('unmountInstanceRecursively()', instance, reconcilingParent);
     }
 
     const stashedParent = reconcilingParent;
@@ -3034,13 +3039,10 @@ export function attach(
     parentInstance: FiberInstance | VirtualInstance,
   ) {
     if (__DEBUG__) {
-      if (
-        parentInstance.firstChild !== null &&
-        parentInstance.firstChild.kind === FIBER_INSTANCE
-      ) {
+      if (parentInstance.firstChild !== null) {
         debug(
           'recordResetChildren()',
-          parentInstance.firstChild.data,
+          parentInstance.firstChild,
           parentInstance,
         );
       }
@@ -3417,7 +3419,9 @@ export function attach(
     traceNearestHostComponentUpdate: boolean,
   ): boolean {
     if (__DEBUG__) {
-      debug('updateFiberRecursively()', nextFiber, reconcilingParent);
+      if (fiberInstance !== null) {
+        debug('updateFiberRecursively()', fiberInstance, reconcilingParent);
+      }
     }
 
     if (traceUpdatesEnabled) {
