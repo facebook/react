@@ -699,7 +699,15 @@ describe('ReactDOMForm', () => {
     // This should suspend because form actions are implicitly wrapped
     // in startTransition.
     await submit(formRef.current);
-    assertLog(['Pending...', 'Suspend! [Updated]', 'Loading...']);
+    assertLog([
+      'Pending...',
+      'Suspend! [Updated]',
+      'Loading...',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['Suspend! [Updated]', 'Loading...']
+        : []),
+    ]);
     expect(container.textContent).toBe('Pending...Initial');
 
     await act(() => resolveText('Updated'));
@@ -736,7 +744,15 @@ describe('ReactDOMForm', () => {
 
     // Update
     await submit(formRef.current);
-    assertLog(['Pending...', 'Suspend! [Count: 1]', 'Loading...']);
+    assertLog([
+      'Pending...',
+      'Suspend! [Count: 1]',
+      'Loading...',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['Suspend! [Count: 1]', 'Loading...']
+        : []),
+    ]);
     expect(container.textContent).toBe('Pending...Count: 0');
 
     await act(() => resolveText('Count: 1'));
@@ -745,7 +761,15 @@ describe('ReactDOMForm', () => {
 
     // Update again
     await submit(formRef.current);
-    assertLog(['Pending...', 'Suspend! [Count: 2]', 'Loading...']);
+    assertLog([
+      'Pending...',
+      'Suspend! [Count: 2]',
+      'Loading...',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['Suspend! [Count: 2]', 'Loading...']
+        : []),
+    ]);
     expect(container.textContent).toBe('Pending...Count: 1');
 
     await act(() => resolveText('Count: 2'));
@@ -789,7 +813,14 @@ describe('ReactDOMForm', () => {
     assertLog(['Async action started', 'Pending...']);
 
     await act(() => resolveText('Wait'));
-    assertLog(['Suspend! [Updated]', 'Loading...']);
+    assertLog([
+      'Suspend! [Updated]',
+      'Loading...',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['Suspend! [Updated]', 'Loading...']
+        : []),
+    ]);
     expect(container.textContent).toBe('Pending...Initial');
 
     await act(() => resolveText('Updated'));
@@ -1475,7 +1506,15 @@ describe('ReactDOMForm', () => {
     // Now dispatch inside of a transition. This one does not trigger a
     // loading state.
     await act(() => startTransition(() => dispatch()));
-    assertLog(['Count: 1', 'Suspend! [Count: 2]', 'Loading...']);
+    assertLog([
+      'Count: 1',
+      'Suspend! [Count: 2]',
+      'Loading...',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['Suspend! [Count: 2]', 'Loading...']
+        : []),
+    ]);
     expect(container.textContent).toBe('Count: 1');
 
     await act(() => resolveText('Count: 2'));
@@ -1495,7 +1534,11 @@ describe('ReactDOMForm', () => {
 
     const root = ReactDOMClient.createRoot(container);
     await act(() => root.render(<App />));
-    assertLog(['Suspend! [Count: 0]']);
+    assertLog([
+      'Suspend! [Count: 0]',
+
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Count: 0]'] : []),
+    ]);
     await act(() => resolveText('Count: 0'));
     assertLog(['Count: 0']);
 
@@ -1508,7 +1551,11 @@ describe('ReactDOMForm', () => {
         {withoutStack: true},
       ],
     ]);
-    assertLog(['Suspend! [Count: 1]']);
+    assertLog([
+      'Suspend! [Count: 1]',
+
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Count: 1]'] : []),
+    ]);
     expect(container.textContent).toBe('Count: 0');
   });
 

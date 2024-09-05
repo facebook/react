@@ -652,14 +652,22 @@ describe('ReactHooksWithNoopRenderer', () => {
       React.startTransition(() => {
         root.render(<Foo signal={false} />);
       });
-      await waitForAll(['Suspend!']);
+      await waitForAll([
+        'Suspend!',
+
+        ...(gate('enableSiblingPrerendering') ? ['Suspend!'] : []),
+      ]);
       expect(root).toMatchRenderedOutput(<span prop={0} />);
 
       // Rendering again should suspend again.
       React.startTransition(() => {
         root.render(<Foo signal={false} />);
       });
-      await waitForAll(['Suspend!']);
+      await waitForAll([
+        'Suspend!',
+
+        ...(gate('enableSiblingPrerendering') ? ['Suspend!'] : []),
+      ]);
     });
 
     it('discards render phase updates if something suspends, but not other updates in the same component', async () => {
@@ -709,14 +717,22 @@ describe('ReactHooksWithNoopRenderer', () => {
           setLabel('B');
         });
 
-        await waitForAll(['Suspend!']);
+        await waitForAll([
+          'Suspend!',
+
+          ...(gate('enableSiblingPrerendering') ? ['Suspend!'] : []),
+        ]);
         expect(root).toMatchRenderedOutput(<span prop="A:0" />);
 
         // Rendering again should suspend again.
         React.startTransition(() => {
           root.render(<Foo signal={false} />);
         });
-        await waitForAll(['Suspend!']);
+        await waitForAll([
+          'Suspend!',
+
+          ...(gate('enableSiblingPrerendering') ? ['Suspend!'] : []),
+        ]);
 
         // Flip the signal back to "cancel" the update. However, the update to
         // label should still proceed. It shouldn't have been dropped.
@@ -3495,6 +3511,13 @@ describe('ReactHooksWithNoopRenderer', () => {
           'Before... Pending: true',
           'Suspend! [After... Pending: false]',
           'Loading... Pending: false',
+
+          ...(gate('enableSiblingPrerendering')
+            ? [
+                'Suspend! [After... Pending: false]',
+                'Loading... Pending: false',
+              ]
+            : []),
         ]);
         expect(ReactNoop).toMatchRenderedOutput(
           <span prop="Before... Pending: true" />,
@@ -3563,7 +3586,17 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       await act(async () => {
         _setText('B');
-        await waitForAll(['B', 'A', 'B', 'Suspend! [B]', 'Loading']);
+        await waitForAll([
+          'B',
+          'A',
+          'B',
+          'Suspend! [B]',
+          'Loading',
+
+          ...(gate('enableSiblingPrerendering')
+            ? ['B', 'Suspend! [B]', 'Loading']
+            : []),
+        ]);
         await waitForAll([]);
         expect(ReactNoop).toMatchRenderedOutput(
           <>
@@ -4201,7 +4234,13 @@ describe('ReactHooksWithNoopRenderer', () => {
     await act(async () => {
       await resolveText('A');
     });
-    assertLog(['Promise resolved [A]', 'A', 'Suspend! [B]']);
+    assertLog([
+      'Promise resolved [A]',
+      'A',
+      'Suspend! [B]',
+
+      ...(gate('enableSiblingPrerendering') ? ['A', 'Suspend! [B]'] : []),
+    ]);
 
     await act(() => {
       root.render(null);

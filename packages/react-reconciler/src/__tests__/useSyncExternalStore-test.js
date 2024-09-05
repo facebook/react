@@ -274,6 +274,10 @@ describe('useSyncExternalStore', () => {
         // This should a synchronous re-render of A using the updated value. In
         // this test, this causes A to suspend.
         'Suspend A',
+
+        ...(gate('enableSiblingPrerendering')
+          ? ['Suspend A', 'B: Updated']
+          : []),
       ]);
       // Nothing has committed, because A suspended and no fallback
       // was provided.

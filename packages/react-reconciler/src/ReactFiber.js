@@ -404,10 +404,16 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
   workInProgress.dependencies =
     currentDependencies === null
       ? null
-      : {
-          lanes: currentDependencies.lanes,
-          firstContext: currentDependencies.firstContext,
-        };
+      : __DEV__
+        ? {
+            lanes: currentDependencies.lanes,
+            firstContext: currentDependencies.firstContext,
+            _debugThenableState: currentDependencies._debugThenableState,
+          }
+        : {
+            lanes: currentDependencies.lanes,
+            firstContext: currentDependencies.firstContext,
+          };
 
   // These will be overridden during the parent's reconciliation
   workInProgress.sibling = current.sibling;
@@ -503,10 +509,16 @@ export function resetWorkInProgress(
     workInProgress.dependencies =
       currentDependencies === null
         ? null
-        : {
-            lanes: currentDependencies.lanes,
-            firstContext: currentDependencies.firstContext,
-          };
+        : __DEV__
+          ? {
+              lanes: currentDependencies.lanes,
+              firstContext: currentDependencies.firstContext,
+              _debugThenableState: currentDependencies._debugThenableState,
+            }
+          : {
+              lanes: currentDependencies.lanes,
+              firstContext: currentDependencies.firstContext,
+            };
 
     if (enableProfilerTimer) {
       // Note: We don't reset the actualTime counts. It's useful to accumulate

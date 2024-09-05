@@ -198,7 +198,11 @@ describe('ReactLazy', () => {
 
     await resolveFakeImport(Foo);
 
-    await waitForAll(['Foo']);
+    await waitForAll([
+      'Foo',
+
+      ...(gate('enableSiblingPrerendering') ? ['Foo'] : []),
+    ]);
     expect(root).not.toMatchRenderedOutput('FooBar');
 
     await act(() => resolveFakeImport(Bar));
@@ -235,6 +239,13 @@ describe('ReactLazy', () => {
     assertConsoleErrorDev([
       'Expected the result of a dynamic import() call',
       'Expected the result of a dynamic import() call',
+
+      ...(gate('enableSiblingPrerendering')
+        ? [
+            'Expected the result of a dynamic import() call',
+            'Expected the result of a dynamic import() call',
+          ]
+        : []),
     ]);
     expect(root).not.toMatchRenderedOutput('Hi');
   });
@@ -1072,7 +1083,7 @@ describe('ReactLazy', () => {
     expect(ref.current).toBe(null);
 
     await act(() => resolveFakeImport(Foo));
-    assertLog(['Foo']);
+    assertLog(['Foo', ...(gate('enableSiblingPrerendering') ? ['Foo'] : [])]);
 
     await act(() => resolveFakeImport(ForwardRefBar));
     assertLog(['Foo', 'forwardRef', 'Bar']);
@@ -1388,7 +1399,12 @@ describe('ReactLazy', () => {
     expect(root).not.toMatchRenderedOutput('AB');
 
     await act(() => resolveFakeImport(ChildA));
-    assertLog(['A', 'Init B']);
+    assertLog([
+      'A',
+      'Init B',
+
+      ...(gate('enableSiblingPrerendering') ? ['A'] : []),
+    ]);
 
     await act(() => resolveFakeImport(ChildB));
     assertLog(['A', 'B', 'Did mount: A', 'Did mount: B']);
@@ -1472,10 +1488,20 @@ describe('ReactLazy', () => {
     React.startTransition(() => {
       root.update(<Parent swap={true} />);
     });
-    await waitForAll(['Init B2', 'Loading...']);
+    await waitForAll([
+      'Init B2',
+      'Loading...',
+
+      ...(gate('enableSiblingPrerendering') ? ['Loading...'] : []),
+    ]);
     await act(() => resolveFakeImport(ChildB2));
     // We need to flush to trigger the second one to load.
-    assertLog(['Init A2', 'Loading...']);
+    assertLog([
+      'Init A2',
+      'Loading...',
+
+      ...(gate('enableSiblingPrerendering') ? ['Loading...'] : []),
+    ]);
     await act(() => resolveFakeImport(ChildA2));
     assertLog(['b', 'a', 'Did update: b', 'Did update: a']);
     expect(root).toMatchRenderedOutput('ba');

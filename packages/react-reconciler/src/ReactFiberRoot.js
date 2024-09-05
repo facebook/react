@@ -75,6 +75,7 @@ function FiberRootNode(
   this.pendingLanes = NoLanes;
   this.suspendedLanes = NoLanes;
   this.pingedLanes = NoLanes;
+  this.warmLanes = NoLanes;
   this.expiredLanes = NoLanes;
   this.finishedLanes = NoLanes;
   this.errorRecoveryDisabledLanes = NoLanes;
