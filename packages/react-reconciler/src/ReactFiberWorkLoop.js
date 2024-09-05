@@ -1277,7 +1277,13 @@ function isRenderConsistentWithExternalStores(finishedWork: Fiber): boolean {
   // loop instead of recursion so we can exit early.
   let node: Fiber = finishedWork;
   while (true) {
-    if (node.flags & StoreConsistency) {
+    const tag = node.tag;
+    if (
+      (tag === FunctionComponent ||
+        tag === ForwardRef ||
+        tag === SimpleMemoComponent) &&
+      node.flags & StoreConsistency
+    ) {
       const updateQueue: FunctionComponentUpdateQueue | null =
         (node.updateQueue: any);
       if (updateQueue !== null) {
