@@ -1,0 +1,467 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/useMemo-switch-return.js
+---
+Input:
+function Component(props) {
+  const x = useMemo(() => {
+    let y;
+    switch (props.switch) {
+      case "foo": {
+        return "foo";
+      }
+      case "bar": {
+        y = "bar";
+        break;
+      }
+      default: {
+        y = props.y;
+      }
+    }
+    return y;
+  });
+  return x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    36,
+                    37
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useMemo",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      40,
+                      47
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "ArrowFunctionExpression",
+                      "id": null,
+                      "params": [],
+                      "body": {
+                        "type": "BlockStatement",
+                        "body": [
+                          {
+                            "type": "VariableDeclaration",
+                            "kind": "let",
+                            "declarations": [
+                              {
+                                "type": "VariableDeclarator",
+                                "id": {
+                                  "type": "Identifier",
+                                  "name": "y",
+                                  "typeAnnotation": null,
+                                  "loc": null,
+                                  "range": [
+                                    64,
+                                    65
+                                  ]
+                                },
+                                "init": null,
+                                "loc": null,
+                                "range": [
+                                  64,
+                                  65
+                                ]
+                              }
+                            ],
+                            "loc": null,
+                            "range": [
+                              60,
+                              66
+                            ]
+                          },
+                          {
+                            "type": "SwitchStatement",
+                            "discriminant": {
+                              "type": "MemberExpression",
+                              "object": {
+                                "type": "Identifier",
+                                "name": "props",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  79,
+                                  84
+                                ]
+                              },
+                              "property": {
+                                "type": "Identifier",
+                                "name": "switch",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  85,
+                                  91
+                                ]
+                              },
+                              "computed": false,
+                              "loc": null,
+                              "range": [
+                                79,
+                                91
+                              ]
+                            },
+                            "cases": [
+                              {
+                                "type": "SwitchCase",
+                                "test": {
+                                  "type": "StringLiteral",
+                                  "value": "foo",
+                                  "loc": null,
+                                  "range": [
+                                    106,
+                                    111
+                                  ]
+                                },
+                                "consequent": [
+                                  {
+                                    "type": "BlockStatement",
+                                    "body": [
+                                      {
+                                        "type": "ReturnStatement",
+                                        "argument": {
+                                          "type": "StringLiteral",
+                                          "value": "foo",
+                                          "loc": null,
+                                          "range": [
+                                            130,
+                                            135
+                                          ]
+                                        },
+                                        "loc": null,
+                                        "range": [
+                                          123,
+                                          136
+                                        ]
+                                      }
+                                    ],
+                                    "loc": null,
+                                    "range": [
+                                      113,
+                                      144
+                                    ]
+                                  }
+                                ],
+                                "loc": null,
+                                "range": [
+                                  101,
+                                  144
+                                ]
+                              },
+                              {
+                                "type": "SwitchCase",
+                                "test": {
+                                  "type": "StringLiteral",
+                                  "value": "bar",
+                                  "loc": null,
+                                  "range": [
+                                    156,
+                                    161
+                                  ]
+                                },
+                                "consequent": [
+                                  {
+                                    "type": "BlockStatement",
+                                    "body": [
+                                      {
+                                        "type": "ExpressionStatement",
+                                        "expression": {
+                                          "type": "AssignmentExpression",
+                                          "operator": "=",
+                                          "left": {
+                                            "type": "Identifier",
+                                            "name": "y",
+                                            "typeAnnotation": null,
+                                            "loc": null,
+                                            "range": [
+                                              173,
+                                              174
+                                            ]
+                                          },
+                                          "right": {
+                                            "type": "StringLiteral",
+                                            "value": "bar",
+                                            "loc": null,
+                                            "range": [
+                                              177,
+                                              182
+                                            ]
+                                          },
+                                          "loc": null,
+                                          "range": [
+                                            173,
+                                            182
+                                          ]
+                                        },
+                                        "directive": null,
+                                        "loc": null,
+                                        "range": [
+                                          173,
+                                          183
+                                        ]
+                                      },
+                                      {
+                                        "type": "BreakStatement",
+                                        "label": null,
+                                        "loc": null,
+                                        "range": [
+                                          192,
+                                          198
+                                        ]
+                                      }
+                                    ],
+                                    "loc": null,
+                                    "range": [
+                                      163,
+                                      206
+                                    ]
+                                  }
+                                ],
+                                "loc": null,
+                                "range": [
+                                  151,
+                                  206
+                                ]
+                              },
+                              {
+                                "type": "SwitchCase",
+                                "test": null,
+                                "consequent": [
+                                  {
+                                    "type": "BlockStatement",
+                                    "body": [
+                                      {
+                                        "type": "ExpressionStatement",
+                                        "expression": {
+                                          "type": "AssignmentExpression",
+                                          "operator": "=",
+                                          "left": {
+                                            "type": "Identifier",
+                                            "name": "y",
+                                            "typeAnnotation": null,
+                                            "loc": null,
+                                            "range": [
+                                              232,
+                                              233
+                                            ]
+                                          },
+                                          "right": {
+                                            "type": "MemberExpression",
+                                            "object": {
+                                              "type": "Identifier",
+                                              "name": "props",
+                                              "typeAnnotation": null,
+                                              "loc": null,
+                                              "range": [
+                                                236,
+                                                241
+                                              ]
+                                            },
+                                            "property": {
+                                              "type": "Identifier",
+                                              "name": "y",
+                                              "typeAnnotation": null,
+                                              "loc": null,
+                                              "range": [
+                                                242,
+                                                243
+                                              ]
+                                            },
+                                            "computed": false,
+                                            "loc": null,
+                                            "range": [
+                                              236,
+                                              243
+                                            ]
+                                          },
+                                          "loc": null,
+                                          "range": [
+                                            232,
+                                            243
+                                          ]
+                                        },
+                                        "directive": null,
+                                        "loc": null,
+                                        "range": [
+                                          232,
+                                          244
+                                        ]
+                                      }
+                                    ],
+                                    "loc": null,
+                                    "range": [
+                                      222,
+                                      252
+                                    ]
+                                  }
+                                ],
+                                "loc": null,
+                                "range": [
+                                  213,
+                                  252
+                                ]
+                              }
+                            ],
+                            "loc": null,
+                            "range": [
+                              71,
+                              258
+                            ]
+                          },
+                          {
+                            "type": "ReturnStatement",
+                            "argument": {
+                              "type": "Identifier",
+                              "name": "y",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                270,
+                                271
+                              ]
+                            },
+                            "loc": null,
+                            "range": [
+                              263,
+                              272
+                            ]
+                          }
+                        ],
+                        "loc": null,
+                        "range": [
+                          54,
+                          276
+                        ]
+                      },
+                      "generator": false,
+                      "async": false,
+                      "loc": null,
+                      "range": [
+                        48,
+                        276
+                      ],
+                      "expression": false,
+                      "loc": null,
+                      "range": [
+                        48,
+                        276
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    40,
+                    277
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  277
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              278
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                288,
+                289
+              ]
+            },
+            "loc": null,
+            "range": [
+              281,
+              290
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          292
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        292
+      ],
+      "loc": null,
+      "range": [
+        0,
+        292
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    292
+  ]
+}

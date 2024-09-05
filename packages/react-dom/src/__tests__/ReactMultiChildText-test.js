@@ -77,7 +77,7 @@ const expectChildren = function (container, children) {
  * faster to render and update.
  */
 describe('ReactMultiChildText', () => {
-  jest.setTimeout(20000);
+  jest.setTimeout(30000);
 
   it('should correctly handle all possible children for render and update', async () => {
     await expect(async () => {
@@ -169,12 +169,11 @@ describe('ReactMultiChildText', () => {
         ['', 'foo', <div>{true}{<div />}{1.2}{''}</div>, 'foo'], ['', 'foo', <div />, 'foo'],
       ]);
     }).toErrorDev([
-      'Warning: Each child in a list should have a unique "key" prop.',
-      'Warning: Each child in a list should have a unique "key" prop.',
+      'Each child in a list should have a unique "key" prop.',
+      'Each child in a list should have a unique "key" prop.',
     ]);
   });
 
-  // @gate enableBigIntSupport
   it('should correctly handle bigint children for render and update', async () => {
     // prettier-ignore
     await testAllPermutations([

@@ -76,7 +76,7 @@ describe('DebugTracing', () => {
     expect(logs).toEqual([]);
   });
 
-  // @gate experimental && build === 'development' && enableDebugTracing
+  // @gate experimental && build === 'development' && enableDebugTracing && !disableLegacyMode
   it('should log sync render with suspense, legacy', async () => {
     let resolveFakeSuspensePromise;
     let didResolve = false;
@@ -116,7 +116,7 @@ describe('DebugTracing', () => {
     expect(logs).toEqual(['log: ⚛️ Example resolved']);
   });
 
-  // @gate experimental && build === 'development' && enableDebugTracing && enableCPUSuspense
+  // @gate experimental && build === 'development' && enableDebugTracing && enableCPUSuspense && !disableLegacyMode
   it('should log sync render with CPU suspense, legacy', async () => {
     function Example() {
       console.log('<Example/>');
@@ -279,7 +279,7 @@ describe('DebugTracing', () => {
         );
       });
     }).toErrorDev(
-      'Warning: Cannot update during an existing state transition (such as within `render`). Render methods should be a pure function of props and state.',
+      'Cannot update during an existing state transition (such as within `render`). Render methods should be a pure function of props and state.',
     );
 
     expect(logs).toEqual([

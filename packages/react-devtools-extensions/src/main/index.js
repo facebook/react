@@ -21,6 +21,8 @@ import {
   setBrowserSelectionFromReact,
   setReactSelectionFromBrowser,
 } from './elementSelection';
+import {viewAttributeSource} from './sourceSelection';
+
 import {startReactPolling} from './reactPolling';
 import cloneStyleTags from './cloneStyleTags';
 import fetchFileWithCaching from './fetchFileWithCaching';
@@ -58,7 +60,7 @@ function createBridge() {
   });
 
   bridge.addListener(
-    'syncSelectionToNativeElementsPanel',
+    'syncSelectionToBuiltinElementsPanel',
     setBrowserSelectionFromReact,
   );
 
@@ -89,15 +91,16 @@ function createBridge() {
 function createBridgeAndStore() {
   createBridge();
 
-  const {isProfiling, supportsProfiling} = getProfilingFlags();
+  const {isProfiling} = getProfilingFlags();
 
   store = new Store(bridge, {
     isProfiling,
     supportsReloadAndProfile: __IS_CHROME__ || __IS_EDGE__,
-    supportsProfiling,
     // At this time, the timeline can only parse Chrome performance profiles.
     supportsTimeline: __IS_CHROME__,
     supportsTraceUpdates: true,
+    supportsInspectMatchingDOMElement: true,
+    supportsClickToInspect: true,
   });
 
   if (!isProfiling) {
@@ -112,19 +115,7 @@ function createBridgeAndStore() {
   const viewAttributeSourceFunction = (id, path) => {
     const rendererID = store.getRendererIDForElement(id);
     if (rendererID != null) {
-      // Ask the renderer interface to find the specified attribute,
-      // and store it as a global variable on the window.
-      bridge.send('viewAttributeSource', {id, path, rendererID});
-
-      setTimeout(() => {
-        // Ask Chrome to display the location of the attribute,
-        // assuming the renderer found a match.
-        chrome.devtools.inspectedWindow.eval(`
-                if (window.$attribute != null) {
-                  inspect(window.$attribute);
-                }
-              `);
-      }, 100);
+      viewAttributeSource(rendererID, id, path);
     }
   };
 
@@ -411,13 +402,19 @@ chrome.devtools.network.onNavigated.addListener(syncSavedPreferences);
 // into subscribing to the same events from Bridge and window multiple times
 // In this case, we will handle `operations` event twice or more and user will see
 // `Cannot add node "1" because a node with that id is already in the Store.`
-const debouncedOnNavigatedListener = debounce(() => {
+const debouncedMountReactDevToolsCallback = debounce(
+  mountReactDevToolsWhenReactHasLoaded,
+  500,
+);
+
+// Clean up everything, but start mounting React DevTools panels if user stays at this page
+function onNavigatedToOtherPage() {
   performInTabNavigationCleanup();
-  mountReactDevToolsWhenReactHasLoaded();
-}, 500);
+  debouncedMountReactDevToolsCallback();
+}
 
 // Cleanup previous page state and remount everything
-chrome.devtools.network.onNavigated.addListener(debouncedOnNavigatedListener);
+chrome.devtools.network.onNavigated.addListener(onNavigatedToOtherPage);
 
 // Should be emitted when browser DevTools are closed
 if (__IS_FIREFOX__) {

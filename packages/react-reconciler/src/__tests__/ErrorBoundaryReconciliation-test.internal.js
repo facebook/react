@@ -6,6 +6,7 @@ describe('ErrorBoundaryReconciliation', () => {
   let ReactTestRenderer;
   let span;
   let act;
+  let assertConsoleErrorDev;
 
   beforeEach(() => {
     jest.resetModules();
@@ -13,6 +14,8 @@ describe('ErrorBoundaryReconciliation', () => {
     ReactTestRenderer = require('react-test-renderer');
     React = require('react');
     act = require('internal-test-utils').act;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
     DidCatchErrorBoundary = class extends React.Component {
       state = {error: null};
       componentDidCatch(error) {
@@ -46,45 +49,42 @@ describe('ErrorBoundaryReconciliation', () => {
       fail ? <InvalidType /> : <span prop="BrokenRender" />;
   });
 
-  [true, false].forEach(isConcurrent => {
-    async function sharedTest(ErrorBoundary, fallbackTagName) {
-      let renderer;
+  async function sharedTest(ErrorBoundary, fallbackTagName) {
+    let renderer;
 
-      await act(() => {
-        renderer = ReactTestRenderer.create(
-          <ErrorBoundary fallbackTagName={fallbackTagName}>
-            <BrokenRender fail={false} />
-          </ErrorBoundary>,
-          {isConcurrent: isConcurrent},
-        );
-      });
-      expect(renderer).toMatchRenderedOutput(<span prop="BrokenRender" />);
-
-      await expect(async () => {
-        await act(() => {
-          renderer.update(
-            <ErrorBoundary fallbackTagName={fallbackTagName}>
-              <BrokenRender fail={true} />
-            </ErrorBoundary>,
-          );
-        });
-      }).toErrorDev(isConcurrent ? ['invalid', 'invalid'] : ['invalid']);
-      const Fallback = fallbackTagName;
-      expect(renderer).toMatchRenderedOutput(<Fallback prop="ErrorBoundary" />);
+    await act(() => {
+      renderer = ReactTestRenderer.create(
+        <ErrorBoundary fallbackTagName={fallbackTagName}>
+          <BrokenRender fail={false} />
+        </ErrorBoundary>,
+        {unstable_isConcurrent: true},
+      );
+    });
+    expect(renderer).toMatchRenderedOutput(<span prop="BrokenRender" />);
+    await act(() => {
+      renderer.update(
+        <ErrorBoundary fallbackTagName={fallbackTagName}>
+          <BrokenRender fail={true} />
+        </ErrorBoundary>,
+      );
+    });
+    if (gate(flags => !flags.enableOwnerStacks)) {
+      assertConsoleErrorDev(['invalid', 'invalid']);
     }
 
-    describe(isConcurrent ? 'concurrent' : 'sync', () => {
-      it('componentDidCatch can recover by rendering an element of the same type', () =>
-        sharedTest(DidCatchErrorBoundary, 'span'));
+    const Fallback = fallbackTagName;
+    expect(renderer).toMatchRenderedOutput(<Fallback prop="ErrorBoundary" />);
+  }
 
-      it('componentDidCatch can recover by rendering an element of a different type', () =>
-        sharedTest(DidCatchErrorBoundary, 'div'));
+  it('componentDidCatch can recover by rendering an element of the same type', () =>
+    sharedTest(DidCatchErrorBoundary, 'span'));
 
-      it('getDerivedStateFromError can recover by rendering an element of the same type', () =>
-        sharedTest(GetDerivedErrorBoundary, 'span'));
+  it('componentDidCatch can recover by rendering an element of a different type', () =>
+    sharedTest(DidCatchErrorBoundary, 'div'));
 
-      it('getDerivedStateFromError can recover by rendering an element of a different type', () =>
-        sharedTest(GetDerivedErrorBoundary, 'div'));
-    });
-  });
+  it('getDerivedStateFromError can recover by rendering an element of the same type', () =>
+    sharedTest(GetDerivedErrorBoundary, 'span'));
+
+  it('getDerivedStateFromError can recover by rendering an element of a different type', () =>
+    sharedTest(GetDerivedErrorBoundary, 'div'));
 });

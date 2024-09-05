@@ -224,9 +224,7 @@ describe('ReactDOMServerIntegrationSelect', () => {
       </select>,
     );
     const option = e.options[0];
-    expect(option.textContent).toBe(
-      gate(flags => flags.enableBigIntSupport) ? 'A B 5' : 'A B ',
-    );
+    expect(option.textContent).toBe('A B 5');
     expect(option.value).toBe('bar');
     expect(option.selected).toBe(true);
   });
@@ -254,7 +252,6 @@ describe('ReactDOMServerIntegrationSelect', () => {
           <option value="first">First</option>
           <option value="true">True</option>
         </select>,
-        1,
       );
       expect(e.firstChild.selected).toBe(false);
       expect(e.lastChild.selected).toBe(true);
@@ -269,7 +266,6 @@ describe('ReactDOMServerIntegrationSelect', () => {
           <option value="first">First</option>
           <option value="undefined">Undefined</option>
         </select>,
-        1,
       );
       expect(e.firstChild.selected).toBe(true);
       expect(e.lastChild.selected).toBe(false);

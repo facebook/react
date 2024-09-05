@@ -12,10 +12,12 @@ const WARNING = 1;
 const ERROR = 2;
 
 module.exports = {
-  extends: ['prettier'],
+  extends: ['prettier', 'plugin:jest/recommended'],
 
   // Stop ESLint from looking for a configuration file in parent folders
   root: true,
+
+  reportUnusedDisableDirectives: true,
 
   plugins: [
     'babel',
@@ -245,7 +247,7 @@ module.exports = {
       },
     ],
     'no-shadow': ERROR,
-    'no-unused-vars': [ERROR, {args: 'none'}],
+    'no-unused-vars': [ERROR, {args: 'none', ignoreRestSiblings: true}],
     'no-use-before-define': OFF,
     'no-useless-concat': OFF,
     quotes: [ERROR, 'single', {avoidEscape: true, allowTemplateLiterals: true}],
@@ -376,16 +378,49 @@ module.exports = {
       files: ['**/__tests__/*.js'],
       rules: {
         // https://github.com/jest-community/eslint-plugin-jest
-        'jest/no-focused-tests': ERROR,
-        'jest/valid-expect': ERROR,
-        'jest/valid-expect-in-promise': ERROR,
+        // Meh, who cares.
+        'jest/consistent-test-it': OFF,
+        // Meh, we have a lot of these, who cares.
+        'jest/no-alias-methods': OFF,
+        // We do conditions based on feature flags.
+        'jest/no-conditional-expect': OFF,
+        // We have our own assertion helpers.
+        'jest/expect-expect': OFF,
+        // Lame rule that fires in itRender helpers or in render methods.
+        'jest/no-standalone-expect': OFF,
       },
     },
     {
-      // disable no focused tests for test setup helper files even if they are inside __tests__ directory
-      files: ['**/setupTests.js'],
+      // Rules specific to test setup helper files.
+      files: [
+        '**/setupTests.js',
+        '**/setupEnv.js',
+        '**/jest/TestFlags.js',
+        '**/dom-event-testing-library/testHelpers.js',
+        '**/utils/ReactDOMServerIntegrationTestUtils.js',
+        '**/babel/transform-react-version-pragma.js',
+        '**/babel/transform-test-gate-pragma.js',
+      ],
       rules: {
+        // Some helpers intentionally focus tests.
         'jest/no-focused-tests': OFF,
+        // Test fn helpers don't use static text names.
+        'jest/valid-title': OFF,
+        // We have our own assertion helpers.
+        'jest/expect-expect': OFF,
+        // Some helpers intentionally disable tests.
+        'jest/no-disabled-tests': OFF,
+        // Helpers export text function helpers.
+        'jest/no-export': OFF,
+        // The examples in comments trigger false errors.
+        'jest/no-commented-out-tests': OFF,
+      },
+    },
+    {
+      files: ['**/jest/TestFlags.js'],
+      rules: {
+        // The examples in comments trigger false errors.
+        'jest/no-commented-out-tests': OFF,
       },
     },
     {
@@ -451,11 +486,17 @@ module.exports = {
       },
     },
     {
-      files: ['packages/react-devtools-extensions/**/*.js'],
+      files: [
+        'packages/react-devtools-extensions/**/*.js',
+        'packages/react-devtools-shared/src/hook.js',
+        'packages/react-devtools-shared/src/backend/console.js',
+        'packages/react-devtools-shared/src/backend/shared/DevToolsComponentStackFrame.js',
+      ],
       globals: {
         __IS_CHROME__: 'readonly',
         __IS_FIREFOX__: 'readonly',
         __IS_EDGE__: 'readonly',
+        __IS_NATIVE__: 'readonly',
         __IS_INTERNAL_VERSION__: 'readonly',
       },
     },
@@ -486,6 +527,8 @@ module.exports = {
     $ReadOnlyArray: 'readonly',
     $ArrayBufferView: 'readonly',
     $Shape: 'readonly',
+    CallSite: 'readonly',
+    ConsoleTask: 'readonly', // TOOD: Figure out what the official name of this will be.
     ReturnType: 'readonly',
     AnimationFrameID: 'readonly',
     // For Flow type annotation. Only `BigInt` is valid at runtime.
@@ -499,7 +542,12 @@ module.exports = {
     DOMHighResTimeStamp: 'readonly',
     EventListener: 'readonly',
     Iterable: 'readonly',
+    AsyncIterable: 'readonly',
+    $AsyncIterable: 'readonly',
+    $AsyncIterator: 'readonly',
     Iterator: 'readonly',
+    AsyncIterator: 'readonly',
+    IteratorResult: 'readonly',
     JSONValue: 'readonly',
     JSResourceReference: 'readonly',
     MouseEventHandler: 'readonly',
@@ -520,6 +568,7 @@ module.exports = {
     React$Portal: 'readonly',
     React$Ref: 'readonly',
     ReadableStreamController: 'readonly',
+    ReadableStreamReader: 'readonly',
     RequestInfo: 'readonly',
     RequestOptions: 'readonly',
     StoreAsGlobal: 'readonly',
@@ -530,6 +579,7 @@ module.exports = {
     TimeoutID: 'readonly',
     WheelEventHandler: 'readonly',
     FinalizationRegistry: 'readonly',
+    Omit: 'readonly',
 
     spyOnDev: 'readonly',
     spyOnDevAndProd: 'readonly',
@@ -539,7 +589,6 @@ module.exports = {
     __EXTENSION__: 'readonly',
     __PROFILE__: 'readonly',
     __TEST__: 'readonly',
-    __UMD__: 'readonly',
     __VARIANT__: 'readonly',
     __unmockReact: 'readonly',
     gate: 'readonly',

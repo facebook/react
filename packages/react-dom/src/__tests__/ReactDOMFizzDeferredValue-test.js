@@ -13,6 +13,7 @@ import {
   insertNodesAndExecuteScripts,
   getVisibleChildren,
 } from '../test-utils/FizzTestUtils';
+import {patchMessageChannel} from '../../../../scripts/jest/patchMessageChannel';
 
 // Polyfills for test environment
 global.ReadableStream =
@@ -33,13 +34,14 @@ let Suspense;
 describe('ReactDOMFizzForm', () => {
   beforeEach(() => {
     jest.resetModules();
-    React = require('react');
     Scheduler = require('scheduler');
+    patchMessageChannel(Scheduler);
+    act = require('internal-test-utils').act;
+    React = require('react');
     ReactDOMServer = require('react-dom/server.browser');
     ReactDOMClient = require('react-dom/client');
     useDeferredValue = React.useDeferredValue;
     Suspense = React.Suspense;
-    act = require('internal-test-utils').act;
     assertLog = require('internal-test-utils').assertLog;
     waitForPaint = require('internal-test-utils').waitForPaint;
     container = document.createElement('div');
@@ -49,6 +51,17 @@ describe('ReactDOMFizzForm', () => {
   afterEach(() => {
     document.body.removeChild(container);
   });
+
+  async function serverAct(callback) {
+    let maybePromise;
+    await act(() => {
+      maybePromise = callback();
+      if (maybePromise && typeof maybePromise.catch === 'function') {
+        maybePromise.catch(() => {});
+      }
+    });
+    return maybePromise;
+  }
 
   async function readIntoContainer(stream) {
     const reader = stream.getReader();
@@ -70,13 +83,14 @@ describe('ReactDOMFizzForm', () => {
     return text;
   }
 
-  // @gate enableUseDeferredValueInitialArg
   it('returns initialValue argument, if provided', async () => {
     function App() {
       return useDeferredValue('Final', 'Initial');
     }
 
-    const stream = await ReactDOMServer.renderToReadableStream(<App />);
+    const stream = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(<App />),
+    );
     await readIntoContainer(stream);
     expect(container.textContent).toEqual('Initial');
 
@@ -85,7 +99,6 @@ describe('ReactDOMFizzForm', () => {
     expect(container.textContent).toEqual('Final');
   });
 
-  // @gate enableUseDeferredValueInitialArg
   // @gate enablePostpone
   it(
     'if initial value postpones during hydration, it will switch to the ' +
@@ -107,17 +120,20 @@ describe('ReactDOMFizzForm', () => {
         );
       }
 
-      const stream = await ReactDOMServer.renderToReadableStream(<App />);
+      const stream = await serverAct(() =>
+        ReactDOMServer.renderToReadableStream(<App />),
+      );
       await readIntoContainer(stream);
       expect(container.textContent).toEqual('Loading...');
 
+      assertLog(['Loading...']);
       // After hydration, it's updated to the final value
       await act(() => ReactDOMClient.hydrateRoot(container, <App />));
       expect(container.textContent).toEqual('Final');
+      assertLog(['Loading...', 'Final']);
     },
   );
 
-  // @gate enableUseDeferredValueInitialArg
   it(
     'useDeferredValue during hydration has higher priority than remaining ' +
       'incremental hydration',
@@ -151,8 +167,9 @@ describe('ReactDOMFizzForm', () => {
 
       const cRef = React.createRef();
 
-      // The server renders using the "initial" value for B.
-      const stream = await ReactDOMServer.renderToReadableStream(<App />);
+      const stream = await serverAct(() =>
+        ReactDOMServer.renderToReadableStream(<App />),
+      );
       await readIntoContainer(stream);
       assertLog(['A', 'B [Initial]', 'C']);
       expect(getVisibleChildren(container)).toEqual(

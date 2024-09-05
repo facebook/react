@@ -41,9 +41,6 @@ function getFormat(filepath) {
   if (filepath.includes('esm')) {
     return 'esm';
   }
-  if (filepath.includes('umd')) {
-    return 'umd';
-  }
   if (
     filepath.includes('oss-experimental') ||
     filepath.includes('oss-stable')

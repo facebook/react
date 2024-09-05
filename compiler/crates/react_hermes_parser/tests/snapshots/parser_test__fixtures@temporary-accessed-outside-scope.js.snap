@@ -1,0 +1,217 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/temporary-accessed-outside-scope.js
+---
+Input:
+function Component(props) {
+  const maybeMutable = new MaybeMutable();
+  let x = props;
+  return [x, maybeMutate(maybeMutable)];
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "maybeMutable",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    36,
+                    48
+                  ]
+                },
+                "init": {
+                  "type": "NewExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "MaybeMutable",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      55,
+                      67
+                    ]
+                  },
+                  "arguments": [],
+                  "loc": null,
+                  "range": [
+                    51,
+                    69
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  69
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              70
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    77,
+                    78
+                  ]
+                },
+                "init": {
+                  "type": "Identifier",
+                  "name": "props",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    81,
+                    86
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  77,
+                  86
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              73,
+              87
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "ArrayExpression",
+              "elements": [
+                {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    98,
+                    99
+                  ]
+                },
+                {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "maybeMutate",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      101,
+                      112
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "Identifier",
+                      "name": "maybeMutable",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        113,
+                        125
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    101,
+                    126
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                97,
+                127
+              ]
+            },
+            "loc": null,
+            "range": [
+              90,
+              128
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          130
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        130
+      ],
+      "loc": null,
+      "range": [
+        0,
+        130
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    130
+  ]
+}

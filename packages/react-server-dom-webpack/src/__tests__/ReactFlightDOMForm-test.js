@@ -17,6 +17,23 @@ global.ReadableStream =
 global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
 
+// Polyfill stream methods on JSDOM.
+global.Blob.prototype.stream = function () {
+  const impl = Object.getOwnPropertySymbols(this)[0];
+  const buffer = this[impl]._buffer;
+  return new ReadableStream({
+    start(c) {
+      c.enqueue(new Uint8Array(buffer));
+      c.close();
+    },
+  });
+};
+
+global.Blob.prototype.text = async function () {
+  const impl = Object.getOwnPropertySymbols(this)[0];
+  return this[impl]._buffer.toString('utf8');
+};
+
 // Don't wait before processing work on the server.
 // TODO: we can replace this with FlightServer.act().
 global.setTimeout = cb => cb();
@@ -31,7 +48,7 @@ let ReactDOMServer;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
 let ReactDOMClient;
-let useFormState;
+let useActionState;
 let act;
 
 describe('ReactFlightDOMForm', () => {
@@ -55,7 +72,13 @@ describe('ReactFlightDOMForm', () => {
     ReactDOMServer = require('react-dom/server.edge');
     ReactDOMClient = require('react-dom/client');
     act = React.act;
-    useFormState = require('react-dom').useFormState;
+
+    // TODO: Test the old api but it warns so needs warnings to be asserted.
+    // if (__VARIANT__) {
+    // Remove after API is deleted.
+    // useActionState = require('react-dom').useFormState;
+    // }
+    useActionState = require('react').useActionState;
     container = document.createElement('div');
     document.body.appendChild(container);
   });
@@ -127,7 +150,6 @@ describe('ReactFlightDOMForm', () => {
     insertNodesAndExecuteScripts(temp, container, null);
   }
 
-  // @gate enableFormActions
   it('can submit a passed server action without hydrating it', async () => {
     let foo = null;
 
@@ -162,7 +184,6 @@ describe('ReactFlightDOMForm', () => {
     expect(foo).toBe('bar');
   });
 
-  // @gate enableFormActions
   it('can submit an imported server action without hydrating it', async () => {
     let foo = null;
 
@@ -195,7 +216,6 @@ describe('ReactFlightDOMForm', () => {
     expect(foo).toBe('bar');
   });
 
-  // @gate enableFormActions
   it('can submit a complex closure server action without hydrating it', async () => {
     let foo = null;
 
@@ -230,7 +250,6 @@ describe('ReactFlightDOMForm', () => {
     expect(foo).toBe('barobject');
   });
 
-  // @gate enableFormActions
   it('can submit a multiple complex closure server action without hydrating it', async () => {
     let foo = null;
 
@@ -271,7 +290,6 @@ describe('ReactFlightDOMForm', () => {
     expect(foo).toBe('barc');
   });
 
-  // @gate enableFormActions
   it('can bind an imported server action on the client without hydrating it', async () => {
     let foo = null;
 
@@ -303,7 +321,6 @@ describe('ReactFlightDOMForm', () => {
     expect(foo).toBe('barobject');
   });
 
-  // @gate enableFormActions
   it('can bind a server action on the client without hydrating it', async () => {
     let foo = null;
 
@@ -344,9 +361,8 @@ describe('ReactFlightDOMForm', () => {
     expect(foo).toBe('barobject');
   });
 
-  // @gate enableFormActions
   // @gate enableAsyncActions
-  it("useFormState's dispatch binds the initial state to the provided action", async () => {
+  it("useActionState's dispatch binds the initial state to the provided action", async () => {
     const serverAction = serverExports(
       async function action(prevState, formData) {
         return {
@@ -358,7 +374,7 @@ describe('ReactFlightDOMForm', () => {
 
     const initialState = {count: 1};
     function Client({action}) {
-      const [state, dispatch, isPending] = useFormState(action, initialState);
+      const [state, dispatch, isPending] = useActionState(action, initialState);
       return (
         <form action={dispatch}>
           <span>{isPending ? 'Pending...' : ''}</span>
@@ -393,9 +409,8 @@ describe('ReactFlightDOMForm', () => {
     expect(await returnValue).toEqual({count: 6});
   });
 
-  // @gate enableFormActions
   // @gate enableAsyncActions
-  it('useFormState can reuse state during MPA form submission', async () => {
+  it('useActionState can reuse state during MPA form submission', async () => {
     const serverAction = serverExports(
       async function action(prevState, formData) {
         return prevState + 1;
@@ -403,7 +418,7 @@ describe('ReactFlightDOMForm', () => {
     );
 
     function Form({action}) {
-      const [count, dispatch, isPending] = useFormState(action, 1);
+      const [count, dispatch, isPending] = useActionState(action, 1);
       return (
         <form action={dispatch}>
           {isPending ? 'Pending...' : ''}
@@ -483,10 +498,9 @@ describe('ReactFlightDOMForm', () => {
     }
   });
 
-  // @gate enableFormActions
   // @gate enableAsyncActions
   it(
-    'useFormState preserves state if arity is the same, but different ' +
+    'useActionState preserves state if arity is the same, but different ' +
       'arguments are bound (i.e. inline closure)',
     async () => {
       const serverAction = serverExports(
@@ -496,7 +510,7 @@ describe('ReactFlightDOMForm', () => {
       );
 
       function Form({action}) {
-        const [count, dispatch, isPending] = useFormState(action, 1);
+        const [count, dispatch, isPending] = useActionState(action, 1);
         return (
           <form action={dispatch}>
             {isPending ? 'Pending...' : ''}
@@ -603,9 +617,8 @@ describe('ReactFlightDOMForm', () => {
     },
   );
 
-  // @gate enableFormActions
   // @gate enableAsyncActions
-  it('useFormState does not reuse state if action signatures are different', async () => {
+  it('useActionState does not reuse state if action signatures are different', async () => {
     // This is the same as the previous test, except instead of using bind to
     // configure the server action (i.e. a closure), it swaps the action.
     const increaseBy1 = serverExports(
@@ -621,7 +634,7 @@ describe('ReactFlightDOMForm', () => {
     );
 
     function Form({action}) {
-      const [count, dispatch, isPending] = useFormState(action, 1);
+      const [count, dispatch, isPending] = useActionState(action, 1);
       return (
         <form action={dispatch}>
           {isPending ? 'Pending...' : ''}
@@ -691,9 +704,8 @@ describe('ReactFlightDOMForm', () => {
     expect(container.textContent).toBe('111');
   });
 
-  // @gate enableFormActions
   // @gate enableAsyncActions
-  it('when permalink is provided, useFormState compares that instead of the keypath', async () => {
+  it('when permalink is provided, useActionState compares that instead of the keypath', async () => {
     const serverAction = serverExports(
       async function action(prevState, formData) {
         return prevState + 1;
@@ -701,7 +713,7 @@ describe('ReactFlightDOMForm', () => {
     );
 
     function Form({action, permalink}) {
-      const [count, dispatch, isPending] = useFormState(action, 1, permalink);
+      const [count, dispatch, isPending] = useActionState(action, 1, permalink);
       return (
         <form action={dispatch}>
           {isPending ? 'Pending...' : ''}
@@ -798,16 +810,15 @@ describe('ReactFlightDOMForm', () => {
     expect(container.textContent).toBe('1');
   });
 
-  // @gate enableFormActions
   // @gate enableAsyncActions
-  it('useFormState can change the action URL with the `permalink` argument', async () => {
+  it('useActionState can change the action URL with the `permalink` argument', async () => {
     const serverAction = serverExports(function action(prevState) {
       return {state: prevState.count + 1};
     });
 
     const initialState = {count: 1};
     function Client({action}) {
-      const [state, dispatch, isPending] = useFormState(
+      const [state, dispatch, isPending] = useActionState(
         action,
         initialState,
         '/permalink',
@@ -844,9 +855,8 @@ describe('ReactFlightDOMForm', () => {
     expect(form.action).toBe('http://localhost/permalink');
   });
 
-  // @gate enableFormActions
   // @gate enableAsyncActions
-  it('useFormState `permalink` is coerced to string', async () => {
+  it('useActionState `permalink` is coerced to string', async () => {
     const serverAction = serverExports(function action(prevState) {
       return {state: prevState.count + 1};
     });
@@ -861,7 +871,7 @@ describe('ReactFlightDOMForm', () => {
 
     const initialState = {count: 1};
     function Client({action}) {
-      const [state, dispatch, isPending] = useFormState(
+      const [state, dispatch, isPending] = useActionState(
         action,
         initialState,
         permalink,
@@ -896,5 +906,153 @@ describe('ReactFlightDOMForm', () => {
     expect(stateSpan.textContent).toBe('Count: 1');
 
     expect(form.action).toBe('http://localhost/permalink');
+  });
+
+  // @gate enableAsyncActions
+  it('useActionState can return JSX state during MPA form submission', async () => {
+    const serverAction = serverExports(
+      async function action(prevState, formData) {
+        return <div>error message</div>;
+      },
+    );
+
+    function Form({action}) {
+      const [errorMsg, dispatch] = useActionState(action, null);
+      return <form action={dispatch}>{errorMsg}</form>;
+    }
+
+    const FormRef = await clientExports(Form);
+
+    const rscStream = ReactServerDOMServer.renderToReadableStream(
+      <FormRef action={serverAction} />,
+      webpackMap,
+    );
+    const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
+      ssrManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
+    const ssrStream = await ReactDOMServer.renderToReadableStream(response);
+    await readIntoContainer(ssrStream);
+
+    const form1 = container.getElementsByTagName('form')[0];
+    expect(form1.textContent).toBe('');
+
+    async function submitTheForm() {
+      const form = container.getElementsByTagName('form')[0];
+      const {formState} = await submit(form);
+
+      // Simulate an MPA form submission by resetting the container and
+      // rendering again.
+      container.innerHTML = '';
+
+      const postbackRscStream = ReactServerDOMServer.renderToReadableStream(
+        <FormRef action={serverAction} />,
+        webpackMap,
+      );
+      const postbackResponse = ReactServerDOMClient.createFromReadableStream(
+        postbackRscStream,
+        {
+          ssrManifest: {
+            moduleMap: null,
+            moduleLoading: null,
+          },
+        },
+      );
+      const postbackSsrStream = await ReactDOMServer.renderToReadableStream(
+        postbackResponse,
+        {formState: formState},
+      );
+      await readIntoContainer(postbackSsrStream);
+    }
+
+    await expect(submitTheForm).toErrorDev(
+      'Failed to serialize an action for progressive enhancement:\n' +
+        'Error: React Element cannot be passed to Server Functions from the Client without a temporary reference set. Pass a TemporaryReferenceSet to the options.\n' +
+        '  [<div/>]\n' +
+        '   ^^^^^^',
+    );
+
+    // The error message was returned as JSX.
+    const form2 = container.getElementsByTagName('form')[0];
+    expect(form2.textContent).toBe('error message');
+    expect(form2.firstChild.tagName).toBe('DIV');
+  });
+
+  // @gate enableAsyncActions && enableBinaryFlight
+  it('useActionState can return binary state during MPA form submission', async () => {
+    const serverAction = serverExports(
+      async function action(prevState, formData) {
+        return new Blob([new Uint8Array([104, 105])]);
+      },
+    );
+
+    let blob;
+
+    function Form({action}) {
+      const [errorMsg, dispatch] = useActionState(action, null);
+      let text;
+      if (errorMsg) {
+        blob = errorMsg;
+        text = React.use(blob.text());
+      }
+      return <form action={dispatch}>{text}</form>;
+    }
+
+    const FormRef = await clientExports(Form);
+
+    const rscStream = ReactServerDOMServer.renderToReadableStream(
+      <FormRef action={serverAction} />,
+      webpackMap,
+    );
+    const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
+      ssrManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
+    const ssrStream = await ReactDOMServer.renderToReadableStream(response);
+    await readIntoContainer(ssrStream);
+
+    const form1 = container.getElementsByTagName('form')[0];
+    expect(form1.textContent).toBe('');
+
+    async function submitTheForm() {
+      const form = container.getElementsByTagName('form')[0];
+      const {formState} = await submit(form);
+
+      // Simulate an MPA form submission by resetting the container and
+      // rendering again.
+      container.innerHTML = '';
+
+      const postbackRscStream = ReactServerDOMServer.renderToReadableStream(
+        {formState, root: <FormRef action={serverAction} />},
+        webpackMap,
+      );
+      const postbackResponse =
+        await ReactServerDOMClient.createFromReadableStream(postbackRscStream, {
+          ssrManifest: {
+            moduleMap: null,
+            moduleLoading: null,
+          },
+        });
+      const postbackSsrStream = await ReactDOMServer.renderToReadableStream(
+        postbackResponse.root,
+        {formState: postbackResponse.formState},
+      );
+      await readIntoContainer(postbackSsrStream);
+    }
+
+    await expect(submitTheForm).toErrorDev(
+      'Failed to serialize an action for progressive enhancement:\n' +
+        'Error: File/Blob fields are not yet supported in progressive forms. Will fallback to client hydration.',
+    );
+
+    expect(blob instanceof Blob).toBe(true);
+    expect(blob.size).toBe(2);
+
+    const form2 = container.getElementsByTagName('form')[0];
+    expect(form2.textContent).toBe('hi');
   });
 });

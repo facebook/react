@@ -5,9 +5,6 @@ const {bundleTypes, moduleTypes} = require('./bundles');
 const inlinedHostConfigs = require('../shared/inlinedHostConfigs');
 
 const {
-  UMD_DEV,
-  UMD_PROD,
-  UMD_PROFILING,
   FB_WWW_DEV,
   FB_WWW_PROD,
   FB_WWW_PROFILING,
@@ -58,16 +55,24 @@ const forks = Object.freeze({
   './packages/shared/ReactSharedInternals.js': (
     bundleType,
     entry,
-    dependencies
+    dependencies,
+    _moduleType,
+    bundle
   ) => {
     if (entry === 'react') {
       return './packages/react/src/ReactSharedInternalsClient.js';
     }
-    if (
-      entry === 'react/src/ReactServer.js' ||
-      entry === 'react/src/ReactServerFB.js'
-    ) {
+    if (entry === 'react/src/ReactServer.js') {
       return './packages/react/src/ReactSharedInternalsServer.js';
+    }
+    if (entry === 'react-markup/src/ReactMarkupServer.js') {
+      // Inside the ReactMarkupServer render we don't refer to any shared internals
+      // but instead use our own internal copy of the state because you cannot use
+      // any of this state from a component anyway. E.g. you can't use a client hook.
+      return './packages/react/src/ReactSharedInternalsClient.js';
+    }
+    if (bundle.condition === 'react-server') {
+      return './packages/react-server/src/ReactSharedInternalsServer.js';
     }
     if (!entry.startsWith('react/') && dependencies.indexOf('react') === -1) {
       // React internals are unavailable if we can't reference the package.
@@ -92,11 +97,21 @@ const forks = Object.freeze({
   ) => {
     if (
       entry === 'react-dom' ||
-      entry === 'react-dom/server-rendering-stub' ||
+      entry === 'react-dom/src/ReactDOMFB.js' ||
+      entry === 'react-dom/src/ReactDOMTestingFB.js' ||
       entry === 'react-dom/src/ReactDOMServer.js' ||
-      entry === 'react-dom/unstable_testing'
+      entry === 'react-markup/src/ReactMarkupClient.js' ||
+      entry === 'react-markup/src/ReactMarkupServer.js'
     ) {
-      return './packages/react-dom/src/ReactDOMSharedInternals.js';
+      if (
+        bundleType === FB_WWW_DEV ||
+        bundleType === FB_WWW_PROD ||
+        bundleType === FB_WWW_PROFILING
+      ) {
+        return './packages/react-dom/src/ReactDOMSharedInternalsFB.js';
+      } else {
+        return './packages/react-dom/src/ReactDOMSharedInternals.js';
+      }
     }
     if (
       !entry.startsWith('react-dom/') &&
@@ -153,10 +168,7 @@ const forks = Object.freeze({
           case RN_FB_DEV:
           case RN_FB_PROD:
           case RN_FB_PROFILING:
-          case RN_OSS_DEV:
-          case RN_OSS_PROD:
-          case RN_OSS_PROFILING:
-            return './packages/shared/forks/ReactFeatureFlags.test-renderer.native.js';
+            return './packages/shared/forks/ReactFeatureFlags.test-renderer.native-fb.js';
           case FB_WWW_DEV:
           case FB_WWW_PROD:
           case FB_WWW_PROFILING:
@@ -178,25 +190,6 @@ const forks = Object.freeze({
     return null;
   },
 
-  './packages/scheduler/index.js': (bundleType, entry, dependencies) => {
-    switch (bundleType) {
-      case UMD_DEV:
-      case UMD_PROD:
-      case UMD_PROFILING:
-        if (dependencies.indexOf('react') === -1) {
-          // It's only safe to use this fork for modules that depend on React,
-          // because they read the re-exported API from the SECRET_INTERNALS object.
-          return null;
-        }
-        // Optimization: for UMDs, use the API that is already a part of the React
-        // package instead of requiring it to be loaded via a separate <script> tag
-        return './packages/shared/forks/Scheduler.umd.js';
-      default:
-        // For other bundles, use the shared NPM package.
-        return null;
-    }
-  },
-
   './packages/scheduler/src/SchedulerFeatureFlags.js': (
     bundleType,
     entry,
@@ -216,47 +209,9 @@ const forks = Object.freeze({
     switch (bundleType) {
       case FB_WWW_DEV:
         return './packages/shared/forks/consoleWithStackDev.www.js';
-      default:
-        return null;
-    }
-  },
-
-  './packages/react/src/ReactSharedInternalsClient.js': (bundleType, entry) => {
-    switch (bundleType) {
-      case UMD_DEV:
-      case UMD_PROD:
-      case UMD_PROFILING:
-        return './packages/react/src/forks/ReactSharedInternalsClient.umd.js';
-      default:
-        return null;
-    }
-  },
-
-  // Different dialogs for caught errors.
-  './packages/react-reconciler/src/ReactFiberErrorDialog.js': (
-    bundleType,
-    entry
-  ) => {
-    switch (bundleType) {
-      case FB_WWW_DEV:
-      case FB_WWW_PROD:
-      case FB_WWW_PROFILING:
-        // Use the www fork which shows an error dialog.
-        return './packages/react-reconciler/src/forks/ReactFiberErrorDialog.www.js';
       case RN_OSS_DEV:
-      case RN_OSS_PROD:
-      case RN_OSS_PROFILING:
       case RN_FB_DEV:
-      case RN_FB_PROD:
-      case RN_FB_PROFILING:
-        switch (entry) {
-          case 'react-native-renderer':
-          case 'react-native-renderer/fabric':
-            // Use the RN fork which plays well with redbox.
-            return './packages/react-reconciler/src/forks/ReactFiberErrorDialog.native.js';
-          default:
-            return null;
-        }
+        return './packages/shared/forks/consoleWithStackDev.rn.js';
       default:
         return null;
     }

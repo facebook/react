@@ -162,7 +162,7 @@ describe('ReactConcurrentErrorRecovery', () => {
   const rejectText = rejectMostRecentTextCache;
 
   // @gate enableLegacyCache
-  test('errors during a refresh transition should not force fallbacks to display (suspend then error)', async () => {
+  it('errors during a refresh transition should not force fallbacks to display (suspend then error)', async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
       static getDerivedStateFromError(error) {
@@ -209,7 +209,16 @@ describe('ReactConcurrentErrorRecovery', () => {
         root.render(<App step={2} />);
       });
     });
-    assertLog(['Suspend! [A2]', 'Loading...', 'Suspend! [B2]', 'Loading...']);
+    assertLog([
+      'Suspend! [A2]',
+      'Loading...',
+      'Suspend! [B2]',
+      'Loading...',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['Suspend! [A2]', 'Loading...', 'Suspend! [B2]', 'Loading...']
+        : []),
+    ]);
     // Because this is a refresh, we don't switch to a fallback
     expect(root).toMatchRenderedOutput('A1B1');
 
@@ -220,7 +229,16 @@ describe('ReactConcurrentErrorRecovery', () => {
 
     // Because we're still suspended on A, we can't show an error boundary. We
     // should wait for A to resolve.
-    assertLog(['Suspend! [A2]', 'Loading...', 'Error! [B2]', 'Oops!']);
+    assertLog([
+      'Suspend! [A2]',
+      'Loading...',
+      'Error! [B2]',
+      'Oops!',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['Suspend! [A2]', 'Loading...', 'Error! [B2]', 'Oops!']
+        : []),
+    ]);
     // Remain on previous screen.
     expect(root).toMatchRenderedOutput('A1B1');
 
@@ -234,7 +252,7 @@ describe('ReactConcurrentErrorRecovery', () => {
   });
 
   // @gate enableLegacyCache
-  test('errors during a refresh transition should not force fallbacks to display (error then suspend)', async () => {
+  it('errors during a refresh transition should not force fallbacks to display (error then suspend)', async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
       static getDerivedStateFromError(error) {
@@ -281,7 +299,16 @@ describe('ReactConcurrentErrorRecovery', () => {
         root.render(<App step={2} />);
       });
     });
-    assertLog(['Suspend! [A2]', 'Loading...', 'Suspend! [B2]', 'Loading...']);
+    assertLog([
+      'Suspend! [A2]',
+      'Loading...',
+      'Suspend! [B2]',
+      'Loading...',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['Suspend! [A2]', 'Loading...', 'Suspend! [B2]', 'Loading...']
+        : []),
+    ]);
     // Because this is a refresh, we don't switch to a fallback
     expect(root).toMatchRenderedOutput('A1B1');
 
@@ -292,7 +319,16 @@ describe('ReactConcurrentErrorRecovery', () => {
 
     // Because we're still suspended on B, we can't show an error boundary. We
     // should wait for B to resolve.
-    assertLog(['Error! [A2]', 'Oops!', 'Suspend! [B2]', 'Loading...']);
+    assertLog([
+      'Error! [A2]',
+      'Oops!',
+      'Suspend! [B2]',
+      'Loading...',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['Error! [A2]', 'Oops!', 'Suspend! [B2]', 'Loading...']
+        : []),
+    ]);
     // Remain on previous screen.
     expect(root).toMatchRenderedOutput('A1B1');
 
@@ -306,7 +342,7 @@ describe('ReactConcurrentErrorRecovery', () => {
   });
 
   // @gate enableLegacyCache
-  test('suspending in the shell (outside a Suspense boundary) should not throw, warn, or log during a transition', async () => {
+  it('suspending in the shell (outside a Suspense boundary) should not throw, warn, or log during a transition', async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
       static getDerivedStateFromError(error) {
@@ -328,7 +364,11 @@ describe('ReactConcurrentErrorRecovery', () => {
         root.render(<AsyncText text="Async" />);
       });
     });
-    assertLog(['Suspend! [Async]']);
+    assertLog([
+      'Suspend! [Async]',
+
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Async]'] : []),
+    ]);
     expect(root).toMatchRenderedOutput(null);
 
     // This also works if the suspended component is wrapped with an error
@@ -344,7 +384,11 @@ describe('ReactConcurrentErrorRecovery', () => {
         );
       });
     });
-    assertLog(['Suspend! [Async]']);
+    assertLog([
+      'Suspend! [Async]',
+
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Async]'] : []),
+    ]);
     expect(root).toMatchRenderedOutput(null);
 
     // Continues rendering once data resolves
@@ -356,7 +400,7 @@ describe('ReactConcurrentErrorRecovery', () => {
   });
 
   // @gate enableLegacyCache
-  test(
+  it(
     'errors during a suspended transition at the shell should not force ' +
       'fallbacks to display (error then suspend)',
     async () => {
@@ -397,8 +441,14 @@ describe('ReactConcurrentErrorRecovery', () => {
           );
         });
       });
-      assertLog(['Suspend! [Async]']);
-      // The render suspended without committing or surfacing the error.
+      assertLog([
+        'Suspend! [Async]',
+
+        ...(gate('enableSiblingPrerendering')
+          ? ['Suspend! [Async]', 'Caught an error: Oops!']
+          : []),
+      ]);
+      // The render suspended without committing the error.
       expect(root).toMatchRenderedOutput(null);
 
       // Try the reverse order, too: throw then suspend
@@ -414,7 +464,13 @@ describe('ReactConcurrentErrorRecovery', () => {
           );
         });
       });
-      assertLog(['Suspend! [Async]']);
+      assertLog([
+        'Suspend! [Async]',
+
+        ...(gate('enableSiblingPrerendering')
+          ? ['Suspend! [Async]', 'Caught an error: Oops!']
+          : []),
+      ]);
       expect(root).toMatchRenderedOutput(null);
 
       await act(async () => {

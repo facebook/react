@@ -12,7 +12,6 @@
 const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegrationTestUtils');
 
 let React;
-let ReactDOM;
 let ReactDOMClient;
 let ReactDOMServer;
 
@@ -311,13 +310,13 @@ describe('ReactDOMServerIntegration', () => {
             <div id="child2" />
           </div>,
           // prettier-ignore
-          <div id="parent"><div id="child1" />      <div id="child2" /></div>, // eslint-disable-line no-multi-spaces
+          <div id="parent"><div id="child1" />      <div id="child2" /></div>,
         ));
 
       it('should error reconnecting a div with children separated by different whitespace on the server', () =>
         expectMarkupMismatch(
           // prettier-ignore
-          <div id="parent"><div id="child1" />      <div id="child2" /></div>, // eslint-disable-line no-multi-spaces
+          <div id="parent"><div id="child1" />      <div id="child2" /></div>,
           <div id="parent">
             <div id="child1" />
             <div id="child2" />
@@ -330,7 +329,7 @@ describe('ReactDOMServerIntegration', () => {
             <div id="child1" /> <div id="child2" />
           </div>,
           // prettier-ignore
-          <div id="parent"><div id="child1" />      <div id="child2" /></div>, // eslint-disable-line no-multi-spaces
+          <div id="parent"><div id="child1" />      <div id="child2" /></div>,
         ));
 
       it('can distinguish an empty component from a dom node', () =>
@@ -452,76 +451,4 @@ describe('ReactDOMServerIntegration', () => {
         />,
       ));
   });
-});
-
-describe('ReactDOMServerIntegration (legacy)', () => {
-  function initModules() {
-    // Reset warning cache.
-    jest.resetModules();
-
-    React = require('react');
-    ReactDOM = require('react-dom');
-    ReactDOMServer = require('react-dom/server');
-
-    // Make them available to the helpers.
-    return {
-      ReactDOM,
-      ReactDOMServer,
-    };
-  }
-
-  const {resetModules, expectMarkupMatch} =
-    ReactDOMServerIntegrationUtils(initModules);
-
-  beforeEach(() => {
-    resetModules();
-  });
-
-  // @gate !disableLegacyMode
-  it('legacy mode can explicitly ignore errors reconnecting different element types of children', () =>
-    expectMarkupMatch(
-      <div>
-        <div />
-      </div>,
-      <div suppressHydrationWarning={true}>
-        <span />
-      </div>,
-    ));
-
-  // @gate !disableLegacyMode
-  it('legacy mode can explicitly ignore reconnecting more children', () =>
-    expectMarkupMatch(
-      <div>
-        <div />
-      </div>,
-      <div suppressHydrationWarning={true}>
-        <div />
-        <div />
-      </div>,
-    ));
-
-  // @gate !disableLegacyMode
-  it('legacy mode can explicitly ignore reconnecting fewer children', () =>
-    expectMarkupMatch(
-      <div>
-        <div />
-        <div />
-      </div>,
-      <div suppressHydrationWarning={true}>
-        <div />
-      </div>,
-    ));
-
-  // @gate !disableLegacyMode
-  it('legacy mode can explicitly ignore reconnecting reordered children', () =>
-    expectMarkupMatch(
-      <div suppressHydrationWarning={true}>
-        <div />
-        <span />
-      </div>,
-      <div suppressHydrationWarning={true}>
-        <span />
-        <div />
-      </div>,
-    ));
 });

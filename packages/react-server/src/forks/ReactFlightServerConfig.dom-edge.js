@@ -6,15 +6,22 @@
  *
  * @flow
  */
-import type {Request} from 'react-server/src/ReactFlightServer';
 
-export * from 'react-server-dom-webpack/src/ReactFlightServerConfigWebpackBundler';
+import type {Request} from 'react-server/src/ReactFlightServer';
+import type {ReactComponentInfo} from 'shared/ReactTypes';
+
+export * from 'react-server-dom-webpack/src/server/ReactFlightServerConfigWebpackBundler';
 export * from 'react-dom-bindings/src/server/ReactFlightServerConfigDOM';
 
 // For now, we get this from the global scope, but this will likely move to a module.
 export const supportsRequestStorage = typeof AsyncLocalStorage === 'function';
 export const requestStorage: AsyncLocalStorage<Request | void> =
   supportsRequestStorage ? new AsyncLocalStorage() : (null: any);
+
+export const supportsComponentStorage: boolean =
+  __DEV__ && supportsRequestStorage;
+export const componentStorage: AsyncLocalStorage<ReactComponentInfo | void> =
+  supportsComponentStorage ? new AsyncLocalStorage() : (null: any);
 
 // We use the Node version but get access to async_hooks from a global.
 import type {HookCallbacks, AsyncHook} from 'async_hooks';
@@ -29,4 +36,7 @@ export const createAsyncHook: HookCallbacks => AsyncHook =
       };
 export const executionAsyncId: () => number =
   typeof async_hooks === 'object' ? async_hooks.executionAsyncId : (null: any);
+
 export * from '../ReactFlightServerConfigDebugNode';
+
+export * from '../ReactFlightStackConfigV8';

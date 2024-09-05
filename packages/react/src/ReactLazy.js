@@ -10,6 +10,7 @@
 import type {Wakeable, Thenable, ReactDebugInfo} from 'shared/ReactTypes';
 
 import {REACT_LAZY_TYPE} from 'shared/ReactSymbols';
+import {disableDefaultPropsExceptForClasses} from 'shared/ReactFeatureFlags';
 
 const Uninitialized = -1;
 const Pending = 0;
@@ -60,7 +61,10 @@ function lazyInitializer<T>(payload: Payload<T>): T {
     // end up fixing it if the resolution was a concurrency bug.
     thenable.then(
       moduleObject => {
-        if (payload._status === Pending || payload._status === Uninitialized) {
+        if (
+          (payload: Payload<T>)._status === Pending ||
+          payload._status === Uninitialized
+        ) {
           // Transition to the next state.
           const resolved: ResolvedPayload<T> = (payload: any);
           resolved._status = Resolved;
@@ -68,7 +72,10 @@ function lazyInitializer<T>(payload: Payload<T>): T {
         }
       },
       error => {
-        if (payload._status === Pending || payload._status === Uninitialized) {
+        if (
+          (payload: Payload<T>)._status === Pending ||
+          payload._status === Uninitialized
+        ) {
           // Transition to the next state.
           const rejected: RejectedPayload = (payload: any);
           rejected._status = Rejected;
@@ -134,53 +141,34 @@ export function lazy<T>(
     _init: lazyInitializer,
   };
 
-  if (__DEV__) {
-    // In production, this would just set it on the object.
-    let defaultProps;
-    let propTypes;
-    // $FlowFixMe[prop-missing]
-    Object.defineProperties(lazyType, {
-      defaultProps: {
-        configurable: true,
-        get() {
-          return defaultProps;
+  if (!disableDefaultPropsExceptForClasses) {
+    if (__DEV__) {
+      // In production, this would just set it on the object.
+      let defaultProps;
+      // $FlowFixMe[prop-missing]
+      Object.defineProperties(lazyType, {
+        defaultProps: {
+          configurable: true,
+          get() {
+            return defaultProps;
+          },
+          // $FlowFixMe[missing-local-annot]
+          set(newDefaultProps) {
+            console.error(
+              'It is not supported to assign `defaultProps` to ' +
+                'a lazy component import. Either specify them where the component ' +
+                'is defined, or create a wrapping component around it.',
+            );
+            defaultProps = newDefaultProps;
+            // Match production behavior more closely:
+            // $FlowFixMe[prop-missing]
+            Object.defineProperty(lazyType, 'defaultProps', {
+              enumerable: true,
+            });
+          },
         },
-        // $FlowFixMe[missing-local-annot]
-        set(newDefaultProps) {
-          console.error(
-            'It is not supported to assign `defaultProps` to ' +
-              'a lazy component import. Either specify them where the component ' +
-              'is defined, or create a wrapping component around it.',
-          );
-          defaultProps = newDefaultProps;
-          // Match production behavior more closely:
-          // $FlowFixMe[prop-missing]
-          Object.defineProperty(lazyType, 'defaultProps', {
-            enumerable: true,
-          });
-        },
-      },
-      propTypes: {
-        configurable: true,
-        get() {
-          return propTypes;
-        },
-        // $FlowFixMe[missing-local-annot]
-        set(newPropTypes) {
-          console.error(
-            'It is not supported to assign `propTypes` to ' +
-              'a lazy component import. Either specify them where the component ' +
-              'is defined, or create a wrapping component around it.',
-          );
-          propTypes = newPropTypes;
-          // Match production behavior more closely:
-          // $FlowFixMe[prop-missing]
-          Object.defineProperty(lazyType, 'propTypes', {
-            enumerable: true,
-          });
-        },
-      },
-    });
+      });
+    }
   }
 
   return lazyType;

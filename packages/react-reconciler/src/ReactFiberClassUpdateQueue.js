@@ -556,7 +556,7 @@ export function processUpdateQueue<State>(
     let newState = queue.baseState;
     // TODO: Don't need to accumulate this. Instead, we can remove renderLanes
     // from the original lanes.
-    let newLanes = NoLanes;
+    let newLanes: Lanes = NoLanes;
 
     let newBaseState = null;
     let newFirstBaseUpdate = null;

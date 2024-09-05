@@ -1,0 +1,217 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/error.useMemo-callback-generator.js
+---
+Input:
+function component(a, b) {
+  // we don't handle generators at all so this test isn't
+  // useful for now, but adding this test in case we do
+  // add support for generators in the future.
+  let x = useMemo(function* () {
+    yield a;
+  }, []);
+  return x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "a",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            20
+          ]
+        },
+        {
+          "type": "Identifier",
+          "name": "b",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            22,
+            23
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    194,
+                    195
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useMemo",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      198,
+                      205
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "FunctionExpression",
+                      "id": null,
+                      "params": [],
+                      "body": {
+                        "type": "BlockStatement",
+                        "body": [
+                          {
+                            "type": "ExpressionStatement",
+                            "expression": {
+                              "type": "YieldExpression",
+                              "argument": {
+                                "type": "Identifier",
+                                "name": "a",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  231,
+                                  232
+                                ]
+                              },
+                              "delegate": false,
+                              "loc": null,
+                              "range": [
+                                225,
+                                232
+                              ]
+                            },
+                            "directive": null,
+                            "loc": null,
+                            "range": [
+                              225,
+                              233
+                            ]
+                          }
+                        ],
+                        "loc": null,
+                        "range": [
+                          219,
+                          237
+                        ]
+                      },
+                      "generator": true,
+                      "async": false,
+                      "loc": null,
+                      "range": [
+                        206,
+                        237
+                      ],
+                      "loc": null,
+                      "range": [
+                        206,
+                        237
+                      ]
+                    },
+                    {
+                      "type": "ArrayExpression",
+                      "elements": [],
+                      "loc": null,
+                      "range": [
+                        239,
+                        241
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    198,
+                    242
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  194,
+                  242
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              190,
+              243
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                253,
+                254
+              ]
+            },
+            "loc": null,
+            "range": [
+              246,
+              255
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          25,
+          257
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        257
+      ],
+      "loc": null,
+      "range": [
+        0,
+        257
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    257
+  ]
+}

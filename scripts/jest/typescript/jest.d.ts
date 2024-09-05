@@ -1,16 +1,16 @@
-declare var __DEV__: boolean;
-declare var __TEST__: boolean;
-declare var __EXTENSION__: boolean;
+declare const __DEV__: boolean;
+declare const __TEST__: boolean;
+declare const __EXTENSION__: boolean;
 
 declare function afterEach(fn: any): any;
 declare function beforeEach(fn: any): any;
 declare function describe(name: string, fn: any): void;
-declare var it: {
+declare const it: {
   (name: string, fn: any): void;
   only: (name: string, fn: any) => void;
 }
 declare function expect(val: any): Expect;
-declare var jest: Jest;
+declare const jest: Jest;
 declare function pit(name: string, fn: any): void;
 declare function spyOnDev(obj: any, key: string): any;
 declare function spyOnDevAndProd(obj: any, key: string): any;
@@ -70,5 +70,5 @@ interface MockFunction {
   mockReturnValueOnce(value: any): MockFunction
 }
 
-declare var check: any;
-declare var gen: any;
+declare const check: any;
+declare const gen: any;

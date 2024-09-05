@@ -52,8 +52,7 @@ import {
   enableLegacyFBSupport,
   enableCreateEventHandleAPI,
   enableScopeAPI,
-  enableFloat,
-  enableFormActions,
+  enableOwnerStacks,
 } from 'shared/ReactFeatureFlags';
 import {createEventListenerWrapperWithPriority} from './ReactDOMEventListener';
 import {
@@ -69,6 +68,10 @@ import * as EnterLeaveEventPlugin from './plugins/EnterLeaveEventPlugin';
 import * as SelectEventPlugin from './plugins/SelectEventPlugin';
 import * as SimpleEventPlugin from './plugins/SimpleEventPlugin';
 import * as FormActionEventPlugin from './plugins/FormActionEventPlugin';
+
+import reportGlobalError from 'shared/reportGlobalError';
+
+import {runWithFiberInDEV} from 'react-reconciler/src/ReactCurrentFiber';
 
 type DispatchListener = {
   instance: null | Fiber,
@@ -170,17 +173,15 @@ function extractEvents(
       eventSystemFlags,
       targetContainer,
     );
-    if (enableFormActions) {
-      FormActionEventPlugin.extractEvents(
-        dispatchQueue,
-        domEventName,
-        targetInst,
-        nativeEvent,
-        nativeEventTarget,
-        eventSystemFlags,
-        targetContainer,
-      );
-    }
+    FormActionEventPlugin.extractEvents(
+      dispatchQueue,
+      domEventName,
+      targetInst,
+      nativeEvent,
+      nativeEventTarget,
+      eventSystemFlags,
+      targetContainer,
+    );
   }
 }
 
@@ -216,6 +217,7 @@ export const mediaEventTypes: Array<DOMEventName> = [
 // set them on the actual target element itself. This is primarily
 // because these events do not consistently bubble in the DOM.
 export const nonDelegatedEvents: Set<DOMEventName> = new Set([
+  'beforetoggle',
   'cancel',
   'close',
   'invalid',
@@ -230,9 +232,6 @@ export const nonDelegatedEvents: Set<DOMEventName> = new Set([
   ...mediaEventTypes,
 ]);
 
-let hasError: boolean = false;
-let caughtError: mixed = null;
-
 function executeDispatch(
   event: ReactSyntheticEvent,
   listener: Function,
@@ -242,12 +241,7 @@ function executeDispatch(
   try {
     listener(event);
   } catch (error) {
-    if (!hasError) {
-      hasError = true;
-      caughtError = error;
-    } else {
-      // TODO: Make sure this error gets logged somehow.
-    }
+    reportGlobalError(error);
   }
   event.currentTarget = null;
 }
@@ -264,7 +258,17 @@ function processDispatchQueueItemsInOrder(
       if (instance !== previousInstance && event.isPropagationStopped()) {
         return;
       }
-      executeDispatch(event, listener, currentTarget);
+      if (__DEV__ && enableOwnerStacks && instance !== null) {
+        runWithFiberInDEV(
+          instance,
+          executeDispatch,
+          event,
+          listener,
+          currentTarget,
+        );
+      } else {
+        executeDispatch(event, listener, currentTarget);
+      }
       previousInstance = instance;
     }
   } else {
@@ -273,7 +277,17 @@ function processDispatchQueueItemsInOrder(
       if (instance !== previousInstance && event.isPropagationStopped()) {
         return;
       }
-      executeDispatch(event, listener, currentTarget);
+      if (__DEV__ && enableOwnerStacks && instance !== null) {
+        runWithFiberInDEV(
+          instance,
+          executeDispatch,
+          event,
+          listener,
+          currentTarget,
+        );
+      } else {
+        executeDispatch(event, listener, currentTarget);
+      }
       previousInstance = instance;
     }
   }
@@ -288,13 +302,6 @@ export function processDispatchQueue(
     const {event, listeners} = dispatchQueue[i];
     processDispatchQueueItemsInOrder(event, listeners, inCapturePhase);
     //  event system doesn't use pooling.
-  }
-  // This would be a good time to rethrow if any of the event handlers threw.
-  if (hasError) {
-    const error = caughtError;
-    hasError = false;
-    caughtError = null;
-    throw error;
   }
 }
 
@@ -647,7 +654,7 @@ export function dispatchEventForPluginEventSystem(
             if (
               parentTag === HostComponent ||
               parentTag === HostText ||
-              (enableFloat ? parentTag === HostHoistable : false) ||
+              parentTag === HostHoistable ||
               parentTag === HostSingleton
             ) {
               node = ancestorInst = parentNode;
@@ -705,7 +712,7 @@ export function accumulateSinglePhaseListeners(
     // Handle listeners that are on HostComponents (i.e. <div>)
     if (
       (tag === HostComponent ||
-        (enableFloat ? tag === HostHoistable : false) ||
+        tag === HostHoistable ||
         tag === HostSingleton) &&
       stateNode !== null
     ) {
@@ -819,7 +826,7 @@ export function accumulateTwoPhaseListeners(
     // Handle listeners that are on HostComponents (i.e. <div>)
     if (
       (tag === HostComponent ||
-        (enableFloat ? tag === HostHoistable : false) ||
+        tag === HostHoistable ||
         tag === HostSingleton) &&
       stateNode !== null
     ) {
@@ -922,7 +929,7 @@ function accumulateEnterLeaveListenersForEvent(
     }
     if (
       (tag === HostComponent ||
-        (enableFloat ? tag === HostHoistable : false) ||
+        tag === HostHoistable ||
         tag === HostSingleton) &&
       stateNode !== null
     ) {

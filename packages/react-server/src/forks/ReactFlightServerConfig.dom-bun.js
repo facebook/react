@@ -8,6 +8,7 @@
  */
 
 import type {Request} from 'react-server/src/ReactFlightServer';
+import type {ReactComponentInfo} from 'shared/ReactTypes';
 
 export * from '../ReactFlightServerConfigBundlerCustom';
 export * from 'react-dom-bindings/src/server/ReactFlightServerConfigDOM';
@@ -15,4 +16,10 @@ export * from 'react-dom-bindings/src/server/ReactFlightServerConfigDOM';
 export const supportsRequestStorage = false;
 export const requestStorage: AsyncLocalStorage<Request | void> = (null: any);
 
+export const supportsComponentStorage = false;
+export const componentStorage: AsyncLocalStorage<ReactComponentInfo | void> =
+  (null: any);
+
 export * from '../ReactFlightServerConfigDebugNoop';
+
+export * from '../ReactFlightStackConfigV8';

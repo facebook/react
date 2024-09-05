@@ -1,0 +1,246 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/hook-inside-logical-expression.js
+---
+Input:
+function Component(props) {
+  const user = useFragment(graphql`...`, props.user) ?? {};
+  return user.name;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "user",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    36,
+                    40
+                  ]
+                },
+                "init": {
+                  "type": "LogicalExpression",
+                  "operator": "??",
+                  "left": {
+                    "type": "CallExpression",
+                    "callee": {
+                      "type": "Identifier",
+                      "name": "useFragment",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        43,
+                        54
+                      ]
+                    },
+                    "arguments": [
+                      {
+                        "type": "TaggedTemplateExpression",
+                        "tag": {
+                          "type": "Identifier",
+                          "name": "graphql",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            55,
+                            62
+                          ]
+                        },
+                        "quasi": {
+                          "type": "TemplateLiteral",
+                          "quasis": [
+                            {
+                              "type": "TemplateElement",
+                              "tail": true,
+                              "value": {
+                                "cooked": "...",
+                                "raw": "..."
+                              },
+                              "loc": null,
+                              "range": [
+                                62,
+                                67
+                              ]
+                            }
+                          ],
+                          "expressions": [],
+                          "loc": null,
+                          "range": [
+                            62,
+                            67
+                          ]
+                        },
+                        "loc": null,
+                        "range": [
+                          55,
+                          67
+                        ]
+                      },
+                      {
+                        "type": "MemberExpression",
+                        "object": {
+                          "type": "Identifier",
+                          "name": "props",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            69,
+                            74
+                          ]
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "user",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            75,
+                            79
+                          ]
+                        },
+                        "computed": false,
+                        "loc": null,
+                        "range": [
+                          69,
+                          79
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      43,
+                      80
+                    ]
+                  },
+                  "right": {
+                    "type": "ObjectExpression",
+                    "properties": [],
+                    "loc": null,
+                    "range": [
+                      84,
+                      86
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    43,
+                    86
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  86
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              87
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "MemberExpression",
+              "object": {
+                "type": "Identifier",
+                "name": "user",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  97,
+                  101
+                ]
+              },
+              "property": {
+                "type": "Identifier",
+                "name": "name",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  102,
+                  106
+                ]
+              },
+              "computed": false,
+              "loc": null,
+              "range": [
+                97,
+                106
+              ]
+            },
+            "loc": null,
+            "range": [
+              90,
+              107
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          109
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        109
+      ],
+      "loc": null,
+      "range": [
+        0,
+        109
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    109
+  ]
+}

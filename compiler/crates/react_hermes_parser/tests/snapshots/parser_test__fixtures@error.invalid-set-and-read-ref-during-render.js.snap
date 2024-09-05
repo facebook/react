@@ -1,0 +1,242 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/error.invalid-set-and-read-ref-during-render.js
+---
+Input:
+function Component(props) {
+  const ref = useRef(null);
+  ref.current = props.value;
+  return ref.current;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "ref",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    36,
+                    39
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useRef",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      42,
+                      48
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "NullLiteral",
+                      "loc": null,
+                      "range": [
+                        49,
+                        53
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    42,
+                    54
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  54
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              55
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "AssignmentExpression",
+              "operator": "=",
+              "left": {
+                "type": "MemberExpression",
+                "object": {
+                  "type": "Identifier",
+                  "name": "ref",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    58,
+                    61
+                  ]
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "current",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    62,
+                    69
+                  ]
+                },
+                "computed": false,
+                "loc": null,
+                "range": [
+                  58,
+                  69
+                ]
+              },
+              "right": {
+                "type": "MemberExpression",
+                "object": {
+                  "type": "Identifier",
+                  "name": "props",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    72,
+                    77
+                  ]
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "value",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    78,
+                    83
+                  ]
+                },
+                "computed": false,
+                "loc": null,
+                "range": [
+                  72,
+                  83
+                ]
+              },
+              "loc": null,
+              "range": [
+                58,
+                83
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              58,
+              84
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "MemberExpression",
+              "object": {
+                "type": "Identifier",
+                "name": "ref",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  94,
+                  97
+                ]
+              },
+              "property": {
+                "type": "Identifier",
+                "name": "current",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  98,
+                  105
+                ]
+              },
+              "computed": false,
+              "loc": null,
+              "range": [
+                94,
+                105
+              ]
+            },
+            "loc": null,
+            "range": [
+              87,
+              106
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          108
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        108
+      ],
+      "loc": null,
+      "range": [
+        0,
+        108
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    108
+  ]
+}

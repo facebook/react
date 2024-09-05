@@ -60,13 +60,14 @@ function getTestFlags() {
   const schedulerFeatureFlags = require('scheduler/src/SchedulerFeatureFlags');
 
   const www = global.__WWW__ === true;
+  const xplat = global.__XPLAT__ === true;
   const releaseChannel = www
     ? __EXPERIMENTAL__
       ? 'modern'
       : 'classic'
     : __EXPERIMENTAL__
-    ? 'experimental'
-    : 'stable';
+      ? 'experimental'
+      : 'stable';
 
   // Return a proxy so we can throw if you attempt to access a flag that
   // doesn't exist.
@@ -79,19 +80,27 @@ function getTestFlags() {
       www,
 
       // These aren't flags, just a useful aliases for tests.
-      enableActivity: releaseChannel === 'experimental' || www,
-      enableSuspenseList: releaseChannel === 'experimental' || www,
+      enableActivity: releaseChannel === 'experimental' || www || xplat,
+      enableSuspenseList: releaseChannel === 'experimental' || www || xplat,
       enableLegacyHidden: www,
+      // TODO: Suspending the work loop during the render phase is currently
+      // not compatible with sibling prerendering. We will add this optimization
+      // back in a later step.
+      enableSuspendingDuringWorkLoop: !featureFlags.enableSiblingPrerendering,
+
+      // This flag is used to determine whether we should run Fizz tests using
+      // the external runtime or the inline script runtime.
+      // For Meta we use variant to gate the feature. For OSS we use experimental
+      shouldUseFizzExternalRuntime: !featureFlags.enableFizzExternalRuntime
+        ? false
+        : www
+          ? __VARIANT__
+          : __EXPERIMENTAL__,
 
       // This is used by useSyncExternalStoresShared-test.js to decide whether
       // to test the shim or the native implementation of useSES.
-      // TODO: It's disabled when enableRefAsProp is on because the JSX
-      // runtime used by our tests is not compatible with older versions of
-      // React. If we want to keep testing this shim after enableRefIsProp is
-      // on everywhere, we'll need to find some other workaround. Maybe by
-      // only using createElement instead of JSX in that test module.
-      enableUseSyncExternalStoreShim:
-        !__VARIANT__ && !featureFlags.enableRefAsProp,
+
+      enableUseSyncExternalStoreShim: !__VARIANT__,
 
       // If there's a naming conflict between scheduler and React feature flags, the
       // React ones take precedence.

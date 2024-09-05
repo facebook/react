@@ -18,7 +18,6 @@ let React;
 let ReactDOM;
 let ReactDOMClient;
 let ReactDOMServer;
-let ReactFeatureFlags;
 
 function initModules() {
   jest.resetModules();
@@ -26,7 +25,6 @@ function initModules() {
   ReactDOM = require('react-dom');
   ReactDOMClient = require('react-dom/client');
   ReactDOMServer = require('react-dom/server');
-  ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
   // Make them available to the helpers.
   return {
@@ -629,23 +627,9 @@ describe('ReactDOMServerIntegration', () => {
         checkFooDiv(await render(<ClassComponent />));
       });
 
-      if (require('shared/ReactFeatureFlags').disableModulePatternComponents) {
-        itThrowsWhenRendering(
-          'factory components',
-          async render => {
-            const FactoryComponent = () => {
-              return {
-                render: function () {
-                  return <div>foo</div>;
-                },
-              };
-            };
-            await render(<FactoryComponent />, 1);
-          },
-          'Objects are not valid as a React child (found: object with keys {render})',
-        );
-      } else {
-        itRenders('factory components', async render => {
+      itThrowsWhenRendering(
+        'factory components',
+        async render => {
           const FactoryComponent = () => {
             return {
               render: function () {
@@ -653,9 +637,10 @@ describe('ReactDOMServerIntegration', () => {
               },
             };
           };
-          checkFooDiv(await render(<FactoryComponent />, 1));
-        });
-      }
+          await render(<FactoryComponent />, 1);
+        },
+        'Objects are not valid as a React child (found: object with keys {render})',
+      );
     });
 
     describe('component hierarchies', function () {
@@ -759,7 +744,7 @@ describe('ReactDOMServerIntegration', () => {
         'a div with a single child surrounded by whitespace',
         async render => {
           // prettier-ignore
-          const e = await render(<div id="parent">  <div id="child" />   </div>); // eslint-disable-line no-multi-spaces
+          const e = await render(<div id="parent">  <div id="child" />   </div>);
           expect(e.childNodes.length).toBe(3);
           const textNode1 = e.childNodes[0];
           const child = e.childNodes[1];
@@ -843,16 +828,15 @@ describe('ReactDOMServerIntegration', () => {
           if (
             render === serverRender ||
             render === streamRender ||
-            (render === clientRenderOnServerString &&
-              ReactFeatureFlags.enableClientRenderFallbackOnTextMismatch)
+            render === clientRenderOnServerString
           ) {
             expect(e.childNodes.length).toBe(1);
-            // Everything becomes LF when parsed from server HTML or hydrated if enableClientRenderFallbackOnTextMismatch is on.
+            // Everything becomes LF when parsed from server HTML or hydrated.
             // Null character is ignored.
             expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\nbar\nbaz\nqux');
           } else {
             expect(e.childNodes.length).toBe(1);
-            // Client rendering (or hydration without enableClientRenderFallbackOnTextMismatch) uses JS value with CR.
+            // Client rendering uses JS value with CR.
             // Null character stays.
 
             expectNode(
@@ -876,19 +860,18 @@ describe('ReactDOMServerIntegration', () => {
           if (
             render === serverRender ||
             render === streamRender ||
-            (render === clientRenderOnServerString &&
-              ReactFeatureFlags.enableClientRenderFallbackOnTextMismatch)
+            render === clientRenderOnServerString
           ) {
             // We have three nodes because there is a comment between them.
             expect(e.childNodes.length).toBe(3);
-            // Everything becomes LF when parsed from server HTML or hydrated if enableClientRenderFallbackOnTextMismatch is on.
+            // Everything becomes LF when parsed from server HTML or hydrated.
             // Null character is ignored.
             expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\nbar');
             expectNode(e.childNodes[2], TEXT_NODE_TYPE, '\nbaz\nqux');
           } else if (render === clientRenderOnServerString) {
             // We have three nodes because there is a comment between them.
             expect(e.childNodes.length).toBe(3);
-            // Hydration without enableClientRenderFallbackOnTextMismatch uses JS value with CR and null character.
+            // Hydration uses JS value with CR and null character.
 
             expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\rbar');
             expectNode(e.childNodes[2], TEXT_NODE_TYPE, '\r\nbaz\nqux\u0000');
@@ -1004,11 +987,13 @@ describe('ReactDOMServerIntegration', () => {
           expect(() => {
             EmptyComponent = <EmptyComponent />;
           }).toErrorDev(
-            'Warning: React.jsx: type is invalid -- expected a string ' +
-              '(for built-in components) or a class/function (for composite ' +
-              'components) but got: object. You likely forgot to export your ' +
-              "component from the file it's defined in, or you might have mixed up " +
-              'default and named imports.',
+            gate(flags => flags.enableOwnerStacks)
+              ? []
+              : 'React.jsx: type is invalid -- expected a string ' +
+                  '(for built-in components) or a class/function (for composite ' +
+                  'components) but got: object. You likely forgot to export your ' +
+                  "component from the file it's defined in, or you might have mixed up " +
+                  'default and named imports.',
             {withoutStack: true},
           );
           await render(EmptyComponent);
@@ -1028,9 +1013,11 @@ describe('ReactDOMServerIntegration', () => {
           expect(() => {
             NullComponent = <NullComponent />;
           }).toErrorDev(
-            'Warning: React.jsx: type is invalid -- expected a string ' +
-              '(for built-in components) or a class/function (for composite ' +
-              'components) but got: null.',
+            gate(flags => flags.enableOwnerStacks)
+              ? []
+              : 'React.jsx: type is invalid -- expected a string ' +
+                  '(for built-in components) or a class/function (for composite ' +
+                  'components) but got: null.',
             {withoutStack: true},
           );
           await render(NullComponent);
@@ -1046,11 +1033,13 @@ describe('ReactDOMServerIntegration', () => {
           expect(() => {
             UndefinedComponent = <UndefinedComponent />;
           }).toErrorDev(
-            'Warning: React.jsx: type is invalid -- expected a string ' +
-              '(for built-in components) or a class/function (for composite ' +
-              'components) but got: undefined. You likely forgot to export your ' +
-              "component from the file it's defined in, or you might have mixed up " +
-              'default and named imports.',
+            gate(flags => flags.enableOwnerStacks)
+              ? []
+              : 'React.jsx: type is invalid -- expected a string ' +
+                  '(for built-in components) or a class/function (for composite ' +
+                  'components) but got: undefined. You likely forgot to export your ' +
+                  "component from the file it's defined in, or you might have mixed up " +
+                  'default and named imports.',
             {withoutStack: true},
           );
 

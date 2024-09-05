@@ -22,7 +22,6 @@ describe('ReactDOMFloat', () => {
   });
 
   // fixes #27177
-  // @gate enableFloat
   it('does not hoist above the <html> tag', async () => {
     const result = ReactDOMFizzServer.renderToString(
       <html>

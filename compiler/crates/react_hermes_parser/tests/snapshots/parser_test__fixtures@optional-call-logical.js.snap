@@ -1,0 +1,336 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/optional-call-logical.js
+---
+Input:
+function Component(props) {
+  const item = useFragment(graphql`...`, props.item);
+  return item.items?.map((item) => renderItem(item)) ?? [];
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "item",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    36,
+                    40
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useFragment",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      43,
+                      54
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "TaggedTemplateExpression",
+                      "tag": {
+                        "type": "Identifier",
+                        "name": "graphql",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          55,
+                          62
+                        ]
+                      },
+                      "quasi": {
+                        "type": "TemplateLiteral",
+                        "quasis": [
+                          {
+                            "type": "TemplateElement",
+                            "tail": true,
+                            "value": {
+                              "cooked": "...",
+                              "raw": "..."
+                            },
+                            "loc": null,
+                            "range": [
+                              62,
+                              67
+                            ]
+                          }
+                        ],
+                        "expressions": [],
+                        "loc": null,
+                        "range": [
+                          62,
+                          67
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        55,
+                        67
+                      ]
+                    },
+                    {
+                      "type": "MemberExpression",
+                      "object": {
+                        "type": "Identifier",
+                        "name": "props",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          69,
+                          74
+                        ]
+                      },
+                      "property": {
+                        "type": "Identifier",
+                        "name": "item",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          75,
+                          79
+                        ]
+                      },
+                      "computed": false,
+                      "loc": null,
+                      "range": [
+                        69,
+                        79
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    43,
+                    80
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  80
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              81
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "LogicalExpression",
+              "operator": "??",
+              "left": {
+                "type": "OptionalCallExpression",
+                "callee": {
+                  "type": "OptionalMemberExpression",
+                  "object": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "item",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        91,
+                        95
+                      ]
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "items",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        96,
+                        101
+                      ]
+                    },
+                    "computed": false,
+                    "loc": null,
+                    "range": [
+                      91,
+                      101
+                    ]
+                  },
+                  "property": {
+                    "type": "Identifier",
+                    "name": "map",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      103,
+                      106
+                    ]
+                  },
+                  "computed": false,
+                  "optional": true,
+                  "loc": null,
+                  "range": [
+                    91,
+                    106
+                  ]
+                },
+                "arguments": [
+                  {
+                    "type": "ArrowFunctionExpression",
+                    "id": null,
+                    "params": [
+                      {
+                        "type": "Identifier",
+                        "name": "item",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          108,
+                          112
+                        ]
+                      }
+                    ],
+                    "body": {
+                      "type": "CallExpression",
+                      "callee": {
+                        "type": "Identifier",
+                        "name": "renderItem",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          117,
+                          127
+                        ]
+                      },
+                      "arguments": [
+                        {
+                          "type": "Identifier",
+                          "name": "item",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            128,
+                            132
+                          ]
+                        }
+                      ],
+                      "loc": null,
+                      "range": [
+                        117,
+                        133
+                      ]
+                    },
+                    "generator": true,
+                    "async": false,
+                    "loc": null,
+                    "range": [
+                      107,
+                      133
+                    ],
+                    "expression": true,
+                    "loc": null,
+                    "range": [
+                      107,
+                      133
+                    ]
+                  }
+                ],
+                "optional": false,
+                "loc": null,
+                "range": [
+                  91,
+                  134
+                ]
+              },
+              "right": {
+                "type": "ArrayExpression",
+                "elements": [],
+                "loc": null,
+                "range": [
+                  138,
+                  140
+                ]
+              },
+              "loc": null,
+              "range": [
+                91,
+                140
+              ]
+            },
+            "loc": null,
+            "range": [
+              84,
+              141
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          143
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        143
+      ],
+      "loc": null,
+      "range": [
+        0,
+        143
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    143
+  ]
+}

@@ -1,0 +1,274 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/ssa-simple-phi.js
+---
+Input:
+function foo() {
+  let y = 2;
+
+  if (y > 1) {
+    y = 1;
+  } else {
+    y = 2;
+  }
+
+  let x = y;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "foo",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          12
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "y",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    23,
+                    24
+                  ]
+                },
+                "init": {
+                  "type": "NumericLiteral",
+                  "value": 2.0,
+                  "loc": null,
+                  "range": [
+                    27,
+                    28
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  23,
+                  28
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              19,
+              29
+            ]
+          },
+          {
+            "type": "IfStatement",
+            "test": {
+              "type": "BinaryExpression",
+              "left": {
+                "type": "Identifier",
+                "name": "y",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  37,
+                  38
+                ]
+              },
+              "operator": ">",
+              "right": {
+                "type": "NumericLiteral",
+                "value": 1.0,
+                "loc": null,
+                "range": [
+                  41,
+                  42
+                ]
+              },
+              "loc": null,
+              "range": [
+                37,
+                42
+              ]
+            },
+            "consequent": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "AssignmentExpression",
+                    "operator": "=",
+                    "left": {
+                      "type": "Identifier",
+                      "name": "y",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        50,
+                        51
+                      ]
+                    },
+                    "right": {
+                      "type": "NumericLiteral",
+                      "value": 1.0,
+                      "loc": null,
+                      "range": [
+                        54,
+                        55
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      50,
+                      55
+                    ]
+                  },
+                  "directive": null,
+                  "loc": null,
+                  "range": [
+                    50,
+                    56
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                44,
+                60
+              ]
+            },
+            "alternate": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "AssignmentExpression",
+                    "operator": "=",
+                    "left": {
+                      "type": "Identifier",
+                      "name": "y",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        72,
+                        73
+                      ]
+                    },
+                    "right": {
+                      "type": "NumericLiteral",
+                      "value": 2.0,
+                      "loc": null,
+                      "range": [
+                        76,
+                        77
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      72,
+                      77
+                    ]
+                  },
+                  "directive": null,
+                  "loc": null,
+                  "range": [
+                    72,
+                    78
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                66,
+                82
+              ]
+            },
+            "loc": null,
+            "range": [
+              33,
+              82
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    90,
+                    91
+                  ]
+                },
+                "init": {
+                  "type": "Identifier",
+                  "name": "y",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    94,
+                    95
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  90,
+                  95
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              86,
+              96
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          15,
+          98
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        98
+      ],
+      "loc": null,
+      "range": [
+        0,
+        98
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    98
+  ]
+}

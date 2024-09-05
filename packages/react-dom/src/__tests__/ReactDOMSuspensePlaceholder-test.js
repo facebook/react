@@ -11,11 +11,13 @@
 
 let React;
 let ReactDOM;
+let findDOMNode;
 let ReactDOMClient;
 let Suspense;
 let Scheduler;
 let act;
 let textCache;
+let assertLog;
 
 describe('ReactDOMSuspensePlaceholder', () => {
   let container;
@@ -25,8 +27,12 @@ describe('ReactDOMSuspensePlaceholder', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
+    findDOMNode =
+      ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE
+        .findDOMNode;
     Scheduler = require('scheduler');
     act = require('internal-test-utils').act;
+    assertLog = require('internal-test-utils').assertLog;
     Suspense = React.Suspense;
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -126,7 +132,7 @@ describe('ReactDOMSuspensePlaceholder', () => {
     expect(window.getComputedStyle(divs[0].current).display).toEqual('none');
     expect(window.getComputedStyle(divs[1].current).display).toEqual('none');
     expect(window.getComputedStyle(divs[2].current).display).toEqual('none');
-
+    assertLog(['A', 'Suspend! [B]', 'C', 'Loading...']);
     await act(async () => {
       await resolveText('B');
     });
@@ -135,6 +141,7 @@ describe('ReactDOMSuspensePlaceholder', () => {
     expect(window.getComputedStyle(divs[1].current).display).toEqual('block');
     // This div's display was set with a prop.
     expect(window.getComputedStyle(divs[2].current).display).toEqual('inline');
+    assertLog(['B']);
   });
 
   it('hides and unhides timed out text nodes', async () => {
@@ -153,11 +160,11 @@ describe('ReactDOMSuspensePlaceholder', () => {
     });
 
     expect(container.textContent).toEqual('Loading...');
-
+    assertLog(['A', 'Suspend! [B]', 'Loading...']);
     await act(() => {
       resolveText('B');
     });
-
+    assertLog(['A', 'B', 'C']);
     expect(container.textContent).toEqual('ABC');
   });
 
@@ -197,6 +204,7 @@ describe('ReactDOMSuspensePlaceholder', () => {
         '<span style="display: none;">Sibling</span><span style=' +
           '"display: none;"></span>Loading...',
       );
+      assertLog(['Suspend! [Async]', 'Loading...']);
 
       // Update the inline display style. It will be overridden because it's
       // inside a hidden fallback.
@@ -205,6 +213,7 @@ describe('ReactDOMSuspensePlaceholder', () => {
         '<span style="display: none;">Sibling</span><span style=' +
           '"display: none;"></span>Loading...',
       );
+      assertLog(['Suspend! [Async]']);
 
       // Unsuspend. The style should now match the inline prop.
       await act(() => resolveText('Async'));
@@ -232,11 +241,11 @@ describe('ReactDOMSuspensePlaceholder', () => {
     class Child extends React.Component {
       componentDidMount() {
         log.push('cDM ' + this.props.id);
-        ReactDOM.findDOMNode(this);
+        findDOMNode(this);
       }
       componentDidUpdate() {
         log.push('cDU ' + this.props.id);
-        ReactDOM.findDOMNode(this);
+        findDOMNode(this);
       }
       render() {
         return 'child';
@@ -291,12 +300,12 @@ describe('ReactDOMSuspensePlaceholder', () => {
     class Child extends React.Component {
       componentDidMount() {
         log.push('cDM');
-        ReactDOM.findDOMNode(this);
+        findDOMNode(this);
       }
 
       componentDidUpdate() {
         log.push('cDU');
-        ReactDOM.findDOMNode(this);
+        findDOMNode(this);
       }
 
       render() {

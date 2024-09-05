@@ -23,6 +23,8 @@ import {
   enableDebugTracing,
   enableSchedulingProfiler,
   enableLazyContextPropagation,
+  enableRefAsProp,
+  disableDefaultPropsExceptForClasses,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {isMounted} from './ReactFiberTreeReflection';
@@ -34,7 +36,6 @@ import assign from 'shared/assign';
 import isArray from 'shared/isArray';
 import {REACT_CONTEXT_TYPE, REACT_CONSUMER_TYPE} from 'shared/ReactSymbols';
 
-import {resolveDefaultProps} from './ReactFiberLazyComponent';
 import {
   DebugTracingMode,
   NoMode,
@@ -72,9 +73,7 @@ import {
   setIsStrictModeForDevtools,
 } from './ReactFiberDevToolsHook';
 
-const fakeInternalInstance: {
-  _processChildContext?: () => empty,
-} = {};
+const fakeInternalInstance = {};
 
 let didWarnAboutStateAssignmentForComponent;
 let didWarnAboutUninitializedState;
@@ -83,6 +82,8 @@ let didWarnAboutLegacyLifecyclesAndDerivedState;
 let didWarnAboutUndefinedDerivedState;
 let didWarnAboutDirectlyAssigningPropsToState;
 let didWarnAboutContextTypeAndContextTypes;
+let didWarnAboutContextTypes;
+let didWarnAboutChildContextTypes;
 let didWarnAboutInvalidateContextType;
 let didWarnOnInvalidCallback;
 
@@ -94,27 +95,11 @@ if (__DEV__) {
   didWarnAboutDirectlyAssigningPropsToState = new Set<string>();
   didWarnAboutUndefinedDerivedState = new Set<string>();
   didWarnAboutContextTypeAndContextTypes = new Set<string>();
+  didWarnAboutContextTypes = new Set<mixed>();
+  didWarnAboutChildContextTypes = new Set<mixed>();
   didWarnAboutInvalidateContextType = new Set<string>();
   didWarnOnInvalidCallback = new Set<string>();
 
-  // This is so gross but it's at least non-critical and can be removed if
-  // it causes problems. This is meant to give a nicer error message for
-  // ReactDOM15.unstable_renderSubtreeIntoContainer(reactDOM16Component,
-  // ...)) which otherwise throws a "_processChildContext is not a function"
-  // exception.
-  Object.defineProperty(fakeInternalInstance, '_processChildContext', {
-    enumerable: false,
-    value: function (): empty {
-      throw new Error(
-        '_processChildContext is not available in React 16+. This likely ' +
-          'means you have multiple copies of React and are attempting to nest ' +
-          'a React 15 tree inside a React 16 tree using ' +
-          "unstable_renderSubtreeIntoContainer, which isn't supported. Try " +
-          'to make sure you have only one copy of React (and ideally, switch ' +
-          'to ReactDOM.createPortal).',
-      );
-    },
-  });
   Object.freeze(fakeInternalInstance);
 }
 
@@ -395,13 +380,6 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
         name,
       );
     }
-    if (instance.propTypes) {
-      console.error(
-        'propTypes was defined as an instance property on %s. Use a static ' +
-          'property to define propTypes instead.',
-        name,
-      );
-    }
     if (instance.contextType) {
       console.error(
         'contextType was defined as an instance property on %s. Use a static ' +
@@ -411,17 +389,20 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
     }
 
     if (disableLegacyContext) {
-      if (ctor.childContextTypes) {
+      if (ctor.childContextTypes && !didWarnAboutChildContextTypes.has(ctor)) {
+        didWarnAboutChildContextTypes.add(ctor);
         console.error(
-          '%s uses the legacy childContextTypes API which is no longer supported. ' +
-            'Use React.createContext() instead.',
+          '%s uses the legacy childContextTypes API which was removed in React 19. ' +
+            'Use React.createContext() instead. (https://react.dev/link/legacy-context)',
           name,
         );
       }
-      if (ctor.contextTypes) {
+      if (ctor.contextTypes && !didWarnAboutContextTypes.has(ctor)) {
+        didWarnAboutContextTypes.add(ctor);
         console.error(
-          '%s uses the legacy contextTypes API which is no longer supported. ' +
-            'Use React.createContext() with static contextType instead.',
+          '%s uses the legacy contextTypes API which was removed in React 19. ' +
+            'Use React.createContext() with static contextType instead. ' +
+            '(https://react.dev/link/legacy-context)',
           name,
         );
       }
@@ -443,6 +424,23 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
         console.error(
           '%s declares both contextTypes and contextType static properties. ' +
             'The legacy contextTypes property will be ignored.',
+          name,
+        );
+      }
+      if (ctor.childContextTypes && !didWarnAboutChildContextTypes.has(ctor)) {
+        didWarnAboutChildContextTypes.add(ctor);
+        console.error(
+          '%s uses the legacy childContextTypes API which will soon be removed. ' +
+            'Use React.createContext() instead. (https://react.dev/link/legacy-context)',
+          name,
+        );
+      }
+      if (ctor.contextTypes && !didWarnAboutContextTypes.has(ctor)) {
+        didWarnAboutContextTypes.add(ctor);
+        console.error(
+          '%s uses the legacy contextTypes API which will soon be removed. ' +
+            'Use React.createContext() with static contextType instead. ' +
+            '(https://react.dev/link/legacy-context)',
           name,
         );
       }
@@ -569,16 +567,6 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
   }
 }
 
-function adoptClassInstance(workInProgress: Fiber, instance: any): void {
-  instance.updater = classComponentUpdater;
-  workInProgress.stateNode = instance;
-  // The instance needs access to the fiber so that it can schedule updates
-  setInstance(instance, workInProgress);
-  if (__DEV__) {
-    instance._reactInternalInstance = fakeInternalInstance;
-  }
-}
-
 function constructClassInstance(
   workInProgress: Fiber,
   ctor: any,
@@ -648,7 +636,7 @@ function constructClassInstance(
     ) {
       setIsStrictModeForDevtools(true);
       try {
-        instance = new ctor(props, context); // eslint-disable-line no-new
+        instance = new ctor(props, context);
       } finally {
         setIsStrictModeForDevtools(false);
       }
@@ -659,7 +647,13 @@ function constructClassInstance(
     instance.state !== null && instance.state !== undefined
       ? instance.state
       : null);
-  adoptClassInstance(workInProgress, instance);
+  instance.updater = classComponentUpdater;
+  workInProgress.stateNode = instance;
+  // The instance needs access to the fiber so that it can schedule updates
+  setInstance(instance, workInProgress);
+  if (__DEV__) {
+    instance._reactInternalInstance = fakeInternalInstance;
+  }
 
   if (__DEV__) {
     if (typeof ctor.getDerivedStateFromProps === 'function' && state === null) {
@@ -908,7 +902,12 @@ function resumeMountClassInstance(
 ): boolean {
   const instance = workInProgress.stateNode;
 
-  const oldProps = workInProgress.memoizedProps;
+  const unresolvedOldProps = workInProgress.memoizedProps;
+  const oldProps = resolveClassComponentProps(
+    ctor,
+    unresolvedOldProps,
+    workInProgress.type === workInProgress.elementType,
+  );
   instance.props = oldProps;
 
   const oldContext = instance.context;
@@ -930,6 +929,13 @@ function resumeMountClassInstance(
     typeof getDerivedStateFromProps === 'function' ||
     typeof instance.getSnapshotBeforeUpdate === 'function';
 
+  // When comparing whether props changed, we should compare using the
+  // unresolved props object that is stored on the fiber, rather than the
+  // one that gets assigned to the instance, because that object may have been
+  // cloned to resolve default props and/or remove `ref`.
+  const unresolvedNewProps = workInProgress.pendingProps;
+  const didReceiveNewProps = unresolvedNewProps !== unresolvedOldProps;
+
   // Note: During these life-cycles, instance.props/instance.state are what
   // ever the previously attempted to render - not the "current". However,
   // during componentDidUpdate we pass the "current" props.
@@ -941,7 +947,7 @@ function resumeMountClassInstance(
     (typeof instance.UNSAFE_componentWillReceiveProps === 'function' ||
       typeof instance.componentWillReceiveProps === 'function')
   ) {
-    if (oldProps !== newProps || oldContext !== nextContext) {
+    if (didReceiveNewProps || oldContext !== nextContext) {
       callComponentWillReceiveProps(
         workInProgress,
         instance,
@@ -959,7 +965,7 @@ function resumeMountClassInstance(
   suspendIfUpdateReadFromEntangledAsyncAction();
   newState = workInProgress.memoizedState;
   if (
-    oldProps === newProps &&
+    !didReceiveNewProps &&
     oldState === newState &&
     !hasContextChanged() &&
     !checkHasForceUpdateAfterProcessing()
@@ -1056,10 +1062,11 @@ function updateClassInstance(
   cloneUpdateQueue(current, workInProgress);
 
   const unresolvedOldProps = workInProgress.memoizedProps;
-  const oldProps =
-    workInProgress.type === workInProgress.elementType
-      ? unresolvedOldProps
-      : resolveDefaultProps(workInProgress.type, unresolvedOldProps);
+  const oldProps = resolveClassComponentProps(
+    ctor,
+    unresolvedOldProps,
+    workInProgress.type === workInProgress.elementType,
+  );
   instance.props = oldProps;
   const unresolvedNewProps = workInProgress.pendingProps;
 
@@ -1229,8 +1236,55 @@ function updateClassInstance(
   return shouldUpdate;
 }
 
+export function resolveClassComponentProps(
+  Component: any,
+  baseProps: Object,
+  // Only resolve default props if this is a lazy component. Otherwise, they
+  // would have already been resolved by the JSX runtime.
+  // TODO: We're going to remove default prop resolution from the JSX runtime
+  // and keep it only for class components. As part of that change, we should
+  // remove this extra check.
+  alreadyResolvedDefaultProps: boolean,
+): Object {
+  let newProps = baseProps;
+
+  if (enableRefAsProp) {
+    // Remove ref from the props object, if it exists.
+    if ('ref' in baseProps) {
+      newProps = ({}: any);
+      for (const propName in baseProps) {
+        if (propName !== 'ref') {
+          newProps[propName] = baseProps[propName];
+        }
+      }
+    }
+  }
+
+  // Resolve default props.
+  const defaultProps = Component.defaultProps;
+  if (
+    defaultProps &&
+    // If disableDefaultPropsExceptForClasses is true, we always resolve
+    // default props here in the reconciler, rather than in the JSX runtime.
+    (disableDefaultPropsExceptForClasses || !alreadyResolvedDefaultProps)
+  ) {
+    // We may have already copied the props object above to remove ref. If so,
+    // we can modify that. Otherwise, copy the props object with Object.assign.
+    if (newProps === baseProps) {
+      newProps = assign({}, newProps);
+    }
+    // Taken from old JSX runtime, where this used to live.
+    for (const propName in defaultProps) {
+      if (newProps[propName] === undefined) {
+        newProps[propName] = defaultProps[propName];
+      }
+    }
+  }
+
+  return newProps;
+}
+
 export {
-  adoptClassInstance,
   constructClassInstance,
   mountClassInstance,
   resumeMountClassInstance,

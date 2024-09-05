@@ -17,6 +17,7 @@ let gen;
 let waitForAll;
 let waitFor;
 let waitForThrow;
+let assertConsoleErrorDev;
 
 describe('ReactNewContext', () => {
   beforeEach(() => {
@@ -28,10 +29,12 @@ describe('ReactNewContext', () => {
     Scheduler = require('scheduler');
     gen = require('random-seed');
 
-    const InternalTestUtils = require('internal-test-utils');
-    waitForAll = InternalTestUtils.waitForAll;
-    waitFor = InternalTestUtils.waitFor;
-    waitForThrow = InternalTestUtils.waitForThrow;
+    ({
+      waitForAll,
+      waitFor,
+      waitForThrow,
+      assertConsoleErrorDev,
+    } = require('internal-test-utils'));
   });
 
   afterEach(() => {
@@ -49,8 +52,7 @@ describe('ReactNewContext', () => {
 
   function readContext(Context) {
     const dispatcher =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-        .ReactCurrentDispatcher.current;
+      React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.H;
     return dispatcher.readContext(Context);
   }
 
@@ -700,7 +702,7 @@ describe('ReactNewContext', () => {
         );
       });
 
-      // @gate www
+      // @gate enableLegacyHidden
       it("context consumer doesn't bail out inside hidden subtree", async () => {
         const Context = React.createContext('dark');
         const Consumer = getConsumer(Context);
@@ -1033,6 +1035,9 @@ describe('ReactNewContext', () => {
         </LegacyProvider>,
       );
       await waitForAll(['LegacyProvider', 'App', 'Child']);
+      assertConsoleErrorDev([
+        'LegacyProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      ]);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Child" />);
 
       // Update App with same value (should bail out)

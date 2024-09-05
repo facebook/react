@@ -7,11 +7,19 @@
  * @flow
  */
 
+import type {ReactContext} from 'shared/ReactTypes';
+
 import isArray from 'shared/isArray';
+import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 import {
   DefaultEventPriority,
+  NoEventPriority,
   type EventPriority,
 } from 'react-reconciler/src/ReactEventPriorities';
+
+export {default as rendererVersion} from 'shared/ReactVersion'; // TODO: Consider exporting the react-native version.
+export const rendererPackageName = 'react-test-renderer';
+export const extraDevToolsConfig = null;
 
 export type Type = string;
 export type Props = Object;
@@ -201,7 +209,19 @@ export function createTextInstance(
   };
 }
 
-export function getCurrentEventPriority(): EventPriority {
+let currentUpdatePriority: EventPriority = NoEventPriority;
+export function setCurrentUpdatePriority(newPriority: EventPriority): void {
+  currentUpdatePriority = newPriority;
+}
+
+export function getCurrentUpdatePriority(): EventPriority {
+  return currentUpdatePriority;
+}
+
+export function resolveUpdatePriority(): EventPriority {
+  if (currentUpdatePriority !== NoEventPriority) {
+    return currentUpdatePriority;
+  }
   return DefaultEventPriority;
 }
 export function shouldAttemptEagerTransition(): boolean {
@@ -224,7 +244,6 @@ export const supportsMutation = true;
 
 export function commitUpdate(
   instance: Instance,
-  updatePayload: null | {...},
   type: string,
   oldProps: Props,
   newProps: Props,
@@ -336,3 +355,14 @@ export function waitForCommitToBeReady(): null {
 }
 
 export const NotPendingTransition: TransitionStatus = null;
+export const HostTransitionContext: ReactContext<TransitionStatus> = {
+  $$typeof: REACT_CONTEXT_TYPE,
+  Provider: (null: any),
+  Consumer: (null: any),
+  _currentValue: NotPendingTransition,
+  _currentValue2: NotPendingTransition,
+  _threadCount: 0,
+};
+
+export type FormInstance = Instance;
+export function resetFormInstance(form: Instance): void {}

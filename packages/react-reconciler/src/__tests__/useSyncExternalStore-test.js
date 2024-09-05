@@ -82,7 +82,7 @@ describe('useSyncExternalStore', () => {
     };
   }
 
-  test(
+  it(
     'detects interleaved mutations during a concurrent read before ' +
       'layout effects fire',
     async () => {
@@ -91,13 +91,9 @@ describe('useSyncExternalStore', () => {
 
       const Child = forwardRef(({store, label}, ref) => {
         const value = useSyncExternalStore(store.subscribe, store.getState);
-        useImperativeHandle(
-          ref,
-          () => {
-            return value;
-          },
-          [],
-        );
+        useImperativeHandle(ref, () => {
+          return value;
+        }, []);
         return <Text text={label + value} />;
       });
 
@@ -186,7 +182,7 @@ describe('useSyncExternalStore', () => {
     },
   );
 
-  test('next value is correctly cached when state is dispatched in render phase', async () => {
+  it('next value is correctly cached when state is dispatched in render phase', async () => {
     const store = createExternalStore('value:initial');
 
     function App() {
@@ -215,7 +211,7 @@ describe('useSyncExternalStore', () => {
     assertLog(['value:initial']);
   });
 
-  test(
+  it(
     'regression: suspending in shell after synchronously patching ' +
       'up store mutation',
     async () => {
@@ -278,6 +274,10 @@ describe('useSyncExternalStore', () => {
         // This should a synchronous re-render of A using the updated value. In
         // this test, this causes A to suspend.
         'Suspend A',
+
+        ...(gate('enableSiblingPrerendering')
+          ? ['Suspend A', 'B: Updated']
+          : []),
       ]);
       // Nothing has committed, because A suspended and no fallback
       // was provided.

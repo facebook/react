@@ -2,7 +2,7 @@
 
 const {diff: jestDiff} = require('jest-diff');
 const util = require('util');
-const shouldIgnoreConsoleError = require('../shouldIgnoreConsoleError');
+const shouldIgnoreConsoleError = require('internal-test-utils/shouldIgnoreConsoleError');
 
 function normalizeCodeLocInfo(str) {
   if (typeof str !== 'string') {
@@ -16,6 +16,11 @@ function normalizeCodeLocInfo(str) {
   // React format:
   //    in Component (at filename.js:123)
   return str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function (m, name) {
+    if (name.endsWith('.render')) {
+      // Class components will have the `render` method as part of their stack trace.
+      // We strip that out in our normalization to make it look more like component stacks.
+      name = name.slice(0, name.length - 7);
+    }
     return '\n    in ' + name + ' (at **)';
   });
 }
@@ -71,12 +76,36 @@ const createMatcherFor = (consoleMethod, matcherName) =>
       const consoleSpy = (format, ...args) => {
         // Ignore uncaught errors reported by jsdom
         // and React addendums because they're too noisy.
-        if (
-          !logAllErrors &&
-          consoleMethod === 'error' &&
-          shouldIgnoreConsoleError(format, args)
-        ) {
+        if (!logAllErrors && shouldIgnoreConsoleError(format, args)) {
           return;
+        }
+
+        // Append Component Stacks. Simulates a framework or DevTools appending them.
+        if (
+          typeof format === 'string' &&
+          (consoleMethod === 'error' || consoleMethod === 'warn')
+        ) {
+          const React = require('react');
+          if (React.captureOwnerStack) {
+            // enableOwnerStacks enabled. When it's always on, we can assume this case.
+            const stack = React.captureOwnerStack();
+            if (stack) {
+              format += '%s';
+              args.push(stack);
+            }
+          } else {
+            // Otherwise we have to use internals to emulate parent stacks.
+            const ReactSharedInternals =
+              React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE ||
+              React.__SERVER_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+            if (ReactSharedInternals && ReactSharedInternals.getCurrentStack) {
+              const stack = ReactSharedInternals.getCurrentStack();
+              if (stack !== '') {
+                format += '%s';
+                args.push(stack);
+              }
+            }
+          }
         }
 
         const message = util.format(format, ...args);
@@ -182,7 +211,9 @@ const createMatcherFor = (consoleMethod, matcherName) =>
           };
         }
 
-        if (typeof withoutStack === 'number') {
+        if (consoleMethod === 'log') {
+          // We don't expect any console.log calls to have a stack.
+        } else if (typeof withoutStack === 'number') {
           // We're expecting a particular number of warnings without stacks.
           if (withoutStack !== warningsWithoutComponentStack.length) {
             return {
@@ -313,4 +344,5 @@ const createMatcherFor = (consoleMethod, matcherName) =>
 module.exports = {
   toWarnDev: createMatcherFor('warn', 'toWarnDev'),
   toErrorDev: createMatcherFor('error', 'toErrorDev'),
+  toLogDev: createMatcherFor('log', 'toLogDev'),
 };

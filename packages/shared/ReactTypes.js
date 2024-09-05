@@ -171,22 +171,37 @@ export type ReactFormState<S, ReferenceId> = [
 export type Awaited<T> = T extends null | void
   ? T // special case for `null | undefined` when not in `--strictNullChecks` mode
   : T extends Object // `await` only unwraps object types with a callable then. Non-object types are not unwrapped.
-  ? T extends {then(onfulfilled: infer F): any} // thenable, extracts the first argument to `then()`
-    ? F extends (value: infer V) => any // if the argument to `then` is callable, extracts the argument
-      ? Awaited<V> // recursively unwrap the value
-      : empty // the argument to `then` was not callable.
-    : T // argument was not an object
-  : T; // non-thenable
+    ? T extends {then(onfulfilled: infer F): any} // thenable, extracts the first argument to `then()`
+      ? F extends (value: infer V) => any // if the argument to `then` is callable, extracts the argument
+        ? Awaited<V> // recursively unwrap the value
+        : empty // the argument to `then` was not callable.
+      : T // argument was not an object
+    : T; // non-thenable
+
+export type ReactCallSite = [
+  string, // function name
+  string, // file name TODO: model nested eval locations as nested arrays
+  number, // line number
+  number, // column number
+];
+
+export type ReactStackTrace = Array<ReactCallSite>;
 
 export type ReactComponentInfo = {
   +name?: string,
   +env?: string,
+  +key?: null | string,
+  +owner?: null | ReactComponentInfo,
+  +stack?: null | ReactStackTrace,
+  // Stashed Data for the Specific Execution Environment. Not part of the transport protocol
+  +debugStack?: null | Error,
+  +debugTask?: null | ConsoleTask,
 };
 
 export type ReactAsyncInfo = {
   +started?: number,
   +completed?: number,
-  +stack?: string,
+  +stack?: null | ReactStackTrace,
 };
 
 export type ReactDebugInfo = Array<ReactComponentInfo | ReactAsyncInfo>;

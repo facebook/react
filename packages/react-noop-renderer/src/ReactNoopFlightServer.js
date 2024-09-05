@@ -25,6 +25,9 @@ type Destination = Array<Uint8Array>;
 const textEncoder = new TextEncoder();
 
 const ReactNoopFlightServer = ReactFlightServer({
+  scheduleMicrotask(callback: () => void) {
+    callback();
+  },
   scheduleWork(callback: () => void) {
     callback();
   },
@@ -46,9 +49,6 @@ const ReactNoopFlightServer = ReactFlightServer({
   stringToPrecomputedChunk(content: string): Uint8Array {
     return textEncoder.encode(content);
   },
-  clonePrecomputedChunk(chunk: Uint8Array): Uint8Array {
-    return chunk;
-  },
   isClientReference(reference: Object): boolean {
     return reference.$$typeof === Symbol.for('react.client.reference');
   },
@@ -67,7 +67,8 @@ const ReactNoopFlightServer = ReactFlightServer({
 });
 
 type Options = {
-  environmentName?: string,
+  environmentName?: string | (() => string),
+  filterStackFrame?: (url: string, functionName: string) => boolean,
   identifierPrefix?: string,
   onError?: (error: mixed) => void,
   onPostpone?: (reason: string) => void,
@@ -82,7 +83,9 @@ function render(model: ReactClientValue, options?: Options): Destination {
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.onPostpone : undefined,
-    options ? options.environmentName : undefined,
+    undefined,
+    __DEV__ && options ? options.environmentName : undefined,
+    __DEV__ && options ? options.filterStackFrame : undefined,
   );
   ReactNoopFlightServer.startWork(request);
   ReactNoopFlightServer.startFlowing(request, destination);

@@ -19,6 +19,7 @@ let assertLog;
 let waitForAll;
 let waitFor;
 let waitForThrow;
+let assertConsoleErrorDev;
 
 describe('ReactIncrementalErrorHandling', () => {
   beforeEach(() => {
@@ -28,6 +29,8 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
     act = require('internal-test-utils').act;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
 
     const InternalTestUtils = require('internal-test-utils');
     assertLog = InternalTestUtils.assertLog;
@@ -289,7 +292,7 @@ describe('ReactIncrementalErrorHandling', () => {
     );
   });
 
-  // @gate www
+  // @gate enableLegacyHidden
   it('does not include offscreen work when retrying after an error', async () => {
     function App(props) {
       if (props.isBroken) {
@@ -387,7 +390,7 @@ describe('ReactIncrementalErrorHandling', () => {
     // The work loop unwound to the nearest error boundary. React will try
     // to render one more time, synchronously. Flush just one unit of work to
     // demonstrate that this render is synchronous.
-    expect(() => Scheduler.unstable_flushNumberOfYields(1)).toThrow('oops');
+    Scheduler.unstable_flushNumberOfYields(1);
     assertLog(['Parent', 'BadRender', 'commit']);
     expect(ReactNoop).toMatchRenderedOutput(null);
   });
@@ -425,10 +428,8 @@ describe('ReactIncrementalErrorHandling', () => {
     // Expire the render midway through
     Scheduler.unstable_advanceTime(10000);
 
-    expect(() => {
-      Scheduler.unstable_flushExpired();
-      ReactNoop.flushSync();
-    }).toThrow('Oops');
+    Scheduler.unstable_flushExpired();
+    ReactNoop.flushSync();
 
     assertLog([
       // The render expired, but we shouldn't throw out the partial work.
@@ -769,15 +770,14 @@ describe('ReactIncrementalErrorHandling', () => {
       throw new Error('Hello');
     }
 
-    expect(() => {
-      ReactNoop.flushSync(() => {
-        ReactNoop.render(
-          <RethrowErrorBoundary>
-            <BrokenRender />
-          </RethrowErrorBoundary>,
-        );
-      });
-    }).toThrow('Hello');
+    ReactNoop.flushSync(() => {
+      ReactNoop.render(
+        <RethrowErrorBoundary>
+          <BrokenRender />
+        </RethrowErrorBoundary>,
+      );
+    });
+
     assertLog([
       'RethrowErrorBoundary render',
       'BrokenRender',
@@ -809,18 +809,17 @@ describe('ReactIncrementalErrorHandling', () => {
       throw new Error('Hello');
     }
 
-    expect(() => {
-      ReactNoop.flushSync(() => {
-        ReactNoop.render(
-          <RethrowErrorBoundary>Before the storm.</RethrowErrorBoundary>,
-        );
-        ReactNoop.render(
-          <RethrowErrorBoundary>
-            <BrokenRender />
-          </RethrowErrorBoundary>,
-        );
-      });
-    }).toThrow('Hello');
+    ReactNoop.flushSync(() => {
+      ReactNoop.render(
+        <RethrowErrorBoundary>Before the storm.</RethrowErrorBoundary>,
+      );
+      ReactNoop.render(
+        <RethrowErrorBoundary>
+          <BrokenRender />
+        </RethrowErrorBoundary>,
+      );
+    });
+
     assertLog([
       'RethrowErrorBoundary render',
       'BrokenRender',
@@ -1120,14 +1119,15 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildrenAsJSX('e')).toEqual(null);
 
     ReactNoop.renderToRootWithID(<BrokenRender label="a" />, 'a');
+    await waitForThrow('a');
+
     ReactNoop.renderToRootWithID(<span prop="b:6" />, 'b');
     ReactNoop.renderToRootWithID(<BrokenRender label="c" />, 'c');
+    await waitForThrow('c');
+
     ReactNoop.renderToRootWithID(<span prop="d:6" />, 'd');
     ReactNoop.renderToRootWithID(<BrokenRender label="e" />, 'e');
     ReactNoop.renderToRootWithID(<span prop="f:6" />, 'f');
-
-    await waitForThrow('a');
-    await waitForThrow('c');
     await waitForThrow('e');
 
     await waitForAll([]);
@@ -1158,7 +1158,7 @@ describe('ReactIncrementalErrorHandling', () => {
   // because it's used for new context, suspense, and many other features.
   // It has to be tested independently for each feature anyway. So although it
   // doesn't look like it, this test is specific to legacy context.
-  // @gate !disableLegacyContext
+  // @gate !disableLegacyContext && !disableLegacyContextForFunctionComponents
   it('unwinds the context stack correctly on error', async () => {
     class Provider extends React.Component {
       static childContextTypes = {message: PropTypes.string};
@@ -1211,7 +1211,14 @@ describe('ReactIncrementalErrorHandling', () => {
         <Connector />
       </Provider>,
     );
-    await waitForAll([]);
+
+    await expect(async () => {
+      await waitForAll([]);
+    }).toErrorDev([
+      'Provider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'Provider uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+      'Connector uses the legacy contextTypes API which will be removed soon. Use React.createContext() with React.useContext() instead.',
+    ]);
 
     // If the context stack does not unwind, span will get 'abcde'
     expect(ReactNoop).toMatchRenderedOutput(<span prop="a" />);
@@ -1240,11 +1247,15 @@ describe('ReactIncrementalErrorHandling', () => {
         <BrokenRender />
       </ErrorBoundary>,
     );
-    await expect(async () => await waitForAll([])).toErrorDev([
-      'Warning: React.jsx: type is invalid -- expected a string',
-      // React retries once on error
-      'Warning: React.jsx: type is invalid -- expected a string',
-    ]);
+    await waitForAll([]);
+    if (gate(flags => !flags.enableOwnerStacks)) {
+      assertConsoleErrorDev([
+        'React.jsx: type is invalid -- expected a string',
+        // React retries once on error
+        'React.jsx: type is invalid -- expected a string',
+      ]);
+    }
+
     expect(ReactNoop).toMatchRenderedOutput(
       <span
         prop={
@@ -1291,11 +1302,14 @@ describe('ReactIncrementalErrorHandling', () => {
         <BrokenRender fail={true} />
       </ErrorBoundary>,
     );
-    await expect(async () => await waitForAll([])).toErrorDev([
-      'Warning: React.jsx: type is invalid -- expected a string',
-      // React retries once on error
-      'Warning: React.jsx: type is invalid -- expected a string',
-    ]);
+    await waitForAll([]);
+    if (gate(flags => !flags.enableOwnerStacks)) {
+      assertConsoleErrorDev([
+        'React.jsx: type is invalid -- expected a string',
+        // React retries once on error
+        'React.jsx: type is invalid -- expected a string',
+      ]);
+    }
     expect(ReactNoop).toMatchRenderedOutput(
       <span
         prop={
@@ -1313,10 +1327,14 @@ describe('ReactIncrementalErrorHandling', () => {
 
   it('recovers from uncaught reconciler errors', async () => {
     const InvalidType = undefined;
-    expect(() => ReactNoop.render(<InvalidType />)).toErrorDev(
-      'Warning: React.jsx: type is invalid -- expected a string',
-      {withoutStack: true},
-    );
+    ReactNoop.render(<InvalidType />);
+    if (gate(flags => !flags.enableOwnerStacks)) {
+      assertConsoleErrorDev(
+        ['React.jsx: type is invalid -- expected a string'],
+        {withoutStack: true},
+      );
+    }
+
     await waitForThrow(
       'Element type is invalid: expected a string (for built-in components) or ' +
         'a class/function (for composite components) but got: undefined.' +
@@ -1369,8 +1387,10 @@ describe('ReactIncrementalErrorHandling', () => {
 
     let aggregateError;
     try {
-      ReactNoop.flushSync(() => {
-        inst.setState({fail: true});
+      await act(() => {
+        ReactNoop.flushSync(() => {
+          inst.setState({fail: true});
+        });
       });
     } catch (e) {
       aggregateError = e;
@@ -1387,9 +1407,10 @@ describe('ReactIncrementalErrorHandling', () => {
 
     // React threw both errors as a single AggregateError
     const errors = aggregateError.errors;
-    expect(errors.length).toBe(2);
+    expect(errors.length).toBe(3);
     expect(errors[0].message).toBe('Hello.');
     expect(errors[1].message).toBe('One does not simply unmount me.');
+    expect(errors[2].message).toBe('One does not simply unmount me.');
   });
 
   it('does not interrupt unmounting if detaching a ref throws', async () => {
@@ -1512,7 +1533,7 @@ describe('ReactIncrementalErrorHandling', () => {
       expect(console.error).toHaveBeenCalledTimes(1);
       expect(console.error.mock.calls[0][1]).toBe(notAnError);
       expect(console.error.mock.calls[0][2]).toContain(
-        'The above error occurred in the <BadRender> component:',
+        'The above error occurred in the <BadRender> component',
       );
     } else {
       expect(console.error).toHaveBeenCalledTimes(1);
@@ -1754,45 +1775,6 @@ describe('ReactIncrementalErrorHandling', () => {
     );
   });
 
-  // @gate !disableModulePatternComponents
-  it('handles error thrown inside getDerivedStateFromProps of a module-style context provider', async () => {
-    function Provider() {
-      return {
-        getChildContext() {
-          return {foo: 'bar'};
-        },
-        render() {
-          return 'Hi';
-        },
-      };
-    }
-    Provider.childContextTypes = {
-      x: () => {},
-    };
-    Provider.getDerivedStateFromProps = () => {
-      throw new Error('Oops!');
-    };
-
-    ReactNoop.render(<Provider />);
-    await expect(async () => {
-      await waitForThrow('Oops!');
-    }).toErrorDev([
-      'Warning: The <Provider /> component appears to be a function component that returns a class instance. ' +
-        'Change Provider to a class that extends React.Component instead. ' +
-        "If you can't use a class try assigning the prototype on the function as a workaround. " +
-        '`Provider.prototype = React.Component.prototype`. ' +
-        "Don't use an arrow function since it cannot be called with `new` by React.",
-      ...gate(flags =>
-        flags.disableLegacyContext
-          ? [
-              'Warning: Provider uses the legacy childContextTypes API which is no longer supported. Use React.createContext() instead.',
-              'Warning: Provider uses the legacy childContextTypes API which is no longer supported. Use React.createContext() instead.',
-            ]
-          : [],
-      ),
-    ]);
-  });
-
   it('uncaught errors should be discarded if the render is aborted', async () => {
     const root = ReactNoop.createRoot();
 
@@ -1878,6 +1860,7 @@ describe('ReactIncrementalErrorHandling', () => {
     // accident) a render phase triggered from userspace.
 
     spyOnDev(console, 'error').mockImplementation(() => {});
+    spyOnDev(console, 'warn').mockImplementation(() => {});
 
     let numberOfThrows = 0;
 
@@ -1916,12 +1899,13 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(numberOfThrows < 100).toBe(true);
 
     if (__DEV__) {
-      expect(console.error).toHaveBeenCalledTimes(2);
+      expect(console.error).toHaveBeenCalledTimes(1);
       expect(console.error.mock.calls[0][0]).toContain(
         'Cannot update a component (`%s`) while rendering a different component',
       );
-      expect(console.error.mock.calls[1][2]).toContain(
-        'The above error occurred in the <App> component',
+      expect(console.warn).toHaveBeenCalledTimes(1);
+      expect(console.warn.mock.calls[0][1]).toContain(
+        'An error occurred in the <App> component',
       );
     }
   });

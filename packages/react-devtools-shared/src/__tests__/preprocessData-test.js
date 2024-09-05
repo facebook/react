@@ -26,16 +26,16 @@ describe('Timeline profiler', () => {
   let waitFor;
 
   describe('User Timing API', () => {
-    let clearedMarks;
+    let currentlyNotClearedMarks;
+    let registeredMarks;
     let featureDetectionMarkName = null;
-    let marks;
     let setPerformanceMock;
 
     function createUserTimingPolyfill() {
       featureDetectionMarkName = null;
 
-      clearedMarks = [];
-      marks = [];
+      currentlyNotClearedMarks = [];
+      registeredMarks = [];
 
       // Remove file-system specific bits or version-specific bits of information from the module range marks.
       function filterMarkData(markName) {
@@ -56,8 +56,9 @@ describe('Timeline profiler', () => {
         clearMarks(markName) {
           markName = filterMarkData(markName);
 
-          clearedMarks.push(markName);
-          marks = marks.filter(mark => mark !== markName);
+          currentlyNotClearedMarks = currentlyNotClearedMarks.filter(
+            mark => mark !== markName,
+          );
         },
         mark(markName, markOptions) {
           markName = filterMarkData(markName);
@@ -66,7 +67,8 @@ describe('Timeline profiler', () => {
             featureDetectionMarkName = markName;
           }
 
-          marks.push(markName);
+          registeredMarks.push(markName);
+          currentlyNotClearedMarks.push(markName);
 
           if (markOptions != null) {
             // This is triggers the feature detection.
@@ -76,8 +78,8 @@ describe('Timeline profiler', () => {
       };
     }
 
-    function clearPendingMarks() {
-      clearedMarks.splice(0);
+    function eraseRegisteredMarks() {
+      registeredMarks.splice(0);
     }
 
     beforeEach(() => {
@@ -114,8 +116,9 @@ describe('Timeline profiler', () => {
 
     afterEach(() => {
       // Verify all logged marks also get cleared.
-      expect(marks).toHaveLength(0);
+      expect(currentlyNotClearedMarks).toHaveLength(0);
 
+      eraseRegisteredMarks();
       setPerformanceMock(null);
     });
 
@@ -635,7 +638,7 @@ describe('Timeline profiler', () => {
 
         const data = await preprocessData([
           ...createBoilerplateEntries(),
-          ...createUserTimingData(clearedMarks),
+          ...createUserTimingData(registeredMarks),
         ]);
         expect(data).toMatchInlineSnapshot(`
           {
@@ -832,7 +835,7 @@ describe('Timeline profiler', () => {
 
         const data = await preprocessData([
           ...createBoilerplateEntries(),
-          ...createUserTimingData(clearedMarks),
+          ...createUserTimingData(registeredMarks),
         ]);
         expect(data).toMatchInlineSnapshot(`
           {
@@ -841,9 +844,9 @@ describe('Timeline profiler', () => {
                 {
                   "batchUID": 0,
                   "depth": 0,
-                  "duration": 0.012,
+                  "duration": 0.014,
                   "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.006,
+                  "timestamp": 0.008,
                   "type": "render-idle",
                 },
                 {
@@ -851,15 +854,15 @@ describe('Timeline profiler', () => {
                   "depth": 0,
                   "duration": 0.003,
                   "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.006,
+                  "timestamp": 0.008,
                   "type": "render",
                 },
                 {
                   "batchUID": 0,
                   "depth": 0,
-                  "duration": 0.008,
+                  "duration": 0.010,
                   "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.01,
+                  "timestamp": 0.012,
                   "type": "commit",
                 },
                 {
@@ -867,7 +870,7 @@ describe('Timeline profiler', () => {
                   "depth": 1,
                   "duration": 0.001,
                   "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.016,
+                  "timestamp": 0.02,
                   "type": "layout-effects",
                 },
                 {
@@ -875,7 +878,7 @@ describe('Timeline profiler', () => {
                   "depth": 0,
                   "duration": 0.004,
                   "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.019,
+                  "timestamp": 0.023,
                   "type": "passive-effects",
                 },
               ],
@@ -883,9 +886,9 @@ describe('Timeline profiler', () => {
                 {
                   "batchUID": 1,
                   "depth": 0,
-                  "duration": 0.012,
+                  "duration": 0.014,
                   "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.024,
+                  "timestamp": 0.028,
                   "type": "render-idle",
                 },
                 {
@@ -893,15 +896,15 @@ describe('Timeline profiler', () => {
                   "depth": 0,
                   "duration": 0.003,
                   "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.024,
+                  "timestamp": 0.028,
                   "type": "render",
                 },
                 {
                   "batchUID": 1,
                   "depth": 0,
-                  "duration": 0.008,
+                  "duration": 0.010,
                   "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.028,
+                  "timestamp": 0.032,
                   "type": "commit",
                 },
                 {
@@ -909,7 +912,7 @@ describe('Timeline profiler', () => {
                   "depth": 1,
                   "duration": 0.001,
                   "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.034,
+                  "timestamp": 0.04,
                   "type": "layout-effects",
                 },
                 {
@@ -917,7 +920,7 @@ describe('Timeline profiler', () => {
                   "depth": 0,
                   "duration": 0.003,
                   "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.037,
+                  "timestamp": 0.043,
                   "type": "passive-effects",
                 },
               ],
@@ -926,33 +929,33 @@ describe('Timeline profiler', () => {
               {
                 "componentName": "App",
                 "duration": 0.001,
-                "timestamp": 0.007,
+                "timestamp": 0.009,
                 "type": "render",
                 "warning": null,
               },
               {
                 "componentName": "App",
                 "duration": 0.002,
-                "timestamp": 0.02,
+                "timestamp": 0.024,
                 "type": "passive-effect-mount",
                 "warning": null,
               },
               {
                 "componentName": "App",
                 "duration": 0.001,
-                "timestamp": 0.025,
+                "timestamp": 0.029,
                 "type": "render",
                 "warning": null,
               },
               {
                 "componentName": "App",
                 "duration": 0.001,
-                "timestamp": 0.038,
+                "timestamp": 0.044,
                 "type": "passive-effect-mount",
                 "warning": null,
               },
             ],
-            "duration": 0.04,
+            "duration": 0.046,
             "flamechart": [],
             "internalModuleSourceToRanges": Map {
               undefined => [
@@ -1015,9 +1018,9 @@ describe('Timeline profiler', () => {
                 {
                   "batchUID": 0,
                   "depth": 0,
-                  "duration": 0.012,
+                  "duration": 0.014,
                   "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.006,
+                  "timestamp": 0.008,
                   "type": "render-idle",
                 },
                 {
@@ -1025,15 +1028,15 @@ describe('Timeline profiler', () => {
                   "depth": 0,
                   "duration": 0.003,
                   "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.006,
+                  "timestamp": 0.008,
                   "type": "render",
                 },
                 {
                   "batchUID": 0,
                   "depth": 0,
-                  "duration": 0.008,
+                  "duration": 0.010,
                   "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.01,
+                  "timestamp": 0.012,
                   "type": "commit",
                 },
                 {
@@ -1041,7 +1044,7 @@ describe('Timeline profiler', () => {
                   "depth": 1,
                   "duration": 0.001,
                   "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.016,
+                  "timestamp": 0.02,
                   "type": "layout-effects",
                 },
                 {
@@ -1049,15 +1052,15 @@ describe('Timeline profiler', () => {
                   "depth": 0,
                   "duration": 0.004,
                   "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.019,
+                  "timestamp": 0.023,
                   "type": "passive-effects",
                 },
                 {
                   "batchUID": 1,
                   "depth": 0,
-                  "duration": 0.012,
+                  "duration": 0.014,
                   "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.024,
+                  "timestamp": 0.028,
                   "type": "render-idle",
                 },
                 {
@@ -1065,15 +1068,15 @@ describe('Timeline profiler', () => {
                   "depth": 0,
                   "duration": 0.003,
                   "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.024,
+                  "timestamp": 0.028,
                   "type": "render",
                 },
                 {
                   "batchUID": 1,
                   "depth": 0,
-                  "duration": 0.008,
+                  "duration": 0.010,
                   "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.028,
+                  "timestamp": 0.032,
                   "type": "commit",
                 },
                 {
@@ -1081,7 +1084,7 @@ describe('Timeline profiler', () => {
                   "depth": 1,
                   "duration": 0.001,
                   "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.034,
+                  "timestamp": 0.04,
                   "type": "layout-effects",
                 },
                 {
@@ -1089,7 +1092,7 @@ describe('Timeline profiler', () => {
                   "depth": 0,
                   "duration": 0.003,
                   "lanes": "0b0000000000000000000000000000101",
-                  "timestamp": 0.037,
+                  "timestamp": 0.043,
                   "type": "passive-effects",
                 },
               ],
@@ -1126,14 +1129,14 @@ describe('Timeline profiler', () => {
             "schedulingEvents": [
               {
                 "lanes": "0b0000000000000000000000000000101",
-                "timestamp": 0.005,
+                "timestamp": 0.007,
                 "type": "schedule-render",
                 "warning": null,
               },
               {
                 "componentName": "App",
                 "lanes": "0b0000000000000000000000000000101",
-                "timestamp": 0.021,
+                "timestamp": 0.025,
                 "type": "schedule-state-update",
                 "warning": null,
               },
@@ -1152,7 +1155,7 @@ describe('Timeline profiler', () => {
       it('should error if events and measures are incomplete', async () => {
         legacyRender(<div />);
 
-        const invalidMarks = clearedMarks.filter(
+        const invalidMarks = registeredMarks.filter(
           mark => !mark.includes('render-stop'),
         );
         const invalidUserTimingData = createUserTimingData(invalidMarks);
@@ -1170,7 +1173,7 @@ describe('Timeline profiler', () => {
       it('should error if work is completed without being started', async () => {
         legacyRender(<div />);
 
-        const invalidMarks = clearedMarks.filter(
+        const invalidMarks = registeredMarks.filter(
           mark => !mark.includes('render-start'),
         );
         const invalidUserTimingData = createUserTimingData(invalidMarks);
@@ -1265,7 +1268,7 @@ describe('Timeline profiler', () => {
           ),
         );
 
-        testMarks.push(...createUserTimingData(clearedMarks));
+        testMarks.push(...createUserTimingData(registeredMarks));
 
         let data;
         await utils.actAsync(async () => {
@@ -1290,11 +1293,10 @@ describe('Timeline profiler', () => {
               createNativeEventEntry('click', 5),
             ];
 
-            clearPendingMarks();
-
+            eraseRegisteredMarks();
             legacyRender(<App />);
 
-            testMarks.push(...createUserTimingData(clearedMarks));
+            testMarks.push(...createUserTimingData(registeredMarks));
 
             const data = await preprocessData(testMarks);
             const event = data.nativeEvents.find(({type}) => type === 'click');
@@ -1316,11 +1318,10 @@ describe('Timeline profiler', () => {
 
             startTime += 2000;
 
-            clearPendingMarks();
-
+            eraseRegisteredMarks();
             legacyRender(<App />);
 
-            testMarks.push(...createUserTimingData(clearedMarks));
+            testMarks.push(...createUserTimingData(registeredMarks));
 
             const data = await preprocessData(testMarks);
             const event = data.nativeEvents.find(({type}) => type === 'click');
@@ -1340,11 +1341,10 @@ describe('Timeline profiler', () => {
               createNativeEventEntry('click', 25000),
             ];
 
-            clearPendingMarks();
-
+            eraseRegisteredMarks();
             legacyRender(<App />);
 
-            clearedMarks.forEach(markName => {
+            registeredMarks.forEach(markName => {
               if (markName === '--render-stop') {
                 // Fake a long running render
                 startTime += 20000;
@@ -1401,8 +1401,8 @@ describe('Timeline profiler', () => {
 
             await waitFor(['A:1']);
 
-            testMarks.push(...createUserTimingData(clearedMarks));
-            clearPendingMarks();
+            testMarks.push(...createUserTimingData(registeredMarks));
+            eraseRegisteredMarks();
 
             // Advance the clock some more to make the pending React update seem long.
             startTime += 20000;
@@ -1421,7 +1421,7 @@ describe('Timeline profiler', () => {
 
             assertLog(['A:2', 'B:2']);
 
-            testMarks.push(...createUserTimingData(clearedMarks));
+            testMarks.push(...createUserTimingData(registeredMarks));
 
             const data = await preprocessData(testMarks);
             const event = data.nativeEvents.find(({type}) => type === 'click');
@@ -1452,7 +1452,7 @@ describe('Timeline profiler', () => {
 
             const data = await preprocessData([
               ...createBoilerplateEntries(),
-              ...createUserTimingData(clearedMarks),
+              ...createUserTimingData(registeredMarks),
             ]);
 
             const event = data.schedulingEvents.find(
@@ -1488,7 +1488,7 @@ describe('Timeline profiler', () => {
 
             const data = await preprocessData([
               ...createBoilerplateEntries(),
-              ...createUserTimingData(clearedMarks),
+              ...createUserTimingData(registeredMarks),
             ]);
 
             const event = data.schedulingEvents.find(
@@ -1499,6 +1499,7 @@ describe('Timeline profiler', () => {
 
           // This is temporarily disabled because the warning doesn't work
           // with useDeferredValue
+          // eslint-disable-next-line jest/no-disabled-tests
           it.skip('should warn about long nested (state) updates during layout effects', async () => {
             function Component() {
               const [didMount, setDidMount] = React.useState(false);
@@ -1523,7 +1524,7 @@ describe('Timeline profiler', () => {
             assertLog(['Component mount', 'Component update']);
 
             const testMarks = [];
-            clearedMarks.forEach(markName => {
+            registeredMarks.forEach(markName => {
               if (markName === '--component-render-start-Component') {
                 // Fake a long running render
                 startTime += 20000;
@@ -1556,6 +1557,7 @@ describe('Timeline profiler', () => {
 
           // This is temporarily disabled because the warning doesn't work
           // with useDeferredValue
+          // eslint-disable-next-line jest/no-disabled-tests
           it.skip('should warn about long nested (forced) updates during layout effects', async () => {
             class Component extends React.Component {
               _didMount: boolean = false;
@@ -1583,7 +1585,7 @@ describe('Timeline profiler', () => {
             assertLog(['Component mount', 'Component update']);
 
             const testMarks = [];
-            clearedMarks.forEach(markName => {
+            registeredMarks.forEach(markName => {
               if (markName === '--component-render-start-Component') {
                 // Fake a long running render
                 startTime += 20000;
@@ -1655,7 +1657,7 @@ describe('Timeline profiler', () => {
             ]);
 
             const testMarks = [];
-            clearedMarks.forEach(markName => {
+            registeredMarks.forEach(markName => {
               if (markName === '--component-render-start-Component') {
                 // Fake a long running render
                 startTime += 20000;
@@ -1685,6 +1687,7 @@ describe('Timeline profiler', () => {
 
           // This is temporarily disabled because the warning doesn't work
           // with useDeferredValue
+          // eslint-disable-next-line jest/no-disabled-tests
           it.skip('should not warn about deferred value updates scheduled during commit phase', async () => {
             function Component() {
               const [value, setValue] = React.useState(0);
@@ -1724,7 +1727,7 @@ describe('Timeline profiler', () => {
             ]);
 
             const testMarks = [];
-            clearedMarks.forEach(markName => {
+            registeredMarks.forEach(markName => {
               if (markName === '--component-render-start-Component') {
                 // Fake a long running render
                 startTime += 20000;
@@ -1789,7 +1792,7 @@ describe('Timeline profiler', () => {
               ),
             );
 
-            testMarks.push(...createUserTimingData(clearedMarks));
+            testMarks.push(...createUserTimingData(registeredMarks));
 
             const data = await preprocessData(testMarks);
             expect(data.thrownErrors).toHaveLength(2);
@@ -1848,7 +1851,7 @@ describe('Timeline profiler', () => {
               ),
             );
 
-            testMarks.push(...createUserTimingData(clearedMarks));
+            testMarks.push(...createUserTimingData(registeredMarks));
 
             let data;
             await utils.actAsync(async () => {
@@ -1908,7 +1911,7 @@ describe('Timeline profiler', () => {
               ),
             );
 
-            testMarks.push(...createUserTimingData(clearedMarks));
+            testMarks.push(...createUserTimingData(registeredMarks));
 
             let data;
             await utils.actAsync(async () => {

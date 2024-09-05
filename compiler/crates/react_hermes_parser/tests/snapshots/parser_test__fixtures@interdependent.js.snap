@@ -1,0 +1,504 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/interdependent.js
+---
+Input:
+/**
+ * Should produce 1 scope:
+ *
+ * return: inputs=props.a & props.b; outputs=return
+ *   const a = compute(props.a);
+ *   const b = compute(props.b);
+ *   foo(a, b);
+ *   return = <Foo a={a} b={b} />
+ */
+function Component(props) {
+  const a = compute(props.a);
+  const b = compute(props.b);
+  foo(a, b);
+  return <Foo a={a} b={b} />;
+}
+
+function compute() {}
+function foo() {}
+function Foo() {}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          215,
+          224
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            225,
+            230
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "a",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    242,
+                    243
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "compute",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      246,
+                      253
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "MemberExpression",
+                      "object": {
+                        "type": "Identifier",
+                        "name": "props",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          254,
+                          259
+                        ]
+                      },
+                      "property": {
+                        "type": "Identifier",
+                        "name": "a",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          260,
+                          261
+                        ]
+                      },
+                      "computed": false,
+                      "loc": null,
+                      "range": [
+                        254,
+                        261
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    246,
+                    262
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  242,
+                  262
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              236,
+              263
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "b",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    272,
+                    273
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "compute",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      276,
+                      283
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "MemberExpression",
+                      "object": {
+                        "type": "Identifier",
+                        "name": "props",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          284,
+                          289
+                        ]
+                      },
+                      "property": {
+                        "type": "Identifier",
+                        "name": "b",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          290,
+                          291
+                        ]
+                      },
+                      "computed": false,
+                      "loc": null,
+                      "range": [
+                        284,
+                        291
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    276,
+                    292
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  272,
+                  292
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              266,
+              293
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "Identifier",
+                "name": "foo",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  296,
+                  299
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "Identifier",
+                  "name": "a",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    300,
+                    301
+                  ]
+                },
+                {
+                  "type": "Identifier",
+                  "name": "b",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    303,
+                    304
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                296,
+                305
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              296,
+              306
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "Foo",
+                  "loc": null,
+                  "range": [
+                    317,
+                    320
+                  ]
+                },
+                "attributes": [
+                  {
+                    "type": "JSXAttribute",
+                    "name": {
+                      "type": "JSXIdentifier",
+                      "name": "a",
+                      "loc": null,
+                      "range": [
+                        321,
+                        322
+                      ]
+                    },
+                    "value": {
+                      "type": "JSXExpressionContainer",
+                      "expression": {
+                        "type": "Identifier",
+                        "name": "a",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          324,
+                          325
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        323,
+                        326
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      321,
+                      326
+                    ]
+                  },
+                  {
+                    "type": "JSXAttribute",
+                    "name": {
+                      "type": "JSXIdentifier",
+                      "name": "b",
+                      "loc": null,
+                      "range": [
+                        327,
+                        328
+                      ]
+                    },
+                    "value": {
+                      "type": "JSXExpressionContainer",
+                      "expression": {
+                        "type": "Identifier",
+                        "name": "b",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          330,
+                          331
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        329,
+                        332
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      327,
+                      332
+                    ]
+                  }
+                ],
+                "selfClosing": true,
+                "loc": null,
+                "range": [
+                  316,
+                  335
+                ]
+              },
+              "children": [],
+              "closingElement": null,
+              "loc": null,
+              "range": [
+                316,
+                335
+              ]
+            },
+            "loc": null,
+            "range": [
+              309,
+              336
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          232,
+          338
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        206,
+        338
+      ],
+      "loc": null,
+      "range": [
+        206,
+        338
+      ]
+    },
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "compute",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          349,
+          356
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [],
+        "loc": null,
+        "range": [
+          359,
+          361
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        340,
+        361
+      ],
+      "loc": null,
+      "range": [
+        340,
+        361
+      ]
+    },
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "foo",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          371,
+          374
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [],
+        "loc": null,
+        "range": [
+          377,
+          379
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        362,
+        379
+      ],
+      "loc": null,
+      "range": [
+        362,
+        379
+      ]
+    },
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Foo",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          389,
+          392
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [],
+        "loc": null,
+        "range": [
+          395,
+          397
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        380,
+        397
+      ],
+      "loc": null,
+      "range": [
+        380,
+        397
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    206,
+    397
+  ]
+}

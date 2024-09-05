@@ -1,0 +1,23 @@
+{
+  "name": "react-compiler-runtime",
+  "version": "0.0.1",
+  "description": "Runtime for React Compiler",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "peerDependencies": {
+    "react": "^18.2.0 || ^19.0.0"
+  },
+  "scripts": {
+    "build": "rimraf dist && rollup --config --bundleConfigAsCjs",
+    "test": "echo 'no tests'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/react.git",
+    "directory": "compiler/packages/react-compiler-runtime"
+  }
+}

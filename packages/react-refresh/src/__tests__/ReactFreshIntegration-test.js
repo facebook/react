@@ -7,8 +7,6 @@
  * @emails react-core
  */
 
-/* eslint-disable no-for-of-loops/no-for-of-loops */
-
 'use strict';
 
 let React;
@@ -129,7 +127,7 @@ describe('ReactFreshIntegration', () => {
       testJavaScript,
     ],
     ['TypeScript syntax', executeTypescript, testTypeScript],
-  ])('%s', (language, execute, test) => {
+  ])('%s', (language, execute, runTest) => {
     async function render(source) {
       const Component = execute(source);
       await act(() => {
@@ -175,7 +173,7 @@ describe('ReactFreshIntegration', () => {
       expect(ReactFreshRuntime._getMountedRootCount()).toBe(1);
     }
 
-    test(render, patch);
+    runTest(render, patch);
   });
 
   function testJavaScript(render, patch) {
@@ -1639,53 +1637,59 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    if (!require('shared/ReactFeatureFlags').disableModulePatternComponents) {
-      it('remounts deprecated factory components', async () => {
-        if (__DEV__) {
-          await expect(async () => {
-            await render(`
-              function Parent() {
-                return {
-                  render() {
-                    return <Child prop="A" />;
-                  }
-                };
-              };
-
-              function Child({prop}) {
-                return <h1>{prop}1</h1>;
-              };
-
-              export default Parent;
-            `);
-          }).toErrorDev(
-            'The <Parent /> component appears to be a function component ' +
-              'that returns a class instance.',
-          );
-          const el = container.firstChild;
-          expect(el.textContent).toBe('A1');
-          await patch(`
-            function Parent() {
-              return {
-                render() {
-                  return <Child prop="B" />;
-                }
-              };
-            };
-
-            function Child({prop}) {
-              return <h1>{prop}2</h1>;
-            };
-
-            export default Parent;
-          `);
-          // Like classes, factory components always remount.
-          expect(container.firstChild).not.toBe(el);
-          const newEl = container.firstChild;
-          expect(newEl.textContent).toBe('B2');
-        }
-      });
-    }
+    it('resets useMemoCache cache slots', async () => {
+      if (__DEV__) {
+        await render(`
+          const useMemoCache = require('react/compiler-runtime').c;
+          let cacheMisses = 0;
+          const cacheMiss = (id) => {
+            cacheMisses++;
+            return id;
+          };
+          export default function App(t0) {
+            const $ = useMemoCache(1);
+            const {reset1} = t0;
+            let t1;
+            if ($[0] !== reset1) {
+              $[0] = t1 = cacheMiss({reset1});
+            } else {
+              t1 = $[1];
+            }
+            return <h1>{cacheMisses}</h1>;
+          }
+        `);
+        const el = container.firstChild;
+        expect(el.textContent).toBe('1');
+        await patch(`
+          const useMemoCache = require('react/compiler-runtime').c;
+          let cacheMisses = 0;
+          const cacheMiss = (id) => {
+            cacheMisses++;
+            return id;
+          };
+          export default function App(t0) {
+            const $ = useMemoCache(2);
+            const {reset1, reset2} = t0;
+            let t1;
+            if ($[0] !== reset1) {
+              $[0] = t1 = cacheMiss({reset1});
+            } else {
+              t1 = $[1];
+            }
+            let t2;
+            if ($[1] !== reset2) {
+              $[1] = t2 = cacheMiss({reset2});
+            } else {
+              t2 = $[1];
+            }
+            return <h1>{cacheMisses}</h1>;
+          }
+        `);
+        expect(container.firstChild).toBe(el);
+        // cache size changed between refreshes
+        expect(el.textContent).toBe('2');
+      }
+    });
 
     describe('with inline requires', () => {
       beforeEach(() => {

@@ -1,0 +1,1367 @@
+{
+    "objects": {
+        "SourceLocation": {
+            "fields": {
+                "source": {
+                    "type": "Option<String>"
+                },
+                "start": {
+                    "type": "Position"
+                },
+                "end": {
+                    "type": "Position"
+                }
+            }
+        },
+        "Position": {
+            "fields": {
+                "line": {
+                    "type": "NonZeroU32"
+                },
+                "column": {
+                    "type": "u32"
+                }
+            }
+        },
+        "Class": {
+            "visitor": true,
+            "fields": {
+                "id": {
+                    "type": "Option<Identifier>"
+                },
+                "super_class": {
+                    "type": "Option<Expression>",
+                    "rename": "superClass"
+                },
+                "body": {
+                    "type": "ClassBody"
+                }
+            }
+        },
+        "Function": {
+            "visitor": true,
+            "fields": {
+                "id": {
+                    "type": "Option<Identifier>"
+                },
+                "params": {
+                    "type": "Vec<Pattern>"
+                },
+                "body": {
+                    "type": "Option<FunctionBody>"
+                },
+                "is_generator": {
+                    "type": "bool",
+                    "optional": true,
+                    "rename": "generator"
+                },
+                "is_async": {
+                    "type": "bool",
+                    "optional": true,
+                    "rename": "async"
+                },
+                "loc": {
+                    "type": "Option<SourceLocation>",
+                    "optional": true
+                },
+                "range": {
+                    "type": "Option<SourceRange>",
+                    "optional": true
+                }
+            }
+        },
+        "RegExpValue": {
+            "fields": {
+                "pattern": {
+                    "type": "String"
+                },
+                "flags": {
+                    "type": "String"
+                }
+            }
+        },
+        "TemplateElementValue": {
+            "fields": {
+                "cooked": {
+                    "type": "Option<String>"
+                },
+                "raw": {
+                    "type": "String"
+                }
+            }
+        }
+    },
+    "nodes": {
+        "Identifier": {
+            "fields": {
+                "name": {
+                    "type": "String"
+                },
+                "binding": {
+                    "type": "Option<Binding>",
+                    "optional": true,
+                    "skip": true
+                },
+                "type_annotation": {
+                    "type": "Option<TypeAnnotation>",
+                    "optional": true,
+                    "rename": "typeAnnotation",
+                    "hermes_default": true,
+                    "TODO": "support HermesParser"
+                }
+            }
+        },
+        "Literal": {
+            "skip_hermes_codegen": true,
+            "skip_hermes_enum_variant": true,
+            "fields": {
+                "value": {
+                    "type": "JsValue"
+                },
+                "raw": {
+                    "type": "Option<String>",
+                    "optional": true
+                },
+                "regex": {
+                    "type": "Option<RegExpValue>",
+                    "optional": true
+                },
+                "bigint": {
+                    "type": "Option<String>",
+                    "optional": true
+                }
+            }
+        },
+        "NumericLiteral": {
+            "fields": {
+                "value": {
+                    "type": "Number"
+                }
+            }
+        },
+        "BooleanLiteral": {
+            "fields": {
+                "value": {
+                    "type": "bool"
+                }
+            }
+        },
+        "NullLiteral": {},
+        "StringLiteral": {
+            "fields": {
+                "value": {
+                    "type": "String",
+                    "hermes_convert_with": "convert_string_value"
+                }
+            }
+        },
+        "RegExpLiteral": {
+            "fields": {
+                "pattern": {
+                    "type": "String"
+                },
+                "flags": {
+                    "type": "String"
+                }
+            }
+        },
+        "Program": {
+            "fields": {
+                "body": {
+                    "type": "Vec<ModuleItem>"
+                },
+                "source_type": {
+                    "type": "SourceType",
+                    "optional": true,
+                    "rename": "sourceType",
+                    "hermes_default": true
+                }
+            }
+        },
+        "ExpressionStatement": {
+            "fields": {
+                "expression": {
+                    "type": "Expression"
+                },
+                "directive": {
+                    "type": "Option<String>",
+                    "optional": true,
+                    "hermes_default": true
+                }
+            }
+        },
+        "BlockStatement": {
+            "fields": {
+                "body": {
+                    "type": "Vec<Statement>"
+                }
+            }
+        },
+        "EmptyStatement": {},
+        "DebuggerStatement": {},
+        "WithStatement": {
+            "fields": {
+                "object": {
+                    "type": "Expression"
+                },
+                "body": {
+                    "type": "Statement"
+                }
+            }
+        },
+        "ReturnStatement": {
+            "fields": {
+                "argument": {
+                    "type": "Option<Expression>"
+                }
+            }
+        },
+        "LabeledStatement": {
+            "fields": {
+                "label": {
+                    "type": "Identifier"
+                },
+                "body": {
+                    "type": "Statement"
+                }
+            }
+        },
+        "BreakStatement": {
+            "fields": {
+                "label": {
+                    "type": "Option<Identifier>"
+                }
+            }
+        },
+        "ContinueStatement": {
+            "fields": {
+                "label": {
+                    "type": "Option<Identifier>"
+                }
+            }
+        },
+        "IfStatement": {
+            "fields": {
+                "test": {
+                    "type": "Expression"
+                },
+                "consequent": {
+                    "type": "Statement"
+                },
+                "alternate": {
+                    "type": "Option<Statement>"
+                }
+            }
+        },
+        "SwitchStatement": {
+            "fields": {
+                "discriminant": {
+                    "type": "Expression"
+                },
+                "cases": {
+                    "type": "Vec<SwitchCase>"
+                }
+            }
+        },
+        "SwitchCase": {
+            "fields": {
+                "test": {
+                    "type": "Option<Expression>"
+                },
+                "consequent": {
+                    "type": "Vec<Statement>"
+                }
+            }
+        },
+        "ThrowStatement": {
+            "fields": {
+                "argument": {
+                    "type": "Expression"
+                }
+            }
+        },
+        "TryStatement": {
+            "fields": {
+                "block": {
+                    "type": "BlockStatement"
+                },
+                "handler": {
+                    "type": "Option<CatchClause>"
+                },
+                "finalizer": {
+                    "type": "Option<BlockStatement>"
+                }
+            }
+        },
+        "CatchClause": {
+            "fields": {
+                "param": {
+                    "type": "Option<Pattern>"
+                },
+                "body": {
+                    "type": "BlockStatement"
+                }
+            }
+        },
+        "WhileStatement": {
+            "fields": {
+                "test": {
+                    "type": "Expression"
+                },
+                "body": {
+                    "type": "Statement"
+                }
+            }
+        },
+        "DoWhileStatement": {
+            "fields": {
+                "body": {
+                    "type": "Statement"
+                },
+                "test": {
+                    "type": "Expression"
+                }
+            }
+        },
+        "ForStatement": {
+            "fields": {
+                "init": {
+                    "type": "Option<ForInit>"
+                },
+                "test": {
+                    "type": "Option<Expression>"
+                },
+                "update": {
+                    "type": "Option<Expression>"
+                },
+                "body": {
+                    "type": "Statement"
+                }
+            }
+        },
+        "ForInStatement": {
+            "fields": {
+                "left": {
+                    "type": "ForInInit"
+                },
+                "right": {
+                    "type": "Expression"
+                },
+                "body": {
+                    "type": "Statement"
+                }
+            }
+        },
+        "ForOfStatement": {
+            "fields": {
+                "is_await": {
+                    "type": "bool",
+                    "optional": true,
+                    "rename": "await"
+                },
+                "left": {
+                    "type": "ForInInit"
+                },
+                "right": {
+                    "type": "Expression"
+                },
+                "body": {
+                    "type": "Statement"
+                }
+            }
+        },
+        "FunctionDeclaration": {
+            "skip_hermes_codegen": true,
+            "fields": {
+                "function": {
+                    "type": "Function",
+                    "flatten": true
+                }
+            }
+        },
+        "ClassDeclaration": {
+            "skip_hermes_codegen": true,
+            "fields": {
+                "class": {
+                    "type": "Class",
+                    "flatten": true
+                }
+            }
+        },
+        "ClassExpression": {
+            "skip_hermes_codegen": true,
+            "fields": {
+                "class": {
+                    "type": "Class",
+                    "flatten": true
+                }
+            }
+        },
+        "ClassBody": {
+            "fields": {
+                "body": {
+                    "type": "Vec<ClassItem>"
+                }
+            }
+        },
+        "MethodDefinition": {
+            "fields": {
+                "key": {
+                    "type": "Expression"
+                },
+                "value": {
+                    "type": "FunctionExpression"
+                },
+                "kind": {
+                    "type": "MethodKind"
+                },
+                "is_computed": {
+                    "type": "bool",
+                    "rename": "computed"
+                },
+                "is_static": {
+                    "type": "bool",
+                    "rename": "static"
+                }
+            }
+        },
+        "VariableDeclaration": {
+            "fields": {
+                "kind": {
+                    "type": "VariableDeclarationKind"
+                },
+                "declarations": {
+                    "type": "Vec<VariableDeclarator>"
+                }
+            }
+        },
+        "VariableDeclarator": {
+            "fields": {
+                "id": {
+                    "type": "Pattern"
+                },
+                "init": {
+                    "type": "Option<Expression>"
+                }
+            }
+        },
+        "ThisExpression": {},
+        "ArrayExpression": {
+            "fields": {
+                "elements": {
+                    "type": "Vec<Option<ExpressionOrSpread>>",
+                    "hermes_convert_with": "convert_array_expression_elements"
+                }
+            }
+        },
+        "ObjectExpression": {
+            "fields": {
+                "properties": {
+                    "type": "Vec<PropertyOrSpreadElement>"
+                }
+            }
+        },
+        "Property": {
+            "fields": {
+                "key": {
+                    "type": "Expression"
+                },
+                "value": {
+                    "type": "Expression"
+                },
+                "kind": {
+                    "type": "PropertyKind"
+                },
+                "is_method": {
+                    "type": "bool",
+                    "rename": "method"
+                },
+                "is_shorthand": {
+                    "type": "bool",
+                    "rename": "shorthand"
+                },
+                "is_computed": {
+                    "type": "bool",
+                    "rename": "computed"
+                }
+            }
+        },
+        "FunctionExpression": {
+            "skip_hermes_codegen": true,
+            "fields": {
+                "function": {
+                    "type": "Function",
+                    "flatten": true
+                }
+            }
+        },
+        "ArrowFunctionExpression": {
+            "skip_hermes_codegen": true,
+            "fields": {
+                "function": {
+                    "type": "Function",
+                    "flatten": true
+                },
+                "is_expression": {
+                    "type": "bool",
+                    "rename": "expression"
+                }
+            }
+        },
+        "UnaryExpression": {
+            "fields": {
+                "operator": {
+                    "type": "UnaryOperator"
+                },
+                "prefix": {
+                    "type": "bool"
+                },
+                "argument": {
+                    "type": "Expression"
+                }
+            }
+        },
+        "UpdateExpression": {
+            "fields": {
+                "operator": {
+                    "type": "UpdateOperator"
+                },
+                "argument": {
+                    "type": "Expression"
+                },
+                "prefix": {
+                    "type": "bool"
+                }
+            }
+        },
+        "BinaryExpression": {
+            "fields": {
+                "left": {
+                    "type": "Expression"
+                },
+                "operator": {
+                    "type": "BinaryOperator"
+                },
+                "right": {
+                    "type": "Expression"
+                }
+            }
+        },
+        "AssignmentExpression": {
+            "fields": {
+                "operator": {
+                    "type": "AssignmentOperator"
+                },
+                "left": {
+                    "type": "AssignmentTarget"
+                },
+                "right": {
+                    "type": "Expression"
+                }
+            }
+        },
+        "LogicalExpression": {
+            "fields": {
+                "operator": {
+                    "type": "LogicalOperator"
+                },
+                "left": {
+                    "type": "Expression"
+                },
+                "right": {
+                    "type": "Expression"
+                }
+            }
+        },
+        "MemberExpression": {
+            "fields": {
+                "object": {
+                    "type": "ExpressionOrSuper"
+                },
+                "property": {
+                    "type": "ExpressionOrPrivateIdentifier"
+                },
+                "is_computed": {
+                    "type": "bool",
+                    "rename": "computed"
+                }
+            }
+        },
+        "ConditionalExpression": {
+            "fields": {
+                "test": {
+                    "type": "Expression"
+                },
+                "alternate": {
+                    "type": "Expression"
+                },
+                "consequent": {
+                    "type": "Expression"
+                }
+            }
+        },
+        "CallExpression": {
+            "fields": {
+                "callee": {
+                    "type": "ExpressionOrSuper"
+                },
+                "arguments": {
+                    "type": "Vec<ExpressionOrSpread>"
+                }
+            }
+        },
+        "NewExpression": {
+            "fields": {
+                "callee": {
+                    "type": "Expression"
+                },
+                "arguments": {
+                    "type": "Vec<ExpressionOrSpread>"
+                }
+            }
+        },
+        "SequenceExpression": {
+            "fields": {
+                "expressions": {
+                    "type": "Vec<Expression>"
+                }
+            }
+        },
+        "Super": {},
+        "SpreadElement": {
+            "fields": {
+                "argument": {
+                    "type": "Expression"
+                }
+            }
+        },
+        "YieldExpression": {
+            "fields": {
+                "argument": {
+                    "type": "Option<Expression>",
+                    "optional": true
+                },
+                "is_delegate": {
+                    "type": "bool",
+                    "rename": "delegate"
+                }
+            }
+        },
+        "ImportDeclaration": {
+            "fields": {
+                "specifiers": {
+                    "type": "Vec<ImportDeclarationSpecifier>"
+                },
+                "source": {
+                    "type": "_Literal"
+                }
+            }
+        },
+        "ImportSpecifier": {
+            "fields": {
+                "imported": {
+                    "type": "Identifier"
+                },
+                "local": {
+                    "type": "Identifier"
+                }
+            }
+        },
+        "ImportDefaultSpecifier": {
+            "fields": {
+                "local": {
+                    "type": "Identifier"
+                }
+            }
+        },
+        "ImportNamespaceSpecifier": {
+            "fields": {
+                "local": {
+                    "type": "Identifier"
+                }
+            }
+        },
+        "ExportNamedDeclaration": {
+            "fields": {
+                "declaration": {
+                    "type": "Option<Declaration>"
+                },
+                "specifiers": {
+                    "type": "Vec<ExportSpecifier>"
+                },
+                "source": {
+                    "type": "Option<_Literal>"
+                }
+            }
+        },
+        "ExportSpecifier": {
+            "fields": {
+                "exported": {
+                    "type": "Identifier"
+                }
+            }
+        },
+        "ExportDefaultDeclaration": {
+            "fields": {
+                "declaration": {
+                    "type": "DeclarationOrExpression"
+                }
+            }
+        },
+        "ExportAllDeclaration": {
+            "fields": {
+                "source": {
+                    "type": "_Literal"
+                },
+                "exported": {
+                    "type": "Option<Identifier>",
+                    "optional": true,
+                    "hermes_default": true
+                }
+            }
+        },
+        "JSXIdentifier": {
+            "fields": {
+                "name": {
+                    "type": "String"
+                },
+                "binding": {
+                    "type": "Option<Binding>",
+                    "optional": true,
+                    "skip": true
+                }
+            }
+        },
+        "JSXNamespacedName": {
+            "fields": {
+                "namespace": {
+                    "type": "JSXIdentifier"
+                },
+                "name": {
+                    "type": "JSXIdentifier"
+                }
+            }
+        },
+        "JSXMemberExpression": {
+            "fields": {
+                "object": {
+                    "type": "JSXMemberExpressionOrIdentifier"
+                },
+                "property": {
+                    "type": "JSXIdentifier"
+                }
+            }
+        },
+        "JSXEmptyExpression": {},
+        "JSXExpressionContainer": {
+            "fields": {
+                "expression": {
+                    "type": "JSXExpressionOrEmpty"
+                }
+            }
+        },
+        "JSXSpreadChild": {
+            "fields": {
+                "expression": {
+                    "type": "Expression"
+                }
+            }
+        },
+        "JSXOpeningElement": {
+            "fields": {
+                "name": {
+                    "type": "JSXElementName"
+                },
+                "attributes": {
+                    "type": "Vec<JSXAttributeOrSpread>"
+                },
+                "self_closing": {
+                    "type": "bool",
+                    "rename": "selfClosing"
+                }
+            }
+        },
+        "JSXClosingElement": {
+            "fields": {
+                "name": {
+                    "type": "JSXElementName"
+                }
+            }
+        },
+        "JSXAttribute": {
+            "fields": {
+                "name": {
+                    "type": "JSXIdentifierOrNamespacedName"
+                },
+                "value": {
+                    "type": "Option<JSXAttributeValue>"
+                }
+            }
+        },
+        "JSXSpreadAttribute": {
+            "fields": {
+                "argument": {
+                    "type": "Expression"
+                }
+            }
+        },
+        "JSXText": {
+            "fields": {
+                "value": {
+                    "type": "String",
+                    "hermes_convert_with": "convert_string_value"
+                },
+                "raw": {
+                    "type": "String"
+                }
+            }
+        },
+        "JSXStringLiteral": {
+            "fields": {
+                "value": {
+                    "type": "String",
+                    "hermes_convert_with": "convert_string_value"
+                },
+                "raw": {
+                    "type": "String"
+                }
+            },
+            "TODO": "Non-standard HermesParser node"
+        },
+        "JSXElement": {
+            "fields": {
+                "opening_element": {
+                    "type": "JSXOpeningElement",
+                    "rename": "openingElement"
+                },
+                "children": {
+                    "type": "Vec<JSXChildItem>"
+                },
+                "closing_element": {
+                    "type": "Option<JSXClosingElement>",
+                    "rename": "closingElement"
+                }
+            }
+        },
+        "JSXFragment": {
+            "fields": {
+                "opening_fragment": {
+                    "type": "JSXOpeningFragment",
+                    "rename": "openingFragment"
+                },
+                "children": {
+                    "type": "Vec<JSXChildItem>"
+                },
+                "closing_fragment": {
+                    "type": "JSXClosingFragment",
+                    "rename": "closingFragment"
+                }
+            }
+        },
+        "JSXOpeningFragment": {},
+        "JSXClosingFragment": {},
+        "ArrayPattern": {
+            "fields": {
+                "elements": {
+                    "type": "Vec<Option<Pattern>>"
+                }
+            }
+        },
+        "ObjectPattern": {
+            "fields": {
+                "properties": {
+                    "type": "Vec<AssignmentPropertyOrRestElement>"
+                }
+            }
+        },
+        "AssignmentProperty": {
+            "skip_hermes_codegen": true,
+            "type": "Property",
+            "fields": {
+                "key": {
+                    "type": "Expression"
+                },
+                "value": {
+                    "type": "Pattern"
+                },
+                "kind": {
+                    "type": "PropertyKind",
+                    "TODO": "fixed value `init`"
+                },
+                "is_computed": {
+                    "type": "bool",
+                    "rename": "computed"
+                },
+                "is_shorthand": {
+                    "type": "bool",
+                    "rename": "shorthand"
+                },
+                "is_method": {
+                    "type": "bool",
+                    "rename": "method",
+                    "TODO": "fixed value `false`" 
+                }
+            }
+        },
+        "RestElement": {
+            "fields": {
+                "argument": {
+                    "type": "Pattern"
+                }
+            }
+        },
+        "AssignmentPattern": {
+            "fields": {
+                "left": {
+                    "type": "Pattern"
+                },
+                "right": {
+                    "type": "Expression"
+                }
+            }
+        },
+        "TemplateLiteral": {
+            "fields": {
+                "quasis": {
+                    "type": "Vec<TemplateElement>"
+                },
+                "expressions": {
+                    "type": "Vec<Expression>"
+                }
+            }
+        },
+        "TemplateElement": {
+            "skip_hermes_codegen": true,
+            "fields": {
+                "tail": {
+                    "type": "bool"
+                },
+                "value": {
+                    "type": "TemplateElementValue"
+                }
+            }
+        },
+        "TaggedTemplateExpression": {
+            "fields": {
+                "tag": {
+                    "type": "Expression"
+                },
+                "quasi": {
+                    "type": "TemplateLiteral"
+                }
+            }
+        },
+        "MetaProperty": {
+            "fields": {
+                "meta": {
+                    "type": "Identifier"
+                },
+                "property": {
+                    "type": "Identifier"
+                }
+            }
+        },
+        "AwaitExpression": {
+            "fields": {
+                "argument": {
+                    "type": "Expression"
+                }
+            }
+        },
+        "ChainExpression": {
+            "skip_hermes_codegen": true,
+            "skip_hermes_enum_variant": true,
+            "fields": {
+                "expression": {
+                    "type": "ChainElement"
+                }
+            }
+        },
+        "OptionalMemberExpression": {
+            "fields": {
+                "object": {
+                    "type": "Expression"
+                },
+                "property": {
+                    "type": "Expression"
+                },
+                "is_computed": {
+                    "type": "bool",
+                    "rename": "computed"
+                },
+                "is_optional": {
+                    "type": "bool",
+                    "optional": true,
+                    "rename": "optional"
+                }
+            }
+        },
+        "OptionalCallExpression": {
+            "fields": {
+                "callee": {
+                    "type": "ExpressionOrSuper"
+                },
+                "arguments": {
+                    "type": "Vec<ExpressionOrSpread>"
+                },
+                "is_optional": {
+                    "type": "bool",
+                    "optional": true,
+                    "rename": "optional"
+                }
+            }
+        },
+        "ImportExpression": {
+            "fields": {
+                "source": {
+                    "type": "Expression"
+                }
+            }
+        },
+        "ClassProperty": {
+            "fields": {
+                "key": {
+                    "type": "Expression"
+                },
+                "value": {
+                    "type": "Option<Expression>",
+                    "optional": true
+                },
+                "is_computed": {
+                    "type": "bool",
+                    "rename": "computed"
+                },
+                "is_static": {
+                    "type": "bool",
+                    "rename": "static"
+                }
+            }
+        },
+        "ClassPrivateProperty": {
+            "fields": {
+                "key": {
+                    "type": "ExpressionOrPrivateIdentifier"
+                },
+                "value": {
+                    "type": "Option<Expression>",
+                    "optional": true
+                },
+                "is_static": {
+                    "type": "bool",
+                    "rename": "static"
+                }
+            },
+            "TODO": "Non-standard HermesParser node"
+        },
+        "PrivateName": {
+            "fields": {
+                "id": {
+                    "type": "Identifier"
+                }
+            },
+            "TODO": "Non-standard HermesParser node"
+        },
+        "PrivateIdentifier": {
+            "skip_hermes_codegen": true,
+            "skip_hermes_enum_variant": true,
+            "fields": {
+                "name": {
+                    "type": "String"
+                }
+            }
+        },
+        "StaticBlock": {
+            "skip_hermes_codegen": true,
+            "skip_hermes_enum_variant": true,
+            "fields": {
+                "body": {
+                    "type": "Vec<Statement>"
+                }
+            },
+            "TODO": "not yet supported in HermesParser"
+        },
+        "CoverTypedIdentifier": {
+            "fields": {
+                "left": {
+                    "type": "Identifier"
+                },
+                "right": {
+                    "type": "Option<TypeAnnotation>"
+                }
+            },
+            "TODO": "Non-standard HermesParser node"
+        },
+        "TSTypeAnnotation": {},
+        "TSTypeAliasDeclaration": {}
+    },
+    "enums": {
+        "Statement": [
+            "BlockStatement",
+            "BreakStatement",
+            "ClassDeclaration",
+            "ContinueStatement",
+            "DebuggerStatement",
+            "DoWhileStatement",
+            "EmptyStatement",
+            "ExpressionStatement",
+            "ForInStatement",
+            "ForOfStatement",
+            "ForStatement",
+            "FunctionDeclaration",
+            "IfStatement",
+            "LabeledStatement",
+            "ReturnStatement",
+            "SwitchStatement",
+            "ThrowStatement",
+            "TryStatement",
+            "TSTypeAliasDeclaration",
+            "VariableDeclaration",
+            "WhileStatement",
+            "WithStatement"
+        ],
+        "Expression": [
+            "ArrayExpression",
+            "ArrowFunctionExpression",
+            "AssignmentExpression",
+            "AwaitExpression",
+            "BinaryExpression",
+            "BooleanLiteral",
+            "CallExpression",
+            "ChainExpression",
+            "ClassExpression",
+            "ConditionalExpression",
+            "CoverTypedIdentifier",
+            "FunctionExpression",
+            "Identifier",
+            "ImportExpression",
+            "JSXElement",
+            "JSXFragment",
+            "Literal",
+            "LogicalExpression",
+            "MemberExpression",
+            "MetaProperty",
+            "NewExpression",
+            "NullLiteral",
+            "NumericLiteral",
+            "ObjectExpression",
+            "OptionalCallExpression",
+            "OptionalMemberExpression",
+            "RegExpLiteral",
+            "SequenceExpression",
+            "StringLiteral",
+            "TaggedTemplateExpression",
+            "TemplateLiteral",
+            "ThisExpression",
+            "UnaryExpression",
+            "UpdateExpression",
+            "YieldExpression"
+        ],
+        "_Literal": [
+            "Literal",
+            "BooleanLiteral",
+            "NullLiteral",
+            "StringLiteral",
+            "NumericLiteral"
+        ],
+        "Declaration": [
+            "ClassDeclaration",
+            "FunctionDeclaration",
+            "VariableDeclaration",
+            "TSTypeAliasDeclaration"
+        ],
+        "ImportDeclarationSpecifier": [
+            "ImportSpecifier",
+            "ImportDefaultSpecifier",
+            "ImportNamespaceSpecifier"
+        ],
+        "ModuleItem": [
+            "ImportOrExportDeclaration",
+            "Statement"
+        ],
+        "ImportOrExportDeclaration": [
+            "ImportDeclaration",
+            "ExportNamedDeclaration",
+            "ExportDefaultDeclaration",
+            "ExportAllDeclaration"
+        ],
+        "ExpressionOrSuper": [
+            "Expression",
+            "Super"
+        ],
+        "ExpressionOrSpread": [
+            "Expression",
+            "SpreadElement"
+        ],
+        "FunctionBody": [
+            "BlockStatement",
+            "Expression"
+        ],
+        "Pattern": [
+            "Identifier",
+            "ArrayPattern",
+            "ObjectPattern",
+            "RestElement",
+            "AssignmentPattern"
+        ],
+        "ForInit": [
+            "Expression",
+            "VariableDeclaration"
+        ],
+        "ForInInit": [
+            "Pattern",
+            "VariableDeclaration"
+        ],
+        "PropertyOrSpreadElement": [
+            "Property",
+            "SpreadElement"
+        ],
+        "AssignmentPropertyOrRestElement": [
+            "AssignmentProperty",
+            "RestElement"
+        ],
+        "AssignmentTarget": [
+            "Pattern",
+            "Expression"
+        ],
+        "ChainElement": [
+            "CallExpression",
+            "MemberExpression"
+        ],
+        "JSXMemberExpressionOrIdentifier": [
+            "JSXMemberExpression",
+            "JSXIdentifier"
+        ],
+        "JSXExpressionOrEmpty": [
+            "Expression",
+            "JSXEmptyExpression"
+        ],
+        "JSXAttributeOrSpread": [
+            "JSXAttribute",
+            "JSXSpreadAttribute"
+        ],
+        "JSXAttributeValue": [
+            "Literal",
+            "JSXExpressionContainer",
+            "JSXElement",
+            "JSXFragment",
+            "JSXStringLiteral"
+        ],
+        "JSXElementName": [
+            "JSXIdentifier",
+            "JSXMemberExpression",
+            "JSXNamespacedName"
+        ],
+        "JSXIdentifierOrNamespacedName": [
+            "JSXIdentifier",
+            "JSXNamespacedName"
+        ],
+        "JSXChildItem": [
+            "JSXText", 
+            "JSXStringLiteral",
+            "JSXExpressionContainer",
+            "JSXSpreadChild",
+            "JSXElement",
+            "JSXFragment"
+        ],
+        "DeclarationOrExpression": [
+            "Declaration",
+            "Expression"
+        ],
+        "ClassItem": [
+            "MethodDefinition",
+            "ClassProperty",
+            "ClassPrivateProperty",
+            "StaticBlock"
+        ],
+        "ExpressionOrPrivateIdentifier": [
+            "Expression",
+            "PrivateIdentifier",
+            "PrivateName"
+        ],
+        "TypeAnnotation": [
+            "TSTypeAnnotation"
+        ]
+    },
+    "operators": {
+        "VariableDeclarationKind": {
+            "Const": "const",
+            "Let": "let",
+            "Var": "var"
+        },
+        "PropertyKind": {
+            "Get": "get",
+            "Init": "init",
+            "Set": "set"
+        },
+        "UnaryOperator": {
+            "Delete": "delete",
+            "Minus": "-",
+            "Negation": "!",
+            "Plus": "+",
+            "Tilde": "~",
+            "Typeof": "typeof",
+            "Void": "void"
+        },
+        "UpdateOperator": {
+            "Decrement": "--",
+            "Increment": "++"
+        },
+        "BinaryOperator": {
+            "Add": "+",
+            "BinaryAnd": "&",
+            "BinaryOr": "|",
+            "BinaryXor": "^",
+            "Divide": "/",
+            "Equals": "==",
+            "Exponent": "**",
+            "GreaterThan": ">",
+            "GreaterThanOrEqual": ">=",
+            "In": "in",
+            "Instanceof": "instanceof",
+            "LessThan": "<",
+            "LessThanOrEqual": "<=",
+            "Modulo": "%",
+            "Multiply": "*",
+            "NotEquals": "!=",
+            "NotStrictEquals": "!==",
+            "ShiftLeft": "<<",
+            "ShiftRight": ">>",
+            "StrictEquals": "===",
+            "Subtract": "-",
+            "UnsignedShiftRight": ">>>"
+        },
+        "AssignmentOperator": {
+            "BinaryAndEquals": "&=",
+            "BinaryOrEquals": "|=",
+            "BinaryXorEquals": "^=",
+            "DivideEquals": "/=",
+            "Equals": "=",
+            "Exponent": "**=",
+            "MinusEquals": "-=",
+            "ModuloEquals": "%=",
+            "MultiplyEquals": "*=",
+            "PlusEquals": "+=",
+            "ShiftLeftEquals": "<<=",
+            "ShiftRightEquals": ">>=",
+            "UnsignedShiftRightEquals": ">>>=",
+            "AndEquals": "&&=",
+            "OrEquals": "||=",
+            "NullCoalescingEquals": "??="
+        },
+        "LogicalOperator": {
+            "And": "&&",
+            "NullCoalescing": "??",
+            "Or": "||"
+        },
+        "SourceType": {
+            "Script": "script",
+            "Module": "module"
+        },
+        "MethodKind": {
+            "Constructor": "constructor",
+            "Method": "method",
+            "Get": "get",
+            "Set": "set"
+        }
+    }
+}

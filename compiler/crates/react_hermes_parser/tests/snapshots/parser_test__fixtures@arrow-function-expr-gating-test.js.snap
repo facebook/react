@@ -1,0 +1,191 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/arrow-function-expr-gating-test.js
+---
+Input:
+// @gating
+const ErrorView = (error, _retry) => <MessageBox error={error}></MessageBox>;
+
+export default ErrorView;
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "VariableDeclaration",
+      "kind": "const",
+      "declarations": [
+        {
+          "type": "VariableDeclarator",
+          "id": {
+            "type": "Identifier",
+            "name": "ErrorView",
+            "typeAnnotation": null,
+            "loc": null,
+            "range": [
+              17,
+              26
+            ]
+          },
+          "init": {
+            "type": "ArrowFunctionExpression",
+            "id": null,
+            "params": [
+              {
+                "type": "Identifier",
+                "name": "error",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  30,
+                  35
+                ]
+              },
+              {
+                "type": "Identifier",
+                "name": "_retry",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  37,
+                  43
+                ]
+              }
+            ],
+            "body": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "MessageBox",
+                  "loc": null,
+                  "range": [
+                    49,
+                    59
+                  ]
+                },
+                "attributes": [
+                  {
+                    "type": "JSXAttribute",
+                    "name": {
+                      "type": "JSXIdentifier",
+                      "name": "error",
+                      "loc": null,
+                      "range": [
+                        60,
+                        65
+                      ]
+                    },
+                    "value": {
+                      "type": "JSXExpressionContainer",
+                      "expression": {
+                        "type": "Identifier",
+                        "name": "error",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          67,
+                          72
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        66,
+                        73
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      60,
+                      73
+                    ]
+                  }
+                ],
+                "selfClosing": false,
+                "loc": null,
+                "range": [
+                  48,
+                  74
+                ]
+              },
+              "children": [],
+              "closingElement": {
+                "type": "JSXClosingElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "MessageBox",
+                  "loc": null,
+                  "range": [
+                    76,
+                    86
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  74,
+                  87
+                ]
+              },
+              "loc": null,
+              "range": [
+                48,
+                87
+              ]
+            },
+            "generator": true,
+            "async": false,
+            "loc": null,
+            "range": [
+              29,
+              87
+            ],
+            "expression": true,
+            "loc": null,
+            "range": [
+              29,
+              87
+            ]
+          },
+          "loc": null,
+          "range": [
+            17,
+            87
+          ]
+        }
+      ],
+      "loc": null,
+      "range": [
+        11,
+        88
+      ]
+    },
+    {
+      "type": "ExportDefaultDeclaration",
+      "declaration": {
+        "type": "Identifier",
+        "name": "ErrorView",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          105,
+          114
+        ]
+      },
+      "loc": null,
+      "range": [
+        90,
+        115
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    11,
+    115
+  ]
+}

@@ -22,6 +22,7 @@ let mockWarn;
 let patchConsole;
 let unpatchConsole;
 let rendererID;
+let supportsOwnerStacks = false;
 
 describe('console', () => {
   beforeEach(() => {
@@ -62,6 +63,12 @@ describe('console', () => {
     };
 
     React = require('react');
+    if (
+      React.version.startsWith('19') &&
+      React.version.includes('experimental')
+    ) {
+      supportsOwnerStacks = true;
+    }
     ReactDOMClient = require('react-dom/client');
 
     const utils = require('./utils');
@@ -224,13 +231,17 @@ describe('console', () => {
     expect(mockWarn.mock.calls[0]).toHaveLength(2);
     expect(mockWarn.mock.calls[0][0]).toBe('warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Child (at **)\n    in Parent (at **)'
+        : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError).toHaveBeenCalledTimes(1);
     expect(mockError.mock.calls[0]).toHaveLength(2);
     expect(mockError.mock.calls[0][0]).toBe('error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Child (at **)\n    in Parent (at **)'
+        : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
   });
 
@@ -243,12 +254,12 @@ describe('console', () => {
       </Intermediate>
     );
     const Child = ({children}) => {
-      React.useLayoutEffect(() => {
+      React.useLayoutEffect(function Child_useLayoutEffect() {
         fakeConsole.error('active error');
         fakeConsole.log('active log');
         fakeConsole.warn('active warn');
       });
-      React.useEffect(() => {
+      React.useEffect(function Child_useEffect() {
         fakeConsole.error('passive error');
         fakeConsole.log('passive log');
         fakeConsole.warn('passive warn');
@@ -267,23 +278,31 @@ describe('console', () => {
     expect(mockWarn.mock.calls[0]).toHaveLength(2);
     expect(mockWarn.mock.calls[0][0]).toBe('active warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Child_useLayoutEffect (at **)\n    in Parent (at **)'
+        : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockWarn.mock.calls[1]).toHaveLength(2);
     expect(mockWarn.mock.calls[1][0]).toBe('passive warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[1][1])).toEqual(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Child_useEffect (at **)\n    in Parent (at **)'
+        : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError).toHaveBeenCalledTimes(2);
     expect(mockError.mock.calls[0]).toHaveLength(2);
     expect(mockError.mock.calls[0][0]).toBe('active error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Child_useLayoutEffect (at **)\n    in Parent (at **)'
+        : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError.mock.calls[1]).toHaveLength(2);
     expect(mockError.mock.calls[1][0]).toBe('passive error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[1][1])).toBe(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Child_useEffect (at **)\n    in Parent (at **)'
+        : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
   });
 
@@ -325,23 +344,31 @@ describe('console', () => {
     expect(mockWarn.mock.calls[0]).toHaveLength(2);
     expect(mockWarn.mock.calls[0][0]).toBe('didMount warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Child.componentDidMount (at **)\n    in Parent (at **)'
+        : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockWarn.mock.calls[1]).toHaveLength(2);
     expect(mockWarn.mock.calls[1][0]).toBe('didUpdate warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[1][1])).toEqual(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Child.componentDidUpdate (at **)\n    in Parent (at **)'
+        : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError).toHaveBeenCalledTimes(2);
     expect(mockError.mock.calls[0]).toHaveLength(2);
     expect(mockError.mock.calls[0][0]).toBe('didMount error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Child.componentDidMount (at **)\n    in Parent (at **)'
+        : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError.mock.calls[1]).toHaveLength(2);
     expect(mockError.mock.calls[1][0]).toBe('didUpdate error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[1][1])).toBe(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Child.componentDidUpdate (at **)\n    in Parent (at **)'
+        : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
   });
 
@@ -375,13 +402,17 @@ describe('console', () => {
     expect(mockWarn.mock.calls[0]).toHaveLength(2);
     expect(mockWarn.mock.calls[0][0]).toBe('warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Parent (at **)'
+        : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError).toHaveBeenCalledTimes(1);
     expect(mockError.mock.calls[0]).toHaveLength(2);
     expect(mockError.mock.calls[0][0]).toBe('error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Parent (at **)'
+        : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
   });
 
@@ -465,13 +496,17 @@ describe('console', () => {
     expect(mockWarn.mock.calls[0]).toHaveLength(2);
     expect(mockWarn.mock.calls[0][0]).toBe('warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Child (at **)\n    in Parent (at **)'
+        : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError).toHaveBeenCalledTimes(1);
     expect(mockError.mock.calls[0]).toHaveLength(2);
     expect(mockError.mock.calls[0][0]).toBe('error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Child (at **)\n    in Parent (at **)'
+        : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
   });
 
@@ -515,58 +550,52 @@ describe('console', () => {
     expect(mockLog.mock.calls[0]).toHaveLength(1);
     expect(mockLog.mock.calls[0][0]).toBe('log');
     expect(mockLog.mock.calls[1]).toEqual([
-      '%c%s',
-      `color: ${process.env.DARK_MODE_DIMMED_LOG_COLOR}`,
+      '\x1b[2;38;2;124;124;124m%s\x1b[0m',
       'log',
     ]);
 
     expect(mockWarn).toHaveBeenCalledTimes(2);
     expect(mockWarn.mock.calls[0]).toHaveLength(1);
     expect(mockWarn.mock.calls[0][0]).toBe('warn');
-    expect(mockWarn.mock.calls[1]).toHaveLength(3);
+    expect(mockWarn.mock.calls[1]).toHaveLength(2);
     expect(mockWarn.mock.calls[1]).toEqual([
-      '%c%s',
-      `color: ${process.env.DARK_MODE_DIMMED_WARNING_COLOR}`,
+      '\x1b[2;38;2;124;124;124m%s\x1b[0m',
       'warn',
     ]);
 
     expect(mockError).toHaveBeenCalledTimes(2);
     expect(mockError.mock.calls[0]).toHaveLength(1);
     expect(mockError.mock.calls[0][0]).toBe('error');
-    expect(mockError.mock.calls[1]).toHaveLength(3);
+    expect(mockError.mock.calls[1]).toHaveLength(2);
     expect(mockError.mock.calls[1]).toEqual([
-      '%c%s',
-      `color: ${process.env.DARK_MODE_DIMMED_ERROR_COLOR}`,
+      '\x1b[2;38;2;124;124;124m%s\x1b[0m',
       'error',
     ]);
 
     expect(mockInfo).toHaveBeenCalledTimes(2);
     expect(mockInfo.mock.calls[0]).toHaveLength(1);
     expect(mockInfo.mock.calls[0][0]).toBe('info');
-    expect(mockInfo.mock.calls[1]).toHaveLength(3);
+    expect(mockInfo.mock.calls[1]).toHaveLength(2);
     expect(mockInfo.mock.calls[1]).toEqual([
-      '%c%s',
-      `color: ${process.env.DARK_MODE_DIMMED_LOG_COLOR}`,
+      '\x1b[2;38;2;124;124;124m%s\x1b[0m',
       'info',
     ]);
 
     expect(mockGroup).toHaveBeenCalledTimes(2);
     expect(mockGroup.mock.calls[0]).toHaveLength(1);
     expect(mockGroup.mock.calls[0][0]).toBe('group');
-    expect(mockGroup.mock.calls[1]).toHaveLength(3);
+    expect(mockGroup.mock.calls[1]).toHaveLength(2);
     expect(mockGroup.mock.calls[1]).toEqual([
-      '%c%s',
-      `color: ${process.env.DARK_MODE_DIMMED_LOG_COLOR}`,
+      '\x1b[2;38;2;124;124;124m%s\x1b[0m',
       'group',
     ]);
 
     expect(mockGroupCollapsed).toHaveBeenCalledTimes(2);
     expect(mockGroupCollapsed.mock.calls[0]).toHaveLength(1);
     expect(mockGroupCollapsed.mock.calls[0][0]).toBe('groupCollapsed');
-    expect(mockGroupCollapsed.mock.calls[1]).toHaveLength(3);
+    expect(mockGroupCollapsed.mock.calls[1]).toHaveLength(2);
     expect(mockGroupCollapsed.mock.calls[1]).toEqual([
-      '%c%s',
-      `color: ${process.env.DARK_MODE_DIMMED_LOG_COLOR}`,
+      '\x1b[2;38;2;124;124;124m%s\x1b[0m',
       'groupCollapsed',
     ]);
   });
@@ -625,6 +654,120 @@ describe('console', () => {
     expect(mockGroupCollapsed.mock.calls[0][0]).toBe('groupCollapsed');
   });
 
+  it('should double log from Effects if hideConsoleLogsInStrictMode is disabled in Strict mode', () => {
+    global.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = false;
+    global.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ = false;
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    function App() {
+      React.useEffect(() => {
+        fakeConsole.log('log effect create');
+        fakeConsole.warn('warn effect create');
+        fakeConsole.error('error effect create');
+        fakeConsole.info('info effect create');
+        fakeConsole.group('group effect create');
+        fakeConsole.groupCollapsed('groupCollapsed effect create');
+
+        return () => {
+          fakeConsole.log('log effect cleanup');
+          fakeConsole.warn('warn effect cleanup');
+          fakeConsole.error('error effect cleanup');
+          fakeConsole.info('info effect cleanup');
+          fakeConsole.group('group effect cleanup');
+          fakeConsole.groupCollapsed('groupCollapsed effect cleanup');
+        };
+      });
+
+      return <div />;
+    }
+
+    act(() =>
+      root.render(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>,
+      ),
+    );
+    expect(mockLog.mock.calls).toEqual([
+      ['log effect create'],
+      ['\x1b[2;38;2;124;124;124m%s\x1b[0m', 'log effect cleanup'],
+      ['\x1b[2;38;2;124;124;124m%s\x1b[0m', 'log effect create'],
+    ]);
+    expect(mockWarn.mock.calls).toEqual([
+      ['warn effect create'],
+      ['\x1b[2;38;2;124;124;124m%s\x1b[0m', 'warn effect cleanup'],
+      ['\x1b[2;38;2;124;124;124m%s\x1b[0m', 'warn effect create'],
+    ]);
+    expect(mockError.mock.calls).toEqual([
+      ['error effect create'],
+      ['\x1b[2;38;2;124;124;124m%s\x1b[0m', 'error effect cleanup'],
+      ['\x1b[2;38;2;124;124;124m%s\x1b[0m', 'error effect create'],
+    ]);
+    expect(mockInfo.mock.calls).toEqual([
+      ['info effect create'],
+      ['\x1b[2;38;2;124;124;124m%s\x1b[0m', 'info effect cleanup'],
+      ['\x1b[2;38;2;124;124;124m%s\x1b[0m', 'info effect create'],
+    ]);
+    expect(mockGroup.mock.calls).toEqual([
+      ['group effect create'],
+      ['\x1b[2;38;2;124;124;124m%s\x1b[0m', 'group effect cleanup'],
+      ['\x1b[2;38;2;124;124;124m%s\x1b[0m', 'group effect create'],
+    ]);
+    expect(mockGroupCollapsed.mock.calls).toEqual([
+      ['groupCollapsed effect create'],
+      ['\x1b[2;38;2;124;124;124m%s\x1b[0m', 'groupCollapsed effect cleanup'],
+      ['\x1b[2;38;2;124;124;124m%s\x1b[0m', 'groupCollapsed effect create'],
+    ]);
+  });
+
+  it('should not double log from Effects if hideConsoleLogsInStrictMode is enabled in Strict mode', () => {
+    global.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = false;
+    global.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ = true;
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    function App() {
+      React.useEffect(() => {
+        fakeConsole.log('log effect create');
+        fakeConsole.warn('warn effect create');
+        fakeConsole.error('error effect create');
+        fakeConsole.info('info effect create');
+        fakeConsole.group('group effect create');
+        fakeConsole.groupCollapsed('groupCollapsed effect create');
+
+        return () => {
+          fakeConsole.log('log effect cleanup');
+          fakeConsole.warn('warn effect cleanup');
+          fakeConsole.error('error effect cleanup');
+          fakeConsole.info('info effect cleanup');
+          fakeConsole.group('group effect cleanup');
+          fakeConsole.groupCollapsed('groupCollapsed effect cleanup');
+        };
+      });
+
+      return <div />;
+    }
+
+    act(() =>
+      root.render(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>,
+      ),
+    );
+    expect(mockLog.mock.calls).toEqual([['log effect create']]);
+    expect(mockWarn.mock.calls).toEqual([['warn effect create']]);
+    expect(mockError.mock.calls).toEqual([['error effect create']]);
+    expect(mockInfo.mock.calls).toEqual([['info effect create']]);
+    expect(mockGroup.mock.calls).toEqual([['group effect create']]);
+    expect(mockGroupCollapsed.mock.calls).toEqual([
+      ['groupCollapsed effect create'],
+    ]);
+  });
+
   it('should double log from useMemo if hideConsoleLogsInStrictMode is disabled in Strict mode', () => {
     global.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = false;
     global.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ = false;
@@ -654,58 +797,52 @@ describe('console', () => {
     expect(mockLog.mock.calls[0]).toHaveLength(1);
     expect(mockLog.mock.calls[0][0]).toBe('log');
     expect(mockLog.mock.calls[1]).toEqual([
-      '%c%s',
-      `color: ${process.env.DARK_MODE_DIMMED_LOG_COLOR}`,
+      '\x1b[2;38;2;124;124;124m%s\x1b[0m',
       'log',
     ]);
 
     expect(mockWarn).toHaveBeenCalledTimes(2);
     expect(mockWarn.mock.calls[0]).toHaveLength(1);
     expect(mockWarn.mock.calls[0][0]).toBe('warn');
-    expect(mockWarn.mock.calls[1]).toHaveLength(3);
+    expect(mockWarn.mock.calls[1]).toHaveLength(2);
     expect(mockWarn.mock.calls[1]).toEqual([
-      '%c%s',
-      `color: ${process.env.DARK_MODE_DIMMED_WARNING_COLOR}`,
+      '\x1b[2;38;2;124;124;124m%s\x1b[0m',
       'warn',
     ]);
 
     expect(mockError).toHaveBeenCalledTimes(2);
     expect(mockError.mock.calls[0]).toHaveLength(1);
     expect(mockError.mock.calls[0][0]).toBe('error');
-    expect(mockError.mock.calls[1]).toHaveLength(3);
+    expect(mockError.mock.calls[1]).toHaveLength(2);
     expect(mockError.mock.calls[1]).toEqual([
-      '%c%s',
-      `color: ${process.env.DARK_MODE_DIMMED_ERROR_COLOR}`,
+      '\x1b[2;38;2;124;124;124m%s\x1b[0m',
       'error',
     ]);
 
     expect(mockInfo).toHaveBeenCalledTimes(2);
     expect(mockInfo.mock.calls[0]).toHaveLength(1);
     expect(mockInfo.mock.calls[0][0]).toBe('info');
-    expect(mockInfo.mock.calls[1]).toHaveLength(3);
+    expect(mockInfo.mock.calls[1]).toHaveLength(2);
     expect(mockInfo.mock.calls[1]).toEqual([
-      '%c%s',
-      `color: ${process.env.DARK_MODE_DIMMED_LOG_COLOR}`,
+      '\x1b[2;38;2;124;124;124m%s\x1b[0m',
       'info',
     ]);
 
     expect(mockGroup).toHaveBeenCalledTimes(2);
     expect(mockGroup.mock.calls[0]).toHaveLength(1);
     expect(mockGroup.mock.calls[0][0]).toBe('group');
-    expect(mockGroup.mock.calls[1]).toHaveLength(3);
+    expect(mockGroup.mock.calls[1]).toHaveLength(2);
     expect(mockGroup.mock.calls[1]).toEqual([
-      '%c%s',
-      `color: ${process.env.DARK_MODE_DIMMED_LOG_COLOR}`,
+      '\x1b[2;38;2;124;124;124m%s\x1b[0m',
       'group',
     ]);
 
     expect(mockGroupCollapsed).toHaveBeenCalledTimes(2);
     expect(mockGroupCollapsed.mock.calls[0]).toHaveLength(1);
     expect(mockGroupCollapsed.mock.calls[0][0]).toBe('groupCollapsed');
-    expect(mockGroupCollapsed.mock.calls[1]).toHaveLength(3);
+    expect(mockGroupCollapsed.mock.calls[1]).toHaveLength(2);
     expect(mockGroupCollapsed.mock.calls[1]).toEqual([
-      '%c%s',
-      `color: ${process.env.DARK_MODE_DIMMED_LOG_COLOR}`,
+      '\x1b[2;38;2;124;124;124m%s\x1b[0m',
       'groupCollapsed',
     ]);
   });
@@ -798,30 +935,27 @@ describe('console', () => {
     expect(mockLog).toHaveBeenCalledTimes(2);
     expect(mockLog.mock.calls[0]).toHaveLength(1);
     expect(mockLog.mock.calls[0][0]).toBe('log');
-    expect(mockLog.mock.calls[1]).toHaveLength(3);
+    expect(mockLog.mock.calls[1]).toHaveLength(2);
     expect(mockLog.mock.calls[1]).toEqual([
-      '%c%s',
-      `color: ${process.env.DARK_MODE_DIMMED_LOG_COLOR}`,
+      '\x1b[2;38;2;124;124;124m%s\x1b[0m',
       'log',
     ]);
 
     expect(mockWarn).toHaveBeenCalledTimes(2);
     expect(mockWarn.mock.calls[0]).toHaveLength(1);
     expect(mockWarn.mock.calls[0][0]).toBe('warn');
-    expect(mockWarn.mock.calls[1]).toHaveLength(3);
+    expect(mockWarn.mock.calls[1]).toHaveLength(2);
     expect(mockWarn.mock.calls[1]).toEqual([
-      '%c%s',
-      `color: ${process.env.DARK_MODE_DIMMED_WARNING_COLOR}`,
+      '\x1b[2;38;2;124;124;124m%s\x1b[0m',
       'warn',
     ]);
 
     expect(mockError).toHaveBeenCalledTimes(2);
     expect(mockError.mock.calls[0]).toHaveLength(1);
     expect(mockError.mock.calls[0][0]).toBe('error');
-    expect(mockError.mock.calls[1]).toHaveLength(3);
+    expect(mockError.mock.calls[1]).toHaveLength(2);
     expect(mockError.mock.calls[1]).toEqual([
-      '%c%s',
-      `color: ${process.env.DARK_MODE_DIMMED_ERROR_COLOR}`,
+      '\x1b[2;38;2;124;124;124m%s\x1b[0m',
       'error',
     ]);
   });
@@ -897,27 +1031,39 @@ describe('console', () => {
     expect(mockWarn).toHaveBeenCalledTimes(2);
     expect(mockWarn.mock.calls[0]).toHaveLength(2);
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Child (at **)\n    in Parent (at **)'
+        : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
-    expect(mockWarn.mock.calls[1]).toHaveLength(4);
-    expect(mockWarn.mock.calls[1][0]).toEqual('%c%s %s');
-    expect(mockWarn.mock.calls[1][1]).toMatch('color: rgba(');
-    expect(mockWarn.mock.calls[1][2]).toEqual('warn');
-    expect(normalizeCodeLocInfo(mockWarn.mock.calls[1][3]).trim()).toEqual(
-      'in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+    expect(mockWarn.mock.calls[1]).toHaveLength(3);
+    expect(mockWarn.mock.calls[1][0]).toEqual(
+      '\x1b[2;38;2;124;124;124m%s %o\x1b[0m',
+    );
+    expect(mockWarn.mock.calls[1][1]).toMatch('warn');
+    expect(normalizeCodeLocInfo(mockWarn.mock.calls[1][2]).trim()).toEqual(
+      supportsOwnerStacks
+        ? 'in Object.overrideMethod (at **)' + // TODO: This leading frame is due to our extra wrapper that shouldn't exist.
+            '\n    in Child (at **)\n    in Parent (at **)'
+        : 'in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
 
     expect(mockError).toHaveBeenCalledTimes(2);
     expect(mockError.mock.calls[0]).toHaveLength(2);
     expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toEqual(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Child (at **)\n    in Parent (at **)'
+        : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
-    expect(mockError.mock.calls[1]).toHaveLength(4);
-    expect(mockError.mock.calls[1][0]).toEqual('%c%s %s');
-    expect(mockError.mock.calls[1][1]).toMatch('color: rgba(');
-    expect(mockError.mock.calls[1][2]).toEqual('error');
-    expect(normalizeCodeLocInfo(mockError.mock.calls[1][3]).trim()).toEqual(
-      'in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+    expect(mockError.mock.calls[1]).toHaveLength(3);
+    expect(mockError.mock.calls[1][0]).toEqual(
+      '\x1b[2;38;2;124;124;124m%s %o\x1b[0m',
+    );
+    expect(mockError.mock.calls[1][1]).toEqual('error');
+    expect(normalizeCodeLocInfo(mockError.mock.calls[1][2]).trim()).toEqual(
+      supportsOwnerStacks
+        ? 'in Object.overrideMethod (at **)' + // TODO: This leading frame is due to our extra wrapper that shouldn't exist.
+            '\n    in Child (at **)\n    in Parent (at **)'
+        : 'in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
   });
 });

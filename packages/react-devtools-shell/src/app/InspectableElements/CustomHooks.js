@@ -21,7 +21,7 @@ import {
   useState,
   use,
 } from 'react';
-import {useFormState} from 'react-dom';
+import {useFormState, useFormStatus} from 'react-dom';
 
 const object = {
   string: 'abc',
@@ -164,6 +164,12 @@ function incrementWithDelay(previousState: number, formData: FormData) {
   });
 }
 
+function FormStatus() {
+  const status = useFormStatus();
+
+  return <pre>{JSON.stringify(status)}</pre>;
+}
+
 function Forms() {
   const [state, formAction] = useFormState<any, any>(incrementWithDelay, 0);
   return (
@@ -184,6 +190,7 @@ function Forms() {
         <input name="shouldReject" type="checkbox" />
       </label>
       <button formAction={formAction}>Increment</button>
+      <FormStatus />
     </form>
   );
 }

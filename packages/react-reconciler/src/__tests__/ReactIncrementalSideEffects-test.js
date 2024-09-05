@@ -88,8 +88,8 @@ describe('ReactIncrementalSideEffects', () => {
           {props.text === 'World'
             ? [<Bar key="a" text={props.text} />, <div key="b" />]
             : props.text === 'Hi'
-            ? [<div key="b" />, <Bar key="a" text={props.text} />]
-            : null}
+              ? [<div key="b" />, <Bar key="a" text={props.text} />]
+              : null}
           <span prop="test" />
         </div>
       );
@@ -481,7 +481,7 @@ describe('ReactIncrementalSideEffects', () => {
     );
   });
 
-  // @gate www
+  // @gate enableLegacyHidden
   it('preserves a previously rendered node when deprioritized', async () => {
     function Middle(props) {
       Scheduler.log('Middle');
@@ -530,7 +530,7 @@ describe('ReactIncrementalSideEffects', () => {
     );
   });
 
-  // @gate www
+  // @gate enableLegacyHidden
   it('can reuse side-effects after being preempted', async () => {
     function Bar(props) {
       Scheduler.log('Bar');
@@ -610,7 +610,7 @@ describe('ReactIncrementalSideEffects', () => {
     );
   });
 
-  // @gate www
+  // @gate enableLegacyHidden
   it('can reuse side-effects after being preempted, if shouldComponentUpdate is false', async () => {
     class Bar extends React.Component {
       shouldComponentUpdate(nextProps) {
@@ -733,7 +733,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={3} />);
   });
 
-  // @gate www
+  // @gate enableLegacyHidden
   it('updates a child even though the old props is empty', async () => {
     function Foo(props) {
       return (
@@ -752,7 +752,8 @@ describe('ReactIncrementalSideEffects', () => {
     );
   });
 
-  xit('can defer side-effects and resume them later on', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('can defer side-effects and resume them later on', async () => {
     class Bar extends React.Component {
       shouldComponentUpdate(nextProps) {
         return this.props.idx !== nextProps.idx;
@@ -835,7 +836,8 @@ describe('ReactIncrementalSideEffects', () => {
     expect(innerSpanA).toBe(innerSpanB);
   });
 
-  xit('can defer side-effects and reuse them later - complex', async function () {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('can defer side-effects and reuse them later - complex', async function () {
     let ops = [];
 
     class Bar extends React.Component {
@@ -984,7 +986,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ops).toEqual(['Bar', 'Baz', 'Bar', 'Bar']);
   });
 
-  // @gate www
+  // @gate enableLegacyHidden
   it('deprioritizes setStates that happens within a deprioritized tree', async () => {
     const barInstances = [];
 
@@ -1301,7 +1303,7 @@ describe('ReactIncrementalSideEffects', () => {
       await waitForAll([]);
     } else {
       await expect(async () => await waitForAll([])).toErrorDev(
-        'Warning: Function components cannot be given refs. ' +
+        'Function components cannot be given refs. ' +
           'Attempts to access this ref will fail. ' +
           'Did you mean to use React.forwardRef()?\n\n' +
           'Check the render method ' +
@@ -1370,10 +1372,11 @@ describe('ReactIncrementalSideEffects', () => {
     await expect(async () => {
       await waitForAll([]);
     }).toErrorDev([
-      'Warning: Component "Foo" contains the string ref "bar". ' +
+      'Component "Foo" contains the string ref "bar". ' +
         'Support for string refs will be removed in a future major release. ' +
         'We recommend using useRef() or createRef() instead. ' +
         'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
+        '    in Bar (at **)\n' +
         '    in Foo (at **)',
     ]);
     expect(fooInstance.refs.bar.test).toEqual('test');

@@ -43,7 +43,7 @@ export default function InspectedElementStyleXPlugin({
   const {resolvedStyles, sources} = styleXPlugin;
 
   return (
-    <div className={sharedStyles.InspectedElementTree}>
+    <div>
       <div className={sharedStyles.HeaderRow}>
         <div className={sharedStyles.Header}>stylex</div>
       </div>

@@ -279,8 +279,8 @@ function initialize(socket: WebSocket) {
   // $FlowFixMe[incompatible-call] found when upgrading Flow
   store = new Store(bridge, {
     checkBridgeProtocolCompatibility: true,
-    supportsNativeInspection: true,
     supportsTraceUpdates: true,
+    supportsClickToInspect: true,
   });
 
   log('Connected');
@@ -329,7 +329,7 @@ function startServer(
   const httpServer = useHttps
     ? require('https').createServer(httpsOptions)
     : require('http').createServer();
-  const server = new Server({server: httpServer});
+  const server = new Server({server: httpServer, maxPayload: 1e9});
   let connected: WebSocket | null = null;
   server.on('connection', (socket: WebSocket) => {
     if (connected !== null) {

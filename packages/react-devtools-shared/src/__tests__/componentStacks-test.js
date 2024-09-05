@@ -14,6 +14,7 @@ describe('component stack', () => {
   let act;
   let mockError;
   let mockWarn;
+  let supportsOwnerStacks;
 
   beforeEach(() => {
     // Intercept native console methods before DevTools bootstraps.
@@ -31,6 +32,12 @@ describe('component stack', () => {
     act = utils.act;
 
     React = require('react');
+    if (
+      React.version.startsWith('19') &&
+      React.version.includes('experimental')
+    ) {
+      supportsOwnerStacks = true;
+    }
   });
 
   const {render} = getVersionedRenderImplementation();
@@ -65,7 +72,8 @@ describe('component stack', () => {
   // but didn't because both DevTools and ReactDOM are running in the same memory space,
   // so the case we're testing against (DevTools prod build and React DEV build) doesn't exist.
   // It would be nice to figure out a way to test this combination at some point...
-  xit('should disable the current dispatcher before shallow rendering so no effects get scheduled', () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('should disable the current dispatcher before shallow rendering so no effects get scheduled', () => {
     let useEffectCount = 0;
 
     const Example = props => {
@@ -101,6 +109,7 @@ describe('component stack', () => {
       {
         name: 'ServerComponent',
         env: 'Server',
+        owner: null,
       },
     ];
     const Parent = () => ChildPromise;
@@ -110,17 +119,21 @@ describe('component stack', () => {
 
     expect(mockError).toHaveBeenCalledWith(
       'Test error.',
-      '\n    in Child (at **)' +
-        '\n    in ServerComponent (at **)' +
-        '\n    in Parent (at **)' +
-        '\n    in Grandparent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Child (at **)'
+        : '\n    in Child (at **)' +
+            '\n    in ServerComponent (at **)' +
+            '\n    in Parent (at **)' +
+            '\n    in Grandparent (at **)',
     );
     expect(mockWarn).toHaveBeenCalledWith(
       'Test warning.',
-      '\n    in Child (at **)' +
-        '\n    in ServerComponent (at **)' +
-        '\n    in Parent (at **)' +
-        '\n    in Grandparent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Child (at **)'
+        : '\n    in Child (at **)' +
+            '\n    in ServerComponent (at **)' +
+            '\n    in Parent (at **)' +
+            '\n    in Grandparent (at **)',
     );
   });
 });

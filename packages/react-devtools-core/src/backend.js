@@ -22,7 +22,10 @@ import {
 } from './cachedSettings';
 
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
-import type {ComponentFilter} from 'react-devtools-shared/src/frontend/types';
+import type {
+  ComponentFilter,
+  Wall,
+} from 'react-devtools-shared/src/frontend/types';
 import type {DevToolsHook} from 'react-devtools-shared/src/backend/types';
 import type {ResolveNativeStyle} from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
 
@@ -309,4 +312,95 @@ export function connectToDevTools(options: ?ConnectOptions) {
       }
     });
   }
+}
+
+type ConnectWithCustomMessagingOptions = {
+  onSubscribe: (cb: Function) => void,
+  onUnsubscribe: (cb: Function) => void,
+  onMessage: (event: string, payload: any) => void,
+  settingsManager: ?DevToolsSettingsManager,
+  nativeStyleEditorValidAttributes?: $ReadOnlyArray<string>,
+  resolveRNStyle?: ResolveNativeStyle,
+};
+
+export function connectWithCustomMessagingProtocol({
+  onSubscribe,
+  onUnsubscribe,
+  onMessage,
+  settingsManager,
+  nativeStyleEditorValidAttributes,
+  resolveRNStyle,
+}: ConnectWithCustomMessagingOptions): Function {
+  if (hook == null) {
+    // DevTools didn't get injected into this page (maybe b'c of the contentType).
+    return;
+  }
+
+  if (settingsManager != null) {
+    try {
+      initializeUsingCachedSettings(settingsManager);
+    } catch (e) {
+      // If we call a method on devToolsSettingsManager that throws, or if
+      // is invalid data read out, don't throw and don't interrupt initialization
+      console.error(e);
+    }
+  }
+
+  const wall: Wall = {
+    listen(fn: Function) {
+      onSubscribe(fn);
+
+      return () => {
+        onUnsubscribe(fn);
+      };
+    },
+    send(event: string, payload: any) {
+      onMessage(event, payload);
+    },
+  };
+
+  const bridge: BackendBridge = new Bridge(wall);
+
+  bridge.addListener(
+    'updateComponentFilters',
+    (componentFilters: Array<ComponentFilter>) => {
+      // Save filter changes in memory, in case DevTools is reloaded.
+      // In that case, the renderer will already be using the updated values.
+      // We'll lose these in between backend reloads but that can't be helped.
+      savedComponentFilters = componentFilters;
+    },
+  );
+
+  if (settingsManager != null) {
+    bridge.addListener('updateConsolePatchSettings', consolePatchSettings =>
+      cacheConsolePatchSettings(settingsManager, consolePatchSettings),
+    );
+  }
+
+  if (window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ == null) {
+    bridge.send('overrideComponentFilters', savedComponentFilters);
+  }
+
+  const agent = new Agent(bridge);
+  agent.addListener('shutdown', () => {
+    // If we received 'shutdown' from `agent`, we assume the `bridge` is already shutting down,
+    // and that caused the 'shutdown' event on the `agent`, so we don't need to call `bridge.shutdown()` here.
+    hook.emit('shutdown');
+  });
+
+  const unsubscribeBackend = initBackend(hook, agent, window);
+
+  const nativeStyleResolver: ResolveNativeStyle | void =
+    resolveRNStyle || hook.resolveRNStyle;
+
+  if (nativeStyleResolver != null) {
+    const validAttributes =
+      nativeStyleEditorValidAttributes ||
+      hook.nativeStyleEditorValidAttributes ||
+      null;
+
+    setupNativeStyleEditor(bridge, agent, nativeStyleResolver, validAttributes);
+  }
+
+  return unsubscribeBackend;
 }

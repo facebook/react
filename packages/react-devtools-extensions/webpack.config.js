@@ -1,19 +1,11 @@
 'use strict';
 
-const {resolve} = require('path');
+const {resolve, isAbsolute, relative} = require('path');
 const Webpack = require('webpack');
 const TerserPlugin = require('terser-webpack-plugin');
-const {
-  DARK_MODE_DIMMED_WARNING_COLOR,
-  DARK_MODE_DIMMED_ERROR_COLOR,
-  DARK_MODE_DIMMED_LOG_COLOR,
-  LIGHT_MODE_DIMMED_WARNING_COLOR,
-  LIGHT_MODE_DIMMED_ERROR_COLOR,
-  LIGHT_MODE_DIMMED_LOG_COLOR,
-  GITHUB_URL,
-  getVersionString,
-} = require('./utils');
+const {GITHUB_URL, getVersionString} = require('./utils');
 const {resolveFeatureFlags} = require('react-devtools-shared/buildUtils');
+const SourceMapIgnoreListPlugin = require('react-devtools-shared/SourceMapIgnoreListPlugin');
 
 const NODE_ENV = process.env.NODE_ENV;
 if (!NODE_ENV) {
@@ -54,7 +46,7 @@ const babelOptions = {
 
 module.exports = {
   mode: __DEV__ ? 'development' : 'production',
-  devtool: __DEV__ ? 'cheap-module-source-map' : false,
+  devtool: false,
   entry: {
     background: './src/background/index.js',
     backendManager: './src/contentScripts/backendManager.js',
@@ -120,6 +112,7 @@ module.exports = {
       __IS_CHROME__: IS_CHROME,
       __IS_FIREFOX__: IS_FIREFOX,
       __IS_EDGE__: IS_EDGE,
+      __IS_NATIVE__: false,
       __IS_INTERNAL_VERSION__: IS_INTERNAL_VERSION,
       'process.env.DEVTOOLS_PACKAGE': `"react-devtools-extensions"`,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
@@ -127,12 +120,39 @@ module.exports = {
       'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
       'process.env.LOGGING_URL': `"${LOGGING_URL}"`,
       'process.env.NODE_ENV': `"${NODE_ENV}"`,
-      'process.env.DARK_MODE_DIMMED_WARNING_COLOR': `"${DARK_MODE_DIMMED_WARNING_COLOR}"`,
-      'process.env.DARK_MODE_DIMMED_ERROR_COLOR': `"${DARK_MODE_DIMMED_ERROR_COLOR}"`,
-      'process.env.DARK_MODE_DIMMED_LOG_COLOR': `"${DARK_MODE_DIMMED_LOG_COLOR}"`,
-      'process.env.LIGHT_MODE_DIMMED_WARNING_COLOR': `"${LIGHT_MODE_DIMMED_WARNING_COLOR}"`,
-      'process.env.LIGHT_MODE_DIMMED_ERROR_COLOR': `"${LIGHT_MODE_DIMMED_ERROR_COLOR}"`,
-      'process.env.LIGHT_MODE_DIMMED_LOG_COLOR': `"${LIGHT_MODE_DIMMED_LOG_COLOR}"`,
+    }),
+    new Webpack.SourceMapDevToolPlugin({
+      filename: '[file].map',
+      include: 'installHook.js',
+      noSources: !__DEV__,
+      // https://github.com/webpack/webpack/issues/3603#issuecomment-1743147144
+      moduleFilenameTemplate(info) {
+        const {absoluteResourcePath, namespace, resourcePath} = info;
+
+        if (isAbsolute(absoluteResourcePath)) {
+          return relative(__dirname + '/build', absoluteResourcePath);
+        }
+
+        // Mimic Webpack's default behavior:
+        return `webpack://${namespace}/${resourcePath}`;
+      },
+    }),
+    new SourceMapIgnoreListPlugin({
+      shouldIgnoreSource: (assetName, _source) => {
+        if (__DEV__) {
+          // Don't ignore list anything in DEV build for debugging purposes
+          return false;
+        }
+
+        const contentScriptNamesToIgnoreList = [
+          // This is where we override console
+          'installHook',
+        ];
+
+        return contentScriptNamesToIgnoreList.some(ignoreListName =>
+          assetName.startsWith(ignoreListName),
+        );
+      },
     }),
   ],
   module: {

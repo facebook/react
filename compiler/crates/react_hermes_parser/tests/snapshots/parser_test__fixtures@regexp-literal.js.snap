@@ -1,0 +1,368 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/regexp-literal.js
+---
+Input:
+function Component(props) {
+  const pattern = /foo/g;
+  const value = makeValue();
+  // We treat RegExp instances as mutable objects (bc they are)
+  // so by default we assume this could be mutating `value`:
+  if (pattern.test(value)) {
+    return <div>{value}</div>;
+  }
+  return <div>Default</div>;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "pattern",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    36,
+                    43
+                  ]
+                },
+                "init": {
+                  "type": "RegExpLiteral",
+                  "pattern": "foo",
+                  "flags": "g",
+                  "loc": null,
+                  "range": [
+                    46,
+                    52
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  52
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              53
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "value",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    62,
+                    67
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "makeValue",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      70,
+                      79
+                    ]
+                  },
+                  "arguments": [],
+                  "loc": null,
+                  "range": [
+                    70,
+                    81
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  62,
+                  81
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              56,
+              82
+            ]
+          },
+          {
+            "type": "IfStatement",
+            "test": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "MemberExpression",
+                "object": {
+                  "type": "Identifier",
+                  "name": "pattern",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    214,
+                    221
+                  ]
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "test",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    222,
+                    226
+                  ]
+                },
+                "computed": false,
+                "loc": null,
+                "range": [
+                  214,
+                  226
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "Identifier",
+                  "name": "value",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    227,
+                    232
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                214,
+                233
+              ]
+            },
+            "consequent": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ReturnStatement",
+                  "argument": {
+                    "type": "JSXElement",
+                    "openingElement": {
+                      "type": "JSXOpeningElement",
+                      "name": {
+                        "type": "JSXIdentifier",
+                        "name": "div",
+                        "loc": null,
+                        "range": [
+                          249,
+                          252
+                        ]
+                      },
+                      "attributes": [],
+                      "selfClosing": false,
+                      "loc": null,
+                      "range": [
+                        248,
+                        253
+                      ]
+                    },
+                    "children": [
+                      {
+                        "type": "JSXExpressionContainer",
+                        "expression": {
+                          "type": "Identifier",
+                          "name": "value",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            254,
+                            259
+                          ]
+                        },
+                        "loc": null,
+                        "range": [
+                          253,
+                          260
+                        ]
+                      }
+                    ],
+                    "closingElement": {
+                      "type": "JSXClosingElement",
+                      "name": {
+                        "type": "JSXIdentifier",
+                        "name": "div",
+                        "loc": null,
+                        "range": [
+                          262,
+                          265
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        260,
+                        266
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      248,
+                      266
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    241,
+                    267
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                235,
+                271
+              ]
+            },
+            "alternate": null,
+            "loc": null,
+            "range": [
+              210,
+              271
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "div",
+                  "loc": null,
+                  "range": [
+                    282,
+                    285
+                  ]
+                },
+                "attributes": [],
+                "selfClosing": false,
+                "loc": null,
+                "range": [
+                  281,
+                  286
+                ]
+              },
+              "children": [
+                {
+                  "type": "JSXText",
+                  "value": "Default",
+                  "raw": "Default",
+                  "loc": null,
+                  "range": [
+                    286,
+                    293
+                  ]
+                }
+              ],
+              "closingElement": {
+                "type": "JSXClosingElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "div",
+                  "loc": null,
+                  "range": [
+                    295,
+                    298
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  293,
+                  299
+                ]
+              },
+              "loc": null,
+              "range": [
+                281,
+                299
+              ]
+            },
+            "loc": null,
+            "range": [
+              274,
+              300
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          302
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        302
+      ],
+      "loc": null,
+      "range": [
+        0,
+        302
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    302
+  ]
+}

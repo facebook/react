@@ -8,7 +8,7 @@
  */
 
 export {
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+  __CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
   act,
   Children,
   Component,
@@ -20,7 +20,6 @@ export {
   cloneElement,
   createContext,
   createElement,
-  createFactory,
   createRef,
   use,
   forwardRef,
@@ -46,5 +45,6 @@ export {
   useState,
   useSyncExternalStore,
   useTransition,
+  useActionState,
   version,
 } from './src/ReactClient';

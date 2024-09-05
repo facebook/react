@@ -1,0 +1,73 @@
+---
+source: crates/react_fixtures/tests/fixtures_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_fixtures/tests/fixtures/ssa-reassign-if.js
+---
+Input:
+function Component(a, b) {
+  let x;
+  let y = 0;
+  let z = 10;
+  if (a) {
+    x = 1;
+    if (b) {
+      z = 20;
+    } else {
+      z = 30;
+    }
+  } else {
+    x = 2;
+  }
+  return x + y + z;
+}
+
+
+Output:
+function Component(
+  unknown a$26,
+  unknown b$27,
+)
+entry bb0
+bb0 (block)
+  [0] unknown $29 = DeclareLocal Let unknown x$28
+  [1] unknown $30 = 0
+  [2] unknown $32 = StoreLocal Let unknown y$31 = unknown $30
+  [3] unknown $33 = 10
+  [4] unknown $35 = StoreLocal Let unknown z$34 = unknown $33
+  [5] unknown $36 = LoadLocal unknown a$26
+  [6] If unknown $36 consequent=bb2 alternate=bb6 fallthrough=bb1
+bb2 (block)
+  predecessors: bb0
+  [7] unknown $37 = 1
+  [8] unknown $39 = StoreLocal Reassign unknown x$38 = unknown $37
+  [9] unknown $40 = LoadLocal unknown b$27
+  [10] If unknown $40 consequent=bb4 alternate=bb5 fallthrough=bb3
+bb4 (block)
+  predecessors: bb2
+  [11] unknown $41 = 20
+  [12] unknown $43 = StoreLocal Reassign unknown z$42 = unknown $41
+  [13] Goto bb3
+bb5 (block)
+  predecessors: bb2
+  [14] unknown $44 = 30
+  [15] unknown $46 = StoreLocal Reassign unknown z$45 = unknown $44
+  [16] Goto bb3
+bb3 (block)
+  predecessors: bb4, bb5
+  z$58: phi(bb4: z$42, bb5: z$45)
+  [17] Goto bb1
+bb6 (block)
+  predecessors: bb0
+  [18] unknown $47 = 2
+  [19] unknown $49 = StoreLocal Reassign unknown x$48 = unknown $47
+  [20] Goto bb1
+bb1 (block)
+  predecessors: bb3, bb6
+  x$50: phi(bb3: x$38, bb6: x$48)
+  z$57: phi(bb3: z$58, bb6: z$34)
+  [21] unknown $52 = LoadLocal unknown x$50
+  [22] unknown $55 = 0
+  [23] unknown $56 = Binary unknown $52 + unknown $55
+  [24] unknown $59 = LoadLocal unknown z$57
+  [25] unknown $60 = Binary unknown $56 + unknown $59
+  [26] Return unknown $60

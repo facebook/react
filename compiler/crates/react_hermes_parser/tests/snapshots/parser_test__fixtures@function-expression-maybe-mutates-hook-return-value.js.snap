@@ -1,0 +1,296 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/function-expression-maybe-mutates-hook-return-value.js
+---
+Input:
+function Component(props) {
+  const id = useSelectedEntitytId();
+  // this example should infer `id` as mutable, and then infer `onLoad` as mutable,
+  // and be rejected because onLoad cannot be passed as a frozen value in the JSX.
+  // however, we likely have to allow this example to work, because hook return
+  // values are generally immutable in practice and are also widely referenced in
+  // callbacks.
+  const onLoad = () => {
+    log(id);
+  };
+  return <Foo onLoad={onLoad} />;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "id",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    36,
+                    38
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useSelectedEntitytId",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      41,
+                      61
+                    ]
+                  },
+                  "arguments": [],
+                  "loc": null,
+                  "range": [
+                    41,
+                    63
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  63
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              64
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "onLoad",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    418,
+                    424
+                  ]
+                },
+                "init": {
+                  "type": "ArrowFunctionExpression",
+                  "id": null,
+                  "params": [],
+                  "body": {
+                    "type": "BlockStatement",
+                    "body": [
+                      {
+                        "type": "ExpressionStatement",
+                        "expression": {
+                          "type": "CallExpression",
+                          "callee": {
+                            "type": "Identifier",
+                            "name": "log",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              439,
+                              442
+                            ]
+                          },
+                          "arguments": [
+                            {
+                              "type": "Identifier",
+                              "name": "id",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                443,
+                                445
+                              ]
+                            }
+                          ],
+                          "loc": null,
+                          "range": [
+                            439,
+                            446
+                          ]
+                        },
+                        "directive": null,
+                        "loc": null,
+                        "range": [
+                          439,
+                          447
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      433,
+                      451
+                    ]
+                  },
+                  "generator": false,
+                  "async": false,
+                  "loc": null,
+                  "range": [
+                    427,
+                    451
+                  ],
+                  "expression": false,
+                  "loc": null,
+                  "range": [
+                    427,
+                    451
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  418,
+                  451
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              412,
+              452
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "Foo",
+                  "loc": null,
+                  "range": [
+                    463,
+                    466
+                  ]
+                },
+                "attributes": [
+                  {
+                    "type": "JSXAttribute",
+                    "name": {
+                      "type": "JSXIdentifier",
+                      "name": "onLoad",
+                      "loc": null,
+                      "range": [
+                        467,
+                        473
+                      ]
+                    },
+                    "value": {
+                      "type": "JSXExpressionContainer",
+                      "expression": {
+                        "type": "Identifier",
+                        "name": "onLoad",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          475,
+                          481
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        474,
+                        482
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      467,
+                      482
+                    ]
+                  }
+                ],
+                "selfClosing": true,
+                "loc": null,
+                "range": [
+                  462,
+                  485
+                ]
+              },
+              "children": [],
+              "closingElement": null,
+              "loc": null,
+              "range": [
+                462,
+                485
+              ]
+            },
+            "loc": null,
+            "range": [
+              455,
+              486
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          488
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        488
+      ],
+      "loc": null,
+      "range": [
+        0,
+        488
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    488
+  ]
+}

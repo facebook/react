@@ -1,0 +1,766 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/destructuring-mixed-scope-declarations-and-locals.js
+---
+Input:
+function Component(props) {
+  const post = useFragment(graphql`...`, props.post);
+  const allUrls = [];
+  // `media` and `urls` are exported from the scope that will wrap this code,
+  // but `comments` is not (it doesn't need to be memoized, bc the callback
+  // only checks `comments.length`)
+  // because of the scope, the let declaration for media and urls are lifted
+  // out of the scope, and the destructure statement ends up turning into
+  // a reassignment, instead of a const declaration. this means we try to
+  // reassign `comments` when there's no declaration for it.
+  const { media, comments, urls } = post;
+  const onClick = (e) => {
+    if (!comments.length) {
+      return;
+    }
+    console.log(comments.length);
+  };
+  allUrls.push(...urls);
+  return <Media media={media} onClick={onClick} />;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "post",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    36,
+                    40
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useFragment",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      43,
+                      54
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "TaggedTemplateExpression",
+                      "tag": {
+                        "type": "Identifier",
+                        "name": "graphql",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          55,
+                          62
+                        ]
+                      },
+                      "quasi": {
+                        "type": "TemplateLiteral",
+                        "quasis": [
+                          {
+                            "type": "TemplateElement",
+                            "tail": true,
+                            "value": {
+                              "cooked": "...",
+                              "raw": "..."
+                            },
+                            "loc": null,
+                            "range": [
+                              62,
+                              67
+                            ]
+                          }
+                        ],
+                        "expressions": [],
+                        "loc": null,
+                        "range": [
+                          62,
+                          67
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        55,
+                        67
+                      ]
+                    },
+                    {
+                      "type": "MemberExpression",
+                      "object": {
+                        "type": "Identifier",
+                        "name": "props",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          69,
+                          74
+                        ]
+                      },
+                      "property": {
+                        "type": "Identifier",
+                        "name": "post",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          75,
+                          79
+                        ]
+                      },
+                      "computed": false,
+                      "loc": null,
+                      "range": [
+                        69,
+                        79
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    43,
+                    80
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  80
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              81
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "allUrls",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    90,
+                    97
+                  ]
+                },
+                "init": {
+                  "type": "ArrayExpression",
+                  "elements": [],
+                  "loc": null,
+                  "range": [
+                    100,
+                    102
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  90,
+                  102
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              84,
+              103
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "ObjectPattern",
+                  "properties": [
+                    {
+                      "type": "Property",
+                      "key": {
+                        "type": "Identifier",
+                        "name": "media",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          590,
+                          595
+                        ]
+                      },
+                      "value": {
+                        "type": "Identifier",
+                        "name": "media",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          590,
+                          595
+                        ]
+                      },
+                      "kind": "init",
+                      "computed": false,
+                      "shorthand": true,
+                      "method": false,
+                      "loc": null,
+                      "range": [
+                        590,
+                        595
+                      ]
+                    },
+                    {
+                      "type": "Property",
+                      "key": {
+                        "type": "Identifier",
+                        "name": "comments",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          597,
+                          605
+                        ]
+                      },
+                      "value": {
+                        "type": "Identifier",
+                        "name": "comments",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          597,
+                          605
+                        ]
+                      },
+                      "kind": "init",
+                      "computed": false,
+                      "shorthand": true,
+                      "method": false,
+                      "loc": null,
+                      "range": [
+                        597,
+                        605
+                      ]
+                    },
+                    {
+                      "type": "Property",
+                      "key": {
+                        "type": "Identifier",
+                        "name": "urls",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          607,
+                          611
+                        ]
+                      },
+                      "value": {
+                        "type": "Identifier",
+                        "name": "urls",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          607,
+                          611
+                        ]
+                      },
+                      "kind": "init",
+                      "computed": false,
+                      "shorthand": true,
+                      "method": false,
+                      "loc": null,
+                      "range": [
+                        607,
+                        611
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    588,
+                    613
+                  ]
+                },
+                "init": {
+                  "type": "Identifier",
+                  "name": "post",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    616,
+                    620
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  588,
+                  620
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              582,
+              621
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "onClick",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    630,
+                    637
+                  ]
+                },
+                "init": {
+                  "type": "ArrowFunctionExpression",
+                  "id": null,
+                  "params": [
+                    {
+                      "type": "Identifier",
+                      "name": "e",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        641,
+                        642
+                      ]
+                    }
+                  ],
+                  "body": {
+                    "type": "BlockStatement",
+                    "body": [
+                      {
+                        "type": "IfStatement",
+                        "test": {
+                          "type": "UnaryExpression",
+                          "operator": "!",
+                          "prefix": true,
+                          "argument": {
+                            "type": "MemberExpression",
+                            "object": {
+                              "type": "Identifier",
+                              "name": "comments",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                658,
+                                666
+                              ]
+                            },
+                            "property": {
+                              "type": "Identifier",
+                              "name": "length",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                667,
+                                673
+                              ]
+                            },
+                            "computed": false,
+                            "loc": null,
+                            "range": [
+                              658,
+                              673
+                            ]
+                          },
+                          "loc": null,
+                          "range": [
+                            657,
+                            673
+                          ]
+                        },
+                        "consequent": {
+                          "type": "BlockStatement",
+                          "body": [
+                            {
+                              "type": "ReturnStatement",
+                              "argument": null,
+                              "loc": null,
+                              "range": [
+                                683,
+                                690
+                              ]
+                            }
+                          ],
+                          "loc": null,
+                          "range": [
+                            675,
+                            696
+                          ]
+                        },
+                        "alternate": null,
+                        "loc": null,
+                        "range": [
+                          653,
+                          696
+                        ]
+                      },
+                      {
+                        "type": "ExpressionStatement",
+                        "expression": {
+                          "type": "CallExpression",
+                          "callee": {
+                            "type": "MemberExpression",
+                            "object": {
+                              "type": "Identifier",
+                              "name": "console",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                701,
+                                708
+                              ]
+                            },
+                            "property": {
+                              "type": "Identifier",
+                              "name": "log",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                709,
+                                712
+                              ]
+                            },
+                            "computed": false,
+                            "loc": null,
+                            "range": [
+                              701,
+                              712
+                            ]
+                          },
+                          "arguments": [
+                            {
+                              "type": "MemberExpression",
+                              "object": {
+                                "type": "Identifier",
+                                "name": "comments",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  713,
+                                  721
+                                ]
+                              },
+                              "property": {
+                                "type": "Identifier",
+                                "name": "length",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  722,
+                                  728
+                                ]
+                              },
+                              "computed": false,
+                              "loc": null,
+                              "range": [
+                                713,
+                                728
+                              ]
+                            }
+                          ],
+                          "loc": null,
+                          "range": [
+                            701,
+                            729
+                          ]
+                        },
+                        "directive": null,
+                        "loc": null,
+                        "range": [
+                          701,
+                          730
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      647,
+                      734
+                    ]
+                  },
+                  "generator": false,
+                  "async": false,
+                  "loc": null,
+                  "range": [
+                    640,
+                    734
+                  ],
+                  "expression": false,
+                  "loc": null,
+                  "range": [
+                    640,
+                    734
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  630,
+                  734
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              624,
+              735
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "MemberExpression",
+                "object": {
+                  "type": "Identifier",
+                  "name": "allUrls",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    738,
+                    745
+                  ]
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "push",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    746,
+                    750
+                  ]
+                },
+                "computed": false,
+                "loc": null,
+                "range": [
+                  738,
+                  750
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "SpreadElement",
+                  "argument": {
+                    "type": "Identifier",
+                    "name": "urls",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      754,
+                      758
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    751,
+                    758
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                738,
+                759
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              738,
+              760
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "Media",
+                  "loc": null,
+                  "range": [
+                    771,
+                    776
+                  ]
+                },
+                "attributes": [
+                  {
+                    "type": "JSXAttribute",
+                    "name": {
+                      "type": "JSXIdentifier",
+                      "name": "media",
+                      "loc": null,
+                      "range": [
+                        777,
+                        782
+                      ]
+                    },
+                    "value": {
+                      "type": "JSXExpressionContainer",
+                      "expression": {
+                        "type": "Identifier",
+                        "name": "media",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          784,
+                          789
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        783,
+                        790
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      777,
+                      790
+                    ]
+                  },
+                  {
+                    "type": "JSXAttribute",
+                    "name": {
+                      "type": "JSXIdentifier",
+                      "name": "onClick",
+                      "loc": null,
+                      "range": [
+                        791,
+                        798
+                      ]
+                    },
+                    "value": {
+                      "type": "JSXExpressionContainer",
+                      "expression": {
+                        "type": "Identifier",
+                        "name": "onClick",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          800,
+                          807
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        799,
+                        808
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      791,
+                      808
+                    ]
+                  }
+                ],
+                "selfClosing": true,
+                "loc": null,
+                "range": [
+                  770,
+                  811
+                ]
+              },
+              "children": [],
+              "closingElement": null,
+              "loc": null,
+              "range": [
+                770,
+                811
+              ]
+            },
+            "loc": null,
+            "range": [
+              763,
+              812
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          814
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        814
+      ],
+      "loc": null,
+      "range": [
+        0,
+        814
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    814
+  ]
+}

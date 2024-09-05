@@ -258,7 +258,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(() => {
         ReactNoop.render(
           <App>
-            <AsyncText text="Async" ms={1000} />
+            <AsyncText text="Async" />
           </App>,
         );
       });
@@ -324,7 +324,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       expect(ReactNoop).toMatchRenderedOutput(null);
     });
 
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && !disableLegacyMode
     it('should not change behavior in sync', async () => {
       class ClassText extends React.Component {
         componentDidMount() {
@@ -376,7 +376,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(() => {
         ReactNoop.renderLegacySyncRoot(
           <App>
-            <AsyncText text="Async" ms={1000} />
+            <AsyncText text="Async" />
           </App>,
         );
       });
@@ -445,7 +445,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
   });
 
   describe('layout effects within a tree that re-suspends in an update', () => {
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && !disableLegacyMode
     it('should not be destroyed or recreated in legacy roots', async () => {
       function App({children = null}) {
         Scheduler.log('App render');
@@ -503,7 +503,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(() => {
         ReactNoop.renderLegacySyncRoot(
           <App>
-            <AsyncText text="Async" ms={1000} />
+            <AsyncText text="Async" />
           </App>,
         );
       });
@@ -633,7 +633,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.render(
           <App>
-            <AsyncText text="Async" ms={1000} />
+            <AsyncText text="Async" />
           </App>,
         );
         await waitFor([
@@ -773,7 +773,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.render(
           <App>
-            <AsyncText text="Async" ms={1000} />
+            <AsyncText text="Async" />
           </App>,
         );
 
@@ -885,7 +885,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.render(
           <App>
-            <AsyncText text="Async" ms={1000} />
+            <AsyncText text="Async" />
           </App>,
         );
         await waitFor([
@@ -999,7 +999,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.render(
           <App>
-            <AsyncText text="Async" ms={1000} />
+            <AsyncText text="Async" />
           </App>,
         );
         await waitFor([
@@ -1097,7 +1097,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       // Suspend the inner Suspense subtree (only inner effects should be destroyed)
       await act(() => {
         ReactNoop.render(
-          <App innerChildren={<AsyncText text="InnerAsync_1" ms={1000} />} />,
+          <App innerChildren={<AsyncText text="InnerAsync_1" />} />,
         );
       });
       assertLog([
@@ -1122,8 +1122,8 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(() => {
         ReactNoop.render(
           <App
-            outerChildren={<AsyncText text="OuterAsync_1" ms={1000} />}
-            innerChildren={<AsyncText text="InnerAsync_1" ms={1000} />}
+            outerChildren={<AsyncText text="OuterAsync_1" />}
+            innerChildren={<AsyncText text="InnerAsync_1" />}
           />,
         );
       });
@@ -1150,7 +1150,19 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         await resolveText('InnerAsync_1');
       });
-      assertLog(['Text:Outer render', 'Suspend:OuterAsync_1']);
+      assertLog([
+        'Text:Outer render',
+        'Suspend:OuterAsync_1',
+
+        ...(gate('enableSiblingPrerendering')
+          ? [
+              'Text:Outer render',
+              'Suspend:OuterAsync_1',
+              'Text:Inner render',
+              'AsyncText:InnerAsync_1 render',
+            ]
+          : []),
+      ]);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
           <span prop="Outer" hidden={true} />
@@ -1164,8 +1176,8 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(() => {
         ReactNoop.render(
           <App
-            outerChildren={<AsyncText text="OuterAsync_1" ms={1000} />}
-            innerChildren={<AsyncText text="InnerAsync_2" ms={1000} />}
+            outerChildren={<AsyncText text="OuterAsync_1" />}
+            innerChildren={<AsyncText text="InnerAsync_2" />}
           />,
         );
       });
@@ -1194,6 +1206,17 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Text:Inner render',
         'Suspend:InnerAsync_2',
         'Text:InnerFallback render',
+
+        ...(gate('enableSiblingPrerendering')
+          ? [
+              'Text:Outer render',
+              'AsyncText:OuterAsync_1 render',
+              'Text:Inner render',
+              'Suspend:InnerAsync_2',
+              'Text:InnerFallback render',
+            ]
+          : []),
+
         'Text:OuterFallback destroy layout',
         'Text:Outer create layout',
         'AsyncText:OuterAsync_1 create layout',
@@ -1236,8 +1259,8 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(() => {
         ReactNoop.render(
           <App
-            outerChildren={<AsyncText text="OuterAsync_2" ms={1000} />}
-            innerChildren={<AsyncText text="InnerAsync_2" ms={1000} />}
+            outerChildren={<AsyncText text="OuterAsync_2" />}
+            innerChildren={<AsyncText text="InnerAsync_2" />}
           />,
         );
       });
@@ -1325,7 +1348,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       // Suspend the inner Suspense subtree (only inner effects should be destroyed)
       await act(() => {
         ReactNoop.render(
-          <App innerChildren={<AsyncText text="InnerAsync_1" ms={1000} />} />,
+          <App innerChildren={<AsyncText text="InnerAsync_1" />} />,
         );
       });
       assertLog([
@@ -1350,8 +1373,8 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(() => {
         ReactNoop.render(
           <App
-            outerChildren={<AsyncText text="OuterAsync_1" ms={1000} />}
-            innerChildren={<AsyncText text="InnerAsync_1" ms={1000} />}
+            outerChildren={<AsyncText text="OuterAsync_1" />}
+            innerChildren={<AsyncText text="InnerAsync_1" />}
           />,
         );
       });
@@ -1448,7 +1471,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       // Suspend the outer shell
       await act(async () => {
         ReactNoop.render(
-          <App outerChildren={<AsyncText text="OutsideAsync" ms={1000} />} />,
+          <App outerChildren={<AsyncText text="OutsideAsync" />} />,
         );
         await waitFor([
           'Text:Inside render',
@@ -1478,8 +1501,8 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.render(
           <App
-            fallbackChildren={<AsyncText text="FallbackAsync" ms={1000} />}
-            outerChildren={<AsyncText text="OutsideAsync" ms={1000} />}
+            fallbackChildren={<AsyncText text="FallbackAsync" />}
+            outerChildren={<AsyncText text="OutsideAsync" />}
           />,
         );
         await waitFor([
@@ -1577,8 +1600,8 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(() => {
         ReactNoop.render(
           <App
-            outerChildren={<AsyncText text="OutsideAsync" ms={1000} />}
-            fallbackChildren={<AsyncText text="FallbackAsync" ms={1000} />}
+            outerChildren={<AsyncText text="OutsideAsync" />}
+            fallbackChildren={<AsyncText text="FallbackAsync" />}
           />,
         );
       });
@@ -1807,7 +1830,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           ReactNoop.render(
             <ErrorBoundary fallback={<Text text="Error" />}>
               <App>
-                <AsyncText text="Async" ms={1000} />
+                <AsyncText text="Async" />
               </App>
             </ErrorBoundary>,
           );
@@ -1941,7 +1964,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           ReactNoop.render(
             <ErrorBoundary fallback={<Text text="Error" />}>
               <App>
-                <AsyncText text="Async" ms={1000} />
+                <AsyncText text="Async" />
               </App>
             </ErrorBoundary>,
           );
@@ -2050,7 +2073,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           ReactNoop.render(
             <ErrorBoundary fallback={<Text text="Error" />}>
               <App>
-                <AsyncText text="Async" ms={1000} />
+                <AsyncText text="Async" />
               </App>
             </ErrorBoundary>,
           );
@@ -2184,7 +2207,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           ReactNoop.render(
             <ErrorBoundary fallback={<Text text="Error" />}>
               <App>
-                <AsyncText text="Async" ms={1000} />
+                <AsyncText text="Async" />
               </App>
             </ErrorBoundary>,
           );
@@ -2276,8 +2299,8 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         ReactNoop.render(
           <App>
-            <AsyncText text="Async_1" ms={1000} />
-            <AsyncText text="Async_2" ms={2000} />
+            <AsyncText text="Async_1" />
+            <AsyncText text="Async_2" />
           </App>,
         );
         await waitFor([
@@ -2305,6 +2328,15 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Text:Function render',
         'AsyncText:Async_1 render',
         'Suspend:Async_2',
+
+        ...(gate('enableSiblingPrerendering')
+          ? [
+              'Text:Function render',
+              'AsyncText:Async_1 render',
+              'Suspend:Async_2',
+              'ClassText:Class render',
+            ]
+          : []),
       ]);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
@@ -2443,7 +2475,20 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         await resolveText('A');
       });
-      assertLog(['Text:Function render', 'Suspender "B" render', 'Suspend:B']);
+      assertLog([
+        'Text:Function render',
+        'Suspender "B" render',
+        'Suspend:B',
+
+        ...(gate('enableSiblingPrerendering')
+          ? [
+              'Text:Function render',
+              'Suspender "B" render',
+              'Suspend:B',
+              'ClassText:Class render',
+            ]
+          : []),
+      ]);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
           <span prop="Function" hidden={true} />
@@ -2542,7 +2587,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       return null;
     }
 
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && !disableLegacyMode
     it('should not be cleared within legacy roots', async () => {
       class ClassComponent extends React.Component {
         render() {
@@ -2581,7 +2626,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       // Suspend the inner Suspense subtree (only inner effects should be destroyed)
       await act(() => {
         ReactNoop.renderLegacySyncRoot(
-          <App children={<AsyncText text="Async" ms={1000} />} />,
+          <App children={<AsyncText text="Async" />} />,
         );
       });
       await advanceTimers(1000);
@@ -2661,9 +2706,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
       // Suspend the inner Suspense subtree (only inner effects should be destroyed)
       await act(() => {
-        ReactNoop.render(
-          <App children={<AsyncText text="Async" ms={1000} />} />,
-        );
+        ReactNoop.render(<App children={<AsyncText text="Async" />} />);
       });
       await advanceTimers(1000);
       assertLog([
@@ -2764,9 +2807,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
       // Suspend the inner Suspense subtree (only inner effects should be destroyed)
       await act(() => {
-        ReactNoop.render(
-          <App children={<AsyncText text="Async" ms={1000} />} />,
-        );
+        ReactNoop.render(<App children={<AsyncText text="Async" />} />);
       });
       await advanceTimers(1000);
       assertLog([
@@ -2863,9 +2904,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
       // Suspend the inner Suspense subtree (only inner effects should be destroyed)
       await act(() => {
-        ReactNoop.render(
-          <App children={<AsyncText text="Async" ms={1000} />} />,
-        );
+        ReactNoop.render(<App children={<AsyncText text="Async" />} />);
       });
       await advanceTimers(1000);
       assertLog([
@@ -2967,9 +3006,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
       // Suspend the inner Suspense subtree (only inner effects should be destroyed)
       await act(() => {
-        ReactNoop.render(
-          <App children={<AsyncText text="Async" ms={1000} />} />,
-        );
+        ReactNoop.render(<App children={<AsyncText text="Async" />} />);
       });
       await advanceTimers(1000);
       assertLog([
@@ -3078,7 +3115,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           ReactNoop.render(
             <ErrorBoundary fallback={<Text text="Error" />}>
               <App>
-                <AsyncText text="Async" ms={1000} />
+                <AsyncText text="Async" />
               </App>
             </ErrorBoundary>,
           );

@@ -208,7 +208,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         <>
           <Suspense fallback={<Text text="Loading..." />}>
             <Bar>
-              <AsyncText text="A" ms={100} />
+              <AsyncText text="A" />
               <Text text="B" />
             </Bar>
           </Suspense>
@@ -298,6 +298,19 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       // We immediately unwind and switch to a fallback without
       // rendering siblings.
       'Loading...',
+
+      ...(gate('enableSiblingPrerendering')
+        ? [
+            'Foo',
+            'Bar',
+            // A suspends
+            'Suspend! [A]',
+            'B',
+            // We immediately unwind and switch to a fallback without
+            // rendering siblings.
+            'Loading...',
+          ]
+        : []),
     ]);
     expect(ReactNoop).toMatchRenderedOutput(null);
 
@@ -379,7 +392,15 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     });
 
     // B suspends. Render a fallback
-    await waitForAll(['A', 'Suspend! [B]', 'Loading...']);
+    await waitForAll([
+      'A',
+      'Suspend! [B]',
+      'Loading...',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['A', 'Suspend! [B]', 'C', 'D', 'Loading...']
+        : []),
+    ]);
     // Did not commit yet.
     expect(ReactNoop).toMatchRenderedOutput(null);
 
@@ -422,7 +443,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         <Suspense fallback={<Text text="Loading..." />}>
           {renderContent ? (
             <ErrorBoundary ref={errorBoundary}>
-              <AsyncText text="Result" ms={1000} />
+              <AsyncText text="Result" />
             </ErrorBoundary>
           ) : null}
         </Suspense>
@@ -436,7 +457,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     React.startTransition(() => {
       ReactNoop.render(<App renderContent={true} />);
     });
-    await waitForAll(['Suspend! [Result]', 'Loading...']);
+    await waitForAll([
+      'Suspend! [Result]',
+      'Loading...',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['Suspend! [Result]', 'Loading...']
+        : []),
+    ]);
     expect(ReactNoop).toMatchRenderedOutput(null);
 
     await rejectText('Result', new Error('Failed to load: Result'));
@@ -496,6 +524,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       // React retries one more time
       'Error! [Result]',
 
+      ...(gate('enableSiblingPrerendering')
+        ? ['Error! [Result]', 'Error! [Result]']
+        : []),
+
       // Errored again on retry. Now handle it.
       'Caught error: Failed to load: Result',
     ]);
@@ -547,7 +579,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     // Update the low-pri text
     await act(() => startTransition(() => setLowPri('2')));
     // Suspends
-    assertLog(['Suspend! [2]', 'Loading...']);
+    assertLog([
+      'Suspend! [2]',
+      'Loading...',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['Suspend! [2]', 'Loading...']
+        : []),
+    ]);
 
     // While we're still waiting for the low-pri update to complete, update the
     // high-pri text at high priority.
@@ -592,13 +631,27 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     React.startTransition(() => {
       ReactNoop.render(<App showA={true} showB={false} />);
     });
-    await waitForAll(['Suspend! [A]', 'Loading...']);
+    await waitForAll([
+      'Suspend! [A]',
+      'Loading...',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['Suspend! [A]', 'Loading...']
+        : []),
+    ]);
     expect(ReactNoop).toMatchRenderedOutput(null);
 
     React.startTransition(() => {
       ReactNoop.render(<App showA={true} showB={true} />);
     });
-    await waitForAll(['Suspend! [A]', 'Loading...']);
+    await waitForAll([
+      'Suspend! [A]',
+      'Loading...',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['Suspend! [A]', 'B', 'Loading...']
+        : []),
+    ]);
     expect(ReactNoop).toMatchRenderedOutput(null);
 
     await resolveText('A');
@@ -619,7 +672,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       }
       return (
         <Suspense fallback="Loading...">
-          <AsyncText ms={2000} text="Async" />
+          <AsyncText text="Async" />
         </Suspense>
       );
     }
@@ -715,9 +768,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       <Fragment>
         <Text text="Sync" />
         <Suspense fallback={<Text text="Loading outer..." />}>
-          <AsyncText text="Outer content" ms={300} />
+          <AsyncText text="Outer content" />
           <Suspense fallback={<Text text="Loading inner..." />}>
-            <AsyncText text="Inner content" ms={1000} />
+            <AsyncText text="Inner content" />
           </Suspense>
         </Suspense>
       </Fragment>,
@@ -743,6 +796,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       'Outer content',
       'Suspend! [Inner content]',
       'Loading inner...',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['Outer content', 'Suspend! [Inner content]', 'Loading inner...']
+        : []),
     ]);
     // Don't commit the inner placeholder yet.
     expect(ReactNoop).toMatchRenderedOutput(
@@ -886,10 +943,12 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     }).not.toThrow();
   });
 
-  // @gate enableLegacyCache
-  it('in legacy mode, errors when an update suspends without a Suspense boundary during a sync update', () => {
+  // @gate enableLegacyCache && !disableLegacyMode
+  it('in legacy mode, errors when an update suspends without a Suspense boundary during a sync update', async () => {
     const root = ReactNoop.createLegacyRoot();
-    expect(() => root.render(<AsyncText text="Async" />)).toThrow(
+    await expect(async () => {
+      await act(() => root.render(<AsyncText text="Async" />));
+    }).rejects.toThrow(
       'A component suspended while responding to synchronous input.',
     );
   });
@@ -930,7 +989,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         </Suspense>,
       );
     });
-    await waitForAll(['Suspend! [Async]', 'Loading...']);
+    await waitForAll([
+      'Suspend! [Async]',
+      'Loading...',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['Suspend! [Async]', 'Loading...']
+        : []),
+    ]);
     expect(ReactNoop).toMatchRenderedOutput(null);
 
     // Resolve the promise
@@ -962,7 +1028,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     // Schedule an update, and suspend for up to 5 seconds.
     React.startTransition(() => ReactNoop.render(<App text="A" />));
     // The update should suspend.
-    await waitForAll(['Suspend! [A]', 'Loading...']);
+    await waitForAll([
+      'Suspend! [A]',
+      'Loading...',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['Suspend! [A]', 'Loading...']
+        : []),
+    ]);
     expect(ReactNoop).toMatchRenderedOutput(<span prop="S" />);
 
     // Advance time until right before it expires.
@@ -974,7 +1047,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     // Schedule another low priority update.
     React.startTransition(() => ReactNoop.render(<App text="B" />));
     // This update should also suspend.
-    await waitForAll(['Suspend! [B]', 'Loading...']);
+    await waitForAll([
+      'Suspend! [B]',
+      'Loading...',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['Suspend! [B]', 'Loading...']
+        : []),
+    ]);
     expect(ReactNoop).toMatchRenderedOutput(<span prop="S" />);
 
     // Schedule a regular update. Its expiration time will fall between
@@ -1030,7 +1110,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   describe('legacy mode mode', () => {
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && !disableLegacyMode
     it('times out immediately', async () => {
       function App() {
         return (
@@ -1053,7 +1133,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Result" />);
     });
 
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && !disableLegacyMode
     it('times out immediately when Suspense is in legacy mode', async () => {
       class UpdatingText extends React.Component {
         state = {step: 1};
@@ -1127,7 +1207,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       );
     });
 
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && !disableLegacyMode
     it('does not re-render siblings in loose mode', async () => {
       class TextWithLifecycle extends React.Component {
         componentDidMount() {
@@ -1202,7 +1282,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       );
     });
 
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && !disableLegacyMode
     it('suspends inside constructor', async () => {
       class AsyncTextInConstructor extends React.Component {
         constructor(props) {
@@ -1238,7 +1318,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Hi" />);
     });
 
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && !disableLegacyMode
     it('does not infinite loop if fallback contains lifecycle method', async () => {
       class Fallback extends React.Component {
         state = {
@@ -1281,7 +1361,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     });
 
     if (global.__PERSISTENT__) {
-      // @gate enableLegacyCache
+      // @gate enableLegacyCache && !disableLegacyMode
       it('hides/unhides suspended children before layout effects fire (persistent)', async () => {
         const {useRef, useLayoutEffect} = React;
 
@@ -1325,7 +1405,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         assertLog(['Hi']);
       });
     } else {
-      // @gate enableLegacyCache
+      // @gate enableLegacyCache && !disableLegacyMode
       it('hides/unhides suspended children before layout effects fire (mutation)', async () => {
         const {useRef, useLayoutEffect} = React;
 
@@ -1368,7 +1448,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       });
     }
 
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && !disableLegacyMode
     it('handles errors in the return path of a component that suspends', async () => {
       // Covers an edge case where an error is thrown inside the complete phase
       // of a component that is in the return path of a component that suspends.
@@ -1403,6 +1483,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       );
     });
 
+    // @gate !disableLegacyMode
     it('does not drop mounted effects', async () => {
       const never = {then() {}};
 
@@ -1453,7 +1534,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     });
   });
 
-  // @gate enableLegacyCache
+  // @gate enableLegacyCache && !disableLegacyMode
   it('does not call lifecycles of a suspended component', async () => {
     class TextWithLifecycle extends React.Component {
       componentDidMount() {
@@ -1521,7 +1602,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
   });
 
-  // @gate enableLegacyCache
+  // @gate enableLegacyCache && !disableLegacyMode
   it('does not call lifecycles of a suspended component (hooks)', async () => {
     function TextWithLifecycle(props) {
       React.useLayoutEffect(() => {
@@ -1744,6 +1825,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         // B suspends
         'Suspend! [B]',
         'Loading more...',
+
+        ...(gate('enableSiblingPrerendering')
+          ? ['A', 'Suspend! [B]', 'Loading more...']
+          : []),
       ]);
       // Because we've already been waiting for so long we can
       // wait a bit longer. Still nothing...
@@ -2231,27 +2316,23 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     await waitForAll(['Foo', 'A']);
     expect(ReactNoop).toMatchRenderedOutput(<span prop="A" />);
 
-    if (gate(flags => flags.forceConcurrentByDefaultForTesting)) {
+    React.startTransition(() => {
       ReactNoop.render(<Foo showB={true} />);
-    } else {
-      React.startTransition(() => {
-        ReactNoop.render(<Foo showB={true} />);
-      });
-    }
+    });
 
-    await waitForAll(['Foo', 'A', 'Suspend! [B]', 'Loading B...']);
+    await waitForAll([
+      'Foo',
+      'A',
+      'Suspend! [B]',
+      'Loading B...',
 
-    if (gate(flags => flags.forceConcurrentByDefaultForTesting)) {
-      expect(ReactNoop).toMatchRenderedOutput(
-        <>
-          <span prop="A" />
-          <span prop="Loading B..." />
-        </>,
-      );
-    } else {
-      // Transitions never fall back.
-      expect(ReactNoop).toMatchRenderedOutput(<span prop="A" />);
-    }
+      ...(gate('enableSiblingPrerendering')
+        ? ['Foo', 'A', 'Suspend! [B]', 'Loading B...']
+        : []),
+    ]);
+
+    // Transitions never fall back.
+    expect(ReactNoop).toMatchRenderedOutput(<span prop="A" />);
   });
 
   // @gate enableLegacyCache
@@ -2324,7 +2405,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       // Start transition.
       React.startTransition(() => ReactNoop.render(<App page="B" />));
 
-      await waitForAll(['Suspend! [B]', 'Loading...']);
+      await waitForAll([
+        'Suspend! [B]',
+        'Loading...',
+
+        ...(gate('enableSiblingPrerendering')
+          ? ['Suspend! [B]', 'Loading...']
+          : []),
+      ]);
       Scheduler.unstable_advanceTime(100000);
       await advanceTimers(100000);
       // Even after lots of time has passed, we have still not yet flushed the
@@ -2375,7 +2463,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       await act(async () => {
         React.startTransition(() => transitionToPage('B'));
 
-        await waitForAll(['Suspend! [B]', 'Loading...']);
+        await waitForAll([
+          'Suspend! [B]',
+          'Loading...',
+
+          ...(gate('enableSiblingPrerendering')
+            ? ['Suspend! [B]', 'Loading...']
+            : []),
+        ]);
         Scheduler.unstable_advanceTime(100000);
         await advanceTimers(100000);
         // Even after lots of time has passed, we have still not yet flushed the
@@ -2430,7 +2525,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       await act(async () => {
         React.startTransition(() => transitionToPage('B'));
 
-        await waitForAll(['Suspend! [B]', 'Loading...']);
+        await waitForAll([
+          'Suspend! [B]',
+          'Loading...',
+
+          ...(gate('enableSiblingPrerendering')
+            ? ['Suspend! [B]', 'Loading...']
+            : []),
+        ]);
         Scheduler.unstable_advanceTime(100000);
         await advanceTimers(100000);
         // Even after lots of time has passed, we have still not yet flushed the
@@ -2472,7 +2574,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       // Start transition.
       React.startTransition(() => ReactNoop.render(<App page="B" />));
 
-      await waitForAll(['Suspend! [B]', 'Loading...']);
+      await waitForAll([
+        'Suspend! [B]',
+        'Loading...',
+
+        ...(gate('enableSiblingPrerendering')
+          ? ['Suspend! [B]', 'Loading...']
+          : []),
+      ]);
       Scheduler.unstable_advanceTime(2999);
       await advanceTimers(2999);
       // Since the timeout is infinite (or effectively infinite),
@@ -2486,7 +2595,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
       // Start a long (infinite) transition.
       React.startTransition(() => ReactNoop.render(<App page="C" />));
-      await waitForAll(['Suspend! [C]', 'Loading...']);
+      await waitForAll([
+        'Suspend! [C]',
+        'Loading...',
+
+        ...(gate('enableSiblingPrerendering')
+          ? ['Suspend! [C]', 'Loading...']
+          : []),
+      ]);
 
       // Even after lots of time has passed, we have still not yet flushed the
       // loading state.
@@ -2534,7 +2650,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       await act(async () => {
         React.startTransition(() => transitionToPage('B'));
 
-        await waitForAll(['Suspend! [B]', 'Loading...']);
+        await waitForAll([
+          'Suspend! [B]',
+          'Loading...',
+
+          ...(gate('enableSiblingPrerendering')
+            ? ['Suspend! [B]', 'Loading...']
+            : []),
+        ]);
 
         Scheduler.unstable_advanceTime(2999);
         await advanceTimers(2999);
@@ -2552,7 +2675,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       await act(async () => {
         React.startTransition(() => transitionToPage('C'));
 
-        await waitForAll(['Suspend! [C]', 'Loading...']);
+        await waitForAll([
+          'Suspend! [C]',
+          'Loading...',
+
+          ...(gate('enableSiblingPrerendering')
+            ? ['Suspend! [C]', 'Loading...']
+            : []),
+        ]);
 
         // Even after lots of time has passed, we have still not yet flushed the
         // loading state.
@@ -2604,7 +2734,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       await act(async () => {
         React.startTransition(() => transitionToPage('B'));
 
-        await waitForAll(['Suspend! [B]', 'Loading...']);
+        await waitForAll([
+          'Suspend! [B]',
+          'Loading...',
+
+          ...(gate('enableSiblingPrerendering')
+            ? ['Suspend! [B]', 'Loading...']
+            : []),
+        ]);
         Scheduler.unstable_advanceTime(2999);
         await advanceTimers(2999);
         // Since the timeout is infinite (or effectively infinite),
@@ -2621,7 +2758,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       await act(async () => {
         React.startTransition(() => transitionToPage('C'));
 
-        await waitForAll(['Suspend! [C]', 'Loading...']);
+        await waitForAll([
+          'Suspend! [C]',
+          'Loading...',
+
+          ...(gate('enableSiblingPrerendering')
+            ? ['Suspend! [C]', 'Loading...']
+            : []),
+        ]);
 
         // Even after lots of time has passed, we have still not yet flushed the
         // loading state.
@@ -2662,7 +2806,15 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     // Start transition.
     React.startTransition(() => ReactNoop.render(<App page="B" />));
 
-    await waitForAll(['Hi!', 'Suspend! [B]', 'Loading B...']);
+    await waitForAll([
+      'Hi!',
+      'Suspend! [B]',
+      'Loading B...',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['Hi!', 'Suspend! [B]', 'Loading B...']
+        : []),
+    ]);
 
     // Suspended
     expect(ReactNoop).toMatchRenderedOutput(
@@ -2723,7 +2875,15 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     // Start transition.
     React.startTransition(() => ReactNoop.render(<App page="B" />));
 
-    await waitForAll(['Hi!', 'Suspend! [B]', 'Loading B...']);
+    await waitForAll([
+      'Hi!',
+      'Suspend! [B]',
+      'Loading B...',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['Hi!', 'Suspend! [B]', 'Loading B...']
+        : []),
+    ]);
 
     // Suspended
     expect(ReactNoop).toMatchRenderedOutput(
@@ -2821,7 +2981,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
             <Offscreen />
           </LegacyHiddenDiv>
           <Suspense fallback={<Text text="Loading..." />}>
-            {showContent ? <AsyncText text="A" ms={2000} /> : null}
+            {showContent ? <AsyncText text="A" /> : null}
           </Suspense>
         </>
       );
@@ -2837,7 +2997,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       ReactNoop.render(<App showContent={true} />);
     });
 
-    await waitForAll(['Suspend! [A]', 'Loading...']);
+    await waitForAll([
+      'Suspend! [A]',
+      'Loading...',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['Suspend! [A]', 'Loading...']
+        : []),
+    ]);
     await resolveText('A');
     await waitFor(['A', 'Commit']);
     expect(ReactNoop).toMatchRenderedOutput(
@@ -2889,7 +3056,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       ReactNoop.render(<App showContent={true} />);
     });
 
-    await waitForAll(['Suspend! [A]', 'Loading...']);
+    await waitForAll([
+      'Suspend! [A]',
+      'Loading...',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['Suspend! [A]', 'Loading...']
+        : []),
+    ]);
     await resolveText('A');
     await waitFor(['A', 'Commit']);
     expect(ReactNoop).toMatchRenderedOutput(
@@ -3502,8 +3676,11 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
   });
 
+  // This regression test relies on subtle implementation details that happen to
+  // rely on sibling prerendering being disabled. Not going to bother to rewrite
+  // it for now; maybe once we land the experiment.
+  // @gate !enableSiblingPrerendering
   // @gate enableLegacyCache
-  // @gate forceConcurrentByDefaultForTesting
   it('regression: ping at high priority causes update to be dropped', async () => {
     const {useState, useTransition} = React;
 
@@ -3570,10 +3747,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       });
 
       await waitFor([
-        'B',
         'Suspend! [A1]',
         'Loading...',
-
+        'B',
         'Suspend! [A2]',
         'Loading...',
         'Suspend! [B2]',
@@ -3666,7 +3842,16 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     // Update to "a". That will suspend.
     await act(async () => {
       setTextWithShortTransition('a');
-      await waitForAll(['Pending...', '', 'Suspend! [a]', 'Loading...']);
+      await waitForAll([
+        'Pending...',
+        '',
+        'Suspend! [a]',
+        'Loading...',
+
+        ...(gate('enableSiblingPrerendering')
+          ? ['Suspend! [a]', 'Loading...']
+          : []),
+      ]);
     });
     assertLog([]);
     expect(root).toMatchRenderedOutput(
@@ -3685,6 +3870,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         '',
         'Suspend! [b]',
         'Loading...',
+
+        ...(gate('enableSiblingPrerendering')
+          ? ['Suspend! [b]', 'Loading...']
+          : []),
       ]);
     });
     assertLog([]);
@@ -3699,7 +3888,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     await act(async () => {
       await resolveText('a');
 
-      await waitForAll(['Suspend! [b]', 'Loading...']);
+      await waitForAll([
+        'Suspend! [b]',
+        'Loading...',
+
+        ...(gate('enableSiblingPrerendering')
+          ? ['Suspend! [b]', 'Loading...']
+          : []),
+      ]);
       expect(root).toMatchRenderedOutput(
         <>
           <span prop="Pending..." />
@@ -3883,7 +4079,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     assertLog(['Unmount Child']);
   });
 
-  // @gate enableLegacyCache
+  // @gate enableLegacyCache && !disableLegacyMode
   it('should fire effect clean-up when deleting suspended tree (legacy)', async () => {
     const {useEffect} = React;
 

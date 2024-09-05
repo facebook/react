@@ -1,0 +1,412 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/multi-arrow-expr-export-gating-test.js
+---
+Input:
+// @gating
+const ErrorView = (error, _retry) => <MessageBox error={error}></MessageBox>;
+
+export const Renderer = (props) => (
+  <Foo>
+    <Bar></Bar>
+    <ErrorView></ErrorView>
+  </Foo>
+);
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "VariableDeclaration",
+      "kind": "const",
+      "declarations": [
+        {
+          "type": "VariableDeclarator",
+          "id": {
+            "type": "Identifier",
+            "name": "ErrorView",
+            "typeAnnotation": null,
+            "loc": null,
+            "range": [
+              17,
+              26
+            ]
+          },
+          "init": {
+            "type": "ArrowFunctionExpression",
+            "id": null,
+            "params": [
+              {
+                "type": "Identifier",
+                "name": "error",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  30,
+                  35
+                ]
+              },
+              {
+                "type": "Identifier",
+                "name": "_retry",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  37,
+                  43
+                ]
+              }
+            ],
+            "body": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "MessageBox",
+                  "loc": null,
+                  "range": [
+                    49,
+                    59
+                  ]
+                },
+                "attributes": [
+                  {
+                    "type": "JSXAttribute",
+                    "name": {
+                      "type": "JSXIdentifier",
+                      "name": "error",
+                      "loc": null,
+                      "range": [
+                        60,
+                        65
+                      ]
+                    },
+                    "value": {
+                      "type": "JSXExpressionContainer",
+                      "expression": {
+                        "type": "Identifier",
+                        "name": "error",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          67,
+                          72
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        66,
+                        73
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      60,
+                      73
+                    ]
+                  }
+                ],
+                "selfClosing": false,
+                "loc": null,
+                "range": [
+                  48,
+                  74
+                ]
+              },
+              "children": [],
+              "closingElement": {
+                "type": "JSXClosingElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "MessageBox",
+                  "loc": null,
+                  "range": [
+                    76,
+                    86
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  74,
+                  87
+                ]
+              },
+              "loc": null,
+              "range": [
+                48,
+                87
+              ]
+            },
+            "generator": true,
+            "async": false,
+            "loc": null,
+            "range": [
+              29,
+              87
+            ],
+            "expression": true,
+            "loc": null,
+            "range": [
+              29,
+              87
+            ]
+          },
+          "loc": null,
+          "range": [
+            17,
+            87
+          ]
+        }
+      ],
+      "loc": null,
+      "range": [
+        11,
+        88
+      ]
+    },
+    {
+      "type": "ExportNamedDeclaration",
+      "declaration": {
+        "type": "VariableDeclaration",
+        "kind": "const",
+        "declarations": [
+          {
+            "type": "VariableDeclarator",
+            "id": {
+              "type": "Identifier",
+              "name": "Renderer",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                103,
+                111
+              ]
+            },
+            "init": {
+              "type": "ArrowFunctionExpression",
+              "id": null,
+              "params": [
+                {
+                  "type": "Identifier",
+                  "name": "props",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    115,
+                    120
+                  ]
+                }
+              ],
+              "body": {
+                "type": "JSXElement",
+                "openingElement": {
+                  "type": "JSXOpeningElement",
+                  "name": {
+                    "type": "JSXIdentifier",
+                    "name": "Foo",
+                    "loc": null,
+                    "range": [
+                      130,
+                      133
+                    ]
+                  },
+                  "attributes": [],
+                  "selfClosing": false,
+                  "loc": null,
+                  "range": [
+                    129,
+                    134
+                  ]
+                },
+                "children": [
+                  {
+                    "type": "JSXText",
+                    "value": "\n    ",
+                    "raw": "\n    ",
+                    "loc": null,
+                    "range": [
+                      134,
+                      139
+                    ]
+                  },
+                  {
+                    "type": "JSXElement",
+                    "openingElement": {
+                      "type": "JSXOpeningElement",
+                      "name": {
+                        "type": "JSXIdentifier",
+                        "name": "Bar",
+                        "loc": null,
+                        "range": [
+                          140,
+                          143
+                        ]
+                      },
+                      "attributes": [],
+                      "selfClosing": false,
+                      "loc": null,
+                      "range": [
+                        139,
+                        144
+                      ]
+                    },
+                    "children": [],
+                    "closingElement": {
+                      "type": "JSXClosingElement",
+                      "name": {
+                        "type": "JSXIdentifier",
+                        "name": "Bar",
+                        "loc": null,
+                        "range": [
+                          146,
+                          149
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        144,
+                        150
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      139,
+                      150
+                    ]
+                  },
+                  {
+                    "type": "JSXText",
+                    "value": "\n    ",
+                    "raw": "\n    ",
+                    "loc": null,
+                    "range": [
+                      150,
+                      155
+                    ]
+                  },
+                  {
+                    "type": "JSXElement",
+                    "openingElement": {
+                      "type": "JSXOpeningElement",
+                      "name": {
+                        "type": "JSXIdentifier",
+                        "name": "ErrorView",
+                        "loc": null,
+                        "range": [
+                          156,
+                          165
+                        ]
+                      },
+                      "attributes": [],
+                      "selfClosing": false,
+                      "loc": null,
+                      "range": [
+                        155,
+                        166
+                      ]
+                    },
+                    "children": [],
+                    "closingElement": {
+                      "type": "JSXClosingElement",
+                      "name": {
+                        "type": "JSXIdentifier",
+                        "name": "ErrorView",
+                        "loc": null,
+                        "range": [
+                          168,
+                          177
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        166,
+                        178
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      155,
+                      178
+                    ]
+                  },
+                  {
+                    "type": "JSXText",
+                    "value": "\n  ",
+                    "raw": "\n  ",
+                    "loc": null,
+                    "range": [
+                      178,
+                      181
+                    ]
+                  }
+                ],
+                "closingElement": {
+                  "type": "JSXClosingElement",
+                  "name": {
+                    "type": "JSXIdentifier",
+                    "name": "Foo",
+                    "loc": null,
+                    "range": [
+                      183,
+                      186
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    181,
+                    187
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  129,
+                  187
+                ]
+              },
+              "generator": true,
+              "async": false,
+              "loc": null,
+              "range": [
+                114,
+                189
+              ],
+              "expression": true,
+              "loc": null,
+              "range": [
+                114,
+                189
+              ]
+            },
+            "loc": null,
+            "range": [
+              103,
+              189
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          97,
+          190
+        ]
+      },
+      "specifiers": [],
+      "source": null,
+      "loc": null,
+      "range": [
+        90,
+        190
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    11,
+    190
+  ]
+}

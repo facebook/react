@@ -59,7 +59,12 @@ function decodeBoundActionMetaData(
   formFieldPrefix: string,
 ): {id: ServerReferenceId, bound: null | Promise<Array<any>>} {
   // The data for this reference is encoded in multiple fields under this prefix.
-  const actionResponse = createResponse(serverManifest, formFieldPrefix, body);
+  const actionResponse = createResponse(
+    serverManifest,
+    formFieldPrefix,
+    undefined,
+    body,
+  );
   close(actionResponse);
   const refPromise = getRoot<{
     id: ServerReferenceId,

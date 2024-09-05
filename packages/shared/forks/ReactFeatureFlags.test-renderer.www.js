@@ -20,13 +20,12 @@ export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableUpdaterTracking = false;
 export const enableCache = true;
 export const enableLegacyCache = true;
-export const enableCacheElement = true;
-export const enableFetchInstrumentation = false;
-export const enableFormActions = true; // Doesn't affect Test Renderer
 export const enableBinaryFlight = true;
+export const enableFlightReadableStream = true;
+export const enableAsyncIterableChildren = false;
 export const enableTaint = true;
 export const enablePostpone = false;
-export const disableJavaScriptURLs = true;
+export const enableHalt = false;
 export const disableCommentsAsDOMContainers = true;
 export const disableInputAttributeSyncing = false;
 export const disableIEWorkarounds = true;
@@ -34,42 +33,36 @@ export const enableScopeAPI = true;
 export const enableCreateEventHandleAPI = false;
 export const enableSuspenseCallback = true;
 export const disableLegacyContext = false;
+export const disableLegacyContextForFunctionComponents = false;
 export const enableTrustedTypesIntegration = false;
 export const disableTextareaChildren = false;
-export const disableModulePatternComponents = true;
 export const enableSuspenseAvoidThisFallback = true;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableCPUSuspense = false;
 export const enableUseMemoCacheHook = true;
+export const enableNoCloningMemoCache = false;
 export const enableUseEffectEventHook = false;
-export const enableClientRenderFallbackOnTextMismatch = true;
+export const favorSafetyOverHydrationPerf = true;
 export const enableComponentStackLocations = true;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = true;
 export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableRenderableContext = false;
+export const enableFabricCompleteRootInCommitPhase = false;
 
 export const enableRetryLaneExpiration = false;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
 
-export const enableUseRefAccessWarning = false;
-
 export const disableSchedulerTimeoutInWorkLoop = false;
-export const enableLazyContextPropagation = false;
+export const enableLazyContextPropagation = true;
+export const enableContextProfiling = false;
 export const enableLegacyHidden = false;
-export const forceConcurrentByDefaultForTesting = false;
-export const enableUnifiedSyncLane = true;
-export const allowConcurrentByDefault = true;
-export const enableCustomElementPropertySupport = false;
-export const enableNewBooleanProps = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
 
 export const enableTransitionTracing = false;
-
-export const enableFloat = true;
 
 export const useModernStrictMode = false;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
@@ -81,20 +74,27 @@ export const enableAsyncActions = true;
 export const alwaysThrottleRetries = true;
 
 export const passChildrenWhenCloningPersistedNodes = false;
-export const enableUseDeferredValueInitialArg = true;
+export const enablePersistedModeClonedFlag = false;
 export const disableClientCache = true;
 
-export const enableServerComponentKeys = true;
 export const enableServerComponentLogs = true;
 export const enableInfiniteRenderLoopDetection = false;
 
-export const enableRefAsProp = false;
+export const enableRefAsProp = true;
 export const disableStringRefs = false;
 
 export const enableReactTestRendererWarning = false;
-export const disableLegacyMode = false;
+export const disableLegacyMode = true;
 
-export const enableBigIntSupport = false;
+export const disableDefaultPropsExceptForClasses = false;
+export const enableAddPropertiesFastPath = false;
+
+export const renameElementSymbol = false;
+
+export const enableObjectFiber = false;
+export const enableOwnerStacks = false;
+export const enableShallowPropDiffing = false;
+export const enableSiblingPrerendering = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

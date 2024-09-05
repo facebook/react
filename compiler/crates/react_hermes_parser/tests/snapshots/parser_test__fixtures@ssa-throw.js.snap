@@ -1,0 +1,203 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/ssa-throw.js
+---
+Input:
+function foo() {
+  let x = 1;
+  if (x === 1) {
+    x = 2;
+  }
+  throw x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "foo",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          12
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    23,
+                    24
+                  ]
+                },
+                "init": {
+                  "type": "NumericLiteral",
+                  "value": 1.0,
+                  "loc": null,
+                  "range": [
+                    27,
+                    28
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  23,
+                  28
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              19,
+              29
+            ]
+          },
+          {
+            "type": "IfStatement",
+            "test": {
+              "type": "BinaryExpression",
+              "left": {
+                "type": "Identifier",
+                "name": "x",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  36,
+                  37
+                ]
+              },
+              "operator": "===",
+              "right": {
+                "type": "NumericLiteral",
+                "value": 1.0,
+                "loc": null,
+                "range": [
+                  42,
+                  43
+                ]
+              },
+              "loc": null,
+              "range": [
+                36,
+                43
+              ]
+            },
+            "consequent": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "AssignmentExpression",
+                    "operator": "=",
+                    "left": {
+                      "type": "Identifier",
+                      "name": "x",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        51,
+                        52
+                      ]
+                    },
+                    "right": {
+                      "type": "NumericLiteral",
+                      "value": 2.0,
+                      "loc": null,
+                      "range": [
+                        55,
+                        56
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      51,
+                      56
+                    ]
+                  },
+                  "directive": null,
+                  "loc": null,
+                  "range": [
+                    51,
+                    57
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                45,
+                61
+              ]
+            },
+            "alternate": null,
+            "loc": null,
+            "range": [
+              32,
+              61
+            ]
+          },
+          {
+            "type": "ThrowStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                70,
+                71
+              ]
+            },
+            "loc": null,
+            "range": [
+              64,
+              72
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          15,
+          74
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        74
+      ],
+      "loc": null,
+      "range": [
+        0,
+        74
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    74
+  ]
+}

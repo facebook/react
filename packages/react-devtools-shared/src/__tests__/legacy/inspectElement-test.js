@@ -62,7 +62,10 @@ describe('InspectedElementContext', () => {
     const Example = () => null;
 
     act(() =>
-      ReactDOM.render(<Example a={1} b="abc" />, document.createElement('div')),
+      ReactDOM.render(
+        React.createElement(Example, {a: 1, b: 'abc'}),
+        document.createElement('div'),
+      ),
     );
 
     const id = ((store.getElementIDAtIndex(0): any): number);
@@ -91,19 +94,19 @@ describe('InspectedElementContext', () => {
 
     act(() =>
       ReactDOM.render(
-        <Example
-          boolean_false={false}
-          boolean_true={true}
-          infinity={Infinity}
-          integer_zero={0}
-          integer_one={1}
-          float={1.23}
-          string="abc"
-          string_empty=""
-          nan={NaN}
-          value_null={null}
-          value_undefined={undefined}
-        />,
+        React.createElement(Example, {
+          boolean_false: false,
+          boolean_true: true,
+          infinity: Infinity,
+          integer_zero: 0,
+          integer_one: 1,
+          float: 1.23,
+          string: 'abc',
+          string_empty: '',
+          nan: NaN,
+          value_null: null,
+          value_undefined: undefined,
+        }),
         document.createElement('div'),
       ),
     );
@@ -178,28 +181,27 @@ describe('InspectedElementContext', () => {
 
     act(() =>
       ReactDOM.render(
-        <Example
-          anonymous_fn={instance.anonymousFunction}
-          array_buffer={arrayBuffer}
-          array_of_arrays={arrayOfArrays}
-          // eslint-disable-next-line no-undef
-          big_int={BigInt(123)}
-          bound_fn={exampleFunction.bind(this)}
-          data_view={dataView}
-          date={new Date(123)}
-          fn={exampleFunction}
-          html_element={div}
-          immutable={immutableMap}
-          map={mapShallow}
-          map_of_maps={mapOfMaps}
-          object_of_objects={objectOfObjects}
-          react_element={<span />}
-          regexp={/abc/giu}
-          set={setShallow}
-          set_of_sets={setOfSets}
-          symbol={Symbol('symbol')}
-          typed_array={typedArray}
-        />,
+        React.createElement(Example, {
+          anonymous_fn: instance.anonymousFunction,
+          array_buffer: arrayBuffer,
+          array_of_arrays: arrayOfArrays,
+          big_int: BigInt(123),
+          bound_fn: exampleFunction.bind(this),
+          data_view: dataView,
+          date: new Date(123),
+          fn: exampleFunction,
+          html_element: div,
+          immutable: immutableMap,
+          map: mapShallow,
+          map_of_maps: mapOfMaps,
+          object_of_objects: objectOfObjects,
+          react_element: React.createElement('span'),
+          regexp: /abc/giu,
+          set: setShallow,
+          set_of_sets: setOfSets,
+          symbol: Symbol('symbol'),
+          typed_array: typedArray,
+        }),
         document.createElement('div'),
       ),
     );
@@ -210,8 +212,8 @@ describe('InspectedElementContext', () => {
     expect(inspectedElement.props).toMatchInlineSnapshot(`
       {
         "anonymous_fn": Dehydrated {
-          "preview_short": ƒ () {},
-          "preview_long": ƒ () {},
+          "preview_short": () => {},
+          "preview_long": () => {},
         },
         "array_buffer": Dehydrated {
           "preview_short": ArrayBuffer(3),
@@ -228,8 +230,8 @@ describe('InspectedElementContext', () => {
           "preview_long": 123n,
         },
         "bound_fn": Dehydrated {
-          "preview_short": ƒ bound exampleFunction() {},
-          "preview_long": ƒ bound exampleFunction() {},
+          "preview_short": bound exampleFunction() {},
+          "preview_long": bound exampleFunction() {},
         },
         "data_view": Dehydrated {
           "preview_short": DataView(3),
@@ -240,8 +242,8 @@ describe('InspectedElementContext', () => {
           "preview_long": Thu Jan 01 1970 00:00:00 GMT+0000 (Coordinated Universal Time),
         },
         "fn": Dehydrated {
-          "preview_short": ƒ exampleFunction() {},
-          "preview_long": ƒ exampleFunction() {},
+          "preview_short": exampleFunction() {},
+          "preview_long": exampleFunction() {},
         },
         "html_element": Dehydrated {
           "preview_short": <div />,
@@ -333,7 +335,7 @@ describe('InspectedElementContext', () => {
 
     act(() =>
       ReactDOM.render(
-        <Example object={object} />,
+        React.createElement(Example, {object}),
         document.createElement('div'),
       ),
     );
@@ -363,7 +365,7 @@ describe('InspectedElementContext', () => {
 
     act(() =>
       ReactDOM.render(
-        <Example object={object} />,
+        React.createElement(Example, {object}),
         document.createElement('div'),
       ),
     );
@@ -390,7 +392,7 @@ describe('InspectedElementContext', () => {
 
     act(() =>
       ReactDOM.render(
-        <Example iteratable={iteratable} />,
+        React.createElement(Example, {iteratable}),
         document.createElement('div'),
       ),
     );
@@ -445,7 +447,7 @@ describe('InspectedElementContext', () => {
 
     act(() =>
       ReactDOM.render(
-        <Example data={new CustomData()} />,
+        React.createElement(Example, {data: new CustomData()}),
         document.createElement('div'),
       ),
     );
@@ -537,7 +539,10 @@ describe('InspectedElementContext', () => {
     });
 
     act(() =>
-      ReactDOM.render(<Example data={object} />, document.createElement('div')),
+      ReactDOM.render(
+        React.createElement(Example, {data: object}),
+        document.createElement('div'),
+      ),
     );
 
     const id = ((store.getElementIDAtIndex(0): any): number);
@@ -605,7 +610,7 @@ describe('InspectedElementContext', () => {
     const Example = ({data}) => null;
     act(() =>
       ReactDOM.render(
-        <Example data={testData} />,
+        React.createElement(Example, {data: testData}),
         document.createElement('div'),
       ),
     );
@@ -631,8 +636,8 @@ describe('InspectedElementContext', () => {
 
     act(() =>
       ReactDOM.render(
-        <Example
-          nestedObject={{
+        React.createElement(Example, {
+          nestedObject: {
             a: {
               b: {
                 c: [
@@ -644,8 +649,8 @@ describe('InspectedElementContext', () => {
                 ],
               },
             },
-          }}
-        />,
+          },
+        }),
         document.createElement('div'),
       ),
     );
@@ -746,7 +751,7 @@ describe('InspectedElementContext', () => {
 
     act(() =>
       ReactDOM.render(
-        <Example nestedObject={nestedObject} />,
+        React.createElement(Example, {nestedObject}),
         document.createElement('div'),
       ),
     );
@@ -802,7 +807,7 @@ describe('InspectedElementContext', () => {
 
     act(() =>
       ReactDOM.render(
-        <Example nestedObject={nestedObject} />,
+        React.createElement(Example, {nestedObject}),
         document.createElement('div'),
       ),
     );
@@ -868,21 +873,21 @@ describe('InspectedElementContext', () => {
         xyz: 1,
       },
     });
-    const bigInt = BigInt(123); // eslint-disable-line no-undef
+    const bigInt = BigInt(123);
 
     act(() =>
       ReactDOM.render(
-        <Example
-          arrayBuffer={arrayBuffer}
-          dataView={dataView}
-          map={map}
-          set={set}
-          mapOfMaps={mapOfMaps}
-          setOfSets={setOfSets}
-          typedArray={typedArray}
-          immutable={immutable}
-          bigInt={bigInt}
-        />,
+        React.createElement(Example, {
+          arrayBuffer: arrayBuffer,
+          dataView: dataView,
+          map: map,
+          set: set,
+          mapOfMaps: mapOfMaps,
+          setOfSets: setOfSets,
+          typedArray: typedArray,
+          immutable: immutable,
+          bigInt: bigInt,
+        }),
         document.createElement('div'),
       ),
     );

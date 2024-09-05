@@ -9,24 +9,15 @@
 
 'use strict';
 
-let React = require('react');
-let ReactDOMClient = require('react-dom/client');
-let ReactFeatureFlags = require('shared/ReactFeatureFlags');
-let act = require('internal-test-utils').act;
+const React = require('react');
+const ReactDOMClient = require('react-dom/client');
+const act = require('internal-test-utils').act;
 
 // This is testing if string refs are deleted from `instance.refs`
 // Once support for string refs is removed, this test can be removed.
 // Detaching is already tested in refs-detruction-test.js
 describe('reactiverefs', () => {
   let container;
-
-  beforeEach(() => {
-    jest.resetModules();
-    React = require('react');
-    ReactDOMClient = require('react-dom/client');
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    act = require('internal-test-utils').act;
-  });
 
   afterEach(() => {
     if (container) {
@@ -131,22 +122,22 @@ describe('reactiverefs', () => {
         );
       });
     }).toErrorDev([
-      'Warning: Component "div" contains the string ref "resetDiv". ' +
-        'Support for string refs will be removed in a future major release. ' +
-        'We recommend using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
+      'Component "TestRefsComponent" contains the string ' +
+        'ref "resetDiv". Support for string refs will be removed in a ' +
+        'future major release. We recommend using useRef() or createRef() ' +
+        'instead. Learn more about using refs safely ' +
+        'here: https://react.dev/link/strict-mode-string-ref\n' +
+        '    in div (at **)\n' +
         '    in div (at **)\n' +
         '    in TestRefsComponent (at **)',
-      'Warning: Component "span" contains the string ref "clickLog0". ' +
-        'Support for string refs will be removed in a future major release. ' +
-        'We recommend using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
+      'Component "ClickCounter" contains the string ' +
+        'ref "clickLog0". Support for string refs will be removed in a ' +
+        'future major release. We recommend using useRef() or createRef() ' +
+        'instead. Learn more about using refs safely ' +
+        'here: https://react.dev/link/strict-mode-string-ref\n' +
+        '    in div (at **)\n' +
         '    in span (at **)\n' +
-        '    in ClickCounter (at **)\n' +
-        '    in div (at **)\n' +
-        '    in GeneralContainerComponent (at **)\n' +
-        '    in div (at **)\n' +
-        '    in TestRefsComponent (at **)',
+        '    in ClickCounter (at **)',
     ]);
 
     expect(testRefsComponent instanceof TestRefsComponent).toBe(true);
@@ -195,50 +186,12 @@ describe('reactiverefs', () => {
   });
 });
 
-if (!ReactFeatureFlags.disableModulePatternComponents) {
-  describe('factory components', () => {
-    it('Should correctly get the ref', async () => {
-      function Comp() {
-        return {
-          elemRef: React.createRef(),
-          render() {
-            return <div ref={this.elemRef} />;
-          },
-        };
-      }
-
-      let inst;
-      await expect(async () => {
-        const container = document.createElement('div');
-        const root = ReactDOMClient.createRoot(container);
-
-        await act(() => {
-          root.render(<Comp ref={current => (inst = current)} />);
-        });
-      }).toErrorDev(
-        'Warning: The <Comp /> component appears to be a function component that returns a class instance. ' +
-          'Change Comp to a class that extends React.Component instead. ' +
-          "If you can't use a class try assigning the prototype on the function as a workaround. " +
-          '`Comp.prototype = React.Component.prototype`. ' +
-          "Don't use an arrow function since it cannot be called with `new` by React.",
-      );
-      expect(inst.elemRef.current.tagName).toBe('DIV');
-    });
-  });
-}
-
 /**
  * Tests that when a ref hops around children, we can track that correctly.
  */
 describe('ref swapping', () => {
   let RefHopsAround;
   beforeEach(() => {
-    jest.resetModules();
-    React = require('react');
-    ReactDOMClient = require('react-dom/client');
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    act = require('internal-test-utils').act;
-
     RefHopsAround = class extends React.Component {
       container = null;
       state = {count: 0};
@@ -383,16 +336,16 @@ describe('ref swapping', () => {
         root.render(<A ref={current => (a = current)} />);
       });
     }).toErrorDev([
-      'Warning: Component "A" contains the string ref "1". ' +
+      'Component "A" contains the string ref "1". ' +
         'Support for string refs will be removed in a future major release. ' +
         'We recommend using useRef() or createRef() instead. ' +
         'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
+        '    in div (at **)\n' +
         '    in A (at **)',
     ]);
     expect(a.refs[1].nodeName).toBe('DIV');
   });
 
-  // @gate !disableStringRefs
   it('provides an error for invalid refs', async () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -400,16 +353,16 @@ describe('ref swapping', () => {
       await act(() => {
         root.render(<div ref={10} />);
       });
-    }).rejects.toThrow(
-      'Element ref was specified as a string (10) but no owner was set.',
-    );
+      // TODO: This throws an AggregateError. Need to update test infra to
+      // support matching against AggregateError.
+    }).rejects.toThrow();
     await expect(async () => {
       await act(() => {
         root.render(<div ref={true} />);
       });
-    }).rejects.toThrow(
-      'Element ref was specified as a string (true) but no owner was set.',
-    );
+      // TODO: This throws an AggregateError. Need to update test infra to
+      // support matching against AggregateError.
+    }).rejects.toThrow();
     await expect(async () => {
       await act(() => {
         root.render(<div ref={Symbol('foo')} />);
@@ -417,7 +370,7 @@ describe('ref swapping', () => {
     }).rejects.toThrow('Expected ref to be a function');
   });
 
-  // @gate !enableRefAsProp
+  // @gate !enableRefAsProp && www
   it('undefined ref on manually inlined React element triggers error', async () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -546,8 +499,8 @@ describe('creating element with string ref in constructor', () => {
     }
   }
 
-  // @gate !disableStringRefs
-  it('throws an error', async () => {
+  // @gate !disableStringRefs && !__DEV__
+  it('throws an error in prod', async () => {
     await expect(async function () {
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
@@ -555,14 +508,10 @@ describe('creating element with string ref in constructor', () => {
       await act(() => {
         root.render(<RefTest />);
       });
-    }).rejects.toThrowError(
-      'Element ref was specified as a string (p) but no owner was set. This could happen for one of' +
-        ' the following reasons:\n' +
-        '1. You may be adding a ref to a function component\n' +
-        "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
-        '3. You have multiple copies of React loaded\n' +
-        'See https://react.dev/link/refs-must-have-owner for more information.',
-    );
+    })
+      // TODO: This throws an AggregateError. Need to update test infra to
+      // support matching against AggregateError.
+      .rejects.toThrowError();
   });
 });
 
@@ -616,10 +565,11 @@ describe('strings refs across renderers', () => {
         );
       });
     }).toErrorDev([
-      'Warning: Component "Indirection" contains the string ref "child1". ' +
+      'Component "Parent" contains the string ref "child1". ' +
         'Support for string refs will be removed in a future major release. ' +
         'We recommend using useRef() or createRef() instead. ' +
         'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
+        '    in div (at **)\n' +
         '    in Indirection (at **)\n' +
         '    in Parent (at **)',
     ]);
@@ -628,20 +578,10 @@ describe('strings refs across renderers', () => {
     expect(inst.refs.child1.tagName).toBe('DIV');
     expect(inst.refs.child1).toBe(div1.firstChild);
 
-    await expect(async () => {
-      // Now both refs should be rendered.
-      await act(() => {
-        root.render(<Parent />);
-      });
-    }).toErrorDev(
-      [
-        'Warning: Component "Root" contains the string ref "child2". ' +
-          'Support for string refs will be removed in a future major release. ' +
-          'We recommend using useRef() or createRef() instead. ' +
-          'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref',
-      ],
-      {withoutStack: true},
-    );
+    // Now both refs should be rendered.
+    await act(() => {
+      root.render(<Parent />);
+    });
     expect(inst.refs.child1.tagName).toBe('DIV');
     expect(inst.refs.child1).toBe(div1.firstChild);
     expect(inst.refs.child2.tagName).toBe('DIV');
@@ -755,44 +695,193 @@ describe('refs return clean up function', () => {
     expect(cleanUp).toHaveBeenCalledTimes(1);
   });
 
-  it('warns if clean up function is returned when called with null', async () => {
+  it('handles detaching refs with either cleanup function or null argument', async () => {
     const container = document.createElement('div');
     const cleanUp = jest.fn();
     const setup = jest.fn();
-    let returnCleanUp = false;
+    const setup2 = jest.fn();
+    const nullHandler = jest.fn();
+
+    function _onRefChangeWithCleanup(_ref) {
+      if (_ref) {
+        setup(_ref.id);
+      } else {
+        nullHandler();
+      }
+      return cleanUp;
+    }
+
+    function _onRefChangeWithoutCleanup(_ref) {
+      if (_ref) {
+        setup2(_ref.id);
+      } else {
+        nullHandler();
+      }
+    }
 
     const root = ReactDOMClient.createRoot(container);
     await act(() => {
-      root.render(
-        <div
-          ref={_ref => {
-            setup(_ref);
-            if (returnCleanUp) {
-              return cleanUp;
-            }
-          }}
-        />,
-      );
+      root.render(<div id="test-div" ref={_onRefChangeWithCleanup} />);
+    });
+
+    expect(setup).toBeCalledWith('test-div');
+    expect(setup).toHaveBeenCalledTimes(1);
+    expect(cleanUp).toHaveBeenCalledTimes(0);
+
+    await act(() => {
+      root.render(<div id="test-div2" ref={_onRefChangeWithoutCleanup} />);
+    });
+
+    // Existing setup call was not called again
+    expect(setup).toHaveBeenCalledTimes(1);
+    // No null call because cleanup is returned
+    expect(nullHandler).toHaveBeenCalledTimes(0);
+    // Now we have a cleanup
+    expect(cleanUp).toHaveBeenCalledTimes(1);
+
+    // New ref is setup
+    expect(setup2).toBeCalledWith('test-div2');
+    expect(setup2).toHaveBeenCalledTimes(1);
+
+    // Now, render with the original ref again
+    await act(() => {
+      root.render(<div id="test-div3" ref={_onRefChangeWithCleanup} />);
+    });
+
+    // Setup was not called again
+    expect(setup2).toBeCalledWith('test-div2');
+    expect(setup2).toHaveBeenCalledTimes(1);
+
+    // Null handler hit because no cleanup is returned
+    expect(nullHandler).toHaveBeenCalledTimes(1);
+
+    // Original setup hit one more time
+    expect(setup).toHaveBeenCalledTimes(2);
+  });
+
+  it('calls cleanup function on unmount', async () => {
+    const container = document.createElement('div');
+    const cleanUp = jest.fn();
+    const setup = jest.fn();
+    const nullHandler = jest.fn();
+
+    function _onRefChangeWithCleanup(_ref) {
+      if (_ref) {
+        setup(_ref.id);
+      } else {
+        nullHandler();
+      }
+      return cleanUp;
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<div id="test-div" ref={_onRefChangeWithCleanup} />);
     });
 
     expect(setup).toHaveBeenCalledTimes(1);
     expect(cleanUp).toHaveBeenCalledTimes(0);
+    expect(nullHandler).toHaveBeenCalledTimes(0);
 
-    returnCleanUp = true;
+    root.unmount();
 
-    await expect(async () => {
-      await act(() => {
-        root.render(
-          <div
-            ref={_ref => {
-              setup(_ref);
-              if (returnCleanUp) {
-                return cleanUp;
-              }
-            }}
-          />,
-        );
-      });
-    }).toErrorDev('Unexpected return value from a callback ref in div');
+    expect(setup).toHaveBeenCalledTimes(1);
+    // Now cleanup has been called
+    expect(cleanUp).toHaveBeenCalledTimes(1);
+    // Ref callback never called with null when cleanup is returned
+    expect(nullHandler).toHaveBeenCalledTimes(0);
+  });
+});
+
+describe('useImerativeHandle refs', () => {
+  const ImperativeHandleComponent = React.forwardRef(({name}, ref) => {
+    React.useImperativeHandle(
+      ref,
+      () => ({
+        greet() {
+          return `Hello ${name}`;
+        },
+      }),
+      [name],
+    );
+    return null;
+  });
+
+  it('should work with object style refs', async () => {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    const ref = React.createRef();
+
+    await act(async () => {
+      root.render(<ImperativeHandleComponent name="Alice" ref={ref} />);
+    });
+    expect(ref.current.greet()).toBe('Hello Alice');
+    await act(() => {
+      root.render(null);
+    });
+    expect(ref.current).toBe(null);
+  });
+
+  it('should work with callback style refs', async () => {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    let current = null;
+
+    await act(async () => {
+      root.render(
+        <ImperativeHandleComponent
+          name="Alice"
+          ref={r => {
+            current = r;
+          }}
+        />,
+      );
+    });
+    expect(current.greet()).toBe('Hello Alice');
+    await act(() => {
+      root.render(null);
+    });
+    expect(current).toBe(null);
+  });
+
+  it('should work with callback style refs with cleanup function', async () => {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    let cleanupCalls = 0;
+    let createCalls = 0;
+    let current = null;
+
+    const ref = r => {
+      current = r;
+      createCalls++;
+      return () => {
+        current = null;
+        cleanupCalls++;
+      };
+    };
+
+    await act(async () => {
+      root.render(<ImperativeHandleComponent name="Alice" ref={ref} />);
+    });
+    expect(current.greet()).toBe('Hello Alice');
+    expect(createCalls).toBe(1);
+    expect(cleanupCalls).toBe(0);
+
+    // update a dep should recreate the ref
+    await act(async () => {
+      root.render(<ImperativeHandleComponent name="Bob" ref={ref} />);
+    });
+    expect(current.greet()).toBe('Hello Bob');
+    expect(createCalls).toBe(2);
+    expect(cleanupCalls).toBe(1);
+
+    // unmounting should call cleanup
+    await act(() => {
+      root.render(null);
+    });
+    expect(current).toBe(null);
+    expect(createCalls).toBe(2);
+    expect(cleanupCalls).toBe(2);
   });
 });

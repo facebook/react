@@ -9,9 +9,10 @@
 
 'use strict';
 
-// Don't wait before processing work on the server.
-// TODO: we can replace this with FlightServer.act().
-global.setImmediate = cb => cb();
+import {patchSetImmediate} from '../../../../scripts/jest/patchSetImmediate';
+
+global.ReadableStream =
+  require('web-streams-polyfill/ponyfill/es6').ReadableStream;
 
 let clientExports;
 let webpackMap;
@@ -19,21 +20,41 @@ let webpackModules;
 let webpackModuleLoading;
 let React;
 let ReactDOMServer;
+let ReactServer;
 let ReactServerDOMServer;
+let ReactServerDOMStaticServer;
 let ReactServerDOMClient;
 let Stream;
 let use;
+let ReactServerScheduler;
+let reactServerAct;
+
+// We test pass-through without encoding strings but it should work without it too.
+const streamOptions = {
+  objectMode: true,
+};
 
 describe('ReactFlightDOMNode', () => {
   beforeEach(() => {
     jest.resetModules();
+
+    ReactServerScheduler = require('scheduler');
+    patchSetImmediate(ReactServerScheduler);
+    reactServerAct = require('internal-test-utils').act;
 
     // Simulate the condition resolution
     jest.mock('react', () => require('react/react.react-server'));
     jest.mock('react-server-dom-webpack/server', () =>
       require('react-server-dom-webpack/server.node'),
     );
+    ReactServer = require('react');
     ReactServerDOMServer = require('react-server-dom-webpack/server');
+    if (__EXPERIMENTAL__) {
+      jest.mock('react-server-dom-webpack/static', () =>
+        require('react-server-dom-webpack/static.node'),
+      );
+      ReactServerDOMStaticServer = require('react-server-dom-webpack/static');
+    }
 
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;
@@ -55,10 +76,21 @@ describe('ReactFlightDOMNode', () => {
     use = React.use;
   });
 
+  async function serverAct(callback) {
+    let maybePromise;
+    await reactServerAct(() => {
+      maybePromise = callback();
+      if (maybePromise && typeof maybePromise.catch === 'function') {
+        maybePromise.catch(() => {});
+      }
+    });
+    return maybePromise;
+  }
+
   function readResult(stream) {
     return new Promise((resolve, reject) => {
       let buffer = '';
-      const writable = new Stream.PassThrough();
+      const writable = new Stream.PassThrough(streamOptions);
       writable.setEncoding('utf8');
       writable.on('data', chunk => {
         buffer += chunk;
@@ -107,11 +139,10 @@ describe('ReactFlightDOMNode', () => {
       return <ClientComponentOnTheClient />;
     }
 
-    const stream = ReactServerDOMServer.renderToPipeableStream(
-      <App />,
-      webpackMap,
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(<App />, webpackMap),
     );
-    const readable = new Stream.PassThrough();
+    const readable = new Stream.PassThrough(streamOptions);
     let response;
 
     stream.pipe(readable);
@@ -125,8 +156,8 @@ describe('ReactFlightDOMNode', () => {
       return use(response);
     }
 
-    const ssrStream = await ReactDOMServer.renderToPipeableStream(
-      <ClientRoot />,
+    const ssrStream = await serverAct(() =>
+      ReactDOMServer.renderToPipeableStream(<ClientRoot />),
     );
     const result = await readResult(ssrStream);
     expect(result).toEqual(
@@ -137,11 +168,13 @@ describe('ReactFlightDOMNode', () => {
   it('should encode long string in a compact format', async () => {
     const testString = '"\n\t'.repeat(500) + '🙃';
 
-    const stream = ReactServerDOMServer.renderToPipeableStream({
-      text: testString,
-    });
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream({
+        text: testString,
+      }),
+    );
 
-    const readable = new Stream.PassThrough();
+    const readable = new Stream.PassThrough(streamOptions);
 
     const stringResult = readResult(readable);
     const parsedResult = ReactServerDOMClient.createFromNodeStream(readable, {
@@ -184,8 +217,10 @@ describe('ReactFlightDOMNode', () => {
       new BigUint64Array(buffer, 0),
       new DataView(buffer, 3),
     ];
-    const stream = ReactServerDOMServer.renderToPipeableStream(buffers);
-    const readable = new Stream.PassThrough();
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(buffers),
+    );
+    const readable = new Stream.PassThrough(streamOptions);
     const promise = ReactServerDOMClient.createFromNodeStream(readable, {
       moduleMap: {},
       moduleLoading: webpackModuleLoading,
@@ -229,11 +264,10 @@ describe('ReactFlightDOMNode', () => {
       return <ClientComponentOnTheClient />;
     }
 
-    const stream = ReactServerDOMServer.renderToPipeableStream(
-      <App />,
-      webpackMap,
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(<App />, webpackMap),
     );
-    const readable = new Stream.PassThrough();
+    const readable = new Stream.PassThrough(streamOptions);
     let response;
 
     stream.pipe(readable);
@@ -250,12 +284,245 @@ describe('ReactFlightDOMNode', () => {
       return use(response);
     }
 
-    const ssrStream = await ReactDOMServer.renderToPipeableStream(
-      <ClientRoot />,
+    const ssrStream = await serverAct(() =>
+      ReactDOMServer.renderToPipeableStream(<ClientRoot />),
     );
     const result = await readResult(ssrStream);
     expect(result).toEqual(
       '<script src="/path/to/chunk.js" async="" nonce="r4nd0m"></script><span>Client Component</span>',
     );
+  });
+
+  // @gate enableFlightReadableStream
+  it('should cancels the underlying ReadableStream when we are cancelled', async () => {
+    let controller;
+    let cancelReason;
+    const s = new ReadableStream({
+      start(c) {
+        controller = c;
+      },
+      cancel(r) {
+        cancelReason = r;
+      },
+    });
+
+    const rscStream = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        s,
+        {},
+        {
+          onError(error) {
+            return error.message;
+          },
+        },
+      ),
+    );
+
+    const writable = new Stream.PassThrough(streamOptions);
+    rscStream.pipe(writable);
+
+    controller.enqueue('hi');
+
+    const reason = new Error('aborted');
+    writable.destroy(reason);
+
+    await new Promise(resolve => {
+      writable.on('error', () => {
+        resolve();
+      });
+    });
+
+    expect(cancelReason.message).toBe(
+      'The destination stream errored while writing data.',
+    );
+  });
+
+  // @gate enableFlightReadableStream
+  it('should cancels the underlying ReadableStream when we abort', async () => {
+    const errors = [];
+    let controller;
+    let cancelReason;
+    const s = new ReadableStream({
+      start(c) {
+        controller = c;
+      },
+      cancel(r) {
+        cancelReason = r;
+      },
+    });
+    const rscStream = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        s,
+        {},
+        {
+          onError(x) {
+            errors.push(x);
+            return x.message;
+          },
+        },
+      ),
+    );
+
+    const readable = new Stream.PassThrough(streamOptions);
+    rscStream.pipe(readable);
+
+    const result = await ReactServerDOMClient.createFromNodeStream(readable, {
+      moduleMap: {},
+      moduleLoading: webpackModuleLoading,
+    });
+    const reader = result.getReader();
+    controller.enqueue('hi');
+
+    const reason = new Error('aborted');
+    rscStream.abort(reason);
+
+    expect(cancelReason).toBe(reason);
+
+    let error = null;
+    try {
+      await reader.read();
+    } catch (x) {
+      error = x;
+    }
+    expect(error.digest).toBe('aborted');
+    expect(errors).toEqual([reason]);
+  });
+
+  // @gate experimental
+  it('can prerender', async () => {
+    let resolveGreeting;
+    const greetingPromise = new Promise(resolve => {
+      resolveGreeting = resolve;
+    });
+
+    function App() {
+      return (
+        <div>
+          <Greeting />
+        </div>
+      );
+    }
+
+    async function Greeting() {
+      await greetingPromise;
+      return 'hello world';
+    }
+
+    const {pendingResult} = await serverAct(async () => {
+      // destructure trick to avoid the act scope from awaiting the returned value
+      return {
+        pendingResult: ReactServerDOMStaticServer.prerenderToNodeStream(
+          <App />,
+          webpackMap,
+        ),
+      };
+    });
+
+    resolveGreeting();
+    const {prelude} = await pendingResult;
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const response = ReactServerDOMClient.createFromNodeStream(prelude, {
+      ssrManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
+    // Use the SSR render to resolve any lazy elements
+    const ssrStream = await serverAct(() =>
+      ReactDOMServer.renderToPipeableStream(
+        React.createElement(ClientRoot, {response}),
+      ),
+    );
+    // Should still match the result when parsed
+    const result = await readResult(ssrStream);
+    expect(result).toBe('<div>hello world</div>');
+  });
+
+  // @gate enableHalt
+  it('does not propagate abort reasons errors when aborting a prerender', async () => {
+    let resolveGreeting;
+    const greetingPromise = new Promise(resolve => {
+      resolveGreeting = resolve;
+    });
+
+    function App() {
+      return (
+        <div>
+          <ReactServer.Suspense fallback="loading...">
+            <Greeting />
+          </ReactServer.Suspense>
+        </div>
+      );
+    }
+
+    async function Greeting() {
+      await greetingPromise;
+      return 'hello world';
+    }
+
+    const controller = new AbortController();
+    const errors = [];
+    const {pendingResult} = await serverAct(async () => {
+      // destructure trick to avoid the act scope from awaiting the returned value
+      return {
+        pendingResult: ReactServerDOMStaticServer.prerenderToNodeStream(
+          <App />,
+          webpackMap,
+          {
+            signal: controller.signal,
+            onError(err) {
+              errors.push(err);
+            },
+          },
+        ),
+      };
+    });
+
+    controller.abort('boom');
+    resolveGreeting();
+    const {prelude} = await pendingResult;
+    expect(errors).toEqual(['boom']);
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const response = ReactServerDOMClient.createFromNodeStream(prelude, {
+      ssrManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
+    errors.length = 0;
+    const ssrStream = await serverAct(() =>
+      ReactDOMServer.renderToPipeableStream(
+        React.createElement(ClientRoot, {response}),
+        {
+          onError(error) {
+            errors.push(error);
+          },
+        },
+      ),
+    );
+    ssrStream.abort('bam');
+    if (__DEV__) {
+      expect(errors).toEqual([new Error('Connection closed.')]);
+    } else {
+      // This is likely a bug. In Dev we get a connection closed error
+      // because the debug info creates a chunk that has a pending status
+      // and when the stream finishes we error if any chunks are still pending.
+      // In production there is no debug info so the missing chunk is never instantiated
+      // because nothing triggers model evaluation before the stream completes
+      expect(errors).toEqual(['bam']);
+    }
+    // Should still match the result when parsed
+    const result = await readResult(ssrStream);
+    const div = document.createElement('div');
+    div.innerHTML = result;
+    expect(div.textContent).toBe('loading...');
   });
 });

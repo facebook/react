@@ -13,14 +13,10 @@ import type {
   TransitionTracingCallbacks,
 } from 'react-reconciler/src/ReactInternalTypes';
 
+import {isValidContainer} from 'react-dom-bindings/src/client/ReactDOMContainer';
 import {queueExplicitHydrationTarget} from 'react-dom-bindings/src/events/ReactDOMEventReplaying';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
-import {
-  allowConcurrentByDefault,
-  disableCommentsAsDOMContainers,
-  enableAsyncActions,
-  enableFormActions,
-} from 'shared/ReactFeatureFlags';
+import {enableAsyncActions} from 'shared/ReactFeatureFlags';
 
 export type RootType = {
   render(children: ReactNodeList): void,
@@ -30,10 +26,23 @@ export type RootType = {
 
 export type CreateRootOptions = {
   unstable_strictMode?: boolean,
-  unstable_concurrentUpdatesByDefault?: boolean,
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
   identifierPrefix?: string,
-  onRecoverableError?: (error: mixed) => void,
+  onUncaughtError?: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
+  onCaughtError?: (
+    error: mixed,
+    errorInfo: {
+      +componentStack?: ?string,
+      +errorBoundary?: ?React$Component<any, any>,
+    },
+  ) => void,
+  onRecoverableError?: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
 };
 
 export type HydrateRootOptions = {
@@ -42,10 +51,23 @@ export type HydrateRootOptions = {
   onDeleted?: (suspenseNode: Comment) => void,
   // Options for all roots
   unstable_strictMode?: boolean,
-  unstable_concurrentUpdatesByDefault?: boolean,
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
   identifierPrefix?: string,
-  onRecoverableError?: (error: mixed) => void,
+  onUncaughtError?: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
+  onCaughtError?: (
+    error: mixed,
+    errorInfo: {
+      +componentStack?: ?string,
+      +errorBoundary?: ?React$Component<any, any>,
+    },
+  ) => void,
+  onRecoverableError?: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
   formState?: ReactFormState<any, any> | null,
 };
 
@@ -55,33 +77,20 @@ import {
   unmarkContainerAsRoot,
 } from 'react-dom-bindings/src/client/ReactDOMComponentTree';
 import {listenToAllSupportedEvents} from 'react-dom-bindings/src/events/DOMPluginEventSystem';
-import {
-  ELEMENT_NODE,
-  COMMENT_NODE,
-  DOCUMENT_NODE,
-  DOCUMENT_FRAGMENT_NODE,
-} from 'react-dom-bindings/src/client/HTMLNodeType';
+import {COMMENT_NODE} from 'react-dom-bindings/src/client/HTMLNodeType';
 
 import {
   createContainer,
   createHydrationContainer,
   updateContainer,
-  flushSync,
+  updateContainerSync,
+  flushSyncWork,
   isAlreadyRendering,
+  defaultOnUncaughtError,
+  defaultOnCaughtError,
+  defaultOnRecoverableError,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import {ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
-
-/* global reportError */
-const defaultOnRecoverableError =
-  typeof reportError === 'function'
-    ? // In modern browsers, reportError will dispatch an error event,
-      // emulating an uncaught JavaScript error.
-      reportError
-    : (error: mixed) => {
-        // In older browsers and test environments, fallback to console.error.
-        // eslint-disable-next-line react-internal/no-production-logging
-        console['error'](error);
-      };
 
 // $FlowFixMe[missing-this-annot]
 function ReactDOMRoot(internalRoot: FiberRoot) {
@@ -143,9 +152,8 @@ ReactDOMHydrationRoot.prototype.unmount = ReactDOMRoot.prototype.unmount =
           );
         }
       }
-      flushSync(() => {
-        updateContainer(null, root, null, null);
-      });
+      updateContainerSync(null, root, null, null);
+      flushSyncWork();
       unmarkContainerAsRoot(container);
     }
   };
@@ -160,9 +168,11 @@ export function createRoot(
 
   warnIfReactDOMContainerInDEV(container);
 
+  const concurrentUpdatesByDefaultOverride = false;
   let isStrictMode = false;
-  let concurrentUpdatesByDefaultOverride = false;
   let identifierPrefix = '';
+  let onUncaughtError = defaultOnUncaughtError;
+  let onCaughtError = defaultOnCaughtError;
   let onRecoverableError = defaultOnRecoverableError;
   let transitionCallbacks = null;
 
@@ -191,14 +201,14 @@ export function createRoot(
     if (options.unstable_strictMode === true) {
       isStrictMode = true;
     }
-    if (
-      allowConcurrentByDefault &&
-      options.unstable_concurrentUpdatesByDefault === true
-    ) {
-      concurrentUpdatesByDefaultOverride = true;
-    }
     if (options.identifierPrefix !== undefined) {
       identifierPrefix = options.identifierPrefix;
+    }
+    if (options.onUncaughtError !== undefined) {
+      onUncaughtError = options.onUncaughtError;
+    }
+    if (options.onCaughtError !== undefined) {
+      onCaughtError = options.onCaughtError;
     }
     if (options.onRecoverableError !== undefined) {
       onRecoverableError = options.onRecoverableError;
@@ -215,6 +225,8 @@ export function createRoot(
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
+    onUncaughtError,
+    onCaughtError,
     onRecoverableError,
     transitionCallbacks,
   );
@@ -266,9 +278,11 @@ export function hydrateRoot(
   // the hydration callbacks.
   const hydrationCallbacks = options != null ? options : null;
 
+  const concurrentUpdatesByDefaultOverride = false;
   let isStrictMode = false;
-  let concurrentUpdatesByDefaultOverride = false;
   let identifierPrefix = '';
+  let onUncaughtError = defaultOnUncaughtError;
+  let onCaughtError = defaultOnCaughtError;
   let onRecoverableError = defaultOnRecoverableError;
   let transitionCallbacks = null;
   let formState = null;
@@ -276,14 +290,14 @@ export function hydrateRoot(
     if (options.unstable_strictMode === true) {
       isStrictMode = true;
     }
-    if (
-      allowConcurrentByDefault &&
-      options.unstable_concurrentUpdatesByDefault === true
-    ) {
-      concurrentUpdatesByDefaultOverride = true;
-    }
     if (options.identifierPrefix !== undefined) {
       identifierPrefix = options.identifierPrefix;
+    }
+    if (options.onUncaughtError !== undefined) {
+      onUncaughtError = options.onUncaughtError;
+    }
+    if (options.onCaughtError !== undefined) {
+      onCaughtError = options.onCaughtError;
     }
     if (options.onRecoverableError !== undefined) {
       onRecoverableError = options.onRecoverableError;
@@ -291,7 +305,7 @@ export function hydrateRoot(
     if (options.unstable_transitionCallbacks !== undefined) {
       transitionCallbacks = options.unstable_transitionCallbacks;
     }
-    if (enableAsyncActions && enableFormActions) {
+    if (enableAsyncActions) {
       if (options.formState !== undefined) {
         formState = options.formState;
       }
@@ -307,6 +321,8 @@ export function hydrateRoot(
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
+    onUncaughtError,
+    onCaughtError,
     onRecoverableError,
     transitionCallbacks,
     formState,
@@ -317,31 +333,6 @@ export function hydrateRoot(
 
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   return new ReactDOMHydrationRoot(root);
-}
-
-export function isValidContainer(node: any): boolean {
-  return !!(
-    node &&
-    (node.nodeType === ELEMENT_NODE ||
-      node.nodeType === DOCUMENT_NODE ||
-      node.nodeType === DOCUMENT_FRAGMENT_NODE ||
-      (!disableCommentsAsDOMContainers &&
-        node.nodeType === COMMENT_NODE &&
-        (node: any).nodeValue === ' react-mount-point-unstable '))
-  );
-}
-
-// TODO: Remove this function which also includes comment nodes.
-// We only use it in places that are currently more relaxed.
-export function isValidContainerLegacy(node: any): boolean {
-  return !!(
-    node &&
-    (node.nodeType === ELEMENT_NODE ||
-      node.nodeType === DOCUMENT_NODE ||
-      node.nodeType === DOCUMENT_FRAGMENT_NODE ||
-      (node.nodeType === COMMENT_NODE &&
-        (node: any).nodeValue === ' react-mount-point-unstable '))
-  );
 }
 
 function warnIfReactDOMContainerInDEV(container: any) {

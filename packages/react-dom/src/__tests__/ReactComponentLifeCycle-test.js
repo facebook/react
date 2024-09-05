@@ -14,7 +14,6 @@ let act;
 let React;
 let ReactDOM;
 let ReactDOMClient;
-let PropTypes;
 
 const clone = function (o) {
   return JSON.parse(JSON.stringify(o));
@@ -96,7 +95,6 @@ describe('ReactComponentLifeCycle', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
-    PropTypes = require('prop-types');
   });
 
   it('should not reuse an instance when it has been unmounted', async () => {
@@ -133,7 +131,7 @@ describe('ReactComponentLifeCycle', () => {
    * If a state update triggers rerendering that in turn fires an onDOMReady,
    * that second onDOMReady should not fail.
    */
-  it('it should fire onDOMReady when already in onDOMReady', async () => {
+  it('should fire onDOMReady when already in onDOMReady', async () => {
     const _testJournal = [];
 
     class Child extends React.Component {
@@ -273,7 +271,7 @@ describe('ReactComponentLifeCycle', () => {
         root.render(<StatefulComponent />);
       });
     }).toErrorDev(
-      "Warning: Can't call setState on a component that is not yet mounted. " +
+      "Can't call setState on a component that is not yet mounted. " +
         'This is a no-op, but it might indicate a bug in your application. ' +
         'Instead, assign to `this.state` directly or define a `state = {};` ' +
         'class property with the desired state in the StatefulComponent component.',
@@ -375,6 +373,7 @@ describe('ReactComponentLifeCycle', () => {
     expect(instance.updater.isMounted(instance)).toBe(false);
   });
 
+  // @gate www && classic
   it('warns if legacy findDOMNode is used inside render', async () => {
     class Component extends React.Component {
       state = {isMounted: false};
@@ -1111,72 +1110,6 @@ describe('ReactComponentLifeCycle', () => {
     });
   });
 
-  if (!require('shared/ReactFeatureFlags').disableModulePatternComponents) {
-    // @gate !disableLegacyContext
-    it('calls effects on module-pattern component', async () => {
-      const log = [];
-
-      function Parent() {
-        return {
-          render() {
-            expect(typeof this.props).toBe('object');
-            log.push('render');
-            return <Child />;
-          },
-          UNSAFE_componentWillMount() {
-            log.push('will mount');
-          },
-          componentDidMount() {
-            log.push('did mount');
-          },
-          componentDidUpdate() {
-            log.push('did update');
-          },
-          getChildContext() {
-            return {x: 2};
-          },
-        };
-      }
-      Parent.childContextTypes = {
-        x: PropTypes.number,
-      };
-      function Child(props, context) {
-        expect(context.x).toBe(2);
-        return <div />;
-      }
-      Child.contextTypes = {
-        x: PropTypes.number,
-      };
-
-      const root = ReactDOMClient.createRoot(document.createElement('div'));
-      await expect(async () => {
-        await act(() => {
-          root.render(<Parent ref={c => c && log.push('ref')} />);
-        });
-      }).toErrorDev(
-        'Warning: The <Parent /> component appears to be a function component that returns a class instance. ' +
-          'Change Parent to a class that extends React.Component instead. ' +
-          "If you can't use a class try assigning the prototype on the function as a workaround. " +
-          '`Parent.prototype = React.Component.prototype`. ' +
-          "Don't use an arrow function since it cannot be called with `new` by React.",
-      );
-      await act(() => {
-        root.render(<Parent ref={c => c && log.push('ref')} />);
-      });
-
-      expect(log).toEqual([
-        'will mount',
-        'render',
-        'did mount',
-        'ref',
-
-        'render',
-        'did update',
-        'ref',
-      ]);
-    });
-  }
-
   it('should warn if getDerivedStateFromProps returns undefined', async () => {
     class MyComponent extends React.Component {
       state = {};
@@ -1570,27 +1503,25 @@ describe('ReactComponentLifeCycle', () => {
       });
     }).toWarnDev(
       [
-        /* eslint-disable max-len */
-        `Warning: componentWillMount has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
+        `componentWillMount has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move code with side effects to componentDidMount, and set initial state in the constructor.
 * Rename componentWillMount to UNSAFE_componentWillMount to suppress this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, you can run \`npx react-codemod rename-unsafe-lifecycles\` in your project source folder.
 
 Please update the following components: MyComponent`,
-        `Warning: componentWillReceiveProps has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
+        `componentWillReceiveProps has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
 * If you're updating state whenever props change, refactor your code to use memoization techniques or move it to static getDerivedStateFromProps. Learn more at: https://react.dev/link/derived-state
 * Rename componentWillReceiveProps to UNSAFE_componentWillReceiveProps to suppress this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, you can run \`npx react-codemod rename-unsafe-lifecycles\` in your project source folder.
 
 Please update the following components: MyComponent`,
-        `Warning: componentWillUpdate has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
+        `componentWillUpdate has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
 * Rename componentWillUpdate to UNSAFE_componentWillUpdate to suppress this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, you can run \`npx react-codemod rename-unsafe-lifecycles\` in your project source folder.
 
 Please update the following components: MyComponent`,
-        /* eslint-enable max-len */
       ],
       {withoutStack: true},
     );

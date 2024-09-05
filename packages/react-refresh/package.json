@@ -13,8 +13,7 @@
     "README.md",
     "babel.js",
     "runtime.js",
-    "cjs/",
-    "umd/"
+    "cjs/"
   ],
   "main": "runtime.js",
   "exports": {

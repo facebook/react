@@ -19,8 +19,6 @@ import type {
 } from 'react-devtools-shared/src/backend/types';
 import type {StyleAndLayout as StyleAndLayoutPayload} from 'react-devtools-shared/src/backend/NativeStyleEditor/types';
 
-const BATCH_DURATION = 100;
-
 // This message specifies the version of the DevTools protocol currently supported by the backend,
 // as well as the earliest NPM version (e.g. "4.13.0") that protocol is supported by on the frontend.
 // This enables an older frontend to display an upgrade message to users for a newer, unsupported backend.
@@ -80,11 +78,11 @@ type Message = {
   payload: any,
 };
 
-type HighlightElementInDOM = {
+type HighlightHostInstance = {
   ...ElementAndRendererID,
   displayName: string | null,
   hideAfterTimeout: boolean,
-  openNativeElementsPanel: boolean,
+  openBuiltinElementsPanel: boolean,
   scrollIntoView: boolean,
 };
 
@@ -191,15 +189,16 @@ export type BackendEvents = {
   operations: [Array<number>],
   ownersList: [OwnersList],
   overrideComponentFilters: [Array<ComponentFilter>],
+  environmentNames: [Array<string>],
   profilingData: [ProfilingDataBackend],
   profilingStatus: [boolean],
   reloadAppForProfiling: [],
   saveToClipboard: [string],
-  selectFiber: [number],
+  selectElement: [number],
   shutdown: [],
-  stopInspectingNative: [boolean],
-  syncSelectionFromNativeElementsPanel: [],
-  syncSelectionToNativeElementsPanel: [],
+  stopInspectingHost: [boolean],
+  syncSelectionFromBuiltinElementsPanel: [],
+  syncSelectionToBuiltinElementsPanel: [],
   unsupportedRendererVersion: [RendererID],
 
   // React Native style editor plug-in.
@@ -211,9 +210,9 @@ export type BackendEvents = {
 
 type FrontendEvents = {
   clearErrorsAndWarnings: [{rendererID: RendererID}],
-  clearErrorsForFiberID: [ElementAndRendererID],
-  clearNativeElementHighlight: [],
-  clearWarningsForFiberID: [ElementAndRendererID],
+  clearErrorsForElementID: [ElementAndRendererID],
+  clearHostInstanceHighlight: [],
+  clearWarningsForElementID: [ElementAndRendererID],
   copyElementPath: [CopyElementPathParams],
   deletePath: [DeletePath],
   getBackendVersion: [],
@@ -221,7 +220,7 @@ type FrontendEvents = {
   getOwnersList: [ElementAndRendererID],
   getProfilingData: [{rendererID: RendererID}],
   getProfilingStatus: [],
-  highlightNativeElement: [HighlightElementInDOM],
+  highlightHostInstance: [HighlightHostInstance],
   inspectElement: [InspectElementParams],
   logElementToConsole: [ElementAndRendererID],
   overrideError: [OverrideError],
@@ -231,15 +230,15 @@ type FrontendEvents = {
   reloadAndProfile: [boolean],
   renamePath: [RenamePath],
   savedPreferences: [SavedPreferencesParams],
-  selectFiber: [number],
   setTraceUpdatesEnabled: [boolean],
   shutdown: [],
-  startInspectingNative: [],
+  startInspectingHost: [],
   startProfiling: [boolean],
-  stopInspectingNative: [boolean],
+  stopInspectingHost: [boolean],
   stopProfiling: [],
   storeAsGlobal: [StoreAsGlobalParams],
   updateComponentFilters: [Array<ComponentFilter>],
+  getEnvironmentNames: [],
   updateConsolePatchSettings: [ConsolePatchSettings],
   viewAttributeSource: [ViewAttributeSourceParams],
   viewElementSource: [ElementAndRendererID],
@@ -277,7 +276,7 @@ class Bridge<
 }> {
   _isShutdown: boolean = false;
   _messageQueue: Array<any> = [];
-  _timeoutID: TimeoutID | null = null;
+  _scheduledFlush: boolean = false;
   _wall: Wall;
   _wallUnlisten: Function | null = null;
 
@@ -325,8 +324,19 @@ class Bridge<
     //   (or we're waiting for our setTimeout-0 to fire), then _timeoutID will
     //   be set, and we'll simply add to the queue and wait for that
     this._messageQueue.push(event, payload);
-    if (!this._timeoutID) {
-      this._timeoutID = setTimeout(this._flush, 0);
+    if (!this._scheduledFlush) {
+      this._scheduledFlush = true;
+      // $FlowFixMe
+      if (typeof devtoolsJestTestScheduler === 'function') {
+        // This exists just for our own jest tests.
+        // They're written in such a way that we can neither mock queueMicrotask
+        // because then we break React DOM and we can't not mock it because then
+        // we can't synchronously flush it. So they need to be rewritten.
+        // $FlowFixMe
+        devtoolsJestTestScheduler(this._flush); // eslint-disable-line no-undef
+      } else {
+        queueMicrotask(this._flush);
+      }
     }
   }
 
@@ -364,34 +374,23 @@ class Bridge<
     do {
       this._flush();
     } while (this._messageQueue.length);
-
-    // Make sure once again that there is no dangling timer.
-    if (this._timeoutID !== null) {
-      clearTimeout(this._timeoutID);
-      this._timeoutID = null;
-    }
   }
 
   _flush: () => void = () => {
     // This method is used after the bridge is marked as destroyed in shutdown sequence,
     // so we do not bail out if the bridge marked as destroyed.
     // It is a private method that the bridge ensures is only called at the right times.
-
-    if (this._timeoutID !== null) {
-      clearTimeout(this._timeoutID);
-      this._timeoutID = null;
-    }
-
-    if (this._messageQueue.length) {
-      for (let i = 0; i < this._messageQueue.length; i += 2) {
-        this._wall.send(this._messageQueue[i], ...this._messageQueue[i + 1]);
+    try {
+      if (this._messageQueue.length) {
+        for (let i = 0; i < this._messageQueue.length; i += 2) {
+          this._wall.send(this._messageQueue[i], ...this._messageQueue[i + 1]);
+        }
+        this._messageQueue.length = 0;
       }
-      this._messageQueue.length = 0;
-
-      // Check again for queued messages in BATCH_DURATION ms. This will keep
-      // flushing in a loop as long as messages continue to be added. Once no
-      // more are, the timer expires.
-      this._timeoutID = setTimeout(this._flush, BATCH_DURATION);
+    } finally {
+      // We set this at the end in case new messages are added synchronously above.
+      // They're already handled so they shouldn't queue more flushes.
+      this._scheduledFlush = false;
     }
   };
 

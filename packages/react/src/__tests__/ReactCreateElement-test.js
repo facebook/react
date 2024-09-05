@@ -90,7 +90,7 @@ describe('ReactCreateElement', () => {
     );
   });
 
-  // @gate !enableRefAsProp
+  // @gate !enableRefAsProp || !__DEV__
   it('should warn when `ref` is being accessed', async () => {
     class Child extends React.Component {
       render() {
@@ -181,7 +181,7 @@ describe('ReactCreateElement', () => {
     expect(element.type).toBe(ComponentClass);
     if (gate(flags => flags.enableRefAsProp)) {
       expect(() => expect(element.ref).toBe(ref)).toErrorDev(
-        'Accessing element.ref is no longer supported',
+        'Accessing element.ref was removed in React 19',
         {withoutStack: true},
       );
       const expectation = {foo: '56', ref};
@@ -275,7 +275,11 @@ describe('ReactCreateElement', () => {
     }
     const root = ReactDOMClient.createRoot(document.createElement('div'));
     await act(() => root.render(React.createElement(Wrapper)));
-    expect(element._owner.stateNode).toBe(instance);
+    if (__DEV__ || !gate(flags => flags.disableStringRefs)) {
+      expect(element._owner.stateNode).toBe(instance);
+    } else {
+      expect('_owner' in element).toBe(false);
+    }
   });
 
   it('merges an additional argument onto the children prop', () => {
@@ -461,5 +465,32 @@ describe('ReactCreateElement', () => {
       root.render(React.createElement(Test, {value: +undefined}));
     });
     expect(test.props.value).toBeNaN();
+  });
+
+  it('warns if outdated JSX transform is detected', async () => {
+    // Warns if __self is detected, because that's only passed by a compiler
+    expect(() => {
+      React.createElement('div', {className: 'foo', __self: this});
+    }).toWarnDev(
+      'Your app (or one of its dependencies) is using an outdated ' +
+        'JSX transform.',
+      {
+        withoutStack: true,
+      },
+    );
+
+    // Only warns the first time. Subsequent elements don't warn.
+    React.createElement('div', {className: 'foo', __self: this});
+  });
+
+  it('do not warn about outdated JSX transform if `key` is present', () => {
+    // When a static "key" prop is defined _after_ a spread, the modern JSX
+    // transform outputs `createElement` instead of `jsx`. (This is because with
+    // `jsx`, a spread key always takes precedence over a static key, regardless
+    // of the order, whereas `createElement` respects the order.)
+    //
+    // To avoid a false positive warning, we skip the warning whenever a `key`
+    // prop is present.
+    React.createElement('div', {key: 'foo', __self: this});
   });
 });

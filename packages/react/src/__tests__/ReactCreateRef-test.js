@@ -45,8 +45,10 @@ describe('ReactCreateRef', () => {
     ).toErrorDev(
       'Unexpected ref object provided for div. ' +
         'Use either a ref-setter function or React.createRef().\n' +
-        '    in div (at **)\n' +
-        '    in Wrapper (at **)',
+        '    in div (at **)' +
+        (gate(flags => flags.enableOwnerStacks)
+          ? ''
+          : '\n    in Wrapper (at **)'),
     );
 
     expect(() =>
@@ -60,8 +62,10 @@ describe('ReactCreateRef', () => {
     ).toErrorDev(
       'Unexpected ref object provided for ExampleComponent. ' +
         'Use either a ref-setter function or React.createRef().\n' +
-        '    in ExampleComponent (at **)\n' +
-        '    in Wrapper (at **)',
+        '    in ExampleComponent (at **)' +
+        (gate(flags => flags.enableOwnerStacks)
+          ? ''
+          : '\n    in Wrapper (at **)'),
     );
   });
 });

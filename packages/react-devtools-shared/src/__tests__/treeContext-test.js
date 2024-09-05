@@ -2286,91 +2286,6 @@ describe('TreeListContext', () => {
       `);
     });
 
-    it('should properly handle when components filters are updated', () => {
-      const Wrapper = ({children}) => children;
-
-      withErrorsOrWarningsIgnored(['test-only:'], () =>
-        utils.act(() =>
-          render(
-            <React.Fragment>
-              <Wrapper>
-                <Child logWarning={true} />
-              </Wrapper>
-              <Wrapper>
-                <Wrapper>
-                  <Child logWarning={true} />
-                </Wrapper>
-              </Wrapper>
-            </React.Fragment>,
-          ),
-        ),
-      );
-
-      utils.act(() => TestRenderer.create(<Contexts />));
-      expect(state).toMatchInlineSnapshot(`
-        ✕ 0, ⚠ 2
-        [root]
-           ▾ <Wrapper>
-               <Child> ⚠
-           ▾ <Wrapper>
-             ▾ <Wrapper>
-                 <Child> ⚠
-      `);
-
-      selectNextErrorOrWarning();
-      expect(state).toMatchInlineSnapshot(`
-        ✕ 0, ⚠ 2
-        [root]
-           ▾ <Wrapper>
-        →      <Child> ⚠
-           ▾ <Wrapper>
-             ▾ <Wrapper>
-                 <Child> ⚠
-      `);
-
-      utils.act(() => {
-        store.componentFilters = [utils.createDisplayNameFilter('Wrapper')];
-      });
-      expect(state).toMatchInlineSnapshot(`
-        ✕ 0, ⚠ 2
-        [root]
-        →    <Child> ⚠
-             <Child> ⚠
-      `);
-
-      selectNextErrorOrWarning();
-      expect(state).toMatchInlineSnapshot(`
-        ✕ 0, ⚠ 2
-        [root]
-             <Child> ⚠
-        →    <Child> ⚠
-      `);
-
-      utils.act(() => {
-        store.componentFilters = [];
-      });
-      expect(state).toMatchInlineSnapshot(`
-        ✕ 0, ⚠ 2
-        [root]
-           ▾ <Wrapper>
-               <Child> ⚠
-           ▾ <Wrapper>
-             ▾ <Wrapper>
-        →        <Child> ⚠
-      `);
-
-      selectPreviousErrorOrWarning();
-      expect(state).toMatchInlineSnapshot(`
-        ✕ 0, ⚠ 2
-        [root]
-           ▾ <Wrapper>
-        →      <Child> ⚠
-           ▾ <Wrapper>
-             ▾ <Wrapper>
-                 <Child> ⚠
-      `);
-    });
-
     it('should preserve errors for fibers even if they are filtered out of the tree initially', () => {
       const Wrapper = ({children}) => children;
 
@@ -2549,7 +2464,7 @@ describe('TreeListContext', () => {
     });
 
     describe('error boundaries', () => {
-      it('should properly handle errors/warnings from components that dont mount because of an error', () => {
+      it('should properly handle errors from components that dont mount because of an error', () => {
         class ErrorBoundary extends React.Component {
           state = {error: null};
           static getDerivedStateFromError(error) {
@@ -2586,16 +2501,14 @@ describe('TreeListContext', () => {
         utils.act(() => TestRenderer.create(<Contexts />));
 
         expect(store).toMatchInlineSnapshot(`
-          ✕ 1, ⚠ 0
           [root]
-              <ErrorBoundary> ✕
+              <ErrorBoundary>
         `);
 
         selectNextErrorOrWarning();
         expect(state).toMatchInlineSnapshot(`
-          ✕ 1, ⚠ 0
           [root]
-          →    <ErrorBoundary> ✕
+               <ErrorBoundary>
         `);
 
         utils.act(() => unmount());
@@ -2606,7 +2519,7 @@ describe('TreeListContext', () => {
         expect(state).toMatchInlineSnapshot(``);
       });
 
-      it('should properly handle errors/warnings from components that dont mount because of an error', () => {
+      it('should properly handle warnings from components that dont mount because of an error', () => {
         class ErrorBoundary extends React.Component {
           state = {error: null};
           static getDerivedStateFromError(error) {
@@ -2648,16 +2561,14 @@ describe('TreeListContext', () => {
         utils.act(() => TestRenderer.create(<Contexts />));
 
         expect(store).toMatchInlineSnapshot(`
-          ✕ 1, ⚠ 0
           [root]
-              <ErrorBoundary> ✕
+              <ErrorBoundary>
         `);
 
         selectNextErrorOrWarning();
         expect(state).toMatchInlineSnapshot(`
-          ✕ 1, ⚠ 0
           [root]
-          →    <ErrorBoundary> ✕
+               <ErrorBoundary>
         `);
 
         utils.act(() => unmount());
@@ -2705,18 +2616,18 @@ describe('TreeListContext', () => {
         utils.act(() => TestRenderer.create(<Contexts />));
 
         expect(store).toMatchInlineSnapshot(`
-          ✕ 2, ⚠ 0
+          ✕ 1, ⚠ 0
           [root]
-            ▾ <ErrorBoundary> ✕
+            ▾ <ErrorBoundary>
                 <Child> ✕
         `);
 
         selectNextErrorOrWarning();
         expect(state).toMatchInlineSnapshot(`
-          ✕ 2, ⚠ 0
+          ✕ 1, ⚠ 0
           [root]
-          →  ▾ <ErrorBoundary> ✕
-                 <Child> ✕
+             ▾ <ErrorBoundary>
+          →      <Child> ✕
         `);
       });
     });

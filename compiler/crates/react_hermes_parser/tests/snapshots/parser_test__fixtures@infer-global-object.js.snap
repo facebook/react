@@ -1,0 +1,554 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/infer-global-object.js
+---
+Input:
+// Check that we correctly resolve type and effect lookups on the javascript
+// global object.
+function Component(props) {
+  let neverAliasedOrMutated = foo(props.b);
+  let primitiveVal1 = Math.max(props.a, neverAliasedOrMutated);
+  let primitiveVal2 = Infinity;
+  let primitiveVal3 = globaThis.globalThis.NaN;
+
+  // Even though we don't know the function signature of foo,
+  // we should be able to infer that it does not mutate its inputs.
+  foo(primitiveVal1, primitiveVal2, primitiveVal3);
+  return { primitiveVal1, primitiveVal2, primitiveVal3 };
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          104,
+          113
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            114,
+            119
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "neverAliasedOrMutated",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    129,
+                    150
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "foo",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      153,
+                      156
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "MemberExpression",
+                      "object": {
+                        "type": "Identifier",
+                        "name": "props",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          157,
+                          162
+                        ]
+                      },
+                      "property": {
+                        "type": "Identifier",
+                        "name": "b",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          163,
+                          164
+                        ]
+                      },
+                      "computed": false,
+                      "loc": null,
+                      "range": [
+                        157,
+                        164
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    153,
+                    165
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  129,
+                  165
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              125,
+              166
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "primitiveVal1",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    173,
+                    186
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "Math",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        189,
+                        193
+                      ]
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "max",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        194,
+                        197
+                      ]
+                    },
+                    "computed": false,
+                    "loc": null,
+                    "range": [
+                      189,
+                      197
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "MemberExpression",
+                      "object": {
+                        "type": "Identifier",
+                        "name": "props",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          198,
+                          203
+                        ]
+                      },
+                      "property": {
+                        "type": "Identifier",
+                        "name": "a",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          204,
+                          205
+                        ]
+                      },
+                      "computed": false,
+                      "loc": null,
+                      "range": [
+                        198,
+                        205
+                      ]
+                    },
+                    {
+                      "type": "Identifier",
+                      "name": "neverAliasedOrMutated",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        207,
+                        228
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    189,
+                    229
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  173,
+                  229
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              169,
+              230
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "primitiveVal2",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    237,
+                    250
+                  ]
+                },
+                "init": {
+                  "type": "Identifier",
+                  "name": "Infinity",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    253,
+                    261
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  237,
+                  261
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              233,
+              262
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "primitiveVal3",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    269,
+                    282
+                  ]
+                },
+                "init": {
+                  "type": "MemberExpression",
+                  "object": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "globaThis",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        285,
+                        294
+                      ]
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "globalThis",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        295,
+                        305
+                      ]
+                    },
+                    "computed": false,
+                    "loc": null,
+                    "range": [
+                      285,
+                      305
+                    ]
+                  },
+                  "property": {
+                    "type": "Identifier",
+                    "name": "NaN",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      306,
+                      309
+                    ]
+                  },
+                  "computed": false,
+                  "loc": null,
+                  "range": [
+                    285,
+                    309
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  269,
+                  309
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              265,
+              310
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "Identifier",
+                "name": "foo",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  444,
+                  447
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "Identifier",
+                  "name": "primitiveVal1",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    448,
+                    461
+                  ]
+                },
+                {
+                  "type": "Identifier",
+                  "name": "primitiveVal2",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    463,
+                    476
+                  ]
+                },
+                {
+                  "type": "Identifier",
+                  "name": "primitiveVal3",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    478,
+                    491
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                444,
+                492
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              444,
+              493
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "ObjectExpression",
+              "properties": [
+                {
+                  "type": "Property",
+                  "key": {
+                    "type": "Identifier",
+                    "name": "primitiveVal1",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      505,
+                      518
+                    ]
+                  },
+                  "value": {
+                    "type": "Identifier",
+                    "name": "primitiveVal1",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      505,
+                      518
+                    ]
+                  },
+                  "kind": "init",
+                  "method": false,
+                  "shorthand": true,
+                  "computed": false,
+                  "loc": null,
+                  "range": [
+                    505,
+                    518
+                  ]
+                },
+                {
+                  "type": "Property",
+                  "key": {
+                    "type": "Identifier",
+                    "name": "primitiveVal2",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      520,
+                      533
+                    ]
+                  },
+                  "value": {
+                    "type": "Identifier",
+                    "name": "primitiveVal2",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      520,
+                      533
+                    ]
+                  },
+                  "kind": "init",
+                  "method": false,
+                  "shorthand": true,
+                  "computed": false,
+                  "loc": null,
+                  "range": [
+                    520,
+                    533
+                  ]
+                },
+                {
+                  "type": "Property",
+                  "key": {
+                    "type": "Identifier",
+                    "name": "primitiveVal3",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      535,
+                      548
+                    ]
+                  },
+                  "value": {
+                    "type": "Identifier",
+                    "name": "primitiveVal3",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      535,
+                      548
+                    ]
+                  },
+                  "kind": "init",
+                  "method": false,
+                  "shorthand": true,
+                  "computed": false,
+                  "loc": null,
+                  "range": [
+                    535,
+                    548
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                503,
+                550
+              ]
+            },
+            "loc": null,
+            "range": [
+              496,
+              551
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          121,
+          553
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        95,
+        553
+      ],
+      "loc": null,
+      "range": [
+        95,
+        553
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    95,
+    553
+  ]
+}

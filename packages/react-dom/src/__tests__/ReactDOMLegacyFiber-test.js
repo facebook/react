@@ -12,11 +12,12 @@
 const React = require('react');
 const ReactDOM = require('react-dom');
 const PropTypes = require('prop-types');
-
+let act;
 describe('ReactDOMLegacyFiber', () => {
   let container;
 
   beforeEach(() => {
+    act = require('internal-test-utils').act;
     container = document.createElement('div');
     document.body.appendChild(container);
   });
@@ -110,7 +111,10 @@ describe('ReactDOMLegacyFiber', () => {
       container,
     );
 
-    const textNode = ReactDOM.findDOMNode(instance);
+    const textNode =
+      ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.findDOMNode(
+        instance,
+      );
     expect(textNode).toBe(container.firstChild);
     expect(textNode.nodeType).toBe(3);
     expect(textNode.nodeValue).toBe('foo');
@@ -129,7 +133,10 @@ describe('ReactDOMLegacyFiber', () => {
 
     expect(container.childNodes.length).toBe(2);
 
-    const firstNode = ReactDOM.findDOMNode(instance);
+    const firstNode =
+      ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.findDOMNode(
+        instance,
+      );
     expect(firstNode).toBe(container.firstChild);
     expect(firstNode.tagName).toBe('DIV');
   });
@@ -158,7 +165,10 @@ describe('ReactDOMLegacyFiber', () => {
 
     expect(container.childNodes.length).toBe(2);
 
-    const firstNode = ReactDOM.findDOMNode(instance);
+    const firstNode =
+      ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.findDOMNode(
+        instance,
+      );
     expect(firstNode).toBe(container.firstChild);
     expect(firstNode.tagName).toBe('DIV');
   });
@@ -182,7 +192,10 @@ describe('ReactDOMLegacyFiber', () => {
 
     expect(container.childNodes.length).toBe(2);
 
-    const firstNode = ReactDOM.findDOMNode(instance);
+    const firstNode =
+      ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.findDOMNode(
+        instance,
+      );
     expect(firstNode).toBe(container.firstChild);
     expect(firstNode.tagName).toBe('DIV');
   });
@@ -656,18 +669,20 @@ describe('ReactDOMLegacyFiber', () => {
   });
 
   // @gate !disableLegacyMode
-  it('should unwind namespaces on uncaught errors', () => {
+  it('should unwind namespaces on uncaught errors', async () => {
     function BrokenRender() {
       throw new Error('Hello');
     }
 
-    expect(() => {
-      assertNamespacesMatch(
-        <svg {...expectSVG}>
-          <BrokenRender />
-        </svg>,
-      );
-    }).toThrow('Hello');
+    await expect(async () => {
+      await act(() => {
+        assertNamespacesMatch(
+          <svg {...expectSVG}>
+            <BrokenRender />
+          </svg>,
+        );
+      });
+    }).rejects.toThrow('Hello');
     assertNamespacesMatch(<div {...expectHTML} />);
   });
 
@@ -771,7 +786,12 @@ describe('ReactDOMLegacyFiber', () => {
       }
     }
 
-    ReactDOM.render(<Parent />, container);
+    expect(() => {
+      ReactDOM.render(<Parent />, container);
+    }).toErrorDev([
+      'Parent uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'Component uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+    ]);
     expect(container.innerHTML).toBe('');
     expect(portalContainer.innerHTML).toBe('<div>bar</div>');
   });
@@ -814,7 +834,13 @@ describe('ReactDOMLegacyFiber', () => {
       }
     }
 
-    const instance = ReactDOM.render(<Parent />, container);
+    let instance;
+    expect(() => {
+      instance = ReactDOM.render(<Parent />, container);
+    }).toErrorDev([
+      'Parent uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'Component uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+    ]);
     expect(portalContainer.innerHTML).toBe('<div>initial-initial</div>');
     expect(container.innerHTML).toBe('');
     instance.setState({bar: 'changed'});
@@ -856,7 +882,12 @@ describe('ReactDOMLegacyFiber', () => {
       }
     }
 
-    ReactDOM.render(<Parent bar="initial" />, container);
+    expect(() => {
+      ReactDOM.render(<Parent bar="initial" />, container);
+    }).toErrorDev([
+      'Parent uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'Component uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+    ]);
     expect(portalContainer.innerHTML).toBe('<div>initial-initial</div>');
     expect(container.innerHTML).toBe('');
     ReactDOM.render(<Parent bar="changed" />, container);
@@ -875,13 +906,19 @@ describe('ReactDOMLegacyFiber', () => {
     }
 
     const myNodeA = ReactDOM.render(<MyNode />, container);
-    const a = ReactDOM.findDOMNode(myNodeA);
+    const a =
+      ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.findDOMNode(
+        myNodeA,
+      );
     expect(a.tagName).toBe('DIV');
 
     const myNodeB = ReactDOM.render(<MyNode flag={true} />, container);
     expect(myNodeA === myNodeB).toBe(true);
 
-    const b = ReactDOM.findDOMNode(myNodeB);
+    const b =
+      ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.findDOMNode(
+        myNodeB,
+      );
     expect(b.tagName).toBe('SPAN');
   });
 
@@ -1193,10 +1230,10 @@ describe('ReactDOMLegacyFiber', () => {
     if (__DEV__) {
       expect(console.error).toHaveBeenCalledTimes(2);
       expect(console.error.mock.calls[0][0]).toMatch(
-        'ReactDOM.render is no longer supported in React 18',
+        'ReactDOM.render has not been supported since React 18',
       );
       expect(console.error.mock.calls[1][0]).toMatch(
-        'ReactDOM.render is no longer supported in React 18',
+        'ReactDOM.render has not been supported since React 18',
       );
     }
   });
@@ -1222,7 +1259,7 @@ describe('ReactDOMLegacyFiber', () => {
   });
 
   // @gate !disableLegacyMode
-  it('should warn when replacing a container which was manually updated outside of React', () => {
+  it('should warn when replacing a container which was manually updated outside of React', async () => {
     // when not messing with the DOM outside of React
     ReactDOM.render(<div key="1">foo</div>, container);
     ReactDOM.render(<div key="1">bar</div>, container);
@@ -1232,18 +1269,20 @@ describe('ReactDOMLegacyFiber', () => {
     // It's an error of type 'NotFoundError' with no message
     container.innerHTML = '<div>MEOW.</div>';
 
-    expect(() => {
-      expect(() =>
-        ReactDOM.render(<div key="2">baz</div>, container),
-      ).toErrorDev(
-        '' +
-          'It looks like the React-rendered content of this container was ' +
-          'removed without using React. This is not supported and will ' +
-          'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
-          'to empty a container.',
-        {withoutStack: true},
-      );
-    }).toThrowError();
+    await expect(async () => {
+      await expect(async () => {
+        await act(() => {
+          ReactDOM.render(<div key="2">baz</div>, container);
+        });
+      }).rejects.toThrow('The node to be removed is not a child of this node.');
+    }).toErrorDev(
+      '' +
+        'It looks like the React-rendered content of this container was ' +
+        'removed without using React. This is not supported and will ' +
+        'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
+        'to empty a container.',
+      {withoutStack: true},
+    );
   });
 
   // @gate !disableLegacyMode

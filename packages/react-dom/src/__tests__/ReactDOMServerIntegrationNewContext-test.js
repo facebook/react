@@ -161,8 +161,8 @@ describe('ReactDOMServerIntegration', () => {
     itRenders('readContext() in different components', async render => {
       function readContext(Ctx) {
         const dispatcher =
-          React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-            .ReactCurrentDispatcher.current;
+          React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE
+            .H;
         return dispatcher.readContext(Ctx);
       }
 
@@ -322,119 +322,6 @@ describe('ReactDOMServerIntegration', () => {
 
       const e = await render(<App />, 0);
       expect(e.textContent).toBe('dark');
-    });
-
-    it('does not pollute parallel node streams', () => {
-      const LoggedInUser = React.createContext();
-
-      const AppWithUser = user => (
-        <LoggedInUser.Provider value={user}>
-          <header>
-            <LoggedInUser.Consumer>{whoAmI => whoAmI}</LoggedInUser.Consumer>
-          </header>
-          <footer>
-            <LoggedInUser.Consumer>{whoAmI => whoAmI}</LoggedInUser.Consumer>
-          </footer>
-        </LoggedInUser.Provider>
-      );
-
-      let streamAmy;
-      let streamBob;
-      expect(() => {
-        streamAmy = ReactDOMServer.renderToNodeStream(
-          AppWithUser('Amy'),
-        ).setEncoding('utf8');
-      }).toErrorDev(
-        'renderToNodeStream is deprecated. Use renderToPipeableStream instead.',
-        {withoutStack: true},
-      );
-      expect(() => {
-        streamBob = ReactDOMServer.renderToNodeStream(
-          AppWithUser('Bob'),
-        ).setEncoding('utf8');
-      }).toErrorDev(
-        'renderToNodeStream is deprecated. Use renderToPipeableStream instead.',
-        {withoutStack: true},
-      );
-
-      // Testing by filling the buffer using internal _read() with a small
-      // number of bytes to avoid a test case which needs to align to a
-      // highWaterMark boundary of 2^14 chars.
-      streamAmy._read(20);
-      streamBob._read(20);
-      streamAmy._read(20);
-      streamBob._read(20);
-
-      expect(streamAmy.read()).toBe('<header>Amy</header><footer>Amy</footer>');
-      expect(streamBob.read()).toBe('<header>Bob</header><footer>Bob</footer>');
-    });
-
-    it('does not pollute parallel node streams when many are used', () => {
-      const CurrentIndex = React.createContext();
-
-      const NthRender = index => (
-        <CurrentIndex.Provider value={index}>
-          <header>
-            <CurrentIndex.Consumer>{idx => idx}</CurrentIndex.Consumer>
-          </header>
-          <footer>
-            <CurrentIndex.Consumer>{idx => idx}</CurrentIndex.Consumer>
-          </footer>
-        </CurrentIndex.Provider>
-      );
-
-      const streams = [];
-
-      // Test with more than 32 streams to test that growing the thread count
-      // works properly.
-      const streamCount = 34;
-
-      for (let i = 0; i < streamCount; i++) {
-        expect(() => {
-          streams[i] = ReactDOMServer.renderToNodeStream(
-            NthRender(i % 2 === 0 ? 'Expected to be recreated' : i),
-          ).setEncoding('utf8');
-        }).toErrorDev(
-          'renderToNodeStream is deprecated. Use renderToPipeableStream instead.',
-          {withoutStack: true},
-        );
-      }
-
-      // Testing by filling the buffer using internal _read() with a small
-      // number of bytes to avoid a test case which needs to align to a
-      // highWaterMark boundary of 2^14 chars.
-      for (let i = 0; i < streamCount; i++) {
-        streams[i]._read(20);
-      }
-
-      // Early destroy every other stream
-      for (let i = 0; i < streamCount; i += 2) {
-        streams[i].destroy();
-      }
-
-      // Recreate those same streams.
-      for (let i = 0; i < streamCount; i += 2) {
-        expect(() => {
-          streams[i] = ReactDOMServer.renderToNodeStream(
-            NthRender(i),
-          ).setEncoding('utf8');
-        }).toErrorDev(
-          'renderToNodeStream is deprecated. Use renderToPipeableStream instead.',
-          {withoutStack: true},
-        );
-      }
-
-      // Read a bit from all streams again.
-      for (let i = 0; i < streamCount; i++) {
-        streams[i]._read(20);
-      }
-
-      // Assert that all stream rendered the expected output.
-      for (let i = 0; i < streamCount; i++) {
-        expect(streams[i].read()).toBe(
-          '<header>' + i + '</header><footer>' + i + '</footer>',
-        );
-      }
     });
 
     it('does not pollute sync renders after an error', () => {

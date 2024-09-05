@@ -6,7 +6,8 @@
  */
 
 import {REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE} from 'shared/ReactSymbols';
-import {enableRefAsProp} from 'shared/ReactFeatureFlags';
+import {disableStringRefs, enableRefAsProp} from 'shared/ReactFeatureFlags';
+const {assertConsoleLogsCleared} = require('internal-test-utils/consoleMock');
 
 import isArray from 'shared/isArray';
 
@@ -37,6 +38,7 @@ function assertYieldsWereCleared(root) {
     Error.captureStackTrace(error, assertYieldsWereCleared);
     throw error;
   }
+  assertConsoleLogsCleared();
 }
 
 function createJSXElementForTestComparison(type, props) {
@@ -54,6 +56,14 @@ function createJSXElementForTestComparison(type, props) {
       value: null,
     });
     return element;
+  } else if (!__DEV__ && disableStringRefs) {
+    return {
+      $$typeof: REACT_ELEMENT_TYPE,
+      type: type,
+      key: null,
+      ref: null,
+      props: props,
+    };
   } else {
     return {
       $$typeof: REACT_ELEMENT_TYPE,

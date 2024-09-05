@@ -36,6 +36,7 @@ describe('ReactErrorBoundaries', () => {
   let RetryErrorBoundary;
   let Normal;
   let assertLog;
+  let assertConsoleErrorDev;
 
   beforeEach(() => {
     jest.useFakeTimers();
@@ -47,8 +48,7 @@ describe('ReactErrorBoundaries', () => {
     act = require('internal-test-utils').act;
     Scheduler = require('scheduler');
 
-    const InternalTestUtils = require('internal-test-utils');
-    assertLog = InternalTestUtils.assertLog;
+    ({assertLog, assertConsoleErrorDev} = require('internal-test-utils'));
 
     BrokenConstructor = class extends React.Component {
       constructor(props) {
@@ -584,6 +584,7 @@ describe('ReactErrorBoundaries', () => {
       });
     }).rejects.toThrow('Hello');
 
+    Scheduler.unstable_clearLog();
     container = document.createElement('div');
     root = ReactDOMClient.createRoot(container);
     await expect(async () => {
@@ -592,6 +593,7 @@ describe('ReactErrorBoundaries', () => {
       });
     }).rejects.toThrow('Hello');
 
+    Scheduler.unstable_clearLog();
     container = document.createElement('div');
     root = ReactDOMClient.createRoot(container);
     await expect(async () => {
@@ -607,28 +609,32 @@ describe('ReactErrorBoundaries', () => {
     await act(async () => {
       root.render(<BrokenComponentWillUpdate />);
     });
+    Scheduler.unstable_clearLog();
     await expect(async () => {
       await act(async () => {
         root.render(<BrokenComponentWillUpdate />);
       });
     }).rejects.toThrow('Hello');
 
+    Scheduler.unstable_clearLog();
     container = document.createElement('div');
     root = ReactDOMClient.createRoot(container);
     await act(async () => {
       root.render(<BrokenComponentWillReceiveProps />);
     });
+    Scheduler.unstable_clearLog();
     await expect(async () => {
       await act(async () => {
         root.render(<BrokenComponentWillReceiveProps />);
       });
     }).rejects.toThrow('Hello');
-
+    Scheduler.unstable_clearLog();
     container = document.createElement('div');
     root = ReactDOMClient.createRoot(container);
     await act(async () => {
       root.render(<BrokenComponentDidUpdate />);
     });
+    Scheduler.unstable_clearLog();
     await expect(async () => {
       await act(async () => {
         root.render(<BrokenComponentDidUpdate />);
@@ -642,8 +648,9 @@ describe('ReactErrorBoundaries', () => {
     await act(async () => {
       root.render(<BrokenComponentWillUnmount />);
     });
+    Scheduler.unstable_clearLog();
     await expect(async () => {
-      root.unmount();
+      await act(() => root.unmount());
     }).rejects.toThrow('Hello');
   });
 
@@ -663,6 +670,15 @@ describe('ReactErrorBoundaries', () => {
         root2.render(<BrokenRender />);
       });
     }).rejects.toThrow('Hello');
+
+    assertLog([
+      'BrokenRender constructor',
+      'BrokenRender componentWillMount',
+      'BrokenRender render [!]',
+      'BrokenRender constructor',
+      'BrokenRender componentWillMount',
+      'BrokenRender render [!]',
+    ]);
     await act(async () => {
       root3.render(
         <ErrorBoundary>
@@ -674,12 +690,15 @@ describe('ReactErrorBoundaries', () => {
     expect(container2.firstChild).toBe(null);
     expect(container3.firstChild.textContent).toBe('Caught an error: Hello.');
 
+    Scheduler.unstable_clearLog();
     await act(async () => {
       root1.render(<span>After 1</span>);
     });
+    Scheduler.unstable_clearLog();
     await act(async () => {
       root2.render(<span>After 2</span>);
     });
+    Scheduler.unstable_clearLog();
     await act(async () => {
       root3.render(<ErrorBoundary forceRetry={true}>After 3</ErrorBoundary>);
     });
@@ -708,7 +727,7 @@ describe('ReactErrorBoundaries', () => {
     if (__DEV__) {
       expect(console.error).toHaveBeenCalledTimes(1);
       expect(console.error.mock.calls[0][2]).toContain(
-        'The above error occurred in the <BrokenRender> component:',
+        'The above error occurred in the <BrokenRender> component',
       );
     }
 
@@ -876,56 +895,9 @@ describe('ReactErrorBoundaries', () => {
         </ErrorBoundary>,
       );
     });
-    expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
-  });
-
-  // @gate !disableModulePatternComponents
-  it('renders an error state if module-style context provider throws in componentWillMount', async () => {
-    function BrokenComponentWillMountWithContext() {
-      return {
-        getChildContext() {
-          return {foo: 42};
-        },
-        render() {
-          return <div>{this.props.children}</div>;
-        },
-        UNSAFE_componentWillMount() {
-          throw new Error('Hello');
-        },
-      };
-    }
-    BrokenComponentWillMountWithContext.childContextTypes = {
-      foo: PropTypes.number,
-    };
-
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-
-    await expect(async () => {
-      await act(() => {
-        root.render(
-          <ErrorBoundary>
-            <BrokenComponentWillMountWithContext />
-          </ErrorBoundary>,
-        );
-      });
-    }).toErrorDev([
-      'Warning: The <BrokenComponentWillMountWithContext /> component appears to be a function component that ' +
-        'returns a class instance. ' +
-        'Change BrokenComponentWillMountWithContext to a class that extends React.Component instead. ' +
-        "If you can't use a class try assigning the prototype on the function as a workaround. " +
-        '`BrokenComponentWillMountWithContext.prototype = React.Component.prototype`. ' +
-        "Don't use an arrow function since it cannot be called with `new` by React.",
-      ...gate(flags =>
-        flags.disableLegacyContext
-          ? [
-              'Warning: BrokenComponentWillMountWithContext uses the legacy childContextTypes API which is no longer supported. Use React.createContext() instead.',
-              'Warning: BrokenComponentWillMountWithContext uses the legacy childContextTypes API which is no longer supported. Use React.createContext() instead.',
-            ]
-          : [],
-      ),
+    assertConsoleErrorDev([
+      'BrokenComponentWillMountWithContext uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
     ]);
-
     expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
   });
 
@@ -1878,6 +1850,7 @@ describe('ReactErrorBoundaries', () => {
       );
     });
 
+    Scheduler.unstable_clearLog();
     await act(async () => {
       root.render(
         <ErrorBoundary>
@@ -1929,6 +1902,7 @@ describe('ReactErrorBoundaries', () => {
       );
     });
     expect(container.textContent).toBe('Caught an error: Hello.');
+    Scheduler.unstable_clearLog();
 
     await act(async () => {
       root.render(
@@ -1938,6 +1912,7 @@ describe('ReactErrorBoundaries', () => {
       );
     });
     expect(container.textContent).toBe('Caught an error: Hello.');
+    Scheduler.unstable_clearLog();
 
     await act(async () => {
       root.render(<div>Other screen</div>);
@@ -1959,7 +1934,7 @@ describe('ReactErrorBoundaries', () => {
         </ErrorBoundary>,
       );
     });
-
+    Scheduler.unstable_clearLog();
     await act(async () => {
       root.render(<ErrorBoundary />);
     });
@@ -1976,6 +1951,12 @@ describe('ReactErrorBoundaries', () => {
     await act(async () => {
       root.render(<ErrorBoundary />);
     });
+    assertLog([
+      'ErrorBoundary constructor',
+      'ErrorBoundary componentWillMount',
+      'ErrorBoundary render success',
+      'ErrorBoundary componentDidMount',
+    ]);
     await act(async () => {
       root.render(
         <ErrorBoundary>
@@ -2033,6 +2014,7 @@ describe('ReactErrorBoundaries', () => {
     expect(container.textContent).not.toContain('Caught an error');
 
     fail = true;
+    Scheduler.unstable_clearLog();
     await act(async () => {
       root.render(
         <ErrorBoundary>
@@ -2470,7 +2452,7 @@ describe('ReactErrorBoundaries', () => {
     ]);
   });
 
-  it('passes first error when two errors happen in commit', async () => {
+  it('passes an aggregate error when two errors happen in commit', async () => {
     const errors = [];
     let caughtError;
     class Parent extends React.Component {
@@ -2501,15 +2483,14 @@ describe('ReactErrorBoundaries', () => {
         root.render(<Parent />);
       });
     } catch (e) {
-      if (e.message !== 'parent sad' && e.message !== 'child sad') {
-        throw e;
-      }
       caughtError = e;
     }
 
     expect(errors).toEqual(['child sad', 'parent sad']);
-    // Error should be the first thrown
-    expect(caughtError.message).toBe('child sad');
+    expect(caughtError.errors).toEqual([
+      expect.objectContaining({message: 'child sad'}),
+      expect.objectContaining({message: 'parent sad'}),
+    ]);
   });
 
   it('propagates uncaught error inside unbatched initial mount', async () => {
@@ -2561,15 +2542,14 @@ describe('ReactErrorBoundaries', () => {
         root.render(<Parent value={2} />);
       });
     } catch (e) {
-      if (e.message !== 'parent sad' && e.message !== 'child sad') {
-        throw e;
-      }
       caughtError = e;
     }
 
     expect(errors).toEqual(['child sad', 'parent sad']);
-    // Error should be the first thrown
-    expect(caughtError.message).toBe('child sad');
+    expect(caughtError.errors).toEqual([
+      expect.objectContaining({message: 'child sad'}),
+      expect.objectContaining({message: 'parent sad'}),
+    ]);
   });
 
   it('should warn if an error boundary with only componentDidCatch does not update state', async () => {

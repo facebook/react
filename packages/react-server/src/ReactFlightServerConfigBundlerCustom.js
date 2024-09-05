@@ -7,7 +7,7 @@
  * @flow
  */
 
-declare var $$$config: any;
+declare const $$$config: any;
 
 export opaque type ClientManifest = mixed;
 export opaque type ClientReference<T> = mixed; // eslint-disable-line no-unused-vars
@@ -23,3 +23,4 @@ export const resolveClientReferenceMetadata =
 export const getServerReferenceId = $$$config.getServerReferenceId;
 export const getServerReferenceBoundArguments =
   $$$config.getServerReferenceBoundArguments;
+export const getServerReferenceLocation = $$$config.getServerReferenceLocation;

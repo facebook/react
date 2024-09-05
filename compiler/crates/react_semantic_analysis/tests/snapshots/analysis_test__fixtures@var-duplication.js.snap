@@ -1,0 +1,372 @@
+---
+source: crates/react_semantic_analysis/tests/analysis_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nAnalysis:\\n{output}\")"
+input_file: crates/react_semantic_analysis/tests/fixtures/var-duplication.js
+---
+Input:
+function Component() {
+  let a;
+  {
+    var a; // error, conflicts when hoisted
+  }
+
+  const b = 1;
+  {
+    var b; // error, conflicts
+  }
+
+  {
+    let c;
+    var c; // error, conflicts
+  }
+
+  {
+    const d = 2;
+    var d; // error, conflicts
+  }
+
+  // there should be one instance of `e`:
+  var e = 3;
+  console.log(e); // 3
+  var e = 4;
+  console.log(e); // 4
+  var e;
+  console.log(e); // 4
+}
+
+
+Analysis:
+ScopeManager {
+    globals: [
+        (
+            "Array",
+            DeclarationId(
+                0,
+            ),
+        ),
+        (
+            "Boolean",
+            DeclarationId(
+                1,
+            ),
+        ),
+        (
+            "console",
+            DeclarationId(
+                2,
+            ),
+        ),
+        (
+            "global",
+            DeclarationId(
+                3,
+            ),
+        ),
+        (
+            "Math",
+            DeclarationId(
+                4,
+            ),
+        ),
+        (
+            "Number",
+            DeclarationId(
+                5,
+            ),
+        ),
+        (
+            "setInterval",
+            DeclarationId(
+                6,
+            ),
+        ),
+        (
+            "setTimeout",
+            DeclarationId(
+                7,
+            ),
+        ),
+        (
+            "String",
+            DeclarationId(
+                8,
+            ),
+        ),
+    ],
+    root: Scope {
+        id: ScopeId(
+            0,
+        ),
+        kind: Module,
+        declarations: {
+            "Component": Declaration {
+                id: DeclarationId(
+                    9,
+                ),
+                kind: Function,
+                scope: ScopeId(
+                    0,
+                ),
+            },
+        },
+        references: [],
+        children: [
+            Scope {
+                id: ScopeId(
+                    1,
+                ),
+                kind: Function,
+                declarations: {
+                    "a": Declaration {
+                        id: DeclarationId(
+                            10,
+                        ),
+                        kind: Let,
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                    "b": Declaration {
+                        id: DeclarationId(
+                            12,
+                        ),
+                        kind: Const,
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                    "c": Declaration {
+                        id: DeclarationId(
+                            15,
+                        ),
+                        kind: Var,
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                    "d": Declaration {
+                        id: DeclarationId(
+                            17,
+                        ),
+                        kind: Var,
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                    "e": Declaration {
+                        id: DeclarationId(
+                            18,
+                        ),
+                        kind: Var,
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                },
+                references: [
+                    Reference {
+                        id: ReferenceId(
+                            0,
+                        ),
+                        kind: Read,
+                        declaration: DeclarationId(
+                            2,
+                        ),
+                        declaration (name): "console",
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                    Reference {
+                        id: ReferenceId(
+                            1,
+                        ),
+                        kind: Read,
+                        declaration: DeclarationId(
+                            18,
+                        ),
+                        declaration (name): "e",
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                    Reference {
+                        id: ReferenceId(
+                            2,
+                        ),
+                        kind: Read,
+                        declaration: DeclarationId(
+                            2,
+                        ),
+                        declaration (name): "console",
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                    Reference {
+                        id: ReferenceId(
+                            3,
+                        ),
+                        kind: Read,
+                        declaration: DeclarationId(
+                            18,
+                        ),
+                        declaration (name): "e",
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                    Reference {
+                        id: ReferenceId(
+                            4,
+                        ),
+                        kind: Read,
+                        declaration: DeclarationId(
+                            2,
+                        ),
+                        declaration (name): "console",
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                    Reference {
+                        id: ReferenceId(
+                            5,
+                        ),
+                        kind: Read,
+                        declaration: DeclarationId(
+                            18,
+                        ),
+                        declaration (name): "e",
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                ],
+                children: [
+                    Scope {
+                        id: ScopeId(
+                            2,
+                        ),
+                        kind: Block,
+                        declarations: {},
+                        references: [],
+                        children: [],
+                    },
+                    Scope {
+                        id: ScopeId(
+                            3,
+                        ),
+                        kind: Block,
+                        declarations: {},
+                        references: [],
+                        children: [],
+                    },
+                    Scope {
+                        id: ScopeId(
+                            4,
+                        ),
+                        kind: Block,
+                        declarations: {
+                            "c": Declaration {
+                                id: DeclarationId(
+                                    14,
+                                ),
+                                kind: Let,
+                                scope: ScopeId(
+                                    4,
+                                ),
+                            },
+                        },
+                        references: [],
+                        children: [],
+                    },
+                    Scope {
+                        id: ScopeId(
+                            5,
+                        ),
+                        kind: Block,
+                        declarations: {
+                            "d": Declaration {
+                                id: DeclarationId(
+                                    16,
+                                ),
+                                kind: Const,
+                                scope: ScopeId(
+                                    5,
+                                ),
+                            },
+                        },
+                        references: [],
+                        children: [],
+                    },
+                ],
+            },
+        ],
+    },
+}
+Diagnostic(
+    DiagnosticData {
+        message: "Duplicate declaration",
+        span: Some(
+            SourceSpan {
+                offset: SourceOffset(
+                    44,
+                ),
+                length: 1,
+            },
+        ),
+        related_information: [],
+        severity: InvalidSyntax,
+        data: [],
+    },
+)
+Diagnostic(
+    DiagnosticData {
+        message: "Duplicate declaration",
+        span: Some(
+            SourceSpan {
+                offset: SourceOffset(
+                    112,
+                ),
+                length: 1,
+            },
+        ),
+        related_information: [],
+        severity: InvalidSyntax,
+        data: [],
+    },
+)
+Diagnostic(
+    DiagnosticData {
+        message: "Duplicate declaration",
+        span: Some(
+            SourceSpan {
+                offset: SourceOffset(
+                    163,
+                ),
+                length: 1,
+            },
+        ),
+        related_information: [],
+        severity: InvalidSyntax,
+        data: [],
+    },
+)
+Diagnostic(
+    DiagnosticData {
+        message: "Duplicate declaration",
+        span: Some(
+            SourceSpan {
+                offset: SourceOffset(
+                    220,
+                ),
+                length: 1,
+            },
+        ),
+        related_information: [],
+        severity: InvalidSyntax,
+        data: [],
+    },
+)
+

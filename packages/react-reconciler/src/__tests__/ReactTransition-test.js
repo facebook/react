@@ -169,7 +169,7 @@ describe('ReactTransition', () => {
   }
 
   // @gate enableLegacyCache
-  test('isPending works even if called from outside an input event', async () => {
+  it('isPending works even if called from outside an input event', async () => {
     let start;
     function App() {
       const [show, setShow] = useState(false);
@@ -199,6 +199,10 @@ describe('ReactTransition', () => {
         '(empty)',
         'Suspend! [Async]',
         'Loading...',
+
+        ...(gate('enableSiblingPrerendering')
+          ? ['Suspend! [Async]', 'Loading...']
+          : []),
       ]);
 
       expect(root).toMatchRenderedOutput('Pending...(empty)');
@@ -210,7 +214,7 @@ describe('ReactTransition', () => {
   });
 
   // @gate enableLegacyCache
-  test(
+  it(
     'when multiple transitions update the same queue, only the most recent ' +
       'one is allowed to finish (no intermediate states)',
     async () => {
@@ -269,6 +273,10 @@ describe('ReactTransition', () => {
         'B label',
         'Suspend! [B content]',
         'Loading...',
+
+        ...(gate('enableSiblingPrerendering')
+          ? ['B label', 'Suspend! [B content]', 'Loading...']
+          : []),
       ]);
       // This is a refresh transition so it shouldn't show a fallback
       expect(root).toMatchRenderedOutput(
@@ -290,6 +298,10 @@ describe('ReactTransition', () => {
         'C label',
         'Suspend! [C content]',
         'Loading...',
+
+        ...(gate('enableSiblingPrerendering')
+          ? ['C label', 'Suspend! [C content]', 'Loading...']
+          : []),
       ]);
       expect(root).toMatchRenderedOutput(
         <>
@@ -307,6 +319,10 @@ describe('ReactTransition', () => {
         'C label',
         'Suspend! [C content]',
         'Loading...',
+
+        ...(gate('enableSiblingPrerendering')
+          ? ['C label', 'Suspend! [C content]', 'Loading...']
+          : []),
       ]);
       expect(root).toMatchRenderedOutput(
         <>
@@ -329,7 +345,7 @@ describe('ReactTransition', () => {
 
   // Same as previous test, but for class update queue.
   // @gate enableLegacyCache
-  test(
+  it(
     'when multiple transitions update the same queue, only the most recent ' +
       'one is allowed to finish (no intermediate states) (classes)',
     async () => {
@@ -394,6 +410,10 @@ describe('ReactTransition', () => {
         'B label',
         'Suspend! [B content]',
         'Loading...',
+
+        ...(gate('enableSiblingPrerendering')
+          ? ['B label', 'Suspend! [B content]', 'Loading...']
+          : []),
       ]);
       // This is a refresh transition so it shouldn't show a fallback
       expect(root).toMatchRenderedOutput(
@@ -415,6 +435,10 @@ describe('ReactTransition', () => {
         'C label',
         'Suspend! [C content]',
         'Loading...',
+
+        ...(gate('enableSiblingPrerendering')
+          ? ['C label', 'Suspend! [C content]', 'Loading...']
+          : []),
       ]);
       expect(root).toMatchRenderedOutput(
         <>
@@ -432,6 +456,10 @@ describe('ReactTransition', () => {
         'C label',
         'Suspend! [C content]',
         'Loading...',
+
+        ...(gate('enableSiblingPrerendering')
+          ? ['C label', 'Suspend! [C content]', 'Loading...']
+          : []),
       ]);
       expect(root).toMatchRenderedOutput(
         <>
@@ -453,7 +481,7 @@ describe('ReactTransition', () => {
   );
 
   // @gate enableLegacyCache
-  test(
+  it(
     'when multiple transitions update overlapping queues, all the transitions ' +
       'across all the queues are entangled',
     async () => {
@@ -500,7 +528,14 @@ describe('ReactTransition', () => {
           setShowA(true);
         });
       });
-      assertLog(['Suspend! [A]', 'Loading...']);
+      assertLog([
+        'Suspend! [A]',
+        'Loading...',
+
+        ...(gate('enableSiblingPrerendering')
+          ? ['Suspend! [A]', 'Loading...']
+          : []),
+      ]);
       expect(root).toMatchRenderedOutput(null);
 
       // Before A loads, switch to B. This should entangle A with B.
@@ -510,7 +545,14 @@ describe('ReactTransition', () => {
           setShowB(true);
         });
       });
-      assertLog(['Suspend! [B]', 'Loading...']);
+      assertLog([
+        'Suspend! [B]',
+        'Loading...',
+
+        ...(gate('enableSiblingPrerendering')
+          ? ['Suspend! [B]', 'Loading...']
+          : []),
+      ]);
       expect(root).toMatchRenderedOutput(null);
 
       // Before A or B loads, switch to C. This should entangle C with B, and
@@ -521,7 +563,14 @@ describe('ReactTransition', () => {
           setShowC(true);
         });
       });
-      assertLog(['Suspend! [C]', 'Loading...']);
+      assertLog([
+        'Suspend! [C]',
+        'Loading...',
+
+        ...(gate('enableSiblingPrerendering')
+          ? ['Suspend! [C]', 'Loading...']
+          : []),
+      ]);
       expect(root).toMatchRenderedOutput(null);
 
       // Now the data starts resolving out of order.
@@ -533,7 +582,14 @@ describe('ReactTransition', () => {
           resolveText('B');
         });
       });
-      assertLog(['Suspend! [C]', 'Loading...']);
+      assertLog([
+        'Suspend! [C]',
+        'Loading...',
+
+        ...(gate('enableSiblingPrerendering')
+          ? ['Suspend! [C]', 'Loading...']
+          : []),
+      ]);
       expect(root).toMatchRenderedOutput(null);
 
       // Now resolve A. Again, this will attempt to render C, since everything
@@ -543,7 +599,14 @@ describe('ReactTransition', () => {
           resolveText('A');
         });
       });
-      assertLog(['Suspend! [C]', 'Loading...']);
+      assertLog([
+        'Suspend! [C]',
+        'Loading...',
+
+        ...(gate('enableSiblingPrerendering')
+          ? ['Suspend! [C]', 'Loading...']
+          : []),
+      ]);
       expect(root).toMatchRenderedOutput(null);
 
       // Finally, resolve C. This time we can finish.
@@ -558,7 +621,7 @@ describe('ReactTransition', () => {
   );
 
   // @gate enableLegacyCache
-  test('interrupt a refresh transition if a new transition is scheduled', async () => {
+  it('interrupt a refresh transition if a new transition is scheduled', async () => {
     const root = ReactNoop.createRoot();
 
     await act(() => {
@@ -613,7 +676,7 @@ describe('ReactTransition', () => {
   });
 
   // @gate enableLegacyCache
-  test(
+  it(
     "interrupt a refresh transition when something suspends and we've " +
       'already bailed out on another transition in a parent',
     async () => {
@@ -705,7 +768,7 @@ describe('ReactTransition', () => {
   );
 
   // @gate enableLegacyCache
-  test(
+  it(
     'interrupt a refresh transition when something suspends and a parent ' +
       'component received an interleaved update after its queue was processed',
     async () => {
@@ -719,7 +782,7 @@ describe('ReactTransition', () => {
           <>
             <Text text={`A${step}`} />
             <Suspense fallback={<Text text="Loading..." />}>
-              {shouldSuspend ? <AsyncText text="Async" ms={2000} /> : null}
+              {shouldSuspend ? <AsyncText text="Async" /> : null}
             </Suspense>
             <Text text={`B${step}`} />
             <Text text={`C${step}`} />
@@ -861,6 +924,10 @@ describe('ReactTransition', () => {
       // Suspend.
       'Suspend! [Async]',
       'Loading...',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['Suspend! [Async]', 'Normal pri: 0', 'Loading...']
+        : []),
     ]);
     expect(root).toMatchRenderedOutput('(empty), Normal pri: 0');
 
@@ -925,28 +992,15 @@ describe('ReactTransition', () => {
       updateNormalPri();
     });
 
-    if (gate(flags => flags.enableUnifiedSyncLane)) {
-      assertLog([
-        'Normal pri: 0',
-        'Commit',
+    assertLog([
+      'Normal pri: 0',
+      'Commit',
 
-        // Normal pri update.
-        'Transition pri: 1',
-        'Normal pri: 1',
-        'Commit',
-      ]);
-    } else {
-      assertLog([
-        // Finish transition update.
-        'Normal pri: 0',
-        'Commit',
-
-        // Normal pri update.
-        'Transition pri: 1',
-        'Normal pri: 1',
-        'Commit',
-      ]);
-    }
+      // Normal pri update.
+      'Transition pri: 1',
+      'Normal pri: 1',
+      'Commit',
+    ]);
 
     expect(root).toMatchRenderedOutput('Transition pri: 1, Normal pri: 1');
   });

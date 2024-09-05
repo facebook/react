@@ -1,0 +1,220 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/error.invalid-ref-value-as-props.js
+---
+Input:
+function Component(props) {
+  const ref = useRef(null);
+  return <Foo ref={ref.current} />;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "ref",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    36,
+                    39
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useRef",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      42,
+                      48
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "NullLiteral",
+                      "loc": null,
+                      "range": [
+                        49,
+                        53
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    42,
+                    54
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  54
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              55
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "Foo",
+                  "loc": null,
+                  "range": [
+                    66,
+                    69
+                  ]
+                },
+                "attributes": [
+                  {
+                    "type": "JSXAttribute",
+                    "name": {
+                      "type": "JSXIdentifier",
+                      "name": "ref",
+                      "loc": null,
+                      "range": [
+                        70,
+                        73
+                      ]
+                    },
+                    "value": {
+                      "type": "JSXExpressionContainer",
+                      "expression": {
+                        "type": "MemberExpression",
+                        "object": {
+                          "type": "Identifier",
+                          "name": "ref",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            75,
+                            78
+                          ]
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "current",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            79,
+                            86
+                          ]
+                        },
+                        "computed": false,
+                        "loc": null,
+                        "range": [
+                          75,
+                          86
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        74,
+                        87
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      70,
+                      87
+                    ]
+                  }
+                ],
+                "selfClosing": true,
+                "loc": null,
+                "range": [
+                  65,
+                  90
+                ]
+              },
+              "children": [],
+              "closingElement": null,
+              "loc": null,
+              "range": [
+                65,
+                90
+              ]
+            },
+            "loc": null,
+            "range": [
+              58,
+              91
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          93
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        93
+      ],
+      "loc": null,
+      "range": [
+        0,
+        93
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    93
+  ]
+}

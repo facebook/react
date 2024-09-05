@@ -10,8 +10,16 @@ import {diff} from 'jest-diff';
 import {equals} from '@jest/expect-utils';
 import enqueueTask from './enqueueTask';
 import simulateBrowserEventDispatch from './simulateBrowserEventDispatch';
+import {
+  clearLogs,
+  clearWarnings,
+  clearErrors,
+  createLogAssertion,
+} from './consoleMock';
+export {act, serverAct} from './internalAct';
+const {assertConsoleLogsCleared} = require('internal-test-utils/consoleMock');
 
-export {act} from './internalAct';
+import {thrownErrors, actingUpdatesScopeDepth} from './internalAct';
 
 function assertYieldsWereCleared(caller) {
   const actualYields = SchedulerMock.unstable_clearLog();
@@ -22,6 +30,7 @@ function assertYieldsWereCleared(caller) {
     Error.captureStackTrace(error, caller);
     throw error;
   }
+  assertConsoleLogsCleared();
 }
 
 export async function waitForMicrotasks() {
@@ -110,6 +119,14 @@ ${diff(expectedLog, actualLog)}
   throw error;
 }
 
+function aggregateErrors(errors: Array<mixed>): mixed {
+  if (errors.length > 1 && typeof AggregateError === 'function') {
+    // eslint-disable-next-line no-undef
+    return new AggregateError(errors);
+  }
+  return errors[0];
+}
+
 export async function waitForThrow(expectedError: mixed): mixed {
   assertYieldsWereCleared(waitForThrow);
 
@@ -126,31 +143,72 @@ export async function waitForThrow(expectedError: mixed): mixed {
       error.message = 'Expected something to throw, but nothing did.';
       throw error;
     }
+
+    const errorHandlerDOM = function (event: ErrorEvent) {
+      // Prevent logs from reprinting this error.
+      event.preventDefault();
+      thrownErrors.push(event.error);
+    };
+    const errorHandlerNode = function (err: mixed) {
+      thrownErrors.push(err);
+    };
+    // We track errors that were logged globally as if they occurred in this scope and then rethrow them.
+    if (actingUpdatesScopeDepth === 0) {
+      if (
+        typeof window === 'object' &&
+        typeof window.addEventListener === 'function'
+      ) {
+        // We're in a JS DOM environment.
+        window.addEventListener('error', errorHandlerDOM);
+      } else if (typeof process === 'object') {
+        // Node environment
+        process.on('uncaughtException', errorHandlerNode);
+      }
+    }
     try {
       SchedulerMock.unstable_flushAllWithoutAsserting();
     } catch (x) {
+      thrownErrors.push(x);
+    } finally {
+      if (actingUpdatesScopeDepth === 0) {
+        if (
+          typeof window === 'object' &&
+          typeof window.addEventListener === 'function'
+        ) {
+          // We're in a JS DOM environment.
+          window.removeEventListener('error', errorHandlerDOM);
+        } else if (typeof process === 'object') {
+          // Node environment
+          process.off('uncaughtException', errorHandlerNode);
+        }
+      }
+    }
+    if (thrownErrors.length > 0) {
+      const thrownError = aggregateErrors(thrownErrors);
+      thrownErrors.length = 0;
+
       if (expectedError === undefined) {
         // If no expected error was provided, then assume the caller is OK with
         // any error being thrown. We're returning the error so they can do
         // their own checks, if they wish.
-        return x;
+        return thrownError;
       }
-      if (equals(x, expectedError)) {
-        return x;
+      if (equals(thrownError, expectedError)) {
+        return thrownError;
       }
       if (
         typeof expectedError === 'string' &&
-        typeof x === 'object' &&
-        x !== null &&
-        typeof x.message === 'string'
+        typeof thrownError === 'object' &&
+        thrownError !== null &&
+        typeof thrownError.message === 'string'
       ) {
-        if (x.message.includes(expectedError)) {
-          return x;
+        if (thrownError.message.includes(expectedError)) {
+          return thrownError;
         } else {
           error.message = `
 Expected error was not thrown.
 
-${diff(expectedError, x.message)}
+${diff(expectedError, thrownError.message)}
 `;
           throw error;
         }
@@ -158,7 +216,7 @@ ${diff(expectedError, x.message)}
       error.message = `
 Expected error was not thrown.
 
-${diff(expectedError, x)}
+${diff(expectedError, thrownError)}
 `;
       throw error;
     }
@@ -265,6 +323,22 @@ ${diff(expectedLog, actualLog)}
   Error.captureStackTrace(error, assertLog);
   throw error;
 }
+
+export const assertConsoleLogDev = createLogAssertion(
+  'log',
+  'assertConsoleLogDev',
+  clearLogs,
+);
+export const assertConsoleWarnDev = createLogAssertion(
+  'warn',
+  'assertConsoleWarnDev',
+  clearWarnings,
+);
+export const assertConsoleErrorDev = createLogAssertion(
+  'error',
+  'assertConsoleErrorDev',
+  clearErrors,
+);
 
 // Simulates dispatching events, waiting for microtasks in between.
 // This matches the browser behavior, which will flush microtasks

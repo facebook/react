@@ -1,0 +1,611 @@
+name: (Runtime) Build and Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths-ignore:
+      - compiler/**
+
+env:
+  TZ: /usr/share/zoneinfo/America/Los_Angeles
+  # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#cache-segment-restore-timeout
+  SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
+
+jobs:
+  # ----- FLOW -----
+  discover_flow_inline_configs:
+    name: Discover flow inline configs
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.result }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/github-script@v7
+        id: set-matrix
+        with:
+          script: |
+            const inlinedHostConfigs = require('./scripts/shared/inlinedHostConfigs.js');
+            return inlinedHostConfigs.map(config => config.shortName);
+
+  flow:
+    name: Flow check ${{ matrix.flow_inline_config_shortname }}
+    needs: discover_flow_inline_configs
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      matrix:
+        flow_inline_config_shortname: ${{ fromJSON(needs.discover_flow_inline_configs.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - run: node ./scripts/tasks/flow-ci ${{ matrix.flow_inline_config_shortname }}
+
+  # ----- FIZZ -----
+  check_generated_fizz_runtime:
+    name: Confirm generated inline Fizz runtime is up to date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - run: |
+          yarn generate-inline-fizz-runtime
+          git diff --quiet || (echo "There was a change to the Fizz runtime. Run `yarn generate-inline-fizz-runtime` and check in the result." && false)
+
+  # ----- FEATURE FLAGS -----
+  flags:
+    name: Check flags
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - run: yarn flags
+
+  # ----- TESTS -----
+  test:
+    name: yarn test ${{ matrix.params }} (Shard ${{ matrix.shard }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        params:
+          - "-r=stable --env=development"
+          - "-r=stable --env=production"
+          - "-r=experimental --env=development"
+          - "-r=experimental --env=production"
+          - "-r=www-classic --env=development --variant=false"
+          - "-r=www-classic --env=production --variant=false"
+          - "-r=www-classic --env=development --variant=true"
+          - "-r=www-classic --env=production --variant=true"
+          - "-r=www-modern --env=development --variant=false"
+          - "-r=www-modern --env=production --variant=false"
+          - "-r=www-modern --env=development --variant=true"
+          - "-r=www-modern --env=production --variant=true"
+          - "-r=xplat --env=development --variant=false"
+          - "-r=xplat --env=development --variant=true"
+          - "-r=xplat --env=production --variant=false"
+          - "-r=xplat --env=production --variant=true"
+          # TODO: Test more persistent configurations?
+          - "-r=stable --env=development --persistent"
+          - "-r=experimental --env=development --persistent"
+        shard:
+          - 1/5
+          - 2/5
+          - 3/5
+          - 4/5
+          - 5/5
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - run: yarn test ${{ matrix.params }} --ci --shard=${{ matrix.shard }}
+
+  # ----- BUILD -----
+  build_and_lint:
+    name: yarn build and lint
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # yml is dumb. update the --total arg to yarn build if you change the number of workers
+        worker_id: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+        release_channel: [stable, experimental]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 11.0.22
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - run: yarn build --index=${{ matrix.worker_id }} --total=20 --r=${{ matrix.release_channel }} --ci
+        env:
+          CI: github
+          RELEASE_CHANNEL: ${{ matrix.release_channel }}
+          NODE_INDEX: ${{ matrix.worker_id }}
+      - name: Lint build
+        run: yarn lint-build
+      - name: Display structure of build
+        run: ls -R build
+      - name: Archive build
+        uses: actions/upload-artifact@v4
+        with:
+          name: _build_${{ matrix.worker_id }}_${{ matrix.release_channel }}
+          path: build
+
+  test_build:
+    name: yarn test-build
+    needs: build_and_lint
+    strategy:
+      matrix:
+        test_params: [
+          # Intentionally passing these as strings instead of creating a
+          # separate parameter per CLI argument, since it's easier to
+          # control/see which combinations we want to run.
+          -r=stable --env=development,
+          -r=stable --env=production,
+          -r=experimental --env=development,
+          -r=experimental --env=production,
+
+          # Dev Tools
+          --project=devtools -r=experimental,
+
+          # TODO: Update test config to support www build tests
+          # - "-r=www-classic --env=development --variant=false"
+          # - "-r=www-classic --env=production --variant=false"
+          # - "-r=www-classic --env=development --variant=true"
+          # - "-r=www-classic --env=production --variant=true"
+          # - "-r=www-modern --env=development --variant=false"
+          # - "-r=www-modern --env=production --variant=false"
+          # - "-r=www-modern --env=development --variant=true"
+          # - "-r=www-modern --env=production --variant=true"
+
+          # TODO: Update test config to support xplat build tests
+          # - "-r=xplat --env=development --variant=false"
+          # - "-r=xplat --env=development --variant=true"
+          # - "-r=xplat --env=production --variant=false"
+          # - "-r=xplat --env=production --variant=true"
+
+          # TODO: Test more persistent configurations?
+        ]
+        shard:
+          - 1/3
+          - 2/3
+          - 3/3
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - name: Restore archived build
+        uses: actions/download-artifact@v4
+        with:
+          pattern: _build_*
+          path: build
+          merge-multiple: true
+      - name: Display structure of build
+        run: ls -R build
+      - run: yarn test --build ${{ matrix.test_params }} --shard=${{ matrix.shard }} --ci
+
+  process_artifacts_combined:
+    name: Process artifacts combined
+    needs: build_and_lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - name: Restore archived build
+        uses: actions/download-artifact@v4
+        with:
+          pattern: _build_*
+          path: build
+          merge-multiple: true
+      - name: Display structure of build
+        run: ls -R build
+      - run: echo ${{ github.sha }} >> build/COMMIT_SHA
+      - name: Scrape warning messages
+        run: |
+          mkdir -p ./build/__test_utils__
+          node ./scripts/print-warnings/print-warnings.js > build/__test_utils__/ReactAllWarnings.js
+        # Compress build directory into a single tarball for easy download
+      - run: tar -zcvf ./build.tgz ./build
+        # TODO: Migrate scripts to use `build` directory instead of `build2`
+      - run: cp ./build.tgz ./build2.tgz
+      - name: Archive build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts_combined
+          path: |
+            ./build.tgz
+            ./build2.tgz
+
+  check_error_codes:
+    name: Search build artifacts for unminified errors
+    needs: build_and_lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - name: Restore archived build
+        uses: actions/download-artifact@v4
+        with:
+          pattern: _build_*
+          path: build
+          merge-multiple: true
+      - name: Display structure of build
+        run: ls -R build
+      - name: Search build artifacts for unminified errors
+        run: |
+          yarn extract-errors
+          git diff --quiet || (echo "Found unminified errors. Either update the error codes map or disable error minification for the affected build, if appropriate." && false)
+
+  check_release_dependencies:
+    name: Check release dependencies
+    needs: build_and_lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - name: Restore archived build
+        uses: actions/download-artifact@v4
+        with:
+          pattern: _build_*
+          path: build
+          merge-multiple: true
+      - name: Display structure of build
+        run: ls -R build
+      - run: yarn check-release-dependencies
+
+  RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
+    name: Check fixtures DOM (stable)
+    needs: build_and_lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: v2-yarn_cache_fixtures_dom-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - run: yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+        working-directory: fixtures/dom
+      - name: Restore archived build
+        uses: actions/download-artifact@v4
+        with:
+          pattern: _build_*
+          path: build
+          merge-multiple: true
+      - name: Display structure of build
+        run: ls -R build
+      - name: Run DOM fixture tests
+        run: |
+          yarn predev
+          yarn test
+        working-directory: fixtures/dom
+        env:
+          RELEASE_CHANNEL: stable
+
+  # ----- FLIGHT -----
+  run_fixtures_flight_tests:
+    name: Run fixtures Flight tests
+    needs: build_and_lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      # Fixture copies some built packages from the workroot after install.
+      # That means dependencies of the built packages are not installed.
+      # We need to install dependencies of the workroot to fulfill all dependency constraints
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: v2-yarn_cache_fixtures_flight-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - name: Restore archived build
+        uses: actions/download-artifact@v4
+        with:
+          pattern: _build_*
+          path: build
+          merge-multiple: true
+      - name: Display structure of build
+        run: ls -R build
+      - name: Install fixture dependencies
+        working-directory: fixtures/flight
+        run: |
+          yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+          if [ $? -ne 0 ]; then
+            yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+          fi
+      - name: Playwright install deps
+        working-directory: fixtures/flight
+        run: |
+          npx playwright install
+          sudo npx playwright install-deps
+      - name: Run tests
+        working-directory: fixtures/flight
+        run: yarn test
+        env:
+          # Otherwise the webserver is a blackbox
+          DEBUG: pw:webserver
+      - name: Archive Flight fixture artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: flight-playwright-report
+          path: fixtures/flight/playwright-report
+      - name: Archive Flight fixture artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: flight-test-results
+          path: fixtures/flight/test-results
+
+  # ----- DEVTOOLS -----
+  build_devtools_and_process_artifacts:
+    name: Build DevTools and process artifacts
+    needs: build_and_lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - name: Restore archived build
+        uses: actions/download-artifact@v4
+        with:
+          pattern: _build_*
+          path: build
+          merge-multiple: true
+      - run: ./scripts/ci/pack_and_store_devtools_artifacts.sh
+        env:
+          RELEASE_CHANNEL: experimental
+      - name: Display structure of build
+        run: ls -R build
+      - name: Archive devtools build
+        uses: actions/upload-artifact@v4
+        with:
+          name: react-devtools
+          path: build/devtools.tgz
+      # Simplifies getting the extension for local testing
+      - name: Archive chrome extension
+        uses: actions/upload-artifact@v4
+        with:
+          name: react-devtools-chrome-extension
+          path: build/devtools/chrome-extension.zip
+      - name: Archive firefox extension
+        uses: actions/upload-artifact@v4
+        with:
+          name: react-devtools-firefox-extension
+          path: build/devtools/firefox-extension.zip
+
+  run_devtools_e2e_tests:
+    name: Run DevTools e2e tests
+    needs: build_devtools_and_process_artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - name: Restore archived build
+        uses: actions/download-artifact@v4
+        with:
+          pattern: _build_*
+          path: build
+          merge-multiple: true
+      - run: |
+          npx playwright install
+          sudo npx playwright install-deps
+      - run: ./scripts/ci/run_devtools_e2e_tests.js
+        env:
+          RELEASE_CHANNEL: experimental
+
+  # ----- SIZEBOT -----
+  download_base_build_for_sizebot:
+    if: ${{ github.event_name == 'pull_request' && github.ref_name != 'main' }}
+    name: Download base build for sizebot
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock', 'scripts/release/yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - run: yarn install --frozen-lockfile
+        working-directory: scripts/release
+      - name: Download artifacts for base revision
+        run: |
+          git fetch origin main
+          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=$(git rev-parse origin/main)
+          mv ./build ./base-build
+      # TODO: The `download-experimental-build` script copies the npm
+      # packages into the `node_modules` directory. This is a historical
+      # quirk of how the release script works. Let's pretend they
+      # don't exist.
+      - name: Delete extraneous files
+        run: rm -rf ./base-build/node_modules
+      - name: Display structure of base-build
+        run: ls -R base-build
+      - name: Archive base-build
+        uses: actions/upload-artifact@v4
+        with:
+          name: base-build
+          path: base-build
+
+  sizebot:
+    name: Run sizebot
+    needs: [build_and_lint, download_base_build_for_sizebot]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - name: Restore archived build for PR
+        uses: actions/download-artifact@v4
+        with:
+          pattern: _build_*
+          path: build
+          merge-multiple: true
+      - name: Scrape warning messages
+        run: |
+          mkdir -p ./build/__test_utils__
+          node ./scripts/print-warnings/print-warnings.js > build/__test_utils__/ReactAllWarnings.js
+      - name: Display structure of build for PR
+        run: ls -R build
+      - name: Restore archived base-build from origin/main
+        uses: actions/download-artifact@v4
+        with:
+          name: base-build
+          path: base-build
+      - name: Display structure of base-build from origin/main
+        run: ls -R base-build
+      - run: echo ${{ github.sha }} >> build/COMMIT_SHA
+      - run: node ./scripts/tasks/danger
+      - name: Archive sizebot results
+        uses: actions/upload-artifact@v4
+        with:
+          name: sizebot-message
+          path: sizebot-message.md

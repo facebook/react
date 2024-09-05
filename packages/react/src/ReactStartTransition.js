@@ -9,55 +9,56 @@
 import type {BatchConfigTransition} from 'react-reconciler/src/ReactFiberTracingMarkerComponent';
 import type {StartTransitionOptions} from 'shared/ReactTypes';
 
-import ReactCurrentBatchConfig from './ReactCurrentBatchConfig';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
+
 import {
   enableAsyncActions,
   enableTransitionTracing,
 } from 'shared/ReactFeatureFlags';
 
+import reportGlobalError from 'shared/reportGlobalError';
+
 export function startTransition(
   scope: () => void,
   options?: StartTransitionOptions,
 ) {
-  const prevTransition = ReactCurrentBatchConfig.transition;
-  // Each renderer registers a callback to receive the return value of
-  // the scope function. This is used to implement async actions.
-  const callbacks = new Set<(BatchConfigTransition, mixed) => mixed>();
-  const transition: BatchConfigTransition = {
-    _callbacks: callbacks,
-  };
-  ReactCurrentBatchConfig.transition = transition;
-  const currentTransition = ReactCurrentBatchConfig.transition;
+  const prevTransition = ReactSharedInternals.T;
+  const transition: BatchConfigTransition = {};
+  ReactSharedInternals.T = transition;
+  const currentTransition = ReactSharedInternals.T;
 
   if (__DEV__) {
-    ReactCurrentBatchConfig.transition._updatedFibers = new Set();
+    ReactSharedInternals.T._updatedFibers = new Set();
   }
 
   if (enableTransitionTracing) {
     if (options !== undefined && options.name !== undefined) {
       // $FlowFixMe[incompatible-use] found when upgrading Flow
-      ReactCurrentBatchConfig.transition.name = options.name;
+      ReactSharedInternals.T.name = options.name;
       // $FlowFixMe[incompatible-use] found when upgrading Flow
-      ReactCurrentBatchConfig.transition.startTime = -1;
+      ReactSharedInternals.T.startTime = -1;
     }
   }
 
   if (enableAsyncActions) {
     try {
       const returnValue = scope();
+      const onStartTransitionFinish = ReactSharedInternals.S;
+      if (onStartTransitionFinish !== null) {
+        onStartTransitionFinish(transition, returnValue);
+      }
       if (
         typeof returnValue === 'object' &&
         returnValue !== null &&
         typeof returnValue.then === 'function'
       ) {
-        callbacks.forEach(callback => callback(currentTransition, returnValue));
-        returnValue.then(noop, onError);
+        returnValue.then(noop, reportGlobalError);
       }
     } catch (error) {
-      onError(error);
+      reportGlobalError(error);
     } finally {
       warnAboutTransitionSubscriptions(prevTransition, currentTransition);
-      ReactCurrentBatchConfig.transition = prevTransition;
+      ReactSharedInternals.T = prevTransition;
     }
   } else {
     // When async actions are not enabled, startTransition does not
@@ -66,7 +67,7 @@ export function startTransition(
       scope();
     } finally {
       warnAboutTransitionSubscriptions(prevTransition, currentTransition);
-      ReactCurrentBatchConfig.transition = prevTransition;
+      ReactSharedInternals.T = prevTransition;
     }
   }
 }
@@ -91,16 +92,3 @@ function warnAboutTransitionSubscriptions(
 }
 
 function noop() {}
-
-// Use reportError, if it exists. Otherwise console.error. This is the same as
-// the default for onRecoverableError.
-const onError =
-  typeof reportError === 'function'
-    ? // In modern browsers, reportError will dispatch an error event,
-      // emulating an uncaught JavaScript error.
-      reportError
-    : (error: mixed) => {
-        // In older browsers and test environments, fallback to console.error.
-        // eslint-disable-next-line react-internal/no-production-logging
-        console['error'](error);
-      };

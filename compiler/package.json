@@ -1,0 +1,57 @@
+{
+  "private": true,
+  "workspaces": {
+    "packages": [
+      "packages/*",
+      "apps/*"
+    ],
+    "nohoist": [
+      "**/next",
+      "**/next/**"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/react.git"
+  },
+  "scripts": {
+    "copyright": "node scripts/copyright.js",
+    "hash": "scripts/hash.sh",
+    "start": "yarn workspace playground run start",
+    "next": "yarn workspace playground run dev",
+    "build": "yarn workspaces run build",
+    "dev": "concurrently --kill-others -n compiler,runtime,playground \"yarn workspace babel-plugin-react-compiler run build --watch\" \"yarn workspace react-compiler-runtime run build --watch\" \"wait-on packages/babel-plugin-react-compiler/dist/index.js && yarn workspace playground run dev\"",
+    "test": "yarn workspaces run test",
+    "snap": "yarn workspace babel-plugin-react-compiler run snap",
+    "snap:build": "yarn workspace snap run build",
+    "postinstall": "perl -p -i -e 's/react\\.element/react.transitional.element/' packages/snap/node_modules/fbt/lib/FbtReactUtil.js && perl -p -i -e 's/didWarnAboutUsingAct = false;/didWarnAboutUsingAct = true;/' packages/babel-plugin-react-compiler/node_modules/react-dom/cjs/react-dom-test-utils.development.js",
+    "npm:publish": "node scripts/release/publish"
+  },
+  "dependencies": {
+    "fs-extra": "^4.0.2"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "@tsconfig/strictest": "^2.0.5",
+    "concurrently": "^7.4.0",
+    "folder-hash": "^4.0.4",
+    "ora": "5.4.1",
+    "prettier": "^3.3.3",
+    "prettier-plugin-hermes-parser": "^0.23.0",
+    "prompt-promise": "^1.0.3",
+    "rollup": "^4.13.2",
+    "rollup-plugin-banner2": "^1.2.3",
+    "rollup-plugin-prettier": "^4.1.1",
+    "typescript": "^5.4.3",
+    "wait-on": "^7.2.0",
+    "yargs": "^17.7.2"
+  },
+  "resolutions": {
+    "react-is": "19.0.0-beta-b498834eab-20240506"
+  },
+  "packageManager": "yarn@1.22.22"
+}

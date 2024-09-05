@@ -9,23 +9,23 @@
 
 import LRU from 'lru-cache';
 import {
-  isElement,
-  typeOf,
-  ContextConsumer,
-  ContextProvider,
-  ForwardRef,
-  Fragment,
-  Lazy,
-  Memo,
-  Portal,
-  Profiler,
-  StrictMode,
-  Suspense,
-} from 'react-is';
-import {
-  REACT_SUSPENSE_LIST_TYPE as SuspenseList,
-  REACT_TRACING_MARKER_TYPE as TracingMarker,
+  REACT_CONSUMER_TYPE,
+  REACT_CONTEXT_TYPE,
+  REACT_FORWARD_REF_TYPE,
+  REACT_FRAGMENT_TYPE,
+  REACT_LAZY_TYPE,
+  REACT_ELEMENT_TYPE,
+  REACT_LEGACY_ELEMENT_TYPE,
+  REACT_MEMO_TYPE,
+  REACT_PORTAL_TYPE,
+  REACT_PROFILER_TYPE,
+  REACT_PROVIDER_TYPE,
+  REACT_STRICT_MODE_TYPE,
+  REACT_SUSPENSE_LIST_TYPE,
+  REACT_SUSPENSE_TYPE,
+  REACT_TRACING_MARKER_TYPE,
 } from 'shared/ReactSymbols';
+import {enableRenderableContext} from 'shared/ReactFeatureFlags';
 import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
@@ -52,6 +52,7 @@ import {
   ElementTypeForwardRef,
   ElementTypeFunction,
   ElementTypeMemo,
+  ElementTypeVirtual,
 } from 'react-devtools-shared/src/frontend/types';
 import {localStorageGetItem, localStorageSetItem} from './storage';
 import {meta} from './hydration';
@@ -470,6 +471,7 @@ export function parseElementDisplayNameFromBackend(
     case ElementTypeForwardRef:
     case ElementTypeFunction:
     case ElementTypeMemo:
+    case ElementTypeVirtual:
       if (displayName.indexOf('(') >= 0) {
         const matches = displayName.match(/[^()]+/g);
         if (matches != null) {
@@ -616,10 +618,6 @@ export function getDataType(data: Object): DataType {
     return 'undefined';
   }
 
-  if (isElement(data)) {
-    return 'react_element';
-  }
-
   if (typeof HTMLElement !== 'undefined' && data instanceof HTMLElement) {
     return 'html_element';
   }
@@ -641,6 +639,12 @@ export function getDataType(data: Object): DataType {
         return 'number';
       }
     case 'object':
+      if (
+        data.$$typeof === REACT_ELEMENT_TYPE ||
+        data.$$typeof === REACT_LEGACY_ELEMENT_TYPE
+      ) {
+        return 'react_element';
+      }
       if (isArray(data)) {
         return 'array';
       } else if (ArrayBuffer.isView(data)) {
@@ -695,34 +699,84 @@ export function getDataType(data: Object): DataType {
   }
 }
 
+// Fork of packages/react-is/src/ReactIs.js:30, but with legacy element type
+// Which has been changed in https://github.com/facebook/react/pull/28813
+function typeOfWithLegacyElementSymbol(object: any): mixed {
+  if (typeof object === 'object' && object !== null) {
+    const $$typeof = object.$$typeof;
+    switch ($$typeof) {
+      case REACT_ELEMENT_TYPE:
+      case REACT_LEGACY_ELEMENT_TYPE:
+        const type = object.type;
+
+        switch (type) {
+          case REACT_FRAGMENT_TYPE:
+          case REACT_PROFILER_TYPE:
+          case REACT_STRICT_MODE_TYPE:
+          case REACT_SUSPENSE_TYPE:
+          case REACT_SUSPENSE_LIST_TYPE:
+            return type;
+          default:
+            const $$typeofType = type && type.$$typeof;
+
+            switch ($$typeofType) {
+              case REACT_CONTEXT_TYPE:
+              case REACT_FORWARD_REF_TYPE:
+              case REACT_LAZY_TYPE:
+              case REACT_MEMO_TYPE:
+                return $$typeofType;
+              case REACT_CONSUMER_TYPE:
+                if (enableRenderableContext) {
+                  return $$typeofType;
+                }
+              // Fall through
+              case REACT_PROVIDER_TYPE:
+                if (!enableRenderableContext) {
+                  return $$typeofType;
+                }
+              // Fall through
+              default:
+                return $$typeof;
+            }
+        }
+      case REACT_PORTAL_TYPE:
+        return $$typeof;
+    }
+  }
+
+  return undefined;
+}
+
 export function getDisplayNameForReactElement(
   element: React$Element<any>,
 ): string | null {
-  const elementType = typeOf(element);
+  const elementType = typeOfWithLegacyElementSymbol(element);
   switch (elementType) {
-    case ContextConsumer:
+    case REACT_CONSUMER_TYPE:
       return 'ContextConsumer';
-    case ContextProvider:
+    case REACT_PROVIDER_TYPE:
       return 'ContextProvider';
-    case ForwardRef:
+    case REACT_CONTEXT_TYPE:
+      return 'Context';
+    case REACT_FORWARD_REF_TYPE:
       return 'ForwardRef';
-    case Fragment:
+    case REACT_FRAGMENT_TYPE:
       return 'Fragment';
-    case Lazy:
+    case REACT_LAZY_TYPE:
       return 'Lazy';
-    case Memo:
+    case REACT_MEMO_TYPE:
       return 'Memo';
-    case Portal:
+    case REACT_PORTAL_TYPE:
       return 'Portal';
-    case Profiler:
+    case REACT_PROFILER_TYPE:
       return 'Profiler';
-    case StrictMode:
+    case REACT_STRICT_MODE_TYPE:
       return 'StrictMode';
-    case Suspense:
+    case REACT_SUSPENSE_TYPE:
       return 'Suspense';
-    case SuspenseList:
+    case REACT_SUSPENSE_LIST_TYPE:
       return 'SuspenseList';
-    case TracingMarker:
+    case REACT_TRACING_MARKER_TYPE:
       return 'TracingMarker';
     default:
       const {type} = element;
@@ -789,9 +843,10 @@ export function formatDataForPreview(
     case 'html_element':
       return `<${truncateForDisplay(data.tagName.toLowerCase())} />`;
     case 'function':
-      return truncateForDisplay(
-        `ƒ ${typeof data.name === 'function' ? '' : data.name}() {}`,
-      );
+      if (typeof data.name === 'function' || data.name === '') {
+        return '() => {}';
+      }
+      return `${truncateForDisplay(data.name)}() {}`;
     case 'string':
       return `"${data}"`;
     case 'bigint':
@@ -956,7 +1011,7 @@ export function backendToFrontendSerializedElementMapper(
   };
 }
 
-// This is a hacky one to just support this exact case.
+// Chrome normalizes urls like webpack-internals:// but new URL don't, so cannot use new URL here.
 export function normalizeUrl(url: string): string {
   return url.replace('/./', '/');
 }

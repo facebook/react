@@ -17,7 +17,6 @@ import type {
 import {getWorkInProgressRoot} from './ReactFiberWorkLoop';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-const {ReactCurrentActQueue} = ReactSharedInternals;
 
 opaque type ThenableStateDev = {
   didWarnAboutUncachedPromise: boolean,
@@ -95,8 +94,8 @@ export function trackUsedThenable<T>(
   thenable: Thenable<T>,
   index: number,
 ): T {
-  if (__DEV__ && ReactCurrentActQueue.current !== null) {
-    ReactCurrentActQueue.didUsePromise = true;
+  if (__DEV__ && ReactSharedInternals.actQueue !== null) {
+    ReactSharedInternals.didUsePromise = true;
   }
   const trackedThenables = getThenablesFromState(thenableState);
   const previous = trackedThenables[index];
@@ -215,7 +214,7 @@ export function trackUsedThenable<T>(
       }
 
       // Check one more time in case the thenable resolved synchronously.
-      switch (thenable.status) {
+      switch ((thenable: Thenable<T>).status) {
         case 'fulfilled': {
           const fulfilledThenable: FulfilledThenable<T> = (thenable: any);
           return fulfilledThenable.value;
