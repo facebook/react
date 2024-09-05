@@ -74,15 +74,13 @@ export type BuiltInTypeConfig =
   | 'Ref'
   | 'Array'
   | 'Primitive'
-  | 'MixedReadonly'
-  | 'JSX';
+  | 'MixedReadonly';
 export const BuiltInTypeSchema: z.ZodType<BuiltInTypeConfig> = z.union([
   z.literal('Any'),
   z.literal('Ref'),
   z.literal('Array'),
   z.literal('Primitive'),
   z.literal('MixedReadonly'),
-  z.literal('JSX'),
 ]);
 
 export type TypeReferenceConfig = {
