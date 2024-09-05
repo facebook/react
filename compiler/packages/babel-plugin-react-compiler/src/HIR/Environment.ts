@@ -788,8 +788,6 @@ export class Environment {
             (isHookName(binding.imported) ? this.#getCustomHookType() : null)
           );
         } else {
-          const expectHook =
-            isHookName(binding.imported) || isHookName(binding.name);
           const moduleType = this.#resolveModuleType(binding.module, loc);
           if (moduleType !== null) {
             const importedType = this.getPropertyType(
@@ -797,11 +795,16 @@ export class Environment {
               binding.imported,
             );
             if (importedType != null) {
+              // Check that hook-like export names are hook types, and non-hook names are non-hook types.
+              // The user-assigned alias isn't decidable by the type provider, so we ignore that for the check.
+              // Thus we allow `import {fooNonHook as useFoo} from ...` because the name and type both say
+              // that it's not a hook.
+              const expectHook = isHookName(binding.imported);
               const isHook = getHookKindForType(this, importedType) != null;
               if (expectHook !== isHook) {
                 CompilerError.throwInvalidConfig({
                   reason: `Invalid type configuration for module`,
-                  description: `Expected type for '${binding.module}.${binding.imported}' to ${expectHook ? 'be a hook' : 'not be a hook'} based on its name`,
+                  description: `Expected type for \`import {${binding.imported}} from '${binding.module}'\` ${expectHook ? 'to be a hook' : 'not to be a hook'} based on the exported name`,
                   loc,
                 });
               }
@@ -817,7 +820,9 @@ export class Environment {
            * `import {useHook as foo} ...`
            * `import {foo as useHook} ...`
            */
-          return expectHook ? this.#getCustomHookType() : null;
+          return isHookName(binding.imported) || isHookName(binding.name)
+            ? this.#getCustomHookType()
+            : null;
         }
       }
       case 'ImportDefault':
@@ -829,7 +834,6 @@ export class Environment {
             (isHookName(binding.name) ? this.#getCustomHookType() : null)
           );
         } else {
-          const expectHook = isHookName(binding.name);
           const moduleType = this.#resolveModuleType(binding.module, loc);
           if (moduleType !== null) {
             let importedType: Type | null = null;
@@ -842,18 +846,21 @@ export class Environment {
               importedType = moduleType;
             }
             if (importedType !== null) {
+              // Check that the hook-like modules are defined as types, and non hook-like modules are not typed as hooks.
+              // So `import Foo from 'useFoo'` is expected to be a hook based on the module name
+              const expectHook = isHookName(binding.module);
               const isHook = getHookKindForType(this, importedType) != null;
               if (expectHook !== isHook) {
                 CompilerError.throwInvalidConfig({
                   reason: `Invalid type configuration for module`,
-                  description: `Expected type for '${binding.module}' (as '${binding.name}') to ${expectHook ? 'be a hook' : 'not be a hook'} based on its name`,
+                  description: `Expected type for \`import ... from '${binding.module}'\` ${expectHook ? 'to be a hook' : 'not to be a hook'} based on the module name`,
                   loc,
                 });
               }
               return importedType;
             }
           }
-          return expectHook ? this.#getCustomHookType() : null;
+          return isHookName(binding.name) ? this.#getCustomHookType() : null;
         }
       }
     }
