@@ -829,7 +829,7 @@ function renderWithHooksAgain<Props, SecondArg>(
     workInProgressHook = null;
 
     if (workInProgress.updateQueue != null) {
-      clearFunctionComponentUpdateQueue(workInProgress.updateQueue);
+      resetFunctionComponentUpdateQueue(workInProgress.updateQueue);
     }
 
     if (__DEV__) {
@@ -1103,10 +1103,7 @@ if (enableUseMemoCacheHook) {
   };
 }
 
-// NOTE: this function intentionally does not reset memoCache data. We reuse updateQueue for the memo
-// cache to avoid increasing the size of fibers that don't need a cache, but we don't want to reset
-// the cache when other properties are reset.
-const clearFunctionComponentUpdateQueue = (
+const resetFunctionComponentUpdateQueue = (
   updateQueue: FunctionComponentUpdateQueue,
 ) => {
   updateQueue.lastEffect = null;
@@ -1114,6 +1111,9 @@ const clearFunctionComponentUpdateQueue = (
   updateQueue.stores = null;
   if (enableUseMemoCacheHook) {
     if (updateQueue.memoCache != null) {
+      // NOTE: this function intentionally does not reset memoCache data. We reuse updateQueue for the memo
+      // cache to avoid increasing the size of fibers that don't need a cache, but we don't want to reset
+      // the cache when other properties are reset.
       updateQueue.memoCache.index = 0;
     }
   }
