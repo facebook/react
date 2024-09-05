@@ -628,18 +628,9 @@ describe('useMemoCache()', () => {
 
     // Finish loading the data.
     await act(() => updatedChunkB.resolve('B2'));
-    if (gate(flags => flags.enableNoCloningMemoCache)) {
-      // We did not have process the first chunk again. We reused the
-      // computation from the earlier attempt.
-      assertLog([]);
-    } else {
-      // Because we clone/reset the memo cache after every aborted attempt, we
-      // must process the first chunk again.
-      //
-      // That's three total times we've processed the first chunk, compared to
-      // just once when enableNoCloningMemoCache is on.
-      assertLog(['Some expensive processing... [A2]']);
-    }
+    // We did not have process the first chunk again. We reused the
+    // computation from the earlier attempt.
+    assertLog([]);
     expect(root).toMatchRenderedOutput(
       <>
         <div>Input: hi!</div>
