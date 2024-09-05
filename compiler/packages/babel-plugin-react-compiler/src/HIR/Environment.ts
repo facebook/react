@@ -33,6 +33,7 @@ import {
   Type,
   ValidatedIdentifier,
   ValueKind,
+  getHookKindForType,
   makeBlockId,
   makeIdentifierId,
   makeIdentifierName,
@@ -734,11 +735,9 @@ export class Environment {
         }
         const moduleConfig = parsedModuleConfig.data;
         moduleType = installTypeConfig(
-          moduleName,
           this.#globals,
           this.#shapes,
           moduleConfig,
-          moduleName,
         );
       } else {
         moduleType = null;
@@ -789,6 +788,8 @@ export class Environment {
             (isHookName(binding.imported) ? this.#getCustomHookType() : null)
           );
         } else {
+          const expectHook =
+            isHookName(binding.imported) || isHookName(binding.name);
           const moduleType = this.#resolveModuleType(binding.module, loc);
           if (moduleType !== null) {
             const importedType = this.getPropertyType(
@@ -796,6 +797,14 @@ export class Environment {
               binding.imported,
             );
             if (importedType != null) {
+              const isHook = getHookKindForType(this, importedType) != null;
+              if (expectHook !== isHook) {
+                CompilerError.throwInvalidConfig({
+                  reason: `Invalid type configuration for module`,
+                  description: `Expected type for '${binding.module}.${binding.imported}' to ${expectHook ? 'be a hook' : 'not be a hook'} based on its name`,
+                  loc,
+                });
+              }
               return importedType;
             }
           }
@@ -808,9 +817,7 @@ export class Environment {
            * `import {useHook as foo} ...`
            * `import {foo as useHook} ...`
            */
-          return isHookName(binding.imported) || isHookName(binding.name)
-            ? this.#getCustomHookType()
-            : null;
+          return expectHook ? this.#getCustomHookType() : null;
         }
       }
       case 'ImportDefault':
@@ -822,18 +829,31 @@ export class Environment {
             (isHookName(binding.name) ? this.#getCustomHookType() : null)
           );
         } else {
+          const expectHook = isHookName(binding.name);
           const moduleType = this.#resolveModuleType(binding.module, loc);
           if (moduleType !== null) {
+            let importedType: Type | null = null;
             if (binding.kind === 'ImportDefault') {
               const defaultType = this.getPropertyType(moduleType, 'default');
               if (defaultType !== null) {
-                return defaultType;
+                importedType = defaultType;
               }
             } else {
-              return moduleType;
+              importedType = moduleType;
+            }
+            if (importedType !== null) {
+              const isHook = getHookKindForType(this, importedType) != null;
+              if (expectHook !== isHook) {
+                CompilerError.throwInvalidConfig({
+                  reason: `Invalid type configuration for module`,
+                  description: `Expected type for '${binding.module}' (as '${binding.name}') to ${expectHook ? 'be a hook' : 'not be a hook'} based on its name`,
+                  loc,
+                });
+              }
+              return importedType;
             }
           }
-          return isHookName(binding.name) ? this.#getCustomHookType() : null;
+          return expectHook ? this.#getCustomHookType() : null;
         }
       }
     }

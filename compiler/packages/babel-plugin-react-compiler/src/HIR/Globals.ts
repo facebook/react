@@ -5,11 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {Effect, GeneratedSource, ValueKind, ValueReason} from './HIR';
+import {Effect, ValueKind, ValueReason} from './HIR';
 import {
   BUILTIN_SHAPES,
   BuiltInArrayId,
-  BuiltInJsxId,
   BuiltInMixedReadonlyId,
   BuiltInUseActionStateId,
   BuiltInUseContextHookId,
@@ -29,8 +28,6 @@ import {
 import {BuiltInType, PolyType} from './Types';
 import {TypeConfig} from './TypeSchema';
 import {assertExhaustive} from '../Utils/utils';
-import {isHookName} from './Environment';
-import {CompilerError} from '..';
 
 /*
  * This file exports types and defaults for JavaScript global objects.
@@ -535,50 +532,6 @@ DEFAULT_GLOBALS.set(
 );
 
 export function installTypeConfig(
-  moduleName: string,
-  globals: GlobalRegistry,
-  shapes: ShapeRegistry,
-  typeConfig: TypeConfig,
-  moduleOrPropertyName: string | null,
-): Global {
-  const type = convertTypeConfig(moduleName, globals, shapes, typeConfig);
-  if (moduleOrPropertyName !== null) {
-    if (isHookName(moduleOrPropertyName)) {
-      // Named like a hook => must be typed as a hook
-      if (type.kind !== 'Function' || type.shapeId == null) {
-        CompilerError.throwInvalidConfig({
-          reason: `Invalid moduleTypeProvider result for module '${moduleName}', expected type for '${moduleOrPropertyName}' to be a hook based on its name, but the type was not a hook`,
-          loc: GeneratedSource,
-        });
-      }
-      const functionType = shapes.get(type.shapeId);
-      if (functionType == null || functionType.functionType?.hookKind == null) {
-        CompilerError.throwInvalidConfig({
-          reason: `Invalid moduleTypeProvider result for module '${moduleName}', expected type for '${moduleOrPropertyName}' to be a hook based on its name, but the type was not a hook`,
-          loc: GeneratedSource,
-        });
-      }
-    } else {
-      // Not named like a hook => must not be a hook
-      if (type.kind === 'Function' && type.shapeId != null) {
-        const functionType = shapes.get(type.shapeId);
-        if (
-          functionType != null &&
-          functionType.functionType?.hookKind != null
-        ) {
-          CompilerError.throwInvalidConfig({
-            reason: `Invalid moduleTypeProvider result for module '${moduleName}', expected type for '${moduleOrPropertyName}' not to be a hook, but it was typed as a hook`,
-            loc: GeneratedSource,
-          });
-        }
-      }
-    }
-  }
-  return type;
-}
-
-function convertTypeConfig(
-  moduleName: string,
   globals: GlobalRegistry,
   shapes: ShapeRegistry,
   typeConfig: TypeConfig,
@@ -601,9 +554,6 @@ function convertTypeConfig(
         case 'Any': {
           return {kind: 'Poly'};
         }
-        case 'JSX': {
-          return {kind: 'Object', shapeId: BuiltInJsxId};
-        }
         default: {
           assertExhaustive(
             typeConfig.name,
@@ -617,12 +567,7 @@ function convertTypeConfig(
         positionalParams: typeConfig.positionalParams,
         restParam: typeConfig.restParam,
         calleeEffect: typeConfig.calleeEffect,
-        returnType: convertTypeConfig(
-          moduleName,
-          globals,
-          shapes,
-          typeConfig.returnType,
-        ),
+        returnType: installTypeConfig(globals, shapes, typeConfig.returnType),
         returnValueKind: typeConfig.returnValueKind,
         noAlias: typeConfig.noAlias === true,
         mutableOnlyIfOperandsAreMutable:
@@ -635,12 +580,7 @@ function convertTypeConfig(
         positionalParams: typeConfig.positionalParams ?? [],
         restParam: typeConfig.restParam ?? Effect.Freeze,
         calleeEffect: Effect.Read,
-        returnType: convertTypeConfig(
-          moduleName,
-          globals,
-          shapes,
-          typeConfig.returnType,
-        ),
+        returnType: installTypeConfig(globals, shapes, typeConfig.returnType),
         returnValueKind: typeConfig.returnValueKind ?? ValueKind.Frozen,
         noAlias: typeConfig.noAlias === true,
       });
@@ -651,7 +591,7 @@ function convertTypeConfig(
         null,
         Object.entries(typeConfig.properties ?? {}).map(([key, value]) => [
           key,
-          installTypeConfig(moduleName, globals, shapes, value, key),
+          installTypeConfig(globals, shapes, value),
         ]),
       );
     }
