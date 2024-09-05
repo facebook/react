@@ -828,7 +828,9 @@ function renderWithHooksAgain<Props, SecondArg>(
     currentHook = null;
     workInProgressHook = null;
 
-    workInProgress.updateQueue = null;
+    if (workInProgress.updateQueue != null) {
+      clearFunctionComponentUpdateQueue(workInProgress.updateQueue);
+    }
 
     if (__DEV__) {
       // Also validate hook order for cascading updates.
@@ -1100,6 +1102,20 @@ if (enableUseMemoCacheHook) {
     };
   };
 }
+
+// NOTE: this function intentionally does not reset memoCache. We reuse updateQueue for the memo
+// cache to avoid increasing the size of fibers that don't need a cache, but we don't want to reset
+// the cache when other properties are reset.
+const clearFunctionComponentUpdateQueue = (
+  updateQueue: FunctionComponentUpdateQueue,
+) => {
+  updateQueue.lastEffect = null;
+  updateQueue.events = null;
+  updateQueue.stores = null;
+  if (updateQueue.memoCache != null) {
+    updateQueue.memoCache.index = 0;
+  }
+};
 
 function useThenable<T>(thenable: Thenable<T>): T {
   // Track the position of the thenable within this fiber.

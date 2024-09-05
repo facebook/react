@@ -667,7 +667,7 @@ describe('useMemoCache()', () => {
     }
 
     // Baseline / source code
-    function useUserMemo(value) {
+    function useManualMemo(value) {
       return useMemo(() => [value], [value]);
     }
 
@@ -683,24 +683,22 @@ describe('useMemoCache()', () => {
     }
 
     /**
-     * Test case: note that the initial render never completes
+     * Test with useMemoCache
      */
     let root = ReactNoop.createRoot();
-    const IncorrectInfiniteComponent = makeComponent(useCompilerMemo);
-    root.render(<IncorrectInfiniteComponent value={2} />);
-    await waitForThrow(
-      'Too many re-renders. React limits the number of renders to prevent ' +
-        'an infinite loop.',
-    );
+    const CompilerMemoComponent = makeComponent(useCompilerMemo);
+    await act(() => {
+      root.render(<CompilerMemoComponent value={2} />);
+    });
+    expect(root).toMatchRenderedOutput(<div>2</div>);
 
     /**
-     * Baseline test: initial render is expected to complete after a retry
-     * (triggered by the setState)
+     * Test with useMemo
      */
     root = ReactNoop.createRoot();
-    const CorrectComponent = makeComponent(useUserMemo);
+    const HookMemoComponent = makeComponent(useManualMemo);
     await act(() => {
-      root.render(<CorrectComponent value={2} />);
+      root.render(<HookMemoComponent value={2} />);
     });
     expect(root).toMatchRenderedOutput(<div>2</div>);
   });
