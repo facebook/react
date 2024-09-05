@@ -2975,16 +2975,12 @@ describe('InspectedElement', () => {
       // Inspect <ErrorBoundary /> and see that we cannot toggle error state
       // on error boundary itself
       let inspectedElement = await inspect(0);
-      expect(inspectedElement.canToggleError).toBe(false);
-      expect(inspectedElement.targetErrorBoundaryID).toBe(null);
+      expect(inspectedElement.canToggleError).toBe(true);
 
       // Inspect <Example />
       inspectedElement = await inspect(1);
       expect(inspectedElement.canToggleError).toBe(true);
       expect(inspectedElement.isErrored).toBe(false);
-      expect(inspectedElement.targetErrorBoundaryID).toBe(
-        targetErrorBoundaryID,
-      );
 
       // Suppress expected error and warning.
       const consoleErrorMock = jest
@@ -3009,10 +3005,6 @@ describe('InspectedElement', () => {
       inspectedElement = await inspect(0);
       expect(inspectedElement.canToggleError).toBe(true);
       expect(inspectedElement.isErrored).toBe(true);
-      // its error boundary ID is itself because it's caught the error
-      expect(inspectedElement.targetErrorBoundaryID).toBe(
-        targetErrorBoundaryID,
-      );
 
       await toggleError(false);
 
@@ -3020,9 +3012,6 @@ describe('InspectedElement', () => {
       inspectedElement = await inspect(1);
       expect(inspectedElement.canToggleError).toBe(true);
       expect(inspectedElement.isErrored).toBe(false);
-      expect(inspectedElement.targetErrorBoundaryID).toBe(
-        targetErrorBoundaryID,
-      );
     });
   });
 
