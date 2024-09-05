@@ -738,6 +738,8 @@ export class Environment {
           this.#globals,
           this.#shapes,
           moduleConfig,
+          moduleName,
+          loc,
         );
       } else {
         moduleType = null;
