@@ -20,6 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - run: corepack enable
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
@@ -31,7 +32,6 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock', 'scripts/release/yarn.lock') }}
-      - run: corepack enable
       - run: yarn
         working-directory: scripts/release
       - name: Download react-devtools artifacts for base revision
@@ -52,6 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - run: corepack enable
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
@@ -63,7 +64,6 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
-      - run: corepack enable
       - run: yarn
       - name: Restore archived build
         uses: actions/download-artifact@v4
@@ -107,6 +107,7 @@ jobs:
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
+      - run: corepack enable
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
@@ -118,7 +119,6 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
-      - run: corepack enable
       - run: yarn
       - name: Restore all archived build artifacts
         uses: actions/download-artifact@v4
@@ -142,6 +142,7 @@ jobs:
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
+      - run: corepack enable
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
@@ -153,7 +154,6 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
-      - run: corepack enable
       - run: yarn
       - name: Restore all archived build artifacts
         uses: actions/download-artifact@v4
