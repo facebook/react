@@ -734,9 +734,11 @@ export class Environment {
         }
         const moduleConfig = parsedModuleConfig.data;
         moduleType = installTypeConfig(
+          moduleName,
           this.#globals,
           this.#shapes,
           moduleConfig,
+          moduleName,
         );
       } else {
         moduleType = null;
