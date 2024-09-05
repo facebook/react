@@ -72,6 +72,10 @@ export function makeSharedRuntimeTypeProvider({
         },
       };
     } else if (moduleName === 'ReactCompilerTest') {
+      /**
+       * Fake module used for testing validation that type providers return hook
+       * types for hook names and non-hook types for non-hook names
+       */
       return {
         kind: 'object',
         properties: {
@@ -86,6 +90,10 @@ export function makeSharedRuntimeTypeProvider({
         },
       };
     } else if (moduleName === 'useDefaultExportNotTypedAsHook') {
+      /**
+       * Fake module used for testing validation that type providers return hook
+       * types for hook names and non-hook types for non-hook names
+       */
       return {
         kind: 'object',
         properties: {
