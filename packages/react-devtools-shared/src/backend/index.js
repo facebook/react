@@ -73,7 +73,12 @@ export function initBackend(
 
     // Inject any not-yet-injected renderers (if we didn't reload-and-profile)
     if (rendererInterface == null) {
-      if (typeof renderer.findFiberByHostInstance === 'function') {
+      if (
+        // v16-19
+        typeof renderer.findFiberByHostInstance === 'function' ||
+        // v16.8+
+        renderer.currentDispatcherRef != null
+      ) {
         // react-reconciler v16+
         rendererInterface = attach(hook, id, renderer, global);
       } else if (renderer.ComponentTree) {

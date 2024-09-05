@@ -76,8 +76,9 @@ export const ComponentFilterElementType = 1;
 export const ComponentFilterDisplayName = 2;
 export const ComponentFilterLocation = 3;
 export const ComponentFilterHOC = 4;
+export const ComponentFilterEnvironmentName = 5;
 
-export type ComponentFilterType = 1 | 2 | 3 | 4;
+export type ComponentFilterType = 1 | 2 | 3 | 4 | 5;
 
 // Hide all elements of types in this Set.
 // We hide host components only by default.
@@ -102,10 +103,18 @@ export type BooleanComponentFilter = {
   type: 4,
 };
 
+export type EnvironmentNameComponentFilter = {
+  isEnabled: boolean,
+  isValid: boolean,
+  type: 5,
+  value: string,
+};
+
 export type ComponentFilter =
   | BooleanComponentFilter
   | ElementTypeComponentFilter
-  | RegExpComponentFilter;
+  | RegExpComponentFilter
+  | EnvironmentNameComponentFilter;
 
 export type HookName = string | null;
 // Map of hook source ("<filename>:<line-number>:<column-number>") to name.

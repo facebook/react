@@ -825,10 +825,16 @@ function readContextForConsumer_withSelect<C>(
 
       // This is the first dependency for this component. Create a new list.
       lastContextDependency = contextItem;
-      consumer.dependencies = {
-        lanes: NoLanes,
-        firstContext: contextItem,
-      };
+      consumer.dependencies = __DEV__
+        ? {
+            lanes: NoLanes,
+            firstContext: contextItem,
+            _debugThenableState: null,
+          }
+        : {
+            lanes: NoLanes,
+            firstContext: contextItem,
+          };
       if (enableLazyContextPropagation) {
         consumer.flags |= NeedsPropagation;
       }
@@ -869,10 +875,16 @@ function readContextForConsumer<C>(
 
       // This is the first dependency for this component. Create a new list.
       lastContextDependency = contextItem;
-      consumer.dependencies = {
-        lanes: NoLanes,
-        firstContext: contextItem,
-      };
+      consumer.dependencies = __DEV__
+        ? {
+            lanes: NoLanes,
+            firstContext: contextItem,
+            _debugThenableState: null,
+          }
+        : {
+            lanes: NoLanes,
+            firstContext: contextItem,
+          };
       if (enableLazyContextPropagation) {
         consumer.flags |= NeedsPropagation;
       }

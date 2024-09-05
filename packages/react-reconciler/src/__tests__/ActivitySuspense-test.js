@@ -215,7 +215,15 @@ describe('Activity Suspense', () => {
         );
       });
     });
-    assertLog(['Open', 'Suspend! [Async]', 'Loading...']);
+    assertLog([
+      'Open',
+      'Suspend! [Async]',
+      'Loading...',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['Open', 'Suspend! [Async]', 'Loading...']
+        : []),
+    ]);
     // It should suspend with delay to prevent the already-visible Suspense
     // boundary from switching to a fallback
     expect(root).toMatchRenderedOutput(<span>Closed</span>);
@@ -276,7 +284,15 @@ describe('Activity Suspense', () => {
         );
       });
     });
-    assertLog(['Open', 'Suspend! [Async]', 'Loading...']);
+    assertLog([
+      'Open',
+      'Suspend! [Async]',
+      'Loading...',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['Open', 'Suspend! [Async]', 'Loading...']
+        : []),
+    ]);
     // It should suspend with delay to prevent the already-visible Suspense
     // boundary from switching to a fallback
     expect(root).toMatchRenderedOutput(
