@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @validatePreserveExistingMemoizationGuarantees @enableOptionalDependencies
+// @validatePreserveExistingMemoizationGuarantees @enableOptionalDependencies @enablePropagateDepsInHIR:false
 import {ValidateMemoization} from 'shared-runtime';
 function Component(props) {
   const data = useMemo(() => {
@@ -23,7 +23,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees @enableOptionalDependencies
+import { c as _c } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees @enableOptionalDependencies @enablePropagateDepsInHIR:false
 import { ValidateMemoization } from "shared-runtime";
 function Component(props) {
   const $ = _c(9);
