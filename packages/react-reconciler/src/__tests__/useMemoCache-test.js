@@ -598,8 +598,6 @@ describe('useMemoCache()', () => {
     await act(() => setInput('hi!'));
 
     // Once the input has updated, we go back to rendering the transition.
-    // We did not have process the first chunk again. We reused the
-    // computation from the earlier attempt.
     if (gate(flags => flags.enableNoCloningMemoCache)) {
       // We did not have process the first chunk again. We reused the
       // computation from the earlier attempt.
@@ -630,8 +628,6 @@ describe('useMemoCache()', () => {
 
     // Finish loading the data.
     await act(() => updatedChunkB.resolve('B2'));
-    // We did not have process the first chunk again. We reused the
-    // computation from the earlier attempt.
     if (gate(flags => flags.enableNoCloningMemoCache)) {
       // We did not have process the first chunk again. We reused the
       // computation from the earlier attempt.
