@@ -1613,11 +1613,8 @@ export function attach(
     prevFiber: Fiber | null,
     nextFiber: Fiber,
   ): ChangeDescription | null {
-    switch (getElementTypeForFiber(nextFiber)) {
-      case ElementTypeClass:
-      case ElementTypeFunction:
-      case ElementTypeMemo:
-      case ElementTypeForwardRef:
+    switch (nextFiber.tag) {
+      case ClassComponent:
         if (prevFiber === null) {
           return {
             context: null,
@@ -1640,15 +1637,39 @@ export function attach(
               nextFiber.memoizedState,
             ),
           };
-
-          // Only traverse the hooks list once, depending on what info we're returning.
+          return data;
+        }
+      case IncompleteFunctionComponent:
+      case FunctionComponent:
+      case IndeterminateComponent:
+      case ForwardRef:
+      case MemoComponent:
+      case SimpleMemoComponent:
+        if (prevFiber === null) {
+          return {
+            context: null,
+            didHooksChange: false,
+            isFirstMount: true,
+            props: null,
+            state: null,
+          };
+        } else {
           const indices = getChangedHooksIndices(
             prevFiber.memoizedState,
             nextFiber.memoizedState,
           );
-          data.hooks = indices;
-          data.didHooksChange = indices !== null && indices.length > 0;
-
+          const data: ChangeDescription = {
+            context: getContextChangedKeys(nextFiber),
+            didHooksChange: indices !== null && indices.length > 0,
+            isFirstMount: false,
+            props: getChangedKeys(
+              prevFiber.memoizedProps,
+              nextFiber.memoizedProps,
+            ),
+            state: null,
+            hooks: indices,
+          };
+          // Only traverse the hooks list once, depending on what info we're returning.
           return data;
         }
       default:
@@ -1841,20 +1862,13 @@ export function attach(
 
     const indices = [];
     let index = 0;
-    if (
-      next.hasOwnProperty('baseState') &&
-      next.hasOwnProperty('memoizedState') &&
-      next.hasOwnProperty('next') &&
-      next.hasOwnProperty('queue')
-    ) {
-      while (next !== null) {
-        if (didStatefulHookChange(prev, next)) {
-          indices.push(index);
-        }
-        next = next.next;
-        prev = prev.next;
-        index++;
+    while (next !== null) {
+      if (didStatefulHookChange(prev, next)) {
+        indices.push(index);
       }
+      next = next.next;
+      prev = prev.next;
+      index++;
     }
 
     return indices;
@@ -1862,16 +1876,6 @@ export function attach(
 
   function getChangedKeys(prev: any, next: any): null | Array<string> {
     if (prev == null || next == null) {
-      return null;
-    }
-
-    // We can't report anything meaningful for hooks changes.
-    if (
-      next.hasOwnProperty('baseState') &&
-      next.hasOwnProperty('memoizedState') &&
-      next.hasOwnProperty('next') &&
-      next.hasOwnProperty('queue')
-    ) {
       return null;
     }
 
