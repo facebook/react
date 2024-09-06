@@ -9246,24 +9246,26 @@ function commitBeforeMutationEffects(root, firstChild) {
             break;
           case 1:
             if (0 !== (JSCompiler_temp & 1024) && null !== root) {
-              JSCompiler_temp = firstChild;
-              anchorOffset = root.memoizedProps;
+              JSCompiler_temp = void 0;
+              anchorOffset = firstChild;
+              focusNode = root.memoizedProps;
               root = root.memoizedState;
-              focusNode = JSCompiler_temp.stateNode;
+              selection = anchorOffset.stateNode;
               try {
-                var snapshot = focusNode.getSnapshotBeforeUpdate(
-                  resolveClassComponentProps(
-                    JSCompiler_temp.type,
-                    anchorOffset,
-                    JSCompiler_temp.elementType === JSCompiler_temp.type
-                  ),
+                var resolvedPrevProps = resolveClassComponentProps(
+                  anchorOffset.type,
+                  focusNode,
+                  anchorOffset.elementType === anchorOffset.type
+                );
+                JSCompiler_temp = selection.getSnapshotBeforeUpdate(
+                  resolvedPrevProps,
                   root
                 );
-                focusNode.__reactInternalSnapshotBeforeUpdate = snapshot;
+                selection.__reactInternalSnapshotBeforeUpdate = JSCompiler_temp;
               } catch (error) {
                 captureCommitPhaseError(
-                  JSCompiler_temp,
-                  JSCompiler_temp.return,
+                  anchorOffset,
+                  anchorOffset.return,
                   error
                 );
               }
@@ -9293,10 +9295,10 @@ function commitBeforeMutationEffects(root, firstChild) {
         nextEffect = firstChild.return;
       }
   }
-  snapshot = shouldFireAfterActiveInstanceBlur;
+  resolvedPrevProps = shouldFireAfterActiveInstanceBlur;
   shouldFireAfterActiveInstanceBlur = !1;
   focusedInstanceHandle = null;
-  return snapshot;
+  return resolvedPrevProps;
 }
 function commitPassiveEffectDurations(finishedRoot, finishedWork) {
   if (executionContext & 4 && 0 !== (finishedWork.flags & 4))
@@ -14038,14 +14040,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$400;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1630 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1630) {
-      var element$jscomp$inline_1631 = document.createElement("div");
-      element$jscomp$inline_1631.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1630 =
-        "function" === typeof element$jscomp$inline_1631.oninput;
+    var isSupported$jscomp$inline_1639 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1639) {
+      var element$jscomp$inline_1640 = document.createElement("div");
+      element$jscomp$inline_1640.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1639 =
+        "function" === typeof element$jscomp$inline_1640.oninput;
     }
-    JSCompiler_inline_result$jscomp$400 = isSupported$jscomp$inline_1630;
+    JSCompiler_inline_result$jscomp$400 = isSupported$jscomp$inline_1639;
   } else JSCompiler_inline_result$jscomp$400 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$400 &&
@@ -14459,20 +14461,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1671 = 0;
-  i$jscomp$inline_1671 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1671++
+  var i$jscomp$inline_1680 = 0;
+  i$jscomp$inline_1680 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1680++
 ) {
-  var eventName$jscomp$inline_1672 =
-      simpleEventPluginEvents[i$jscomp$inline_1671],
-    domEventName$jscomp$inline_1673 =
-      eventName$jscomp$inline_1672.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1674 =
-      eventName$jscomp$inline_1672[0].toUpperCase() +
-      eventName$jscomp$inline_1672.slice(1);
+  var eventName$jscomp$inline_1681 =
+      simpleEventPluginEvents[i$jscomp$inline_1680],
+    domEventName$jscomp$inline_1682 =
+      eventName$jscomp$inline_1681.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1683 =
+      eventName$jscomp$inline_1681[0].toUpperCase() +
+      eventName$jscomp$inline_1681.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1673,
-    "on" + capitalizedEvent$jscomp$inline_1674
+    domEventName$jscomp$inline_1682,
+    "on" + capitalizedEvent$jscomp$inline_1683
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -18081,16 +18083,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_1844 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1853 = React.version;
 if (
-  "19.0.0-www-classic-fe03c56d-20240905" !==
-  isomorphicReactPackageVersion$jscomp$inline_1844
+  "19.0.0-www-classic-a03254bc-20240905" !==
+  isomorphicReactPackageVersion$jscomp$inline_1853
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1844,
-      "19.0.0-www-classic-fe03c56d-20240905"
+      isomorphicReactPackageVersion$jscomp$inline_1853,
+      "19.0.0-www-classic-a03254bc-20240905"
     )
   );
 function flushSyncFromReconciler(fn) {
@@ -18133,28 +18135,28 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_1851 = {
+var internals$jscomp$inline_1860 = {
   bundleType: 0,
-  version: "19.0.0-www-classic-fe03c56d-20240905",
+  version: "19.0.0-www-classic-a03254bc-20240905",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-www-classic-fe03c56d-20240905"
+  reconcilerVersion: "19.0.0-www-classic-a03254bc-20240905"
 };
 enableSchedulingProfiler &&
-  ((internals$jscomp$inline_1851.getLaneLabelMap = getLaneLabelMap),
-  (internals$jscomp$inline_1851.injectProfilingHooks = injectProfilingHooks));
+  ((internals$jscomp$inline_1860.getLaneLabelMap = getLaneLabelMap),
+  (internals$jscomp$inline_1860.injectProfilingHooks = injectProfilingHooks));
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2309 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2318 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2309.isDisabled &&
-    hook$jscomp$inline_2309.supportsFiber
+    !hook$jscomp$inline_2318.isDisabled &&
+    hook$jscomp$inline_2318.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2309.inject(
-        internals$jscomp$inline_1851
+      (rendererID = hook$jscomp$inline_2318.inject(
+        internals$jscomp$inline_1860
       )),
-        (injectedHook = hook$jscomp$inline_2309);
+        (injectedHook = hook$jscomp$inline_2318);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -18598,7 +18600,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-fe03c56d-20240905";
+exports.version = "19.0.0-www-classic-a03254bc-20240905";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

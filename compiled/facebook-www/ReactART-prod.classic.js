@@ -7280,22 +7280,28 @@ function commitBeforeMutationEffects(root, firstChild) {
             break;
           case 1:
             if (0 !== (i & 1024) && null !== firstChild) {
-              i = root;
-              JSCompiler_temp = firstChild.memoizedProps;
+              i = void 0;
+              JSCompiler_temp = root;
+              var prevProps = firstChild.memoizedProps;
               firstChild = firstChild.memoizedState;
-              var instance = i.stateNode;
+              var instance = JSCompiler_temp.stateNode;
               try {
-                var snapshot = instance.getSnapshotBeforeUpdate(
-                  resolveClassComponentProps(
-                    i.type,
-                    JSCompiler_temp,
-                    i.elementType === i.type
-                  ),
+                var resolvedPrevProps = resolveClassComponentProps(
+                  JSCompiler_temp.type,
+                  prevProps,
+                  JSCompiler_temp.elementType === JSCompiler_temp.type
+                );
+                i = instance.getSnapshotBeforeUpdate(
+                  resolvedPrevProps,
                   firstChild
                 );
-                instance.__reactInternalSnapshotBeforeUpdate = snapshot;
+                instance.__reactInternalSnapshotBeforeUpdate = i;
               } catch (error) {
-                captureCommitPhaseError(i, i.return, error);
+                captureCommitPhaseError(
+                  JSCompiler_temp,
+                  JSCompiler_temp.return,
+                  error
+                );
               }
             }
             break;
@@ -7320,10 +7326,10 @@ function commitBeforeMutationEffects(root, firstChild) {
         nextEffect = root.return;
       }
   }
-  snapshot = shouldFireAfterActiveInstanceBlur;
+  resolvedPrevProps = shouldFireAfterActiveInstanceBlur;
   shouldFireAfterActiveInstanceBlur = !1;
   focusedInstanceHandle = null;
-  return snapshot;
+  return resolvedPrevProps;
 }
 function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
   var flags = finishedWork.flags;
@@ -10769,13 +10775,13 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1420 = {
   bundleType: 0,
-  version: "19.0.0-www-classic-fe03c56d-20240905",
+  version: "19.0.0-www-classic-a03254bc-20240905",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: function () {
     return null;
   },
-  reconcilerVersion: "19.0.0-www-classic-fe03c56d-20240905"
+  reconcilerVersion: "19.0.0-www-classic-a03254bc-20240905"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1421 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -10801,4 +10807,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.0.0-www-classic-fe03c56d-20240905";
+exports.version = "19.0.0-www-classic-a03254bc-20240905";

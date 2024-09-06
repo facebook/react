@@ -7653,22 +7653,24 @@ module.exports = function ($$$config) {
               break;
             case 1:
               if (0 !== (i & 1024) && null !== firstChild) {
-                i = root;
-                deletion = firstChild.memoizedProps;
+                i = void 0;
+                deletion = root;
+                var prevProps = firstChild.memoizedProps;
                 firstChild = firstChild.memoizedState;
-                var instance = i.stateNode;
+                var instance = deletion.stateNode;
                 try {
-                  var snapshot = instance.getSnapshotBeforeUpdate(
-                    resolveClassComponentProps(
-                      i.type,
-                      deletion,
-                      i.elementType === i.type
-                    ),
+                  var resolvedPrevProps = resolveClassComponentProps(
+                    deletion.type,
+                    prevProps,
+                    deletion.elementType === deletion.type
+                  );
+                  i = instance.getSnapshotBeforeUpdate(
+                    resolvedPrevProps,
                     firstChild
                   );
-                  instance.__reactInternalSnapshotBeforeUpdate = snapshot;
+                  instance.__reactInternalSnapshotBeforeUpdate = i;
                 } catch (error) {
-                  captureCommitPhaseError(i, i.return, error);
+                  captureCommitPhaseError(deletion, deletion.return, error);
                 }
               }
               break;
@@ -7696,10 +7698,10 @@ module.exports = function ($$$config) {
           nextEffect = root.return;
         }
     }
-    snapshot = shouldFireAfterActiveInstanceBlur;
+    resolvedPrevProps = shouldFireAfterActiveInstanceBlur;
     shouldFireAfterActiveInstanceBlur = !1;
     focusedInstanceHandle = null;
-    return snapshot;
+    return resolvedPrevProps;
   }
   function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
     var flags = finishedWork.flags;
@@ -12771,7 +12773,7 @@ module.exports = function ($$$config) {
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
       findFiberByHostInstance: getInstanceFromNode,
-      reconcilerVersion: "19.0.0-www-classic-fe03c56d-20240905"
+      reconcilerVersion: "19.0.0-www-classic-a03254bc-20240905"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

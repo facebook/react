@@ -8792,24 +8792,26 @@ function commitBeforeMutationEffects(root, firstChild) {
             break;
           case 1:
             if (0 !== (JSCompiler_temp & 1024) && null !== root) {
-              JSCompiler_temp = firstChild;
-              anchorOffset = root.memoizedProps;
+              JSCompiler_temp = void 0;
+              anchorOffset = firstChild;
+              focusNode = root.memoizedProps;
               root = root.memoizedState;
-              focusNode = JSCompiler_temp.stateNode;
+              selection = anchorOffset.stateNode;
               try {
-                var snapshot = focusNode.getSnapshotBeforeUpdate(
-                  resolveClassComponentProps(
-                    JSCompiler_temp.type,
-                    anchorOffset,
-                    JSCompiler_temp.elementType === JSCompiler_temp.type
-                  ),
+                var resolvedPrevProps = resolveClassComponentProps(
+                  anchorOffset.type,
+                  focusNode,
+                  anchorOffset.elementType === anchorOffset.type
+                );
+                JSCompiler_temp = selection.getSnapshotBeforeUpdate(
+                  resolvedPrevProps,
                   root
                 );
-                focusNode.__reactInternalSnapshotBeforeUpdate = snapshot;
+                selection.__reactInternalSnapshotBeforeUpdate = JSCompiler_temp;
               } catch (error) {
                 captureCommitPhaseError(
-                  JSCompiler_temp,
-                  JSCompiler_temp.return,
+                  anchorOffset,
+                  anchorOffset.return,
                   error
                 );
               }
@@ -8839,10 +8841,10 @@ function commitBeforeMutationEffects(root, firstChild) {
         nextEffect = firstChild.return;
       }
   }
-  snapshot = shouldFireAfterActiveInstanceBlur;
+  resolvedPrevProps = shouldFireAfterActiveInstanceBlur;
   shouldFireAfterActiveInstanceBlur = !1;
   focusedInstanceHandle = null;
-  return snapshot;
+  return resolvedPrevProps;
 }
 function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
   var flags = finishedWork.flags;
@@ -17323,14 +17325,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1763 = React.version;
 if (
-  "19.0.0-www-classic-fe03c56d-20240905" !==
+  "19.0.0-www-classic-a03254bc-20240905" !==
   isomorphicReactPackageVersion$jscomp$inline_1763
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1763,
-      "19.0.0-www-classic-fe03c56d-20240905"
+      "19.0.0-www-classic-a03254bc-20240905"
     )
   );
 function flushSyncFromReconciler(fn) {
@@ -17375,11 +17377,11 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2257 = {
   bundleType: 0,
-  version: "19.0.0-www-classic-fe03c56d-20240905",
+  version: "19.0.0-www-classic-a03254bc-20240905",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-www-classic-fe03c56d-20240905"
+  reconcilerVersion: "19.0.0-www-classic-a03254bc-20240905"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2258 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17835,4 +17837,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-fe03c56d-20240905";
+exports.version = "19.0.0-www-classic-a03254bc-20240905";

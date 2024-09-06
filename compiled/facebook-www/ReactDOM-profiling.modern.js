@@ -8797,24 +8797,26 @@ function commitBeforeMutationEffects(root, firstChild) {
             break;
           case 1:
             if (0 !== (JSCompiler_temp & 1024) && null !== root) {
-              JSCompiler_temp = firstChild;
-              anchorOffset = root.memoizedProps;
+              JSCompiler_temp = void 0;
+              anchorOffset = firstChild;
+              focusNode = root.memoizedProps;
               root = root.memoizedState;
-              focusNode = JSCompiler_temp.stateNode;
+              selection = anchorOffset.stateNode;
               try {
-                var snapshot = focusNode.getSnapshotBeforeUpdate(
-                  resolveClassComponentProps(
-                    JSCompiler_temp.type,
-                    anchorOffset,
-                    JSCompiler_temp.elementType === JSCompiler_temp.type
-                  ),
+                var resolvedPrevProps = resolveClassComponentProps(
+                  anchorOffset.type,
+                  focusNode,
+                  anchorOffset.elementType === anchorOffset.type
+                );
+                JSCompiler_temp = selection.getSnapshotBeforeUpdate(
+                  resolvedPrevProps,
                   root
                 );
-                focusNode.__reactInternalSnapshotBeforeUpdate = snapshot;
+                selection.__reactInternalSnapshotBeforeUpdate = JSCompiler_temp;
               } catch (error) {
                 captureCommitPhaseError(
-                  JSCompiler_temp,
-                  JSCompiler_temp.return,
+                  anchorOffset,
+                  anchorOffset.return,
                   error
                 );
               }
@@ -8859,10 +8861,10 @@ function commitBeforeMutationEffects(root, firstChild) {
         nextEffect = firstChild.return;
       }
   }
-  snapshot = shouldFireAfterActiveInstanceBlur;
+  resolvedPrevProps = shouldFireAfterActiveInstanceBlur;
   shouldFireAfterActiveInstanceBlur = !1;
   focusedInstanceHandle = null;
-  return snapshot;
+  return resolvedPrevProps;
 }
 function commitPassiveEffectDurations(finishedRoot, finishedWork) {
   if (executionContext & 4 && 0 !== (finishedWork.flags & 4))
@@ -13448,14 +13450,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$387;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1601 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1601) {
-      var element$jscomp$inline_1602 = document.createElement("div");
-      element$jscomp$inline_1602.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1601 =
-        "function" === typeof element$jscomp$inline_1602.oninput;
+    var isSupported$jscomp$inline_1610 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1610) {
+      var element$jscomp$inline_1611 = document.createElement("div");
+      element$jscomp$inline_1611.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1610 =
+        "function" === typeof element$jscomp$inline_1611.oninput;
     }
-    JSCompiler_inline_result$jscomp$387 = isSupported$jscomp$inline_1601;
+    JSCompiler_inline_result$jscomp$387 = isSupported$jscomp$inline_1610;
   } else JSCompiler_inline_result$jscomp$387 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$387 &&
@@ -13869,20 +13871,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1642 = 0;
-  i$jscomp$inline_1642 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1642++
+  var i$jscomp$inline_1651 = 0;
+  i$jscomp$inline_1651 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1651++
 ) {
-  var eventName$jscomp$inline_1643 =
-      simpleEventPluginEvents[i$jscomp$inline_1642],
-    domEventName$jscomp$inline_1644 =
-      eventName$jscomp$inline_1643.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1645 =
-      eventName$jscomp$inline_1643[0].toUpperCase() +
-      eventName$jscomp$inline_1643.slice(1);
+  var eventName$jscomp$inline_1652 =
+      simpleEventPluginEvents[i$jscomp$inline_1651],
+    domEventName$jscomp$inline_1653 =
+      eventName$jscomp$inline_1652.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1654 =
+      eventName$jscomp$inline_1652[0].toUpperCase() +
+      eventName$jscomp$inline_1652.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1644,
-    "on" + capitalizedEvent$jscomp$inline_1645
+    domEventName$jscomp$inline_1653,
+    "on" + capitalizedEvent$jscomp$inline_1654
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17440,16 +17442,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_1815 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1824 = React.version;
 if (
-  "19.0.0-www-modern-fe03c56d-20240905" !==
-  isomorphicReactPackageVersion$jscomp$inline_1815
+  "19.0.0-www-modern-a03254bc-20240905" !==
+  isomorphicReactPackageVersion$jscomp$inline_1824
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1815,
-      "19.0.0-www-modern-fe03c56d-20240905"
+      isomorphicReactPackageVersion$jscomp$inline_1824,
+      "19.0.0-www-modern-a03254bc-20240905"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17465,28 +17467,28 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_1817 = {
+var internals$jscomp$inline_1826 = {
   bundleType: 0,
-  version: "19.0.0-www-modern-fe03c56d-20240905",
+  version: "19.0.0-www-modern-a03254bc-20240905",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-www-modern-fe03c56d-20240905"
+  reconcilerVersion: "19.0.0-www-modern-a03254bc-20240905"
 };
 enableSchedulingProfiler &&
-  ((internals$jscomp$inline_1817.getLaneLabelMap = getLaneLabelMap),
-  (internals$jscomp$inline_1817.injectProfilingHooks = injectProfilingHooks));
+  ((internals$jscomp$inline_1826.getLaneLabelMap = getLaneLabelMap),
+  (internals$jscomp$inline_1826.injectProfilingHooks = injectProfilingHooks));
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2301 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2310 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2301.isDisabled &&
-    hook$jscomp$inline_2301.supportsFiber
+    !hook$jscomp$inline_2310.isDisabled &&
+    hook$jscomp$inline_2310.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2301.inject(
-        internals$jscomp$inline_1817
+      (rendererID = hook$jscomp$inline_2310.inject(
+        internals$jscomp$inline_1826
       )),
-        (injectedHook = hook$jscomp$inline_2301);
+        (injectedHook = hook$jscomp$inline_2310);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -17837,7 +17839,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-fe03c56d-20240905";
+exports.version = "19.0.0-www-modern-a03254bc-20240905";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
