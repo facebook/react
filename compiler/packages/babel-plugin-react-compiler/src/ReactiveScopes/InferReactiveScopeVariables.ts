@@ -192,7 +192,7 @@ export function isMutable({id}: Instruction, place: Place): boolean {
   return id >= range.start && id < range.end;
 }
 
-export function inMutableRange({id}: Instruction, range: MutableRange): boolean {
+export function inRange({id}: Instruction, range: MutableRange): boolean {
   return id >= range.start && id < range.end;
 }
 

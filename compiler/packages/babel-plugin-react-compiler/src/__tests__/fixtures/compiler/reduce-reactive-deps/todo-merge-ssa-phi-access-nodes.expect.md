@@ -2,7 +2,11 @@
 ## Input
 
 ```javascript
-import { identity, makeObject_Primitives, setPropertyByKey } from "shared-runtime";
+import {
+  identity,
+  makeObject_Primitives,
+  setPropertyByKey,
+} from 'shared-runtime';
 
 /**
  * A bit of an edge case, but we could further optimize here by merging
@@ -26,7 +30,7 @@ function useFoo(cond) {
   /**
    * At this point, we have a phi node.
    * x_@2 = phi(x_@0, x_@1)
-   * 
+   *
    * We can assume that both x_@0 and x_@1 both have non-null `x.a` properties,
    * so we can infer that x_@2 does as well.
    */
@@ -41,8 +45,8 @@ function useFoo(cond) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useFoo,
-  params: [true]
-}
+  params: [true],
+};
 
 ```
 

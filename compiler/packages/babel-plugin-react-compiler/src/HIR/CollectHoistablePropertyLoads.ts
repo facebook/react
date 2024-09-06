@@ -1,5 +1,5 @@
 import {CompilerError} from '../CompilerError';
-import {inMutableRange} from '../ReactiveScopes/InferReactiveScopeVariables';
+import {inRange} from '../ReactiveScopes/InferReactiveScopeVariables';
 import {Set_intersect, Set_union, getOrInsertDefault} from '../Utils/utils';
 import {
   BasicBlock,
@@ -251,7 +251,7 @@ function collectNodes(
           value.object.identifier.mutableRange.end >
             value.object.identifier.mutableRange.start + 1 &&
           value.object.identifier.scope != null &&
-          inMutableRange(instr, value.object.identifier.scope.range);
+          inRange(instr, value.object.identifier.scope.range);
         if (
           !isMutableAtInstr ||
           knownImmutableIdentifiers.has(propertyNode.fullPath.identifier)

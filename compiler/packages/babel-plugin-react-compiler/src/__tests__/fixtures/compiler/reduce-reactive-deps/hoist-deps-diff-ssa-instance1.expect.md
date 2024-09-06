@@ -2,12 +2,12 @@
 ## Input
 
 ```javascript
-import { identity, shallowCopy, Stringify, useIdentity } from "shared-runtime";
+import {identity, shallowCopy, Stringify, useIdentity} from 'shared-runtime';
 
-type HasA = {kind: "hasA", a: {value: number}};
-type HasC = {kind: "hasC", c: {value: number}};
-function Foo({ cond }: {cond: boolean}) {
-  let x: HasA | HasC = shallowCopy({kind: "hasA", a: {value: 2}});
+type HasA = {kind: 'hasA'; a: {value: number}};
+type HasC = {kind: 'hasC'; c: {value: number}};
+function Foo({cond}: {cond: boolean}) {
+  let x: HasA | HasC = shallowCopy({kind: 'hasA', a: {value: 2}});
   /**
    * This read of x.a.value is outside of x's identifier mutable
    * range + scope range. We mark this ssa instance (x_@0) as having
@@ -15,7 +15,7 @@ function Foo({ cond }: {cond: boolean}) {
    */
   Math.max(x.a.value, 2);
   if (cond) {
-    x = shallowCopy({kind: "hasC", c: {value: 3}});
+    x = shallowCopy({kind: 'hasC', c: {value: 3}});
   }
 
   /**
@@ -27,8 +27,8 @@ function Foo({ cond }: {cond: boolean}) {
 export const FIXTURE_ENTRYPOINT = {
   fn: Foo,
   params: [{cond: false}],
-  sequentialRenders: [{cond: false}, {cond: true}]
-}
+  sequentialRenders: [{cond: false}, {cond: true}],
+};
 
 ```
 

@@ -1,7 +1,4 @@
-import {
-  makeObject_Primitives,
-  setPropertyByKey,
-} from 'shared-runtime';
+import {makeObject_Primitives, setPropertyByKey} from 'shared-runtime';
 
 function useFoo({value, cond}) {
   let x: any = makeObject_Primitives();
@@ -27,6 +24,9 @@ function useFoo({value, cond}) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useFoo,
-  params: [{value:3,cond: true}],
-  sequentialRenders: [{value:3,cond: true}, {value:3,cond: false}],
+  params: [{value: 3, cond: true}],
+  sequentialRenders: [
+    {value: 3, cond: true},
+    {value: 3, cond: false},
+  ],
 };
