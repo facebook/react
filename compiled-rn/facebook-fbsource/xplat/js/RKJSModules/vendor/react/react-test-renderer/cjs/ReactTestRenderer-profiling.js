@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7b62c4c79e4f3fff37a3237b451e7316>>
+ * @generated SignedSource<<810ece3813f16a4de75fcacac7d7813e>>
  */
 
 "use strict";
@@ -2483,9 +2483,15 @@ function renderWithHooksAgain(workInProgress, Component, props, secondArg) {
       );
     numberOfReRenders += 1;
     workInProgressHook = currentHook = null;
-    workInProgress.updateQueue = null;
+    if (null != workInProgress.updateQueue) {
+      var children = workInProgress.updateQueue;
+      children.lastEffect = null;
+      children.events = null;
+      children.stores = null;
+      null != children.memoCache && (children.memoCache.index = 0);
+    }
     ReactSharedInternals.H = HooksDispatcherOnRerender;
-    var children = Component(props, secondArg);
+    children = Component(props, secondArg);
   } while (didScheduleRenderPhaseUpdateDuringThisPass);
   return children;
 }
@@ -3074,17 +3080,16 @@ function rerenderActionState(action) {
 function pushEffect(tag, create, inst, deps) {
   tag = { tag: tag, create: create, inst: inst, deps: deps, next: null };
   create = currentlyRenderingFiber$1.updateQueue;
-  null === create
-    ? ((create = createFunctionComponentUpdateQueue()),
-      (currentlyRenderingFiber$1.updateQueue = create),
-      (create.lastEffect = tag.next = tag))
-    : ((inst = create.lastEffect),
-      null === inst
-        ? (create.lastEffect = tag.next = tag)
-        : ((deps = inst.next),
-          (inst.next = tag),
-          (tag.next = deps),
-          (create.lastEffect = tag)));
+  null === create &&
+    ((create = createFunctionComponentUpdateQueue()),
+    (currentlyRenderingFiber$1.updateQueue = create));
+  inst = create.lastEffect;
+  null === inst
+    ? (create.lastEffect = tag.next = tag)
+    : ((deps = inst.next),
+      (inst.next = tag),
+      (tag.next = deps),
+      (create.lastEffect = tag));
   return tag;
 }
 function updateRef() {
@@ -4380,6 +4385,7 @@ function replayFunctionComponent(
 ) {
   prepareToReadContext(workInProgress, renderLanes);
   markComponentRenderStarted(workInProgress);
+  workInProgress.updateQueue = null;
   nextProps = renderWithHooksAgain(
     workInProgress,
     Component,
@@ -10025,16 +10031,16 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var internals$jscomp$inline_1137 = {
+var internals$jscomp$inline_1139 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-a03254bc-20240905",
+  version: "19.0.0-native-fb-727b3615-20240906",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: function (mockNode) {
     mockNode = nodeToInstanceMap.get(mockNode);
     return void 0 !== mockNode ? mockNode.internalInstanceHandle : null;
   },
-  reconcilerVersion: "19.0.0-native-fb-a03254bc-20240905",
+  reconcilerVersion: "19.0.0-native-fb-727b3615-20240906",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$138 = 0;
@@ -10052,16 +10058,16 @@ var internals$jscomp$inline_1137 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1339 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1341 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1339.isDisabled &&
-    hook$jscomp$inline_1339.supportsFiber
+    !hook$jscomp$inline_1341.isDisabled &&
+    hook$jscomp$inline_1341.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1339.inject(
-        internals$jscomp$inline_1137
+      (rendererID = hook$jscomp$inline_1341.inject(
+        internals$jscomp$inline_1139
       )),
-        (injectedHook = hook$jscomp$inline_1339);
+        (injectedHook = hook$jscomp$inline_1341);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
@@ -10185,4 +10191,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.0.0-native-fb-a03254bc-20240905";
+exports.version = "19.0.0-native-fb-727b3615-20240906";

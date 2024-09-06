@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1f391176146c2131cb59e5294a929432>>
+ * @generated SignedSource<<b0a3a5866ba0253ef8b11a4ac30094d7>>
  */
 
 "use strict";
@@ -3792,9 +3792,15 @@ function renderWithHooksAgain(workInProgress, Component, props, secondArg) {
       );
     numberOfReRenders += 1;
     workInProgressHook = currentHook = null;
-    workInProgress.updateQueue = null;
+    if (null != workInProgress.updateQueue) {
+      var children = workInProgress.updateQueue;
+      children.lastEffect = null;
+      children.events = null;
+      children.stores = null;
+      null != children.memoCache && (children.memoCache.index = 0);
+    }
     ReactSharedInternals.H = HooksDispatcherOnRerender;
-    var children = Component(props, secondArg);
+    children = Component(props, secondArg);
   } while (didScheduleRenderPhaseUpdateDuringThisPass);
   return children;
 }
@@ -4386,17 +4392,16 @@ function rerenderActionState(action) {
 function pushEffect(tag, create, inst, deps) {
   tag = { tag: tag, create: create, inst: inst, deps: deps, next: null };
   create = currentlyRenderingFiber$1.updateQueue;
-  null === create
-    ? ((create = createFunctionComponentUpdateQueue()),
-      (currentlyRenderingFiber$1.updateQueue = create),
-      (create.lastEffect = tag.next = tag))
-    : ((inst = create.lastEffect),
-      null === inst
-        ? (create.lastEffect = tag.next = tag)
-        : ((deps = inst.next),
-          (inst.next = tag),
-          (tag.next = deps),
-          (create.lastEffect = tag)));
+  null === create &&
+    ((create = createFunctionComponentUpdateQueue()),
+    (currentlyRenderingFiber$1.updateQueue = create));
+  inst = create.lastEffect;
+  null === inst
+    ? (create.lastEffect = tag.next = tag)
+    : ((deps = inst.next),
+      (inst.next = tag),
+      (tag.next = deps),
+      (create.lastEffect = tag));
   return tag;
 }
 function updateRef() {
@@ -5721,6 +5726,7 @@ function replayFunctionComponent(
 ) {
   prepareToReadContext(workInProgress, renderLanes);
   markComponentRenderStarted(workInProgress);
+  workInProgress.updateQueue = null;
   nextProps = renderWithHooksAgain(
     workInProgress,
     Component,
@@ -11645,17 +11651,17 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1245 = {
+  internals$jscomp$inline_1247 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-a03254bc-20240905",
+    version: "19.0.0-native-fb-727b3615-20240906",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromNode,
-    reconcilerVersion: "19.0.0-native-fb-a03254bc-20240905"
+    reconcilerVersion: "19.0.0-native-fb-727b3615-20240906"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1245.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1245.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1247.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1247.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$146 = 0;
     31 > index$146;
@@ -11667,20 +11673,20 @@ internals$jscomp$inline_1245.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1245.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1247.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1498 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1500 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1498.isDisabled &&
-    hook$jscomp$inline_1498.supportsFiber
+    !hook$jscomp$inline_1500.isDisabled &&
+    hook$jscomp$inline_1500.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1498.inject(
-        internals$jscomp$inline_1245
+      (rendererID = hook$jscomp$inline_1500.inject(
+        internals$jscomp$inline_1247
       )),
-        (injectedHook = hook$jscomp$inline_1498);
+        (injectedHook = hook$jscomp$inline_1500);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
