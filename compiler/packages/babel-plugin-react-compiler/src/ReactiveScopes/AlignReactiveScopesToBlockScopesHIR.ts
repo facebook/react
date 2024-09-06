@@ -13,6 +13,7 @@ import {
   MutableRange,
   Place,
   ReactiveScope,
+  getPlaceScope,
   makeInstructionId,
 } from '../HIR/HIR';
 import {
@@ -23,7 +24,6 @@ import {
   terminalFallthrough,
 } from '../HIR/visitors';
 import {retainWhere_Set} from '../Utils/utils';
-import {getPlaceScope} from './BuildReactiveBlocks';
 
 type InstructionRange = MutableRange;
 /*

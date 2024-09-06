@@ -26,7 +26,7 @@ import {
 } from '../HIR';
 import {getFunctionCallSignature} from '../Inference/InferReferenceEffects';
 import {assertExhaustive, getOrInsertDefault} from '../Utils/utils';
-import {getPlaceScope} from './BuildReactiveBlocks';
+import {getPlaceScope} from '../HIR/HIR';
 import {
   ReactiveFunctionTransform,
   ReactiveFunctionVisitor,
