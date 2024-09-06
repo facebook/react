@@ -19,18 +19,15 @@ const ENABLE_DEBUG_INVARIANTS = true;
 export class ReactiveScopeDependencyTreeHIR {
   #roots: Map<Identifier, DependencyNode> = new Map();
 
-  #getOrCreateRoot(
-    identifier: Identifier,
-    isHoistable: boolean,
-  ): DependencyNode {
+  #getOrCreateRoot(identifier: Identifier, isNonNull: boolean): DependencyNode {
     // roots can always be accessed unconditionally in JS
     let rootNode = this.#roots.get(identifier);
 
     if (rootNode === undefined) {
       rootNode = {
         properties: new Map(),
-        accessType: isHoistable
-          ? PropertyAccessType.HoistableAccess
+        accessType: isNonNull
+          ? PropertyAccessType.NonNullAccess
           : PropertyAccessType.Access,
       };
       this.#roots.set(identifier, rootNode);
@@ -64,8 +61,8 @@ export class ReactiveScopeDependencyTreeHIR {
     );
   }
 
-  markNodesHoistable(dep: ReactiveScopePropertyDependency): void {
-    const accessType = PropertyAccessType.HoistableAccess;
+  markNodesNonNull(dep: ReactiveScopePropertyDependency): void {
+    const accessType = PropertyAccessType.NonNullAccess;
     let currNode = this.#roots.get(dep.identifier);
 
     let cursor = 0;
@@ -121,27 +118,27 @@ export class ReactiveScopeDependencyTreeHIR {
 
 enum PropertyAccessType {
   Access = 'Access',
-  HoistableAccess = 'HoistableAccess',
+  NonNullAccess = 'NonNullAccess',
   Dependency = 'Dependency',
-  HoistableDependency = 'HoistableDependency',
+  NonNullDependency = 'NonNullDependency',
 }
 
 const MIN_ACCESS_TYPE = PropertyAccessType.Access;
 /**
- * "Hoistable" means that PropertyReads from a node are side-effect free.
- * In other words, this means that control flow analysis shows that
- * we can assume this node is a non-null object.
+ * "NonNull" means that PropertyReads from a node are side-effect free,
+ * as the node is (1) immutable and (2) has unconditional propertyloads
+ * somewhere in the cfg.
  */
-function isHoistable(access: PropertyAccessType): boolean {
+function isNonNull(access: PropertyAccessType): boolean {
   return (
-    access === PropertyAccessType.HoistableAccess ||
-    access === PropertyAccessType.HoistableDependency
+    access === PropertyAccessType.NonNullAccess ||
+    access === PropertyAccessType.NonNullDependency
   );
 }
 function isDependency(access: PropertyAccessType): boolean {
   return (
     access === PropertyAccessType.Dependency ||
-    access === PropertyAccessType.HoistableDependency
+    access === PropertyAccessType.NonNullDependency
   );
 }
 
@@ -149,22 +146,22 @@ function merge(
   access1: PropertyAccessType,
   access2: PropertyAccessType,
 ): PropertyAccessType {
-  const resultisHoistable = isHoistable(access1) || isHoistable(access2);
+  const resultisNonNull = isNonNull(access1) || isNonNull(access2);
   const resultIsDependency = isDependency(access1) || isDependency(access2);
 
   /*
    * Straightforward merge.
    * This can be represented as bitwise OR, but is written out for readability
    *
-   * Observe that `HoistableAccess | Dependency` produces an
+   * Observe that `NonNullAccess | Dependency` produces an
    * unconditionally accessed conditional dependency. We currently use these
    * as we use unconditional dependencies. (i.e. to codegen change variables)
    */
-  if (resultisHoistable) {
+  if (resultisNonNull) {
     if (resultIsDependency) {
-      return PropertyAccessType.HoistableDependency;
+      return PropertyAccessType.NonNullDependency;
     } else {
-      return PropertyAccessType.HoistableAccess;
+      return PropertyAccessType.NonNullAccess;
     }
   } else {
     if (resultIsDependency) {
@@ -185,15 +182,15 @@ type ReduceResultNode = {
 };
 
 function assertWellFormedTree(node: DependencyNode): void {
-  let hoistableInChildren = false;
+  let nonNullInChildren = false;
   for (const childNode of node.properties.values()) {
     assertWellFormedTree(childNode);
-    hoistableInChildren ||= isHoistable(childNode.accessType);
+    nonNullInChildren ||= isNonNull(childNode.accessType);
   }
-  if (hoistableInChildren) {
-    CompilerError.invariant(isHoistable(node.accessType), {
+  if (nonNullInChildren) {
+    CompilerError.invariant(isNonNull(node.accessType), {
       reason:
-        '[DeriveMinimialDependencies] Not well formed tree, unexpected hoistable node',
+        '[DeriveMinimialDependencies] Not well formed tree, unexpected non-null node',
       description: node.accessType,
       loc: GeneratedSource,
     });
@@ -212,7 +209,7 @@ function deriveMinimalDependenciesInSubtree(
      */
     return [{path}];
   } else {
-    if (isHoistable(node.accessType)) {
+    if (isNonNull(node.accessType)) {
       /*
        * Only recurse into subtree dependencies if this node
        * is known to be non-null.

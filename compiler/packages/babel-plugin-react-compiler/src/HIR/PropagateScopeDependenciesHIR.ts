@@ -505,7 +505,7 @@ function recordHoistablePropertyReads(
   });
 
   for (const item of node.assumedNonNullObjects) {
-    tree.markNodesHoistable({
+    tree.markNodesNonNull({
       ...item.fullPath,
     });
   }
