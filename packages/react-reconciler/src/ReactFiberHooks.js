@@ -770,6 +770,12 @@ export function replaySuspendedComponentWithHooks<Props, SecondArg>(
     ignorePreviousDependencies =
       current !== null && current.type !== workInProgress.type;
   }
+  // renderWithHooks only resets the updateQueue but does not clear it, since
+  // it needs to work for both this case (suspense replay) as well as for double
+  // renders in dev and setState-in-render. However, for the suspense replay case
+  // we need to reset the updateQueue to correctly handle unmount effects, so we
+  // clear the queue here
+  workInProgress.updateQueue = null;
   const children = renderWithHooksAgain(
     workInProgress,
     Component,
@@ -828,7 +834,9 @@ function renderWithHooksAgain<Props, SecondArg>(
     currentHook = null;
     workInProgressHook = null;
 
-    workInProgress.updateQueue = null;
+    if (workInProgress.updateQueue != null) {
+      resetFunctionComponentUpdateQueue((workInProgress.updateQueue: any));
+    }
 
     if (__DEV__) {
       // Also validate hook order for cascading updates.
@@ -1099,6 +1107,22 @@ if (enableUseMemoCacheHook) {
       stores: null,
     };
   };
+}
+
+function resetFunctionComponentUpdateQueue(
+  updateQueue: FunctionComponentUpdateQueue,
+): void {
+  updateQueue.lastEffect = null;
+  updateQueue.events = null;
+  updateQueue.stores = null;
+  if (enableUseMemoCacheHook) {
+    if (updateQueue.memoCache != null) {
+      // NOTE: this function intentionally does not reset memoCache data. We reuse updateQueue for the memo
+      // cache to avoid increasing the size of fibers that don't need a cache, but we don't want to reset
+      // the cache when other properties are reset.
+      updateQueue.memoCache.index = 0;
+    }
+  }
 }
 
 function useThenable<T>(thenable: Thenable<T>): T {
@@ -2496,17 +2520,15 @@ function pushEffect(
   if (componentUpdateQueue === null) {
     componentUpdateQueue = createFunctionComponentUpdateQueue();
     currentlyRenderingFiber.updateQueue = (componentUpdateQueue: any);
+  }
+  const lastEffect = componentUpdateQueue.lastEffect;
+  if (lastEffect === null) {
     componentUpdateQueue.lastEffect = effect.next = effect;
   } else {
-    const lastEffect = componentUpdateQueue.lastEffect;
-    if (lastEffect === null) {
-      componentUpdateQueue.lastEffect = effect.next = effect;
-    } else {
-      const firstEffect = lastEffect.next;
-      lastEffect.next = effect;
-      effect.next = firstEffect;
-      componentUpdateQueue.lastEffect = effect;
-    }
+    const firstEffect = lastEffect.next;
+    lastEffect.next = effect;
+    effect.next = firstEffect;
+    componentUpdateQueue.lastEffect = effect;
   }
   return effect;
 }
