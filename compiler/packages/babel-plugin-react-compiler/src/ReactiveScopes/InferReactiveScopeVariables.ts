@@ -17,6 +17,7 @@ import {
   ReactiveScope,
   makeInstructionId,
 } from '../HIR/HIR';
+import {BuiltInPropsId} from '../HIR/ObjectShape';
 import {
   doesPatternContainSpreadElement,
   eachInstructionOperand,
@@ -227,6 +228,15 @@ function mayAllocate(env: Environment, instruction: Instruction): boolean {
     case 'StoreGlobal': {
       return false;
     }
+    case 'ObjectExpression': {
+      const type = instruction.lvalue.identifier.type;
+      if (type.kind === 'Object' && type.shapeId === BuiltInPropsId) {
+        // If this is an object literal for inlined JSX, we don't need to memoize
+        // it. The props object is always assumed to have changed.
+        return false;
+      }
+      return true;
+    }
     case 'TaggedTemplateExpression':
     case 'CallExpression':
     case 'MethodCall': {
@@ -239,7 +249,6 @@ function mayAllocate(env: Environment, instruction: Instruction): boolean {
     case 'JsxExpression':
     case 'JsxFragment':
     case 'NewExpression':
-    case 'ObjectExpression':
     case 'UnsupportedNode':
     case 'ObjectMethod':
     case 'FunctionExpression': {

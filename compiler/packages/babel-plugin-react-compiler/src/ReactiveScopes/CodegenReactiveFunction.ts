@@ -1475,7 +1475,7 @@ function withLoc<T extends (...args: Array<any>) => t.Node>(
     ...args: Parameters<T>
   ): ReturnType<T> => {
     const node = fn(...args);
-    if (loc != null && loc != GeneratedSource) {
+    if (loc != null && typeof loc !== 'symbol') {
       node.loc = loc;
     }
     return node as ReturnType<T>;
@@ -1550,7 +1550,7 @@ function createCallExpression(
   isHook: boolean,
 ): t.CallExpression {
   const callExpr = t.callExpression(callee, args);
-  if (loc != null && loc != GeneratedSource) {
+  if (loc != null && typeof loc !== 'symbol') {
     callExpr.loc = loc;
   }
 
@@ -2555,7 +2555,7 @@ function codegenPlace(cx: Context, place: Place): t.Expression | t.JSXText {
     suggestions: null,
   });
   const identifier = convertIdentifier(place.identifier);
-  identifier.loc = place.loc as any;
+  identifier.loc = typeof place.loc !== 'symbol' ? (place.loc as any) : null;
   return identifier;
 }
 

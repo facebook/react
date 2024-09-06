@@ -17,6 +17,7 @@ import {
   SpreadPattern,
 } from '../HIR';
 import {createTemporaryPlace, markInstructionIds} from '../HIR/HIRBuilder';
+import {BuiltInPropsId} from '../HIR/ObjectShape';
 
 export function inlineSingleReturnJSX(fn: HIRFunction): void {
   if (fn.fnType !== 'Component') {
@@ -65,6 +66,7 @@ export function inlineSingleReturnJSX(fn: HIRFunction): void {
     nextInstructions ??= returnBlock.instructions.slice(0, i);
     const propsTemp = createTemporaryPlace(fn.env, value.loc);
     propsTemp.effect = Effect.Freeze;
+    propsTemp.identifier.type = {kind: 'Object', shapeId: BuiltInPropsId};
 
     const properties: Array<ObjectProperty | SpreadPattern> = value.props.map(
       attr => {
