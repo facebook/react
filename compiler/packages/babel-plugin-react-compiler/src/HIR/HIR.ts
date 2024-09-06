@@ -1492,6 +1492,7 @@ export type ReactiveScopeDeclaration = {
   scope: ReactiveScope; // the scope in which the variable was originally declared
 };
 
+export type DependencyPath = Array<{property: string; optional: boolean}>;
 export type ReactiveScopeDependency = {
   identifier: Identifier;
   path: DependencyPath;
@@ -1506,7 +1507,21 @@ export function areEqualPaths(a: DependencyPath, b: DependencyPath): boolean {
     )
   );
 }
-export type DependencyPath = Array<{property: string; optional: boolean}>;
+
+export function getPlaceScope(
+  id: InstructionId,
+  place: Place,
+): ReactiveScope | null {
+  const scope = place.identifier.scope;
+  if (scope !== null && isScopeActive(scope, id)) {
+    return scope;
+  }
+  return null;
+}
+
+function isScopeActive(scope: ReactiveScope, id: InstructionId): boolean {
+  return id >= scope.range.start && id < scope.range.end;
+}
 
 /*
  * Simulated opaque type for BlockIds to prevent using normal numbers as block ids
