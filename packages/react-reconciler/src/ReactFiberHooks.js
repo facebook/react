@@ -522,7 +522,9 @@ export function renderWithHooks<Props, SecondArg>(
   }
 
   workInProgress.memoizedState = null;
-  workInProgress.updateQueue = null;
+  if (workInProgress.updateQueue != null) {
+    resetFunctionComponentUpdateQueue(workInProgress.updateQueue);
+  }
   workInProgress.lanes = NoLanes;
 
   // The following should have already been reset

@@ -575,11 +575,7 @@ describe('useMemoCache()', () => {
       'Some expensive processing... [A2]',
       'Suspend! [chunkB]',
 
-      ...(gate('enableSiblingPrerendering')
-        ? gate('enableNoCloningMemoCache')
-          ? ['Suspend! [chunkB]']
-          : ['Some expensive processing... [A2]', 'Suspend! [chunkB]']
-        : []),
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [chunkB]'] : []),
     ]);
 
     // The second chunk hasn't loaded yet, so we're still showing the
@@ -598,26 +594,13 @@ describe('useMemoCache()', () => {
     await act(() => setInput('hi!'));
 
     // Once the input has updated, we go back to rendering the transition.
-    if (gate(flags => flags.enableNoCloningMemoCache)) {
-      // We did not have process the first chunk again. We reused the
-      // computation from the earlier attempt.
-      assertLog([
-        'Suspend! [chunkB]',
+    // We did not have process the first chunk again. We reused the
+    // computation from the earlier attempt.
+    assertLog([
+      'Suspend! [chunkB]',
 
-        ...(gate('enableSiblingPrerendering') ? ['Suspend! [chunkB]'] : []),
-      ]);
-    } else {
-      // Because we clone/reset the memo cache after every aborted attempt, we
-      // must process the first chunk again.
-      assertLog([
-        'Some expensive processing... [A2]',
-        'Suspend! [chunkB]',
-
-        ...(gate('enableSiblingPrerendering')
-          ? ['Some expensive processing... [A2]', 'Suspend! [chunkB]']
-          : []),
-      ]);
-    }
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [chunkB]'] : []),
+    ]);
 
     expect(root).toMatchRenderedOutput(
       <>
