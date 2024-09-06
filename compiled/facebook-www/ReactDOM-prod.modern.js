@@ -3202,9 +3202,15 @@ function renderWithHooksAgain(workInProgress, Component, props, secondArg) {
     if (25 <= numberOfReRenders) throw Error(formatProdErrorMessage(301));
     numberOfReRenders += 1;
     workInProgressHook = currentHook = null;
-    workInProgress.updateQueue = null;
+    if (null != workInProgress.updateQueue) {
+      var children = workInProgress.updateQueue;
+      children.lastEffect = null;
+      children.events = null;
+      children.stores = null;
+      null != children.memoCache && (children.memoCache.index = 0);
+    }
     ReactSharedInternals.H = HooksDispatcherOnRerender;
-    var children = Component(props, secondArg);
+    children = Component(props, secondArg);
   } while (didScheduleRenderPhaseUpdateDuringThisPass);
   return children;
 }
@@ -3876,17 +3882,16 @@ function rerenderActionState(action) {
 function pushEffect(tag, create, inst, deps) {
   tag = { tag: tag, create: create, inst: inst, deps: deps, next: null };
   create = currentlyRenderingFiber$1.updateQueue;
-  null === create
-    ? ((create = createFunctionComponentUpdateQueue()),
-      (currentlyRenderingFiber$1.updateQueue = create),
-      (create.lastEffect = tag.next = tag))
-    : ((inst = create.lastEffect),
-      null === inst
-        ? (create.lastEffect = tag.next = tag)
-        : ((deps = inst.next),
-          (inst.next = tag),
-          (tag.next = deps),
-          (create.lastEffect = tag)));
+  null === create &&
+    ((create = createFunctionComponentUpdateQueue()),
+    (currentlyRenderingFiber$1.updateQueue = create));
+  inst = create.lastEffect;
+  null === inst
+    ? (create.lastEffect = tag.next = tag)
+    : ((deps = inst.next),
+      (inst.next = tag),
+      (tag.next = deps),
+      (create.lastEffect = tag));
   return tag;
 }
 function updateRef() {
@@ -5374,6 +5379,7 @@ function replayFunctionComponent(
   renderLanes
 ) {
   prepareToReadContext(workInProgress);
+  workInProgress.updateQueue = null;
   nextProps = renderWithHooksAgain(
     workInProgress,
     Component,
@@ -12707,14 +12713,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$370;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1520 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1520) {
-      var element$jscomp$inline_1521 = document.createElement("div");
-      element$jscomp$inline_1521.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1520 =
-        "function" === typeof element$jscomp$inline_1521.oninput;
+    var isSupported$jscomp$inline_1522 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1522) {
+      var element$jscomp$inline_1523 = document.createElement("div");
+      element$jscomp$inline_1523.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1522 =
+        "function" === typeof element$jscomp$inline_1523.oninput;
     }
-    JSCompiler_inline_result$jscomp$370 = isSupported$jscomp$inline_1520;
+    JSCompiler_inline_result$jscomp$370 = isSupported$jscomp$inline_1522;
   } else JSCompiler_inline_result$jscomp$370 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$370 &&
@@ -13128,20 +13134,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1561 = 0;
-  i$jscomp$inline_1561 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1561++
+  var i$jscomp$inline_1563 = 0;
+  i$jscomp$inline_1563 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1563++
 ) {
-  var eventName$jscomp$inline_1562 =
-      simpleEventPluginEvents[i$jscomp$inline_1561],
-    domEventName$jscomp$inline_1563 =
-      eventName$jscomp$inline_1562.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1564 =
-      eventName$jscomp$inline_1562[0].toUpperCase() +
-      eventName$jscomp$inline_1562.slice(1);
+  var eventName$jscomp$inline_1564 =
+      simpleEventPluginEvents[i$jscomp$inline_1563],
+    domEventName$jscomp$inline_1565 =
+      eventName$jscomp$inline_1564.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1566 =
+      eventName$jscomp$inline_1564[0].toUpperCase() +
+      eventName$jscomp$inline_1564.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1563,
-    "on" + capitalizedEvent$jscomp$inline_1564
+    domEventName$jscomp$inline_1565,
+    "on" + capitalizedEvent$jscomp$inline_1566
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -16699,16 +16705,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_1734 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1736 = React.version;
 if (
-  "19.0.0-www-modern-a03254bc-20240905" !==
-  isomorphicReactPackageVersion$jscomp$inline_1734
+  "19.0.0-www-modern-727b3615-20240906" !==
+  isomorphicReactPackageVersion$jscomp$inline_1736
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1734,
-      "19.0.0-www-modern-a03254bc-20240905"
+      isomorphicReactPackageVersion$jscomp$inline_1736,
+      "19.0.0-www-modern-727b3615-20240906"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -16724,25 +16730,25 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2248 = {
+var internals$jscomp$inline_2250 = {
   bundleType: 0,
-  version: "19.0.0-www-modern-a03254bc-20240905",
+  version: "19.0.0-www-modern-727b3615-20240906",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-www-modern-a03254bc-20240905"
+  reconcilerVersion: "19.0.0-www-modern-727b3615-20240906"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2249 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2251 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2249.isDisabled &&
-    hook$jscomp$inline_2249.supportsFiber
+    !hook$jscomp$inline_2251.isDisabled &&
+    hook$jscomp$inline_2251.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2249.inject(
-        internals$jscomp$inline_2248
+      (rendererID = hook$jscomp$inline_2251.inject(
+        internals$jscomp$inline_2250
       )),
-        (injectedHook = hook$jscomp$inline_2249);
+        (injectedHook = hook$jscomp$inline_2251);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -17093,4 +17099,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-a03254bc-20240905";
+exports.version = "19.0.0-www-modern-727b3615-20240906";

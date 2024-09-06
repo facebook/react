@@ -2516,9 +2516,15 @@ module.exports = function ($$$config) {
       if (25 <= numberOfReRenders) throw Error(formatProdErrorMessage(301));
       numberOfReRenders += 1;
       workInProgressHook = currentHook = null;
-      workInProgress.updateQueue = null;
+      if (null != workInProgress.updateQueue) {
+        var children = workInProgress.updateQueue;
+        children.lastEffect = null;
+        children.events = null;
+        children.stores = null;
+        null != children.memoCache && (children.memoCache.index = 0);
+      }
       ReactSharedInternals.H = HooksDispatcherOnRerender;
-      var children = Component(props, secondArg);
+      children = Component(props, secondArg);
     } while (didScheduleRenderPhaseUpdateDuringThisPass);
     return children;
   }
@@ -3168,17 +3174,16 @@ module.exports = function ($$$config) {
   function pushEffect(tag, create, inst, deps) {
     tag = { tag: tag, create: create, inst: inst, deps: deps, next: null };
     create = currentlyRenderingFiber$1.updateQueue;
-    null === create
-      ? ((create = createFunctionComponentUpdateQueue()),
-        (currentlyRenderingFiber$1.updateQueue = create),
-        (create.lastEffect = tag.next = tag))
-      : ((inst = create.lastEffect),
-        null === inst
-          ? (create.lastEffect = tag.next = tag)
-          : ((deps = inst.next),
-            (inst.next = tag),
-            (tag.next = deps),
-            (create.lastEffect = tag)));
+    null === create &&
+      ((create = createFunctionComponentUpdateQueue()),
+      (currentlyRenderingFiber$1.updateQueue = create));
+    inst = create.lastEffect;
+    null === inst
+      ? (create.lastEffect = tag.next = tag)
+      : ((deps = inst.next),
+        (inst.next = tag),
+        (tag.next = deps),
+        (create.lastEffect = tag));
     return tag;
   }
   function updateRef() {
@@ -4414,6 +4419,7 @@ module.exports = function ($$$config) {
     renderLanes
   ) {
     prepareToReadContext(workInProgress);
+    workInProgress.updateQueue = null;
     nextProps = renderWithHooksAgain(
       workInProgress,
       Component,
@@ -12773,7 +12779,7 @@ module.exports = function ($$$config) {
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
       findFiberByHostInstance: getInstanceFromNode,
-      reconcilerVersion: "19.0.0-www-classic-a03254bc-20240905"
+      reconcilerVersion: "19.0.0-www-classic-727b3615-20240906"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
