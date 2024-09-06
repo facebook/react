@@ -744,13 +744,7 @@ const knownEnvironmentNames: Set<string> = new Set();
 // Map of FiberRoot to their root FiberInstance.
 const rootToFiberInstanceMap: Map<FiberRoot, FiberInstance> = new Map();
 
-// Map of one or more Fibers in a pair to their unique id number.
-// We track both Fibers to support Fast Refresh,
-// which may forcefully replace one of the pair as part of hot reloading.
-// In that case it's still important to be able to locate the previous ID during subsequent renders.
-const fiberToFiberInstanceMap: Map<Fiber, FiberInstance> = new Map();
-
-// Map of id to one (arbitrary) Fiber in a pair.
+// Map of id to FiberInstance or VirtualInstance.
 // This Map is used to e.g. get the display name for a Fiber or schedule an update,
 // operations that should be the same whether the current and work-in-progress Fiber is used.
 const idToDevToolsInstanceMap: Map<number, FiberInstance | VirtualInstance> =
@@ -1327,14 +1321,9 @@ export function attach(
     // Recursively re-mount all roots with new filter criteria applied.
     hook.getFiberRoots(rendererID).forEach(root => {
       const current = root.current;
-      const alternate = current.alternate;
       const newRoot = createFiberInstance(current);
       rootToFiberInstanceMap.set(root, newRoot);
       idToDevToolsInstanceMap.set(newRoot.id, newRoot);
-      fiberToFiberInstanceMap.set(current, newRoot);
-      if (alternate) {
-        fiberToFiberInstanceMap.set(alternate, newRoot);
-      }
 
       // Before the traversals, remember to start tracking
       // our path in case we have selection to restore.
@@ -2016,14 +2005,6 @@ export function attach(
     } else {
       fiberInstance = createFiberInstance(fiber);
     }
-    // If this already exists behind a different FiberInstance, we intentionally
-    // override it here to claim the fiber as part of this new instance.
-    // E.g. if it was part of a reparenting.
-    fiberToFiberInstanceMap.set(fiber, fiberInstance);
-    const alternate = fiber.alternate;
-    if (alternate !== null && fiberToFiberInstanceMap.has(alternate)) {
-      fiberToFiberInstanceMap.set(alternate, fiberInstance);
-    }
     idToDevToolsInstanceMap.set(fiberInstance.id, fiberInstance);
 
     const id = fiberInstance.id;
@@ -2236,16 +2217,6 @@ export function attach(
     }
 
     idToDevToolsInstanceMap.delete(fiberInstance.id);
-
-    if (fiberToFiberInstanceMap.get(fiber) === fiberInstance) {
-      fiberToFiberInstanceMap.delete(fiber);
-    }
-    const {alternate} = fiber;
-    if (alternate !== null) {
-      if (fiberToFiberInstanceMap.get(alternate) === fiberInstance) {
-        fiberToFiberInstanceMap.delete(alternate);
-      }
-    }
 
     untrackFiber(fiberInstance, fiber);
   }
@@ -3084,9 +3055,6 @@ export function attach(
             shouldResetChildren = true;
           }
 
-          // Register the new alternate in case it's not already in.
-          fiberToFiberInstanceMap.set(nextChild, fiberInstance);
-
           moveChild(fiberInstance, previousSiblingOfExistingInstance);
 
           if (
@@ -3467,11 +3435,6 @@ export function attach(
         const newRoot = createFiberInstance(current);
         rootToFiberInstanceMap.set(root, newRoot);
         idToDevToolsInstanceMap.set(newRoot.id, newRoot);
-        fiberToFiberInstanceMap.set(current, newRoot);
-        const alternate = current.alternate;
-        if (alternate) {
-          fiberToFiberInstanceMap.set(alternate, newRoot);
-        }
         currentRoot = newRoot;
         setRootPseudoKey(currentRoot.id, root.current);
 
@@ -3541,11 +3504,6 @@ export function attach(
       rootInstance = createFiberInstance(current);
       rootToFiberInstanceMap.set(root, rootInstance);
       idToDevToolsInstanceMap.set(rootInstance.id, rootInstance);
-      fiberToFiberInstanceMap.set(current, rootInstance);
-      const alternate = current.alternate;
-      if (alternate) {
-        fiberToFiberInstanceMap.set(alternate, rootInstance);
-      }
     } else {
       prevFiber = rootInstance.data;
     }
