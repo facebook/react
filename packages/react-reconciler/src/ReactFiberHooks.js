@@ -522,9 +522,7 @@ export function renderWithHooks<Props, SecondArg>(
   }
 
   workInProgress.memoizedState = null;
-  if (workInProgress.updateQueue != null) {
-    resetFunctionComponentUpdateQueue(workInProgress.updateQueue);
-  }
+  workInProgress.updateQueue = null;
   workInProgress.lanes = NoLanes;
 
   // The following should have already been reset
@@ -772,6 +770,7 @@ export function replaySuspendedComponentWithHooks<Props, SecondArg>(
     ignorePreviousDependencies =
       current !== null && current.type !== workInProgress.type;
   }
+  workInProgress.updateQueue = null;
   const children = renderWithHooksAgain(
     workInProgress,
     Component,
@@ -2516,17 +2515,15 @@ function pushEffect(
   if (componentUpdateQueue === null) {
     componentUpdateQueue = createFunctionComponentUpdateQueue();
     currentlyRenderingFiber.updateQueue = (componentUpdateQueue: any);
+  }
+  const lastEffect = componentUpdateQueue.lastEffect;
+  if (lastEffect === null) {
     componentUpdateQueue.lastEffect = effect.next = effect;
   } else {
-    const lastEffect = componentUpdateQueue.lastEffect;
-    if (lastEffect === null) {
-      componentUpdateQueue.lastEffect = effect.next = effect;
-    } else {
-      const firstEffect = lastEffect.next;
-      lastEffect.next = effect;
-      effect.next = firstEffect;
-      componentUpdateQueue.lastEffect = effect;
-    }
+    const firstEffect = lastEffect.next;
+    lastEffect.next = effect;
+    effect.next = firstEffect;
+    componentUpdateQueue.lastEffect = effect;
   }
   return effect;
 }

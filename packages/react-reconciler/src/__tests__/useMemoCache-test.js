@@ -575,7 +575,11 @@ describe('useMemoCache()', () => {
       'Some expensive processing... [A2]',
       'Suspend! [chunkB]',
 
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [chunkB]'] : []),
+      ...(gate('enableSiblingPrerendering')
+        ? gate('enableNoCloningMemoCache')
+          ? ['Suspend! [chunkB]']
+          : ['Some expensive processing... [A2]', 'Suspend! [chunkB]']
+        : []),
     ]);
 
     // The second chunk hasn't loaded yet, so we're still showing the
@@ -596,11 +600,26 @@ describe('useMemoCache()', () => {
     // Once the input has updated, we go back to rendering the transition.
     // We did not have process the first chunk again. We reused the
     // computation from the earlier attempt.
-    assertLog([
-      'Suspend! [chunkB]',
+    if (gate(flags => flags.enableNoCloningMemoCache)) {
+      // We did not have process the first chunk again. We reused the
+      // computation from the earlier attempt.
+      assertLog([
+        'Suspend! [chunkB]',
 
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [chunkB]'] : []),
-    ]);
+        ...(gate('enableSiblingPrerendering') ? ['Suspend! [chunkB]'] : []),
+      ]);
+    } else {
+      // Because we clone/reset the memo cache after every aborted attempt, we
+      // must process the first chunk again.
+      assertLog([
+        'Some expensive processing... [A2]',
+        'Suspend! [chunkB]',
+
+        ...(gate('enableSiblingPrerendering')
+          ? ['Some expensive processing... [A2]', 'Suspend! [chunkB]']
+          : []),
+      ]);
+    }
 
     expect(root).toMatchRenderedOutput(
       <>
@@ -613,7 +632,18 @@ describe('useMemoCache()', () => {
     await act(() => updatedChunkB.resolve('B2'));
     // We did not have process the first chunk again. We reused the
     // computation from the earlier attempt.
-    assertLog([]);
+    if (gate(flags => flags.enableNoCloningMemoCache)) {
+      // We did not have process the first chunk again. We reused the
+      // computation from the earlier attempt.
+      assertLog([]);
+    } else {
+      // Because we clone/reset the memo cache after every aborted attempt, we
+      // must process the first chunk again.
+      //
+      // That's three total times we've processed the first chunk, compared to
+      // just once when enableNoCloningMemoCache is on.
+      assertLog(['Some expensive processing... [A2]']);
+    }
     expect(root).toMatchRenderedOutput(
       <>
         <div>Input: hi!</div>
