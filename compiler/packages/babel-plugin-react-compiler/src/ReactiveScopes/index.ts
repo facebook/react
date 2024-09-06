@@ -6,18 +6,13 @@
  */
 
 export {alignObjectMethodScopes} from './AlignObjectMethodScopes';
-export {alignReactiveScopesToBlockScopes} from './AlignReactiveScopesToBlockScopes';
 export {assertScopeInstructionsWithinScopes} from './AssertScopeInstructionsWithinScope';
 export {assertWellFormedBreakTargets} from './AssertWellFormedBreakTargets';
-export {buildReactiveBlocks} from './BuildReactiveBlocks';
 export {buildReactiveFunction} from './BuildReactiveFunction';
 export {codegenFunction, type CodegenFunction} from './CodegenReactiveFunction';
 export {extractScopeDeclarationsFromDestructuring} from './ExtractScopeDeclarationsFromDestructuring';
-export {flattenReactiveLoops} from './FlattenReactiveLoops';
-export {flattenScopesWithHooksOrUse} from './FlattenScopesWithHooksOrUse';
 export {inferReactiveScopeVariables} from './InferReactiveScopeVariables';
 export {memoizeFbtAndMacroOperandsInSameScope} from './MemoizeFbtAndMacroOperandsInSameScope';
-export {mergeOverlappingReactiveScopes} from './MergeOverlappingReactiveScopes';
 export {mergeReactiveScopesThatInvalidateTogether} from './MergeReactiveScopesThatInvalidateTogether';
 export {printReactiveFunction} from './PrintReactiveFunction';
 export {promoteUsedTemporaries} from './PromoteUsedTemporaries';
