@@ -16,9 +16,9 @@ import {
 } from './HIR';
 
 export type CollectHoistablePropertyLoadsResult = {
-  nodes: Map<ScopeId, BlockInfo>;
-  temporaries: Map<Identifier, Identifier>;
-  properties: Map<Identifier, ReactiveScopeDependency>;
+  nodes: ReadonlyMap<ScopeId, BlockInfo>;
+  temporaries: ReadonlyMap<Identifier, Identifier>;
+  properties: ReadonlyMap<Identifier, ReactiveScopeDependency>;
 };
 
 /**
@@ -72,7 +72,7 @@ export type CollectHoistablePropertyLoadsResult = {
  */
 export function collectHoistablePropertyLoads(
   fn: HIRFunction,
-  usedOutsideDeclaringScope: Set<DeclarationId>,
+  usedOutsideDeclaringScope: ReadonlySet<DeclarationId>,
 ): CollectHoistablePropertyLoadsResult {
   const sidemap = collectSidemap(fn, usedOutsideDeclaringScope);
   const nodes = collectNodes(fn, sidemap);
@@ -243,14 +243,14 @@ type PropertyLoadInfo = {
 };
 
 type TemporariesSidemap = {
-  temporaries: Map<Identifier, Identifier>;
-  properties: Map<Identifier, ReactiveScopeDependency>;
-  propertyLoadInfo: Map<BlockId, Array<PropertyLoadInfo>>;
+  temporaries: ReadonlyMap<Identifier, Identifier>;
+  properties: ReadonlyMap<Identifier, ReactiveScopeDependency>;
+  propertyLoadInfo: ReadonlyMap<BlockId, Array<PropertyLoadInfo>>;
 };
 
 function collectSidemap(
   fn: HIRFunction,
-  usedOutsideDeclaringScope: Set<DeclarationId>,
+  usedOutsideDeclaringScope: ReadonlySet<DeclarationId>,
 ): TemporariesSidemap {
   const temporaries = new Map<Identifier, Identifier>();
   const properties = new Map<Identifier, ReactiveScopeDependency>();
@@ -294,7 +294,7 @@ function collectSidemap(
 function collectNodes(
   fn: HIRFunction,
   sidemap: TemporariesSidemap,
-): Map<BlockId, BlockInfo> {
+): ReadonlyMap<BlockId, BlockInfo> {
   /**
    * Due to current limitations of mutable range inference, there are edge cases in
    * which we infer known-immutable values (e.g. props or hook params) to have a
@@ -358,7 +358,10 @@ function collectNodes(
   return nodes;
 }
 
-function deriveNonNull(fn: HIRFunction, nodes: Map<BlockId, BlockInfo>): void {
+function deriveNonNull(
+  fn: HIRFunction,
+  nodes: ReadonlyMap<BlockId, BlockInfo>,
+): void {
   const succ = new Map<BlockId, Set<BlockId>>();
   const terminalPreds = new Set<BlockId>();
 

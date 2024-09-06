@@ -84,7 +84,7 @@ export function propagateScopeDependenciesHIR(fn: HIRFunction): void {
 
 function findTemporariesUsedOutsideDeclaringScope(
   fn: HIRFunction,
-): Set<DeclarationId> {
+): ReadonlySet<DeclarationId> {
   /*
    * tracks all relevant LoadLocal and PropertyLoad lvalues
    * and the scope where they are defined
@@ -150,25 +150,20 @@ type Decl = {
 };
 
 class Context {
-  #temporariesUsedOutsideScope: Set<DeclarationId>;
   #declarations: Map<DeclarationId, Decl> = new Map();
   #reassignments: Map<Identifier, Decl> = new Map();
+
+  #scopes: Stack<ReactiveScope> = empty();
   // Reactive dependencies used in the current reactive scope.
   #dependencies: Stack<Array<ReactiveScopeDependency>> = empty();
-  /*
-   * We keep a sidemap for temporaries created by PropertyLoads, and do
-   * not store any control flow (i.e. #inConditionalWithinScope) here.
-   *  - a ReactiveScope (A) containing a PropertyLoad may differ from the
-   *    ReactiveScope (B) that uses the produced temporary.
-   *  - codegen will inline these PropertyLoads back into scope (B)
-   */
-  #properties: ReadonlyMap<Identifier, ReactiveScopeDependency>;
-  #temporaries: ReadonlyMap<Identifier, Identifier>;
-  #scopes: Stack<ReactiveScope> = empty();
   deps: Map<ReactiveScope, Array<ReactiveScopeDependency>> = new Map();
 
+  #properties: ReadonlyMap<Identifier, ReactiveScopeDependency>;
+  #temporaries: ReadonlyMap<Identifier, Identifier>;
+  #temporariesUsedOutsideScope: ReadonlySet<DeclarationId>;
+
   constructor(
-    temporariesUsedOutsideScope: Set<DeclarationId>,
+    temporariesUsedOutsideScope: ReadonlySet<DeclarationId>,
     temporaries: ReadonlyMap<Identifier, Identifier>,
     properties: ReadonlyMap<Identifier, ReactiveScopeDependency>,
   ) {
@@ -445,7 +440,7 @@ function handleInstruction(instr: Instruction, context: Context): void {
 
 function collectDependencies(
   fn: HIRFunction,
-  usedOutsideDeclaringScope: Set<DeclarationId>,
+  usedOutsideDeclaringScope: ReadonlySet<DeclarationId>,
   temporaries: ReadonlyMap<Identifier, Identifier>,
   properties: ReadonlyMap<Identifier, ReactiveScopeDependency>,
 ): Map<ReactiveScope, Array<ReactiveScopeDependency>> {
@@ -494,7 +489,7 @@ function collectDependencies(
  * Compute the set of hoistable property reads.
  */
 function recordHoistablePropertyReads(
-  nodes: Map<ScopeId, BlockInfo>,
+  nodes: ReadonlyMap<ScopeId, BlockInfo>,
   scopeId: ScopeId,
   tree: ReactiveScopeDependencyTreeHIR,
 ): void {
