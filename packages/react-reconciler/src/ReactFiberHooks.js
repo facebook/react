@@ -770,6 +770,11 @@ export function replaySuspendedComponentWithHooks<Props, SecondArg>(
     ignorePreviousDependencies =
       current !== null && current.type !== workInProgress.type;
   }
+  // renderWithHooks only resets the updateQueue but does not clear it, since
+  // it needs to work for both this case (suspense replay) as well as for double
+  // renders in dev and setState-in-render. However, for the suspense replay case
+  // we need to reset the updateQueue to correctly handle unmount effects, so we
+  // clear the queue here
   workInProgress.updateQueue = null;
   const children = renderWithHooksAgain(
     workInProgress,
