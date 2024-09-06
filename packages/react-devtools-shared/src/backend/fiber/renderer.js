@@ -1293,11 +1293,11 @@ export function attach(
           'Expected the root instance to already exist when applying filters',
         );
       }
-      currentRootID = rootInstance.id;
+      currentRoot = rootInstance;
       unmountInstanceRecursively(rootInstance);
       rootToFiberInstanceMap.delete(root);
       flushPendingEvents(root);
-      currentRootID = -1;
+      currentRoot = (null: any);
     });
 
     applyComponentFilters(componentFilters);
@@ -1323,11 +1323,11 @@ export function attach(
         mightBeOnTrackedPath = true;
       }
 
-      currentRootID = newRoot.id;
-      setRootPseudoKey(currentRootID, root.current);
+      currentRoot = newRoot;
+      setRootPseudoKey(currentRoot.id, root.current);
       mountFiberRecursively(root.current, false);
       flushPendingEvents(root);
-      currentRootID = -1;
+      currentRoot = (null: any);
     });
 
     // Also re-evaluate all error and warning counts given the new filters.
@@ -1528,7 +1528,7 @@ export function attach(
   }
 
   // When a mount or update is in progress, this value tracks the root that is being operated on.
-  let currentRootID: number = -1;
+  let currentRoot: FiberInstance = (null: any);
 
   // Returns a FiberInstance if one has already been generated for the Fiber or null if one has not been generated.
   // Use this method while e.g. logging to avoid over-retaining Fibers.
@@ -1885,7 +1885,12 @@ export function attach(
         3 + pendingOperations.length,
       );
       operations[0] = rendererID;
-      operations[1] = currentRootID;
+      if (currentRoot === null) {
+        // TODO: This is not always safe so this field is probably not needed.
+        operations[1] = -1;
+      } else {
+        operations[1] = currentRoot.id;
+      }
       operations[2] = 0; // String table size
       for (let j = 0; j < pendingOperations.length; j++) {
         operations[3 + j] = pendingOperations[j];
@@ -2038,7 +2043,12 @@ export function attach(
     // Which in turn enables fiber props, states, and hooks to be inspected.
     let i = 0;
     operations[i++] = rendererID;
-    operations[i++] = currentRootID;
+    if (currentRoot === null) {
+      // TODO: This is not always safe so this field is probably not needed.
+      operations[i++] = -1;
+    } else {
+      operations[i++] = currentRoot.id;
+    }
 
     // Now fill in the string table.
     // [stringTableLength, str1Length, ...str1, str2Length, ...str2, ...]
@@ -3568,8 +3578,8 @@ export function attach(
         if (alternate) {
           fiberToFiberInstanceMap.set(alternate, newRoot);
         }
-        currentRootID = newRoot.id;
-        setRootPseudoKey(currentRootID, root.current);
+        currentRoot = newRoot;
+        setRootPseudoKey(currentRoot.id, root.current);
 
         // Handle multi-renderer edge-case where only some v16 renderers support profiling.
         if (isProfiling && rootSupportsProfiling(root)) {
@@ -3589,7 +3599,7 @@ export function attach(
 
         mountFiberRecursively(root.current, false);
         flushPendingEvents(root);
-        currentRootID = -1;
+        currentRoot = (null: any);
       });
     }
   }
@@ -3646,11 +3656,10 @@ export function attach(
       if (alternate) {
         fiberToFiberInstanceMap.set(alternate, rootInstance);
       }
-      currentRootID = rootInstance.id;
     } else {
-      currentRootID = rootInstance.id;
       prevFiber = rootInstance.data;
     }
+    currentRoot = rootInstance;
 
     // Before the traversals, remember to start tracking
     // our path in case we have selection to restore.
@@ -3699,7 +3708,7 @@ export function attach(
         current.memoizedState.isDehydrated !== true;
       if (!wasMounted && isMounted) {
         // Mount a new root.
-        setRootPseudoKey(currentRootID, current);
+        setRootPseudoKey(currentRoot.id, current);
         mountFiberRecursively(current, false);
       } else if (wasMounted && isMounted) {
         // Update an existing root.
@@ -3707,12 +3716,12 @@ export function attach(
       } else if (wasMounted && !isMounted) {
         // Unmount an existing root.
         unmountInstanceRecursively(rootInstance);
-        removeRootPseudoKey(currentRootID);
+        removeRootPseudoKey(currentRoot.id);
         rootToFiberInstanceMap.delete(root);
       }
     } else {
       // Mount a new root.
-      setRootPseudoKey(currentRootID, current);
+      setRootPseudoKey(currentRoot.id, current);
       mountFiberRecursively(current, false);
     }
 
@@ -3720,7 +3729,7 @@ export function attach(
       if (!shouldBailoutWithPendingOperations()) {
         const commitProfilingMetadata =
           ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
-            currentRootID,
+            currentRoot.id,
           );
 
         if (commitProfilingMetadata != null) {
@@ -3729,7 +3738,7 @@ export function attach(
           );
         } else {
           ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).set(
-            currentRootID,
+            currentRoot.id,
             [((currentCommitProfilingMetadata: any): CommitProfilingData)],
           );
         }
@@ -3743,7 +3752,7 @@ export function attach(
       hook.emit('traceUpdates', traceUpdatesForNodes);
     }
 
-    currentRootID = -1;
+    currentRoot = (null: any);
   }
 
   function getResourceInstance(fiber: Fiber): HostInstance | null {
