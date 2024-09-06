@@ -37,9 +37,6 @@ export function propagateScopeDependenciesHIR(fn: HIRFunction): void {
   const usedOutsideDeclaringScope =
     findTemporariesUsedOutsideDeclaringScope(fn);
 
-  /**
-   *
-   */
   const {nodes, temporaries, properties} = collectHoistablePropertyLoads(
     fn,
     usedOutsideDeclaringScope,
@@ -172,8 +169,8 @@ class Context {
 
   constructor(
     temporariesUsedOutsideScope: Set<DeclarationId>,
-    temporaries: Map<Identifier, Identifier>,
-    properties: Map<Identifier, ReactiveScopeDependency>,
+    temporaries: ReadonlyMap<Identifier, Identifier>,
+    properties: ReadonlyMap<Identifier, ReactiveScopeDependency>,
   ) {
     this.#temporariesUsedOutsideScope = temporariesUsedOutsideScope;
     this.#temporaries = temporaries;
@@ -383,7 +380,7 @@ class Context {
   }
 }
 
-function handleInstruction(instr: Instruction, context: Context) {
+function handleInstruction(instr: Instruction, context: Context): void {
   const {id, value, lvalue} = instr;
   if (value.kind === 'LoadLocal') {
     if (
@@ -449,9 +446,9 @@ function handleInstruction(instr: Instruction, context: Context) {
 function collectDependencies(
   fn: HIRFunction,
   usedOutsideDeclaringScope: Set<DeclarationId>,
-  temporaries: Map<Identifier, Identifier>,
-  properties: Map<Identifier, ReactiveScopeDependency>,
-) {
+  temporaries: ReadonlyMap<Identifier, Identifier>,
+  properties: ReadonlyMap<Identifier, ReactiveScopeDependency>,
+): Map<ReactiveScope, Array<ReactiveScopeDependency>> {
   const context = new Context(
     usedOutsideDeclaringScope,
     temporaries,

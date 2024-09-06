@@ -13,12 +13,61 @@ import {
   ScopeId,
 } from './HIR';
 
-type CollectHoistablePropertyLoadsResult = {
+export type CollectHoistablePropertyLoadsResult = {
   nodes: Map<ScopeId, BlockInfo>;
   temporaries: Map<Identifier, Identifier>;
   properties: Map<Identifier, ReactiveScopeDependency>;
 };
 
+/**
+ * Helper function for `PropagateScopeDependencies`.
+ * Uses control flow graph analysis to determine which `Identifier`s can
+ * be assumed to be non-null objects, on a per-block basis.
+ *
+ * Here is an example:
+ * ```js
+ * function useFoo(x, y, z) {
+ *   // NOT safe to hoist PropertyLoads here
+ *   if (...) {
+ *     // safe to hoist loads from x
+ *     read(x.a);
+ *     return;
+ *   }
+ *   // safe to hoist loads from y, z
+ *   read(y.b);
+ *   if (...) {
+ *     // safe to hoist loads from y, z
+ *     read(z.a);
+ *   } else {
+ *     // safe to hoist loads from y, z
+ *     read(z.b);
+ *   }
+ *   // safe to hoist loads from y, z
+ *   return;
+ * }
+ * ```
+ *
+ * Note that we currently do NOT account for mutable / declaration range
+ * when doing the CFG-based traversal, producing results that are technically
+ * incorrect but filtered by PropagateScopeDeps (which only takes dependencies
+ * on constructed value -- i.e. a scope's dependencies must have mutable ranges
+ * ending earlier than the scope start).
+ *
+ * Take this example, this function will infer x.foo.bar as non-nullable for bb0,
+ * via the intersection of bb1 & bb2 which in turn comes from bb3. This is technically
+ * incorrect bb0 is before / during x's mutable range.
+ *  bb0:
+ *    const x = ...;
+ *    if cond then bb1 else bb2
+ *  bb1:
+ *    ...
+ *    goto bb3
+ *  bb2:
+ *    ...
+ *    goto bb3:
+ *  bb3:
+ *    x.foo.bar
+ */
 export function collectHoistablePropertyLoads(
   fn: HIRFunction,
   usedOutsideDeclaringScope: Set<DeclarationId>,
@@ -207,6 +256,14 @@ function collectNodes(
   usedOutsideDeclaringScope: Set<DeclarationId>,
   c: TemporariesSideMap,
 ): Map<BlockId, BlockInfo> {
+  /**
+   * Due to current limitations of mutable range inference, there are edge cases in
+   * which we infer known-immutable values (e.g. props or hook params) to have a
+   * mutable range and scope.
+   * (see `destructure-array-declaration-to-context-var` fixture)
+   * We track known immutable identifiers to reduce regressions (as PropagateScopeDeps
+   * is being rewritten to HIR).
+   */
   const knownImmutableIdentifiers = new Set<Identifier>();
   if (fn.fnType === 'Component' || fn.fnType === 'Hook') {
     for (const p of fn.params) {
@@ -242,10 +299,7 @@ function collectNodes(
          * blocks and (2) passes like MemoizeFbtAndMacroOperands may assign scopes to
          * non-mutable identifiers.
          *
-         * Due to current limitations of mutable range inference, there are edge cases in
-         * which we infer known-immutable values (e.g. props or hook params) to have a
-         * mutable range and scope.
-         * (see `destructure-array-declaration-to-context-var` fixture)
+         * See comment at top of function for why we track known immutable identifiers.
          */
         const isMutableAtInstr =
           value.object.identifier.mutableRange.end >
@@ -287,8 +341,7 @@ function deriveNonNull(fn: HIRFunction, nodes: Map<BlockId, BlockInfo>): void {
 
   for (const [blockId, block] of fn.body.blocks) {
     for (const pred of block.preds) {
-      const predVal = getOrInsertDefault(succ, pred, new Set());
-      predVal.add(blockId);
+      getOrInsertDefault(succ, pred, new Set()).add(blockId);
     }
     if (block.terminal.kind === 'throw' || block.terminal.kind === 'return') {
       terminalPreds.add(blockId);
@@ -297,10 +350,14 @@ function deriveNonNull(fn: HIRFunction, nodes: Map<BlockId, BlockInfo>): void {
 
   function recursivelyDeriveNonNull(
     nodeId: BlockId,
-    kind: 'succ' | 'pred',
+    direction: 'forward' | 'backward',
     traversalState: Map<BlockId, 'active' | 'done'>,
-    result: Map<BlockId, Set<PropertyLoadNode>>,
+    nonNullObjectsByBlock: Map<BlockId, Set<PropertyLoadNode>>,
   ): boolean {
+    /**
+     * Avoid re-visiting computed or currently active nodes, which can
+     * occur when the control flow graph has backedges.
+     */
     if (traversalState.has(nodeId)) {
       return false;
     }
@@ -309,12 +366,12 @@ function deriveNonNull(fn: HIRFunction, nodes: Map<BlockId, BlockInfo>): void {
     const node = nodes.get(nodeId);
     if (node == null) {
       CompilerError.invariant(false, {
-        reason: `Bad node ${nodeId}, kind: ${kind}`,
+        reason: `Bad node ${nodeId}, kind: ${direction}`,
         loc: GeneratedSource,
       });
     }
     const neighbors = Array.from(
-      kind === 'succ' ? (succ.get(nodeId) ?? []) : node.block.preds,
+      direction === 'backward' ? (succ.get(nodeId) ?? []) : node.block.preds,
     );
 
     let changed = false;
@@ -322,9 +379,9 @@ function deriveNonNull(fn: HIRFunction, nodes: Map<BlockId, BlockInfo>): void {
       if (!traversalState.has(pred)) {
         const neighborChanged = recursivelyDeriveNonNull(
           pred,
-          kind,
+          direction,
           traversalState,
-          result,
+          nonNullObjectsByBlock,
         );
         changed ||= neighborChanged;
       }
@@ -339,20 +396,25 @@ function deriveNonNull(fn: HIRFunction, nodes: Map<BlockId, BlockInfo>): void {
     const neighborAccesses = Set_intersect([
       ...(Array.from(neighbors)
         .filter(n => traversalState.get(n) === 'done')
-        .map(n => result.get(n) ?? new Set()) as Array<Set<PropertyLoadNode>>),
+        .map(n => nonNullObjectsByBlock.get(n) ?? new Set()) as Array<
+        Set<PropertyLoadNode>
+      >),
     ]);
 
-    const prevSize = result.get(nodeId)?.size;
-    result.set(nodeId, Set_union(node.assumedNonNullObjects, neighborAccesses));
+    const prevSize = nonNullObjectsByBlock.get(nodeId)?.size;
+    nonNullObjectsByBlock.set(
+      nodeId,
+      Set_union(node.assumedNonNullObjects, neighborAccesses),
+    );
     traversalState.set(nodeId, 'done');
 
-    changed ||= prevSize !== result.get(nodeId)!.size;
+    changed ||= prevSize !== nonNullObjectsByBlock.get(nodeId)!.size;
     CompilerError.invariant(
-      prevSize == null || prevSize <= result.get(nodeId)!.size,
+      prevSize == null || prevSize <= nonNullObjectsByBlock.get(nodeId)!.size,
       {
         reason: '[CollectHoistablePropertyLoads] Nodes shrank!',
-        description: `${nodeId} ${kind} ${prevSize} ${
-          result.get(nodeId)!.size
+        description: `${nodeId} ${direction} ${prevSize} ${
+          nonNullObjectsByBlock.get(nodeId)!.size
         }`,
         loc: GeneratedSource,
       },
@@ -373,7 +435,7 @@ function deriveNonNull(fn: HIRFunction, nodes: Map<BlockId, BlockInfo>): void {
     for (const [blockId] of fn.body.blocks) {
       const changed_ = recursivelyDeriveNonNull(
         blockId,
-        'pred',
+        'forward',
         traversalState,
         fromEntry,
       );
@@ -383,7 +445,7 @@ function deriveNonNull(fn: HIRFunction, nodes: Map<BlockId, BlockInfo>): void {
     for (const [blockId] of reversedBlocks) {
       const changed_ = recursivelyDeriveNonNull(
         blockId,
-        'succ',
+        'backward',
         traversalState,
         fromExit,
       );
@@ -392,7 +454,10 @@ function deriveNonNull(fn: HIRFunction, nodes: Map<BlockId, BlockInfo>): void {
     traversalState.clear();
   }
 
-  // TODO: I can't come up with a case that requires fixed-point iteration
+  /**
+   * TODO: validate against meta internal code, then remove in future PR.
+   * Currently cannot come up with a case that requires fixed-point iteration.
+   */
   CompilerError.invariant(i === 2, {
     reason: 'require fixed-point iteration',
     loc: GeneratedSource,

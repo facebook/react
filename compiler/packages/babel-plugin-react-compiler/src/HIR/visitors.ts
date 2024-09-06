@@ -1157,7 +1157,7 @@ export function* eachTerminalOperand(terminal: Terminal): Iterable<Place> {
 /**
  * Helper class for traversing scope blocks in HIR-form.
  */
-export class ScopeBlockTraversal<TContext, TState> {
+export class ScopeBlockTraversal {
   // Live stack of active scopes
   #activeScopes: Array<ScopeId> = [];
   blockInfos: Map<
