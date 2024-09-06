@@ -2891,6 +2891,25 @@ export function attach(
           }
         }
       }
+
+      // If this Fiber was in the set of memoizedUpdaters we need to record
+      // it to be included in the description of the commit.
+      const fiberRoot: FiberRoot = currentRoot.data.stateNode;
+      const updaters = fiberRoot.memoizedUpdaters;
+      if (
+        updaters != null &&
+        (updaters.has(fiber) ||
+          // We check the alternate here because we're matching identity and
+          // prevFiber might be same as fiber.
+          (fiber.alternate !== null && updaters.has(fiber.alternate)))
+      ) {
+        const metadata =
+          ((currentCommitProfilingMetadata: any): CommitProfilingData);
+        if (metadata.updaters === null) {
+          metadata.updaters = [];
+        }
+        metadata.updaters.push(instanceToSerializedElement(fiberInstance));
+      }
     }
   }
 
@@ -3591,33 +3610,18 @@ export function attach(
             commitTime: getCurrentTime() - profilingStartTime,
             maxActualDuration: 0,
             priorityLevel: null,
-            updaters: getUpdatersList(root),
+            updaters: null,
             effectDuration: null,
             passiveEffectDuration: null,
           };
         }
 
         mountFiberRecursively(root.current, false);
+
         flushPendingEvents(root);
         currentRoot = (null: any);
       });
     }
-  }
-
-  function getUpdatersList(root: any): Array<SerializedElement> | null {
-    const updaters = root.memoizedUpdaters;
-    if (updaters == null) {
-      return null;
-    }
-    const result = [];
-    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-    for (const updater of updaters) {
-      const inst = getFiberInstanceUnsafe(updater);
-      if (inst !== null) {
-        result.push(instanceToSerializedElement(inst));
-      }
-    }
-    return result;
   }
 
   function handleCommitFiberUnmount(fiber: any) {
@@ -3684,9 +3688,7 @@ export function attach(
         maxActualDuration: 0,
         priorityLevel:
           priorityLevel == null ? null : formatPriorityLevel(priorityLevel),
-
-        updaters: getUpdatersList(root),
-
+        updaters: null,
         // Initialize to null; if new enough React version is running,
         // these values will be read during separate handlePostCommitFiberRoot() call.
         effectDuration: null,
