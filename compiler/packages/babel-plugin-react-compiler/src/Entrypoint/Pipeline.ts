@@ -101,6 +101,7 @@ import {propagatePhiTypes} from '../TypeInference/PropagatePhiTypes';
 import {lowerContextAccess} from '../Optimization/LowerContextAccess';
 import {validateNoSetStateInPassiveEffects} from '../Validation/ValidateNoSetStateInPassiveEffects';
 import {validateNoJSXInTryStatement} from '../Validation/ValidateNoJSXInTryStatement';
+import {inlineSingleReturnJSX} from '../Optimization/InlineSingleReturnJSX';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -221,6 +222,11 @@ function* runWithEnvironment(
   if (env.config.enableInstructionReordering) {
     instructionReordering(hir);
     yield log({kind: 'hir', name: 'InstructionReordering', value: hir});
+  }
+
+  if (env.config.enableInlineSingleReturnJSX) {
+    inlineSingleReturnJSX(hir);
+    yield log({kind: 'hir', name: 'InlineSingleReturnJSX', value: hir});
   }
 
   pruneMaybeThrows(hir);

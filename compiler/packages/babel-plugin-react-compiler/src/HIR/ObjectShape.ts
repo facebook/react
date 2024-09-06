@@ -195,6 +195,7 @@ export const BuiltInPropsId = 'BuiltInProps';
 export const BuiltInArrayId = 'BuiltInArray';
 export const BuiltInFunctionId = 'BuiltInFunction';
 export const BuiltInJsxId = 'BuiltInJsx';
+export const BuiltInComponentId = 'BuiltInComponent';
 export const BuiltInObjectId = 'BuiltInObject';
 export const BuiltInUseStateId = 'BuiltInUseState';
 export const BuiltInSetStateId = 'BuiltInSetState';
