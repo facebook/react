@@ -96,6 +96,11 @@ export function setProperty(arg: any, property: any): void {
   }
 }
 
+export function setPropertyByKey(arg: any, key: string, property: any): void {
+  arg[key] = property;
+  return arg;
+}
+
 export function arrayPush<T>(arr: Array<T>, ...values: Array<T>): void {
   arr.push(...values);
 }
@@ -123,7 +128,7 @@ export function calculateExpensiveNumber(x: number): number {
 /**
  * Functions that do not mutate their parameters
  */
-export function shallowCopy(obj: object): object {
+export function shallowCopy<T extends object>(obj: T): T {
   return Object.assign({}, obj);
 }
 
