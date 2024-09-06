@@ -9,8 +9,10 @@ import {
   HIRFunction,
   Identifier,
   Place,
+  PropertyLoad,
   ReactiveScopeDependency,
   ScopeId,
+  TInstruction,
 } from './HIR';
 
 export type CollectHoistablePropertyLoadsResult = {
@@ -72,9 +74,8 @@ export function collectHoistablePropertyLoads(
   fn: HIRFunction,
   usedOutsideDeclaringScope: Set<DeclarationId>,
 ): CollectHoistablePropertyLoadsResult {
-  const sidemap = new TemporariesSideMap();
-
-  const nodes = collectNodes(fn, usedOutsideDeclaringScope, sidemap);
+  const sidemap = collectSidemap(fn, usedOutsideDeclaringScope);
+  const nodes = collectNodes(fn, sidemap);
   deriveNonNull(fn, nodes);
 
   const nodesKeyedByScopeId = new Map<ScopeId, BlockInfo>();
@@ -236,25 +237,63 @@ class Tree {
     return Tree.#getOrCreateProperty(currNode, n.path.at(-1)!.property);
   }
 }
+type PropertyLoadInfo = {
+  instr: TInstruction<PropertyLoad>;
+  property: ReactiveScopeDependency;
+};
 
-class TemporariesSideMap {
-  temporaries: Map<Identifier, Identifier> = new Map();
-  properties: Map<Identifier, ReactiveScopeDependency> = new Map();
-  tree: Tree = new Tree();
+type TemporariesSidemap = {
+  temporaries: Map<Identifier, Identifier>;
+  properties: Map<Identifier, ReactiveScopeDependency>;
+  propertyLoadInfo: Map<BlockId, Array<PropertyLoadInfo>>;
+};
 
-  declareTemporary(from: Identifier, to: Identifier): void {
-    this.temporaries.set(from, to);
+function collectSidemap(
+  fn: HIRFunction,
+  usedOutsideDeclaringScope: Set<DeclarationId>,
+): TemporariesSidemap {
+  const temporaries = new Map<Identifier, Identifier>();
+  const properties = new Map<Identifier, ReactiveScopeDependency>();
+  const propertyLoadInfo = new Map<BlockId, Array<PropertyLoadInfo>>();
+  for (const [_, block] of fn.body.blocks) {
+    const propertyLoads: Array<PropertyLoadInfo> = [];
+    for (const instr of block.instructions) {
+      const {value, lvalue} = instr;
+      const usedOutside = usedOutsideDeclaringScope.has(
+        lvalue.identifier.declarationId,
+      );
+      if (value.kind === 'PropertyLoad') {
+        const property = getProperty(
+          value.object,
+          value.property,
+          temporaries,
+          properties,
+        );
+        if (!usedOutside) {
+          properties.set(lvalue.identifier, property);
+        }
+        propertyLoads.push({
+          instr: instr as TInstruction<PropertyLoad>,
+          property,
+        });
+      } else if (value.kind === 'LoadLocal') {
+        if (
+          lvalue.identifier.name == null &&
+          value.place.identifier.name !== null &&
+          !usedOutside
+        ) {
+          temporaries.set(lvalue.identifier, value.place.identifier);
+        }
+      }
+    }
+    propertyLoadInfo.set(block.id, propertyLoads);
   }
-
-  declareProperty(from: Identifier, to: ReactiveScopeDependency): void {
-    this.properties.set(from, to);
-  }
+  return {temporaries, properties, propertyLoadInfo};
 }
 
 function collectNodes(
   fn: HIRFunction,
-  usedOutsideDeclaringScope: Set<DeclarationId>,
-  c: TemporariesSideMap,
+  sidemap: TemporariesSidemap,
 ): Map<BlockId, BlockInfo> {
   /**
    * Due to current limitations of mutable range inference, there are edge cases in
@@ -272,62 +311,46 @@ function collectNodes(
       }
     }
   }
+  const tree = new Tree();
   const nodes = new Map<BlockId, BlockInfo>();
-  for (const [blockId, block] of fn.body.blocks) {
+  for (const [_, block] of fn.body.blocks) {
+    const propertyLoadInfos = sidemap.propertyLoadInfo.get(block.id);
+    CompilerError.invariant(propertyLoadInfos != null, {
+      reason: '[CollectHoistablePropertyLoads] block info missing',
+      loc: GeneratedSource,
+    });
+
     const assumedNonNullObjects = new Set<PropertyLoadNode>();
-    for (const instr of block.instructions) {
-      const {value, lvalue} = instr;
-      const usedOutside = usedOutsideDeclaringScope.has(
-        lvalue.identifier.declarationId,
-      );
-      if (value.kind === 'PropertyLoad') {
-        const property = getProperty(
-          value.object,
-          value.property,
-          c.temporaries,
-          c.properties,
-        );
-        if (!usedOutside) {
-          c.declareProperty(lvalue.identifier, property);
-        }
-        const propertyNode = c.tree.getPropertyLoadNode(property);
-        /**
-         * Since this runs *after* buildReactiveScopeTerminals, identifier mutable ranges
-         * are not valid with respect to current instruction id numbering.
-         * We use attached reactive scope ranges as a proxy for mutable range, but this
-         * is an overestimate as (1) scope ranges merge and align to form valid program
-         * blocks and (2) passes like MemoizeFbtAndMacroOperands may assign scopes to
-         * non-mutable identifiers.
-         *
-         * See comment at top of function for why we track known immutable identifiers.
-         */
-        const isMutableAtInstr =
-          value.object.identifier.mutableRange.end >
-            value.object.identifier.mutableRange.start + 1 &&
-          value.object.identifier.scope != null &&
-          inRange(instr, value.object.identifier.scope.range);
-        if (
-          !isMutableAtInstr ||
-          knownImmutableIdentifiers.has(propertyNode.fullPath.identifier)
-        ) {
-          let curr = propertyNode.parent;
-          while (curr != null) {
-            assumedNonNullObjects.add(curr);
-            curr = curr.parent;
-          }
-        }
-      } else if (value.kind === 'LoadLocal') {
-        if (
-          lvalue.identifier.name == null &&
-          value.place.identifier.name !== null &&
-          !usedOutside
-        ) {
-          c.declareTemporary(lvalue.identifier, value.place.identifier);
+    for (const {instr, property} of propertyLoadInfos) {
+      const object = instr.value.object.identifier;
+      const propertyNode = tree.getPropertyLoadNode(property);
+      /**
+       * Since this runs *after* buildReactiveScopeTerminals, identifier mutable ranges
+       * are not valid with respect to current instruction id numbering.
+       * We use attached reactive scope ranges as a proxy for mutable range, but this
+       * is an overestimate as (1) scope ranges merge and align to form valid program
+       * blocks and (2) passes like MemoizeFbtAndMacroOperands may assign scopes to
+       * non-mutable identifiers.
+       *
+       * See comment at top of function for why we track known immutable identifiers.
+       */
+      const isMutableAtInstr =
+        object.mutableRange.end > object.mutableRange.start + 1 &&
+        object.scope != null &&
+        inRange(instr, object.scope.range);
+      if (
+        !isMutableAtInstr ||
+        knownImmutableIdentifiers.has(propertyNode.fullPath.identifier)
+      ) {
+        let curr = propertyNode.parent;
+        while (curr != null) {
+          assumedNonNullObjects.add(curr);
+          curr = curr.parent;
         }
       }
     }
 
-    nodes.set(blockId, {
+    nodes.set(block.id, {
       block,
       assumedNonNullObjects,
     });
