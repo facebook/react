@@ -6962,6 +6962,65 @@ module.exports = function ($$$config) {
           pop(markerInstanceStack);
     }
   }
+  function commitHookEffectListMount(flags, finishedWork) {
+    try {
+      var updateQueue = finishedWork.updateQueue,
+        lastEffect = null !== updateQueue ? updateQueue.lastEffect : null;
+      if (null !== lastEffect) {
+        var firstEffect = lastEffect.next;
+        updateQueue = firstEffect;
+        do {
+          if ((updateQueue.tag & flags) === flags) {
+            lastEffect = void 0;
+            var create = updateQueue.create,
+              inst = updateQueue.inst;
+            lastEffect = create();
+            inst.destroy = lastEffect;
+          }
+          updateQueue = updateQueue.next;
+        } while (updateQueue !== firstEffect);
+      }
+    } catch (error) {
+      captureCommitPhaseError(finishedWork, finishedWork.return, error);
+    }
+  }
+  function commitHookEffectListUnmount(
+    flags,
+    finishedWork,
+    nearestMountedAncestor
+  ) {
+    try {
+      var updateQueue = finishedWork.updateQueue,
+        lastEffect = null !== updateQueue ? updateQueue.lastEffect : null;
+      if (null !== lastEffect) {
+        var firstEffect = lastEffect.next;
+        updateQueue = firstEffect;
+        do {
+          if ((updateQueue.tag & flags) === flags) {
+            var inst = updateQueue.inst,
+              destroy = inst.destroy;
+            void 0 !== destroy &&
+              ((inst.destroy = void 0),
+              safelyCallDestroy(finishedWork, nearestMountedAncestor, destroy));
+          }
+          updateQueue = updateQueue.next;
+        } while (updateQueue !== firstEffect);
+      }
+    } catch (error) {
+      captureCommitPhaseError(finishedWork, finishedWork.return, error);
+    }
+  }
+  function commitClassCallbacks(finishedWork) {
+    var updateQueue = finishedWork.updateQueue;
+    if (null !== updateQueue) {
+      var instance = finishedWork.stateNode;
+      try {
+        commitCallbacks(updateQueue, instance);
+      } catch (error) {
+        captureCommitPhaseError(finishedWork, finishedWork.return, error);
+      }
+    }
+  }
   function safelyCallComponentWillUnmount(
     current,
     nearestMountedAncestor,
@@ -7019,8 +7078,8 @@ module.exports = function ($$$config) {
       else if ("function" === typeof ref)
         try {
           ref(null);
-        } catch (error$144) {
-          captureCommitPhaseError(current, nearestMountedAncestor, error$144);
+        } catch (error$145) {
+          captureCommitPhaseError(current, nearestMountedAncestor, error$145);
         }
       else ref.current = null;
   }
@@ -7029,6 +7088,109 @@ module.exports = function ($$$config) {
       destroy();
     } catch (error) {
       captureCommitPhaseError(current, nearestMountedAncestor, error);
+    }
+  }
+  function commitHostMount(finishedWork) {
+    var type = finishedWork.type,
+      props = finishedWork.memoizedProps,
+      instance = finishedWork.stateNode;
+    try {
+      commitMount(instance, type, props, finishedWork);
+    } catch (error) {
+      captureCommitPhaseError(finishedWork, finishedWork.return, error);
+    }
+  }
+  function commitHostUpdate(finishedWork, newProps, oldProps) {
+    try {
+      commitUpdate(
+        finishedWork.stateNode,
+        finishedWork.type,
+        oldProps,
+        newProps,
+        finishedWork
+      );
+    } catch (error) {
+      captureCommitPhaseError(finishedWork, finishedWork.return, error);
+    }
+  }
+  function isHostParent(fiber) {
+    return (
+      5 === fiber.tag ||
+      3 === fiber.tag ||
+      (supportsResources ? 26 === fiber.tag : !1) ||
+      (supportsSingletons ? 27 === fiber.tag : !1) ||
+      4 === fiber.tag
+    );
+  }
+  function getHostSibling(fiber) {
+    a: for (;;) {
+      for (; null === fiber.sibling; ) {
+        if (null === fiber.return || isHostParent(fiber.return)) return null;
+        fiber = fiber.return;
+      }
+      fiber.sibling.return = fiber.return;
+      for (
+        fiber = fiber.sibling;
+        5 !== fiber.tag &&
+        6 !== fiber.tag &&
+        (supportsSingletons ? 27 !== fiber.tag : 1) &&
+        18 !== fiber.tag;
+
+      ) {
+        if (fiber.flags & 2) continue a;
+        if (null === fiber.child || 4 === fiber.tag) continue a;
+        else (fiber.child.return = fiber), (fiber = fiber.child);
+      }
+      if (!(fiber.flags & 2)) return fiber.stateNode;
+    }
+  }
+  function insertOrAppendPlacementNodeIntoContainer(node, before, parent) {
+    var tag = node.tag;
+    if (5 === tag || 6 === tag)
+      (node = node.stateNode),
+        before
+          ? insertInContainerBefore(parent, node, before)
+          : appendChildToContainer(parent, node);
+    else if (
+      !(4 === tag || (supportsSingletons && 27 === tag)) &&
+      ((node = node.child), null !== node)
+    )
+      for (
+        insertOrAppendPlacementNodeIntoContainer(node, before, parent),
+          node = node.sibling;
+        null !== node;
+
+      )
+        insertOrAppendPlacementNodeIntoContainer(node, before, parent),
+          (node = node.sibling);
+  }
+  function insertOrAppendPlacementNode(node, before, parent) {
+    var tag = node.tag;
+    if (5 === tag || 6 === tag)
+      (node = node.stateNode),
+        before ? insertBefore(parent, node, before) : appendChild(parent, node);
+    else if (
+      !(4 === tag || (supportsSingletons && 27 === tag)) &&
+      ((node = node.child), null !== node)
+    )
+      for (
+        insertOrAppendPlacementNode(node, before, parent), node = node.sibling;
+        null !== node;
+
+      )
+        insertOrAppendPlacementNode(node, before, parent),
+          (node = node.sibling);
+  }
+  function commitHostPortalContainerChildren(
+    portal,
+    finishedWork,
+    pendingChildren
+  ) {
+    portal = portal.containerInfo;
+    try {
+      replaceContainerChildren(portal, pendingChildren);
+    } catch (error) {
+      captureCommitPhaseError(finishedWork, finishedWork.return, error);
     }
   }
   function commitBeforeMutationEffects(root, firstChild) {
@@ -7049,89 +7211,82 @@ module.exports = function ($$$config) {
       else
         for (; null !== nextEffect; ) {
           root = nextEffect;
-          try {
-            var current = root.alternate,
-              flags = root.flags,
-              JSCompiler_temp;
-            if (
-              (JSCompiler_temp =
-                !shouldFireAfterActiveInstanceBlur &&
-                null !== focusedInstanceHandle)
-            ) {
-              var JSCompiler_temp$jscomp$0;
-              if ((JSCompiler_temp$jscomp$0 = 13 === root.tag))
-                a: {
-                  if (null !== current) {
-                    var oldState = current.memoizedState;
-                    if (null === oldState || null !== oldState.dehydrated) {
-                      var newState = root.memoizedState;
-                      JSCompiler_temp$jscomp$0 =
-                        null !== newState && null === newState.dehydrated;
-                      break a;
-                    }
-                  }
-                  JSCompiler_temp$jscomp$0 = !1;
+          firstChild = root.alternate;
+          i = root.flags;
+          if (
+            (deletion =
+              !shouldFireAfterActiveInstanceBlur &&
+              null !== focusedInstanceHandle)
+          ) {
+            if ((deletion = 13 === root.tag))
+              a: {
+                if (
+                  null !== firstChild &&
+                  ((deletion = firstChild.memoizedState),
+                  null === deletion || null !== deletion.dehydrated)
+                ) {
+                  deletion = root.memoizedState;
+                  deletion = null !== deletion && null === deletion.dehydrated;
+                  break a;
                 }
-              JSCompiler_temp =
-                JSCompiler_temp$jscomp$0 &&
-                doesFiberContain(root, focusedInstanceHandle);
-            }
-            JSCompiler_temp &&
-              ((shouldFireAfterActiveInstanceBlur = !0),
-              beforeActiveInstanceBlur(root));
-            switch (root.tag) {
-              case 0:
-                if (0 !== (flags & 4)) {
-                  var updateQueue = root.updateQueue,
-                    eventPayloads =
-                      null !== updateQueue ? updateQueue.events : null;
-                  if (null !== eventPayloads)
-                    for (
-                      firstChild = 0;
-                      firstChild < eventPayloads.length;
-                      firstChild++
-                    ) {
-                      var _eventPayloads$ii = eventPayloads[firstChild];
-                      _eventPayloads$ii.ref.impl = _eventPayloads$ii.nextImpl;
-                    }
-                }
-                break;
-              case 11:
-              case 15:
-                break;
-              case 1:
-                if (0 !== (flags & 1024) && null !== current) {
-                  var prevState = current.memoizedState,
-                    instance = root.stateNode,
-                    snapshot = instance.getSnapshotBeforeUpdate(
-                      resolveClassComponentProps(
-                        root.type,
-                        current.memoizedProps,
-                        root.elementType === root.type
-                      ),
-                      prevState
-                    );
+                deletion = !1;
+              }
+            deletion =
+              deletion && doesFiberContain(root, focusedInstanceHandle);
+          }
+          deletion &&
+            ((shouldFireAfterActiveInstanceBlur = !0),
+            beforeActiveInstanceBlur(root));
+          switch (root.tag) {
+            case 0:
+              if (
+                0 !== (i & 4) &&
+                ((firstChild = root.updateQueue),
+                (firstChild = null !== firstChild ? firstChild.events : null),
+                null !== firstChild)
+              )
+                for (i = 0; i < firstChild.length; i++)
+                  (deletion = firstChild[i]),
+                    (deletion.ref.impl = deletion.nextImpl);
+              break;
+            case 11:
+            case 15:
+              break;
+            case 1:
+              if (0 !== (i & 1024) && null !== firstChild) {
+                i = root;
+                deletion = firstChild.memoizedProps;
+                firstChild = firstChild.memoizedState;
+                var instance = i.stateNode;
+                try {
+                  var snapshot = instance.getSnapshotBeforeUpdate(
+                    resolveClassComponentProps(
+                      i.type,
+                      deletion,
+                      i.elementType === i.type
+                    ),
+                    firstChild
+                  );
                   instance.__reactInternalSnapshotBeforeUpdate = snapshot;
+                } catch (error) {
+                  captureCommitPhaseError(i, i.return, error);
                 }
-                break;
-              case 3:
-                0 !== (flags & 1024) &&
-                  supportsMutation &&
-                  clearContainer(root.stateNode.containerInfo);
-                break;
-              case 5:
-              case 26:
-              case 27:
-              case 6:
-              case 4:
-              case 17:
-                break;
-              default:
-                if (0 !== (flags & 1024))
-                  throw Error(formatProdErrorMessage(163));
-            }
-          } catch (error) {
-            captureCommitPhaseError(root, root.return, error);
+              }
+              break;
+            case 3:
+              0 !== (i & 1024) &&
+                supportsMutation &&
+                clearContainer(root.stateNode.containerInfo);
+              break;
+            case 5:
+            case 26:
+            case 27:
+            case 6:
+            case 4:
+            case 17:
+              break;
+            default:
+              if (0 !== (i & 1024)) throw Error(formatProdErrorMessage(163));
           }
           firstChild = root.sibling;
           if (null !== firstChild) {
@@ -7142,75 +7297,10 @@ module.exports = function ($$$config) {
           nextEffect = root.return;
         }
     }
-    current = shouldFireAfterActiveInstanceBlur;
+    snapshot = shouldFireAfterActiveInstanceBlur;
     shouldFireAfterActiveInstanceBlur = !1;
     focusedInstanceHandle = null;
-    return current;
-  }
-  function commitHookEffectListUnmount(
-    flags,
-    finishedWork,
-    nearestMountedAncestor
-  ) {
-    var updateQueue = finishedWork.updateQueue;
-    updateQueue = null !== updateQueue ? updateQueue.lastEffect : null;
-    if (null !== updateQueue) {
-      var effect = (updateQueue = updateQueue.next);
-      do {
-        if ((effect.tag & flags) === flags) {
-          var inst = effect.inst,
-            destroy = inst.destroy;
-          void 0 !== destroy &&
-            ((inst.destroy = void 0),
-            safelyCallDestroy(finishedWork, nearestMountedAncestor, destroy));
-        }
-        effect = effect.next;
-      } while (effect !== updateQueue);
-    }
-  }
-  function commitHookEffectListMount(flags, finishedWork) {
-    finishedWork = finishedWork.updateQueue;
-    finishedWork = null !== finishedWork ? finishedWork.lastEffect : null;
-    if (null !== finishedWork) {
-      var effect = (finishedWork = finishedWork.next);
-      do {
-        if ((effect.tag & flags) === flags) {
-          var destroy = effect.create;
-          var inst = effect.inst;
-          destroy = destroy();
-          inst.destroy = destroy;
-        }
-        effect = effect.next;
-      } while (effect !== finishedWork);
-    }
-  }
-  function commitHookLayoutEffects(finishedWork, hookFlags) {
-    try {
-      commitHookEffectListMount(hookFlags, finishedWork);
-    } catch (error) {
-      captureCommitPhaseError(finishedWork, finishedWork.return, error);
-    }
-  }
-  function commitClassCallbacks(finishedWork) {
-    var updateQueue = finishedWork.updateQueue;
-    if (null !== updateQueue) {
-      var instance = finishedWork.stateNode;
-      try {
-        commitCallbacks(updateQueue, instance);
-      } catch (error) {
-        captureCommitPhaseError(finishedWork, finishedWork.return, error);
-      }
-    }
-  }
-  function commitHostComponentMount(finishedWork) {
-    var type = finishedWork.type,
-      props = finishedWork.memoizedProps,
-      instance = finishedWork.stateNode;
-    try {
-      commitMount(instance, type, props, finishedWork);
-    } catch (error) {
-      captureCommitPhaseError(finishedWork, finishedWork.return, error);
-    }
+    return snapshot;
   }
   function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
     var flags = finishedWork.flags;
@@ -7219,7 +7309,7 @@ module.exports = function ($$$config) {
       case 11:
       case 15:
         recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
-        flags & 4 && commitHookLayoutEffects(finishedWork, 5);
+        flags & 4 && commitHookEffectListMount(5, finishedWork);
         break;
       case 1:
         recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
@@ -7243,11 +7333,11 @@ module.exports = function ($$$config) {
                 current,
                 finishedRoot.__reactInternalSnapshotBeforeUpdate
               );
-            } catch (error$145) {
+            } catch (error$144) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$145
+                error$144
               );
             }
           }
@@ -7286,11 +7376,28 @@ module.exports = function ($$$config) {
       case 27:
       case 5:
         recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
-        null === current && flags & 4 && commitHostComponentMount(finishedWork);
+        null === current && flags & 4 && commitHostMount(finishedWork);
         flags & 512 && safelyAttachRef(finishedWork, finishedWork.return);
         break;
       case 12:
         recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
+        if (flags & 4)
+          a: for (
+            flags = finishedWork.stateNode.effectDuration,
+              finishedWork = finishedWork.return;
+            null !== finishedWork;
+
+          ) {
+            switch (finishedWork.tag) {
+              case 3:
+                finishedWork.stateNode.effectDuration += flags;
+                break a;
+              case 12:
+                finishedWork.stateNode.effectDuration += flags;
+                break a;
+            }
+            finishedWork = finishedWork.return;
+          }
         break;
       case 13:
         recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
@@ -7530,74 +7637,6 @@ module.exports = function ($$$config) {
     fiber.stateNode = null;
     fiber.updateQueue = null;
   }
-  function isHostParent(fiber) {
-    return (
-      5 === fiber.tag ||
-      3 === fiber.tag ||
-      (supportsResources ? 26 === fiber.tag : !1) ||
-      (supportsSingletons ? 27 === fiber.tag : !1) ||
-      4 === fiber.tag
-    );
-  }
-  function getHostSibling(fiber) {
-    a: for (;;) {
-      for (; null === fiber.sibling; ) {
-        if (null === fiber.return || isHostParent(fiber.return)) return null;
-        fiber = fiber.return;
-      }
-      fiber.sibling.return = fiber.return;
-      for (
-        fiber = fiber.sibling;
-        5 !== fiber.tag &&
-        6 !== fiber.tag &&
-        (supportsSingletons ? 27 !== fiber.tag : 1) &&
-        18 !== fiber.tag;
-
-      ) {
-        if (fiber.flags & 2) continue a;
-        if (null === fiber.child || 4 === fiber.tag) continue a;
-        else (fiber.child.return = fiber), (fiber = fiber.child);
-      }
-      if (!(fiber.flags & 2)) return fiber.stateNode;
-    }
-  }
-  function insertOrAppendPlacementNodeIntoContainer(node, before, parent) {
-    var tag = node.tag;
-    if (5 === tag || 6 === tag)
-      (node = node.stateNode),
-        before
-          ? insertInContainerBefore(parent, node, before)
-          : appendChildToContainer(parent, node);
-    else if (
-      !(4 === tag || (supportsSingletons && 27 === tag)) &&
-      ((node = node.child), null !== node)
-    )
-      for (
-        insertOrAppendPlacementNodeIntoContainer(node, before, parent),
-          node = node.sibling;
-        null !== node;
-
-      )
-        insertOrAppendPlacementNodeIntoContainer(node, before, parent),
-          (node = node.sibling);
-  }
-  function insertOrAppendPlacementNode(node, before, parent) {
-    var tag = node.tag;
-    if (5 === tag || 6 === tag)
-      (node = node.stateNode),
-        before ? insertBefore(parent, node, before) : appendChild(parent, node);
-    else if (
-      !(4 === tag || (supportsSingletons && 27 === tag)) &&
-      ((node = node.child), null !== node)
-    )
-      for (
-        insertOrAppendPlacementNode(node, before, parent), node = node.sibling;
-        null !== node;
-
-      )
-        insertOrAppendPlacementNode(node, before, parent),
-          (node = node.sibling);
-  }
   function recursivelyTraverseDeletionEffects(
     finishedRoot,
     nearestMountedAncestor,
@@ -7657,8 +7696,9 @@ module.exports = function ($$$config) {
         offscreenSubtreeWasHidden ||
           safelyDetachRef(deletedFiber, nearestMountedAncestor);
       case 6:
-        supportsMutation
-          ? ((prevHostParent = hostParent),
+        if (supportsMutation) {
+          if (
+            ((prevHostParent = hostParent),
             (prevHostParentIsContainer = hostParentIsContainer),
             (hostParent = null),
             recursivelyTraverseDeletionEffects(
@@ -7668,21 +7708,48 @@ module.exports = function ($$$config) {
             ),
             (hostParent = prevHostParent),
             (hostParentIsContainer = prevHostParentIsContainer),
-            null !== hostParent &&
-              (hostParentIsContainer
-                ? removeChildFromContainer(hostParent, deletedFiber.stateNode)
-                : removeChild(hostParent, deletedFiber.stateNode)))
-          : recursivelyTraverseDeletionEffects(
-              finishedRoot,
-              nearestMountedAncestor,
-              deletedFiber
-            );
+            null !== hostParent)
+          )
+            if (hostParentIsContainer)
+              try {
+                removeChildFromContainer(hostParent, deletedFiber.stateNode);
+              } catch (error) {
+                captureCommitPhaseError(
+                  deletedFiber,
+                  nearestMountedAncestor,
+                  error
+                );
+              }
+            else
+              try {
+                removeChild(hostParent, deletedFiber.stateNode);
+              } catch (error) {
+                captureCommitPhaseError(
+                  deletedFiber,
+                  nearestMountedAncestor,
+                  error
+                );
+              }
+        } else
+          recursivelyTraverseDeletionEffects(
+            finishedRoot,
+            nearestMountedAncestor,
+            deletedFiber
+          );
         break;
       case 18:
         finishedRoot = finishedRoot.hydrationCallbacks;
-        null !== finishedRoot &&
-          (finishedRoot = finishedRoot.onDeleted) &&
-          finishedRoot(deletedFiber.stateNode);
+        if (null !== finishedRoot)
+          try {
+            (prevHostParent = finishedRoot.onDeleted) &&
+              prevHostParent(deletedFiber.stateNode);
+          } catch (error) {
+            captureCommitPhaseError(
+              deletedFiber,
+              nearestMountedAncestor,
+              error
+            );
+          }
         supportsMutation &&
           null !== hostParent &&
           (hostParentIsContainer
@@ -7706,12 +7773,11 @@ module.exports = function ($$$config) {
             (hostParent = prevHostParent),
             (hostParentIsContainer = prevHostParentIsContainer))
           : (supportsPersistence &&
-              ((prevHostParent = deletedFiber.stateNode.containerInfo),
-              (prevHostParentIsContainer = createContainerChildSet()),
-              replaceContainerChildren(
-                prevHostParent,
-                prevHostParentIsContainer
-              )),
+              commitHostPortalContainerChildren(
+                deletedFiber.stateNode,
+                deletedFiber,
+                createContainerChildSet()
+              ),
             recursivelyTraverseDeletionEffects(
               finishedRoot,
               nearestMountedAncestor,
@@ -7804,23 +7870,28 @@ module.exports = function ($$$config) {
   }
   function commitSuspenseHydrationCallbacks(finishedRoot, finishedWork) {
     if (supportsHydration && null === finishedWork.memoizedState) {
-      var current$156 = finishedWork.alternate;
+      var current$154 = finishedWork.alternate;
       if (
-        null !== current$156 &&
-        ((current$156 = current$156.memoizedState),
-        null !== current$156 &&
-          ((current$156 = current$156.dehydrated), null !== current$156))
-      )
+        null !== current$154 &&
+        ((current$154 = current$154.memoizedState),
+        null !== current$154 &&
+          ((current$154 = current$154.dehydrated), null !== current$154))
+      ) {
         try {
-          commitHydratedSuspenseInstance(current$156);
+          commitHydratedSuspenseInstance(current$154);
+        } catch (error) {
+          captureCommitPhaseError(finishedWork, finishedWork.return, error);
+        }
+        try {
           var hydrationCallbacks = finishedRoot.hydrationCallbacks;
           if (null !== hydrationCallbacks) {
             var onHydrated = hydrationCallbacks.onHydrated;
-            onHydrated && onHydrated(current$156);
+            onHydrated && onHydrated(current$154);
           }
         } catch (error) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error);
         }
+      }
     }
   }
   function getRetryCache(finishedWork) {
@@ -7875,41 +7946,37 @@ module.exports = function ($$$config) {
     var deletions = parentFiber.deletions;
     if (null !== deletions)
       for (var i = 0; i < deletions.length; i++) {
-        var childToDelete = deletions[i];
-        try {
-          var root = root$jscomp$0,
-            returnFiber = parentFiber;
-          if (supportsMutation) {
-            var parent = returnFiber;
-            a: for (; null !== parent; ) {
-              switch (parent.tag) {
-                case 27:
-                case 5:
-                  hostParent = parent.stateNode;
-                  hostParentIsContainer = !1;
-                  break a;
-                case 3:
-                  hostParent = parent.stateNode.containerInfo;
-                  hostParentIsContainer = !0;
-                  break a;
-                case 4:
-                  hostParent = parent.stateNode.containerInfo;
-                  hostParentIsContainer = !0;
-                  break a;
-              }
-              parent = parent.return;
+        var childToDelete = deletions[i],
+          root = root$jscomp$0,
+          returnFiber = parentFiber;
+        if (supportsMutation) {
+          var parent = returnFiber;
+          a: for (; null !== parent; ) {
+            switch (parent.tag) {
+              case 27:
+              case 5:
+                hostParent = parent.stateNode;
+                hostParentIsContainer = !1;
+                break a;
+              case 3:
+                hostParent = parent.stateNode.containerInfo;
+                hostParentIsContainer = !0;
+                break a;
+              case 4:
+                hostParent = parent.stateNode.containerInfo;
+                hostParentIsContainer = !0;
+                break a;
             }
-            if (null === hostParent) throw Error(formatProdErrorMessage(160));
-            commitDeletionEffectsOnFiber(root, returnFiber, childToDelete);
-            hostParent = null;
-            hostParentIsContainer = !1;
-          } else commitDeletionEffectsOnFiber(root, returnFiber, childToDelete);
-          var alternate = childToDelete.alternate;
-          null !== alternate && (alternate.return = null);
-          childToDelete.return = null;
-        } catch (error) {
-          captureCommitPhaseError(childToDelete, parentFiber, error);
-        }
+            parent = parent.return;
+          }
+          if (null === hostParent) throw Error(formatProdErrorMessage(160));
+          commitDeletionEffectsOnFiber(root, returnFiber, childToDelete);
+          hostParent = null;
+          hostParentIsContainer = !1;
+        } else commitDeletionEffectsOnFiber(root, returnFiber, childToDelete);
+        root = childToDelete.alternate;
+        null !== root && (root.return = null);
+        childToDelete.return = null;
       }
     if (parentFiber.subtreeFlags & 13878)
       for (parentFiber = parentFiber.child; null !== parentFiber; )
@@ -7926,23 +7993,10 @@ module.exports = function ($$$config) {
       case 15:
         recursivelyTraverseMutationEffects(root, finishedWork);
         commitReconciliationEffects(finishedWork);
-        if (flags & 4) {
-          try {
-            commitHookEffectListUnmount(3, finishedWork, finishedWork.return),
-              commitHookEffectListMount(3, finishedWork);
-          } catch (error) {
-            captureCommitPhaseError(finishedWork, finishedWork.return, error);
-          }
-          try {
-            commitHookEffectListUnmount(5, finishedWork, finishedWork.return);
-          } catch (error$158) {
-            captureCommitPhaseError(
-              finishedWork,
-              finishedWork.return,
-              error$158
-            );
-          }
-        }
+        flags & 4 &&
+          (commitHookEffectListUnmount(3, finishedWork, finishedWork.return),
+          commitHookEffectListMount(3, finishedWork),
+          commitHookEffectListUnmount(5, finishedWork, finishedWork.return));
         break;
       case 1:
         recursivelyTraverseMutationEffects(root, finishedWork);
@@ -7968,13 +8022,11 @@ module.exports = function ($$$config) {
           flags & 512 &&
             null !== current &&
             safelyDetachRef(current, current.return);
-          if (flags & 4)
-            if (
-              ((flags = null !== current ? current.memoizedState : null),
-              (root = finishedWork.memoizedState),
-              null === current)
-            )
-              null === root
+          flags & 4 &&
+            ((flags = null !== current ? current.memoizedState : null),
+            (root = finishedWork.memoizedState),
+            null === current
+              ? null === root
                 ? null === finishedWork.stateNode
                   ? (finishedWork.stateNode = hydrateHoistable(
                       hoistableRoot,
@@ -7991,39 +8043,30 @@ module.exports = function ($$$config) {
                     hoistableRoot,
                     root,
                     finishedWork.memoizedProps
+                  ))
+              : flags !== root
+                ? (null === flags
+                    ? null !== current.stateNode &&
+                      unmountHoistable(current.stateNode)
+                    : releaseResource(flags),
+                  null === root
+                    ? mountHoistable(
+                        hoistableRoot,
+                        finishedWork.type,
+                        finishedWork.stateNode
+                      )
+                    : acquireResource(
+                        hoistableRoot,
+                        root,
+                        finishedWork.memoizedProps
+                      ))
+                : null === root &&
+                  null !== finishedWork.stateNode &&
+                  commitHostUpdate(
+                    finishedWork,
+                    finishedWork.memoizedProps,
+                    current.memoizedProps
                   ));
-            else if (flags !== root)
-              null === flags
-                ? null !== current.stateNode &&
-                  unmountHoistable(current.stateNode)
-                : releaseResource(flags),
-                null === root
-                  ? mountHoistable(
-                      hoistableRoot,
-                      finishedWork.type,
-                      finishedWork.stateNode
-                    )
-                  : acquireResource(
-                      hoistableRoot,
-                      root,
-                      finishedWork.memoizedProps
-                    );
-            else if (null === root && null !== finishedWork.stateNode)
-              try {
-                commitUpdate(
-                  finishedWork.stateNode,
-                  finishedWork.type,
-                  current.memoizedProps,
-                  finishedWork.memoizedProps,
-                  finishedWork
-                );
-              } catch (error$159) {
-                captureCommitPhaseError(
-                  finishedWork,
-                  finishedWork.return,
-                  error$159
-                );
-              }
           break;
         }
       case 27:
@@ -8034,13 +8077,17 @@ module.exports = function ($$$config) {
         ) {
           hoistableRoot = finishedWork.stateNode;
           var props = finishedWork.memoizedProps;
-          clearSingleton(hoistableRoot);
-          acquireSingletonInstance(
-            finishedWork.type,
-            props,
-            hoistableRoot,
-            finishedWork
-          );
+          try {
+            clearSingleton(hoistableRoot),
+              acquireSingletonInstance(
+                finishedWork.type,
+                props,
+                hoistableRoot,
+                finishedWork
+              );
+          } catch (error) {
+            captureCommitPhaseError(finishedWork, finishedWork.return, error);
+          }
         }
       case 5:
         recursivelyTraverseMutationEffects(root, finishedWork);
@@ -8053,28 +8100,18 @@ module.exports = function ($$$config) {
             root = finishedWork.stateNode;
             try {
               resetTextContent(root);
-            } catch (error$160) {
-              captureCommitPhaseError(
-                finishedWork,
-                finishedWork.return,
-                error$160
-              );
+            } catch (error) {
+              captureCommitPhaseError(finishedWork, finishedWork.return, error);
             }
           }
-          if (flags & 4 && ((root = finishedWork.stateNode), null != root)) {
-            hoistableRoot = finishedWork.memoizedProps;
-            current = null !== current ? current.memoizedProps : hoistableRoot;
-            props = finishedWork.type;
-            try {
-              commitUpdate(root, props, current, hoistableRoot, finishedWork);
-            } catch (error$162) {
-              captureCommitPhaseError(
-                finishedWork,
-                finishedWork.return,
-                error$162
-              );
-            }
-          }
+          flags & 4 &&
+            null != finishedWork.stateNode &&
+            ((root = finishedWork.memoizedProps),
+            commitHostUpdate(
+              finishedWork,
+              root,
+              null !== current ? current.memoizedProps : root
+            ));
           flags & 1024 && (needsFormReset = !0);
         }
         break;
@@ -8084,17 +8121,13 @@ module.exports = function ($$$config) {
         if (flags & 4 && supportsMutation) {
           if (null === finishedWork.stateNode)
             throw Error(formatProdErrorMessage(162));
-          flags = finishedWork.stateNode;
-          root = finishedWork.memoizedProps;
-          current = null !== current ? current.memoizedProps : root;
+          flags = finishedWork.memoizedProps;
+          current = null !== current ? current.memoizedProps : flags;
+          root = finishedWork.stateNode;
           try {
-            commitTextUpdate(flags, current, root);
-          } catch (error$163) {
-            captureCommitPhaseError(
-              finishedWork,
-              finishedWork.return,
-              error$163
-            );
+            commitTextUpdate(root, current, flags);
+          } catch (error) {
+            captureCommitPhaseError(finishedWork, finishedWork.return, error);
           }
         }
         break;
@@ -8116,24 +8149,16 @@ module.exports = function ($$$config) {
           )
             try {
               commitHydratedContainer(root.containerInfo);
-            } catch (error$164) {
-              captureCommitPhaseError(
-                finishedWork,
-                finishedWork.return,
-                error$164
-              );
+            } catch (error) {
+              captureCommitPhaseError(finishedWork, finishedWork.return, error);
             }
           if (supportsPersistence) {
             flags = root.containerInfo;
             current = root.pendingChildren;
             try {
               replaceContainerChildren(flags, current);
-            } catch (error$165) {
-              captureCommitPhaseError(
-                finishedWork,
-                finishedWork.return,
-                error$165
-              );
+            } catch (error) {
+              captureCommitPhaseError(finishedWork, finishedWork.return, error);
             }
           }
         }
@@ -8151,20 +8176,13 @@ module.exports = function ($$$config) {
             (currentHoistableRoot = current))
           : (recursivelyTraverseMutationEffects(root, finishedWork),
             commitReconciliationEffects(finishedWork));
-        if (flags & 4 && supportsPersistence) {
-          current = finishedWork.stateNode;
-          flags = current.containerInfo;
-          current = current.pendingChildren;
-          try {
-            replaceContainerChildren(flags, current);
-          } catch (error$169) {
-            captureCommitPhaseError(
-              finishedWork,
-              finishedWork.return,
-              error$169
-            );
-          }
-        }
+        flags & 4 &&
+          supportsPersistence &&
+          commitHostPortalContainerChildren(
+            finishedWork.stateNode,
+            finishedWork,
+            finishedWork.stateNode.pendingChildren
+          );
         break;
       case 13:
         recursivelyTraverseMutationEffects(root, finishedWork);
@@ -8185,12 +8203,8 @@ module.exports = function ($$$config) {
                 null !== retryQueue && suspenseCallback(new Set(retryQueue));
               }
             }
-          } catch (error$170) {
-            captureCommitPhaseError(
-              finishedWork,
-              finishedWork.return,
-              error$170
-            );
+          } catch (error) {
+            captureCommitPhaseError(finishedWork, finishedWork.return, error);
           }
           flags = finishedWork.updateQueue;
           null !== flags &&
@@ -8240,34 +8254,39 @@ module.exports = function ($$$config) {
                 (supportsSingletons && 27 === root.tag)
               ) {
                 if (null === current) {
-                  current = root;
+                  retryQueue = current = root;
                   try {
-                    (hoistableRoot = root.stateNode),
+                    (hoistableRoot = retryQueue.stateNode),
                       suspenseCallback
                         ? hideInstance(hoistableRoot)
-                        : unhideInstance(root.stateNode, root.memoizedProps);
+                        : unhideInstance(
+                            retryQueue.stateNode,
+                            retryQueue.memoizedProps
+                          );
                   } catch (error) {
                     captureCommitPhaseError(
-                      finishedWork,
-                      finishedWork.return,
+                      retryQueue,
+                      retryQueue.return,
                       error
                     );
                   }
                 }
               } else if (6 === root.tag) {
-                if (null === current)
+                if (null === current) {
+                  retryQueue = root;
                   try {
-                    (props = root.stateNode),
+                    (props = retryQueue.stateNode),
                       suspenseCallback
                         ? hideTextInstance(props)
-                        : unhideTextInstance(props, root.memoizedProps);
-                  } catch (error$147) {
+                        : unhideTextInstance(props, retryQueue.memoizedProps);
+                  } catch (error) {
                     captureCommitPhaseError(
-                      finishedWork,
-                      finishedWork.return,
-                      error$147
+                      retryQueue,
+                      retryQueue.return,
+                      error
                     );
                   }
+                }
               } else if (
                 ((22 !== root.tag && 23 !== root.tag) ||
                   null === root.memoizedState ||
@@ -8328,11 +8347,11 @@ module.exports = function ($$$config) {
           supportsMutation &&
           (!supportsSingletons || 27 !== finishedWork.tag)
         ) {
-          b: {
+          a: {
             for (var parent = finishedWork.return; null !== parent; ) {
               if (isHostParent(parent)) {
                 var JSCompiler_inline_result = parent;
-                break b;
+                break a;
               }
               parent = parent.return;
             }
@@ -8351,21 +8370,21 @@ module.exports = function ($$$config) {
                 break;
               }
             case 5:
-              var parent$148 = JSCompiler_inline_result.stateNode;
+              var parent$146 = JSCompiler_inline_result.stateNode;
               JSCompiler_inline_result.flags & 32 &&
-                (resetTextContent(parent$148),
+                (resetTextContent(parent$146),
                 (JSCompiler_inline_result.flags &= -33));
-              var before$149 = getHostSibling(finishedWork);
-              insertOrAppendPlacementNode(finishedWork, before$149, parent$148);
+              var before$147 = getHostSibling(finishedWork);
+              insertOrAppendPlacementNode(finishedWork, before$147, parent$146);
               break;
             case 3:
             case 4:
-              var parent$150 = JSCompiler_inline_result.stateNode.containerInfo,
-                before$151 = getHostSibling(finishedWork);
+              var parent$148 = JSCompiler_inline_result.stateNode.containerInfo,
+                before$149 = getHostSibling(finishedWork);
               insertOrAppendPlacementNodeIntoContainer(
                 finishedWork,
-                before$151,
-                parent$150
+                before$149,
+                parent$148
               );
               break;
             default:
@@ -8443,7 +8462,7 @@ module.exports = function ($$$config) {
     includeWorkInProgressEffects =
       includeWorkInProgressEffects && 0 !== (parentFiber.subtreeFlags & 8772);
     for (parentFiber = parentFiber.child; null !== parentFiber; ) {
-      var current$174 = parentFiber.alternate,
+      var current$160 = parentFiber.alternate,
         finishedRoot = finishedRoot$jscomp$0,
         finishedWork = parentFiber,
         flags = finishedWork.flags;
@@ -8456,7 +8475,7 @@ module.exports = function ($$$config) {
             finishedWork,
             includeWorkInProgressEffects
           );
-          commitHookLayoutEffects(finishedWork, 4);
+          commitHookEffectListMount(4, finishedWork);
           break;
         case 1:
           recursivelyTraverseReappearLayoutEffects(
@@ -8464,23 +8483,30 @@ module.exports = function ($$$config) {
             finishedWork,
             includeWorkInProgressEffects
           );
-          finishedRoot = finishedWork.stateNode;
+          current$160 = finishedWork;
+          finishedRoot = current$160.stateNode;
           if ("function" === typeof finishedRoot.componentDidMount)
             try {
               finishedRoot.componentDidMount();
             } catch (error) {
-              captureCommitPhaseError(finishedWork, finishedWork.return, error);
+              captureCommitPhaseError(current$160, current$160.return, error);
             }
-          current$174 = finishedWork.updateQueue;
-          if (null !== current$174) {
-            var hiddenCallbacks = current$174.shared.hiddenCallbacks;
-            if (null !== hiddenCallbacks)
-              for (
-                current$174.shared.hiddenCallbacks = null, current$174 = 0;
-                current$174 < hiddenCallbacks.length;
-                current$174++
-              )
-                callCallback(hiddenCallbacks[current$174], finishedRoot);
+          current$160 = finishedWork;
+          finishedRoot = current$160.updateQueue;
+          if (null !== finishedRoot) {
+            var instance = current$160.stateNode;
+            try {
+              var hiddenCallbacks = finishedRoot.shared.hiddenCallbacks;
+              if (null !== hiddenCallbacks)
+                for (
+                  finishedRoot.shared.hiddenCallbacks = null, finishedRoot = 0;
+                  finishedRoot < hiddenCallbacks.length;
+                  finishedRoot++
+                )
+                  callCallback(hiddenCallbacks[finishedRoot], instance);
+            } catch (error) {
+              captureCommitPhaseError(current$160, current$160.return, error);
+            }
           }
           includeWorkInProgressEffects &&
             flags & 64 &&
@@ -8496,9 +8522,9 @@ module.exports = function ($$$config) {
             includeWorkInProgressEffects
           );
           includeWorkInProgressEffects &&
-            null === current$174 &&
+            null === current$160 &&
             flags & 4 &&
-            commitHostComponentMount(finishedWork);
+            commitHostMount(finishedWork);
           safelyAttachRef(finishedWork, finishedWork.return);
           break;
         case 12:
@@ -8507,6 +8533,23 @@ module.exports = function ($$$config) {
             finishedWork,
             includeWorkInProgressEffects
           );
+          if (includeWorkInProgressEffects && flags & 4)
+            a: for (
+              flags = finishedWork.stateNode.effectDuration,
+                finishedWork = finishedWork.return;
+              null !== finishedWork;
+
+            ) {
+              switch (finishedWork.tag) {
+                case 3:
+                  finishedWork.stateNode.effectDuration += flags;
+                  break a;
+                case 12:
+                  finishedWork.stateNode.effectDuration += flags;
+                  break a;
+              }
+              finishedWork = finishedWork.return;
+            }
           break;
         case 13:
           recursivelyTraverseReappearLayoutEffects(
@@ -8535,13 +8578,6 @@ module.exports = function ($$$config) {
           );
       }
       parentFiber = parentFiber.sibling;
-    }
-  }
-  function commitHookPassiveMountEffects(finishedWork, hookFlags) {
-    try {
-      commitHookEffectListMount(hookFlags, finishedWork);
-    } catch (error) {
-      captureCommitPhaseError(finishedWork, finishedWork.return, error);
     }
   }
   function commitOffscreenPassiveMountEffects(current, finishedWork, instance) {
@@ -8647,7 +8683,7 @@ module.exports = function ($$$config) {
           committedLanes,
           committedTransitions
         );
-        flags & 2048 && commitHookPassiveMountEffects(finishedWork, 9);
+        flags & 2048 && commitHookEffectListMount(9, finishedWork);
         break;
       case 3:
         recursivelyTraversePassiveMountEffects(
@@ -8820,7 +8856,7 @@ module.exports = function ($$$config) {
             committedTransitions,
             includeWorkInProgressEffects
           );
-          commitHookPassiveMountEffects(finishedWork, 8);
+          commitHookEffectListMount(8, finishedWork);
           break;
         case 23:
           recursivelyTraverseReconnectPassiveEffects(
@@ -8839,9 +8875,9 @@ module.exports = function ($$$config) {
             );
           break;
         case 22:
-          var instance$180 = finishedWork.stateNode;
+          var instance$166 = finishedWork.stateNode;
           null !== finishedWork.memoizedState
-            ? instance$180._visibility & 4
+            ? instance$166._visibility & 4
               ? recursivelyTraverseReconnectPassiveEffects(
                   finishedRoot,
                   finishedWork,
@@ -8853,7 +8889,7 @@ module.exports = function ($$$config) {
                   finishedRoot,
                   finishedWork
                 )
-            : ((instance$180._visibility |= 4),
+            : ((instance$166._visibility |= 4),
               recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork,
@@ -8866,7 +8902,7 @@ module.exports = function ($$$config) {
             commitOffscreenPassiveMountEffects(
               finishedWork.alternate,
               finishedWork,
-              instance$180
+              instance$166
             );
           break;
         case 24:
@@ -9951,8 +9987,8 @@ module.exports = function ($$$config) {
         }
         workLoopSync();
         break;
-      } catch (thrownValue$194) {
-        handleThrow(root, thrownValue$194);
+      } catch (thrownValue$180) {
+        handleThrow(root, thrownValue$180);
       }
     while (1);
     lanes && root.shellSuspendCounter++;
@@ -10067,8 +10103,8 @@ module.exports = function ($$$config) {
         }
         workLoopConcurrent();
         break;
-      } catch (thrownValue$196) {
-        handleThrow(root, thrownValue$196);
+      } catch (thrownValue$182) {
+        handleThrow(root, thrownValue$182);
       }
     while (1);
     resetContextDependencies();
@@ -10320,12 +10356,12 @@ module.exports = function ($$$config) {
       setCurrentUpdatePriority(2);
       var prevExecutionContext = executionContext;
       executionContext |= 4;
-      var shouldFireAfterActiveInstanceBlur$202 = commitBeforeMutationEffects(
+      var shouldFireAfterActiveInstanceBlur$188 = commitBeforeMutationEffects(
         root,
         finishedWork
       );
       commitMutationEffectsOnFiber(finishedWork, root);
-      shouldFireAfterActiveInstanceBlur$202 && afterActiveInstanceBlur();
+      shouldFireAfterActiveInstanceBlur$188 && afterActiveInstanceBlur();
       resetAfterCommit(root.containerInfo);
       root.current = finishedWork;
       commitLayoutEffectOnFiber(root, finishedWork.alternate, finishedWork);
@@ -12228,7 +12264,7 @@ module.exports = function ($$$config) {
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
       findFiberByHostInstance: getInstanceFromNode,
-      reconcilerVersion: "19.0.0-www-modern-e10e8681-20240904"
+      reconcilerVersion: "19.0.0-www-modern-fe03c56d-20240905"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
