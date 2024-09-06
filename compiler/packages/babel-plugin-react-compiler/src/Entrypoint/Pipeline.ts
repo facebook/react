@@ -46,18 +46,13 @@ import {instructionReordering} from '../Optimization/InstructionReordering';
 import {
   CodegenFunction,
   alignObjectMethodScopes,
-  alignReactiveScopesToBlockScopes,
   assertScopeInstructionsWithinScopes,
   assertWellFormedBreakTargets,
-  buildReactiveBlocks,
   buildReactiveFunction,
   codegenFunction,
   extractScopeDeclarationsFromDestructuring,
-  flattenReactiveLoops,
-  flattenScopesWithHooksOrUse,
   inferReactiveScopeVariables,
   memoizeFbtAndMacroOperandsInSameScope,
-  mergeOverlappingReactiveScopes,
   mergeReactiveScopesThatInvalidateTogether,
   promoteUsedTemporaries,
   propagateEarlyReturns,
@@ -300,54 +295,52 @@ function* runWithEnvironment(
     value: hir,
   });
 
-  if (env.config.enableReactiveScopesInHIR) {
-    pruneUnusedLabelsHIR(hir);
-    yield log({
-      kind: 'hir',
-      name: 'PruneUnusedLabelsHIR',
-      value: hir,
-    });
+  pruneUnusedLabelsHIR(hir);
+  yield log({
+    kind: 'hir',
+    name: 'PruneUnusedLabelsHIR',
+    value: hir,
+  });
 
-    alignReactiveScopesToBlockScopesHIR(hir);
-    yield log({
-      kind: 'hir',
-      name: 'AlignReactiveScopesToBlockScopesHIR',
-      value: hir,
-    });
+  alignReactiveScopesToBlockScopesHIR(hir);
+  yield log({
+    kind: 'hir',
+    name: 'AlignReactiveScopesToBlockScopesHIR',
+    value: hir,
+  });
 
-    mergeOverlappingReactiveScopesHIR(hir);
-    yield log({
-      kind: 'hir',
-      name: 'MergeOverlappingReactiveScopesHIR',
-      value: hir,
-    });
-    assertValidBlockNesting(hir);
+  mergeOverlappingReactiveScopesHIR(hir);
+  yield log({
+    kind: 'hir',
+    name: 'MergeOverlappingReactiveScopesHIR',
+    value: hir,
+  });
+  assertValidBlockNesting(hir);
 
-    buildReactiveScopeTerminalsHIR(hir);
-    yield log({
-      kind: 'hir',
-      name: 'BuildReactiveScopeTerminalsHIR',
-      value: hir,
-    });
+  buildReactiveScopeTerminalsHIR(hir);
+  yield log({
+    kind: 'hir',
+    name: 'BuildReactiveScopeTerminalsHIR',
+    value: hir,
+  });
 
-    assertValidBlockNesting(hir);
+  assertValidBlockNesting(hir);
 
-    flattenReactiveLoopsHIR(hir);
-    yield log({
-      kind: 'hir',
-      name: 'FlattenReactiveLoopsHIR',
-      value: hir,
-    });
+  flattenReactiveLoopsHIR(hir);
+  yield log({
+    kind: 'hir',
+    name: 'FlattenReactiveLoopsHIR',
+    value: hir,
+  });
 
-    flattenScopesWithHooksOrUseHIR(hir);
-    yield log({
-      kind: 'hir',
-      name: 'FlattenScopesWithHooksOrUseHIR',
-      value: hir,
-    });
-    assertTerminalSuccessorsExist(hir);
-    assertTerminalPredsExist(hir);
-  }
+  flattenScopesWithHooksOrUseHIR(hir);
+  yield log({
+    kind: 'hir',
+    name: 'FlattenScopesWithHooksOrUseHIR',
+    value: hir,
+  });
+  assertTerminalSuccessorsExist(hir);
+  assertTerminalPredsExist(hir);
 
   const reactiveFunction = buildReactiveFunction(hir);
   yield log({
@@ -364,44 +357,6 @@ function* runWithEnvironment(
     name: 'PruneUnusedLabels',
     value: reactiveFunction,
   });
-
-  if (!env.config.enableReactiveScopesInHIR) {
-    alignReactiveScopesToBlockScopes(reactiveFunction);
-    yield log({
-      kind: 'reactive',
-      name: 'AlignReactiveScopesToBlockScopes',
-      value: reactiveFunction,
-    });
-
-    mergeOverlappingReactiveScopes(reactiveFunction);
-    yield log({
-      kind: 'reactive',
-      name: 'MergeOverlappingReactiveScopes',
-      value: reactiveFunction,
-    });
-
-    buildReactiveBlocks(reactiveFunction);
-    yield log({
-      kind: 'reactive',
-      name: 'BuildReactiveBlocks',
-      value: reactiveFunction,
-    });
-
-    flattenReactiveLoops(reactiveFunction);
-    yield log({
-      kind: 'reactive',
-      name: 'FlattenReactiveLoops',
-      value: reactiveFunction,
-    });
-
-    flattenScopesWithHooksOrUse(reactiveFunction);
-    yield log({
-      kind: 'reactive',
-      name: 'FlattenScopesWithHooks',
-      value: reactiveFunction,
-    });
-  }
-
   assertScopeInstructionsWithinScopes(reactiveFunction);
 
   propagateScopeDependencies(reactiveFunction);
