@@ -1530,16 +1530,6 @@ export function attach(
   // When a mount or update is in progress, this value tracks the root that is being operated on.
   let currentRootID: number = -1;
 
-  function getFiberIDThrows(fiber: Fiber): number {
-    const fiberInstance = getFiberInstanceUnsafe(fiber);
-    if (fiberInstance !== null) {
-      return fiberInstance.id;
-    }
-    throw Error(
-      `Could not find ID for Fiber "${getDisplayNameForFiber(fiber) || ''}"`,
-    );
-  }
-
   // Returns a FiberInstance if one has already been generated for the Fiber or null if one has not been generated.
   // Use this method while e.g. logging to avoid over-retaining Fibers.
   function getFiberInstanceUnsafe(fiber: Fiber): FiberInstance | null {
@@ -1625,7 +1615,7 @@ export function attach(
           };
         } else {
           const data: ChangeDescription = {
-            context: getContextChangedKeys(nextFiber),
+            context: getContextChanged(prevFiber, nextFiber),
             didHooksChange: false,
             isFirstMount: false,
             props: getChangedKeys(
@@ -1659,7 +1649,7 @@ export function attach(
             nextFiber.memoizedState,
           );
           const data: ChangeDescription = {
-            context: getContextChangedKeys(nextFiber),
+            context: getContextChanged(prevFiber, nextFiber),
             didHooksChange: indices !== null && indices.length > 0,
             isFirstMount: false,
             props: getChangedKeys(
@@ -1677,147 +1667,33 @@ export function attach(
     }
   }
 
-  function updateContextsForFiber(fiber: Fiber) {
-    switch (getElementTypeForFiber(fiber)) {
-      case ElementTypeClass:
-      case ElementTypeForwardRef:
-      case ElementTypeFunction:
-      case ElementTypeMemo:
-        if (idToContextsMap !== null) {
-          const id = getFiberIDThrows(fiber);
-          const contexts = getContextsForFiber(fiber);
-          if (contexts !== null) {
-            // $FlowFixMe[incompatible-use] found when upgrading Flow
-            idToContextsMap.set(id, contexts);
-          }
-        }
-        break;
-      default:
-        break;
-    }
-  }
+  function getContextChanged(prevFiber: Fiber, nextFiber: Fiber): boolean {
+    let prevContext =
+      prevFiber.dependencies && prevFiber.dependencies.firstContext;
+    let nextContext =
+      nextFiber.dependencies && nextFiber.dependencies.firstContext;
 
-  // Differentiates between a null context value and no context.
-  const NO_CONTEXT = {};
-
-  function getContextsForFiber(fiber: Fiber): [Object, any] | null {
-    let legacyContext = NO_CONTEXT;
-    let modernContext = NO_CONTEXT;
-
-    switch (getElementTypeForFiber(fiber)) {
-      case ElementTypeClass:
-        const instance = fiber.stateNode;
-        if (instance != null) {
-          if (
-            instance.constructor &&
-            instance.constructor.contextType != null
-          ) {
-            modernContext = instance.context;
-          } else {
-            legacyContext = instance.context;
-            if (legacyContext && Object.keys(legacyContext).length === 0) {
-              legacyContext = NO_CONTEXT;
-            }
-          }
-        }
-        return [legacyContext, modernContext];
-      case ElementTypeForwardRef:
-      case ElementTypeFunction:
-      case ElementTypeMemo:
-        const dependencies = fiber.dependencies;
-        if (dependencies && dependencies.firstContext) {
-          modernContext = dependencies.firstContext;
-        }
-
-        return [legacyContext, modernContext];
-      default:
-        return null;
-    }
-  }
-
-  // Record all contexts at the time profiling is started.
-  // Fibers only store the current context value,
-  // so we need to track them separately in order to determine changed keys.
-  function crawlToInitializeContextsMap(fiber: Fiber) {
-    const id = getFiberIDUnsafe(fiber);
-
-    // Not all Fibers in the subtree have mounted yet.
-    // For example, Offscreen (hidden) or Suspense (suspended) subtrees won't yet be tracked.
-    // We can safely skip these subtrees.
-    if (id !== null) {
-      updateContextsForFiber(fiber);
-
-      let current = fiber.child;
-      while (current !== null) {
-        crawlToInitializeContextsMap(current);
-        current = current.sibling;
+    while (prevContext && nextContext) {
+      // Note this only works for versions of React that support this key (e.v. 18+)
+      // For older versions, there's no good way to read the current context value after render has completed.
+      // This is because React maintains a stack of context values during render,
+      // but by the time DevTools is called, render has finished and the stack is empty.
+      if (prevContext.context !== nextContext.context) {
+        // If the order of context has changed, then the later context values might have
+        // changed too but the main reason it rerendered was earlier. Either an earlier
+        // context changed value but then we would have exited already. If we end up here
+        // it's because a state or props change caused the order of contexts used to change.
+        // So the main cause is not the contexts themselves.
+        return false;
       }
-    }
-  }
-
-  function getContextChangedKeys(fiber: Fiber): null | boolean | Array<string> {
-    if (idToContextsMap !== null) {
-      const id = getFiberIDThrows(fiber);
-      // $FlowFixMe[incompatible-use] found when upgrading Flow
-      const prevContexts = idToContextsMap.has(id)
-        ? // $FlowFixMe[incompatible-use] found when upgrading Flow
-          idToContextsMap.get(id)
-        : null;
-      const nextContexts = getContextsForFiber(fiber);
-
-      if (prevContexts == null || nextContexts == null) {
-        return null;
+      if (!is(prevContext.memoizedValue, nextContext.memoizedValue)) {
+        return true;
       }
 
-      const [prevLegacyContext, prevModernContext] = prevContexts;
-      const [nextLegacyContext, nextModernContext] = nextContexts;
-
-      switch (getElementTypeForFiber(fiber)) {
-        case ElementTypeClass:
-          if (prevContexts && nextContexts) {
-            if (nextLegacyContext !== NO_CONTEXT) {
-              return getChangedKeys(prevLegacyContext, nextLegacyContext);
-            } else if (nextModernContext !== NO_CONTEXT) {
-              return prevModernContext !== nextModernContext;
-            }
-          }
-          break;
-        case ElementTypeForwardRef:
-        case ElementTypeFunction:
-        case ElementTypeMemo:
-          if (nextModernContext !== NO_CONTEXT) {
-            let prevContext = prevModernContext;
-            let nextContext = nextModernContext;
-
-            while (prevContext && nextContext) {
-              // Note this only works for versions of React that support this key (e.v. 18+)
-              // For older versions, there's no good way to read the current context value after render has completed.
-              // This is because React maintains a stack of context values during render,
-              // but by the time DevTools is called, render has finished and the stack is empty.
-              if (prevContext.context !== nextContext.context) {
-                // If the order of context has changed, then the later context values might have
-                // changed too but the main reason it rerendered was earlier. Either an earlier
-                // context changed value but then we would have exited already. If we end up here
-                // it's because a state or props change caused the order of contexts used to change.
-                // So the main cause is not the contexts themselves.
-                return false;
-              }
-              if (!is(prevContext.memoizedValue, nextContext.memoizedValue)) {
-                return true;
-              }
-
-              prevContext = prevContext.next;
-              nextContext = nextContext.next;
-            }
-
-            return false;
-          }
-          break;
-        default:
-          break;
-      }
+      prevContext = prevContext.next;
+      nextContext = nextContext.next;
     }
-    return null;
+    return false;
   }
 
   function isHookThatCanScheduleUpdate(hookObject: any) {
@@ -3002,8 +2878,6 @@ export function attach(
                 metadata.changeDescriptions.set(id, changeDescription);
               }
             }
-
-            updateContextsForFiber(fiber);
           }
         }
       }
@@ -5209,7 +5083,6 @@ export function attach(
 
   let currentCommitProfilingMetadata: CommitProfilingData | null = null;
   let displayNamesByRootID: DisplayNamesByRootID | null = null;
-  let idToContextsMap: Map<number, any> | null = null;
   let initialTreeBaseDurationsMap: Map<number, Array<[number, number]>> | null =
     null;
   let isProfiling: boolean = false;
@@ -5356,7 +5229,6 @@ export function attach(
     // (e.g. when a fiber is re-rendered or when a fiber gets removed).
     displayNamesByRootID = new Map();
     initialTreeBaseDurationsMap = new Map();
-    idToContextsMap = new Map();
 
     hook.getFiberRoots(rendererID).forEach(root => {
       const rootInstance = rootToFiberInstanceMap.get(root);
@@ -5373,13 +5245,6 @@ export function attach(
       const initialTreeBaseDurations: Array<[number, number]> = [];
       snapshotTreeBaseDurations(rootInstance, initialTreeBaseDurations);
       (initialTreeBaseDurationsMap: any).set(rootID, initialTreeBaseDurations);
-
-      if (shouldRecordChangeDescriptions) {
-        // Record all contexts at the time profiling is started.
-        // Fibers only store the current context value,
-        // so we need to track them separately in order to determine changed keys.
-        crawlToInitializeContextsMap(root.current);
-      }
     });
 
     isProfiling = true;
