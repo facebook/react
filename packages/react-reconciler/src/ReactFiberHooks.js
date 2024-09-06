@@ -835,7 +835,7 @@ function renderWithHooksAgain<Props, SecondArg>(
     workInProgressHook = null;
 
     if (workInProgress.updateQueue != null) {
-      resetFunctionComponentUpdateQueue(workInProgress.updateQueue);
+      resetFunctionComponentUpdateQueue((workInProgress.updateQueue: any));
     }
 
     if (__DEV__) {
