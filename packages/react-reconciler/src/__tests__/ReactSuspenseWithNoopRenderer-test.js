@@ -506,10 +506,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       // React retries one more time
       'Error! [Result]',
 
-      ...(gate('enableSiblingPrerendering')
-        ? ['Error! [Result]', 'Error! [Result]']
-        : []),
-
       // Errored again on retry. Now handle it.
       'Caught error: Failed to load: Result',
     ]);

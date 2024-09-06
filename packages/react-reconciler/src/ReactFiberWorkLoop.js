@@ -2110,9 +2110,10 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
           }
           default: {
             // Unwind then continue with the normal work loop.
+            const reason = workInProgressSuspendedReason;
             workInProgressSuspendedReason = NotSuspended;
             workInProgressThrownValue = null;
-            throwAndUnwindWorkLoop(root, unitOfWork, thrownValue);
+            throwAndUnwindWorkLoop(root, unitOfWork, thrownValue, reason);
             break;
           }
         }
@@ -2232,7 +2233,12 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             // Unwind then continue with the normal work loop.
             workInProgressSuspendedReason = NotSuspended;
             workInProgressThrownValue = null;
-            throwAndUnwindWorkLoop(root, unitOfWork, thrownValue);
+            throwAndUnwindWorkLoop(
+              root,
+              unitOfWork,
+              thrownValue,
+              SuspendedOnError,
+            );
             break;
           }
           case SuspendedOnData: {
@@ -2290,7 +2296,12 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
               // Otherwise, unwind then continue with the normal work loop.
               workInProgressSuspendedReason = NotSuspended;
               workInProgressThrownValue = null;
-              throwAndUnwindWorkLoop(root, unitOfWork, thrownValue);
+              throwAndUnwindWorkLoop(
+                root,
+                unitOfWork,
+                thrownValue,
+                SuspendedAndReadyToContinue,
+              );
             }
             break;
           }
@@ -2353,7 +2364,12 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             // Otherwise, unwind then continue with the normal work loop.
             workInProgressSuspendedReason = NotSuspended;
             workInProgressThrownValue = null;
-            throwAndUnwindWorkLoop(root, unitOfWork, thrownValue);
+            throwAndUnwindWorkLoop(
+              root,
+              unitOfWork,
+              thrownValue,
+              SuspendedOnInstanceAndReadyToContinue,
+            );
             break;
           }
           case SuspendedOnDeprecatedThrowPromise: {
@@ -2363,7 +2379,12 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             // always unwind.
             workInProgressSuspendedReason = NotSuspended;
             workInProgressThrownValue = null;
-            throwAndUnwindWorkLoop(root, unitOfWork, thrownValue);
+            throwAndUnwindWorkLoop(
+              root,
+              unitOfWork,
+              thrownValue,
+              SuspendedOnDeprecatedThrowPromise,
+            );
             break;
           }
           case SuspendedOnHydration: {
@@ -2617,6 +2638,7 @@ function throwAndUnwindWorkLoop(
   root: FiberRoot,
   unitOfWork: Fiber,
   thrownValue: mixed,
+  suspendedReason: SuspendedReason,
 ) {
   // This is a fork of performUnitOfWork specifcally for unwinding a fiber
   // that threw an exception.
@@ -2664,7 +2686,7 @@ function throwAndUnwindWorkLoop(
         // The current algorithm for both hydration and error handling assumes
         // that the tree is rendered sequentially. So we always skip the siblings.
         getIsHydrating() ||
-        workInProgressSuspendedReason === SuspendedOnError
+        suspendedReason === SuspendedOnError
       ) {
         skipSiblings = true;
         // We intentionally don't set workInProgressRootDidSkipSuspendedSiblings,

@@ -148,15 +148,7 @@ describe('ReactCache', () => {
       error = e;
     }
     expect(error.message).toMatch('Failed to load: Hi');
-    assertLog([
-      'Promise rejected [Hi]',
-      'Error! [Hi]',
-      'Error! [Hi]',
-
-      ...(gate('enableSiblingPrerendering')
-        ? ['Error! [Hi]', 'Error! [Hi]']
-        : []),
-    ]);
+    assertLog(['Promise rejected [Hi]', 'Error! [Hi]', 'Error! [Hi]']);
 
     // Should throw again on a subsequent read
     root.render(<App />);

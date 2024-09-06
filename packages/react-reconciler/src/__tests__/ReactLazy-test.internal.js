@@ -239,13 +239,6 @@ describe('ReactLazy', () => {
     assertConsoleErrorDev([
       'Expected the result of a dynamic import() call',
       'Expected the result of a dynamic import() call',
-
-      ...(gate('enableSiblingPrerendering')
-        ? [
-            'Expected the result of a dynamic import() call',
-            'Expected the result of a dynamic import() call',
-          ]
-        : []),
     ]);
     expect(root).not.toMatchRenderedOutput('Hi');
   });
