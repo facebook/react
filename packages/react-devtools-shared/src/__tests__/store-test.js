@@ -1817,13 +1817,8 @@ describe('Store', () => {
         jest.runOnlyPendingTimers();
       }
 
-      // Gross abstraction around pending passive warning/error delay.
-      function flushPendingPassiveErrorAndWarningCounts() {
-        jest.advanceTimersByTime(1000);
-      }
-
       // @reactVersion >= 18.0
-      it('are counted (after a delay)', () => {
+      it('are counted (after no delay)', () => {
         function Example() {
           React.useEffect(() => {
             console.error('test-only: passive error');
@@ -1838,13 +1833,6 @@ describe('Store', () => {
           }, false);
         });
         flushPendingBridgeOperations();
-        expect(store).toMatchInlineSnapshot(`
-          [root]
-              <Example>
-        `);
-
-        // After a delay, passive effects should be committed as well
-        act(flushPendingPassiveErrorAndWarningCounts, false);
         expect(store).toMatchInlineSnapshot(`
           ✕ 1, ⚠ 1
           [root]
@@ -1879,8 +1867,9 @@ describe('Store', () => {
           }, false);
           flushPendingBridgeOperations();
           expect(store).toMatchInlineSnapshot(`
+            ✕ 1, ⚠ 1
             [root]
-                <Example>
+                <Example> ✕⚠
           `);
 
           // Before warnings and errors have flushed, flush another commit.
@@ -1894,21 +1883,12 @@ describe('Store', () => {
           }, false);
           flushPendingBridgeOperations();
           expect(store).toMatchInlineSnapshot(`
-            ✕ 1, ⚠ 1
+            ✕ 2, ⚠ 2
             [root]
                 <Example> ✕⚠
                 <Noop>
           `);
         });
-
-        // After a delay, passive effects should be committed as well
-        act(flushPendingPassiveErrorAndWarningCounts, false);
-        expect(store).toMatchInlineSnapshot(`
-          ✕ 2, ⚠ 2
-          [root]
-              <Example> ✕⚠
-              <Noop>
-        `);
 
         act(() => unmount());
         expect(store).toMatchInlineSnapshot(``);

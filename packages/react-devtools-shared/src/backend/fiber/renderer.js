@@ -970,6 +970,32 @@ export function attach(
   // lets the Fiber get reparented/remounted and still observe the previous errors/warnings.
   // Unless we explicitly clear the logs from a Fiber.
   const fiberToComponentLogsMap: WeakMap<Fiber, ComponentLogs> = new WeakMap();
+  // Tracks whether we've performed a commit since the last log. This is used to know
+  // whether we received any new logs between the commit and post commit phases. I.e.
+  // if any passive effects called console.warn / console.error.
+  let needsToFlushComponentLogs = false;
+
+  function bruteForceFlushErrorsAndWarnings() {
+    // Refresh error/warning count for all mounted unfiltered Fibers.
+    let hasChanges = false;
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+    for (const devtoolsInstance of idToDevToolsInstanceMap.values()) {
+      if (devtoolsInstance.kind === FIBER_INSTANCE) {
+        const fiber = devtoolsInstance.data;
+        const componentLogsEntry = fiberToComponentLogsMap.get(fiber);
+        const changed = recordConsoleLogs(devtoolsInstance, componentLogsEntry);
+        if (changed) {
+          hasChanges = true;
+          updateMostRecentlyInspectedElementIfNecessary(devtoolsInstance.id);
+        }
+      } else {
+        // Virtual Instances cannot log in passive effects and so never appear here.
+      }
+    }
+    if (hasChanges) {
+      flushPendingEvents();
+    }
+  }
 
   function clearErrorsAndWarnings() {
     // Note, this only clears logs for Fibers that have instances. If they're filtered
@@ -1101,10 +1127,12 @@ export function attach(
     }
 
     // The changes will be flushed later when we commit.
-    // TODO: If the log happened in a passive effect, then this happens after we've
+
+    // If the log happened in a passive effect, then this happens after we've
     // already committed the new tree so the change won't show up until we rerender
     // that component again. We need to visit a Component with passive effects in
     // handlePostCommitFiberRoot again to ensure that we flush the changes after passive.
+    needsToFlushComponentLogs = true;
   }
 
   // Patching the console enables DevTools to do a few useful things:
@@ -1322,6 +1350,8 @@ export function attach(
     });
 
     flushPendingEvents();
+
+    needsToFlushComponentLogs = false;
   }
 
   function getEnvironmentNames(): Array<string> {
@@ -3464,6 +3494,8 @@ export function attach(
         mountFiberRecursively(root.current, false);
 
         flushPendingEvents(root);
+
+        needsToFlushComponentLogs = false;
         currentRoot = (null: any);
       });
     }
@@ -3485,6 +3517,15 @@ export function attach(
         currentCommitProfilingMetadata.passiveEffectDuration =
           passiveEffectDuration;
       }
+    }
+
+    if (needsToFlushComponentLogs) {
+      // We received new logs after commit. I.e. in a passive effect. We need to
+      // traverse the tree to find the affected ones. If we just moved the whole
+      // tree traversal from handleCommitFiberRoot to handlePostCommitFiberRoot
+      // this wouldn't be needed. For now we just brute force check all instances.
+      // This is not that common of a case.
+      bruteForceFlushErrorsAndWarnings();
     }
   }
 
@@ -3594,6 +3635,8 @@ export function attach(
 
     // We're done here.
     flushPendingEvents(root);
+
+    needsToFlushComponentLogs = false;
 
     if (traceUpdatesEnabled) {
       hook.emit('traceUpdates', traceUpdatesForNodes);
