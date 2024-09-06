@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<cff5b6f891f4645743d5f4f443350208>>
+ * @generated SignedSource<<1f391176146c2131cb59e5294a929432>>
  */
 
 "use strict";
@@ -8398,22 +8398,28 @@ function commitBeforeMutationEffects(root, firstChild) {
             break;
           case 1:
             if (0 !== (firstChild & 1024) && null !== current) {
-              firstChild = root;
-              var prevProps = current.memoizedProps;
+              firstChild = void 0;
+              var finishedWork = root,
+                prevProps = current.memoizedProps;
               current = current.memoizedState;
-              var instance = firstChild.stateNode;
+              var instance = finishedWork.stateNode;
               try {
-                var snapshot = instance.getSnapshotBeforeUpdate(
-                  resolveClassComponentProps(
-                    firstChild.type,
-                    prevProps,
-                    firstChild.elementType === firstChild.type
-                  ),
+                var resolvedPrevProps = resolveClassComponentProps(
+                  finishedWork.type,
+                  prevProps,
+                  finishedWork.elementType === finishedWork.type
+                );
+                firstChild = instance.getSnapshotBeforeUpdate(
+                  resolvedPrevProps,
                   current
                 );
-                instance.__reactInternalSnapshotBeforeUpdate = snapshot;
+                instance.__reactInternalSnapshotBeforeUpdate = firstChild;
               } catch (error) {
-                captureCommitPhaseError(firstChild, firstChild.return, error);
+                captureCommitPhaseError(
+                  finishedWork,
+                  finishedWork.return,
+                  error
+                );
               }
             }
             break;
@@ -8440,9 +8446,9 @@ function commitBeforeMutationEffects(root, firstChild) {
         }
         nextEffect = root.return;
       }
-  snapshot = shouldFireAfterActiveInstanceBlur;
+  resolvedPrevProps = shouldFireAfterActiveInstanceBlur;
   shouldFireAfterActiveInstanceBlur = !1;
-  return snapshot;
+  return resolvedPrevProps;
 }
 function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
   var flags = finishedWork.flags;
@@ -11639,17 +11645,17 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1229 = {
+  internals$jscomp$inline_1245 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-fe03c56d-20240905",
+    version: "19.0.0-native-fb-a03254bc-20240905",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromNode,
-    reconcilerVersion: "19.0.0-native-fb-fe03c56d-20240905"
+    reconcilerVersion: "19.0.0-native-fb-a03254bc-20240905"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1229.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1229.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1245.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1245.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$146 = 0;
     31 > index$146;
@@ -11661,20 +11667,20 @@ internals$jscomp$inline_1229.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1229.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1245.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1482 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1498 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1482.isDisabled &&
-    hook$jscomp$inline_1482.supportsFiber
+    !hook$jscomp$inline_1498.isDisabled &&
+    hook$jscomp$inline_1498.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1482.inject(
-        internals$jscomp$inline_1229
+      (rendererID = hook$jscomp$inline_1498.inject(
+        internals$jscomp$inline_1245
       )),
-        (injectedHook = hook$jscomp$inline_1482);
+        (injectedHook = hook$jscomp$inline_1498);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

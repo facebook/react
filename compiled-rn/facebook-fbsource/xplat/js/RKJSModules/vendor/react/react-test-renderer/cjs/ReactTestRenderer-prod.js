@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<335b8afbe03a2227bfa3068fd05d691a>>
+ * @generated SignedSource<<4fca6319224428deafef3fdf57cb682f>>
  */
 
 "use strict";
@@ -6335,22 +6335,28 @@ function commitBeforeMutationEffects(root, firstChild) {
             break;
           case 1:
             if (0 !== (firstChild & 1024) && null !== current) {
-              firstChild = root;
-              var prevProps = current.memoizedProps;
+              firstChild = void 0;
+              var finishedWork = root,
+                prevProps = current.memoizedProps;
               current = current.memoizedState;
-              var instance = firstChild.stateNode;
+              var instance = finishedWork.stateNode;
               try {
-                var snapshot = instance.getSnapshotBeforeUpdate(
-                  resolveClassComponentProps(
-                    firstChild.type,
-                    prevProps,
-                    firstChild.elementType === firstChild.type
-                  ),
+                var resolvedPrevProps = resolveClassComponentProps(
+                  finishedWork.type,
+                  prevProps,
+                  finishedWork.elementType === finishedWork.type
+                );
+                firstChild = instance.getSnapshotBeforeUpdate(
+                  resolvedPrevProps,
                   current
                 );
-                instance.__reactInternalSnapshotBeforeUpdate = snapshot;
+                instance.__reactInternalSnapshotBeforeUpdate = firstChild;
               } catch (error) {
-                captureCommitPhaseError(firstChild, firstChild.return, error);
+                captureCommitPhaseError(
+                  finishedWork,
+                  finishedWork.return,
+                  error
+                );
               }
             }
             break;
@@ -6379,9 +6385,9 @@ function commitBeforeMutationEffects(root, firstChild) {
         }
         nextEffect = root.return;
       }
-  snapshot = shouldFireAfterActiveInstanceBlur;
+  resolvedPrevProps = shouldFireAfterActiveInstanceBlur;
   shouldFireAfterActiveInstanceBlur = !1;
-  return snapshot;
+  return resolvedPrevProps;
 }
 function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
   var flags = finishedWork.flags;
@@ -9431,28 +9437,28 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var internals$jscomp$inline_1255 = {
+var internals$jscomp$inline_1262 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-fe03c56d-20240905",
+  version: "19.0.0-native-fb-a03254bc-20240905",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: function (mockNode) {
     mockNode = nodeToInstanceMap.get(mockNode);
     return void 0 !== mockNode ? mockNode.internalInstanceHandle : null;
   },
-  reconcilerVersion: "19.0.0-native-fb-fe03c56d-20240905"
+  reconcilerVersion: "19.0.0-native-fb-a03254bc-20240905"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1256 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1263 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1256.isDisabled &&
-    hook$jscomp$inline_1256.supportsFiber
+    !hook$jscomp$inline_1263.isDisabled &&
+    hook$jscomp$inline_1263.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1256.inject(
-        internals$jscomp$inline_1255
+      (rendererID = hook$jscomp$inline_1263.inject(
+        internals$jscomp$inline_1262
       )),
-        (injectedHook = hook$jscomp$inline_1256);
+        (injectedHook = hook$jscomp$inline_1263);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
@@ -9576,4 +9582,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.0.0-native-fb-fe03c56d-20240905";
+exports.version = "19.0.0-native-fb-a03254bc-20240905";

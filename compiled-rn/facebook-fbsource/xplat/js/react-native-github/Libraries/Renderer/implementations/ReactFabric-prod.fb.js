@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<67202214b2bd9ab8d1dc01dd0b7df624>>
+ * @generated SignedSource<<adb2f589aafa3b017bdd5b53085a4ca6>>
  */
 
 "use strict";
@@ -7979,22 +7979,28 @@ function commitBeforeMutationEffects(root, firstChild) {
             break;
           case 1:
             if (0 !== (firstChild & 1024) && null !== current) {
-              firstChild = root;
-              var prevProps = current.memoizedProps;
+              firstChild = void 0;
+              var finishedWork = root,
+                prevProps = current.memoizedProps;
               current = current.memoizedState;
-              var instance = firstChild.stateNode;
+              var instance = finishedWork.stateNode;
               try {
-                var snapshot = instance.getSnapshotBeforeUpdate(
-                  resolveClassComponentProps(
-                    firstChild.type,
-                    prevProps,
-                    firstChild.elementType === firstChild.type
-                  ),
+                var resolvedPrevProps = resolveClassComponentProps(
+                  finishedWork.type,
+                  prevProps,
+                  finishedWork.elementType === finishedWork.type
+                );
+                firstChild = instance.getSnapshotBeforeUpdate(
+                  resolvedPrevProps,
                   current
                 );
-                instance.__reactInternalSnapshotBeforeUpdate = snapshot;
+                instance.__reactInternalSnapshotBeforeUpdate = firstChild;
               } catch (error) {
-                captureCommitPhaseError(firstChild, firstChild.return, error);
+                captureCommitPhaseError(
+                  finishedWork,
+                  finishedWork.return,
+                  error
+                );
               }
             }
             break;
@@ -8021,9 +8027,9 @@ function commitBeforeMutationEffects(root, firstChild) {
         }
         nextEffect = root.return;
       }
-  snapshot = shouldFireAfterActiveInstanceBlur;
+  resolvedPrevProps = shouldFireAfterActiveInstanceBlur;
   shouldFireAfterActiveInstanceBlur = !1;
-  return snapshot;
+  return resolvedPrevProps;
 }
 function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
   var flags = finishedWork.flags;
@@ -10961,27 +10967,27 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1153 = {
+  internals$jscomp$inline_1160 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-fe03c56d-20240905",
+    version: "19.0.0-native-fb-a03254bc-20240905",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromNode,
-    reconcilerVersion: "19.0.0-native-fb-fe03c56d-20240905"
+    reconcilerVersion: "19.0.0-native-fb-a03254bc-20240905"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1153.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1160.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1420 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1427 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1420.isDisabled &&
-    hook$jscomp$inline_1420.supportsFiber
+    !hook$jscomp$inline_1427.isDisabled &&
+    hook$jscomp$inline_1427.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1420.inject(
-        internals$jscomp$inline_1153
+      (rendererID = hook$jscomp$inline_1427.inject(
+        internals$jscomp$inline_1160
       )),
-        (injectedHook = hook$jscomp$inline_1420);
+        (injectedHook = hook$jscomp$inline_1427);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

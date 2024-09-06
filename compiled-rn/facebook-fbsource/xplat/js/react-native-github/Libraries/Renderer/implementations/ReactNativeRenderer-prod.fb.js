@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f8817d51aa946a99a101afe356d3337d>>
+ * @generated SignedSource<<fa6105f0bfd09c6f5aa6b2c3ea46bef6>>
  */
 
 "use strict";
@@ -8180,22 +8180,28 @@ function commitBeforeMutationEffects(root, firstChild) {
             break;
           case 1:
             if (0 !== (firstChild & 1024) && null !== current) {
-              firstChild = root;
-              var prevProps = current.memoizedProps;
+              firstChild = void 0;
+              var finishedWork = root,
+                prevProps = current.memoizedProps;
               current = current.memoizedState;
-              var instance = firstChild.stateNode;
+              var instance = finishedWork.stateNode;
               try {
-                var snapshot = instance.getSnapshotBeforeUpdate(
-                  resolveClassComponentProps(
-                    firstChild.type,
-                    prevProps,
-                    firstChild.elementType === firstChild.type
-                  ),
+                var resolvedPrevProps = resolveClassComponentProps(
+                  finishedWork.type,
+                  prevProps,
+                  finishedWork.elementType === finishedWork.type
+                );
+                firstChild = instance.getSnapshotBeforeUpdate(
+                  resolvedPrevProps,
                   current
                 );
-                instance.__reactInternalSnapshotBeforeUpdate = snapshot;
+                instance.__reactInternalSnapshotBeforeUpdate = firstChild;
               } catch (error) {
-                captureCommitPhaseError(firstChild, firstChild.return, error);
+                captureCommitPhaseError(
+                  finishedWork,
+                  finishedWork.return,
+                  error
+                );
               }
             }
             break;
@@ -8222,9 +8228,9 @@ function commitBeforeMutationEffects(root, firstChild) {
         }
         nextEffect = root.return;
       }
-  snapshot = shouldFireAfterActiveInstanceBlur;
+  resolvedPrevProps = shouldFireAfterActiveInstanceBlur;
   shouldFireAfterActiveInstanceBlur = !1;
-  return snapshot;
+  return resolvedPrevProps;
 }
 function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
   var flags = finishedWork.flags;
@@ -11092,11 +11098,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.0.0-native-fb-fe03c56d-20240905" !== isomorphicReactPackageVersion)
+if ("19.0.0-native-fb-a03254bc-20240905" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.0.0-native-fb-fe03c56d-20240905\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.0.0-native-fb-a03254bc-20240905\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11143,27 +11149,27 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1219 = {
+  internals$jscomp$inline_1226 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-fe03c56d-20240905",
+    version: "19.0.0-native-fb-a03254bc-20240905",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromTag,
-    reconcilerVersion: "19.0.0-native-fb-fe03c56d-20240905"
+    reconcilerVersion: "19.0.0-native-fb-a03254bc-20240905"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1219.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1226.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1511 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1518 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1511.isDisabled &&
-    hook$jscomp$inline_1511.supportsFiber
+    !hook$jscomp$inline_1518.isDisabled &&
+    hook$jscomp$inline_1518.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1511.inject(
-        internals$jscomp$inline_1219
+      (rendererID = hook$jscomp$inline_1518.inject(
+        internals$jscomp$inline_1226
       )),
-        (injectedHook = hook$jscomp$inline_1511);
+        (injectedHook = hook$jscomp$inline_1518);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {

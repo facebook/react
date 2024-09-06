@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c6b789e820a0aa95b993d014eb02e09d>>
+ * @generated SignedSource<<7b62c4c79e4f3fff37a3237b451e7316>>
  */
 
 "use strict";
@@ -6717,22 +6717,28 @@ function commitBeforeMutationEffects(root, firstChild) {
             break;
           case 1:
             if (0 !== (firstChild & 1024) && null !== current) {
-              firstChild = root;
-              var prevProps = current.memoizedProps;
+              firstChild = void 0;
+              var finishedWork = root,
+                prevProps = current.memoizedProps;
               current = current.memoizedState;
-              var instance = firstChild.stateNode;
+              var instance = finishedWork.stateNode;
               try {
-                var snapshot = instance.getSnapshotBeforeUpdate(
-                  resolveClassComponentProps(
-                    firstChild.type,
-                    prevProps,
-                    firstChild.elementType === firstChild.type
-                  ),
+                var resolvedPrevProps = resolveClassComponentProps(
+                  finishedWork.type,
+                  prevProps,
+                  finishedWork.elementType === finishedWork.type
+                );
+                firstChild = instance.getSnapshotBeforeUpdate(
+                  resolvedPrevProps,
                   current
                 );
-                instance.__reactInternalSnapshotBeforeUpdate = snapshot;
+                instance.__reactInternalSnapshotBeforeUpdate = firstChild;
               } catch (error) {
-                captureCommitPhaseError(firstChild, firstChild.return, error);
+                captureCommitPhaseError(
+                  finishedWork,
+                  finishedWork.return,
+                  error
+                );
               }
             }
             break;
@@ -6761,9 +6767,9 @@ function commitBeforeMutationEffects(root, firstChild) {
         }
         nextEffect = root.return;
       }
-  snapshot = shouldFireAfterActiveInstanceBlur;
+  resolvedPrevProps = shouldFireAfterActiveInstanceBlur;
   shouldFireAfterActiveInstanceBlur = !1;
-  return snapshot;
+  return resolvedPrevProps;
 }
 function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
   var flags = finishedWork.flags;
@@ -10019,16 +10025,16 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var internals$jscomp$inline_1121 = {
+var internals$jscomp$inline_1137 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-fe03c56d-20240905",
+  version: "19.0.0-native-fb-a03254bc-20240905",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: function (mockNode) {
     mockNode = nodeToInstanceMap.get(mockNode);
     return void 0 !== mockNode ? mockNode.internalInstanceHandle : null;
   },
-  reconcilerVersion: "19.0.0-native-fb-fe03c56d-20240905",
+  reconcilerVersion: "19.0.0-native-fb-a03254bc-20240905",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$138 = 0;
@@ -10046,16 +10052,16 @@ var internals$jscomp$inline_1121 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1323 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1339 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1323.isDisabled &&
-    hook$jscomp$inline_1323.supportsFiber
+    !hook$jscomp$inline_1339.isDisabled &&
+    hook$jscomp$inline_1339.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1323.inject(
-        internals$jscomp$inline_1121
+      (rendererID = hook$jscomp$inline_1339.inject(
+        internals$jscomp$inline_1137
       )),
-        (injectedHook = hook$jscomp$inline_1323);
+        (injectedHook = hook$jscomp$inline_1339);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
@@ -10179,4 +10185,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.0.0-native-fb-fe03c56d-20240905";
+exports.version = "19.0.0-native-fb-a03254bc-20240905";
