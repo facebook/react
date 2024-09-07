@@ -14,7 +14,11 @@
  * Be mindful of backwards compatibility when making changes.
  */
 
-import type {ReactContext, Wakeable} from 'shared/ReactTypes';
+import type {
+  ReactContext,
+  Wakeable,
+  ReactComponentInfo,
+} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   ComponentFilter,
@@ -155,6 +159,9 @@ export type ReactRenderer = {
   // Only injected by React v16.9+ in DEV mode.
   // Enables DevTools to append owners-only component stack to error messages.
   getCurrentFiber?: () => Fiber | null,
+  // Only injected by React Flight Clients in DEV mode.
+  // Enables DevTools to append owners-only component stack to error messages from Server Components.
+  getCurrentComponentInfo?: () => ReactComponentInfo | null,
   // 17.0.2+
   reconcilerVersion?: string,
   // Uniquely identifies React DOM v15.
