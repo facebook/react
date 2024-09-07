@@ -2371,7 +2371,7 @@ export function attach(
     }
 
     if (isProfilingSupported) {
-      recordProfilingDurations(fiberInstance);
+      recordProfilingDurations(fiberInstance, null);
     }
     return fiberInstance;
   }
@@ -2937,7 +2937,10 @@ export function attach(
     removeChild(instance, null);
   }
 
-  function recordProfilingDurations(fiberInstance: FiberInstance) {
+  function recordProfilingDurations(
+    fiberInstance: FiberInstance,
+    prevFiber: null | Fiber,
+  ) {
     const id = fiberInstance.id;
     const fiber = fiberInstance.data;
     const {actualDuration, treeBaseDuration} = fiber;
@@ -2945,13 +2948,11 @@ export function attach(
     fiberInstance.treeBaseDuration = treeBaseDuration || 0;
 
     if (isProfiling) {
-      const {alternate} = fiber;
-
       // It's important to update treeBaseDuration even if the current Fiber did not render,
       // because it's possible that one of its descendants did.
       if (
-        alternate == null ||
-        treeBaseDuration !== alternate.treeBaseDuration
+        prevFiber == null ||
+        treeBaseDuration !== prevFiber.treeBaseDuration
       ) {
         // Tree base duration updates are included in the operations typed array.
         // So we have to convert them from milliseconds to microseconds so we can send them as ints.
@@ -2963,7 +2964,7 @@ export function attach(
         pushOperation(convertedTreeBaseDuration);
       }
 
-      if (alternate == null || didFiberRender(alternate, fiber)) {
+      if (prevFiber == null || didFiberRender(prevFiber, fiber)) {
         if (actualDuration != null) {
           // The actual duration reported by React includes time spent working on children.
           // This is useful information, but it's also useful to be able to exclude child durations.
@@ -2991,7 +2992,7 @@ export function attach(
           );
 
           if (recordChangeDescriptions) {
-            const changeDescription = getChangeDescription(alternate, fiber);
+            const changeDescription = getChangeDescription(prevFiber, fiber);
             if (changeDescription !== null) {
               if (metadata.changeDescriptions !== null) {
                 metadata.changeDescriptions.set(id, changeDescription);
@@ -3314,8 +3315,6 @@ export function attach(
           // Register the new alternate in case it's not already in.
           fiberToFiberInstanceMap.set(nextChild, fiberInstance);
 
-          // Update the Fiber so we that we always keep the current Fiber on the data.
-          fiberInstance.data = nextChild;
           moveChild(fiberInstance, previousSiblingOfExistingInstance);
 
           if (
@@ -3455,6 +3454,8 @@ export function attach(
     const stashedPrevious = previouslyReconciledSibling;
     const stashedRemaining = remainingReconcilingChildren;
     if (fiberInstance !== null) {
+      // Update the Fiber so we that we always keep the current Fiber on the data.
+      fiberInstance.data = nextFiber;
       if (
         mostRecentlyInspectedElement !== null &&
         mostRecentlyInspectedElement.id === fiberInstance.id &&
@@ -3610,7 +3611,7 @@ export function attach(
         const isProfilingSupported =
           nextFiber.hasOwnProperty('treeBaseDuration');
         if (isProfilingSupported) {
-          recordProfilingDurations(fiberInstance);
+          recordProfilingDurations(fiberInstance, prevFiber);
         }
       }
       if (shouldResetChildren) {
@@ -3681,11 +3682,11 @@ export function attach(
       // If we have not been profiling, then we can just walk the tree and build up its current state as-is.
       hook.getFiberRoots(rendererID).forEach(root => {
         const current = root.current;
-        const alternate = current.alternate;
         const newRoot = createFiberInstance(current);
         rootToFiberInstanceMap.set(root, newRoot);
         idToDevToolsInstanceMap.set(newRoot.id, newRoot);
         fiberToFiberInstanceMap.set(current, newRoot);
+        const alternate = current.alternate;
         if (alternate) {
           fiberToFiberInstanceMap.set(alternate, newRoot);
         }
@@ -3755,20 +3756,22 @@ export function attach(
     priorityLevel: void | number,
   ) {
     const current = root.current;
-    const alternate = current.alternate;
 
+    let prevFiber: null | Fiber = null;
     let rootInstance = rootToFiberInstanceMap.get(root);
     if (!rootInstance) {
       rootInstance = createFiberInstance(current);
       rootToFiberInstanceMap.set(root, rootInstance);
       idToDevToolsInstanceMap.set(rootInstance.id, rootInstance);
       fiberToFiberInstanceMap.set(current, rootInstance);
+      const alternate = current.alternate;
       if (alternate) {
         fiberToFiberInstanceMap.set(alternate, rootInstance);
       }
       currentRootID = rootInstance.id;
     } else {
       currentRootID = rootInstance.id;
+      prevFiber = rootInstance.data;
     }
 
     // Before the traversals, remember to start tracking
@@ -3804,13 +3807,13 @@ export function attach(
       };
     }
 
-    if (alternate) {
+    if (prevFiber !== null) {
       // TODO: relying on this seems a bit fishy.
       const wasMounted =
-        alternate.memoizedState != null &&
-        alternate.memoizedState.element != null &&
+        prevFiber.memoizedState != null &&
+        prevFiber.memoizedState.element != null &&
         // A dehydrated root is not considered mounted
-        alternate.memoizedState.isDehydrated !== true;
+        prevFiber.memoizedState.isDehydrated !== true;
       const isMounted =
         current.memoizedState != null &&
         current.memoizedState.element != null &&
@@ -3822,7 +3825,7 @@ export function attach(
         mountFiberRecursively(current, false);
       } else if (wasMounted && isMounted) {
         // Update an existing root.
-        updateFiberRecursively(rootInstance, current, alternate, false);
+        updateFiberRecursively(rootInstance, current, prevFiber, false);
       } else if (wasMounted && !isMounted) {
         // Unmount an existing root.
         unmountInstanceRecursively(rootInstance);
