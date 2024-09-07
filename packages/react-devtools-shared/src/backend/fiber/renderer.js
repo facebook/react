@@ -1773,6 +1773,14 @@ export function attach(
               // For older versions, there's no good way to read the current context value after render has completed.
               // This is because React maintains a stack of context values during render,
               // but by the time DevTools is called, render has finished and the stack is empty.
+              if (prevContext.context !== nextContext.context) {
+                // If the order of context has changed, then the later context values might have
+                // changed too but the main reason it rerendered was earlier. Either an earlier
+                // context changed value but then we would have exited already. If we end up here
+                // it's because a state or props change caused the order of contexts used to change.
+                // So the main cause is not the contexts themselves.
+                return false;
+              }
               if (!is(prevContext.memoizedValue, nextContext.memoizedValue)) {
                 return true;
               }
