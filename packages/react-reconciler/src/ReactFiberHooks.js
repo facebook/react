@@ -1191,11 +1191,33 @@ function use<T>(usable: Usable<T>): T {
     } else if (usable.$$typeof === REACT_CONTEXT_TYPE) {
       const context: ReactContext<T> = (usable: any);
       return readContext(context);
+    } else if (usable.$$typeof === 'REACT_OBSERVABLE_TYPE') { // TODO: set up the symbol value for REACT_OBSERVABLE_TYPE, or use some other property as preferred.
+      return readObservable(usable);
     }
   }
 
   // eslint-disable-next-line react-internal/safe-string-coercion
   throw new Error('An unsupported type was passed to use(): ' + String(usable));
+}
+
+/**
+ * In readObservable, we hook into some observable interface. Maybe it's a method called
+ * `registerObserver` that accepts some callback. React can take control of that method and
+ * delegate its call to some kind of safe process where side-effects can be run 
+ * @param {*} observable 
+ * @returns 
+ */
+function readObservable(observable: any) {
+  // This is the observable method we might delegae elsewhere
+  const delegatedSideEffect = observable.registerObserver
+
+  // Then we could send that method to the commit phase (or other appropriate place)
+  // Method does not exist.
+  addSideEffectToCorrectQueue(delegatedSideEffect);
+
+  // Return the observable value, with the knowledge that React will set up the correct
+  // callbacks that trigger re-renders or schedule work when observable values changed.
+  return observable;
 }
 
 function useMemoCache(size: number): Array<any> {
