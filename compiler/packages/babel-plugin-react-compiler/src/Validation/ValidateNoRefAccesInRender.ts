@@ -282,7 +282,12 @@ function validateNoRefAccessInRenderImpl(
             break;
           }
           case 'MethodCall': {
-            if (!isEffectHook(instr.value.property.identifier)) {
+            if (
+              !isHookThatAllowsRefValueAccess(
+                fn,
+                instr.value.property.identifier,
+              )
+            ) {
               for (const operand of eachInstructionValueOperand(instr.value)) {
                 const hookKind = getHookKindForType(
                   fn.env,
@@ -307,7 +312,10 @@ function validateNoRefAccessInRenderImpl(
           case 'CallExpression': {
             const callee = instr.value.callee;
             const hookKind = getHookKindForType(fn.env, callee.identifier.type);
-            const isUseEffect = isEffectHook(callee.identifier);
+            const isUseEffect = isHookThatAllowsRefValueAccess(
+              fn,
+              callee.identifier,
+            );
             let returnType: RefAccessType = {kind: 'None'};
             if (!isUseEffect) {
               // Report a more precise error when calling a local function that accesses a ref
@@ -498,4 +506,12 @@ function validateNoDirectRefValueAccess(
       suggestions: null,
     });
   }
+}
+
+function isHookThatAllowsRefValueAccess(
+  fn: HIRFunction,
+  identifier: Identifier,
+): boolean {
+  const hookKind = getHookKindForType(fn.env, identifier.type);
+  return isEffectHook(identifier) || hookKind === 'useImperativeHandle';
 }
