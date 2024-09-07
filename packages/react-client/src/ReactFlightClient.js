@@ -58,6 +58,8 @@ import {
   createStringDecoder,
   prepareDestinationForModule,
   bindToConsole,
+  rendererVersion,
+  rendererPackageName,
 } from './ReactFlightClientConfig';
 
 import {createBoundServerReference} from './ReactFlightReplyClient';
@@ -75,6 +77,10 @@ import {
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 
 import {getOwnerStackByComponentInfoInDev} from 'shared/ReactComponentInfoStack';
+
+import {injectInternals} from './ReactFlightClientDevToolsHook';
+
+import ReactVersion from 'shared/ReactVersion';
 
 import isArray from 'shared/isArray';
 
@@ -2920,4 +2926,22 @@ export function close(response: Response): void {
   // Ideally we should be able to early bail out if we kept a
   // ref count of pending chunks.
   reportGlobalError(response, new Error('Connection closed.'));
+}
+
+function getCurrentOwnerInDEV(): null | ReactComponentInfo {
+  return currentOwnerInDEV;
+}
+
+export function injectIntoDevTools(): boolean {
+  const internals: Object = {
+    bundleType: __DEV__ ? 1 : 0, // Might add PROFILE later.
+    version: rendererVersion,
+    rendererPackageName: rendererPackageName,
+    currentDispatcherRef: ReactSharedInternals,
+    // Enables DevTools to detect reconciler version rather than renderer version
+    // which may not match for third party renderers.
+    reconcilerVersion: ReactVersion,
+    getCurrentComponentInfo: getCurrentOwnerInDEV,
+  };
+  return injectInternals(internals);
 }
