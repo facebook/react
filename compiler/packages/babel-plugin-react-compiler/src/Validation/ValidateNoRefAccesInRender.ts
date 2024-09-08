@@ -45,12 +45,14 @@ import {isEffectHook} from './ValidateMemoizedEffectDependencies';
  * or based on property name alone (`foo.current` might be a ref).
  */
 
-type RefAccessType =
-  | {kind: 'None'}
+type RefAccessType = {kind: 'None'} | RefAccessRefType;
+
+type RefAccessRefType =
   | {kind: 'Ref'}
   | {kind: 'RefValue'; loc?: SourceLocation}
-  | {kind: 'Structure'; value: RefAccessType}
-  | {kind: 'Function'; readRefEffect: boolean; returnType: RefAccessType};
+  | {kind: 'Structure'; value: null | RefAccessRefType; fn: null | RefFnType};
+
+type RefFnType = {readRefEffect: boolean; returnType: RefAccessType};
 
 class Env extends Map<IdentifierId, RefAccessType> {
   #changed = false;
@@ -79,21 +81,25 @@ class Env extends Map<IdentifierId, RefAccessType> {
             loc: null,
           });
           return a.loc == b.loc;
-        case 'Function':
-          CompilerError.invariant(b.kind === 'Function', {
-            reason: 'Expected function',
-            loc: null,
-          });
-          return (
-            a.readRefEffect === b.readRefEffect &&
-            tyEqual(a.returnType, b.returnType)
-          );
-        case 'Structure':
+        case 'Structure': {
           CompilerError.invariant(b.kind === 'Structure', {
             reason: 'Expected structure',
             loc: null,
           });
-          return tyEqual(a.value, b.value);
+          const fnTypesEqual =
+            (a.fn === null && b.fn === null) ||
+            (a.fn !== null &&
+              b.fn !== null &&
+              a.fn.readRefEffect === b.fn.readRefEffect &&
+              tyEqual(a.fn.returnType, b.fn.returnType));
+          return (
+            fnTypesEqual &&
+            (a.value === b.value ||
+              (a.value !== null &&
+                b.value !== null &&
+                tyEqual(a.value, b.value)))
+          );
+        }
       }
     }
 
@@ -125,36 +131,55 @@ function refTypeOfType(identifier: Identifier): RefAccessType {
 }
 
 function joinRefTypes(...types: Array<RefAccessType>): RefAccessType {
+  function joinRefRefTypes(
+    a: RefAccessRefType,
+    b: RefAccessRefType,
+  ): RefAccessRefType {
+    if (a.kind === 'RefValue') {
+      return a;
+    } else if (b.kind === 'RefValue') {
+      return b;
+    } else if (a.kind === 'Ref' || b.kind === 'Ref') {
+      return {kind: 'Ref'};
+    } else {
+      CompilerError.invariant(
+        a.kind === 'Structure' && b.kind === 'Structure',
+        {
+          reason: 'Expected structure',
+          loc: null,
+        },
+      );
+      const fn =
+        a.fn === null
+          ? b.fn
+          : b.fn === null
+            ? a.fn
+            : {
+                readRefEffect: a.fn.readRefEffect || b.fn.readRefEffect,
+                returnType: joinRefTypes(a.fn.returnType, b.fn.returnType),
+              };
+      const value =
+        a.value === null
+          ? b.value
+          : b.value === null
+            ? a.value
+            : joinRefRefTypes(a.value, b.value);
+      return {
+        kind: 'Structure',
+        fn,
+        value,
+      };
+    }
+  }
+
   return types.reduce(
     (a, b) => {
       if (a.kind === 'None') {
         return b;
       } else if (b.kind === 'None') {
         return a;
-      } else if (a.kind === 'RefValue') {
-        return a;
-      } else if (b.kind === 'RefValue') {
-        return b;
-      } else if (a.kind === 'Ref' || b.kind === 'Ref') {
-        return {kind: 'Ref'};
-      } else if (a.kind === 'Function' && b.kind === 'Function') {
-        return {
-          kind: 'Function',
-          readRefEffect: a.readRefEffect || b.readRefEffect,
-          returnType: joinRefTypes(a.returnType, b.returnType),
-        };
-      } else if (a.kind === 'Structure' && b.kind === 'Structure') {
-        return {
-          kind: 'Structure',
-          value: joinRefTypes(a.value, b.value),
-        };
       } else {
-        CompilerError.invariant(
-          (a.kind === 'Function' && b.kind === 'Structure') ||
-            (a.kind === 'Structure' && b.kind === 'Function'),
-          {reason: 'Unexpected ref type combination', loc: null},
-        );
-        return {kind: 'None'};
+        return joinRefRefTypes(a, b);
       }
     },
     {kind: 'None'},
@@ -165,7 +190,7 @@ function validateNoRefAccessInRenderImpl(
   fn: HIRFunction,
   env: Env,
 ): Result<RefAccessType, CompilerError> {
-  let returnValues: Array<undefined | RefAccessType>;
+  let returnValues: Array<undefined | RefAccessType> = [];
   let place;
   for (const param of fn.params) {
     if (param.kind === 'Identifier') {
@@ -177,7 +202,7 @@ function validateNoRefAccessInRenderImpl(
     env.set(place.identifier.id, type);
   }
 
-  do {
+  for (let i = 0; (i == 0 || env.hasChanged()) && i < 10; i++) {
     env.resetChanged();
     returnValues = [];
     const errors = new CompilerError();
@@ -275,9 +300,12 @@ function validateNoRefAccessInRenderImpl(
               readRefEffect = true;
             }
             env.set(instr.lvalue.identifier.id, {
-              kind: 'Function',
-              readRefEffect,
-              returnType,
+              kind: 'Structure',
+              fn: {
+                readRefEffect,
+                returnType,
+              },
+              value: null,
             });
             break;
           }
@@ -298,8 +326,8 @@ function validateNoRefAccessInRenderImpl(
             validateNoRefValueAccess(errors, env, instr.value.receiver);
             const methType = env.get(instr.value.property.identifier.id);
             let returnType: RefAccessType = {kind: 'None'};
-            if (methType?.kind === 'Function') {
-              returnType = methType.returnType;
+            if (methType?.kind === 'Structure' && methType.fn !== null) {
+              returnType = methType.fn.returnType;
             }
             env.set(instr.lvalue.identifier.id, returnType);
             break;
@@ -312,9 +340,9 @@ function validateNoRefAccessInRenderImpl(
             if (!isUseEffect) {
               // Report a more precise error when calling a local function that accesses a ref
               const fnType = env.get(instr.value.callee.identifier.id);
-              if (fnType?.kind === 'Function') {
-                returnType = fnType.returnType;
-                if (fnType.readRefEffect) {
+              if (fnType?.kind === 'Structure' && fnType.fn !== null) {
+                returnType = fnType.fn.returnType;
+                if (fnType.fn.readRefEffect) {
                   errors.push({
                     severity: ErrorSeverity.InvalidReact,
                     reason:
@@ -347,10 +375,16 @@ function validateNoRefAccessInRenderImpl(
               validateNoDirectRefValueAccess(errors, operand, env);
               types.push(env.get(operand.identifier.id) ?? {kind: 'None'});
             }
-            env.set(instr.lvalue.identifier.id, {
-              kind: 'Structure',
-              value: joinRefTypes(...types),
-            });
+            const value = joinRefTypes(...types);
+            if (value.kind === 'None') {
+              env.set(instr.lvalue.identifier.id, {kind: 'None'});
+            } else {
+              env.set(instr.lvalue.identifier.id, {
+                kind: 'Structure',
+                value,
+                fn: null,
+              });
+            }
             break;
           }
           case 'PropertyDelete':
@@ -409,7 +443,13 @@ function validateNoRefAccessInRenderImpl(
     if (errors.hasErrors()) {
       return Err(errors);
     }
-  } while (env.hasChanged());
+  }
+
+  CompilerError.invariant(!env.hasChanged(), {
+    reason: 'Ref type environment did not converge',
+    loc: null,
+  });
+
   return Ok(
     joinRefTypes(
       ...returnValues.filter((env): env is RefAccessType => env !== undefined),
@@ -420,7 +460,7 @@ function validateNoRefAccessInRenderImpl(
 function destructure(
   type: RefAccessType | undefined,
 ): RefAccessType | undefined {
-  if (type?.kind === 'Structure') {
+  if (type?.kind === 'Structure' && type.value !== null) {
     return destructure(type.value);
   }
   return type;
@@ -434,7 +474,7 @@ function validateNoRefValueAccess(
   const type = destructure(env.get(operand.identifier.id));
   if (
     type?.kind === 'RefValue' ||
-    (type?.kind === 'Function' && type.readRefEffect)
+    (type?.kind === 'Structure' && type.fn?.readRefEffect)
   ) {
     errors.push({
       severity: ErrorSeverity.InvalidReact,
@@ -461,7 +501,7 @@ function validateNoRefAccess(
   if (
     type?.kind === 'Ref' ||
     type?.kind === 'RefValue' ||
-    (type?.kind === 'Function' && type.readRefEffect)
+    (type?.kind === 'Structure' && type.fn?.readRefEffect)
   ) {
     errors.push({
       severity: ErrorSeverity.InvalidReact,
