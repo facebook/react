@@ -21,7 +21,7 @@ function Component(props) {
   3 |   const onChange = e => {
   4 |     // INVALID! should use copy-on-write and pass the new value
 > 5 |     x.value = e.target.value;
-    |     ^ InvalidReact: Mutating a value returned from 'useState()', which should not be mutated. Use the setter function to update instead. Found mutation of `x` (5:5)
+    |     ^ InvalidReact: Updating a value used previously in JSX is not allowed. Consider moving the mutation before the JSX. Found mutation of `x` (5:5)
   6 |     setX(x);
   7 |   };
   8 |   return <input value={x.value} onChange={onChange} />;

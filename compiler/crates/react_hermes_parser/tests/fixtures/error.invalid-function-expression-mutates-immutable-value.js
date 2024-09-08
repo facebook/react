@@ -5,5 +5,5 @@ function Component(props) {
     x.value = e.target.value;
     setX(x);
   };
-  return <input value={x.value} onChange={onChange} />;
+  return <input onChange={onChange} />;
 }
