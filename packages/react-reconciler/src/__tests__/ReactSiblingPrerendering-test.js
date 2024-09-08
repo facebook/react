@@ -26,6 +26,22 @@ describe('ReactSiblingPrerendering', () => {
     textCache = new Map();
   });
 
+  // function resolveText(text) {
+  //   const record = textCache.get(text);
+  //   if (record === undefined) {
+  //     const newRecord = {
+  //       status: 'resolved',
+  //       value: text,
+  //     };
+  //     textCache.set(text, newRecord);
+  //   } else if (record.status === 'pending') {
+  //     const thenable = record.value;
+  //     record.status = 'resolved';
+  //     record.value = text;
+  //     thenable.pings.forEach(t => t());
+  //   }
+  // }
+
   function readText(text) {
     const record = textCache.get(text);
     if (record !== undefined) {
@@ -60,6 +76,37 @@ describe('ReactSiblingPrerendering', () => {
       throw thenable;
     }
   }
+
+  // function getText(text) {
+  //   const record = textCache.get(text);
+  //   if (record === undefined) {
+  //     const thenable = {
+  //       pings: [],
+  //       then(resolve) {
+  //         if (newRecord.status === 'pending') {
+  //           thenable.pings.push(resolve);
+  //         } else {
+  //           Promise.resolve().then(() => resolve(newRecord.value));
+  //         }
+  //       },
+  //     };
+  //     const newRecord = {
+  //       status: 'pending',
+  //       value: thenable,
+  //     };
+  //     textCache.set(text, newRecord);
+  //     return thenable;
+  //   } else {
+  //     switch (record.status) {
+  //       case 'pending':
+  //         return record.value;
+  //       case 'rejected':
+  //         return Promise.reject(record.value);
+  //       case 'resolved':
+  //         return Promise.resolve(record.value);
+  //     }
+  //   }
+  // }
 
   function Text({text}) {
     Scheduler.log(text);
@@ -162,5 +209,33 @@ describe('ReactSiblingPrerendering', () => {
       ]);
       expect(root).toMatchRenderedOutput('A');
     });
+  });
+
+  it('start prerendering retries right after the fallback commits', async () => {
+    function App() {
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <AsyncText text="A" />
+          <AsyncText text="B" />
+        </Suspense>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      startTransition(() => root.render(<App />));
+
+      // On the first attempt, A suspends. Unwind and show a fallback, without
+      // attempting B.
+      await waitForPaint(['Suspend! [A]', 'Loading...']);
+      expect(root).toMatchRenderedOutput('Loading...');
+
+      // Immediately after the fallback commits, retry the boundary again. This
+      // time we include B, since we're not blocking the fallback from showing.
+      if (gate('enableSiblingPrerendering')) {
+        await waitForPaint(['Suspend! [A]', 'Suspend! [B]']);
+      }
+    });
+    expect(root).toMatchRenderedOutput('Loading...');
   });
 });

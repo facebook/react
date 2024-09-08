@@ -191,7 +191,12 @@ describe('ReactUse', () => {
     await act(() => {
       root.render(<App />);
     });
-    assertLog(['Suspend!', 'Loading...']);
+    assertLog([
+      'Suspend!',
+      'Loading...',
+
+      ...(gate('enableSiblingPrerendering') ? ['Suspend!'] : []),
+    ]);
     expect(root).toMatchRenderedOutput('Loading...');
   });
 
@@ -1060,7 +1065,13 @@ describe('ReactUse', () => {
         </Suspense>,
       );
     });
-    assertLog(['(Loading A...)']);
+    assertLog([
+      '(Loading A...)',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['(Loading C...)', '(Loading B...)']
+        : []),
+    ]);
     expect(root).toMatchRenderedOutput('(Loading A...)');
 
     await act(() => {

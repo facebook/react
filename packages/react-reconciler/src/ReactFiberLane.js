@@ -26,9 +26,11 @@ import {
   syncLaneExpirationMs,
   transitionLaneExpirationMs,
   retryLaneExpirationMs,
+  disableLegacyMode,
 } from 'shared/ReactFeatureFlags';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {clz32} from './clz32';
+import {LegacyRoot} from './ReactRootTags';
 
 // Lane values below should be kept in sync with getLabelForLane(), used by react-devtools-timeline.
 // If those values are changed that package should be rebuilt and redeployed.
@@ -753,10 +755,14 @@ export function markRootPinged(root: FiberRoot, pingedLanes: Lanes) {
 
 export function markRootFinished(
   root: FiberRoot,
+  finishedLanes: Lanes,
   remainingLanes: Lanes,
   spawnedLane: Lane,
+  updatedLanes: Lanes,
+  suspendedRetryLanes: Lanes,
 ) {
-  const noLongerPendingLanes = root.pendingLanes & ~remainingLanes;
+  const previouslyPendingLanes = root.pendingLanes;
+  const noLongerPendingLanes = previouslyPendingLanes & ~remainingLanes;
 
   root.pendingLanes = remainingLanes;
 
@@ -811,6 +817,37 @@ export function markRootFinished(
       // to entangle the spawned task with the parent task.
       NoLanes,
     );
+  }
+
+  // suspendedRetryLanes represents the retry lanes spawned by new Suspense
+  // boundaries during this render that were not later pinged.
+  //
+  // These lanes were marked as pending on their associated Suspense boundary
+  // fiber during the render phase so that we could start rendering them
+  // before new data streams in. As soon as the fallback commits, we can try
+  // to render them again.
+  //
+  // But since we know they're still suspended, we can skip straight to the
+  // "prerender" mode (i.e. don't skip over siblings after something
+  // suspended) instead of the regular mode (i.e. unwind and skip the siblings
+  // as soon as something suspends to unblock the rest of the update).
+  if (
+    suspendedRetryLanes !== NoLanes &&
+    // Note that we only do this if there were no updates since we started
+    // rendering. This mirrors the logic in markRootUpdated — whenever we
+    // receive an update, we reset all the suspended and pinged lanes.
+    updatedLanes === NoLanes &&
+    !(disableLegacyMode && root.tag === LegacyRoot)
+  ) {
+    // We also need to avoid marking a retry lane as suspended if it was already
+    // pending before this render. We can't say these are now suspended if they
+    // weren't included in our attempt.
+    const freshlySpawnedRetryLanes =
+      suspendedRetryLanes &
+      // Remove any retry lane that was already pending before our just-finished
+      // attempt, and also wasn't included in that attempt.
+      ~(previouslyPendingLanes & ~finishedLanes);
+    root.suspendedLanes |= freshlySpawnedRetryLanes;
   }
 }
 
