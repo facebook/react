@@ -107,7 +107,7 @@ function equation(left: Type, right: Type): TypeEquation {
 function* generate(
   func: HIRFunction,
 ): Generator<TypeEquation, void, undefined> {
-  if (func.env.fnType === 'Component') {
+  if (func.fnType === 'Component') {
     const [props, ref] = func.params;
     if (props && props.kind === 'Identifier') {
       yield equation(props.identifier.type, {
