@@ -8,9 +8,11 @@
 import {CompilerError, ErrorSeverity} from '../CompilerError';
 import {
   HIRFunction,
+  Identifier,
   IdentifierId,
   Place,
   SourceLocation,
+  getHookKindForType,
   isRefValueType,
   isUseRefType,
 } from '../HIR';
@@ -42,25 +44,128 @@ import {isEffectHook} from './ValidateMemoizedEffectDependencies';
  * In the future we may reject more cases, based on either object names (`fooRef.current` is likely a ref)
  * or based on property name alone (`foo.current` might be a ref).
  */
-type State = {
-  refs: Set<IdentifierId>;
-  refValues: Map<IdentifierId, SourceLocation | null>;
-  refAccessingFunctions: Set<IdentifierId>;
-};
+
+type RefAccessType =
+  | {kind: 'None'}
+  | {kind: 'Ref'}
+  | {kind: 'RefValue'; loc?: SourceLocation}
+  | {kind: 'Structure'; value: RefAccessType}
+  | {kind: 'Function'; readRefEffect: boolean; returnType: RefAccessType};
+
+class Env extends Map<IdentifierId, RefAccessType> {
+  #changed = false;
+
+  resetChanged(): void {
+    this.#changed = false;
+  }
+
+  hasChanged(): boolean {
+    return this.#changed;
+  }
+
+  override set(key: IdentifierId, value: RefAccessType): this {
+    function tyEqual(a: RefAccessType, b: RefAccessType): boolean {
+      if (a.kind !== b.kind) {
+        return false;
+      }
+      switch (a.kind) {
+        case 'None':
+          return true;
+        case 'Ref':
+          return true;
+        case 'RefValue':
+          CompilerError.invariant(b.kind === 'RefValue', {
+            reason: 'Expected ref value',
+            loc: null,
+          });
+          return a.loc == b.loc;
+        case 'Function':
+          CompilerError.invariant(b.kind === 'Function', {
+            reason: 'Expected function',
+            loc: null,
+          });
+          return (
+            a.readRefEffect === b.readRefEffect &&
+            tyEqual(a.returnType, b.returnType)
+          );
+        case 'Structure':
+          CompilerError.invariant(b.kind === 'Structure', {
+            reason: 'Expected structure',
+            loc: null,
+          });
+          return tyEqual(a.value, b.value);
+      }
+    }
+
+    const cur = this.get(key);
+    const widenedValue = joinRefTypes(value, cur ?? {kind: 'None'});
+    if (
+      !(cur == null && widenedValue.kind === 'None') &&
+      (cur == null || !tyEqual(cur, widenedValue))
+    ) {
+      this.#changed = true;
+    }
+    return super.set(key, widenedValue);
+  }
+}
 
 export function validateNoRefAccessInRender(fn: HIRFunction): void {
-  const state = {
-    refs: new Set<IdentifierId>(),
-    refValues: new Map<IdentifierId, SourceLocation | null>(),
-    refAccessingFunctions: new Set<IdentifierId>(),
-  };
-  validateNoRefAccessInRenderImpl(fn, state).unwrap();
+  const env = new Env();
+  validateNoRefAccessInRenderImpl(fn, env).unwrap();
+}
+
+function refTypeOfType(identifier: Identifier): RefAccessType {
+  if (isRefValueType(identifier)) {
+    return {kind: 'RefValue'};
+  } else if (isUseRefType(identifier)) {
+    return {kind: 'Ref'};
+  } else {
+    return {kind: 'None'};
+  }
+}
+
+function joinRefTypes(...types: Array<RefAccessType>): RefAccessType {
+  return types.reduce(
+    (a, b) => {
+      if (a.kind === 'None') {
+        return b;
+      } else if (b.kind === 'None') {
+        return a;
+      } else if (a.kind === 'RefValue') {
+        return a;
+      } else if (b.kind === 'RefValue') {
+        return b;
+      } else if (a.kind === 'Ref' || b.kind === 'Ref') {
+        return {kind: 'Ref'};
+      } else if (a.kind === 'Function' && b.kind === 'Function') {
+        return {
+          kind: 'Function',
+          readRefEffect: a.readRefEffect || b.readRefEffect,
+          returnType: joinRefTypes(a.returnType, b.returnType),
+        };
+      } else if (a.kind === 'Structure' && b.kind === 'Structure') {
+        return {
+          kind: 'Structure',
+          value: joinRefTypes(a.value, b.value),
+        };
+      } else {
+        CompilerError.invariant(
+          (a.kind === 'Function' && b.kind === 'Structure') ||
+            (a.kind === 'Structure' && b.kind === 'Function'),
+          {reason: 'Unexpected ref type combination', loc: null},
+        );
+        return {kind: 'None'};
+      }
+    },
+    {kind: 'None'},
+  );
 }
 
 function validateNoRefAccessInRenderImpl(
   fn: HIRFunction,
-  state: State,
-): Result<void, CompilerError> {
+  env: Env,
+): Result<RefAccessType, CompilerError> {
+  let returnValues: Array<undefined | RefAccessType>;
   let place;
   for (const param of fn.params) {
     if (param.kind === 'Identifier') {
@@ -68,293 +173,274 @@ function validateNoRefAccessInRenderImpl(
     } else {
       place = param.place;
     }
-
-    if (isRefValueType(place.identifier)) {
-      state.refValues.set(place.identifier.id, null);
-    }
-    if (isUseRefType(place.identifier)) {
-      state.refs.add(place.identifier.id);
-    }
+    const type = refTypeOfType(place.identifier);
+    env.set(place.identifier.id, type);
   }
-  const errors = new CompilerError();
-  for (const [, block] of fn.body.blocks) {
-    for (const phi of block.phis) {
-      phi.operands.forEach(operand => {
-        if (state.refs.has(operand.id) || isUseRefType(phi.id)) {
-          state.refs.add(phi.id.id);
-        }
-        const refValue = state.refValues.get(operand.id);
-        if (refValue !== undefined || isRefValueType(operand)) {
-          state.refValues.set(
-            phi.id.id,
-            refValue ?? state.refValues.get(phi.id.id) ?? null,
-          );
-        }
-        if (state.refAccessingFunctions.has(operand.id)) {
-          state.refAccessingFunctions.add(phi.id.id);
-        }
-      });
-    }
 
-    for (const instr of block.instructions) {
-      for (const operand of eachInstructionValueOperand(instr.value)) {
-        if (isRefValueType(operand.identifier)) {
-          CompilerError.invariant(state.refValues.has(operand.identifier.id), {
-            reason: 'Expected ref value to be in state',
-            loc: operand.loc,
-          });
-        }
-        if (isUseRefType(operand.identifier)) {
-          CompilerError.invariant(state.refs.has(operand.identifier.id), {
-            reason: 'Expected ref to be in state',
-            loc: operand.loc,
-          });
-        }
+  do {
+    env.resetChanged();
+    returnValues = [];
+    const errors = new CompilerError();
+    for (const [, block] of fn.body.blocks) {
+      for (const phi of block.phis) {
+        env.set(
+          phi.id.id,
+          joinRefTypes(
+            ...Array(...phi.operands.values()).map(
+              operand => env.get(operand.id) ?? ({kind: 'None'} as const),
+            ),
+          ),
+        );
       }
 
-      switch (instr.value.kind) {
-        case 'JsxExpression':
-        case 'JsxFragment': {
-          for (const operand of eachInstructionValueOperand(instr.value)) {
-            validateNoDirectRefValueAccess(errors, operand, state);
-          }
-          break;
-        }
-        case 'ComputedLoad':
-        case 'PropertyLoad': {
-          if (typeof instr.value.property !== 'string') {
-            validateNoRefValueAccess(errors, state, instr.value.property);
-          }
-          if (
-            state.refAccessingFunctions.has(instr.value.object.identifier.id)
-          ) {
-            state.refAccessingFunctions.add(instr.lvalue.identifier.id);
-          }
-          if (state.refs.has(instr.value.object.identifier.id)) {
-            /*
-             * Once an object contains a ref at any level, we treat it as a ref.
-             * If we look something up from it, that value may either be a ref
-             * or the ref value (or neither), so we conservatively assume it's both.
-             */
-            state.refs.add(instr.lvalue.identifier.id);
-            state.refValues.set(instr.lvalue.identifier.id, instr.loc);
-          }
-          break;
-        }
-        case 'LoadContext':
-        case 'LoadLocal': {
-          if (
-            state.refAccessingFunctions.has(instr.value.place.identifier.id)
-          ) {
-            state.refAccessingFunctions.add(instr.lvalue.identifier.id);
-          }
-          const refValue = state.refValues.get(instr.value.place.identifier.id);
-          if (refValue !== undefined) {
-            state.refValues.set(instr.lvalue.identifier.id, refValue);
-          }
-          if (state.refs.has(instr.value.place.identifier.id)) {
-            state.refs.add(instr.lvalue.identifier.id);
-          }
-          break;
-        }
-        case 'StoreContext':
-        case 'StoreLocal': {
-          if (
-            state.refAccessingFunctions.has(instr.value.value.identifier.id)
-          ) {
-            state.refAccessingFunctions.add(
-              instr.value.lvalue.place.identifier.id,
-            );
-            state.refAccessingFunctions.add(instr.lvalue.identifier.id);
-          }
-          const refValue = state.refValues.get(instr.value.value.identifier.id);
-          if (
-            refValue !== undefined ||
-            isRefValueType(instr.value.lvalue.place.identifier)
-          ) {
-            state.refValues.set(
-              instr.value.lvalue.place.identifier.id,
-              refValue ?? null,
-            );
-            state.refValues.set(instr.lvalue.identifier.id, refValue ?? null);
-          }
-          if (state.refs.has(instr.value.value.identifier.id)) {
-            state.refs.add(instr.value.lvalue.place.identifier.id);
-            state.refs.add(instr.lvalue.identifier.id);
-          }
-          break;
-        }
-        case 'Destructure': {
-          const destructuredFunction = state.refAccessingFunctions.has(
-            instr.value.value.identifier.id,
-          );
-          const destructuredRef = state.refs.has(
-            instr.value.value.identifier.id,
-          );
-          for (const lval of eachPatternOperand(instr.value.lvalue.pattern)) {
-            if (isUseRefType(lval.identifier)) {
-              state.refs.add(lval.identifier.id);
-            }
-            if (destructuredRef || isRefValueType(lval.identifier)) {
-              state.refs.add(lval.identifier.id);
-              state.refValues.set(lval.identifier.id, null);
-            }
-            if (destructuredFunction) {
-              state.refAccessingFunctions.add(lval.identifier.id);
-            }
-          }
-          break;
-        }
-        case 'ObjectMethod':
-        case 'FunctionExpression': {
-          if (
-            /*
-             * check if the function expression accesses a ref *or* some other
-             * function which accesses a ref
-             */
-            [...eachInstructionValueOperand(instr.value)].some(
-              operand =>
-                state.refValues.has(operand.identifier.id) ||
-                state.refAccessingFunctions.has(operand.identifier.id),
-            ) ||
-            // check for cases where .current is accessed through an aliased ref
-            ([...eachInstructionValueOperand(instr.value)].some(operand =>
-              state.refs.has(operand.identifier.id),
-            ) &&
-              validateNoRefAccessInRenderImpl(
-                instr.value.loweredFunc.func,
-                state,
-              ).isErr())
-          ) {
-            // This function expression unconditionally accesses a ref
-            state.refAccessingFunctions.add(instr.lvalue.identifier.id);
-          }
-          break;
-        }
-        case 'MethodCall': {
-          if (!isEffectHook(instr.value.property.identifier)) {
+      for (const instr of block.instructions) {
+        switch (instr.value.kind) {
+          case 'JsxExpression':
+          case 'JsxFragment': {
             for (const operand of eachInstructionValueOperand(instr.value)) {
-              validateNoRefAccess(errors, state, operand, operand.loc);
+              validateNoDirectRefValueAccess(errors, operand, env);
             }
+            break;
           }
-          break;
-        }
-        case 'CallExpression': {
-          const callee = instr.value.callee;
-          const isUseEffect = isEffectHook(callee.identifier);
-          if (!isUseEffect) {
-            // Report a more precise error when calling a local function that accesses a ref
-            if (state.refAccessingFunctions.has(callee.identifier.id)) {
-              errors.push({
-                severity: ErrorSeverity.InvalidReact,
-                reason:
-                  'This function accesses a ref value (the `current` property), which may not be accessed during render. (https://react.dev/reference/react/useRef)',
-                loc: callee.loc,
-                description:
-                  callee.identifier.name !== null &&
-                  callee.identifier.name.kind === 'named'
-                    ? `Function \`${callee.identifier.name.value}\` accesses a ref`
-                    : null,
-                suggestions: null,
-              });
+          case 'ComputedLoad':
+          case 'PropertyLoad': {
+            if (typeof instr.value.property !== 'string') {
+              validateNoDirectRefValueAccess(errors, instr.value.property, env);
             }
-            for (const operand of eachInstructionValueOperand(instr.value)) {
-              validateNoRefAccess(
-                errors,
-                state,
-                operand,
-                state.refValues.get(operand.identifier.id) ?? operand.loc,
+            const objType = env.get(instr.value.object.identifier.id);
+            let lookupType: null | RefAccessType = null;
+            if (objType?.kind === 'Structure') {
+              lookupType = objType.value;
+            } else if (objType?.kind === 'Ref') {
+              lookupType = {kind: 'RefValue', loc: instr.loc};
+            }
+            env.set(
+              instr.lvalue.identifier.id,
+              lookupType ?? refTypeOfType(instr.lvalue.identifier),
+            );
+            break;
+          }
+          case 'LoadContext':
+          case 'LoadLocal': {
+            env.set(
+              instr.lvalue.identifier.id,
+              env.get(instr.value.place.identifier.id) ??
+                refTypeOfType(instr.lvalue.identifier),
+            );
+            break;
+          }
+          case 'StoreContext':
+          case 'StoreLocal': {
+            env.set(
+              instr.value.lvalue.place.identifier.id,
+              env.get(instr.value.value.identifier.id) ??
+                refTypeOfType(instr.value.lvalue.place.identifier),
+            );
+            env.set(
+              instr.lvalue.identifier.id,
+              env.get(instr.value.value.identifier.id) ??
+                refTypeOfType(instr.lvalue.identifier),
+            );
+            break;
+          }
+          case 'Destructure': {
+            const objType = env.get(instr.value.value.identifier.id);
+            let lookupType = null;
+            if (objType?.kind === 'Structure') {
+              lookupType = objType.value;
+            }
+            env.set(
+              instr.lvalue.identifier.id,
+              lookupType ?? refTypeOfType(instr.lvalue.identifier),
+            );
+            for (const lval of eachPatternOperand(instr.value.lvalue.pattern)) {
+              env.set(
+                lval.identifier.id,
+                lookupType ?? refTypeOfType(lval.identifier),
               );
             }
+            break;
           }
-          break;
-        }
-        case 'ObjectExpression':
-        case 'ArrayExpression': {
-          for (const operand of eachInstructionValueOperand(instr.value)) {
-            validateNoDirectRefValueAccess(errors, operand, state);
-            if (state.refAccessingFunctions.has(operand.identifier.id)) {
-              state.refAccessingFunctions.add(instr.lvalue.identifier.id);
+          case 'ObjectMethod':
+          case 'FunctionExpression': {
+            let returnType: RefAccessType = {kind: 'None'};
+            let readRefEffect = false;
+            const result = validateNoRefAccessInRenderImpl(
+              instr.value.loweredFunc.func,
+              env,
+            );
+            if (result.isOk()) {
+              returnType = result.unwrap();
+            } else if (result.isErr()) {
+              readRefEffect = true;
             }
-            if (state.refs.has(operand.identifier.id)) {
-              state.refs.add(instr.lvalue.identifier.id);
-            }
-            const refValue = state.refValues.get(operand.identifier.id);
-            if (refValue !== undefined) {
-              state.refValues.set(instr.lvalue.identifier.id, refValue);
-            }
+            env.set(instr.lvalue.identifier.id, {
+              kind: 'Function',
+              readRefEffect,
+              returnType,
+            });
+            break;
           }
-          break;
+          case 'MethodCall': {
+            if (!isEffectHook(instr.value.property.identifier)) {
+              for (const operand of eachInstructionValueOperand(instr.value)) {
+                const hookKind = getHookKindForType(
+                  fn.env,
+                  instr.value.property.identifier.type,
+                );
+                if (hookKind != null) {
+                  validateNoRefValueAccess(errors, env, operand);
+                } else {
+                  validateNoRefAccess(errors, env, operand, operand.loc);
+                }
+              }
+            }
+            validateNoRefValueAccess(errors, env, instr.value.receiver);
+            const methType = env.get(instr.value.property.identifier.id);
+            let returnType: RefAccessType = {kind: 'None'};
+            if (methType?.kind === 'Function') {
+              returnType = methType.returnType;
+            }
+            env.set(instr.lvalue.identifier.id, returnType);
+            break;
+          }
+          case 'CallExpression': {
+            const callee = instr.value.callee;
+            const hookKind = getHookKindForType(fn.env, callee.identifier.type);
+            const isUseEffect = isEffectHook(callee.identifier);
+            let returnType: RefAccessType = {kind: 'None'};
+            if (!isUseEffect) {
+              // Report a more precise error when calling a local function that accesses a ref
+              const fnType = env.get(instr.value.callee.identifier.id);
+              if (fnType?.kind === 'Function') {
+                returnType = fnType.returnType;
+                if (fnType.readRefEffect) {
+                  errors.push({
+                    severity: ErrorSeverity.InvalidReact,
+                    reason:
+                      'This function accesses a ref value (the `current` property), which may not be accessed during render. (https://react.dev/reference/react/useRef)',
+                    loc: callee.loc,
+                    description:
+                      callee.identifier.name !== null &&
+                      callee.identifier.name.kind === 'named'
+                        ? `Function \`${callee.identifier.name.value}\` accesses a ref`
+                        : null,
+                    suggestions: null,
+                  });
+                }
+              }
+              for (const operand of eachInstructionValueOperand(instr.value)) {
+                if (hookKind != null) {
+                  validateNoRefValueAccess(errors, env, operand);
+                } else {
+                  validateNoRefAccess(errors, env, operand, operand.loc);
+                }
+              }
+            }
+            env.set(instr.lvalue.identifier.id, returnType);
+            break;
+          }
+          case 'ObjectExpression':
+          case 'ArrayExpression': {
+            const types: Array<RefAccessType> = [];
+            for (const operand of eachInstructionValueOperand(instr.value)) {
+              validateNoDirectRefValueAccess(errors, operand, env);
+              types.push(env.get(operand.identifier.id) ?? {kind: 'None'});
+            }
+            env.set(instr.lvalue.identifier.id, {
+              kind: 'Structure',
+              value: joinRefTypes(...types),
+            });
+            break;
+          }
+          case 'PropertyDelete':
+          case 'PropertyStore':
+          case 'ComputedDelete':
+          case 'ComputedStore': {
+            validateNoRefAccess(errors, env, instr.value.object, instr.loc);
+            for (const operand of eachInstructionValueOperand(instr.value)) {
+              if (operand === instr.value.object) {
+                continue;
+              }
+              validateNoRefValueAccess(errors, env, operand);
+            }
+            break;
+          }
+          case 'StartMemoize':
+          case 'FinishMemoize':
+            break;
+          default: {
+            for (const operand of eachInstructionValueOperand(instr.value)) {
+              validateNoRefValueAccess(errors, env, operand);
+            }
+            break;
+          }
         }
-        case 'PropertyDelete':
-        case 'PropertyStore':
-        case 'ComputedDelete':
-        case 'ComputedStore': {
-          validateNoRefAccess(
-            errors,
-            state,
-            instr.value.object,
-            state.refValues.get(instr.value.object.identifier.id) ?? instr.loc,
+        if (isUseRefType(instr.lvalue.identifier)) {
+          env.set(
+            instr.lvalue.identifier.id,
+            joinRefTypes(
+              env.get(instr.lvalue.identifier.id) ?? {kind: 'None'},
+              {kind: 'Ref'},
+            ),
           );
-          for (const operand of eachInstructionValueOperand(instr.value)) {
-            if (operand === instr.value.object) {
-              continue;
-            }
-            validateNoRefValueAccess(errors, state, operand);
-          }
-          break;
         }
-        case 'StartMemoize':
-        case 'FinishMemoize':
-          break;
-        default: {
-          for (const operand of eachInstructionValueOperand(instr.value)) {
-            validateNoRefValueAccess(errors, state, operand);
-          }
-          break;
+        if (isRefValueType(instr.lvalue.identifier)) {
+          env.set(
+            instr.lvalue.identifier.id,
+            joinRefTypes(
+              env.get(instr.lvalue.identifier.id) ?? {kind: 'None'},
+              {kind: 'RefValue', loc: instr.loc},
+            ),
+          );
         }
       }
-      if (isUseRefType(instr.lvalue.identifier)) {
-        state.refs.add(instr.lvalue.identifier.id);
-      }
-      if (
-        isRefValueType(instr.lvalue.identifier) &&
-        !state.refValues.has(instr.lvalue.identifier.id)
-      ) {
-        state.refValues.set(instr.lvalue.identifier.id, instr.loc);
-      }
-    }
-    for (const operand of eachTerminalOperand(block.terminal)) {
-      if (block.terminal.kind !== 'return') {
-        validateNoRefValueAccess(errors, state, operand);
-      } else {
-        // Allow functions containing refs to be returned, but not direct ref values
-        validateNoDirectRefValueAccess(errors, operand, state);
+      for (const operand of eachTerminalOperand(block.terminal)) {
+        if (block.terminal.kind !== 'return') {
+          validateNoRefValueAccess(errors, env, operand);
+        } else {
+          // Allow functions containing refs to be returned, but not direct ref values
+          validateNoDirectRefValueAccess(errors, operand, env);
+          returnValues.push(env.get(operand.identifier.id));
+        }
       }
     }
-  }
 
-  if (errors.hasErrors()) {
-    return Err(errors);
-  } else {
-    return Ok(undefined);
+    if (errors.hasErrors()) {
+      return Err(errors);
+    }
+  } while (env.hasChanged());
+  return Ok(
+    joinRefTypes(
+      ...returnValues.filter((env): env is RefAccessType => env !== undefined),
+    ),
+  );
+}
+
+function destructure(
+  type: RefAccessType | undefined,
+): RefAccessType | undefined {
+  if (type?.kind === 'Structure') {
+    return destructure(type.value);
   }
+  return type;
 }
 
 function validateNoRefValueAccess(
   errors: CompilerError,
-  state: State,
+  env: Env,
   operand: Place,
 ): void {
+  const type = destructure(env.get(operand.identifier.id));
   if (
-    state.refValues.has(operand.identifier.id) ||
-    state.refAccessingFunctions.has(operand.identifier.id)
+    type?.kind === 'RefValue' ||
+    (type?.kind === 'Function' && type.readRefEffect)
   ) {
     errors.push({
       severity: ErrorSeverity.InvalidReact,
       reason:
         'Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)',
-      loc: state.refValues.get(operand.identifier.id) ?? operand.loc,
+      loc: (type.kind === 'RefValue' && type.loc) || operand.loc,
       description:
         operand.identifier.name !== null &&
         operand.identifier.name.kind === 'named'
@@ -367,20 +453,21 @@ function validateNoRefValueAccess(
 
 function validateNoRefAccess(
   errors: CompilerError,
-  state: State,
+  env: Env,
   operand: Place,
   loc: SourceLocation,
 ): void {
+  const type = destructure(env.get(operand.identifier.id));
   if (
-    state.refs.has(operand.identifier.id) ||
-    state.refValues.has(operand.identifier.id) ||
-    state.refAccessingFunctions.has(operand.identifier.id)
+    type?.kind === 'Ref' ||
+    type?.kind === 'RefValue' ||
+    (type?.kind === 'Function' && type.readRefEffect)
   ) {
     errors.push({
       severity: ErrorSeverity.InvalidReact,
       reason:
         'Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)',
-      loc: loc,
+      loc: (type.kind === 'RefValue' && type.loc) || loc,
       description:
         operand.identifier.name !== null &&
         operand.identifier.name.kind === 'named'
@@ -394,14 +481,15 @@ function validateNoRefAccess(
 function validateNoDirectRefValueAccess(
   errors: CompilerError,
   operand: Place,
-  state: State,
+  env: Env,
 ): void {
-  if (state.refValues.has(operand.identifier.id)) {
+  const type = destructure(env.get(operand.identifier.id));
+  if (type?.kind === 'RefValue') {
     errors.push({
       severity: ErrorSeverity.InvalidReact,
       reason:
         'Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)',
-      loc: state.refValues.get(operand.identifier.id) ?? operand.loc,
+      loc: type.loc ?? operand.loc,
       description:
         operand.identifier.name !== null &&
         operand.identifier.name.kind === 'named'
