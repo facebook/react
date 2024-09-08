@@ -3,8 +3,11 @@ let ReactNoop;
 let Scheduler;
 let act;
 let assertLog;
+let waitForPaint;
 let textCache;
 let startTransition;
+let Suspense;
+let Activity;
 
 describe('ReactSiblingPrerendering', () => {
   beforeEach(() => {
@@ -15,7 +18,10 @@ describe('ReactSiblingPrerendering', () => {
     Scheduler = require('scheduler');
     act = require('internal-test-utils').act;
     assertLog = require('internal-test-utils').assertLog;
+    waitForPaint = require('internal-test-utils').waitForPaint;
     startTransition = React.startTransition;
+    Suspense = React.Suspense;
+    Activity = React.unstable_Activity;
 
     textCache = new Map();
   });
@@ -116,5 +122,45 @@ describe('ReactSiblingPrerendering', () => {
       // committing anyway.
       ...(gate('enableSiblingPrerendering') ? ['Suspend! [C]'] : []),
     ]);
+  });
+
+  // @gate enableActivity
+  it("don't skip siblings when rendering inside a hidden tree", async () => {
+    function App() {
+      return (
+        <>
+          <Text text="A" />
+          <Activity mode="hidden">
+            <Suspense fallback={<Text text="Loading..." />}>
+              <AsyncText text="B" />
+              <AsyncText text="C" />
+            </Suspense>
+          </Activity>
+        </>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      startTransition(async () => root.render(<App />));
+
+      // The first render includes only the visible part of the tree. The
+      // hidden content is deferred until later.
+      await waitForPaint(['A']);
+      expect(root).toMatchRenderedOutput('A');
+
+      // The second render is a prerender of the hidden content.
+      await waitForPaint([
+        'Suspend! [B]',
+
+        // If B and C were visible, C would not have been attempted
+        // during this pass, because it would prevented the fallback
+        // from showing.
+        ...(gate('enableSiblingPrerendering') ? ['Suspend! [C]'] : []),
+
+        'Loading...',
+      ]);
+      expect(root).toMatchRenderedOutput('A');
+    });
   });
 });

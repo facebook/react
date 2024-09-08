@@ -2691,7 +2691,12 @@ function throwAndUnwindWorkLoop(
         skipSiblings = true;
         // We intentionally don't set workInProgressRootDidSkipSuspendedSiblings,
         // because we don't want to trigger another prerender attempt.
-      } else if (!workInProgressRootIsPrerendering) {
+      } else if (
+        // Check whether this is a prerender
+        !workInProgressRootIsPrerendering &&
+        // Offscreen rendering is also a form of speculative rendering
+        !includesSomeLane(workInProgressRootRenderLanes, OffscreenLane)
+      ) {
         // This is not a prerender. Skip the siblings during this render. A
         // separate prerender will be scheduled for later.
         skipSiblings = true;
