@@ -532,6 +532,7 @@ export function installHook(target: any): DevToolsHook | null {
       const startStackFrame = openModuleRangesStack.pop();
       const stopStackFrame = getTopStackFrameString(error);
       if (stopStackFrame !== null) {
+        // $FlowFixMe[incompatible-call]
         moduleRanges.push([startStackFrame, stopStackFrame]);
       }
     }
