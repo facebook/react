@@ -981,36 +981,12 @@ function codegenTerminal(
             suggestions: null,
           });
         case InstructionKind.Catch:
-          CompilerError.invariant(false, {
-            reason: 'Unexpected catch variable as for..in collection',
-            description: null,
-            loc: iterableItem.loc,
-            suggestions: null,
-          });
         case InstructionKind.HoistedConst:
-          CompilerError.invariant(false, {
-            reason: 'Unexpected HoistedConst variable in for..in collection',
-            description: null,
-            loc: iterableItem.loc,
-            suggestions: null,
-          });
         case InstructionKind.HoistedLet:
-          CompilerError.invariant(false, {
-            reason: 'Unexpected HoistedLet variable in for..in collection',
-            description: null,
-            loc: iterableItem.loc,
-            suggestions: null,
-          });
         case InstructionKind.HoistedFunction:
-          CompilerError.invariant(false, {
-            reason: 'Unexpected HoistedFunction variable in for..in collection',
-            description: null,
-            loc: iterableItem.loc,
-            suggestions: null,
-          });
         case InstructionKind.Function:
           CompilerError.invariant(false, {
-            reason: 'Unexpected Function variable in for..in collection',
+            reason: `Unexpected ${iterableItem.value.lvalue.kind} variable in for..in collection`,
             description: null,
             loc: iterableItem.loc,
             suggestions: null,
@@ -1089,44 +1065,13 @@ function codegenTerminal(
           varDeclKind = 'let' as const;
           break;
         case InstructionKind.Reassign:
-          CompilerError.invariant(false, {
-            reason:
-              'Destructure should never be Reassign as it would be an Object/ArrayPattern',
-            description: null,
-            loc: iterableItem.loc,
-            suggestions: null,
-          });
         case InstructionKind.Catch:
-          CompilerError.invariant(false, {
-            reason: 'Unexpected catch variable as for..of collection',
-            description: null,
-            loc: iterableItem.loc,
-            suggestions: null,
-          });
         case InstructionKind.HoistedConst:
-          CompilerError.invariant(false, {
-            reason: 'Unexpected HoistedConst variable in for..of collection',
-            description: null,
-            loc: iterableItem.loc,
-            suggestions: null,
-          });
         case InstructionKind.HoistedLet:
-          CompilerError.invariant(false, {
-            reason: 'Unexpected HoistedLet variable in for..of collection',
-            description: null,
-            loc: iterableItem.loc,
-            suggestions: null,
-          });
         case InstructionKind.HoistedFunction:
-          CompilerError.invariant(false, {
-            reason: 'Unexpected HoistedFunction variable in for..of collection',
-            description: null,
-            loc: iterableItem.loc,
-            suggestions: null,
-          });
         case InstructionKind.Function:
           CompilerError.invariant(false, {
-            reason: 'Unexpected Function variable in for..of collection',
+            reason: `Unexpected ${iterableItem.value.lvalue.kind} variable in for..of collection`,
             description: null,
             loc: iterableItem.loc,
             suggestions: null,
@@ -1360,28 +1305,11 @@ function codegenInstructionNullable(
       case InstructionKind.Catch: {
         return t.emptyStatement();
       }
-      case InstructionKind.HoistedLet: {
-        CompilerError.invariant(false, {
-          reason:
-            'Expected HoistedLet to have been pruned in PruneHoistedContexts',
-          description: null,
-          loc: instr.loc,
-          suggestions: null,
-        });
-      }
-      case InstructionKind.HoistedConst: {
-        CompilerError.invariant(false, {
-          reason:
-            'Expected HoistedConsts to have been pruned in PruneHoistedContexts',
-          description: null,
-          loc: instr.loc,
-          suggestions: null,
-        });
-      }
+      case InstructionKind.HoistedLet:
+      case InstructionKind.HoistedConst:
       case InstructionKind.HoistedFunction: {
         CompilerError.invariant(false, {
-          reason:
-            'Expected HoistedFunction to have been pruned in PruneHoistedContexts',
+          reason: `Expected ${kind} to have been pruned in PruneHoistedContexts`,
           description: null,
           loc: instr.loc,
           suggestions: null,
