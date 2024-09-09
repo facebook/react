@@ -2332,6 +2332,61 @@ function getCurrentStackInDEV(): string {
   return '';
 }
 
+const replayConsoleWithCallStack = {
+  'react-stack-bottom-frame': function (
+    response: Response,
+    methodName: string,
+    stackTrace: ReactStackTrace,
+    owner: null | ReactComponentInfo,
+    env: string,
+    args: Array<mixed>,
+  ): void {
+    // There really shouldn't be anything else on the stack atm.
+    const prevStack = ReactSharedInternals.getCurrentStack;
+    ReactSharedInternals.getCurrentStack = getCurrentStackInDEV;
+    currentOwnerInDEV = owner;
+
+    try {
+      const callStack = buildFakeCallStack(
+        response,
+        stackTrace,
+        env,
+        bindToConsole(methodName, args, env),
+      );
+      if (owner != null) {
+        const task = initializeFakeTask(response, owner, env);
+        initializeFakeStack(response, owner);
+        if (task !== null) {
+          task.run(callStack);
+          return;
+        }
+      }
+      const rootTask = getRootTask(response, env);
+      if (rootTask != null) {
+        rootTask.run(callStack);
+        return;
+      }
+      callStack();
+    } finally {
+      ReactSharedInternals.getCurrentStack = prevStack;
+    }
+  },
+};
+
+const replayConsoleWithCallStackInDEV: (
+  response: Response,
+  methodName: string,
+  stackTrace: ReactStackTrace,
+  owner: null | ReactComponentInfo,
+  env: string,
+  args: Array<mixed>,
+) => void = __DEV__
+  ? // We use this technique to trick minifiers to preserve the function name.
+    (replayConsoleWithCallStack['react-stack-bottom-frame'].bind(
+      replayConsoleWithCallStack,
+    ): any)
+  : (null: any);
+
 function resolveConsoleEntry(
   response: Response,
   value: UninitializedModel,
@@ -2361,43 +2416,21 @@ function resolveConsoleEntry(
   const env = payload[3];
   const args = payload.slice(4);
 
-  // There really shouldn't be anything else on the stack atm.
-  const prevStack = ReactSharedInternals.getCurrentStack;
-  ReactSharedInternals.getCurrentStack = getCurrentStackInDEV;
-  currentOwnerInDEV = owner;
-
-  try {
-    if (!enableOwnerStacks) {
-      // Printing with stack isn't really limited to owner stacks but
-      // we gate it behind the same flag for now while iterating.
-      bindToConsole(methodName, args, env)();
-      return;
-    }
-    const callStack = buildFakeCallStack(
-      response,
-      stackTrace,
-      env,
-      bindToConsole(methodName, args, env),
-    );
-    if (owner != null) {
-      const task = initializeFakeTask(response, owner, env);
-      initializeFakeStack(response, owner);
-      if (task !== null) {
-        task.run(callStack);
-        return;
-      }
-      // TODO: Set the current owner so that captureOwnerStack() adds the component
-      // stack during the replay - if needed.
-    }
-    const rootTask = getRootTask(response, env);
-    if (rootTask != null) {
-      rootTask.run(callStack);
-      return;
-    }
-    callStack();
-  } finally {
-    ReactSharedInternals.getCurrentStack = prevStack;
+  if (!enableOwnerStacks) {
+    // Printing with stack isn't really limited to owner stacks but
+    // we gate it behind the same flag for now while iterating.
+    bindToConsole(methodName, args, env)();
+    return;
   }
+
+  replayConsoleWithCallStackInDEV(
+    response,
+    methodName,
+    stackTrace,
+    owner,
+    env,
+    args,
+  );
 }
 
 function mergeBuffer(
