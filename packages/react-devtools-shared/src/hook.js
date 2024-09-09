@@ -565,6 +565,9 @@ export function installHook(target: any): DevToolsHook | null {
     // React v16 checks the hook for this to ensure DevTools is new enough.
     supportsFiber: true,
 
+    // React Flight Client checks the hook for this to ensure DevTools is new enough.
+    supportsFlight: true,
+
     // React calls these methods.
     checkDCE,
     onCommitFiberUnmount,
