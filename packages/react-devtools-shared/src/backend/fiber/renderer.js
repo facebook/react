@@ -106,6 +106,13 @@ import {componentInfoToComponentLogsMap} from '../shared/DevToolsServerComponent
 import is from 'shared/objectIs';
 import hasOwnProperty from 'shared/hasOwnProperty';
 
+import {
+  getStackByFiberInDevAndProd,
+  getOwnerStackByFiberInDev,
+  supportsOwnerStacks,
+  supportsConsoleTasks,
+} from './DevToolsFiberComponentStack';
+
 // $FlowFixMe[method-unbinding]
 const toString = Object.prototype.toString;
 
@@ -912,6 +919,7 @@ export function attach(
     setErrorHandler,
     setSuspenseHandler,
     scheduleUpdate,
+    getCurrentFiber,
   } = renderer;
   const supportsTogglingError =
     typeof setErrorHandler === 'function' &&
@@ -1067,12 +1075,70 @@ export function attach(
     }
   }
 
+  function getComponentStack(
+    topFrame: Error,
+  ): null | {enableOwnerStacks: boolean, componentStack: string} {
+    if (getCurrentFiber === undefined) {
+      // Expected this to be part of the renderer. Ignore.
+      return null;
+    }
+    const current = getCurrentFiber();
+    if (current === null) {
+      // Outside of our render scope.
+      return null;
+    }
+
+    if (supportsConsoleTasks(current)) {
+      // This will be handled natively by console.createTask. No need for
+      // DevTools to add it.
+      return null;
+    }
+
+    const dispatcherRef = getDispatcherRef(renderer);
+    if (dispatcherRef === undefined) {
+      return null;
+    }
+
+    const enableOwnerStacks = supportsOwnerStacks(current);
+    let componentStack = '';
+    if (enableOwnerStacks) {
+      // Prefix the owner stack with the current stack. I.e. what called
+      // console.error. While this will also be part of the native stack,
+      // it is hidden and not presented alongside this argument so we print
+      // them all together.
+      const topStackFrames = formatOwnerStack(topFrame);
+      if (topStackFrames) {
+        componentStack += '\n' + topStackFrames;
+      }
+      componentStack += getOwnerStackByFiberInDev(
+        ReactTypeOfWork,
+        current,
+        dispatcherRef,
+      );
+    } else {
+      componentStack = getStackByFiberInDevAndProd(
+        ReactTypeOfWork,
+        current,
+        dispatcherRef,
+      );
+    }
+    return {enableOwnerStacks, componentStack};
+  }
+
   // Called when an error or warning is logged during render, commit, or passive (including unmount functions).
   function onErrorOrWarning(
-    fiber: Fiber,
     type: 'error' | 'warn',
     args: $ReadOnlyArray<any>,
   ): void {
+    if (getCurrentFiber === undefined) {
+      // Expected this to be part of the renderer. Ignore.
+      return;
+    }
+    const fiber = getCurrentFiber();
+    if (fiber === null) {
+      // Outside of our render scope.
+      return;
+    }
     if (type === 'error') {
       // if this is an error simulated by us to trigger error boundary, ignore
       if (
@@ -1135,7 +1201,7 @@ export function attach(
   // Patching the console enables DevTools to do a few useful things:
   // * Append component stacks to warnings and error messages
   // * Disable logging during re-renders to inspect hooks (see inspectHooksOfFiber)
-  registerRendererWithConsole(renderer, onErrorOrWarning);
+  registerRendererWithConsole(onErrorOrWarning, getComponentStack);
 
   // The renderer interface can't read these preferences directly,
   // because it is stored in localStorage within the context of the extension.

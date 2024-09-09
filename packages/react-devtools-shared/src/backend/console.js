@@ -7,14 +7,7 @@
  * @flow
  */
 
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-import type {
-  LegacyDispatcherRef,
-  CurrentDispatcherRef,
-  ReactRenderer,
-  WorkTagMap,
-  ConsolePatchSettings,
-} from './types';
+import type {ConsolePatchSettings} from './types';
 
 import {
   formatConsoleArguments,
@@ -25,14 +18,6 @@ import {
   ANSI_STYLE_DIMMING_TEMPLATE,
   ANSI_STYLE_DIMMING_TEMPLATE_WITH_COMPONENT_STACK,
 } from 'react-devtools-shared/src/constants';
-import {getInternalReactConstants, getDispatcherRef} from './fiber/renderer';
-import {
-  getStackByFiberInDevAndProd,
-  getOwnerStackByFiberInDev,
-  supportsOwnerStacks,
-  supportsConsoleTasks,
-} from './fiber/DevToolsFiberComponentStack';
-import {formatOwnerStack} from './shared/DevToolsOwnerStack';
 import {castBool, castBrowserTheme} from '../utils';
 
 const OVERRIDE_CONSOLE_METHODS = ['error', 'trace', 'warn'];
@@ -90,21 +75,15 @@ function restorePotentiallyModifiedArgs(args: Array<any>): Array<any> {
   }
 }
 
-type OnErrorOrWarning = (
-  fiber: Fiber,
-  type: 'error' | 'warn',
-  args: Array<any>,
-) => void;
+type OnErrorOrWarning = (type: 'error' | 'warn', args: Array<any>) => void;
+type GetComponentStack = (
+  topFrame: Error,
+) => null | {enableOwnerStacks: boolean, componentStack: string};
 
-const injectedRenderers: Map<
-  ReactRenderer,
-  {
-    currentDispatcherRef: LegacyDispatcherRef | CurrentDispatcherRef,
-    getCurrentFiber: () => Fiber | null,
-    onErrorOrWarning: ?OnErrorOrWarning,
-    workTagMap: WorkTagMap,
-  },
-> = new Map();
+const injectedRenderers: Array<{
+  onErrorOrWarning: ?OnErrorOrWarning,
+  getComponentStack: ?GetComponentStack,
+}> = [];
 
 let targetConsole: Object = console;
 let targetConsoleMethods: {[string]: $FlowFixMe} = {};
@@ -132,23 +111,13 @@ export function dangerous_setTargetConsoleForTesting(
 // These internals will be used if the console is patched.
 // Injecting them separately allows the console to easily be patched or un-patched later (at runtime).
 export function registerRenderer(
-  renderer: ReactRenderer,
   onErrorOrWarning?: OnErrorOrWarning,
+  getComponentStack?: GetComponentStack,
 ): void {
-  const {currentDispatcherRef, getCurrentFiber, version} = renderer;
-
-  // currentDispatcherRef gets injected for v16.8+ to support hooks inspection.
-  // getCurrentFiber gets injected for v16.9+.
-  if (currentDispatcherRef != null && typeof getCurrentFiber === 'function') {
-    const {ReactTypeOfWork} = getInternalReactConstants(version);
-
-    injectedRenderers.set(renderer, {
-      currentDispatcherRef,
-      getCurrentFiber,
-      workTagMap: ReactTypeOfWork,
-      onErrorOrWarning,
-    });
-  }
+  injectedRenderers.push({
+    onErrorOrWarning,
+    getComponentStack,
+  });
 }
 
 const consoleSettingsRef: ConsolePatchSettings = {
@@ -219,55 +188,39 @@ export function patch({
 
           // Search for the first renderer that has a current Fiber.
           // We don't handle the edge case of stacks for more than one (e.g. interleaved renderers?)
-          // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-          for (const renderer of injectedRenderers.values()) {
-            const currentDispatcherRef = getDispatcherRef(renderer);
-            const {getCurrentFiber, onErrorOrWarning, workTagMap} = renderer;
-            const current: ?Fiber = getCurrentFiber();
-            if (current != null) {
-              try {
-                if (shouldShowInlineWarningsAndErrors) {
-                  // patch() is called by two places: (1) the hook and (2) the renderer backend.
-                  // The backend is what implements a message queue, so it's the only one that injects onErrorOrWarning.
-                  if (typeof onErrorOrWarning === 'function') {
-                    onErrorOrWarning(
-                      current,
-                      ((method: any): 'error' | 'warn'),
-                      // Restore and copy args before we mutate them (e.g. adding the component stack)
-                      restorePotentiallyModifiedArgs(args),
-                    );
-                  }
+          for (let i = 0; i < injectedRenderers.length; i++) {
+            const renderer = injectedRenderers[i];
+            const {getComponentStack, onErrorOrWarning} = renderer;
+            try {
+              if (shouldShowInlineWarningsAndErrors) {
+                // patch() is called by two places: (1) the hook and (2) the renderer backend.
+                // The backend is what implements a message queue, so it's the only one that injects onErrorOrWarning.
+                if (onErrorOrWarning != null) {
+                  onErrorOrWarning(
+                    ((method: any): 'error' | 'warn'),
+                    // Restore and copy args before we mutate them (e.g. adding the component stack)
+                    restorePotentiallyModifiedArgs(args),
+                  );
                 }
-
-                if (
-                  consoleSettingsRef.appendComponentStack &&
-                  !supportsConsoleTasks(current)
-                ) {
-                  const enableOwnerStacks = supportsOwnerStacks(current);
-                  let componentStack = '';
-                  if (enableOwnerStacks) {
-                    // Prefix the owner stack with the current stack. I.e. what called
-                    // console.error. While this will also be part of the native stack,
-                    // it is hidden and not presented alongside this argument so we print
-                    // them all together.
-                    const topStackFrames = formatOwnerStack(
-                      new Error('react-stack-top-frame'),
-                    );
-                    if (topStackFrames) {
-                      componentStack += '\n' + topStackFrames;
-                    }
-                    componentStack += getOwnerStackByFiberInDev(
-                      workTagMap,
-                      current,
-                      (currentDispatcherRef: any),
-                    );
-                  } else {
-                    componentStack = getStackByFiberInDevAndProd(
-                      workTagMap,
-                      current,
-                      (currentDispatcherRef: any),
-                    );
-                  }
+              }
+            } catch (error) {
+              // Don't let a DevTools or React internal error interfere with logging.
+              setTimeout(() => {
+                throw error;
+              }, 0);
+            }
+            try {
+              if (
+                consoleSettingsRef.appendComponentStack &&
+                getComponentStack != null
+              ) {
+                // This needs to be directly in the wrapper so we can pop exactly one frame.
+                const topFrame = Error('react-stack-top-frame');
+                const match = getComponentStack(topFrame);
+                if (match !== null) {
+                  const {enableOwnerStacks, componentStack} = match;
+                  // Empty string means we have a match but no component stack.
+                  // We don't need to look in other renderers but we also don't add anything.
                   if (componentStack !== '') {
                     // Create a fake Error so that when we print it we get native source maps. Every
                     // browser will print the .stack property of the error and then parse it back for source
@@ -275,7 +228,7 @@ export function patch({
                     // slot doesn't line up.
                     const fakeError = new Error('');
                     // In Chromium, only the stack property is printed but in Firefox the <name>:<message>
-                    // gets printed so to make the colon make sense, we name it so we print Component Stack:
+                    // gets printed so to make the colon make sense, we name it so we print Stack:
                     // and similarly Safari leave an expandable slot.
                     fakeError.name = enableOwnerStacks
                       ? 'Stack'
@@ -289,6 +242,7 @@ export function patch({
                             ? 'Error Stack:'
                             : 'Error Component Stack:') + componentStack
                         : componentStack;
+
                     if (alreadyHasComponentStack) {
                       // Only modify the component stack if it matches what we would've added anyway.
                       // Otherwise we assume it was a non-React stack.
@@ -324,15 +278,15 @@ export function patch({
                       }
                     }
                   }
+                  // Don't add stacks from other renderers.
+                  break;
                 }
-              } catch (error) {
-                // Don't let a DevTools or React internal error interfere with logging.
-                setTimeout(() => {
-                  throw error;
-                }, 0);
-              } finally {
-                break;
               }
+            } catch (error) {
+              // Don't let a DevTools or React internal error interfere with logging.
+              setTimeout(() => {
+                throw error;
+              }, 0);
             }
           }
 
