@@ -75,7 +75,10 @@ export function initBackend(
 
     // Inject any not-yet-injected renderers (if we didn't reload-and-profile)
     if (rendererInterface == null) {
-      if (
+      if (typeof renderer.getCurrentComponentInfo === 'function') {
+        // react-flight/client
+        rendererInterface = attachFlight(hook, id, renderer, global);
+      } else if (
         // v16-19
         typeof renderer.findFiberByHostInstance === 'function' ||
         // v16.8+
@@ -83,9 +86,6 @@ export function initBackend(
       ) {
         // react-reconciler v16+
         rendererInterface = attachFiber(hook, id, renderer, global);
-      } else if (typeof renderer.getCurrentComponentInfo === 'function') {
-        // react-flight/client
-        rendererInterface = attachFlight(hook, id, renderer, global);
       } else if (renderer.ComponentTree) {
         // react-dom v15
         rendererInterface = attachLegacy(hook, id, renderer, global);
