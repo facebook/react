@@ -7,14 +7,7 @@
  * @flow
  */
 
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-import type {
-  LegacyDispatcherRef,
-  CurrentDispatcherRef,
-  ReactRenderer,
-  WorkTagMap,
-  ConsolePatchSettings,
-} from './types';
+import type {ConsolePatchSettings} from './types';
 
 import {
   formatConsoleArguments,
@@ -25,7 +18,6 @@ import {
   ANSI_STYLE_DIMMING_TEMPLATE,
   ANSI_STYLE_DIMMING_TEMPLATE_WITH_COMPONENT_STACK,
 } from 'react-devtools-shared/src/constants';
-import {getInternalReactConstants} from './fiber/renderer';
 import {castBool, castBrowserTheme} from '../utils';
 
 const OVERRIDE_CONSOLE_METHODS = ['error', 'trace', 'warn'];
@@ -88,16 +80,10 @@ type GetComponentStack = (
   topFrame: Error,
 ) => null | {enableOwnerStacks: boolean, componentStack: string};
 
-const injectedRenderers: Map<
-  ReactRenderer,
-  {
-    currentDispatcherRef: LegacyDispatcherRef | CurrentDispatcherRef,
-    getCurrentFiber: () => Fiber | null,
-    onErrorOrWarning: ?OnErrorOrWarning,
-    workTagMap: WorkTagMap,
-    getComponentStack: ?GetComponentStack,
-  },
-> = new Map();
+const injectedRenderers: Array<{
+  onErrorOrWarning: ?OnErrorOrWarning,
+  getComponentStack: ?GetComponentStack,
+}> = [];
 
 let targetConsole: Object = console;
 let targetConsoleMethods: {[string]: $FlowFixMe} = {};
@@ -125,25 +111,13 @@ export function dangerous_setTargetConsoleForTesting(
 // These internals will be used if the console is patched.
 // Injecting them separately allows the console to easily be patched or un-patched later (at runtime).
 export function registerRenderer(
-  renderer: ReactRenderer,
   onErrorOrWarning?: OnErrorOrWarning,
   getComponentStack?: GetComponentStack,
 ): void {
-  const {currentDispatcherRef, getCurrentFiber, version} = renderer;
-
-  // currentDispatcherRef gets injected for v16.8+ to support hooks inspection.
-  // getCurrentFiber gets injected for v16.9+.
-  if (currentDispatcherRef != null && typeof getCurrentFiber === 'function') {
-    const {ReactTypeOfWork} = getInternalReactConstants(version);
-
-    injectedRenderers.set(renderer, {
-      currentDispatcherRef,
-      getCurrentFiber,
-      workTagMap: ReactTypeOfWork,
-      onErrorOrWarning,
-      getComponentStack,
-    });
-  }
+  injectedRenderers.push({
+    onErrorOrWarning,
+    getComponentStack,
+  });
 }
 
 const consoleSettingsRef: ConsolePatchSettings = {
@@ -214,8 +188,8 @@ export function patch({
 
           // Search for the first renderer that has a current Fiber.
           // We don't handle the edge case of stacks for more than one (e.g. interleaved renderers?)
-          // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-          for (const renderer of injectedRenderers.values()) {
+          for (let i = 0; i < injectedRenderers.length; i++) {
+            const renderer = injectedRenderers[i];
             const {getComponentStack, onErrorOrWarning} = renderer;
             try {
               if (shouldShowInlineWarningsAndErrors) {

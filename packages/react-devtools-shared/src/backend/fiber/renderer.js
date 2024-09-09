@@ -1201,7 +1201,7 @@ export function attach(
   // Patching the console enables DevTools to do a few useful things:
   // * Append component stacks to warnings and error messages
   // * Disable logging during re-renders to inspect hooks (see inspectHooksOfFiber)
-  registerRendererWithConsole(renderer, onErrorOrWarning, getComponentStack);
+  registerRendererWithConsole(onErrorOrWarning, getComponentStack);
 
   // The renderer interface can't read these preferences directly,
   // because it is stored in localStorage within the context of the extension.

@@ -1093,7 +1093,6 @@ describe('console error', () => {
       inject(internals);
 
       Console.registerRenderer(
-        internals,
         () => {
           throw Error('foo');
         },

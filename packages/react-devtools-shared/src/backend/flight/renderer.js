@@ -21,7 +21,7 @@ export function attach(
   global: Object,
 ): RendererInterface {
   patchConsoleUsingWindowValues();
-  registerRendererWithConsole(renderer);
+  registerRendererWithConsole(); // TODO: Fill in the impl
 
   return {
     cleanup() {},
