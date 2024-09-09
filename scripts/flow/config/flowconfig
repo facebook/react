@@ -31,9 +31,12 @@
 
 [lints]
 untyped-type-import=error
+internal-type=off
+deprecated-type=off
 
 [options]
 munge_underscores=false
+react.custom_jsx_typing=true
 
 # Substituted by createFlowConfig.js:
 %REACT_RENDERER_FLOW_OPTIONS%
