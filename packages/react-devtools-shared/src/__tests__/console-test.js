@@ -1142,11 +1142,18 @@ describe('console error', () => {
     expect(mockLog.mock.calls[0][0]).toBe('log');
 
     expect(mockWarn).toHaveBeenCalledTimes(1);
-    expect(mockWarn.mock.calls[0]).toHaveLength(1);
+    expect(mockWarn.mock.calls[0]).toHaveLength(2);
     expect(mockWarn.mock.calls[0][0]).toBe('warn');
+    // An error in showInlineWarningsAndErrors doesn't need to break component stacks.
+    expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
+      '\n    in App (at **)',
+    );
 
     expect(mockError).toHaveBeenCalledTimes(1);
-    expect(mockError.mock.calls[0]).toHaveLength(1);
+    expect(mockError.mock.calls[0]).toHaveLength(2);
     expect(mockError.mock.calls[0][0]).toBe('error');
+    expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
+      '\n    in App (at **)',
+    );
   });
 });

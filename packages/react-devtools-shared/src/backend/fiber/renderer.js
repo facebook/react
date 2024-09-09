@@ -912,6 +912,7 @@ export function attach(
     setErrorHandler,
     setSuspenseHandler,
     scheduleUpdate,
+    getCurrentFiber,
   } = renderer;
   const supportsTogglingError =
     typeof setErrorHandler === 'function' &&
@@ -1069,10 +1070,18 @@ export function attach(
 
   // Called when an error or warning is logged during render, commit, or passive (including unmount functions).
   function onErrorOrWarning(
-    fiber: Fiber,
     type: 'error' | 'warn',
     args: $ReadOnlyArray<any>,
   ): void {
+    if (getCurrentFiber === undefined) {
+      // Expected this to be part of the renderer. Ignore.
+      return;
+    }
+    const fiber = getCurrentFiber();
+    if (fiber === null) {
+      // Outside of our render scope.
+      return;
+    }
     if (type === 'error') {
       // if this is an error simulated by us to trigger error boundary, ignore
       if (

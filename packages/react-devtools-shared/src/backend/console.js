@@ -90,11 +90,7 @@ function restorePotentiallyModifiedArgs(args: Array<any>): Array<any> {
   }
 }
 
-type OnErrorOrWarning = (
-  fiber: Fiber,
-  type: 'error' | 'warn',
-  args: Array<any>,
-) => void;
+type OnErrorOrWarning = (type: 'error' | 'warn', args: Array<any>) => void;
 
 const injectedRenderers: Map<
   ReactRenderer,
@@ -223,22 +219,27 @@ export function patch({
           for (const renderer of injectedRenderers.values()) {
             const currentDispatcherRef = getDispatcherRef(renderer);
             const {getCurrentFiber, onErrorOrWarning, workTagMap} = renderer;
+            try {
+              if (shouldShowInlineWarningsAndErrors) {
+                // patch() is called by two places: (1) the hook and (2) the renderer backend.
+                // The backend is what implements a message queue, so it's the only one that injects onErrorOrWarning.
+                if (typeof onErrorOrWarning === 'function') {
+                  onErrorOrWarning(
+                    ((method: any): 'error' | 'warn'),
+                    // Restore and copy args before we mutate them (e.g. adding the component stack)
+                    restorePotentiallyModifiedArgs(args),
+                  );
+                }
+              }
+            } catch (error) {
+              // Don't let a DevTools or React internal error interfere with logging.
+              setTimeout(() => {
+                throw error;
+              }, 0);
+            }
             const current: ?Fiber = getCurrentFiber();
             if (current != null) {
               try {
-                if (shouldShowInlineWarningsAndErrors) {
-                  // patch() is called by two places: (1) the hook and (2) the renderer backend.
-                  // The backend is what implements a message queue, so it's the only one that injects onErrorOrWarning.
-                  if (typeof onErrorOrWarning === 'function') {
-                    onErrorOrWarning(
-                      current,
-                      ((method: any): 'error' | 'warn'),
-                      // Restore and copy args before we mutate them (e.g. adding the component stack)
-                      restorePotentiallyModifiedArgs(args),
-                    );
-                  }
-                }
-
                 if (
                   consoleSettingsRef.appendComponentStack &&
                   !supportsConsoleTasks(current)
