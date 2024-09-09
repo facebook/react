@@ -7,7 +7,7 @@
  * @noformat
  * @nolint
  * @flow strict
- * @generated SignedSource<<89361333bb6b688486e35849a9c669a6>>
+ * @generated SignedSource<<3eb929731c259569c7af3b6479e486fe>>
  */
 
 import type {
@@ -234,8 +234,8 @@ export type ReactNativeType = {
   ): ?ElementRef<ElementType>,
   unmountComponentAtNode(containerTag: number): void,
   unmountComponentAtNodeAndRemoveContainer(containerTag: number): void,
-  unstable_batchedUpdates: <T>(fn: (T) => void, bookkeeping: T) => void,
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: SecretInternalsType,
+  +unstable_batchedUpdates: <T>(fn: (T) => void, bookkeeping: T) => void,
+  +__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: SecretInternalsType,
   ...
 };
 
