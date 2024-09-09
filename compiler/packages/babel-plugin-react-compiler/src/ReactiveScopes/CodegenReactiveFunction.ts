@@ -1001,6 +1001,20 @@ function codegenTerminal(
             loc: iterableItem.loc,
             suggestions: null,
           });
+        case InstructionKind.HoistedFunction:
+          CompilerError.invariant(false, {
+            reason: 'Unexpected HoistedFunction variable in for..in collection',
+            description: null,
+            loc: iterableItem.loc,
+            suggestions: null,
+          });
+        case InstructionKind.Function:
+          CompilerError.invariant(false, {
+            reason: 'Unexpected Function variable in for..in collection',
+            description: null,
+            loc: iterableItem.loc,
+            suggestions: null,
+          });
         default:
           assertExhaustive(
             iterableItem.value.lvalue.kind,
@@ -1099,6 +1113,20 @@ function codegenTerminal(
         case InstructionKind.HoistedLet:
           CompilerError.invariant(false, {
             reason: 'Unexpected HoistedLet variable in for..of collection',
+            description: null,
+            loc: iterableItem.loc,
+            suggestions: null,
+          });
+        case InstructionKind.HoistedFunction:
+          CompilerError.invariant(false, {
+            reason: 'Unexpected HoistedFunction variable in for..of collection',
+            description: null,
+            loc: iterableItem.loc,
+            suggestions: null,
+          });
+        case InstructionKind.Function:
+          CompilerError.invariant(false, {
+            reason: 'Unexpected Function variable in for..of collection',
             description: null,
             loc: iterableItem.loc,
             suggestions: null,
@@ -1261,6 +1289,35 @@ function codegenInstructionNullable(
           t.variableDeclarator(codegenLValue(cx, lvalue), value),
         ]);
       }
+      case InstructionKind.Function: {
+        CompilerError.invariant(instr.lvalue === null, {
+          reason: `Function declaration cannot be referenced as an expression`,
+          description: null,
+          loc: instr.value.loc,
+          suggestions: null,
+        });
+        const genLvalue = codegenLValue(cx, lvalue);
+        CompilerError.invariant(genLvalue.type === 'Identifier', {
+          reason: 'Expected an identifier as a function declaration lvalue',
+          description: null,
+          loc: instr.value.loc,
+          suggestions: null,
+        });
+        CompilerError.invariant(value?.type === 'FunctionExpression', {
+          reason: 'Expected a function as a function declaration value',
+          description: null,
+          loc: instr.value.loc,
+          suggestions: null,
+        });
+        return createFunctionDeclaration(
+          instr.loc,
+          genLvalue,
+          value.params,
+          value.body,
+          value.generator,
+          value.async,
+        );
+      }
       case InstructionKind.Let: {
         CompilerError.invariant(instr.lvalue === null, {
           reason: `Const declaration cannot be referenced as an expression`,
@@ -1316,6 +1373,15 @@ function codegenInstructionNullable(
         CompilerError.invariant(false, {
           reason:
             'Expected HoistedConsts to have been pruned in PruneHoistedContexts',
+          description: null,
+          loc: instr.loc,
+          suggestions: null,
+        });
+      }
+      case InstructionKind.HoistedFunction: {
+        CompilerError.invariant(false, {
+          reason:
+            'Expected HoistedFunction to have been pruned in PruneHoistedContexts',
           description: null,
           loc: instr.loc,
           suggestions: null,
@@ -1486,6 +1552,7 @@ const createBinaryExpression = withLoc(t.binaryExpression);
 const createExpressionStatement = withLoc(t.expressionStatement);
 const _createLabelledStatement = withLoc(t.labeledStatement);
 const createVariableDeclaration = withLoc(t.variableDeclaration);
+const createFunctionDeclaration = withLoc(t.functionDeclaration);
 const _createWhileStatement = withLoc(t.whileStatement);
 const createTaggedTemplateExpression = withLoc(t.taggedTemplateExpression);
 const createLogicalExpression = withLoc(t.logicalExpression);
