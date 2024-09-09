@@ -100,6 +100,9 @@ import {
   SERVER_CONTEXT_SYMBOL_STRING,
 } from '../shared/ReactSymbols';
 import {enableStyleXFeatures} from 'react-devtools-feature-flags';
+
+import {componentInfoToComponentLogsMap} from '../shared/DevToolsServerComponentLogs';
+
 import is from 'shared/objectIs';
 import hasOwnProperty from 'shared/hasOwnProperty';
 
@@ -995,7 +998,8 @@ export function attach(
     // Note, this only clears logs for Fibers that have instances. If they're filtered
     // and then mount, the logs are there. Ensuring we only clear what you've seen.
     // If we wanted to clear the whole set, we'd replace fiberToComponentLogsMap with a
-    // new WeakMap.
+    // new WeakMap. It's unclear whether we should clear componentInfoToComponentLogsMap
+    // since it's shared by other renderers but presumably it would.
 
     // eslint-disable-next-line no-for-of-loops/no-for-of-loops
     for (const devtoolsInstance of idToDevToolsInstanceMap.values()) {
@@ -1006,7 +1010,7 @@ export function attach(
           fiberToComponentLogsMap.delete(fiber.alternate);
         }
       } else {
-        // TODO: Handle VirtualInstance.
+        componentInfoToComponentLogsMap.delete(devtoolsInstance.data);
       }
       const changed = recordConsoleLogs(devtoolsInstance, undefined);
       if (changed) {
@@ -1019,28 +1023,27 @@ export function attach(
   function clearConsoleLogsHelper(instanceID: number, type: 'error' | 'warn') {
     const devtoolsInstance = idToDevToolsInstanceMap.get(instanceID);
     if (devtoolsInstance !== undefined) {
+      let componentLogsEntry;
       if (devtoolsInstance.kind === FIBER_INSTANCE) {
         const fiber = devtoolsInstance.data;
-        const componentLogsEntry = fiberToComponentLogsMap.get(fiber);
-        if (componentLogsEntry !== undefined) {
-          if (type === 'error') {
-            componentLogsEntry.errors.clear();
-            componentLogsEntry.errorsCount = 0;
-          } else {
-            componentLogsEntry.warnings.clear();
-            componentLogsEntry.warningsCount = 0;
-          }
-          const changed = recordConsoleLogs(
-            devtoolsInstance,
-            componentLogsEntry,
-          );
-          if (changed) {
-            flushPendingEvents();
-            updateMostRecentlyInspectedElementIfNecessary(devtoolsInstance.id);
-          }
-        }
+        componentLogsEntry = fiberToComponentLogsMap.get(fiber);
       } else {
-        // TODO: Handle VirtualInstance.
+        const componentInfo = devtoolsInstance.data;
+        componentLogsEntry = componentInfoToComponentLogsMap.get(componentInfo);
+      }
+      if (componentLogsEntry !== undefined) {
+        if (type === 'error') {
+          componentLogsEntry.errors.clear();
+          componentLogsEntry.errorsCount = 0;
+        } else {
+          componentLogsEntry.warnings.clear();
+          componentLogsEntry.warningsCount = 0;
+        }
+        const changed = recordConsoleLogs(devtoolsInstance, componentLogsEntry);
+        if (changed) {
+          flushPendingEvents();
+          updateMostRecentlyInspectedElementIfNecessary(devtoolsInstance.id);
+        }
       }
     }
   }
@@ -2188,6 +2191,10 @@ export function attach(
     pushOperation(ownerID);
     pushOperation(displayNameStringID);
     pushOperation(keyStringID);
+
+    const componentLogsEntry =
+      componentInfoToComponentLogsMap.get(componentInfo);
+    recordConsoleLogs(instance, componentLogsEntry);
   }
 
   function recordUnmount(fiberInstance: FiberInstance): void {
@@ -2857,6 +2864,14 @@ export function attach(
       ) {
         recordResetChildren(virtualInstance);
       }
+      // Update the errors/warnings count. If this Instance has switched to a different
+      // ReactComponentInfo instance, such as when refreshing Server Components, then
+      // we replace all the previous logs with the ones associated with the new ones rather
+      // than merging. Because deduping is expected to happen at the request level.
+      const componentLogsEntry = componentInfoToComponentLogsMap.get(
+        virtualInstance.data,
+      );
+      recordConsoleLogs(virtualInstance, componentLogsEntry);
       // Must be called after all children have been appended.
       recordVirtualProfilingDurations(virtualInstance);
     } finally {
@@ -4293,6 +4308,9 @@ export function attach(
       stylex: null,
     };
 
+    const componentLogsEntry =
+      componentInfoToComponentLogsMap.get(componentInfo);
+
     return {
       id: virtualInstance.id,
 
@@ -4326,8 +4344,14 @@ export function attach(
       hooks: null,
       props: props,
       state: null,
-      errors: [], // TODO: Handle errors on Virtual Instances.
-      warnings: [], // TODO: Handle warnings on Virtual Instances.
+      errors:
+        componentLogsEntry === undefined
+          ? []
+          : Array.from(componentLogsEntry.errors.entries()),
+      warnings:
+        componentLogsEntry === undefined
+          ? []
+          : Array.from(componentLogsEntry.warnings.entries()),
       // List of owners
       owners,
 
