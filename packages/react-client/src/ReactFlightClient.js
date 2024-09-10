@@ -2368,6 +2368,7 @@ const replayConsoleWithCallStack = {
       }
       callStack();
     } finally {
+      currentOwnerInDEV = null;
       ReactSharedInternals.getCurrentStack = prevStack;
     }
   },
