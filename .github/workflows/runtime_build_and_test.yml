@@ -175,7 +175,7 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn
-      - run: yarn build --index=${{ matrix.worker_id }} --total=20 --r=${{ matrix.release_channel }} --ci
+      - run: yarn build -- --index=${{ matrix.worker_id }} --total=20 --r=${{ matrix.release_channel }} --ci
         env:
           CI: github
           RELEASE_CHANNEL: ${{ matrix.release_channel }}
