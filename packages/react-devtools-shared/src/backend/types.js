@@ -350,6 +350,14 @@ export type InstanceAndStyle = {
 
 type Type = 'props' | 'hooks' | 'state' | 'context';
 
+export type OnErrorOrWarning = (
+  type: 'error' | 'warn',
+  args: Array<any>,
+) => void;
+export type GetComponentStack = (
+  topFrame: Error,
+) => null | {enableOwnerStacks: boolean, componentStack: string};
+
 export type RendererInterface = {
   cleanup: () => void,
   clearErrorsAndWarnings: () => void,
@@ -364,6 +372,7 @@ export type RendererInterface = {
   findHostInstancesForElementID: FindHostInstancesForElementID,
   flushInitialOperations: () => void,
   getBestMatchForTrackedPath: () => PathMatch | null,
+  getComponentStack?: GetComponentStack,
   getNearestMountedDOMNode: (component: Element) => Element | null,
   getElementIDForHostInstance: GetElementIDForHostInstance,
   getDisplayNameForElementID: GetDisplayNameForElementID,
@@ -386,6 +395,7 @@ export type RendererInterface = {
     forceFullData: boolean,
   ) => InspectedElementPayload,
   logElementToConsole: (id: number) => void,
+  onErrorOrWarning?: OnErrorOrWarning,
   overrideError: (id: number, forceError: boolean) => void,
   overrideSuspense: (id: number, forceFallback: boolean) => void,
   overrideValueAtPath: (
