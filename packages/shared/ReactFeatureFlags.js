@@ -260,10 +260,6 @@ export const disableTextareaChildren = false;
 // Debugging and DevTools
 // -----------------------------------------------------------------------------
 
-// Adds user timing marks for e.g. state updates, suspense, and work loop stuff,
-// for an experimental timeline tool.
-export const enableSchedulingProfiler = __PROFILE__;
-
 // Helps identify side effects in render-phase lifecycle hooks and setState
 // reducers by double invoking them in StrictLegacyMode.
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
@@ -276,6 +272,11 @@ export const enableProfilerTimer = __PROFILE__;
 // This flag will be used for both Server Component and Client Component tracks.
 // All calls should also be gated on enableProfilerTimer.
 export const enableComponentPerformanceTrack = __EXPERIMENTAL__;
+
+// Adds user timing marks for e.g. state updates, suspense, and work loop stuff,
+// for an experimental timeline tool.
+export const enableSchedulingProfiler: boolean =
+  !enableComponentPerformanceTrack && __PROFILE__;
 
 // Record durations for commit and passive effects phases.
 export const enableProfilerCommitHooks = __PROFILE__;
