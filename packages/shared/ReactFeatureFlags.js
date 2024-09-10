@@ -271,6 +271,12 @@ export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 // Gather advanced timing metrics for Profiler subtrees.
 export const enableProfilerTimer = __PROFILE__;
 
+// Adds performance.measure() marks using Chrome extensions to allow formatted
+// Component rendering tracks to show up in the Performance tab.
+// This flag will be used for both Server Component and Client Component tracks.
+// All calls should also be gated on enableProfilerTimer.
+export const enableComponentPerformanceTrack = __EXPERIMENTAL__;
+
 // Record durations for commit and passive effects phases.
 export const enableProfilerCommitHooks = __PROFILE__;
 
