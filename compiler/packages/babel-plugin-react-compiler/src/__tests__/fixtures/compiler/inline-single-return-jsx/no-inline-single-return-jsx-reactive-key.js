@@ -1,20 +1,23 @@
 // @enableInlineSingleReturnJSX
+import {useEffect, useState} from 'react';
+
+function Component({a, b}) {
+  return <Child key={b} value={a} />;
+}
 
 function Child({value, children}) {
-  'use no forget';
+  const [state, setState] = useState(value);
+  useEffect(() => {
+    if (state === 0 && value === 0) {
+      setState(1);
+    }
+  }, [state]);
   return (
     <div>
+      {state}
       <span>{value}</span>
       {children}
     </div>
-  );
-}
-
-function Component({a, b}) {
-  return (
-    <Child value={a}>
-      <div>{b}</div>
-    </Child>
   );
 }
 

@@ -224,11 +224,6 @@ function* runWithEnvironment(
     yield log({kind: 'hir', name: 'InstructionReordering', value: hir});
   }
 
-  if (env.config.enableInlineSingleReturnJSX) {
-    inlineSingleReturnJSX(hir);
-    yield log({kind: 'hir', name: 'InlineSingleReturnJSX', value: hir});
-  }
-
   pruneMaybeThrows(hir);
   yield log({kind: 'hir', name: 'PruneMaybeThrows', value: hir});
 
@@ -331,6 +326,11 @@ function* runWithEnvironment(
   });
 
   assertValidBlockNesting(hir);
+
+  if (env.config.enableInlineSingleReturnJSX) {
+    inlineSingleReturnJSX(hir);
+    yield log({kind: 'hir', name: 'InlineSingleReturnJSX', value: hir});
+  }
 
   flattenReactiveLoopsHIR(hir);
   yield log({

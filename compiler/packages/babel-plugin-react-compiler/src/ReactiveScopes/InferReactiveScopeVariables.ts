@@ -231,8 +231,10 @@ function mayAllocate(env: Environment, instruction: Instruction): boolean {
     case 'ObjectExpression': {
       const type = instruction.lvalue.identifier.type;
       if (type.kind === 'Object' && type.shapeId === BuiltInPropsId) {
-        // If this is an object literal for inlined JSX, we don't need to memoize
-        // it. The props object is always assumed to have changed.
+        /*
+         * If this is an object literal for inlined JSX, we don't need to memoize
+         * it. The props object is always assumed to have changed.
+         */
         return false;
       }
       return true;
