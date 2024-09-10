@@ -907,7 +907,7 @@ export function performConcurrentWorkOnRoot(
   // bug we're still investigating. Once the bug in Scheduler is fixed,
   // we can remove this, since we track expiration ourselves.
   const shouldTimeSlice =
-    !includesBlockingLane(root, lanes) &&
+    !includesBlockingLane(lanes) &&
     !includesExpiredLane(root, lanes) &&
     (disableSchedulerTimeoutInWorkLoop || !didTimeout);
   let exitStatus = shouldTimeSlice
@@ -1967,6 +1967,18 @@ export function renderDidSuspend(): void {
 
 export function renderDidSuspendDelayIfPossible(): void {
   workInProgressRootExitStatus = RootSuspendedWithDelay;
+
+  if (
+    !workInProgressRootDidSkipSuspendedSiblings &&
+    !includesBlockingLane(workInProgressRootRenderLanes)
+  ) {
+    // This render may not have originally been scheduled as a prerender, but
+    // something suspended inside the visible part of the tree, which means we
+    // won't be able to commit a fallback anyway. Let's proceed as if this were
+    // a prerender so that we can warm up the siblings without scheduling a
+    // separate pass.
+    workInProgressRootIsPrerendering = true;
+  }
 
   // Check if there are updates that we skipped tree that might have unblocked
   // this render.

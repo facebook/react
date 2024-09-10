@@ -135,11 +135,10 @@ describe('ReactSuspense', () => {
       'Bar',
       // A suspends
       'Suspend! [A]',
-      'Loading...',
 
-      ...(gate('enableSiblingPrerendering')
-        ? ['Foo', 'Bar', 'Suspend! [A]', 'B', 'Loading...']
-        : []),
+      ...(gate('enableSiblingPrerendering') ? ['B'] : []),
+
+      'Loading...',
     ]);
     expect(container.textContent).toEqual('');
 

@@ -579,7 +579,7 @@ export function includesOnlyTransitions(lanes: Lanes): boolean {
   return (lanes & TransitionLanes) === lanes;
 }
 
-export function includesBlockingLane(root: FiberRoot, lanes: Lanes): boolean {
+export function includesBlockingLane(lanes: Lanes): boolean {
   const SyncDefaultLanes =
     InputContinuousHydrationLane |
     InputContinuousLane |

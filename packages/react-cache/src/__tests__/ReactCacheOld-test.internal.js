@@ -238,12 +238,14 @@ describe('ReactCache', () => {
     await act(() => jest.advanceTimersByTime(100));
     assertLog([
       'Promise resolved [4]',
+
       1,
       4,
       'Suspend! [5]',
       1,
       4,
       'Suspend! [5]',
+
       'Promise resolved [5]',
       1,
       4,
@@ -274,12 +276,14 @@ describe('ReactCache', () => {
     await act(() => jest.advanceTimersByTime(100));
     assertLog([
       'Promise resolved [2]',
+
       1,
       2,
       'Suspend! [3]',
       1,
       2,
       'Suspend! [3]',
+
       'Promise resolved [3]',
       1,
       2,

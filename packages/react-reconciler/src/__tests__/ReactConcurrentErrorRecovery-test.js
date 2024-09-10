@@ -209,16 +209,7 @@ describe('ReactConcurrentErrorRecovery', () => {
         root.render(<App step={2} />);
       });
     });
-    assertLog([
-      'Suspend! [A2]',
-      'Loading...',
-      'Suspend! [B2]',
-      'Loading...',
-
-      ...(gate('enableSiblingPrerendering')
-        ? ['Suspend! [A2]', 'Loading...', 'Suspend! [B2]', 'Loading...']
-        : []),
-    ]);
+    assertLog(['Suspend! [A2]', 'Loading...', 'Suspend! [B2]', 'Loading...']);
     // Because this is a refresh, we don't switch to a fallback
     expect(root).toMatchRenderedOutput('A1B1');
 
@@ -229,16 +220,7 @@ describe('ReactConcurrentErrorRecovery', () => {
 
     // Because we're still suspended on A, we can't show an error boundary. We
     // should wait for A to resolve.
-    assertLog([
-      'Suspend! [A2]',
-      'Loading...',
-      'Error! [B2]',
-      'Oops!',
-
-      ...(gate('enableSiblingPrerendering')
-        ? ['Suspend! [A2]', 'Loading...', 'Error! [B2]', 'Oops!']
-        : []),
-    ]);
+    assertLog(['Suspend! [A2]', 'Loading...', 'Error! [B2]', 'Oops!']);
     // Remain on previous screen.
     expect(root).toMatchRenderedOutput('A1B1');
 
@@ -299,16 +281,7 @@ describe('ReactConcurrentErrorRecovery', () => {
         root.render(<App step={2} />);
       });
     });
-    assertLog([
-      'Suspend! [A2]',
-      'Loading...',
-      'Suspend! [B2]',
-      'Loading...',
-
-      ...(gate('enableSiblingPrerendering')
-        ? ['Suspend! [A2]', 'Loading...', 'Suspend! [B2]', 'Loading...']
-        : []),
-    ]);
+    assertLog(['Suspend! [A2]', 'Loading...', 'Suspend! [B2]', 'Loading...']);
     // Because this is a refresh, we don't switch to a fallback
     expect(root).toMatchRenderedOutput('A1B1');
 
@@ -364,11 +337,7 @@ describe('ReactConcurrentErrorRecovery', () => {
         root.render(<AsyncText text="Async" />);
       });
     });
-    assertLog([
-      'Suspend! [Async]',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Async]'] : []),
-    ]);
+    assertLog(['Suspend! [Async]']);
     expect(root).toMatchRenderedOutput(null);
 
     // This also works if the suspended component is wrapped with an error
@@ -384,11 +353,7 @@ describe('ReactConcurrentErrorRecovery', () => {
         );
       });
     });
-    assertLog([
-      'Suspend! [Async]',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Async]'] : []),
-    ]);
+    assertLog(['Suspend! [Async]']);
     expect(root).toMatchRenderedOutput(null);
 
     // Continues rendering once data resolves
@@ -445,7 +410,7 @@ describe('ReactConcurrentErrorRecovery', () => {
         'Suspend! [Async]',
 
         ...(gate('enableSiblingPrerendering')
-          ? ['Suspend! [Async]', 'Caught an error: Oops!']
+          ? ['Caught an error: Oops!']
           : []),
       ]);
       // The render suspended without committing the error.
@@ -468,7 +433,7 @@ describe('ReactConcurrentErrorRecovery', () => {
         'Suspend! [Async]',
 
         ...(gate('enableSiblingPrerendering')
-          ? ['Suspend! [Async]', 'Caught an error: Oops!']
+          ? ['Caught an error: Oops!']
           : []),
       ]);
       expect(root).toMatchRenderedOutput(null);
