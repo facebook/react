@@ -3287,7 +3287,7 @@ __DEV__ &&
         var id = getWakeableID(wakeable),
           display = wakeable.displayName || wakeable;
         log(
-          "%c\u269b\ufe0f%c " + componentName + " suspended",
+          "%c\u269b%c " + componentName + " suspended",
           "background-color: #20232a; color: #61dafb; padding: 0 2px;",
           "color: #80366d; font-weight: bold;",
           id,
@@ -3296,7 +3296,7 @@ __DEV__ &&
         wakeable.then(
           function () {
             log(
-              "%c\u269b\ufe0f%c " + componentName + " resolved",
+              "%c\u269b%c " + componentName + " resolved",
               "background-color: #20232a; color: #61dafb; padding: 0 2px;",
               "color: #80366d; font-weight: bold;",
               id,
@@ -3305,7 +3305,7 @@ __DEV__ &&
           },
           function () {
             log(
-              "%c\u269b\ufe0f%c " + componentName + " rejected",
+              "%c\u269b%c " + componentName + " rejected",
               "background-color: #20232a; color: #61dafb; padding: 0 2px;",
               "color: #80366d; font-weight: bold;",
               id,
@@ -3318,7 +3318,7 @@ __DEV__ &&
     function logRenderStarted(lanes) {
       enableDebugTracing &&
         group(
-          "%c\u269b\ufe0f%c render%c (" + formatLanes(lanes) + ")",
+          "%c\u269b%c render%c (" + formatLanes(lanes) + ")",
           "background-color: #20232a; color: #61dafb; padding: 0 2px;",
           "",
           "font-weight: normal;"
@@ -3327,7 +3327,7 @@ __DEV__ &&
     function logStateUpdateScheduled(componentName, lane, payloadOrAction) {
       enableDebugTracing &&
         log(
-          "%c\u269b\ufe0f%c " +
+          "%c\u269b%c " +
             componentName +
             " updated state %c(" +
             formatLanes(lane) +
@@ -16305,7 +16305,7 @@ __DEV__ &&
       enableDebugTracing &&
         enableDebugTracing &&
         group(
-          "%c\u269b\ufe0f%c commit%c (" + formatLanes(lanes) + ")",
+          "%c\u269b%c commit%c (" + formatLanes(lanes) + ")",
           "background-color: #20232a; color: #61dafb; padding: 0 2px;",
           "",
           "font-weight: normal;"
@@ -16376,7 +16376,7 @@ __DEV__ &&
         enableDebugTracing &&
           enableDebugTracing &&
           group(
-            "%c\u269b\ufe0f%c layout effects%c (" + formatLanes(lanes) + ")",
+            "%c\u269b%c layout effects%c (" + formatLanes(lanes) + ")",
             "background-color: #20232a; color: #61dafb; padding: 0 2px;",
             "",
             "font-weight: normal;"
@@ -16528,7 +16528,7 @@ __DEV__ &&
       enableDebugTracing &&
         enableDebugTracing &&
         group(
-          "%c\u269b\ufe0f%c passive effects%c (" + formatLanes(lanes) + ")",
+          "%c\u269b%c passive effects%c (" + formatLanes(lanes) + ")",
           "background-color: #20232a; color: #61dafb; padding: 0 2px;",
           "",
           "font-weight: normal;"
@@ -26115,7 +26115,7 @@ __DEV__ &&
             ((callback = getComponentNameFromFiber(inst) || "Unknown"),
             enableDebugTracing &&
               log(
-                "%c\u269b\ufe0f%c " +
+                "%c\u269b%c " +
                   callback +
                   " forced update %c(" +
                   formatLanes(lane) +
@@ -27152,11 +27152,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.0.0-www-modern-727b3615-20240906" !== isomorphicReactPackageVersion)
+      if ("19.0.0-www-modern-d160aa0f-20240910" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.0.0-www-modern-727b3615-20240906\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.0.0-www-modern-d160aa0f-20240910\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -27199,11 +27199,11 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.0.0-www-modern-727b3615-20240906",
+          version: "19.0.0-www-modern-d160aa0f-20240910",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
           findFiberByHostInstance: getClosestInstanceFromNode,
-          reconcilerVersion: "19.0.0-www-modern-727b3615-20240906"
+          reconcilerVersion: "19.0.0-www-modern-d160aa0f-20240910"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -27974,5 +27974,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.0.0-www-modern-727b3615-20240906";
+    exports.version = "19.0.0-www-modern-d160aa0f-20240910";
   })();
