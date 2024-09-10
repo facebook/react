@@ -89,6 +89,27 @@ export function attach(
       return;
     }
 
+    if (
+      args.length > 3 &&
+      typeof args[0] === 'string' &&
+      args[0].startsWith('%c%s%c ') &&
+      typeof args[1] === 'string' &&
+      typeof args[2] === 'string' &&
+      typeof args[3] === 'string'
+    ) {
+      // This looks like the badge we prefixed to the log. Our UI doesn't support formatted logs.
+      // We remove the formatting. If the environment of the log is the same as the environment of
+      // the component (the common case) we remove the badge completely otherwise leave it plain
+      const format = args[0].slice(7);
+      const env = args[2].trim();
+      args = args.slice(4);
+      if (env !== componentInfo.env) {
+        args.unshift('[' + env + '] ' + format);
+      } else {
+        args.unshift(format);
+      }
+    }
+
     // We can't really use this message as a unique key, since we can't distinguish
     // different objects in this implementation. We have to delegate displaying of the objects
     // to the environment, the browser console, for example, so this is why this should be kept
