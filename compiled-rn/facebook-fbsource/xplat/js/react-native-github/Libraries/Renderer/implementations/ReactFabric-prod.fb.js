@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f8a2977a268036ae8166fcdb6e3a75c4>>
+ * @generated SignedSource<<0957f41cf0c05a8013a5c3aef90921b1>>
  */
 
 "use strict";
@@ -9641,6 +9641,9 @@ function pushAsyncDispatcher() {
 }
 function renderDidSuspendDelayIfPossible() {
   workInProgressRootExitStatus = 4;
+  workInProgressRootDidSkipSuspendedSiblings ||
+    0 !== (workInProgressRootRenderLanes & 60) ||
+    (workInProgressRootIsPrerendering = !0);
   (0 === (workInProgressRootSkippedLanes & 134217727) &&
     0 === (workInProgressRootInterleavedUpdatedLanes & 134217727)) ||
     null === workInProgressRoot ||
@@ -10975,11 +10978,11 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1162 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-e210d081-20240909",
+    version: "19.0.0-native-fb-66cf2cfc-20240910",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromNode,
-    reconcilerVersion: "19.0.0-native-fb-e210d081-20240909"
+    reconcilerVersion: "19.0.0-native-fb-66cf2cfc-20240910"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1162.rendererConfig = extraDevToolsConfig);
