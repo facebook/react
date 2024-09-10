@@ -101,7 +101,7 @@ function startProfilerTimer(fiber: Fiber): void {
   profilerStartTime = now();
 
   if (((fiber.actualStartTime: any): number) < 0) {
-    fiber.actualStartTime = now();
+    fiber.actualStartTime = profilerStartTime;
   }
 }
 
