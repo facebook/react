@@ -1057,8 +1057,7 @@ function getOutlinedModel<T>(
     case INITIALIZED:
       let value = chunk.value;
       for (let i = 1; i < path.length; i++) {
-        value = value[path[i]];
-        if (value.$$typeof === REACT_LAZY_TYPE) {
+        while (value.$$typeof === REACT_LAZY_TYPE) {
           const referencedChunk: SomeChunk<any> = value._payload;
           if (referencedChunk.status === INITIALIZED) {
             value = referencedChunk.value;
@@ -1069,10 +1068,11 @@ function getOutlinedModel<T>(
               key,
               response,
               map,
-              path.slice(i),
+              path.slice(i - 1),
             );
           }
         }
+        value = value[path[i]];
       }
       const chunkValue = map(response, value);
       if (__DEV__ && chunk._debugInfo) {
