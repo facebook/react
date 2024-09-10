@@ -2271,7 +2271,7 @@ function isReactComponentInfo(value: any): boolean {
       typeof value.debugTask.run === 'function') ||
       value.debugStack instanceof Error) &&
     (enableOwnerStacks
-      ? isArray((value: any).stack)
+      ? isArray((value: any).stack) || (value: any).stack === null
       : typeof (value: any).stack === 'undefined') &&
     typeof value.name === 'string' &&
     typeof value.env === 'string' &&
