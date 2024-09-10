@@ -9953,6 +9953,9 @@ module.exports = function ($$$config) {
   }
   function renderDidSuspendDelayIfPossible() {
     workInProgressRootExitStatus = 4;
+    workInProgressRootDidSkipSuspendedSiblings ||
+      0 !== (workInProgressRootRenderLanes & 60) ||
+      (workInProgressRootIsPrerendering = !0);
     (0 === (workInProgressRootSkippedLanes & 134217727) &&
       0 === (workInProgressRootInterleavedUpdatedLanes & 134217727)) ||
       null === workInProgressRoot ||
@@ -12272,7 +12275,7 @@ module.exports = function ($$$config) {
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
       findFiberByHostInstance: getInstanceFromNode,
-      reconcilerVersion: "19.0.0-www-modern-d160aa0f-20240910"
+      reconcilerVersion: "19.0.0-www-modern-66cf2cfc-20240910"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

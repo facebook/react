@@ -11586,6 +11586,9 @@ function pushAsyncDispatcher() {
 }
 function renderDidSuspendDelayIfPossible() {
   workInProgressRootExitStatus = 4;
+  workInProgressRootDidSkipSuspendedSiblings ||
+    0 !== (workInProgressRootRenderLanes & 60) ||
+    (workInProgressRootIsPrerendering = !0);
   (0 === (workInProgressRootSkippedLanes & 134217727) &&
     0 === (workInProgressRootInterleavedUpdatedLanes & 134217727)) ||
     null === workInProgressRoot ||
@@ -17450,14 +17453,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1826 = React.version;
 if (
-  "19.0.0-www-modern-d160aa0f-20240910" !==
+  "19.0.0-www-modern-66cf2cfc-20240910" !==
   isomorphicReactPackageVersion$jscomp$inline_1826
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1826,
-      "19.0.0-www-modern-d160aa0f-20240910"
+      "19.0.0-www-modern-66cf2cfc-20240910"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17475,11 +17478,11 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_1828 = {
   bundleType: 0,
-  version: "19.0.0-www-modern-d160aa0f-20240910",
+  version: "19.0.0-www-modern-66cf2cfc-20240910",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-www-modern-d160aa0f-20240910"
+  reconcilerVersion: "19.0.0-www-modern-66cf2cfc-20240910"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_1828.getLaneLabelMap = getLaneLabelMap),
@@ -17845,7 +17848,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-d160aa0f-20240910";
+exports.version = "19.0.0-www-modern-66cf2cfc-20240910";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
