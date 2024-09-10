@@ -2446,11 +2446,10 @@ describe('ReactInteractionTracing', () => {
       'Text',
       'Suspend [Text Two]',
       'Loading Two...',
-      ...(gate('enableSiblingPrerendering')
-        ? ['Suspend [Text Two]', 'Suspend [Text Two]']
-        : []),
+      ...(gate('enableSiblingPrerendering') ? ['Suspend [Text Two]'] : []),
       'onTransitionStart(transition, 0)',
       'onTransitionProgress(transition, 0, 1000, [two])',
+      ...(gate('enableSiblingPrerendering') ? ['Suspend [Text Two]'] : []),
     ]);
 
     await act(() => {

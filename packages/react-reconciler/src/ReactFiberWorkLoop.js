@@ -997,8 +997,6 @@ export function performConcurrentWorkOnRoot(
 
         // We now have a consistent tree. The next step is either to commit it,
         // or, if something suspended, wait to commit it after a timeout.
-        root.finishedWork = finishedWork;
-        root.finishedLanes = lanes;
         finishConcurrentRender(root, exitStatus, finishedWork, lanes);
       }
       break;
@@ -1141,6 +1139,12 @@ function finishConcurrentRender(
       throw new Error('Unknown root exit status.');
     }
   }
+
+  // Only set these if we have a complete tree that is ready to be committed.
+  // We use these fields to determine later whether or not the work should be
+  // discarded for a fresh render attempt.
+  root.finishedWork = finishedWork;
+  root.finishedLanes = lanes;
 
   if (shouldForceFlushFallbacksInDEV()) {
     // We're inside an `act` scope. Commit immediately.
@@ -2226,6 +2230,14 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
     workInProgressTransitions = getTransitionsForLanes(root, lanes);
     resetRenderTimer();
     prepareFreshStack(root, lanes);
+  } else {
+    // This is a continuation of an existing work-in-progress.
+    //
+    // If we were previously in prerendering mode, check if we received any new
+    // data during an interleaved event.
+    if (workInProgressRootIsPrerendering) {
+      workInProgressRootIsPrerendering = checkIfRootIsPrerendering(root, lanes);
+    }
   }
 
   if (__DEV__) {

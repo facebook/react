@@ -255,7 +255,7 @@ describe('ReactSuspenseList', () => {
     await act(() => C.resolve());
     assertLog(
       gate('enableSiblingPrerendering')
-        ? ['Suspend! [B]', 'C', 'Suspend! [B]', 'C']
+        ? ['Suspend! [B]', 'C', 'Suspend! [B]']
         : ['C'],
     );
 
@@ -390,13 +390,7 @@ describe('ReactSuspenseList', () => {
     );
 
     await act(() => B.resolve());
-    assertLog([
-      'A',
-      'B',
-      'Suspend! [C]',
-
-      ...(gate('enableSiblingPrerendering') ? ['A', 'B', 'Suspend! [C]'] : []),
-    ]);
+    assertLog(['A', 'B', 'Suspend! [C]']);
 
     expect(ReactNoop).toMatchRenderedOutput(
       <>
@@ -472,13 +466,7 @@ describe('ReactSuspenseList', () => {
     );
 
     await act(() => B.resolve());
-    assertLog([
-      'A',
-      'B',
-      'Suspend! [C]',
-
-      ...(gate('enableSiblingPrerendering') ? ['A', 'B', 'Suspend! [C]'] : []),
-    ]);
+    assertLog(['A', 'B', 'Suspend! [C]']);
 
     expect(ReactNoop).toMatchRenderedOutput(
       <>
@@ -749,7 +737,11 @@ describe('ReactSuspenseList', () => {
 
     ReactNoop.render(<Foo />);
 
-    await waitForAll(['Suspend! [A]', 'Loading']);
+    await waitForAll([
+      'Suspend! [A]',
+      'Loading',
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [A]'] : []),
+    ]);
 
     expect(ReactNoop).toMatchRenderedOutput(<span>Loading</span>);
 
@@ -786,12 +778,7 @@ describe('ReactSuspenseList', () => {
     );
 
     await act(() => B.resolve());
-    assertLog([
-      'B',
-      'Suspend! [C]',
-
-      ...(gate('enableSiblingPrerendering') ? ['B', 'Suspend! [C]'] : []),
-    ]);
+    assertLog(['B', 'Suspend! [C]']);
 
     // Even though we could now show B, we're still waiting on C.
     expect(ReactNoop).toMatchRenderedOutput(
@@ -878,12 +865,7 @@ describe('ReactSuspenseList', () => {
     expect(ReactNoop).toMatchRenderedOutput(<span>A</span>);
 
     await act(() => B.resolve());
-    assertLog([
-      'B',
-      'Suspend! [C]',
-
-      ...(gate('enableSiblingPrerendering') ? ['B', 'Suspend! [C]'] : []),
-    ]);
+    assertLog(['B', 'Suspend! [C]']);
 
     // Even though we could now show B, we're still waiting on C.
     expect(ReactNoop).toMatchRenderedOutput(<span>A</span>);
@@ -948,7 +930,7 @@ describe('ReactSuspenseList', () => {
       'A',
       'Suspend! [B]',
 
-      ...(gate('enableSiblingPrerendering') ? ['A', 'Suspend! [B]'] : []),
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [B]'] : []),
     ]);
 
     expect(ReactNoop).toMatchRenderedOutput(
@@ -1019,7 +1001,7 @@ describe('ReactSuspenseList', () => {
       'C',
       'Suspend! [B]',
 
-      ...(gate('enableSiblingPrerendering') ? ['C', 'Suspend! [B]'] : []),
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [B]'] : []),
     ]);
 
     expect(ReactNoop).toMatchRenderedOutput(
@@ -1125,12 +1107,7 @@ describe('ReactSuspenseList', () => {
     );
 
     await act(() => A.resolve());
-    assertLog([
-      'A',
-      'Suspend! [C]',
-
-      ...(gate('enableSiblingPrerendering') ? ['A', 'Suspend! [C]'] : []),
-    ]);
+    assertLog(['A', 'Suspend! [C]']);
 
     // Even though we could show A, it is still in a fallback state because
     // C is not yet resolved. We need to resolve everything in the head first.
@@ -1151,7 +1128,7 @@ describe('ReactSuspenseList', () => {
       'C',
       'Suspend! [E]',
 
-      ...(gate('enableSiblingPrerendering') ? ['A', 'C', 'Suspend! [E]'] : []),
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [E]'] : []),
     ]);
 
     // We can now resolve the full head.
@@ -1171,7 +1148,7 @@ describe('ReactSuspenseList', () => {
       'E',
       'Suspend! [F]',
 
-      ...(gate('enableSiblingPrerendering') ? ['E', 'Suspend! [F]'] : []),
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [F]'] : []),
     ]);
 
     // In the tail we can resolve one-by-one.
@@ -1340,12 +1317,7 @@ describe('ReactSuspenseList', () => {
 
     await F.resolve();
 
-    await waitForAll([
-      'Suspend! [D]',
-      'F',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [D]', 'F'] : []),
-    ]);
+    await waitForAll(['Suspend! [D]', 'F']);
 
     // Even though we could show F, it is still in a fallback state because
     // E is not yet resolved. We need to resolve everything in the head first.
@@ -1370,7 +1342,7 @@ describe('ReactSuspenseList', () => {
       'F',
       'Suspend! [B]',
 
-      ...(gate('enableSiblingPrerendering') ? ['D', 'F', 'Suspend! [B]'] : []),
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [B]'] : []),
     ]);
 
     // We can now resolve the full head.
@@ -1392,7 +1364,7 @@ describe('ReactSuspenseList', () => {
       'B',
       'Suspend! [A]',
 
-      ...(gate('enableSiblingPrerendering') ? ['B', 'Suspend! [A]'] : []),
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [A]'] : []),
     ]);
 
     // In the tail we can resolve one-by-one.
@@ -1523,15 +1495,7 @@ describe('ReactSuspenseList', () => {
 
     await A.resolve();
 
-    await waitForAll([
-      'A',
-      'Suspend! [B]',
-      'Loading B',
-
-      ...(gate('enableSiblingPrerendering')
-        ? ['A', 'Suspend! [B]', 'Loading B']
-        : []),
-    ]);
+    await waitForAll(['A', 'Suspend! [B]', 'Loading B']);
 
     // Incremental loading is suspended.
     jest.advanceTimersByTime(500);
@@ -1545,15 +1509,7 @@ describe('ReactSuspenseList', () => {
 
     await B.resolve();
 
-    await waitForAll([
-      'B',
-      'Suspend! [C]',
-      'Loading C',
-
-      ...(gate('enableSiblingPrerendering')
-        ? ['B', 'Suspend! [C]', 'Loading C']
-        : []),
-    ]);
+    await waitForAll(['B', 'Suspend! [C]', 'Loading C']);
 
     // Incremental loading is suspended.
     jest.advanceTimersByTime(500);
@@ -1777,12 +1733,7 @@ describe('ReactSuspenseList', () => {
 
     await B.resolve();
 
-    await waitForAll([
-      'B',
-      'Suspend! [C]',
-
-      ...(gate('enableSiblingPrerendering') ? ['B', 'Suspend! [C]'] : []),
-    ]);
+    await waitForAll(['B', 'Suspend! [C]']);
 
     // Incremental loading is suspended.
     jest.advanceTimersByTime(500);
@@ -1802,17 +1753,7 @@ describe('ReactSuspenseList', () => {
     await C.resolve();
     await E.resolve();
 
-    await waitForAll([
-      'B',
-      'C',
-      'E',
-      'Suspend! [F]',
-      'Loading F',
-
-      ...(gate('enableSiblingPrerendering')
-        ? ['B', 'C', 'E', 'Suspend! [F]', 'Loading F']
-        : []),
-    ]);
+    await waitForAll(['B', 'C', 'E', 'Suspend! [F]', 'Loading F']);
 
     jest.advanceTimersByTime(500);
 
@@ -1929,12 +1870,7 @@ describe('ReactSuspenseList', () => {
 
     await D.resolve();
 
-    await waitForAll([
-      'D',
-      'Suspend! [E]',
-
-      ...(gate('enableSiblingPrerendering') ? ['D', 'Suspend! [E]'] : []),
-    ]);
+    await waitForAll(['D', 'Suspend! [E]']);
 
     // Incremental loading is suspended.
     jest.advanceTimersByTime(500);
@@ -1959,17 +1895,7 @@ describe('ReactSuspenseList', () => {
     await D.resolve();
     await E.resolve();
 
-    await waitForAll([
-      'D',
-      'E',
-      'B',
-      'Suspend! [A]',
-      'Loading A',
-
-      ...(gate('enableSiblingPrerendering')
-        ? ['D', 'E', 'B', 'Suspend! [A]', 'Loading A']
-        : []),
-    ]);
+    await waitForAll(['D', 'E', 'B', 'Suspend! [A]', 'Loading A']);
 
     jest.advanceTimersByTime(500);
 
@@ -2100,12 +2026,7 @@ describe('ReactSuspenseList', () => {
 
     await B.resolve();
 
-    await waitForAll([
-      'B',
-      'Suspend! [C]',
-
-      ...(gate('enableSiblingPrerendering') ? ['B', 'Suspend! [C]'] : []),
-    ]);
+    await waitForAll(['B', 'Suspend! [C]']);
 
     // Incremental loading is suspended.
     jest.advanceTimersByTime(500);
@@ -2128,17 +2049,7 @@ describe('ReactSuspenseList', () => {
     await D.resolve();
     await E.resolve();
 
-    await waitForAll([
-      'C',
-      'D',
-      'E',
-      'Suspend! [F]',
-      'Loading F',
-
-      ...(gate('enableSiblingPrerendering')
-        ? ['C', 'D', 'E', 'Suspend! [F]', 'Loading F']
-        : []),
-    ]);
+    await waitForAll(['C', 'D', 'E', 'Suspend! [F]', 'Loading F']);
 
     jest.advanceTimersByTime(500);
 
@@ -2201,15 +2112,7 @@ describe('ReactSuspenseList', () => {
 
     await A.resolve();
 
-    await waitForAll([
-      'A',
-      'Suspend! [B]',
-      'Loading B',
-
-      ...(gate('enableSiblingPrerendering')
-        ? ['A', 'Suspend! [B]', 'Loading B']
-        : []),
-    ]);
+    await waitForAll(['A', 'Suspend! [B]', 'Loading B']);
 
     // Incremental loading is suspended.
     jest.advanceTimersByTime(500);
@@ -2217,15 +2120,7 @@ describe('ReactSuspenseList', () => {
     expect(ReactNoop).toMatchRenderedOutput(<span>A</span>);
 
     await act(() => B.resolve());
-    assertLog([
-      'B',
-      'Suspend! [C]',
-      'Loading C',
-
-      ...(gate('enableSiblingPrerendering')
-        ? ['B', 'Suspend! [C]', 'Loading C']
-        : []),
-    ]);
+    assertLog(['B', 'Suspend! [C]', 'Loading C']);
 
     // Incremental loading is suspended.
     jest.advanceTimersByTime(500);
@@ -2987,7 +2882,7 @@ describe('ReactSuspenseList', () => {
       'C',
       'Suspend! [D]',
 
-      ...(gate('enableSiblingPrerendering') ? ['C', 'Suspend! [D]'] : []),
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [D]'] : []),
     ]);
     expect(ReactNoop).toMatchRenderedOutput(
       <>
@@ -2999,12 +2894,12 @@ describe('ReactSuspenseList', () => {
     );
 
     if (gate('enableSiblingPrerendering')) {
-      expect(onRender).toHaveBeenCalledTimes(5);
+      expect(onRender).toHaveBeenCalledTimes(6);
 
       // actualDuration
-      expect(onRender.mock.calls[4][2]).toBe(5 + 12);
+      expect(onRender.mock.calls[5][2]).toBe(12);
       // treeBaseDuration
-      expect(onRender.mock.calls[4][3]).toBe(1 + 4 + 5 + 3);
+      expect(onRender.mock.calls[5][3]).toBe(1 + 4 + 5 + 3);
     } else {
       expect(onRender).toHaveBeenCalledTimes(4);
 
@@ -3095,7 +2990,7 @@ describe('ReactSuspenseList', () => {
       'A',
       'Suspend! [B]',
 
-      ...(gate('enableSiblingPrerendering') ? ['A', 'Suspend! [B]'] : []),
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [B]'] : []),
     ]);
     expect(ReactNoop).toMatchRenderedOutput(
       <>

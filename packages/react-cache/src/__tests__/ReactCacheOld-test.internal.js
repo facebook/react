@@ -206,7 +206,12 @@ describe('ReactCache', () => {
         ...(gate('enableSiblingPrerendering') ? ['Invalid key type'] : []),
       ]);
     } else {
-      await waitForAll(['App', 'Loading...']);
+      await waitForAll([
+        'App',
+        'Loading...',
+
+        ...(gate('enableSiblingPrerendering') ? ['App'] : []),
+      ]);
     }
   });
 
@@ -226,10 +231,14 @@ describe('ReactCache', () => {
     await waitForPaint(['Suspend! [1]', 'Loading...']);
     jest.advanceTimersByTime(100);
     assertLog(['Promise resolved [1]']);
-    await waitForAll([1, 'Suspend! [2]', 1, 'Suspend! [2]', 'Suspend! [3]']);
+    await waitForAll([1, 'Suspend! [2]']);
 
     jest.advanceTimersByTime(100);
-    assertLog(['Promise resolved [2]', 'Promise resolved [3]']);
+    assertLog(['Promise resolved [2]']);
+    await waitForAll([1, 2, 'Suspend! [3]']);
+
+    jest.advanceTimersByTime(100);
+    assertLog(['Promise resolved [3]']);
     await waitForAll([1, 2, 3]);
 
     await act(() => jest.advanceTimersByTime(100));

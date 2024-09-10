@@ -233,6 +233,29 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
   const pingedLanes = root.pingedLanes;
   const warmLanes = root.warmLanes;
 
+  // finishedLanes represents a completed tree that is ready to commit.
+  //
+  // It's not worth doing discarding the completed tree in favor of performing
+  // speculative work. So always check this before deciding to warm up
+  // the siblings.
+  //
+  // Note that this is not set in a "suspend indefinitely" scenario, like when
+  // suspending outside of a Suspense boundary, or in the shell during a
+  // transition — only in cases where we are very likely to commit the tree in
+  // a brief amount of time (i.e. below the "Just Noticeable Difference"
+  // threshold).
+  //
+  // TODO: finishedLanes is also set when a Suspensey resource, like CSS or
+  // images, suspends during the commit phase. (We could detect that here by
+  // checking for root.cancelPendingCommit.) These are also expected to resolve
+  // quickly, because of preloading, but theoretically they could block forever
+  // like in a normal "suspend indefinitely" scenario. In the future, we should
+  // consider only blocking for up to some time limit before discarding the
+  // commit in favor of prerendering. If we do discard a pending commit, then
+  // the commit phase callback should act as a ping to try the original
+  // render again.
+  const rootHasPendingCommit = root.finishedLanes !== NoLanes;
+
   // Do not work on any idle work until all the non-idle work has finished,
   // even if the work is suspended.
   const nonIdlePendingLanes = pendingLanes & NonIdleLanes;
@@ -248,9 +271,11 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
         nextLanes = getHighestPriorityLanes(nonIdlePingedLanes);
       } else {
         // Nothing has been pinged. Check for lanes that need to be prewarmed.
-        const lanesToPrewarm = nonIdlePendingLanes & ~warmLanes;
-        if (lanesToPrewarm !== NoLanes) {
-          nextLanes = getHighestPriorityLanes(lanesToPrewarm);
+        if (!rootHasPendingCommit) {
+          const lanesToPrewarm = nonIdlePendingLanes & ~warmLanes;
+          if (lanesToPrewarm !== NoLanes) {
+            nextLanes = getHighestPriorityLanes(lanesToPrewarm);
+          }
         }
       }
     }
@@ -270,9 +295,11 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
         nextLanes = getHighestPriorityLanes(pingedLanes);
       } else {
         // Nothing has been pinged. Check for lanes that need to be prewarmed.
-        const lanesToPrewarm = pendingLanes & ~warmLanes;
-        if (lanesToPrewarm !== NoLanes) {
-          nextLanes = getHighestPriorityLanes(lanesToPrewarm);
+        if (!rootHasPendingCommit) {
+          const lanesToPrewarm = pendingLanes & ~warmLanes;
+          if (lanesToPrewarm !== NoLanes) {
+            nextLanes = getHighestPriorityLanes(lanesToPrewarm);
+          }
         }
       }
     }

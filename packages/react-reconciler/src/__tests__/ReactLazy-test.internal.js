@@ -198,11 +198,7 @@ describe('ReactLazy', () => {
 
     await resolveFakeImport(Foo);
 
-    await waitForAll([
-      'Foo',
-
-      ...(gate('enableSiblingPrerendering') ? ['Foo'] : []),
-    ]);
+    await waitForAll(['Foo']);
     expect(root).not.toMatchRenderedOutput('FooBar');
 
     await act(() => resolveFakeImport(Bar));

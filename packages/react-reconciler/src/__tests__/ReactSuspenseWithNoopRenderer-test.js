@@ -353,7 +353,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       'A',
 
       ...(gate('enableSiblingPrerendering')
-        ? ['Suspend! [B]', 'A', 'Suspend! [B]']
+        ? ['Suspend! [B]', 'Suspend! [B]']
         : []),
     ]);
     expect(ReactNoop).toMatchRenderedOutput(
@@ -788,10 +788,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       'Outer content',
       'Suspend! [Inner content]',
       'Loading inner...',
-
-      ...(gate('enableSiblingPrerendering')
-        ? ['Outer content', 'Suspend! [Inner content]', 'Loading inner...']
-        : []),
     ]);
     // Don't commit the inner placeholder yet.
     expect(ReactNoop).toMatchRenderedOutput(
@@ -1819,10 +1815,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         // B suspends
         'Suspend! [B]',
         'Loading more...',
-
-        ...(gate('enableSiblingPrerendering')
-          ? ['A', 'Suspend! [B]', 'Loading more...']
-          : []),
       ]);
       // Because we've already been waiting for so long we can
       // wait a bit longer. Still nothing...
@@ -3698,10 +3690,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
   });
 
-  // This regression test relies on subtle implementation details that happen to
-  // rely on sibling prerendering being disabled. Not going to bother to rewrite
-  // it for now; maybe once we land the experiment.
-  // @gate !enableSiblingPrerendering
   // @gate enableLegacyCache
   it('regression: ping at high priority causes update to be dropped', async () => {
     const {useState, useTransition} = React;

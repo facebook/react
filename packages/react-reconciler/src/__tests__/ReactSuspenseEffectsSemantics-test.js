@@ -1268,22 +1268,16 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Suspend:InnerAsync_2',
         'Text:InnerFallback render',
 
-        ...(gate('enableSiblingPrerendering')
-          ? [
-              'Text:Outer render',
-              'AsyncText:OuterAsync_1 render',
-              'Text:Inner render',
-              'Suspend:InnerAsync_2',
-              'Text:InnerFallback render',
-            ]
-          : []),
-
         'Text:OuterFallback destroy layout',
         'Text:Outer create layout',
         'AsyncText:OuterAsync_1 create layout',
         'Text:InnerFallback create layout',
         'Text:OuterFallback destroy passive',
         'AsyncText:OuterAsync_1 create passive',
+
+        ...(gate('enableSiblingPrerendering')
+          ? ['Text:Inner render', 'Suspend:InnerAsync_2']
+          : []),
       ]);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
