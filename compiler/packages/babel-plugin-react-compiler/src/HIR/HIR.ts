@@ -1714,6 +1714,10 @@ export function isUseOperator(id: Identifier): boolean {
   );
 }
 
+export function isFunctionComponentType(id: Identifier): boolean {
+  return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInComponentId';
+}
+
 export function getHookKindForType(
   env: Environment,
   type: Type,

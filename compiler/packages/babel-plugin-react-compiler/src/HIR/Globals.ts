@@ -9,6 +9,8 @@ import {Effect, ValueKind, ValueReason} from './HIR';
 import {
   BUILTIN_SHAPES,
   BuiltInArrayId,
+  BuiltInComponentId,
+  BuiltInJsxId,
   BuiltInMixedReadonlyId,
   BuiltInUseActionStateId,
   BuiltInUseContextHookId,
@@ -553,6 +555,12 @@ export function installTypeConfig(
         }
         case 'Any': {
           return {kind: 'Poly'};
+        }
+        case 'JSX': {
+          return {kind: 'Object', shapeId: BuiltInJsxId};
+        }
+        case 'Component': {
+          return {kind: 'Object', shapeId: BuiltInComponentId};
         }
         default: {
           assertExhaustive(

@@ -176,6 +176,12 @@ export function buildReactiveScopeTerminalsHIR(fn: HIRFunction): void {
    * Step 5:
    * Fix scope and identifier ranges to account for renumbered instructions
    */
+  updateScopeRangesAfterRenumberingInstructions(fn);
+}
+
+export function updateScopeRangesAfterRenumberingInstructions(
+  fn: HIRFunction,
+): void {
   for (const [, block] of fn.body.blocks) {
     const terminal = block.terminal;
     if (terminal.kind === 'scope' || terminal.kind === 'pruned-scope') {

@@ -332,6 +332,21 @@ const EnvironmentConfigSchema = z.object({
   enableInstructionReordering: z.boolean().default(false),
 
   /**
+   * If a given component has a single return statement and returns JSX where the
+   * tag is known (via moduleTypeProvider) to be a function component, then it is
+   * safe to convert the JSX expression into a direct call to the component in question:
+   *
+   * function Parent() {
+   *   return <Child />
+   * }
+   * =>
+   * function Parent() {
+   *   return Child({})
+   * }
+   */
+  enableInlineSingleReturnJSX: z.boolean().default(false),
+
+  /**
    * Enables function outlinining, where anonymous functions that do not close over
    * local variables can be extracted into top-level helper functions.
    */

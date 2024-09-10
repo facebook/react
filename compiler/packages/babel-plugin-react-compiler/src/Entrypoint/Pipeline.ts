@@ -101,6 +101,7 @@ import {propagatePhiTypes} from '../TypeInference/PropagatePhiTypes';
 import {lowerContextAccess} from '../Optimization/LowerContextAccess';
 import {validateNoSetStateInPassiveEffects} from '../Validation/ValidateNoSetStateInPassiveEffects';
 import {validateNoJSXInTryStatement} from '../Validation/ValidateNoJSXInTryStatement';
+import {inlineSingleReturnJSX} from '../Optimization/InlineSingleReturnJSX';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -325,6 +326,11 @@ function* runWithEnvironment(
   });
 
   assertValidBlockNesting(hir);
+
+  if (env.config.enableInlineSingleReturnJSX) {
+    inlineSingleReturnJSX(hir);
+    yield log({kind: 'hir', name: 'InlineSingleReturnJSX', value: hir});
+  }
 
   flattenReactiveLoopsHIR(hir);
   yield log({
