@@ -5548,7 +5548,7 @@ __DEV__ &&
     }
     function startProfilerTimer(fiber) {
       profilerStartTime = now();
-      0 > fiber.actualStartTime && (fiber.actualStartTime = now());
+      0 > fiber.actualStartTime && (fiber.actualStartTime = profilerStartTime);
     }
     function stopProfilerTimerIfRunningAndRecordDelta(fiber, overrideBaseTime) {
       if (0 <= profilerStartTime) {
@@ -18546,7 +18546,7 @@ __DEV__ &&
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-www-modern-66cf2cfc-20240910"
+        reconcilerVersion: "19.0.0-www-modern-a5a7f106-20240910"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

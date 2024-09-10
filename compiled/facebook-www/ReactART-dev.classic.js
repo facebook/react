@@ -5417,7 +5417,7 @@ __DEV__ &&
     }
     function startProfilerTimer(fiber) {
       profilerStartTime = now();
-      0 > fiber.actualStartTime && (fiber.actualStartTime = now());
+      0 > fiber.actualStartTime && (fiber.actualStartTime = profilerStartTime);
     }
     function stopProfilerTimerIfRunningAndRecordDelta(fiber, overrideBaseTime) {
       if (0 <= profilerStartTime) {
@@ -16967,11 +16967,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-www-classic-66cf2cfc-20240910",
+        version: "19.0.0-www-classic-a5a7f106-20240910",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-www-classic-66cf2cfc-20240910"
+        reconcilerVersion: "19.0.0-www-classic-a5a7f106-20240910"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -17005,7 +17005,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.0.0-www-classic-66cf2cfc-20240910";
+    exports.version = "19.0.0-www-classic-a5a7f106-20240910";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
