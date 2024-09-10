@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<987f05dd5f02291a5d0a9d00e8856490>>
+ * @generated SignedSource<<38906953b5d5c7b5c1b15f5d4e7aae29>>
  */
 
 "use strict";
@@ -6125,7 +6125,7 @@ __DEV__ &&
     }
     function startProfilerTimer(fiber) {
       profilerStartTime = now();
-      0 > fiber.actualStartTime && (fiber.actualStartTime = now());
+      0 > fiber.actualStartTime && (fiber.actualStartTime = profilerStartTime);
     }
     function stopProfilerTimerIfRunningAndRecordDelta(fiber, overrideBaseTime) {
       if (0 <= profilerStartTime) {
@@ -17257,11 +17257,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.0.0-native-fb-66cf2cfc-20240910" !== isomorphicReactPackageVersion)
+    if ("19.0.0-native-fb-a5a7f106-20240910" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.0.0-native-fb-66cf2cfc-20240910\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.0.0-native-fb-a5a7f106-20240910\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17287,11 +17287,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-66cf2cfc-20240910",
+        version: "19.0.0-native-fb-a5a7f106-20240910",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromTag,
-        reconcilerVersion: "19.0.0-native-fb-66cf2cfc-20240910"
+        reconcilerVersion: "19.0.0-native-fb-a5a7f106-20240910"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f2439c3bc71acb4262fec800dc93b6a8>>
+ * @generated SignedSource<<8f1af1317adb530cf5e93c6d98166d09>>
  */
 
 "use strict";
@@ -5015,7 +5015,7 @@ __DEV__ &&
     }
     function startProfilerTimer(fiber) {
       profilerStartTime = now();
-      0 > fiber.actualStartTime && (fiber.actualStartTime = now());
+      0 > fiber.actualStartTime && (fiber.actualStartTime = profilerStartTime);
     }
     function stopProfilerTimerIfRunningAndRecordDelta(fiber, overrideBaseTime) {
       if (0 <= profilerStartTime) {
@@ -15057,11 +15057,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-66cf2cfc-20240910",
+        version: "19.0.0-native-fb-a5a7f106-20240910",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-native-fb-66cf2cfc-20240910"
+        reconcilerVersion: "19.0.0-native-fb-a5a7f106-20240910"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15206,5 +15206,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.0.0-native-fb-66cf2cfc-20240910";
+    exports.version = "19.0.0-native-fb-a5a7f106-20240910";
   })();

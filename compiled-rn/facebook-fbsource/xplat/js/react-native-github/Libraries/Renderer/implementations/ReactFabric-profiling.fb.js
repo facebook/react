@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1a7aa7a59bbebec940703518e618897a>>
+ * @generated SignedSource<<8ad56df9c7b93b1db67af3c5c2b936cd>>
  */
 
 "use strict";
@@ -4964,7 +4964,7 @@ var now = Scheduler.unstable_now,
   nestedUpdateScheduled = !1;
 function startProfilerTimer(fiber) {
   profilerStartTime = now();
-  0 > fiber.actualStartTime && (fiber.actualStartTime = now());
+  0 > fiber.actualStartTime && (fiber.actualStartTime = profilerStartTime);
 }
 function stopProfilerTimerIfRunningAndRecordDelta(fiber, overrideBaseTime) {
   if (0 <= profilerStartTime) {
@@ -11656,11 +11656,11 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1247 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-66cf2cfc-20240910",
+    version: "19.0.0-native-fb-a5a7f106-20240910",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromNode,
-    reconcilerVersion: "19.0.0-native-fb-66cf2cfc-20240910"
+    reconcilerVersion: "19.0.0-native-fb-a5a7f106-20240910"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1247.rendererConfig = extraDevToolsConfig);

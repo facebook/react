@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a1eb9c1fbcfc31ccea21e968a916b7d1>>
+ * @generated SignedSource<<896bf8b1f76305c76285784dae9ebb6d>>
  */
 
 "use strict";
@@ -5901,7 +5901,7 @@ __DEV__ &&
     }
     function startProfilerTimer(fiber) {
       profilerStartTime = now();
-      0 > fiber.actualStartTime && (fiber.actualStartTime = now());
+      0 > fiber.actualStartTime && (fiber.actualStartTime = profilerStartTime);
     }
     function stopProfilerTimerIfRunningAndRecordDelta(fiber, overrideBaseTime) {
       if (0 <= profilerStartTime) {
@@ -17033,11 +17033,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-66cf2cfc-20240910",
+        version: "19.0.0-native-fb-a5a7f106-20240910",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-native-fb-66cf2cfc-20240910"
+        reconcilerVersion: "19.0.0-native-fb-a5a7f106-20240910"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

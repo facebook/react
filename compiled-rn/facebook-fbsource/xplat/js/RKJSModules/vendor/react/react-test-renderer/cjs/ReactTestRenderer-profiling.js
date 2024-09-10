@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0de508771b94d6332922c2450b77ad5f>>
+ * @generated SignedSource<<34bf2e90c5560d580e7ce54b20ce9401>>
  */
 
 "use strict";
@@ -3643,7 +3643,7 @@ var now = Scheduler$1.unstable_now,
   nestedUpdateScheduled = !1;
 function startProfilerTimer(fiber) {
   profilerStartTime = now();
-  0 > fiber.actualStartTime && (fiber.actualStartTime = now());
+  0 > fiber.actualStartTime && (fiber.actualStartTime = profilerStartTime);
 }
 function stopProfilerTimerIfRunningAndRecordDelta(fiber, overrideBaseTime) {
   if (0 <= profilerStartTime) {
@@ -10033,14 +10033,14 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1139 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-66cf2cfc-20240910",
+  version: "19.0.0-native-fb-a5a7f106-20240910",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: function (mockNode) {
     mockNode = nodeToInstanceMap.get(mockNode);
     return void 0 !== mockNode ? mockNode.internalInstanceHandle : null;
   },
-  reconcilerVersion: "19.0.0-native-fb-66cf2cfc-20240910",
+  reconcilerVersion: "19.0.0-native-fb-a5a7f106-20240910",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$138 = 0;
@@ -10191,4 +10191,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.0.0-native-fb-66cf2cfc-20240910";
+exports.version = "19.0.0-native-fb-a5a7f106-20240910";
