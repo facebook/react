@@ -7,7 +7,11 @@
  * @flow
  */
 
-import type {ConsolePatchSettings} from './types';
+import type {
+  ConsolePatchSettings,
+  OnErrorOrWarning,
+  GetComponentStack,
+} from './types';
 
 import {
   formatConsoleArguments,
@@ -74,11 +78,6 @@ function restorePotentiallyModifiedArgs(args: Array<any>): Array<any> {
     return args.slice(1);
   }
 }
-
-type OnErrorOrWarning = (type: 'error' | 'warn', args: Array<any>) => void;
-type GetComponentStack = (
-  topFrame: Error,
-) => null | {enableOwnerStacks: boolean, componentStack: string};
 
 const injectedRenderers: Array<{
   onErrorOrWarning: ?OnErrorOrWarning,

@@ -162,6 +162,7 @@ export function attach(
     getBestMatchForTrackedPath() {
       return null;
     },
+    getComponentStack,
     getDisplayNameForElementID() {
       return null;
     },
@@ -207,6 +208,7 @@ export function attach(
     patchConsoleForStrictMode() {},
     getElementAttributeByPath() {},
     getElementSourceFunctionById() {},
+    onErrorOrWarning,
     overrideError() {},
     overrideSuspense() {},
     overrideValueAtPath() {},
