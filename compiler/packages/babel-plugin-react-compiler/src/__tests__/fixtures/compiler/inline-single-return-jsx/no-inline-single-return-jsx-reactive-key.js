@@ -1,4 +1,4 @@
-// @enableInlineSingleReturnJSX
+// @enableInlineSingleReturnJSX @compilationMode(infer)
 import {useEffect, useState} from 'react';
 
 function Component({a, b}) {

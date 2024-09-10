@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enableInlineSingleReturnJSX
+// @enableInlineSingleReturnJSX @compilationMode(infer)
 import {useEffect, useState} from 'react';
 
 function Component({a, b}) {
@@ -58,7 +58,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enableInlineSingleReturnJSX
+import { c as _c } from "react/compiler-runtime"; // @enableInlineSingleReturnJSX @compilationMode(infer)
 import { useEffect, useState } from "react";
 
 function Component(t0) {

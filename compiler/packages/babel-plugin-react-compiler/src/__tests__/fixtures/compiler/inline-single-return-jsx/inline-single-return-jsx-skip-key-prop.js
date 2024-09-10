@@ -1,21 +1,14 @@
 // @enableInlineSingleReturnJSX @compilationMode(infer)
 
-function Child({value, children}) {
+import {Stringify} from 'shared-runtime';
+
+function Child(props) {
   'use no forget';
-  return (
-    <div>
-      <span>{value}</span>
-      {children}
-    </div>
-  );
+  return <Stringify props={props} />;
 }
 
 function Component({a, b}) {
-  return (
-    <Child value={a}>
-      <div>{b}</div>
-    </Child>
-  );
+  return <Child value={a} key={1} />;
 }
 
 export const FIXTURE_ENTRYPOINT = {

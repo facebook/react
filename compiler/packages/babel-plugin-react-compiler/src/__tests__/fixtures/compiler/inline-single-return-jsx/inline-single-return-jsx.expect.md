@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enableInlineSingleReturnJSX
+// @enableInlineSingleReturnJSX @compilationMode(infer)
 
 function Child({value, children}) {
   'use no forget';
@@ -40,7 +40,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enableInlineSingleReturnJSX
+import { c as _c } from "react/compiler-runtime"; // @enableInlineSingleReturnJSX @compilationMode(infer)
 
 function Child({ value, children }) {
   "use no forget";
