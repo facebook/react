@@ -140,7 +140,6 @@
     "flags": "node ./scripts/flags/flags.js"
   },
   "resolutions": {
-    "react-is": "npm:react-is@*",
     "jsdom": "22.1.0"
   },
   "packageManager": "yarn@4.5.0"
