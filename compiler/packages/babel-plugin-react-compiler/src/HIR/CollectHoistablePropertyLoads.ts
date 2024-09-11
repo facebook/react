@@ -166,7 +166,10 @@ class Tree {
   roots: Map<Identifier, RootNode> = new Map();
 
   #getOrCreateRoot(identifier: Identifier): PropertyLoadNode {
-    // roots can always be accessed unconditionally in JS
+    /**
+     * Reads from a statically scoped variable are always safe in JS,
+     * with the exception of TDZ (not addressed by this pass).
+     */
     let rootNode = this.roots.get(identifier);
 
     if (rootNode === undefined) {
@@ -380,27 +383,12 @@ function deriveNonNull(
         .map(n => assertNonNull(nonNullObjectsByBlock.get(n))),
     );
 
-    const prevSize = nonNullObjectsByBlock.get(nodeId)?.size;
-    nonNullObjectsByBlock.set(
-      nodeId,
-      Set_union(
-        assertNonNull(nonNullObjectsByBlock.get(nodeId)),
-        neighborAccesses,
-      ),
-    );
-    traversalState.set(nodeId, 'done');
+    const prevObjects = assertNonNull(nonNullObjectsByBlock.get(nodeId));
+    const newObjects = Set_union(prevObjects, neighborAccesses);
 
-    changed ||= prevSize !== nonNullObjectsByBlock.get(nodeId)!.size;
-    CompilerError.invariant(
-      prevSize == null || prevSize <= nonNullObjectsByBlock.get(nodeId)!.size,
-      {
-        reason: '[CollectHoistablePropertyLoads] Nodes shrank!',
-        description: `${nodeId} ${direction} ${prevSize} ${
-          nonNullObjectsByBlock.get(nodeId)!.size
-        }`,
-        loc: GeneratedSource,
-      },
-    );
+    nonNullObjectsByBlock.set(nodeId, newObjects);
+    traversalState.set(nodeId, 'done');
+    changed ||= prevObjects.size !== newObjects.size;
     return changed;
   }
   const fromEntry = new Map<BlockId, ReadonlySet<PropertyLoadNode>>();
