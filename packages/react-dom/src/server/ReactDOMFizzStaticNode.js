@@ -25,6 +25,7 @@ import ReactVersion from 'shared/ReactVersion';
 
 import {
   createPrerenderRequest,
+  resumeAndPrerenderRequest,
   startWork,
   startFlowing,
   abort,
@@ -34,6 +35,7 @@ import {
 import {
   createResumableState,
   createRenderState,
+  resumeRenderState,
   createRootFormatContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
@@ -144,9 +146,6 @@ function prerenderToNodeStream(
 type ResumeOptions = {
   nonce?: string,
   signal?: AbortSignal,
-  onShellReady?: () => void,
-  onShellError?: (error: mixed) => void,
-  onAllReady?: () => void,
   onError?: (error: mixed, errorInfo: ErrorInfo) => ?string,
   onPostpone?: (reason: string, postponeInfo: PostponeInfo) => void,
 };
@@ -156,7 +155,51 @@ function resumeAndPrerenderToNodeStream(
   postponedState: PostponedState,
   options?: ResumeOptions,
 ): Promise<StaticResult> {
-  return (null: any);
+  return new Promise((resolve, reject) => {
+    const onFatalError = reject;
+
+    function onAllReady() {
+      const readable: Readable = new Readable({
+        read() {
+          startFlowing(request, writable);
+        },
+      });
+      const writable = createFakeWritable(readable);
+
+      const result = {
+        postponed: getPostponedState(request),
+        prelude: readable,
+      };
+      resolve(result);
+    }
+    const request = resumeAndPrerenderRequest(
+      children,
+      postponedState,
+      resumeRenderState(
+        postponedState.resumableState,
+        options ? options.nonce : undefined,
+      ),
+      options ? options.onError : undefined,
+      onAllReady,
+      undefined,
+      undefined,
+      onFatalError,
+      options ? options.onPostpone : undefined,
+    );
+    if (options && options.signal) {
+      const signal = options.signal;
+      if (signal.aborted) {
+        abort(request, (signal: any).reason);
+      } else {
+        const listener = () => {
+          abort(request, (signal: any).reason);
+          signal.removeEventListener('abort', listener);
+        };
+        signal.addEventListener('abort', listener);
+      }
+    }
+    startWork(request);
+  });
 }
 
 export {
