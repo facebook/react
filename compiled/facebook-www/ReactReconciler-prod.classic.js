@@ -629,8 +629,9 @@ module.exports = function ($$$config) {
     if (0 === pendingLanes) return 0;
     var nextLanes = 0,
       suspendedLanes = root.suspendedLanes,
-      pingedLanes = root.pingedLanes;
-    root = root.warmLanes;
+      pingedLanes = root.pingedLanes,
+      warmLanes = root.warmLanes;
+    root = 0 !== root.finishedLanes;
     var nonIdlePendingLanes = pendingLanes & 134217727;
     0 !== nonIdlePendingLanes
       ? ((pendingLanes = nonIdlePendingLanes & ~suspendedLanes),
@@ -639,26 +640,28 @@ module.exports = function ($$$config) {
           : ((pingedLanes &= nonIdlePendingLanes),
             0 !== pingedLanes
               ? (nextLanes = getHighestPriorityLanes(pingedLanes))
-              : ((pingedLanes = nonIdlePendingLanes & ~root),
-                0 !== pingedLanes &&
-                  (nextLanes = getHighestPriorityLanes(pingedLanes)))))
+              : root ||
+                ((warmLanes = nonIdlePendingLanes & ~warmLanes),
+                0 !== warmLanes &&
+                  (nextLanes = getHighestPriorityLanes(warmLanes)))))
       : ((nonIdlePendingLanes = pendingLanes & ~suspendedLanes),
         0 !== nonIdlePendingLanes
           ? (nextLanes = getHighestPriorityLanes(nonIdlePendingLanes))
           : 0 !== pingedLanes
             ? (nextLanes = getHighestPriorityLanes(pingedLanes))
-            : ((pingedLanes = pendingLanes & ~root),
-              0 !== pingedLanes &&
-                (nextLanes = getHighestPriorityLanes(pingedLanes))));
+            : root ||
+              ((warmLanes = pendingLanes & ~warmLanes),
+              0 !== warmLanes &&
+                (nextLanes = getHighestPriorityLanes(warmLanes))));
     return 0 === nextLanes
       ? 0
       : 0 !== wipLanes &&
           wipLanes !== nextLanes &&
           0 === (wipLanes & suspendedLanes) &&
           ((suspendedLanes = nextLanes & -nextLanes),
-          (pingedLanes = wipLanes & -wipLanes),
-          suspendedLanes >= pingedLanes ||
-            (32 === suspendedLanes && 0 !== (pingedLanes & 4194176)))
+          (warmLanes = wipLanes & -wipLanes),
+          suspendedLanes >= warmLanes ||
+            (32 === suspendedLanes && 0 !== (warmLanes & 4194176)))
         ? wipLanes
         : nextLanes;
   }
@@ -726,8 +729,15 @@ module.exports = function ($$$config) {
     for (var laneMap = [], i = 0; 31 > i; i++) laneMap.push(initial);
     return laneMap;
   }
-  function markRootFinished(root, remainingLanes, spawnedLane) {
-    var noLongerPendingLanes = root.pendingLanes & ~remainingLanes;
+  function markRootFinished(
+    root,
+    finishedLanes,
+    remainingLanes,
+    spawnedLane,
+    updatedLanes,
+    suspendedRetryLanes
+  ) {
+    var previouslyPendingLanes = root.pendingLanes;
     root.pendingLanes = remainingLanes;
     root.suspendedLanes = 0;
     root.pingedLanes = 0;
@@ -736,16 +746,17 @@ module.exports = function ($$$config) {
     root.entangledLanes &= remainingLanes;
     root.errorRecoveryDisabledLanes &= remainingLanes;
     root.shellSuspendCounter = 0;
-    remainingLanes = root.entanglements;
+    var entanglements = root.entanglements,
+      expirationTimes = root.expirationTimes,
+      hiddenUpdates = root.hiddenUpdates;
     for (
-      var expirationTimes = root.expirationTimes,
-        hiddenUpdates = root.hiddenUpdates;
-      0 < noLongerPendingLanes;
+      remainingLanes = previouslyPendingLanes & ~remainingLanes;
+      0 < remainingLanes;
 
     ) {
-      var index$8 = 31 - clz32(noLongerPendingLanes),
+      var index$8 = 31 - clz32(remainingLanes),
         lane = 1 << index$8;
-      remainingLanes[index$8] = 0;
+      entanglements[index$8] = 0;
       expirationTimes[index$8] = -1;
       var hiddenUpdatesForLane = hiddenUpdates[index$8];
       if (null !== hiddenUpdatesForLane)
@@ -757,9 +768,14 @@ module.exports = function ($$$config) {
           var update = hiddenUpdatesForLane[index$8];
           null !== update && (update.lane &= -536870913);
         }
-      noLongerPendingLanes &= ~lane;
+      remainingLanes &= ~lane;
     }
     0 !== spawnedLane && markSpawnedDeferredLane(root, spawnedLane, 0);
+    0 === suspendedRetryLanes ||
+      0 !== updatedLanes ||
+      (disableLegacyMode && 0 === root.tag) ||
+      (root.suspendedLanes |=
+        suspendedRetryLanes & ~(previouslyPendingLanes & ~finishedLanes));
   }
   function markSpawnedDeferredLane(root, spawnedLane, entangledLanes) {
     root.pendingLanes |= spawnedLane;
@@ -6689,12 +6705,12 @@ module.exports = function ($$$config) {
     } else workInProgress.flags &= -16777217;
   }
   function scheduleRetryEffect(workInProgress, retryQueue) {
-    null !== retryQueue
-      ? (workInProgress.flags |= 4)
-      : workInProgress.flags & 16384 &&
-        ((retryQueue =
-          22 !== workInProgress.tag ? claimNextRetryLane() : 536870912),
-        (workInProgress.lanes |= retryQueue));
+    null !== retryQueue && (workInProgress.flags |= 4);
+    workInProgress.flags & 16384 &&
+      ((retryQueue =
+        22 !== workInProgress.tag ? claimNextRetryLane() : 536870912),
+      (workInProgress.lanes |= retryQueue),
+      (workInProgressSuspendedRetryLanes |= retryQueue));
   }
   function cutOffTailIfNeeded(renderState, hasRenderedATailFallback) {
     if (!isHydrating)
@@ -10004,8 +10020,6 @@ module.exports = function ($$$config) {
             );
             break;
           }
-          root.finishedWork = didTimeout;
-          root.finishedLanes = lanes;
           a: {
             renderWasConcurrent = root;
             switch (exitStatus) {
@@ -10032,6 +10046,8 @@ module.exports = function ($$$config) {
               default:
                 throw Error(formatProdErrorMessage(329));
             }
+            renderWasConcurrent.finishedWork = didTimeout;
+            renderWasConcurrent.finishedLanes = lanes;
             if (
               (lanes & 62914560) === lanes &&
               (alwaysThrottleRetries || 3 === exitStatus) &&
@@ -10055,6 +10071,8 @@ module.exports = function ($$$config) {
                   workInProgressRootDidIncludeRecursiveRenderUpdate,
                   lanes,
                   workInProgressDeferredLane,
+                  workInProgressRootInterleavedUpdatedLanes,
+                  workInProgressSuspendedRetryLanes,
                   workInProgressRootDidSkipSuspendedSiblings
                 ),
                 exitStatus
@@ -10069,6 +10087,8 @@ module.exports = function ($$$config) {
               workInProgressRootDidIncludeRecursiveRenderUpdate,
               lanes,
               workInProgressDeferredLane,
+              workInProgressRootInterleavedUpdatedLanes,
+              workInProgressSuspendedRetryLanes,
               workInProgressRootDidSkipSuspendedSiblings
             );
           }
@@ -10125,6 +10145,8 @@ module.exports = function ($$$config) {
     didIncludeRenderPhaseUpdate,
     lanes,
     spawnedLane,
+    updatedLanes,
+    suspendedRetryLanes,
     didSkipSuspendedSiblings
   ) {
     var subtreeFlags = finishedWork.subtreeFlags;
@@ -10141,7 +10163,10 @@ module.exports = function ($$$config) {
             root,
             recoverableErrors,
             transitions,
-            didIncludeRenderPhaseUpdate
+            didIncludeRenderPhaseUpdate,
+            spawnedLane,
+            updatedLanes,
+            suspendedRetryLanes
           )
         );
         markRootSuspended(root, lanes, spawnedLane, didSkipSuspendedSiblings);
@@ -10152,31 +10177,33 @@ module.exports = function ($$$config) {
       recoverableErrors,
       transitions,
       didIncludeRenderPhaseUpdate,
-      spawnedLane
+      spawnedLane,
+      updatedLanes,
+      suspendedRetryLanes
     );
   }
   function isRenderConsistentWithExternalStores(finishedWork) {
     for (var node = finishedWork; ; ) {
-      if (node.flags & 16384) {
-        var updateQueue = node.updateQueue;
-        if (
-          null !== updateQueue &&
-          ((updateQueue = updateQueue.stores), null !== updateQueue)
-        )
-          for (var i = 0; i < updateQueue.length; i++) {
-            var check = updateQueue[i],
-              getSnapshot = check.getSnapshot;
-            check = check.value;
-            try {
-              if (!objectIs(getSnapshot(), check)) return !1;
-            } catch (error) {
-              return !1;
-            }
+      var tag = node.tag;
+      if (
+        (0 === tag || 11 === tag || 15 === tag) &&
+        node.flags & 16384 &&
+        ((tag = node.updateQueue),
+        null !== tag && ((tag = tag.stores), null !== tag))
+      )
+        for (var i = 0; i < tag.length; i++) {
+          var check = tag[i],
+            getSnapshot = check.getSnapshot;
+          check = check.value;
+          try {
+            if (!objectIs(getSnapshot(), check)) return !1;
+          } catch (error) {
+            return !1;
           }
-      }
-      updateQueue = node.child;
-      if (node.subtreeFlags & 16384 && null !== updateQueue)
-        (updateQueue.return = node), (node = updateQueue);
+        }
+      tag = node.child;
+      if (node.subtreeFlags & 16384 && null !== tag)
+        (tag.return = node), (node = tag);
       else {
         if (node === finishedWork) break;
         for (; null === node.sibling; ) {
@@ -10263,7 +10290,9 @@ module.exports = function ($$$config) {
       workInProgressRootRecoverableErrors,
       workInProgressTransitions,
       workInProgressRootDidIncludeRecursiveRenderUpdate,
-      workInProgressDeferredLane
+      workInProgressDeferredLane,
+      workInProgressRootInterleavedUpdatedLanes,
+      workInProgressSuspendedRetryLanes
     );
     ensureRootIsScheduled(root);
     return null;
@@ -10310,7 +10339,8 @@ module.exports = function ($$$config) {
       0 ===
       (root.pendingLanes & ~(root.suspendedLanes & ~root.pingedLanes) & lanes);
     workInProgressRootDidAttachPingListener = !1;
-    workInProgressDeferredLane =
+    workInProgressSuspendedRetryLanes =
+      workInProgressDeferredLane =
       workInProgressRootPingedLanes =
       workInProgressRootInterleavedUpdatedLanes =
       workInProgressRootSkippedLanes =
@@ -10433,9 +10463,10 @@ module.exports = function ($$$config) {
                 null !== suspenseHandlerStackCursor.current ||
                 (lanes = !0);
             default:
-              (workInProgressSuspendedReason = 0),
-                (workInProgressThrownValue = null),
-                throwAndUnwindWorkLoop(root, unitOfWork, thrownValue);
+              var reason = workInProgressSuspendedReason;
+              workInProgressSuspendedReason = 0;
+              workInProgressThrownValue = null;
+              throwAndUnwindWorkLoop(root, unitOfWork, thrownValue, reason);
           }
         }
         workLoopSync();
@@ -10463,10 +10494,16 @@ module.exports = function ($$$config) {
     executionContext |= 2;
     var prevDispatcher = pushDispatcher(),
       prevAsyncDispatcher = pushAsyncDispatcher();
-    if (workInProgressRoot !== root || workInProgressRootRenderLanes !== lanes)
-      (workInProgressTransitions = getTransitionsForLanes(root, lanes)),
+    workInProgressRoot !== root || workInProgressRootRenderLanes !== lanes
+      ? ((workInProgressTransitions = getTransitionsForLanes(root, lanes)),
         resetRenderTimer(),
-        prepareFreshStack(root, lanes);
+        prepareFreshStack(root, lanes))
+      : workInProgressRootIsPrerendering &&
+        (workInProgressRootIsPrerendering =
+          0 ===
+          (root.pendingLanes &
+            ~(root.suspendedLanes & ~root.pingedLanes) &
+            lanes));
     a: do
       try {
         if (0 !== workInProgressSuspendedReason && null !== workInProgress) {
@@ -10476,7 +10513,7 @@ module.exports = function ($$$config) {
             case 1:
               workInProgressSuspendedReason = 0;
               workInProgressThrownValue = null;
-              throwAndUnwindWorkLoop(root, lanes, thrownValue);
+              throwAndUnwindWorkLoop(root, lanes, thrownValue, 1);
               break;
             case 2:
               if (isThenableResolved(thrownValue)) {
@@ -10506,7 +10543,7 @@ module.exports = function ($$$config) {
                   replaySuspendedUnitOfWork(lanes))
                 : ((workInProgressSuspendedReason = 0),
                   (workInProgressThrownValue = null),
-                  throwAndUnwindWorkLoop(root, lanes, thrownValue));
+                  throwAndUnwindWorkLoop(root, lanes, thrownValue, 7));
               break;
             case 5:
               var resource = null;
@@ -10539,12 +10576,12 @@ module.exports = function ($$$config) {
               }
               workInProgressSuspendedReason = 0;
               workInProgressThrownValue = null;
-              throwAndUnwindWorkLoop(root, lanes, thrownValue);
+              throwAndUnwindWorkLoop(root, lanes, thrownValue, 5);
               break;
             case 6:
               workInProgressSuspendedReason = 0;
               workInProgressThrownValue = null;
-              throwAndUnwindWorkLoop(root, lanes, thrownValue);
+              throwAndUnwindWorkLoop(root, lanes, thrownValue, 6);
               break;
             case 8:
               resetWorkInProgressStack();
@@ -10643,7 +10680,12 @@ module.exports = function ($$$config) {
     unitOfWork.memoizedProps = unitOfWork.pendingProps;
     null === next ? completeUnitOfWork(unitOfWork) : (workInProgress = next);
   }
-  function throwAndUnwindWorkLoop(root, unitOfWork, thrownValue) {
+  function throwAndUnwindWorkLoop(
+    root,
+    unitOfWork,
+    thrownValue,
+    suspendedReason
+  ) {
     resetContextDependencies();
     resetHooksOnUnwind(unitOfWork);
     thenableState$1 = null;
@@ -10677,16 +10719,29 @@ module.exports = function ($$$config) {
       workInProgress = null;
       return;
     }
-    unitOfWork.flags & 32768
-      ? (enableSiblingPrerendering
-          ? isHydrating || 1 === workInProgressSuspendedReason
-            ? (root = !0)
-            : workInProgressRootIsPrerendering
-              ? (root = !1)
-              : (workInProgressRootDidSkipSuspendedSiblings = root = !0)
-          : (root = !0),
-        unwindUnitOfWork(unitOfWork, root))
-      : completeUnitOfWork(unitOfWork);
+    if (unitOfWork.flags & 32768) {
+      if (enableSiblingPrerendering)
+        if (isHydrating || 1 === suspendedReason) root = !0;
+        else if (
+          workInProgressRootIsPrerendering ||
+          0 !== (workInProgressRootRenderLanes & 536870912)
+        )
+          root = !1;
+        else {
+          if (
+            ((workInProgressRootDidSkipSuspendedSiblings = root = !0),
+            2 === suspendedReason ||
+              3 === suspendedReason ||
+              6 === suspendedReason)
+          )
+            (suspendedReason = suspenseHandlerStackCursor.current),
+              null !== suspendedReason &&
+                13 === suspendedReason.tag &&
+                (suspendedReason.flags |= 16384);
+        }
+      else root = !0;
+      unwindUnitOfWork(unitOfWork, root);
+    } else completeUnitOfWork(unitOfWork);
   }
   function completeUnitOfWork(unitOfWork) {
     var completedWork = unitOfWork;
@@ -10747,7 +10802,9 @@ module.exports = function ($$$config) {
     recoverableErrors,
     transitions,
     didIncludeRenderPhaseUpdate,
-    spawnedLane
+    spawnedLane,
+    updatedLanes,
+    suspendedRetryLanes
   ) {
     var prevTransition = ReactSharedInternals.T,
       previousUpdateLanePriority = getCurrentUpdatePriority();
@@ -10760,7 +10817,9 @@ module.exports = function ($$$config) {
           transitions,
           didIncludeRenderPhaseUpdate,
           previousUpdateLanePriority,
-          spawnedLane
+          spawnedLane,
+          updatedLanes,
+          suspendedRetryLanes
         );
     } finally {
       (ReactSharedInternals.T = prevTransition),
@@ -10774,7 +10833,9 @@ module.exports = function ($$$config) {
     transitions,
     didIncludeRenderPhaseUpdate,
     renderPriorityLevel,
-    spawnedLane
+    spawnedLane,
+    updatedLanes,
+    suspendedRetryLanes
   ) {
     do flushPassiveEffects();
     while (null !== rootWithPendingPassiveEffects);
@@ -10790,7 +10851,14 @@ module.exports = function ($$$config) {
     root.cancelPendingCommit = null;
     var remainingLanes = finishedWork.lanes | finishedWork.childLanes;
     remainingLanes |= concurrentlyUpdatedLanes;
-    markRootFinished(root, remainingLanes, spawnedLane);
+    markRootFinished(
+      root,
+      lanes,
+      remainingLanes,
+      spawnedLane,
+      updatedLanes,
+      suspendedRetryLanes
+    );
     didIncludeCommitPhaseUpdate = !1;
     root === workInProgressRoot &&
       ((workInProgress = workInProgressRoot = null),
@@ -10806,27 +10874,24 @@ module.exports = function ($$$config) {
         return null;
       }));
     transitions = 0 !== (finishedWork.flags & 15990);
-    if (0 !== (finishedWork.subtreeFlags & 15990) || transitions) {
-      transitions = ReactSharedInternals.T;
-      ReactSharedInternals.T = null;
-      spawnedLane = getCurrentUpdatePriority();
-      setCurrentUpdatePriority(2);
-      var prevExecutionContext = executionContext;
-      executionContext |= 4;
-      var shouldFireAfterActiveInstanceBlur$197 = commitBeforeMutationEffects(
-        root,
-        finishedWork
-      );
-      commitMutationEffectsOnFiber(finishedWork, root);
-      shouldFireAfterActiveInstanceBlur$197 && afterActiveInstanceBlur();
-      resetAfterCommit(root.containerInfo);
-      root.current = finishedWork;
-      commitLayoutEffectOnFiber(root, finishedWork.alternate, finishedWork);
-      requestPaint();
-      executionContext = prevExecutionContext;
-      setCurrentUpdatePriority(spawnedLane);
-      ReactSharedInternals.T = transitions;
-    } else root.current = finishedWork;
+    0 !== (finishedWork.subtreeFlags & 15990) || transitions
+      ? ((transitions = ReactSharedInternals.T),
+        (ReactSharedInternals.T = null),
+        (spawnedLane = getCurrentUpdatePriority()),
+        setCurrentUpdatePriority(2),
+        (updatedLanes = executionContext),
+        (executionContext |= 4),
+        (suspendedRetryLanes = commitBeforeMutationEffects(root, finishedWork)),
+        commitMutationEffectsOnFiber(finishedWork, root),
+        suspendedRetryLanes && afterActiveInstanceBlur(),
+        resetAfterCommit(root.containerInfo),
+        (root.current = finishedWork),
+        commitLayoutEffectOnFiber(root, finishedWork.alternate, finishedWork),
+        requestPaint(),
+        (executionContext = updatedLanes),
+        setCurrentUpdatePriority(spawnedLane),
+        (ReactSharedInternals.T = transitions))
+      : (root.current = finishedWork);
     rootDoesHavePassiveEffects
       ? ((rootDoesHavePassiveEffects = !1),
         (rootWithPendingPassiveEffects = root),
@@ -11027,7 +11092,9 @@ module.exports = function ($$$config) {
           workInProgressRootRenderLanes &&
         300 > now() - globalMostRecentFallbackTime)
         ? 0 === (executionContext & 2) && prepareFreshStack(root, 0)
-        : (workInProgressRootPingedLanes |= pingedLanes));
+        : (workInProgressRootPingedLanes |= pingedLanes),
+      workInProgressSuspendedRetryLanes === workInProgressRootRenderLanes &&
+        (workInProgressSuspendedRetryLanes = 0));
     ensureRootIsScheduled(root);
   }
   function retryTimedOutBoundary(boundaryFiber, retryLane) {
@@ -12403,6 +12470,7 @@ module.exports = function ($$$config) {
     workInProgressRootInterleavedUpdatedLanes = 0,
     workInProgressRootPingedLanes = 0,
     workInProgressDeferredLane = 0,
+    workInProgressSuspendedRetryLanes = 0,
     workInProgressRootConcurrentErrors = null,
     workInProgressRootRecoverableErrors = null,
     workInProgressRootDidIncludeRecursiveRenderUpdate = !1,
@@ -12782,7 +12850,7 @@ module.exports = function ($$$config) {
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
       findFiberByHostInstance: getInstanceFromNode,
-      reconcilerVersion: "19.0.0-www-classic-1bb05636-20240911"
+      reconcilerVersion: "19.0.0-www-classic-d6cb4e77-20240911"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
