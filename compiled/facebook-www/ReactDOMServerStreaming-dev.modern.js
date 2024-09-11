@@ -4122,7 +4122,6 @@ __DEV__ &&
     }
     function noop() {}
     function RequestInstance(
-      children,
       resumableState,
       renderState,
       rootFormatContext,
@@ -4135,8 +4134,7 @@ __DEV__ &&
       onPostpone,
       formState
     ) {
-      var pingedTasks = [],
-        abortSet = new Set();
+      var abortSet = new Set();
       this.destination = null;
       this.flushScheduled = !1;
       this.resumableState = resumableState;
@@ -4149,7 +4147,7 @@ __DEV__ &&
       this.pendingRootTasks = this.allPendingTasks = this.nextSegmentId = 0;
       this.completedRootSegment = null;
       this.abortableTasks = abortSet;
-      this.pingedTasks = pingedTasks;
+      this.pingedTasks = [];
       this.clientRenderedBoundaries = [];
       this.completedBoundaries = [];
       this.partialBoundaries = [];
@@ -4162,33 +4160,6 @@ __DEV__ &&
       this.onFatalError = void 0 === onFatalError ? noop : onFatalError;
       this.formState = void 0 === formState ? null : formState;
       this.didWarnForKey = null;
-      resumableState = createPendingSegment(
-        this,
-        0,
-        null,
-        rootFormatContext,
-        !1,
-        !1
-      );
-      resumableState.parentFlushed = !0;
-      children = createRenderTask(
-        this,
-        null,
-        children,
-        -1,
-        null,
-        resumableState,
-        null,
-        abortSet,
-        null,
-        rootFormatContext,
-        null,
-        emptyTreeContext,
-        null,
-        !1
-      );
-      pushComponentStack(children);
-      pingedTasks.push(children);
     }
     function pingTask(request, task) {
       request.pingedTasks.push(task);
@@ -8578,8 +8549,7 @@ __DEV__ &&
               ),
             streamingFormat.push('" async="">\x3c/script>');
       streamingFormat = createFormatContext(0, null, 0);
-      children = new RequestInstance(
-        children,
+      options = new RequestInstance(
         resumableState,
         externalRuntimeConfig,
         streamingFormat,
@@ -8592,8 +8562,35 @@ __DEV__ &&
         void 0,
         void 0
       );
-      children.flushScheduled = null !== children.destination;
+      resumableState = createPendingSegment(
+        options,
+        0,
+        null,
+        streamingFormat,
+        !1,
+        !1
+      );
+      resumableState.parentFlushed = !0;
+      children = createRenderTask(
+        options,
+        null,
+        children,
+        -1,
+        null,
+        resumableState,
+        null,
+        options.abortableTasks,
+        null,
+        streamingFormat,
+        null,
+        emptyTreeContext,
+        null,
+        !1
+      );
+      pushComponentStack(children);
+      options.pingedTasks.push(children);
+      options.flushScheduled = null !== options.destination;
       if (destination.fatal) throw destination.error;
-      return { destination: destination, request: children };
+      return { destination: destination, request: options };
     };
   })();
