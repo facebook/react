@@ -98,7 +98,11 @@ export function setProperty(arg: any, property: any): void {
   }
 }
 
-export function setPropertyByKey(arg: any, key: string, property: any): void {
+export function setPropertyByKey<
+  T,
+  TKey extends keyof T,
+  TProperty extends T[TKey],
+>(arg: T, key: TKey, property: TProperty): T {
   arg[key] = property;
   return arg;
 }

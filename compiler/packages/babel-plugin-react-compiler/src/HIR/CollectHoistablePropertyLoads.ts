@@ -4,22 +4,14 @@ import {Set_intersect, Set_union, getOrInsertDefault} from '../Utils/utils';
 import {
   BasicBlock,
   BlockId,
-  DeclarationId,
   GeneratedSource,
   HIRFunction,
   Identifier,
+  IdentifierId,
   Place,
-  PropertyLoad,
   ReactiveScopeDependency,
   ScopeId,
-  TInstruction,
 } from './HIR';
-
-export type CollectHoistablePropertyLoadsResult = {
-  nodes: ReadonlyMap<ScopeId, BlockInfo>;
-  temporaries: ReadonlyMap<Identifier, Identifier>;
-  properties: ReadonlyMap<Identifier, ReactiveScopeDependency>;
-};
 
 /**
  * Helper function for `PropagateScopeDependencies`.
@@ -72,10 +64,9 @@ export type CollectHoistablePropertyLoadsResult = {
  */
 export function collectHoistablePropertyLoads(
   fn: HIRFunction,
-  usedOutsideDeclaringScope: ReadonlySet<DeclarationId>,
-): CollectHoistablePropertyLoadsResult {
-  const sidemap = collectSidemap(fn, usedOutsideDeclaringScope);
-  const nodes = collectNodes(fn, sidemap);
+  temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
+): ReadonlyMap<ScopeId, BlockInfo> {
+  const nodes = collectPropertyLoadsInBlocks(fn, temporaries);
   deriveNonNull(fn, nodes);
 
   const nodesKeyedByScopeId = new Map<ScopeId, BlockInfo>();
@@ -88,23 +79,18 @@ export function collectHoistablePropertyLoads(
     }
   }
 
-  return {
-    nodes: nodesKeyedByScopeId,
-    temporaries: sidemap.temporaries,
-    properties: sidemap.properties,
-  };
+  return nodesKeyedByScopeId;
 }
 
 export type BlockInfo = {
   block: BasicBlock;
-  assumedNonNullObjects: Set<PropertyLoadNode>;
+  assumedNonNullObjects: ReadonlySet<PropertyLoadNode>;
 };
 
 export function getProperty(
   object: Place,
   propertyName: string,
-  temporaries: ReadonlyMap<Identifier, Identifier>,
-  properties: ReadonlyMap<Identifier, ReactiveScopeDependency>,
+  temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
 ): ReactiveScopeDependency {
   /*
    * (1) Get the base object either from the temporary sidemap (e.g. a LoadLocal)
@@ -125,8 +111,7 @@ export function getProperty(
    *    $1 = PropertyLoad $0.y
    *  getProperty($0, ...) -> resolvedObject = null, resolvedDependency = null
    */
-  const resolvedObject = resolveTemporary(object, temporaries);
-  const resolvedDependency = properties.get(resolvedObject);
+  const resolvedDependency = temporaries.get(object.identifier.id);
 
   /**
    * (2) Push the last PropertyLoad
@@ -135,7 +120,7 @@ export function getProperty(
   let property: ReactiveScopeDependency;
   if (resolvedDependency == null) {
     property = {
-      identifier: resolvedObject,
+      identifier: object.identifier,
       path: [{property: propertyName, optional: false}],
     };
   } else {
@@ -152,9 +137,9 @@ export function getProperty(
 
 export function resolveTemporary(
   place: Place,
-  temporaries: ReadonlyMap<Identifier, Identifier>,
+  temporaries: ReadonlyMap<IdentifierId, Identifier>,
 ): Identifier {
-  return temporaries.get(place.identifier) ?? place.identifier;
+  return temporaries.get(place.identifier.id) ?? place.identifier;
 }
 
 /**
@@ -237,63 +222,10 @@ class Tree {
     return Tree.#getOrCreateProperty(currNode, n.path.at(-1)!.property);
   }
 }
-type PropertyLoadInfo = {
-  instr: TInstruction<PropertyLoad>;
-  property: ReactiveScopeDependency;
-};
 
-type TemporariesSidemap = {
-  temporaries: ReadonlyMap<Identifier, Identifier>;
-  properties: ReadonlyMap<Identifier, ReactiveScopeDependency>;
-  propertyLoadInfo: ReadonlyMap<BlockId, Array<PropertyLoadInfo>>;
-};
-
-function collectSidemap(
+function collectPropertyLoadsInBlocks(
   fn: HIRFunction,
-  usedOutsideDeclaringScope: ReadonlySet<DeclarationId>,
-): TemporariesSidemap {
-  const temporaries = new Map<Identifier, Identifier>();
-  const properties = new Map<Identifier, ReactiveScopeDependency>();
-  const propertyLoadInfo = new Map<BlockId, Array<PropertyLoadInfo>>();
-  for (const [_, block] of fn.body.blocks) {
-    const propertyLoads: Array<PropertyLoadInfo> = [];
-    for (const instr of block.instructions) {
-      const {value, lvalue} = instr;
-      const usedOutside = usedOutsideDeclaringScope.has(
-        lvalue.identifier.declarationId,
-      );
-      if (value.kind === 'PropertyLoad') {
-        const property = getProperty(
-          value.object,
-          value.property,
-          temporaries,
-          properties,
-        );
-        if (!usedOutside) {
-          properties.set(lvalue.identifier, property);
-        }
-        propertyLoads.push({
-          instr: instr as TInstruction<PropertyLoad>,
-          property,
-        });
-      } else if (value.kind === 'LoadLocal') {
-        if (
-          lvalue.identifier.name == null &&
-          value.place.identifier.name !== null &&
-          !usedOutside
-        ) {
-          temporaries.set(lvalue.identifier, value.place.identifier);
-        }
-      }
-    }
-    propertyLoadInfo.set(block.id, propertyLoads);
-  }
-  return {temporaries, properties, propertyLoadInfo};
-}
-
-function collectNodes(
-  fn: HIRFunction,
-  sidemap: TemporariesSidemap,
+  temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
 ): ReadonlyMap<BlockId, BlockInfo> {
   /**
    * Due to current limitations of mutable range inference, there are edge cases in
@@ -314,40 +246,42 @@ function collectNodes(
   const tree = new Tree();
   const nodes = new Map<BlockId, BlockInfo>();
   for (const [_, block] of fn.body.blocks) {
-    const propertyLoadInfos = sidemap.propertyLoadInfo.get(block.id);
-    CompilerError.invariant(propertyLoadInfos != null, {
-      reason: '[CollectHoistablePropertyLoads] block info missing',
-      loc: GeneratedSource,
-    });
-
     const assumedNonNullObjects = new Set<PropertyLoadNode>();
-    for (const {instr, property} of propertyLoadInfos) {
-      const object = instr.value.object.identifier;
-      const propertyNode = tree.getPropertyLoadNode(property);
-      /**
-       * Since this runs *after* buildReactiveScopeTerminals, identifier mutable ranges
-       * are not valid with respect to current instruction id numbering.
-       * We use attached reactive scope ranges as a proxy for mutable range, but this
-       * is an overestimate as (1) scope ranges merge and align to form valid program
-       * blocks and (2) passes like MemoizeFbtAndMacroOperands may assign scopes to
-       * non-mutable identifiers.
-       *
-       * See comment at top of function for why we track known immutable identifiers.
-       */
-      const isMutableAtInstr =
-        object.mutableRange.end > object.mutableRange.start + 1 &&
-        object.scope != null &&
-        inRange(instr, object.scope.range);
-      if (
-        !isMutableAtInstr ||
-        knownImmutableIdentifiers.has(propertyNode.fullPath.identifier)
-      ) {
-        let curr = propertyNode.parent;
-        while (curr != null) {
-          assumedNonNullObjects.add(curr);
-          curr = curr.parent;
+    for (const instr of block.instructions) {
+      if (instr.value.kind === 'PropertyLoad') {
+        const property = getProperty(
+          instr.value.object,
+          instr.value.property,
+          temporaries,
+        );
+        const propertyNode = tree.getPropertyLoadNode(property);
+        const object = instr.value.object.identifier;
+        /**
+         * Since this runs *after* buildReactiveScopeTerminals, identifier mutable ranges
+         * are not valid with respect to current instruction id numbering.
+         * We use attached reactive scope ranges as a proxy for mutable range, but this
+         * is an overestimate as (1) scope ranges merge and align to form valid program
+         * blocks and (2) passes like MemoizeFbtAndMacroOperands may assign scopes to
+         * non-mutable identifiers.
+         *
+         * See comment at top of function for why we track known immutable identifiers.
+         */
+        const isMutableAtInstr =
+          object.mutableRange.end > object.mutableRange.start + 1 &&
+          object.scope != null &&
+          inRange(instr, object.scope.range);
+        if (
+          !isMutableAtInstr ||
+          knownImmutableIdentifiers.has(propertyNode.fullPath.identifier)
+        ) {
+          let curr = propertyNode.parent;
+          while (curr != null) {
+            assumedNonNullObjects.add(curr);
+            curr = curr.parent;
+          }
         }
       }
+      // TODO handle destructuring
     }
 
     nodes.set(block.id, {
@@ -374,11 +308,16 @@ function deriveNonNull(
     }
   }
 
+  /**
+   * In the context of a control flow graph, the identifiers that a block
+   * can assume are non-null can be calculated from the following:
+   * X = Union(Intersect(X_neighbors), X)
+   */
   function recursivelyDeriveNonNull(
     nodeId: BlockId,
     direction: 'forward' | 'backward',
     traversalState: Map<BlockId, 'active' | 'done'>,
-    nonNullObjectsByBlock: Map<BlockId, Set<PropertyLoadNode>>,
+    nonNullObjectsByBlock: Map<BlockId, ReadonlySet<PropertyLoadNode>>,
   ): boolean {
     /**
      * Avoid re-visiting computed or currently active nodes, which can
@@ -397,7 +336,9 @@ function deriveNonNull(
       });
     }
     const neighbors = Array.from(
-      direction === 'backward' ? (blockSuccessors.get(nodeId) ?? []) : node.block.preds,
+      direction === 'backward'
+        ? (blockSuccessors.get(nodeId) ?? [])
+        : node.block.preds,
     );
 
     let changed = false;
@@ -413,24 +354,39 @@ function deriveNonNull(
       }
     }
     /**
-     * Active neighbors can be filtered out as we're solving for the following
-     * relation.
-     * X = Intersect(X_neighbors, X)
+     * Note that a predecessor / successor can only be active (status != 'done')
+     * if it is a self-loop or other transitive cycle. Active neighbors can be
+     * filtered out (i.e. not included in the intersection)
+     * Example: self loop.
+     *    X = Union(Intersect(X, ...X_other_neighbors), X)
+     *
+     * Example: transitive cycle through node Y, for some Y that is a
+     * predecessor / successor of X.
+     *    X = Union(
+     *          Intersect(
+     *            Union(Intersect(X, ...Y_other_neighbors), Y),
+     *            ...X_neighbors
+     *          ),
+     *          X
+     *        )
+     *
      * Non-active neighbors with no recorded results can occur due to backedges.
-     * it's not safe to assume they can be filtered out (e.g. not intersected)
+     * it's not safe to assume they can be filtered out (e.g. not included in
+     * the intersection)
      */
-    const neighborAccesses = Set_intersect([
-      ...(Array.from(neighbors)
+    const neighborAccesses = Set_intersect(
+      Array.from(neighbors)
         .filter(n => traversalState.get(n) === 'done')
-        .map(n => nonNullObjectsByBlock.get(n) ?? new Set()) as Array<
-        Set<PropertyLoadNode>
-      >),
-    ]);
+        .map(n => assertNonNull(nonNullObjectsByBlock.get(n))),
+    );
 
     const prevSize = nonNullObjectsByBlock.get(nodeId)?.size;
     nonNullObjectsByBlock.set(
       nodeId,
-      Set_union(node.assumedNonNullObjects, neighborAccesses),
+      Set_union(
+        assertNonNull(nonNullObjectsByBlock.get(nodeId)),
+        neighborAccesses,
+      ),
     );
     traversalState.set(nodeId, 'done');
 
@@ -447,45 +403,50 @@ function deriveNonNull(
     );
     return changed;
   }
-  const fromEntry = new Map<BlockId, Set<PropertyLoadNode>>();
-  const fromExit = new Map<BlockId, Set<PropertyLoadNode>>();
-  let changed = true;
+  const fromEntry = new Map<BlockId, ReadonlySet<PropertyLoadNode>>();
+  const fromExit = new Map<BlockId, ReadonlySet<PropertyLoadNode>>();
+  for (const [blockId, blockInfo] of nodes) {
+    fromEntry.set(blockId, blockInfo.assumedNonNullObjects);
+    fromExit.set(blockId, blockInfo.assumedNonNullObjects);
+  }
   const traversalState = new Map<BlockId, 'done' | 'active'>();
   const reversedBlocks = [...fn.body.blocks];
   reversedBlocks.reverse();
-  let i = 0;
 
-  while (changed) {
+  let i = 0;
+  let changed;
+  do {
     i++;
     changed = false;
     for (const [blockId] of fn.body.blocks) {
-      const changed_ = recursivelyDeriveNonNull(
+      const forwardChanged = recursivelyDeriveNonNull(
         blockId,
         'forward',
         traversalState,
         fromEntry,
       );
-      changed ||= changed_;
+      changed ||= forwardChanged;
     }
     traversalState.clear();
     for (const [blockId] of reversedBlocks) {
-      const changed_ = recursivelyDeriveNonNull(
+      const backwardChanged = recursivelyDeriveNonNull(
         blockId,
         'backward',
         traversalState,
         fromExit,
       );
-      changed ||= changed_;
+      changed ||= backwardChanged;
     }
     traversalState.clear();
-  }
+  } while (changed);
 
   /**
    * TODO: validate against meta internal code, then remove in future PR.
    * Currently cannot come up with a case that requires fixed-point iteration.
    */
-  CompilerError.invariant(i === 2, {
+  CompilerError.invariant(i <= 2, {
     reason: 'require fixed-point iteration',
+    description: `#iterations = ${i}`,
     loc: GeneratedSource,
   });
 

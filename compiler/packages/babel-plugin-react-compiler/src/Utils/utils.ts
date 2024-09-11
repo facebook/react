@@ -83,7 +83,7 @@ export function getOrInsertDefault<U, V>(
   }
 }
 
-export function Set_union<T>(a: Set<T>, b: Set<T>): Set<T> {
+export function Set_union<T>(a: ReadonlySet<T>, b: ReadonlySet<T>): Set<T> {
   const union = new Set<T>(a);
   for (const item of b) {
     union.add(item);
@@ -91,7 +91,7 @@ export function Set_union<T>(a: Set<T>, b: Set<T>): Set<T> {
   return union;
 }
 
-export function Set_intersect<T>(sets: Array<Set<T>>): Set<T> {
+export function Set_intersect<T>(sets: Array<ReadonlySet<T>>): Set<T> {
   if (sets.length === 0 || sets.some(s => s.size === 0)) {
     return new Set();
   } else if (sets.length === 1) {

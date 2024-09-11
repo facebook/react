@@ -15,6 +15,7 @@ import {
   GeneratedSource,
   DeclarationId,
   areEqualPaths,
+  IdentifierId,
 } from './HIR';
 import {
   BlockInfo,
@@ -36,17 +37,14 @@ import {ReactiveScopeDependencyTreeHIR} from './DeriveMinimalDependenciesHIR';
 export function propagateScopeDependenciesHIR(fn: HIRFunction): void {
   const usedOutsideDeclaringScope =
     findTemporariesUsedOutsideDeclaringScope(fn);
+  const temporaries = collectTemporariesSidemap(fn, usedOutsideDeclaringScope);
 
-  const {nodes, temporaries, properties} = collectHoistablePropertyLoads(
-    fn,
-    usedOutsideDeclaringScope,
-  );
+  const hoistablePropertyLoads = collectHoistablePropertyLoads(fn, temporaries);
 
   const scopeDeps = collectDependencies(
     fn,
     usedOutsideDeclaringScope,
     temporaries,
-    properties,
   );
 
   /**
@@ -65,7 +63,7 @@ export function propagateScopeDependenciesHIR(fn: HIRFunction): void {
      * Step 2: Mark hoistable dependencies, given the basic block in
      * which the scope begins.
      */
-    recordHoistablePropertyReads(nodes, scope.id, tree);
+    recordHoistablePropertyReads(hoistablePropertyLoads, scope.id, tree);
     const candidates = tree.deriveMinimalDependencies();
     for (const candidateDep of candidates) {
       if (
@@ -144,6 +142,84 @@ function findTemporariesUsedOutsideDeclaringScope(
   return usedOutsideDeclaringScope;
 }
 
+/**
+ * @returns mapping of LoadLocal and PropertyLoad to the source of the load.
+ * ```js
+ * // source
+ * foo(a.b);
+ *
+ * // HIR: a potential sidemap is {0: a, 1: a.b, 2: foo}
+ * $0 = LoadLocal 'a'
+ * $1 = PropertyLoad $0, 'b'
+ * $2 = LoadLocal 'foo'
+ * $3 = CallExpression $2($1)
+ * ```
+ * Only map LoadLocal and PropertyLoad lvalues to their source if we know that
+ * reordering the read (from the time-of-load to time-of-use) is valid.
+ *
+ * If a LoadLocal or PropertyLoad instruction is within the reactive scope range
+ * (a proxy for mutable range) of the load source, later instructions may
+ * reassign / mutate the source value. Since it's incorrect to reorder these
+ * load instructions to after their scope ranges, we also do not store them in
+ * identifier sidemaps.
+ *
+ * Take this example (from fixture
+ * `evaluation-order-mutate-call-after-dependency-load`)
+ * ```js
+ * // source
+ * function useFoo(arg) {
+ *   const arr = [1, 2, 3, ...arg];
+ *   return [
+ *     arr.length,
+ *     arr.push(0)
+ *   ];
+ * }
+ *
+ * // IR pseudocode
+ * scope @0 {
+ *   $0 = arr = ArrayExpression [1, 2, 3, ...arg]
+ *   $1 = arr.length
+ *   $2 = arr.push(0)
+ * }
+ * scope @1 {
+ *   $3 = ArrayExpression [$1, $2]
+ * }
+ * ```
+ * Here, it's invalid for scope@1 to take `arr.length` as a dependency instead
+ * of $1, as the evaluation of `arr.length` changes between instructions $1 and
+ * $3. We do not track $1 -> arr.length in this case.
+ */
+function collectTemporariesSidemap(
+  fn: HIRFunction,
+  usedOutsideDeclaringScope: ReadonlySet<DeclarationId>,
+): ReadonlyMap<IdentifierId, ReactiveScopeDependency> {
+  const temporaries = new Map<IdentifierId, ReactiveScopeDependency>();
+  for (const [_, block] of fn.body.blocks) {
+    for (const instr of block.instructions) {
+      const {value, lvalue} = instr;
+      const usedOutside = usedOutsideDeclaringScope.has(
+        lvalue.identifier.declarationId,
+      );
+
+      if (value.kind === 'PropertyLoad' && !usedOutside) {
+        const property = getProperty(value.object, value.property, temporaries);
+        temporaries.set(lvalue.identifier.id, property);
+      } else if (
+        value.kind === 'LoadLocal' &&
+        lvalue.identifier.name == null &&
+        value.place.identifier.name !== null &&
+        !usedOutside
+      ) {
+        temporaries.set(lvalue.identifier.id, {
+          identifier: value.place.identifier,
+          path: [],
+        });
+      }
+    }
+  }
+  return temporaries;
+}
+
 type Decl = {
   id: InstructionId;
   scope: Stack<ReactiveScope>;
@@ -158,18 +234,15 @@ class Context {
   #dependencies: Stack<Array<ReactiveScopeDependency>> = empty();
   deps: Map<ReactiveScope, Array<ReactiveScopeDependency>> = new Map();
 
-  #properties: ReadonlyMap<Identifier, ReactiveScopeDependency>;
-  #temporaries: ReadonlyMap<Identifier, Identifier>;
+  #temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>;
   #temporariesUsedOutsideScope: ReadonlySet<DeclarationId>;
 
   constructor(
     temporariesUsedOutsideScope: ReadonlySet<DeclarationId>,
-    temporaries: ReadonlyMap<Identifier, Identifier>,
-    properties: ReadonlyMap<Identifier, ReactiveScopeDependency>,
+    temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
   ) {
     this.#temporariesUsedOutsideScope = temporariesUsedOutsideScope;
     this.#temporaries = temporaries;
-    this.#properties = properties;
   }
 
   enterScope(scope: ReactiveScope): void {
@@ -226,10 +299,6 @@ class Context {
     this.#reassignments.set(identifier, decl);
   }
 
-  resolveTemporary(place: Place): Identifier {
-    return this.#temporaries.get(place.identifier) ?? place.identifier;
-  }
-
   // Checks if identifier is a valid dependency in the current scope
   #checkValidDependency(maybeDependency: ReactiveScopeDependency): boolean {
     // ref.current access is not a valid dep
@@ -281,34 +350,20 @@ class Context {
   }
 
   visitOperand(place: Place): void {
-    const resolved = this.resolveTemporary(place);
     /*
      * if this operand is a temporary created for a property load, try to resolve it to
      * the expanded Place. Fall back to using the operand as-is.
      */
-
-    let dependency: ReactiveScopeDependency | null = null;
-    if (resolved.name === null) {
-      const propertyDependency = this.#properties.get(resolved);
-      if (propertyDependency !== undefined) {
-        dependency = {...propertyDependency};
-      }
-    }
     this.visitDependency(
-      dependency ?? {
-        identifier: resolved,
+      this.#temporaries.get(place.identifier.id) ?? {
+        identifier: place.identifier,
         path: [],
       },
     );
   }
 
   visitProperty(object: Place, property: string): void {
-    const nextDependency = getProperty(
-      object,
-      property,
-      this.#temporaries,
-      this.#properties,
-    );
+    const nextDependency = getProperty(object, property, this.#temporaries);
     this.visitDependency(nextDependency);
   }
 
@@ -441,14 +496,9 @@ function handleInstruction(instr: Instruction, context: Context): void {
 function collectDependencies(
   fn: HIRFunction,
   usedOutsideDeclaringScope: ReadonlySet<DeclarationId>,
-  temporaries: ReadonlyMap<Identifier, Identifier>,
-  properties: ReadonlyMap<Identifier, ReactiveScopeDependency>,
+  temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
 ): Map<ReactiveScope, Array<ReactiveScopeDependency>> {
-  const context = new Context(
-    usedOutsideDeclaringScope,
-    temporaries,
-    properties,
-  );
+  const context = new Context(usedOutsideDeclaringScope, temporaries);
 
   for (const param of fn.params) {
     if (param.kind === 'Identifier') {
