@@ -191,6 +191,8 @@ export default class Store extends EventEmitter<{
   // Used for windowing purposes.
   _weightAcrossRoots: number = 0;
 
+  _shouldCheckBridgeProtocolCompatibility: boolean = false;
+
   constructor(bridge: FrontendBridge, config?: Config) {
     super();
 
@@ -218,6 +220,7 @@ export default class Store extends EventEmitter<{
         supportsReloadAndProfile,
         supportsTimeline,
         supportsTraceUpdates,
+        checkBridgeProtocolCompatibility,
       } = config;
       if (supportsInspectMatchingDOMElement) {
         this._supportsInspectMatchingDOMElement = true;
@@ -233,6 +236,9 @@ export default class Store extends EventEmitter<{
       }
       if (supportsTraceUpdates) {
         this._supportsTraceUpdates = true;
+      }
+      if (checkBridgeProtocolCompatibility) {
+        this._shouldCheckBridgeProtocolCompatibility = true;
       }
     }
 
@@ -262,24 +268,9 @@ export default class Store extends EventEmitter<{
 
     this._profilerStore = new ProfilerStore(bridge, this, isProfiling);
 
-    // Verify that the frontend version is compatible with the connected backend.
-    // See github.com/facebook/react/issues/21326
-    if (config != null && config.checkBridgeProtocolCompatibility) {
-      // Older backends don't support an explicit bridge protocol,
-      // so we should timeout eventually and show a downgrade message.
-      this._onBridgeProtocolTimeoutID = setTimeout(
-        this.onBridgeProtocolTimeout,
-        10000,
-      );
-
-      bridge.addListener('bridgeProtocol', this.onBridgeProtocol);
-      bridge.send('getBridgeProtocol');
-    }
-
     bridge.addListener('backendVersion', this.onBridgeBackendVersion);
-    bridge.send('getBackendVersion');
-
     bridge.addListener('saveToClipboard', this.onSaveToClipboard);
+    bridge.addListener('backendInitialized', this.onBackendInitialized);
   }
 
   // This is only used in tests to avoid memory leaks.
@@ -1491,6 +1482,24 @@ export default class Store extends EventEmitter<{
 
   onSaveToClipboard: (text: string) => void = text => {
     copy(text);
+  };
+
+  onBackendInitialized: () => void = () => {
+    // Verify that the frontend version is compatible with the connected backend.
+    // See github.com/facebook/react/issues/21326
+    if (this._shouldCheckBridgeProtocolCompatibility) {
+      // Older backends don't support an explicit bridge protocol,
+      // so we should timeout eventually and show a downgrade message.
+      this._onBridgeProtocolTimeoutID = setTimeout(
+        this.onBridgeProtocolTimeout,
+        10000,
+      );
+
+      this._bridge.addListener('bridgeProtocol', this.onBridgeProtocol);
+      this._bridge.send('getBridgeProtocol');
+    }
+
+    this._bridge.send('getBackendVersion');
   };
 
   // The Store should never throw an Error without also emitting an event.
