@@ -155,6 +155,7 @@ import {
   getRenderTargetTime,
   getWorkInProgressTransitions,
   shouldRemainOnPreviousScreen,
+  markSpawnedRetryLane,
 } from './ReactFiberWorkLoop';
 import {
   OffscreenLane,
@@ -600,25 +601,28 @@ function scheduleRetryEffect(
     // Schedule an effect to attach a retry listener to the promise.
     // TODO: Move to passive phase
     workInProgress.flags |= Update;
-  } else {
-    // This boundary suspended, but no wakeables were added to the retry
-    // queue. Check if the renderer suspended commit. If so, this means
-    // that once the fallback is committed, we can immediately retry
-    // rendering again, because rendering wasn't actually blocked. Only
-    // the commit phase.
-    // TODO: Consider a model where we always schedule an immediate retry, even
-    // for normal Suspense. That way the retry can partially render up to the
-    // first thing that suspends.
-    if (workInProgress.flags & ScheduleRetry) {
-      const retryLane =
-        // TODO: This check should probably be moved into claimNextRetryLane
-        // I also suspect that we need some further consolidation of offscreen
-        // and retry lanes.
-        workInProgress.tag !== OffscreenComponent
-          ? claimNextRetryLane()
-          : OffscreenLane;
-      workInProgress.lanes = mergeLanes(workInProgress.lanes, retryLane);
-    }
+  }
+
+  // Check if we need to schedule an immediate retry. This should happen
+  // whenever we unwind a suspended tree without fully rendering its siblings;
+  // we need to begin the retry so we can start prerendering them.
+  //
+  // We also use this mechanism for Suspensey Resources (e.g. stylesheets),
+  // because those don't actually block the render phase, only the commit phase.
+  // So we can start rendering even before the resources are ready.
+  if (workInProgress.flags & ScheduleRetry) {
+    const retryLane =
+      // TODO: This check should probably be moved into claimNextRetryLane
+      // I also suspect that we need some further consolidation of offscreen
+      // and retry lanes.
+      workInProgress.tag !== OffscreenComponent
+        ? claimNextRetryLane()
+        : OffscreenLane;
+    workInProgress.lanes = mergeLanes(workInProgress.lanes, retryLane);
+
+    // Track the lanes that have been scheduled for an immediate retry so that
+    // we can mark them as suspended upon committing the root.
+    markSpawnedRetryLane(retryLane);
   }
 }
 

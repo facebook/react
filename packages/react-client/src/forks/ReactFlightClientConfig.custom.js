@@ -49,3 +49,6 @@ export const readPartialStringChunk = $$$config.readPartialStringChunk;
 export const readFinalStringChunk = $$$config.readFinalStringChunk;
 
 export const bindToConsole = $$$config.bindToConsole;
+
+export const rendererVersion = $$$config.rendererVersion;
+export const rendererPackageName = $$$config.rendererPackageName;

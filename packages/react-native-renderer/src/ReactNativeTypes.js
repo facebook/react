@@ -233,8 +233,8 @@ export type ReactNativeType = {
   ): ?ElementRef<ElementType>,
   unmountComponentAtNode(containerTag: number): void,
   unmountComponentAtNodeAndRemoveContainer(containerTag: number): void,
-  unstable_batchedUpdates: <T>(fn: (T) => void, bookkeeping: T) => void,
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: SecretInternalsType,
+  +unstable_batchedUpdates: <T>(fn: (T) => void, bookkeeping: T) => void,
+  +__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: SecretInternalsType,
   ...
 };
 
