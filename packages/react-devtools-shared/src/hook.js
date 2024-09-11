@@ -21,6 +21,7 @@ import {
   FIREFOX_CONSOLE_DIMMING_COLOR,
   ANSI_STYLE_DIMMING_TEMPLATE,
 } from 'react-devtools-shared/src/constants';
+import attachRenderer from './attachRenderer';
 
 declare var window: any;
 
@@ -358,7 +359,6 @@ export function installHook(target: any): DevToolsHook | null {
   }
 
   let uidCounter = 0;
-
   function inject(renderer: ReactRenderer): number {
     const id = ++uidCounter;
     renderers.set(id, renderer);
@@ -367,19 +367,20 @@ export function installHook(target: any): DevToolsHook | null {
       ? 'deadcode'
       : detectReactBuildType(renderer);
 
-    // If we have just reloaded to profile, we need to inject the renderer interface before the app loads.
-    // Otherwise the renderer won't yet exist and we can skip this step.
-    const attach = target.__REACT_DEVTOOLS_ATTACH__;
-    if (typeof attach === 'function') {
-      const rendererInterface = attach(hook, id, renderer, target);
-      hook.rendererInterfaces.set(id, rendererInterface);
-    }
-
     hook.emit('renderer', {
       id,
       renderer,
       reactBuildType,
     });
+
+    const rendererInterface = attachRenderer(hook, id, renderer, target);
+    if (rendererInterface != null) {
+      hook.rendererInterfaces.set(id, rendererInterface);
+      hook.emit('renderer-attached', {id, rendererInterface});
+    } else {
+      hook.hasUnsupportedRendererAttached = true;
+      hook.emit('unsupported-renderer-version');
+    }
 
     return id;
   }
@@ -534,6 +535,7 @@ export function installHook(target: any): DevToolsHook | null {
 
     // Fast Refresh for web relies on this.
     renderers,
+    hasUnsupportedRendererAttached: false,
 
     emit,
     getFiberRoots,

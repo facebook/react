@@ -492,6 +492,7 @@ export type DevToolsHook = {
   listeners: {[key: string]: Array<Handler>, ...},
   rendererInterfaces: Map<RendererID, RendererInterface>,
   renderers: Map<RendererID, ReactRenderer>,
+  hasUnsupportedRendererAttached: boolean,
   backends: Map<string, DevToolsBackend>,
 
   emit: (event: string, data: any) => void,
