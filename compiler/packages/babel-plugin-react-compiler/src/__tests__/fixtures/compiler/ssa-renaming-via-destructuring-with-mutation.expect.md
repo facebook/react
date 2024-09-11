@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { mutate } from "shared-runtime";
+import {mutate} from 'shared-runtime';
 
 function useFoo(props) {
   let {x} = {x: []};

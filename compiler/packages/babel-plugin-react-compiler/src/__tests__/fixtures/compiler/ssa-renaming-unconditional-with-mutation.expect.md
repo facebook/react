@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { mutate } from "shared-runtime";
+import {mutate} from 'shared-runtime';
 
 function useFoo(props) {
   let x = [];
@@ -19,7 +19,6 @@ function useFoo(props) {
   mutate(x);
   return x;
 }
-
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useFoo,
