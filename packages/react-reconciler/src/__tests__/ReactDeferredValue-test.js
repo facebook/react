@@ -499,6 +499,8 @@ describe('ReactDeferredValue', () => {
         // The initial value suspended, so we attempt the final value, which
         // also suspends.
         'Suspend! [Final]',
+
+        ...(gate('enableSiblingPrerendering') ? ['Suspend! [Final]'] : []),
       ]);
       expect(root).toMatchRenderedOutput('Fallback');
 
@@ -630,6 +632,8 @@ describe('ReactDeferredValue', () => {
       // go straight to attempting the final value.
       'Suspend! [Content]',
       'Loading...',
+
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Content]'] : []),
     ]);
     // The content suspended, so we show a Suspense fallback
     expect(root).toMatchRenderedOutput('Loading...');

@@ -292,16 +292,7 @@ describe('ReactConcurrentErrorRecovery', () => {
 
     // Because we're still suspended on B, we can't show an error boundary. We
     // should wait for B to resolve.
-    assertLog([
-      'Error! [A2]',
-      'Oops!',
-      'Suspend! [B2]',
-      'Loading...',
-
-      ...(gate('enableSiblingPrerendering')
-        ? ['Error! [A2]', 'Oops!', 'Suspend! [B2]', 'Loading...']
-        : []),
-    ]);
+    assertLog(['Error! [A2]', 'Oops!', 'Suspend! [B2]', 'Loading...']);
     // Remain on previous screen.
     expect(root).toMatchRenderedOutput('A1B1');
 
