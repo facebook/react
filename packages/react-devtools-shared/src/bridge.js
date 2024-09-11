@@ -178,6 +178,7 @@ type SavedPreferencesParams = {
 };
 
 export type BackendEvents = {
+  backendInitialized: [],
   backendVersion: [string],
   bridgeProtocol: [BridgeProtocol],
   extensionBackendInitialized: [],

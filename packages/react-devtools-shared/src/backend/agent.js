@@ -230,17 +230,15 @@ export default class Agent extends EventEmitter<{
     bridge.addListener('overrideProps', this.overrideProps);
     bridge.addListener('overrideState', this.overrideState);
 
+    setupHighlighter(bridge, this);
+    setupTraceUpdates(this);
+
+    // By this time, Store should already be initialized and intercept events
+    bridge.send('backendInitialized');
+
     if (this._isProfiling) {
       bridge.send('profilingStatus', true);
     }
-
-    // Send the Bridge protocol and backend versions, after initialization, in case the frontend has already requested it.
-    // The Store may be instantiated beore the agent.
-    const version = process.env.DEVTOOLS_VERSION;
-    if (version) {
-      this._bridge.send('backendVersion', version);
-    }
-    this._bridge.send('bridgeProtocol', currentBridgeProtocol);
 
     // Notify the frontend if the backend supports the Storage API (e.g. localStorage).
     // If not, features like reload-and-profile will not work correctly and must be disabled.
@@ -251,9 +249,6 @@ export default class Agent extends EventEmitter<{
     } catch (error) {}
     bridge.send('isBackendStorageAPISupported', isBackendStorageAPISupported);
     bridge.send('isSynchronousXHRSupported', isSynchronousXHRSupported());
-
-    setupHighlighter(bridge, this);
-    setupTraceUpdates(this);
   }
 
   get rendererInterfaces(): {[key: RendererID]: RendererInterface, ...} {
