@@ -33,16 +33,11 @@ import { c as _c } from "react/compiler-runtime";
 import { useMemo } from "react";
 
 function Component(props) {
-  const $ = _c(6);
+  const $ = _c(3);
   let t0;
   bb0: {
     let y;
-    if (
-      $[0] !== props.cond ||
-      $[1] !== props.a ||
-      $[2] !== props.cond2 ||
-      $[3] !== props.b
-    ) {
+    if ($[0] !== props) {
       y = [];
       if (props.cond) {
         y.push(props.a);
@@ -53,15 +48,12 @@ function Component(props) {
       }
 
       y.push(props.b);
-      $[0] = props.cond;
-      $[1] = props.a;
-      $[2] = props.cond2;
-      $[3] = props.b;
-      $[4] = y;
-      $[5] = t0;
+      $[0] = props;
+      $[1] = y;
+      $[2] = t0;
     } else {
-      y = $[4];
-      t0 = $[5];
+      y = $[1];
+      t0 = $[2];
     }
     t0 = y;
   }

@@ -978,6 +978,7 @@ function parseModelString(
         // $FlowFixMe[prop-missing] FormData has forEach on it.
         backingFormData.forEach((entry: File | string, entryKey: string) => {
           if (entryKey.startsWith(formPrefix)) {
+            // $FlowFixMe[incompatible-call]
             data.append(entryKey.slice(formPrefix.length), entry);
           }
         });

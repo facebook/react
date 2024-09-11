@@ -15,6 +15,17 @@ import {
   normalizeCodeLocInfo,
 } from './utils';
 
+import {ReactVersion} from '../../../../ReactVersions';
+import semver from 'semver';
+
+// TODO: This is how other DevTools tests access the version but we should find
+// a better solution for this
+const ReactVersionTestingAgainst = process.env.REACT_VERSION || ReactVersion;
+const enableSiblingPrerendering = semver.gte(
+  ReactVersionTestingAgainst,
+  '19.0.0',
+);
+
 describe('Timeline profiler', () => {
   let React;
   let Scheduler;
@@ -1651,7 +1662,11 @@ describe('Timeline profiler', () => {
             </React.Suspense>,
           );
 
-          await waitForAll(['suspended']);
+          await waitForAll([
+            'suspended',
+
+            ...(enableSiblingPrerendering ? ['suspended'] : []),
+          ]);
 
           Scheduler.unstable_advanceTime(10);
           resolveFn();
@@ -1662,9 +1677,38 @@ describe('Timeline profiler', () => {
           const timelineData = stopProfilingAndGetTimelineData();
 
           // Verify the Suspense event and duration was recorded.
-          expect(timelineData.suspenseEvents).toHaveLength(1);
-          const suspenseEvent = timelineData.suspenseEvents[0];
-          expect(suspenseEvent).toMatchInlineSnapshot(`
+          if (enableSiblingPrerendering) {
+            expect(timelineData.suspenseEvents).toMatchInlineSnapshot(`
+              [
+                {
+                  "componentName": "Example",
+                  "depth": 0,
+                  "duration": 10,
+                  "id": "0",
+                  "phase": "mount",
+                  "promiseName": "",
+                  "resolution": "resolved",
+                  "timestamp": 10,
+                  "type": "suspense",
+                  "warning": null,
+                },
+                {
+                  "componentName": "Example",
+                  "depth": 0,
+                  "duration": 10,
+                  "id": "0",
+                  "phase": "mount",
+                  "promiseName": "",
+                  "resolution": "resolved",
+                  "timestamp": 10,
+                  "type": "suspense",
+                  "warning": null,
+                },
+              ]
+            `);
+          } else {
+            const suspenseEvent = timelineData.suspenseEvents[0];
+            expect(suspenseEvent).toMatchInlineSnapshot(`
                       {
                         "componentName": "Example",
                         "depth": 0,
@@ -1678,10 +1722,13 @@ describe('Timeline profiler', () => {
                         "warning": null,
                       }
                   `);
+          }
 
           // There should be two batches of renders: Suspeneded and resolved.
           expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
-          expect(timelineData.componentMeasures).toHaveLength(2);
+          expect(timelineData.componentMeasures).toHaveLength(
+            enableSiblingPrerendering ? 3 : 2,
+          );
         });
 
         it('should mark concurrent render with suspense that rejects', async () => {
@@ -1708,7 +1755,11 @@ describe('Timeline profiler', () => {
             </React.Suspense>,
           );
 
-          await waitForAll(['suspended']);
+          await waitForAll([
+            'suspended',
+
+            ...(enableSiblingPrerendering ? ['suspended'] : []),
+          ]);
 
           Scheduler.unstable_advanceTime(10);
           rejectFn();
@@ -1719,9 +1770,39 @@ describe('Timeline profiler', () => {
           const timelineData = stopProfilingAndGetTimelineData();
 
           // Verify the Suspense event and duration was recorded.
-          expect(timelineData.suspenseEvents).toHaveLength(1);
-          const suspenseEvent = timelineData.suspenseEvents[0];
-          expect(suspenseEvent).toMatchInlineSnapshot(`
+          if (enableSiblingPrerendering) {
+            expect(timelineData.suspenseEvents).toMatchInlineSnapshot(`
+              [
+                {
+                  "componentName": "Example",
+                  "depth": 0,
+                  "duration": 10,
+                  "id": "0",
+                  "phase": "mount",
+                  "promiseName": "",
+                  "resolution": "rejected",
+                  "timestamp": 10,
+                  "type": "suspense",
+                  "warning": null,
+                },
+                {
+                  "componentName": "Example",
+                  "depth": 0,
+                  "duration": 10,
+                  "id": "0",
+                  "phase": "mount",
+                  "promiseName": "",
+                  "resolution": "rejected",
+                  "timestamp": 10,
+                  "type": "suspense",
+                  "warning": null,
+                },
+              ]
+            `);
+          } else {
+            expect(timelineData.suspenseEvents).toHaveLength(1);
+            const suspenseEvent = timelineData.suspenseEvents[0];
+            expect(suspenseEvent).toMatchInlineSnapshot(`
                       {
                         "componentName": "Example",
                         "depth": 0,
@@ -1735,10 +1816,13 @@ describe('Timeline profiler', () => {
                         "warning": null,
                       }
                   `);
+          }
 
           // There should be two batches of renders: Suspeneded and resolved.
           expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
-          expect(timelineData.componentMeasures).toHaveLength(2);
+          expect(timelineData.componentMeasures).toHaveLength(
+            enableSiblingPrerendering ? 3 : 2,
+          );
         });
 
         it('should mark cascading class component state updates', async () => {

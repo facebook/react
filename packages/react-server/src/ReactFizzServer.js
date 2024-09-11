@@ -401,7 +401,6 @@ function noop(): void {}
 
 function RequestInstance(
   this: $FlowFixMe,
-  children: ReactNodeList,
   resumableState: ResumableState,
   renderState: RenderState,
   rootFormatContext: FormatContext,
@@ -447,38 +446,6 @@ function RequestInstance(
   if (__DEV__) {
     this.didWarnForKey = null;
   }
-  // This segment represents the root fallback.
-  const rootSegment = createPendingSegment(
-    this,
-    0,
-    null,
-    rootFormatContext,
-    // Root segments are never embedded in Text on either edge
-    false,
-    false,
-  );
-  // There is no parent so conceptually, we're unblocked to flush this segment.
-  rootSegment.parentFlushed = true;
-  const rootTask = createRenderTask(
-    this,
-    null,
-    children,
-    -1,
-    null,
-    rootSegment,
-    null,
-    abortSet,
-    null,
-    rootFormatContext,
-    rootContextSnapshot,
-    emptyTreeContext,
-    null,
-    false,
-    emptyContextObject,
-    null,
-  );
-  pushComponentStack(rootTask);
-  pingedTasks.push(rootTask);
 }
 
 export function createRequest(
@@ -496,8 +463,7 @@ export function createRequest(
   formState: void | null | ReactFormState<any, any>,
 ): Request {
   // $FlowFixMe[invalid-constructor]: the shapes are exact here but Flow doesn't like constructors
-  return new RequestInstance(
-    children,
+  const request: Request = new RequestInstance(
     resumableState,
     renderState,
     rootFormatContext,
@@ -510,6 +476,40 @@ export function createRequest(
     onPostpone,
     formState,
   );
+
+  // This segment represents the root fallback.
+  const rootSegment = createPendingSegment(
+    request,
+    0,
+    null,
+    rootFormatContext,
+    // Root segments are never embedded in Text on either edge
+    false,
+    false,
+  );
+  // There is no parent so conceptually, we're unblocked to flush this segment.
+  rootSegment.parentFlushed = true;
+  const rootTask = createRenderTask(
+    request,
+    null,
+    children,
+    -1,
+    null,
+    rootSegment,
+    null,
+    request.abortableTasks,
+    null,
+    rootFormatContext,
+    rootContextSnapshot,
+    emptyTreeContext,
+    null,
+    false,
+    emptyContextObject,
+    null,
+  );
+  pushComponentStack(rootTask);
+  request.pingedTasks.push(rootTask);
+  return request;
 }
 
 export function createPrerenderRequest(
@@ -559,35 +559,22 @@ export function resumeRequest(
   onFatalError: void | ((error: mixed) => void),
   onPostpone: void | ((reason: string, postponeInfo: PostponeInfo) => void),
 ): Request {
-  const pingedTasks: Array<Task> = [];
-  const abortSet: Set<Task> = new Set();
-  const request: Request = {
-    destination: null,
-    flushScheduled: false,
-    resumableState: postponedState.resumableState,
+  // $FlowFixMe[invalid-constructor]: the shapes are exact here but Flow doesn't like constructors
+  const request: Request = new RequestInstance(
+    postponedState.resumableState,
     renderState,
-    rootFormatContext: postponedState.rootFormatContext,
-    progressiveChunkSize: postponedState.progressiveChunkSize,
-    status: OPEN,
-    fatalError: null,
-    nextSegmentId: postponedState.nextSegmentId,
-    allPendingTasks: 0,
-    pendingRootTasks: 0,
-    completedRootSegment: null,
-    abortableTasks: abortSet,
-    pingedTasks: pingedTasks,
-    clientRenderedBoundaries: ([]: Array<SuspenseBoundary>),
-    completedBoundaries: ([]: Array<SuspenseBoundary>),
-    partialBoundaries: ([]: Array<SuspenseBoundary>),
-    trackedPostpones: null,
-    onError: onError === undefined ? defaultErrorHandler : onError,
-    onPostpone: onPostpone === undefined ? noop : onPostpone,
-    onAllReady: onAllReady === undefined ? noop : onAllReady,
-    onShellReady: onShellReady === undefined ? noop : onShellReady,
-    onShellError: onShellError === undefined ? noop : onShellError,
-    onFatalError: onFatalError === undefined ? noop : onFatalError,
-    formState: null,
-  };
+    postponedState.rootFormatContext,
+    postponedState.progressiveChunkSize,
+    onError,
+    onAllReady,
+    onShellReady,
+    onShellError,
+    onFatalError,
+    onPostpone,
+    null,
+  );
+  request.nextSegmentId = postponedState.nextSegmentId;
+
   if (typeof postponedState.replaySlots === 'number') {
     const resumedId = postponedState.replaySlots;
     // We have a resume slot at the very root. This is effectively just a full rerender.
@@ -611,7 +598,7 @@ export function resumeRequest(
       null,
       rootSegment,
       null,
-      abortSet,
+      request.abortableTasks,
       null,
       postponedState.rootFormatContext,
       rootContextSnapshot,
@@ -622,7 +609,7 @@ export function resumeRequest(
       null,
     );
     pushComponentStack(rootTask);
-    pingedTasks.push(rootTask);
+    request.pingedTasks.push(rootTask);
     return request;
   }
 
@@ -639,7 +626,7 @@ export function resumeRequest(
     -1,
     null,
     null,
-    abortSet,
+    request.abortableTasks,
     null,
     postponedState.rootFormatContext,
     rootContextSnapshot,
@@ -650,7 +637,7 @@ export function resumeRequest(
     null,
   );
   pushComponentStack(rootTask);
-  pingedTasks.push(rootTask);
+  request.pingedTasks.push(rootTask);
   return request;
 }
 

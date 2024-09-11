@@ -16,7 +16,6 @@ let assertLog;
 let useMemo;
 let useState;
 let useMemoCache;
-let waitForThrow;
 let MemoCacheSentinel;
 let ErrorBoundary;
 
@@ -32,7 +31,6 @@ describe('useMemoCache()', () => {
     useMemo = React.useMemo;
     useMemoCache = require('react/compiler-runtime').c;
     useState = React.useState;
-    waitForThrow = require('internal-test-utils').waitForThrow;
     MemoCacheSentinel = Symbol.for('react.memo_cache_sentinel');
 
     class _ErrorBoundary extends React.Component {
@@ -563,26 +561,13 @@ describe('useMemoCache()', () => {
         root.render(<App chunkA={updatedChunkA} chunkB={updatedChunkB} />);
       });
     });
-    assertLog([
-      'Suspend! [chunkA]',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [chunkA]'] : []),
-    ]);
+    assertLog(['Suspend! [chunkA]']);
 
     // The data starts to stream in. Loading the data in the first chunk
     // triggers an expensive computation in the UI. Later, we'll test whether
     // this computation is reused.
     await act(() => updatedChunkA.resolve('A2'));
-    assertLog([
-      'Some expensive processing... [A2]',
-      'Suspend! [chunkB]',
-
-      ...(gate('enableSiblingPrerendering')
-        ? gate('enableNoCloningMemoCache')
-          ? ['Suspend! [chunkB]']
-          : ['Some expensive processing... [A2]', 'Suspend! [chunkB]']
-        : []),
-    ]);
+    assertLog(['Some expensive processing... [A2]', 'Suspend! [chunkB]']);
 
     // The second chunk hasn't loaded yet, so we're still showing the
     // initial UI.
@@ -603,22 +588,11 @@ describe('useMemoCache()', () => {
     if (gate(flags => flags.enableNoCloningMemoCache)) {
       // We did not have process the first chunk again. We reused the
       // computation from the earlier attempt.
-      assertLog([
-        'Suspend! [chunkB]',
-
-        ...(gate('enableSiblingPrerendering') ? ['Suspend! [chunkB]'] : []),
-      ]);
+      assertLog(['Suspend! [chunkB]']);
     } else {
       // Because we clone/reset the memo cache after every aborted attempt, we
       // must process the first chunk again.
-      assertLog([
-        'Some expensive processing... [A2]',
-        'Suspend! [chunkB]',
-
-        ...(gate('enableSiblingPrerendering')
-          ? ['Some expensive processing... [A2]', 'Suspend! [chunkB]']
-          : []),
-      ]);
+      assertLog(['Some expensive processing... [A2]', 'Suspend! [chunkB]']);
     }
 
     expect(root).toMatchRenderedOutput(
@@ -667,7 +641,7 @@ describe('useMemoCache()', () => {
     }
 
     // Baseline / source code
-    function useUserMemo(value) {
+    function useManualMemo(value) {
       return useMemo(() => [value], [value]);
     }
 
@@ -683,24 +657,22 @@ describe('useMemoCache()', () => {
     }
 
     /**
-     * Test case: note that the initial render never completes
+     * Test with useMemoCache
      */
     let root = ReactNoop.createRoot();
-    const IncorrectInfiniteComponent = makeComponent(useCompilerMemo);
-    root.render(<IncorrectInfiniteComponent value={2} />);
-    await waitForThrow(
-      'Too many re-renders. React limits the number of renders to prevent ' +
-        'an infinite loop.',
-    );
+    const CompilerMemoComponent = makeComponent(useCompilerMemo);
+    await act(() => {
+      root.render(<CompilerMemoComponent value={2} />);
+    });
+    expect(root).toMatchRenderedOutput(<div>2</div>);
 
     /**
-     * Baseline test: initial render is expected to complete after a retry
-     * (triggered by the setState)
+     * Test with useMemo
      */
     root = ReactNoop.createRoot();
-    const CorrectComponent = makeComponent(useUserMemo);
+    const HookMemoComponent = makeComponent(useManualMemo);
     await act(() => {
-      root.render(<CorrectComponent value={2} />);
+      root.render(<HookMemoComponent value={2} />);
     });
     expect(root).toMatchRenderedOutput(<div>2</div>);
   });

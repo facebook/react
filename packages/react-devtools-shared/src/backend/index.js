@@ -9,8 +9,10 @@
 
 import Agent from './agent';
 
-import {attach} from './fiber/renderer';
+import {attach as attachFiber} from './fiber/renderer';
+import {attach as attachFlight} from './flight/renderer';
 import {attach as attachLegacy} from './legacy/renderer';
+
 import {hasAssignedBackend} from './utils';
 
 import type {DevToolsHook, ReactRenderer, RendererInterface} from './types';
@@ -73,14 +75,17 @@ export function initBackend(
 
     // Inject any not-yet-injected renderers (if we didn't reload-and-profile)
     if (rendererInterface == null) {
-      if (
+      if (typeof renderer.getCurrentComponentInfo === 'function') {
+        // react-flight/client
+        rendererInterface = attachFlight(hook, id, renderer, global);
+      } else if (
         // v16-19
         typeof renderer.findFiberByHostInstance === 'function' ||
         // v16.8+
         renderer.currentDispatcherRef != null
       ) {
         // react-reconciler v16+
-        rendererInterface = attach(hook, id, renderer, global);
+        rendererInterface = attachFiber(hook, id, renderer, global);
       } else if (renderer.ComponentTree) {
         // react-dom v15
         rendererInterface = attachLegacy(hook, id, renderer, global);

@@ -362,12 +362,12 @@ function deriveNonNull(
   fn: HIRFunction,
   nodes: ReadonlyMap<BlockId, BlockInfo>,
 ): void {
-  const succ = new Map<BlockId, Set<BlockId>>();
+  const blockSuccessors = new Map<BlockId, Set<BlockId>>();
   const terminalPreds = new Set<BlockId>();
 
   for (const [blockId, block] of fn.body.blocks) {
     for (const pred of block.preds) {
-      getOrInsertDefault(succ, pred, new Set()).add(blockId);
+      getOrInsertDefault(blockSuccessors, pred, new Set()).add(blockId);
     }
     if (block.terminal.kind === 'throw' || block.terminal.kind === 'return') {
       terminalPreds.add(blockId);
@@ -397,7 +397,7 @@ function deriveNonNull(
       });
     }
     const neighbors = Array.from(
-      direction === 'backward' ? (succ.get(nodeId) ?? []) : node.block.preds,
+      direction === 'backward' ? (blockSuccessors.get(nodeId) ?? []) : node.block.preds,
     );
 
     let changed = false;

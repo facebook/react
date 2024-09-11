@@ -29,9 +29,9 @@ import { c as _c } from "react/compiler-runtime";
 import { makeObject_Primitives } from "shared-runtime";
 
 function Component(props) {
-  const $ = _c(3);
+  const $ = _c(2);
   let t0;
-  if ($[0] !== props.cond || $[1] !== props.value) {
+  if ($[0] !== props) {
     t0 = Symbol.for("react.early_return_sentinel");
     bb0: {
       const object = makeObject_Primitives();
@@ -45,11 +45,10 @@ function Component(props) {
         break bb0;
       }
     }
-    $[0] = props.cond;
-    $[1] = props.value;
-    $[2] = t0;
+    $[0] = props;
+    $[1] = t0;
   } else {
-    t0 = $[2];
+    t0 = $[1];
   }
   if (t0 !== Symbol.for("react.early_return_sentinel")) {
     return t0;

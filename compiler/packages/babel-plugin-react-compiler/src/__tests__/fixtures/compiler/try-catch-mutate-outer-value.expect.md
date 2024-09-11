@@ -28,9 +28,9 @@ import { c as _c } from "react/compiler-runtime";
 const { shallowCopy, throwErrorWithMessage } = require("shared-runtime");
 
 function Component(props) {
-  const $ = _c(5);
+  const $ = _c(3);
   let x;
-  if ($[0] !== props) {
+  if ($[0] !== props.a) {
     x = [];
     try {
       let t0;
@@ -42,17 +42,9 @@ function Component(props) {
       }
       x.push(t0);
     } catch {
-      let t0;
-      if ($[3] !== props.a) {
-        t0 = shallowCopy({ a: props.a });
-        $[3] = props.a;
-        $[4] = t0;
-      } else {
-        t0 = $[4];
-      }
-      x.push(t0);
+      x.push(shallowCopy({ a: props.a }));
     }
-    $[0] = props;
+    $[0] = props.a;
     $[1] = x;
   } else {
     x = $[1];

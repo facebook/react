@@ -49,7 +49,7 @@ import { c as _c } from "react/compiler-runtime";
 import { makeArray } from "shared-runtime";
 
 function Component(props) {
-  const $ = _c(6);
+  const $ = _c(3);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = {};
@@ -59,12 +59,7 @@ function Component(props) {
   }
   const x = t0;
   let t1;
-  if (
-    $[1] !== props.cond ||
-    $[2] !== props.cond2 ||
-    $[3] !== props.value ||
-    $[4] !== props.value2
-  ) {
+  if ($[1] !== props) {
     let y;
     if (props.cond) {
       if (props.cond2) {
@@ -79,13 +74,10 @@ function Component(props) {
     y.push(x);
 
     t1 = [x, y];
-    $[1] = props.cond;
-    $[2] = props.cond2;
-    $[3] = props.value;
-    $[4] = props.value2;
-    $[5] = t1;
+    $[1] = props;
+    $[2] = t1;
   } else {
-    t1 = $[5];
+    t1 = $[2];
   }
   return t1;
 }

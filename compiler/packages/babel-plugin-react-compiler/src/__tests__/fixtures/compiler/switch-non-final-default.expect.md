@@ -33,10 +33,10 @@ function Component(props) {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = _c(8);
+  const $ = _c(7);
   let y;
   let t0;
-  if ($[0] !== props.p0 || $[1] !== props.p2) {
+  if ($[0] !== props) {
     const x = [];
     bb0: switch (props.p0) {
       case 1: {
@@ -45,11 +45,11 @@ function Component(props) {
       case true: {
         x.push(props.p2);
         let t1;
-        if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
+        if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
           t1 = [];
-          $[4] = t1;
+          $[3] = t1;
         } else {
-          t1 = $[4];
+          t1 = $[3];
         }
         y = t1;
       }
@@ -62,24 +62,23 @@ function Component(props) {
     }
 
     t0 = <Component data={x} />;
-    $[0] = props.p0;
-    $[1] = props.p2;
-    $[2] = y;
-    $[3] = t0;
+    $[0] = props;
+    $[1] = y;
+    $[2] = t0;
   } else {
-    y = $[2];
-    t0 = $[3];
+    y = $[1];
+    t0 = $[2];
   }
   const child = t0;
   y.push(props.p4);
   let t1;
-  if ($[5] !== y || $[6] !== child) {
+  if ($[4] !== y || $[5] !== child) {
     t1 = <Component data={y}>{child}</Component>;
-    $[5] = y;
-    $[6] = child;
-    $[7] = t1;
+    $[4] = y;
+    $[5] = child;
+    $[6] = t1;
   } else {
-    t1 = $[7];
+    t1 = $[6];
   }
   return t1;
 }

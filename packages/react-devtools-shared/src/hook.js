@@ -367,25 +367,6 @@ export function installHook(target: any): DevToolsHook | null {
       ? 'deadcode'
       : detectReactBuildType(renderer);
 
-    // Patching the console enables DevTools to do a few useful things:
-    // * Append component stacks to warnings and error messages
-    // * Disabling or marking logs during a double render in Strict Mode
-    // * Disable logging during re-renders to inspect hooks (see inspectHooksOfFiber)
-    //
-    // Allow patching console early (during injection) to
-    // provide developers with components stacks even if they don't run DevTools.
-    if (target.hasOwnProperty('__REACT_DEVTOOLS_CONSOLE_FUNCTIONS__')) {
-      const {registerRendererWithConsole, patchConsoleUsingWindowValues} =
-        target.__REACT_DEVTOOLS_CONSOLE_FUNCTIONS__;
-      if (
-        typeof registerRendererWithConsole === 'function' &&
-        typeof patchConsoleUsingWindowValues === 'function'
-      ) {
-        registerRendererWithConsole(renderer);
-        patchConsoleUsingWindowValues();
-      }
-    }
-
     // If we have just reloaded to profile, we need to inject the renderer interface before the app loads.
     // Otherwise the renderer won't yet exist and we can skip this step.
     const attach = target.__REACT_DEVTOOLS_ATTACH__;
@@ -532,6 +513,7 @@ export function installHook(target: any): DevToolsHook | null {
       const startStackFrame = openModuleRangesStack.pop();
       const stopStackFrame = getTopStackFrameString(error);
       if (stopStackFrame !== null) {
+        // $FlowFixMe[incompatible-call]
         moduleRanges.push([startStackFrame, stopStackFrame]);
       }
     }
@@ -563,6 +545,9 @@ export function installHook(target: any): DevToolsHook | null {
     // This is a legacy flag.
     // React v16 checks the hook for this to ensure DevTools is new enough.
     supportsFiber: true,
+
+    // React Flight Client checks the hook for this to ensure DevTools is new enough.
+    supportsFlight: true,
 
     // React calls these methods.
     checkDCE,
