@@ -141,4 +141,26 @@ function prerenderToNodeStream(
   });
 }
 
-export {prerenderToNodeStream, ReactVersion as version};
+type ResumeOptions = {
+  nonce?: string,
+  signal?: AbortSignal,
+  onShellReady?: () => void,
+  onShellError?: (error: mixed) => void,
+  onAllReady?: () => void,
+  onError?: (error: mixed, errorInfo: ErrorInfo) => ?string,
+  onPostpone?: (reason: string, postponeInfo: PostponeInfo) => void,
+};
+
+function resumeAndPrerenderToNodeStream(
+  children: ReactNodeList,
+  postponedState: PostponedState,
+  options?: ResumeOptions,
+): Promise<StaticResult> {
+  return (null: any);
+}
+
+export {
+  prerenderToNodeStream,
+  resumeAndPrerenderToNodeStream,
+  ReactVersion as version,
+};

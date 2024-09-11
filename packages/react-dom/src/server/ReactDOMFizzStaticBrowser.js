@@ -141,4 +141,20 @@ function prerender(
   });
 }
 
-export {prerender, ReactVersion as version};
+type ResumeOptions = {
+  nonce?: string,
+  signal?: AbortSignal,
+  onError?: (error: mixed) => ?string,
+  onPostpone?: (reason: string) => void,
+  unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
+};
+
+function resumeAndPrerender(
+  children: ReactNodeList,
+  postponedState: PostponedState,
+  options?: ResumeOptions,
+): Promise<StaticResult> {
+  return (null: any);
+}
+
+export {prerender, resumeAndPrerender, ReactVersion as version};
