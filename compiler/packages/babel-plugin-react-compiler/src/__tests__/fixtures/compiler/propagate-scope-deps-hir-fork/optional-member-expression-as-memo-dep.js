@@ -1,4 +1,4 @@
-// @validatePreserveExistingMemoizationGuarantees @enableOptionalDependencies
+// @validatePreserveExistingMemoizationGuarantees @enableOptionalDependencies @enablePropagateDepsInHIR
 function Component(props) {
   const data = useMemo(() => {
     return props?.items.edges?.nodes.map();

@@ -2,14 +2,14 @@
 ## Input
 
 ```javascript
-// @validatePreserveExistingMemoizationGuarantees @enableOptionalDependencies
+// @validatePreserveExistingMemoizationGuarantees @enableOptionalDependencies @enablePropagateDepsInHIR
 import {ValidateMemoization} from 'shared-runtime';
 function Component(props) {
   const data = useMemo(() => {
     const x = [];
     x.push(props?.items);
     if (props.cond) {
-      x.push(props.items);
+      x.push(props?.items);
     }
     return x;
   }, [props?.items, props.cond]);
@@ -23,7 +23,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees @enableOptionalDependencies
+import { c as _c } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees @enableOptionalDependencies @enablePropagateDepsInHIR
 import { ValidateMemoization } from "shared-runtime";
 function Component(props) {
   const $ = _c(9);
@@ -35,7 +35,7 @@ function Component(props) {
     x = [];
     x.push(props?.items);
     if (props.cond) {
-      x.push(props.items);
+      x.push(props?.items);
     }
     $[0] = props?.items;
     $[1] = props.cond;

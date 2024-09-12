@@ -1,11 +1,11 @@
-// @validatePreserveExistingMemoizationGuarantees @enableOptionalDependencies
+// @validatePreserveExistingMemoizationGuarantees @enableOptionalDependencies @enablePropagateDepsInHIR
 import {ValidateMemoization} from 'shared-runtime';
 function Component(props) {
   const data = useMemo(() => {
     const x = [];
     x.push(props?.items);
     if (props.cond) {
-      x.push(props.items);
+      x.push(props?.items);
     }
     return x;
   }, [props?.items, props.cond]);
