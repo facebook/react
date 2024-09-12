@@ -86,14 +86,19 @@ import isArray from 'shared/isArray';
 
 import * as React from 'react';
 
+import type {SharedStateServer} from 'react/src/ReactSharedInternalsServer';
+import type {SharedStateClient} from 'react/src/ReactSharedInternalsClient';
+
 // TODO: This is an unfortunate hack. We shouldn't feature detect the internals
 // like this. It's just that for now we support the same build of the Flight
 // client both in the RSC environment, in the SSR environments as well as the
 // browser client. We should probably have a separate RSC build. This is DEV
 // only though.
-const ReactSharedInternals =
+const ReactSharedInteralsServer: void | SharedStateServer = (React: any)
+  .__SERVER_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+const ReactSharedInternals: SharedStateServer | SharedStateClient =
   React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE ||
-  React.__SERVER_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+  ReactSharedInteralsServer;
 
 export type {CallServerCallback, EncodeFormActionCallback};
 
@@ -277,6 +282,8 @@ export type Response = {
   _rowLength: number, // remaining bytes in the row. 0 indicates that we're looking for a newline.
   _buffer: Array<Uint8Array>, // chunks received so far as part of this row
   _tempRefs: void | TemporaryReferenceSet, // the set temporary references can be resolved from
+  _debugRootOwner?: null | ReactComponentInfo, // DEV-only
+  _debugRootStack?: null | Error, // DEV-only
   _debugRootTask?: null | ConsoleTask, // DEV-only
   _debugFindSourceMapURL?: void | FindSourceMapURLCallback, // DEV-only
   _replayConsole: boolean, // DEV-only
@@ -672,7 +679,7 @@ function createElement(
       type,
       key,
       props,
-      _owner: owner,
+      _owner: __DEV__ && owner === null ? response._debugRootOwner : owner,
     }: any);
     Object.defineProperty(element, 'ref', {
       enumerable: false,
@@ -699,7 +706,7 @@ function createElement(
       props,
 
       // Record the component responsible for creating this element.
-      _owner: owner,
+      _owner: __DEV__ && owner === null ? response._debugRootOwner : owner,
     }: any);
   }
 
@@ -733,7 +740,11 @@ function createElement(
         env = owner.env;
       }
       let normalizedStackTrace: null | Error = null;
-      if (stack !== null) {
+      if (owner === null && response._debugRootStack != null) {
+        // We override the stack if we override the owner since the stack where the root JSX
+        // was created on the server isn't very useful but where the request was made is.
+        normalizedStackTrace = response._debugRootStack;
+      } else if (stack !== null) {
         // We create a fake stack and then create an Error object inside of it.
         // This means that the stack trace is now normalized into the native format
         // of the browser and the stack frames will have been registered with
@@ -821,8 +832,10 @@ function createElement(
         if (enableOwnerStacks) {
           // $FlowFixMe[cannot-write]
           erroredComponent.debugStack = element._debugStack;
-          // $FlowFixMe[cannot-write]
-          erroredComponent.debugTask = element._debugTask;
+          if (supportsCreateTask) {
+            // $FlowFixMe[cannot-write]
+            erroredComponent.debugTask = element._debugTask;
+          }
         }
         erroredChunk._debugInfo = [erroredComponent];
       }
@@ -998,8 +1011,10 @@ function waitForReference<T>(
         if (enableOwnerStacks) {
           // $FlowFixMe[cannot-write]
           erroredComponent.debugStack = element._debugStack;
-          // $FlowFixMe[cannot-write]
-          erroredComponent.debugTask = element._debugTask;
+          if (supportsCreateTask) {
+            // $FlowFixMe[cannot-write]
+            erroredComponent.debugTask = element._debugTask;
+          }
         }
         const chunkDebugInfo: ReactDebugInfo =
           chunk._debugInfo || (chunk._debugInfo = []);
@@ -1408,6 +1423,25 @@ function ResponseInstance(
   this._buffer = [];
   this._tempRefs = temporaryReferences;
   if (__DEV__) {
+    // TODO: The Flight Client can be used in a Client Environment too and we should really support
+    // getting the owner there as well, but currently the owner of ReactComponentInfo is typed as only
+    // supporting other ReactComponentInfo as owners (and not Fiber or Fizz's ComponentStackNode).
+    // We need to update all the callsites consuming ReactComponentInfo owners to support those.
+    // In the meantime we only check ReactSharedInteralsServer since we know that in an RSC environment
+    // the only owners will be ReactComponentInfo.
+    const rootOwner: null | ReactComponentInfo =
+      ReactSharedInteralsServer === undefined ||
+      ReactSharedInteralsServer.A === null
+        ? null
+        : (ReactSharedInteralsServer.A.getOwner(): any);
+
+    this._debugRootOwner = rootOwner;
+    this._debugRootStack =
+      rootOwner !== null
+        ? // TODO: Consider passing the top frame in so we can avoid internals showing up.
+          new Error('react-stack-top-frame')
+        : null;
+
     const rootEnv = environmentName === undefined ? 'Server' : environmentName;
     if (supportsCreateTask) {
       // Any stacks that appear on the server need to be rooted somehow on the client
@@ -2308,7 +2342,16 @@ function resolveDebugInfo(
   const env =
     debugInfo.env === undefined ? response._rootEnvironmentName : debugInfo.env;
   initializeFakeTask(response, debugInfo, env);
-  initializeFakeStack(response, debugInfo);
+  if (debugInfo.owner === null && response._debugRootOwner != null) {
+    // $FlowFixMe
+    debugInfo.owner = response._debugRootOwner;
+    // We override the stack if we override the owner since the stack where the root JSX
+    // was created on the server isn't very useful but where the request was made is.
+    // $FlowFixMe
+    debugInfo.debugStack = response._debugRootStack;
+  } else {
+    initializeFakeStack(response, debugInfo);
+  }
 
   const chunk = getChunk(response, id);
   const chunkDebugInfo: ReactDebugInfo =
@@ -2344,7 +2387,8 @@ const replayConsoleWithCallStack = {
     // There really shouldn't be anything else on the stack atm.
     const prevStack = ReactSharedInternals.getCurrentStack;
     ReactSharedInternals.getCurrentStack = getCurrentStackInDEV;
-    currentOwnerInDEV = owner;
+    currentOwnerInDEV =
+      owner === null ? (response._debugRootOwner: any) : owner;
 
     try {
       const callStack = buildFakeCallStack(
