@@ -21,10 +21,10 @@ import semver from 'semver';
 // TODO: This is how other DevTools tests access the version but we should find
 // a better solution for this
 const ReactVersionTestingAgainst = process.env.REACT_VERSION || ReactVersion;
-const enableSiblingPrerendering = semver.gte(
-  ReactVersionTestingAgainst,
-  '19.0.0',
-);
+// Disabling this while the flag is off in experimental. Leaving the logic so we can
+// restore the behavior when we turn the flag back on.
+const enableSiblingPrerendering =
+  false && semver.gte(ReactVersionTestingAgainst, '19.0.0');
 
 describe('Timeline profiler', () => {
   let React;
