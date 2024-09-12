@@ -67,7 +67,7 @@ export function collectHoistablePropertyLoads(
   temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
 ): ReadonlyMap<ScopeId, BlockInfo> {
   const nodes = collectPropertyLoadsInBlocks(fn, temporaries);
-  deriveNonNull(fn, nodes);
+  propagateNonNull(fn, nodes);
 
   const nodesKeyedByScopeId = new Map<ScopeId, BlockInfo>();
   for (const [_, block] of fn.body.blocks) {
@@ -295,7 +295,7 @@ function collectPropertyLoadsInBlocks(
   return nodes;
 }
 
-function deriveNonNull(
+function propagateNonNull(
   fn: HIRFunction,
   nodes: ReadonlyMap<BlockId, BlockInfo>,
 ): void {
@@ -316,7 +316,7 @@ function deriveNonNull(
    * can assume are non-null can be calculated from the following:
    * X = Union(Intersect(X_neighbors), X)
    */
-  function recursivelyDeriveNonNull(
+  function recursivelyPropagateNonNull(
     nodeId: BlockId,
     direction: 'forward' | 'backward',
     traversalState: Map<BlockId, 'active' | 'done'>,
@@ -347,7 +347,7 @@ function deriveNonNull(
     let changed = false;
     for (const pred of neighbors) {
       if (!traversalState.has(pred)) {
-        const neighborChanged = recursivelyDeriveNonNull(
+        const neighborChanged = recursivelyPropagateNonNull(
           pred,
           direction,
           traversalState,
@@ -407,7 +407,7 @@ function deriveNonNull(
     i++;
     changed = false;
     for (const [blockId] of fn.body.blocks) {
-      const forwardChanged = recursivelyDeriveNonNull(
+      const forwardChanged = recursivelyPropagateNonNull(
         blockId,
         'forward',
         traversalState,
@@ -417,7 +417,7 @@ function deriveNonNull(
     }
     traversalState.clear();
     for (const [blockId] of reversedBlocks) {
-      const backwardChanged = recursivelyDeriveNonNull(
+      const backwardChanged = recursivelyPropagateNonNull(
         blockId,
         'backward',
         traversalState,
