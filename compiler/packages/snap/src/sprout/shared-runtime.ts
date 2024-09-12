@@ -54,6 +54,8 @@ export function mutate(arg: any): void {
   // don't mutate primitive
   if (arg == null || typeof arg !== 'object') {
     return;
+  } else if (Array.isArray(arg)) {
+    arg.push('joe');
   }
 
   let count: number = 0;
