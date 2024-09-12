@@ -1380,6 +1380,7 @@ function replaySuspenseBoundary(
   // we're writing to. If something suspends, it'll spawn new suspended task with that context.
   task.blockedBoundary = resumedBoundary;
   task.hoistableState = resumedBoundary.contentState;
+  task.keyPath = keyPath;
   task.replay = {nodes: childNodes, slots: childSlots, pendingTasks: 1};
 
   try {
@@ -5097,6 +5098,7 @@ export function abort(request: Request, reason: mixed): void {
   if (request.status === OPEN) {
     request.status = ABORTING;
   }
+
   try {
     const abortableTasks = request.abortableTasks;
     if (abortableTasks.size > 0) {
