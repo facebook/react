@@ -641,6 +641,37 @@ export function resumeRequest(
   return request;
 }
 
+export function resumeAndPrerenderRequest(
+  children: ReactNodeList,
+  postponedState: PostponedState,
+  renderState: RenderState,
+  onError: void | ((error: mixed, errorInfo: ErrorInfo) => ?string),
+  onAllReady: void | (() => void),
+  onShellReady: void | (() => void),
+  onShellError: void | ((error: mixed) => void),
+  onFatalError: void | ((error: mixed) => void),
+  onPostpone: void | ((reason: string, postponeInfo: PostponeInfo) => void),
+): Request {
+  const request = resumeRequest(
+    children,
+    postponedState,
+    renderState,
+    onError,
+    onAllReady,
+    onShellReady,
+    onShellError,
+    onFatalError,
+    onPostpone,
+  );
+  // Start tracking postponed holes during this render.
+  request.trackedPostpones = {
+    workingMap: new Map(),
+    rootNodes: [],
+    rootSlots: null,
+  };
+  return request;
+}
+
 let currentRequest: null | Request = null;
 
 export function resolveRequest(): null | Request {
@@ -1349,6 +1380,7 @@ function replaySuspenseBoundary(
   // we're writing to. If something suspends, it'll spawn new suspended task with that context.
   task.blockedBoundary = resumedBoundary;
   task.hoistableState = resumedBoundary.contentState;
+  task.keyPath = keyPath;
   task.replay = {nodes: childNodes, slots: childSlots, pendingTasks: 1};
 
   try {
@@ -5066,6 +5098,7 @@ export function abort(request: Request, reason: mixed): void {
   if (request.status === OPEN) {
     request.status = ABORTING;
   }
+
   try {
     const abortableTasks = request.abortableTasks;
     if (abortableTasks.size > 0) {
