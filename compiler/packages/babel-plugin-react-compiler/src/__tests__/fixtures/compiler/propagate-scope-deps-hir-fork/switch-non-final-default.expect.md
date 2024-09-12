@@ -34,10 +34,10 @@ function Component(props) {
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @enablePropagateDepsInHIR
 function Component(props) {
-  const $ = _c(7);
+  const $ = _c(8);
   let y;
   let t0;
-  if ($[0] !== props) {
+  if ($[0] !== props.p0 || $[1] !== props.p2) {
     const x = [];
     bb0: switch (props.p0) {
       case 1: {
@@ -46,11 +46,11 @@ function Component(props) {
       case true: {
         x.push(props.p2);
         let t1;
-        if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+        if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
           t1 = [];
-          $[3] = t1;
+          $[4] = t1;
         } else {
-          t1 = $[3];
+          t1 = $[4];
         }
         y = t1;
       }
@@ -63,23 +63,24 @@ function Component(props) {
     }
 
     t0 = <Component data={x} />;
-    $[0] = props;
-    $[1] = y;
-    $[2] = t0;
+    $[0] = props.p0;
+    $[1] = props.p2;
+    $[2] = y;
+    $[3] = t0;
   } else {
-    y = $[1];
-    t0 = $[2];
+    y = $[2];
+    t0 = $[3];
   }
   const child = t0;
   y.push(props.p4);
   let t1;
-  if ($[4] !== y || $[5] !== child) {
+  if ($[5] !== y || $[6] !== child) {
     t1 = <Component data={y}>{child}</Component>;
-    $[4] = y;
-    $[5] = child;
-    $[6] = t1;
+    $[5] = y;
+    $[6] = child;
+    $[7] = t1;
   } else {
-    t1 = $[6];
+    t1 = $[7];
   }
   return t1;
 }

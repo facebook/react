@@ -63,20 +63,13 @@ import { c as _c } from "react/compiler-runtime"; // @enablePropagateDepsInHIR
 import { CONST_TRUE, setProperty } from "shared-runtime";
 
 function useJoinCondDepsInUncondScopes(props) {
-  const $ = _c(4);
+  const $ = _c(2);
   let t0;
   if ($[0] !== props.a.b) {
     const y = {};
-    let x;
-    if ($[2] !== props) {
-      x = {};
-      if (CONST_TRUE) {
-        setProperty(x, props.a.b);
-      }
-      $[2] = props;
-      $[3] = x;
-    } else {
-      x = $[3];
+    const x = {};
+    if (CONST_TRUE) {
+      setProperty(x, props.a.b);
     }
 
     setProperty(y, props.a.b);

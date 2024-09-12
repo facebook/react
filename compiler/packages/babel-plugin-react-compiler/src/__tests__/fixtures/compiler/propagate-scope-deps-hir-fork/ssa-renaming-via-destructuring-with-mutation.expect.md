@@ -36,9 +36,9 @@ import { c as _c } from "react/compiler-runtime"; // @enablePropagateDepsInHIR
 import { mutate } from "shared-runtime";
 
 function useFoo(props) {
-  const $ = _c(2);
+  const $ = _c(4);
   let x;
-  if ($[0] !== props) {
+  if ($[0] !== props.bar || $[1] !== props.cond || $[2] !== props.foo) {
     ({ x } = { x: [] });
     x.push(props.bar);
     if (props.cond) {
@@ -47,10 +47,12 @@ function useFoo(props) {
     }
 
     mutate(x);
-    $[0] = props;
-    $[1] = x;
+    $[0] = props.bar;
+    $[1] = props.cond;
+    $[2] = props.foo;
+    $[3] = x;
   } else {
-    x = $[1];
+    x = $[3];
   }
   return x;
 }

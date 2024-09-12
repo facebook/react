@@ -34,11 +34,16 @@ import { c as _c } from "react/compiler-runtime"; // @enablePropagateDepsInHIR
 import { useMemo } from "react";
 
 function Component(props) {
-  const $ = _c(3);
+  const $ = _c(6);
   let t0;
   bb0: {
     let y;
-    if ($[0] !== props) {
+    if (
+      $[0] !== props.cond ||
+      $[1] !== props.a ||
+      $[2] !== props.cond2 ||
+      $[3] !== props.b
+    ) {
       y = [];
       if (props.cond) {
         y.push(props.a);
@@ -49,12 +54,15 @@ function Component(props) {
       }
 
       y.push(props.b);
-      $[0] = props;
-      $[1] = y;
-      $[2] = t0;
+      $[0] = props.cond;
+      $[1] = props.a;
+      $[2] = props.cond2;
+      $[3] = props.b;
+      $[4] = y;
+      $[5] = t0;
     } else {
-      y = $[1];
-      t0 = $[2];
+      y = $[4];
+      t0 = $[5];
     }
     t0 = y;
   }

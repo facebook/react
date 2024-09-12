@@ -40,9 +40,9 @@ import { c as _c } from "react/compiler-runtime"; // @enablePropagateDepsInHIR
 import { Stringify } from "shared-runtime";
 
 function Component(props) {
-  const $ = _c(2);
+  const $ = _c(3);
   let t0;
-  if ($[0] !== props) {
+  if ($[0] !== props.p0 || $[1] !== props.p1) {
     const x = [];
     let y;
     if (props.p0) {
@@ -56,10 +56,11 @@ function Component(props) {
         {y}
       </Stringify>
     );
-    $[0] = props;
-    $[1] = t0;
+    $[0] = props.p0;
+    $[1] = props.p1;
+    $[2] = t0;
   } else {
-    t0 = $[1];
+    t0 = $[2];
   }
   return t0;
 }
