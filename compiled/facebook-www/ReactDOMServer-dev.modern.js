@@ -5665,6 +5665,7 @@ __DEV__ &&
                         resumedBoundary.rootSegmentID = ref;
                         task.blockedBoundary = resumedBoundary;
                         task.hoistableState = resumedBoundary.contentState;
+                        task.keyPath = keyPath;
                         task.replay = {
                           nodes: replay,
                           slots: name,
@@ -8803,5 +8804,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.0.0-www-modern-d6cb4e77-20240911";
+    exports.version = "19.0.0-www-modern-47352209-20240912";
   })();
