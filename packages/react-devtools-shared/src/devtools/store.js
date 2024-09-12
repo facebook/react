@@ -1500,6 +1500,7 @@ export default class Store extends EventEmitter<{
     }
 
     this._bridge.send('getBackendVersion');
+    this._bridge.send('getIfHasUnsupportedRendererVersion');
   };
 
   // The Store should never throw an Error without also emitting an event.

@@ -9,18 +9,7 @@
 
 import Agent from './agent';
 
-import {attach as attachFiber} from './fiber/renderer';
-import {attach as attachFlight} from './flight/renderer';
-import {attach as attachLegacy} from './legacy/renderer';
-
-import {hasAssignedBackend} from './utils';
-
-import type {DevToolsHook, ReactRenderer, RendererInterface} from './types';
-
-// this is the backend that is compatible with all older React versions
-function isMatchingRender(version: string): boolean {
-  return !hasAssignedBackend(version);
-}
+import type {DevToolsHook, RendererID, RendererInterface} from './types';
 
 export type InitBackend = typeof initBackend;
 
@@ -34,29 +23,32 @@ export function initBackend(
     return () => {};
   }
 
+  function registerRendererInterface(
+    id: RendererID,
+    rendererInterface: RendererInterface,
+  ) {
+    agent.registerRendererInterface(id, rendererInterface);
+
+    // Now that the Store and the renderer interface are connected,
+    // it's time to flush the pending operation codes to the frontend.
+    rendererInterface.flushInitialOperations();
+  }
+
   const subs = [
     hook.sub(
       'renderer-attached',
       ({
         id,
-        renderer,
         rendererInterface,
       }: {
         id: number,
-        renderer: ReactRenderer,
         rendererInterface: RendererInterface,
-        ...
       }) => {
-        agent.setRendererInterface(id, rendererInterface);
-
-        // Now that the Store and the renderer interface are connected,
-        // it's time to flush the pending operation codes to the frontend.
-        rendererInterface.flushInitialOperations();
+        registerRendererInterface(id, rendererInterface);
       },
     ),
-
-    hook.sub('unsupported-renderer-version', (id: number) => {
-      agent.onUnsupportedRenderer(id);
+    hook.sub('unsupported-renderer-version', () => {
+      agent.onUnsupportedRenderer();
     }),
 
     hook.sub('fastRefreshScheduled', agent.onFastRefreshScheduled),
@@ -66,68 +58,19 @@ export function initBackend(
     // TODO Add additional subscriptions required for profiling mode
   ];
 
-  const attachRenderer = (id: number, renderer: ReactRenderer) => {
-    // only attach if the renderer is compatible with the current version of the backend
-    if (!isMatchingRender(renderer.reconcilerVersion || renderer.version)) {
-      return;
+  agent.addListener('getIfHasUnsupportedRendererVersion', () => {
+    if (hook.hasUnsupportedRendererAttached) {
+      agent.onUnsupportedRenderer();
     }
-    let rendererInterface = hook.rendererInterfaces.get(id);
-
-    // Inject any not-yet-injected renderers (if we didn't reload-and-profile)
-    if (rendererInterface == null) {
-      if (typeof renderer.getCurrentComponentInfo === 'function') {
-        // react-flight/client
-        rendererInterface = attachFlight(hook, id, renderer, global);
-      } else if (
-        // v16-19
-        typeof renderer.findFiberByHostInstance === 'function' ||
-        // v16.8+
-        renderer.currentDispatcherRef != null
-      ) {
-        // react-reconciler v16+
-        rendererInterface = attachFiber(hook, id, renderer, global);
-      } else if (renderer.ComponentTree) {
-        // react-dom v15
-        rendererInterface = attachLegacy(hook, id, renderer, global);
-      } else {
-        // Older react-dom or other unsupported renderer version
-      }
-
-      if (rendererInterface != null) {
-        hook.rendererInterfaces.set(id, rendererInterface);
-      }
-    }
-
-    // Notify the DevTools frontend about new renderers.
-    // This includes any that were attached early (via __REACT_DEVTOOLS_ATTACH__).
-    if (rendererInterface != null) {
-      hook.emit('renderer-attached', {
-        id,
-        renderer,
-        rendererInterface,
-      });
-    } else {
-      hook.emit('unsupported-renderer-version', id);
-    }
-  };
-
-  // Connect renderers that have already injected themselves.
-  hook.renderers.forEach((renderer, id) => {
-    attachRenderer(id, renderer);
   });
 
-  // Connect any new renderers that injected themselves.
-  subs.push(
-    hook.sub(
-      'renderer',
-      ({id, renderer}: {id: number, renderer: ReactRenderer, ...}) => {
-        attachRenderer(id, renderer);
-      },
-    ),
-  );
+  hook.rendererInterfaces.forEach((rendererInterface, id) => {
+    registerRendererInterface(id, rendererInterface);
+  });
 
   hook.emit('react-devtools', agent);
   hook.reactDevtoolsAgent = agent;
+
   const onAgentShutdown = () => {
     subs.forEach(fn => fn());
     hook.rendererInterfaces.forEach(rendererInterface => {

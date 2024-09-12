@@ -152,6 +152,7 @@ export default class Agent extends EventEmitter<{
   traceUpdates: [Set<HostInstance>],
   drawTraceUpdates: [Array<HostInstance>],
   disableTraceUpdates: [],
+  getIfHasUnsupportedRendererVersion: [],
 }> {
   _bridge: BackendBridge;
   _isProfiling: boolean = false;
@@ -221,6 +222,10 @@ export default class Agent extends EventEmitter<{
     );
     bridge.addListener('updateComponentFilters', this.updateComponentFilters);
     bridge.addListener('getEnvironmentNames', this.getEnvironmentNames);
+    bridge.addListener(
+      'getIfHasUnsupportedRendererVersion',
+      this.getIfHasUnsupportedRendererVersion,
+    );
 
     // Temporarily support older standalone front-ends sending commands to newer embedded backends.
     // We do this because React Native embeds the React DevTools backend,
@@ -709,7 +714,7 @@ export default class Agent extends EventEmitter<{
     }
   }
 
-  setRendererInterface(
+  registerRendererInterface(
     rendererID: RendererID,
     rendererInterface: RendererInterface,
   ) {
@@ -940,8 +945,12 @@ export default class Agent extends EventEmitter<{
     }
   };
 
-  onUnsupportedRenderer(rendererID: number) {
-    this._bridge.send('unsupportedRendererVersion', rendererID);
+  getIfHasUnsupportedRendererVersion: () => void = () => {
+    this.emit('getIfHasUnsupportedRendererVersion');
+  };
+
+  onUnsupportedRenderer() {
+    this._bridge.send('unsupportedRendererVersion');
   }
 
   _persistSelectionTimerScheduled: boolean = false;
