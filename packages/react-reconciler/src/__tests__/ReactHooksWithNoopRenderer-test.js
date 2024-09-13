@@ -3035,7 +3035,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           await act(() => {
             root.render(<Activity mode="hidden" />);
           });
-        });
+        }).toErrorDev([]);
       }
 
       // Should not warn for regular effects after throw.
