@@ -225,7 +225,8 @@ import {
   recordCommitTime,
   resetNestedUpdateFlag,
   startProfilerTimer,
-  stopProfilerTimerIfRunningAndRecordDelta,
+  stopProfilerTimerIfRunningAndRecordDuration,
+  stopProfilerTimerIfRunningAndRecordIncompleteDuration,
   syncNestedUpdateFlag,
 } from './ReactProfilerTimer';
 
@@ -1844,7 +1845,7 @@ function handleThrow(root: FiberRoot, thrownValue: any): void {
     // Record the time spent rendering before an error was thrown. This
     // avoids inaccurate Profiler durations in the case of a
     // suspended render.
-    stopProfilerTimerIfRunningAndRecordDelta(erroredWork, true);
+    stopProfilerTimerIfRunningAndRecordDuration(erroredWork);
   }
 
   if (enableSchedulingProfiler) {
@@ -2516,7 +2517,7 @@ function performUnitOfWork(unitOfWork: Fiber): void {
     } else {
       next = beginWork(current, unitOfWork, entangledRenderLanes);
     }
-    stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, true);
+    stopProfilerTimerIfRunningAndRecordDuration(unitOfWork);
   } else {
     if (__DEV__) {
       next = runWithFiberInDEV(
@@ -2660,7 +2661,7 @@ function replayBeginWork(unitOfWork: Fiber): null | Fiber {
     }
   }
   if (isProfilingMode) {
-    stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, true);
+    stopProfilerTimerIfRunningAndRecordDuration(unitOfWork);
   }
 
   return next;
@@ -2851,7 +2852,7 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
         next = completeWork(current, completedWork, entangledRenderLanes);
       }
       // Update render duration assuming we didn't error.
-      stopProfilerTimerIfRunningAndRecordDelta(completedWork, false);
+      stopProfilerTimerIfRunningAndRecordIncompleteDuration(completedWork);
     }
 
     if (next !== null) {
@@ -2909,7 +2910,7 @@ function unwindUnitOfWork(unitOfWork: Fiber, skipSiblings: boolean): void {
 
     if (enableProfilerTimer && (incompleteWork.mode & ProfileMode) !== NoMode) {
       // Record the render duration for the fiber that errored.
-      stopProfilerTimerIfRunningAndRecordDelta(incompleteWork, false);
+      stopProfilerTimerIfRunningAndRecordIncompleteDuration(incompleteWork);
 
       // Include the time spent working on failed children before continuing.
       let actualDuration = incompleteWork.actualDuration;
