@@ -67,16 +67,20 @@ exports.clientModuleError = function clientModuleError(moduleError) {
 
 exports.clientExports = function clientExports(
   moduleExports,
-  chunkId,
-  chunkFilename,
-  blockOnChunk,
+  options?: {
+    chunk?: {
+      id: string | number,
+      filename: string,
+      promise?: Promise,
+    },
+  } = {},
 ) {
   const chunks = [];
-  if (chunkId) {
-    chunks.push(chunkId, chunkFilename);
+  if (options.chunk) {
+    chunks.push(options.chunk.id, options.chunk.filename);
 
-    if (blockOnChunk) {
-      webpackChunkMap[chunkId] = blockOnChunk;
+    if (options.chunk.promise) {
+      webpackChunkMap[options.chunk.id] = options.chunk.promise;
     }
   }
   const idx = '' + webpackModuleIdx++;

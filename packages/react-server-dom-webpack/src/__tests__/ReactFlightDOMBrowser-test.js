@@ -213,9 +213,15 @@ describe('ReactFlightDOMBrowser', () => {
       function ClientInner({children}) {
         return <span>{children}</span>;
       },
-      '42',
-      '/test.js',
-      new Promise(resolve => (resolveClientComponentChunk = resolve)),
+      {
+        chunk: {
+          id: '42',
+          filename: '/test.js',
+          promise: new Promise(
+            resolve => (resolveClientComponentChunk = resolve),
+          ),
+        },
+      },
     );
 
     function Server() {
@@ -258,9 +264,15 @@ describe('ReactFlightDOMBrowser', () => {
       function ClientInner({value}) {
         return <pre>{JSON.stringify(value)}</pre>;
       },
-      '42',
-      '/test.js',
-      new Promise(resolve => (resolveClientComponentChunk = resolve)),
+      {
+        chunk: {
+          id: '42',
+          filename: '/test.js',
+          promise: new Promise(
+            resolve => (resolveClientComponentChunk = resolve),
+          ),
+        },
+      },
     );
 
     function Server({value}) {
@@ -309,9 +321,15 @@ describe('ReactFlightDOMBrowser', () => {
       function ClientInner({value}) {
         return <pre>{JSON.stringify(value)}</pre>;
       },
-      '42',
-      '/test.js',
-      new Promise(resolve => (resolveClientComponentChunk = resolve)),
+      {
+        chunk: {
+          id: '42',
+          filename: '/test.js',
+          promise: new Promise(
+            resolve => (resolveClientComponentChunk = resolve),
+          ),
+        },
+      },
     );
 
     function Server({value}) {
@@ -355,12 +373,15 @@ describe('ReactFlightDOMBrowser', () => {
   it('should resolve deduped objects that are themselves blocked', async () => {
     let resolveClientComponentChunk;
 
-    const Client = clientExports(
-      [4, 5],
-      '42',
-      '/test.js',
-      new Promise(resolve => (resolveClientComponentChunk = resolve)),
-    );
+    const Client = clientExports([4, 5], {
+      chunk: {
+        id: '42',
+        filename: '/test.js',
+        promise: new Promise(
+          resolve => (resolveClientComponentChunk = resolve),
+        ),
+      },
+    });
 
     const shared = [1, 2, 3, Client];
 
@@ -407,9 +428,15 @@ describe('ReactFlightDOMBrowser', () => {
       function ClientOuter({children, value}) {
         return children;
       },
-      '1',
-      '/outer.js',
-      new Promise(resolve => (resolveOuterClientComponentChunk = resolve)),
+      {
+        chunk: {
+          id: '1',
+          filename: '/outer.js',
+          promise: new Promise(
+            resolve => (resolveOuterClientComponentChunk = resolve),
+          ),
+        },
+      },
     );
 
     function PassthroughServerComponent({children}) {
@@ -420,9 +447,15 @@ describe('ReactFlightDOMBrowser', () => {
       function ClientInner({children}) {
         return JSON.stringify(children);
       },
-      '2',
-      '/inner.js',
-      new Promise(resolve => (resolveInnerClientComponentChunk = resolve)),
+      {
+        chunk: {
+          id: '2',
+          filename: '/inner.js',
+          promise: new Promise(
+            resolve => (resolveInnerClientComponentChunk = resolve),
+          ),
+        },
+      },
     );
 
     const value = {};
@@ -475,18 +508,30 @@ describe('ReactFlightDOMBrowser', () => {
       function FooClient({children}) {
         return JSON.stringify(children);
       },
-      '1',
-      '/foo.js',
-      new Promise(resolve => (resolveFooClientComponentChunk = resolve)),
+      {
+        chunk: {
+          id: '1',
+          filename: '/foo.js',
+          promise: new Promise(
+            resolve => (resolveFooClientComponentChunk = resolve),
+          ),
+        },
+      },
     );
 
     const BarClient = clientExports(
       function BarClient() {
         return 'not used';
       },
-      '2',
-      '/bar.js',
-      new Promise(resolve => (resolveBarClientComponentChunk = resolve)),
+      {
+        chunk: {
+          id: '2',
+          filename: '/bar.js',
+          promise: new Promise(
+            resolve => (resolveBarClientComponentChunk = resolve),
+          ),
+        },
+      },
     );
 
     const shared = {foo: 1};
@@ -539,9 +584,15 @@ describe('ReactFlightDOMBrowser', () => {
       function Foo({children, item}) {
         return children;
       },
-      '1',
-      '/foo.js',
-      new Promise(resolve => (resolveFooClientComponentChunk = resolve)),
+      {
+        chunk: {
+          id: '1',
+          filename: '/foo.js',
+          promise: new Promise(
+            resolve => (resolveFooClientComponentChunk = resolve),
+          ),
+        },
+      },
     );
 
     const shared = <div />;
@@ -590,9 +641,15 @@ describe('ReactFlightDOMBrowser', () => {
       function Foo({children, item}) {
         return children;
       },
-      '1',
-      '/foo.js',
-      new Promise(resolve => (resolveFooClientComponentChunk = resolve)),
+      {
+        chunk: {
+          id: '1',
+          filename: '/foo.js',
+          promise: new Promise(
+            resolve => (resolveFooClientComponentChunk = resolve),
+          ),
+        },
+      },
     );
 
     const shared = <div />;
