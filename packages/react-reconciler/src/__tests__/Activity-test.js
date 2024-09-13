@@ -1477,7 +1477,7 @@ describe('Activity', () => {
     assertLog([1, 'Commit mount [1]']);
     expect(root).toMatchRenderedOutput(<span prop={1} />);
 
-    // Hide the tree. This will unmount the effect.
+    // Hide the tree. This will not unmount insertion effects.
     await act(() => {
       root.render(<App show={false} step={1} />);
     });
