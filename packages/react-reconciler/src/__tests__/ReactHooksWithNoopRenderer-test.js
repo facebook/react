@@ -19,6 +19,7 @@ let resolveText;
 let ReactNoop;
 let Scheduler;
 let Suspense;
+let Activity;
 let useState;
 let useReducer;
 let useEffect;
@@ -64,6 +65,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     useTransition = React.useTransition;
     useDeferredValue = React.useDeferredValue;
     Suspense = React.Suspense;
+    Activity = React.unstable_Activity;
     ContinuousEventPriority =
       require('react-reconciler/constants').ContinuousEventPriority;
     if (gate(flags => flags.enableSuspenseList)) {
@@ -2872,38 +2874,6 @@ describe('ReactHooksWithNoopRenderer', () => {
       });
     });
 
-    // @gate enableActivity
-    it('runs insertion effect cleanup when unmounting in Offscreen state', async () => {
-      function Logger(props) {
-        useInsertionEffect(() => {
-          Scheduler.log(`create`);
-          return () => {
-            Scheduler.log(`destroy`);
-          };
-        }, []);
-        return null;
-      }
-
-      const Activity = React.unstable_Activity;
-      await act(async () => {
-        ReactNoop.render(
-          <Activity mode="hidden">
-            <Logger name="hidden" />
-          </Activity>,
-        );
-        await waitForAll(['create']);
-      });
-
-      await act(async () => {
-        ReactNoop.render(null);
-        await waitForAll(
-          gate(flags => flags.enableHiddenSubtreeInsertionEffectCleanup)
-            ? ['destroy']
-            : [],
-        );
-      });
-    });
-
     it('assumes insertion effect destroy function is either a function or undefined', async () => {
       function App(props) {
         useInsertionEffect(() => {
@@ -3016,6 +2986,48 @@ describe('ReactHooksWithNoopRenderer', () => {
         root.render(<App throw={true} />);
         await waitForThrow('No');
       });
+
+      // Should not warn for regular effects after throw.
+      function NotInsertion() {
+        const [, setX] = useState(0);
+        useEffect(() => {
+          setX(1);
+        }, []);
+        return null;
+      }
+      await act(() => {
+        root.render(<NotInsertion />);
+      });
+    });
+
+    // @gate enableActivity && enableHiddenSubtreeInsertionEffectCleanup
+    it('warns when setState is called from offscreen deleted insertion effect cleanup', async () => {
+      function App(props) {
+        const [, setX] = useState(0);
+        useInsertionEffect(() => {
+          if (props.throw) {
+            throw Error('No');
+          }
+          return () => {
+            setX(1);
+          };
+        }, [props.throw, props.foo]);
+        return null;
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(() => {
+        root.render(
+          <Activity mode="hidden">
+            <App foo="hello" />
+          </Activity>,
+        );
+      });
+      await expect(async () => {
+        await act(() => {
+          root.render(<Activity mode="hidden" />);
+        });
+      }).toErrorDev(['useInsertionEffect must not schedule updates.']);
 
       // Should not warn for regular effects after throw.
       function NotInsertion() {
