@@ -2430,10 +2430,10 @@ function mountSuspenseFallbackChildren(
       // final amounts. This seems counterintuitive, since we're intentionally
       // not measuring part of the render phase, but this makes it match what we
       // do in Concurrent Mode.
-      primaryChildFragment.actualDuration = 0;
-      primaryChildFragment.actualStartTime = -1;
-      primaryChildFragment.selfBaseDuration = 0;
-      primaryChildFragment.treeBaseDuration = 0;
+      primaryChildFragment.actualDuration = -0;
+      primaryChildFragment.actualStartTime = -1.1;
+      primaryChildFragment.selfBaseDuration = -0;
+      primaryChildFragment.treeBaseDuration = -0;
     }
 
     fallbackChildFragment = createFiberFromFragment(
@@ -2560,8 +2560,8 @@ function updateSuspenseFallbackChildren(
       // final amounts. This seems counterintuitive, since we're intentionally
       // not measuring part of the render phase, but this makes it match what we
       // do in Concurrent Mode.
-      primaryChildFragment.actualDuration = 0;
-      primaryChildFragment.actualStartTime = -1;
+      primaryChildFragment.actualDuration = -0;
+      primaryChildFragment.actualStartTime = -1.1;
       primaryChildFragment.selfBaseDuration =
         currentPrimaryChildFragment.selfBaseDuration;
       primaryChildFragment.treeBaseDuration =
