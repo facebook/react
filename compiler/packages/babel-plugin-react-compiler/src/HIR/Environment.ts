@@ -354,6 +354,54 @@ const EnvironmentConfigSchema = z.object({
    */
   enableFunctionOutlining: z.boolean().default(true),
 
+  /**
+   * If enabled, this will outline nested JSX into a separate component.
+   *
+   * This will enable the compiler to memoize the separate component, giving us
+   * the same behavior as compiling _within_ the callback.
+   *
+   * ```
+   * function Component(countries, onDelete) {
+   *   const name = useFoo();
+   *   return countries.map(() => {
+   *     return (
+   *       <Foo>
+   *         <Bar>{name}</Bar>
+   *         <Button onclick={onDelete}>delete</Button>
+   *       </Foo>
+   *     );
+   *   });
+   * }
+   * ```
+   *
+   * will be transpiled to:
+   *
+   * ```
+   * function Component(countries, onDelete) {
+   *   const name = useFoo();
+   *   return countries.map(() => {
+   *     return (
+   *       <Temp name={name} onDelete={onDelete} />
+   *     );
+   *   });
+   * }
+   *
+   * function Temp({name, onDelete}) {
+   *   return (
+   *     <Foo>
+   *       <Bar>{name}</Bar>
+   *       <Button onclick={onDelete}>delete</Button>
+   *     </Foo>
+   *   );
+   * }
+   *
+   * Both, `Component` and `Temp` will then be memoized by the compiler.
+   *
+   * With this change, when `countries` is updated by adding one single value,
+   * only the newly added value is re-rendered and not the entire list.
+   */
+  enableJsxOutlining: z.boolean().default(false),
+
   /*
    * Enables instrumentation codegen. This emits a dev-mode only call to an
    * instrumentation function, for components and hooks that Forget compiles.

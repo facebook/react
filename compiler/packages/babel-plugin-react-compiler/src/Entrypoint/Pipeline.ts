@@ -103,6 +103,7 @@ import {lowerContextAccess} from '../Optimization/LowerContextAccess';
 import {validateNoSetStateInPassiveEffects} from '../Validation/ValidateNoSetStateInPassiveEffects';
 import {validateNoJSXInTryStatement} from '../Validation/ValidateNoJSXInTryStatement';
 import {propagateScopeDependenciesHIR} from '../HIR/PropagateScopeDependenciesHIR';
+import {outlineJSX} from '../Optimization/OutlineJsx';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -277,6 +278,10 @@ function* runWithEnvironment(
     name: 'MemoizeFbtAndMacroOperandsInSameScope',
     value: hir,
   });
+
+  if (env.config.enableJsxOutlining) {
+    outlineJSX(hir);
+  }
 
   if (env.config.enableFunctionOutlining) {
     outlineFunctions(hir, fbtOperands);
