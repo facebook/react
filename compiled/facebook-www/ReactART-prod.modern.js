@@ -77,6 +77,8 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableRetryLaneExpiration = dynamicFeatureFlags.enableRetryLaneExpiration,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+  enableHiddenSubtreeInsertionEffectCleanup =
+    dynamicFeatureFlags.enableHiddenSubtreeInsertionEffectCleanup,
   renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
   retryLaneExpirationMs = dynamicFeatureFlags.retryLaneExpirationMs,
   syncLaneExpirationMs = dynamicFeatureFlags.syncLaneExpirationMs,
@@ -7373,33 +7375,62 @@ function commitDeletionEffectsOnFiber(
     case 11:
     case 14:
     case 15:
-      if (
+      if (enableHiddenSubtreeInsertionEffectCleanup) {
+        if (
+          ((child = deletedFiber.updateQueue),
+          null !== child && ((child = child.lastEffect), null !== child))
+        ) {
+          child$jscomp$0 = child = child.next;
+          do {
+            prevHostParent = child$jscomp$0.tag;
+            prevHostParentIsContainer = child$jscomp$0.inst;
+            var destroy = prevHostParentIsContainer.destroy;
+            void 0 !== destroy &&
+              (0 !== (prevHostParent & 2)
+                ? ((prevHostParentIsContainer.destroy = void 0),
+                  safelyCallDestroy(
+                    deletedFiber,
+                    nearestMountedAncestor,
+                    destroy
+                  ))
+                : offscreenSubtreeWasHidden ||
+                  0 === (prevHostParent & 4) ||
+                  ((prevHostParentIsContainer.destroy = void 0),
+                  safelyCallDestroy(
+                    deletedFiber,
+                    nearestMountedAncestor,
+                    destroy
+                  )));
+            child$jscomp$0 = child$jscomp$0.next;
+          } while (child$jscomp$0 !== child);
+        }
+      } else if (
         !offscreenSubtreeWasHidden &&
         ((child = deletedFiber.updateQueue),
         null !== child && ((child = child.lastEffect), null !== child))
       ) {
         child$jscomp$0 = child = child.next;
-        do {
-          prevHostParent = child$jscomp$0.tag;
-          prevHostParentIsContainer = child$jscomp$0.inst;
-          var destroy = prevHostParentIsContainer.destroy;
-          void 0 !== destroy &&
-            (0 !== (prevHostParent & 2)
-              ? ((prevHostParentIsContainer.destroy = void 0),
-                safelyCallDestroy(
-                  deletedFiber,
-                  nearestMountedAncestor,
-                  destroy
-                ))
-              : 0 !== (prevHostParent & 4) &&
-                ((prevHostParentIsContainer.destroy = void 0),
-                safelyCallDestroy(
-                  deletedFiber,
-                  nearestMountedAncestor,
-                  destroy
-                )));
-          child$jscomp$0 = child$jscomp$0.next;
-        } while (child$jscomp$0 !== child);
+        do
+          (prevHostParent = child$jscomp$0.tag),
+            (prevHostParentIsContainer = child$jscomp$0.inst),
+            (destroy = prevHostParentIsContainer.destroy),
+            void 0 !== destroy &&
+              (0 !== (prevHostParent & 2)
+                ? ((prevHostParentIsContainer.destroy = void 0),
+                  safelyCallDestroy(
+                    deletedFiber,
+                    nearestMountedAncestor,
+                    destroy
+                  ))
+                : 0 !== (prevHostParent & 4) &&
+                  ((prevHostParentIsContainer.destroy = void 0),
+                  safelyCallDestroy(
+                    deletedFiber,
+                    nearestMountedAncestor,
+                    destroy
+                  ))),
+            (child$jscomp$0 = child$jscomp$0.next);
+        while (child$jscomp$0 !== child);
       }
       recursivelyTraverseDeletionEffects(
         finishedRoot,
@@ -8240,9 +8271,9 @@ function recursivelyTraverseReconnectPassiveEffects(
           );
         break;
       case 22:
-        var instance$131 = finishedWork.stateNode;
+        var instance$138 = finishedWork.stateNode;
         null !== finishedWork.memoizedState
-          ? instance$131._visibility & 4
+          ? instance$138._visibility & 4
             ? recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork,
@@ -8254,7 +8285,7 @@ function recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork
               )
-          : ((instance$131._visibility |= 4),
+          : ((instance$138._visibility |= 4),
             recursivelyTraverseReconnectPassiveEffects(
               finishedRoot,
               finishedWork,
@@ -8267,7 +8298,7 @@ function recursivelyTraverseReconnectPassiveEffects(
           commitOffscreenPassiveMountEffects(
             finishedWork.alternate,
             finishedWork,
-            instance$131
+            instance$138
           );
         break;
       case 24:
@@ -8361,12 +8392,12 @@ function accumulateSuspenseyCommitOnFiber(fiber) {
       break;
     case 22:
       if (null === fiber.memoizedState) {
-        var current$136 = fiber.alternate;
-        null !== current$136 && null !== current$136.memoizedState
-          ? ((current$136 = suspenseyCommitFlag),
+        var current$143 = fiber.alternate;
+        null !== current$143 && null !== current$143.memoizedState
+          ? ((current$143 = suspenseyCommitFlag),
             (suspenseyCommitFlag = 16777216),
             recursivelyAccumulateSuspenseyCommit(fiber),
-            (suspenseyCommitFlag = current$136))
+            (suspenseyCommitFlag = current$143))
           : recursivelyAccumulateSuspenseyCommit(fiber);
       }
       break;
@@ -9222,8 +9253,8 @@ function renderRootSync(root, lanes) {
       }
       workLoopSync();
       break;
-    } catch (thrownValue$142) {
-      handleThrow(root, thrownValue$142);
+    } catch (thrownValue$149) {
+      handleThrow(root, thrownValue$149);
     }
   while (1);
   lanes && root.shellSuspendCounter++;
@@ -9338,8 +9369,8 @@ function renderRootConcurrent(root, lanes) {
       }
       workLoopConcurrent();
       break;
-    } catch (thrownValue$144) {
-      handleThrow(root, thrownValue$144);
+    } catch (thrownValue$151) {
+      handleThrow(root, thrownValue$151);
     }
   while (1);
   resetContextDependencies();
@@ -10364,27 +10395,27 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component);
-var internals$jscomp$inline_1409 = {
+var internals$jscomp$inline_1416 = {
   bundleType: 0,
-  version: "19.0.0-www-modern-94e4acaa-20240913",
+  version: "19.0.0-www-modern-d3d4d3a4-20240913",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: function () {
     return null;
   },
-  reconcilerVersion: "19.0.0-www-modern-94e4acaa-20240913"
+  reconcilerVersion: "19.0.0-www-modern-d3d4d3a4-20240913"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1410 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1417 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1410.isDisabled &&
-    hook$jscomp$inline_1410.supportsFiber
+    !hook$jscomp$inline_1417.isDisabled &&
+    hook$jscomp$inline_1417.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1410.inject(
-        internals$jscomp$inline_1409
+      (rendererID = hook$jscomp$inline_1417.inject(
+        internals$jscomp$inline_1416
       )),
-        (injectedHook = hook$jscomp$inline_1410);
+        (injectedHook = hook$jscomp$inline_1417);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
@@ -10398,4 +10429,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.0.0-www-modern-94e4acaa-20240913";
+exports.version = "19.0.0-www-modern-d3d4d3a4-20240913";

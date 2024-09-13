@@ -7812,7 +7812,38 @@ module.exports = function ($$$config) {
       case 11:
       case 14:
       case 15:
-        if (
+        if (enableHiddenSubtreeInsertionEffectCleanup) {
+          if (
+            ((prevHostParent = deletedFiber.updateQueue),
+            null !== prevHostParent &&
+              ((prevHostParent = prevHostParent.lastEffect),
+              null !== prevHostParent))
+          ) {
+            prevHostParentIsContainer = prevHostParent = prevHostParent.next;
+            do {
+              var tag = prevHostParentIsContainer.tag,
+                inst = prevHostParentIsContainer.inst,
+                destroy = inst.destroy;
+              void 0 !== destroy &&
+                (0 !== (tag & 2)
+                  ? ((inst.destroy = void 0),
+                    safelyCallDestroy(
+                      deletedFiber,
+                      nearestMountedAncestor,
+                      destroy
+                    ))
+                  : offscreenSubtreeWasHidden ||
+                    0 === (tag & 4) ||
+                    ((inst.destroy = void 0),
+                    safelyCallDestroy(
+                      deletedFiber,
+                      nearestMountedAncestor,
+                      destroy
+                    )));
+              prevHostParentIsContainer = prevHostParentIsContainer.next;
+            } while (prevHostParentIsContainer !== prevHostParent);
+          }
+        } else if (
           !offscreenSubtreeWasHidden &&
           ((prevHostParent = deletedFiber.updateQueue),
           null !== prevHostParent &&
@@ -7820,27 +7851,27 @@ module.exports = function ($$$config) {
             null !== prevHostParent))
         ) {
           prevHostParentIsContainer = prevHostParent = prevHostParent.next;
-          do {
-            var tag = prevHostParentIsContainer.tag,
-              inst = prevHostParentIsContainer.inst,
-              destroy = inst.destroy;
-            void 0 !== destroy &&
-              (0 !== (tag & 2)
-                ? ((inst.destroy = void 0),
-                  safelyCallDestroy(
-                    deletedFiber,
-                    nearestMountedAncestor,
-                    destroy
-                  ))
-                : 0 !== (tag & 4) &&
-                  ((inst.destroy = void 0),
-                  safelyCallDestroy(
-                    deletedFiber,
-                    nearestMountedAncestor,
-                    destroy
-                  )));
-            prevHostParentIsContainer = prevHostParentIsContainer.next;
-          } while (prevHostParentIsContainer !== prevHostParent);
+          do
+            (tag = prevHostParentIsContainer.tag),
+              (inst = prevHostParentIsContainer.inst),
+              (destroy = inst.destroy),
+              void 0 !== destroy &&
+                (0 !== (tag & 2)
+                  ? ((inst.destroy = void 0),
+                    safelyCallDestroy(
+                      deletedFiber,
+                      nearestMountedAncestor,
+                      destroy
+                    ))
+                  : 0 !== (tag & 4) &&
+                    ((inst.destroy = void 0),
+                    safelyCallDestroy(
+                      deletedFiber,
+                      nearestMountedAncestor,
+                      destroy
+                    ))),
+              (prevHostParentIsContainer = prevHostParentIsContainer.next);
+          while (prevHostParentIsContainer !== prevHostParent);
         }
         recursivelyTraverseDeletionEffects(
           finishedRoot,
@@ -7894,15 +7925,15 @@ module.exports = function ($$$config) {
   }
   function commitSuspenseHydrationCallbacks(finishedRoot, finishedWork) {
     if (supportsHydration && null === finishedWork.memoizedState) {
-      var current$154 = finishedWork.alternate;
+      var current$161 = finishedWork.alternate;
       if (
-        null !== current$154 &&
-        ((current$154 = current$154.memoizedState),
-        null !== current$154 &&
-          ((current$154 = current$154.dehydrated), null !== current$154))
+        null !== current$161 &&
+        ((current$161 = current$161.memoizedState),
+        null !== current$161 &&
+          ((current$161 = current$161.dehydrated), null !== current$161))
       ) {
         try {
-          commitHydratedSuspenseInstance(current$154);
+          commitHydratedSuspenseInstance(current$161);
         } catch (error) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error);
         }
@@ -7910,7 +7941,7 @@ module.exports = function ($$$config) {
           var hydrationCallbacks = finishedRoot.hydrationCallbacks;
           if (null !== hydrationCallbacks) {
             var onHydrated = hydrationCallbacks.onHydrated;
-            onHydrated && onHydrated(current$154);
+            onHydrated && onHydrated(current$161);
           }
         } catch (error) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error);
@@ -8486,7 +8517,7 @@ module.exports = function ($$$config) {
     includeWorkInProgressEffects =
       includeWorkInProgressEffects && 0 !== (parentFiber.subtreeFlags & 8772);
     for (parentFiber = parentFiber.child; null !== parentFiber; ) {
-      var current$160 = parentFiber.alternate,
+      var current$167 = parentFiber.alternate,
         finishedRoot = finishedRoot$jscomp$0,
         finishedWork = parentFiber,
         flags = finishedWork.flags;
@@ -8507,18 +8538,18 @@ module.exports = function ($$$config) {
             finishedWork,
             includeWorkInProgressEffects
           );
-          current$160 = finishedWork;
-          finishedRoot = current$160.stateNode;
+          current$167 = finishedWork;
+          finishedRoot = current$167.stateNode;
           if ("function" === typeof finishedRoot.componentDidMount)
             try {
               finishedRoot.componentDidMount();
             } catch (error) {
-              captureCommitPhaseError(current$160, current$160.return, error);
+              captureCommitPhaseError(current$167, current$167.return, error);
             }
-          current$160 = finishedWork;
-          finishedRoot = current$160.updateQueue;
+          current$167 = finishedWork;
+          finishedRoot = current$167.updateQueue;
           if (null !== finishedRoot) {
-            var instance = current$160.stateNode;
+            var instance = current$167.stateNode;
             try {
               var hiddenCallbacks = finishedRoot.shared.hiddenCallbacks;
               if (null !== hiddenCallbacks)
@@ -8529,7 +8560,7 @@ module.exports = function ($$$config) {
                 )
                   callCallback(hiddenCallbacks[finishedRoot], instance);
             } catch (error) {
-              captureCommitPhaseError(current$160, current$160.return, error);
+              captureCommitPhaseError(current$167, current$167.return, error);
             }
           }
           includeWorkInProgressEffects &&
@@ -8546,7 +8577,7 @@ module.exports = function ($$$config) {
             includeWorkInProgressEffects
           );
           includeWorkInProgressEffects &&
-            null === current$160 &&
+            null === current$167 &&
             flags & 4 &&
             commitHostMount(finishedWork);
           safelyAttachRef(finishedWork, finishedWork.return);
@@ -8899,9 +8930,9 @@ module.exports = function ($$$config) {
             );
           break;
         case 22:
-          var instance$166 = finishedWork.stateNode;
+          var instance$173 = finishedWork.stateNode;
           null !== finishedWork.memoizedState
-            ? instance$166._visibility & 4
+            ? instance$173._visibility & 4
               ? recursivelyTraverseReconnectPassiveEffects(
                   finishedRoot,
                   finishedWork,
@@ -8913,7 +8944,7 @@ module.exports = function ($$$config) {
                   finishedRoot,
                   finishedWork
                 )
-            : ((instance$166._visibility |= 4),
+            : ((instance$173._visibility |= 4),
               recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork,
@@ -8926,7 +8957,7 @@ module.exports = function ($$$config) {
             commitOffscreenPassiveMountEffects(
               finishedWork.alternate,
               finishedWork,
-              instance$166
+              instance$173
             );
           break;
         case 24:
@@ -10029,8 +10060,8 @@ module.exports = function ($$$config) {
         }
         workLoopSync();
         break;
-      } catch (thrownValue$180) {
-        handleThrow(root, thrownValue$180);
+      } catch (thrownValue$187) {
+        handleThrow(root, thrownValue$187);
       }
     while (1);
     lanes && root.shellSuspendCounter++;
@@ -10151,8 +10182,8 @@ module.exports = function ($$$config) {
         }
         workLoopConcurrent();
         break;
-      } catch (thrownValue$182) {
-        handleThrow(root, thrownValue$182);
+      } catch (thrownValue$189) {
+        handleThrow(root, thrownValue$189);
       }
     while (1);
     resetContextDependencies();
@@ -11214,6 +11245,8 @@ module.exports = function ($$$config) {
     enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
     enableRetryLaneExpiration = dynamicFeatureFlags.enableRetryLaneExpiration,
     enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+    enableHiddenSubtreeInsertionEffectCleanup =
+      dynamicFeatureFlags.enableHiddenSubtreeInsertionEffectCleanup,
     favorSafetyOverHydrationPerf =
       dynamicFeatureFlags.favorSafetyOverHydrationPerf,
     renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
@@ -12343,7 +12376,7 @@ module.exports = function ($$$config) {
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
       findFiberByHostInstance: getInstanceFromNode,
-      reconcilerVersion: "19.0.0-www-modern-94e4acaa-20240913"
+      reconcilerVersion: "19.0.0-www-modern-d3d4d3a4-20240913"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

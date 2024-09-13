@@ -13,7 +13,7 @@
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1111() {
+    function JSCompiler_object_inline_createNodeMock_1115() {
       return null;
     }
     function findHook(fiber, id) {
@@ -9471,12 +9471,11 @@ __DEV__ &&
         case 11:
         case 14:
         case 15:
+          _prevHostParent = deletedFiber.updateQueue;
           if (
-            !offscreenSubtreeWasHidden &&
-            ((_prevHostParent = deletedFiber.updateQueue),
             null !== _prevHostParent &&
-              ((_prevHostParent = _prevHostParent.lastEffect),
-              null !== _prevHostParent))
+            ((_prevHostParent = _prevHostParent.lastEffect),
+            null !== _prevHostParent)
           ) {
             _prevHostParentIsContainer = _prevHostParent = _prevHostParent.next;
             do {
@@ -9485,15 +9484,18 @@ __DEV__ &&
                 destroy = inst.destroy;
               void 0 !== destroy &&
                 ((tag & Insertion) !== NoFlags
-                  ? ((inst.destroy = void 0),
+                  ? ((isRunningInsertionEffect = !0),
+                    (inst.destroy = void 0),
                     runWithFiberInDEV(
                       deletedFiber,
                       callDestroyInDEV,
                       deletedFiber,
                       nearestMountedAncestor,
                       destroy
-                    ))
-                  : (tag & Layout) !== NoFlags &&
+                    ),
+                    (isRunningInsertionEffect = !1))
+                  : offscreenSubtreeWasHidden ||
+                    (tag & Layout) === NoFlags ||
                     (shouldProfile(deletedFiber)
                       ? (startLayoutEffectTimer(),
                         (inst.destroy = void 0),
@@ -15022,11 +15024,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-www-modern-94e4acaa-20240913",
+        version: "19.0.0-www-modern-d3d4d3a4-20240913",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-www-modern-94e4acaa-20240913"
+        reconcilerVersion: "19.0.0-www-modern-d3d4d3a4-20240913"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15046,7 +15048,7 @@ __DEV__ &&
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1111,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1115,
         isConcurrentOnly = !0 !== global.IS_REACT_NATIVE_TEST_ENVIRONMENT,
         isConcurrent = isConcurrentOnly,
         isStrictMode = !1;
@@ -15161,5 +15163,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.0.0-www-modern-94e4acaa-20240913";
+    exports.version = "19.0.0-www-modern-d3d4d3a4-20240913";
   })();

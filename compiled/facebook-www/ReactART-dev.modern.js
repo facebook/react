@@ -9418,9 +9418,7 @@ __DEV__ &&
                       markComponentLayoutEffectUnmountStarted(finishedWork)),
                 (flags & Insertion) !== NoFlags &&
                   (isRunningInsertionEffect = !0),
-                runWithFiberInDEV(
-                  finishedWork,
-                  callDestroyInDEV,
+                safelyCallDestroy(
                   finishedWork,
                   nearestMountedAncestor,
                   destroy
@@ -9649,6 +9647,15 @@ __DEV__ &&
             captureCommitPhaseError(current, nearestMountedAncestor, error$19);
           }
         else ref.current = null;
+    }
+    function safelyCallDestroy(current, nearestMountedAncestor, destroy) {
+      runWithFiberInDEV(
+        current,
+        callDestroyInDEV,
+        current,
+        nearestMountedAncestor,
+        destroy
+      );
     }
     function commitProfiler(finishedWork, current, commitTime, effectDuration) {
       var _finishedWork$memoize = finishedWork.memoizedProps,
@@ -10433,7 +10440,54 @@ __DEV__ &&
         case 11:
         case 14:
         case 15:
-          if (
+          if (enableHiddenSubtreeInsertionEffectCleanup) {
+            if (
+              ((_prevHostParent = deletedFiber.updateQueue),
+              null !== _prevHostParent &&
+                ((_prevHostParent = _prevHostParent.lastEffect),
+                null !== _prevHostParent))
+            ) {
+              _prevHostParentIsContainer = _prevHostParent =
+                _prevHostParent.next;
+              do {
+                var tag = _prevHostParentIsContainer.tag,
+                  inst = _prevHostParentIsContainer.inst,
+                  destroy = inst.destroy;
+                void 0 !== destroy &&
+                  ((tag & Insertion) !== NoFlags
+                    ? ((isRunningInsertionEffect = !0),
+                      (inst.destroy = void 0),
+                      safelyCallDestroy(
+                        deletedFiber,
+                        nearestMountedAncestor,
+                        destroy
+                      ),
+                      (isRunningInsertionEffect = !1))
+                    : offscreenSubtreeWasHidden ||
+                      (tag & Layout) === NoFlags ||
+                      (enableSchedulingProfiler &&
+                        markComponentLayoutEffectUnmountStarted(deletedFiber),
+                      shouldProfile(deletedFiber)
+                        ? (startLayoutEffectTimer(),
+                          (inst.destroy = void 0),
+                          safelyCallDestroy(
+                            deletedFiber,
+                            nearestMountedAncestor,
+                            destroy
+                          ),
+                          recordLayoutEffectDuration(deletedFiber))
+                        : ((inst.destroy = void 0),
+                          safelyCallDestroy(
+                            deletedFiber,
+                            nearestMountedAncestor,
+                            destroy
+                          )),
+                      enableSchedulingProfiler &&
+                        markComponentLayoutEffectUnmountStopped()));
+                _prevHostParentIsContainer = _prevHostParentIsContainer.next;
+              } while (_prevHostParentIsContainer !== _prevHostParent);
+            }
+          } else if (
             !offscreenSubtreeWasHidden &&
             ((_prevHostParent = deletedFiber.updateQueue),
             null !== _prevHostParent &&
@@ -10441,46 +10495,40 @@ __DEV__ &&
               null !== _prevHostParent))
           ) {
             _prevHostParentIsContainer = _prevHostParent = _prevHostParent.next;
-            do {
-              var tag = _prevHostParentIsContainer.tag,
-                inst = _prevHostParentIsContainer.inst,
-                destroy = inst.destroy;
-              void 0 !== destroy &&
-                ((tag & Insertion) !== NoFlags
-                  ? ((inst.destroy = void 0),
-                    runWithFiberInDEV(
-                      deletedFiber,
-                      callDestroyInDEV,
-                      deletedFiber,
-                      nearestMountedAncestor,
-                      destroy
-                    ))
-                  : (tag & Layout) !== NoFlags &&
-                    (enableSchedulingProfiler &&
-                      markComponentLayoutEffectUnmountStarted(deletedFiber),
-                    shouldProfile(deletedFiber)
-                      ? (startLayoutEffectTimer(),
-                        (inst.destroy = void 0),
-                        runWithFiberInDEV(
-                          deletedFiber,
-                          callDestroyInDEV,
-                          deletedFiber,
-                          nearestMountedAncestor,
-                          destroy
-                        ),
-                        recordLayoutEffectDuration(deletedFiber))
-                      : ((inst.destroy = void 0),
-                        runWithFiberInDEV(
-                          deletedFiber,
-                          callDestroyInDEV,
-                          deletedFiber,
-                          nearestMountedAncestor,
-                          destroy
-                        )),
-                    enableSchedulingProfiler &&
-                      markComponentLayoutEffectUnmountStopped()));
-              _prevHostParentIsContainer = _prevHostParentIsContainer.next;
-            } while (_prevHostParentIsContainer !== _prevHostParent);
+            do
+              (tag = _prevHostParentIsContainer.tag),
+                (inst = _prevHostParentIsContainer.inst),
+                (destroy = inst.destroy),
+                void 0 !== destroy &&
+                  ((tag & Insertion) !== NoFlags
+                    ? ((inst.destroy = void 0),
+                      safelyCallDestroy(
+                        deletedFiber,
+                        nearestMountedAncestor,
+                        destroy
+                      ))
+                    : (tag & Layout) !== NoFlags &&
+                      (enableSchedulingProfiler &&
+                        markComponentLayoutEffectUnmountStarted(deletedFiber),
+                      shouldProfile(deletedFiber)
+                        ? (startLayoutEffectTimer(),
+                          (inst.destroy = void 0),
+                          safelyCallDestroy(
+                            deletedFiber,
+                            nearestMountedAncestor,
+                            destroy
+                          ),
+                          recordLayoutEffectDuration(deletedFiber))
+                        : ((inst.destroy = void 0),
+                          safelyCallDestroy(
+                            deletedFiber,
+                            nearestMountedAncestor,
+                            destroy
+                          )),
+                      enableSchedulingProfiler &&
+                        markComponentLayoutEffectUnmountStopped())),
+                (_prevHostParentIsContainer = _prevHostParentIsContainer.next);
+            while (_prevHostParentIsContainer !== _prevHostParent);
           }
           recursivelyTraverseDeletionEffects(
             finishedRoot,
@@ -14305,6 +14353,8 @@ __DEV__ &&
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableRetryLaneExpiration = dynamicFeatureFlags.enableRetryLaneExpiration,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+      enableHiddenSubtreeInsertionEffectCleanup =
+        dynamicFeatureFlags.enableHiddenSubtreeInsertionEffectCleanup,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
       retryLaneExpirationMs = dynamicFeatureFlags.retryLaneExpirationMs,
       syncLaneExpirationMs = dynamicFeatureFlags.syncLaneExpirationMs,
@@ -16508,11 +16558,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-www-modern-94e4acaa-20240913",
+        version: "19.0.0-www-modern-d3d4d3a4-20240913",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-www-modern-94e4acaa-20240913"
+        reconcilerVersion: "19.0.0-www-modern-d3d4d3a4-20240913"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -16546,7 +16596,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.0.0-www-modern-94e4acaa-20240913";
+    exports.version = "19.0.0-www-modern-d3d4d3a4-20240913";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
