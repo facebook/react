@@ -3813,6 +3813,7 @@ function retryTask(request: Request, task: Task): void {
       if (__DEV__) {
         const currentEnv = (0, request.environmentName)();
         if (currentEnv !== task.environmentName) {
+          request.pendingChunks++;
           // The environment changed since we last emitted any debug information for this
           // task. We emit an entry that just includes the environment name change.
           emitDebugChunk(request, task.id, {env: currentEnv});
@@ -3831,6 +3832,7 @@ function retryTask(request: Request, task: Task): void {
       if (__DEV__) {
         const currentEnv = (0, request.environmentName)();
         if (currentEnv !== task.environmentName) {
+          request.pendingChunks++;
           // The environment changed since we last emitted any debug information for this
           // task. We emit an entry that just includes the environment name change.
           emitDebugChunk(request, task.id, {env: currentEnv});
