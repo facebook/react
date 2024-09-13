@@ -94,9 +94,10 @@ describe('ReactFlightTurbopackDOMNode', () => {
     }
     // The Client build may not have the same IDs as the Server bundles for the same
     // component.
-    const ClientComponentOnTheClient = clientExports(ClientComponent, {
-      chunkUrl: 'path/to/chunk.js',
-    });
+    const ClientComponentOnTheClient = clientExports(
+      ClientComponent,
+      'path/to/chunk.js',
+    );
     const ClientComponentOnTheServer = clientExports(ClientComponent);
 
     // In the SSR bundle this module won't exist. We simulate this by deleting it.

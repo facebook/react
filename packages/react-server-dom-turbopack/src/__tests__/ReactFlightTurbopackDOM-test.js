@@ -20,6 +20,7 @@ global.TextDecoder = require('util').TextDecoder;
 let act;
 let use;
 let clientExports;
+let clientExportsESM;
 let turbopackMap;
 let Stream;
 let React;
@@ -50,6 +51,7 @@ describe('ReactFlightTurbopackDOM', () => {
 
     const TurbopackMock = require('./utils/TurbopackMock');
     clientExports = TurbopackMock.clientExports;
+    clientExportsESM = TurbopackMock.clientExportsESM;
     turbopackMap = TurbopackMock.turbopackMap;
 
     ReactServerDOMServer = require('react-server-dom-turbopack/server');
@@ -259,12 +261,8 @@ describe('ReactFlightTurbopackDOM', () => {
       );
     }
 
-    const AsyncModuleRef = await clientExports(AsyncModule, {
-      isESM: true,
-    });
-    const AsyncModuleRef2 = await clientExports(AsyncModule2, {
-      isESM: true,
-    });
+    const AsyncModuleRef = await clientExportsESM(AsyncModule);
+    const AsyncModuleRef2 = await clientExportsESM(AsyncModule2);
 
     const {writable, readable} = getTestStream();
     const {pipe} = await serverAct(() =>
@@ -309,8 +307,7 @@ describe('ReactFlightTurbopackDOM', () => {
       );
     }
 
-    const AsyncModuleRef = await clientExports(AsyncModule, {
-      isESM: true,
+    const AsyncModuleRef = await clientExportsESM(AsyncModule, {
       forceClientModuleProxy: true,
     });
 

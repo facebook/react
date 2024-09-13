@@ -34,17 +34,10 @@ exports.moduleLoading = {
   prefix: '/prefix/',
 };
 
-exports.clientExports = function clientExports(
-  moduleExports,
-  options?: {
-    chunkUrl?: string,
-    isESM?: boolean,
-    forceClientModuleProxy?: boolean,
-  } = {},
-) {
+exports.clientExports = function clientExports(moduleExports, chunkUrl) {
   const chunks = [];
-  if (options.chunkUrl !== undefined) {
-    chunks.push(options.chunkUrl);
+  if (chunkUrl !== undefined) {
+    chunks.push(chunkUrl);
   }
   const idx = '' + turbopackModuleIdx++;
   turbopackClientModules[idx] = moduleExports;
@@ -63,50 +56,6 @@ exports.clientExports = function clientExports(
     };
   }
   if (typeof moduleExports.then === 'function') {
-    if (options.isESM) {
-      return moduleExports.then(
-        asyncModuleExports => {
-          if (options.forceClientModuleProxy) {
-            turbopackClientMap[path] = {
-              id: idx,
-              chunks,
-              name: '*',
-              async: true,
-            };
-
-            return createClientModuleProxy(path);
-          }
-
-          if (typeof asyncModuleExports === 'object') {
-            const references = {};
-
-            for (const name in asyncModuleExports) {
-              const id = path + '#' + name;
-              turbopackClientMap[path + '#' + name] = {
-                id: idx,
-                chunks,
-                name: name,
-                async: true,
-              };
-              references[name] = registerClientReference(() => {}, id, name);
-            }
-
-            return references;
-          }
-
-          turbopackClientMap[path] = {
-            id: idx,
-            chunks,
-            name: '',
-            async: true,
-          };
-
-          return registerClientReference(() => {}, path, '');
-        },
-        () => {},
-      );
-    }
-
     moduleExports.then(
       asyncModuleExports => {
         for (const name in asyncModuleExports) {
@@ -133,6 +82,61 @@ exports.clientExports = function clientExports(
     };
   }
   return createClientModuleProxy(path);
+};
+
+exports.clientExportsESM = function clientExportsESM(
+  moduleExports,
+  options?: {forceClientModuleProxy?: boolean} = {},
+) {
+  const chunks = [];
+  const idx = '' + turbopackModuleIdx++;
+  turbopackClientModules[idx] = moduleExports;
+  const path = url.pathToFileURL(idx).href;
+
+  const createClientReferencesForExports = ({exports, async}) => {
+    turbopackClientMap[path] = {
+      id: idx,
+      chunks,
+      name: '*',
+      async: true,
+    };
+
+    if (options.forceClientModuleProxy) {
+      return createClientModuleProxy(path);
+    }
+
+    if (typeof exports === 'object') {
+      const references = {};
+
+      for (const name in exports) {
+        const id = path + '#' + name;
+        turbopackClientMap[path + '#' + name] = {
+          id: idx,
+          chunks,
+          name: name,
+          async,
+        };
+        references[name] = registerClientReference(() => {}, id, name);
+      }
+
+      return references;
+    }
+
+    return registerClientReference(() => {}, path, '*');
+  };
+
+  if (
+    moduleExports &&
+    typeof moduleExports === 'object' &&
+    typeof moduleExports.then === 'function'
+  ) {
+    return moduleExports.then(
+      exports => createClientReferencesForExports({exports, async: true}),
+      () => {},
+    );
+  }
+
+  return createClientReferencesForExports({exports});
 };
 
 // This tests server to server references. There's another case of client to server references.
