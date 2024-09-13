@@ -7,6 +7,7 @@ let Activity;
 let useState;
 let useLayoutEffect;
 let useEffect;
+let useInsertionEffect;
 let useMemo;
 let useRef;
 let startTransition;
