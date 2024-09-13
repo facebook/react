@@ -44,6 +44,10 @@ if (previousCompile === nodeCompile) {
 
 Module.prototype._compile = previousCompile;
 
+const Server = require('react-server-dom-webpack/server');
+const registerClientReference = Server.registerClientReference;
+const createClientModuleProxy = Server.createClientModuleProxy;
+
 exports.webpackMap = webpackClientMap;
 exports.webpackModules = webpackClientModules;
 exports.webpackServerMap = webpackServerMap;
@@ -73,6 +77,8 @@ exports.clientExports = function clientExports(
       filename: string,
       promise?: Promise,
     },
+    isESM?: boolean,
+    forceClientModuleProxy?: boolean,
   } = {},
 ) {
   const chunks = [];
@@ -100,6 +106,50 @@ exports.clientExports = function clientExports(
     };
   }
   if (typeof moduleExports.then === 'function') {
+    if (options.isESM) {
+      return moduleExports.then(
+        asyncModuleExports => {
+          if (options.forceClientModuleProxy) {
+            webpackClientMap[path] = {
+              id: idx,
+              chunks,
+              name: '*',
+              async: true,
+            };
+
+            return createClientModuleProxy(path);
+          }
+
+          if (typeof asyncModuleExports === 'object') {
+            const references = {};
+
+            for (const name in asyncModuleExports) {
+              const id = path + '#' + name;
+              webpackClientMap[path + '#' + name] = {
+                id: idx,
+                chunks,
+                name: name,
+                async: true,
+              };
+              references[name] = registerClientReference(() => {}, id, name);
+            }
+
+            return references;
+          }
+
+          webpackClientMap[path] = {
+            id: idx,
+            chunks,
+            name: '',
+            async: true,
+          };
+
+          return registerClientReference(() => {}, path, '');
+        },
+        () => {},
+      );
+    }
+
     moduleExports.then(
       asyncModuleExports => {
         for (const name in asyncModuleExports) {
@@ -125,9 +175,7 @@ exports.clientExports = function clientExports(
       name: 's',
     };
   }
-  const mod = new Module();
-  nodeCompile.call(mod, '"use client"', idx);
-  return mod.exports;
+  return createClientModuleProxy(path);
 };
 
 // This tests server to server references. There's another case of client to server references.
