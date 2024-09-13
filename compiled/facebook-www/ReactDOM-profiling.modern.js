@@ -12458,9 +12458,9 @@ function FiberNode(tag, pendingProps, key, mode) {
   this.deletions = null;
   this.childLanes = this.lanes = 0;
   this.alternate = null;
-  this.actualDuration = 0;
-  this.actualStartTime = -1;
-  this.treeBaseDuration = this.selfBaseDuration = 0;
+  this.actualDuration = -0;
+  this.actualStartTime = -1.1;
+  this.treeBaseDuration = this.selfBaseDuration = -0;
 }
 function createFiberImplClass(tag, pendingProps, key, mode) {
   return new FiberNode(tag, pendingProps, key, mode);
@@ -12490,10 +12490,10 @@ function createFiberImplObject(tag, pendingProps, key, mode) {
     key: key,
     pendingProps: pendingProps,
     mode: mode,
-    actualDuration: 0,
-    actualStartTime: -1,
-    selfBaseDuration: 0,
-    treeBaseDuration: 0
+    actualDuration: -0,
+    actualStartTime: -1.1,
+    selfBaseDuration: -0,
+    treeBaseDuration: -0
   };
 }
 var createFiber = enableObjectFiber
@@ -12522,8 +12522,8 @@ function createWorkInProgress(current, pendingProps) {
       (workInProgress.flags = 0),
       (workInProgress.subtreeFlags = 0),
       (workInProgress.deletions = null),
-      (workInProgress.actualDuration = 0),
-      (workInProgress.actualStartTime = -1));
+      (workInProgress.actualDuration = -0),
+      (workInProgress.actualStartTime = -1.1));
   workInProgress.flags = current.flags & 31457280;
   workInProgress.childLanes = current.childLanes;
   workInProgress.lanes = current.lanes;
@@ -17521,14 +17521,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1821 = React.version;
 if (
-  "19.0.0-www-modern-47352209-20240912" !==
+  "19.0.0-www-modern-94e4acaa-20240913" !==
   isomorphicReactPackageVersion$jscomp$inline_1821
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1821,
-      "19.0.0-www-modern-47352209-20240912"
+      "19.0.0-www-modern-94e4acaa-20240913"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17546,11 +17546,11 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_1823 = {
   bundleType: 0,
-  version: "19.0.0-www-modern-47352209-20240912",
+  version: "19.0.0-www-modern-94e4acaa-20240913",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-www-modern-47352209-20240912"
+  reconcilerVersion: "19.0.0-www-modern-94e4acaa-20240913"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_1823.getLaneLabelMap = getLaneLabelMap),
@@ -17916,7 +17916,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-47352209-20240912";
+exports.version = "19.0.0-www-modern-94e4acaa-20240913";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

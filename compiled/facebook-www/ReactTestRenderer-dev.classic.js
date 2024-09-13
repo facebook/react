@@ -12267,9 +12267,9 @@ __DEV__ &&
       this.deletions = null;
       this.childLanes = this.lanes = 0;
       this.alternate = null;
-      this.actualDuration = 0;
-      this.actualStartTime = -1;
-      this.treeBaseDuration = this.selfBaseDuration = 0;
+      this.actualDuration = -0;
+      this.actualStartTime = -1.1;
+      this.treeBaseDuration = this.selfBaseDuration = -0;
       this._debugOwner = this._debugInfo = null;
       this._debugNeedsRemount = !1;
       this._debugHookTypes = null;
@@ -12302,8 +12302,8 @@ __DEV__ &&
           (workInProgress.flags = 0),
           (workInProgress.subtreeFlags = 0),
           (workInProgress.deletions = null),
-          (workInProgress.actualDuration = 0),
-          (workInProgress.actualStartTime = -1));
+          (workInProgress.actualDuration = -0),
+          (workInProgress.actualStartTime = -1.1));
       workInProgress.flags = current.flags & 31457280;
       workInProgress.childLanes = current.childLanes;
       workInProgress.lanes = current.lanes;
@@ -15022,11 +15022,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-www-classic-47352209-20240912",
+        version: "19.0.0-www-classic-94e4acaa-20240913",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-www-classic-47352209-20240912"
+        reconcilerVersion: "19.0.0-www-classic-94e4acaa-20240913"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15161,5 +15161,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.0.0-www-classic-47352209-20240912";
+    exports.version = "19.0.0-www-classic-94e4acaa-20240913";
   })();

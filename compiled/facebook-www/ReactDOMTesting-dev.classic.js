@@ -9672,8 +9672,8 @@ __DEV__ &&
               (JSCompiler_object_inline_stack_2449.pendingProps =
                 componentStack),
               workInProgress.mode & ProfileMode &&
-                ((JSCompiler_object_inline_stack_2449.actualDuration = 0),
-                (JSCompiler_object_inline_stack_2449.actualStartTime = -1),
+                ((JSCompiler_object_inline_stack_2449.actualDuration = -0),
+                (JSCompiler_object_inline_stack_2449.actualStartTime = -1.1),
                 (JSCompiler_object_inline_stack_2449.selfBaseDuration =
                   JSCompiler_temp.selfBaseDuration),
                 (JSCompiler_object_inline_stack_2449.treeBaseDuration =
@@ -9817,10 +9817,10 @@ __DEV__ &&
         : ((progressedPrimaryFragment.childLanes = 0),
           (progressedPrimaryFragment.pendingProps = primaryChildren),
           workInProgress.mode & ProfileMode &&
-            ((progressedPrimaryFragment.actualDuration = 0),
-            (progressedPrimaryFragment.actualStartTime = -1),
-            (progressedPrimaryFragment.selfBaseDuration = 0),
-            (progressedPrimaryFragment.treeBaseDuration = 0)));
+            ((progressedPrimaryFragment.actualDuration = -0),
+            (progressedPrimaryFragment.actualStartTime = -1.1),
+            (progressedPrimaryFragment.selfBaseDuration = -0),
+            (progressedPrimaryFragment.treeBaseDuration = -0)));
       fallbackChildren = createFiberFromFragment(
         fallbackChildren,
         mode,
@@ -17698,9 +17698,9 @@ __DEV__ &&
       this.deletions = null;
       this.childLanes = this.lanes = 0;
       this.alternate = null;
-      this.actualDuration = 0;
-      this.actualStartTime = -1;
-      this.treeBaseDuration = this.selfBaseDuration = 0;
+      this.actualDuration = -0;
+      this.actualStartTime = -1.1;
+      this.treeBaseDuration = this.selfBaseDuration = -0;
       this._debugOwner = this._debugInfo = null;
       this._debugNeedsRemount = !1;
       this._debugHookTypes = null;
@@ -17736,10 +17736,10 @@ __DEV__ &&
         key: key,
         pendingProps: pendingProps,
         mode: mode,
-        actualDuration: 0,
-        actualStartTime: -1,
-        selfBaseDuration: 0,
-        treeBaseDuration: 0,
+        actualDuration: -0,
+        actualStartTime: -1.1,
+        selfBaseDuration: -0,
+        treeBaseDuration: -0,
         _debugInfo: null,
         _debugOwner: null,
         _debugNeedsRemount: !1,
@@ -17775,8 +17775,8 @@ __DEV__ &&
           (workInProgress.flags = 0),
           (workInProgress.subtreeFlags = 0),
           (workInProgress.deletions = null),
-          (workInProgress.actualDuration = 0),
-          (workInProgress.actualStartTime = -1));
+          (workInProgress.actualDuration = -0),
+          (workInProgress.actualStartTime = -1.1));
       workInProgress.flags = current.flags & 31457280;
       workInProgress.childLanes = current.childLanes;
       workInProgress.lanes = current.lanes;
@@ -28136,11 +28136,11 @@ __DEV__ &&
         : flushSyncErrorInBuildsThatSupportLegacyMode;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.0.0-www-classic-47352209-20240912" !== isomorphicReactPackageVersion)
+      if ("19.0.0-www-classic-94e4acaa-20240913" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.0.0-www-classic-47352209-20240912\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.0.0-www-classic-94e4acaa-20240913\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -28184,11 +28184,11 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.0.0-www-classic-47352209-20240912",
+          version: "19.0.0-www-classic-94e4acaa-20240913",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
           findFiberByHostInstance: getClosestInstanceFromNode,
-          reconcilerVersion: "19.0.0-www-classic-47352209-20240912"
+          reconcilerVersion: "19.0.0-www-classic-94e4acaa-20240913"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -29007,5 +29007,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.0.0-www-classic-47352209-20240912";
+    exports.version = "19.0.0-www-classic-94e4acaa-20240913";
   })();
