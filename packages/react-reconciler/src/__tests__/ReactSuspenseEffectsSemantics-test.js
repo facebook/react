@@ -408,6 +408,9 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'ClassText:Inside:After render',
         'Text:Fallback render',
         'Text:Outside render',
+        'Text:Inside:Before create insertion',
+        'Text:Fallback create insertion',
+        'Text:Outside create insertion',
         'Text:Inside:Before create layout',
         'ClassText:Inside:After componentDidMount',
         'Text:Fallback create layout',
@@ -433,6 +436,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       });
       assertLog([
         'AsyncText:Async render',
+        'Text:Fallback destroy insertion',
         'Text:Fallback destroy layout',
         'AsyncText:Async create layout',
         'Text:Fallback destroy passive',
@@ -452,9 +456,11 @@ describe('ReactSuspenseEffectsSemantics', () => {
       });
       assertLog([
         'App destroy layout',
+        'Text:Inside:Before destroy insertion',
         'Text:Inside:Before destroy layout',
         'AsyncText:Async destroy layout',
         'ClassText:Inside:After componentWillUnmount',
+        'Text:Outside destroy insertion',
         'Text:Outside destroy layout',
         'App destroy passive',
         'Text:Inside:Before destroy passive',
@@ -503,6 +509,9 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Text:Inside:Before render',
         'Text:Inside:After render',
         'Text:Outside render',
+        'Text:Inside:Before create insertion',
+        'Text:Inside:After create insertion',
+        'Text:Outside create insertion',
         'Text:Inside:Before create layout',
         'Text:Inside:After create layout',
         'Text:Outside create layout',
@@ -535,6 +544,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Text:Inside:After render',
         'Text:Fallback render',
         'Text:Outside render',
+        'Text:Fallback create insertion',
         'Text:Fallback create layout',
         'Text:Fallback create passive',
       ]);
@@ -566,6 +576,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       });
       assertLog([
         'AsyncText:Async render',
+        'Text:Fallback destroy insertion',
         'Text:Fallback destroy layout',
         'AsyncText:Async create layout',
         'Text:Fallback destroy passive',
@@ -585,9 +596,12 @@ describe('ReactSuspenseEffectsSemantics', () => {
       });
       assertLog([
         'App destroy layout',
+        'Text:Inside:Before destroy insertion',
         'Text:Inside:Before destroy layout',
         'AsyncText:Async destroy layout',
+        'Text:Inside:After destroy insertion',
         'Text:Inside:After destroy layout',
+        'Text:Outside destroy insertion',
         'Text:Outside destroy layout',
         'App destroy passive',
         'Text:Inside:Before destroy passive',
@@ -2880,6 +2894,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'ClassComponent:refCallback render',
         'RefCheckerInner:refCallback render',
         'Text:Fallback render',
+        'Text:Fallback create insertion',
         'Text:Fallback create layout',
         'Text:Fallback create passive',
       ]);
@@ -2891,6 +2906,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       });
       assertLog([
         'AsyncText:Async render',
+        'Text:Fallback destroy insertion',
         'Text:Fallback destroy layout',
         'AsyncText:Async create layout',
         'Text:Fallback destroy passive',
