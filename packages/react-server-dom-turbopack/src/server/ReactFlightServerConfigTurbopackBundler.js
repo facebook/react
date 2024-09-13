@@ -71,7 +71,10 @@ export function resolveClientReferenceMetadata<T>(
       );
     }
   }
-  if (clientReference.$$async === true) {
+  if (clientReference.$$async === true && resolvedModuleData.async === true) {
+    throw new Error('TODO: error message');
+  }
+  if (clientReference.$$async === true || resolvedModuleData.async === true) {
     return [resolvedModuleData.id, resolvedModuleData.chunks, name, 1];
   } else {
     return [resolvedModuleData.id, resolvedModuleData.chunks, name];

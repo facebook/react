@@ -23,6 +23,7 @@ global.__turbopack_require__ = function (id) {
 };
 
 const Server = require('react-server-dom-turbopack/server');
+const registerClientReference = Server.registerClientReference;
 const registerServerReference = Server.registerServerReference;
 const createClientModuleProxy = Server.createClientModuleProxy;
 
@@ -33,10 +34,17 @@ exports.moduleLoading = {
   prefix: '/prefix/',
 };
 
-exports.clientExports = function clientExports(moduleExports, chunkUrl) {
+exports.clientExports = function clientExports(
+  moduleExports,
+  options?: {
+    chunkUrl?: string,
+    isESM?: boolean,
+    forceClientModuleProxy?: boolean,
+  } = {},
+) {
   const chunks = [];
-  if (chunkUrl !== undefined) {
-    chunks.push(chunkUrl);
+  if (options.chunkUrl !== undefined) {
+    chunks.push(options.chunkUrl);
   }
   const idx = '' + turbopackModuleIdx++;
   turbopackClientModules[idx] = moduleExports;
@@ -55,6 +63,50 @@ exports.clientExports = function clientExports(moduleExports, chunkUrl) {
     };
   }
   if (typeof moduleExports.then === 'function') {
+    if (options.isESM) {
+      return moduleExports.then(
+        asyncModuleExports => {
+          if (options.forceClientModuleProxy) {
+            turbopackClientMap[path] = {
+              id: idx,
+              chunks,
+              name: '*',
+              async: true,
+            };
+
+            return createClientModuleProxy(path);
+          }
+
+          if (typeof asyncModuleExports === 'object') {
+            const references = {};
+
+            for (const name in asyncModuleExports) {
+              const id = path + '#' + name;
+              turbopackClientMap[path + '#' + name] = {
+                id: idx,
+                chunks,
+                name: name,
+                async: true,
+              };
+              references[name] = registerClientReference(() => {}, id, name);
+            }
+
+            return references;
+          }
+
+          turbopackClientMap[path] = {
+            id: idx,
+            chunks,
+            name: '',
+            async: true,
+          };
+
+          return registerClientReference(() => {}, path, '');
+        },
+        () => {},
+      );
+    }
+
     moduleExports.then(
       asyncModuleExports => {
         for (const name in asyncModuleExports) {

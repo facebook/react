@@ -29,6 +29,8 @@ let ReactServerDOMClient;
 let Suspense;
 let ReactServerScheduler;
 let reactServerAct;
+let assertConsoleErrorDev;
+let ErrorBoundary;
 
 describe('ReactFlightTurbopackDOM', () => {
   beforeEach(() => {
@@ -57,12 +59,30 @@ describe('ReactFlightTurbopackDOM', () => {
     jest.resetModules();
     __unmockReact();
     act = require('internal-test-utils').act;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
     Stream = require('stream');
     React = require('react');
     use = React.use;
     Suspense = React.Suspense;
     ReactDOMClient = require('react-dom/client');
     ReactServerDOMClient = require('react-server-dom-turbopack/client');
+
+    ErrorBoundary = class extends React.Component {
+      state = {hasError: false, error: null};
+      static getDerivedStateFromError(error) {
+        return {
+          hasError: true,
+          error,
+        };
+      }
+      render() {
+        if (this.state.hasError) {
+          return this.props.fallback(this.state.error);
+        }
+        return this.props.children;
+      }
+    };
   });
 
   async function serverAct(callback) {
@@ -219,5 +239,94 @@ describe('ReactFlightTurbopackDOM', () => {
       root.render(<App response={response} />);
     });
     expect(container.innerHTML).toBe('<p>Async: Module</p>');
+  });
+
+  it('should unwrap async ESM module references', async () => {
+    const AsyncModule = Promise.resolve(function AsyncModule({text}) {
+      return 'Async: ' + text;
+    });
+
+    const AsyncModule2 = Promise.resolve({
+      exportName: 'Module',
+    });
+
+    function Print({response}) {
+      return <p>{use(response)}</p>;
+    }
+
+    function App({response}) {
+      return (
+        <Suspense fallback={<h1>Loading...</h1>}>
+          <Print response={response} />
+        </Suspense>
+      );
+    }
+
+    const AsyncModuleRef = await clientExports(AsyncModule, {
+      isESM: true,
+    });
+    const AsyncModuleRef2 = await clientExports(AsyncModule2, {
+      isESM: true,
+    });
+
+    const {writable, readable} = getTestStream();
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <AsyncModuleRef text={AsyncModuleRef2.exportName} />,
+        turbopackMap,
+      ),
+    );
+    pipe(writable);
+    const response = ReactServerDOMClient.createFromReadableStream(readable);
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<App response={response} />);
+    });
+    expect(container.innerHTML).toBe('<p>Async: Module</p>');
+  });
+
+  it('should error when a bundler uses async ESM modules with createClientModuleProxy', async () => {
+    const AsyncModule = Promise.resolve(function AsyncModule() {
+      return 'This should not be rendered';
+    });
+
+    function Print({response}) {
+      return <p>{use(response)}</p>;
+    }
+
+    function App({response}) {
+      return (
+        <ErrorBoundary fallback={e => <p>{e.message}</p>}>
+          <Suspense fallback={<h1>Loading...</h1>}>
+            <Print response={response} />
+          </Suspense>
+        </ErrorBoundary>
+      );
+    }
+
+    const AsyncModuleRef = await clientExports(AsyncModule, {
+      isESM: true,
+      forceClientModuleProxy: true,
+    });
+
+    const {writable, readable} = getTestStream();
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <AsyncModuleRef />,
+        turbopackMap,
+      ),
+    );
+    pipe(writable);
+    const response = ReactServerDOMClient.createFromReadableStream(readable);
+    assertConsoleErrorDev(['TODO: error message']);
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<App response={response} />);
+    });
+    expect(container.innerHTML).toBe('<p>TODO: error message</p>');
   });
 });
