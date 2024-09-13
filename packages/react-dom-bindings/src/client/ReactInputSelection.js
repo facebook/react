@@ -57,10 +57,7 @@ function isSameOriginFrame(iframe) {
 }
 
 function getActiveElementDeep(containerInfo) {
-  let win = window;
-  if (containerInfo?.ownerDocument?.defaultView) {
-    win = containerInfo.ownerDocument.defaultView
-  }
+  let win = containerInfo?.ownerDocument?.defaultView ?? window;
   let element = getActiveElement(win.document);
   while (element instanceof win.HTMLIFrameElement) {
     if (isSameOriginFrame(element)) {
