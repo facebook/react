@@ -131,12 +131,16 @@ exports.clientExportsESM = function clientExportsESM(
     typeof moduleExports.then === 'function'
   ) {
     return moduleExports.then(
-      exports => createClientReferencesForExports({exports, async: true}),
+      asyncModuleExports =>
+        createClientReferencesForExports({
+          exports: asyncModuleExports,
+          async: true,
+        }),
       () => {},
     );
   }
 
-  return createClientReferencesForExports({exports});
+  return createClientReferencesForExports({exports: moduleExports});
 };
 
 // This tests server to server references. There's another case of client to server references.
