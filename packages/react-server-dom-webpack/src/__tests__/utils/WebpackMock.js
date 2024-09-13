@@ -71,22 +71,16 @@ exports.clientModuleError = function clientModuleError(moduleError) {
 
 exports.clientExports = function clientExports(
   moduleExports,
-  options?: {
-    chunk?: {
-      id: string | number,
-      filename: string,
-      promise?: Promise,
-    },
-    isESM?: boolean,
-    forceClientModuleProxy?: boolean,
-  } = {},
+  chunkId,
+  chunkFilename,
+  blockOnChunk,
 ) {
   const chunks = [];
-  if (options.chunk) {
-    chunks.push(options.chunk.id, options.chunk.filename);
+  if (chunkId) {
+    chunks.push(chunkId, chunkFilename);
 
-    if (options.chunk.promise) {
-      webpackChunkMap[options.chunk.id] = options.chunk.promise;
+    if (blockOnChunk) {
+      webpackChunkMap[chunkId] = blockOnChunk;
     }
   }
   const idx = '' + webpackModuleIdx++;
@@ -106,50 +100,6 @@ exports.clientExports = function clientExports(
     };
   }
   if (typeof moduleExports.then === 'function') {
-    if (options.isESM) {
-      return moduleExports.then(
-        asyncModuleExports => {
-          if (options.forceClientModuleProxy) {
-            webpackClientMap[path] = {
-              id: idx,
-              chunks,
-              name: '*',
-              async: true,
-            };
-
-            return createClientModuleProxy(path);
-          }
-
-          if (typeof asyncModuleExports === 'object') {
-            const references = {};
-
-            for (const name in asyncModuleExports) {
-              const id = path + '#' + name;
-              webpackClientMap[path + '#' + name] = {
-                id: idx,
-                chunks,
-                name: name,
-                async: true,
-              };
-              references[name] = registerClientReference(() => {}, id, name);
-            }
-
-            return references;
-          }
-
-          webpackClientMap[path] = {
-            id: idx,
-            chunks,
-            name: '',
-            async: true,
-          };
-
-          return registerClientReference(() => {}, path, '');
-        },
-        () => {},
-      );
-    }
-
     moduleExports.then(
       asyncModuleExports => {
         for (const name in asyncModuleExports) {
@@ -175,7 +125,9 @@ exports.clientExports = function clientExports(
       name: 's',
     };
   }
-  return createClientModuleProxy(path);
+  const mod = new Module();
+  nodeCompile.call(mod, '"use client"', idx);
+  return mod.exports;
 };
 
 // This tests server to server references. There's another case of client to server references.
