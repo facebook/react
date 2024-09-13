@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<752342ba1e4a42fdfe4a2a763bab5db2>>
+ * @generated SignedSource<<a938f4583ceb6a14b187a261183efc4a>>
  */
 
 "use strict";
@@ -6259,8 +6259,8 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         (nextProps.childLanes = 0),
         (nextProps.pendingProps = primaryChildProps),
         workInProgress.mode & 2 &&
-          ((nextProps.actualDuration = 0),
-          (nextProps.actualStartTime = -1),
+          ((nextProps.actualDuration = -0),
+          (nextProps.actualStartTime = -1.1),
           (nextProps.selfBaseDuration = didSuspend.selfBaseDuration),
           (nextProps.treeBaseDuration = didSuspend.treeBaseDuration)),
         (workInProgress.deletions = null))
@@ -6353,10 +6353,10 @@ function mountSuspenseFallbackChildren(
     ? ((progressedPrimaryFragment.childLanes = 0),
       (progressedPrimaryFragment.pendingProps = primaryChildren),
       workInProgress.mode & 2 &&
-        ((progressedPrimaryFragment.actualDuration = 0),
-        (progressedPrimaryFragment.actualStartTime = -1),
-        (progressedPrimaryFragment.selfBaseDuration = 0),
-        (progressedPrimaryFragment.treeBaseDuration = 0)))
+        ((progressedPrimaryFragment.actualDuration = -0),
+        (progressedPrimaryFragment.actualStartTime = -1.1),
+        (progressedPrimaryFragment.selfBaseDuration = -0),
+        (progressedPrimaryFragment.treeBaseDuration = -0)))
     : (progressedPrimaryFragment = createFiberFromOffscreen(
         primaryChildren,
         mode,
@@ -11014,9 +11014,9 @@ function FiberNode(tag, pendingProps, key, mode) {
   this.deletions = null;
   this.childLanes = this.lanes = 0;
   this.alternate = null;
-  this.actualDuration = 0;
-  this.actualStartTime = -1;
-  this.treeBaseDuration = this.selfBaseDuration = 0;
+  this.actualDuration = -0;
+  this.actualStartTime = -1.1;
+  this.treeBaseDuration = this.selfBaseDuration = -0;
 }
 function createFiberImplClass(tag, pendingProps, key, mode) {
   return new FiberNode(tag, pendingProps, key, mode);
@@ -11046,10 +11046,10 @@ function createFiberImplObject(tag, pendingProps, key, mode) {
     key: key,
     pendingProps: pendingProps,
     mode: mode,
-    actualDuration: 0,
-    actualStartTime: -1,
-    selfBaseDuration: 0,
-    treeBaseDuration: 0
+    actualDuration: -0,
+    actualStartTime: -1.1,
+    selfBaseDuration: -0,
+    treeBaseDuration: -0
   };
 }
 var createFiber = enableObjectFiber
@@ -11078,8 +11078,8 @@ function createWorkInProgress(current, pendingProps) {
       (workInProgress.flags = 0),
       (workInProgress.subtreeFlags = 0),
       (workInProgress.deletions = null),
-      (workInProgress.actualDuration = 0),
-      (workInProgress.actualStartTime = -1));
+      (workInProgress.actualDuration = -0),
+      (workInProgress.actualStartTime = -1.1));
   workInProgress.flags = current.flags & 31457280;
   workInProgress.childLanes = current.childLanes;
   workInProgress.lanes = current.lanes;
@@ -11723,11 +11723,11 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1242 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-d6cb4e77-20240911",
+    version: "19.0.0-native-fb-94e4acaa-20240913",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromNode,
-    reconcilerVersion: "19.0.0-native-fb-d6cb4e77-20240911"
+    reconcilerVersion: "19.0.0-native-fb-94e4acaa-20240913"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1242.rendererConfig = extraDevToolsConfig);

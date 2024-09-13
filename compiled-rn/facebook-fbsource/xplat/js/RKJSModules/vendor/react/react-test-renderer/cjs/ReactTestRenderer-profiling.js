@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<4153f4020f989abe56d39fd033419f88>>
+ * @generated SignedSource<<1b967cee52d371092874f9ae20a82460>>
  */
 
 "use strict";
@@ -4908,8 +4908,8 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         (nextProps.childLanes = 0),
         (nextProps.pendingProps = primaryChildProps),
         workInProgress.mode & 2 &&
-          ((nextProps.actualDuration = 0),
-          (nextProps.actualStartTime = -1),
+          ((nextProps.actualDuration = -0),
+          (nextProps.actualStartTime = -1.1),
           (nextProps.selfBaseDuration = didSuspend.selfBaseDuration),
           (nextProps.treeBaseDuration = didSuspend.treeBaseDuration)),
         (workInProgress.deletions = null))
@@ -5002,10 +5002,10 @@ function mountSuspenseFallbackChildren(
     ? ((progressedPrimaryFragment.childLanes = 0),
       (progressedPrimaryFragment.pendingProps = primaryChildren),
       workInProgress.mode & 2 &&
-        ((progressedPrimaryFragment.actualDuration = 0),
-        (progressedPrimaryFragment.actualStartTime = -1),
-        (progressedPrimaryFragment.selfBaseDuration = 0),
-        (progressedPrimaryFragment.treeBaseDuration = 0)))
+        ((progressedPrimaryFragment.actualDuration = -0),
+        (progressedPrimaryFragment.actualStartTime = -1.1),
+        (progressedPrimaryFragment.selfBaseDuration = -0),
+        (progressedPrimaryFragment.treeBaseDuration = -0)))
     : (progressedPrimaryFragment = createFiberFromOffscreen(
         primaryChildren,
         mode,
@@ -9400,9 +9400,9 @@ function FiberNode(tag, pendingProps, key, mode) {
   this.deletions = null;
   this.childLanes = this.lanes = 0;
   this.alternate = null;
-  this.actualDuration = 0;
-  this.actualStartTime = -1;
-  this.treeBaseDuration = this.selfBaseDuration = 0;
+  this.actualDuration = -0;
+  this.actualStartTime = -1.1;
+  this.treeBaseDuration = this.selfBaseDuration = -0;
 }
 function createFiberImplClass(tag, pendingProps, key, mode) {
   return new FiberNode(tag, pendingProps, key, mode);
@@ -9430,8 +9430,8 @@ function createWorkInProgress(current, pendingProps) {
       (workInProgress.flags = 0),
       (workInProgress.subtreeFlags = 0),
       (workInProgress.deletions = null),
-      (workInProgress.actualDuration = 0),
-      (workInProgress.actualStartTime = -1));
+      (workInProgress.actualDuration = -0),
+      (workInProgress.actualStartTime = -1.1));
   workInProgress.flags = current.flags & 31457280;
   workInProgress.childLanes = current.childLanes;
   workInProgress.lanes = current.lanes;
@@ -10076,14 +10076,14 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1141 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-d6cb4e77-20240911",
+  version: "19.0.0-native-fb-94e4acaa-20240913",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: function (mockNode) {
     mockNode = nodeToInstanceMap.get(mockNode);
     return void 0 !== mockNode ? mockNode.internalInstanceHandle : null;
   },
-  reconcilerVersion: "19.0.0-native-fb-d6cb4e77-20240911",
+  reconcilerVersion: "19.0.0-native-fb-94e4acaa-20240913",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$138 = 0;
@@ -10234,4 +10234,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.0.0-native-fb-d6cb4e77-20240911";
+exports.version = "19.0.0-native-fb-94e4acaa-20240913";
