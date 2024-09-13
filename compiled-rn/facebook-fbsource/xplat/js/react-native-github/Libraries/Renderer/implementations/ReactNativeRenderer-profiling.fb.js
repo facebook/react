@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<4a5f94f3f74b114d87aa6658bbcdf35a>>
+ * @generated SignedSource<<e95d542def8b49e35fbe42f8d849241c>>
  */
 
 "use strict";
@@ -22,6 +22,8 @@ var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/R
   Scheduler = require("scheduler"),
   isArrayImpl = Array.isArray,
   alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
+  enableHiddenSubtreeInsertionEffectCleanup =
+    dynamicFlagsUntyped.enableHiddenSubtreeInsertionEffectCleanup,
   enableObjectFiber = dynamicFlagsUntyped.enableObjectFiber,
   enablePersistedModeClonedFlag =
     dynamicFlagsUntyped.enablePersistedModeClonedFlag,
@@ -1229,7 +1231,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_304 = {
+var injectedNamesToPlugins$jscomp$inline_311 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -1275,32 +1277,32 @@ var injectedNamesToPlugins$jscomp$inline_304 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_305 = !1,
-  pluginName$jscomp$inline_306;
-for (pluginName$jscomp$inline_306 in injectedNamesToPlugins$jscomp$inline_304)
+  isOrderingDirty$jscomp$inline_312 = !1,
+  pluginName$jscomp$inline_313;
+for (pluginName$jscomp$inline_313 in injectedNamesToPlugins$jscomp$inline_311)
   if (
-    injectedNamesToPlugins$jscomp$inline_304.hasOwnProperty(
-      pluginName$jscomp$inline_306
+    injectedNamesToPlugins$jscomp$inline_311.hasOwnProperty(
+      pluginName$jscomp$inline_313
     )
   ) {
-    var pluginModule$jscomp$inline_307 =
-      injectedNamesToPlugins$jscomp$inline_304[pluginName$jscomp$inline_306];
+    var pluginModule$jscomp$inline_314 =
+      injectedNamesToPlugins$jscomp$inline_311[pluginName$jscomp$inline_313];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_306) ||
-      namesToPlugins[pluginName$jscomp$inline_306] !==
-        pluginModule$jscomp$inline_307
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_313) ||
+      namesToPlugins[pluginName$jscomp$inline_313] !==
+        pluginModule$jscomp$inline_314
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_306])
+      if (namesToPlugins[pluginName$jscomp$inline_313])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_306 + "`.")
+            (pluginName$jscomp$inline_313 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_306] =
-        pluginModule$jscomp$inline_307;
-      isOrderingDirty$jscomp$inline_305 = !0;
+      namesToPlugins[pluginName$jscomp$inline_313] =
+        pluginModule$jscomp$inline_314;
+      isOrderingDirty$jscomp$inline_312 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_305 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_312 && recomputePluginOrdering();
 var instanceCache = new Map(),
   instanceProps = new Map();
 function getInstanceFromTag(tag) {
@@ -8953,7 +8955,47 @@ function commitDeletionEffectsOnFiber(
     case 11:
     case 14:
     case 15:
-      if (
+      if (enableHiddenSubtreeInsertionEffectCleanup) {
+        if (
+          ((child = deletedFiber.updateQueue),
+          null !== child && ((child = child.lastEffect), null !== child))
+        ) {
+          children = child = child.next;
+          do
+            (index = children.tag),
+              (prevHostParent = children.inst),
+              (prevHostParentIsContainer = prevHostParent.destroy),
+              void 0 !== prevHostParentIsContainer &&
+                (0 !== (index & 2)
+                  ? ((prevHostParent.destroy = void 0),
+                    safelyCallDestroy(
+                      deletedFiber,
+                      nearestMountedAncestor,
+                      prevHostParentIsContainer
+                    ))
+                  : offscreenSubtreeWasHidden ||
+                    0 === (index & 4) ||
+                    (markComponentLayoutEffectUnmountStarted(deletedFiber),
+                    shouldProfile(deletedFiber)
+                      ? (startLayoutEffectTimer(),
+                        (prevHostParent.destroy = void 0),
+                        safelyCallDestroy(
+                          deletedFiber,
+                          nearestMountedAncestor,
+                          prevHostParentIsContainer
+                        ),
+                        recordLayoutEffectDuration(deletedFiber))
+                      : ((prevHostParent.destroy = void 0),
+                        safelyCallDestroy(
+                          deletedFiber,
+                          nearestMountedAncestor,
+                          prevHostParentIsContainer
+                        )),
+                    markComponentLayoutEffectUnmountStopped())),
+              (children = children.next);
+          while (children !== child);
+        }
+      } else if (
         !offscreenSubtreeWasHidden &&
         ((child = deletedFiber.updateQueue),
         null !== child && ((child = child.lastEffect), null !== child))
@@ -10685,8 +10727,8 @@ function renderRootSync(root, lanes) {
       }
       workLoopSync();
       break;
-    } catch (thrownValue$144) {
-      handleThrow(root, thrownValue$144);
+    } catch (thrownValue$151) {
+      handleThrow(root, thrownValue$151);
     }
   while (1);
   lanes && root.shellSuspendCounter++;
@@ -10815,8 +10857,8 @@ function renderRootConcurrent(root, lanes) {
         }
       workLoopConcurrent();
       break;
-    } catch (thrownValue$146) {
-      handleThrow(root, thrownValue$146);
+    } catch (thrownValue$153) {
+      handleThrow(root, thrownValue$153);
     }
   while (1);
   resetContextDependencies();
@@ -11853,11 +11895,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.0.0-native-fb-94e4acaa-20240913" !== isomorphicReactPackageVersion)
+if ("19.0.0-native-fb-d3d4d3a4-20240913" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.0.0-native-fb-94e4acaa-20240913\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.0.0-native-fb-d3d4d3a4-20240913\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11904,21 +11946,21 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1308 = {
+  internals$jscomp$inline_1315 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-94e4acaa-20240913",
+    version: "19.0.0-native-fb-d3d4d3a4-20240913",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromTag,
-    reconcilerVersion: "19.0.0-native-fb-94e4acaa-20240913"
+    reconcilerVersion: "19.0.0-native-fb-d3d4d3a4-20240913"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1308.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1308.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1315.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1315.getLaneLabelMap = function () {
   for (
-    var map = new Map(), lane = 1, index$150 = 0;
-    31 > index$150;
-    index$150++
+    var map = new Map(), lane = 1, index$157 = 0;
+    31 > index$157;
+    index$157++
   ) {
     var label = getLabelForLane(lane);
     map.set(lane, label);
@@ -11926,20 +11968,20 @@ internals$jscomp$inline_1308.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1308.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1315.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1586 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1593 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1586.isDisabled &&
-    hook$jscomp$inline_1586.supportsFiber
+    !hook$jscomp$inline_1593.isDisabled &&
+    hook$jscomp$inline_1593.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1586.inject(
-        internals$jscomp$inline_1308
+      (rendererID = hook$jscomp$inline_1593.inject(
+        internals$jscomp$inline_1315
       )),
-        (injectedHook = hook$jscomp$inline_1586);
+        (injectedHook = hook$jscomp$inline_1593);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {

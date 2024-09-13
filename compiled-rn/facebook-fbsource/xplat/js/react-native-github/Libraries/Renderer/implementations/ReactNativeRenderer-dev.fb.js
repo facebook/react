@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f7060630edb1bfa70d3a7fbe981c2b1a>>
+ * @generated SignedSource<<da7c512452f201bb369ca465a2bed8bd>>
  */
 
 "use strict";
@@ -10012,9 +10012,7 @@ __DEV__ &&
                     markComponentLayoutEffectUnmountStarted(finishedWork),
                 (flags & Insertion) !== NoFlags &&
                   (isRunningInsertionEffect = !0),
-                runWithFiberInDEV(
-                  finishedWork,
-                  callDestroyInDEV,
+                safelyCallDestroy(
                   finishedWork,
                   nearestMountedAncestor,
                   destroy
@@ -10248,6 +10246,15 @@ __DEV__ &&
             captureCommitPhaseError(current, nearestMountedAncestor, error$20);
           }
         else ref.current = null;
+    }
+    function safelyCallDestroy(current, nearestMountedAncestor, destroy) {
+      runWithFiberInDEV(
+        current,
+        callDestroyInDEV,
+        current,
+        nearestMountedAncestor,
+        destroy
+      );
     }
     function commitProfiler(finishedWork, current, commitTime, effectDuration) {
       var _finishedWork$memoize = finishedWork.memoizedProps,
@@ -10827,7 +10834,52 @@ __DEV__ &&
         case 11:
         case 14:
         case 15:
-          if (
+          if (enableHiddenSubtreeInsertionEffectCleanup) {
+            if (
+              ((_prevHostParent = deletedFiber.updateQueue),
+              null !== _prevHostParent &&
+                ((_prevHostParent = _prevHostParent.lastEffect),
+                null !== _prevHostParent))
+            ) {
+              _prevHostParentIsContainer = _prevHostParent =
+                _prevHostParent.next;
+              do {
+                var tag = _prevHostParentIsContainer.tag,
+                  inst = _prevHostParentIsContainer.inst,
+                  destroy = inst.destroy;
+                void 0 !== destroy &&
+                  ((tag & Insertion) !== NoFlags
+                    ? ((isRunningInsertionEffect = !0),
+                      (inst.destroy = void 0),
+                      safelyCallDestroy(
+                        deletedFiber,
+                        nearestMountedAncestor,
+                        destroy
+                      ),
+                      (isRunningInsertionEffect = !1))
+                    : offscreenSubtreeWasHidden ||
+                      (tag & Layout) === NoFlags ||
+                      (markComponentLayoutEffectUnmountStarted(deletedFiber),
+                      shouldProfile(deletedFiber)
+                        ? (startLayoutEffectTimer(),
+                          (inst.destroy = void 0),
+                          safelyCallDestroy(
+                            deletedFiber,
+                            nearestMountedAncestor,
+                            destroy
+                          ),
+                          recordLayoutEffectDuration(deletedFiber))
+                        : ((inst.destroy = void 0),
+                          safelyCallDestroy(
+                            deletedFiber,
+                            nearestMountedAncestor,
+                            destroy
+                          )),
+                      markComponentLayoutEffectUnmountStopped()));
+                _prevHostParentIsContainer = _prevHostParentIsContainer.next;
+              } while (_prevHostParentIsContainer !== _prevHostParent);
+            }
+          } else if (
             !offscreenSubtreeWasHidden &&
             ((_prevHostParent = deletedFiber.updateQueue),
             null !== _prevHostParent &&
@@ -10835,44 +10887,38 @@ __DEV__ &&
               null !== _prevHostParent))
           ) {
             _prevHostParentIsContainer = _prevHostParent = _prevHostParent.next;
-            do {
-              var tag = _prevHostParentIsContainer.tag,
-                inst = _prevHostParentIsContainer.inst,
-                destroy = inst.destroy;
-              void 0 !== destroy &&
-                ((tag & Insertion) !== NoFlags
-                  ? ((inst.destroy = void 0),
-                    runWithFiberInDEV(
-                      deletedFiber,
-                      callDestroyInDEV,
-                      deletedFiber,
-                      nearestMountedAncestor,
-                      destroy
-                    ))
-                  : (tag & Layout) !== NoFlags &&
-                    (markComponentLayoutEffectUnmountStarted(deletedFiber),
-                    shouldProfile(deletedFiber)
-                      ? (startLayoutEffectTimer(),
-                        (inst.destroy = void 0),
-                        runWithFiberInDEV(
-                          deletedFiber,
-                          callDestroyInDEV,
-                          deletedFiber,
-                          nearestMountedAncestor,
-                          destroy
-                        ),
-                        recordLayoutEffectDuration(deletedFiber))
-                      : ((inst.destroy = void 0),
-                        runWithFiberInDEV(
-                          deletedFiber,
-                          callDestroyInDEV,
-                          deletedFiber,
-                          nearestMountedAncestor,
-                          destroy
-                        )),
-                    markComponentLayoutEffectUnmountStopped()));
-              _prevHostParentIsContainer = _prevHostParentIsContainer.next;
-            } while (_prevHostParentIsContainer !== _prevHostParent);
+            do
+              (tag = _prevHostParentIsContainer.tag),
+                (inst = _prevHostParentIsContainer.inst),
+                (destroy = inst.destroy),
+                void 0 !== destroy &&
+                  ((tag & Insertion) !== NoFlags
+                    ? ((inst.destroy = void 0),
+                      safelyCallDestroy(
+                        deletedFiber,
+                        nearestMountedAncestor,
+                        destroy
+                      ))
+                    : (tag & Layout) !== NoFlags &&
+                      (markComponentLayoutEffectUnmountStarted(deletedFiber),
+                      shouldProfile(deletedFiber)
+                        ? (startLayoutEffectTimer(),
+                          (inst.destroy = void 0),
+                          safelyCallDestroy(
+                            deletedFiber,
+                            nearestMountedAncestor,
+                            destroy
+                          ),
+                          recordLayoutEffectDuration(deletedFiber))
+                        : ((inst.destroy = void 0),
+                          safelyCallDestroy(
+                            deletedFiber,
+                            nearestMountedAncestor,
+                            destroy
+                          )),
+                      markComponentLayoutEffectUnmountStopped())),
+                (_prevHostParentIsContainer = _prevHostParentIsContainer.next);
+            while (_prevHostParentIsContainer !== _prevHostParent);
           }
           recursivelyTraverseDeletionEffects(
             finishedRoot,
@@ -14538,6 +14584,8 @@ __DEV__ &&
       suppressWarning = !1,
       isArrayImpl = Array.isArray,
       alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
+      enableHiddenSubtreeInsertionEffectCleanup =
+        dynamicFlagsUntyped.enableHiddenSubtreeInsertionEffectCleanup,
       enableObjectFiber = dynamicFlagsUntyped.enableObjectFiber,
       enablePersistedModeClonedFlag =
         dynamicFlagsUntyped.enablePersistedModeClonedFlag,
@@ -17351,11 +17399,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.0.0-native-fb-94e4acaa-20240913" !== isomorphicReactPackageVersion)
+    if ("19.0.0-native-fb-d3d4d3a4-20240913" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.0.0-native-fb-94e4acaa-20240913\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.0.0-native-fb-d3d4d3a4-20240913\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17381,11 +17429,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-94e4acaa-20240913",
+        version: "19.0.0-native-fb-d3d4d3a4-20240913",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromTag,
-        reconcilerVersion: "19.0.0-native-fb-94e4acaa-20240913"
+        reconcilerVersion: "19.0.0-native-fb-d3d4d3a4-20240913"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

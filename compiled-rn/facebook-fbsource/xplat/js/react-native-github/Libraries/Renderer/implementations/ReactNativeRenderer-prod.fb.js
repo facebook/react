@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c5b91e401a7798478afd839fd555285e>>
+ * @generated SignedSource<<b81309e2daf7536e37c679cebc59aec8>>
  */
 
 "use strict";
@@ -18,6 +18,8 @@ var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/R
   Scheduler = require("scheduler"),
   isArrayImpl = Array.isArray,
   alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
+  enableHiddenSubtreeInsertionEffectCleanup =
+    dynamicFlagsUntyped.enableHiddenSubtreeInsertionEffectCleanup,
   enableObjectFiber = dynamicFlagsUntyped.enableObjectFiber,
   enablePersistedModeClonedFlag =
     dynamicFlagsUntyped.enablePersistedModeClonedFlag,
@@ -1225,7 +1227,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_291 = {
+var injectedNamesToPlugins$jscomp$inline_298 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -1271,32 +1273,32 @@ var injectedNamesToPlugins$jscomp$inline_291 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_292 = !1,
-  pluginName$jscomp$inline_293;
-for (pluginName$jscomp$inline_293 in injectedNamesToPlugins$jscomp$inline_291)
+  isOrderingDirty$jscomp$inline_299 = !1,
+  pluginName$jscomp$inline_300;
+for (pluginName$jscomp$inline_300 in injectedNamesToPlugins$jscomp$inline_298)
   if (
-    injectedNamesToPlugins$jscomp$inline_291.hasOwnProperty(
-      pluginName$jscomp$inline_293
+    injectedNamesToPlugins$jscomp$inline_298.hasOwnProperty(
+      pluginName$jscomp$inline_300
     )
   ) {
-    var pluginModule$jscomp$inline_294 =
-      injectedNamesToPlugins$jscomp$inline_291[pluginName$jscomp$inline_293];
+    var pluginModule$jscomp$inline_301 =
+      injectedNamesToPlugins$jscomp$inline_298[pluginName$jscomp$inline_300];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_293) ||
-      namesToPlugins[pluginName$jscomp$inline_293] !==
-        pluginModule$jscomp$inline_294
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_300) ||
+      namesToPlugins[pluginName$jscomp$inline_300] !==
+        pluginModule$jscomp$inline_301
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_293])
+      if (namesToPlugins[pluginName$jscomp$inline_300])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_293 + "`.")
+            (pluginName$jscomp$inline_300 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_293] =
-        pluginModule$jscomp$inline_294;
-      isOrderingDirty$jscomp$inline_292 = !0;
+      namesToPlugins[pluginName$jscomp$inline_300] =
+        pluginModule$jscomp$inline_301;
+      isOrderingDirty$jscomp$inline_299 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_292 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_299 && recomputePluginOrdering();
 var instanceCache = new Map(),
   instanceProps = new Map();
 function getInstanceFromTag(tag) {
@@ -8502,7 +8504,36 @@ function commitDeletionEffectsOnFiber(
     case 11:
     case 14:
     case 15:
-      if (
+      if (enableHiddenSubtreeInsertionEffectCleanup) {
+        if (
+          ((child = deletedFiber.updateQueue),
+          null !== child && ((child = child.lastEffect), null !== child))
+        ) {
+          children = child = child.next;
+          do
+            (index = children.tag),
+              (prevHostParent = children.inst),
+              (prevHostParentIsContainer = prevHostParent.destroy),
+              void 0 !== prevHostParentIsContainer &&
+                (0 !== (index & 2)
+                  ? ((prevHostParent.destroy = void 0),
+                    safelyCallDestroy(
+                      deletedFiber,
+                      nearestMountedAncestor,
+                      prevHostParentIsContainer
+                    ))
+                  : offscreenSubtreeWasHidden ||
+                    0 === (index & 4) ||
+                    ((prevHostParent.destroy = void 0),
+                    safelyCallDestroy(
+                      deletedFiber,
+                      nearestMountedAncestor,
+                      prevHostParentIsContainer
+                    ))),
+              (children = children.next);
+          while (children !== child);
+        }
+      } else if (
         !offscreenSubtreeWasHidden &&
         ((child = deletedFiber.updateQueue),
         null !== child && ((child = child.lastEffect), null !== child))
@@ -10144,8 +10175,8 @@ function renderRootSync(root, lanes) {
       }
       workLoopSync();
       break;
-    } catch (thrownValue$132) {
-      handleThrow(root, thrownValue$132);
+    } catch (thrownValue$139) {
+      handleThrow(root, thrownValue$139);
     }
   while (1);
   lanes && root.shellSuspendCounter++;
@@ -10263,8 +10294,8 @@ function renderRootConcurrent(root, lanes) {
       }
       workLoopConcurrent();
       break;
-    } catch (thrownValue$134) {
-      handleThrow(root, thrownValue$134);
+    } catch (thrownValue$141) {
+      handleThrow(root, thrownValue$141);
     }
   while (1);
   resetContextDependencies();
@@ -11174,11 +11205,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.0.0-native-fb-94e4acaa-20240913" !== isomorphicReactPackageVersion)
+if ("19.0.0-native-fb-d3d4d3a4-20240913" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.0.0-native-fb-94e4acaa-20240913\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.0.0-native-fb-d3d4d3a4-20240913\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11225,27 +11256,27 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1223 = {
+  internals$jscomp$inline_1230 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-94e4acaa-20240913",
+    version: "19.0.0-native-fb-d3d4d3a4-20240913",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromTag,
-    reconcilerVersion: "19.0.0-native-fb-94e4acaa-20240913"
+    reconcilerVersion: "19.0.0-native-fb-d3d4d3a4-20240913"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1223.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1230.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1515 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1522 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1515.isDisabled &&
-    hook$jscomp$inline_1515.supportsFiber
+    !hook$jscomp$inline_1522.isDisabled &&
+    hook$jscomp$inline_1522.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1515.inject(
-        internals$jscomp$inline_1223
+      (rendererID = hook$jscomp$inline_1522.inject(
+        internals$jscomp$inline_1230
       )),
-        (injectedHook = hook$jscomp$inline_1515);
+        (injectedHook = hook$jscomp$inline_1522);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {

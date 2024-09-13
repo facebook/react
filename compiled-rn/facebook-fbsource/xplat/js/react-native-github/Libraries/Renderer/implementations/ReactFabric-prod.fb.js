@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<4df305484f484525a38e23f4b70a2a3a>>
+ * @generated SignedSource<<322e750c3add37d8f3b0459e45ce2320>>
  */
 
 "use strict";
@@ -21,6 +21,8 @@ var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/R
   enableAddPropertiesFastPath = dynamicFlagsUntyped.enableAddPropertiesFastPath,
   enableFabricCompleteRootInCommitPhase =
     dynamicFlagsUntyped.enableFabricCompleteRootInCommitPhase,
+  enableHiddenSubtreeInsertionEffectCleanup =
+    dynamicFlagsUntyped.enableHiddenSubtreeInsertionEffectCleanup,
   enableObjectFiber = dynamicFlagsUntyped.enableObjectFiber,
   enablePersistedModeClonedFlag =
     dynamicFlagsUntyped.enablePersistedModeClonedFlag,
@@ -1231,7 +1233,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_284 = {
+var injectedNamesToPlugins$jscomp$inline_291 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -1277,32 +1279,32 @@ var injectedNamesToPlugins$jscomp$inline_284 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_285 = !1,
-  pluginName$jscomp$inline_286;
-for (pluginName$jscomp$inline_286 in injectedNamesToPlugins$jscomp$inline_284)
+  isOrderingDirty$jscomp$inline_292 = !1,
+  pluginName$jscomp$inline_293;
+for (pluginName$jscomp$inline_293 in injectedNamesToPlugins$jscomp$inline_291)
   if (
-    injectedNamesToPlugins$jscomp$inline_284.hasOwnProperty(
-      pluginName$jscomp$inline_286
+    injectedNamesToPlugins$jscomp$inline_291.hasOwnProperty(
+      pluginName$jscomp$inline_293
     )
   ) {
-    var pluginModule$jscomp$inline_287 =
-      injectedNamesToPlugins$jscomp$inline_284[pluginName$jscomp$inline_286];
+    var pluginModule$jscomp$inline_294 =
+      injectedNamesToPlugins$jscomp$inline_291[pluginName$jscomp$inline_293];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_286) ||
-      namesToPlugins[pluginName$jscomp$inline_286] !==
-        pluginModule$jscomp$inline_287
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_293) ||
+      namesToPlugins[pluginName$jscomp$inline_293] !==
+        pluginModule$jscomp$inline_294
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_286])
+      if (namesToPlugins[pluginName$jscomp$inline_293])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_286 + "`.")
+            (pluginName$jscomp$inline_293 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_286] =
-        pluginModule$jscomp$inline_287;
-      isOrderingDirty$jscomp$inline_285 = !0;
+      namesToPlugins[pluginName$jscomp$inline_293] =
+        pluginModule$jscomp$inline_294;
+      isOrderingDirty$jscomp$inline_292 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_285 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_292 && recomputePluginOrdering();
 var emptyObject$1 = {},
   removedKeys = null,
   removedKeyCount = 0,
@@ -8250,34 +8252,64 @@ function commitDeletionEffectsOnFiber(
     case 11:
     case 14:
     case 15:
-      if (
+      if (enableHiddenSubtreeInsertionEffectCleanup) {
+        if (
+          ((onDeleted = deletedFiber.updateQueue),
+          null !== onDeleted &&
+            ((onDeleted = onDeleted.lastEffect), null !== onDeleted))
+        ) {
+          var effect = (onDeleted = onDeleted.next);
+          do {
+            var tag = effect.tag,
+              inst = effect.inst,
+              destroy = inst.destroy;
+            void 0 !== destroy &&
+              (0 !== (tag & 2)
+                ? ((inst.destroy = void 0),
+                  safelyCallDestroy(
+                    deletedFiber,
+                    nearestMountedAncestor,
+                    destroy
+                  ))
+                : offscreenSubtreeWasHidden ||
+                  0 === (tag & 4) ||
+                  ((inst.destroy = void 0),
+                  safelyCallDestroy(
+                    deletedFiber,
+                    nearestMountedAncestor,
+                    destroy
+                  )));
+            effect = effect.next;
+          } while (effect !== onDeleted);
+        }
+      } else if (
         !offscreenSubtreeWasHidden &&
         ((onDeleted = deletedFiber.updateQueue),
         null !== onDeleted &&
           ((onDeleted = onDeleted.lastEffect), null !== onDeleted))
       ) {
-        var effect = (onDeleted = onDeleted.next);
-        do {
-          var tag = effect.tag,
-            inst = effect.inst,
-            destroy = inst.destroy;
-          void 0 !== destroy &&
-            (0 !== (tag & 2)
-              ? ((inst.destroy = void 0),
-                safelyCallDestroy(
-                  deletedFiber,
-                  nearestMountedAncestor,
-                  destroy
-                ))
-              : 0 !== (tag & 4) &&
-                ((inst.destroy = void 0),
-                safelyCallDestroy(
-                  deletedFiber,
-                  nearestMountedAncestor,
-                  destroy
-                )));
-          effect = effect.next;
-        } while (effect !== onDeleted);
+        effect = onDeleted = onDeleted.next;
+        do
+          (tag = effect.tag),
+            (inst = effect.inst),
+            (destroy = inst.destroy),
+            void 0 !== destroy &&
+              (0 !== (tag & 2)
+                ? ((inst.destroy = void 0),
+                  safelyCallDestroy(
+                    deletedFiber,
+                    nearestMountedAncestor,
+                    destroy
+                  ))
+                : 0 !== (tag & 4) &&
+                  ((inst.destroy = void 0),
+                  safelyCallDestroy(
+                    deletedFiber,
+                    nearestMountedAncestor,
+                    destroy
+                  ))),
+            (effect = effect.next);
+        while (effect !== onDeleted);
       }
       recursivelyTraverseDeletionEffects(
         finishedRoot,
@@ -9713,8 +9745,8 @@ function renderRootSync(root, lanes) {
       }
       workLoopSync();
       break;
-    } catch (thrownValue$128) {
-      handleThrow(root, thrownValue$128);
+    } catch (thrownValue$135) {
+      handleThrow(root, thrownValue$135);
     }
   while (1);
   lanes && root.shellSuspendCounter++;
@@ -9832,8 +9864,8 @@ function renderRootConcurrent(root, lanes) {
       }
       workLoopConcurrent();
       break;
-    } catch (thrownValue$130) {
-      handleThrow(root, thrownValue$130);
+    } catch (thrownValue$137) {
+      handleThrow(root, thrownValue$137);
     }
   while (1);
   resetContextDependencies();
@@ -11043,27 +11075,27 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1157 = {
+  internals$jscomp$inline_1164 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-94e4acaa-20240913",
+    version: "19.0.0-native-fb-d3d4d3a4-20240913",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromNode,
-    reconcilerVersion: "19.0.0-native-fb-94e4acaa-20240913"
+    reconcilerVersion: "19.0.0-native-fb-d3d4d3a4-20240913"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1157.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1164.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1424 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1431 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1424.isDisabled &&
-    hook$jscomp$inline_1424.supportsFiber
+    !hook$jscomp$inline_1431.isDisabled &&
+    hook$jscomp$inline_1431.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1424.inject(
-        internals$jscomp$inline_1157
+      (rendererID = hook$jscomp$inline_1431.inject(
+        internals$jscomp$inline_1164
       )),
-        (injectedHook = hook$jscomp$inline_1424);
+        (injectedHook = hook$jscomp$inline_1431);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
