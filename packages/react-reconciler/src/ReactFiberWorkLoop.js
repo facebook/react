@@ -44,6 +44,7 @@ import {
   disableDefaultPropsExceptForClasses,
   disableStringRefs,
   enableSiblingPrerendering,
+  enableComponentPerformanceTrack,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import is from 'shared/objectIs';
@@ -221,6 +222,7 @@ import {
 
 import {
   markNestedUpdateScheduled,
+  recordCompleteTime,
   recordCommitTime,
   resetNestedUpdateFlag,
   startProfilerTimer,
@@ -1098,6 +1100,12 @@ function finishConcurrentRender(
   finishedWork: Fiber,
   lanes: Lanes,
 ) {
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // Track when we finished the last unit of work, before we actually commit it.
+    // The commit can be suspended/blocked until we commit it.
+    recordCompleteTime();
+  }
+
   // TODO: The fact that most of these branches are identical suggests that some
   // of the exit statuses are not best modeled as exit statuses and should be
   // tracked orthogonally.
@@ -1477,6 +1485,10 @@ export function performSyncWorkOnRoot(root: FiberRoot, lanes: Lanes): null {
     );
     ensureRootIsScheduled(root);
     return null;
+  }
+
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    recordCompleteTime();
   }
 
   // We now have a consistent tree. Because this is a sync render, we

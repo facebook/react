@@ -35,6 +35,7 @@ export type ProfilerTimer = {
   ...
 };
 
+let completeTime: number = 0;
 let commitTime: number = 0;
 let layoutEffectStartTime: number = -1;
 let profilerStartTime: number = -1;
@@ -81,6 +82,17 @@ function syncNestedUpdateFlag(): void {
     currentUpdateIsNested = nestedUpdateScheduled;
     nestedUpdateScheduled = false;
   }
+}
+
+function getCompleteTime(): number {
+  return completeTime;
+}
+
+function recordCompleteTime(): void {
+  if (!enableProfilerTimer) {
+    return;
+  }
+  completeTime = now();
 }
 
 function getCommitTime(): number {
@@ -233,10 +245,12 @@ function transferActualDuration(fiber: Fiber): void {
 }
 
 export {
+  getCompleteTime,
+  recordCompleteTime,
   getCommitTime,
+  recordCommitTime,
   isCurrentUpdateNested,
   markNestedUpdateScheduled,
-  recordCommitTime,
   recordLayoutEffectDuration,
   recordPassiveEffectDuration,
   resetNestedUpdateFlag,
