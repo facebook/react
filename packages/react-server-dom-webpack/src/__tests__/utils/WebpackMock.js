@@ -44,6 +44,10 @@ if (previousCompile === nodeCompile) {
 
 Module.prototype._compile = previousCompile;
 
+const Server = require('react-server-dom-webpack/server');
+const registerClientReference = Server.registerClientReference;
+const createClientModuleProxy = Server.createClientModuleProxy;
+
 exports.webpackMap = webpackClientMap;
 exports.webpackModules = webpackClientModules;
 exports.webpackServerMap = webpackServerMap;
@@ -124,6 +128,65 @@ exports.clientExports = function clientExports(
   const mod = new Module();
   nodeCompile.call(mod, '"use client"', idx);
   return mod.exports;
+};
+
+exports.clientExportsESM = function clientExportsESM(
+  moduleExports,
+  options?: {forceClientModuleProxy?: boolean} = {},
+) {
+  const chunks = [];
+  const idx = '' + webpackModuleIdx++;
+  webpackClientModules[idx] = moduleExports;
+  const path = url.pathToFileURL(idx).href;
+
+  const createClientReferencesForExports = ({exports, async}) => {
+    webpackClientMap[path] = {
+      id: idx,
+      chunks,
+      name: '*',
+      async: true,
+    };
+
+    if (options.forceClientModuleProxy) {
+      return createClientModuleProxy(path);
+    }
+
+    if (typeof exports === 'object') {
+      const references = {};
+
+      for (const name in exports) {
+        const id = path + '#' + name;
+        webpackClientMap[path + '#' + name] = {
+          id: idx,
+          chunks,
+          name: name,
+          async,
+        };
+        references[name] = registerClientReference(() => {}, id, name);
+      }
+
+      return references;
+    }
+
+    return registerClientReference(() => {}, path, '*');
+  };
+
+  if (
+    moduleExports &&
+    typeof moduleExports === 'object' &&
+    typeof moduleExports.then === 'function'
+  ) {
+    return moduleExports.then(
+      asyncModuleExports =>
+        createClientReferencesForExports({
+          exports: asyncModuleExports,
+          async: true,
+        }),
+      () => {},
+    );
+  }
+
+  return createClientReferencesForExports({exports: moduleExports});
 };
 
 // This tests server to server references. There's another case of client to server references.
