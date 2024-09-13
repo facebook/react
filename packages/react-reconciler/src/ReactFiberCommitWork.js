@@ -40,6 +40,7 @@ import type {
 import {
   alwaysThrottleRetries,
   enableCreateEventHandleAPI,
+  enableHiddenSubtreeInsertionEffectCleanup,
   enablePersistedModeClonedFlag,
   enableProfilerTimer,
   enableProfilerCommitHooks,
@@ -147,6 +148,7 @@ import {
   getExecutionContext,
   CommitContext,
   NoContext,
+  setIsRunningInsertionEffect,
 } from './ReactFiberWorkLoop';
 import {
   NoFlags as NoHookEffect,
@@ -1324,7 +1326,78 @@ function commitDeletionEffectsOnFiber(
     case ForwardRef:
     case MemoComponent:
     case SimpleMemoComponent: {
-      if (!offscreenSubtreeWasHidden) {
+      if (enableHiddenSubtreeInsertionEffectCleanup) {
+        // When deleting a fiber, we may need to destroy insertion or layout effects.
+        // Insertion effects are not destroyed on hidden, only when destroyed, so now
+        // we need to destroy them. Layout effects are destroyed when hidden, so
+        // we only need to destroy them if the tree is visible.
+        const updateQueue: FunctionComponentUpdateQueue | null =
+          (deletedFiber.updateQueue: any);
+        if (updateQueue !== null) {
+          const lastEffect = updateQueue.lastEffect;
+          if (lastEffect !== null) {
+            const firstEffect = lastEffect.next;
+
+            let effect = firstEffect;
+            do {
+              const tag = effect.tag;
+              const inst = effect.inst;
+              const destroy = inst.destroy;
+              if (destroy !== undefined) {
+                if ((tag & HookInsertion) !== NoHookEffect) {
+                  // TODO: add insertion effect marks and profiling.
+                  if (__DEV__) {
+                    setIsRunningInsertionEffect(true);
+                  }
+
+                  inst.destroy = undefined;
+                  safelyCallDestroy(
+                    deletedFiber,
+                    nearestMountedAncestor,
+                    destroy,
+                  );
+
+                  if (__DEV__) {
+                    setIsRunningInsertionEffect(false);
+                  }
+                } else if (
+                  !offscreenSubtreeWasHidden &&
+                  (tag & HookLayout) !== NoHookEffect
+                ) {
+                  // Offscreen fibers already unmounted their layout effects.
+                  // We only need to destroy layout effects for visible trees.
+                  if (enableSchedulingProfiler) {
+                    markComponentLayoutEffectUnmountStarted(deletedFiber);
+                  }
+
+                  if (shouldProfile(deletedFiber)) {
+                    startLayoutEffectTimer();
+                    inst.destroy = undefined;
+                    safelyCallDestroy(
+                      deletedFiber,
+                      nearestMountedAncestor,
+                      destroy,
+                    );
+                    recordLayoutEffectDuration(deletedFiber);
+                  } else {
+                    inst.destroy = undefined;
+                    safelyCallDestroy(
+                      deletedFiber,
+                      nearestMountedAncestor,
+                      destroy,
+                    );
+                  }
+
+                  if (enableSchedulingProfiler) {
+                    markComponentLayoutEffectUnmountStopped();
+                  }
+                }
+              }
+              effect = effect.next;
+            } while (effect !== firstEffect);
+          }
+        }
+      } else if (!offscreenSubtreeWasHidden) {
         const updateQueue: FunctionComponentUpdateQueue | null =
           (deletedFiber.updateQueue: any);
         if (updateQueue !== null) {

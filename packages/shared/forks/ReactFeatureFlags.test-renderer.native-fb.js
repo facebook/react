@@ -44,6 +44,7 @@ export const enableHalt = false;
 export const enableInfiniteRenderLoopDetection = true;
 export const enableLazyContextPropagation = false;
 export const enableContextProfiling = false;
+export const enableHiddenSubtreeInsertionEffectCleanup = true;
 export const enableLegacyCache = false;
 export const enableLegacyFBSupport = false;
 export const enableLegacyHidden = false;

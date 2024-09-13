@@ -173,6 +173,11 @@ export const transitionLaneExpirationMs = 5000;
 export const renameElementSymbol = true;
 
 /**
+ * Enables a fix to run insertion effect cleanup on hidden subtrees.
+ */
+export const enableHiddenSubtreeInsertionEffectCleanup = false;
+
+/**
  * Removes legacy style context defined using static `contextTypes` and consumed with static `childContextTypes`.
  */
 export const disableLegacyContext = true;
