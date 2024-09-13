@@ -636,7 +636,13 @@ describe('ReactFlightDOM', () => {
 
     function App({response}) {
       return (
-        <ErrorBoundary fallback={e => <p>{e.message}</p>}>
+        <ErrorBoundary
+          fallback={error => (
+            <p>
+              {__DEV__ ? error.message + ' + ' : null}
+              {error.digest}
+            </p>
+          )}>
           <Suspense fallback={<h1>Loading...</h1>}>
             <Print response={response} />
           </Suspense>
@@ -654,18 +660,29 @@ describe('ReactFlightDOM', () => {
       ReactServerDOMServer.renderToPipeableStream(
         <AsyncModuleRef />,
         webpackMap,
+        {
+          onError(error) {
+            return __DEV__ ? 'a dev digest' : `digest(${error.message})`;
+          },
+        },
       ),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
-    assertConsoleErrorDev(['TODO: error message']);
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
     await act(() => {
       root.render(<App response={response} />);
     });
-    expect(container.innerHTML).toBe('<p>TODO: error message</p>');
+
+    const errorMessage = `The module "${Object.keys(webpackMap).at(0)}" is marked as an async ESM module but was loaded as a CJS proxy.This is probably a bug in the React Server Components bundler.`;
+
+    expect(container.innerHTML).toBe(
+      __DEV__
+        ? `<p>${errorMessage} + a dev digest</p>`
+        : `<p>digest(${errorMessage})</p>`,
+    );
   });
 
   it('should be able to import a name called "then"', async () => {
