@@ -19,7 +19,7 @@ let act;
 let assertConsoleErrorDev;
 let assertLog;
 let root;
-let JSDOM
+let JSDOM;
 
 describe('ReactDOMFiber', () => {
   let container;
@@ -30,7 +30,7 @@ describe('ReactDOMFiber', () => {
     // JSDOM needs to be setup with a TextEncoder and TextDecoder when used standalone
     // https://github.com/jsdom/jsdom/issues/2524
     (() => {
-      const { TextEncoder, TextDecoder } = require('util');
+      const {TextEncoder, TextDecoder} = require('util');
       global.TextEncoder = TextEncoder;
       global.TextDecoder = TextDecoder;
       JSDOM = require('jsdom').JSDOM;
@@ -1285,7 +1285,7 @@ describe('ReactDOMFiber', () => {
   });
 
   it('should restore selection in the correct window', async () => {
-    // creating new JSOM instance to get a second window as window.open is not implemented
+    // creating new JSDOM instance to get a second window as window.open is not implemented
     // https://github.com/jsdom/jsdom/blob/c53efc81e75f38a0558fbf3ed75d30b78b4c4898/lib/jsdom/browser/Window.js#L987
     const {window: newWindow} = new JSDOM('');
     // creating a new container since the default cleanup expects the existing container to be in the document
