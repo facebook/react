@@ -332,7 +332,7 @@ describe('ReactFlightTurbopackDOM', () => {
       root.render(<App response={response} />);
     });
 
-    const errorMessage = `The module "${Object.keys(turbopackMap).at(0)}" is marked as an async ESM module but was loaded as a CJS proxy.This is probably a bug in the React Server Components bundler.`;
+    const errorMessage = `The module "${Object.keys(turbopackMap).at(0)}" is marked as an async ESM module but was loaded as a CJS proxy. This is probably a bug in the React Server Components bundler.`;
 
     expect(container.innerHTML).toBe(
       __DEV__

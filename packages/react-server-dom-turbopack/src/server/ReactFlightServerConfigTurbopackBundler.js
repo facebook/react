@@ -75,7 +75,7 @@ export function resolveClientReferenceMetadata<T>(
     throw new Error(
       'The module "' +
         modulePath +
-        '" is marked as an async ESM module but was loaded as a CJS proxy.' +
+        '" is marked as an async ESM module but was loaded as a CJS proxy. ' +
         'This is probably a bug in the React Server Components bundler.',
     );
   }
