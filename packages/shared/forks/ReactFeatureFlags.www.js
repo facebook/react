@@ -30,6 +30,7 @@ export const {
   enableRetryLaneExpiration,
   enableTransitionTracing,
   enableTrustedTypesIntegration,
+  enableHiddenSubtreeInsertionEffectCleanup,
   favorSafetyOverHydrationPerf,
   renameElementSymbol,
   retryLaneExpirationMs,

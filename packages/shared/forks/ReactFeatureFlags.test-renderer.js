@@ -46,6 +46,7 @@ export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = true;
 export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableFabricCompleteRootInCommitPhase = false;
+export const enableHiddenSubtreeInsertionEffectCleanup = false;
 
 export const enableRetryLaneExpiration = false;
 export const retryLaneExpirationMs = 5000;

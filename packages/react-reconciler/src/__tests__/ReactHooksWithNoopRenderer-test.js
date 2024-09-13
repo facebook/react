@@ -2872,6 +2872,38 @@ describe('ReactHooksWithNoopRenderer', () => {
       });
     });
 
+    // @gate enableActivity
+    it('runs insertion effect cleanup when unmounting in Offscreen state', async () => {
+      function Logger(props) {
+        useInsertionEffect(() => {
+          Scheduler.log(`create`);
+          return () => {
+            Scheduler.log(`destroy`);
+          };
+        }, []);
+        return null;
+      }
+
+      const Activity = React.unstable_Activity;
+      await act(async () => {
+        ReactNoop.render(
+          <Activity mode="hidden">
+            <Logger name="hidden" />
+          </Activity>,
+        );
+        await waitForAll(['create']);
+      });
+
+      await act(async () => {
+        ReactNoop.render(null);
+        await waitForAll(
+          gate(flags => flags.enableHiddenSubtreeInsertionEffectCleanup)
+            ? ['destroy']
+            : [],
+        );
+      });
+    });
+
     it('assumes insertion effect destroy function is either a function or undefined', async () => {
       function App(props) {
         useInsertionEffect(() => {

@@ -40,6 +40,7 @@ import type {
 import {
   alwaysThrottleRetries,
   enableCreateEventHandleAPI,
+  enableHiddenSubtreeInsertionEffectCleanup,
   enablePersistedModeClonedFlag,
   enableProfilerTimer,
   enableProfilerCommitHooks,
@@ -1324,7 +1325,10 @@ function commitDeletionEffectsOnFiber(
     case ForwardRef:
     case MemoComponent:
     case SimpleMemoComponent: {
-      if (!offscreenSubtreeWasHidden) {
+      if (
+        enableHiddenSubtreeInsertionEffectCleanup ||
+        !offscreenSubtreeWasHidden
+      ) {
         const updateQueue: FunctionComponentUpdateQueue | null =
           (deletedFiber.updateQueue: any);
         if (updateQueue !== null) {
