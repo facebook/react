@@ -21,6 +21,7 @@ global.TextDecoder = require('util').TextDecoder;
 let act;
 let use;
 let clientExports;
+let clientExportsESM;
 let clientModuleError;
 let webpackMap;
 let Stream;
@@ -68,6 +69,7 @@ describe('ReactFlightDOM', () => {
     }
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;
+    clientExportsESM = WebpackMock.clientExportsESM;
     clientModuleError = WebpackMock.clientModuleError;
     webpackMap = WebpackMock.webpackMap;
 
@@ -604,8 +606,8 @@ describe('ReactFlightDOM', () => {
       );
     }
 
-    const AsyncModuleRef = await clientExports(AsyncModule, {isESM: true});
-    const AsyncModuleRef2 = await clientExports(AsyncModule2, {isESM: true});
+    const AsyncModuleRef = await clientExportsESM(AsyncModule);
+    const AsyncModuleRef2 = await clientExportsESM(AsyncModule2);
 
     const {writable, readable} = getTestStream();
     const {pipe} = await serverAct(() =>
@@ -650,8 +652,7 @@ describe('ReactFlightDOM', () => {
       );
     }
 
-    const AsyncModuleRef = await clientExports(AsyncModule, {
-      isESM: true,
+    const AsyncModuleRef = await clientExportsESM(AsyncModule, {
       forceClientModuleProxy: true,
     });
 

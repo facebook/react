@@ -130,6 +130,61 @@ exports.clientExports = function clientExports(
   return mod.exports;
 };
 
+exports.clientExportsESM = function clientExportsESM(
+  moduleExports,
+  options?: {forceClientModuleProxy?: boolean} = {},
+) {
+  const chunks = [];
+  const idx = '' + webpackModuleIdx++;
+  webpackClientModules[idx] = moduleExports;
+  const path = url.pathToFileURL(idx).href;
+
+  const createClientReferencesForExports = ({exports, async}) => {
+    webpackClientMap[path] = {
+      id: idx,
+      chunks,
+      name: '*',
+      async: true,
+    };
+
+    if (options.forceClientModuleProxy) {
+      return createClientModuleProxy(path);
+    }
+
+    if (typeof exports === 'object') {
+      const references = {};
+
+      for (const name in exports) {
+        const id = path + '#' + name;
+        webpackClientMap[path + '#' + name] = {
+          id: idx,
+          chunks,
+          name: name,
+          async,
+        };
+        references[name] = registerClientReference(() => {}, id, name);
+      }
+
+      return references;
+    }
+
+    return registerClientReference(() => {}, path, '*');
+  };
+
+  if (
+    moduleExports &&
+    typeof moduleExports === 'object' &&
+    typeof moduleExports.then === 'function'
+  ) {
+    return moduleExports.then(
+      exports => createClientReferencesForExports({exports, async: true}),
+      () => {},
+    );
+  }
+
+  return createClientReferencesForExports({exports});
+};
+
 // This tests server to server references. There's another case of client to server references.
 exports.serverExports = function serverExports(moduleExports, blockOnChunk) {
   const idx = '' + webpackModuleIdx++;
