@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b264040d9a17e92d86c094ff1ead550e>>
+ * @generated SignedSource<<2929f47cce484593e96e4514ec4d434b>>
  */
 
 "use strict";
@@ -3660,11 +3660,18 @@ function startProfilerTimer(fiber) {
   profilerStartTime = now();
   0 > fiber.actualStartTime && (fiber.actualStartTime = profilerStartTime);
 }
-function stopProfilerTimerIfRunningAndRecordDelta(fiber, overrideBaseTime) {
+function stopProfilerTimerIfRunningAndRecordDuration(fiber) {
   if (0 <= profilerStartTime) {
     var elapsedTime = now() - profilerStartTime;
     fiber.actualDuration += elapsedTime;
-    overrideBaseTime && (fiber.selfBaseDuration = elapsedTime);
+    fiber.selfBaseDuration = elapsedTime;
+    profilerStartTime = -1;
+  }
+}
+function stopProfilerTimerIfRunningAndRecordIncompleteDuration(fiber) {
+  if (0 <= profilerStartTime) {
+    var elapsedTime = now() - profilerStartTime;
+    fiber.actualDuration += elapsedTime;
     profilerStartTime = -1;
   }
 }
@@ -8603,8 +8610,7 @@ function handleThrow(root, thrownValue) {
       );
   else
     switch (
-      (handler.mode & 2 &&
-        stopProfilerTimerIfRunningAndRecordDelta(handler, !0),
+      (handler.mode & 2 && stopProfilerTimerIfRunningAndRecordDuration(handler),
       markComponentRenderStopped(),
       workInProgressSuspendedReason)
     ) {
@@ -8830,7 +8836,7 @@ function performUnitOfWork(unitOfWork) {
   0 !== (unitOfWork.mode & 2)
     ? (startProfilerTimer(unitOfWork),
       (current = beginWork(current, unitOfWork, entangledRenderLanes)),
-      stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, !0))
+      stopProfilerTimerIfRunningAndRecordDuration(unitOfWork))
     : (current = beginWork(current, unitOfWork, entangledRenderLanes));
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
   null === current
@@ -8878,7 +8884,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
           resetWorkInProgress(next, entangledRenderLanes)),
         (current = beginWork(current, next, entangledRenderLanes));
   }
-  isProfilingMode && stopProfilerTimerIfRunningAndRecordDelta(next, !0);
+  isProfilingMode && stopProfilerTimerIfRunningAndRecordDuration(next);
   next = current;
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
   null === next ? completeUnitOfWork(unitOfWork) : (workInProgress = next);
@@ -8937,7 +8943,7 @@ function completeUnitOfWork(unitOfWork) {
       ? (current = completeWork(current, completedWork, entangledRenderLanes))
       : (startProfilerTimer(completedWork),
         (current = completeWork(current, completedWork, entangledRenderLanes)),
-        stopProfilerTimerIfRunningAndRecordDelta(completedWork, !1));
+        stopProfilerTimerIfRunningAndRecordIncompleteDuration(completedWork));
     if (null !== current) {
       workInProgress = current;
       return;
@@ -8960,7 +8966,7 @@ function unwindUnitOfWork(unitOfWork, skipSiblings) {
       return;
     }
     if (0 !== (unitOfWork.mode & 2)) {
-      stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, !1);
+      stopProfilerTimerIfRunningAndRecordIncompleteDuration(unitOfWork);
       next = unitOfWork.actualDuration;
       for (var child = unitOfWork.child; null !== child; )
         (next += child.actualDuration), (child = child.sibling);
@@ -10074,14 +10080,14 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1141 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-d3d4d3a4-20240913",
+  version: "19.0.0-native-fb-3d95c43b-20240913",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: function (mockNode) {
     mockNode = nodeToInstanceMap.get(mockNode);
     return void 0 !== mockNode ? mockNode.internalInstanceHandle : null;
   },
-  reconcilerVersion: "19.0.0-native-fb-d3d4d3a4-20240913",
+  reconcilerVersion: "19.0.0-native-fb-3d95c43b-20240913",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$138 = 0;
@@ -10232,4 +10238,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.0.0-native-fb-d3d4d3a4-20240913";
+exports.version = "19.0.0-native-fb-3d95c43b-20240913";

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2e8b99493c3aa005334ae8baef13ae78>>
+ * @generated SignedSource<<22b0fd36180890c63b8c7db1f327dc65>>
  */
 
 "use strict";
@@ -4983,11 +4983,18 @@ function startProfilerTimer(fiber) {
   profilerStartTime = now();
   0 > fiber.actualStartTime && (fiber.actualStartTime = profilerStartTime);
 }
-function stopProfilerTimerIfRunningAndRecordDelta(fiber, overrideBaseTime) {
+function stopProfilerTimerIfRunningAndRecordDuration(fiber) {
   if (0 <= profilerStartTime) {
     var elapsedTime = now() - profilerStartTime;
     fiber.actualDuration += elapsedTime;
-    overrideBaseTime && (fiber.selfBaseDuration = elapsedTime);
+    fiber.selfBaseDuration = elapsedTime;
+    profilerStartTime = -1;
+  }
+}
+function stopProfilerTimerIfRunningAndRecordIncompleteDuration(fiber) {
+  if (0 <= profilerStartTime) {
+    var elapsedTime = now() - profilerStartTime;
+    fiber.actualDuration += elapsedTime;
     profilerStartTime = -1;
   }
 }
@@ -10203,7 +10210,7 @@ function handleThrow(root, thrownValue) {
   else
     switch (
       (JSCompiler_temp.mode & 2 &&
-        stopProfilerTimerIfRunningAndRecordDelta(JSCompiler_temp, !0),
+        stopProfilerTimerIfRunningAndRecordDuration(JSCompiler_temp),
       markComponentRenderStopped(),
       workInProgressSuspendedReason)
     ) {
@@ -10456,7 +10463,7 @@ function performUnitOfWork(unitOfWork) {
   0 !== (unitOfWork.mode & 2)
     ? (startProfilerTimer(unitOfWork),
       (current = beginWork(current, unitOfWork, entangledRenderLanes)),
-      stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, !0))
+      stopProfilerTimerIfRunningAndRecordDuration(unitOfWork))
     : (current = beginWork(current, unitOfWork, entangledRenderLanes));
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
   null === current
@@ -10504,7 +10511,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
           resetWorkInProgress(next, entangledRenderLanes)),
         (current = beginWork(current, next, entangledRenderLanes));
   }
-  isProfilingMode && stopProfilerTimerIfRunningAndRecordDelta(next, !0);
+  isProfilingMode && stopProfilerTimerIfRunningAndRecordDuration(next);
   next = current;
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
   null === next ? completeUnitOfWork(unitOfWork) : (workInProgress = next);
@@ -10588,7 +10595,7 @@ function completeUnitOfWork(unitOfWork) {
       ? (current = completeWork(current, completedWork, entangledRenderLanes))
       : (startProfilerTimer(completedWork),
         (current = completeWork(current, completedWork, entangledRenderLanes)),
-        stopProfilerTimerIfRunningAndRecordDelta(completedWork, !1));
+        stopProfilerTimerIfRunningAndRecordIncompleteDuration(completedWork));
     if (null !== current) {
       workInProgress = current;
       return;
@@ -10611,7 +10618,7 @@ function unwindUnitOfWork(unitOfWork, skipSiblings) {
       return;
     }
     if (0 !== (unitOfWork.mode & 2)) {
-      stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, !1);
+      stopProfilerTimerIfRunningAndRecordIncompleteDuration(unitOfWork);
       next = unitOfWork.actualDuration;
       for (var child = unitOfWork.child; null !== child; )
         (next += child.actualDuration), (child = child.sibling);
@@ -11766,11 +11773,11 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1249 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-d3d4d3a4-20240913",
+    version: "19.0.0-native-fb-3d95c43b-20240913",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromNode,
-    reconcilerVersion: "19.0.0-native-fb-d3d4d3a4-20240913"
+    reconcilerVersion: "19.0.0-native-fb-3d95c43b-20240913"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1249.rendererConfig = extraDevToolsConfig);

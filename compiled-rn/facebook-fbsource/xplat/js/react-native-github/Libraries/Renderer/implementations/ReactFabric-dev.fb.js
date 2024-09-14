@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d23230a057fe994a91ecee3cb9cf7716>>
+ * @generated SignedSource<<f22f4e59e1c8c1bd2c19eba25b7b92e9>>
  */
 
 "use strict";
@@ -5918,11 +5918,18 @@ __DEV__ &&
       profilerStartTime = now();
       0 > fiber.actualStartTime && (fiber.actualStartTime = profilerStartTime);
     }
-    function stopProfilerTimerIfRunningAndRecordDelta(fiber, overrideBaseTime) {
+    function stopProfilerTimerIfRunningAndRecordDuration(fiber) {
       if (0 <= profilerStartTime) {
         var elapsedTime = now() - profilerStartTime;
         fiber.actualDuration += elapsedTime;
-        overrideBaseTime && (fiber.selfBaseDuration = elapsedTime);
+        fiber.selfBaseDuration = elapsedTime;
+        profilerStartTime = -1;
+      }
+    }
+    function stopProfilerTimerIfRunningAndRecordIncompleteDuration(fiber) {
+      if (0 <= profilerStartTime) {
+        var elapsedTime = now() - profilerStartTime;
+        fiber.actualDuration += elapsedTime;
         profilerStartTime = -1;
       }
     }
@@ -12297,7 +12304,7 @@ __DEV__ &&
       else
         switch (
           (JSCompiler_temp.mode & 2 &&
-            stopProfilerTimerIfRunningAndRecordDelta(JSCompiler_temp, !0),
+            stopProfilerTimerIfRunningAndRecordDuration(JSCompiler_temp),
           markComponentRenderStopped(),
           workInProgressSuspendedReason)
         ) {
@@ -12606,7 +12613,7 @@ __DEV__ &&
             unitOfWork,
             entangledRenderLanes
           )),
-          stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, !0))
+          stopProfilerTimerIfRunningAndRecordDuration(unitOfWork))
         : (current = runWithFiberInDEV(
             unitOfWork,
             beginWork,
@@ -12665,7 +12672,7 @@ __DEV__ &&
             (current = beginWork(current, unitOfWork, entangledRenderLanes));
       }
       isProfilingMode &&
-        stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, !0);
+        stopProfilerTimerIfRunningAndRecordDuration(unitOfWork);
       return current;
     }
     function throwAndUnwindWorkLoop(
@@ -12760,7 +12767,9 @@ __DEV__ &&
               completedWork,
               entangledRenderLanes
             )),
-            stopProfilerTimerIfRunningAndRecordDelta(completedWork, !1));
+            stopProfilerTimerIfRunningAndRecordIncompleteDuration(
+              completedWork
+            ));
         if (null !== current) {
           workInProgress = current;
           return;
@@ -12784,7 +12793,7 @@ __DEV__ &&
           return;
         }
         if (0 !== (unitOfWork.mode & 2)) {
-          stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, !1);
+          stopProfilerTimerIfRunningAndRecordIncompleteDuration(unitOfWork);
           next = unitOfWork.actualDuration;
           for (var child = unitOfWork.child; null !== child; )
             (next += child.actualDuration), (child = child.sibling);
@@ -17173,11 +17182,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-d3d4d3a4-20240913",
+        version: "19.0.0-native-fb-3d95c43b-20240913",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-native-fb-d3d4d3a4-20240913"
+        reconcilerVersion: "19.0.0-native-fb-3d95c43b-20240913"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
