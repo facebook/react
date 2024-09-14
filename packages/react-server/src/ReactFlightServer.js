@@ -352,8 +352,17 @@ type Task = {
 
 interface Reference {}
 
+const OPENING = 10;
+const OPEN = 11;
+const ABORTING = 12;
+const CLOSING = 13;
+const CLOSED = 14;
+
+const RENDER = 20;
+const PRERENDER = 21;
+
 export type Request = {
-  status: 10 | 11 | 12 | 13,
+  status: 10 | 11 | 12 | 13 | 14,
   type: 20 | 21,
   flushScheduled: boolean,
   fatalError: mixed,
@@ -426,14 +435,6 @@ function defaultPostponeHandler(reason: string) {
   // Noop
 }
 
-const OPEN = 10;
-const ABORTING = 11;
-const CLOSING = 12;
-const CLOSED = 13;
-
-const RENDER = 20;
-const PRERENDER = 21;
-
 function RequestInstance(
   this: $FlowFixMe,
   type: 20 | 21,
@@ -472,7 +473,7 @@ function RequestInstance(
   }
   const hints = createHints();
   this.type = type;
-  this.status = OPEN;
+  this.status = OPENING;
   this.flushScheduled = false;
   this.fatalError = null;
   this.destination = null;
@@ -1794,7 +1795,7 @@ function pingTask(request: Request, task: Task): void {
   pingedTasks.push(task);
   if (pingedTasks.length === 1) {
     request.flushScheduled = request.destination !== null;
-    if (request.type === PRERENDER) {
+    if (request.type === PRERENDER || request.status === OPENING) {
       scheduleMicrotask(() => performWork(request));
     } else {
       scheduleWork(() => performWork(request));
@@ -4062,21 +4063,18 @@ function flushCompletedChunks(
 
 export function startWork(request: Request): void {
   request.flushScheduled = request.destination !== null;
-  if (request.type === PRERENDER) {
-    if (supportsRequestStorage) {
-      scheduleMicrotask(() => {
-        requestStorage.run(request, performWork, request);
-      });
-    } else {
-      scheduleMicrotask(() => performWork(request));
-    }
+  if (supportsRequestStorage) {
+    scheduleMicrotask(() => {
+      requestStorage.run(request, performWork, request);
+    });
   } else {
-    if (supportsRequestStorage) {
-      scheduleWork(() => requestStorage.run(request, performWork, request));
-    } else {
-      scheduleWork(() => performWork(request));
-    }
+    scheduleMicrotask(() => performWork(request));
   }
+  scheduleWork(() => {
+    if (request.status === OPENING) {
+      request.status = OPEN;
+    }
+  });
 }
 
 function enqueueFlush(request: Request): void {
@@ -4129,7 +4127,8 @@ export function stopFlowing(request: Request): void {
 
 export function abort(request: Request, reason: mixed): void {
   try {
-    if (request.status === OPEN) {
+    // We define any status below OPEN as OPEN equivalent
+    if (request.status <= OPEN) {
       request.status = ABORTING;
     }
     const abortableTasks = request.abortableTasks;
