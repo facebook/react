@@ -4737,11 +4737,18 @@ function startProfilerTimer(fiber) {
   profilerStartTime = now();
   0 > fiber.actualStartTime && (fiber.actualStartTime = profilerStartTime);
 }
-function stopProfilerTimerIfRunningAndRecordDelta(fiber, overrideBaseTime) {
+function stopProfilerTimerIfRunningAndRecordDuration(fiber) {
   if (0 <= profilerStartTime) {
     var elapsedTime = now() - profilerStartTime;
     fiber.actualDuration += elapsedTime;
-    overrideBaseTime && (fiber.selfBaseDuration = elapsedTime);
+    fiber.selfBaseDuration = elapsedTime;
+    profilerStartTime = -1;
+  }
+}
+function stopProfilerTimerIfRunningAndRecordIncompleteDuration(fiber) {
+  if (0 <= profilerStartTime) {
+    var elapsedTime = now() - profilerStartTime;
+    fiber.actualDuration += elapsedTime;
     profilerStartTime = -1;
   }
 }
@@ -11609,7 +11616,7 @@ function handleThrow(root, thrownValue) {
       );
   else if (
     (erroredWork.mode & 2 &&
-      stopProfilerTimerIfRunningAndRecordDelta(erroredWork, !0),
+      stopProfilerTimerIfRunningAndRecordDuration(erroredWork),
     enableSchedulingProfiler)
   )
     switch ((markComponentRenderStopped(), workInProgressSuspendedReason)) {
@@ -11882,7 +11889,7 @@ function performUnitOfWork(unitOfWork) {
         unitOfWork,
         entangledRenderLanes
       )),
-      stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, !0))
+      stopProfilerTimerIfRunningAndRecordDuration(unitOfWork))
     : (current$jscomp$0 = beginWork(
         current$jscomp$0,
         unitOfWork,
@@ -11945,7 +11952,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
           entangledRenderLanes
         ));
   }
-  isProfilingMode && stopProfilerTimerIfRunningAndRecordDelta(next, !0);
+  isProfilingMode && stopProfilerTimerIfRunningAndRecordDuration(next);
   next = current$jscomp$0;
   current = null;
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
@@ -12038,7 +12045,7 @@ function completeUnitOfWork(unitOfWork) {
           completedWork,
           entangledRenderLanes
         )),
-        stopProfilerTimerIfRunningAndRecordDelta(completedWork, !1));
+        stopProfilerTimerIfRunningAndRecordIncompleteDuration(completedWork));
     if (null !== current$228) {
       workInProgress = current$228;
       return;
@@ -12061,7 +12068,7 @@ function unwindUnitOfWork(unitOfWork, skipSiblings) {
       return;
     }
     if (0 !== (unitOfWork.mode & 2)) {
-      stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, !1);
+      stopProfilerTimerIfRunningAndRecordIncompleteDuration(unitOfWork);
       next = unitOfWork.actualDuration;
       for (var child = unitOfWork.child; null !== child; )
         (next += child.actualDuration), (child = child.sibling);
@@ -13673,36 +13680,41 @@ function containsNode(outerNode, innerNode) {
     : !1;
 }
 function getActiveElementDeep(containerInfo) {
-  var $jscomp$optchain$tmp163018232$1, $jscomp$nullish$tmp0;
+  var $jscomp$optchain$tmpm1874826397$1, $jscomp$nullish$tmp0;
   containerInfo =
     null !=
     ($jscomp$nullish$tmp0 =
       null == containerInfo
         ? void 0
         : null ==
-            ($jscomp$optchain$tmp163018232$1 = containerInfo.ownerDocument)
+            ($jscomp$optchain$tmpm1874826397$1 = containerInfo.ownerDocument)
           ? void 0
-          : $jscomp$optchain$tmp163018232$1.defaultView)
+          : $jscomp$optchain$tmpm1874826397$1.defaultView)
       ? $jscomp$nullish$tmp0
       : window;
   for (
-    $jscomp$optchain$tmp163018232$1 = getActiveElement(containerInfo.document);
-    $jscomp$optchain$tmp163018232$1 instanceof containerInfo.HTMLIFrameElement;
+    $jscomp$optchain$tmpm1874826397$1 = getActiveElement(
+      containerInfo.document
+    );
+    $jscomp$optchain$tmpm1874826397$1 instanceof
+    containerInfo.HTMLIFrameElement;
 
   ) {
     try {
       var JSCompiler_inline_result =
         "string" ===
-        typeof $jscomp$optchain$tmp163018232$1.contentWindow.location.href;
+        typeof $jscomp$optchain$tmpm1874826397$1.contentWindow.location.href;
     } catch (err) {
       JSCompiler_inline_result = !1;
     }
     if (JSCompiler_inline_result)
-      containerInfo = $jscomp$optchain$tmp163018232$1.contentWindow;
+      containerInfo = $jscomp$optchain$tmpm1874826397$1.contentWindow;
     else break;
-    $jscomp$optchain$tmp163018232$1 = getActiveElement(containerInfo.document);
+    $jscomp$optchain$tmpm1874826397$1 = getActiveElement(
+      containerInfo.document
+    );
   }
-  return $jscomp$optchain$tmp163018232$1;
+  return $jscomp$optchain$tmpm1874826397$1;
 }
 function hasSelectionCapabilities(elem) {
   var nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
@@ -17576,14 +17588,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1829 = React.version;
 if (
-  "19.0.0-www-modern-6774caa3-20240913" !==
+  "19.0.0-www-modern-3d95c43b-20240913" !==
   isomorphicReactPackageVersion$jscomp$inline_1829
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1829,
-      "19.0.0-www-modern-6774caa3-20240913"
+      "19.0.0-www-modern-3d95c43b-20240913"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17601,11 +17613,11 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_1831 = {
   bundleType: 0,
-  version: "19.0.0-www-modern-6774caa3-20240913",
+  version: "19.0.0-www-modern-3d95c43b-20240913",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-www-modern-6774caa3-20240913"
+  reconcilerVersion: "19.0.0-www-modern-3d95c43b-20240913"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_1831.getLaneLabelMap = getLaneLabelMap),
@@ -17971,7 +17983,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-6774caa3-20240913";
+exports.version = "19.0.0-www-modern-3d95c43b-20240913";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

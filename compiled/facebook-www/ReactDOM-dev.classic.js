@@ -7353,11 +7353,18 @@ __DEV__ &&
       profilerStartTime = now();
       0 > fiber.actualStartTime && (fiber.actualStartTime = profilerStartTime);
     }
-    function stopProfilerTimerIfRunningAndRecordDelta(fiber, overrideBaseTime) {
+    function stopProfilerTimerIfRunningAndRecordDuration(fiber) {
       if (0 <= profilerStartTime) {
         var elapsedTime = now() - profilerStartTime;
         fiber.actualDuration += elapsedTime;
-        overrideBaseTime && (fiber.selfBaseDuration = elapsedTime);
+        fiber.selfBaseDuration = elapsedTime;
+        profilerStartTime = -1;
+      }
+    }
+    function stopProfilerTimerIfRunningAndRecordIncompleteDuration(fiber) {
+      if (0 <= profilerStartTime) {
+        var elapsedTime = now() - profilerStartTime;
+        fiber.actualDuration += elapsedTime;
         profilerStartTime = -1;
       }
     }
@@ -16153,7 +16160,7 @@ __DEV__ &&
           );
       else if (
         (erroredWork.mode & ProfileMode &&
-          stopProfilerTimerIfRunningAndRecordDelta(erroredWork, !0),
+          stopProfilerTimerIfRunningAndRecordDuration(erroredWork),
         enableSchedulingProfiler)
       )
         switch ((markComponentRenderStopped(), workInProgressSuspendedReason)) {
@@ -16485,7 +16492,7 @@ __DEV__ &&
             unitOfWork,
             entangledRenderLanes
           )),
-          stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, !0))
+          stopProfilerTimerIfRunningAndRecordDuration(unitOfWork))
         : (current = runWithFiberInDEV(
             unitOfWork,
             beginWork,
@@ -16564,7 +16571,7 @@ __DEV__ &&
             (current = beginWork(current, unitOfWork, entangledRenderLanes));
       }
       isProfilingMode &&
-        stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, !0);
+        stopProfilerTimerIfRunningAndRecordDuration(unitOfWork);
       return current;
     }
     function throwAndUnwindWorkLoop(
@@ -16659,7 +16666,9 @@ __DEV__ &&
               completedWork,
               entangledRenderLanes
             )),
-            stopProfilerTimerIfRunningAndRecordDelta(completedWork, !1));
+            stopProfilerTimerIfRunningAndRecordIncompleteDuration(
+              completedWork
+            ));
         if (null !== current) {
           workInProgress = current;
           return;
@@ -16683,7 +16692,7 @@ __DEV__ &&
           return;
         }
         if ((unitOfWork.mode & ProfileMode) !== NoMode) {
-          stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, !1);
+          stopProfilerTimerIfRunningAndRecordIncompleteDuration(unitOfWork);
           next = unitOfWork.actualDuration;
           for (var child = unitOfWork.child; null !== child; )
             (next += child.actualDuration), (child = child.sibling);
@@ -18666,41 +18675,41 @@ __DEV__ &&
         : !1;
     }
     function getActiveElementDeep(containerInfo) {
-      var $jscomp$optchain$tmp1894495135$1, $jscomp$nullish$tmp0;
+      var $jscomp$optchain$tmpm180540846$1, $jscomp$nullish$tmp0;
       containerInfo =
         null !=
         ($jscomp$nullish$tmp0 =
           null == containerInfo
             ? void 0
             : null ==
-                ($jscomp$optchain$tmp1894495135$1 = containerInfo.ownerDocument)
+                ($jscomp$optchain$tmpm180540846$1 = containerInfo.ownerDocument)
               ? void 0
-              : $jscomp$optchain$tmp1894495135$1.defaultView)
+              : $jscomp$optchain$tmpm180540846$1.defaultView)
           ? $jscomp$nullish$tmp0
           : window;
       for (
-        $jscomp$optchain$tmp1894495135$1 = getActiveElement(
+        $jscomp$optchain$tmpm180540846$1 = getActiveElement(
           containerInfo.document
         );
-        $jscomp$optchain$tmp1894495135$1 instanceof
+        $jscomp$optchain$tmpm180540846$1 instanceof
         containerInfo.HTMLIFrameElement;
 
       ) {
         try {
           var JSCompiler_inline_result =
             "string" ===
-            typeof $jscomp$optchain$tmp1894495135$1.contentWindow.location.href;
+            typeof $jscomp$optchain$tmpm180540846$1.contentWindow.location.href;
         } catch (err) {
           JSCompiler_inline_result = !1;
         }
         if (JSCompiler_inline_result)
-          containerInfo = $jscomp$optchain$tmp1894495135$1.contentWindow;
+          containerInfo = $jscomp$optchain$tmpm180540846$1.contentWindow;
         else break;
-        $jscomp$optchain$tmp1894495135$1 = getActiveElement(
+        $jscomp$optchain$tmpm180540846$1 = getActiveElement(
           containerInfo.document
         );
       }
-      return $jscomp$optchain$tmp1894495135$1;
+      return $jscomp$optchain$tmpm180540846$1;
     }
     function hasSelectionCapabilities(elem) {
       var nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
@@ -27866,11 +27875,11 @@ __DEV__ &&
         : flushSyncErrorInBuildsThatSupportLegacyMode;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.0.0-www-classic-6774caa3-20240913" !== isomorphicReactPackageVersion)
+      if ("19.0.0-www-classic-3d95c43b-20240913" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.0.0-www-classic-6774caa3-20240913\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.0.0-www-classic-3d95c43b-20240913\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -27914,11 +27923,11 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.0.0-www-classic-6774caa3-20240913",
+          version: "19.0.0-www-classic-3d95c43b-20240913",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
           findFiberByHostInstance: getClosestInstanceFromNode,
-          reconcilerVersion: "19.0.0-www-classic-6774caa3-20240913"
+          reconcilerVersion: "19.0.0-www-classic-3d95c43b-20240913"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -28571,7 +28580,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.0.0-www-classic-6774caa3-20240913";
+    exports.version = "19.0.0-www-classic-3d95c43b-20240913";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
