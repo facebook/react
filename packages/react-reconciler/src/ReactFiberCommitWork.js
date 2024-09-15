@@ -135,7 +135,6 @@ import {
   captureCommitPhaseError,
   resolveRetryWakeable,
   markCommitTimeOfFallback,
-  enqueuePendingPassiveProfilerEffect,
   restorePendingUpdaters,
   addTransitionStartCallbackToPendingTransition,
   addTransitionProgressCallbackToPendingTransition,
@@ -393,55 +392,6 @@ function commitBeforeMutationEffectsDeletion(deletion: Fiber) {
   }
 }
 
-export function commitPassiveEffectDurations(
-  finishedRoot: FiberRoot,
-  finishedWork: Fiber,
-): void {
-  if (
-    enableProfilerTimer &&
-    enableProfilerCommitHooks &&
-    getExecutionContext() & CommitContext
-  ) {
-    // Only Profilers with work in their subtree will have an Update effect scheduled.
-    if ((finishedWork.flags & Update) !== NoFlags) {
-      switch (finishedWork.tag) {
-        case Profiler: {
-          const {passiveEffectDuration} = finishedWork.stateNode;
-
-          commitProfilerPostCommit(
-            finishedWork,
-            finishedWork.alternate,
-            // This value will still reflect the previous commit phase.
-            // It does not get reset until the start of the next commit phase.
-            getCommitTime(),
-            passiveEffectDuration,
-          );
-
-          // Bubble times to the next nearest ancestor Profiler.
-          // After we process that Profiler, we'll bubble further up.
-          let parentFiber = finishedWork.return;
-          outer: while (parentFiber !== null) {
-            switch (parentFiber.tag) {
-              case HostRoot:
-                const root = parentFiber.stateNode;
-                root.passiveEffectDuration += passiveEffectDuration;
-                break outer;
-              case Profiler:
-                const parentStateNode = parentFiber.stateNode;
-                parentStateNode.passiveEffectDuration += passiveEffectDuration;
-                break outer;
-            }
-            parentFiber = parentFiber.return;
-          }
-          break;
-        }
-        default:
-          break;
-      }
-    }
-  }
-}
-
 function commitLayoutEffectOnFiber(
   finishedRoot: FiberRoot,
   current: Fiber | null,
@@ -548,11 +498,6 @@ function commitLayoutEffectOnFiber(
           getCommitTime(),
           effectDuration,
         );
-
-        // Schedule a passive effect for this Profiler to call onPostCommit hooks.
-        // This effect should be scheduled even if there is no onPostCommit callback for this Profiler,
-        // because the effect is also where times bubble to parent Profilers.
-        enqueuePendingPassiveProfilerEffect(finishedWork);
 
         // Propagate layout effect durations to the next nearest Profiler ancestor.
         // Do not reset these values until the next render so DevTools has a chance to read them first.
@@ -2467,11 +2412,6 @@ export function reappearLayoutEffects(
           effectDuration,
         );
 
-        // Schedule a passive effect for this Profiler to call onPostCommit hooks.
-        // This effect should be scheduled even if there is no onPostCommit callback for this Profiler,
-        // because the effect is also where times bubble to parent Profilers.
-        enqueuePendingPassiveProfilerEffect(finishedWork);
-
         // Propagate layout effect durations to the next nearest Profiler ancestor.
         // Do not reset these values until the next render so DevTools has a chance to read them first.
         let parentFiber = finishedWork.return;
@@ -2812,6 +2752,52 @@ function commitPassiveMountOnFiber(
           });
 
           clearTransitionsForLanes(finishedRoot, committedLanes);
+        }
+      }
+      break;
+    }
+    case Profiler: {
+      recursivelyTraversePassiveMountEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        committedTransitions,
+      );
+
+      // Only Profilers with work in their subtree will have a Passive effect scheduled.
+      if (flags & Passive) {
+        if (
+          enableProfilerTimer &&
+          enableProfilerCommitHooks &&
+          getExecutionContext() & CommitContext
+        ) {
+          const {passiveEffectDuration} = finishedWork.stateNode;
+
+          commitProfilerPostCommit(
+            finishedWork,
+            finishedWork.alternate,
+            // This value will still reflect the previous commit phase.
+            // It does not get reset until the start of the next commit phase.
+            getCommitTime(),
+            passiveEffectDuration,
+          );
+
+          // Bubble times to the next nearest ancestor Profiler.
+          // After we process that Profiler, we'll bubble further up.
+          let parentFiber = finishedWork.return;
+          outer: while (parentFiber !== null) {
+            switch (parentFiber.tag) {
+              case HostRoot:
+                const root = parentFiber.stateNode;
+                root.passiveEffectDuration += passiveEffectDuration;
+                break outer;
+              case Profiler:
+                const parentStateNode = parentFiber.stateNode;
+                parentStateNode.passiveEffectDuration += passiveEffectDuration;
+                break outer;
+            }
+            parentFiber = parentFiber.return;
+          }
         }
       }
       break;
