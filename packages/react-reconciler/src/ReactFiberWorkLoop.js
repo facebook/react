@@ -2836,35 +2836,22 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
     const returnFiber = completedWork.return;
 
     let next;
-    if (!enableProfilerTimer || (completedWork.mode & ProfileMode) === NoMode) {
-      if (__DEV__) {
-        next = runWithFiberInDEV(
-          completedWork,
-          completeWork,
-          current,
-          completedWork,
-          entangledRenderLanes,
-        );
-      } else {
-        next = completeWork(current, completedWork, entangledRenderLanes);
-      }
+    startProfilerTimer(completedWork);
+    if (__DEV__) {
+      next = runWithFiberInDEV(
+        completedWork,
+        completeWork,
+        current,
+        completedWork,
+        entangledRenderLanes,
+      );
     } else {
-      startProfilerTimer(completedWork);
-      if (__DEV__) {
-        next = runWithFiberInDEV(
-          completedWork,
-          completeWork,
-          current,
-          completedWork,
-          entangledRenderLanes,
-        );
-      } else {
-        next = completeWork(current, completedWork, entangledRenderLanes);
-      }
+      next = completeWork(current, completedWork, entangledRenderLanes);
+    }
+    if (enableProfilerTimer && (completedWork.mode & ProfileMode) !== NoMode) {
       // Update render duration assuming we didn't error.
       stopProfilerTimerIfRunningAndRecordIncompleteDuration(completedWork);
     }
-
     if (next !== null) {
       // Completing this fiber spawned new work. Work on that next.
       workInProgress = next;
