@@ -44,7 +44,6 @@ import {
   enablePersistedModeClonedFlag,
   enableProfilerTimer,
   enableProfilerCommitHooks,
-  enableProfilerNestedUpdatePhase,
   enableSchedulingProfiler,
   enableSuspenseCallback,
   enableScopeAPI,
@@ -100,7 +99,6 @@ import {
   Cloned,
 } from './ReactFiberFlags';
 import {
-  isCurrentUpdateNested,
   getCommitTime,
   recordLayoutEffectDuration,
   startLayoutEffectTimer,
@@ -193,6 +191,7 @@ import {
   safelyDetachRef,
   safelyCallDestroy,
   commitProfilerUpdate,
+  commitProfilerPostCommit,
   commitRootCallbacks,
 } from './ReactFiberCommitEffects';
 import {
@@ -408,22 +407,15 @@ export function commitPassiveEffectDurations(
       switch (finishedWork.tag) {
         case Profiler: {
           const {passiveEffectDuration} = finishedWork.stateNode;
-          const {id, onPostCommit} = finishedWork.memoizedProps;
 
-          // This value will still reflect the previous commit phase.
-          // It does not get reset until the start of the next commit phase.
-          const commitTime = getCommitTime();
-
-          let phase = finishedWork.alternate === null ? 'mount' : 'update';
-          if (enableProfilerNestedUpdatePhase) {
-            if (isCurrentUpdateNested()) {
-              phase = 'nested-update';
-            }
-          }
-
-          if (typeof onPostCommit === 'function') {
-            onPostCommit(id, phase, passiveEffectDuration, commitTime);
-          }
+          commitProfilerPostCommit(
+            finishedWork,
+            finishedWork.alternate,
+            // This value will still reflect the previous commit phase.
+            // It does not get reset until the start of the next commit phase.
+            getCommitTime(),
+            passiveEffectDuration,
+          );
 
           // Bubble times to the next nearest ancestor Profiler.
           // After we process that Profiler, we'll bubble further up.
