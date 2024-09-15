@@ -3104,6 +3104,10 @@ function commitRootImpl(
   // TODO: Delete all other places that schedule the passive effect callback
   // They're redundant.
   if (
+    // If this subtree rendered with profiling this commit, we need to visit it to log it.
+    (enableProfilerTimer &&
+      enableComponentPerformanceTrack &&
+      finishedWork.actualDuration !== 0) ||
     (finishedWork.subtreeFlags & PassiveMask) !== NoFlags ||
     (finishedWork.flags & PassiveMask) !== NoFlags
   ) {

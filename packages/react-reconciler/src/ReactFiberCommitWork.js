@@ -53,6 +53,7 @@ import {
   enableUseEffectEventHook,
   enableLegacyHidden,
   disableLegacyMode,
+  enableComponentPerformanceTrack,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -2657,7 +2658,15 @@ function recursivelyTraversePassiveMountEffects(
   committedLanes: Lanes,
   committedTransitions: Array<Transition> | null,
 ) {
-  if (parentFiber.subtreeFlags & PassiveMask) {
+  if (
+    parentFiber.subtreeFlags & PassiveMask ||
+    // If this subtree rendered with profiling this commit, we need to visit it to log it.
+    (enableProfilerTimer &&
+      enableComponentPerformanceTrack &&
+      parentFiber.actualDuration !== 0 &&
+      (parentFiber.alternate === null ||
+        parentFiber.alternate.child !== parentFiber.child))
+  ) {
     let child = parentFiber.child;
     while (child !== null) {
       commitPassiveMountOnFiber(
