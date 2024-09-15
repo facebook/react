@@ -4,11 +4,17 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @format
+ * @noformat
+ * @nolint
  * @flow strict
  */
 
-import type {ElementRef, ElementType, Element, AbstractComponent} from 'react';
+import type {
+  ElementRef,
+  ElementType,
+  MixedElement,
+  AbstractComponent,
+} from 'react';
 
 export type MeasureOnSuccessCallback = (
   x: number,
@@ -84,6 +90,7 @@ export type ViewConfig = $ReadOnly<{
     }>,
     ...
   }>,
+  supportsRawText?: boolean,
   uiViewClassName: string,
   validAttributes: AttributeConfiguration,
 }>;
@@ -91,6 +98,7 @@ export type ViewConfig = $ReadOnly<{
 export type PartialViewConfig = $ReadOnly<{
   bubblingEventTypes?: $PropertyType<ViewConfig, 'bubblingEventTypes'>,
   directEventTypes?: $PropertyType<ViewConfig, 'directEventTypes'>,
+  supportsRawText?: boolean,
   uiViewClassName: string,
   validAttributes?: PartialAttributeConfiguration,
 }>;
@@ -125,7 +133,7 @@ export type NativeMethods = $ReadOnly<{|
 |}>;
 
 // This validates that INativeMethods and NativeMethods stay in sync using Flow!
-declare var ensureNativeMethodsAreSynced: NativeMethods;
+declare const ensureNativeMethodsAreSynced: NativeMethods;
 (ensureNativeMethodsAreSynced: INativeMethods);
 
 export type HostComponent<T> = AbstractComponent<T, $ReadOnly<NativeMethods>>;
@@ -142,11 +150,6 @@ type InspectorDataProps = $ReadOnly<{
   ...
 }>;
 
-type InspectorDataSource = $ReadOnly<{
-  fileName?: string,
-  lineNumber?: number,
-}>;
-
 type InspectorDataGetter = (
   <TElementType: ElementType>(
     componentOrHandle: ElementRef<TElementType> | number,
@@ -154,7 +157,6 @@ type InspectorDataGetter = (
 ) => $ReadOnly<{
   measure: (callback: MeasureOnSuccessCallback) => void,
   props: InspectorDataProps,
-  source: InspectorDataSource,
 }>;
 
 export type InspectorData = $ReadOnly<{
@@ -165,7 +167,7 @@ export type InspectorData = $ReadOnly<{
   }>,
   selectedIndex: ?number,
   props: InspectorDataProps,
-  source: ?InspectorDataSource,
+  componentStack: string,
 }>;
 
 export type TouchedViewDataAtPoint = $ReadOnly<{
@@ -179,6 +181,25 @@ export type TouchedViewDataAtPoint = $ReadOnly<{
   }>,
   ...InspectorData,
 }>;
+
+export type RenderRootOptions = {
+  onUncaughtError?: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
+  onCaughtError?: (
+    error: mixed,
+    errorInfo: {
+      +componentStack?: ?string,
+      // $FlowFixMe[unclear-type] unknown props and state.
+      +errorBoundary?: ?React$Component<any, any>,
+    },
+  ) => void,
+  onRecoverableError?: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
+};
 
 /**
  * Flat ReactNative renderer bundles are too big for Flow to parse efficiently.
@@ -205,14 +226,15 @@ export type ReactNativeType = {
     eventType: string,
   ): void,
   render(
-    element: Element<ElementType>,
+    element: MixedElement,
     containerTag: number,
     callback: ?() => void,
+    options: ?RenderRootOptions,
   ): ?ElementRef<ElementType>,
   unmountComponentAtNode(containerTag: number): void,
   unmountComponentAtNodeAndRemoveContainer(containerTag: number): void,
-  unstable_batchedUpdates: <T>(fn: (T) => void, bookkeeping: T) => void,
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: SecretInternalsType,
+  +unstable_batchedUpdates: <T>(fn: (T) => void, bookkeeping: T) => void,
+  +__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: SecretInternalsType,
   ...
 };
 
@@ -239,10 +261,11 @@ export type ReactFabricType = {
     eventType: string,
   ): void,
   render(
-    element: Element<ElementType>,
+    element: MixedElement,
     containerTag: number,
     callback: ?() => void,
     concurrentRoot: ?boolean,
+    options: ?RenderRootOptions,
   ): ?ElementRef<ElementType>,
   unmountComponentAtNode(containerTag: number): void,
   getNodeFromInternalInstanceHandle(

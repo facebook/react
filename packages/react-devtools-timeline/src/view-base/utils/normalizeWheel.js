@@ -7,7 +7,7 @@
  * @flow
  */
 
-// Adapted from: https://github.com/facebookarchive/fixed-data-table/blob/main/src/vendor_upstream/dom/normalizeWheel.js
+// Adapted from: https://github.com/facebookarchive/fixed-data-table/blob/master/src/vendor_upstream/dom/normalizeWheel.js
 
 export type NormalizedWheelDelta = {
   deltaX: number,

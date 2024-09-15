@@ -53,7 +53,7 @@ export default function InspectedElementStateTree({
   const handleCopy = () => copy(serializeDataForCopy(((state: any): Object)));
 
   return (
-    <div className={styles.InspectedElementTree}>
+    <div>
       <div className={styles.HeaderRow}>
         <div className={styles.Header}>state</div>
         {!isEmpty && (

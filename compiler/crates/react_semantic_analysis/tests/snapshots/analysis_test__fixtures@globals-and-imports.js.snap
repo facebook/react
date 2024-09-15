@@ -1,0 +1,407 @@
+---
+source: crates/react_semantic_analysis/tests/analysis_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nAnalysis:\\n{output}\")"
+input_file: crates/react_semantic_analysis/tests/fixtures/globals-and-imports.js
+---
+Input:
+import Foo from "foo";
+import * as Bar from "bar";
+import { Baz } from "baz";
+
+function Component(props) {
+  let g = global;
+  let y = new Array(props.count);
+  let s = String("hello");
+  let b = Boolean(true);
+  let n = Number(0);
+  let x = Math.min(props.x, props.y);
+  setTimeout(() => {}, 0);
+  setInterval(() => {}, 0);
+  Foo;
+  Bar;
+  Baz;
+}
+
+
+Analysis:
+ScopeManager {
+    globals: [
+        (
+            "Array",
+            DeclarationId(
+                0,
+            ),
+        ),
+        (
+            "Boolean",
+            DeclarationId(
+                1,
+            ),
+        ),
+        (
+            "console",
+            DeclarationId(
+                2,
+            ),
+        ),
+        (
+            "global",
+            DeclarationId(
+                3,
+            ),
+        ),
+        (
+            "Math",
+            DeclarationId(
+                4,
+            ),
+        ),
+        (
+            "Number",
+            DeclarationId(
+                5,
+            ),
+        ),
+        (
+            "setInterval",
+            DeclarationId(
+                6,
+            ),
+        ),
+        (
+            "setTimeout",
+            DeclarationId(
+                7,
+            ),
+        ),
+        (
+            "String",
+            DeclarationId(
+                8,
+            ),
+        ),
+    ],
+    root: Scope {
+        id: ScopeId(
+            0,
+        ),
+        kind: Module,
+        declarations: {
+            "Foo": Declaration {
+                id: DeclarationId(
+                    9,
+                ),
+                kind: Import,
+                scope: ScopeId(
+                    0,
+                ),
+            },
+            "Bar": Declaration {
+                id: DeclarationId(
+                    10,
+                ),
+                kind: Import,
+                scope: ScopeId(
+                    0,
+                ),
+            },
+            "Baz": Declaration {
+                id: DeclarationId(
+                    11,
+                ),
+                kind: Import,
+                scope: ScopeId(
+                    0,
+                ),
+            },
+            "Component": Declaration {
+                id: DeclarationId(
+                    12,
+                ),
+                kind: Function,
+                scope: ScopeId(
+                    0,
+                ),
+            },
+        },
+        references: [],
+        children: [
+            Scope {
+                id: ScopeId(
+                    1,
+                ),
+                kind: Function,
+                declarations: {
+                    "props": Declaration {
+                        id: DeclarationId(
+                            13,
+                        ),
+                        kind: Function,
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                    "g": Declaration {
+                        id: DeclarationId(
+                            14,
+                        ),
+                        kind: Let,
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                    "y": Declaration {
+                        id: DeclarationId(
+                            15,
+                        ),
+                        kind: Let,
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                    "s": Declaration {
+                        id: DeclarationId(
+                            16,
+                        ),
+                        kind: Let,
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                    "b": Declaration {
+                        id: DeclarationId(
+                            17,
+                        ),
+                        kind: Let,
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                    "n": Declaration {
+                        id: DeclarationId(
+                            18,
+                        ),
+                        kind: Let,
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                    "x": Declaration {
+                        id: DeclarationId(
+                            19,
+                        ),
+                        kind: Let,
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                },
+                references: [
+                    Reference {
+                        id: ReferenceId(
+                            0,
+                        ),
+                        kind: Read,
+                        declaration: DeclarationId(
+                            3,
+                        ),
+                        declaration (name): "global",
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                    Reference {
+                        id: ReferenceId(
+                            1,
+                        ),
+                        kind: Read,
+                        declaration: DeclarationId(
+                            0,
+                        ),
+                        declaration (name): "Array",
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                    Reference {
+                        id: ReferenceId(
+                            2,
+                        ),
+                        kind: Read,
+                        declaration: DeclarationId(
+                            13,
+                        ),
+                        declaration (name): "props",
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                    Reference {
+                        id: ReferenceId(
+                            3,
+                        ),
+                        kind: Read,
+                        declaration: DeclarationId(
+                            8,
+                        ),
+                        declaration (name): "String",
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                    Reference {
+                        id: ReferenceId(
+                            4,
+                        ),
+                        kind: Read,
+                        declaration: DeclarationId(
+                            1,
+                        ),
+                        declaration (name): "Boolean",
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                    Reference {
+                        id: ReferenceId(
+                            5,
+                        ),
+                        kind: Read,
+                        declaration: DeclarationId(
+                            5,
+                        ),
+                        declaration (name): "Number",
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                    Reference {
+                        id: ReferenceId(
+                            6,
+                        ),
+                        kind: Read,
+                        declaration: DeclarationId(
+                            4,
+                        ),
+                        declaration (name): "Math",
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                    Reference {
+                        id: ReferenceId(
+                            7,
+                        ),
+                        kind: Read,
+                        declaration: DeclarationId(
+                            13,
+                        ),
+                        declaration (name): "props",
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                    Reference {
+                        id: ReferenceId(
+                            8,
+                        ),
+                        kind: Read,
+                        declaration: DeclarationId(
+                            13,
+                        ),
+                        declaration (name): "props",
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                    Reference {
+                        id: ReferenceId(
+                            9,
+                        ),
+                        kind: Read,
+                        declaration: DeclarationId(
+                            7,
+                        ),
+                        declaration (name): "setTimeout",
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                    Reference {
+                        id: ReferenceId(
+                            10,
+                        ),
+                        kind: Read,
+                        declaration: DeclarationId(
+                            6,
+                        ),
+                        declaration (name): "setInterval",
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                    Reference {
+                        id: ReferenceId(
+                            11,
+                        ),
+                        kind: Read,
+                        declaration: DeclarationId(
+                            9,
+                        ),
+                        declaration (name): "Foo",
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                    Reference {
+                        id: ReferenceId(
+                            12,
+                        ),
+                        kind: Read,
+                        declaration: DeclarationId(
+                            10,
+                        ),
+                        declaration (name): "Bar",
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                    Reference {
+                        id: ReferenceId(
+                            13,
+                        ),
+                        kind: Read,
+                        declaration: DeclarationId(
+                            11,
+                        ),
+                        declaration (name): "Baz",
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                ],
+                children: [
+                    Scope {
+                        id: ScopeId(
+                            2,
+                        ),
+                        kind: Function,
+                        declarations: {},
+                        references: [],
+                        children: [],
+                    },
+                    Scope {
+                        id: ScopeId(
+                            3,
+                        ),
+                        kind: Function,
+                        declarations: {},
+                        references: [],
+                        children: [],
+                    },
+                ],
+            },
+        ],
+    },
+}
+

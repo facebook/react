@@ -14,7 +14,6 @@ import {isFiberMounted} from './ReactFiberTreeReflection';
 import {disableLegacyContext} from 'shared/ReactFeatureFlags';
 import {ClassComponent, HostRoot} from './ReactWorkTags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
-import checkPropTypes from 'shared/checkPropTypes';
 
 import {createCursor, push, pop} from './ReactFiberStack';
 
@@ -99,11 +98,6 @@ function getMaskedContext(
     const context: {[string]: $FlowFixMe} = {};
     for (const key in contextTypes) {
       context[key] = unmaskedContext[key];
-    }
-
-    if (__DEV__) {
-      const name = getComponentNameFromFiber(workInProgress) || 'Unknown';
-      checkPropTypes(contextTypes, context, 'context', name);
     }
 
     // Cache unmasked context so we can avoid recreating masked context unless necessary.
@@ -211,10 +205,6 @@ function processChildContext(
           }.getChildContext(): key "${contextKey}" is not defined in childContextTypes.`,
         );
       }
-    }
-    if (__DEV__) {
-      const name = getComponentNameFromFiber(fiber) || 'Unknown';
-      checkPropTypes(childContextTypes, childContext, 'child context', name);
     }
 
     return {...parentContext, ...childContext};

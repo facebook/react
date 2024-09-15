@@ -68,11 +68,11 @@ const LOCAL_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY =
 
 type ErrorAndWarningTuples = Array<{id: number, index: number}>;
 
-type Config = {
+export type Config = {
   checkBridgeProtocolCompatibility?: boolean,
   isProfiling?: boolean,
-  supportsNativeInspection?: boolean,
-  supportsProfiling?: boolean,
+  supportsInspectMatchingDOMElement?: boolean,
+  supportsClickToInspect?: boolean,
   supportsReloadAndProfile?: boolean,
   supportsTimeline?: boolean,
   supportsTraceUpdates?: boolean,
@@ -173,8 +173,8 @@ export default class Store extends EventEmitter<{
   _rootIDToRendererID: Map<number, number> = new Map();
 
   // These options may be initially set by a configuration option when constructing the Store.
-  _supportsNativeInspection: boolean = true;
-  _supportsProfiling: boolean = false;
+  _supportsInspectMatchingDOMElement: boolean = false;
+  _supportsClickToInspect: boolean = false;
   _supportsReloadAndProfile: boolean = false;
   _supportsTimeline: boolean = false;
   _supportsTraceUpdates: boolean = false;
@@ -190,6 +190,8 @@ export default class Store extends EventEmitter<{
   // Total number of visible elements (within all roots).
   // Used for windowing purposes.
   _weightAcrossRoots: number = 0;
+
+  _shouldCheckBridgeProtocolCompatibility: boolean = false;
 
   constructor(bridge: FrontendBridge, config?: Config) {
     super();
@@ -213,15 +215,18 @@ export default class Store extends EventEmitter<{
       isProfiling = config.isProfiling === true;
 
       const {
-        supportsNativeInspection,
-        supportsProfiling,
+        supportsInspectMatchingDOMElement,
+        supportsClickToInspect,
         supportsReloadAndProfile,
         supportsTimeline,
         supportsTraceUpdates,
+        checkBridgeProtocolCompatibility,
       } = config;
-      this._supportsNativeInspection = supportsNativeInspection !== false;
-      if (supportsProfiling) {
-        this._supportsProfiling = true;
+      if (supportsInspectMatchingDOMElement) {
+        this._supportsInspectMatchingDOMElement = true;
+      }
+      if (supportsClickToInspect) {
+        this._supportsClickToInspect = true;
       }
       if (supportsReloadAndProfile) {
         this._supportsReloadAndProfile = true;
@@ -231,6 +236,9 @@ export default class Store extends EventEmitter<{
       }
       if (supportsTraceUpdates) {
         this._supportsTraceUpdates = true;
+      }
+      if (checkBridgeProtocolCompatibility) {
+        this._shouldCheckBridgeProtocolCompatibility = true;
       }
     }
 
@@ -260,24 +268,9 @@ export default class Store extends EventEmitter<{
 
     this._profilerStore = new ProfilerStore(bridge, this, isProfiling);
 
-    // Verify that the frontend version is compatible with the connected backend.
-    // See github.com/facebook/react/issues/21326
-    if (config != null && config.checkBridgeProtocolCompatibility) {
-      // Older backends don't support an explicit bridge protocol,
-      // so we should timeout eventually and show a downgrade message.
-      this._onBridgeProtocolTimeoutID = setTimeout(
-        this.onBridgeProtocolTimeout,
-        10000,
-      );
-
-      bridge.addListener('bridgeProtocol', this.onBridgeProtocol);
-      bridge.send('getBridgeProtocol');
-    }
-
     bridge.addListener('backendVersion', this.onBridgeBackendVersion);
-    bridge.send('getBackendVersion');
-
     bridge.addListener('saveToClipboard', this.onSaveToClipboard);
+    bridge.addListener('backendInitialized', this.onBackendInitialized);
   }
 
   // This is only used in tests to avoid memory leaks.
@@ -441,18 +434,16 @@ export default class Store extends EventEmitter<{
     return this._rootSupportsTimelineProfiling;
   }
 
-  get supportsNativeInspection(): boolean {
-    return this._supportsNativeInspection;
+  get supportsInspectMatchingDOMElement(): boolean {
+    return this._supportsInspectMatchingDOMElement;
+  }
+
+  get supportsClickToInspect(): boolean {
+    return this._supportsClickToInspect;
   }
 
   get supportsNativeStyleEditor(): boolean {
     return this._isNativeStyleEditorSupported;
-  }
-
-  // This build of DevTools supports the legacy profiler.
-  // This is a static flag, controlled by the Store config.
-  get supportsProfiling(): boolean {
-    return this._supportsProfiling;
   }
 
   get supportsReloadAndProfile(): boolean {
@@ -1491,6 +1482,25 @@ export default class Store extends EventEmitter<{
 
   onSaveToClipboard: (text: string) => void = text => {
     copy(text);
+  };
+
+  onBackendInitialized: () => void = () => {
+    // Verify that the frontend version is compatible with the connected backend.
+    // See github.com/facebook/react/issues/21326
+    if (this._shouldCheckBridgeProtocolCompatibility) {
+      // Older backends don't support an explicit bridge protocol,
+      // so we should timeout eventually and show a downgrade message.
+      this._onBridgeProtocolTimeoutID = setTimeout(
+        this.onBridgeProtocolTimeout,
+        10000,
+      );
+
+      this._bridge.addListener('bridgeProtocol', this.onBridgeProtocol);
+      this._bridge.send('getBridgeProtocol');
+    }
+
+    this._bridge.send('getBackendVersion');
+    this._bridge.send('getIfHasUnsupportedRendererVersion');
   };
 
   // The Store should never throw an Error without also emitting an event.

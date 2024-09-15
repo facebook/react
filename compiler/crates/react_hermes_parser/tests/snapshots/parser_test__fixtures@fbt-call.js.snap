@@ -1,0 +1,358 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/fbt-call.js
+---
+Input:
+import fbt from "fbt";
+
+function Component(props) {
+  const text = fbt(
+    `${fbt.param("(key) count", props.count)} items`,
+    "(description) Number of items"
+  );
+  return <div>{text}</div>;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "ImportDeclaration",
+      "specifiers": [
+        {
+          "type": "ImportDefaultSpecifier",
+          "local": {
+            "type": "Identifier",
+            "name": "fbt",
+            "typeAnnotation": null,
+            "loc": null,
+            "range": [
+              7,
+              10
+            ]
+          },
+          "loc": null,
+          "range": [
+            7,
+            10
+          ]
+        }
+      ],
+      "source": {
+        "type": "StringLiteral",
+        "value": "fbt",
+        "loc": null,
+        "range": [
+          16,
+          21
+        ]
+      },
+      "loc": null,
+      "range": [
+        0,
+        22
+      ]
+    },
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          33,
+          42
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            43,
+            48
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "text",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    60,
+                    64
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "fbt",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      67,
+                      70
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "TemplateLiteral",
+                      "quasis": [
+                        {
+                          "type": "TemplateElement",
+                          "tail": false,
+                          "value": {
+                            "cooked": "",
+                            "raw": ""
+                          },
+                          "loc": null,
+                          "range": [
+                            76,
+                            79
+                          ]
+                        },
+                        {
+                          "type": "TemplateElement",
+                          "tail": true,
+                          "value": {
+                            "cooked": " items",
+                            "raw": " items"
+                          },
+                          "loc": null,
+                          "range": [
+                            116,
+                            124
+                          ]
+                        }
+                      ],
+                      "expressions": [
+                        {
+                          "type": "CallExpression",
+                          "callee": {
+                            "type": "MemberExpression",
+                            "object": {
+                              "type": "Identifier",
+                              "name": "fbt",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                79,
+                                82
+                              ]
+                            },
+                            "property": {
+                              "type": "Identifier",
+                              "name": "param",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                83,
+                                88
+                              ]
+                            },
+                            "computed": false,
+                            "loc": null,
+                            "range": [
+                              79,
+                              88
+                            ]
+                          },
+                          "arguments": [
+                            {
+                              "type": "StringLiteral",
+                              "value": "(key) count",
+                              "loc": null,
+                              "range": [
+                                89,
+                                102
+                              ]
+                            },
+                            {
+                              "type": "MemberExpression",
+                              "object": {
+                                "type": "Identifier",
+                                "name": "props",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  104,
+                                  109
+                                ]
+                              },
+                              "property": {
+                                "type": "Identifier",
+                                "name": "count",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  110,
+                                  115
+                                ]
+                              },
+                              "computed": false,
+                              "loc": null,
+                              "range": [
+                                104,
+                                115
+                              ]
+                            }
+                          ],
+                          "loc": null,
+                          "range": [
+                            79,
+                            116
+                          ]
+                        }
+                      ],
+                      "loc": null,
+                      "range": [
+                        76,
+                        124
+                      ]
+                    },
+                    {
+                      "type": "StringLiteral",
+                      "value": "(description) Number of items",
+                      "loc": null,
+                      "range": [
+                        130,
+                        161
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    67,
+                    165
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  60,
+                  165
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              54,
+              166
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "div",
+                  "loc": null,
+                  "range": [
+                    177,
+                    180
+                  ]
+                },
+                "attributes": [],
+                "selfClosing": false,
+                "loc": null,
+                "range": [
+                  176,
+                  181
+                ]
+              },
+              "children": [
+                {
+                  "type": "JSXExpressionContainer",
+                  "expression": {
+                    "type": "Identifier",
+                    "name": "text",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      182,
+                      186
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    181,
+                    187
+                  ]
+                }
+              ],
+              "closingElement": {
+                "type": "JSXClosingElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "div",
+                  "loc": null,
+                  "range": [
+                    189,
+                    192
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  187,
+                  193
+                ]
+              },
+              "loc": null,
+              "range": [
+                176,
+                193
+              ]
+            },
+            "loc": null,
+            "range": [
+              169,
+              194
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          50,
+          196
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        24,
+        196
+      ],
+      "loc": null,
+      "range": [
+        24,
+        196
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    196
+  ]
+}

@@ -25,9 +25,17 @@ import type {TransitionStatus} from './ReactFizzConfig';
 
 import {readContext as readContextImpl} from './ReactFizzNewContext';
 import {getTreeId} from './ReactFizzTreeContext';
-import {createThenableState, trackUsedThenable} from './ReactFizzThenable';
+import {
+  createThenableState,
+  trackUsedThenable,
+  readPreviousThenable,
+} from './ReactFizzThenable';
 
-import {makeId, NotPendingTransition} from './ReactFizzConfig';
+import {
+  makeId,
+  NotPendingTransition,
+  supportsClientAPIs,
+} from './ReactFizzConfig';
 import {createFastHash} from './ReactServerStreamConfig';
 
 import {
@@ -35,12 +43,9 @@ import {
   enableUseEffectEventHook,
   enableUseMemoCacheHook,
   enableAsyncActions,
-  enableFormActions,
-  enableUseDeferredValueInitialArg,
 } from 'shared/ReactFeatureFlags';
 import is from 'shared/objectIs';
 import {
-  REACT_SERVER_CONTEXT_TYPE,
   REACT_CONTEXT_TYPE,
   REACT_MEMO_CACHE_SENTINEL,
 } from 'shared/ReactSymbols';
@@ -80,11 +85,11 @@ let didScheduleRenderPhaseUpdate: boolean = false;
 let localIdCounter: number = 0;
 // Chunks that should be pushed to the stream once the component
 // finishes rendering.
-// Counts the number of useFormState calls in this component
-let formStateCounter: number = 0;
-// The index of the useFormState hook that matches the one passed in at the
+// Counts the number of useActionState calls in this component
+let actionStateCounter: number = 0;
+// The index of the useActionState hook that matches the one passed in at the
 // root during an MPA navigation, if any.
-let formStateMatchingIndex: number = -1;
+let actionStateMatchingIndex: number = -1;
 // Counts the number of use(thenable) calls in this component
 let thenableIndexCounter: number = 0;
 let thenableState: ThenableState | null = null;
@@ -107,7 +112,7 @@ function resolveCurrentlyRenderingComponent(): Object {
         '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
         '2. You might be breaking the Rules of Hooks\n' +
         '3. You might have more than one copy of React in the same app\n' +
-        'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
+        'See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.',
     );
   }
 
@@ -117,7 +122,7 @@ function resolveCurrentlyRenderingComponent(): Object {
         'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks. ' +
           'You can only call Hooks at the top level of your React function. ' +
           'For more information, see ' +
-          'https://reactjs.org/link/rules-of-hooks',
+          'https://react.dev/link/rules-of-hooks',
       );
     }
   }
@@ -225,8 +230,15 @@ export function prepareToUseHooks(
   // workInProgressHook = null;
 
   localIdCounter = 0;
-  formStateCounter = 0;
-  formStateMatchingIndex = -1;
+  actionStateCounter = 0;
+  actionStateMatchingIndex = -1;
+  thenableIndexCounter = 0;
+  thenableState = prevThenableState;
+}
+
+export function prepareToUseThenableState(
+  prevThenableState: ThenableState | null,
+): void {
   thenableIndexCounter = 0;
   thenableState = prevThenableState;
 }
@@ -247,8 +259,8 @@ export function finishHooks(
     // restarting until no more updates are scheduled.
     didScheduleRenderPhaseUpdate = false;
     localIdCounter = 0;
-    formStateCounter = 0;
-    formStateMatchingIndex = -1;
+    actionStateCounter = 0;
+    actionStateMatchingIndex = -1;
     thenableIndexCounter = 0;
     numberOfReRenders += 1;
 
@@ -276,17 +288,17 @@ export function checkDidRenderIdHook(): boolean {
   return didRenderIdHook;
 }
 
-export function getFormStateCount(): number {
+export function getActionStateCount(): number {
   // This should be called immediately after every finishHooks call.
   // Conceptually, it's part of the return value of finishHooks; it's only a
   // separate function to avoid using an array tuple.
-  return formStateCounter;
+  return actionStateCounter;
 }
-export function getFormStateMatchingIndex(): number {
+export function getActionStateMatchingIndex(): number {
   // This should be called immediately after every finishHooks call.
   // Conceptually, it's part of the return value of finishHooks; it's only a
   // separate function to avoid using an array tuple.
-  return formStateMatchingIndex;
+  return actionStateMatchingIndex;
 }
 
 // Reset the internal hooks state if an error occurs while rendering a component
@@ -557,11 +569,7 @@ function useSyncExternalStore<T>(
 
 function useDeferredValue<T>(value: T, initialValue?: T): T {
   resolveCurrentlyRenderingComponent();
-  if (enableUseDeferredValueInitialArg) {
-    return initialValue !== undefined ? initialValue : value;
-  } else {
-    return value;
-  }
+  return initialValue !== undefined ? initialValue : value;
 }
 
 function unsupportedStartTransition() {
@@ -593,7 +601,7 @@ function useOptimistic<S, A>(
   return [passthrough, unsupportedSetOptimisticState];
 }
 
-function createPostbackFormStateKey(
+function createPostbackActionStateKey(
   permalink: string | void,
   componentKeyPath: KeyNode | null,
   hookIndex: number,
@@ -612,17 +620,17 @@ function createPostbackFormStateKey(
   }
 }
 
-function useFormState<S, P>(
+function useActionState<S, P>(
   action: (Awaited<S>, P) => S,
   initialState: Awaited<S>,
   permalink?: string,
-): [Awaited<S>, (P) => void] {
+): [Awaited<S>, (P) => void, boolean] {
   resolveCurrentlyRenderingComponent();
 
-  // Count the number of useFormState hooks per component. We also use this to
-  // track the position of this useFormState hook relative to the other ones in
+  // Count the number of useActionState hooks per component. We also use this to
+  // track the position of this useActionState hook relative to the other ones in
   // this component, so we can generate a unique key for each one.
-  const formStateHookIndex = formStateCounter++;
+  const actionStateHookIndex = actionStateCounter++;
   const request: Request = (currentlyRenderingRequest: any);
 
   // $FlowIgnore[prop-missing]
@@ -631,7 +639,7 @@ function useFormState<S, P>(
     // This is a server action. These have additional features to enable
     // MPA-style form submissions with progressive enhancement.
 
-    // TODO: If the same permalink is passed to multiple useFormStates, and
+    // TODO: If the same permalink is passed to multiple useActionStates, and
     // they all have the same action signature, Fizz will pass the postback
     // state to all of them. We should probably only pass it to the first one,
     // and/or warn.
@@ -642,30 +650,33 @@ function useFormState<S, P>(
 
     // Determine the current form state. If we received state during an MPA form
     // submission, then we will reuse that, if the action identity matches.
-    // Otherwise we'll use the initial state argument. We will emit a comment
+    // Otherwise, we'll use the initial state argument. We will emit a comment
     // marker into the stream that indicates whether the state was reused.
     let state = initialState;
     const componentKeyPath = (currentlyRenderingKeyPath: any);
-    const postbackFormState = getFormState(request);
+    const postbackActionState = getFormState(request);
     // $FlowIgnore[prop-missing]
     const isSignatureEqual = action.$$IS_SIGNATURE_EQUAL;
-    if (postbackFormState !== null && typeof isSignatureEqual === 'function') {
-      const postbackKey = postbackFormState[1];
-      const postbackReferenceId = postbackFormState[2];
-      const postbackBoundArity = postbackFormState[3];
+    if (
+      postbackActionState !== null &&
+      typeof isSignatureEqual === 'function'
+    ) {
+      const postbackKey = postbackActionState[1];
+      const postbackReferenceId = postbackActionState[2];
+      const postbackBoundArity = postbackActionState[3];
       if (
         isSignatureEqual.call(action, postbackReferenceId, postbackBoundArity)
       ) {
-        nextPostbackStateKey = createPostbackFormStateKey(
+        nextPostbackStateKey = createPostbackActionStateKey(
           permalink,
           componentKeyPath,
-          formStateHookIndex,
+          actionStateHookIndex,
         );
         if (postbackKey === nextPostbackStateKey) {
           // This was a match
-          formStateMatchingIndex = formStateHookIndex;
+          actionStateMatchingIndex = actionStateHookIndex;
           // Reuse the state that was submitted by the form.
-          state = postbackFormState[0];
+          state = postbackActionState[0];
         }
       }
     }
@@ -697,10 +708,10 @@ function useFormState<S, P>(
         const formData = metadata.data;
         if (formData) {
           if (nextPostbackStateKey === null) {
-            nextPostbackStateKey = createPostbackFormStateKey(
+            nextPostbackStateKey = createPostbackActionStateKey(
               permalink,
               componentKeyPath,
-              formStateHookIndex,
+              actionStateHookIndex,
             );
           }
           formData.append('$ACTION_KEY', nextPostbackStateKey);
@@ -709,7 +720,7 @@ function useFormState<S, P>(
       };
     }
 
-    return [state, dispatch];
+    return [state, dispatch, false];
   } else {
     // This is not a server action, so the implementation is much simpler.
 
@@ -719,7 +730,7 @@ function useFormState<S, P>(
     const dispatch = (payload: P): void => {
       boundAction(payload);
     };
-    return [initialState, dispatch];
+    return [initialState, dispatch, false];
   }
 }
 
@@ -745,10 +756,7 @@ function use<T>(usable: Usable<T>): T {
       // This is a thenable.
       const thenable: Thenable<T> = (usable: any);
       return unwrapThenable(thenable);
-    } else if (
-      usable.$$typeof === REACT_CONTEXT_TYPE ||
-      usable.$$typeof === REACT_SERVER_CONTEXT_TYPE
-    ) {
+    } else if (usable.$$typeof === REACT_CONTEXT_TYPE) {
       const context: ReactContext<T> = (usable: any);
       return readContext(context);
     }
@@ -765,6 +773,15 @@ export function unwrapThenable<T>(thenable: Thenable<T>): T {
     thenableState = createThenableState();
   }
   return trackUsedThenable(thenableState, thenable, index);
+}
+
+export function readPreviousThenableFromState<T>(): T | void {
+  const index = thenableIndexCounter;
+  thenableIndexCounter += 1;
+  if (thenableState === null) {
+    return undefined;
+  }
+  return readPreviousThenable(thenableState, index);
 }
 
 function unsupportedRefresh() {
@@ -785,29 +802,56 @@ function useMemoCache(size: number): Array<any> {
 
 function noop(): void {}
 
-export const HooksDispatcher: Dispatcher = {
-  readContext,
-  use,
-  useContext,
-  useMemo,
-  useReducer,
-  useRef,
-  useState,
-  useInsertionEffect: noop,
-  useLayoutEffect: noop,
-  useCallback,
-  // useImperativeHandle is not run in the server environment
-  useImperativeHandle: noop,
-  // Effects are not run in the server environment.
-  useEffect: noop,
-  // Debugging effect
-  useDebugValue: noop,
-  useDeferredValue,
-  useTransition,
-  useId,
-  // Subscriptions are not setup in a server environment.
-  useSyncExternalStore,
-};
+function clientHookNotSupported() {
+  throw new Error(
+    'Cannot use state or effect Hooks in renderToHTML because ' +
+      'this component will never be hydrated.',
+  );
+}
+
+export const HooksDispatcher: Dispatcher = supportsClientAPIs
+  ? {
+      readContext,
+      use,
+      useContext,
+      useMemo,
+      useReducer,
+      useRef,
+      useState,
+      useInsertionEffect: noop,
+      useLayoutEffect: noop,
+      useCallback,
+      // useImperativeHandle is not run in the server environment
+      useImperativeHandle: noop,
+      // Effects are not run in the server environment.
+      useEffect: noop,
+      // Debugging effect
+      useDebugValue: noop,
+      useDeferredValue,
+      useTransition,
+      useId,
+      // Subscriptions are not setup in a server environment.
+      useSyncExternalStore,
+    }
+  : {
+      readContext,
+      use,
+      useContext,
+      useMemo,
+      useReducer: clientHookNotSupported,
+      useRef: clientHookNotSupported,
+      useState: clientHookNotSupported,
+      useInsertionEffect: clientHookNotSupported,
+      useLayoutEffect: clientHookNotSupported,
+      useCallback,
+      useImperativeHandle: clientHookNotSupported,
+      useEffect: clientHookNotSupported,
+      useDebugValue: noop,
+      useDeferredValue: clientHookNotSupported,
+      useTransition: clientHookNotSupported,
+      useId,
+      useSyncExternalStore: clientHookNotSupported,
+    };
 
 if (enableCache) {
   HooksDispatcher.useCacheRefresh = useCacheRefresh;
@@ -818,12 +862,13 @@ if (enableUseEffectEventHook) {
 if (enableUseMemoCacheHook) {
   HooksDispatcher.useMemoCache = useMemoCache;
 }
-if (enableFormActions && enableAsyncActions) {
+if (enableAsyncActions) {
   HooksDispatcher.useHostTransitionStatus = useHostTransitionStatus;
 }
 if (enableAsyncActions) {
   HooksDispatcher.useOptimistic = useOptimistic;
-  HooksDispatcher.useFormState = useFormState;
+  HooksDispatcher.useFormState = useActionState;
+  HooksDispatcher.useActionState = useActionState;
 }
 
 export let currentResumableState: null | ResumableState = (null: any);

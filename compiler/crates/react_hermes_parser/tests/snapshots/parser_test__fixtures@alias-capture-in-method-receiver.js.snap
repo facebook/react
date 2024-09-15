@@ -1,0 +1,248 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/alias-capture-in-method-receiver.js
+---
+Input:
+function Component() {
+  // a's mutable range should be limited
+  // the following line
+  let a = someObj();
+
+  let x = [];
+  x.push(a);
+
+  return [x, a];
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "a",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    94,
+                    95
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "someObj",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      98,
+                      105
+                    ]
+                  },
+                  "arguments": [],
+                  "loc": null,
+                  "range": [
+                    98,
+                    107
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  94,
+                  107
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              90,
+              108
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    116,
+                    117
+                  ]
+                },
+                "init": {
+                  "type": "ArrayExpression",
+                  "elements": [],
+                  "loc": null,
+                  "range": [
+                    120,
+                    122
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  116,
+                  122
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              112,
+              123
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "MemberExpression",
+                "object": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    126,
+                    127
+                  ]
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "push",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    128,
+                    132
+                  ]
+                },
+                "computed": false,
+                "loc": null,
+                "range": [
+                  126,
+                  132
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "Identifier",
+                  "name": "a",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    133,
+                    134
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                126,
+                135
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              126,
+              136
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "ArrayExpression",
+              "elements": [
+                {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    148,
+                    149
+                  ]
+                },
+                {
+                  "type": "Identifier",
+                  "name": "a",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    151,
+                    152
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                147,
+                153
+              ]
+            },
+            "loc": null,
+            "range": [
+              140,
+              154
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          21,
+          156
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        156
+      ],
+      "loc": null,
+      "range": [
+        0,
+        156
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    156
+  ]
+}

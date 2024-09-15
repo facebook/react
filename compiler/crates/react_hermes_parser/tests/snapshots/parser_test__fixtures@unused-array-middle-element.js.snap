@@ -1,0 +1,196 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/unused-array-middle-element.js
+---
+Input:
+function foo(props) {
+  const [x, unused, y] = props.a;
+  return x + y;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "foo",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          12
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            13,
+            18
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "ArrayPattern",
+                  "elements": [
+                    {
+                      "type": "Identifier",
+                      "name": "x",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        31,
+                        32
+                      ]
+                    },
+                    {
+                      "type": "Identifier",
+                      "name": "unused",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        34,
+                        40
+                      ]
+                    },
+                    {
+                      "type": "Identifier",
+                      "name": "y",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        42,
+                        43
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    30,
+                    44
+                  ]
+                },
+                "init": {
+                  "type": "MemberExpression",
+                  "object": {
+                    "type": "Identifier",
+                    "name": "props",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      47,
+                      52
+                    ]
+                  },
+                  "property": {
+                    "type": "Identifier",
+                    "name": "a",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      53,
+                      54
+                    ]
+                  },
+                  "computed": false,
+                  "loc": null,
+                  "range": [
+                    47,
+                    54
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  30,
+                  54
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              24,
+              55
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "BinaryExpression",
+              "left": {
+                "type": "Identifier",
+                "name": "x",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  65,
+                  66
+                ]
+              },
+              "operator": "+",
+              "right": {
+                "type": "Identifier",
+                "name": "y",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  69,
+                  70
+                ]
+              },
+              "loc": null,
+              "range": [
+                65,
+                70
+              ]
+            },
+            "loc": null,
+            "range": [
+              58,
+              71
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          20,
+          73
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        73
+      ],
+      "loc": null,
+      "range": [
+        0,
+        73
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    73
+  ]
+}

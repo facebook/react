@@ -61,6 +61,13 @@ exports[`error transform should support error constructors with concatenated mes
 Error(_formatProdErrorMessage(7, foo, bar));"
 `;
 
+exports[`error transform should support extra arguments to error constructor 1`] = `
+"import _formatProdErrorMessage from "shared/formatProdErrorMessage";
+Error(_formatProdErrorMessage(7, foo, bar), {
+  cause: error
+});"
+`;
+
 exports[`error transform should support interpolating arguments with concatenation 1`] = `
 "import _formatProdErrorMessage from "shared/formatProdErrorMessage";
 Error(_formatProdErrorMessage(7, foo, bar));"

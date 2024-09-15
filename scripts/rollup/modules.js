@@ -1,7 +1,6 @@
 'use strict';
 
 const forks = require('./forks');
-const {UMD_DEV, UMD_PROD, UMD_PROFILING} = require('./bundles').bundleTypes;
 
 // For any external that is used in a DEV-only condition, explicitly
 // specify whether it has side effects during import or not. This lets
@@ -23,6 +22,9 @@ const importSideEffects = Object.freeze({
   'react-dom': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   url: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   ReactNativeInternalFeatureFlags: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  'webpack-sources/lib/helpers/createMappingsSerializer.js':
+    HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  'webpack-sources/lib/helpers/readMappings.js': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
 });
 
 // Bundles exporting globals that other modules rely on.
@@ -30,7 +32,6 @@ const knownGlobals = Object.freeze({
   react: 'React',
   'react-dom': 'ReactDOM',
   'react-dom/server': 'ReactDOMServer',
-  'react-interactions/events/tap': 'ReactEventsTap',
   scheduler: 'Scheduler',
   'scheduler/unstable_mock': 'SchedulerMock',
   ReactNativeInternalFeatureFlags: 'ReactNativeInternalFeatureFlags',
@@ -40,14 +41,6 @@ const knownGlobals = Object.freeze({
 function getPeerGlobals(externals, bundleType) {
   const peerGlobals = {};
   externals.forEach(name => {
-    if (
-      !knownGlobals[name] &&
-      (bundleType === UMD_DEV ||
-        bundleType === UMD_PROD ||
-        bundleType === UMD_PROFILING)
-    ) {
-      throw new Error('Cannot build UMD without a global name for: ' + name);
-    }
     peerGlobals[name] = knownGlobals[name];
   });
   return peerGlobals;

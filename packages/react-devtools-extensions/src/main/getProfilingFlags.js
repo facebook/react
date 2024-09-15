@@ -9,15 +9,13 @@ function getProfilingFlags() {
   // This avoids flashing a temporary "Profiling not supported" message in the Profiler tab,
   // after a user has clicked the "reload and profile" button.
   let isProfiling = false;
-  let supportsProfiling = false;
 
   if (localStorageGetItem(LOCAL_STORAGE_SUPPORTS_PROFILING_KEY) === 'true') {
-    supportsProfiling = true;
     isProfiling = true;
     localStorageRemoveItem(LOCAL_STORAGE_SUPPORTS_PROFILING_KEY);
   }
 
-  return {isProfiling, supportsProfiling};
+  return {isProfiling};
 }
 
 export default getProfilingFlags;

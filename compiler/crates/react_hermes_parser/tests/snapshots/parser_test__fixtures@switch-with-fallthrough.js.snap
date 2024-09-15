@@ -1,0 +1,579 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/switch-with-fallthrough.js
+---
+Input:
+function foo(x) {
+  let y;
+  switch (x) {
+    case 0: {
+      y = 0;
+    }
+    case 1: {
+      y = 1;
+    }
+    case 2: {
+      break;
+    }
+    case 3: {
+      y = 3;
+      break;
+    }
+    case 4: {
+      y = 4;
+    }
+    case 5: {
+      y = 5;
+    }
+    default: {
+      y = 0;
+    }
+  }
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "foo",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          12
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "x",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            13,
+            14
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "y",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    24,
+                    25
+                  ]
+                },
+                "init": null,
+                "loc": null,
+                "range": [
+                  24,
+                  25
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              20,
+              26
+            ]
+          },
+          {
+            "type": "SwitchStatement",
+            "discriminant": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                37,
+                38
+              ]
+            },
+            "cases": [
+              {
+                "type": "SwitchCase",
+                "test": {
+                  "type": "NumericLiteral",
+                  "value": 0.0,
+                  "loc": null,
+                  "range": [
+                    51,
+                    52
+                  ]
+                },
+                "consequent": [
+                  {
+                    "type": "BlockStatement",
+                    "body": [
+                      {
+                        "type": "ExpressionStatement",
+                        "expression": {
+                          "type": "AssignmentExpression",
+                          "operator": "=",
+                          "left": {
+                            "type": "Identifier",
+                            "name": "y",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              62,
+                              63
+                            ]
+                          },
+                          "right": {
+                            "type": "NumericLiteral",
+                            "value": 0.0,
+                            "loc": null,
+                            "range": [
+                              66,
+                              67
+                            ]
+                          },
+                          "loc": null,
+                          "range": [
+                            62,
+                            67
+                          ]
+                        },
+                        "directive": null,
+                        "loc": null,
+                        "range": [
+                          62,
+                          68
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      54,
+                      74
+                    ]
+                  }
+                ],
+                "loc": null,
+                "range": [
+                  46,
+                  74
+                ]
+              },
+              {
+                "type": "SwitchCase",
+                "test": {
+                  "type": "NumericLiteral",
+                  "value": 1.0,
+                  "loc": null,
+                  "range": [
+                    84,
+                    85
+                  ]
+                },
+                "consequent": [
+                  {
+                    "type": "BlockStatement",
+                    "body": [
+                      {
+                        "type": "ExpressionStatement",
+                        "expression": {
+                          "type": "AssignmentExpression",
+                          "operator": "=",
+                          "left": {
+                            "type": "Identifier",
+                            "name": "y",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              95,
+                              96
+                            ]
+                          },
+                          "right": {
+                            "type": "NumericLiteral",
+                            "value": 1.0,
+                            "loc": null,
+                            "range": [
+                              99,
+                              100
+                            ]
+                          },
+                          "loc": null,
+                          "range": [
+                            95,
+                            100
+                          ]
+                        },
+                        "directive": null,
+                        "loc": null,
+                        "range": [
+                          95,
+                          101
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      87,
+                      107
+                    ]
+                  }
+                ],
+                "loc": null,
+                "range": [
+                  79,
+                  107
+                ]
+              },
+              {
+                "type": "SwitchCase",
+                "test": {
+                  "type": "NumericLiteral",
+                  "value": 2.0,
+                  "loc": null,
+                  "range": [
+                    117,
+                    118
+                  ]
+                },
+                "consequent": [
+                  {
+                    "type": "BlockStatement",
+                    "body": [
+                      {
+                        "type": "BreakStatement",
+                        "label": null,
+                        "loc": null,
+                        "range": [
+                          128,
+                          134
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      120,
+                      140
+                    ]
+                  }
+                ],
+                "loc": null,
+                "range": [
+                  112,
+                  140
+                ]
+              },
+              {
+                "type": "SwitchCase",
+                "test": {
+                  "type": "NumericLiteral",
+                  "value": 3.0,
+                  "loc": null,
+                  "range": [
+                    150,
+                    151
+                  ]
+                },
+                "consequent": [
+                  {
+                    "type": "BlockStatement",
+                    "body": [
+                      {
+                        "type": "ExpressionStatement",
+                        "expression": {
+                          "type": "AssignmentExpression",
+                          "operator": "=",
+                          "left": {
+                            "type": "Identifier",
+                            "name": "y",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              161,
+                              162
+                            ]
+                          },
+                          "right": {
+                            "type": "NumericLiteral",
+                            "value": 3.0,
+                            "loc": null,
+                            "range": [
+                              165,
+                              166
+                            ]
+                          },
+                          "loc": null,
+                          "range": [
+                            161,
+                            166
+                          ]
+                        },
+                        "directive": null,
+                        "loc": null,
+                        "range": [
+                          161,
+                          167
+                        ]
+                      },
+                      {
+                        "type": "BreakStatement",
+                        "label": null,
+                        "loc": null,
+                        "range": [
+                          174,
+                          180
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      153,
+                      186
+                    ]
+                  }
+                ],
+                "loc": null,
+                "range": [
+                  145,
+                  186
+                ]
+              },
+              {
+                "type": "SwitchCase",
+                "test": {
+                  "type": "NumericLiteral",
+                  "value": 4.0,
+                  "loc": null,
+                  "range": [
+                    196,
+                    197
+                  ]
+                },
+                "consequent": [
+                  {
+                    "type": "BlockStatement",
+                    "body": [
+                      {
+                        "type": "ExpressionStatement",
+                        "expression": {
+                          "type": "AssignmentExpression",
+                          "operator": "=",
+                          "left": {
+                            "type": "Identifier",
+                            "name": "y",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              207,
+                              208
+                            ]
+                          },
+                          "right": {
+                            "type": "NumericLiteral",
+                            "value": 4.0,
+                            "loc": null,
+                            "range": [
+                              211,
+                              212
+                            ]
+                          },
+                          "loc": null,
+                          "range": [
+                            207,
+                            212
+                          ]
+                        },
+                        "directive": null,
+                        "loc": null,
+                        "range": [
+                          207,
+                          213
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      199,
+                      219
+                    ]
+                  }
+                ],
+                "loc": null,
+                "range": [
+                  191,
+                  219
+                ]
+              },
+              {
+                "type": "SwitchCase",
+                "test": {
+                  "type": "NumericLiteral",
+                  "value": 5.0,
+                  "loc": null,
+                  "range": [
+                    229,
+                    230
+                  ]
+                },
+                "consequent": [
+                  {
+                    "type": "BlockStatement",
+                    "body": [
+                      {
+                        "type": "ExpressionStatement",
+                        "expression": {
+                          "type": "AssignmentExpression",
+                          "operator": "=",
+                          "left": {
+                            "type": "Identifier",
+                            "name": "y",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              240,
+                              241
+                            ]
+                          },
+                          "right": {
+                            "type": "NumericLiteral",
+                            "value": 5.0,
+                            "loc": null,
+                            "range": [
+                              244,
+                              245
+                            ]
+                          },
+                          "loc": null,
+                          "range": [
+                            240,
+                            245
+                          ]
+                        },
+                        "directive": null,
+                        "loc": null,
+                        "range": [
+                          240,
+                          246
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      232,
+                      252
+                    ]
+                  }
+                ],
+                "loc": null,
+                "range": [
+                  224,
+                  252
+                ]
+              },
+              {
+                "type": "SwitchCase",
+                "test": null,
+                "consequent": [
+                  {
+                    "type": "BlockStatement",
+                    "body": [
+                      {
+                        "type": "ExpressionStatement",
+                        "expression": {
+                          "type": "AssignmentExpression",
+                          "operator": "=",
+                          "left": {
+                            "type": "Identifier",
+                            "name": "y",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              274,
+                              275
+                            ]
+                          },
+                          "right": {
+                            "type": "NumericLiteral",
+                            "value": 0.0,
+                            "loc": null,
+                            "range": [
+                              278,
+                              279
+                            ]
+                          },
+                          "loc": null,
+                          "range": [
+                            274,
+                            279
+                          ]
+                        },
+                        "directive": null,
+                        "loc": null,
+                        "range": [
+                          274,
+                          280
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      266,
+                      286
+                    ]
+                  }
+                ],
+                "loc": null,
+                "range": [
+                  257,
+                  286
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              29,
+              290
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          16,
+          292
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        292
+      ],
+      "loc": null,
+      "range": [
+        0,
+        292
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    292
+  ]
+}

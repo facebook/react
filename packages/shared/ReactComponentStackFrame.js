@@ -7,7 +7,6 @@
  * @flow
  */
 
-import type {Source} from 'shared/ReactElementType';
 import type {LazyComponent} from 'react/src/ReactLazy';
 
 import {enableComponentStackLocations} from 'shared/ReactFeatureFlags';
@@ -24,14 +23,9 @@ import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
-const {ReactCurrentDispatcher} = ReactSharedInternals;
-
 let prefix;
-export function describeBuiltInComponentFrame(
-  name: string,
-  source: void | null | Source,
-  ownerFn: void | null | Function,
-): string {
+let suffix;
+export function describeBuiltInComponentFrame(name: string): string {
   if (enableComponentStackLocations) {
     if (prefix === undefined) {
       // Extract the VM specific prefix used by each line.
@@ -40,17 +34,26 @@ export function describeBuiltInComponentFrame(
       } catch (x) {
         const match = x.stack.trim().match(/\n( *(at )?)/);
         prefix = (match && match[1]) || '';
+        suffix =
+          x.stack.indexOf('\n    at') > -1
+            ? // V8
+              ' (<anonymous>)'
+            : // JSC/Spidermonkey
+              x.stack.indexOf('@') > -1
+              ? '@unknown:0:0'
+              : // Other
+                '';
       }
     }
     // We use the prefix to ensure our stacks line up with native stack frames.
-    return '\n' + prefix + name;
+    return '\n' + prefix + name + suffix;
   } else {
-    let ownerName = null;
-    if (__DEV__ && ownerFn) {
-      ownerName = ownerFn.displayName || ownerFn.name || null;
-    }
-    return describeComponentFrame(name, source, ownerName);
+    return describeComponentFrame(name);
   }
+}
+
+export function describeDebugInfoFrame(name: string, env: ?string): string {
+  return describeBuiltInComponentFrame(name + (env ? ' [' + env + ']' : ''));
 }
 
 let reentry = false;
@@ -91,13 +94,13 @@ export function describeNativeComponentFrame(
   const previousPrepareStackTrace = Error.prepareStackTrace;
   // $FlowFixMe[incompatible-type] It does accept undefined.
   Error.prepareStackTrace = undefined;
-  let previousDispatcher;
+  let previousDispatcher = null;
 
   if (__DEV__) {
-    previousDispatcher = ReactCurrentDispatcher.current;
+    previousDispatcher = ReactSharedInternals.H;
     // Set the dispatcher in DEV because this might be call in the render function
     // for warnings.
-    ReactCurrentDispatcher.current = null;
+    ReactSharedInternals.H = null;
     disableLogs();
   }
 
@@ -277,7 +280,7 @@ export function describeNativeComponentFrame(
   } finally {
     reentry = false;
     if (__DEV__) {
-      ReactCurrentDispatcher.current = previousDispatcher;
+      ReactSharedInternals.H = previousDispatcher;
       reenableLogs();
     }
     Error.prepareStackTrace = previousPrepareStackTrace;
@@ -293,53 +296,19 @@ export function describeNativeComponentFrame(
   return syntheticFrame;
 }
 
-const BEFORE_SLASH_RE = /^(.*)[\\\/]/;
-
-function describeComponentFrame(
-  name: null | string,
-  source: void | null | Source,
-  ownerName: null | string,
-) {
-  let sourceInfo = '';
-  if (__DEV__ && source) {
-    const path = source.fileName;
-    let fileName = path.replace(BEFORE_SLASH_RE, '');
-    // In DEV, include code for a common special case:
-    // prefer "folder/index.js" instead of just "index.js".
-    if (/^index\./.test(fileName)) {
-      const match = path.match(BEFORE_SLASH_RE);
-      if (match) {
-        const pathBeforeSlash = match[1];
-        if (pathBeforeSlash) {
-          const folderName = pathBeforeSlash.replace(BEFORE_SLASH_RE, '');
-          fileName = folderName + '/' + fileName;
-        }
-      }
-    }
-    sourceInfo = ' (at ' + fileName + ':' + source.lineNumber + ')';
-  } else if (ownerName) {
-    sourceInfo = ' (created by ' + ownerName + ')';
-  }
-  return '\n    in ' + (name || 'Unknown') + sourceInfo;
+function describeComponentFrame(name: null | string) {
+  return '\n    in ' + (name || 'Unknown');
 }
 
-export function describeClassComponentFrame(
-  ctor: Function,
-  source: void | null | Source,
-  ownerFn: void | null | Function,
-): string {
+export function describeClassComponentFrame(ctor: Function): string {
   if (enableComponentStackLocations) {
     return describeNativeComponentFrame(ctor, true);
   } else {
-    return describeFunctionComponentFrame(ctor, source, ownerFn);
+    return describeFunctionComponentFrame(ctor);
   }
 }
 
-export function describeFunctionComponentFrame(
-  fn: Function,
-  source: void | null | Source,
-  ownerFn: void | null | Function,
-): string {
+export function describeFunctionComponentFrame(fn: Function): string {
   if (enableComponentStackLocations) {
     return describeNativeComponentFrame(fn, false);
   } else {
@@ -347,11 +316,7 @@ export function describeFunctionComponentFrame(
       return '';
     }
     const name = fn.displayName || fn.name || null;
-    let ownerName = null;
-    if (__DEV__ && ownerFn) {
-      ownerName = ownerFn.displayName || ownerFn.name || null;
-    }
-    return describeComponentFrame(name, source, ownerName);
+    return describeComponentFrame(name);
   }
 }
 
@@ -360,11 +325,8 @@ function shouldConstruct(Component: Function) {
   return !!(prototype && prototype.isReactComponent);
 }
 
-export function describeUnknownElementTypeFrameInDEV(
-  type: any,
-  source: void | null | Source,
-  ownerFn: void | null | Function,
-): string {
+// TODO: Delete this once the key warning no longer uses it. I.e. when enableOwnerStacks ship.
+export function describeUnknownElementTypeFrameInDEV(type: any): string {
   if (!__DEV__) {
     return '';
   }
@@ -375,36 +337,32 @@ export function describeUnknownElementTypeFrameInDEV(
     if (enableComponentStackLocations) {
       return describeNativeComponentFrame(type, shouldConstruct(type));
     } else {
-      return describeFunctionComponentFrame(type, source, ownerFn);
+      return describeFunctionComponentFrame(type);
     }
   }
   if (typeof type === 'string') {
-    return describeBuiltInComponentFrame(type, source, ownerFn);
+    return describeBuiltInComponentFrame(type);
   }
   switch (type) {
     case REACT_SUSPENSE_TYPE:
-      return describeBuiltInComponentFrame('Suspense', source, ownerFn);
+      return describeBuiltInComponentFrame('Suspense');
     case REACT_SUSPENSE_LIST_TYPE:
-      return describeBuiltInComponentFrame('SuspenseList', source, ownerFn);
+      return describeBuiltInComponentFrame('SuspenseList');
   }
   if (typeof type === 'object') {
     switch (type.$$typeof) {
       case REACT_FORWARD_REF_TYPE:
-        return describeFunctionComponentFrame(type.render, source, ownerFn);
+        return describeFunctionComponentFrame(type.render);
       case REACT_MEMO_TYPE:
         // Memo may contain any component type so we recursively resolve it.
-        return describeUnknownElementTypeFrameInDEV(type.type, source, ownerFn);
+        return describeUnknownElementTypeFrameInDEV(type.type);
       case REACT_LAZY_TYPE: {
         const lazyComponent: LazyComponent<any, any> = (type: any);
         const payload = lazyComponent._payload;
         const init = lazyComponent._init;
         try {
           // Lazy may contain any component type so we recursively resolve it.
-          return describeUnknownElementTypeFrameInDEV(
-            init(payload),
-            source,
-            ownerFn,
-          );
+          return describeUnknownElementTypeFrameInDEV(init(payload));
         } catch (x) {}
       }
     }

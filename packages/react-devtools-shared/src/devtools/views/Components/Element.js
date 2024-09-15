@@ -142,7 +142,7 @@ export default function Element({data, index, style}: Props): React.Node {
       className={className}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      onClick={handleClick}
+      onMouseDown={handleClick}
       onDoubleClick={handleDoubleClick}
       style={style}
       data-testname="ComponentTreeListItem"

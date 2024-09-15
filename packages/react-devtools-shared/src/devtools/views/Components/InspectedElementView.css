@@ -1,35 +1,5 @@
-.Owners {
-  padding: 0.25rem;
-  border-top: 1px solid var(--color-border);
-}
-
 .OwnersHeader {
   font-family: var(--font-family-sans);
-}
-
-.Source {
-  padding: 0.25rem;
-  border-top: 1px solid var(--color-border);
-}
-
-.SourceHeaderRow {
-  display: flex;
-  align-items: center;
-}
-
-.SourceHeader {
-  flex: 1 1;
-  font-family: var(--font-family-sans);
-}
-
-.SourceOneLiner {
-  font-family: var(--font-family-monospace);
-  font-size: var(--font-size-monospace-normal);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-  margin-left: 1rem;
 }
 
 .Owner {
@@ -48,6 +18,14 @@
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-monospace-normal);
   line-height: var(--line-height-data);
+}
+
+.InspectedElementSection:not(:empty) {
+  padding: 0.25rem;
+
+  &:not(:last-of-type) {
+    border-bottom: 1px solid var(--color-border);
+  }
 }
 
 .Owner {
@@ -83,10 +61,6 @@
 
 .OwnerContent:hover {
   background-color: var(--color-background-hover);
-}
-
-.ContextMenuIcon {
-  margin-right: 0.5rem;
 }
 
 .OwnersMetaField {

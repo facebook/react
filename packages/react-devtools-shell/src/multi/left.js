@@ -7,7 +7,7 @@
 
 import * as React from 'react';
 import {useState} from 'react';
-import {createRoot} from 'react-dom';
+import {createRoot} from 'react-dom/client';
 
 function createContainer() {
   const container = document.createElement('div');

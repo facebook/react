@@ -10,10 +10,9 @@
 import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
 import type {Awaited} from 'shared/ReactTypes';
 
-import {enableAsyncActions, enableFormActions} from 'shared/ReactFeatureFlags';
+import {enableAsyncActions} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-
-const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
+import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 
 type FormStatusNotPending = {|
   pending: false,
@@ -26,7 +25,7 @@ type FormStatusPending = {|
   pending: true,
   data: FormData,
   method: string,
-  action: string | (FormData => void | Promise<void>),
+  action: string | (FormData => void | Promise<void>) | null,
 |};
 
 export type FormStatus = FormStatusPending | FormStatusNotPending;
@@ -47,7 +46,7 @@ export const NotPending: FormStatus = __DEV__
 function resolveDispatcher() {
   // Copied from react/src/ReactHooks.js. It's the same thing but in a
   // different package.
-  const dispatcher = ReactCurrentDispatcher.current;
+  const dispatcher = ReactSharedInternals.H;
   if (__DEV__) {
     if (dispatcher === null) {
       console.error(
@@ -56,7 +55,7 @@ function resolveDispatcher() {
           '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
           '2. You might be breaking the Rules of Hooks\n' +
           '3. You might have more than one copy of React in the same app\n' +
-          'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
+          'See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.',
       );
     }
   }
@@ -67,7 +66,7 @@ function resolveDispatcher() {
 }
 
 export function useFormStatus(): FormStatus {
-  if (!(enableFormActions && enableAsyncActions)) {
+  if (!enableAsyncActions) {
     throw new Error('Not implemented.');
   } else {
     const dispatcher = resolveDispatcher();
@@ -80,12 +79,17 @@ export function useFormState<S, P>(
   action: (Awaited<S>, P) => S,
   initialState: Awaited<S>,
   permalink?: string,
-): [Awaited<S>, (P) => void] {
-  if (!(enableFormActions && enableAsyncActions)) {
+): [Awaited<S>, (P) => void, boolean] {
+  if (!enableAsyncActions) {
     throw new Error('Not implemented.');
   } else {
     const dispatcher = resolveDispatcher();
     // $FlowFixMe[not-a-function] This is unstable, thus optional
     return dispatcher.useFormState(action, initialState, permalink);
   }
+}
+
+export function requestFormReset(form: HTMLFormElement) {
+  ReactDOMSharedInternals.d /* ReactDOMCurrentDispatcher */
+    .r(/* requestFormReset */ form);
 }

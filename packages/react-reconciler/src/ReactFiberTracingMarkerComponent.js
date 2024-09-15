@@ -36,9 +36,11 @@ export type PendingTransitionCallbacks = {
   markerComplete: Map<string, Set<Transition>> | null,
 };
 
+// TODO: Unclear to me why these are separate types
 export type Transition = {
   name: string,
   startTime: number,
+  ...
 };
 
 export type BatchConfigTransition = {

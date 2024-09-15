@@ -1,0 +1,245 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/type-binary-operator.js
+---
+Input:
+function component() {
+  let a = some();
+  let b = someOther();
+  if (a > b) {
+    let m = {};
+  }
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "a",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    29,
+                    30
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "some",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      33,
+                      37
+                    ]
+                  },
+                  "arguments": [],
+                  "loc": null,
+                  "range": [
+                    33,
+                    39
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  29,
+                  39
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              25,
+              40
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "b",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    47,
+                    48
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "someOther",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      51,
+                      60
+                    ]
+                  },
+                  "arguments": [],
+                  "loc": null,
+                  "range": [
+                    51,
+                    62
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  47,
+                  62
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              43,
+              63
+            ]
+          },
+          {
+            "type": "IfStatement",
+            "test": {
+              "type": "BinaryExpression",
+              "left": {
+                "type": "Identifier",
+                "name": "a",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  70,
+                  71
+                ]
+              },
+              "operator": ">",
+              "right": {
+                "type": "Identifier",
+                "name": "b",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  74,
+                  75
+                ]
+              },
+              "loc": null,
+              "range": [
+                70,
+                75
+              ]
+            },
+            "consequent": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "VariableDeclaration",
+                  "kind": "let",
+                  "declarations": [
+                    {
+                      "type": "VariableDeclarator",
+                      "id": {
+                        "type": "Identifier",
+                        "name": "m",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          87,
+                          88
+                        ]
+                      },
+                      "init": {
+                        "type": "ObjectExpression",
+                        "properties": [],
+                        "loc": null,
+                        "range": [
+                          91,
+                          93
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        87,
+                        93
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    83,
+                    94
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                77,
+                98
+              ]
+            },
+            "alternate": null,
+            "loc": null,
+            "range": [
+              66,
+              98
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          21,
+          100
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        100
+      ],
+      "loc": null,
+      "range": [
+        0,
+        100
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    100
+  ]
+}

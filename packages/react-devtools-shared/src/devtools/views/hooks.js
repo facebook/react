@@ -7,7 +7,6 @@
  * @flow
  */
 
-import throttle from 'lodash.throttle';
 import {
   useCallback,
   useEffect,
@@ -125,10 +124,8 @@ export function useIsOverflowing(
 
     const container = ((containerRef.current: any): HTMLDivElement);
 
-    const handleResize = throttle(
-      () => setIsOverflowing(container.clientWidth <= totalChildWidth),
-      100,
-    );
+    const handleResize = () =>
+      setIsOverflowing(container.clientWidth <= totalChildWidth);
 
     handleResize();
 
@@ -189,7 +186,7 @@ export function useLocalStorage<T>(
   );
 
   // Listen for changes to this local storage value made from other windows.
-  // This enables the e.g. "⚛️ Elements" tab to update in response to changes from "⚛️ Settings".
+  // This enables the e.g. "⚛ Elements" tab to update in response to changes from "⚛ Settings".
   useLayoutEffect(() => {
     // $FlowFixMe[missing-local-annot]
     const onStorage = event => {
@@ -219,15 +216,18 @@ export function useModalDismissSignal(
       return () => {};
     }
 
-    const handleDocumentKeyDown = (event: any) => {
+    const handleRootNodeKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         dismissCallback();
       }
     };
 
-    const handleDocumentClick = (event: any) => {
+    const handleRootNodeClick: MouseEventHandler = event => {
       if (
         modalRef.current !== null &&
+        /* $FlowExpectedError[incompatible-call] Instead of dealing with possibly multiple realms
+         and multiple Node references to comply with Flow (e.g. checking with `event.target instanceof Node`)
+         just delegate it to contains call */
         !modalRef.current.contains(event.target)
       ) {
         event.stopPropagation();
@@ -237,7 +237,7 @@ export function useModalDismissSignal(
       }
     };
 
-    let ownerDocument = null;
+    let modalRootNode = null;
 
     // Delay until after the current call stack is empty,
     // in case this effect is being run while an event is currently bubbling.
@@ -248,12 +248,12 @@ export function useModalDismissSignal(
       // It's important to listen to the ownerDocument to support the browser extension.
       // Here we use portals to render individual tabs (e.g. Profiler),
       // and the root document might belong to a different window.
-      const div = modalRef.current;
-      if (div != null) {
-        ownerDocument = div.ownerDocument;
-        ownerDocument.addEventListener('keydown', handleDocumentKeyDown);
+      const modalDOMElement = modalRef.current;
+      if (modalDOMElement != null) {
+        modalRootNode = modalDOMElement.getRootNode();
+        modalRootNode.addEventListener('keydown', handleRootNodeKeyDown);
         if (dismissOnClickOutside) {
-          ownerDocument.addEventListener('click', handleDocumentClick, true);
+          modalRootNode.addEventListener('click', handleRootNodeClick, true);
         }
       }
     }, 0);
@@ -263,9 +263,9 @@ export function useModalDismissSignal(
         clearTimeout(timeoutID);
       }
 
-      if (ownerDocument !== null) {
-        ownerDocument.removeEventListener('keydown', handleDocumentKeyDown);
-        ownerDocument.removeEventListener('click', handleDocumentClick, true);
+      if (modalRootNode !== null) {
+        modalRootNode.removeEventListener('keydown', handleRootNodeKeyDown);
+        modalRootNode.removeEventListener('click', handleRootNodeClick, true);
       }
     };
   }, [modalRef, dismissCallback, dismissOnClickOutside]);
@@ -333,23 +333,23 @@ export function useSubscription<Value>({
   return state.value;
 }
 
-export function useHighlightNativeElement(): {
-  clearHighlightNativeElement: () => void,
-  highlightNativeElement: (id: number) => void,
+export function useHighlightHostInstance(): {
+  clearHighlightHostInstance: () => void,
+  highlightHostInstance: (id: number) => void,
 } {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
-  const highlightNativeElement = useCallback(
+  const highlightHostInstance = useCallback(
     (id: number) => {
       const element = store.getElementByID(id);
       const rendererID = store.getRendererIDForElement(id);
       if (element !== null && rendererID !== null) {
-        bridge.send('highlightNativeElement', {
+        bridge.send('highlightHostInstance', {
           displayName: element.displayName,
           hideAfterTimeout: false,
           id,
-          openNativeElementsPanel: false,
+          openBuiltinElementsPanel: false,
           rendererID,
           scrollIntoView: false,
         });
@@ -358,12 +358,12 @@ export function useHighlightNativeElement(): {
     [store, bridge],
   );
 
-  const clearHighlightNativeElement = useCallback(() => {
-    bridge.send('clearNativeElementHighlight');
+  const clearHighlightHostInstance = useCallback(() => {
+    bridge.send('clearHostInstanceHighlight');
   }, [bridge]);
 
   return {
-    highlightNativeElement,
-    clearHighlightNativeElement,
+    highlightHostInstance,
+    clearHighlightHostInstance,
   };
 }

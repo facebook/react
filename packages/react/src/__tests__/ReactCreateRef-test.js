@@ -10,14 +10,16 @@
 'use strict';
 
 let React;
-let ReactTestRenderer;
+let ReactDOM;
+let ReactDOMClient;
 
 describe('ReactCreateRef', () => {
   beforeEach(() => {
     jest.resetModules();
 
     React = require('react');
-    ReactTestRenderer = require('react-test-renderer');
+    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
   });
 
   it('should warn in dev if an invalid ref object is provided', () => {
@@ -31,30 +33,39 @@ describe('ReactCreateRef', () => {
       }
     }
 
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
     expect(() =>
-      ReactTestRenderer.create(
-        <Wrapper>
-          <div ref={{}} />
-        </Wrapper>,
-      ),
+      ReactDOM.flushSync(() => {
+        root.render(
+          <Wrapper>
+            <div ref={{}} />
+          </Wrapper>,
+        );
+      }),
     ).toErrorDev(
       'Unexpected ref object provided for div. ' +
         'Use either a ref-setter function or React.createRef().\n' +
-        '    in div (at **)\n' +
-        '    in Wrapper (at **)',
+        '    in div (at **)' +
+        (gate(flags => flags.enableOwnerStacks)
+          ? ''
+          : '\n    in Wrapper (at **)'),
     );
 
     expect(() =>
-      ReactTestRenderer.create(
-        <Wrapper>
-          <ExampleComponent ref={{}} />
-        </Wrapper>,
-      ),
+      ReactDOM.flushSync(() => {
+        root.render(
+          <Wrapper>
+            <ExampleComponent ref={{}} />
+          </Wrapper>,
+        );
+      }),
     ).toErrorDev(
       'Unexpected ref object provided for ExampleComponent. ' +
         'Use either a ref-setter function or React.createRef().\n' +
-        '    in ExampleComponent (at **)\n' +
-        '    in Wrapper (at **)',
+        '    in ExampleComponent (at **)' +
+        (gate(flags => flags.enableOwnerStacks)
+          ? ''
+          : '\n    in Wrapper (at **)'),
     );
   });
 });

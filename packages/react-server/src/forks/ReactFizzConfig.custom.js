@@ -26,19 +26,23 @@
 import type {Request} from 'react-server/src/ReactFizzServer';
 import type {TransitionStatus} from 'react-reconciler/src/ReactFiberConfig';
 
-declare var $$$config: any;
-export opaque type Destination = mixed; // eslint-disable-line no-undef
+declare const $$$config: any;
+export opaque type Destination = mixed;
 export opaque type RenderState = mixed;
+export opaque type HoistableState = mixed;
 export opaque type ResumableState = mixed;
-export opaque type BoundaryResources = mixed;
 export opaque type FormatContext = mixed;
 export opaque type HeadersDescriptor = mixed;
 export type {TransitionStatus};
 
 export const isPrimaryRenderer = false;
 
+export const supportsClientAPIs = true;
+
 export const supportsRequestStorage = false;
-export const requestStorage: AsyncLocalStorage<Request> = (null: any);
+export const requestStorage: AsyncLocalStorage<Request | void> = (null: any);
+
+export const bindToConsole = $$$config.bindToConsole;
 
 export const resetResumableState = $$$config.resetResumableState;
 export const completeResumableState = $$$config.completeResumableState;
@@ -78,7 +82,6 @@ export const writeCompletedBoundaryInstruction =
   $$$config.writeCompletedBoundaryInstruction;
 export const writeClientRenderBoundaryInstruction =
   $$$config.writeClientRenderBoundaryInstruction;
-export const prepareHostDispatcher = $$$config.prepareHostDispatcher;
 export const NotPendingTransition = $$$config.NotPendingTransition;
 
 // -------------------------
@@ -86,11 +89,8 @@ export const NotPendingTransition = $$$config.NotPendingTransition;
 // -------------------------
 export const writePreamble = $$$config.writePreamble;
 export const writeHoistables = $$$config.writeHoistables;
+export const writeHoistablesForBoundary = $$$config.writeHoistablesForBoundary;
 export const writePostamble = $$$config.writePostamble;
-export const hoistResources = $$$config.hoistResources;
-export const createResources = $$$config.createResources;
-export const createBoundaryResources = $$$config.createBoundaryResources;
-export const setCurrentlyRenderingBoundaryResourcesTarget =
-  $$$config.setCurrentlyRenderingBoundaryResourcesTarget;
-export const writeResourcesForBoundary = $$$config.writeResourcesForBoundary;
+export const hoistHoistables = $$$config.hoistHoistables;
+export const createHoistableState = $$$config.createHoistableState;
 export const emitEarlyPreloads = $$$config.emitEarlyPreloads;

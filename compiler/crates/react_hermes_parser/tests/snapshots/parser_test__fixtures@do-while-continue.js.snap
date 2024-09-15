@@ -1,0 +1,446 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/do-while-continue.js
+---
+Input:
+function Component() {
+  const x = [0, 1, 2, 3];
+  const ret = [];
+  do {
+    const item = x.pop();
+    if (item === 0) {
+      continue;
+    }
+    ret.push(item / 2);
+  } while (x.length);
+
+  return ret;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    31,
+                    32
+                  ]
+                },
+                "init": {
+                  "type": "ArrayExpression",
+                  "elements": [
+                    {
+                      "type": "NumericLiteral",
+                      "value": 0.0,
+                      "loc": null,
+                      "range": [
+                        36,
+                        37
+                      ]
+                    },
+                    {
+                      "type": "NumericLiteral",
+                      "value": 1.0,
+                      "loc": null,
+                      "range": [
+                        39,
+                        40
+                      ]
+                    },
+                    {
+                      "type": "NumericLiteral",
+                      "value": 2.0,
+                      "loc": null,
+                      "range": [
+                        42,
+                        43
+                      ]
+                    },
+                    {
+                      "type": "NumericLiteral",
+                      "value": 3.0,
+                      "loc": null,
+                      "range": [
+                        45,
+                        46
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    35,
+                    47
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  31,
+                  47
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              25,
+              48
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "ret",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    57,
+                    60
+                  ]
+                },
+                "init": {
+                  "type": "ArrayExpression",
+                  "elements": [],
+                  "loc": null,
+                  "range": [
+                    63,
+                    65
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  57,
+                  65
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              51,
+              66
+            ]
+          },
+          {
+            "type": "DoWhileStatement",
+            "body": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "VariableDeclaration",
+                  "kind": "const",
+                  "declarations": [
+                    {
+                      "type": "VariableDeclarator",
+                      "id": {
+                        "type": "Identifier",
+                        "name": "item",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          84,
+                          88
+                        ]
+                      },
+                      "init": {
+                        "type": "CallExpression",
+                        "callee": {
+                          "type": "MemberExpression",
+                          "object": {
+                            "type": "Identifier",
+                            "name": "x",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              91,
+                              92
+                            ]
+                          },
+                          "property": {
+                            "type": "Identifier",
+                            "name": "pop",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              93,
+                              96
+                            ]
+                          },
+                          "computed": false,
+                          "loc": null,
+                          "range": [
+                            91,
+                            96
+                          ]
+                        },
+                        "arguments": [],
+                        "loc": null,
+                        "range": [
+                          91,
+                          98
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        84,
+                        98
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    78,
+                    99
+                  ]
+                },
+                {
+                  "type": "IfStatement",
+                  "test": {
+                    "type": "BinaryExpression",
+                    "left": {
+                      "type": "Identifier",
+                      "name": "item",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        108,
+                        112
+                      ]
+                    },
+                    "operator": "===",
+                    "right": {
+                      "type": "NumericLiteral",
+                      "value": 0.0,
+                      "loc": null,
+                      "range": [
+                        117,
+                        118
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      108,
+                      118
+                    ]
+                  },
+                  "consequent": {
+                    "type": "BlockStatement",
+                    "body": [
+                      {
+                        "type": "ContinueStatement",
+                        "label": null,
+                        "loc": null,
+                        "range": [
+                          128,
+                          137
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      120,
+                      143
+                    ]
+                  },
+                  "alternate": null,
+                  "loc": null,
+                  "range": [
+                    104,
+                    143
+                  ]
+                },
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "CallExpression",
+                    "callee": {
+                      "type": "MemberExpression",
+                      "object": {
+                        "type": "Identifier",
+                        "name": "ret",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          148,
+                          151
+                        ]
+                      },
+                      "property": {
+                        "type": "Identifier",
+                        "name": "push",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          152,
+                          156
+                        ]
+                      },
+                      "computed": false,
+                      "loc": null,
+                      "range": [
+                        148,
+                        156
+                      ]
+                    },
+                    "arguments": [
+                      {
+                        "type": "BinaryExpression",
+                        "left": {
+                          "type": "Identifier",
+                          "name": "item",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            157,
+                            161
+                          ]
+                        },
+                        "operator": "/",
+                        "right": {
+                          "type": "NumericLiteral",
+                          "value": 2.0,
+                          "loc": null,
+                          "range": [
+                            164,
+                            165
+                          ]
+                        },
+                        "loc": null,
+                        "range": [
+                          157,
+                          165
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      148,
+                      166
+                    ]
+                  },
+                  "directive": null,
+                  "loc": null,
+                  "range": [
+                    148,
+                    167
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                72,
+                171
+              ]
+            },
+            "test": {
+              "type": "MemberExpression",
+              "object": {
+                "type": "Identifier",
+                "name": "x",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  179,
+                  180
+                ]
+              },
+              "property": {
+                "type": "Identifier",
+                "name": "length",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  181,
+                  187
+                ]
+              },
+              "computed": false,
+              "loc": null,
+              "range": [
+                179,
+                187
+              ]
+            },
+            "loc": null,
+            "range": [
+              69,
+              189
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "ret",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                200,
+                203
+              ]
+            },
+            "loc": null,
+            "range": [
+              193,
+              204
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          21,
+          206
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        206
+      ],
+      "loc": null,
+      "range": [
+        0,
+        206
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    206
+  ]
+}

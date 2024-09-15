@@ -37,6 +37,7 @@ const React = require('react');
 
 const {renderToPipeableStream} = require('react-dom/server');
 const {createFromNodeStream} = require('react-server-dom-webpack/client');
+const {PassThrough} = require('stream');
 
 const app = express();
 
@@ -85,7 +86,7 @@ function request(options, body) {
   });
 }
 
-app.all('/', async function (req, res, next) {
+async function renderApp(req, res, next) {
   // Proxy the request to the regional server.
   const proxiedHeaders = {
     'X-Forwarded-Host': req.hostname,
@@ -101,12 +102,14 @@ app.all('/', async function (req, res, next) {
     proxiedHeaders['Content-type'] = req.get('Content-type');
   }
 
+  const requestsPrerender = req.path === '/prerender';
+
   const promiseForData = request(
     {
       host: '127.0.0.1',
       port: 3001,
       method: req.method,
-      path: '/',
+      path: requestsPrerender ? '/?prerender=1' : '/',
       headers: proxiedHeaders,
     },
     req
@@ -146,36 +149,46 @@ app.all('/', async function (req, res, next) {
       // so we start by consuming the RSC payload. This needs a module
       // map that reverse engineers the client-side path to the SSR path.
 
-      // This is a bad hack to set the form state after SSR has started. It works
-      // because we block the root component until we have the form state and
-      // any form that reads it necessarily will come later. It also only works
-      // because the formstate type is an object which may change in the future
-      const lazyFormState = [];
+      // We need to get the formState before we start rendering but we also
+      // need to run the Flight client inside the render to get all the preloads.
+      // The API is ambivalent about what's the right one so we need two for now.
 
-      let cachedResult = null;
-      async function getRootAndFormState() {
-        const {root, formState} = await createFromNodeStream(
-          rscResponse,
-          ssrManifest
-        );
-        // We shouldn't be assuming formState is an object type but at the moment
-        // we have no way of setting the form state from within the render
-        Object.assign(lazyFormState, formState);
-        return root;
-      }
+      // Tee the response into two streams so that we can do both.
+      const rscResponse1 = new PassThrough();
+      const rscResponse2 = new PassThrough();
+
+      rscResponse.pipe(rscResponse1);
+      rscResponse.pipe(rscResponse2);
+
+      const {formState} = await createFromNodeStream(rscResponse1, ssrManifest);
+      rscResponse1.end();
+
+      let cachedResult;
       let Root = () => {
         if (!cachedResult) {
-          cachedResult = getRootAndFormState();
+          // Read this stream inside the render.
+          cachedResult = createFromNodeStream(rscResponse2, ssrManifest);
         }
-        return React.use(cachedResult);
+        return React.use(cachedResult).root;
       };
       // Render it into HTML by resolving the client components
       res.set('Content-type', 'text/html');
       const {pipe} = renderToPipeableStream(React.createElement(Root), {
         bootstrapScripts: mainJSChunks,
-        formState: lazyFormState,
+        formState: formState,
+        onShellReady() {
+          pipe(res);
+        },
+        onShellError(error) {
+          const {pipe: pipeError} = renderToPipeableStream(
+            React.createElement('html', null, React.createElement('body')),
+            {
+              bootstrapScripts: mainJSChunks,
+            }
+          );
+          pipeError(res);
+        },
       });
-      pipe(res);
     } catch (e) {
       console.error(`Failed to SSR: ${e.stack}`);
       res.statusCode = 500;
@@ -199,10 +212,50 @@ app.all('/', async function (req, res, next) {
       res.end();
     }
   }
-});
+}
+
+app.all('/', renderApp);
+app.all('/prerender', renderApp);
 
 if (process.env.NODE_ENV === 'development') {
   app.use(express.static('public'));
+
+  app.get('/source-maps', async function (req, res, next) {
+    // Proxy the request to the regional server.
+    const proxiedHeaders = {
+      'X-Forwarded-Host': req.hostname,
+      'X-Forwarded-For': req.ips,
+      'X-Forwarded-Port': 3000,
+      'X-Forwarded-Proto': req.protocol,
+    };
+
+    const promiseForData = request(
+      {
+        host: '127.0.0.1',
+        port: 3001,
+        method: req.method,
+        path: req.originalUrl,
+        headers: proxiedHeaders,
+      },
+      req
+    );
+
+    try {
+      const rscResponse = await promiseForData;
+      res.set('Content-type', 'application/json');
+      rscResponse.on('data', data => {
+        res.write(data);
+        res.flush();
+      });
+      rscResponse.on('end', data => {
+        res.end();
+      });
+    } catch (e) {
+      console.error(`Failed to proxy request: ${e.stack}`);
+      res.statusCode = 500;
+      res.end();
+    }
+  });
 } else {
   // In production we host the static build output.
   app.use(express.static('build'));

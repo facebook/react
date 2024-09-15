@@ -1,0 +1,503 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/console-readonly.js
+---
+Input:
+function Component(props) {
+  const x = makeObject(props);
+  // These calls should view x as readonly and be grouped outside of the reactive scope for x:
+  console.log(x);
+  console.info(x);
+  console.warn(x);
+  console.error(x);
+  console.trace(x);
+  console.table(x);
+  return x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    36,
+                    37
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "makeObject",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      40,
+                      50
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "Identifier",
+                      "name": "props",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        51,
+                        56
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    40,
+                    57
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  57
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              58
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "MemberExpression",
+                "object": {
+                  "type": "Identifier",
+                  "name": "console",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    156,
+                    163
+                  ]
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "log",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    164,
+                    167
+                  ]
+                },
+                "computed": false,
+                "loc": null,
+                "range": [
+                  156,
+                  167
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    168,
+                    169
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                156,
+                170
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              156,
+              171
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "MemberExpression",
+                "object": {
+                  "type": "Identifier",
+                  "name": "console",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    174,
+                    181
+                  ]
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "info",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    182,
+                    186
+                  ]
+                },
+                "computed": false,
+                "loc": null,
+                "range": [
+                  174,
+                  186
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    187,
+                    188
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                174,
+                189
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              174,
+              190
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "MemberExpression",
+                "object": {
+                  "type": "Identifier",
+                  "name": "console",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    193,
+                    200
+                  ]
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "warn",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    201,
+                    205
+                  ]
+                },
+                "computed": false,
+                "loc": null,
+                "range": [
+                  193,
+                  205
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    206,
+                    207
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                193,
+                208
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              193,
+              209
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "MemberExpression",
+                "object": {
+                  "type": "Identifier",
+                  "name": "console",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    212,
+                    219
+                  ]
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "error",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    220,
+                    225
+                  ]
+                },
+                "computed": false,
+                "loc": null,
+                "range": [
+                  212,
+                  225
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    226,
+                    227
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                212,
+                228
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              212,
+              229
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "MemberExpression",
+                "object": {
+                  "type": "Identifier",
+                  "name": "console",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    232,
+                    239
+                  ]
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "trace",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    240,
+                    245
+                  ]
+                },
+                "computed": false,
+                "loc": null,
+                "range": [
+                  232,
+                  245
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    246,
+                    247
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                232,
+                248
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              232,
+              249
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "MemberExpression",
+                "object": {
+                  "type": "Identifier",
+                  "name": "console",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    252,
+                    259
+                  ]
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "table",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    260,
+                    265
+                  ]
+                },
+                "computed": false,
+                "loc": null,
+                "range": [
+                  252,
+                  265
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    266,
+                    267
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                252,
+                268
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              252,
+              269
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                279,
+                280
+              ]
+            },
+            "loc": null,
+            "range": [
+              272,
+              281
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          283
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        283
+      ],
+      "loc": null,
+      "range": [
+        0,
+        283
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    283
+  ]
+}

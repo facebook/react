@@ -20,7 +20,7 @@ export const Hydrating = /*                    */ 0b0000000000000001000000000000
 
 // You can change the rest (and add more).
 export const Update = /*                       */ 0b0000000000000000000000000100;
-/* Skipped value:                                 0b0000000000000000000000001000; */
+export const Cloned = /*                       */ 0b0000000000000000000000001000;
 
 export const ChildDeletion = /*                */ 0b0000000000000000000000010000;
 export const ContentReset = /*                 */ 0b0000000000000000000000100000;
@@ -41,6 +41,8 @@ export const StoreConsistency = /*             */ 0b0000000000000100000000000000
 // possible, because we're about to run out of bits.
 export const ScheduleRetry = StoreConsistency;
 export const ShouldSuspendCommit = Visibility;
+export const DidDefer = ContentReset;
+export const FormReset = Snapshot;
 
 export const LifecycleEffectMask =
   Passive | Update | Callback | Ref | Snapshot | StoreConsistency;
@@ -94,7 +96,8 @@ export const MutationMask =
   ContentReset |
   Ref |
   Hydrating |
-  Visibility;
+  Visibility |
+  FormReset;
 export const LayoutMask = Update | Callback | Ref | Visibility;
 
 // TODO: Split into PassiveMountMask and PassiveUnmountMask

@@ -1,0 +1,319 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/ref-current-not-added-to-dep.js
+---
+Input:
+function VideoTab() {
+  const ref = useRef();
+  let x = () => {
+    console.log(ref.current);
+  };
+
+  return <VideoList videos={x} />;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "VideoTab",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          17
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "ref",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    30,
+                    33
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useRef",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      36,
+                      42
+                    ]
+                  },
+                  "arguments": [],
+                  "loc": null,
+                  "range": [
+                    36,
+                    44
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  30,
+                  44
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              24,
+              45
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    52,
+                    53
+                  ]
+                },
+                "init": {
+                  "type": "ArrowFunctionExpression",
+                  "id": null,
+                  "params": [],
+                  "body": {
+                    "type": "BlockStatement",
+                    "body": [
+                      {
+                        "type": "ExpressionStatement",
+                        "expression": {
+                          "type": "CallExpression",
+                          "callee": {
+                            "type": "MemberExpression",
+                            "object": {
+                              "type": "Identifier",
+                              "name": "console",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                68,
+                                75
+                              ]
+                            },
+                            "property": {
+                              "type": "Identifier",
+                              "name": "log",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                76,
+                                79
+                              ]
+                            },
+                            "computed": false,
+                            "loc": null,
+                            "range": [
+                              68,
+                              79
+                            ]
+                          },
+                          "arguments": [
+                            {
+                              "type": "MemberExpression",
+                              "object": {
+                                "type": "Identifier",
+                                "name": "ref",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  80,
+                                  83
+                                ]
+                              },
+                              "property": {
+                                "type": "Identifier",
+                                "name": "current",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  84,
+                                  91
+                                ]
+                              },
+                              "computed": false,
+                              "loc": null,
+                              "range": [
+                                80,
+                                91
+                              ]
+                            }
+                          ],
+                          "loc": null,
+                          "range": [
+                            68,
+                            92
+                          ]
+                        },
+                        "directive": null,
+                        "loc": null,
+                        "range": [
+                          68,
+                          93
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      62,
+                      97
+                    ]
+                  },
+                  "generator": false,
+                  "async": false,
+                  "loc": null,
+                  "range": [
+                    56,
+                    97
+                  ],
+                  "expression": false,
+                  "loc": null,
+                  "range": [
+                    56,
+                    97
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  52,
+                  97
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              48,
+              98
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "VideoList",
+                  "loc": null,
+                  "range": [
+                    110,
+                    119
+                  ]
+                },
+                "attributes": [
+                  {
+                    "type": "JSXAttribute",
+                    "name": {
+                      "type": "JSXIdentifier",
+                      "name": "videos",
+                      "loc": null,
+                      "range": [
+                        120,
+                        126
+                      ]
+                    },
+                    "value": {
+                      "type": "JSXExpressionContainer",
+                      "expression": {
+                        "type": "Identifier",
+                        "name": "x",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          128,
+                          129
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        127,
+                        130
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      120,
+                      130
+                    ]
+                  }
+                ],
+                "selfClosing": true,
+                "loc": null,
+                "range": [
+                  109,
+                  133
+                ]
+              },
+              "children": [],
+              "closingElement": null,
+              "loc": null,
+              "range": [
+                109,
+                133
+              ]
+            },
+            "loc": null,
+            "range": [
+              102,
+              134
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          20,
+          136
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        136
+      ],
+      "loc": null,
+      "range": [
+        0,
+        136
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    136
+  ]
+}

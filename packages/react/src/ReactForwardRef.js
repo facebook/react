@@ -36,9 +36,9 @@ export function forwardRef<Props, ElementType: React$ElementType>(
     }
 
     if (render != null) {
-      if (render.defaultProps != null || render.propTypes != null) {
+      if (render.defaultProps != null) {
         console.error(
-          'forwardRef render functions do not support propTypes or defaultProps. ' +
+          'forwardRef render functions do not support defaultProps. ' +
             'Did you accidentally pass a React component?',
         );
       }
@@ -68,6 +68,9 @@ export function forwardRef<Props, ElementType: React$ElementType>(
         //   React.forwardRef((props, ref) => {...});
         // This kind of inner function is not used elsewhere so the side effect is okay.
         if (!render.name && !render.displayName) {
+          Object.defineProperty(render, 'name', {
+            value: name,
+          });
           render.displayName = name;
         }
       },

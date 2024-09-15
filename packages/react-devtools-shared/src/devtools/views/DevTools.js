@@ -27,7 +27,6 @@ import TabBar from './TabBar';
 import {SettingsContextController} from './Settings/SettingsContext';
 import {TreeContextController} from './Components/TreeContext';
 import ViewElementSourceContext from './Components/ViewElementSourceContext';
-import ViewSourceContext from './Components/ViewSourceContext';
 import FetchFileWithCachingContext from './Components/FetchFileWithCachingContext';
 import HookNamesModuleLoaderContext from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 import {ProfilerContextController} from './Profiler/ProfilerContext';
@@ -46,25 +45,25 @@ import styles from './DevTools.css';
 
 import './root.css';
 
-import type {InspectedElement} from 'react-devtools-shared/src/frontend/types';
 import type {FetchFileWithCaching} from './Components/FetchFileWithCachingContext';
 import type {HookNamesModuleLoaderFunction} from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {BrowserTheme} from 'react-devtools-shared/src/frontend/types';
+import type {Source} from 'react-devtools-shared/src/shared/types';
 
 export type TabID = 'components' | 'profiler';
 
 export type ViewElementSource = (
-  id: number,
-  inspectedElement: InspectedElement,
+  source: Source,
+  symbolicatedSource: Source | null,
 ) => void;
-export type ViewUrlSource = (url: string, row: number, column: number) => void;
 export type ViewAttributeSource = (
   id: number,
   path: Array<string | number>,
 ) => void;
 export type CanViewElementSource = (
-  inspectedElement: InspectedElement,
+  source: Source,
+  symbolicatedSource: Source | null,
 ) => boolean;
 
 export type Props = {
@@ -79,7 +78,6 @@ export type Props = {
   warnIfUnsupportedVersionDetected?: boolean,
   viewAttributeSourceFunction?: ?ViewAttributeSource,
   viewElementSourceFunction?: ?ViewElementSource,
-  viewUrlSourceFunction?: ?ViewUrlSource,
   readOnly?: boolean,
   hideSettings?: boolean,
   hideToggleErrorAction?: boolean,
@@ -139,7 +137,6 @@ export default function DevTools({
   warnIfUnsupportedVersionDetected = false,
   viewAttributeSourceFunction,
   viewElementSourceFunction,
-  viewUrlSourceFunction,
   readOnly,
   hideSettings,
   hideToggleErrorAction,
@@ -201,15 +198,6 @@ export default function DevTools({
       viewElementSourceFunction: viewElementSourceFunction || null,
     }),
     [canViewElementSourceFunction, viewElementSourceFunction],
-  );
-
-  const viewSource = useMemo(
-    () => ({
-      viewUrlSourceFunction: viewUrlSourceFunction || null,
-      // todo(blakef): Add inspect(...) method here and remove viewElementSource
-      // to consolidate source code inspection.
-    }),
-    [viewUrlSourceFunction],
   );
 
   const contextMenu = useMemo(
@@ -281,59 +269,55 @@ export default function DevTools({
                 componentsPortalContainer={componentsPortalContainer}
                 profilerPortalContainer={profilerPortalContainer}>
                 <ViewElementSourceContext.Provider value={viewElementSource}>
-                  <ViewSourceContext.Provider value={viewSource}>
-                    <HookNamesModuleLoaderContext.Provider
-                      value={hookNamesModuleLoaderFunction || null}>
-                      <FetchFileWithCachingContext.Provider
-                        value={fetchFileWithCaching || null}>
-                        <TreeContextController>
-                          <ProfilerContextController>
-                            <TimelineContextController>
-                              <ThemeProvider>
+                  <HookNamesModuleLoaderContext.Provider
+                    value={hookNamesModuleLoaderFunction || null}>
+                    <FetchFileWithCachingContext.Provider
+                      value={fetchFileWithCaching || null}>
+                      <TreeContextController>
+                        <ProfilerContextController>
+                          <TimelineContextController>
+                            <ThemeProvider>
+                              <div
+                                className={styles.DevTools}
+                                ref={devToolsRef}
+                                data-react-devtools-portal-root={true}>
+                                {showTabBar && (
+                                  <div className={styles.TabBar}>
+                                    <ReactLogo />
+                                    <span className={styles.DevToolsVersion}>
+                                      {process.env.DEVTOOLS_VERSION}
+                                    </span>
+                                    <div className={styles.Spacer} />
+                                    <TabBar
+                                      currentTab={tab}
+                                      id="DevTools"
+                                      selectTab={selectTab}
+                                      tabs={tabs}
+                                      type="navigation"
+                                    />
+                                  </div>
+                                )}
                                 <div
-                                  className={styles.DevTools}
-                                  ref={devToolsRef}
-                                  data-react-devtools-portal-root={true}>
-                                  {showTabBar && (
-                                    <div className={styles.TabBar}>
-                                      <ReactLogo />
-                                      <span className={styles.DevToolsVersion}>
-                                        {process.env.DEVTOOLS_VERSION}
-                                      </span>
-                                      <div className={styles.Spacer} />
-                                      <TabBar
-                                        currentTab={tab}
-                                        id="DevTools"
-                                        selectTab={selectTab}
-                                        tabs={tabs}
-                                        type="navigation"
-                                      />
-                                    </div>
-                                  )}
-                                  <div
-                                    className={styles.TabContent}
-                                    hidden={tab !== 'components'}>
-                                    <Components
-                                      portalContainer={
-                                        componentsPortalContainer
-                                      }
-                                    />
-                                  </div>
-                                  <div
-                                    className={styles.TabContent}
-                                    hidden={tab !== 'profiler'}>
-                                    <Profiler
-                                      portalContainer={profilerPortalContainer}
-                                    />
-                                  </div>
+                                  className={styles.TabContent}
+                                  hidden={tab !== 'components'}>
+                                  <Components
+                                    portalContainer={componentsPortalContainer}
+                                  />
                                 </div>
-                              </ThemeProvider>
-                            </TimelineContextController>
-                          </ProfilerContextController>
-                        </TreeContextController>
-                      </FetchFileWithCachingContext.Provider>
-                    </HookNamesModuleLoaderContext.Provider>
-                  </ViewSourceContext.Provider>
+                                <div
+                                  className={styles.TabContent}
+                                  hidden={tab !== 'profiler'}>
+                                  <Profiler
+                                    portalContainer={profilerPortalContainer}
+                                  />
+                                </div>
+                              </div>
+                            </ThemeProvider>
+                          </TimelineContextController>
+                        </ProfilerContextController>
+                      </TreeContextController>
+                    </FetchFileWithCachingContext.Provider>
+                  </HookNamesModuleLoaderContext.Provider>
                 </ViewElementSourceContext.Provider>
               </SettingsContextController>
               <UnsupportedBridgeProtocolDialog />

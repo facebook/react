@@ -7,6 +7,55 @@
  * @flow
  */
 
+import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
+import type {HydrationDiffNode} from 'react-reconciler/src/ReactFiberHydrationDiffs';
+
+import {enableOwnerStacks} from 'shared/ReactFeatureFlags';
+
+import {
+  current,
+  runWithFiberInDEV,
+} from 'react-reconciler/src/ReactCurrentFiber';
+import {
+  HostComponent,
+  HostHoistable,
+  HostSingleton,
+  HostText,
+} from 'react-reconciler/src/ReactWorkTags';
+
+import {describeDiff} from 'react-reconciler/src/ReactFiberHydrationDiffs';
+
+function describeAncestors(
+  ancestor: Fiber,
+  child: Fiber,
+  props: null | {children: null},
+): string {
+  let fiber: null | Fiber = child;
+  let node: null | HydrationDiffNode = null;
+  let distanceFromLeaf = 0;
+  while (fiber) {
+    if (fiber === ancestor) {
+      distanceFromLeaf = 0;
+    }
+    node = {
+      fiber: fiber,
+      children: node !== null ? [node] : [],
+      serverProps:
+        fiber === child ? props : fiber === ancestor ? null : undefined,
+      serverTail: [],
+      distanceFromLeaf: distanceFromLeaf,
+    };
+    distanceFromLeaf++;
+    fiber = fiber.return;
+  }
+  if (node !== null) {
+    // Describe the node using the hydration diff logic.
+    // Replace + with - to mark ancestor and child. It's kind of arbitrary.
+    return describeDiff(node).replaceAll(/^[+-]/gm, '>');
+  }
+  return '';
+}
+
 type Info = {tag: string};
 export type AncestorInfoDev = {
   current: ?Info,
@@ -438,10 +487,25 @@ function findInvalidAncestorForTag(
 
 const didWarn: {[string]: boolean} = {};
 
+function findAncestor(parent: null | Fiber, tagName: string): null | Fiber {
+  while (parent) {
+    switch (parent.tag) {
+      case HostComponent:
+      case HostHoistable:
+      case HostSingleton:
+        if (parent.type === tagName) {
+          return parent;
+        }
+    }
+    parent = parent.return;
+  }
+  return null;
+}
+
 function validateDOMNesting(
   childTag: string,
   ancestorInfo: AncestorInfoDev,
-): void {
+): boolean {
   if (__DEV__) {
     ancestorInfo = ancestorInfo || emptyAncestorInfoDev;
     const parentInfo = ancestorInfo.current;
@@ -455,7 +519,7 @@ function validateDOMNesting(
       : findInvalidAncestorForTag(childTag, ancestorInfo);
     const invalidParentOrAncestor = invalidParent || invalidAncestor;
     if (!invalidParentOrAncestor) {
-      return;
+      return true;
     }
 
     const ancestorTag = invalidParentOrAncestor.tag;
@@ -464,9 +528,17 @@ function validateDOMNesting(
       // eslint-disable-next-line react-internal/safe-string-coercion
       String(!!invalidParent) + '|' + childTag + '|' + ancestorTag;
     if (didWarn[warnKey]) {
-      return;
+      return false;
     }
     didWarn[warnKey] = true;
+
+    const child = current;
+    const ancestor = child ? findAncestor(child.return, ancestorTag) : null;
+
+    const ancestorDescription =
+      child !== null && ancestor !== null
+        ? describeAncestors(ancestor, child, null)
+        : '';
 
     const tagDisplayName = '<' + childTag + '>';
     if (invalidParent) {
@@ -477,49 +549,93 @@ function validateDOMNesting(
           'the browser.';
       }
       console.error(
-        'validateDOMNesting(...): %s cannot appear as a child of <%s>.%s',
+        'In HTML, %s cannot be a child of <%s>.%s\n' +
+          'This will cause a hydration error.%s',
         tagDisplayName,
         ancestorTag,
         info,
+        ancestorDescription,
       );
     } else {
       console.error(
-        'validateDOMNesting(...): %s cannot appear as a descendant of ' +
-          '<%s>.',
+        'In HTML, %s cannot be a descendant of <%s>.\n' +
+          'This will cause a hydration error.%s',
         tagDisplayName,
         ancestorTag,
+        ancestorDescription,
       );
     }
+    if (enableOwnerStacks && child) {
+      // For debugging purposes find the nearest ancestor that caused the issue.
+      // The stack trace of this ancestor can be useful to find the cause.
+      // If the parent is a direct parent in the same owner, we don't bother.
+      const parent = child.return;
+      if (
+        ancestor !== null &&
+        parent !== null &&
+        (ancestor !== parent || parent._debugOwner !== child._debugOwner)
+      ) {
+        runWithFiberInDEV(ancestor, () => {
+          console.error(
+            // We repeat some context because this log might be taken out of context
+            // such as in React DevTools or grouped server logs.
+            '<%s> cannot contain a nested %s.\n' +
+              'See this log for the ancestor stack trace.',
+            ancestorTag,
+            tagDisplayName,
+          );
+        });
+      }
+    }
+    return false;
   }
+  return true;
 }
 
-function validateTextNesting(childText: string, parentTag: string): void {
+function validateTextNesting(childText: string, parentTag: string): boolean {
   if (__DEV__) {
     if (isTagValidWithParent('#text', parentTag)) {
-      return;
+      return true;
     }
 
-    // eslint-disable-next-line react-internal/safe-string-coercion
     const warnKey = '#text|' + parentTag;
     if (didWarn[warnKey]) {
-      return;
+      return false;
     }
     didWarn[warnKey] = true;
 
+    const child = current;
+    const ancestor = child ? findAncestor(child, parentTag) : null;
+
+    const ancestorDescription =
+      child !== null && ancestor !== null
+        ? describeAncestors(
+            ancestor,
+            child,
+            child.tag !== HostText ? {children: null} : null,
+          )
+        : '';
+
     if (/\S/.test(childText)) {
       console.error(
-        'validateDOMNesting(...): Text nodes cannot appear as a child of <%s>.',
+        'In HTML, text nodes cannot be a child of <%s>.\n' +
+          'This will cause a hydration error.%s',
         parentTag,
+        ancestorDescription,
       );
     } else {
       console.error(
-        'validateDOMNesting(...): Whitespace text nodes cannot appear as a child of <%s>. ' +
+        'In HTML, whitespace text nodes cannot be a child of <%s>. ' +
           "Make sure you don't have any extra whitespace between tags on " +
-          'each line of your source code.',
+          'each line of your source code.\n' +
+          'This will cause a hydration error.%s',
         parentTag,
+        ancestorDescription,
       );
     }
+    return false;
   }
+  return true;
 }
 
 export {updatedAncestorInfoDev, validateDOMNesting, validateTextNesting};

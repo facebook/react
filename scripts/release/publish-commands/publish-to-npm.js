@@ -2,10 +2,11 @@
 
 'use strict';
 
+const {spawnSync} = require('child_process');
 const {exec} = require('child-process-promise');
 const {readJsonSync} = require('fs-extra');
 const {join} = require('path');
-const {confirm, execRead} = require('../utils');
+const {confirm} = require('../utils');
 const theme = require('../theme');
 
 const run = async ({cwd, dry, tags, ci}, packageName, otp) => {
@@ -16,8 +17,9 @@ const run = async ({cwd, dry, tags, ci}, packageName, otp) => {
   // If so we might be resuming from a previous run.
   // We could infer this by comparing the build-info.json,
   // But for now the easiest way is just to ask if this is expected.
-  const info = await execRead(`npm view ${packageName}@${version}`);
-  if (info) {
+  const {status} = spawnSync('npm', ['view', `${packageName}@${version}`]);
+  const packageExists = status === 0;
+  if (packageExists) {
     console.log(
       theme`{package ${packageName}} {version ${version}} has already been published.`
     );

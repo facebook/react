@@ -49,7 +49,7 @@ describe('ReactStartTransition', () => {
 
     await act(() => {
       ReactTestRenderer.create(<Component level={0} />, {
-        isConcurrent: true,
+        unstable_isConcurrent: true,
       });
     });
 

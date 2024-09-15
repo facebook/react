@@ -9,24 +9,26 @@
 
 import * as React from 'react';
 import {useCallback, useContext, useSyncExternalStore} from 'react';
-import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
+import {TreeStateContext} from './TreeContext';
 import {BridgeContext, StoreContext, OptionsContext} from '../context';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import Icon from '../Icon';
-import {ModalDialogContext} from '../ModalDialog';
-import ViewElementSourceContext from './ViewElementSourceContext';
 import Toggle from '../Toggle';
 import {ElementTypeSuspense} from 'react-devtools-shared/src/frontend/types';
-import CannotSuspendWarningMessage from './CannotSuspendWarningMessage';
 import InspectedElementView from './InspectedElementView';
 import {InspectedElementContext} from './InspectedElementContext';
 import {getOpenInEditorURL} from '../../../utils';
 import {LOCAL_STORAGE_OPEN_IN_EDITOR_URL} from '../../../constants';
+import FetchFileWithCachingContext from './FetchFileWithCachingContext';
+import {symbolicateSourceWithCache} from 'react-devtools-shared/src/symbolicateSource';
+import OpenInEditorButton from './OpenInEditorButton';
+import InspectedElementViewSourceButton from './InspectedElementViewSourceButton';
+import Skeleton from './Skeleton';
 
 import styles from './InspectedElement.css';
 
-import type {InspectedElement} from 'react-devtools-shared/src/frontend/types';
+import type {Source} from 'react-devtools-shared/src/shared/types';
 
 export type Props = {};
 
@@ -34,10 +36,6 @@ export type Props = {};
 
 export default function InspectedElementWrapper(_: Props): React.Node {
   const {inspectedElementID} = useContext(TreeStateContext);
-  const dispatch = useContext(TreeDispatcherContext);
-  const {canViewElementSourceFunction, viewElementSourceFunction} = useContext(
-    ViewElementSourceContext,
-  );
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
   const {
@@ -46,10 +44,28 @@ export default function InspectedElementWrapper(_: Props): React.Node {
     hideLogAction,
     hideViewSourceAction,
   } = useContext(OptionsContext);
-  const {dispatch: modalDialogDispatch} = useContext(ModalDialogContext);
 
   const {hookNames, inspectedElement, parseHookNames, toggleParseHookNames} =
     useContext(InspectedElementContext);
+
+  const fetchFileWithCaching = useContext(FetchFileWithCachingContext);
+
+  const symbolicatedSourcePromise: null | Promise<Source | null> =
+    React.useMemo(() => {
+      if (inspectedElement == null) return null;
+      if (fetchFileWithCaching == null) return Promise.resolve(null);
+
+      const {source} = inspectedElement;
+      if (source == null) return Promise.resolve(null);
+
+      const {sourceURL, line, column} = source;
+      return symbolicateSourceWithCache(
+        fetchFileWithCaching,
+        sourceURL,
+        line,
+        column,
+      );
+    }, [inspectedElement]);
 
   const element =
     inspectedElementID !== null
@@ -60,11 +76,11 @@ export default function InspectedElementWrapper(_: Props): React.Node {
     if (element !== null && inspectedElementID !== null) {
       const rendererID = store.getRendererIDForElement(inspectedElementID);
       if (rendererID !== null) {
-        bridge.send('highlightNativeElement', {
+        bridge.send('highlightHostInstance', {
           displayName: element.displayName,
           hideAfterTimeout: true,
           id: inspectedElementID,
-          openNativeElementsPanel: true,
+          openBuiltinElementsPanel: true,
           rendererID,
           scrollIntoView: true,
         });
@@ -84,27 +100,7 @@ export default function InspectedElementWrapper(_: Props): React.Node {
     }
   }, [bridge, inspectedElementID, store]);
 
-  const viewSource = useCallback(() => {
-    if (viewElementSourceFunction != null && inspectedElement !== null) {
-      viewElementSourceFunction(
-        inspectedElement.id,
-        ((inspectedElement: any): InspectedElement),
-      );
-    }
-  }, [inspectedElement, viewElementSourceFunction]);
-
-  // In some cases (e.g. FB internal usage) the standalone shell might not be able to view the source.
-  // To detect this case, we defer to an injected helper function (if present).
-  const canViewSource =
-    inspectedElement !== null &&
-    inspectedElement.canViewSource &&
-    viewElementSourceFunction !== null &&
-    (canViewElementSourceFunction === null ||
-      canViewElementSourceFunction(inspectedElement));
-
   const isErrored = inspectedElement != null && inspectedElement.isErrored;
-  const targetErrorBoundaryID =
-    inspectedElement != null ? inspectedElement.targetErrorBoundaryID : null;
 
   const isSuspended =
     element !== null &&
@@ -134,98 +130,44 @@ export default function InspectedElementWrapper(_: Props): React.Node {
     },
   );
 
-  const canOpenInEditor =
-    editorURL && inspectedElement != null && inspectedElement.source != null;
-
   const toggleErrored = useCallback(() => {
-    if (inspectedElement == null || targetErrorBoundaryID == null) {
+    if (inspectedElement == null) {
       return;
     }
 
-    const rendererID = store.getRendererIDForElement(targetErrorBoundaryID);
+    const rendererID = store.getRendererIDForElement(inspectedElement.id);
     if (rendererID !== null) {
-      if (targetErrorBoundaryID !== inspectedElement.id) {
-        // Update tree selection so that if we cause a component to error,
-        // the nearest error boundary will become the newly selected thing.
-        dispatch({
-          type: 'SELECT_ELEMENT_BY_ID',
-          payload: targetErrorBoundaryID,
-        });
-      }
-
       // Toggle error.
+      // Because triggering an error will always delete the children, we'll
+      // automatically select the nearest still mounted instance which will be
+      // the error boundary.
       bridge.send('overrideError', {
-        id: targetErrorBoundaryID,
+        id: inspectedElement.id,
         rendererID,
         forceError: !isErrored,
       });
     }
-  }, [bridge, dispatch, isErrored, targetErrorBoundaryID]);
+  }, [bridge, store, isErrored, inspectedElement]);
 
   // TODO (suspense toggle) Would be nice to eventually use a two setState pattern here as well.
   const toggleSuspended = useCallback(() => {
-    let nearestSuspenseElement = null;
-    let currentElement = element;
-    while (currentElement !== null) {
-      if (currentElement.type === ElementTypeSuspense) {
-        nearestSuspenseElement = currentElement;
-        break;
-      } else if (currentElement.parentID > 0) {
-        currentElement = store.getElementByID(currentElement.parentID);
-      } else {
-        currentElement = null;
-      }
-    }
-
-    // If we didn't find a Suspense ancestor, we can't suspend.
-    // Instead we can show a warning to the user.
-    if (nearestSuspenseElement === null) {
-      modalDialogDispatch({
-        id: 'InspectedElement',
-        type: 'SHOW',
-        content: <CannotSuspendWarningMessage />,
-      });
-    } else {
-      const nearestSuspenseElementID = nearestSuspenseElement.id;
-
-      // If we're suspending from an arbitrary (non-Suspense) component, select the nearest Suspense element in the Tree.
-      // This way when the fallback UI is shown and the current element is hidden, something meaningful is selected.
-      if (nearestSuspenseElement !== element) {
-        dispatch({
-          type: 'SELECT_ELEMENT_BY_ID',
-          payload: nearestSuspenseElementID,
-        });
-      }
-
-      const rendererID = store.getRendererIDForElement(
-        nearestSuspenseElementID,
-      );
-
-      // Toggle suspended
-      if (rendererID !== null) {
-        bridge.send('overrideSuspense', {
-          id: nearestSuspenseElementID,
-          rendererID,
-          forceFallback: !isSuspended,
-        });
-      }
-    }
-  }, [bridge, dispatch, element, isSuspended, modalDialogDispatch, store]);
-
-  const onOpenInEditor = useCallback(() => {
-    const source = inspectedElement?.source;
-    if (source == null || editorURL == null) {
+    if (inspectedElement == null) {
       return;
     }
 
-    const url = new URL(editorURL);
-    url.href = url.href
-      .replace('{path}', source.fileName)
-      .replace('{line}', String(source.lineNumber))
-      .replace('%7Bpath%7D', source.fileName)
-      .replace('%7Bline%7D', String(source.lineNumber));
-    window.open(url);
-  }, [inspectedElement, editorURL]);
+    const rendererID = store.getRendererIDForElement(inspectedElement.id);
+    if (rendererID !== null) {
+      // Toggle suspended
+      // Because suspending or unsuspending always delete the children or fallback,
+      // we'll automatically select the nearest still mounted instance which will be
+      // the Suspense boundary.
+      bridge.send('overrideSuspense', {
+        id: inspectedElement.id,
+        rendererID,
+        forceFallback: !isSuspended,
+      });
+    }
+  }, [bridge, store, isSuspended, inspectedElement]);
 
   if (element === null) {
     return (
@@ -267,18 +209,27 @@ export default function InspectedElementWrapper(_: Props): React.Node {
           <div
             className={
               element.isStrictModeNonCompliant
-                ? styles.StrictModeNonCompliant
-                : styles.Component
+                ? `${styles.ComponentName} ${styles.StrictModeNonCompliantComponentName}`
+                : styles.ComponentName
             }
             title={element.displayName}>
             {element.displayName}
           </div>
         </div>
-        {canOpenInEditor && (
-          <Button onClick={onOpenInEditor} title="Open in editor">
-            <ButtonIcon type="editor" />
-          </Button>
-        )}
+
+        {!!editorURL &&
+          inspectedElement != null &&
+          inspectedElement.source != null &&
+          symbolicatedSourcePromise != null && (
+            <React.Suspense fallback={<Skeleton height={16} width={24} />}>
+              <OpenInEditorButton
+                editorURL={editorURL}
+                source={inspectedElement.source}
+                symbolicatedSourcePromise={symbolicatedSourcePromise}
+              />
+            </React.Suspense>
+          )}
+
         {canToggleError && (
           <Toggle
             isChecked={isErrored}
@@ -303,7 +254,7 @@ export default function InspectedElementWrapper(_: Props): React.Node {
             <ButtonIcon type="suspend" />
           </Toggle>
         )}
-        {store.supportsNativeInspection && (
+        {store.supportsInspectMatchingDOMElement && (
           <Button
             onClick={highlightElement}
             title="Inspect the matching DOM element">
@@ -317,13 +268,13 @@ export default function InspectedElementWrapper(_: Props): React.Node {
             <ButtonIcon type="log-data" />
           </Button>
         )}
+
         {!hideViewSourceAction && (
-          <Button
-            disabled={!canViewSource}
-            onClick={viewSource}
-            title="View source for this element">
-            <ButtonIcon type="view-source" />
-          </Button>
+          <InspectedElementViewSourceButton
+            canViewSource={inspectedElement?.canViewSource}
+            source={inspectedElement?.source}
+            symbolicatedSourcePromise={symbolicatedSourcePromise}
+          />
         )}
       </div>
 
@@ -331,7 +282,7 @@ export default function InspectedElementWrapper(_: Props): React.Node {
         <div className={styles.Loading}>Loading...</div>
       )}
 
-      {inspectedElement !== null && (
+      {inspectedElement !== null && symbolicatedSourcePromise != null && (
         <InspectedElementView
           key={
             inspectedElementID /* Force reset when selected Element changes */
@@ -341,6 +292,7 @@ export default function InspectedElementWrapper(_: Props): React.Node {
           inspectedElement={inspectedElement}
           parseHookNames={parseHookNames}
           toggleParseHookNames={toggleParseHookNames}
+          symbolicatedSourcePromise={symbolicatedSourcePromise}
         />
       )}
     </div>

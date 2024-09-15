@@ -13,16 +13,41 @@ export type PrecomputedChunk = Uint8Array;
 export opaque type Chunk = Uint8Array;
 export type BinaryChunk = Uint8Array;
 
+const channel = new MessageChannel();
+const taskQueue = [];
+channel.port1.onmessage = () => {
+  const task = taskQueue.shift();
+  if (task) {
+    task();
+  }
+};
+
 export function scheduleWork(callback: () => void) {
-  callback();
+  taskQueue.push(callback);
+  channel.port2.postMessage(null);
 }
+
+function handleErrorInNextTick(error: any) {
+  setTimeout(() => {
+    throw error;
+  });
+}
+
+const LocalPromise = Promise;
+
+export const scheduleMicrotask: (callback: () => void) => void =
+  typeof queueMicrotask === 'function'
+    ? queueMicrotask
+    : callback => {
+        LocalPromise.resolve(null).then(callback).catch(handleErrorInNextTick);
+      };
 
 export function flushBuffered(destination: Destination) {
   // WHATWG Streams do not yet have a way to flush the underlying
   // transform streams. https://github.com/whatwg/streams/issues/960
 }
 
-const VIEW_SIZE = 512;
+const VIEW_SIZE = 2048;
 let currentView = null;
 let writtenBytes = 0;
 
@@ -40,15 +65,6 @@ export function writeChunk(
   }
 
   if (chunk.byteLength > VIEW_SIZE) {
-    if (__DEV__) {
-      if (precomputedChunkSet.has(chunk)) {
-        console.error(
-          'A large precomputed chunk was passed to writeChunk without being copied.' +
-            ' Large chunks get enqueued directly and are not copied. This is incompatible with precomputed chunks because you cannot enqueue the same precomputed chunk twice.' +
-            ' Use "cloneChunk" to make a copy of this large precomputed chunk before writing it. This is a bug in React.',
-        );
-      }
-    }
     // this chunk may overflow a single view which implies it was not
     // one that is cached by the streaming renderer. We will enqueu
     // it directly and expect it is not re-used
@@ -120,15 +136,15 @@ export function stringToChunk(content: string): Chunk {
   return textEncoder.encode(content);
 }
 
-const precomputedChunkSet: Set<Chunk | BinaryChunk> = __DEV__
-  ? new Set()
-  : (null: any);
-
 export function stringToPrecomputedChunk(content: string): PrecomputedChunk {
   const precomputedChunk = textEncoder.encode(content);
 
   if (__DEV__) {
-    precomputedChunkSet.add(precomputedChunk);
+    if (precomputedChunk.byteLength > VIEW_SIZE) {
+      console.error(
+        'precomputed chunks must be smaller than the view size configured for this host. This is a bug in React.',
+      );
+    }
   }
 
   return precomputedChunk;
@@ -149,14 +165,6 @@ export function typedArrayToBinaryChunk(
   // We clone large chunks so that we can transfer them when we write them.
   // Others get copied into the target buffer.
   return content.byteLength > VIEW_SIZE ? buffer.slice() : buffer;
-}
-
-export function clonePrecomputedChunk(
-  precomputedChunk: PrecomputedChunk,
-): PrecomputedChunk {
-  return precomputedChunk.byteLength > VIEW_SIZE
-    ? precomputedChunk.slice()
-    : precomputedChunk;
 }
 
 export function byteLengthOfChunk(chunk: Chunk | PrecomputedChunk): number {

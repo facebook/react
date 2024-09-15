@@ -17,6 +17,7 @@ let gen;
 let waitForAll;
 let waitFor;
 let waitForThrow;
+let assertConsoleErrorDev;
 
 describe('ReactNewContext', () => {
   beforeEach(() => {
@@ -28,10 +29,12 @@ describe('ReactNewContext', () => {
     Scheduler = require('scheduler');
     gen = require('random-seed');
 
-    const InternalTestUtils = require('internal-test-utils');
-    waitForAll = InternalTestUtils.waitForAll;
-    waitFor = InternalTestUtils.waitFor;
-    waitForThrow = InternalTestUtils.waitForThrow;
+    ({
+      waitForAll,
+      waitFor,
+      waitForThrow,
+      assertConsoleErrorDev,
+    } = require('internal-test-utils'));
   });
 
   afterEach(() => {
@@ -49,8 +52,7 @@ describe('ReactNewContext', () => {
 
   function readContext(Context) {
     const dispatcher =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-        .ReactCurrentDispatcher.current;
+      React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.H;
     return dispatcher.readContext(Context);
   }
 
@@ -700,7 +702,7 @@ describe('ReactNewContext', () => {
         );
       });
 
-      // @gate www
+      // @gate enableLegacyHidden
       it("context consumer doesn't bail out inside hidden subtree", async () => {
         const Context = React.createContext('dark');
         const Consumer = getConsumer(Context);
@@ -1033,6 +1035,9 @@ describe('ReactNewContext', () => {
         </LegacyProvider>,
       );
       await waitForAll(['LegacyProvider', 'App', 'Child']);
+      assertConsoleErrorDev([
+        'LegacyProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      ]);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Child" />);
 
       // Update App with same value (should bail out)
@@ -1337,10 +1342,11 @@ describe('ReactNewContext', () => {
           '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
           '2. You might be breaking the Rules of Hooks\n' +
           '3. You might have more than one copy of React in the same app\n' +
-          'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
+          'See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.',
       );
     });
 
+    // @gate enableRenderableContext || !__DEV__
     it('warns when passed a consumer', async () => {
       const Context = React.createContext(0);
       function Foo() {
@@ -1348,21 +1354,7 @@ describe('ReactNewContext', () => {
       }
       ReactNoop.render(<Foo />);
       await expect(async () => await waitForAll([])).toErrorDev(
-        'Calling useContext(Context.Consumer) is not supported, may cause bugs, ' +
-          'and will be removed in a future major release. ' +
-          'Did you mean to call useContext(Context) instead?',
-      );
-    });
-
-    it('warns when passed a provider', async () => {
-      const Context = React.createContext(0);
-      function Foo() {
-        useContext(Context.Provider);
-        return null;
-      }
-      ReactNoop.render(<Foo />);
-      await expect(async () => await waitForAll([])).toErrorDev(
-        'Calling useContext(Context.Provider) is not supported. ' +
+        'Calling useContext(Context.Consumer) is not supported and will cause bugs. ' +
           'Did you mean to call useContext(Context) instead?',
       );
     });
@@ -1651,99 +1643,23 @@ Context fuzz tester error! Copy and paste the following line into the test suite
     });
   });
 
-  it('should warn with an error message when using context as a consumer in DEV', async () => {
+  // @gate enableRenderableContext
+  it('should treat Context as Context.Provider', async () => {
     const BarContext = React.createContext({value: 'bar-initial'});
-    const BarConsumer = BarContext;
+    expect(BarContext.Provider).toBe(BarContext);
 
     function Component() {
       return (
-        <>
-          <BarContext.Provider value={{value: 'bar-updated'}}>
-            <BarConsumer>
-              {({value}) => <div actual={value} expected="bar-updated" />}
-            </BarConsumer>
-          </BarContext.Provider>
-        </>
-      );
-    }
-
-    await expect(async () => {
-      ReactNoop.render(<Component />);
-      await waitForAll([]);
-    }).toErrorDev(
-      'Rendering <Context> directly is not supported and will be removed in ' +
-        'a future major release. Did you mean to render <Context.Consumer> instead?',
-    );
-  });
-
-  // False positive regression test.
-  it('should not warn when using Consumer from React < 16.6 with newer renderer', async () => {
-    const BarContext = React.createContext({value: 'bar-initial'});
-    // React 16.5 and earlier didn't have a separate object.
-    BarContext.Consumer = BarContext;
-
-    function Component() {
-      return (
-        <>
-          <BarContext.Provider value={{value: 'bar-updated'}}>
-            <BarContext.Consumer>
-              {({value}) => <div actual={value} expected="bar-updated" />}
-            </BarContext.Consumer>
-          </BarContext.Provider>
-        </>
+        <BarContext value={{value: 'bar-updated'}}>
+          <BarContext.Consumer>
+            {({value}) => <span prop={value} />}
+          </BarContext.Consumer>
+        </BarContext>
       );
     }
 
     ReactNoop.render(<Component />);
     await waitForAll([]);
-  });
-
-  it('should warn with an error message when using nested context consumers in DEV', async () => {
-    const BarContext = React.createContext({value: 'bar-initial'});
-    const BarConsumer = BarContext;
-
-    function Component() {
-      return (
-        <>
-          <BarContext.Provider value={{value: 'bar-updated'}}>
-            <BarConsumer.Consumer.Consumer>
-              {({value}) => <div actual={value} expected="bar-updated" />}
-            </BarConsumer.Consumer.Consumer>
-          </BarContext.Provider>
-        </>
-      );
-    }
-
-    await expect(async () => {
-      ReactNoop.render(<Component />);
-      await waitForAll([]);
-    }).toErrorDev(
-      'Rendering <Context.Consumer.Consumer> is not supported and will be removed in ' +
-        'a future major release. Did you mean to render <Context.Consumer> instead?',
-    );
-  });
-
-  it('should warn with an error message when using Context.Consumer.Provider DEV', async () => {
-    const BarContext = React.createContext({value: 'bar-initial'});
-
-    function Component() {
-      return (
-        <>
-          <BarContext.Consumer.Provider value={{value: 'bar-updated'}}>
-            <BarContext.Consumer>
-              {({value}) => <div actual={value} expected="bar-updated" />}
-            </BarContext.Consumer>
-          </BarContext.Consumer.Provider>
-        </>
-      );
-    }
-
-    await expect(async () => {
-      ReactNoop.render(<Component />);
-      await waitForAll([]);
-    }).toErrorDev(
-      'Rendering <Context.Consumer.Provider> is not supported and will be removed in ' +
-        'a future major release. Did you mean to render <Context.Provider> instead?',
-    );
+    expect(ReactNoop).toMatchRenderedOutput(<span prop="bar-updated" />);
   });
 });

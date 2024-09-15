@@ -1,0 +1,20 @@
+.SourceHeaderRow {
+  display: flex;
+  align-items: center;
+  min-height: 24px;
+}
+
+.SourceHeader {
+  flex: 1 1;
+  font-family: var(--font-family-sans);
+}
+
+.SourceOneLiner {
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-monospace-normal);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  margin-left: 1rem;
+}

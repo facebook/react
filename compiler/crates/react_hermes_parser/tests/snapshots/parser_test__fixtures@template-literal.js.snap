@@ -1,0 +1,466 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/template-literal.js
+---
+Input:
+function componentA(props) {
+  let t = `hello ${props.a}, ${props.b}!`;
+  t += ``;
+  return t;
+}
+
+function componentB(props) {
+  let x = useFoo(`hello ${props.a}`);
+  return x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "componentA",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          19
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            20,
+            25
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "t",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    35,
+                    36
+                  ]
+                },
+                "init": {
+                  "type": "TemplateLiteral",
+                  "quasis": [
+                    {
+                      "type": "TemplateElement",
+                      "tail": false,
+                      "value": {
+                        "cooked": "hello ",
+                        "raw": "hello "
+                      },
+                      "loc": null,
+                      "range": [
+                        39,
+                        48
+                      ]
+                    },
+                    {
+                      "type": "TemplateElement",
+                      "tail": false,
+                      "value": {
+                        "cooked": ", ",
+                        "raw": ", "
+                      },
+                      "loc": null,
+                      "range": [
+                        55,
+                        60
+                      ]
+                    },
+                    {
+                      "type": "TemplateElement",
+                      "tail": true,
+                      "value": {
+                        "cooked": "!",
+                        "raw": "!"
+                      },
+                      "loc": null,
+                      "range": [
+                        67,
+                        70
+                      ]
+                    }
+                  ],
+                  "expressions": [
+                    {
+                      "type": "MemberExpression",
+                      "object": {
+                        "type": "Identifier",
+                        "name": "props",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          48,
+                          53
+                        ]
+                      },
+                      "property": {
+                        "type": "Identifier",
+                        "name": "a",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          54,
+                          55
+                        ]
+                      },
+                      "computed": false,
+                      "loc": null,
+                      "range": [
+                        48,
+                        55
+                      ]
+                    },
+                    {
+                      "type": "MemberExpression",
+                      "object": {
+                        "type": "Identifier",
+                        "name": "props",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          60,
+                          65
+                        ]
+                      },
+                      "property": {
+                        "type": "Identifier",
+                        "name": "b",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          66,
+                          67
+                        ]
+                      },
+                      "computed": false,
+                      "loc": null,
+                      "range": [
+                        60,
+                        67
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    39,
+                    70
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  35,
+                  70
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              31,
+              71
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "AssignmentExpression",
+              "operator": "+=",
+              "left": {
+                "type": "Identifier",
+                "name": "t",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  74,
+                  75
+                ]
+              },
+              "right": {
+                "type": "TemplateLiteral",
+                "quasis": [
+                  {
+                    "type": "TemplateElement",
+                    "tail": true,
+                    "value": {
+                      "cooked": "",
+                      "raw": ""
+                    },
+                    "loc": null,
+                    "range": [
+                      79,
+                      81
+                    ]
+                  }
+                ],
+                "expressions": [],
+                "loc": null,
+                "range": [
+                  79,
+                  81
+                ]
+              },
+              "loc": null,
+              "range": [
+                74,
+                81
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              74,
+              82
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "t",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                92,
+                93
+              ]
+            },
+            "loc": null,
+            "range": [
+              85,
+              94
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          27,
+          96
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        96
+      ],
+      "loc": null,
+      "range": [
+        0,
+        96
+      ]
+    },
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "componentB",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          107,
+          117
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            118,
+            123
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    133,
+                    134
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useFoo",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      137,
+                      143
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "TemplateLiteral",
+                      "quasis": [
+                        {
+                          "type": "TemplateElement",
+                          "tail": false,
+                          "value": {
+                            "cooked": "hello ",
+                            "raw": "hello "
+                          },
+                          "loc": null,
+                          "range": [
+                            144,
+                            153
+                          ]
+                        },
+                        {
+                          "type": "TemplateElement",
+                          "tail": true,
+                          "value": {
+                            "cooked": "",
+                            "raw": ""
+                          },
+                          "loc": null,
+                          "range": [
+                            160,
+                            162
+                          ]
+                        }
+                      ],
+                      "expressions": [
+                        {
+                          "type": "MemberExpression",
+                          "object": {
+                            "type": "Identifier",
+                            "name": "props",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              153,
+                              158
+                            ]
+                          },
+                          "property": {
+                            "type": "Identifier",
+                            "name": "a",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              159,
+                              160
+                            ]
+                          },
+                          "computed": false,
+                          "loc": null,
+                          "range": [
+                            153,
+                            160
+                          ]
+                        }
+                      ],
+                      "loc": null,
+                      "range": [
+                        144,
+                        162
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    137,
+                    163
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  133,
+                  163
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              129,
+              164
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                174,
+                175
+              ]
+            },
+            "loc": null,
+            "range": [
+              167,
+              176
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          125,
+          178
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        98,
+        178
+      ],
+      "loc": null,
+      "range": [
+        98,
+        178
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    178
+  ]
+}

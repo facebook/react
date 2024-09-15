@@ -7,15 +7,18 @@
  * @flow
  */
 
-import type {ReactContext, ReactProviderType} from 'shared/ReactTypes';
+import type {ReactContext, ReactConsumerType} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 
-import {enableLegacyHidden} from 'shared/ReactFeatureFlags';
+import {
+  disableLegacyMode,
+  enableLegacyHidden,
+  enableRenderableContext,
+} from 'shared/ReactFeatureFlags';
 
 import {
   FunctionComponent,
   ClassComponent,
-  IndeterminateComponent,
   HostRoot,
   HostPortal,
   HostComponent,
@@ -33,6 +36,7 @@ import {
   SimpleMemoComponent,
   LazyComponent,
   IncompleteClassComponent,
+  IncompleteFunctionComponent,
   DehydratedFragment,
   SuspenseListComponent,
   ScopeComponent,
@@ -40,9 +44,11 @@ import {
   LegacyHiddenComponent,
   CacheComponent,
   TracingMarkerComponent,
+  Throw,
 } from 'react-reconciler/src/ReactWorkTags';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import {REACT_STRICT_MODE_TYPE} from 'shared/ReactSymbols';
+import type {ReactComponentInfo} from '../../shared/ReactTypes';
 
 // Keep in sync with shared/getComponentNameFromType
 function getWrappedName(
@@ -62,17 +68,39 @@ function getContextName(type: ReactContext<any>) {
   return type.displayName || 'Context';
 }
 
+export function getComponentNameFromOwner(
+  owner: Fiber | ReactComponentInfo,
+): string | null {
+  if (typeof owner.tag === 'number') {
+    return getComponentNameFromFiber((owner: any));
+  }
+  if (typeof owner.name === 'string') {
+    return owner.name;
+  }
+  return null;
+}
+
 export default function getComponentNameFromFiber(fiber: Fiber): string | null {
   const {tag, type} = fiber;
   switch (tag) {
     case CacheComponent:
       return 'Cache';
     case ContextConsumer:
-      const context: ReactContext<any> = (type: any);
-      return getContextName(context) + '.Consumer';
+      if (enableRenderableContext) {
+        const consumer: ReactConsumerType<any> = (type: any);
+        return getContextName(consumer._context) + '.Consumer';
+      } else {
+        const context: ReactContext<any> = (type: any);
+        return getContextName(context) + '.Consumer';
+      }
     case ContextProvider:
-      const provider: ReactProviderType<any> = (type: any);
-      return getContextName(provider._context) + '.Provider';
+      if (enableRenderableContext) {
+        const context: ReactContext<any> = (type: any);
+        return getContextName(context) + '.Provider';
+      } else {
+        const provider = (type: any);
+        return getContextName(provider._context) + '.Provider';
+      }
     case DehydratedFragment:
       return 'DehydratedFragment';
     case ForwardRef:
@@ -111,11 +139,15 @@ export default function getComponentNameFromFiber(fiber: Fiber): string | null {
       return 'SuspenseList';
     case TracingMarkerComponent:
       return 'TracingMarker';
-    // The display name for this tags come from the user-provided type:
+    // The display name for these tags come from the user-provided type:
+    case IncompleteClassComponent:
+    case IncompleteFunctionComponent:
+      if (disableLegacyMode) {
+        break;
+      }
+    // Fallthrough
     case ClassComponent:
     case FunctionComponent:
-    case IncompleteClassComponent:
-    case IndeterminateComponent:
     case MemoComponent:
     case SimpleMemoComponent:
       if (typeof type === 'function') {
@@ -129,6 +161,26 @@ export default function getComponentNameFromFiber(fiber: Fiber): string | null {
       if (enableLegacyHidden) {
         return 'LegacyHidden';
       }
+      break;
+    case Throw: {
+      if (__DEV__) {
+        // For an error in child position we use the name of the inner most parent component.
+        // Whether a Server Component or the parent Fiber.
+        const debugInfo = fiber._debugInfo;
+        if (debugInfo != null) {
+          for (let i = debugInfo.length - 1; i >= 0; i--) {
+            if (typeof debugInfo[i].name === 'string') {
+              return debugInfo[i].name;
+            }
+          }
+        }
+        if (fiber.return === null) {
+          return null;
+        }
+        return getComponentNameFromFiber(fiber.return);
+      }
+      return null;
+    }
   }
 
   return null;

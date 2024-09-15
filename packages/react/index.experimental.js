@@ -8,8 +8,7 @@
  */
 
 export {
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-  act as unstable_act,
+  __CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
   Children,
   Component,
   Fragment,
@@ -20,9 +19,7 @@ export {
   cloneElement,
   createContext,
   createElement,
-  createFactory,
   createRef,
-  createServerContext,
   use,
   forwardRef,
   isValidElement,
@@ -30,15 +27,12 @@ export {
   memo,
   cache,
   startTransition,
-  unstable_Cache,
   unstable_DebugTracingMode,
   unstable_Activity,
   unstable_postpone,
-  unstable_getCacheSignal,
   unstable_getCacheForType,
   unstable_SuspenseList,
   unstable_useCacheRefresh,
-  unstable_useMemoCache,
   useId,
   useCallback,
   useContext,
@@ -56,10 +50,11 @@ export {
   useState,
   useSyncExternalStore,
   useTransition,
+  useActionState,
   version,
-} from './src/React';
+} from './src/ReactClient';
 
-import {useOptimistic} from './src/React';
+import {useOptimistic} from './src/ReactClient';
 
 export function experimental_useOptimistic<S, A>(
   passthrough: S,

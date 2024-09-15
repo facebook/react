@@ -8,7 +8,6 @@
  * @flow
  */
 
-import type {BrowserTheme} from './frontend/types';
 import type {
   DevToolsHook,
   Handler,
@@ -17,6 +16,12 @@ import type {
   RendererInterface,
   DevToolsBackend,
 } from './backend/types';
+
+import {
+  FIREFOX_CONSOLE_DIMMING_COLOR,
+  ANSI_STYLE_DIMMING_TEMPLATE,
+} from 'react-devtools-shared/src/constants';
+import attachRenderer from './attachRenderer';
 
 declare var window: any;
 
@@ -28,6 +33,7 @@ export function installHook(target: any): DevToolsHook | null {
   let targetConsole: Object = console;
   let targetConsoleMethods: {[string]: $FlowFixMe} = {};
   for (const method in console) {
+    // $FlowFixMe[invalid-computed-prop]
     targetConsoleMethods[method] = console[method];
   }
 
@@ -38,6 +44,7 @@ export function installHook(target: any): DevToolsHook | null {
 
     targetConsoleMethods = ({}: {[string]: $FlowFixMe});
     for (const method in targetConsole) {
+      // $FlowFixMe[invalid-computed-prop]
       targetConsoleMethods[method] = console[method];
     }
   }
@@ -168,7 +175,7 @@ export function installHook(target: any): DevToolsHook | null {
             'React is running in production mode, but dead code ' +
               'elimination has not been applied. Read how to correctly ' +
               'configure React for production: ' +
-              'https://reactjs.org/link/perf-use-production-build',
+              'https://react.dev/link/perf-use-production-build',
           );
         });
       }
@@ -216,6 +223,61 @@ export function installHook(target: any): DevToolsHook | null {
       return [firstArg, style, ...inputArgs];
     }
   }
+  // NOTE: KEEP IN SYNC with src/backend/utils.js
+  function formatConsoleArguments(
+    maybeMessage: any,
+    ...inputArgs: $ReadOnlyArray<any>
+  ): $ReadOnlyArray<any> {
+    if (inputArgs.length === 0 || typeof maybeMessage !== 'string') {
+      return [maybeMessage, ...inputArgs];
+    }
+
+    const args = inputArgs.slice();
+
+    let template = '';
+    let argumentsPointer = 0;
+    for (let i = 0; i < maybeMessage.length; ++i) {
+      const currentChar = maybeMessage[i];
+      if (currentChar !== '%') {
+        template += currentChar;
+        continue;
+      }
+
+      const nextChar = maybeMessage[i + 1];
+      ++i;
+
+      // Only keep CSS and objects, inline other arguments
+      switch (nextChar) {
+        case 'c':
+        case 'O':
+        case 'o': {
+          ++argumentsPointer;
+          template += `%${nextChar}`;
+
+          break;
+        }
+        case 'd':
+        case 'i': {
+          const [arg] = args.splice(argumentsPointer, 1);
+          template += parseInt(arg, 10).toString();
+
+          break;
+        }
+        case 'f': {
+          const [arg] = args.splice(argumentsPointer, 1);
+          template += parseFloat(arg).toString();
+
+          break;
+        }
+        case 's': {
+          const [arg] = args.splice(argumentsPointer, 1);
+          template += arg.toString();
+        }
+      }
+    }
+
+    return [template, ...args];
+  }
 
   let unpatchFn = null;
 
@@ -225,13 +287,9 @@ export function installHook(target: any): DevToolsHook | null {
   // React and DevTools are connecting and the renderer interface isn't avaiable
   // and we want to be able to have consistent logging behavior for double logs
   // during the initial renderer.
-  function patchConsoleForInitialRenderInStrictMode({
-    hideConsoleLogsInStrictMode,
-    browserTheme,
-  }: {
+  function patchConsoleForInitialCommitInStrictMode(
     hideConsoleLogsInStrictMode: boolean,
-    browserTheme: BrowserTheme,
-  }) {
+  ) {
     const overrideConsoleMethods = [
       'error',
       'group',
@@ -266,36 +324,18 @@ export function installHook(target: any): DevToolsHook | null {
           : targetConsole[method]);
 
         const overrideMethod = (...args: $ReadOnlyArray<any>) => {
+          // Dim the text color of the double logs if we're not hiding them.
           if (!hideConsoleLogsInStrictMode) {
-            // Dim the text color of the double logs if we're not
-            // hiding them.
-            let color;
-            switch (method) {
-              case 'warn':
-                color =
-                  browserTheme === 'light'
-                    ? process.env.LIGHT_MODE_DIMMED_WARNING_COLOR
-                    : process.env.DARK_MODE_DIMMED_WARNING_COLOR;
-                break;
-              case 'error':
-                color =
-                  browserTheme === 'light'
-                    ? process.env.LIGHT_MODE_DIMMED_ERROR_COLOR
-                    : process.env.DARK_MODE_DIMMED_ERROR_COLOR;
-                break;
-              case 'log':
-              default:
-                color =
-                  browserTheme === 'light'
-                    ? process.env.LIGHT_MODE_DIMMED_LOG_COLOR
-                    : process.env.DARK_MODE_DIMMED_LOG_COLOR;
-                break;
-            }
-
-            if (color) {
-              originalMethod(...formatWithStyles(args, `color: ${color}`));
+            // Firefox doesn't support ANSI escape sequences
+            if (__IS_FIREFOX__) {
+              originalMethod(
+                ...formatWithStyles(args, FIREFOX_CONSOLE_DIMMING_COLOR),
+              );
             } else {
-              throw Error('Console color is not defined');
+              originalMethod(
+                ANSI_STYLE_DIMMING_TEMPLATE,
+                ...formatConsoleArguments(...args),
+              );
             }
           }
         };
@@ -311,7 +351,7 @@ export function installHook(target: any): DevToolsHook | null {
   }
 
   // NOTE: KEEP IN SYNC with src/backend/console.js:unpatchForStrictMode
-  function unpatchConsoleForInitialRenderInStrictMode() {
+  function unpatchConsoleForInitialCommitInStrictMode() {
     if (unpatchFn !== null) {
       unpatchFn();
       unpatchFn = null;
@@ -319,7 +359,6 @@ export function installHook(target: any): DevToolsHook | null {
   }
 
   let uidCounter = 0;
-
   function inject(renderer: ReactRenderer): number {
     const id = ++uidCounter;
     renderers.set(id, renderer);
@@ -328,38 +367,20 @@ export function installHook(target: any): DevToolsHook | null {
       ? 'deadcode'
       : detectReactBuildType(renderer);
 
-    // Patching the console enables DevTools to do a few useful things:
-    // * Append component stacks to warnings and error messages
-    // * Disabling or marking logs during a double render in Strict Mode
-    // * Disable logging during re-renders to inspect hooks (see inspectHooksOfFiber)
-    //
-    // Allow patching console early (during injection) to
-    // provide developers with components stacks even if they don't run DevTools.
-    if (target.hasOwnProperty('__REACT_DEVTOOLS_CONSOLE_FUNCTIONS__')) {
-      const {registerRendererWithConsole, patchConsoleUsingWindowValues} =
-        target.__REACT_DEVTOOLS_CONSOLE_FUNCTIONS__;
-      if (
-        typeof registerRendererWithConsole === 'function' &&
-        typeof patchConsoleUsingWindowValues === 'function'
-      ) {
-        registerRendererWithConsole(renderer);
-        patchConsoleUsingWindowValues();
-      }
-    }
-
-    // If we have just reloaded to profile, we need to inject the renderer interface before the app loads.
-    // Otherwise the renderer won't yet exist and we can skip this step.
-    const attach = target.__REACT_DEVTOOLS_ATTACH__;
-    if (typeof attach === 'function') {
-      const rendererInterface = attach(hook, id, renderer, target);
-      hook.rendererInterfaces.set(id, rendererInterface);
-    }
-
     hook.emit('renderer', {
       id,
       renderer,
       reactBuildType,
     });
+
+    const rendererInterface = attachRenderer(hook, id, renderer, target);
+    if (rendererInterface != null) {
+      hook.rendererInterfaces.set(id, rendererInterface);
+      hook.emit('renderer-attached', {id, rendererInterface});
+    } else {
+      hook.hasUnsupportedRendererAttached = true;
+      hook.emit('unsupported-renderer-version');
+    }
 
     return id;
   }
@@ -451,19 +472,15 @@ export function installHook(target: any): DevToolsHook | null {
         rendererInterface.unpatchConsoleForStrictMode();
       }
     } else {
-      // This should only happen during initial render in the extension before DevTools
+      // This should only happen during initial commit in the extension before DevTools
       // finishes its handshake with the injected renderer
       if (isStrictMode) {
         const hideConsoleLogsInStrictMode =
           window.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ === true;
-        const browserTheme = window.__REACT_DEVTOOLS_BROWSER_THEME__;
 
-        patchConsoleForInitialRenderInStrictMode({
-          hideConsoleLogsInStrictMode,
-          browserTheme,
-        });
+        patchConsoleForInitialCommitInStrictMode(hideConsoleLogsInStrictMode);
       } else {
-        unpatchConsoleForInitialRenderInStrictMode();
+        unpatchConsoleForInitialCommitInStrictMode();
       }
     }
   }
@@ -497,6 +514,7 @@ export function installHook(target: any): DevToolsHook | null {
       const startStackFrame = openModuleRangesStack.pop();
       const stopStackFrame = getTopStackFrameString(error);
       if (stopStackFrame !== null) {
+        // $FlowFixMe[incompatible-call]
         moduleRanges.push([startStackFrame, stopStackFrame]);
       }
     }
@@ -517,6 +535,7 @@ export function installHook(target: any): DevToolsHook | null {
 
     // Fast Refresh for web relies on this.
     renderers,
+    hasUnsupportedRendererAttached: false,
 
     emit,
     getFiberRoots,
@@ -528,6 +547,9 @@ export function installHook(target: any): DevToolsHook | null {
     // This is a legacy flag.
     // React v16 checks the hook for this to ensure DevTools is new enough.
     supportsFiber: true,
+
+    // React Flight Client checks the hook for this to ensure DevTools is new enough.
+    supportsFlight: true,
 
     // React calls these methods.
     checkDCE,

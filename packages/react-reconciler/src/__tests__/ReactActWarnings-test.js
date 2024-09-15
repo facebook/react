@@ -28,7 +28,7 @@ describe('act warnings', () => {
     React = require('react');
     Scheduler = require('scheduler');
     ReactNoop = require('react-noop-renderer');
-    act = React.unstable_act;
+    act = React.act;
     useState = React.useState;
     Suspense = React.Suspense;
     startTransition = React.startTransition;
@@ -150,7 +150,7 @@ describe('act warnings', () => {
     }
   }
 
-  test('warns about unwrapped updates only if environment flag is enabled', async () => {
+  it('warns about unwrapped updates only if environment flag is enabled', async () => {
     let setState;
     function App() {
       const [state, _setState] = useState(0);
@@ -187,7 +187,7 @@ describe('act warnings', () => {
   });
 
   // @gate __DEV__
-  test('act warns if the environment flag is not enabled', async () => {
+  it('act warns if the environment flag is not enabled', async () => {
     let setState;
     function App() {
       const [state, _setState] = useState(0);
@@ -237,7 +237,7 @@ describe('act warnings', () => {
     });
   });
 
-  test('warns if root update is not wrapped', async () => {
+  it('warns if root update is not wrapped', async () => {
     await withActEnvironment(true, () => {
       const root = ReactNoop.createRoot();
       expect(() => root.render('Hi')).toErrorDev(
@@ -250,7 +250,7 @@ describe('act warnings', () => {
   });
 
   // @gate __DEV__
-  test('warns if class update is not wrapped', async () => {
+  it('warns if class update is not wrapped', async () => {
     let app;
     class App extends React.Component {
       state = {count: 0};
@@ -272,7 +272,7 @@ describe('act warnings', () => {
   });
 
   // @gate __DEV__
-  test('warns even if update is synchronous', async () => {
+  it('warns even if update is synchronous', async () => {
     let setState;
     function App() {
       const [state, _setState] = useState(0);
@@ -299,7 +299,7 @@ describe('act warnings', () => {
 
   // @gate __DEV__
   // @gate enableLegacyCache
-  test('warns if Suspense retry is not wrapped', async () => {
+  it('warns if Suspense retry is not wrapped', async () => {
     function App() {
       return (
         <Suspense fallback={<Text text="Loading..." />}>
@@ -313,13 +313,23 @@ describe('act warnings', () => {
       act(() => {
         root.render(<App />);
       });
-      assertLog(['Suspend! [Async]', 'Loading...']);
+      assertLog([
+        'Suspend! [Async]',
+        'Loading...',
+
+        ...(gate('enableSiblingPrerendering') ? ['Suspend! [Async]'] : []),
+      ]);
       expect(root).toMatchRenderedOutput('Loading...');
 
       // This is a retry, not a ping, because we already showed a fallback.
       expect(() => resolveText('Async')).toErrorDev(
-        'A suspended resource finished loading inside a test, but the event ' +
-          'was not wrapped in act(...)',
+        [
+          'A suspended resource finished loading inside a test, but the event ' +
+            'was not wrapped in act(...)',
+
+          ...(gate('enableSiblingPrerendering') ? ['not wrapped in act'] : []),
+        ],
+
         {withoutStack: true},
       );
     });
@@ -327,7 +337,7 @@ describe('act warnings', () => {
 
   // @gate __DEV__
   // @gate enableLegacyCache
-  test('warns if Suspense ping is not wrapped', async () => {
+  it('warns if Suspense ping is not wrapped', async () => {
     function App({showMore}) {
       return (
         <Suspense fallback={<Text text="Loading..." />}>

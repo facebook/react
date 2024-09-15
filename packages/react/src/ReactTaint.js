@@ -13,13 +13,13 @@ import getPrototypeOf from 'shared/getPrototypeOf';
 
 import binaryToComparableString from 'shared/binaryToComparableString';
 
-import ReactServerSharedInternals from './ReactServerSharedInternals';
+import ReactSharedInternals from './ReactSharedInternalsServer';
 const {
   TaintRegistryObjects,
   TaintRegistryValues,
   TaintRegistryByteLengths,
   TaintRegistryPendingRequests,
-} = ReactServerSharedInternals;
+} = ReactSharedInternals;
 
 interface Reference {}
 

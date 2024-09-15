@@ -1,0 +1,36 @@
+---
+source: crates/react_fixtures/tests/fixtures_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_fixtures/tests/fixtures/use-memo.js
+---
+Input:
+import { useMemo } from "react";
+
+function Component(x) {
+  const y = useMemo(() => {
+    return x;
+  });
+  return y;
+}
+
+
+Output:
+function Component(
+  unknown x$10,
+)
+entry bb0
+bb0 (block)
+  [0] unknown $11 = LoadGlobal useMemo
+  [1] unknown $20 = DeclareLocal Let unknown t$18
+  [2] Label block=bb1 fallthrough=bb6
+bb1 (block)
+  predecessors: bb0
+  [3] unknown $13 = LoadLocal unknown x$10
+  [4] unknown $19 = StoreLocal Reassign unknown t$18 = unknown $13
+  [5] Goto bb6
+bb6 (block)
+  predecessors: bb1
+  [6] unknown $14 = LoadLocal unknown t$18
+  [7] unknown $16 = StoreLocal Const unknown y$15 = unknown $14
+  [8] unknown $17 = LoadLocal unknown y$15
+  [9] Return unknown $17

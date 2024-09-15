@@ -1,0 +1,203 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/ssa-while-no-reassign.js
+---
+Input:
+function foo() {
+  let x = 1;
+  while (x < 10) {
+    x + 1;
+  }
+
+  return x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "foo",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          12
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    23,
+                    24
+                  ]
+                },
+                "init": {
+                  "type": "NumericLiteral",
+                  "value": 1.0,
+                  "loc": null,
+                  "range": [
+                    27,
+                    28
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  23,
+                  28
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              19,
+              29
+            ]
+          },
+          {
+            "type": "WhileStatement",
+            "test": {
+              "type": "BinaryExpression",
+              "left": {
+                "type": "Identifier",
+                "name": "x",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  39,
+                  40
+                ]
+              },
+              "operator": "<",
+              "right": {
+                "type": "NumericLiteral",
+                "value": 10.0,
+                "loc": null,
+                "range": [
+                  43,
+                  45
+                ]
+              },
+              "loc": null,
+              "range": [
+                39,
+                45
+              ]
+            },
+            "body": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "BinaryExpression",
+                    "left": {
+                      "type": "Identifier",
+                      "name": "x",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        53,
+                        54
+                      ]
+                    },
+                    "operator": "+",
+                    "right": {
+                      "type": "NumericLiteral",
+                      "value": 1.0,
+                      "loc": null,
+                      "range": [
+                        57,
+                        58
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      53,
+                      58
+                    ]
+                  },
+                  "directive": null,
+                  "loc": null,
+                  "range": [
+                    53,
+                    59
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                47,
+                63
+              ]
+            },
+            "loc": null,
+            "range": [
+              32,
+              63
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                74,
+                75
+              ]
+            },
+            "loc": null,
+            "range": [
+              67,
+              76
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          15,
+          78
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        78
+      ],
+      "loc": null,
+      "range": [
+        0,
+        78
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    78
+  ]
+}

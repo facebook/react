@@ -9,10 +9,11 @@
 
 import {
   REACT_CONTEXT_TYPE,
+  REACT_CONSUMER_TYPE,
+  REACT_PROVIDER_TYPE,
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_PROFILER_TYPE,
-  REACT_PROVIDER_TYPE,
   REACT_DEBUG_TRACING_MODE_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
@@ -22,19 +23,20 @@ import {
   REACT_SCOPE_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
   REACT_OFFSCREEN_TYPE,
-  REACT_CACHE_TYPE,
   REACT_TRACING_MARKER_TYPE,
 } from 'shared/ReactSymbols';
 import {
   enableScopeAPI,
-  enableCacheElement,
   enableTransitionTracing,
   enableDebugTracing,
   enableLegacyHidden,
+  enableRenderableContext,
 } from './ReactFeatureFlags';
 
 const REACT_CLIENT_REFERENCE: symbol = Symbol.for('react.client.reference');
 
+// This function is deprecated. Don't use. Only the renderer knows what a valid type is.
+// TODO: Delete this when enableOwnerStacks ships.
 export default function isValidElementType(type: mixed): boolean {
   if (typeof type === 'string' || typeof type === 'function') {
     return true;
@@ -51,7 +53,6 @@ export default function isValidElementType(type: mixed): boolean {
     (enableLegacyHidden && type === REACT_LEGACY_HIDDEN_TYPE) ||
     type === REACT_OFFSCREEN_TYPE ||
     (enableScopeAPI && type === REACT_SCOPE_TYPE) ||
-    (enableCacheElement && type === REACT_CACHE_TYPE) ||
     (enableTransitionTracing && type === REACT_TRACING_MARKER_TYPE)
   ) {
     return true;
@@ -61,8 +62,9 @@ export default function isValidElementType(type: mixed): boolean {
     if (
       type.$$typeof === REACT_LAZY_TYPE ||
       type.$$typeof === REACT_MEMO_TYPE ||
-      type.$$typeof === REACT_PROVIDER_TYPE ||
       type.$$typeof === REACT_CONTEXT_TYPE ||
+      (!enableRenderableContext && type.$$typeof === REACT_PROVIDER_TYPE) ||
+      (enableRenderableContext && type.$$typeof === REACT_CONSUMER_TYPE) ||
       type.$$typeof === REACT_FORWARD_REF_TYPE ||
       // This needs to include all possible module reference object
       // types supported by any Flight configuration anywhere since

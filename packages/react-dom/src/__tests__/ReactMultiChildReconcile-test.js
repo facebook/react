@@ -10,7 +10,8 @@
 'use strict';
 
 const React = require('react');
-const ReactDOM = require('react-dom');
+const ReactDOMClient = require('react-dom/client');
+const act = require('internal-test-utils').act;
 
 const stripEmptyValues = function (obj) {
   const ret = {};
@@ -221,24 +222,40 @@ function verifyDomOrderingAccurate(outerContainer, statusDisplays) {
   expect(orderedDomKeys).toEqual(orderedLogicalKeys);
 }
 
-function testPropsSequenceWithPreparedChildren(sequence, prepareChildren) {
+async function testPropsSequenceWithPreparedChildren(
+  sequence,
+  prepareChildren,
+) {
   const container = document.createElement('div');
-  const parentInstance = ReactDOM.render(
-    <FriendsStatusDisplay {...sequence[0]} prepareChildren={prepareChildren} />,
-    container,
-  );
+  const root = ReactDOMClient.createRoot(container);
+  let parentInstance;
+  await act(() => {
+    root.render(
+      <FriendsStatusDisplay
+        {...sequence[0]}
+        prepareChildren={prepareChildren}
+        ref={current => {
+          if (parentInstance === undefined) {
+            parentInstance = current;
+          }
+        }}
+      />,
+    );
+  });
   let statusDisplays = parentInstance.getStatusDisplays();
   let lastInternalStates = getInternalStateByUserName(statusDisplays);
   verifyStatuses(statusDisplays, sequence[0]);
 
   for (let i = 1; i < sequence.length; i++) {
-    ReactDOM.render(
-      <FriendsStatusDisplay
-        {...sequence[i]}
-        prepareChildren={prepareChildren}
-      />,
-      container,
-    );
+    await act(() => {
+      root.render(
+        <FriendsStatusDisplay
+          {...sequence[i]}
+          prepareChildren={prepareChildren}
+        />,
+      );
+    });
+
     statusDisplays = parentInstance.getStatusDisplays();
     verifyStatuses(statusDisplays, sequence[i]);
     verifyStatesPreserved(lastInternalStates, statusDisplays);
@@ -274,13 +291,13 @@ function prepareChildrenModernIterable(childrenArray) {
   };
 }
 
-function testPropsSequence(sequence) {
-  testPropsSequenceWithPreparedChildren(sequence, prepareChildrenArray);
-  testPropsSequenceWithPreparedChildren(
+async function testPropsSequence(sequence) {
+  await testPropsSequenceWithPreparedChildren(sequence, prepareChildrenArray);
+  await testPropsSequenceWithPreparedChildren(
     sequence,
     prepareChildrenLegacyIterable,
   );
-  testPropsSequenceWithPreparedChildren(
+  await testPropsSequenceWithPreparedChildren(
     sequence,
     prepareChildrenModernIterable,
   );
@@ -291,7 +308,7 @@ describe('ReactMultiChildReconcile', () => {
     jest.resetModules();
   });
 
-  it('should reset internal state if removed then readded in an array', () => {
+  it('should reset internal state if removed then readded in an array', async () => {
     // Test basics.
     const props = {
       usernameToStatus: {
@@ -300,32 +317,44 @@ describe('ReactMultiChildReconcile', () => {
     };
 
     const container = document.createElement('div');
-    const parentInstance = ReactDOM.render(
-      <FriendsStatusDisplay
-        {...props}
-        prepareChildren={prepareChildrenArray}
-      />,
-      container,
-    );
+    const root = ReactDOMClient.createRoot(container);
+    let parentInstance;
+    await act(() => {
+      root.render(
+        <FriendsStatusDisplay
+          {...props}
+          prepareChildren={prepareChildrenArray}
+          ref={current => {
+            if (parentInstance === undefined) {
+              parentInstance = current;
+            }
+          }}
+        />,
+      );
+    });
     let statusDisplays = parentInstance.getStatusDisplays();
     const startingInternalState = statusDisplays.jcw.getInternalState();
 
     // Now remove the child.
-    ReactDOM.render(
-      <FriendsStatusDisplay prepareChildren={prepareChildrenArray} />,
-      container,
-    );
+    await act(() => {
+      root.render(
+        <FriendsStatusDisplay prepareChildren={prepareChildrenArray} />,
+      );
+    });
+
     statusDisplays = parentInstance.getStatusDisplays();
     expect(statusDisplays.jcw).toBeFalsy();
 
     // Now reset the props that cause there to be a child
-    ReactDOM.render(
-      <FriendsStatusDisplay
-        {...props}
-        prepareChildren={prepareChildrenArray}
-      />,
-      container,
-    );
+    await act(() => {
+      root.render(
+        <FriendsStatusDisplay
+          {...props}
+          prepareChildren={prepareChildrenArray}
+        />,
+      );
+    });
+
     statusDisplays = parentInstance.getStatusDisplays();
     expect(statusDisplays.jcw).toBeTruthy();
     expect(statusDisplays.jcw.getInternalState()).not.toBe(
@@ -333,7 +362,7 @@ describe('ReactMultiChildReconcile', () => {
     );
   });
 
-  it('should reset internal state if removed then readded in a legacy iterable', () => {
+  it('should reset internal state if removed then readded in a legacy iterable', async () => {
     // Test basics.
     const props = {
       usernameToStatus: {
@@ -342,32 +371,47 @@ describe('ReactMultiChildReconcile', () => {
     };
 
     const container = document.createElement('div');
-    const parentInstance = ReactDOM.render(
-      <FriendsStatusDisplay
-        {...props}
-        prepareChildren={prepareChildrenLegacyIterable}
-      />,
-      container,
-    );
+    const root = ReactDOMClient.createRoot(container);
+    let parentInstance;
+    await act(() => {
+      root.render(
+        <FriendsStatusDisplay
+          {...props}
+          prepareChildren={prepareChildrenLegacyIterable}
+          ref={current => {
+            if (parentInstance === undefined) {
+              parentInstance = current;
+            }
+          }}
+        />,
+      );
+    });
+
     let statusDisplays = parentInstance.getStatusDisplays();
     const startingInternalState = statusDisplays.jcw.getInternalState();
 
     // Now remove the child.
-    ReactDOM.render(
-      <FriendsStatusDisplay prepareChildren={prepareChildrenLegacyIterable} />,
-      container,
-    );
+    await act(() => {
+      root.render(
+        <FriendsStatusDisplay
+          prepareChildren={prepareChildrenLegacyIterable}
+        />,
+      );
+    });
+
     statusDisplays = parentInstance.getStatusDisplays();
     expect(statusDisplays.jcw).toBeFalsy();
 
     // Now reset the props that cause there to be a child
-    ReactDOM.render(
-      <FriendsStatusDisplay
-        {...props}
-        prepareChildren={prepareChildrenLegacyIterable}
-      />,
-      container,
-    );
+    await act(() => {
+      root.render(
+        <FriendsStatusDisplay
+          {...props}
+          prepareChildren={prepareChildrenLegacyIterable}
+        />,
+      );
+    });
+
     statusDisplays = parentInstance.getStatusDisplays();
     expect(statusDisplays.jcw).toBeTruthy();
     expect(statusDisplays.jcw.getInternalState()).not.toBe(
@@ -375,7 +419,7 @@ describe('ReactMultiChildReconcile', () => {
     );
   });
 
-  it('should reset internal state if removed then readded in a modern iterable', () => {
+  it('should reset internal state if removed then readded in a modern iterable', async () => {
     // Test basics.
     const props = {
       usernameToStatus: {
@@ -384,32 +428,47 @@ describe('ReactMultiChildReconcile', () => {
     };
 
     const container = document.createElement('div');
-    const parentInstance = ReactDOM.render(
-      <FriendsStatusDisplay
-        {...props}
-        prepareChildren={prepareChildrenModernIterable}
-      />,
-      container,
-    );
+    const root = ReactDOMClient.createRoot(container);
+    let parentInstance;
+    await act(() => {
+      root.render(
+        <FriendsStatusDisplay
+          {...props}
+          prepareChildren={prepareChildrenModernIterable}
+          ref={current => {
+            if (parentInstance === undefined) {
+              parentInstance = current;
+            }
+          }}
+        />,
+      );
+    });
+
     let statusDisplays = parentInstance.getStatusDisplays();
     const startingInternalState = statusDisplays.jcw.getInternalState();
 
     // Now remove the child.
-    ReactDOM.render(
-      <FriendsStatusDisplay prepareChildren={prepareChildrenModernIterable} />,
-      container,
-    );
+    await act(() => {
+      root.render(
+        <FriendsStatusDisplay
+          prepareChildren={prepareChildrenModernIterable}
+        />,
+      );
+    });
+
     statusDisplays = parentInstance.getStatusDisplays();
     expect(statusDisplays.jcw).toBeFalsy();
 
     // Now reset the props that cause there to be a child
-    ReactDOM.render(
-      <FriendsStatusDisplay
-        {...props}
-        prepareChildren={prepareChildrenModernIterable}
-      />,
-      container,
-    );
+    await act(() => {
+      root.render(
+        <FriendsStatusDisplay
+          {...props}
+          prepareChildren={prepareChildrenModernIterable}
+        />,
+      );
+    });
+
     statusDisplays = parentInstance.getStatusDisplays();
     expect(statusDisplays.jcw).toBeTruthy();
     expect(statusDisplays.jcw.getInternalState()).not.toBe(
@@ -417,7 +476,7 @@ describe('ReactMultiChildReconcile', () => {
     );
   });
 
-  it('should create unique identity', () => {
+  it('should create unique identity', async () => {
     // Test basics.
     const usernameToStatus = {
       jcw: 'jcwStatus',
@@ -425,10 +484,10 @@ describe('ReactMultiChildReconcile', () => {
       bob: 'bobStatus',
     };
 
-    testPropsSequence([{usernameToStatus: usernameToStatus}]);
+    await testPropsSequence([{usernameToStatus: usernameToStatus}]);
   });
 
-  it('should preserve order if children order has not changed', () => {
+  it('should preserve order if children order has not changed', async () => {
     const PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -443,10 +502,10 @@ describe('ReactMultiChildReconcile', () => {
         },
       },
     ];
-    testPropsSequence(PROPS_SEQUENCE);
+    await testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should transition from zero to one children correctly', () => {
+  it('should transition from zero to one children correctly', async () => {
     const PROPS_SEQUENCE = [
       {usernameToStatus: {}},
       {
@@ -455,10 +514,10 @@ describe('ReactMultiChildReconcile', () => {
         },
       },
     ];
-    testPropsSequence(PROPS_SEQUENCE);
+    await testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should transition from one to zero children correctly', () => {
+  it('should transition from one to zero children correctly', async () => {
     const PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -467,11 +526,11 @@ describe('ReactMultiChildReconcile', () => {
       },
       {usernameToStatus: {}},
     ];
-    testPropsSequence(PROPS_SEQUENCE);
+    await testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should transition from one child to null children', () => {
-    testPropsSequence([
+  it('should transition from one child to null children', async () => {
+    await testPropsSequence([
       {
         usernameToStatus: {
           first: 'firstStatus',
@@ -481,8 +540,8 @@ describe('ReactMultiChildReconcile', () => {
     ]);
   });
 
-  it('should transition from null children to one child', () => {
-    testPropsSequence([
+  it('should transition from null children to one child', async () => {
+    await testPropsSequence([
       {},
       {
         usernameToStatus: {
@@ -492,8 +551,8 @@ describe('ReactMultiChildReconcile', () => {
     ]);
   });
 
-  it('should transition from zero children to null children', () => {
-    testPropsSequence([
+  it('should transition from zero children to null children', async () => {
+    await testPropsSequence([
       {
         usernameToStatus: {},
       },
@@ -501,8 +560,8 @@ describe('ReactMultiChildReconcile', () => {
     ]);
   });
 
-  it('should transition from null children to zero children', () => {
-    testPropsSequence([
+  it('should transition from null children to zero children', async () => {
+    await testPropsSequence([
       {},
       {
         usernameToStatus: {},
@@ -514,7 +573,7 @@ describe('ReactMultiChildReconcile', () => {
    * `FriendsStatusDisplay` renders nulls as empty children (it's a convention
    * of `FriendsStatusDisplay`, nothing related to React or these test cases.
    */
-  it('should remove nulled out children at the beginning', () => {
+  it('should remove nulled out children at the beginning', async () => {
     const PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -529,10 +588,10 @@ describe('ReactMultiChildReconcile', () => {
         },
       },
     ];
-    testPropsSequence(PROPS_SEQUENCE);
+    await testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should remove nulled out children at the end', () => {
+  it('should remove nulled out children at the end', async () => {
     const PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -547,10 +606,10 @@ describe('ReactMultiChildReconcile', () => {
         },
       },
     ];
-    testPropsSequence(PROPS_SEQUENCE);
+    await testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should reverse the order of two children', () => {
+  it('should reverse the order of two children', async () => {
     const PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -565,10 +624,10 @@ describe('ReactMultiChildReconcile', () => {
         },
       },
     ];
-    testPropsSequence(PROPS_SEQUENCE);
+    await testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should reverse the order of more than two children', () => {
+  it('should reverse the order of more than two children', async () => {
     const PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -585,10 +644,10 @@ describe('ReactMultiChildReconcile', () => {
         },
       },
     ];
-    testPropsSequence(PROPS_SEQUENCE);
+    await testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should cycle order correctly', () => {
+  it('should cycle order correctly', async () => {
     const PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -632,10 +691,10 @@ describe('ReactMultiChildReconcile', () => {
         },
       },
     ];
-    testPropsSequence(PROPS_SEQUENCE);
+    await testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should cycle order correctly in the other direction', () => {
+  it('should cycle order correctly in the other direction', async () => {
     const PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -679,10 +738,10 @@ describe('ReactMultiChildReconcile', () => {
         },
       },
     ];
-    testPropsSequence(PROPS_SEQUENCE);
+    await testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should remove nulled out children and ignore new null children', () => {
+  it('should remove nulled out children and ignore new null children', async () => {
     const PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -698,10 +757,10 @@ describe('ReactMultiChildReconcile', () => {
         },
       },
     ];
-    testPropsSequence(PROPS_SEQUENCE);
+    await testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should remove nulled out children and reorder remaining', () => {
+  it('should remove nulled out children and reorder remaining', async () => {
     const PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -719,10 +778,10 @@ describe('ReactMultiChildReconcile', () => {
         },
       },
     ];
-    testPropsSequence(PROPS_SEQUENCE);
+    await testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should append children to the end', () => {
+  it('should append children to the end', async () => {
     const PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -738,10 +797,10 @@ describe('ReactMultiChildReconcile', () => {
         },
       },
     ];
-    testPropsSequence(PROPS_SEQUENCE);
+    await testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should append multiple children to the end', () => {
+  it('should append multiple children to the end', async () => {
     const PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -758,10 +817,10 @@ describe('ReactMultiChildReconcile', () => {
         },
       },
     ];
-    testPropsSequence(PROPS_SEQUENCE);
+    await testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should prepend children to the beginning', () => {
+  it('should prepend children to the beginning', async () => {
     const PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -777,10 +836,10 @@ describe('ReactMultiChildReconcile', () => {
         },
       },
     ];
-    testPropsSequence(PROPS_SEQUENCE);
+    await testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should prepend multiple children to the beginning', () => {
+  it('should prepend multiple children to the beginning', async () => {
     const PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -797,10 +856,10 @@ describe('ReactMultiChildReconcile', () => {
         },
       },
     ];
-    testPropsSequence(PROPS_SEQUENCE);
+    await testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should not prepend an empty child to the beginning', () => {
+  it('should not prepend an empty child to the beginning', async () => {
     const PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -816,10 +875,10 @@ describe('ReactMultiChildReconcile', () => {
         },
       },
     ];
-    testPropsSequence(PROPS_SEQUENCE);
+    await testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should not append an empty child to the end', () => {
+  it('should not append an empty child to the end', async () => {
     const PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -835,10 +894,10 @@ describe('ReactMultiChildReconcile', () => {
         },
       },
     ];
-    testPropsSequence(PROPS_SEQUENCE);
+    await testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should not insert empty children in the middle', () => {
+  it('should not insert empty children in the middle', async () => {
     const PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -856,10 +915,10 @@ describe('ReactMultiChildReconcile', () => {
         },
       },
     ];
-    testPropsSequence(PROPS_SEQUENCE);
+    await testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should insert one new child in the middle', () => {
+  it('should insert one new child in the middle', async () => {
     const PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -875,10 +934,10 @@ describe('ReactMultiChildReconcile', () => {
         },
       },
     ];
-    testPropsSequence(PROPS_SEQUENCE);
+    await testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should insert multiple new truthy children in the middle', () => {
+  it('should insert multiple new truthy children in the middle', async () => {
     const PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -896,10 +955,10 @@ describe('ReactMultiChildReconcile', () => {
         },
       },
     ];
-    testPropsSequence(PROPS_SEQUENCE);
+    await testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should insert non-empty children in middle where nulls were', () => {
+  it('should insert non-empty children in middle where nulls were', async () => {
     const PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -920,6 +979,6 @@ describe('ReactMultiChildReconcile', () => {
         },
       },
     ];
-    testPropsSequence(PROPS_SEQUENCE);
+    await testPropsSequence(PROPS_SEQUENCE);
   });
 });
