@@ -22,6 +22,7 @@ import {
   reportGlobalError,
   processBinaryChunk,
   close,
+  injectIntoDevTools,
 } from 'react-client/src/ReactFlightClient';
 
 import {
@@ -142,3 +143,7 @@ export {
   encodeReply,
   createServerReference,
 };
+
+if (__DEV__) {
+  injectIntoDevTools();
+}

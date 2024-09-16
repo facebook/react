@@ -25,14 +25,6 @@ const contentScriptsToInject = [
     runAt: 'document_start',
     world: chrome.scripting.ExecutionWorld.MAIN,
   },
-  {
-    id: '@react-devtools/renderer',
-    js: ['build/renderer.js'],
-    matches: ['<all_urls>'],
-    persistAcrossSessions: true,
-    runAt: 'document_start',
-    world: chrome.scripting.ExecutionWorld.MAIN,
-  },
 ];
 
 async function dynamicallyInjectContentScripts() {

@@ -1,4 +1,4 @@
-// @validatePreserveExistingMemoizationGuarantees @enableOptionalDependencies @enablePropagateDepsInHIR:false
+// @validatePreserveExistingMemoizationGuarantees @enableOptionalDependencies
 import {ValidateMemoization} from 'shared-runtime';
 function Component(props) {
   const data = useMemo(() => {

@@ -3,7 +3,7 @@
 
 ```javascript
 import {arrayPush} from 'shared-runtime';
-function foo(props) {
+function useFoo(props) {
   let x = [];
   x.push(props.bar);
   props.cond
@@ -14,7 +14,7 @@ function foo(props) {
 }
 
 export const FIXTURE_ENTRYPOINT = {
-  fn: foo,
+  fn: useFoo,
   params: [{cond: false, foo: 2, bar: 55}],
   sequentialRenders: [
     {cond: false, foo: 2, bar: 55},
@@ -30,7 +30,7 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 import { arrayPush } from "shared-runtime";
-function foo(props) {
+function useFoo(props) {
   const $ = _c(2);
   let x;
   if ($[0] !== props) {
@@ -47,7 +47,7 @@ function foo(props) {
 }
 
 export const FIXTURE_ENTRYPOINT = {
-  fn: foo,
+  fn: useFoo,
   params: [{ cond: false, foo: 2, bar: 55 }],
   sequentialRenders: [
     { cond: false, foo: 2, bar: 55 },

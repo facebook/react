@@ -7,6 +7,9 @@
  * @flow
  */
 
+export {default as rendererVersion} from 'shared/ReactVersion';
+export const rendererPackageName = 'react-server-dom-bun';
+
 export * from 'react-client/src/ReactFlightClientStreamConfigWeb';
 export * from 'react-client/src/ReactClientConsoleConfigPlain';
 export * from 'react-dom-bindings/src/shared/ReactFlightClientConfigDOM';

@@ -420,8 +420,6 @@ describe('ReactDeferredValue', () => {
         // The initial value suspended, so we attempt the final value, which
         // also suspends.
         'Suspend! [Final]',
-
-        ...(gate('enableSiblingPrerendering') ? ['Suspend! [Final]'] : []),
       ]);
       expect(root).toMatchRenderedOutput(null);
 
@@ -461,8 +459,6 @@ describe('ReactDeferredValue', () => {
         // The initial value suspended, so we attempt the final value, which
         // also suspends.
         'Suspend! [Final]',
-
-        ...(gate('enableSiblingPrerendering') ? ['Suspend! [Final]'] : []),
       ]);
       expect(root).toMatchRenderedOutput(null);
 
@@ -503,6 +499,8 @@ describe('ReactDeferredValue', () => {
         // The initial value suspended, so we attempt the final value, which
         // also suspends.
         'Suspend! [Final]',
+
+        ...(gate('enableSiblingPrerendering') ? ['Suspend! [Final]'] : []),
       ]);
       expect(root).toMatchRenderedOutput('Fallback');
 
@@ -535,8 +533,6 @@ describe('ReactDeferredValue', () => {
         // The initial value suspended, so we attempt the final value, which
         // also suspends.
         'Suspend! [Final]',
-
-        ...(gate('enableSiblingPrerendering') ? ['Suspend! [Final]'] : []),
       ]);
       expect(root).toMatchRenderedOutput(null);
 
@@ -546,8 +542,6 @@ describe('ReactDeferredValue', () => {
         'Loading...',
         // Still waiting for the final value.
         'Suspend! [Final]',
-
-        ...(gate('enableSiblingPrerendering') ? ['Suspend! [Final]'] : []),
       ]);
       expect(root).toMatchRenderedOutput('Loading...');
 
@@ -592,8 +586,6 @@ describe('ReactDeferredValue', () => {
         // boundaries work, where we always prefer to show the innermost
         // loading state.)
         'Suspend! [Content]',
-
-        ...(gate('enableSiblingPrerendering') ? ['Suspend! [Content]'] : []),
       ]);
       // Still showing the App preview state because the inner
       // content suspended.
@@ -640,6 +632,8 @@ describe('ReactDeferredValue', () => {
       // go straight to attempting the final value.
       'Suspend! [Content]',
       'Loading...',
+
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Content]'] : []),
     ]);
     // The content suspended, so we show a Suspense fallback
     expect(root).toMatchRenderedOutput('Loading...');
