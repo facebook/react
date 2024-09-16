@@ -124,6 +124,42 @@ export default class DisjointSet<T> {
     return [...sets.values()];
   }
 
+  copy(): DisjointSet<T> {
+    const copy = new DisjointSet<T>();
+    copy.#entries = new Map(this.#entries);
+    return copy;
+  }
+
+  equals(other: DisjointSet<T>): boolean {
+    if (this.size !== other.size) {
+      return false;
+    }
+    const rootMap = new Map<T, T>();
+    for (const item of this.#entries.keys()) {
+      const otherRoot = other.find(item);
+      if (otherRoot === null) {
+        return false;
+      }
+      const thisRoot = this.find(item);
+      CompilerError.invariant(thisRoot != null, {
+        reason: 'Expected item to be in set',
+        loc: null,
+      });
+      if (rootMap.get(thisRoot) == null) {
+        rootMap.set(thisRoot, otherRoot);
+      } else if (rootMap.get(thisRoot) !== otherRoot) {
+        return false;
+      }
+    }
+    for (const item of other.#entries.keys()) {
+      const thisRoot = this.find(item);
+      if (thisRoot === null) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   get size(): number {
     return this.#entries.size;
   }
