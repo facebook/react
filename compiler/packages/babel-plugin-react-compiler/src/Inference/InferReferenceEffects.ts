@@ -47,6 +47,7 @@ import {
   eachTerminalOperand,
   eachTerminalSuccessor,
 } from '../HIR/visitors';
+import DisjointSet from '../Utils/DisjointSet';
 import {assertExhaustive} from '../Utils/utils';
 import {
   inferTerminalFunctionEffects,
@@ -105,7 +106,7 @@ const UndefinedValue: InstructionValue = {
 export default function inferReferenceEffects(
   fn: HIRFunction,
   options: {isFunctionExpression: boolean} = {isFunctionExpression: false},
-): void {
+): DisjointSet<IdentifierId> {
   /*
    * Initial state contains function params
    * TODO: include module declarations here as well
@@ -225,6 +226,7 @@ export default function inferReferenceEffects(
   }
   queue(fn.body.entry, initialState);
 
+  const finishedStates: Map<BlockId, InferenceState> = new Map();
   const functionEffects: Array<FunctionEffect> = fn.effects ?? [];
 
   while (queuedStates.size !== 0) {
@@ -237,6 +239,7 @@ export default function inferReferenceEffects(
 
       statesByBlock.set(blockId, incomingState);
       const state = incomingState.clone();
+      finishedStates.set(blockId, state);
       inferBlock(fn.env, state, block, functionEffects);
 
       for (const nextBlockId of eachTerminalSuccessor(block.terminal)) {
@@ -250,6 +253,12 @@ export default function inferReferenceEffects(
   } else {
     raiseFunctionEffectErrors(functionEffects);
   }
+
+  const summaryState = Array(...finishedStates.values()).reduce(
+    (acc, state) => acc.merge(state) ?? acc,
+  );
+
+  return summaryState.aliases;
 }
 
 type FreezeAction = {values: Set<InstructionValue>; reason: Set<ValueReason>};
@@ -267,18 +276,26 @@ class InferenceState {
    */
   #variables: Map<IdentifierId, Set<InstructionValue>>;
 
+  #aliases: DisjointSet<IdentifierId>;
+
   constructor(
     env: Environment,
     values: Map<InstructionValue, AbstractValue>,
     variables: Map<IdentifierId, Set<InstructionValue>>,
+    aliases: DisjointSet<IdentifierId>,
   ) {
     this.#env = env;
     this.#values = values;
     this.#variables = variables;
+    this.#aliases = aliases;
+  }
+
+  get aliases(): DisjointSet<IdentifierId> {
+    return this.#aliases;
   }
 
   static empty(env: Environment): InferenceState {
-    return new InferenceState(env, new Map(), new Map());
+    return new InferenceState(env, new Map(), new Map(), new DisjointSet());
   }
 
   // (Re)initializes a @param value with its default @param kind.
@@ -338,6 +355,7 @@ class InferenceState {
       suggestions: null,
     });
     this.#variables.set(place.identifier.id, new Set(values));
+    this.#aliases.union([place.identifier.id, value.identifier.id]);
     place.abstractValue = value.abstractValue;
   }
 
@@ -549,6 +567,7 @@ class InferenceState {
   merge(other: InferenceState): InferenceState | null {
     let nextValues: Map<InstructionValue, AbstractValue> | null = null;
     let nextVariables: Map<IdentifierId, Set<InstructionValue>> | null = null;
+    let nextAliases: DisjointSet<IdentifierId> | null = null;
 
     for (const [id, thisValue] of this.#values) {
       const otherValue = other.#values.get(id);
@@ -593,13 +612,21 @@ class InferenceState {
       nextVariables.set(id, new Set(otherValues));
     }
 
-    if (nextVariables === null && nextValues === null) {
+    if (!this.#aliases.equals(other.#aliases)) {
+      nextAliases = this.#aliases.copy();
+      for (const otherAliasSet of other.#aliases.buildSets()) {
+        nextAliases.union(Array(...otherAliasSet));
+      }
+    }
+
+    if (nextVariables === null && nextValues === null && nextAliases === null) {
       return null;
     } else {
       return new InferenceState(
         this.#env,
         nextValues ?? new Map(this.#values),
         nextVariables ?? new Map(this.#variables),
+        nextAliases ?? this.#aliases.copy(),
       );
     }
   }
@@ -614,6 +641,7 @@ class InferenceState {
       this.#env,
       new Map(this.#values),
       new Map(this.#variables),
+      this.#aliases.copy(),
     );
   }
 
