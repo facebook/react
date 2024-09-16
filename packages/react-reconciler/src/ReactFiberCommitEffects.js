@@ -99,6 +99,33 @@ export function commitHookLayoutEffects(
   }
 }
 
+export function commitHookLayoutUnmountEffects(
+  finishedWork: Fiber,
+  nearestMountedAncestor: null | Fiber,
+  hookFlags: HookFlags,
+) {
+  // Layout effects are destroyed during the mutation phase so that all
+  // destroy functions for all fibers are called before any create functions.
+  // This prevents sibling component effects from interfering with each other,
+  // e.g. a destroy function in one component should never override a ref set
+  // by a create function in another component during the same commit.
+  if (shouldProfile(finishedWork)) {
+    startLayoutEffectTimer();
+    commitHookEffectListUnmount(
+      hookFlags,
+      finishedWork,
+      nearestMountedAncestor,
+    );
+    recordLayoutEffectDuration(finishedWork);
+  } else {
+    commitHookEffectListUnmount(
+      hookFlags,
+      finishedWork,
+      nearestMountedAncestor,
+    );
+  }
+}
+
 export function commitHookEffectListMount(
   flags: HookFlags,
   finishedWork: Fiber,
