@@ -316,7 +316,10 @@ function createPropsProperties(
 }
 
 // TODO: Make PROD only with conditional statements
-export function inlineJsxTransform(fn: HIRFunction): void {
+export function inlineJsxTransform(
+  fn: HIRFunction,
+  elementSymbol: 'react.element' | 'react.transitional.element',
+): void {
   for (const [, block] of fn.body.blocks) {
     let nextInstructions: Array<Instruction> | null = null;
     for (let i = 0; i < block.instructions.length; i++) {
@@ -344,11 +347,7 @@ export function inlineJsxTransform(fn: HIRFunction): void {
                   instr,
                   nextInstructions,
                   '$$typeof',
-                  /**
-                   * TODO: Add this to config so we can switch between
-                   * react.element / react.transitional.element
-                   */
-                  'react.transitional.element',
+                  elementSymbol,
                 ),
                 createTagProperty(fn, instr, nextInstructions, instr.value.tag),
                 refProperty,
@@ -384,11 +383,7 @@ export function inlineJsxTransform(fn: HIRFunction): void {
                   instr,
                   nextInstructions,
                   '$$typeof',
-                  /**
-                   * TODO: Add this to config so we can switch between
-                   * react.element / react.transitional.element
-                   */
-                  'react.transitional.element',
+                  elementSymbol,
                 ),
                 createSymbolProperty(
                   fn,
