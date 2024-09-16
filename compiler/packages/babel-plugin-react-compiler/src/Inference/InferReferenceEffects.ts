@@ -227,6 +227,7 @@ export default function inferReferenceEffects(
   queue(fn.body.entry, initialState);
 
   const finishedStates: Map<BlockId, InferenceState> = new Map();
+  const functionEffects: Array<FunctionEffect> = fn.effects ?? [];
 
   while (queuedStates.size !== 0) {
     for (const [blockId, block] of fn.body.blocks) {
@@ -247,16 +248,17 @@ export default function inferReferenceEffects(
     }
   }
 
-  const summaryState = Array(...finishedStates.values()).reduce(
-    (acc, state) => acc.merge(state) ?? acc,
-  );
-
-  return summaryState.aliases;
   if (options.isFunctionExpression) {
     fn.effects = functionEffects;
   } else {
     raiseFunctionEffectErrors(functionEffects);
   }
+
+  const summaryState = Array(...finishedStates.values()).reduce(
+    (acc, state) => acc.merge(state) ?? acc,
+  );
+
+  return summaryState.aliases;
 }
 
 type FreezeAction = {values: Set<InstructionValue>; reason: Set<ValueReason>};
