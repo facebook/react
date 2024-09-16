@@ -10676,10 +10676,7 @@ __DEV__ &&
       }
     }
     function shouldProfile$1(current) {
-      return (
-        (current.mode & 2) !== NoMode &&
-        (executionContext & CommitContext) !== NoContext
-      );
+      return (current.mode & 2) !== NoMode;
     }
     function commitHookLayoutEffects(finishedWork, hookFlags) {
       shouldProfile$1(finishedWork)
@@ -11081,26 +11078,6 @@ __DEV__ &&
           commitTime
         );
     }
-    function commitProfilerUpdate(
-      finishedWork,
-      current,
-      commitTime,
-      effectDuration
-    ) {
-      if (executionContext & CommitContext)
-        try {
-          runWithFiberInDEV(
-            finishedWork,
-            commitProfiler,
-            finishedWork,
-            current,
-            commitTime,
-            effectDuration
-          );
-        } catch (error$20) {
-          captureCommitPhaseError(finishedWork, finishedWork.return, error$20);
-        }
-    }
     function commitProfilerPostCommitImpl(
       finishedWork,
       current,
@@ -11307,12 +11284,6 @@ __DEV__ &&
       } catch (error$32) {
         captureCommitPhaseError(finishedWork, finishedWork.return, error$32);
       }
-    }
-    function shouldProfile(current) {
-      return (
-        (current.mode & 2) !== NoMode &&
-        (executionContext & CommitContext) !== NoContext
-      );
     }
     function commitBeforeMutationEffects(root, firstChild) {
       focusedInstanceHandle = prepareForCommit(root.containerInfo);
@@ -11550,14 +11521,26 @@ __DEV__ &&
           break;
         case 12:
           recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
-          if (flags & 4)
-            a: for (
-              flags = finishedWork.stateNode.effectDuration,
-                commitProfilerUpdate(finishedWork, current, commitTime, flags),
-                finishedWork = finishedWork.return;
-              null !== finishedWork;
-
-            ) {
+          if (flags & 4) {
+            flags = finishedWork.stateNode.effectDuration;
+            try {
+              runWithFiberInDEV(
+                finishedWork,
+                commitProfiler,
+                finishedWork,
+                current,
+                commitTime,
+                flags
+              );
+            } catch (error$20) {
+              captureCommitPhaseError(
+                finishedWork,
+                finishedWork.return,
+                error$20
+              );
+            }
+            finishedWork = finishedWork.return;
+            a: for (; null !== finishedWork; ) {
               switch (finishedWork.tag) {
                 case 3:
                   finishedWork.stateNode.effectDuration += flags;
@@ -11568,6 +11551,7 @@ __DEV__ &&
               }
               finishedWork = finishedWork.return;
             }
+          }
           break;
         case 13:
           recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
@@ -12012,7 +11996,7 @@ __DEV__ &&
                       (tag & Layout) === NoFlags ||
                       (enableSchedulingProfiler &&
                         markComponentLayoutEffectUnmountStarted(deletedFiber),
-                      shouldProfile(deletedFiber)
+                      (deletedFiber.mode & 2) !== NoMode
                         ? (startLayoutEffectTimer(),
                           (inst.destroy = void 0),
                           safelyCallDestroy(
@@ -12055,7 +12039,7 @@ __DEV__ &&
                     : (tag & Layout) !== NoFlags &&
                       (enableSchedulingProfiler &&
                         markComponentLayoutEffectUnmountStarted(deletedFiber),
-                      shouldProfile(deletedFiber)
+                      (deletedFiber.mode & 2) !== NoMode
                         ? (startLayoutEffectTimer(),
                           (inst.destroy = void 0),
                           safelyCallDestroy(
@@ -12304,7 +12288,7 @@ __DEV__ &&
               finishedWork.return
             ),
             commitHookEffectListMount(Insertion | HasEffect, finishedWork),
-            shouldProfile(finishedWork)
+            (finishedWork.mode & 2) !== NoMode
               ? (startLayoutEffectTimer(),
                 commitHookEffectListUnmount(
                   Layout | HasEffect,
@@ -12769,7 +12753,7 @@ __DEV__ &&
         case 11:
         case 14:
         case 15:
-          if (shouldProfile(finishedWork))
+          if ((finishedWork.mode & 2) !== NoMode)
             try {
               startLayoutEffectTimer(),
                 commitHookEffectListUnmount(
@@ -12887,20 +12871,27 @@ __DEV__ &&
             finishedWork,
             includeWorkInProgressEffects
           );
-          if (includeWorkInProgressEffects && flags & 4)
-            a: for (
-              includeWorkInProgressEffects =
-                finishedWork.stateNode.effectDuration,
-                commitProfilerUpdate(
-                  finishedWork,
-                  current,
-                  commitTime,
-                  includeWorkInProgressEffects
-                ),
-                finishedWork = finishedWork.return;
-              null !== finishedWork;
-
-            ) {
+          if (includeWorkInProgressEffects && flags & 4) {
+            includeWorkInProgressEffects =
+              finishedWork.stateNode.effectDuration;
+            try {
+              runWithFiberInDEV(
+                finishedWork,
+                commitProfiler,
+                finishedWork,
+                current,
+                commitTime,
+                includeWorkInProgressEffects
+              );
+            } catch (error$20) {
+              captureCommitPhaseError(
+                finishedWork,
+                finishedWork.return,
+                error$20
+              );
+            }
+            finishedWork = finishedWork.return;
+            a: for (; null !== finishedWork; ) {
               switch (finishedWork.tag) {
                 case 3:
                   finishedWork.stateNode.effectDuration +=
@@ -12913,6 +12904,7 @@ __DEV__ &&
               }
               finishedWork = finishedWork.return;
             }
+          }
           break;
         case 13:
           recursivelyTraverseReappearLayoutEffects(
@@ -13143,7 +13135,7 @@ __DEV__ &&
             committedLanes,
             committedTransitions
           );
-          if (flags & 2048 && executionContext & CommitContext)
+          if (flags & 2048)
             a: for (
               finishedRoot = finishedWork.stateNode.passiveEffectDuration,
                 commitProfilerPostCommit(
@@ -19323,7 +19315,7 @@ __DEV__ &&
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-www-classic-d7167c35-20240916"
+        reconcilerVersion: "19.0.0-www-classic-8152e5cd-20240916"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

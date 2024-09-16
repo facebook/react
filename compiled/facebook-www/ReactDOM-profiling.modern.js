@@ -8304,7 +8304,7 @@ function unwindInterruptedWork(current, interruptedWork) {
   }
 }
 function shouldProfile$1(current) {
-  return 0 !== (current.mode & 2) && 0 !== (executionContext & 4);
+  return 0 !== (current.mode & 2);
 }
 function commitHookLayoutEffects(finishedWork, hookFlags) {
   shouldProfile$1(finishedWork)
@@ -8550,33 +8550,32 @@ function commitProfilerUpdate(
   commitTime,
   effectDuration
 ) {
-  if (executionContext & 4)
-    try {
-      var _finishedWork$memoize = finishedWork.memoizedProps,
-        id = _finishedWork$memoize.id,
-        onCommit = _finishedWork$memoize.onCommit,
-        onRender = _finishedWork$memoize.onRender;
-      current = null === current ? "mount" : "update";
-      currentUpdateIsNested && (current = "nested-update");
-      "function" === typeof onRender &&
-        onRender(
-          id,
-          current,
-          finishedWork.actualDuration,
-          finishedWork.treeBaseDuration,
-          finishedWork.actualStartTime,
-          commitTime
-        );
-      "function" === typeof onCommit &&
-        onCommit(
-          finishedWork.memoizedProps.id,
-          current,
-          effectDuration,
-          commitTime
-        );
-    } catch (error) {
-      captureCommitPhaseError(finishedWork, finishedWork.return, error);
-    }
+  try {
+    var _finishedWork$memoize = finishedWork.memoizedProps,
+      id = _finishedWork$memoize.id,
+      onCommit = _finishedWork$memoize.onCommit,
+      onRender = _finishedWork$memoize.onRender;
+    current = null === current ? "mount" : "update";
+    currentUpdateIsNested && (current = "nested-update");
+    "function" === typeof onRender &&
+      onRender(
+        id,
+        current,
+        finishedWork.actualDuration,
+        finishedWork.treeBaseDuration,
+        finishedWork.actualStartTime,
+        commitTime
+      );
+    "function" === typeof onCommit &&
+      onCommit(
+        finishedWork.memoizedProps.id,
+        current,
+        effectDuration,
+        commitTime
+      );
+  } catch (error) {
+    captureCommitPhaseError(finishedWork, finishedWork.return, error);
+  }
 }
 function commitProfilerPostCommit(
   finishedWork,
@@ -8701,11 +8700,8 @@ var offscreenSubtreeIsHidden = !1,
   PossiblyWeakSet = "function" === typeof WeakSet ? WeakSet : Set,
   nextEffect = null,
   inProgressLanes = null,
-  inProgressRoot = null;
-function shouldProfile(current) {
-  return 0 !== (current.mode & 2) && 0 !== (executionContext & 4);
-}
-var focusedInstanceHandle = null,
+  inProgressRoot = null,
+  focusedInstanceHandle = null,
   shouldFireAfterActiveInstanceBlur = !1;
 function commitBeforeMutationEffects(root, firstChild) {
   root = root.containerInfo;
@@ -9439,7 +9435,7 @@ function commitDeletionEffectsOnFiber(
                   0 === (prevHostParentIsContainer$185 & 4) ||
                   (enableSchedulingProfiler &&
                     markComponentLayoutEffectUnmountStarted(deletedFiber),
-                  shouldProfile(deletedFiber)
+                  0 !== (deletedFiber.mode & 2)
                     ? (startLayoutEffectTimer(),
                       (inst.destroy = void 0),
                       safelyCallDestroy(
@@ -9482,7 +9478,7 @@ function commitDeletionEffectsOnFiber(
                 : 0 !== (prevHostParentIsContainer$185 & 4) &&
                   (enableSchedulingProfiler &&
                     markComponentLayoutEffectUnmountStarted(deletedFiber),
-                  shouldProfile(deletedFiber)
+                  0 !== (deletedFiber.mode & 2)
                     ? (startLayoutEffectTimer(),
                       (inst.destroy = void 0),
                       safelyCallDestroy(
@@ -9691,7 +9687,7 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       flags & 4 &&
         (commitHookEffectListUnmount(3, finishedWork, finishedWork.return),
         commitHookEffectListMount(3, finishedWork),
-        shouldProfile(finishedWork)
+        0 !== (finishedWork.mode & 2)
           ? (startLayoutEffectTimer(),
             commitHookEffectListUnmount(5, finishedWork, finishedWork.return),
             recordLayoutEffectDuration(finishedWork))
@@ -10191,7 +10187,7 @@ function recursivelyTraverseDisappearLayoutEffects(parentFiber) {
       case 11:
       case 14:
       case 15:
-        if (shouldProfile(finishedWork))
+        if (0 !== (finishedWork.mode & 2))
           try {
             startLayoutEffectTimer(),
               commitHookEffectListUnmount(4, finishedWork, finishedWork.return);
@@ -10534,7 +10530,7 @@ function commitPassiveMountOnFiber(
         committedLanes,
         committedTransitions
       );
-      if (flags & 2048 && executionContext & 4)
+      if (flags & 2048)
         a: for (
           finishedRoot = finishedWork.stateNode.passiveEffectDuration,
             commitProfilerPostCommit(
@@ -13684,41 +13680,36 @@ function containsNode(outerNode, innerNode) {
     : !1;
 }
 function getActiveElementDeep(containerInfo) {
-  var $jscomp$optchain$tmpm1599319018$1, $jscomp$nullish$tmp0;
+  var $jscomp$optchain$tmp2057677589$1, $jscomp$nullish$tmp0;
   containerInfo =
     null !=
     ($jscomp$nullish$tmp0 =
       null == containerInfo
         ? void 0
         : null ==
-            ($jscomp$optchain$tmpm1599319018$1 = containerInfo.ownerDocument)
+            ($jscomp$optchain$tmp2057677589$1 = containerInfo.ownerDocument)
           ? void 0
-          : $jscomp$optchain$tmpm1599319018$1.defaultView)
+          : $jscomp$optchain$tmp2057677589$1.defaultView)
       ? $jscomp$nullish$tmp0
       : window;
   for (
-    $jscomp$optchain$tmpm1599319018$1 = getActiveElement(
-      containerInfo.document
-    );
-    $jscomp$optchain$tmpm1599319018$1 instanceof
-    containerInfo.HTMLIFrameElement;
+    $jscomp$optchain$tmp2057677589$1 = getActiveElement(containerInfo.document);
+    $jscomp$optchain$tmp2057677589$1 instanceof containerInfo.HTMLIFrameElement;
 
   ) {
     try {
       var JSCompiler_inline_result =
         "string" ===
-        typeof $jscomp$optchain$tmpm1599319018$1.contentWindow.location.href;
+        typeof $jscomp$optchain$tmp2057677589$1.contentWindow.location.href;
     } catch (err) {
       JSCompiler_inline_result = !1;
     }
     if (JSCompiler_inline_result)
-      containerInfo = $jscomp$optchain$tmpm1599319018$1.contentWindow;
+      containerInfo = $jscomp$optchain$tmp2057677589$1.contentWindow;
     else break;
-    $jscomp$optchain$tmpm1599319018$1 = getActiveElement(
-      containerInfo.document
-    );
+    $jscomp$optchain$tmp2057677589$1 = getActiveElement(containerInfo.document);
   }
-  return $jscomp$optchain$tmpm1599319018$1;
+  return $jscomp$optchain$tmp2057677589$1;
 }
 function hasSelectionCapabilities(elem) {
   var nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
@@ -17592,14 +17583,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1838 = React.version;
 if (
-  "19.0.0-www-modern-d7167c35-20240916" !==
+  "19.0.0-www-modern-8152e5cd-20240916" !==
   isomorphicReactPackageVersion$jscomp$inline_1838
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1838,
-      "19.0.0-www-modern-d7167c35-20240916"
+      "19.0.0-www-modern-8152e5cd-20240916"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17617,11 +17608,11 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_1840 = {
   bundleType: 0,
-  version: "19.0.0-www-modern-d7167c35-20240916",
+  version: "19.0.0-www-modern-8152e5cd-20240916",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-www-modern-d7167c35-20240916"
+  reconcilerVersion: "19.0.0-www-modern-8152e5cd-20240916"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_1840.getLaneLabelMap = getLaneLabelMap),
@@ -17987,7 +17978,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-d7167c35-20240916";
+exports.version = "19.0.0-www-modern-8152e5cd-20240916";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
