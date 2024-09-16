@@ -2,7 +2,9 @@
 ## Input
 
 ```javascript
-function foo(props) {
+import {mutate} from 'shared-runtime';
+
+function useFoo(props) {
   let x = [];
   x.push(props.bar);
   if (props.cond) {
@@ -10,9 +12,19 @@ function foo(props) {
     x = [];
     x.push(props.foo);
   }
-  mut(x);
+  mutate(x);
   return x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: useFoo,
+  params: [{bar: 'bar', foo: 'foo', cond: true}],
+  sequentialRenders: [
+    {bar: 'bar', foo: 'foo', cond: true},
+    {bar: 'bar', foo: 'foo', cond: true},
+    {bar: 'bar', foo: 'foo', cond: false},
+  ],
+};
 
 ```
 
@@ -20,7 +32,9 @@ function foo(props) {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime";
-function foo(props) {
+import { mutate } from "shared-runtime";
+
+function useFoo(props) {
   const $ = _c(2);
   let x;
   if ($[0] !== props) {
@@ -31,7 +45,7 @@ function foo(props) {
       x.push(props.foo);
     }
 
-    mut(x);
+    mutate(x);
     $[0] = props;
     $[1] = x;
   } else {
@@ -40,5 +54,19 @@ function foo(props) {
   return x;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: useFoo,
+  params: [{ bar: "bar", foo: "foo", cond: true }],
+  sequentialRenders: [
+    { bar: "bar", foo: "foo", cond: true },
+    { bar: "bar", foo: "foo", cond: true },
+    { bar: "bar", foo: "foo", cond: false },
+  ],
+};
+
 ```
       
+### Eval output
+(kind: ok) ["foo","joe"]
+["foo","joe"]
+["bar","joe"]

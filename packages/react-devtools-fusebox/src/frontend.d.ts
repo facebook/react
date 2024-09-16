@@ -50,4 +50,5 @@ export type InitializationOptions = {
   canViewElementSourceFunction?: CanViewElementSource,
 };
 
-export function initialize(node: Element | Document, options: InitializationOptions): void;
+export function initializeComponents(node: Element | Document, options: InitializationOptions): void;
+export function initializeProfiler(node: Element | Document, options: InitializationOptions): void;

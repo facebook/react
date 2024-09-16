@@ -17,6 +17,7 @@ export const enableSchedulingProfiler = false;
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
+export const enableComponentPerformanceTrack = false;
 export const enableUpdaterTracking = false;
 export const enableCache = true;
 export const enableLegacyCache = true;
@@ -49,6 +50,7 @@ export const enableFilterEmptyStringAttributesDOM = true;
 export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableRenderableContext = false;
 export const enableFabricCompleteRootInCommitPhase = false;
+export const enableHiddenSubtreeInsertionEffectCleanup = true;
 
 export const enableRetryLaneExpiration = false;
 export const retryLaneExpirationMs = 5000;

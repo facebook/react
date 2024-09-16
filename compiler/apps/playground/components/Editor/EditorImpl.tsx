@@ -235,7 +235,7 @@ function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
               name: result.name,
               value: {
                 type: 'FunctionDeclaration',
-                id,
+                id: withIdentifier(result.value.id),
                 async: result.value.async,
                 generator: result.value.generator,
                 body: result.value.body,

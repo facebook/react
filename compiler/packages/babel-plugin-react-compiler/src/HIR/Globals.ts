@@ -28,6 +28,8 @@ import {
 import {BuiltInType, PolyType} from './Types';
 import {TypeConfig} from './TypeSchema';
 import {assertExhaustive} from '../Utils/utils';
+import {isHookName} from './Environment';
+import {CompilerError, SourceLocation} from '..';
 
 /*
  * This file exports types and defaults for JavaScript global objects.
@@ -535,6 +537,8 @@ export function installTypeConfig(
   globals: GlobalRegistry,
   shapes: ShapeRegistry,
   typeConfig: TypeConfig,
+  moduleName: string,
+  loc: SourceLocation,
 ): Global {
   switch (typeConfig.kind) {
     case 'type': {
@@ -567,7 +571,13 @@ export function installTypeConfig(
         positionalParams: typeConfig.positionalParams,
         restParam: typeConfig.restParam,
         calleeEffect: typeConfig.calleeEffect,
-        returnType: installTypeConfig(globals, shapes, typeConfig.returnType),
+        returnType: installTypeConfig(
+          globals,
+          shapes,
+          typeConfig.returnType,
+          moduleName,
+          loc,
+        ),
         returnValueKind: typeConfig.returnValueKind,
         noAlias: typeConfig.noAlias === true,
         mutableOnlyIfOperandsAreMutable:
@@ -580,7 +590,13 @@ export function installTypeConfig(
         positionalParams: typeConfig.positionalParams ?? [],
         restParam: typeConfig.restParam ?? Effect.Freeze,
         calleeEffect: Effect.Read,
-        returnType: installTypeConfig(globals, shapes, typeConfig.returnType),
+        returnType: installTypeConfig(
+          globals,
+          shapes,
+          typeConfig.returnType,
+          moduleName,
+          loc,
+        ),
         returnValueKind: typeConfig.returnValueKind ?? ValueKind.Frozen,
         noAlias: typeConfig.noAlias === true,
       });
@@ -589,10 +605,31 @@ export function installTypeConfig(
       return addObject(
         shapes,
         null,
-        Object.entries(typeConfig.properties ?? {}).map(([key, value]) => [
-          key,
-          installTypeConfig(globals, shapes, value),
-        ]),
+        Object.entries(typeConfig.properties ?? {}).map(([key, value]) => {
+          const type = installTypeConfig(
+            globals,
+            shapes,
+            value,
+            moduleName,
+            loc,
+          );
+          const expectHook = isHookName(key);
+          let isHook = false;
+          if (type.kind === 'Function' && type.shapeId !== null) {
+            const functionType = shapes.get(type.shapeId);
+            if (functionType?.functionType?.hookKind !== null) {
+              isHook = true;
+            }
+          }
+          if (expectHook !== isHook) {
+            CompilerError.throwInvalidConfig({
+              reason: `Invalid type configuration for module`,
+              description: `Expected type for object property '${key}' from module '${moduleName}' ${expectHook ? 'to be a hook' : 'not to be a hook'} based on the property name`,
+              loc,
+            });
+          }
+          return [key, type];
+        }),
       );
     }
     default: {

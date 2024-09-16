@@ -7,4 +7,8 @@
  * @flow
  */
 
-export {prerender, version} from './src/server/react-dom-server.edge';
+export {
+  prerender,
+  resumeAndPrerender,
+  version,
+} from './src/server/react-dom-server.edge';

@@ -13,6 +13,8 @@ import {
   HIRFunction,
   Identifier,
   Instruction,
+  InstructionId,
+  MutableRange,
   Place,
   ReactiveScope,
   makeInstructionId,
@@ -186,8 +188,14 @@ function mergeLocation(l: SourceLocation, r: SourceLocation): SourceLocation {
 }
 
 // Is the operand mutable at this given instruction
-export function isMutable({id}: Instruction, place: Place): boolean {
-  const range = place.identifier.mutableRange;
+export function isMutable(instr: {id: InstructionId}, place: Place): boolean {
+  return inRange(instr, place.identifier.mutableRange);
+}
+
+export function inRange(
+  {id}: {id: InstructionId},
+  range: MutableRange,
+): boolean {
   return id >= range.start && id < range.end;
 }
 

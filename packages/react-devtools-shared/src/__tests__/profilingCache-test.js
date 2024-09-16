@@ -1209,6 +1209,106 @@ describe('ProfilingCache', () => {
     }
   });
 
+  // @reactVersion >= 19.0
+  it('should detect context changes or lack of changes with conditional use()', () => {
+    const ContextA = React.createContext(0);
+    const ContextB = React.createContext(1);
+    let setState = null;
+
+    const Component = () => {
+      // These hooks may change and initiate re-renders.
+      let state;
+      [state, setState] = React.useState('abc');
+
+      let result = state;
+
+      if (state.includes('a')) {
+        result += React.use(ContextA);
+      }
+
+      result += React.use(ContextB);
+
+      return result;
+    };
+
+    utils.act(() =>
+      render(
+        <ContextA.Provider value={1}>
+          <ContextB.Provider value={1}>
+            <Component />
+          </ContextB.Provider>
+        </ContextA.Provider>,
+      ),
+    );
+
+    utils.act(() => store.profilerStore.startProfiling());
+
+    // First render changes Context.
+    utils.act(() =>
+      render(
+        <ContextA.Provider value={0}>
+          <ContextB.Provider value={1}>
+            <Component />
+          </ContextB.Provider>
+        </ContextA.Provider>,
+      ),
+    );
+
+    // Second render has no changed Context, only changed state.
+    utils.act(() => setState('def'));
+
+    utils.act(() => store.profilerStore.stopProfiling());
+
+    const rootID = store.roots[0];
+
+    const changeDescriptions = store.profilerStore
+      .getDataForRoot(rootID)
+      .commitData.map(commitData => commitData.changeDescriptions);
+    expect(changeDescriptions).toHaveLength(2);
+
+    // 1st render: Change to Context
+    expect(changeDescriptions[0]).toMatchInlineSnapshot(`
+      Map {
+        4 => {
+          "context": true,
+          "didHooksChange": false,
+          "hooks": [],
+          "isFirstMount": false,
+          "props": [],
+          "state": null,
+        },
+      }
+    `);
+
+    // 2nd render: Change to State
+    expect(changeDescriptions[1]).toMatchInlineSnapshot(`
+      Map {
+        4 => {
+          "context": false,
+          "didHooksChange": true,
+          "hooks": [
+            0,
+          ],
+          "isFirstMount": false,
+          "props": [],
+          "state": null,
+        },
+      }
+    `);
+
+    expect(changeDescriptions).toHaveLength(2);
+
+    // Export and re-import profile data and make sure it is retained.
+    utils.exportImportHelper(bridge, store);
+
+    for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
+      const commitData = store.profilerStore.getCommitData(rootID, commitIndex);
+      expect(commitData.changeDescriptions).toEqual(
+        changeDescriptions[commitIndex],
+      );
+    }
+  });
+
   // @reactVersion >= 18.0
   it('should calculate durations based on actual children (not filtered children)', () => {
     store.componentFilters = [utils.createDisplayNameFilter('^Parent$')];

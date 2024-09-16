@@ -136,7 +136,11 @@ describe('ReactSuspense', () => {
     ReactNoop.render(element);
     await waitForAll([]);
     expect(ReactNoop).toMatchRenderedOutput('Waiting Tier 1');
-    expect(ops).toEqual([new Set([promise2])]);
+    expect(ops).toEqual([
+      new Set([promise2]),
+
+      ...(gate('enableSiblingPrerendering') ? new Set([promise2]) : []),
+    ]);
     ops = [];
 
     await act(() => resolve2());
@@ -224,7 +228,11 @@ describe('ReactSuspense', () => {
     await act(() => resolve1());
     expect(ReactNoop).toMatchRenderedOutput('Waiting Tier 2Done');
     expect(ops1).toEqual([]);
-    expect(ops2).toEqual([new Set([promise2])]);
+    expect(ops2).toEqual([
+      new Set([promise2]),
+
+      ...(gate('enableSiblingPrerendering') ? new Set([promise2]) : []),
+    ]);
     ops1 = [];
     ops2 = [];
 

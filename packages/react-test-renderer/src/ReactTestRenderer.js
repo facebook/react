@@ -166,10 +166,14 @@ function flatten(arr) {
   const stack = [{i: 0, array: arr}];
   while (stack.length) {
     const n = stack.pop();
+    // $FlowFixMe[incompatible-use]
     while (n.i < n.array.length) {
+      // $FlowFixMe[incompatible-use]
       const el = n.array[n.i];
+      // $FlowFixMe[incompatible-use]
       n.i += 1;
       if (isArray(el)) {
+        // $FlowFixMe[incompatible-call]
         stack.push(n);
         stack.push({i: 0, array: el});
         break;
