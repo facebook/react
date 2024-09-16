@@ -37,8 +37,6 @@ export type ProfilerTimer = {
 let completeTime: number = -0;
 let commitTime: number = -0;
 let profilerStartTime: number = -1.1;
-let layoutEffectStartTime: number = -1.1;
-let passiveEffectStartTime: number = -1.1;
 let profilerEffectDuration: number = -0;
 
 function pushNestedEffectDurations(): number {
@@ -181,15 +179,15 @@ function stopProfilerTimerIfRunningAndRecordIncompleteDuration(
   }
 }
 
-function recordLayoutEffectDuration(fiber: Fiber): void {
+function recordEffectDuration(fiber: Fiber): void {
   if (!enableProfilerTimer || !enableProfilerCommitHooks) {
     return;
   }
 
-  if (layoutEffectStartTime >= 0) {
-    const elapsedTime = now() - layoutEffectStartTime;
+  if (profilerStartTime >= 0) {
+    const elapsedTime = now() - profilerStartTime;
 
-    layoutEffectStartTime = -1;
+    profilerStartTime = -1;
 
     // Store duration on the next nearest Profiler ancestor
     // Or the root (for the DevTools Profiler to read)
@@ -197,34 +195,11 @@ function recordLayoutEffectDuration(fiber: Fiber): void {
   }
 }
 
-function recordPassiveEffectDuration(fiber: Fiber): void {
+function startEffectTimer(): void {
   if (!enableProfilerTimer || !enableProfilerCommitHooks) {
     return;
   }
-
-  if (passiveEffectStartTime >= 0) {
-    const elapsedTime = now() - passiveEffectStartTime;
-
-    passiveEffectStartTime = -1;
-
-    // Store duration on the next nearest Profiler ancestor
-    // Or the root (for the DevTools Profiler to read)
-    profilerEffectDuration += elapsedTime;
-  }
-}
-
-function startLayoutEffectTimer(): void {
-  if (!enableProfilerTimer || !enableProfilerCommitHooks) {
-    return;
-  }
-  layoutEffectStartTime = now();
-}
-
-function startPassiveEffectTimer(): void {
-  if (!enableProfilerTimer || !enableProfilerCommitHooks) {
-    return;
-  }
-  passiveEffectStartTime = now();
+  profilerStartTime = now();
 }
 
 function transferActualDuration(fiber: Fiber): void {
@@ -246,11 +221,9 @@ export {
   recordCommitTime,
   isCurrentUpdateNested,
   markNestedUpdateScheduled,
-  recordLayoutEffectDuration,
-  recordPassiveEffectDuration,
+  recordEffectDuration,
   resetNestedUpdateFlag,
-  startLayoutEffectTimer,
-  startPassiveEffectTimer,
+  startEffectTimer,
   startProfilerTimer,
   stopProfilerTimerIfRunning,
   stopProfilerTimerIfRunningAndRecordDuration,
