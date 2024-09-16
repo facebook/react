@@ -9,6 +9,7 @@ import {CompilerError, ErrorSeverity, ValueKind} from '..';
 import {
   AbstractValue,
   BasicBlock,
+  BlockId,
   Effect,
   Environment,
   FunctionEffect,
@@ -30,7 +31,7 @@ import {assertExhaustive} from '../Utils/utils';
 
 type State = {
   values: Map<IdentifierId, AbstractValue>;
-  nestedEffects: Map<IdentifierId, Array<FunctionEffect>>;
+  nestedEffects: Map<IdentifierId, Set<FunctionEffect>>;
   aliases: DisjointSet<IdentifierId>;
 };
 
@@ -63,41 +64,99 @@ export function inferFunctionEffects(
     });
     state.values.set(cx.identifier.id, cx.abstractValue);
   }
-  for (const [_, block] of fn.body.blocks) {
-    for (const phi of block.phis) {
-      CompilerError.invariant(phi.abstractValue != null, {
-        reason: 'Expected phi to have a kind',
-        loc: phi.id.loc,
-      });
-      state.values.set(phi.id.id, phi.abstractValue);
-    }
-    for (const instr of block.instructions) {
-      if (
-        instr.value.kind === 'FunctionExpression' ||
-        instr.value.kind === 'ObjectMethod'
-      ) {
-        /*
-         * Since we infer the effects of nested functions from function
-         * instructions, we need to make sure we can go from identifiers
-         * aliased to function definitions to the function's effects
-         */
-        const root =
-          state.aliases.find(instr.lvalue.identifier.id) ??
-          instr.lvalue.identifier.id;
-        CompilerError.invariant(root != null, {
-          reason: 'Expected lvalue to have a root',
-          loc: instr.loc,
+  let blocksSeen: Set<BlockId> = new Set();
+  let backEdgeSeen = false;
+  let lastNested: Map<IdentifierId, Set<FunctionEffect>>;
+
+  do {
+    lastNested = new Map(state.nestedEffects);
+    for (const [blockId, block] of fn.body.blocks) {
+      blocksSeen.add(blockId);
+      for (const phi of block.phis) {
+        CompilerError.invariant(phi.abstractValue != null, {
+          reason: 'Expected phi to have a kind',
+          loc: phi.id.loc,
         });
-        const nested = state.nestedEffects.get(root) ?? [];
-        nested.push(...(instr.value.loweredFunc.func.effects ?? []));
-        state.nestedEffects.set(root, nested);
+        const phiRoot = state.aliases.find(phi.id.id) ?? phi.id.id;
+        for (const [predId, operand] of phi.operands) {
+          if (!blocksSeen.has(predId)) {
+            backEdgeSeen = true;
+          }
+          const operandRoot = state.aliases.find(operand.id) ?? operand.id;
+          if (state.nestedEffects.has(operandRoot)) {
+            state.nestedEffects.set(
+              phiRoot,
+              state.nestedEffects.get(operandRoot) ?? new Set(),
+            );
+          }
+        }
+        state.values.set(phi.id.id, phi.abstractValue);
       }
-      for (const lvalue of eachInstructionLValue(instr)) {
-        lvalue.abstractValue &&
-          state.values.set(lvalue.identifier.id, lvalue.abstractValue);
+      for (const instr of block.instructions) {
+        if (
+          instr.value.kind === 'FunctionExpression' ||
+          instr.value.kind === 'ObjectMethod'
+        ) {
+          /**
+           * If this function references other functions, propagate the referenced function's
+           * effects to this function.
+           *
+           * ```
+           * let f = () => global = true;
+           * let g = () => f();
+           * g();
+           * ```
+           *
+           * In this example, because `g` references `f`, we propagate the GlobalMutation from
+           * `f` to `g`. Thus, referencing `g` in `g()` will evaluate the GlobalMutation in the outer
+           * function effect context and report an error. But if instead we do:
+           *
+           * ```
+           * let f = () => global = true;
+           * let g = () => f();
+           * useEffect(() => g(), [g])
+           * ```
+           *
+           * Now `g`'s effects will be discarded since they're in a useEffect.
+           */
+          let propagatedEffects = [
+            ...(instr.value.loweredFunc.func.effects ?? []),
+          ];
+          for (const operand of eachInstructionOperand(instr)) {
+            propagatedEffects.push(
+              ...inferFunctionInstrEffects(state, operand),
+            );
+          }
+          /*
+           * Since we infer the effects of nested functions from function
+           * instructions, we need to make sure we can go from identifiers
+           * aliased to function definitions to the function's effects
+           */
+          const root =
+            state.aliases.find(instr.lvalue.identifier.id) ??
+            instr.lvalue.identifier.id;
+          CompilerError.invariant(root != null, {
+            reason: 'Expected lvalue to have a root',
+            loc: instr.loc,
+          });
+          const curEffects = state.nestedEffects.get(root) ?? new Set();
+          if (propagatedEffects.some(eff => !curEffects.has(eff))) {
+            const nested = new Set([...curEffects, ...propagatedEffects]);
+            state.nestedEffects.set(root, nested);
+          }
+          instr.value.loweredFunc.func.effects = propagatedEffects;
+        }
+        for (const lvalue of eachInstructionLValue(instr)) {
+          lvalue.abstractValue &&
+            state.values.set(lvalue.identifier.id, lvalue.abstractValue);
+        }
       }
     }
-  }
+    // Loop until we have propagated all nested effects backwards through backedges, if they exist
+  } while (
+    backEdgeSeen &&
+    ![...state.nestedEffects].every(([id, effs]) => lastNested.get(id) === effs)
+  );
 
   const functionEffects: Array<FunctionEffect> = [];
 
@@ -277,38 +336,6 @@ export function inferInstructionFunctionEffects(
     }
     case 'ObjectMethod':
     case 'FunctionExpression': {
-      /**
-       * If this function references other functions, propagate the referenced function's
-       * effects to this function.
-       *
-       * ```
-       * let f = () => global = true;
-       * let g = () => f();
-       * g();
-       * ```
-       *
-       * In this example, because `g` references `f`, we propagate the GlobalMutation from
-       * `f` to `g`. Thus, referencing `g` in `g()` will evaluate the GlobalMutation in the outer
-       * function effect context and report an error. But if instead we do:
-       *
-       * ```
-       * let f = () => global = true;
-       * let g = () => f();
-       * useEffect(() => g(), [g])
-       * ```
-       *
-       * Now `g`'s effects will be discarded since they're in a useEffect.
-       */
-      for (const operand of eachInstructionOperand(instr)) {
-        const funEffects = inferFunctionInstrEffects(state, operand);
-        instr.value.loweredFunc.func.effects ??= [];
-        instr.value.loweredFunc.func.effects.push(...funEffects);
-        state.nestedEffects.set(
-          state.aliases.find(instr.lvalue.identifier.id) ??
-            instr.lvalue.identifier.id,
-          instr.value.loweredFunc.func.effects,
-        );
-      }
       break;
     }
     case 'MethodCall':

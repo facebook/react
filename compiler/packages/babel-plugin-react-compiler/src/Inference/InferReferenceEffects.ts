@@ -240,7 +240,6 @@ export default function inferReferenceEffects(
       }
     }
   }
-
   CompilerError.invariant(finishedStates.size > 0, {
     reason: 'Expected to have processed at least one block',
     loc: null,
