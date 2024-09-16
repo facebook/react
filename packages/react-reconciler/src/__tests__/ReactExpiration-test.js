@@ -654,11 +654,10 @@ describe('ReactExpiration', () => {
       });
       await waitForAll([
         'Suspend! [A1]',
-        'Loading...',
 
-        ...(gate('enableSiblingPrerendering')
-          ? ['Suspend! [A1]', 'B', 'C', 'Loading...']
-          : []),
+        ...(gate('enableSiblingPrerendering') ? ['B', 'C'] : []),
+
+        'Loading...',
       ]);
 
       // Lots of time elapses before the promise resolves

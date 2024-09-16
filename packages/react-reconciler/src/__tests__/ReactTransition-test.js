@@ -199,10 +199,6 @@ describe('ReactTransition', () => {
         '(empty)',
         'Suspend! [Async]',
         'Loading...',
-
-        ...(gate('enableSiblingPrerendering')
-          ? ['Suspend! [Async]', 'Loading...']
-          : []),
       ]);
 
       expect(root).toMatchRenderedOutput('Pending...(empty)');
@@ -273,10 +269,6 @@ describe('ReactTransition', () => {
         'B label',
         'Suspend! [B content]',
         'Loading...',
-
-        ...(gate('enableSiblingPrerendering')
-          ? ['B label', 'Suspend! [B content]', 'Loading...']
-          : []),
       ]);
       // This is a refresh transition so it shouldn't show a fallback
       expect(root).toMatchRenderedOutput(
@@ -298,10 +290,6 @@ describe('ReactTransition', () => {
         'C label',
         'Suspend! [C content]',
         'Loading...',
-
-        ...(gate('enableSiblingPrerendering')
-          ? ['C label', 'Suspend! [C content]', 'Loading...']
-          : []),
       ]);
       expect(root).toMatchRenderedOutput(
         <>
@@ -319,10 +307,6 @@ describe('ReactTransition', () => {
         'C label',
         'Suspend! [C content]',
         'Loading...',
-
-        ...(gate('enableSiblingPrerendering')
-          ? ['C label', 'Suspend! [C content]', 'Loading...']
-          : []),
       ]);
       expect(root).toMatchRenderedOutput(
         <>
@@ -410,10 +394,6 @@ describe('ReactTransition', () => {
         'B label',
         'Suspend! [B content]',
         'Loading...',
-
-        ...(gate('enableSiblingPrerendering')
-          ? ['B label', 'Suspend! [B content]', 'Loading...']
-          : []),
       ]);
       // This is a refresh transition so it shouldn't show a fallback
       expect(root).toMatchRenderedOutput(
@@ -435,10 +415,6 @@ describe('ReactTransition', () => {
         'C label',
         'Suspend! [C content]',
         'Loading...',
-
-        ...(gate('enableSiblingPrerendering')
-          ? ['C label', 'Suspend! [C content]', 'Loading...']
-          : []),
       ]);
       expect(root).toMatchRenderedOutput(
         <>
@@ -456,10 +432,6 @@ describe('ReactTransition', () => {
         'C label',
         'Suspend! [C content]',
         'Loading...',
-
-        ...(gate('enableSiblingPrerendering')
-          ? ['C label', 'Suspend! [C content]', 'Loading...']
-          : []),
       ]);
       expect(root).toMatchRenderedOutput(
         <>
@@ -528,14 +500,7 @@ describe('ReactTransition', () => {
           setShowA(true);
         });
       });
-      assertLog([
-        'Suspend! [A]',
-        'Loading...',
-
-        ...(gate('enableSiblingPrerendering')
-          ? ['Suspend! [A]', 'Loading...']
-          : []),
-      ]);
+      assertLog(['Suspend! [A]', 'Loading...']);
       expect(root).toMatchRenderedOutput(null);
 
       // Before A loads, switch to B. This should entangle A with B.
@@ -545,14 +510,7 @@ describe('ReactTransition', () => {
           setShowB(true);
         });
       });
-      assertLog([
-        'Suspend! [B]',
-        'Loading...',
-
-        ...(gate('enableSiblingPrerendering')
-          ? ['Suspend! [B]', 'Loading...']
-          : []),
-      ]);
+      assertLog(['Suspend! [B]', 'Loading...']);
       expect(root).toMatchRenderedOutput(null);
 
       // Before A or B loads, switch to C. This should entangle C with B, and
@@ -563,14 +521,7 @@ describe('ReactTransition', () => {
           setShowC(true);
         });
       });
-      assertLog([
-        'Suspend! [C]',
-        'Loading...',
-
-        ...(gate('enableSiblingPrerendering')
-          ? ['Suspend! [C]', 'Loading...']
-          : []),
-      ]);
+      assertLog(['Suspend! [C]', 'Loading...']);
       expect(root).toMatchRenderedOutput(null);
 
       // Now the data starts resolving out of order.
@@ -582,14 +533,7 @@ describe('ReactTransition', () => {
           resolveText('B');
         });
       });
-      assertLog([
-        'Suspend! [C]',
-        'Loading...',
-
-        ...(gate('enableSiblingPrerendering')
-          ? ['Suspend! [C]', 'Loading...']
-          : []),
-      ]);
+      assertLog(['Suspend! [C]', 'Loading...']);
       expect(root).toMatchRenderedOutput(null);
 
       // Now resolve A. Again, this will attempt to render C, since everything
@@ -599,14 +543,7 @@ describe('ReactTransition', () => {
           resolveText('A');
         });
       });
-      assertLog([
-        'Suspend! [C]',
-        'Loading...',
-
-        ...(gate('enableSiblingPrerendering')
-          ? ['Suspend! [C]', 'Loading...']
-          : []),
-      ]);
+      assertLog(['Suspend! [C]', 'Loading...']);
       expect(root).toMatchRenderedOutput(null);
 
       // Finally, resolve C. This time we can finish.
@@ -923,11 +860,10 @@ describe('ReactTransition', () => {
     assertLog([
       // Suspend.
       'Suspend! [Async]',
-      'Loading...',
 
-      ...(gate('enableSiblingPrerendering')
-        ? ['Suspend! [Async]', 'Normal pri: 0', 'Loading...']
-        : []),
+      ...(gate('enableSiblingPrerendering') ? ['Normal pri: 0'] : []),
+
+      'Loading...',
     ]);
     expect(root).toMatchRenderedOutput('(empty), Normal pri: 0');
 

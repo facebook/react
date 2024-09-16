@@ -399,7 +399,13 @@ describe('ReactLazyContextPropagation', () => {
       // the fallback displays despite this being a refresh.
       setContext('B');
     });
-    assertLog(['Suspend! [B]', 'Loading...', 'B']);
+    assertLog([
+      'Suspend! [B]',
+      'Loading...',
+      'B',
+
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [B]'] : []),
+    ]);
     expect(root).toMatchRenderedOutput('Loading...B');
 
     await act(async () => {
@@ -479,7 +485,13 @@ describe('ReactLazyContextPropagation', () => {
       // the fallback displays despite this being a refresh.
       setContext('B');
     });
-    assertLog(['Suspend! [B]', 'Loading...', 'B']);
+    assertLog([
+      'Suspend! [B]',
+      'Loading...',
+      'B',
+
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [B]'] : []),
+    ]);
     expect(root).toMatchRenderedOutput('Loading...B');
 
     await act(async () => {
@@ -812,7 +824,12 @@ describe('ReactLazyContextPropagation', () => {
     await act(() => {
       setContext('B');
     });
-    assertLog(['Suspend! [B]', 'Loading...']);
+    assertLog([
+      'Suspend! [B]',
+      'Loading...',
+
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [B]'] : []),
+    ]);
     expect(root).toMatchRenderedOutput('Loading...');
 
     await act(async () => {

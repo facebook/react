@@ -303,7 +303,7 @@ describe('ReactAsyncActions', () => {
       'Suspend! [A1]',
 
       ...(gate('enableSiblingPrerendering')
-        ? ['Pending: false', 'Suspend! [A1]', 'Suspend! [B1]', 'Suspend! [C1]']
+        ? ['Suspend! [B1]', 'Suspend! [C1]']
         : []),
     ]);
     expect(root).toMatchRenderedOutput(
@@ -322,9 +322,7 @@ describe('ReactAsyncActions', () => {
       'A1',
       'Suspend! [B1]',
 
-      ...(gate('enableSiblingPrerendering')
-        ? ['Pending: false', 'A1', 'Suspend! [B1]', 'Suspend! [C1]']
-        : []),
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [C1]'] : []),
     ]);
     expect(root).toMatchRenderedOutput(
       <>
@@ -333,16 +331,7 @@ describe('ReactAsyncActions', () => {
       </>,
     );
     await act(() => resolveText('B1'));
-    assertLog([
-      'Pending: false',
-      'A1',
-      'B1',
-      'Suspend! [C1]',
-
-      ...(gate('enableSiblingPrerendering')
-        ? ['Pending: false', 'A1', 'B1', 'Suspend! [C1]']
-        : []),
-    ]);
+    assertLog(['Pending: false', 'A1', 'B1', 'Suspend! [C1]']);
     expect(root).toMatchRenderedOutput(
       <>
         <span>Pending: true</span>
@@ -715,10 +704,6 @@ describe('ReactAsyncActions', () => {
       // automatically reverted.
       'Pending: false',
       'Suspend! [B]',
-
-      ...(gate('enableSiblingPrerendering')
-        ? ['Pending: false', 'Suspend! [B]']
-        : []),
     ]);
 
     // Resolve the transition

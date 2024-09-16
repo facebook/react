@@ -29,11 +29,13 @@ export type ProfilerTimer = {
   recordCommitTime(): void,
   startProfilerTimer(fiber: Fiber): void,
   stopProfilerTimerIfRunning(fiber: Fiber): void,
-  stopProfilerTimerIfRunningAndRecordDelta(fiber: Fiber): void,
+  stopProfilerTimerIfRunningAndRecordDuration(fiber: Fiber): void,
+  stopProfilerTimerIfRunningAndRecordIncompleteDuration(fiber: Fiber): void,
   syncNestedUpdateFlag(): void,
   ...
 };
 
+let completeTime: number = 0;
 let commitTime: number = 0;
 let layoutEffectStartTime: number = -1;
 let profilerStartTime: number = -1;
@@ -82,6 +84,17 @@ function syncNestedUpdateFlag(): void {
   }
 }
 
+function getCompleteTime(): number {
+  return completeTime;
+}
+
+function recordCompleteTime(): void {
+  if (!enableProfilerTimer) {
+    return;
+  }
+  completeTime = now();
+}
+
 function getCommitTime(): number {
   return commitTime;
 }
@@ -101,7 +114,7 @@ function startProfilerTimer(fiber: Fiber): void {
   profilerStartTime = now();
 
   if (((fiber.actualStartTime: any): number) < 0) {
-    fiber.actualStartTime = now();
+    fiber.actualStartTime = profilerStartTime;
   }
 }
 
@@ -112,9 +125,21 @@ function stopProfilerTimerIfRunning(fiber: Fiber): void {
   profilerStartTime = -1;
 }
 
-function stopProfilerTimerIfRunningAndRecordDelta(
+function stopProfilerTimerIfRunningAndRecordDuration(fiber: Fiber): void {
+  if (!enableProfilerTimer) {
+    return;
+  }
+
+  if (profilerStartTime >= 0) {
+    const elapsedTime = now() - profilerStartTime;
+    fiber.actualDuration += elapsedTime;
+    fiber.selfBaseDuration = elapsedTime;
+    profilerStartTime = -1;
+  }
+}
+
+function stopProfilerTimerIfRunningAndRecordIncompleteDuration(
   fiber: Fiber,
-  overrideBaseTime: boolean,
 ): void {
   if (!enableProfilerTimer) {
     return;
@@ -123,9 +148,7 @@ function stopProfilerTimerIfRunningAndRecordDelta(
   if (profilerStartTime >= 0) {
     const elapsedTime = now() - profilerStartTime;
     fiber.actualDuration += elapsedTime;
-    if (overrideBaseTime) {
-      fiber.selfBaseDuration = elapsedTime;
-    }
+    // We don't update the selfBaseDuration here because we errored.
     profilerStartTime = -1;
   }
 }
@@ -222,10 +245,12 @@ function transferActualDuration(fiber: Fiber): void {
 }
 
 export {
+  getCompleteTime,
+  recordCompleteTime,
   getCommitTime,
+  recordCommitTime,
   isCurrentUpdateNested,
   markNestedUpdateScheduled,
-  recordCommitTime,
   recordLayoutEffectDuration,
   recordPassiveEffectDuration,
   resetNestedUpdateFlag,
@@ -233,7 +258,8 @@ export {
   startPassiveEffectTimer,
   startProfilerTimer,
   stopProfilerTimerIfRunning,
-  stopProfilerTimerIfRunningAndRecordDelta,
+  stopProfilerTimerIfRunningAndRecordDuration,
+  stopProfilerTimerIfRunningAndRecordIncompleteDuration,
   syncNestedUpdateFlag,
   transferActualDuration,
 };

@@ -194,6 +194,7 @@ export default class Overlay {
 
     while (this.rects.length > elements.length) {
       const rect = this.rects.pop();
+      // $FlowFixMe[incompatible-use]
       rect.remove();
     }
     if (elements.length === 0) {
