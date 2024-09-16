@@ -13,6 +13,14 @@ import getComponentNameFromFiber from './getComponentNameFromFiber';
 
 import {getGroupNameOfHighestPriorityLane} from './ReactFiberLane';
 
+import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
+
+const supportsUserTiming =
+  enableProfilerTimer &&
+  typeof performance !== 'undefined' &&
+  // $FlowFixMe[method-unbinding]
+  typeof performance.measure === 'function';
+
 const TRACK_GROUP = 'Components ⚛';
 
 // Reused to avoid thrashing the GC.
@@ -45,7 +53,9 @@ export function logComponentRender(
     // Skip
     return;
   }
-  reusableComponentOptions.start = startTime;
-  reusableComponentOptions.end = endTime;
-  performance.measure(name, reusableComponentOptions);
+  if (supportsUserTiming) {
+    reusableComponentOptions.start = startTime;
+    reusableComponentOptions.end = endTime;
+    performance.measure(name, reusableComponentOptions);
+  }
 }
