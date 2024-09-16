@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c491bc7d6b0b98eedcce79f44d645a2f>>
+ * @generated SignedSource<<f9872caa5c1e2288da5e95a4722b9ad8>>
  */
 
 "use strict";
@@ -9239,6 +9239,14 @@ function commitPassiveMountOnFiber(
           (finishedWork.refCount++,
           null != finishedRoot && releaseCache(finishedRoot)));
       break;
+    case 12:
+      recursivelyTraversePassiveMountEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        committedTransitions
+      );
+      break;
     case 23:
       break;
     case 22:
@@ -11205,11 +11213,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.0.0-native-fb-3d95c43b-20240913" !== isomorphicReactPackageVersion)
+if ("19.0.0-native-fb-ee1a403a-20240916" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.0.0-native-fb-3d95c43b-20240913\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.0.0-native-fb-ee1a403a-20240916\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11258,11 +11266,11 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1230 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-3d95c43b-20240913",
+    version: "19.0.0-native-fb-ee1a403a-20240916",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromTag,
-    reconcilerVersion: "19.0.0-native-fb-3d95c43b-20240913"
+    reconcilerVersion: "19.0.0-native-fb-ee1a403a-20240916"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1230.rendererConfig = extraDevToolsConfig);

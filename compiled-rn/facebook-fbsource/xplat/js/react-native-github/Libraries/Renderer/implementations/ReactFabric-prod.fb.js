@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<29f9932a8cd462c8e4d6e6a1bab1ffe7>>
+ * @generated SignedSource<<7f9e61ef45310ef46f7d0986a6e32f98>>
  */
 
 "use strict";
@@ -8811,6 +8811,14 @@ function commitPassiveMountOnFiber(
           (finishedWork.refCount++,
           null != finishedRoot && releaseCache(finishedRoot)));
       break;
+    case 12:
+      recursivelyTraversePassiveMountEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        committedTransitions
+      );
+      break;
     case 23:
       break;
     case 22:
@@ -11077,11 +11085,11 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1164 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-3d95c43b-20240913",
+    version: "19.0.0-native-fb-ee1a403a-20240916",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromNode,
-    reconcilerVersion: "19.0.0-native-fb-3d95c43b-20240913"
+    reconcilerVersion: "19.0.0-native-fb-ee1a403a-20240916"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1164.rendererConfig = extraDevToolsConfig);

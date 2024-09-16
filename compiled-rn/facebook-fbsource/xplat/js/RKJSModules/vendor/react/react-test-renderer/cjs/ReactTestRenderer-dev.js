@@ -7,13 +7,13 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e4eab5c04819ff525ec966db4c05e91a>>
+ * @generated SignedSource<<bda351a6bd74d56044bd86d2d6462273>>
  */
 
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1109() {
+    function JSCompiler_object_inline_createNodeMock_1113() {
       return null;
     }
     function findHook(fiber, id) {
@@ -7161,6 +7161,7 @@ __DEV__ &&
         case 12:
           0 !== (renderLanes & workInProgress.childLanes) &&
             (workInProgress.flags |= 4);
+          workInProgress.flags |= 2048;
           var stateNode = workInProgress.stateNode;
           stateNode.effectDuration = 0;
           stateNode.passiveEffectDuration = 0;
@@ -7511,6 +7512,7 @@ __DEV__ &&
         case 12:
           return (
             (workInProgress.flags |= 4),
+            (workInProgress.flags |= 2048),
             (returnFiber = workInProgress.stateNode),
             (returnFiber.effectDuration = 0),
             (returnFiber.passiveEffectDuration = 0),
@@ -8873,13 +8875,14 @@ __DEV__ &&
     }
     function commitProfiler(finishedWork, current, commitTime, effectDuration) {
       var _finishedWork$memoize = finishedWork.memoizedProps,
+        id = _finishedWork$memoize.id,
         onCommit = _finishedWork$memoize.onCommit;
       _finishedWork$memoize = _finishedWork$memoize.onRender;
       current = null === current ? "mount" : "update";
       currentUpdateIsNested && (current = "nested-update");
       "function" === typeof _finishedWork$memoize &&
         _finishedWork$memoize(
-          finishedWork.memoizedProps.id,
+          id,
           current,
           finishedWork.actualDuration,
           finishedWork.treeBaseDuration,
@@ -8914,6 +8917,25 @@ __DEV__ &&
           captureCommitPhaseError(finishedWork, finishedWork.return, error$20);
         }
     }
+    function commitProfilerPostCommitImpl(
+      finishedWork,
+      current,
+      commitTime,
+      passiveEffectDuration
+    ) {
+      var _finishedWork$memoize2 = finishedWork.memoizedProps;
+      finishedWork = _finishedWork$memoize2.id;
+      _finishedWork$memoize2 = _finishedWork$memoize2.onPostCommit;
+      current = null === current ? "mount" : "update";
+      currentUpdateIsNested && (current = "nested-update");
+      "function" === typeof _finishedWork$memoize2 &&
+        _finishedWork$memoize2(
+          finishedWork,
+          current,
+          passiveEffectDuration,
+          commitTime
+        );
+    }
     function commitHostMount(finishedWork) {
       var type = finishedWork.type,
         props = finishedWork.memoizedProps,
@@ -8927,8 +8949,8 @@ __DEV__ &&
           props,
           finishedWork
         );
-      } catch (error$21) {
-        captureCommitPhaseError(finishedWork, finishedWork.return, error$21);
+      } catch (error$22) {
+        captureCommitPhaseError(finishedWork, finishedWork.return, error$22);
       }
     }
     function isHostParent(fiber) {
@@ -9216,7 +9238,6 @@ __DEV__ &&
             a: for (
               flags = finishedWork.stateNode.effectDuration,
                 commitProfilerUpdate(finishedWork, current, commitTime, flags),
-                enqueuePendingPassiveProfilerEffect(finishedWork),
                 finishedWork = finishedWork.return;
               null !== finishedWork;
 
@@ -9345,11 +9366,11 @@ __DEV__ &&
                   hostParent,
                   deletedFiber.stateNode
                 );
-              } catch (error$28) {
+              } catch (error$29) {
                 captureCommitPhaseError(
                   deletedFiber,
                   nearestMountedAncestor,
-                  error$28
+                  error$29
                 );
               }
             else
@@ -9360,11 +9381,11 @@ __DEV__ &&
                   hostParent,
                   deletedFiber.stateNode
                 );
-              } catch (error$29) {
+              } catch (error$30) {
                 captureCommitPhaseError(
                   deletedFiber,
                   nearestMountedAncestor,
-                  error$29
+                  error$30
                 );
               }
           break;
@@ -9637,11 +9658,11 @@ __DEV__ &&
                 resetTextContent,
                 existingHiddenCallbacks
               );
-            } catch (error$24) {
+            } catch (error$25) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$24
+                error$25
               );
             }
           }
@@ -9661,11 +9682,11 @@ __DEV__ &&
                 existingHiddenCallbacks,
                 finishedWork
               );
-            } catch (error$22) {
+            } catch (error$23) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$22
+                error$23
               );
             }
           }
@@ -9695,11 +9716,11 @@ __DEV__ &&
                 existingHiddenCallbacks,
                 flags
               );
-            } catch (error$23) {
+            } catch (error$24) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$23
+                error$24
               );
             }
           }
@@ -9778,8 +9799,8 @@ __DEV__ &&
                             root.stateNode,
                             root.memoizedProps
                           );
-                  } catch (error$25) {
-                    captureCommitPhaseError(root, root.return, error$25);
+                  } catch (error$26) {
+                    captureCommitPhaseError(root, root.return, error$26);
                   }
                 }
               } else if (6 === wasHidden.tag) {
@@ -9795,8 +9816,8 @@ __DEV__ &&
                           instance,
                           root.memoizedProps
                         );
-                  } catch (error$26) {
-                    captureCommitPhaseError(root, root.return, error$26);
+                  } catch (error$27) {
+                    captureCommitPhaseError(root, root.return, error$27);
                   }
                 }
               } else if (
@@ -9855,8 +9876,8 @@ __DEV__ &&
       if (flags & 2) {
         try {
           runWithFiberInDEV(finishedWork, commitPlacement, finishedWork);
-        } catch (error$27) {
-          captureCommitPhaseError(finishedWork, finishedWork.return, error$27);
+        } catch (error$28) {
+          captureCommitPhaseError(finishedWork, finishedWork.return, error$28);
         }
         finishedWork.flags &= -3;
       }
@@ -10002,7 +10023,6 @@ __DEV__ &&
                   commitTime,
                   includeWorkInProgressEffects
                 ),
-                enqueuePendingPassiveProfilerEffect(finishedWork),
                 finishedWork = finishedWork.return;
               null !== finishedWork;
 
@@ -10133,6 +10153,45 @@ __DEV__ &&
             finishedWork !== finishedRoot &&
               (retainCache(finishedWork),
               null != finishedRoot && releaseCache(finishedRoot)));
+          break;
+        case 12:
+          recursivelyTraversePassiveMountEffects(
+            finishedRoot,
+            finishedWork,
+            committedLanes,
+            committedTransitions
+          );
+          if (flags & 2048 && executionContext & CommitContext) {
+            finishedRoot = finishedWork.stateNode.passiveEffectDuration;
+            try {
+              runWithFiberInDEV(
+                finishedWork,
+                commitProfilerPostCommitImpl,
+                finishedWork,
+                finishedWork.alternate,
+                commitTime,
+                finishedRoot
+              );
+            } catch (error$21) {
+              captureCommitPhaseError(
+                finishedWork,
+                finishedWork.return,
+                error$21
+              );
+            }
+            finishedWork = finishedWork.return;
+            a: for (; null !== finishedWork; ) {
+              switch (finishedWork.tag) {
+                case 3:
+                  finishedWork.stateNode.passiveEffectDuration += finishedRoot;
+                  break a;
+                case 12:
+                  finishedWork.stateNode.passiveEffectDuration += finishedRoot;
+                  break a;
+              }
+              finishedWork = finishedWork.return;
+            }
+          }
           break;
         case 23:
           break;
@@ -10915,7 +10974,7 @@ __DEV__ &&
             check = check.value;
             try {
               if (!objectIs(getSnapshot(), check)) return !1;
-            } catch (error$31) {
+            } catch (error$32) {
               return !1;
             }
           }
@@ -11245,8 +11304,8 @@ __DEV__ &&
           }
           workLoopSync();
           break;
-        } catch (thrownValue$32) {
-          handleThrow(root, thrownValue$32);
+        } catch (thrownValue$33) {
+          handleThrow(root, thrownValue$33);
         }
       while (1);
       lanes && root.shellSuspendCounter++;
@@ -11397,8 +11456,8 @@ __DEV__ &&
             ? workLoopSync()
             : workLoopConcurrent();
           break;
-        } catch (thrownValue$33) {
-          handleThrow(root, thrownValue$33);
+        } catch (thrownValue$34) {
+          handleThrow(root, thrownValue$34);
         }
       while (1);
       resetContextDependencies();
@@ -11519,9 +11578,9 @@ __DEV__ &&
           workInProgress = null;
           return;
         }
-      } catch (error$34) {
+      } catch (error$35) {
         if (null !== returnFiber)
-          throw ((workInProgress = returnFiber), error$34);
+          throw ((workInProgress = returnFiber), error$35);
         workInProgressRootExitStatus = RootFatalErrored;
         logUncaughtError(
           root,
@@ -11803,10 +11862,10 @@ __DEV__ &&
           if (null === rootWithPendingPassiveEffects)
             var JSCompiler_inline_result = !1;
           else {
-            var transitions = pendingPassiveTransitions;
+            priority = pendingPassiveTransitions;
             pendingPassiveTransitions = null;
-            priority = rootWithPendingPassiveEffects;
-            var lanes = pendingPassiveEffectsLanes;
+            var root$jscomp$0 = rootWithPendingPassiveEffects,
+              lanes = pendingPassiveEffectsLanes;
             rootWithPendingPassiveEffects = null;
             pendingPassiveEffectsLanes = 0;
             if (
@@ -11824,67 +11883,25 @@ __DEV__ &&
               injectedProfilingHooks.markPassiveEffectsStarted(lanes);
             var prevExecutionContext = executionContext;
             executionContext |= CommitContext;
-            commitPassiveUnmountOnFiber(priority.current);
+            commitPassiveUnmountOnFiber(root$jscomp$0.current);
             commitPassiveMountOnFiber(
-              priority,
-              priority.current,
+              root$jscomp$0,
+              root$jscomp$0.current,
               lanes,
-              transitions
+              priority
             );
-            transitions = pendingPassiveProfilerEffects;
-            pendingPassiveProfilerEffects = [];
-            for (lanes = 0; lanes < transitions.length; lanes++) {
-              var finishedWork = transitions[lanes];
-              if (
-                executionContext & CommitContext &&
-                0 !== (finishedWork.flags & 4)
-              )
-                switch (finishedWork.tag) {
-                  case 12:
-                    var passiveEffectDuration =
-                        finishedWork.stateNode.passiveEffectDuration,
-                      _finishedWork$memoize = finishedWork.memoizedProps,
-                      id = _finishedWork$memoize.id,
-                      onPostCommit = _finishedWork$memoize.onPostCommit,
-                      commitTime$jscomp$0 = commitTime,
-                      phase =
-                        null === finishedWork.alternate ? "mount" : "update";
-                    currentUpdateIsNested && (phase = "nested-update");
-                    "function" === typeof onPostCommit &&
-                      onPostCommit(
-                        id,
-                        phase,
-                        passiveEffectDuration,
-                        commitTime$jscomp$0
-                      );
-                    var parentFiber = finishedWork.return;
-                    b: for (; null !== parentFiber; ) {
-                      switch (parentFiber.tag) {
-                        case 3:
-                          parentFiber.stateNode.passiveEffectDuration +=
-                            passiveEffectDuration;
-                          break b;
-                        case 12:
-                          parentFiber.stateNode.passiveEffectDuration +=
-                            passiveEffectDuration;
-                          break b;
-                      }
-                      parentFiber = parentFiber.return;
-                    }
-                }
-            }
             null !== injectedProfilingHooks &&
               "function" ===
                 typeof injectedProfilingHooks.markPassiveEffectsStopped &&
               injectedProfilingHooks.markPassiveEffectsStopped();
-            commitDoubleInvokeEffectsInDEV(priority, !0);
+            commitDoubleInvokeEffectsInDEV(root$jscomp$0, !0);
             executionContext = prevExecutionContext;
             flushSyncWorkAcrossRoots_impl(0, !1);
             didScheduleUpdateDuringPassiveEffects
-              ? priority === rootWithPassiveNestedUpdates
+              ? root$jscomp$0 === rootWithPassiveNestedUpdates
                 ? nestedPassiveUpdateCount++
                 : ((nestedPassiveUpdateCount = 0),
-                  (rootWithPassiveNestedUpdates = priority))
+                  (rootWithPassiveNestedUpdates = root$jscomp$0))
               : (nestedPassiveUpdateCount = 0);
             didScheduleUpdateDuringPassiveEffects = isFlushingPassiveEffects =
               !1;
@@ -11893,7 +11910,7 @@ __DEV__ &&
               "function" === typeof injectedHook.onPostCommitFiberRoot
             )
               try {
-                injectedHook.onPostCommitFiberRoot(rendererID, priority);
+                injectedHook.onPostCommitFiberRoot(rendererID, root$jscomp$0);
               } catch (err) {
                 hasLoggedError ||
                   ((hasLoggedError = !0),
@@ -11902,7 +11919,7 @@ __DEV__ &&
                     err
                   ));
               }
-            var stateNode = priority.current.stateNode;
+            var stateNode = root$jscomp$0.current.stateNode;
             stateNode.effectDuration = 0;
             stateNode.passiveEffectDuration = 0;
             JSCompiler_inline_result = !0;
@@ -11915,15 +11932,6 @@ __DEV__ &&
         }
       }
       return !1;
-    }
-    function enqueuePendingPassiveProfilerEffect(fiber) {
-      pendingPassiveProfilerEffects.push(fiber);
-      rootDoesHavePassiveEffects ||
-        ((rootDoesHavePassiveEffects = !0),
-        scheduleCallback(NormalPriority$1, function () {
-          flushPassiveEffects();
-          return null;
-        }));
     }
     function captureCommitPhaseErrorOnRoot(rootFiber, sourceFiber, error) {
       sourceFiber = createCapturedValueAtFiber(error, sourceFiber);
@@ -13034,7 +13042,7 @@ __DEV__ &&
           try {
             testStringCoercion(value);
             var JSCompiler_inline_result = !1;
-          } catch (e$35) {
+          } catch (e$36) {
             JSCompiler_inline_result = !0;
           }
           JSCompiler_inline_result &&
@@ -14904,7 +14912,6 @@ __DEV__ &&
       rootDoesHavePassiveEffects = !1,
       rootWithPendingPassiveEffects = null,
       pendingPassiveEffectsLanes = 0,
-      pendingPassiveProfilerEffects = [],
       pendingPassiveEffectsRemainingLanes = 0,
       pendingPassiveTransitions = null,
       NESTED_UPDATE_LIMIT = 50,
@@ -15133,11 +15140,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-3d95c43b-20240913",
+        version: "19.0.0-native-fb-ee1a403a-20240916",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-native-fb-3d95c43b-20240913"
+        reconcilerVersion: "19.0.0-native-fb-ee1a403a-20240916"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15159,7 +15166,7 @@ __DEV__ &&
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1109,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1113,
         isConcurrent = !1,
         isStrictMode = !1;
       "object" === typeof options &&
@@ -15282,5 +15289,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.0.0-native-fb-3d95c43b-20240913";
+    exports.version = "19.0.0-native-fb-ee1a403a-20240916";
   })();

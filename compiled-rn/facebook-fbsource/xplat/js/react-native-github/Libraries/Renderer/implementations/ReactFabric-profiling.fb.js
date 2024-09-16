@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<22b0fd36180890c63b8c7db1f327dc65>>
+ * @generated SignedSource<<22acb37b2cd38769b44252bf796f3563>>
  */
 
 "use strict";
@@ -1237,7 +1237,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_304 = {
+var injectedNamesToPlugins$jscomp$inline_303 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -1283,32 +1283,32 @@ var injectedNamesToPlugins$jscomp$inline_304 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_305 = !1,
-  pluginName$jscomp$inline_306;
-for (pluginName$jscomp$inline_306 in injectedNamesToPlugins$jscomp$inline_304)
+  isOrderingDirty$jscomp$inline_304 = !1,
+  pluginName$jscomp$inline_305;
+for (pluginName$jscomp$inline_305 in injectedNamesToPlugins$jscomp$inline_303)
   if (
-    injectedNamesToPlugins$jscomp$inline_304.hasOwnProperty(
-      pluginName$jscomp$inline_306
+    injectedNamesToPlugins$jscomp$inline_303.hasOwnProperty(
+      pluginName$jscomp$inline_305
     )
   ) {
-    var pluginModule$jscomp$inline_307 =
-      injectedNamesToPlugins$jscomp$inline_304[pluginName$jscomp$inline_306];
+    var pluginModule$jscomp$inline_306 =
+      injectedNamesToPlugins$jscomp$inline_303[pluginName$jscomp$inline_305];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_306) ||
-      namesToPlugins[pluginName$jscomp$inline_306] !==
-        pluginModule$jscomp$inline_307
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_305) ||
+      namesToPlugins[pluginName$jscomp$inline_305] !==
+        pluginModule$jscomp$inline_306
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_306])
+      if (namesToPlugins[pluginName$jscomp$inline_305])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_306 + "`.")
+            (pluginName$jscomp$inline_305 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_306] =
-        pluginModule$jscomp$inline_307;
-      isOrderingDirty$jscomp$inline_305 = !0;
+      namesToPlugins[pluginName$jscomp$inline_305] =
+        pluginModule$jscomp$inline_306;
+      isOrderingDirty$jscomp$inline_304 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_305 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_304 && recomputePluginOrdering();
 var emptyObject$1 = {},
   removedKeys = null,
   removedKeyCount = 0,
@@ -6593,6 +6593,7 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
     case 12:
       0 !== (renderLanes & workInProgress.childLanes) &&
         (workInProgress.flags |= 4);
+      workInProgress.flags |= 2048;
       var stateNode = workInProgress.stateNode;
       stateNode.effectDuration = 0;
       stateNode.passiveEffectDuration = 0;
@@ -6878,6 +6879,7 @@ function beginWork(current, workInProgress, renderLanes) {
     case 12:
       return (
         (workInProgress.flags |= 4),
+        (workInProgress.flags |= 2048),
         (elementType = workInProgress.stateNode),
         (elementType.effectDuration = 0),
         (elementType.passiveEffectDuration = 0),
@@ -8351,13 +8353,14 @@ function commitProfilerUpdate(
   if (executionContext & 4)
     try {
       var _finishedWork$memoize = finishedWork.memoizedProps,
+        id = _finishedWork$memoize.id,
         onCommit = _finishedWork$memoize.onCommit,
         onRender = _finishedWork$memoize.onRender;
       current = null === current ? "mount" : "update";
       currentUpdateIsNested && (current = "nested-update");
       "function" === typeof onRender &&
         onRender(
-          finishedWork.memoizedProps.id,
+          id,
           current,
           finishedWork.actualDuration,
           finishedWork.treeBaseDuration,
@@ -8584,7 +8587,6 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
         a: for (
           flags = finishedWork.stateNode.effectDuration,
             commitProfilerUpdate(finishedWork, current, commitTime, flags),
-            enqueuePendingPassiveProfilerEffect(finishedWork),
             finishedWork = finishedWork.return;
           null !== finishedWork;
 
@@ -9210,7 +9212,6 @@ function recursivelyTraverseReappearLayoutEffects(
           a: for (
             flags = finishedWork.stateNode.effectDuration,
               commitProfilerUpdate(finishedWork, current, commitTime, flags),
-              enqueuePendingPassiveProfilerEffect(finishedWork),
               finishedWork = finishedWork.return;
             null !== finishedWork;
 
@@ -9325,12 +9326,46 @@ function commitPassiveMountOnFiber(
           (finishedWork.refCount++,
           null != finishedRoot && releaseCache(finishedRoot)));
       break;
+    case 12:
+      recursivelyTraversePassiveMountEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        committedTransitions
+      );
+      if (flags & 2048 && executionContext & 4) {
+        finishedRoot = finishedWork.stateNode.passiveEffectDuration;
+        try {
+          var _finishedWork$memoize2 = finishedWork.memoizedProps,
+            id = _finishedWork$memoize2.id,
+            onPostCommit = _finishedWork$memoize2.onPostCommit,
+            phase = null === finishedWork.alternate ? "mount" : "update";
+          currentUpdateIsNested && (phase = "nested-update");
+          "function" === typeof onPostCommit &&
+            onPostCommit(id, phase, finishedRoot, commitTime);
+        } catch (error) {
+          captureCommitPhaseError(finishedWork, finishedWork.return, error);
+        }
+        finishedWork = finishedWork.return;
+        a: for (; null !== finishedWork; ) {
+          switch (finishedWork.tag) {
+            case 3:
+              finishedWork.stateNode.passiveEffectDuration += finishedRoot;
+              break a;
+            case 12:
+              finishedWork.stateNode.passiveEffectDuration += finishedRoot;
+              break a;
+          }
+          finishedWork = finishedWork.return;
+        }
+      }
+      break;
     case 23:
       break;
     case 22:
-      var instance = finishedWork.stateNode;
+      _finishedWork$memoize2 = finishedWork.stateNode;
       null !== finishedWork.memoizedState
-        ? instance._visibility & 4
+        ? _finishedWork$memoize2._visibility & 4
           ? recursivelyTraversePassiveMountEffects(
               finishedRoot,
               finishedWork,
@@ -9342,21 +9377,21 @@ function commitPassiveMountOnFiber(
                 finishedRoot,
                 finishedWork
               )
-            : ((instance._visibility |= 4),
+            : ((_finishedWork$memoize2._visibility |= 4),
               recursivelyTraversePassiveMountEffects(
                 finishedRoot,
                 finishedWork,
                 committedLanes,
                 committedTransitions
               ))
-        : instance._visibility & 4
+        : _finishedWork$memoize2._visibility & 4
           ? recursivelyTraversePassiveMountEffects(
               finishedRoot,
               finishedWork,
               committedLanes,
               committedTransitions
             )
-          : ((instance._visibility |= 4),
+          : ((_finishedWork$memoize2._visibility |= 4),
             recursivelyTraverseReconnectPassiveEffects(
               finishedRoot,
               finishedWork,
@@ -9722,7 +9757,6 @@ var DefaultAsyncDispatcher = {
   rootDoesHavePassiveEffects = !1,
   rootWithPendingPassiveEffects = null,
   pendingPassiveEffectsLanes = 0,
-  pendingPassiveProfilerEffects = [],
   pendingPassiveEffectsRemainingLanes = 0,
   pendingPassiveTransitions = null,
   nestedUpdateCount = 0,
@@ -10303,8 +10337,8 @@ function renderRootSync(root, lanes) {
       }
       workLoopSync();
       break;
-    } catch (thrownValue$147) {
-      handleThrow(root, thrownValue$147);
+    } catch (thrownValue$146) {
+      handleThrow(root, thrownValue$146);
     }
   while (1);
   lanes && root.shellSuspendCounter++;
@@ -10433,8 +10467,8 @@ function renderRootConcurrent(root, lanes) {
         }
       workLoopConcurrent();
       break;
-    } catch (thrownValue$149) {
-      handleThrow(root, thrownValue$149);
+    } catch (thrownValue$148) {
+      handleThrow(root, thrownValue$148);
     }
   while (1);
   resetContextDependencies();
@@ -10802,10 +10836,10 @@ function flushPassiveEffects() {
       if (null === rootWithPendingPassiveEffects)
         var JSCompiler_inline_result = !1;
       else {
-        var transitions = pendingPassiveTransitions;
+        renderPriority = pendingPassiveTransitions;
         pendingPassiveTransitions = null;
-        renderPriority = rootWithPendingPassiveEffects;
-        var lanes = pendingPassiveEffectsLanes;
+        var root$jscomp$0 = rootWithPendingPassiveEffects,
+          lanes = pendingPassiveEffectsLanes;
         rootWithPendingPassiveEffects = null;
         pendingPassiveEffectsLanes = 0;
         if (0 !== (executionContext & 6))
@@ -10816,51 +10850,13 @@ function flushPassiveEffects() {
           injectedProfilingHooks.markPassiveEffectsStarted(lanes);
         var prevExecutionContext = executionContext;
         executionContext |= 4;
-        commitPassiveUnmountOnFiber(renderPriority.current);
+        commitPassiveUnmountOnFiber(root$jscomp$0.current);
         commitPassiveMountOnFiber(
-          renderPriority,
-          renderPriority.current,
+          root$jscomp$0,
+          root$jscomp$0.current,
           lanes,
-          transitions
+          renderPriority
         );
-        transitions = pendingPassiveProfilerEffects;
-        pendingPassiveProfilerEffects = [];
-        for (lanes = 0; lanes < transitions.length; lanes++) {
-          var finishedWork = transitions[lanes];
-          if (executionContext & 4 && 0 !== (finishedWork.flags & 4))
-            switch (finishedWork.tag) {
-              case 12:
-                var passiveEffectDuration =
-                    finishedWork.stateNode.passiveEffectDuration,
-                  _finishedWork$memoize = finishedWork.memoizedProps,
-                  id = _finishedWork$memoize.id,
-                  onPostCommit = _finishedWork$memoize.onPostCommit,
-                  commitTime$132 = commitTime,
-                  phase = null === finishedWork.alternate ? "mount" : "update";
-                currentUpdateIsNested && (phase = "nested-update");
-                "function" === typeof onPostCommit &&
-                  onPostCommit(
-                    id,
-                    phase,
-                    passiveEffectDuration,
-                    commitTime$132
-                  );
-                var parentFiber = finishedWork.return;
-                b: for (; null !== parentFiber; ) {
-                  switch (parentFiber.tag) {
-                    case 3:
-                      parentFiber.stateNode.passiveEffectDuration +=
-                        passiveEffectDuration;
-                      break b;
-                    case 12:
-                      parentFiber.stateNode.passiveEffectDuration +=
-                        passiveEffectDuration;
-                      break b;
-                  }
-                  parentFiber = parentFiber.return;
-                }
-            }
-        }
         null !== injectedProfilingHooks &&
           "function" ===
             typeof injectedProfilingHooks.markPassiveEffectsStopped &&
@@ -10872,9 +10868,9 @@ function flushPassiveEffects() {
           "function" === typeof injectedHook.onPostCommitFiberRoot
         )
           try {
-            injectedHook.onPostCommitFiberRoot(rendererID, renderPriority);
+            injectedHook.onPostCommitFiberRoot(rendererID, root$jscomp$0);
           } catch (err) {}
-        var stateNode = renderPriority.current.stateNode;
+        var stateNode = root$jscomp$0.current.stateNode;
         stateNode.effectDuration = 0;
         stateNode.passiveEffectDuration = 0;
         JSCompiler_inline_result = !0;
@@ -10887,15 +10883,6 @@ function flushPassiveEffects() {
     }
   }
   return !1;
-}
-function enqueuePendingPassiveProfilerEffect(fiber) {
-  pendingPassiveProfilerEffects.push(fiber);
-  rootDoesHavePassiveEffects ||
-    ((rootDoesHavePassiveEffects = !0),
-    scheduleCallback(NormalPriority$1, function () {
-      flushPassiveEffects();
-      return null;
-    }));
 }
 function captureCommitPhaseErrorOnRoot(rootFiber, sourceFiber, error) {
   sourceFiber = createCapturedValueAtFiber(error, sourceFiber);
@@ -11771,21 +11758,21 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1249 = {
+  internals$jscomp$inline_1252 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-3d95c43b-20240913",
+    version: "19.0.0-native-fb-ee1a403a-20240916",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromNode,
-    reconcilerVersion: "19.0.0-native-fb-3d95c43b-20240913"
+    reconcilerVersion: "19.0.0-native-fb-ee1a403a-20240916"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1249.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1249.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1252.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1252.getLaneLabelMap = function () {
   for (
-    var map = new Map(), lane = 1, index$153 = 0;
-    31 > index$153;
-    index$153++
+    var map = new Map(), lane = 1, index$152 = 0;
+    31 > index$152;
+    index$152++
   ) {
     var label = getLabelForLane(lane);
     map.set(lane, label);
@@ -11793,20 +11780,20 @@ internals$jscomp$inline_1249.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1249.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1252.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1502 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1503 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1502.isDisabled &&
-    hook$jscomp$inline_1502.supportsFiber
+    !hook$jscomp$inline_1503.isDisabled &&
+    hook$jscomp$inline_1503.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1502.inject(
-        internals$jscomp$inline_1249
+      (rendererID = hook$jscomp$inline_1503.inject(
+        internals$jscomp$inline_1252
       )),
-        (injectedHook = hook$jscomp$inline_1502);
+        (injectedHook = hook$jscomp$inline_1503);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
