@@ -9,3 +9,4 @@ if (process.env.NODE_ENV === 'production') {
 
 exports.version = s.version;
 exports.prerenderToNodeStream = s.prerenderToNodeStream;
+exports.resumeAndPrerenderToNodeStream = s.resumeAndPrerenderToNodeStream;

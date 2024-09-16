@@ -64,6 +64,7 @@ const FunctionBind = Function.prototype.bind;
 const ArraySlice = Array.prototype.slice;
 function bind(this: ServerReference<any>): any {
   // $FlowFixMe[unsupported-syntax]
+  // $FlowFixMe[prop-missing]
   const newFn = FunctionBind.apply(this, arguments);
   if (this.$$typeof === SERVER_REFERENCE_TAG) {
     if (__DEV__) {

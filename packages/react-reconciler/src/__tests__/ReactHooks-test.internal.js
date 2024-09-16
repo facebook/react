@@ -1864,13 +1864,15 @@ describe('ReactHooks', () => {
   it('does not fire a false positive warning when suspending memo', async () => {
     const {Suspense, useState} = React;
 
-    let wasSuspended = false;
+    let isSuspended = true;
     let resolve;
     function trySuspend() {
-      if (!wasSuspended) {
-        throw new Promise(r => {
-          wasSuspended = true;
-          resolve = r;
+      if (isSuspended) {
+        throw new Promise(res => {
+          resolve = () => {
+            isSuspended = false;
+            res();
+          };
         });
       }
     }
@@ -1900,13 +1902,15 @@ describe('ReactHooks', () => {
   it('does not fire a false positive warning when suspending forwardRef', async () => {
     const {Suspense, useState} = React;
 
-    let wasSuspended = false;
+    let isSuspended = true;
     let resolve;
     function trySuspend() {
-      if (!wasSuspended) {
-        throw new Promise(r => {
-          wasSuspended = true;
-          resolve = r;
+      if (isSuspended) {
+        throw new Promise(res => {
+          resolve = () => {
+            isSuspended = false;
+            res();
+          };
         });
       }
     }
@@ -1936,13 +1940,15 @@ describe('ReactHooks', () => {
   it('does not fire a false positive warning when suspending memo(forwardRef)', async () => {
     const {Suspense, useState} = React;
 
-    let wasSuspended = false;
+    let isSuspended = true;
     let resolve;
     function trySuspend() {
-      if (!wasSuspended) {
-        throw new Promise(r => {
-          wasSuspended = true;
-          resolve = r;
+      if (isSuspended) {
+        throw new Promise(res => {
+          resolve = () => {
+            isSuspended = false;
+            res();
+          };
         });
       }
     }

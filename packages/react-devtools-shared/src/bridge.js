@@ -178,6 +178,7 @@ type SavedPreferencesParams = {
 };
 
 export type BackendEvents = {
+  backendInitialized: [],
   backendVersion: [string],
   bridgeProtocol: [BridgeProtocol],
   extensionBackendInitialized: [],
@@ -199,7 +200,7 @@ export type BackendEvents = {
   stopInspectingHost: [boolean],
   syncSelectionFromBuiltinElementsPanel: [],
   syncSelectionToBuiltinElementsPanel: [],
-  unsupportedRendererVersion: [RendererID],
+  unsupportedRendererVersion: [],
 
   // React Native style editor plug-in.
   isNativeStyleEditorSupported: [
@@ -217,6 +218,7 @@ type FrontendEvents = {
   deletePath: [DeletePath],
   getBackendVersion: [],
   getBridgeProtocol: [],
+  getIfHasUnsupportedRendererVersion: [],
   getOwnersList: [ElementAndRendererID],
   getProfilingData: [{rendererID: RendererID}],
   getProfilingStatus: [],

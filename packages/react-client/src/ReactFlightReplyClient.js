@@ -554,6 +554,7 @@ export function processReply(
         const prefix = formFieldPrefix + refId + '_';
         // $FlowFixMe[prop-missing]: FormData has forEach.
         value.forEach((originalValue: string | File, originalKey: string) => {
+          // $FlowFixMe[incompatible-call]
           data.append(prefix + originalKey, originalValue);
         });
         return serializeFormDataReference(refId);
@@ -925,6 +926,7 @@ function defaultEncodeFormAction(
     const prefixedData = new FormData();
     // $FlowFixMe[prop-missing]
     encodedFormData.forEach((value: string | File, key: string) => {
+      // $FlowFixMe[incompatible-call]
       prefixedData.append('$ACTION_' + identifierPrefix + ':' + key, value);
     });
     data = prefixedData;
@@ -1153,6 +1155,7 @@ const FunctionBind = Function.prototype.bind;
 const ArraySlice = Array.prototype.slice;
 function bind(this: Function): Function {
   // $FlowFixMe[unsupported-syntax]
+  // $FlowFixMe[prop-missing]
   const newFn = FunctionBind.apply(this, arguments);
   const reference = knownServerReferences.get(this);
   if (reference) {

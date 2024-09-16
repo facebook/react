@@ -93,8 +93,8 @@ export function register(name: string, callback: () => ViewConfig): string {
  * This configuration will be lazy-loaded from UIManager.
  */
 export function get(name: string): ViewConfig {
-  let viewConfig;
-  if (!viewConfigs.has(name)) {
+  let viewConfig = viewConfigs.get(name);
+  if (viewConfig == null) {
     const callback = viewConfigCallbacks.get(name);
     if (typeof callback !== 'function') {
       invariant(
@@ -109,15 +109,14 @@ export function get(name: string): ViewConfig {
       );
     }
     viewConfig = callback();
+    invariant(viewConfig, 'View config not found for component `%s`', name);
+
     processEventTypes(viewConfig);
     viewConfigs.set(name, viewConfig);
 
     // Clear the callback after the config is set so that
     // we don't mask any errors during registration.
     viewConfigCallbacks.set(name, null);
-  } else {
-    viewConfig = viewConfigs.get(name);
   }
-  invariant(viewConfig, 'View config not found for name %s', name);
   return viewConfig;
 }

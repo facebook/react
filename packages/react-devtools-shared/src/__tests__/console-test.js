@@ -54,14 +54,6 @@ describe('console', () => {
       fakeConsole,
     );
 
-    const inject = global.__REACT_DEVTOOLS_GLOBAL_HOOK__.inject;
-    global.__REACT_DEVTOOLS_GLOBAL_HOOK__.inject = internals => {
-      rendererID = inject(internals);
-
-      Console.registerRenderer(internals);
-      return rendererID;
-    };
-
     React = require('react');
     if (
       React.version.startsWith('19') &&
@@ -1100,9 +1092,17 @@ describe('console error', () => {
     global.__REACT_DEVTOOLS_GLOBAL_HOOK__.inject = internals => {
       inject(internals);
 
-      Console.registerRenderer(internals, () => {
-        throw Error('foo');
-      });
+      Console.registerRenderer(
+        () => {
+          throw Error('foo');
+        },
+        () => {
+          return {
+            enableOwnerStacks: true,
+            componentStack: '\n    at FakeStack (fake-file)',
+          };
+        },
+      );
     };
 
     React = require('react');
@@ -1142,11 +1142,18 @@ describe('console error', () => {
     expect(mockLog.mock.calls[0][0]).toBe('log');
 
     expect(mockWarn).toHaveBeenCalledTimes(1);
-    expect(mockWarn.mock.calls[0]).toHaveLength(1);
+    expect(mockWarn.mock.calls[0]).toHaveLength(2);
     expect(mockWarn.mock.calls[0][0]).toBe('warn');
+    // An error in showInlineWarningsAndErrors doesn't need to break component stacks.
+    expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
+      '\n    in FakeStack (at **)',
+    );
 
     expect(mockError).toHaveBeenCalledTimes(1);
-    expect(mockError.mock.calls[0]).toHaveLength(1);
+    expect(mockError.mock.calls[0]).toHaveLength(2);
     expect(mockError.mock.calls[0][0]).toBe('error');
+    expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
+      '\n    in FakeStack (at **)',
+    );
   });
 });

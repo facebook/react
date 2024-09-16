@@ -475,6 +475,7 @@ export function parseElementDisplayNameFromBackend(
       if (displayName.indexOf('(') >= 0) {
         const matches = displayName.match(/[^()]+/g);
         if (matches != null) {
+          // $FlowFixMe[incompatible-type]
           displayName = matches.pop();
           hocDisplayNames = matches;
         }
@@ -485,6 +486,7 @@ export function parseElementDisplayNameFromBackend(
   }
 
   return {
+    // $FlowFixMe[incompatible-return]
     formattedDisplayName: displayName,
     hocDisplayNames,
     compiledWithForget: false,
