@@ -1026,6 +1026,10 @@ function updateProfiler(
     workInProgress.flags |= Update;
 
     if (enableProfilerCommitHooks) {
+      // Schedule a passive effect for this Profiler to call onPostCommit hooks.
+      // This effect should be scheduled even if there is no onPostCommit callback for this Profiler,
+      // because the effect is also where times bubble to parent Profilers.
+      workInProgress.flags |= Passive;
       // Reset effect durations for the next eventual effect phase.
       // These are reset during render to allow the DevTools commit hook a chance to read them,
       const stateNode = workInProgress.stateNode;
@@ -3700,6 +3704,10 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
         }
 
         if (enableProfilerCommitHooks) {
+          // Schedule a passive effect for this Profiler to call onPostCommit hooks.
+          // This effect should be scheduled even if there is no onPostCommit callback for this Profiler,
+          // because the effect is also where times bubble to parent Profilers.
+          workInProgress.flags |= Passive;
           // Reset effect durations for the next eventual effect phase.
           // These are reset during render to allow the DevTools commit hook a chance to read them,
           const stateNode = workInProgress.stateNode;

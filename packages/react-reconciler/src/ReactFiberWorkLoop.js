@@ -189,7 +189,6 @@ import {
   commitBeforeMutationEffects,
   commitLayoutEffects,
   commitMutationEffects,
-  commitPassiveEffectDurations,
   commitPassiveMountEffects,
   commitPassiveUnmountEffects,
   disappearLayoutEffects,
@@ -580,7 +579,6 @@ let legacyErrorBoundariesThatAlreadyFailed: Set<mixed> | null = null;
 let rootDoesHavePassiveEffects: boolean = false;
 let rootWithPendingPassiveEffects: FiberRoot | null = null;
 let pendingPassiveEffectsLanes: Lanes = NoLanes;
-let pendingPassiveProfilerEffects: Array<Fiber> = [];
 let pendingPassiveEffectsRemainingLanes: Lanes = NoLanes;
 let pendingPassiveTransitions: Array<Transition> | null = null;
 
@@ -3475,19 +3473,6 @@ export function flushPassiveEffects(): boolean {
   return false;
 }
 
-export function enqueuePendingPassiveProfilerEffect(fiber: Fiber): void {
-  if (enableProfilerTimer && enableProfilerCommitHooks) {
-    pendingPassiveProfilerEffects.push(fiber);
-    if (!rootDoesHavePassiveEffects) {
-      rootDoesHavePassiveEffects = true;
-      scheduleCallback(NormalSchedulerPriority, () => {
-        flushPassiveEffects();
-        return null;
-      });
-    }
-  }
-}
-
 function flushPassiveEffectsImpl() {
   if (rootWithPendingPassiveEffects === null) {
     return false;
@@ -3527,16 +3512,6 @@ function flushPassiveEffectsImpl() {
 
   commitPassiveUnmountEffects(root.current);
   commitPassiveMountEffects(root, root.current, lanes, transitions);
-
-  // TODO: Move to commitPassiveMountEffects
-  if (enableProfilerTimer && enableProfilerCommitHooks) {
-    const profilerEffects = pendingPassiveProfilerEffects;
-    pendingPassiveProfilerEffects = [];
-    for (let i = 0; i < profilerEffects.length; i++) {
-      const fiber = ((profilerEffects[i]: any): Fiber);
-      commitPassiveEffectDurations(root, fiber);
-    }
-  }
 
   if (__DEV__) {
     if (enableDebugTracing) {
