@@ -1264,6 +1264,7 @@ function commitDeletionEffectsOnFiber(
         enableHiddenSubtreeInsertionEffectCleanup ||
         !offscreenSubtreeWasHidden
       ) {
+        // TODO: Use a commitHookInsertionUnmountEffects wrapper to record timings.
         commitHookEffectListUnmount(
           HookInsertion,
           deletedFiber,
@@ -1271,10 +1272,10 @@ function commitDeletionEffectsOnFiber(
         );
       }
       if (!offscreenSubtreeWasHidden) {
-        commitHookEffectListUnmount(
-          HookLayout,
+        commitHookLayoutUnmountEffects(
           deletedFiber,
           nearestMountedAncestor,
+          HookLayout,
         );
       }
       recursivelyTraverseDeletionEffects(
@@ -1598,6 +1599,7 @@ function commitMutationEffectsOnFiber(
           finishedWork,
           finishedWork.return,
         );
+        // TODO: Use a commitHookInsertionUnmountEffects wrapper to record timings.
         commitHookEffectListMount(HookInsertion | HookHasEffect, finishedWork);
         commitHookLayoutUnmountEffects(
           finishedWork,
