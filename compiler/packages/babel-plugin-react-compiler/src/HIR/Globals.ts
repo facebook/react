@@ -365,6 +365,17 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
     }),
   ],
   [
+    'useImperativeHandle',
+    addHook(DEFAULT_SHAPES, {
+      positionalParams: [],
+      restParam: Effect.Freeze,
+      returnType: {kind: 'Primitive'},
+      calleeEffect: Effect.Read,
+      hookKind: 'useImperativeHandle',
+      returnValueKind: ValueKind.Frozen,
+    }),
+  ],
+  [
     'useMemo',
     addHook(DEFAULT_SHAPES, {
       positionalParams: [],
