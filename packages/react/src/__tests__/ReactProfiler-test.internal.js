@@ -164,22 +164,73 @@ describe(`onRender`, () => {
     // TODO: unstable_now is called by more places than just the profiler.
     // Rewrite this test so it's less fragile.
     if (gate(flags => flags.enableDeferRootSchedulingToMicrotask)) {
-      assertLog([
-        'read current time',
-        'read current time',
-        'read current time',
-        'read current time',
-      ]);
+      if (gate(flags => flags.enableComponentPerformanceTrack)) {
+        assertLog([
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+        ]);
+      } else {
+        assertLog([
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+        ]);
+      }
     } else {
-      assertLog([
-        'read current time',
-        'read current time',
-        'read current time',
-        'read current time',
-        'read current time',
-        'read current time',
-        'read current time',
-      ]);
+      if (gate(flags => flags.enableComponentPerformanceTrack)) {
+        assertLog([
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+        ]);
+      } else {
+        assertLog([
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+          'read current time',
+        ]);
+      }
     }
   });
 

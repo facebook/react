@@ -100,6 +100,7 @@ function flushSyncFromReconciler<R>(fn: (() => R) | void): R | void {
       );
     }
   }
+  // $FlowFixMe[incompatible-call]
   return flushSyncWithoutWarningIfAlreadyRendering(fn);
 }
 

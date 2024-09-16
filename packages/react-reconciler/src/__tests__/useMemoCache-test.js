@@ -561,26 +561,13 @@ describe('useMemoCache()', () => {
         root.render(<App chunkA={updatedChunkA} chunkB={updatedChunkB} />);
       });
     });
-    assertLog([
-      'Suspend! [chunkA]',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [chunkA]'] : []),
-    ]);
+    assertLog(['Suspend! [chunkA]']);
 
     // The data starts to stream in. Loading the data in the first chunk
     // triggers an expensive computation in the UI. Later, we'll test whether
     // this computation is reused.
     await act(() => updatedChunkA.resolve('A2'));
-    assertLog([
-      'Some expensive processing... [A2]',
-      'Suspend! [chunkB]',
-
-      ...(gate('enableSiblingPrerendering')
-        ? gate('enableNoCloningMemoCache')
-          ? ['Suspend! [chunkB]']
-          : ['Some expensive processing... [A2]', 'Suspend! [chunkB]']
-        : []),
-    ]);
+    assertLog(['Some expensive processing... [A2]', 'Suspend! [chunkB]']);
 
     // The second chunk hasn't loaded yet, so we're still showing the
     // initial UI.
@@ -601,22 +588,11 @@ describe('useMemoCache()', () => {
     if (gate(flags => flags.enableNoCloningMemoCache)) {
       // We did not have process the first chunk again. We reused the
       // computation from the earlier attempt.
-      assertLog([
-        'Suspend! [chunkB]',
-
-        ...(gate('enableSiblingPrerendering') ? ['Suspend! [chunkB]'] : []),
-      ]);
+      assertLog(['Suspend! [chunkB]']);
     } else {
       // Because we clone/reset the memo cache after every aborted attempt, we
       // must process the first chunk again.
-      assertLog([
-        'Some expensive processing... [A2]',
-        'Suspend! [chunkB]',
-
-        ...(gate('enableSiblingPrerendering')
-          ? ['Some expensive processing... [A2]', 'Suspend! [chunkB]']
-          : []),
-      ]);
+      assertLog(['Some expensive processing... [A2]', 'Suspend! [chunkB]']);
     }
 
     expect(root).toMatchRenderedOutput(

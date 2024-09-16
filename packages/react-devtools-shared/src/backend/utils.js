@@ -299,10 +299,12 @@ export function formatConsoleArgumentsToSingleString(
     if (args.length) {
       const REGEXP = /(%?)(%([jds]))/g;
 
+      // $FlowFixMe[incompatible-call]
       formatted = formatted.replace(REGEXP, (match, escaped, ptn, flag) => {
         let arg = args.shift();
         switch (flag) {
           case 's':
+            // $FlowFixMe[unsafe-addition]
             arg += '';
             break;
           case 'd':

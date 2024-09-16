@@ -20,8 +20,13 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: ['TodoAdd'],
-  isComponent: 'TodoAdd',
+  params: [{a: 0, b: 1, c: true, d: true}],
+  sequentialRenders: [
+    {a: 0, b: 1, c: true, d: true},
+    {a: 4, b: 1, c: true, d: true},
+    {a: 4, b: 1, c: false, d: true},
+    {a: 4, b: 1, c: false, d: false},
+  ],
 };
 
 ```
@@ -61,9 +66,19 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: [{ a: 0, b: 1, c: true, d: true }],
+  sequentialRenders: [
+    { a: 0, b: 1, c: true, d: true },
+    { a: 4, b: 1, c: true, d: true },
+    { a: 4, b: 1, c: false, d: true },
+    { a: 4, b: 1, c: false, d: false },
+  ],
 };
 
 ```
       
+### Eval output
+(kind: ok) [1,1,2]
+[4,1,2]
+[4,0,2]
+[4,0,0]
