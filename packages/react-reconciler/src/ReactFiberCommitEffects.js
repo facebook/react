@@ -876,7 +876,7 @@ export function safelyDetachRef(
   }
 }
 
-export function safelyCallDestroy(
+function safelyCallDestroy(
   current: Fiber,
   nearestMountedAncestor: Fiber | null,
   destroy: () => void,
