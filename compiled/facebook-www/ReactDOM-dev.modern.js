@@ -18009,41 +18009,43 @@ __DEV__ &&
         : !1;
     }
     function getActiveElementDeep(containerInfo) {
-      var $jscomp$optchain$tmpm82189054$1, $jscomp$nullish$tmp0;
+      var $jscomp$optchain$tmpm2084807178$1, $jscomp$nullish$tmp0;
       containerInfo =
         null !=
         ($jscomp$nullish$tmp0 =
           null == containerInfo
             ? void 0
             : null ==
-                ($jscomp$optchain$tmpm82189054$1 = containerInfo.ownerDocument)
+                ($jscomp$optchain$tmpm2084807178$1 =
+                  containerInfo.ownerDocument)
               ? void 0
-              : $jscomp$optchain$tmpm82189054$1.defaultView)
+              : $jscomp$optchain$tmpm2084807178$1.defaultView)
           ? $jscomp$nullish$tmp0
           : window;
       for (
-        $jscomp$optchain$tmpm82189054$1 = getActiveElement(
+        $jscomp$optchain$tmpm2084807178$1 = getActiveElement(
           containerInfo.document
         );
-        $jscomp$optchain$tmpm82189054$1 instanceof
+        $jscomp$optchain$tmpm2084807178$1 instanceof
         containerInfo.HTMLIFrameElement;
 
       ) {
         try {
           var JSCompiler_inline_result =
             "string" ===
-            typeof $jscomp$optchain$tmpm82189054$1.contentWindow.location.href;
+            typeof $jscomp$optchain$tmpm2084807178$1.contentWindow.location
+              .href;
         } catch (err) {
           JSCompiler_inline_result = !1;
         }
         if (JSCompiler_inline_result)
-          containerInfo = $jscomp$optchain$tmpm82189054$1.contentWindow;
+          containerInfo = $jscomp$optchain$tmpm2084807178$1.contentWindow;
         else break;
-        $jscomp$optchain$tmpm82189054$1 = getActiveElement(
+        $jscomp$optchain$tmpm2084807178$1 = getActiveElement(
           containerInfo.document
         );
       }
-      return $jscomp$optchain$tmpm82189054$1;
+      return $jscomp$optchain$tmpm2084807178$1;
     }
     function hasSelectionCapabilities(elem) {
       var nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
@@ -26992,11 +26994,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.0.0-www-modern-fc5ef50d-20240914" !== isomorphicReactPackageVersion)
+      if ("19.0.0-www-modern-8cf64620-20240916" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.0.0-www-modern-fc5ef50d-20240914\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.0.0-www-modern-8cf64620-20240916\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -27039,11 +27041,11 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.0.0-www-modern-fc5ef50d-20240914",
+          version: "19.0.0-www-modern-8cf64620-20240916",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
           findFiberByHostInstance: getClosestInstanceFromNode,
-          reconcilerVersion: "19.0.0-www-modern-fc5ef50d-20240914"
+          reconcilerVersion: "19.0.0-www-modern-8cf64620-20240916"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -27648,7 +27650,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.0.0-www-modern-fc5ef50d-20240914";
+    exports.version = "19.0.0-www-modern-8cf64620-20240916";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
