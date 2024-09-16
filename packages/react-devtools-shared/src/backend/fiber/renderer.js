@@ -1078,7 +1078,7 @@ export function attach(
   function getComponentStack(
     topFrame: Error,
   ): null | {enableOwnerStacks: boolean, componentStack: string} {
-    if (getCurrentFiber === undefined) {
+    if (getCurrentFiber == null) {
       // Expected this to be part of the renderer. Ignore.
       return null;
     }
@@ -1130,7 +1130,7 @@ export function attach(
     type: 'error' | 'warn',
     args: $ReadOnlyArray<any>,
   ): void {
-    if (getCurrentFiber === undefined) {
+    if (getCurrentFiber == null) {
       // Expected this to be part of the renderer. Ignore.
       return;
     }

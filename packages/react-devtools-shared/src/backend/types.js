@@ -158,7 +158,7 @@ export type ReactRenderer = {
   currentDispatcherRef?: LegacyDispatcherRef | CurrentDispatcherRef,
   // Only injected by React v16.9+ in DEV mode.
   // Enables DevTools to append owners-only component stack to error messages.
-  getCurrentFiber?: () => Fiber | null,
+  getCurrentFiber?: (() => Fiber | null) | null,
   // Only injected by React Flight Clients in DEV mode.
   // Enables DevTools to append owners-only component stack to error messages from Server Components.
   getCurrentComponentInfo?: () => ReactComponentInfo | null,
