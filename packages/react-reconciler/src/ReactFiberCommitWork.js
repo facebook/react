@@ -144,7 +144,6 @@ import {
   addMarkerCompleteCallbackToPendingTransition,
   getExecutionContext,
   CommitContext,
-  NoContext,
   setIsRunningInsertionEffect,
 } from './ReactFiberWorkLoop';
 import {
@@ -230,8 +229,7 @@ function shouldProfile(current: Fiber): boolean {
   return (
     enableProfilerTimer &&
     enableProfilerCommitHooks &&
-    (current.mode & ProfileMode) !== NoMode &&
-    (getExecutionContext() & CommitContext) !== NoContext
+    (current.mode & ProfileMode) !== NoMode
   );
 }
 
