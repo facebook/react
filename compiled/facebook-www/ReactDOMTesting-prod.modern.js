@@ -13197,36 +13197,41 @@ function containsNode(outerNode, innerNode) {
     : !1;
 }
 function getActiveElementDeep(containerInfo) {
-  var $jscomp$optchain$tmp680638947$1, $jscomp$nullish$tmp0;
+  var $jscomp$optchain$tmpm1471981955$1, $jscomp$nullish$tmp0;
   containerInfo =
     null !=
     ($jscomp$nullish$tmp0 =
       null == containerInfo
         ? void 0
         : null ==
-            ($jscomp$optchain$tmp680638947$1 = containerInfo.ownerDocument)
+            ($jscomp$optchain$tmpm1471981955$1 = containerInfo.ownerDocument)
           ? void 0
-          : $jscomp$optchain$tmp680638947$1.defaultView)
+          : $jscomp$optchain$tmpm1471981955$1.defaultView)
       ? $jscomp$nullish$tmp0
       : window;
   for (
-    $jscomp$optchain$tmp680638947$1 = getActiveElement(containerInfo.document);
-    $jscomp$optchain$tmp680638947$1 instanceof containerInfo.HTMLIFrameElement;
+    $jscomp$optchain$tmpm1471981955$1 = getActiveElement(
+      containerInfo.document
+    );
+    $jscomp$optchain$tmpm1471981955$1 instanceof
+    containerInfo.HTMLIFrameElement;
 
   ) {
     try {
       var JSCompiler_inline_result =
         "string" ===
-        typeof $jscomp$optchain$tmp680638947$1.contentWindow.location.href;
+        typeof $jscomp$optchain$tmpm1471981955$1.contentWindow.location.href;
     } catch (err) {
       JSCompiler_inline_result = !1;
     }
     if (JSCompiler_inline_result)
-      containerInfo = $jscomp$optchain$tmp680638947$1.contentWindow;
+      containerInfo = $jscomp$optchain$tmpm1471981955$1.contentWindow;
     else break;
-    $jscomp$optchain$tmp680638947$1 = getActiveElement(containerInfo.document);
+    $jscomp$optchain$tmpm1471981955$1 = getActiveElement(
+      containerInfo.document
+    );
   }
-  return $jscomp$optchain$tmp680638947$1;
+  return $jscomp$optchain$tmpm1471981955$1;
 }
 function hasSelectionCapabilities(elem) {
   var nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
@@ -17157,14 +17162,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1769 = React.version;
 if (
-  "19.0.0-www-modern-26855e46-20240916" !==
+  "19.0.0-www-modern-e78c9362-20240916" !==
   isomorphicReactPackageVersion$jscomp$inline_1769
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1769,
-      "19.0.0-www-modern-26855e46-20240916"
+      "19.0.0-www-modern-e78c9362-20240916"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17182,11 +17187,11 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2289 = {
   bundleType: 0,
-  version: "19.0.0-www-modern-26855e46-20240916",
+  version: "19.0.0-www-modern-e78c9362-20240916",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-www-modern-26855e46-20240916"
+  reconcilerVersion: "19.0.0-www-modern-e78c9362-20240916"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2290 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17700,4 +17705,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-26855e46-20240916";
+exports.version = "19.0.0-www-modern-e78c9362-20240916";
