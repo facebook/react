@@ -229,9 +229,19 @@ export function patch({
                     // In Chromium, only the stack property is printed but in Firefox the <name>:<message>
                     // gets printed so to make the colon make sense, we name it so we print Stack:
                     // and similarly Safari leave an expandable slot.
-                    fakeError.name = enableOwnerStacks
-                      ? 'Stack'
-                      : 'Component Stack'; // This gets printed
+                    if (__IS_CHROME__ || __IS_EDGE__) {
+                      // Before sending the stack to Chrome DevTools for formatting,
+                      // V8 will reconstruct this according to the template <name>: <message><stack-frames>
+                      // https://source.chromium.org/chromium/chromium/src/+/main:v8/src/inspector/value-mirror.cc;l=252-311;drc=bdc48d1b1312cc40c00282efb1c9c5f41dcdca9a
+                      // It has to start with ^[\w.]*Error\b to trigger stack formatting.
+                      fakeError.name = enableOwnerStacks
+                        ? 'Error Stack'
+                        : 'Error Component Stack'; // This gets printed
+                    } else {
+                      fakeError.name = enableOwnerStacks
+                        ? 'Stack'
+                        : 'Component Stack'; // This gets printed
+                    }
                     // In Chromium, the stack property needs to start with ^[\w.]*Error\b to trigger stack
                     // formatting. Otherwise it is left alone. So we prefix it. Otherwise we just override it
                     // to our own stack.
