@@ -98,13 +98,7 @@ import {
   FormReset,
   Cloned,
 } from './ReactFiberFlags';
-import {
-  getCommitTime,
-  getCompleteTime,
-  pushNestedEffectDurations,
-  popNestedEffectDurations,
-  bubbleNestedEffectDurations,
-} from './ReactProfilerTimer';
+import {getCommitTime, getCompleteTime} from './ReactProfilerTimer';
 import {logComponentRender} from './ReactFiberPerformanceTrack';
 import {ConcurrentMode, NoMode, ProfileMode} from './ReactTypeOfMode';
 import {deferHiddenCallbacks} from './ReactFiberClassUpdateQueue';
