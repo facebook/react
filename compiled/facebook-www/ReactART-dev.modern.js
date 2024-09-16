@@ -7565,6 +7565,7 @@ __DEV__ &&
         case 12:
           0 !== (renderLanes & workInProgress.childLanes) &&
             (workInProgress.flags |= 4);
+          workInProgress.flags |= 2048;
           var stateNode = workInProgress.stateNode;
           stateNode.effectDuration = 0;
           stateNode.passiveEffectDuration = 0;
@@ -7987,6 +7988,7 @@ __DEV__ &&
         case 12:
           return (
             (workInProgress.flags |= 4),
+            (workInProgress.flags |= 2048),
             (returnFiber = workInProgress.stateNode),
             (returnFiber.effectDuration = 0),
             (returnFiber.passiveEffectDuration = 0),
@@ -9666,13 +9668,14 @@ __DEV__ &&
     }
     function commitProfiler(finishedWork, current, commitTime, effectDuration) {
       var _finishedWork$memoize = finishedWork.memoizedProps,
+        id = _finishedWork$memoize.id,
         onCommit = _finishedWork$memoize.onCommit;
       _finishedWork$memoize = _finishedWork$memoize.onRender;
       current = null === current ? "mount" : "update";
       currentUpdateIsNested && (current = "nested-update");
       "function" === typeof _finishedWork$memoize &&
         _finishedWork$memoize(
-          finishedWork.memoizedProps.id,
+          id,
           current,
           finishedWork.actualDuration,
           finishedWork.treeBaseDuration,
@@ -9707,6 +9710,44 @@ __DEV__ &&
           captureCommitPhaseError(finishedWork, finishedWork.return, error$20);
         }
     }
+    function commitProfilerPostCommitImpl(
+      finishedWork,
+      current,
+      commitTime,
+      passiveEffectDuration
+    ) {
+      var _finishedWork$memoize2 = finishedWork.memoizedProps;
+      finishedWork = _finishedWork$memoize2.id;
+      _finishedWork$memoize2 = _finishedWork$memoize2.onPostCommit;
+      current = null === current ? "mount" : "update";
+      currentUpdateIsNested && (current = "nested-update");
+      "function" === typeof _finishedWork$memoize2 &&
+        _finishedWork$memoize2(
+          finishedWork,
+          current,
+          passiveEffectDuration,
+          commitTime
+        );
+    }
+    function commitProfilerPostCommit(
+      finishedWork,
+      current,
+      commitTime,
+      passiveEffectDuration
+    ) {
+      try {
+        runWithFiberInDEV(
+          finishedWork,
+          commitProfilerPostCommitImpl,
+          finishedWork,
+          current,
+          commitTime,
+          passiveEffectDuration
+        );
+      } catch (error$21) {
+        captureCommitPhaseError(finishedWork, finishedWork.return, error$21);
+      }
+    }
     function commitHostMount(finishedWork) {
       var type = finishedWork.type,
         props = finishedWork.memoizedProps,
@@ -9720,8 +9761,8 @@ __DEV__ &&
           props,
           finishedWork
         );
-      } catch (error$21) {
-        captureCommitPhaseError(finishedWork, finishedWork.return, error$21);
+      } catch (error$22) {
+        captureCommitPhaseError(finishedWork, finishedWork.return, error$22);
       }
     }
     function isHostParent(fiber) {
@@ -9915,38 +9956,6 @@ __DEV__ &&
       focusedInstanceHandle = null;
       return root;
     }
-    function commitPassiveEffectDurations(finishedRoot, finishedWork) {
-      if (executionContext & CommitContext && 0 !== (finishedWork.flags & 4))
-        switch (finishedWork.tag) {
-          case 12:
-            finishedRoot = finishedWork.stateNode.passiveEffectDuration;
-            var _finishedWork$memoize = finishedWork.memoizedProps,
-              id = _finishedWork$memoize.id;
-            _finishedWork$memoize = _finishedWork$memoize.onPostCommit;
-            var commitTime$jscomp$0 = commitTime,
-              phase = null === finishedWork.alternate ? "mount" : "update";
-            currentUpdateIsNested && (phase = "nested-update");
-            "function" === typeof _finishedWork$memoize &&
-              _finishedWork$memoize(
-                id,
-                phase,
-                finishedRoot,
-                commitTime$jscomp$0
-              );
-            finishedWork = finishedWork.return;
-            a: for (; null !== finishedWork; ) {
-              switch (finishedWork.tag) {
-                case 3:
-                  finishedWork.stateNode.passiveEffectDuration += finishedRoot;
-                  break a;
-                case 12:
-                  finishedWork.stateNode.passiveEffectDuration += finishedRoot;
-                  break a;
-              }
-              finishedWork = finishedWork.return;
-            }
-        }
-    }
     function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
       var flags = finishedWork.flags;
       switch (finishedWork.tag) {
@@ -10079,7 +10088,6 @@ __DEV__ &&
             a: for (
               flags = finishedWork.stateNode.effectDuration,
                 commitProfilerUpdate(finishedWork, current, commitTime, flags),
-                enqueuePendingPassiveProfilerEffect(finishedWork),
                 finishedWork = finishedWork.return;
               null !== finishedWork;
 
@@ -10389,11 +10397,11 @@ __DEV__ &&
                   hostParent,
                   deletedFiber.stateNode
                 );
-              } catch (error$28) {
+              } catch (error$29) {
                 captureCommitPhaseError(
                   deletedFiber,
                   nearestMountedAncestor,
-                  error$28
+                  error$29
                 );
               }
             else
@@ -10404,11 +10412,11 @@ __DEV__ &&
                   hostParent,
                   deletedFiber.stateNode
                 );
-              } catch (error$29) {
+              } catch (error$30) {
                 captureCommitPhaseError(
                   deletedFiber,
                   nearestMountedAncestor,
-                  error$29
+                  error$30
                 );
               }
           break;
@@ -10418,11 +10426,11 @@ __DEV__ &&
             try {
               (_prevHostParent = finishedRoot.onDeleted) &&
                 _prevHostParent(deletedFiber.stateNode);
-            } catch (error$30) {
+            } catch (error$31) {
               captureCommitPhaseError(
                 deletedFiber,
                 nearestMountedAncestor,
-                error$30
+                error$31
               );
             }
           null !== hostParent &&
@@ -10762,11 +10770,11 @@ __DEV__ &&
             var instance = finishedWork.stateNode;
             try {
               runWithFiberInDEV(finishedWork, resetTextContent, instance);
-            } catch (error$24) {
+            } catch (error$25) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$24
+                error$25
               );
             }
           }
@@ -10783,11 +10791,11 @@ __DEV__ &&
                 instance,
                 finishedWork
               );
-            } catch (error$22) {
+            } catch (error$23) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$22
+                error$23
               );
             }
           }
@@ -10816,11 +10824,11 @@ __DEV__ &&
                 current,
                 flags
               );
-            } catch (error$23) {
+            } catch (error$24) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$23
+                error$24
               );
             }
           }
@@ -10856,11 +10864,11 @@ __DEV__ &&
                   void 0 !== suspenseCallback &&
                     error$jscomp$0("Unexpected type for suspenseCallback.");
               }
-            } catch (error$31) {
+            } catch (error$32) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$31
+                error$32
               );
             }
             flags = finishedWork.updateQueue;
@@ -10917,11 +10925,11 @@ __DEV__ &&
                             retryQueue.stateNode,
                             retryQueue.memoizedProps
                           );
-                  } catch (error$25) {
+                  } catch (error$26) {
                     captureCommitPhaseError(
                       retryQueue,
                       retryQueue.return,
-                      error$25
+                      error$26
                     );
                   }
                 }
@@ -10942,11 +10950,11 @@ __DEV__ &&
                           instance$jscomp$0,
                           retryQueue.memoizedProps
                         );
-                  } catch (error$26) {
+                  } catch (error$27) {
                     captureCommitPhaseError(
                       retryQueue,
                       retryQueue.return,
-                      error$26
+                      error$27
                     );
                   }
                 }
@@ -11007,8 +11015,8 @@ __DEV__ &&
       if (flags & 2) {
         try {
           runWithFiberInDEV(finishedWork, commitPlacement, finishedWork);
-        } catch (error$27) {
-          captureCommitPhaseError(finishedWork, finishedWork.return, error$27);
+        } catch (error$28) {
+          captureCommitPhaseError(finishedWork, finishedWork.return, error$28);
         }
         finishedWork.flags &= -3;
       }
@@ -11167,7 +11175,6 @@ __DEV__ &&
                   commitTime,
                   includeWorkInProgressEffects
                 ),
-                enqueuePendingPassiveProfilerEffect(finishedWork),
                 finishedWork = finishedWork.return;
               null !== finishedWork;
 
@@ -11403,6 +11410,37 @@ __DEV__ &&
               clearTransitionsForLanes(finishedRoot, committedLanes);
             }
           }
+          break;
+        case 12:
+          recursivelyTraversePassiveMountEffects(
+            finishedRoot,
+            finishedWork,
+            committedLanes,
+            committedTransitions
+          );
+          if (flags & 2048 && executionContext & CommitContext)
+            a: for (
+              finishedRoot = finishedWork.stateNode.passiveEffectDuration,
+                commitProfilerPostCommit(
+                  finishedWork,
+                  finishedWork.alternate,
+                  commitTime,
+                  finishedRoot
+                ),
+                finishedWork = finishedWork.return;
+              null !== finishedWork;
+
+            ) {
+              switch (finishedWork.tag) {
+                case 3:
+                  finishedWork.stateNode.passiveEffectDuration += finishedRoot;
+                  break a;
+                case 12:
+                  finishedWork.stateNode.passiveEffectDuration += finishedRoot;
+                  break a;
+              }
+              finishedWork = finishedWork.return;
+            }
           break;
         case 23:
           recursivelyTraversePassiveMountEffects(
@@ -12302,7 +12340,7 @@ __DEV__ &&
             check = check.value;
             try {
               if (!objectIs(getSnapshot(), check)) return !1;
-            } catch (error$32) {
+            } catch (error$33) {
               return !1;
             }
           }
@@ -12639,8 +12677,8 @@ __DEV__ &&
           }
           workLoopSync();
           break;
-        } catch (thrownValue$33) {
-          handleThrow(root, thrownValue$33);
+        } catch (thrownValue$34) {
+          handleThrow(root, thrownValue$34);
         }
       while (1);
       lanes && root.shellSuspendCounter++;
@@ -12808,8 +12846,8 @@ __DEV__ &&
             ? workLoopSync()
             : workLoopConcurrent();
           break;
-        } catch (thrownValue$34) {
-          handleThrow(root, thrownValue$34);
+        } catch (thrownValue$35) {
+          handleThrow(root, thrownValue$35);
         }
       while (1);
       resetContextDependencies();
@@ -12954,9 +12992,9 @@ __DEV__ &&
           workInProgress = null;
           return;
         }
-      } catch (error$35) {
+      } catch (error$36) {
         if (null !== returnFiber)
-          throw ((workInProgress = returnFiber), error$35);
+          throw ((workInProgress = returnFiber), error$36);
         workInProgressRootExitStatus = RootFatalErrored;
         logUncaughtError(
           root,
@@ -13001,25 +13039,16 @@ __DEV__ &&
         }
         var current = completedWork.alternate;
         unitOfWork = completedWork.return;
-        0 === (completedWork.mode & 2)
-          ? (current = runWithFiberInDEV(
-              completedWork,
-              completeWork,
-              current,
-              completedWork,
-              entangledRenderLanes
-            ))
-          : (startProfilerTimer(completedWork),
-            (current = runWithFiberInDEV(
-              completedWork,
-              completeWork,
-              current,
-              completedWork,
-              entangledRenderLanes
-            )),
-            stopProfilerTimerIfRunningAndRecordIncompleteDuration(
-              completedWork
-            ));
+        startProfilerTimer(completedWork);
+        current = runWithFiberInDEV(
+          completedWork,
+          completeWork,
+          current,
+          completedWork,
+          entangledRenderLanes
+        );
+        0 !== (completedWork.mode & 2) &&
+          stopProfilerTimerIfRunningAndRecordIncompleteDuration(completedWork);
         if (null !== current) {
           workInProgress = current;
           return;
@@ -13294,15 +13323,6 @@ __DEV__ &&
       }
       return !1;
     }
-    function enqueuePendingPassiveProfilerEffect(fiber) {
-      pendingPassiveProfilerEffects.push(fiber);
-      rootDoesHavePassiveEffects ||
-        ((rootDoesHavePassiveEffects = !0),
-        scheduleCallback(NormalPriority$1, function () {
-          flushPassiveEffects();
-          return null;
-        }));
-    }
     function flushPassiveEffectsImpl() {
       if (null === rootWithPendingPassiveEffects) return !1;
       var transitions = pendingPassiveTransitions;
@@ -13333,10 +13353,6 @@ __DEV__ &&
       executionContext |= CommitContext;
       commitPassiveUnmountOnFiber(root.current);
       commitPassiveMountOnFiber(root, root.current, lanes, transitions);
-      transitions = pendingPassiveProfilerEffects;
-      pendingPassiveProfilerEffects = [];
-      for (lanes = 0; lanes < transitions.length; lanes++)
-        commitPassiveEffectDurations(root, transitions[lanes]);
       enableDebugTracing && enableDebugTracing && groupEnd();
       enableSchedulingProfiler &&
         enableSchedulingProfiler &&
@@ -13384,9 +13400,9 @@ __DEV__ &&
               err
             ));
         }
-      root = root.current.stateNode;
-      root.effectDuration = 0;
-      root.passiveEffectDuration = 0;
+      transitions = root.current.stateNode;
+      transitions.effectDuration = 0;
+      transitions.passiveEffectDuration = 0;
       return !0;
     }
     function captureCommitPhaseErrorOnRoot(rootFiber, sourceFiber, error) {
@@ -16332,7 +16348,6 @@ __DEV__ &&
       rootDoesHavePassiveEffects = !1,
       rootWithPendingPassiveEffects = null,
       pendingPassiveEffectsLanes = 0,
-      pendingPassiveProfilerEffects = [],
       pendingPassiveEffectsRemainingLanes = 0,
       pendingPassiveTransitions = null,
       NESTED_UPDATE_LIMIT = 50,
@@ -16567,11 +16582,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-www-modern-0eab377a-20240916",
+        version: "19.0.0-www-modern-f2df5694-20240916",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-www-modern-0eab377a-20240916"
+        reconcilerVersion: "19.0.0-www-modern-f2df5694-20240916"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -16605,7 +16620,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.0.0-www-modern-0eab377a-20240916";
+    exports.version = "19.0.0-www-modern-f2df5694-20240916";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

@@ -8805,6 +8805,14 @@ module.exports = function ($$$config) {
           }
         }
         break;
+      case 12:
+        recursivelyTraversePassiveMountEffects(
+          finishedRoot,
+          finishedWork,
+          committedLanes,
+          committedTransitions
+        );
+        break;
       case 23:
         recursivelyTraversePassiveMountEffects(
           finishedRoot,
@@ -12376,7 +12384,7 @@ module.exports = function ($$$config) {
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
       findFiberByHostInstance: getInstanceFromNode,
-      reconcilerVersion: "19.0.0-www-modern-0eab377a-20240916"
+      reconcilerVersion: "19.0.0-www-modern-f2df5694-20240916"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

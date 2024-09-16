@@ -8149,6 +8149,14 @@ function commitPassiveMountOnFiber(
         }
       }
       break;
+    case 12:
+      recursivelyTraversePassiveMountEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        committedTransitions
+      );
+      break;
     case 23:
       recursivelyTraversePassiveMountEffects(
         finishedRoot,
@@ -10397,13 +10405,13 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1416 = {
   bundleType: 0,
-  version: "19.0.0-www-modern-0eab377a-20240916",
+  version: "19.0.0-www-modern-f2df5694-20240916",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: function () {
     return null;
   },
-  reconcilerVersion: "19.0.0-www-modern-0eab377a-20240916"
+  reconcilerVersion: "19.0.0-www-modern-f2df5694-20240916"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1417 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -10429,4 +10437,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.0.0-www-modern-0eab377a-20240916";
+exports.version = "19.0.0-www-modern-f2df5694-20240916";
