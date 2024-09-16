@@ -981,22 +981,12 @@ function codegenTerminal(
             suggestions: null,
           });
         case InstructionKind.Catch:
-          CompilerError.invariant(false, {
-            reason: 'Unexpected catch variable as for..in collection',
-            description: null,
-            loc: iterableItem.loc,
-            suggestions: null,
-          });
         case InstructionKind.HoistedConst:
-          CompilerError.invariant(false, {
-            reason: 'Unexpected HoistedConst variable in for..in collection',
-            description: null,
-            loc: iterableItem.loc,
-            suggestions: null,
-          });
         case InstructionKind.HoistedLet:
+        case InstructionKind.HoistedFunction:
+        case InstructionKind.Function:
           CompilerError.invariant(false, {
-            reason: 'Unexpected HoistedLet variable in for..in collection',
+            reason: `Unexpected ${iterableItem.value.lvalue.kind} variable in for..in collection`,
             description: null,
             loc: iterableItem.loc,
             suggestions: null,
@@ -1075,30 +1065,13 @@ function codegenTerminal(
           varDeclKind = 'let' as const;
           break;
         case InstructionKind.Reassign:
-          CompilerError.invariant(false, {
-            reason:
-              'Destructure should never be Reassign as it would be an Object/ArrayPattern',
-            description: null,
-            loc: iterableItem.loc,
-            suggestions: null,
-          });
         case InstructionKind.Catch:
-          CompilerError.invariant(false, {
-            reason: 'Unexpected catch variable as for..of collection',
-            description: null,
-            loc: iterableItem.loc,
-            suggestions: null,
-          });
         case InstructionKind.HoistedConst:
-          CompilerError.invariant(false, {
-            reason: 'Unexpected HoistedConst variable in for..of collection',
-            description: null,
-            loc: iterableItem.loc,
-            suggestions: null,
-          });
         case InstructionKind.HoistedLet:
+        case InstructionKind.HoistedFunction:
+        case InstructionKind.Function:
           CompilerError.invariant(false, {
-            reason: 'Unexpected HoistedLet variable in for..of collection',
+            reason: `Unexpected ${iterableItem.value.lvalue.kind} variable in for..of collection`,
             description: null,
             loc: iterableItem.loc,
             suggestions: null,
@@ -1261,6 +1234,35 @@ function codegenInstructionNullable(
           t.variableDeclarator(codegenLValue(cx, lvalue), value),
         ]);
       }
+      case InstructionKind.Function: {
+        CompilerError.invariant(instr.lvalue === null, {
+          reason: `Function declaration cannot be referenced as an expression`,
+          description: null,
+          loc: instr.value.loc,
+          suggestions: null,
+        });
+        const genLvalue = codegenLValue(cx, lvalue);
+        CompilerError.invariant(genLvalue.type === 'Identifier', {
+          reason: 'Expected an identifier as a function declaration lvalue',
+          description: null,
+          loc: instr.value.loc,
+          suggestions: null,
+        });
+        CompilerError.invariant(value?.type === 'FunctionExpression', {
+          reason: 'Expected a function as a function declaration value',
+          description: null,
+          loc: instr.value.loc,
+          suggestions: null,
+        });
+        return createFunctionDeclaration(
+          instr.loc,
+          genLvalue,
+          value.params,
+          value.body,
+          value.generator,
+          value.async,
+        );
+      }
       case InstructionKind.Let: {
         CompilerError.invariant(instr.lvalue === null, {
           reason: `Const declaration cannot be referenced as an expression`,
@@ -1303,19 +1305,11 @@ function codegenInstructionNullable(
       case InstructionKind.Catch: {
         return t.emptyStatement();
       }
-      case InstructionKind.HoistedLet: {
+      case InstructionKind.HoistedLet:
+      case InstructionKind.HoistedConst:
+      case InstructionKind.HoistedFunction: {
         CompilerError.invariant(false, {
-          reason:
-            'Expected HoistedLet to have been pruned in PruneHoistedContexts',
-          description: null,
-          loc: instr.loc,
-          suggestions: null,
-        });
-      }
-      case InstructionKind.HoistedConst: {
-        CompilerError.invariant(false, {
-          reason:
-            'Expected HoistedConsts to have been pruned in PruneHoistedContexts',
+          reason: `Expected ${kind} to have been pruned in PruneHoistedContexts`,
           description: null,
           loc: instr.loc,
           suggestions: null,
@@ -1486,6 +1480,7 @@ const createBinaryExpression = withLoc(t.binaryExpression);
 const createExpressionStatement = withLoc(t.expressionStatement);
 const _createLabelledStatement = withLoc(t.labeledStatement);
 const createVariableDeclaration = withLoc(t.variableDeclaration);
+const createFunctionDeclaration = withLoc(t.functionDeclaration);
 const _createWhileStatement = withLoc(t.whileStatement);
 const createTaggedTemplateExpression = withLoc(t.taggedTemplateExpression);
 const createLogicalExpression = withLoc(t.logicalExpression);
