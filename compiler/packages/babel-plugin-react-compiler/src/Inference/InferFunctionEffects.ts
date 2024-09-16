@@ -56,6 +56,13 @@ export function inferFunctionEffects(
   }
 
   // Build an environment mapping identifiers to AbstractValues
+  for (const cx of fn.context) {
+    CompilerError.invariant(cx.abstractValue != null, {
+      reason: 'Expected context to have a kind',
+      loc: cx.loc,
+    });
+    state.values.set(cx.identifier.id, cx.abstractValue);
+  }
   for (const [_, block] of fn.body.blocks) {
     for (const phi of block.phis) {
       CompilerError.invariant(phi.abstractValue != null, {
@@ -165,7 +172,6 @@ function inheritFunctionEffects(
   place: Place,
 ): Array<FunctionEffect> {
   const effects = inferFunctionInstrEffects(state, place);
-
   return effects
     .flatMap(effect => {
       if (effect.kind === 'GlobalMutation' || effect.kind === 'ReactMutation') {

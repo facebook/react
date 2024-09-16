@@ -7,3 +7,8 @@ function Component() {
   }
   return callback(10);
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [],
+};
