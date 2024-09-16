@@ -22,7 +22,6 @@ import {
   eachTerminalOperand,
 } from '../HIR/visitors';
 import {Err, Ok, Result} from '../Utils/Result';
-import {isEffectHook} from './ValidateMemoizedEffectDependencies';
 
 /**
  * Validates that a function does not access a ref value during render. This includes a partial check
@@ -310,60 +309,37 @@ function validateNoRefAccessInRenderImpl(
             });
             break;
           }
-          case 'MethodCall': {
-            if (!isEffectHook(instr.value.property.identifier)) {
-              for (const operand of eachInstructionValueOperand(instr.value)) {
-                const hookKind = getHookKindForType(
-                  fn.env,
-                  instr.value.property.identifier.type,
-                );
-                if (hookKind != null) {
-                  validateNoRefValueAccess(errors, env, operand);
-                } else {
-                  validateNoRefAccess(errors, env, operand, operand.loc);
-                }
-              }
-            }
-            validateNoRefValueAccess(errors, env, instr.value.receiver);
-            const methType = env.get(instr.value.property.identifier.id);
-            let returnType: RefAccessType = {kind: 'None'};
-            if (methType?.kind === 'Structure' && methType.fn !== null) {
-              returnType = methType.fn.returnType;
-            }
-            env.set(instr.lvalue.identifier.id, returnType);
-            break;
-          }
+          case 'MethodCall':
           case 'CallExpression': {
-            const callee = instr.value.callee;
+            const callee =
+              instr.value.kind === 'CallExpression'
+                ? instr.value.callee
+                : instr.value.property;
             const hookKind = getHookKindForType(fn.env, callee.identifier.type);
-            const isUseEffect = isEffectHook(callee.identifier);
             let returnType: RefAccessType = {kind: 'None'};
-            if (!isUseEffect) {
-              // Report a more precise error when calling a local function that accesses a ref
-              const fnType = env.get(instr.value.callee.identifier.id);
-              if (fnType?.kind === 'Structure' && fnType.fn !== null) {
-                returnType = fnType.fn.returnType;
-                if (fnType.fn.readRefEffect) {
-                  errors.push({
-                    severity: ErrorSeverity.InvalidReact,
-                    reason:
-                      'This function accesses a ref value (the `current` property), which may not be accessed during render. (https://react.dev/reference/react/useRef)',
-                    loc: callee.loc,
-                    description:
-                      callee.identifier.name !== null &&
-                      callee.identifier.name.kind === 'named'
-                        ? `Function \`${callee.identifier.name.value}\` accesses a ref`
-                        : null,
-                    suggestions: null,
-                  });
-                }
+            const fnType = env.get(callee.identifier.id);
+            if (fnType?.kind === 'Structure' && fnType.fn !== null) {
+              returnType = fnType.fn.returnType;
+              if (fnType.fn.readRefEffect) {
+                errors.push({
+                  severity: ErrorSeverity.InvalidReact,
+                  reason:
+                    'This function accesses a ref value (the `current` property), which may not be accessed during render. (https://react.dev/reference/react/useRef)',
+                  loc: callee.loc,
+                  description:
+                    callee.identifier.name !== null &&
+                    callee.identifier.name.kind === 'named'
+                      ? `Function \`${callee.identifier.name.value}\` accesses a ref`
+                      : null,
+                  suggestions: null,
+                });
               }
-              for (const operand of eachInstructionValueOperand(instr.value)) {
-                if (hookKind != null) {
-                  validateNoRefValueAccess(errors, env, operand);
-                } else {
-                  validateNoRefAccess(errors, env, operand, operand.loc);
-                }
+            }
+            for (const operand of eachInstructionValueOperand(instr.value)) {
+              if (hookKind != null) {
+                validateNoDirectRefValueAccess(errors, operand, env);
+              } else {
+                validateNoRefAccess(errors, env, operand, operand.loc);
               }
             }
             env.set(instr.lvalue.identifier.id, returnType);
