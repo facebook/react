@@ -1143,3 +1143,35 @@ export function clearTransitionsForLanes(root: FiberRoot, lanes: Lane | Lanes) {
     lanes &= ~lane;
   }
 }
+
+// Used to name the Performance Track
+export function getGroupNameOfHighestPriorityLane(lanes: Lanes): string {
+  if (
+    lanes &
+    (SyncHydrationLane |
+      SyncLane |
+      InputContinuousHydrationLane |
+      InputContinuousLane |
+      DefaultHydrationLane |
+      DefaultLane)
+  ) {
+    return 'Blocking';
+  }
+  if (lanes & (TransitionHydrationLane | TransitionLanes)) {
+    return 'Transition';
+  }
+  if (lanes & RetryLanes) {
+    return 'Suspense';
+  }
+  if (
+    lanes &
+    (SelectiveHydrationLane |
+      IdleHydrationLane |
+      IdleLane |
+      OffscreenLane |
+      DeferredLane)
+  ) {
+    return 'Idle';
+  }
+  return 'Other';
+}

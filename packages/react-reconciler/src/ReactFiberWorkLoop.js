@@ -44,6 +44,7 @@ import {
   disableDefaultPropsExceptForClasses,
   disableStringRefs,
   enableSiblingPrerendering,
+  enableComponentPerformanceTrack,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import is from 'shared/objectIs';
@@ -221,6 +222,7 @@ import {
 
 import {
   markNestedUpdateScheduled,
+  recordCompleteTime,
   recordCommitTime,
   resetNestedUpdateFlag,
   startProfilerTimer,
@@ -228,6 +230,7 @@ import {
   stopProfilerTimerIfRunningAndRecordIncompleteDuration,
   syncNestedUpdateFlag,
 } from './ReactProfilerTimer';
+import {setCurrentTrackFromLanes} from './ReactFiberPerformanceTrack';
 
 // DEV stuff
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
@@ -1098,6 +1101,12 @@ function finishConcurrentRender(
   finishedWork: Fiber,
   lanes: Lanes,
 ) {
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // Track when we finished the last unit of work, before we actually commit it.
+    // The commit can be suspended/blocked until we commit it.
+    recordCompleteTime();
+  }
+
   // TODO: The fact that most of these branches are identical suggests that some
   // of the exit statuses are not best modeled as exit statuses and should be
   // tracked orthogonally.
@@ -1477,6 +1486,10 @@ export function performSyncWorkOnRoot(root: FiberRoot, lanes: Lanes): null {
     );
     ensureRootIsScheduled(root);
     return null;
+  }
+
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    recordCompleteTime();
   }
 
   // We now have a consistent tree. Because this is a sync render, we
@@ -2824,35 +2837,22 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
     const returnFiber = completedWork.return;
 
     let next;
-    if (!enableProfilerTimer || (completedWork.mode & ProfileMode) === NoMode) {
-      if (__DEV__) {
-        next = runWithFiberInDEV(
-          completedWork,
-          completeWork,
-          current,
-          completedWork,
-          entangledRenderLanes,
-        );
-      } else {
-        next = completeWork(current, completedWork, entangledRenderLanes);
-      }
+    startProfilerTimer(completedWork);
+    if (__DEV__) {
+      next = runWithFiberInDEV(
+        completedWork,
+        completeWork,
+        current,
+        completedWork,
+        entangledRenderLanes,
+      );
     } else {
-      startProfilerTimer(completedWork);
-      if (__DEV__) {
-        next = runWithFiberInDEV(
-          completedWork,
-          completeWork,
-          current,
-          completedWork,
-          entangledRenderLanes,
-        );
-      } else {
-        next = completeWork(current, completedWork, entangledRenderLanes);
-      }
+      next = completeWork(current, completedWork, entangledRenderLanes);
+    }
+    if (enableProfilerTimer && (completedWork.mode & ProfileMode) !== NoMode) {
       // Update render duration assuming we didn't error.
       stopProfilerTimerIfRunningAndRecordIncompleteDuration(completedWork);
     }
-
     if (next !== null) {
       // Completing this fiber spawned new work. Work on that next.
       workInProgress = next;
@@ -3104,6 +3104,10 @@ function commitRootImpl(
   // TODO: Delete all other places that schedule the passive effect callback
   // They're redundant.
   if (
+    // If this subtree rendered with profiling this commit, we need to visit it to log it.
+    (enableProfilerTimer &&
+      enableComponentPerformanceTrack &&
+      finishedWork.actualDuration !== 0) ||
     (finishedWork.subtreeFlags & PassiveMask) !== NoFlags ||
     (finishedWork.flags & PassiveMask) !== NoFlags
   ) {
@@ -3492,6 +3496,12 @@ function flushPassiveEffectsImpl() {
 
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     throw new Error('Cannot flush passive effects while already rendering.');
+  }
+
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // We're about to log a lot of profiling for this commit.
+    // We set this once so we don't have to recompute it for every log.
+    setCurrentTrackFromLanes(lanes);
   }
 
   if (__DEV__) {
