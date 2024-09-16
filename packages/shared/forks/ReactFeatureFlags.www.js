@@ -62,6 +62,8 @@ export const disableInputAttributeSyncing = false;
 export const enableLegacyFBSupport = true;
 export const enableLazyContextPropagation = true;
 
+export const enableComponentPerformanceTrack = false;
+
 // Logs additional User Timing API marks for use with an experimental profiling tool.
 export const enableSchedulingProfiler: boolean =
   __PROFILE__ && dynamicFeatureFlags.enableSchedulingProfiler;

@@ -61,6 +61,7 @@ export const enableRefAsProp = true;
 export const enableRenderableContext = true;
 export const enableRetryLaneExpiration = false;
 export const enableSchedulingProfiler = __PROFILE__;
+export const enableComponentPerformanceTrack = false;
 export const enableScopeAPI = false;
 export const enableServerComponentLogs = true;
 export const enableShallowPropDiffing = false;
