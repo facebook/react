@@ -230,6 +230,7 @@ import {
   stopProfilerTimerIfRunningAndRecordIncompleteDuration,
   syncNestedUpdateFlag,
 } from './ReactProfilerTimer';
+import {setCurrentTrackFromLanes} from './ReactFiberPerformanceTrack';
 
 // DEV stuff
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
@@ -3495,6 +3496,12 @@ function flushPassiveEffectsImpl() {
 
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     throw new Error('Cannot flush passive effects while already rendering.');
+  }
+
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // We're about to log a lot of profiling for this commit.
+    // We set this once so we don't have to recompute it for every log.
+    setCurrentTrackFromLanes(lanes);
   }
 
   if (__DEV__) {

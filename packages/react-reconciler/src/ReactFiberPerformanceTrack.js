@@ -11,6 +11,8 @@ import type {Fiber} from './ReactInternalTypes';
 
 import getComponentNameFromFiber from './getComponentNameFromFiber';
 
+import {getGroupNameOfHighestPriorityLane} from './ReactFiberLane';
+
 const TRACK_GROUP = 'Components ⚛';
 
 // Reused to avoid thrashing the GC.
@@ -27,6 +29,11 @@ const reusableComponentOptions = {
     devtools: reusableComponentDevToolDetails,
   },
 };
+
+export function setCurrentTrackFromLanes(lanes: number): void {
+  reusableComponentDevToolDetails.track =
+    getGroupNameOfHighestPriorityLane(lanes);
+}
 
 export function logComponentRender(
   fiber: Fiber,
