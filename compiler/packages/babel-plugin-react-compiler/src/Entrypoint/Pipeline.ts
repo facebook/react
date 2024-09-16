@@ -101,6 +101,7 @@ import {propagatePhiTypes} from '../TypeInference/PropagatePhiTypes';
 import {lowerContextAccess} from '../Optimization/LowerContextAccess';
 import {validateNoSetStateInPassiveEffects} from '../Validation/ValidateNoSetStateInPassiveEffects';
 import {validateNoJSXInTryStatement} from '../Validation/ValidateNoJSXInTryStatement';
+import {inferFunctionEffects} from '../Inference/InferFunctionEffects';
 import {propagateScopeDependenciesHIR} from '../HIR/PropagateScopeDependenciesHIR';
 
 export type CompilerPipelineValue =
@@ -210,8 +211,11 @@ function* runWithEnvironment(
   analyseFunctions(hir);
   yield log({kind: 'hir', name: 'AnalyseFunctions', value: hir});
 
-  inferReferenceEffects(hir);
+  const referenceAliases = inferReferenceEffects(hir);
   yield log({kind: 'hir', name: 'InferReferenceEffects', value: hir});
+
+  inferFunctionEffects(hir, referenceAliases);
+  yield log({kind: 'hir', name: 'InferFunctionEffects', value: hir});
 
   validateLocalsNotReassignedAfterRender(hir);
 

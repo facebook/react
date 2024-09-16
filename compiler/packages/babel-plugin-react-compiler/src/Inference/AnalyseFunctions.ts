@@ -20,6 +20,7 @@ import {deadCodeElimination} from '../Optimization';
 import {inferReactiveScopeVariables} from '../ReactiveScopes';
 import {rewriteInstructionKindsBasedOnReassignment} from '../SSA';
 import {logHIRFunction} from '../Utils/logger';
+import {inferFunctionEffects} from './InferFunctionEffects';
 import {inferMutableContextVariables} from './InferMutableContextVariables';
 import {inferMutableRanges} from './InferMutableRanges';
 import inferReferenceEffects from './InferReferenceEffects';
@@ -106,7 +107,8 @@ export default function analyseFunctions(func: HIRFunction): void {
 
 function lower(func: HIRFunction): void {
   analyseFunctions(func);
-  inferReferenceEffects(func, {isFunctionExpression: true});
+  const aliases = inferReferenceEffects(func, {isFunctionExpression: true});
+  inferFunctionEffects(func, aliases, {isFunctionExpression: true});
   deadCodeElimination(func);
   inferMutableRanges(func);
   rewriteInstructionKindsBasedOnReassignment(func);
