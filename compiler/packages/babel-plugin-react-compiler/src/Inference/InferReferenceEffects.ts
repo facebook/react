@@ -13,7 +13,6 @@ import {
   BlockId,
   CallExpression,
   Effect,
-  FunctionEffect,
   GeneratedSource,
   HIRFunction,
   Identifier,
@@ -49,11 +48,6 @@ import {
 } from '../HIR/visitors';
 import DisjointSet from '../Utils/DisjointSet';
 import {assertExhaustive} from '../Utils/utils';
-import {
-  inferTerminalFunctionEffects,
-  inferInstructionFunctionEffects,
-  raiseFunctionEffectErrors,
-} from './InferFunctionEffects';
 
 const UndefinedValue: InstructionValue = {
   kind: 'Primitive',
@@ -227,7 +221,6 @@ export default function inferReferenceEffects(
   queue(fn.body.entry, initialState);
 
   const finishedStates: Map<BlockId, InferenceState> = new Map();
-  const functionEffects: Array<FunctionEffect> = fn.effects ?? [];
 
   while (queuedStates.size !== 0) {
     for (const [blockId, block] of fn.body.blocks) {
@@ -239,20 +232,18 @@ export default function inferReferenceEffects(
 
       statesByBlock.set(blockId, incomingState);
       const state = incomingState.clone();
+      inferBlock(fn.env, state, block);
       finishedStates.set(blockId, state);
-      inferBlock(fn.env, state, block, functionEffects);
 
       for (const nextBlockId of eachTerminalSuccessor(block.terminal)) {
         queue(nextBlockId, state);
       }
     }
   }
-
-  if (options.isFunctionExpression) {
-    fn.effects = functionEffects;
-  } else {
-    raiseFunctionEffectErrors(functionEffects);
-  }
+  CompilerError.invariant(finishedStates.size > 0, {
+    reason: 'Expected to have processed at least one block',
+    loc: null,
+  });
 
   const summaryState = Array(...finishedStates.values()).reduce(
     (acc, state) => acc.merge(state) ?? acc,
@@ -872,7 +863,6 @@ function inferBlock(
   env: Environment,
   state: InferenceState,
   block: BasicBlock,
-  functionEffects: Array<FunctionEffect>,
 ): void {
   for (const phi of block.phis) {
     state.inferPhi(phi);
@@ -1973,7 +1963,6 @@ function inferBlock(
       instr.lvalue.effect = continuation.lvalueEffect ?? defaultLvalueEffect;
     }
 
-    functionEffects.push(...inferInstructionFunctionEffects(env, state, instr));
     freezeActions.forEach(({values, reason}) =>
       state.freezeValues(values, reason),
     );
@@ -2001,7 +1990,6 @@ function inferBlock(
       ValueReason.Other,
     );
   }
-  functionEffects.push(...inferTerminalFunctionEffects(state, block));
   terminalFreezeActions.forEach(({values, reason}) =>
     state.freezeValues(values, reason),
   );

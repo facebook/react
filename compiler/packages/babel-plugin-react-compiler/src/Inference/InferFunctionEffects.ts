@@ -9,29 +9,178 @@ import {CompilerError, ErrorSeverity, ValueKind} from '..';
 import {
   AbstractValue,
   BasicBlock,
+  BlockId,
   Effect,
   Environment,
   FunctionEffect,
+  HIRFunction,
+  IdentifierId,
   Instruction,
-  InstructionValue,
   Place,
   ValueReason,
   getHookKind,
   isRefOrRefValue,
 } from '../HIR';
-import {eachInstructionOperand, eachTerminalOperand} from '../HIR/visitors';
+import {
+  eachInstructionLValue,
+  eachInstructionOperand,
+  eachTerminalOperand,
+} from '../HIR/visitors';
+import DisjointSet from '../Utils/DisjointSet';
 import {assertExhaustive} from '../Utils/utils';
 
-interface State {
-  kind(place: Place): AbstractValue;
-  values(place: Place): Array<InstructionValue>;
-  isDefined(place: Place): boolean;
+type State = {
+  values: Map<IdentifierId, AbstractValue>;
+  nestedEffects: Map<IdentifierId, Set<FunctionEffect>>;
+  aliases: DisjointSet<IdentifierId>;
+};
+
+export function inferFunctionEffects(
+  fn: HIRFunction,
+  aliases: DisjointSet<IdentifierId>,
+  options: {isFunctionExpression: boolean} = {isFunctionExpression: false},
+): void {
+  const state: State = {values: new Map(), nestedEffects: new Map(), aliases};
+
+  for (const param of fn.params) {
+    let place;
+    if (param.kind === 'Identifier') {
+      place = param;
+    } else {
+      place = param.place;
+    }
+    CompilerError.invariant(place.abstractValue != null, {
+      reason: 'Expected lvalue to have a kind',
+      loc: place.loc,
+    });
+    state.values.set(place.identifier.id, place.abstractValue);
+  }
+
+  // Build an environment mapping identifiers to AbstractValues
+  for (const cx of fn.context) {
+    CompilerError.invariant(cx.abstractValue != null, {
+      reason: 'Expected context to have a kind',
+      loc: cx.loc,
+    });
+    state.values.set(cx.identifier.id, cx.abstractValue);
+  }
+  let blocksSeen: Set<BlockId> = new Set();
+  let backEdgeSeen = false;
+  let lastNested: Map<IdentifierId, Set<FunctionEffect>>;
+
+  do {
+    lastNested = new Map(state.nestedEffects);
+    for (const [blockId, block] of fn.body.blocks) {
+      blocksSeen.add(blockId);
+      for (const phi of block.phis) {
+        CompilerError.invariant(phi.abstractValue != null, {
+          reason: 'Expected phi to have a kind',
+          loc: phi.id.loc,
+        });
+        const phiRoot = state.aliases.find(phi.id.id) ?? phi.id.id;
+        for (const [predId, operand] of phi.operands) {
+          if (!blocksSeen.has(predId)) {
+            backEdgeSeen = true;
+          }
+          const operandRoot = state.aliases.find(operand.id) ?? operand.id;
+          if (state.nestedEffects.has(operandRoot)) {
+            state.nestedEffects.set(
+              phiRoot,
+              state.nestedEffects.get(operandRoot) ?? new Set(),
+            );
+          }
+        }
+        state.values.set(phi.id.id, phi.abstractValue);
+      }
+      for (const instr of block.instructions) {
+        if (
+          instr.value.kind === 'FunctionExpression' ||
+          instr.value.kind === 'ObjectMethod'
+        ) {
+          /**
+           * If this function references other functions, propagate the referenced function's
+           * effects to this function.
+           *
+           * ```
+           * let f = () => global = true;
+           * let g = () => f();
+           * g();
+           * ```
+           *
+           * In this example, because `g` references `f`, we propagate the GlobalMutation from
+           * `f` to `g`. Thus, referencing `g` in `g()` will evaluate the GlobalMutation in the outer
+           * function effect context and report an error. But if instead we do:
+           *
+           * ```
+           * let f = () => global = true;
+           * let g = () => f();
+           * useEffect(() => g(), [g])
+           * ```
+           *
+           * Now `g`'s effects will be discarded since they're in a useEffect.
+           */
+          let propagatedEffects = [
+            ...(instr.value.loweredFunc.func.effects ?? []),
+          ];
+          for (const operand of eachInstructionOperand(instr)) {
+            propagatedEffects.push(
+              ...inferFunctionInstrEffects(state, operand),
+            );
+          }
+          /*
+           * Since we infer the effects of nested functions from function
+           * instructions, we need to make sure we can go from identifiers
+           * aliased to function definitions to the function's effects
+           */
+          const root =
+            state.aliases.find(instr.lvalue.identifier.id) ??
+            instr.lvalue.identifier.id;
+          CompilerError.invariant(root != null, {
+            reason: 'Expected lvalue to have a root',
+            loc: instr.loc,
+          });
+          const curEffects = state.nestedEffects.get(root) ?? new Set();
+          if (propagatedEffects.some(eff => !curEffects.has(eff))) {
+            const nested = new Set([...curEffects, ...propagatedEffects]);
+            state.nestedEffects.set(root, nested);
+          }
+          instr.value.loweredFunc.func.effects = propagatedEffects;
+        }
+        for (const lvalue of eachInstructionLValue(instr)) {
+          lvalue.abstractValue &&
+            state.values.set(lvalue.identifier.id, lvalue.abstractValue);
+        }
+      }
+    }
+    // Loop until we have propagated all nested effects backwards through backedges, if they exist
+  } while (
+    backEdgeSeen &&
+    ![...state.nestedEffects].every(([id, effs]) => lastNested.get(id) === effs)
+  );
+
+  const functionEffects: Array<FunctionEffect> = [];
+
+  for (const [_, block] of fn.body.blocks) {
+    for (const instr of block.instructions) {
+      functionEffects.push(
+        ...inferInstructionFunctionEffects(fn.env, state, instr),
+      );
+    }
+    functionEffects.push(...inferTerminalFunctionEffects(state, block));
+  }
+
+  if (options.isFunctionExpression) {
+    fn.effects = functionEffects;
+  } else {
+    raiseFunctionEffectErrors(functionEffects);
+  }
 }
 
 function inferOperandEffect(state: State, place: Place): null | FunctionEffect {
-  const value = state.kind(place);
+  const value = place.abstractValue;
   CompilerError.invariant(value != null, {
     reason: 'Expected operand to have a kind',
+    description: `${place.identifier.id}`,
     loc: null,
   });
 
@@ -82,7 +231,6 @@ function inheritFunctionEffects(
   place: Place,
 ): Array<FunctionEffect> {
   const effects = inferFunctionInstrEffects(state, place);
-
   return effects
     .flatMap(effect => {
       if (effect.kind === 'GlobalMutation' || effect.kind === 'ReactMutation') {
@@ -106,11 +254,13 @@ function inheritFunctionEffects(
          *    more detailed effect to the current function context.
          */
         for (const place of effect.places) {
-          if (state.isDefined(place)) {
+          const abstractValue = state.values.get(place.identifier.id);
+          if (abstractValue != null) {
             const replayedEffect = inferOperandEffect(state, {
               ...place,
               loc: effect.loc,
               effect: effect.effect,
+              abstractValue,
             });
             if (replayedEffect != null) {
               if (replayedEffect.kind === 'ContextMutation') {
@@ -120,7 +270,8 @@ function inheritFunctionEffects(
                 // Case 3, immutable value so propagate the more precise effect
                 effects.push(replayedEffect);
               }
-            } // else case 2, local mutable value so this effect was fine
+            }
+            // else case 2, local mutable value so this effect was fine
           }
         }
         return effects;
@@ -134,21 +285,13 @@ function inferFunctionInstrEffects(
   place: Place,
 ): Array<FunctionEffect> {
   const effects: Array<FunctionEffect> = [];
-  const instrs = state.values(place);
-  CompilerError.invariant(instrs != null, {
-    reason: 'Expected operand to have instructions',
-    loc: null,
+  const root = state.aliases.find(place.identifier.id) ?? place.identifier.id;
+  CompilerError.invariant(root != null, {
+    reason: 'Expected operand to have a root',
+    loc: place.loc,
   });
-
-  for (const instr of instrs) {
-    if (
-      (instr.kind === 'FunctionExpression' || instr.kind === 'ObjectMethod') &&
-      instr.loweredFunc.func.effects != null
-    ) {
-      effects.push(...instr.loweredFunc.func.effects);
-    }
-  }
-
+  const instrs = state.nestedEffects.get(root) ?? [];
+  effects.push(...instrs);
   return effects;
 }
 
@@ -193,34 +336,6 @@ export function inferInstructionFunctionEffects(
     }
     case 'ObjectMethod':
     case 'FunctionExpression': {
-      /**
-       * If this function references other functions, propagate the referenced function's
-       * effects to this function.
-       *
-       * ```
-       * let f = () => global = true;
-       * let g = () => f();
-       * g();
-       * ```
-       *
-       * In this example, because `g` references `f`, we propagate the GlobalMutation from
-       * `f` to `g`. Thus, referencing `g` in `g()` will evaluate the GlobalMutation in the outer
-       * function effect context and report an error. But if instead we do:
-       *
-       * ```
-       * let f = () => global = true;
-       * let g = () => f();
-       * useEffect(() => g(), [g])
-       * ```
-       *
-       * Now `g`'s effects will be discarded since they're in a useEffect.
-       */
-      for (const operand of eachInstructionOperand(instr)) {
-        instr.value.loweredFunc.func.effects ??= [];
-        instr.value.loweredFunc.func.effects.push(
-          ...inferFunctionInstrEffects(state, operand),
-        );
-      }
       break;
     }
     case 'MethodCall':
@@ -285,7 +400,7 @@ export function inferTerminalFunctionEffects(
   return functionEffects;
 }
 
-export function raiseFunctionEffectErrors(
+function raiseFunctionEffectErrors(
   functionEffects: Array<FunctionEffect>,
 ): void {
   functionEffects.forEach(eff => {
