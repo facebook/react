@@ -758,6 +758,7 @@ function _staticInvariantInstructionValueHasLocation(
 export type Phi = {
   kind: 'Phi';
   id: Identifier;
+  abstractValue: AbstractValue | null;
   operands: Map<BlockId, Identifier>;
 };
 
@@ -1106,6 +1107,7 @@ export type Place = {
   kind: 'Identifier';
   identifier: Identifier;
   effect: Effect;
+  abstractValue: AbstractValue | null;
   reactive: boolean;
   loc: SourceLocation;
 };

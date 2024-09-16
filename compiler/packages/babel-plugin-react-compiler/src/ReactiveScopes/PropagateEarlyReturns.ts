@@ -237,6 +237,7 @@ class Transform extends ReactiveFunctionTransform<State> {
                   place: {
                     kind: 'Identifier',
                     effect: Effect.ConditionallyMutate,
+                    abstractValue: null,
                     loc,
                     reactive: true,
                     identifier: earlyReturnValue.value,
@@ -308,6 +309,7 @@ class Transform extends ReactiveFunctionTransform<State> {
                     kind: 'Identifier',
                     identifier: earlyReturnValue.value,
                     effect: Effect.Capture,
+                    abstractValue: null,
                     loc,
                     reactive: true,
                   },
