@@ -12384,7 +12384,7 @@ module.exports = function ($$$config) {
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
       findFiberByHostInstance: getInstanceFromNode,
-      reconcilerVersion: "19.0.0-www-modern-9f4e4611-20240916"
+      reconcilerVersion: "19.0.0-www-modern-26855e46-20240916"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
