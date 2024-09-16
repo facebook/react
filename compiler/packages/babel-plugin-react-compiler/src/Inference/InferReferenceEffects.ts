@@ -16,12 +16,14 @@ import {
   FunctionEffect,
   GeneratedSource,
   HIRFunction,
+  Identifier,
   IdentifierId,
   InstructionKind,
   InstructionValue,
   MethodCall,
   Phi,
   Place,
+  SourceLocation,
   SpreadPattern,
   Type,
   ValueKind,
@@ -127,12 +129,14 @@ export default function inferReferenceEffects(
       properties: [],
       loc: ref.loc,
     };
-    initialState.initialize(value, {
+    const valueKind: AbstractValue = {
       kind: ValueKind.Context,
       reason: new Set([ValueReason.Other]),
       context: new Set([ref]),
-    });
+    };
+    initialState.initialize(value, valueKind);
     initialState.define(ref, value);
+    ref.abstractValue = valueKind;
   }
 
   const paramKind: AbstractValue = options.isFunctionExpression
@@ -177,12 +181,14 @@ export default function inferReferenceEffects(
           loc: ref.place.loc,
         };
       }
-      initialState.initialize(value, {
+      const valueKind: AbstractValue = {
         kind: ValueKind.Mutable,
         reason: new Set([ValueReason.Other]),
         context: new Set(),
-      });
+      };
+      initialState.initialize(value, valueKind);
       initialState.define(place, value);
+      place.abstractValue = valueKind;
     }
   } else {
     for (const param of fn.params) {
@@ -290,7 +296,7 @@ class InferenceState {
   values(place: Place): Array<InstructionValue> {
     const values = this.#variables.get(place.identifier.id);
     CompilerError.invariant(values != null, {
-      reason: `[hoisting] Expected value kind to be initialized`,
+      reason: `[hoisting] Expected value kind to be initialized in call to values()`,
       description: `${printPlace(place)}`,
       loc: place.loc,
       suggestions: null,
@@ -299,11 +305,11 @@ class InferenceState {
   }
 
   // Lookup the kind of the given @param value.
-  kind(place: Place): AbstractValue {
+  kind(place: {identifier: Identifier; loc: SourceLocation}): AbstractValue {
     const values = this.#variables.get(place.identifier.id);
     CompilerError.invariant(values != null, {
-      reason: `[hoisting] Expected value kind to be initialized`,
-      description: `${printPlace(place)}`,
+      reason: `[hoisting] Expected value kind to be initialized in call to kind()`,
+      description: `${place.identifier.id}`,
       loc: place.loc,
       suggestions: null,
     });
@@ -315,7 +321,7 @@ class InferenceState {
     }
     CompilerError.invariant(mergedKind !== null, {
       reason: `InferReferenceEffects::kind: Expected at least one value`,
-      description: `No value found at \`${printPlace(place)}\``,
+      description: `No value found at \`${place.identifier.id}\``,
       loc: place.loc,
       suggestions: null,
     });
@@ -332,6 +338,7 @@ class InferenceState {
       suggestions: null,
     });
     this.#variables.set(place.identifier.id, new Set(values));
+    place.abstractValue = value.abstractValue;
   }
 
   // Defines (initializing or updating) a variable with a specific kind of value.
@@ -370,6 +377,7 @@ class InferenceState {
     reason: ValueReason,
   ): void {
     const values = this.#variables.get(place.identifier.id);
+    let valueKind: AbstractValue = this.kind(place);
     if (values === undefined) {
       CompilerError.invariant(effectKind !== Effect.Store, {
         reason: '[InferReferenceEffects] Unhandled store reference effect',
@@ -381,10 +389,12 @@ class InferenceState {
         effectKind === Effect.ConditionallyMutate
           ? Effect.ConditionallyMutate
           : Effect.Read;
+      place.abstractValue = valueKind;
       return;
     }
 
     const action = this.reference(place, effectKind, reason);
+    place.abstractValue = valueKind;
     action && freezeActions.push(action);
   }
 
@@ -431,7 +441,7 @@ class InferenceState {
       loc: place.loc,
       suggestions: null,
     });
-    let valueKind: AbstractValue | null = this.kind(place);
+    let valueKind: AbstractValue = this.kind(place);
     let effect: Effect | null = null;
     let freeze: null | FreezeAction = null;
     switch (effectKind) {
@@ -634,10 +644,13 @@ class InferenceState {
 
   inferPhi(phi: Phi): void {
     const values: Set<InstructionValue> = new Set();
+    let valueKind;
     for (const [_, operand] of phi.operands) {
       const operandValues = this.#variables.get(operand.id);
       // This is a backedge that will be handled later by State.merge
       if (operandValues === undefined) continue;
+      const kind = this.kind({identifier: operand, loc: GeneratedSource});
+      valueKind = valueKind ? mergeAbstractValues(valueKind, kind) : kind;
       for (const v of operandValues) {
         values.add(v);
       }
@@ -645,6 +658,7 @@ class InferenceState {
 
     if (values.size > 0) {
       this.#variables.set(phi.id.id, values);
+      phi.abstractValue = valueKind!;
     }
   }
 }
@@ -673,6 +687,7 @@ function inferParam(
   }
   initialState.initialize(value, paramKind);
   initialState.define(place, value);
+  place.abstractValue = paramKind;
 }
 
 /*
@@ -913,6 +928,7 @@ function inferBlock(
 
         state.initialize(instrValue, valueKind);
         state.define(instr.lvalue, instrValue);
+        instr.lvalue.abstractValue = valueKind;
         instr.lvalue.effect = Effect.ConditionallyMutate;
         continuation = {kind: 'funeffects'};
         break;
@@ -972,6 +988,7 @@ function inferBlock(
 
         state.initialize(instrValue, valueKind);
         state.define(instr.lvalue, instrValue);
+        instr.lvalue.abstractValue = valueKind;
         instr.lvalue.effect = Effect.Store;
         continuation = {kind: 'funeffects'};
         break;
@@ -1038,12 +1055,14 @@ function inferBlock(
           }
         }
 
-        state.initialize(instrValue, {
+        const valueKind: AbstractValue = {
           kind: ValueKind.Frozen,
           reason: new Set([ValueReason.Other]),
           context: new Set(),
-        });
+        };
+        state.initialize(instrValue, valueKind);
         state.define(instr.lvalue, instrValue);
+        instr.lvalue.abstractValue = valueKind;
         instr.lvalue.effect = Effect.ConditionallyMutate;
         continuation = {kind: 'funeffects'};
         break;
@@ -1156,12 +1175,14 @@ function inferBlock(
          * If a closure did not capture any mutable values, then we can consider it to be
          * frozen, which allows it to be independently memoized.
          */
-        state.initialize(instrValue, {
+        const valueKind: AbstractValue = {
           kind: hasMutableOperand ? ValueKind.Mutable : ValueKind.Frozen,
           reason: new Set([ValueReason.Other]),
           context: new Set(),
-        });
+        };
+        state.initialize(instrValue, valueKind);
         state.define(instr.lvalue, instrValue);
+        instr.lvalue.abstractValue = valueKind;
         instr.lvalue.effect = Effect.Store;
         continuation = {kind: 'funeffects'};
         break;
@@ -1204,6 +1225,7 @@ function inferBlock(
         );
         state.initialize(instrValue, returnValueKind);
         state.define(instr.lvalue, instrValue);
+        instr.lvalue.abstractValue = returnValueKind;
         instr.lvalue.effect = Effect.ConditionallyMutate;
         continuation = {kind: 'funeffects'};
         break;
@@ -1271,6 +1293,7 @@ function inferBlock(
 
         state.initialize(instrValue, returnValueKind);
         state.define(instr.lvalue, instrValue);
+        instr.lvalue.abstractValue = returnValueKind;
         instr.lvalue.effect = hasCaptureArgument
           ? Effect.Store
           : Effect.ConditionallyMutate;
@@ -1336,6 +1359,7 @@ function inferBlock(
           );
           state.initialize(instrValue, returnValueKind);
           state.define(instr.lvalue, instrValue);
+          instr.lvalue.abstractValue = returnValueKind;
           instr.lvalue.effect =
             instrValue.receiver.effect === Effect.Capture
               ? Effect.Store
@@ -1390,6 +1414,7 @@ function inferBlock(
 
         state.initialize(instrValue, returnValueKind);
         state.define(instr.lvalue, instrValue);
+        instr.lvalue.abstractValue = returnValueKind;
         instr.lvalue.effect = hasCaptureArgument
           ? Effect.Store
           : Effect.ConditionallyMutate;
@@ -1441,9 +1466,11 @@ function inferBlock(
           ValueReason.Other,
         );
         const lvalue = instr.lvalue;
+        const valueKind = state.kind(instrValue.object);
         lvalue.effect = Effect.ConditionallyMutate;
-        state.initialize(instrValue, state.kind(instrValue.object));
+        state.initialize(instrValue, valueKind);
         state.define(lvalue, instrValue);
+        instr.lvalue.abstractValue = valueKind;
         continuation = {kind: 'funeffects'};
         break;
       }
@@ -1490,12 +1517,14 @@ function inferBlock(
           Effect.Read,
           ValueReason.Other,
         );
-        state.initialize(instrValue, {
+        const valueKind: AbstractValue = {
           kind: ValueKind.Primitive,
           reason: new Set([ValueReason.Other]),
           context: new Set(),
-        });
+        };
+        state.initialize(instrValue, valueKind);
         state.define(instr.lvalue, instrValue);
+        instr.lvalue.abstractValue = valueKind;
         instr.lvalue.effect = Effect.Mutate;
         continuation = {kind: 'funeffects'};
         break;
@@ -1513,10 +1542,12 @@ function inferBlock(
           Effect.Read,
           ValueReason.Other,
         );
+        const valueKind = state.kind(instrValue.object);
         const lvalue = instr.lvalue;
         lvalue.effect = Effect.ConditionallyMutate;
-        state.initialize(instrValue, state.kind(instrValue.object));
+        state.initialize(instrValue, valueKind);
         state.define(lvalue, instrValue);
+        instr.lvalue.abstractValue = valueKind;
         continuation = {kind: 'funeffects'};
         break;
       }
@@ -1580,14 +1611,16 @@ function inferBlock(
             );
           }
         }
-        const lvalue = instr.lvalue;
-        lvalue.effect = Effect.ConditionallyMutate;
-        state.initialize(instrValue, {
+        const valueKind: AbstractValue = {
           kind: ValueKind.Frozen,
           reason: new Set([ValueReason.Other]),
           context: new Set(),
-        });
+        };
+        const lvalue = instr.lvalue;
+        lvalue.effect = Effect.ConditionallyMutate;
+        state.initialize(instrValue, valueKind);
         state.define(lvalue, instrValue);
+        instr.lvalue.abstractValue = valueKind;
         continuation = {kind: 'funeffects'};
         break;
       }
@@ -1622,13 +1655,13 @@ function inferBlock(
         const valueKind = state.kind(instrValue.place);
         state.initialize(instrValue, valueKind);
         state.define(lvalue, instrValue);
+        instr.lvalue.abstractValue = valueKind;
         continuation = {kind: 'funeffects'};
         break;
       }
       case 'DeclareLocal': {
         const value = UndefinedValue;
-        state.initialize(
-          value,
+        const valueKind: AbstractValue =
           // Catch params may be aliased to mutable values
           instrValue.lvalue.kind === InstructionKind.Catch
             ? {
@@ -1640,19 +1673,26 @@ function inferBlock(
                 kind: ValueKind.Primitive,
                 reason: new Set([ValueReason.Other]),
                 context: new Set(),
-              },
-        );
+              };
+        state.initialize(value, valueKind);
         state.define(instrValue.lvalue.place, value);
+        instrValue.lvalue.place.abstractValue = valueKind;
+        state.define(instr.lvalue, value);
+        instr.lvalue.abstractValue = valueKind;
         continuation = {kind: 'funeffects'};
         break;
       }
       case 'DeclareContext': {
-        state.initialize(instrValue, {
+        const valueKind: AbstractValue = {
           kind: ValueKind.Mutable,
           reason: new Set([ValueReason.Other]),
           context: new Set(),
-        });
+        };
+        state.initialize(instrValue, valueKind);
         state.define(instrValue.lvalue.place, instrValue);
+        instrValue.lvalue.place.abstractValue = valueKind;
+        state.define(instr.lvalue, instrValue);
+        instr.lvalue.abstractValue = valueKind;
         continuation = {kind: 'funeffects'};
         break;
       }
@@ -1740,6 +1780,10 @@ function inferBlock(
         );
         const lvalue = instr.lvalue;
         lvalue.effect = Effect.Store;
+        const valueKind = state.kind(instrValue.value);
+        state.initialize(instrValue, valueKind);
+        state.define(lvalue, instrValue);
+        instr.lvalue.abstractValue = valueKind;
         continuation = {kind: 'funeffects'};
         break;
       }
@@ -1853,8 +1897,10 @@ function inferBlock(
           Effect.Capture,
           ValueReason.Other,
         );
-        state.initialize(instrValue, state.kind(instrValue.collection));
+        const valueKind = state.kind(instrValue.collection);
+        state.initialize(instrValue, valueKind);
         state.define(instr.lvalue, instrValue);
+        instr.lvalue.abstractValue = valueKind;
         instr.lvalue.effect = Effect.Store;
         continuation = {kind: 'funeffects'};
         break;
@@ -1895,6 +1941,7 @@ function inferBlock(
 
       state.initialize(instrValue, continuation.valueKind);
       state.define(instr.lvalue, instrValue);
+      instr.lvalue.abstractValue = continuation.valueKind;
       instr.lvalue.effect = continuation.lvalueEffect ?? defaultLvalueEffect;
     }
 
