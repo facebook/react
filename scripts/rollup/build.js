@@ -661,7 +661,10 @@ async function createBundle(bundle, bundleType) {
       const containsThisModule = pkg => id === pkg || id.startsWith(pkg + '/');
       const isProvidedByDependency = externals.some(containsThisModule);
       if (isProvidedByDependency) {
-        if (id.indexOf('/src/') !== -1) {
+        // If the module is provided by React Native, it's fine to be in src/
+        // because this bundle will be included in that package too.
+        const isReactNative = containsThisModule('react-native');
+        if (!isReactNative && id.indexOf('/src/') !== -1) {
           throw Error(
             'You are trying to import ' +
               id +

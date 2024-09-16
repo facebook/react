@@ -33,6 +33,10 @@ type RawEventEmitterEvent = $ReadOnly<{
   nativeEvent: {[string]: mixed, ...},
 }>;
 
+declare module 'react-native/src/private/renderer/featureflags/ReactFeatureFlags' {
+  declare module.exports: any;
+}
+
 declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface' {
   declare export function deepDiffer(
     one: any,

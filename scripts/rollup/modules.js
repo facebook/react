@@ -21,7 +21,8 @@ const importSideEffects = Object.freeze({
   'react/jsx-dev-runtime': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'react-dom': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   url: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
-  ReactNativeInternalFeatureFlags: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  'react-native/src/private/renderer/featureflags/ReactFeatureFlags':
+    HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'webpack-sources/lib/helpers/createMappingsSerializer.js':
     HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'webpack-sources/lib/helpers/readMappings.js': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
@@ -34,7 +35,8 @@ const knownGlobals = Object.freeze({
   'react-dom/server': 'ReactDOMServer',
   scheduler: 'Scheduler',
   'scheduler/unstable_mock': 'SchedulerMock',
-  ReactNativeInternalFeatureFlags: 'ReactNativeInternalFeatureFlags',
+  'react-native/src/private/renderer/featureflags/ReactFeatureFlags':
+    'ReactFeatureFlags',
 });
 
 // Given ['react'] in bundle externals, returns { 'react': 'React' }.
