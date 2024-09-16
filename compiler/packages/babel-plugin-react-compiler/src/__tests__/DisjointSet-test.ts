@@ -116,4 +116,45 @@ describe('DisjointSet', () => {
 
     identifiers.forEach((_, group) => expect(group).toBe(z));
   });
+
+  it('`.equals` is false when it should be', () => {
+    const x = new DisjointSet<TestIdentifier>();
+    const y = new DisjointSet<TestIdentifier>();
+
+    const [a, b] = makeIdentifiers('a', 'b');
+    x.union([a, b]);
+    y.union([a]);
+    y.union([b]);
+
+    expect(x.equals(y)).toBe(false);
+    expect(y.equals(x)).toBe(false);
+  });
+
+  it('`.equals` is true when it should be', () => {
+    const x = new DisjointSet<TestIdentifier>();
+    const y = new DisjointSet<TestIdentifier>();
+
+    const [a, b, c] = makeIdentifiers('a', 'b', 'c');
+    x.union([a, b, c]);
+    y.union([a, b]);
+    y.union([b, c]);
+
+    expect(x.equals(y)).toBe(true);
+    expect(y.equals(x)).toBe(true);
+  });
+
+  it('`.copy` doesnt mutate the underlying', () => {
+    const x = new DisjointSet<TestIdentifier>();
+
+    const [a, b] = makeIdentifiers('a', 'b');
+    x.union([a]);
+    x.union([b]);
+
+    const y = x.copy();
+
+    y.union([a, b]);
+
+    expect(x.find(a) !== x.find(b)).toBe(true);
+    expect(y.find(a) === y.find(b)).toBe(true);
+  });
 });
