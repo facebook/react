@@ -12,6 +12,7 @@ export type ImportManifestEntry = {
   // chunks is an array of filenames
   chunks: Array<string>,
   name: string,
+  async?: boolean,
 };
 
 // This is the parsed shape of the wire format which is why it is

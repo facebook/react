@@ -55,7 +55,6 @@ module.exports = {
     panel: './src/panel.js',
     proxy: './src/contentScripts/proxy.js',
     prepareInjection: './src/contentScripts/prepareInjection.js',
-    renderer: './src/contentScripts/renderer.js',
     installHook: './src/contentScripts/installHook.js',
   },
   output: {

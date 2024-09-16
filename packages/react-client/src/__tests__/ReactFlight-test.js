@@ -24,6 +24,10 @@ function normalizeCodeLocInfo(str) {
   return (
     str &&
     str.replace(/^ +(?:at|in) ([\S]+)[^\n]*/gm, function (m, name) {
+      const dot = name.lastIndexOf('.');
+      if (dot !== -1) {
+        name = name.slice(dot + 1);
+      }
       return '    in ' + name + (/\d/.test(m) ? ' (at **)' : '');
     })
   );
@@ -3121,6 +3125,69 @@ describe('ReactFlight', () => {
 
     expect(normalizeCodeLocInfo(stack)).toBe(
       '\n    in Bar (at **)' + '\n    in Foo (at **)',
+    );
+  });
+
+  // @gate __DEV__ && enableOwnerStacks
+  it('can track owner for a flight response created in another render', async () => {
+    jest.resetModules();
+    jest.mock('react', () => ReactServer);
+    // For this to work the Flight Client needs to be the react-server version.
+    const ReactNoopFlightClienOnTheServer = require('react-noop-renderer/flight-client');
+    jest.resetModules();
+    jest.mock('react', () => React);
+
+    let stack;
+
+    function Component() {
+      stack = ReactServer.captureOwnerStack();
+      return ReactServer.createElement('span', null, 'hi');
+    }
+
+    const ClientComponent = clientReference(Component);
+
+    function ThirdPartyComponent() {
+      return ReactServer.createElement(ClientComponent);
+    }
+
+    // This is rendered outside the render to ensure we don't inherit anything accidental
+    // by being in the same environment which would make it seem like it works when it doesn't.
+    const thirdPartyTransport = ReactNoopFlightServer.render(
+      {children: ReactServer.createElement(ThirdPartyComponent)},
+      {
+        environmentName: 'third-party',
+      },
+    );
+
+    async function fetchThirdParty() {
+      return ReactNoopFlightClienOnTheServer.read(thirdPartyTransport);
+    }
+
+    async function FirstPartyComponent() {
+      // This component fetches from a third party
+      const thirdParty = await fetchThirdParty();
+      return thirdParty.children;
+    }
+    function App() {
+      return ReactServer.createElement(FirstPartyComponent);
+    }
+
+    const transport = ReactNoopFlightServer.render(
+      ReactServer.createElement(App),
+    );
+
+    await act(async () => {
+      const root = await ReactNoopFlightClient.read(transport);
+      ReactNoop.render(root);
+    });
+
+    expect(normalizeCodeLocInfo(stack)).toBe(
+      '\n    in ThirdPartyComponent (at **)' +
+        '\n    in createResponse (at **)' + // These two internal frames should
+        '\n    in read (at **)' + // ideally not be included.
+        '\n    in fetchThirdParty (at **)' +
+        '\n    in FirstPartyComponent (at **)' +
+        '\n    in App (at **)',
     );
   });
 

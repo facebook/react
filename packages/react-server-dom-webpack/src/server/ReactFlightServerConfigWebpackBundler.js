@@ -71,7 +71,15 @@ export function resolveClientReferenceMetadata<T>(
       );
     }
   }
-  if (clientReference.$$async === true) {
+  if (resolvedModuleData.async === true && clientReference.$$async === true) {
+    throw new Error(
+      'The module "' +
+        modulePath +
+        '" is marked as an async ESM module but was loaded as a CJS proxy. ' +
+        'This is probably a bug in the React Server Components bundler.',
+    );
+  }
+  if (resolvedModuleData.async === true || clientReference.$$async === true) {
     return [resolvedModuleData.id, resolvedModuleData.chunks, name, 1];
   } else {
     return [resolvedModuleData.id, resolvedModuleData.chunks, name];

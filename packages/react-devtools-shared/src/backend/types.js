@@ -14,7 +14,11 @@
  * Be mindful of backwards compatibility when making changes.
  */
 
-import type {ReactContext, Wakeable} from 'shared/ReactTypes';
+import type {
+  ReactContext,
+  Wakeable,
+  ReactComponentInfo,
+} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   ComponentFilter,
@@ -154,7 +158,10 @@ export type ReactRenderer = {
   currentDispatcherRef?: LegacyDispatcherRef | CurrentDispatcherRef,
   // Only injected by React v16.9+ in DEV mode.
   // Enables DevTools to append owners-only component stack to error messages.
-  getCurrentFiber?: () => Fiber | null,
+  getCurrentFiber?: (() => Fiber | null) | null,
+  // Only injected by React Flight Clients in DEV mode.
+  // Enables DevTools to append owners-only component stack to error messages from Server Components.
+  getCurrentComponentInfo?: () => ReactComponentInfo | null,
   // 17.0.2+
   reconcilerVersion?: string,
   // Uniquely identifies React DOM v15.
@@ -343,6 +350,14 @@ export type InstanceAndStyle = {
 
 type Type = 'props' | 'hooks' | 'state' | 'context';
 
+export type OnErrorOrWarning = (
+  type: 'error' | 'warn',
+  args: Array<any>,
+) => void;
+export type GetComponentStack = (
+  topFrame: Error,
+) => null | {enableOwnerStacks: boolean, componentStack: string};
+
 export type RendererInterface = {
   cleanup: () => void,
   clearErrorsAndWarnings: () => void,
@@ -357,6 +372,7 @@ export type RendererInterface = {
   findHostInstancesForElementID: FindHostInstancesForElementID,
   flushInitialOperations: () => void,
   getBestMatchForTrackedPath: () => PathMatch | null,
+  getComponentStack?: GetComponentStack,
   getNearestMountedDOMNode: (component: Element) => Element | null,
   getElementIDForHostInstance: GetElementIDForHostInstance,
   getDisplayNameForElementID: GetDisplayNameForElementID,
@@ -379,6 +395,7 @@ export type RendererInterface = {
     forceFullData: boolean,
   ) => InspectedElementPayload,
   logElementToConsole: (id: number) => void,
+  onErrorOrWarning?: OnErrorOrWarning,
   overrideError: (id: number, forceError: boolean) => void,
   overrideSuspense: (id: number, forceFallback: boolean) => void,
   overrideValueAtPath: (
@@ -475,6 +492,7 @@ export type DevToolsHook = {
   listeners: {[key: string]: Array<Handler>, ...},
   rendererInterfaces: Map<RendererID, RendererInterface>,
   renderers: Map<RendererID, ReactRenderer>,
+  hasUnsupportedRendererAttached: boolean,
   backends: Map<string, DevToolsBackend>,
 
   emit: (event: string, data: any) => void,

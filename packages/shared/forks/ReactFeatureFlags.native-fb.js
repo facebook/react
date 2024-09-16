@@ -22,6 +22,7 @@ export const {
   alwaysThrottleRetries,
   enableAddPropertiesFastPath,
   enableFabricCompleteRootInCommitPhase,
+  enableHiddenSubtreeInsertionEffectCleanup,
   enableObjectFiber,
   enablePersistedModeClonedFlag,
   enableShallowPropDiffing,
@@ -76,6 +77,7 @@ export const enableRefAsProp = true;
 export const enableRenderableContext = true;
 export const enableRetryLaneExpiration = false;
 export const enableSchedulingProfiler = __PROFILE__;
+export const enableComponentPerformanceTrack = false;
 export const enableScopeAPI = false;
 export const enableServerComponentLogs = true;
 export const enableSuspenseAvoidThisFallback = false;
