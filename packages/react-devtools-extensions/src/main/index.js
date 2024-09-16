@@ -185,7 +185,7 @@ function createComponentsPanel() {
   }
 
   chrome.devtools.panels.create(
-    __IS_CHROME__ || __IS_EDGE__ ? '⚛️ Components' : 'Components',
+    __IS_CHROME__ || __IS_EDGE__ ? 'Components ⚛' : 'Components',
     __IS_EDGE__ ? 'icons/production.svg' : '',
     'panel.html',
     createdPanel => {
@@ -224,7 +224,7 @@ function createProfilerPanel() {
   }
 
   chrome.devtools.panels.create(
-    __IS_CHROME__ || __IS_EDGE__ ? '⚛️ Profiler' : 'Profiler',
+    __IS_CHROME__ || __IS_EDGE__ ? 'Profiler ⚛' : 'Profiler',
     __IS_EDGE__ ? 'icons/production.svg' : '',
     'panel.html',
     createdPanel => {

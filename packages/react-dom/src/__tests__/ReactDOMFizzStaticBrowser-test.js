@@ -1758,4 +1758,90 @@ describe('ReactDOMFizzStaticBrowser', () => {
     await readIntoContainer(dynamic);
     expect(getVisibleChildren(container)).toEqual('hello');
   });
+
+  // @gate enableHalt
+  it('can resume render of a prerender', async () => {
+    const errors = [];
+
+    let resolveA;
+    const promiseA = new Promise(r => (resolveA = r));
+    let resolveB;
+    const promiseB = new Promise(r => (resolveB = r));
+
+    async function ComponentA() {
+      await promiseA;
+      return (
+        <Suspense fallback="Loading B">
+          <ComponentB />
+        </Suspense>
+      );
+    }
+
+    async function ComponentB() {
+      await promiseB;
+      return 'Hello';
+    }
+
+    function App() {
+      return (
+        <Suspense fallback="Loading A">
+          <ComponentA />
+        </Suspense>
+      );
+    }
+
+    const controller = new AbortController();
+    let pendingResult;
+    await serverAct(async () => {
+      pendingResult = ReactDOMFizzStatic.prerender(<App />, {
+        signal: controller.signal,
+        onError(x) {
+          errors.push(x.message);
+        },
+      });
+    });
+
+    controller.abort();
+
+    const prerendered = await pendingResult;
+    const postponedState = JSON.stringify(prerendered.postponed);
+
+    await readIntoContainer(prerendered.prelude);
+    expect(getVisibleChildren(container)).toEqual('Loading A');
+
+    await resolveA();
+
+    expect(prerendered.postponed).not.toBe(null);
+
+    const controller2 = new AbortController();
+    await serverAct(async () => {
+      pendingResult = ReactDOMFizzStatic.resumeAndPrerender(
+        <App />,
+        JSON.parse(postponedState),
+        {
+          signal: controller2.signal,
+          onError(x) {
+            errors.push(x.message);
+          },
+        },
+      );
+    });
+
+    controller2.abort();
+
+    const prerendered2 = await pendingResult;
+    const postponedState2 = JSON.stringify(prerendered2.postponed);
+
+    await readIntoContainer(prerendered2.prelude);
+    expect(getVisibleChildren(container)).toEqual('Loading B');
+
+    await resolveB();
+
+    const dynamic = await serverAct(() =>
+      ReactDOMFizzServer.resume(<App />, JSON.parse(postponedState2)),
+    );
+
+    await readIntoContainer(dynamic);
+    expect(getVisibleChildren(container)).toEqual('Hello');
+  });
 });

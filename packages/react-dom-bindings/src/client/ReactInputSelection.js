@@ -56,9 +56,9 @@ function isSameOriginFrame(iframe) {
   }
 }
 
-function getActiveElementDeep() {
-  let win = window;
-  let element = getActiveElement();
+function getActiveElementDeep(containerInfo) {
+  let win = containerInfo?.ownerDocument?.defaultView ?? window;
+  let element = getActiveElement(win.document);
   while (element instanceof win.HTMLIFrameElement) {
     if (isSameOriginFrame(element)) {
       win = element.contentWindow;
@@ -97,8 +97,8 @@ export function hasSelectionCapabilities(elem) {
   );
 }
 
-export function getSelectionInformation() {
-  const focusedElem = getActiveElementDeep();
+export function getSelectionInformation(containerInfo) {
+  const focusedElem = getActiveElementDeep(containerInfo);
   return {
     focusedElem: focusedElem,
     selectionRange: hasSelectionCapabilities(focusedElem)
@@ -112,8 +112,8 @@ export function getSelectionInformation() {
  * restore it. This is useful when performing operations that could remove dom
  * nodes and place them back in, resulting in focus being lost.
  */
-export function restoreSelection(priorSelectionInformation) {
-  const curFocusedElem = getActiveElementDeep();
+export function restoreSelection(priorSelectionInformation, containerInfo) {
+  const curFocusedElem = getActiveElementDeep(containerInfo);
   const priorFocusedElem = priorSelectionInformation.focusedElem;
   const priorSelectionRange = priorSelectionInformation.selectionRange;
   if (curFocusedElem !== priorFocusedElem && isInDocument(priorFocusedElem)) {

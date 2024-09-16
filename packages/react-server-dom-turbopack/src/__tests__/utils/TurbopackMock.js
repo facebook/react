@@ -23,6 +23,7 @@ global.__turbopack_require__ = function (id) {
 };
 
 const Server = require('react-server-dom-turbopack/server');
+const registerClientReference = Server.registerClientReference;
 const registerServerReference = Server.registerServerReference;
 const createClientModuleProxy = Server.createClientModuleProxy;
 
@@ -81,6 +82,65 @@ exports.clientExports = function clientExports(moduleExports, chunkUrl) {
     };
   }
   return createClientModuleProxy(path);
+};
+
+exports.clientExportsESM = function clientExportsESM(
+  moduleExports,
+  options?: {forceClientModuleProxy?: boolean} = {},
+) {
+  const chunks = [];
+  const idx = '' + turbopackModuleIdx++;
+  turbopackClientModules[idx] = moduleExports;
+  const path = url.pathToFileURL(idx).href;
+
+  const createClientReferencesForExports = ({exports, async}) => {
+    turbopackClientMap[path] = {
+      id: idx,
+      chunks,
+      name: '*',
+      async: true,
+    };
+
+    if (options.forceClientModuleProxy) {
+      return createClientModuleProxy(path);
+    }
+
+    if (typeof exports === 'object') {
+      const references = {};
+
+      for (const name in exports) {
+        const id = path + '#' + name;
+        turbopackClientMap[path + '#' + name] = {
+          id: idx,
+          chunks,
+          name: name,
+          async,
+        };
+        references[name] = registerClientReference(() => {}, id, name);
+      }
+
+      return references;
+    }
+
+    return registerClientReference(() => {}, path, '*');
+  };
+
+  if (
+    moduleExports &&
+    typeof moduleExports === 'object' &&
+    typeof moduleExports.then === 'function'
+  ) {
+    return moduleExports.then(
+      asyncModuleExports =>
+        createClientReferencesForExports({
+          exports: asyncModuleExports,
+          async: true,
+        }),
+      () => {},
+    );
+  }
+
+  return createClientReferencesForExports({exports: moduleExports});
 };
 
 // This tests server to server references. There's another case of client to server references.
