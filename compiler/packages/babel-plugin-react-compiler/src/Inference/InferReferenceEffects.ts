@@ -874,7 +874,6 @@ function inferBlock(
     switch (instrValue.kind) {
       case 'BinaryExpression': {
         continuation = {
-          kind: 'initialize',
           valueKind: {
             kind: ValueKind.Primitive,
             reason: new Set([ValueReason.Other]),
@@ -900,7 +899,6 @@ function inferBlock(
               context: new Set(),
             };
         continuation = {
-          kind: 'initialize',
           valueKind,
           effect: {kind: Effect.Capture, reason: ValueReason.Other},
           lvalueEffect: Effect.Store,
@@ -1011,7 +1009,6 @@ function inferBlock(
       }
       case 'UnaryExpression': {
         continuation = {
-          kind: 'initialize',
           valueKind: {
             kind: ValueKind.Primitive,
             reason: new Set([ValueReason.Other]),
@@ -1024,7 +1021,6 @@ function inferBlock(
       case 'UnsupportedNode': {
         // TODO: handle other statement kinds
         continuation = {
-          kind: 'initialize',
           valueKind: {
             kind: ValueKind.Mutable,
             reason: new Set([ValueReason.Other]),
@@ -1085,7 +1081,6 @@ function inferBlock(
       }
       case 'JsxFragment': {
         continuation = {
-          kind: 'initialize',
           valueKind: {
             kind: ValueKind.Frozen,
             reason: new Set([ValueReason.Other]),
@@ -1104,7 +1099,6 @@ function inferBlock(
          * an immutable string
          */
         continuation = {
-          kind: 'initialize',
           valueKind: {
             kind: ValueKind.Primitive,
             reason: new Set([ValueReason.Other]),
@@ -1117,7 +1111,6 @@ function inferBlock(
       case 'RegExpLiteral': {
         // RegExp instances are mutable objects
         continuation = {
-          kind: 'initialize',
           valueKind: {
             kind: ValueKind.Mutable,
             reason: new Set([ValueReason.Other]),
@@ -1136,7 +1129,6 @@ function inferBlock(
           break;
         }
         continuation = {
-          kind: 'initialize',
           valueKind: {
             kind: ValueKind.Global,
             reason: new Set([ValueReason.Global]),
@@ -1148,7 +1140,6 @@ function inferBlock(
       }
       case 'LoadGlobal':
         continuation = {
-          kind: 'initialize',
           valueKind: {
             kind: ValueKind.Global,
             reason: new Set([ValueReason.Global]),
@@ -1161,7 +1152,6 @@ function inferBlock(
       case 'JSXText':
       case 'Primitive': {
         continuation = {
-          kind: 'initialize',
           valueKind: {
             kind: ValueKind.Primitive,
             reason: new Set([ValueReason.Other]),
@@ -1464,7 +1454,6 @@ function inferBlock(
       case 'PropertyDelete': {
         // `delete` returns a boolean (immutable) and modifies the object
         continuation = {
-          kind: 'initialize',
           valueKind: {
             kind: ValueKind.Primitive,
             reason: new Set([ValueReason.Other]),
@@ -1877,7 +1866,6 @@ function inferBlock(
           valueKind = state.kind(instrValue.collection);
         }
         continuation = {
-          kind: 'initialize',
           effect,
           valueKind,
           lvalueEffect: Effect.Store,
@@ -1923,7 +1911,6 @@ function inferBlock(
       }
       case 'NextPropertyOf': {
         continuation = {
-          kind: 'initialize',
           effect: {kind: Effect.Read, reason: ValueReason.Other},
           lvalueEffect: Effect.Store,
           valueKind: {
