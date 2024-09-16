@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<22acb37b2cd38769b44252bf796f3563>>
+ * @generated SignedSource<<f2fdab5d82153a58466983660146b7da>>
  */
 
 "use strict";
@@ -10625,11 +10625,10 @@ function completeUnitOfWork(unitOfWork) {
     }
     var current = completedWork.alternate;
     unitOfWork = completedWork.return;
-    0 === (completedWork.mode & 2)
-      ? (current = completeWork(current, completedWork, entangledRenderLanes))
-      : (startProfilerTimer(completedWork),
-        (current = completeWork(current, completedWork, entangledRenderLanes)),
-        stopProfilerTimerIfRunningAndRecordIncompleteDuration(completedWork));
+    startProfilerTimer(completedWork);
+    current = completeWork(current, completedWork, entangledRenderLanes);
+    0 !== (completedWork.mode & 2) &&
+      stopProfilerTimerIfRunningAndRecordIncompleteDuration(completedWork);
     if (null !== current) {
       workInProgress = current;
       return;
@@ -11760,11 +11759,11 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1252 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-ee1a403a-20240916",
+    version: "19.0.0-native-fb-f2df5694-20240916",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromNode,
-    reconcilerVersion: "19.0.0-native-fb-ee1a403a-20240916"
+    reconcilerVersion: "19.0.0-native-fb-f2df5694-20240916"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1252.rendererConfig = extraDevToolsConfig);

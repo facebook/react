@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bda351a6bd74d56044bd86d2d6462273>>
+ * @generated SignedSource<<40679ac3de121003b93c964de30bcf93>>
  */
 
 "use strict";
@@ -11605,25 +11605,16 @@ __DEV__ &&
         }
         var current = completedWork.alternate;
         unitOfWork = completedWork.return;
-        0 === (completedWork.mode & 2)
-          ? (current = runWithFiberInDEV(
-              completedWork,
-              completeWork,
-              current,
-              completedWork,
-              entangledRenderLanes
-            ))
-          : (startProfilerTimer(completedWork),
-            (current = runWithFiberInDEV(
-              completedWork,
-              completeWork,
-              current,
-              completedWork,
-              entangledRenderLanes
-            )),
-            stopProfilerTimerIfRunningAndRecordIncompleteDuration(
-              completedWork
-            ));
+        startProfilerTimer(completedWork);
+        current = runWithFiberInDEV(
+          completedWork,
+          completeWork,
+          current,
+          completedWork,
+          entangledRenderLanes
+        );
+        0 !== (completedWork.mode & 2) &&
+          stopProfilerTimerIfRunningAndRecordIncompleteDuration(completedWork);
         if (null !== current) {
           workInProgress = current;
           return;
@@ -15140,11 +15131,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-ee1a403a-20240916",
+        version: "19.0.0-native-fb-f2df5694-20240916",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-native-fb-ee1a403a-20240916"
+        reconcilerVersion: "19.0.0-native-fb-f2df5694-20240916"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15289,5 +15280,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.0.0-native-fb-ee1a403a-20240916";
+    exports.version = "19.0.0-native-fb-f2df5694-20240916";
   })();
