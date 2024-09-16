@@ -135,6 +135,20 @@ export default class DisjointSet<T> {
       return false;
     }
     const rootMap = new Map<T, T>();
+    for (const thisGroupId of this.#entries.values()) {
+      const otherGroupId = other.find(thisGroupId);
+      if (otherGroupId === null || this.find(otherGroupId) !== thisGroupId) {
+        return false;
+      }
+      rootMap.set(thisGroupId, otherGroupId);
+    }
+
+    for (const otherGroupId of other.#entries.values()) {
+      if (!new Set(rootMap.values()).has(otherGroupId)) {
+        return false;
+      }
+    }
+
     for (const item of this.#entries.keys()) {
       const otherRoot = other.find(item);
       if (otherRoot === null) {
@@ -145,9 +159,7 @@ export default class DisjointSet<T> {
         reason: 'Expected item to be in set',
         loc: null,
       });
-      if (rootMap.get(thisRoot) == null) {
-        rootMap.set(thisRoot, otherRoot);
-      } else if (rootMap.get(thisRoot) !== otherRoot) {
+      if (rootMap.get(thisRoot) !== otherRoot) {
         return false;
       }
     }
