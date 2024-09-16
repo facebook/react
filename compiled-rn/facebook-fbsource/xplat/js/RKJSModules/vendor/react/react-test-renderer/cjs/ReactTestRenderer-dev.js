@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f8a96fa0f2e72cb61ce052e8a5718a5b>>
+ * @generated SignedSource<<13016889a9d577c3ebecd5eeb820686d>>
  */
 
 "use strict";
@@ -8512,10 +8512,7 @@ __DEV__ &&
       }
     }
     function shouldProfile$1(current) {
-      return (
-        0 !== (current.mode & 2) &&
-        (executionContext & CommitContext) !== NoContext
-      );
+      return 0 !== (current.mode & 2);
     }
     function commitHookLayoutEffects(finishedWork, hookFlags) {
       shouldProfile$1(finishedWork)
@@ -8897,26 +8894,6 @@ __DEV__ &&
           commitTime
         );
     }
-    function commitProfilerUpdate(
-      finishedWork,
-      current,
-      commitTime,
-      effectDuration
-    ) {
-      if (executionContext & CommitContext)
-        try {
-          runWithFiberInDEV(
-            finishedWork,
-            commitProfiler,
-            finishedWork,
-            current,
-            commitTime,
-            effectDuration
-          );
-        } catch (error$20) {
-          captureCommitPhaseError(finishedWork, finishedWork.return, error$20);
-        }
-    }
     function commitProfilerPostCommitImpl(
       finishedWork,
       current,
@@ -9045,12 +9022,6 @@ __DEV__ &&
             "Invalid host parent fiber. This error is likely caused by a bug in React. Please file an issue."
           );
       }
-    }
-    function shouldProfile(current) {
-      return (
-        0 !== (current.mode & 2) &&
-        (executionContext & CommitContext) !== NoContext
-      );
     }
     function commitBeforeMutationEffects(root, firstChild) {
       for (nextEffect = firstChild; null !== nextEffect; )
@@ -9234,14 +9205,26 @@ __DEV__ &&
           break;
         case 12:
           recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
-          if (flags & 4)
-            a: for (
-              flags = finishedWork.stateNode.effectDuration,
-                commitProfilerUpdate(finishedWork, current, commitTime, flags),
-                finishedWork = finishedWork.return;
-              null !== finishedWork;
-
-            ) {
+          if (flags & 4) {
+            flags = finishedWork.stateNode.effectDuration;
+            try {
+              runWithFiberInDEV(
+                finishedWork,
+                commitProfiler,
+                finishedWork,
+                current,
+                commitTime,
+                flags
+              );
+            } catch (error$20) {
+              captureCommitPhaseError(
+                finishedWork,
+                finishedWork.return,
+                error$20
+              );
+            }
+            finishedWork = finishedWork.return;
+            a: for (; null !== finishedWork; ) {
               switch (finishedWork.tag) {
                 case 3:
                   finishedWork.stateNode.effectDuration += flags;
@@ -9252,6 +9235,7 @@ __DEV__ &&
               }
               finishedWork = finishedWork.return;
             }
+          }
           break;
         case 13:
           recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
@@ -9438,7 +9422,7 @@ __DEV__ &&
                   : offscreenSubtreeWasHidden ||
                     (tag & Layout) === NoFlags ||
                     (markComponentLayoutEffectUnmountStarted(deletedFiber),
-                    shouldProfile(deletedFiber)
+                    0 !== (deletedFiber.mode & 2)
                       ? (startLayoutEffectTimer(),
                         (inst.destroy = void 0),
                         runWithFiberInDEV(
@@ -9608,7 +9592,7 @@ __DEV__ &&
               finishedWork.return
             ),
             commitHookEffectListMount(Insertion | HasEffect, finishedWork),
-            shouldProfile(finishedWork)
+            0 !== (finishedWork.mode & 2)
               ? (startLayoutEffectTimer(),
                 commitHookEffectListUnmount(
                   Layout | HasEffect,
@@ -9895,7 +9879,7 @@ __DEV__ &&
         case 11:
         case 14:
         case 15:
-          if (shouldProfile(finishedWork))
+          if (0 !== (finishedWork.mode & 2))
             try {
               startLayoutEffectTimer(),
                 commitHookEffectListUnmount(
@@ -10013,20 +9997,27 @@ __DEV__ &&
             finishedWork,
             includeWorkInProgressEffects
           );
-          if (includeWorkInProgressEffects && flags & 4)
-            a: for (
-              includeWorkInProgressEffects =
-                finishedWork.stateNode.effectDuration,
-                commitProfilerUpdate(
-                  finishedWork,
-                  current,
-                  commitTime,
-                  includeWorkInProgressEffects
-                ),
-                finishedWork = finishedWork.return;
-              null !== finishedWork;
-
-            ) {
+          if (includeWorkInProgressEffects && flags & 4) {
+            includeWorkInProgressEffects =
+              finishedWork.stateNode.effectDuration;
+            try {
+              runWithFiberInDEV(
+                finishedWork,
+                commitProfiler,
+                finishedWork,
+                current,
+                commitTime,
+                includeWorkInProgressEffects
+              );
+            } catch (error$20) {
+              captureCommitPhaseError(
+                finishedWork,
+                finishedWork.return,
+                error$20
+              );
+            }
+            finishedWork = finishedWork.return;
+            a: for (; null !== finishedWork; ) {
               switch (finishedWork.tag) {
                 case 3:
                   finishedWork.stateNode.effectDuration +=
@@ -10039,6 +10030,7 @@ __DEV__ &&
               }
               finishedWork = finishedWork.return;
             }
+          }
           break;
         case 13:
           recursivelyTraverseReappearLayoutEffects(
@@ -10161,7 +10153,7 @@ __DEV__ &&
             committedLanes,
             committedTransitions
           );
-          if (flags & 2048 && executionContext & CommitContext) {
+          if (flags & 2048) {
             finishedRoot = finishedWork.stateNode.passiveEffectDuration;
             try {
               runWithFiberInDEV(
@@ -15131,11 +15123,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-26855e46-20240916",
+        version: "19.0.0-native-fb-8152e5cd-20240916",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-native-fb-26855e46-20240916"
+        reconcilerVersion: "19.0.0-native-fb-8152e5cd-20240916"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15280,5 +15272,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.0.0-native-fb-26855e46-20240916";
+    exports.version = "19.0.0-native-fb-8152e5cd-20240916";
   })();

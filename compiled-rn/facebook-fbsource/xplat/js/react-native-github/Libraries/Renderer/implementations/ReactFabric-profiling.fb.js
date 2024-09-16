@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b3ecc7c6528e5e72bbcba37751960722>>
+ * @generated SignedSource<<6b5422f356f17af242b14cfdec99ef35>>
  */
 
 "use strict";
@@ -8117,7 +8117,7 @@ function unwindInterruptedWork(current, interruptedWork) {
   }
 }
 function shouldProfile$1(current) {
-  return 0 !== (current.mode & 2) && 0 !== (executionContext & 4);
+  return 0 !== (current.mode & 2);
 }
 function commitHookLayoutEffects(finishedWork, hookFlags) {
   shouldProfile$1(finishedWork)
@@ -8350,33 +8350,32 @@ function commitProfilerUpdate(
   commitTime,
   effectDuration
 ) {
-  if (executionContext & 4)
-    try {
-      var _finishedWork$memoize = finishedWork.memoizedProps,
-        id = _finishedWork$memoize.id,
-        onCommit = _finishedWork$memoize.onCommit,
-        onRender = _finishedWork$memoize.onRender;
-      current = null === current ? "mount" : "update";
-      currentUpdateIsNested && (current = "nested-update");
-      "function" === typeof onRender &&
-        onRender(
-          id,
-          current,
-          finishedWork.actualDuration,
-          finishedWork.treeBaseDuration,
-          finishedWork.actualStartTime,
-          commitTime
-        );
-      "function" === typeof onCommit &&
-        onCommit(
-          finishedWork.memoizedProps.id,
-          current,
-          effectDuration,
-          commitTime
-        );
-    } catch (error) {
-      captureCommitPhaseError(finishedWork, finishedWork.return, error);
-    }
+  try {
+    var _finishedWork$memoize = finishedWork.memoizedProps,
+      id = _finishedWork$memoize.id,
+      onCommit = _finishedWork$memoize.onCommit,
+      onRender = _finishedWork$memoize.onRender;
+    current = null === current ? "mount" : "update";
+    currentUpdateIsNested && (current = "nested-update");
+    "function" === typeof onRender &&
+      onRender(
+        id,
+        current,
+        finishedWork.actualDuration,
+        finishedWork.treeBaseDuration,
+        finishedWork.actualStartTime,
+        commitTime
+      );
+    "function" === typeof onCommit &&
+      onCommit(
+        finishedWork.memoizedProps.id,
+        current,
+        effectDuration,
+        commitTime
+      );
+  } catch (error) {
+    captureCommitPhaseError(finishedWork, finishedWork.return, error);
+  }
 }
 function commitHostMount(finishedWork) {
   try {
@@ -8405,11 +8404,8 @@ var offscreenSubtreeIsHidden = !1,
   PossiblyWeakSet = "function" === typeof WeakSet ? WeakSet : Set,
   nextEffect = null,
   inProgressLanes = null,
-  inProgressRoot = null;
-function shouldProfile(current) {
-  return 0 !== (current.mode & 2) && 0 !== (executionContext & 4);
-}
-var shouldFireAfterActiveInstanceBlur = !1;
+  inProgressRoot = null,
+  shouldFireAfterActiveInstanceBlur = !1;
 function commitBeforeMutationEffects(root, firstChild) {
   for (nextEffect = firstChild; null !== nextEffect; )
     if (
@@ -8734,7 +8730,7 @@ function commitDeletionEffectsOnFiber(
                 : offscreenSubtreeWasHidden ||
                   0 === (tag & 4) ||
                   (markComponentLayoutEffectUnmountStarted(deletedFiber),
-                  shouldProfile(deletedFiber)
+                  0 !== (deletedFiber.mode & 2)
                     ? (startLayoutEffectTimer(),
                       (inst.destroy = void 0),
                       safelyCallDestroy(
@@ -8774,7 +8770,7 @@ function commitDeletionEffectsOnFiber(
                   ))
                 : 0 !== (tag & 4) &&
                   (markComponentLayoutEffectUnmountStarted(deletedFiber),
-                  shouldProfile(deletedFiber)
+                  0 !== (deletedFiber.mode & 2)
                     ? (startLayoutEffectTimer(),
                       (inst.destroy = void 0),
                       safelyCallDestroy(
@@ -8925,7 +8921,7 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       flags & 4 &&
         (commitHookEffectListUnmount(3, finishedWork, finishedWork.return),
         commitHookEffectListMount(3, finishedWork),
-        shouldProfile(finishedWork)
+        0 !== (finishedWork.mode & 2)
           ? (startLayoutEffectTimer(),
             commitHookEffectListUnmount(5, finishedWork, finishedWork.return),
             recordLayoutEffectDuration(finishedWork))
@@ -9091,7 +9087,7 @@ function recursivelyTraverseDisappearLayoutEffects(parentFiber) {
       case 11:
       case 14:
       case 15:
-        if (shouldProfile(finishedWork))
+        if (0 !== (finishedWork.mode & 2))
           try {
             startLayoutEffectTimer(),
               commitHookEffectListUnmount(4, finishedWork, finishedWork.return);
@@ -9333,7 +9329,7 @@ function commitPassiveMountOnFiber(
         committedLanes,
         committedTransitions
       );
-      if (flags & 2048 && executionContext & 4) {
+      if (flags & 2048) {
         finishedRoot = finishedWork.stateNode.passiveEffectDuration;
         try {
           var _finishedWork$memoize2 = finishedWork.memoizedProps,
@@ -11759,11 +11755,11 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1252 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-26855e46-20240916",
+    version: "19.0.0-native-fb-8152e5cd-20240916",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromNode,
-    reconcilerVersion: "19.0.0-native-fb-26855e46-20240916"
+    reconcilerVersion: "19.0.0-native-fb-8152e5cd-20240916"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1252.rendererConfig = extraDevToolsConfig);
