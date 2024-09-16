@@ -1784,6 +1784,8 @@ function commitMutationEffectsOnFiber(
       return;
     }
     case HostRoot: {
+      const prevEffectDuration = pushNestedEffectDurations();
+
       if (supportsResources) {
         prepareToCommitHoistables();
 
@@ -1827,6 +1829,10 @@ function commitMutationEffectsOnFiber(
         recursivelyResetForms(finishedWork);
       }
 
+      if (enableProfilerTimer && enableProfilerCommitHooks) {
+        root.effectDuration += popNestedEffectDurations(prevEffectDuration);
+      }
+
       return;
     }
     case HostPortal: {
@@ -1851,6 +1857,21 @@ function commitMutationEffectsOnFiber(
             finishedWork.stateNode.pendingChildren,
           );
         }
+      }
+      return;
+    }
+    case Profiler: {
+      const prevEffectDuration = pushNestedEffectDurations();
+
+      recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+      commitReconciliationEffects(finishedWork);
+
+      if (enableProfilerTimer && enableProfilerCommitHooks) {
+        const profilerInstance = finishedWork.stateNode;
+        // Propagate layout effect durations to the next nearest Profiler ancestor.
+        // Do not reset these values until the next render so DevTools has a chance to read them first.
+        profilerInstance.effectDuration +=
+          bubbleNestedEffectDurations(prevEffectDuration);
       }
       return;
     }
@@ -3279,6 +3300,30 @@ function commitPassiveUnmountOnFiber(finishedWork: Fiber): void {
           finishedWork.return,
           HookPassive | HookHasEffect,
         );
+      }
+      break;
+    }
+    case HostRoot: {
+      const prevEffectDuration = pushNestedEffectDurations();
+      recursivelyTraversePassiveUnmountEffects(finishedWork);
+      if (enableProfilerTimer && enableProfilerCommitHooks) {
+        const finishedRoot: FiberRoot = finishedWork.stateNode;
+        finishedRoot.passiveEffectDuration +=
+          popNestedEffectDurations(prevEffectDuration);
+      }
+      break;
+    }
+    case Profiler: {
+      const prevEffectDuration = pushNestedEffectDurations();
+
+      recursivelyTraversePassiveUnmountEffects(finishedWork);
+
+      if (enableProfilerTimer && enableProfilerCommitHooks) {
+        const profilerInstance = finishedWork.stateNode;
+        // Propagate layout effect durations to the next nearest Profiler ancestor.
+        // Do not reset these values until the next render so DevTools has a chance to read them first.
+        profilerInstance.passiveEffectDuration +=
+          bubbleNestedEffectDurations(prevEffectDuration);
       }
       break;
     }
