@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import {useEffect} from 'react';
+import {useEffect, useRef} from 'react';
 
 function Component(props) {
   const ref = useRef();

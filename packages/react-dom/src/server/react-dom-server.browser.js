@@ -8,4 +8,4 @@
  */
 
 export * from './ReactDOMFizzServerBrowser.js';
-export {prerender} from './ReactDOMFizzStaticBrowser.js';
+export {prerender, resumeAndPrerender} from './ReactDOMFizzStaticBrowser.js';

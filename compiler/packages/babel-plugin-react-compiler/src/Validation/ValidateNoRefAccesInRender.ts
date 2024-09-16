@@ -65,45 +65,8 @@ class Env extends Map<IdentifierId, RefAccessType> {
   }
 
   override set(key: IdentifierId, value: RefAccessType): this {
-    function tyEqual(a: RefAccessType, b: RefAccessType): boolean {
-      if (a.kind !== b.kind) {
-        return false;
-      }
-      switch (a.kind) {
-        case 'None':
-          return true;
-        case 'Ref':
-          return true;
-        case 'RefValue':
-          CompilerError.invariant(b.kind === 'RefValue', {
-            reason: 'Expected ref value',
-            loc: null,
-          });
-          return a.loc == b.loc;
-        case 'Structure': {
-          CompilerError.invariant(b.kind === 'Structure', {
-            reason: 'Expected structure',
-            loc: null,
-          });
-          const fnTypesEqual =
-            (a.fn === null && b.fn === null) ||
-            (a.fn !== null &&
-              b.fn !== null &&
-              a.fn.readRefEffect === b.fn.readRefEffect &&
-              tyEqual(a.fn.returnType, b.fn.returnType));
-          return (
-            fnTypesEqual &&
-            (a.value === b.value ||
-              (a.value !== null &&
-                b.value !== null &&
-                tyEqual(a.value, b.value)))
-          );
-        }
-      }
-    }
-
     const cur = this.get(key);
-    const widenedValue = joinRefTypes(value, cur ?? {kind: 'None'});
+    const widenedValue = joinRefAccessTypes(value, cur ?? {kind: 'None'});
     if (
       !(cur == null && widenedValue.kind === 'None') &&
       (cur == null || !tyEqual(cur, widenedValue))
@@ -129,8 +92,43 @@ function refTypeOfType(identifier: Identifier): RefAccessType {
   }
 }
 
-function joinRefTypes(...types: Array<RefAccessType>): RefAccessType {
-  function joinRefRefTypes(
+function tyEqual(a: RefAccessType, b: RefAccessType): boolean {
+  if (a.kind !== b.kind) {
+    return false;
+  }
+  switch (a.kind) {
+    case 'None':
+      return true;
+    case 'Ref':
+      return true;
+    case 'RefValue':
+      CompilerError.invariant(b.kind === 'RefValue', {
+        reason: 'Expected ref value',
+        loc: null,
+      });
+      return a.loc == b.loc;
+    case 'Structure': {
+      CompilerError.invariant(b.kind === 'Structure', {
+        reason: 'Expected structure',
+        loc: null,
+      });
+      const fnTypesEqual =
+        (a.fn === null && b.fn === null) ||
+        (a.fn !== null &&
+          b.fn !== null &&
+          a.fn.readRefEffect === b.fn.readRefEffect &&
+          tyEqual(a.fn.returnType, b.fn.returnType));
+      return (
+        fnTypesEqual &&
+        (a.value === b.value ||
+          (a.value !== null && b.value !== null && tyEqual(a.value, b.value)))
+      );
+    }
+  }
+}
+
+function joinRefAccessTypes(...types: Array<RefAccessType>): RefAccessType {
+  function joinRefAccessRefTypes(
     a: RefAccessRefType,
     b: RefAccessRefType,
   ): RefAccessRefType {
@@ -155,14 +153,17 @@ function joinRefTypes(...types: Array<RefAccessType>): RefAccessType {
             ? a.fn
             : {
                 readRefEffect: a.fn.readRefEffect || b.fn.readRefEffect,
-                returnType: joinRefTypes(a.fn.returnType, b.fn.returnType),
+                returnType: joinRefAccessTypes(
+                  a.fn.returnType,
+                  b.fn.returnType,
+                ),
               };
       const value =
         a.value === null
           ? b.value
           : b.value === null
             ? a.value
-            : joinRefRefTypes(a.value, b.value);
+            : joinRefAccessRefTypes(a.value, b.value);
       return {
         kind: 'Structure',
         fn,
@@ -178,7 +179,7 @@ function joinRefTypes(...types: Array<RefAccessType>): RefAccessType {
       } else if (b.kind === 'None') {
         return a;
       } else {
-        return joinRefRefTypes(a, b);
+        return joinRefAccessRefTypes(a, b);
       }
     },
     {kind: 'None'},
@@ -209,7 +210,7 @@ function validateNoRefAccessInRenderImpl(
       for (const phi of block.phis) {
         env.set(
           phi.id.id,
-          joinRefTypes(
+          joinRefAccessTypes(
             ...Array(...phi.operands.values()).map(
               operand => env.get(operand.id) ?? ({kind: 'None'} as const),
             ),
@@ -351,7 +352,7 @@ function validateNoRefAccessInRenderImpl(
               validateNoDirectRefValueAccess(errors, operand, env);
               types.push(env.get(operand.identifier.id) ?? {kind: 'None'});
             }
-            const value = joinRefTypes(...types);
+            const value = joinRefAccessTypes(...types);
             if (value.kind === 'None') {
               env.set(instr.lvalue.identifier.id, {kind: 'None'});
             } else {
@@ -389,7 +390,7 @@ function validateNoRefAccessInRenderImpl(
         if (isUseRefType(instr.lvalue.identifier)) {
           env.set(
             instr.lvalue.identifier.id,
-            joinRefTypes(
+            joinRefAccessTypes(
               env.get(instr.lvalue.identifier.id) ?? {kind: 'None'},
               {kind: 'Ref'},
             ),
@@ -398,7 +399,7 @@ function validateNoRefAccessInRenderImpl(
         if (isRefValueType(instr.lvalue.identifier)) {
           env.set(
             instr.lvalue.identifier.id,
-            joinRefTypes(
+            joinRefAccessTypes(
               env.get(instr.lvalue.identifier.id) ?? {kind: 'None'},
               {kind: 'RefValue', loc: instr.loc},
             ),
@@ -427,7 +428,7 @@ function validateNoRefAccessInRenderImpl(
   });
 
   return Ok(
-    joinRefTypes(
+    joinRefAccessTypes(
       ...returnValues.filter((env): env is RefAccessType => env !== undefined),
     ),
   );

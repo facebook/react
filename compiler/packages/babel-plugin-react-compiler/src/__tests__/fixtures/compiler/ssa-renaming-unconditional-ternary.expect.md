@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-function foo(props) {
+function useFoo(props) {
   let x = [];
   x.push(props.bar);
   props.cond
@@ -12,9 +12,13 @@ function foo(props) {
 }
 
 export const FIXTURE_ENTRYPOINT = {
-  fn: foo,
-  params: ['TodoAdd'],
-  isComponent: 'TodoAdd',
+  fn: useFoo,
+  params: [{cond: false, foo: 2, bar: 55}],
+  sequentialRenders: [
+    {cond: false, foo: 2, bar: 55},
+    {cond: false, foo: 3, bar: 55},
+    {cond: true, foo: 3, bar: 55},
+  ],
 };
 
 ```
@@ -23,7 +27,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime";
-function foo(props) {
+function useFoo(props) {
   const $ = _c(4);
   let x;
   if ($[0] !== props.bar) {
@@ -45,10 +49,18 @@ function foo(props) {
 }
 
 export const FIXTURE_ENTRYPOINT = {
-  fn: foo,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  fn: useFoo,
+  params: [{ cond: false, foo: 2, bar: 55 }],
+  sequentialRenders: [
+    { cond: false, foo: 2, bar: 55 },
+    { cond: false, foo: 3, bar: 55 },
+    { cond: true, foo: 3, bar: 55 },
+  ],
 };
 
 ```
       
+### Eval output
+(kind: ok) [55]
+[55]
+[3]
