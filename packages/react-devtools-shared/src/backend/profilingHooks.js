@@ -35,7 +35,7 @@ import {
   REACT_TOTAL_NUM_LANES,
   SCHEDULING_PROFILER_VERSION,
 } from 'react-devtools-timeline/src/constants';
-import {describeFiber} from './DevToolsFiberComponentStack';
+import {describeFiber} from './fiber/DevToolsFiberComponentStack';
 
 // Add padding to the start/stop time of the profile.
 // This makes the UI nicer to use.
@@ -274,16 +274,19 @@ export function createProfilingHooks({
     }
 
     const top = currentReactMeasuresStack.pop();
+    // $FlowFixMe[incompatible-type]
     if (top.type !== type) {
       console.error(
         'Unexpected type "%s" completed at %sms before "%s" completed.',
         type,
         currentTime,
+        // $FlowFixMe[incompatible-use]
         top.type,
       );
     }
 
     // $FlowFixMe[cannot-write] This property should not be writable outside of this function.
+    // $FlowFixMe[incompatible-use]
     top.duration = currentTime - top.timestamp;
 
     if (currentTimelineData) {

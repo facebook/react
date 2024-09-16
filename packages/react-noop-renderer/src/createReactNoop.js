@@ -42,6 +42,7 @@ import {
 } from 'shared/ReactFeatureFlags';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
+import ReactVersion from 'shared/ReactVersion';
 
 type Container = {
   rootID: string,
@@ -367,6 +368,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   }
 
   const sharedHostConfig = {
+    rendererVersion: ReactVersion,
+    rendererPackageName: 'react-noop',
+
     supportsSingletons: false,
 
     getRootHostContext() {
@@ -503,15 +507,15 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       typeof queueMicrotask === 'function'
         ? queueMicrotask
         : typeof Promise !== 'undefined'
-        ? callback =>
-            Promise.resolve(null)
-              .then(callback)
-              .catch(error => {
-                setTimeout(() => {
-                  throw error;
-                });
-              })
-        : setTimeout,
+          ? callback =>
+              Promise.resolve(null)
+                .then(callback)
+                .catch(error => {
+                  setTimeout(() => {
+                    throw error;
+                  });
+                })
+          : setTimeout,
 
     prepareForCommit(): null | Object {
       return null;
@@ -636,9 +640,12 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     resetFormInstance(form: Instance) {},
 
-    printToConsole(methodName, args, badgeName) {
-      // eslint-disable-next-line react-internal/no-production-logging
-      console[methodName].apply(console, args);
+    bindToConsole(methodName, args, badgeName) {
+      return Function.prototype.bind.apply(
+        // eslint-disable-next-line react-internal/no-production-logging
+        console[methodName],
+        [console].concat(args),
+      );
     },
   };
 

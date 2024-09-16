@@ -3,14 +3,14 @@
 
 ```javascript
 // @validateRefAccessDuringRender
-import { useEffect, useRef, useState } from "react";
+import {useEffect, useRef, useState} from 'react';
 
 function Component() {
   const ref = useRef(null);
   const [state, setState] = useState(false);
   useEffect(() => {
     const callback = () => {
-      ref.current = "Ok";
+      ref.current = 'Ok';
     };
   }, []);
 
@@ -24,7 +24,7 @@ function Component() {
   return <Child key={String(state)} ref={ref} />;
 }
 
-function Child({ ref }) {
+function Child({ref}) {
   // This violates the rules of React, so we access the ref in a child
   // component
   return ref.current;
@@ -44,7 +44,7 @@ import { c as _c } from "react/compiler-runtime"; // @validateRefAccessDuringRen
 import { useEffect, useRef, useState } from "react";
 
 function Component() {
-  const $ = _c(7);
+  const $ = _c(6);
   const ref = useRef(null);
   const [state, setState] = useState(false);
   let t0;
@@ -77,13 +77,12 @@ function Component() {
 
   const t4 = String(state);
   let t5;
-  if ($[4] !== t4 || $[5] !== ref) {
+  if ($[4] !== t4) {
     t5 = <Child key={t4} ref={ref} />;
     $[4] = t4;
-    $[5] = ref;
-    $[6] = t5;
+    $[5] = t5;
   } else {
-    t5 = $[6];
+    t5 = $[5];
   }
   return t5;
 }

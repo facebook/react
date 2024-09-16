@@ -490,11 +490,13 @@ module.exports = {
         'packages/react-devtools-extensions/**/*.js',
         'packages/react-devtools-shared/src/hook.js',
         'packages/react-devtools-shared/src/backend/console.js',
+        'packages/react-devtools-shared/src/backend/shared/DevToolsComponentStackFrame.js',
       ],
       globals: {
         __IS_CHROME__: 'readonly',
         __IS_FIREFOX__: 'readonly',
         __IS_EDGE__: 'readonly',
+        __IS_NATIVE__: 'readonly',
         __IS_INTERNAL_VERSION__: 'readonly',
       },
     },

@@ -6,67 +6,84 @@
  */
 
 import {
-  Identifier,
+  DeclarationId,
   InstructionKind,
   ReactiveFunction,
   ReactiveInstruction,
   ReactiveStatement,
-} from "../HIR";
+} from '../HIR';
 import {
   ReactiveFunctionTransform,
   Transformed,
   visitReactiveFunction,
-} from "./visitors";
+} from './visitors';
 
 /*
  * Prunes DeclareContexts lowered for HoistedConsts, and transforms any references back to its
  * original instruction kind.
  */
 export function pruneHoistedContexts(fn: ReactiveFunction): void {
-  const hoistedIdentifiers: HoistedIdentifiers = new Set();
+  const hoistedIdentifiers: HoistedIdentifiers = new Map();
   visitReactiveFunction(fn, new Visitor(), hoistedIdentifiers);
 }
 
-type HoistedIdentifiers = Set<Identifier>;
+type HoistedIdentifiers = Map<DeclarationId, InstructionKind>;
 
 class Visitor extends ReactiveFunctionTransform<HoistedIdentifiers> {
   override transformInstruction(
     instruction: ReactiveInstruction,
-    state: HoistedIdentifiers
+    state: HoistedIdentifiers,
   ): Transformed<ReactiveStatement> {
     this.visitInstruction(instruction, state);
     if (
-      instruction.value.kind === "DeclareContext" &&
-      instruction.value.lvalue.kind === "HoistedConst"
+      instruction.value.kind === 'DeclareContext' &&
+      instruction.value.lvalue.kind === 'HoistedConst'
     ) {
-      state.add(instruction.value.lvalue.place.identifier);
-      return { kind: "remove" };
+      state.set(
+        instruction.value.lvalue.place.identifier.declarationId,
+        InstructionKind.Const,
+      );
+      return {kind: 'remove'};
     }
 
     if (
-      instruction.value.kind === "StoreContext" &&
-      state.has(instruction.value.lvalue.place.identifier)
+      instruction.value.kind === 'DeclareContext' &&
+      instruction.value.lvalue.kind === 'HoistedLet'
     ) {
+      state.set(
+        instruction.value.lvalue.place.identifier.declarationId,
+        InstructionKind.Let,
+      );
+      return {kind: 'remove'};
+    }
+
+    if (
+      instruction.value.kind === 'StoreContext' &&
+      state.has(instruction.value.lvalue.place.identifier.declarationId)
+    ) {
+      const kind = state.get(
+        instruction.value.lvalue.place.identifier.declarationId,
+      )!;
       return {
-        kind: "replace",
+        kind: 'replace',
         value: {
-          kind: "instruction",
+          kind: 'instruction',
           instruction: {
             ...instruction,
             value: {
               ...instruction.value,
               lvalue: {
                 ...instruction.value.lvalue,
-                kind: InstructionKind.Const,
+                kind,
               },
               type: null,
-              kind: "StoreLocal",
+              kind: 'StoreLocal',
             },
           },
         },
       };
     }
 
-    return { kind: "keep" };
+    return {kind: 'keep'};
   }
 }

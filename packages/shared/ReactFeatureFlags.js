@@ -87,10 +87,24 @@ export const enableTaint = __EXPERIMENTAL__;
 
 export const enablePostpone = __EXPERIMENTAL__;
 
+export const enableHalt = __EXPERIMENTAL__;
+
+/**
+ * Switches the Fabric API from doing layout in commit work instead of complete work.
+ */
+export const enableFabricCompleteRootInCommitPhase = false;
+
+/**
+ * Switches Fiber creation to a simple object instead of a constructor.
+ */
+export const enableObjectFiber = false;
+
 export const enableTransitionTracing = false;
 
-// No known bugs, but needs performance testing
-export const enableLazyContextPropagation = false;
+export const enableLazyContextPropagation = true;
+
+// Expose unstable useContext for performance testing
+export const enableContextProfiling = false;
 
 // FB-only usage. The new API has different semantics.
 export const enableLegacyHidden = false;
@@ -119,13 +133,21 @@ export const alwaysThrottleRetries = true;
 
 export const passChildrenWhenCloningPersistedNodes = false;
 
-export const enableServerComponentLogs = __EXPERIMENTAL__;
+export const enableServerComponentLogs = true;
+
+/**
+ * Enables a new Fiber flag used in persisted mode to reduce the number
+ * of cloned host components.
+ */
+export const enablePersistedModeClonedFlag = false;
 
 export const enableAddPropertiesFastPath = false;
 
 export const enableOwnerStacks = __EXPERIMENTAL__;
 
 export const enableShallowPropDiffing = false;
+
+export const enableSiblingPrerendering = false;
 
 /**
  * Enables an expiration time for retry lanes to avoid starvation.
@@ -150,8 +172,19 @@ export const transitionLaneExpirationMs = 5000;
 // Renames the internal symbol for elements since they have changed signature/constructor
 export const renameElementSymbol = true;
 
-// Removes legacy style context
+/**
+ * Enables a fix to run insertion effect cleanup on hidden subtrees.
+ */
+export const enableHiddenSubtreeInsertionEffectCleanup = false;
+
+/**
+ * Removes legacy style context defined using static `contextTypes` and consumed with static `childContextTypes`.
+ */
 export const disableLegacyContext = true;
+/**
+ * Removes legacy style context just from function components.
+ */
+export const disableLegacyContextForFunctionComponents = true;
 
 // Not ready to break experimental yet.
 // Modern <StrictMode /> behaviour aligns more with what components
@@ -184,7 +217,6 @@ export const enableInfiniteRenderLoopDetection = true;
 // during element creation.
 export const enableRefAsProp = true;
 export const disableStringRefs = true;
-export const enableFastJSX = true;
 
 // Warn on any usage of ReactTestRenderer
 export const enableReactTestRendererWarning = true;
@@ -197,21 +229,12 @@ export const disableLegacyMode = true;
 // Make <Context> equivalent to <Context.Provider> instead of <Context.Consumer>
 export const enableRenderableContext = true;
 
-// Enables the `initialValue` option for `useDeferredValue`
-export const enableUseDeferredValueInitialArg = true;
-
 // -----------------------------------------------------------------------------
 // Chopping Block
 //
 // Planned feature deprecations and breaking changes. Sorted roughly in order of
 // when we plan to enable them.
 // -----------------------------------------------------------------------------
-
-// Enables time slicing for updates that aren't wrapped in startTransition.
-export const forceConcurrentByDefaultForTesting = false;
-
-// Adds an opt-in to time slicing for updates that aren't wrapped in startTransition.
-export const allowConcurrentByDefault = false;
 
 // -----------------------------------------------------------------------------
 // React DOM Chopping Block

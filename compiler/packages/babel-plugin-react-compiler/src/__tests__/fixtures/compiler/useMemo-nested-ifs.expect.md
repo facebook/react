@@ -14,8 +14,8 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: ['TodoAdd'],
+  isComponent: 'TodoAdd',
 };
 
 ```
@@ -24,10 +24,12 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 function Component(props) {
+  let t0;
   if (props.cond) {
     if (props.cond) {
     }
   }
+  t0 = undefined;
 }
 
 export const FIXTURE_ENTRYPOINT = {

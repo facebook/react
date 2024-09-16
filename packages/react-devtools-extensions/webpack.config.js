@@ -55,7 +55,6 @@ module.exports = {
     panel: './src/panel.js',
     proxy: './src/contentScripts/proxy.js',
     prepareInjection: './src/contentScripts/prepareInjection.js',
-    renderer: './src/contentScripts/renderer.js',
     installHook: './src/contentScripts/installHook.js',
   },
   output: {
@@ -112,6 +111,7 @@ module.exports = {
       __IS_CHROME__: IS_CHROME,
       __IS_FIREFOX__: IS_FIREFOX,
       __IS_EDGE__: IS_EDGE,
+      __IS_NATIVE__: false,
       __IS_INTERNAL_VERSION__: IS_INTERNAL_VERSION,
       'process.env.DEVTOOLS_PACKAGE': `"react-devtools-extensions"`,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,

@@ -307,7 +307,8 @@ describe('ReactDOMFizzStaticBrowser', () => {
   });
 
   // @gate experimental
-  it('should reject if aborting before the shell is complete', async () => {
+  // @gate !enableHalt
+  it('should reject if aborting before the shell is complete and enableHalt is disabled', async () => {
     const errors = [];
     const controller = new AbortController();
     const promise = serverAct(() =>
@@ -339,6 +340,42 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(errors).toEqual(['aborted for reasons']);
   });
 
+  // @gate enableHalt
+  it('should resolve an empty prelude if aborting before the shell is complete', async () => {
+    const errors = [];
+    const controller = new AbortController();
+    const promise = serverAct(() =>
+      ReactDOMFizzStatic.prerender(
+        <div>
+          <InfiniteSuspend />
+        </div>,
+        {
+          signal: controller.signal,
+          onError(x) {
+            errors.push(x.message);
+          },
+        },
+      ),
+    );
+
+    await jest.runAllTimers();
+
+    const theReason = new Error('aborted for reasons');
+    controller.abort(theReason);
+
+    let rejected = false;
+    let prelude;
+    try {
+      ({prelude} = await promise);
+    } catch (error) {
+      rejected = true;
+    }
+    expect(rejected).toBe(false);
+    expect(errors).toEqual(['aborted for reasons']);
+    const content = await readContent(prelude);
+    expect(content).toBe('');
+  });
+
   // @gate experimental
   it('should be able to abort before something suspends', async () => {
     const errors = [];
@@ -365,18 +402,26 @@ describe('ReactDOMFizzStaticBrowser', () => {
       ),
     );
 
-    let caughtError = null;
-    try {
-      await streamPromise;
-    } catch (error) {
-      caughtError = error;
+    if (gate(flags => flags.enableHalt)) {
+      const {prelude} = await streamPromise;
+      const content = await readContent(prelude);
+      expect(errors).toEqual(['The operation was aborted.']);
+      expect(content).toBe('');
+    } else {
+      let caughtError = null;
+      try {
+        await streamPromise;
+      } catch (error) {
+        caughtError = error;
+      }
+      expect(caughtError.message).toBe('The operation was aborted.');
+      expect(errors).toEqual(['The operation was aborted.']);
     }
-    expect(caughtError.message).toBe('The operation was aborted.');
-    expect(errors).toEqual(['The operation was aborted.']);
   });
 
   // @gate experimental
-  it('should reject if passing an already aborted signal', async () => {
+  // @gate !enableHalt
+  it('should reject if passing an already aborted signal and enableHalt is disabled', async () => {
     const errors = [];
     const controller = new AbortController();
     const theReason = new Error('aborted for reasons');
@@ -408,6 +453,44 @@ describe('ReactDOMFizzStaticBrowser', () => {
     }
     expect(caughtError).toBe(theReason);
     expect(errors).toEqual(['aborted for reasons']);
+  });
+
+  // @gate enableHalt
+  it('should resolve an empty prelude if passing an already aborted signal', async () => {
+    const errors = [];
+    const controller = new AbortController();
+    const theReason = new Error('aborted for reasons');
+    controller.abort(theReason);
+
+    const promise = serverAct(() =>
+      ReactDOMFizzStatic.prerender(
+        <div>
+          <Suspense fallback={<div>Loading</div>}>
+            <InfiniteSuspend />
+          </Suspense>
+        </div>,
+        {
+          signal: controller.signal,
+          onError(x) {
+            errors.push(x.message);
+          },
+        },
+      ),
+    );
+
+    // Technically we could still continue rendering the shell but currently the
+    // semantics mean that we also abort any pending CPU work.
+    let didThrow = false;
+    let prelude;
+    try {
+      ({prelude} = await promise);
+    } catch (error) {
+      didThrow = true;
+    }
+    expect(didThrow).toBe(false);
+    expect(errors).toEqual(['aborted for reasons']);
+    const content = await readContent(prelude);
+    expect(content).toBe('');
   });
 
   // @gate experimental
@@ -1674,5 +1757,91 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     await readIntoContainer(dynamic);
     expect(getVisibleChildren(container)).toEqual('hello');
+  });
+
+  // @gate enableHalt
+  it('can resume render of a prerender', async () => {
+    const errors = [];
+
+    let resolveA;
+    const promiseA = new Promise(r => (resolveA = r));
+    let resolveB;
+    const promiseB = new Promise(r => (resolveB = r));
+
+    async function ComponentA() {
+      await promiseA;
+      return (
+        <Suspense fallback="Loading B">
+          <ComponentB />
+        </Suspense>
+      );
+    }
+
+    async function ComponentB() {
+      await promiseB;
+      return 'Hello';
+    }
+
+    function App() {
+      return (
+        <Suspense fallback="Loading A">
+          <ComponentA />
+        </Suspense>
+      );
+    }
+
+    const controller = new AbortController();
+    let pendingResult;
+    await serverAct(async () => {
+      pendingResult = ReactDOMFizzStatic.prerender(<App />, {
+        signal: controller.signal,
+        onError(x) {
+          errors.push(x.message);
+        },
+      });
+    });
+
+    controller.abort();
+
+    const prerendered = await pendingResult;
+    const postponedState = JSON.stringify(prerendered.postponed);
+
+    await readIntoContainer(prerendered.prelude);
+    expect(getVisibleChildren(container)).toEqual('Loading A');
+
+    await resolveA();
+
+    expect(prerendered.postponed).not.toBe(null);
+
+    const controller2 = new AbortController();
+    await serverAct(async () => {
+      pendingResult = ReactDOMFizzStatic.resumeAndPrerender(
+        <App />,
+        JSON.parse(postponedState),
+        {
+          signal: controller2.signal,
+          onError(x) {
+            errors.push(x.message);
+          },
+        },
+      );
+    });
+
+    controller2.abort();
+
+    const prerendered2 = await pendingResult;
+    const postponedState2 = JSON.stringify(prerendered2.postponed);
+
+    await readIntoContainer(prerendered2.prelude);
+    expect(getVisibleChildren(container)).toEqual('Loading B');
+
+    await resolveB();
+
+    const dynamic = await serverAct(() =>
+      ReactDOMFizzServer.resume(<App />, JSON.parse(postponedState2)),
+    );
+
+    await readIntoContainer(dynamic);
+    expect(getVisibleChildren(container)).toEqual('Hello');
   });
 });

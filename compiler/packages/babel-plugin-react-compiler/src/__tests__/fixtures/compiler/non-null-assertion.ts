@@ -8,5 +8,5 @@ function Component(props: ComponentProps) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ name: "Alice" }],
+  params: [{name: 'Alice'}],
 };

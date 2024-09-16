@@ -16,6 +16,12 @@ import {
   DefaultEventPriority,
   NoEventPriority,
 } from 'react-reconciler/src/ReactEventPriorities';
+import type {ReactContext} from 'shared/ReactTypes';
+import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
+
+export {default as rendererVersion} from 'shared/ReactVersion';
+export const rendererPackageName = 'react-art';
+export const extraDevToolsConfig = null;
 
 const pooledTransform = new Transform();
 
@@ -23,6 +29,8 @@ const NO_CONTEXT = {};
 if (__DEV__) {
   Object.freeze(NO_CONTEXT);
 }
+
+export type TransitionStatus = mixed;
 
 /** Helper Methods */
 
@@ -441,8 +449,8 @@ export function clearContainer(container) {
   // TODO Implement this
 }
 
-export function getInstanceFromNode(node) {
-  throw new Error('Not implemented.');
+export function getInstanceFromNode(node): null {
+  return null;
 }
 
 export function beforeActiveInstanceBlur(internalInstanceHandle: Object) {
@@ -484,4 +492,12 @@ export function waitForCommitToBeReady() {
 }
 
 export const NotPendingTransition = null;
+export const HostTransitionContext: ReactContext<TransitionStatus> = {
+  $$typeof: REACT_CONTEXT_TYPE,
+  Provider: (null: any),
+  Consumer: (null: any),
+  _currentValue: NotPendingTransition,
+  _currentValue2: NotPendingTransition,
+  _threadCount: 0,
+};
 export function resetFormInstance() {}

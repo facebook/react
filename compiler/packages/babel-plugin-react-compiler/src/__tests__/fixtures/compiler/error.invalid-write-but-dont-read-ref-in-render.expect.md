@@ -3,7 +3,7 @@
 
 ```javascript
 // @validateRefAccessDuringRender
-function useHook({ value }) {
+function useHook({value}) {
   const ref = useRef(null);
   // Writing to a ref in render is against the rules:
   ref.current = value;

@@ -1,4 +1,4 @@
-import { CompilerError } from "..";
+import {CompilerError} from '..';
 import {
   BlockId,
   GeneratedSource,
@@ -7,13 +7,13 @@ import {
   Place,
   ReactiveScope,
   ScopeId,
-} from "./HIR";
+} from './HIR';
 import {
   eachInstructionLValue,
   eachInstructionOperand,
   eachTerminalOperand,
   terminalFallthrough,
-} from "./visitors";
+} from './visitors';
 
 /**
  * This pass asserts that program blocks and scopes properly form a tree hierarchy
@@ -41,11 +41,11 @@ import {
  */
 type Block =
   | ({
-      kind: "ProgramBlockSubtree";
+      kind: 'ProgramBlockSubtree';
       id: BlockId;
     } & MutableRange)
   | ({
-      kind: "Scope";
+      kind: 'Scope';
       id: ScopeId;
     } & MutableRange);
 
@@ -96,7 +96,7 @@ export function getScopes(fn: HIRFunction): Set<ReactiveScope> {
  */
 export function rangePreOrderComparator(
   a: MutableRange,
-  b: MutableRange
+  b: MutableRange,
 ): number {
   const startDiff = a.start - b.start;
   if (startDiff !== 0) return startDiff;
@@ -108,7 +108,7 @@ export function recursivelyTraverseItems<T, TContext>(
   getRange: (val: T) => MutableRange,
   context: TContext,
   enter: (val: T, context: TContext) => void,
-  exit: (val: T, context: TContext) => void
+  exit: (val: T, context: TContext) => void,
 ): void {
   items.sort((a, b) => rangePreOrderComparator(getRange(a), getRange(b)));
   let activeItems: Array<T> = [];
@@ -122,7 +122,7 @@ export function recursivelyTraverseItems<T, TContext>(
       const disjoint = currRange.start >= maybeParentRange.end;
       const nested = currRange.end <= maybeParentRange.end;
       CompilerError.invariant(disjoint || nested, {
-        reason: "Invalid nesting in program blocks or scopes",
+        reason: 'Invalid nesting in program blocks or scopes',
         description: `Items overlap but are not nested: ${maybeParentRange.start}:${maybeParentRange.end}(${currRange.start}:${currRange.end})`,
         loc: GeneratedSource,
       });
@@ -148,8 +148,8 @@ const no_op: () => void = () => {};
 export function assertValidBlockNesting(fn: HIRFunction): void {
   const scopes = getScopes(fn);
 
-  const blocks: Array<Block> = [...scopes].map((scope) => ({
-    kind: "Scope",
+  const blocks: Array<Block> = [...scopes].map(scope => ({
+    kind: 'Scope',
     id: scope.id,
     ...scope.range,
   })) as Array<Block>;
@@ -159,7 +159,7 @@ export function assertValidBlockNesting(fn: HIRFunction): void {
       const fallthrough = fn.body.blocks.get(fallthroughId)!;
       const end = fallthrough.instructions[0]?.id ?? fallthrough.terminal.id;
       blocks.push({
-        kind: "ProgramBlockSubtree",
+        kind: 'ProgramBlockSubtree',
         id: block.id,
         start: block.terminal.id,
         end,
@@ -167,5 +167,5 @@ export function assertValidBlockNesting(fn: HIRFunction): void {
     }
   }
 
-  recursivelyTraverseItems(blocks, (block) => block, null, no_op, no_op);
+  recursivelyTraverseItems(blocks, block => block, null, no_op, no_op);
 }

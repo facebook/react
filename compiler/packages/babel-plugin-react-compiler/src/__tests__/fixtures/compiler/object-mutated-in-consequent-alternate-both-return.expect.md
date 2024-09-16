@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { makeObject_Primitives } from "shared-runtime";
+import {makeObject_Primitives} from 'shared-runtime';
 
 function Component(props) {
   const object = makeObject_Primitives();
@@ -17,7 +17,7 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ cond: false, value: [0, 1, 2] }],
+  params: [{cond: false, value: [0, 1, 2]}],
 };
 
 ```

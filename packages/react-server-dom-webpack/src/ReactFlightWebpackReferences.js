@@ -13,6 +13,7 @@ export type ServerReference<T: Function> = T & {
   $$typeof: symbol,
   $$id: string,
   $$bound: null | Array<ReactClientValue>,
+  $$location?: Error,
 };
 
 // eslint-disable-next-line no-unused-vars
@@ -63,6 +64,7 @@ const FunctionBind = Function.prototype.bind;
 const ArraySlice = Array.prototype.slice;
 function bind(this: ServerReference<any>): any {
   // $FlowFixMe[unsupported-syntax]
+  // $FlowFixMe[prop-missing]
   const newFn = FunctionBind.apply(this, arguments);
   if (this.$$typeof === SERVER_REFERENCE_TAG) {
     if (__DEV__) {
@@ -74,12 +76,29 @@ function bind(this: ServerReference<any>): any {
       }
     }
     const args = ArraySlice.call(arguments, 1);
-    return Object.defineProperties((newFn: any), {
-      $$typeof: {value: SERVER_REFERENCE_TAG},
-      $$id: {value: this.$$id},
-      $$bound: {value: this.$$bound ? this.$$bound.concat(args) : args},
-      bind: {value: bind},
-    });
+    const $$typeof = {value: SERVER_REFERENCE_TAG};
+    const $$id = {value: this.$$id};
+    const $$bound = {value: this.$$bound ? this.$$bound.concat(args) : args};
+    return Object.defineProperties(
+      (newFn: any),
+      __DEV__
+        ? {
+            $$typeof,
+            $$id,
+            $$bound,
+            $$location: {
+              value: this.$$location,
+              configurable: true,
+            },
+            bind: {value: bind, configurable: true},
+          }
+        : {
+            $$typeof,
+            $$id,
+            $$bound,
+            bind: {value: bind, configurable: true},
+          },
+    );
   }
   return newFn;
 }
@@ -89,15 +108,32 @@ export function registerServerReference<T: Function>(
   id: string,
   exportName: null | string,
 ): ServerReference<T> {
-  return Object.defineProperties((reference: any), {
-    $$typeof: {value: SERVER_REFERENCE_TAG},
-    $$id: {
-      value: exportName === null ? id : id + '#' + exportName,
-      configurable: true,
-    },
-    $$bound: {value: null, configurable: true},
-    bind: {value: bind, configurable: true},
-  });
+  const $$typeof = {value: SERVER_REFERENCE_TAG};
+  const $$id = {
+    value: exportName === null ? id : id + '#' + exportName,
+    configurable: true,
+  };
+  const $$bound = {value: null, configurable: true};
+  return Object.defineProperties(
+    (reference: any),
+    __DEV__
+      ? {
+          $$typeof,
+          $$id,
+          $$bound,
+          $$location: {
+            value: Error('react-stack-top-frame'),
+            configurable: true,
+          },
+          bind: {value: bind, configurable: true},
+        }
+      : {
+          $$typeof,
+          $$id,
+          $$bound,
+          bind: {value: bind, configurable: true},
+        },
+  );
 }
 
 const PROMISE_PROTOTYPE = Promise.prototype;

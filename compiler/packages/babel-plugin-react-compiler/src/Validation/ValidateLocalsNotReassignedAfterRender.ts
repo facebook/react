@@ -5,12 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError, Effect } from "..";
-import { HIRFunction, IdentifierId, Place } from "../HIR";
+import {CompilerError, Effect} from '..';
+import {HIRFunction, IdentifierId, Place} from '../HIR';
 import {
+  eachInstructionLValue,
   eachInstructionValueOperand,
   eachTerminalOperand,
-} from "../HIR/visitors";
+} from '../HIR/visitors';
+import {getFunctionCallSignature} from '../Inference/InferReferenceEffects';
 
 /**
  * Validates that local variables cannot be reassigned after render.
@@ -23,17 +25,17 @@ export function validateLocalsNotReassignedAfterRender(fn: HIRFunction): void {
     fn,
     contextVariables,
     false,
-    false
+    false,
   );
   if (reassignment !== null) {
     CompilerError.throwInvalidReact({
       reason:
-        "Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead",
+        'Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead',
       description:
         reassignment.identifier.name !== null &&
-        reassignment.identifier.name.kind === "named"
+        reassignment.identifier.name.kind === 'named'
           ? `Variable \`${reassignment.identifier.name.value}\` cannot be reassigned after render`
-          : "",
+          : '',
       loc: reassignment.loc,
     });
   }
@@ -43,26 +45,26 @@ function getContextReassignment(
   fn: HIRFunction,
   contextVariables: Set<IdentifierId>,
   isFunctionExpression: boolean,
-  isAsync: boolean
+  isAsync: boolean,
 ): Place | null {
   const reassigningFunctions = new Map<IdentifierId, Place>();
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
-      const { lvalue, value } = instr;
+      const {lvalue, value} = instr;
       switch (value.kind) {
-        case "FunctionExpression":
-        case "ObjectMethod": {
+        case 'FunctionExpression':
+        case 'ObjectMethod': {
           let reassignment = getContextReassignment(
             value.loweredFunc.func,
             contextVariables,
             true,
-            isAsync || value.loweredFunc.func.async
+            isAsync || value.loweredFunc.func.async,
           );
           if (reassignment === null) {
             // If the function itself doesn't reassign, does one of its dependencies?
             for (const operand of eachInstructionValueOperand(value)) {
               const reassignmentFromOperand = reassigningFunctions.get(
-                operand.identifier.id
+                operand.identifier.id,
               );
               if (reassignmentFromOperand !== undefined) {
                 reassignment = reassignmentFromOperand;
@@ -75,12 +77,12 @@ function getContextReassignment(
             if (isAsync || value.loweredFunc.func.async) {
               CompilerError.throwInvalidReact({
                 reason:
-                  "Reassigning a variable in an async function can cause inconsistent behavior on subsequent renders. Consider using state instead",
+                  'Reassigning a variable in an async function can cause inconsistent behavior on subsequent renders. Consider using state instead',
                 description:
                   reassignment.identifier.name !== null &&
-                  reassignment.identifier.name.kind === "named"
+                  reassignment.identifier.name.kind === 'named'
                     ? `Variable \`${reassignment.identifier.name.value}\` cannot be reassigned after render`
-                    : "",
+                    : '',
                 loc: reassignment.loc,
               });
             }
@@ -88,35 +90,35 @@ function getContextReassignment(
           }
           break;
         }
-        case "StoreLocal": {
+        case 'StoreLocal': {
           const reassignment = reassigningFunctions.get(
-            value.value.identifier.id
+            value.value.identifier.id,
           );
           if (reassignment !== undefined) {
             reassigningFunctions.set(
               value.lvalue.place.identifier.id,
-              reassignment
+              reassignment,
             );
             reassigningFunctions.set(lvalue.identifier.id, reassignment);
           }
           break;
         }
-        case "LoadLocal": {
+        case 'LoadLocal': {
           const reassignment = reassigningFunctions.get(
-            value.place.identifier.id
+            value.place.identifier.id,
           );
           if (reassignment !== undefined) {
             reassigningFunctions.set(lvalue.identifier.id, reassignment);
           }
           break;
         }
-        case "DeclareContext": {
+        case 'DeclareContext': {
           if (!isFunctionExpression) {
             contextVariables.add(value.lvalue.place.identifier.id);
           }
           break;
         }
-        case "StoreContext": {
+        case 'StoreContext': {
           if (isFunctionExpression) {
             if (contextVariables.has(value.lvalue.place.identifier.id)) {
               return value.lvalue.place;
@@ -128,26 +130,70 @@ function getContextReassignment(
              */
             contextVariables.add(value.lvalue.place.identifier.id);
           }
+          const reassignment = reassigningFunctions.get(
+            value.value.identifier.id,
+          );
+          if (reassignment !== undefined) {
+            reassigningFunctions.set(
+              value.lvalue.place.identifier.id,
+              reassignment,
+            );
+            reassigningFunctions.set(lvalue.identifier.id, reassignment);
+          }
           break;
         }
         default: {
-          for (const operand of eachInstructionValueOperand(value)) {
+          let operands = eachInstructionValueOperand(value);
+          // If we're calling a function that doesn't let its arguments escape, only test the callee
+          if (value.kind === 'CallExpression') {
+            const signature = getFunctionCallSignature(
+              fn.env,
+              value.callee.identifier.type,
+            );
+            if (signature?.noAlias) {
+              operands = [value.callee];
+            }
+          } else if (value.kind === 'MethodCall') {
+            const signature = getFunctionCallSignature(
+              fn.env,
+              value.property.identifier.type,
+            );
+            if (signature?.noAlias) {
+              operands = [value.receiver, value.property];
+            }
+          } else if (value.kind === 'TaggedTemplateExpression') {
+            const signature = getFunctionCallSignature(
+              fn.env,
+              value.tag.identifier.type,
+            );
+            if (signature?.noAlias) {
+              operands = [value.tag];
+            }
+          }
+          for (const operand of operands) {
             CompilerError.invariant(operand.effect !== Effect.Unknown, {
               reason: `Expected effects to be inferred prior to ValidateLocalsNotReassignedAfterRender`,
               loc: operand.loc,
             });
             const reassignment = reassigningFunctions.get(
-              operand.identifier.id
+              operand.identifier.id,
             );
-            if (
-              reassignment !== undefined &&
-              operand.effect === Effect.Freeze
-            ) {
+            if (reassignment !== undefined) {
               /*
                * Functions that reassign local variables are inherently mutable and are unsafe to pass
                * to a place that expects a frozen value. Propagate the reassignment upward.
                */
-              return reassignment;
+              if (operand.effect === Effect.Freeze) {
+                return reassignment;
+              } else {
+                /*
+                 * If the operand is not frozen but it does reassign, then the lvalues
+                 * of the instruction could also be reassigning
+                 */
+                for (const lval of eachInstructionLValue(instr)) {
+                  reassigningFunctions.set(lval.identifier.id, reassignment);
+                }
+              }
             }
           }
           break;

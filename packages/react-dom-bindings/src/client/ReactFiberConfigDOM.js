@@ -14,7 +14,7 @@ import type {
   IntersectionObserverOptions,
   ObserveVisibleRectsCallback,
 } from 'react-reconciler/src/ReactTestSelectors';
-import type {ReactScopeInstance} from 'shared/ReactTypes';
+import type {ReactContext, ReactScopeInstance} from 'shared/ReactTypes';
 import type {AncestorInfoDev} from './validateDOMNesting';
 import type {FormStatus} from 'react-dom-bindings/src/shared/ReactDOMFormActions';
 import type {
@@ -26,11 +26,13 @@ import type {
   PreinitModuleScriptOptions,
 } from 'react-dom/src/shared/ReactDOMTypes';
 
-import {NotPending} from 'react-dom-bindings/src/shared/ReactDOMFormActions';
+import {NotPending} from '../shared/ReactDOMFormActions';
+
 import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostContext';
 
 import hasOwnProperty from 'shared/hasOwnProperty';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
+import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 
 export {
   setCurrentUpdatePriority,
@@ -105,6 +107,10 @@ import {flushSyncWork as flushSyncWorkOnAllRoots} from 'react-reconciler/src/Rea
 import {requestFormReset as requestFormResetOnFiber} from 'react-reconciler/src/ReactFiberHooks';
 
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
+
+export {default as rendererVersion} from 'shared/ReactVersion';
+export const rendererPackageName = 'react-dom';
+export const extraDevToolsConfig = null;
 
 export type Type = string;
 export type Props = {
@@ -319,7 +325,7 @@ export function getPublicInstance(instance: Instance): Instance {
 
 export function prepareForCommit(containerInfo: Container): Object | null {
   eventsEnabled = ReactBrowserEventEmitterIsEnabled();
-  selectionInformation = getSelectionInformation();
+  selectionInformation = getSelectionInformation(containerInfo);
   let activeInstance = null;
   if (enableCreateEventHandleAPI) {
     const focusedElem = selectionInformation.focusedElem;
@@ -351,7 +357,7 @@ export function afterActiveInstanceBlur(): void {
 }
 
 export function resetAfterCommit(containerInfo: Container): void {
-  restoreSelection(selectionInformation);
+  restoreSelection(selectionInformation, containerInfo);
   ReactBrowserEventEmitterSetEnabled(eventsEnabled);
   eventsEnabled = null;
   selectionInformation = null;
@@ -616,9 +622,7 @@ const localRequestAnimationFrame =
     ? requestAnimationFrame
     : scheduleTimeout;
 
-export function getInstanceFromNode(node: HTMLElement): null | Object {
-  return getClosestInstanceFromNode(node) || null;
-}
+export {getClosestInstanceFromNode as getInstanceFromNode};
 
 export function preparePortalMount(portalInstance: Instance): void {
   listenToAllSupportedEvents(portalInstance);
@@ -650,9 +654,9 @@ export const scheduleMicrotask: any =
   typeof queueMicrotask === 'function'
     ? queueMicrotask
     : typeof localPromise !== 'undefined'
-    ? callback =>
-        localPromise.resolve(null).then(callback).catch(handleErrorInNextTick)
-    : scheduleTimeout; // TODO: Determine the best fallback here.
+      ? callback =>
+          localPromise.resolve(null).then(callback).catch(handleErrorInNextTick)
+      : scheduleTimeout; // TODO: Determine the best fallback here.
 
 function handleErrorInNextTick(error: any) {
   setTimeout(() => {
@@ -692,8 +696,19 @@ export function commitMount(
       }
       return;
     case 'img': {
+      // The technique here is to assign the src or srcSet property to cause the browser
+      // to issue a new load event. If it hasn't loaded yet it'll fire whenever the load actually completes.
+      // If it has already loaded we missed it so the second load will still be the first one that executes
+      // any associated onLoad props.
+      // Even if we have srcSet we prefer to reassign src. The reason is that Firefox does not trigger a new
+      // load event when only srcSet is assigned. Chrome will trigger a load event if either is assigned so we
+      // only need to assign one. And Safari just never triggers a new load event which means this technique
+      // is already a noop regardless of which properties are assigned. We should revisit if browsers update
+      // this heuristic in the future.
       if ((newProps: any).src) {
         ((domElement: any): HTMLImageElement).src = (newProps: any).src;
+      } else if ((newProps: any).srcSet) {
+        ((domElement: any): HTMLImageElement).srcset = (newProps: any).srcSet;
       }
       return;
     }
@@ -3505,7 +3520,7 @@ function insertStylesheetIntoRoot(
     for (let i = 0; i < nodes.length; i++) {
       const node = nodes[i];
       if (
-        node.nodeName === 'link' ||
+        node.nodeName === 'LINK' ||
         // We omit style tags with media="not all" because they are not in the right position
         // and will be hoisted by the Fizz runtime imminently.
         node.getAttribute('media') !== 'not all'
@@ -3550,6 +3565,14 @@ function insertStylesheetIntoRoot(
 }
 
 export const NotPendingTransition: TransitionStatus = NotPending;
+export const HostTransitionContext: ReactContext<TransitionStatus> = {
+  $$typeof: REACT_CONTEXT_TYPE,
+  Provider: (null: any),
+  Consumer: (null: any),
+  _currentValue: NotPendingTransition,
+  _currentValue2: NotPendingTransition,
+  _threadCount: 0,
+};
 
 export type FormInstance = HTMLFormElement;
 export function resetFormInstance(form: FormInstance): void {

@@ -20,6 +20,7 @@ import type {
   Dependencies,
   Fiber,
   Dispatcher as DispatcherType,
+  ContextDependencyWithSelect,
 } from 'react-reconciler/src/ReactInternalTypes';
 import type {TransitionStatus} from 'react-reconciler/src/ReactFiberConfig';
 
@@ -75,6 +76,13 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
     try {
       // Use all hooks here to add them to the hook log.
       Dispatcher.useContext(({_currentValue: null}: any));
+      if (typeof Dispatcher.unstable_useContextWithBailout === 'function') {
+        // This type check is for Flow only.
+        Dispatcher.unstable_useContextWithBailout(
+          ({_currentValue: null}: any),
+          null,
+        );
+      }
       Dispatcher.useState(null);
       Dispatcher.useReducer((s: mixed, a: mixed) => s, null);
       Dispatcher.useRef(null);
@@ -155,7 +163,10 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
 
 let currentFiber: null | Fiber = null;
 let currentHook: null | Hook = null;
-let currentContextDependency: null | ContextDependency<mixed> = null;
+let currentContextDependency:
+  | null
+  | ContextDependency<mixed>
+  | ContextDependencyWithSelect<mixed> = null;
 
 function nextHook(): null | Hook {
   const hook = currentHook;
@@ -276,6 +287,22 @@ function useContext<T>(context: ReactContext<T>): T {
   return value;
 }
 
+function unstable_useContextWithBailout<T>(
+  context: ReactContext<T>,
+  select: (T => Array<mixed>) | null,
+): T {
+  const value = readContext(context);
+  hookLog.push({
+    displayName: context.displayName || null,
+    primitive: 'ContextWithBailout',
+    stackError: new Error(),
+    value: value,
+    debugInfo: null,
+    dispatcherHookName: 'ContextWithBailout',
+  });
+  return value;
+}
+
 function useState<S>(
   initialState: (() => S) | S,
 ): [S, Dispatch<BasicStateAction<S>>] {
@@ -284,9 +311,9 @@ function useState<S>(
     hook !== null
       ? hook.memoizedState
       : typeof initialState === 'function'
-      ? // $FlowFixMe[incompatible-use]: Flow doesn't like mixed types
-        initialState()
-      : initialState;
+        ? // $FlowFixMe[incompatible-use]: Flow doesn't like mixed types
+          initialState()
+        : initialState;
   hookLog.push({
     displayName: null,
     primitive: 'State',
@@ -749,6 +776,7 @@ const Dispatcher: DispatcherType = {
   useCacheRefresh,
   useCallback,
   useContext,
+  unstable_useContextWithBailout,
   useEffect,
   useImperativeHandle,
   useDebugValue,
@@ -774,6 +802,7 @@ const Dispatcher: DispatcherType = {
 const DispatcherProxyHandler = {
   get(target: DispatcherType, prop: string) {
     if (target.hasOwnProperty(prop)) {
+      // $FlowFixMe[invalid-computed-prop]
       return target[prop];
     }
     const error = new Error('Missing method in Dispatcher: ' + prop);
@@ -949,6 +978,11 @@ function parseHookName(functionName: void | string): string {
   } else {
     startIndex += 1;
   }
+
+  if (functionName.slice(startIndex).startsWith('unstable_')) {
+    startIndex += 'unstable_'.length;
+  }
+
   if (functionName.slice(startIndex, startIndex + 3) === 'use') {
     if (functionName.length - startIndex === 3) {
       return 'Use';
@@ -999,6 +1033,7 @@ function buildTree(
         }
         // Pop back the stack as many steps as were not common.
         for (let j = prevStack.length - 1; j > commonSteps; j--) {
+          // $FlowFixMe[incompatible-type]
           levelChildren = stackOfChildren.pop();
         }
       }

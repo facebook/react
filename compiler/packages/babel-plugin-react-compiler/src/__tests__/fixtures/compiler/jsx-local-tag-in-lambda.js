@@ -1,4 +1,4 @@
-import { Stringify } from "shared-runtime";
+import {Stringify} from 'shared-runtime';
 function useFoo() {
   const MyLocal = Stringify;
   const callback = () => {

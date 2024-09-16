@@ -3,8 +3,8 @@
 
 ```javascript
 function Component(props) {
-  const [x, setX] = useState({ value: "" });
-  const onChange = (e) => {
+  const [x, setX] = useState({value: ''});
+  const onChange = e => {
     // INVALID! should use copy-on-write and pass the new value
     x.value = e.target.value;
     setX(x);
@@ -18,7 +18,7 @@ function Component(props) {
 ## Error
 
 ```
-  3 |   const onChange = (e) => {
+  3 |   const onChange = e => {
   4 |     // INVALID! should use copy-on-write and pass the new value
 > 5 |     x.value = e.target.value;
     |     ^ InvalidReact: Mutating a value returned from 'useState()', which should not be mutated. Use the setter function to update instead. Found mutation of `x` (5:5)

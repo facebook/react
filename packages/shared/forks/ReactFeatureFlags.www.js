@@ -15,27 +15,28 @@ import typeof * as DynamicFeatureFlags from './ReactFeatureFlags.www-dynamic';
 const dynamicFeatureFlags: DynamicFeatureFlags = require('ReactFeatureFlags');
 
 export const {
-  enableTrustedTypesIntegration,
+  alwaysThrottleRetries,
+  disableDefaultPropsExceptForClasses,
+  disableLegacyContextForFunctionComponents,
+  disableSchedulerTimeoutInWorkLoop,
+  enableAddPropertiesFastPath,
   enableDebugTracing,
-  enableLazyContextPropagation,
+  enableDeferRootSchedulingToMicrotask,
+  enableDO_NOT_USE_disableStrictPassiveEffect,
+  enableInfiniteRenderLoopDetection,
+  enableNoCloningMemoCache,
+  enableObjectFiber,
+  enableRenderableContext,
   enableRetryLaneExpiration,
   enableTransitionTracing,
-  enableDeferRootSchedulingToMicrotask,
-  alwaysThrottleRetries,
-  enableDO_NOT_USE_disableStrictPassiveEffect,
-  disableSchedulerTimeoutInWorkLoop,
-  enableUseDeferredValueInitialArg,
+  enableTrustedTypesIntegration,
+  enableHiddenSubtreeInsertionEffectCleanup,
+  favorSafetyOverHydrationPerf,
+  renameElementSymbol,
   retryLaneExpirationMs,
   syncLaneExpirationMs,
   transitionLaneExpirationMs,
-  enableInfiniteRenderLoopDetection,
-  enableRenderableContext,
-  favorSafetyOverHydrationPerf,
-  disableDefaultPropsExceptForClasses,
-  enableNoCloningMemoCache,
-  enableAddPropertiesFastPath,
-  enableFastJSX,
-  renameElementSymbol,
+  enableSiblingPrerendering,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -46,6 +47,7 @@ export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableUpdaterTracking = __PROFILE__;
+export const enableFabricCompleteRootInCommitPhase = false;
 
 export const enableSuspenseAvoidThisFallback = true;
 export const enableSuspenseAvoidThisFallbackFizz = false;
@@ -58,6 +60,7 @@ export const enableFilterEmptyStringAttributesDOM = true;
 export const enableAsyncActions = true;
 export const disableInputAttributeSyncing = false;
 export const enableLegacyFBSupport = true;
+export const enableLazyContextPropagation = true;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.
 export const enableSchedulingProfiler: boolean =
@@ -77,6 +80,10 @@ export const enableTaint = false;
 
 export const enablePostpone = false;
 
+export const enableHalt = false;
+
+export const enableContextProfiling = true;
+
 // TODO: www currently relies on this feature. It's disabled in open source.
 // Need to remove it.
 export const disableCommentsAsDOMContainers = false;
@@ -95,15 +102,13 @@ export const enableRefAsProp = true;
 
 export const disableTextareaChildren = __EXPERIMENTAL__;
 
-export const allowConcurrentByDefault = true;
-
 export const consoleManagedByDevToolsDuringStrictMode = true;
 
 export const enableFizzExternalRuntime = true;
 
-export const forceConcurrentByDefaultForTesting = false;
-
 export const passChildrenWhenCloningPersistedNodes = false;
+
+export const enablePersistedModeClonedFlag = false;
 
 export const enableAsyncDebugInfo = false;
 export const disableClientCache = true;

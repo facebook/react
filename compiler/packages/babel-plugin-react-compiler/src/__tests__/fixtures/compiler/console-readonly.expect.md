@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { shallowCopy } from "shared-runtime";
+import {shallowCopy} from 'shared-runtime';
 
 function Component(props) {
   const x = shallowCopy(props);
@@ -13,12 +13,13 @@ function Component(props) {
   console.error(x);
   console.trace(x);
   console.table(x);
+  global.console.log(x);
   return x;
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ a: 1, b: 2 }],
+  params: [{a: 1, b: 2}],
   isComponent: false,
 };
 
@@ -48,6 +49,7 @@ function Component(props) {
   console.error(x);
   console.trace(x);
   console.table(x);
+  global.console.log(x);
   return x;
 }
 
@@ -61,4 +63,4 @@ export const FIXTURE_ENTRYPOINT = {
       
 ### Eval output
 (kind: ok) {"a":1,"b":2}
-logs: [{ a: 1, b: 2 },{ a: 1, b: 2 },{ a: 1, b: 2 },{ a: 1, b: 2 },{ a: 1, b: 2 }]
+logs: [{ a: 1, b: 2 },{ a: 1, b: 2 },{ a: 1, b: 2 },{ a: 1, b: 2 },{ a: 1, b: 2 },{ a: 1, b: 2 }]

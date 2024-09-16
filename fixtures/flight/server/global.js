@@ -86,7 +86,7 @@ function request(options, body) {
   });
 }
 
-app.all('/', async function (req, res, next) {
+async function renderApp(req, res, next) {
   // Proxy the request to the regional server.
   const proxiedHeaders = {
     'X-Forwarded-Host': req.hostname,
@@ -102,12 +102,14 @@ app.all('/', async function (req, res, next) {
     proxiedHeaders['Content-type'] = req.get('Content-type');
   }
 
+  const requestsPrerender = req.path === '/prerender';
+
   const promiseForData = request(
     {
       host: '127.0.0.1',
       port: 3001,
       method: req.method,
-      path: '/',
+      path: requestsPrerender ? '/?prerender=1' : '/',
       headers: proxiedHeaders,
     },
     req
@@ -210,7 +212,10 @@ app.all('/', async function (req, res, next) {
       res.end();
     }
   }
-});
+}
+
+app.all('/', renderApp);
+app.all('/prerender', renderApp);
 
 if (process.env.NODE_ENV === 'development') {
   app.use(express.static('public'));

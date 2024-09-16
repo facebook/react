@@ -1,5 +1,5 @@
 function foo() {
-  const { "data-foo-bar": t } = { "data-foo-bar": 1 };
+  const {'data-foo-bar': t} = {'data-foo-bar': 1};
   return t;
 }
 

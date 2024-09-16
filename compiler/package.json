@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/facebook/react-forget.git"
+    "url": "git+https://github.com/facebook/react.git"
   },
   "scripts": {
     "copyright": "node scripts/copyright.js",
@@ -25,9 +25,11 @@
     "snap": "yarn workspace babel-plugin-react-compiler run snap",
     "snap:build": "yarn workspace snap run build",
     "postinstall": "perl -p -i -e 's/react\\.element/react.transitional.element/' packages/snap/node_modules/fbt/lib/FbtReactUtil.js && perl -p -i -e 's/didWarnAboutUsingAct = false;/didWarnAboutUsingAct = true;/' packages/babel-plugin-react-compiler/node_modules/react-dom/cjs/react-dom-test-utils.development.js",
-    "npm:publish": "node scripts/release/publish-manual"
+    "npm:publish": "node scripts/release/publish"
   },
-  "dependencies": {},
+  "dependencies": {
+    "fs-extra": "^4.0.2"
+  },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-json": "^6.1.0",
@@ -38,7 +40,8 @@
     "concurrently": "^7.4.0",
     "folder-hash": "^4.0.4",
     "ora": "5.4.1",
-    "prettier": "^3.2.5",
+    "prettier": "^3.3.3",
+    "prettier-plugin-hermes-parser": "^0.23.0",
     "prompt-promise": "^1.0.3",
     "rollup": "^4.13.2",
     "rollup-plugin-banner2": "^1.2.3",

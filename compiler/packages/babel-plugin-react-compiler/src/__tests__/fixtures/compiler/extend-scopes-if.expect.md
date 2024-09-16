@@ -19,8 +19,8 @@ function foo(a, b, c) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: foo,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: ['TodoAdd'],
+  isComponent: 'TodoAdd',
 };
 
 ```

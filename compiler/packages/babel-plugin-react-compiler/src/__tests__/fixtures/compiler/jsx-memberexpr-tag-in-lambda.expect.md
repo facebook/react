@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import * as SharedRuntime from "shared-runtime";
+import * as SharedRuntime from 'shared-runtime';
 function useFoo() {
   const MyLocal = SharedRuntime;
   const callback = () => {

@@ -21,6 +21,8 @@ import {
   setBrowserSelectionFromReact,
   setReactSelectionFromBrowser,
 } from './elementSelection';
+import {viewAttributeSource} from './sourceSelection';
+
 import {startReactPolling} from './reactPolling';
 import cloneStyleTags from './cloneStyleTags';
 import fetchFileWithCaching from './fetchFileWithCaching';
@@ -58,7 +60,7 @@ function createBridge() {
   });
 
   bridge.addListener(
-    'syncSelectionToNativeElementsPanel',
+    'syncSelectionToBuiltinElementsPanel',
     setBrowserSelectionFromReact,
   );
 
@@ -113,19 +115,7 @@ function createBridgeAndStore() {
   const viewAttributeSourceFunction = (id, path) => {
     const rendererID = store.getRendererIDForElement(id);
     if (rendererID != null) {
-      // Ask the renderer interface to find the specified attribute,
-      // and store it as a global variable on the window.
-      bridge.send('viewAttributeSource', {id, path, rendererID});
-
-      setTimeout(() => {
-        // Ask Chrome to display the location of the attribute,
-        // assuming the renderer found a match.
-        chrome.devtools.inspectedWindow.eval(`
-                if (window.$attribute != null) {
-                  inspect(window.$attribute);
-                }
-              `);
-      }, 100);
+      viewAttributeSource(rendererID, id, path);
     }
   };
 
@@ -195,7 +185,7 @@ function createComponentsPanel() {
   }
 
   chrome.devtools.panels.create(
-    __IS_CHROME__ || __IS_EDGE__ ? '⚛️ Components' : 'Components',
+    __IS_CHROME__ || __IS_EDGE__ ? 'Components ⚛' : 'Components',
     __IS_EDGE__ ? 'icons/production.svg' : '',
     'panel.html',
     createdPanel => {
@@ -234,7 +224,7 @@ function createProfilerPanel() {
   }
 
   chrome.devtools.panels.create(
-    __IS_CHROME__ || __IS_EDGE__ ? '⚛️ Profiler' : 'Profiler',
+    __IS_CHROME__ || __IS_EDGE__ ? 'Profiler ⚛' : 'Profiler',
     __IS_EDGE__ ? 'icons/production.svg' : '',
     'panel.html',
     createdPanel => {

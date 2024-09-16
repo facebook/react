@@ -124,11 +124,11 @@ class OkImpl<T> implements Result<T, never> {
     return this;
   }
 
-  isOk(): boolean {
+  isOk(): this is OkImpl<T> {
     return true;
   }
 
-  isErr(): boolean {
+  isErr(): this is ErrImpl<never> {
     return false;
   }
 
@@ -199,11 +199,11 @@ class ErrImpl<E> implements Result<never, E> {
     return fn(this.val);
   }
 
-  isOk(): boolean {
+  isOk(): this is OkImpl<never> {
     return false;
   }
 
-  isErr(): boolean {
+  isErr(): this is ErrImpl<E> {
     return true;
   }
 

@@ -66,8 +66,8 @@ function getTestFlags() {
       ? 'modern'
       : 'classic'
     : __EXPERIMENTAL__
-    ? 'experimental'
-    : 'stable';
+      ? 'experimental'
+      : 'stable';
 
   // Return a proxy so we can throw if you attempt to access a flag that
   // doesn't exist.
@@ -83,6 +83,10 @@ function getTestFlags() {
       enableActivity: releaseChannel === 'experimental' || www || xplat,
       enableSuspenseList: releaseChannel === 'experimental' || www || xplat,
       enableLegacyHidden: www,
+      // TODO: Suspending the work loop during the render phase is currently
+      // not compatible with sibling prerendering. We will add this optimization
+      // back in a later step.
+      enableSuspendingDuringWorkLoop: !featureFlags.enableSiblingPrerendering,
 
       // This flag is used to determine whether we should run Fizz tests using
       // the external runtime or the inline script runtime.
@@ -90,8 +94,8 @@ function getTestFlags() {
       shouldUseFizzExternalRuntime: !featureFlags.enableFizzExternalRuntime
         ? false
         : www
-        ? __VARIANT__
-        : __EXPERIMENTAL__,
+          ? __VARIANT__
+          : __EXPERIMENTAL__,
 
       // This is used by useSyncExternalStoresShared-test.js to decide whether
       // to test the shim or the native implementation of useSES.

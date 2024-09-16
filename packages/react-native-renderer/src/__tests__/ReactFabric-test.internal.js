@@ -279,6 +279,130 @@ describe('ReactFabric', () => {
     expect(nativeFabricUIManager.completeRoot).toBeCalled();
   });
 
+  // @gate enablePersistedModeClonedFlag
+  it('should not clone nodes when layout effects are used', async () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    const ComponentWithEffect = () => {
+      React.useLayoutEffect(() => {});
+      return null;
+    };
+
+    await act(() =>
+      ReactFabric.render(
+        <View>
+          <ComponentWithEffect />
+        </View>,
+        11,
+      ),
+    );
+    expect(nativeFabricUIManager.completeRoot).toBeCalled();
+    jest.clearAllMocks();
+
+    await act(() =>
+      ReactFabric.render(
+        <View>
+          <ComponentWithEffect />
+        </View>,
+        11,
+      ),
+    );
+    expect(nativeFabricUIManager.cloneNode).not.toBeCalled();
+    expect(nativeFabricUIManager.cloneNodeWithNewChildren).not.toBeCalled();
+    expect(nativeFabricUIManager.cloneNodeWithNewProps).not.toBeCalled();
+    expect(
+      nativeFabricUIManager.cloneNodeWithNewChildrenAndProps,
+    ).not.toBeCalled();
+    expect(nativeFabricUIManager.completeRoot).not.toBeCalled();
+  });
+
+  // @gate enablePersistedModeClonedFlag
+  it('should not clone nodes when insertion effects are used', async () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    const ComponentWithRef = () => {
+      React.useInsertionEffect(() => {});
+      return null;
+    };
+
+    await act(() =>
+      ReactFabric.render(
+        <View>
+          <ComponentWithRef />
+        </View>,
+        11,
+      ),
+    );
+    expect(nativeFabricUIManager.completeRoot).toBeCalled();
+    jest.clearAllMocks();
+
+    await act(() =>
+      ReactFabric.render(
+        <View>
+          <ComponentWithRef />
+        </View>,
+        11,
+      ),
+    );
+    expect(nativeFabricUIManager.cloneNode).not.toBeCalled();
+    expect(nativeFabricUIManager.cloneNodeWithNewChildren).not.toBeCalled();
+    expect(nativeFabricUIManager.cloneNodeWithNewProps).not.toBeCalled();
+    expect(
+      nativeFabricUIManager.cloneNodeWithNewChildrenAndProps,
+    ).not.toBeCalled();
+    expect(nativeFabricUIManager.completeRoot).not.toBeCalled();
+  });
+
+  // @gate enablePersistedModeClonedFlag
+  it('should not clone nodes when useImperativeHandle is used', async () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    const ComponentWithImperativeHandle = props => {
+      React.useImperativeHandle(props.ref, () => ({greet: () => 'hello'}));
+      return null;
+    };
+
+    const ref = React.createRef();
+
+    await act(() =>
+      ReactFabric.render(
+        <View>
+          <ComponentWithImperativeHandle ref={ref} />
+        </View>,
+        11,
+      ),
+    );
+    expect(nativeFabricUIManager.completeRoot).toBeCalled();
+    expect(ref.current.greet()).toBe('hello');
+    jest.clearAllMocks();
+
+    await act(() =>
+      ReactFabric.render(
+        <View>
+          <ComponentWithImperativeHandle ref={ref} />
+        </View>,
+        11,
+      ),
+    );
+    expect(nativeFabricUIManager.cloneNode).not.toBeCalled();
+    expect(nativeFabricUIManager.cloneNodeWithNewChildren).not.toBeCalled();
+    expect(nativeFabricUIManager.cloneNodeWithNewProps).not.toBeCalled();
+    expect(
+      nativeFabricUIManager.cloneNodeWithNewChildrenAndProps,
+    ).not.toBeCalled();
+    expect(nativeFabricUIManager.completeRoot).not.toBeCalled();
+    expect(ref.current.greet()).toBe('hello');
+  });
+
   it('should call dispatchCommand for native refs', async () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
@@ -1180,6 +1304,40 @@ describe('ReactFabric', () => {
     expect(match).toBe(
       ReactNativePrivateInterface.getNativeTagFromPublicInstance(child),
     );
+  });
+
+  it('findNodeHandle errors when called from render', async () => {
+    class TestComponent extends React.Component {
+      render() {
+        ReactFabric.findNodeHandle(this);
+        return null;
+      }
+    }
+    await expect(async () => {
+      await act(() => {
+        ReactFabric.render(<TestComponent />, 11, null, true);
+      });
+    }).toErrorDev([
+      'TestComponent is accessing findNodeHandle inside its render(). ' +
+        'render() should be a pure function of props and state. It should ' +
+        'never access something that requires stale data from the previous ' +
+        'render, such as refs. Move this logic to componentDidMount and ' +
+        'componentDidUpdate instead.',
+    ]);
+  });
+
+  it("findNodeHandle doesn't error when called outside render", async () => {
+    class TestComponent extends React.Component {
+      render() {
+        return null;
+      }
+      componentDidMount() {
+        ReactFabric.findNodeHandle(this);
+      }
+    }
+    await act(() => {
+      ReactFabric.render(<TestComponent />, 11, null, true);
+    });
   });
 
   it('should no-op if calling sendAccessibilityEvent on unmounted refs', async () => {

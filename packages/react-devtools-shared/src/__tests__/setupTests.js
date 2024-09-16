@@ -128,6 +128,11 @@ beforeEach(() => {
   // Fake timers let us flush Bridge operations between setup and assertions.
   jest.useFakeTimers();
 
+  // We use fake timers heavily in tests but the bridge batching now uses microtasks.
+  global.devtoolsJestTestScheduler = callback => {
+    setTimeout(callback, 0);
+  };
+
   // Use utils.js#withErrorsOrWarningsIgnored instead of directly mutating this array.
   global._ignoredErrorOrWarningMessages = [
     'react-test-renderer is deprecated.',

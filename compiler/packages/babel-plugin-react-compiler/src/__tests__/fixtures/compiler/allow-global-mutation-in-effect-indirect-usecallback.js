@@ -1,5 +1,5 @@
 // @validatePreserveExistingMemoizationGuarantees
-import { useCallback, useEffect, useState } from "react";
+import {useCallback, useEffect, useState} from 'react';
 
 let someGlobal = {};
 
