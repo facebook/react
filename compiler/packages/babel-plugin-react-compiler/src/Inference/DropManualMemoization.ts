@@ -268,6 +268,7 @@ function getManualMemoizationReplacement(
         kind: 'Identifier',
         identifier: fn.identifier,
         effect: Effect.Unknown,
+        abstractValue: null,
         reactive: false,
         loc,
       },
@@ -420,6 +421,7 @@ export function dropManualMemoization(func: HIRFunction): void {
                     kind: 'Identifier',
                     identifier: fnPlace.identifier,
                     effect: Effect.Unknown,
+                    abstractValue: null,
                     reactive: false,
                     loc: fnPlace.loc,
                   };

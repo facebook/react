@@ -191,6 +191,7 @@ class SSABuilder {
     const phi: Phi = {
       kind: 'Phi',
       id: newId,
+      abstractValue: null,
       operands: predDefs,
     };
 

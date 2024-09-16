@@ -250,6 +250,7 @@ function validateInferredDep(
           identifier: dep.identifier,
           loc: GeneratedSource,
           effect: Effect.Read,
+          abstractValue: null,
           reactive: false,
         },
       },

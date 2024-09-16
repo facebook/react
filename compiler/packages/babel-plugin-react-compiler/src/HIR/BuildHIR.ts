@@ -82,6 +82,7 @@ export function lower(
       kind: 'Identifier',
       identifier: builder.resolveBinding(ref),
       effect: Effect.Unknown,
+      abstractValue: null,
       reactive: false,
       loc: ref.loc ?? GeneratedSource,
     });
@@ -113,6 +114,7 @@ export function lower(
         kind: 'Identifier',
         identifier: binding.identifier,
         effect: Effect.Unknown,
+        abstractValue: null,
         reactive: false,
         loc: param.node.loc ?? GeneratedSource,
       };
@@ -126,6 +128,7 @@ export function lower(
         kind: 'Identifier',
         identifier: builder.makeTemporary(param.node.loc ?? GeneratedSource),
         effect: Effect.Unknown,
+        abstractValue: null,
         reactive: false,
         loc: param.node.loc ?? GeneratedSource,
       };
@@ -144,6 +147,7 @@ export function lower(
         kind: 'Identifier',
         identifier: builder.makeTemporary(param.node.loc ?? GeneratedSource),
         effect: Effect.Unknown,
+        abstractValue: null,
         reactive: false,
         loc: param.node.loc ?? GeneratedSource,
       };
@@ -460,6 +464,7 @@ function lowerStatement(
           });
           const place: Place = {
             effect: Effect.Unknown,
+            abstractValue: null,
             identifier: identifier.identifier,
             kind: 'Identifier',
             reactive: false,
@@ -853,6 +858,7 @@ function lowerStatement(
           } else {
             const place: Place = {
               effect: Effect.Unknown,
+              abstractValue: null,
               identifier: binding.identifier,
               kind: 'Identifier',
               reactive: false,
@@ -1264,6 +1270,7 @@ function lowerStatement(
             handlerBindingPath.node.loc ?? GeneratedSource,
           ),
           effect: Effect.Unknown,
+          abstractValue: null,
           reactive: false,
           loc: handlerBindingPath.node.loc ?? GeneratedSource,
         };
@@ -3428,6 +3435,7 @@ function lowerIdentifier(
         kind: 'Identifier',
         identifier: binding.identifier,
         effect: Effect.Unknown,
+        abstractValue: null,
         reactive: false,
         loc: exprLoc,
       };
@@ -3449,6 +3457,7 @@ function buildTemporaryPlace(builder: HIRBuilder, loc: SourceLocation): Place {
     kind: 'Identifier',
     identifier: builder.makeTemporary(loc),
     effect: Effect.Unknown,
+    abstractValue: null,
     reactive: false,
     loc,
   };
@@ -3511,6 +3520,7 @@ function lowerIdentifierForAssignment(
     kind: 'Identifier',
     identifier: binding.identifier,
     effect: Effect.Unknown,
+    abstractValue: null,
     reactive: false,
     loc,
   };

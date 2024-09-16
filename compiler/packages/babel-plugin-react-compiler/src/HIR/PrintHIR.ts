@@ -833,6 +833,8 @@ export function printPattern(pattern: Pattern | Place | SpreadPattern): string {
 
 export function printPlace(place: Place): string {
   const items = [
+    place.abstractValue?.kind,
+    place.abstractValue ? ' ' : '',
     place.effect,
     ' ',
     printIdentifier(place.identifier),
