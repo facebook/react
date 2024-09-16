@@ -145,9 +145,6 @@ import {
   addMarkerProgressCallbackToPendingTransition,
   addMarkerIncompleteCallbackToPendingTransition,
   addMarkerCompleteCallbackToPendingTransition,
-  getExecutionContext,
-  CommitContext,
-  NoContext,
   setIsRunningInsertionEffect,
 } from './ReactFiberWorkLoop';
 import {
@@ -233,8 +230,7 @@ function shouldProfile(current: Fiber): boolean {
   return (
     enableProfilerTimer &&
     enableProfilerCommitHooks &&
-    (current.mode & ProfileMode) !== NoMode &&
-    (getExecutionContext() & CommitContext) !== NoContext
+    (current.mode & ProfileMode) !== NoMode
   );
 }
 
@@ -2817,11 +2813,7 @@ function commitPassiveMountOnFiber(
 
       // Only Profilers with work in their subtree will have a Passive effect scheduled.
       if (flags & Passive) {
-        if (
-          enableProfilerTimer &&
-          enableProfilerCommitHooks &&
-          getExecutionContext() & CommitContext
-        ) {
+        if (enableProfilerTimer && enableProfilerCommitHooks) {
           const {passiveEffectDuration} = finishedWork.stateNode;
 
           commitProfilerPostCommit(

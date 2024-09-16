@@ -46,9 +46,6 @@ import {getPublicInstance} from './ReactFiberConfig';
 import {
   captureCommitPhaseError,
   setIsRunningInsertionEffect,
-  getExecutionContext,
-  CommitContext,
-  NoContext,
 } from './ReactFiberWorkLoop';
 import {
   NoFlags as NoHookEffect,
@@ -81,8 +78,7 @@ function shouldProfile(current: Fiber): boolean {
   return (
     enableProfilerTimer &&
     enableProfilerCommitHooks &&
-    (current.mode & ProfileMode) !== NoMode &&
-    (getExecutionContext() & CommitContext) !== NoContext
+    (current.mode & ProfileMode) !== NoMode
   );
 }
 
@@ -919,7 +915,7 @@ export function commitProfilerUpdate(
   commitTime: number,
   effectDuration: number,
 ) {
-  if (enableProfilerTimer && getExecutionContext() & CommitContext) {
+  if (enableProfilerTimer) {
     try {
       if (__DEV__) {
         runWithFiberInDEV(
