@@ -38,24 +38,9 @@ const reusableComponentOptions = {
   },
 };
 
-const reusableComponentEffectDevToolDetails = {
-  dataType: 'track-entry',
-  color: 'secondary',
-  track: 'Blocking', // Lane
-  trackGroup: TRACK_GROUP,
-};
-const reusableComponentEffectOptions = {
-  start: -0,
-  end: -0,
-  detail: {
-    devtools: reusableComponentEffectDevToolDetails,
-  },
-};
-
 export function setCurrentTrackFromLanes(lanes: number): void {
-  reusableComponentEffectDevToolDetails.track =
-    reusableComponentDevToolDetails.track =
-      getGroupNameOfHighestPriorityLane(lanes);
+  reusableComponentDevToolDetails.track =
+    getGroupNameOfHighestPriorityLane(lanes);
 }
 
 export function logComponentRender(
@@ -69,6 +54,20 @@ export function logComponentRender(
     return;
   }
   if (supportsUserTiming) {
+    let selfTime: number = (fiber.actualDuration: any);
+    if (fiber.alternate === null || fiber.alternate.child !== fiber.child) {
+      for (let child = fiber.child; child !== null; child = child.sibling) {
+        selfTime -= (child.actualDuration: any);
+      }
+    }
+    reusableComponentDevToolDetails.color =
+      selfTime < 0.5
+        ? 'primary-light'
+        : selfTime < 10
+          ? 'primary'
+          : selfTime < 100
+            ? 'primary-dark'
+            : 'error';
     reusableComponentOptions.start = startTime;
     reusableComponentOptions.end = endTime;
     performance.measure(name, reusableComponentOptions);
@@ -79,6 +78,7 @@ export function logComponentEffect(
   fiber: Fiber,
   startTime: number,
   endTime: number,
+  selfTime: number,
 ): void {
   const name = getComponentNameFromFiber(fiber);
   if (name === null) {
@@ -86,8 +86,16 @@ export function logComponentEffect(
     return;
   }
   if (supportsUserTiming) {
-    reusableComponentEffectOptions.start = startTime;
-    reusableComponentEffectOptions.end = endTime;
-    performance.measure(name, reusableComponentEffectOptions);
+    reusableComponentDevToolDetails.color =
+      selfTime < 1
+        ? 'secondary-light'
+        : selfTime < 100
+          ? 'secondary'
+          : selfTime < 500
+            ? 'secondary-dark'
+            : 'error';
+    reusableComponentOptions.start = startTime;
+    reusableComponentOptions.end = endTime;
+    performance.measure(name, reusableComponentOptions);
   }
 }
