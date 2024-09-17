@@ -38,9 +38,24 @@ const reusableComponentOptions = {
   },
 };
 
+const reusableComponentEffectDevToolDetails = {
+  dataType: 'track-entry',
+  color: 'secondary',
+  track: 'Blocking', // Lane
+  trackGroup: TRACK_GROUP,
+};
+const reusableComponentEffectOptions = {
+  start: -0,
+  end: -0,
+  detail: {
+    devtools: reusableComponentEffectDevToolDetails,
+  },
+};
+
 export function setCurrentTrackFromLanes(lanes: number): void {
-  reusableComponentDevToolDetails.track =
-    getGroupNameOfHighestPriorityLane(lanes);
+  reusableComponentEffectDevToolDetails.track =
+    reusableComponentDevToolDetails.track =
+      getGroupNameOfHighestPriorityLane(lanes);
 }
 
 export function logComponentRender(
@@ -57,5 +72,22 @@ export function logComponentRender(
     reusableComponentOptions.start = startTime;
     reusableComponentOptions.end = endTime;
     performance.measure(name, reusableComponentOptions);
+  }
+}
+
+export function logComponentEffect(
+  fiber: Fiber,
+  startTime: number,
+  endTime: number,
+): void {
+  const name = getComponentNameFromFiber(fiber);
+  if (name === null) {
+    // Skip
+    return;
+  }
+  if (supportsUserTiming) {
+    reusableComponentEffectOptions.start = startTime;
+    reusableComponentEffectOptions.end = endTime;
+    performance.measure(name, reusableComponentEffectOptions);
   }
 }
