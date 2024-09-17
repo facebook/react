@@ -554,3 +554,14 @@ export function log(value: CompilerPipelineValue): CompilerPipelineValue {
   }
   return value;
 }
+
+export function* runPlayground(
+  func: NodePath<
+    t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
+  >,
+  config: EnvironmentConfig,
+  fnType: ReactFunctionType,
+): Generator<CompilerPipelineValue, CodegenFunction> {
+  const ast = yield* run(func, config, fnType, '_c', null, null, null);
+  return ast;
+}
