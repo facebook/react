@@ -570,18 +570,18 @@ exports.memo = function (type, compare) {
 };
 exports.startTransition = function (scope, options) {
   var prevTransition = ReactSharedInternals.T,
-    transition = {};
-  ReactSharedInternals.T = transition;
+    currentTransition = {};
+  ReactSharedInternals.T = currentTransition;
   enableTransitionTracing &&
     void 0 !== options &&
     void 0 !== options.name &&
-    ((ReactSharedInternals.T.name = options.name),
-    (ReactSharedInternals.T.startTime = -1));
+    ((currentTransition.name = options.name),
+    (currentTransition.startTime = -1));
   try {
     var returnValue = scope(),
       onStartTransitionFinish = ReactSharedInternals.S;
     null !== onStartTransitionFinish &&
-      onStartTransitionFinish(transition, returnValue);
+      onStartTransitionFinish(currentTransition, returnValue);
     "object" === typeof returnValue &&
       null !== returnValue &&
       "function" === typeof returnValue.then &&
@@ -669,7 +669,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.0.0-www-modern-4549be0f-20240917";
+exports.version = "19.0.0-www-modern-15da9174-20240917";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
