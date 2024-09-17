@@ -38,6 +38,8 @@ let completeTime: number = -0;
 let commitTime: number = -0;
 let profilerStartTime: number = -1.1;
 let profilerEffectDuration: number = -0;
+let componentEffectStartTime: number = -1.1;
+let componentEffectEndTime: number = -1.1;
 
 function pushNestedEffectDurations(): number {
   if (!enableProfilerTimer || !enableProfilerCommitHooks) {
@@ -65,6 +67,34 @@ function bubbleNestedEffectDurations(prevEffectDuration: number): number {
   const elapsedTime = profilerEffectDuration;
   profilerEffectDuration += prevEffectDuration;
   return elapsedTime;
+}
+
+function resetComponentEffectTimers(): void {
+  if (!enableProfilerTimer || !enableProfilerCommitHooks) {
+    return;
+  }
+  componentEffectStartTime = -1.1;
+  componentEffectEndTime = -1.1;
+}
+
+function pushComponentEffectStart(): number {
+  if (!enableProfilerTimer || !enableProfilerCommitHooks) {
+    return 0;
+  }
+  const prevEffectStart = componentEffectStartTime;
+  componentEffectStartTime = -1.1; // Track the next start.
+  return prevEffectStart;
+}
+
+function popComponentEffectStart(prevEffectStart: number): void {
+  if (!enableProfilerTimer || !enableProfilerCommitHooks) {
+    return;
+  }
+  // If the parent component didn't have a start time, we let this current time persist.
+  if (prevEffectStart >= 0) {
+    // Otherwise, we restore the previous parent's start time.
+    componentEffectStartTime = prevEffectStart;
+  }
 }
 
 /**
@@ -185,13 +215,17 @@ function recordEffectDuration(fiber: Fiber): void {
   }
 
   if (profilerStartTime >= 0) {
-    const elapsedTime = now() - profilerStartTime;
+    const endTime = now();
+    const elapsedTime = endTime - profilerStartTime;
 
     profilerStartTime = -1;
 
     // Store duration on the next nearest Profiler ancestor
     // Or the root (for the DevTools Profiler to read)
     profilerEffectDuration += elapsedTime;
+
+    // Keep track of the last end time of the effects.
+    componentEffectEndTime = endTime;
   }
 }
 
@@ -200,6 +234,10 @@ function startEffectTimer(): void {
     return;
   }
   profilerStartTime = now();
+  if (componentEffectStartTime < 0) {
+    // Keep track of the first time we start an effect as the component's effect start time.
+    componentEffectStartTime = profilerStartTime;
+  }
 }
 
 function transferActualDuration(fiber: Fiber): void {
@@ -233,4 +271,9 @@ export {
   pushNestedEffectDurations,
   popNestedEffectDurations,
   bubbleNestedEffectDurations,
+  resetComponentEffectTimers,
+  pushComponentEffectStart,
+  popComponentEffectStart,
+  componentEffectStartTime,
+  componentEffectEndTime,
 };

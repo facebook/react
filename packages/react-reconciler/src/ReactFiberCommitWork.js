@@ -104,8 +104,16 @@ import {
   pushNestedEffectDurations,
   popNestedEffectDurations,
   bubbleNestedEffectDurations,
+  resetComponentEffectTimers,
+  pushComponentEffectStart,
+  popComponentEffectStart,
+  componentEffectStartTime,
+  componentEffectEndTime,
 } from './ReactProfilerTimer';
-import {logComponentRender} from './ReactFiberPerformanceTrack';
+import {
+  logComponentRender,
+  logComponentEffect,
+} from './ReactFiberPerformanceTrack';
 import {ConcurrentMode, NoMode, ProfileMode} from './ReactTypeOfMode';
 import {deferHiddenCallbacks} from './ReactFiberClassUpdateQueue';
 import {
@@ -382,6 +390,8 @@ function commitLayoutEffectOnFiber(
   finishedWork: Fiber,
   committedLanes: Lanes,
 ): void {
+  const prevEffectStart = pushComponentEffectStart();
+
   // When updating this function, also update reappearLayoutEffects, which does
   // most of the same things when an offscreen tree goes from hidden -> visible.
   const flags = finishedWork.flags;
@@ -585,6 +595,22 @@ function commitLayoutEffectOnFiber(
       break;
     }
   }
+
+  if (
+    enableProfilerTimer &&
+    enableComponentPerformanceTrack &&
+    (finishedWork.mode & ProfileMode) !== NoMode &&
+    componentEffectStartTime >= 0 &&
+    componentEffectEndTime >= 0
+  ) {
+    logComponentEffect(
+      finishedWork,
+      componentEffectStartTime,
+      componentEffectEndTime,
+    );
+  }
+
+  popComponentEffectStart(prevEffectStart);
 }
 
 function abortRootTransitions(
@@ -2105,6 +2131,8 @@ export function commitLayoutEffects(
 ): void {
   inProgressLanes = committedLanes;
   inProgressRoot = root;
+
+  resetComponentEffectTimers();
 
   const current = finishedWork.alternate;
   commitLayoutEffectOnFiber(root, current, finishedWork, committedLanes);
