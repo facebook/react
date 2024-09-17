@@ -87,6 +87,71 @@ describe('ReactUpdates', () => {
     expect(container.firstChild.textContent).toBe('2');
   });
 
+  it('should keep state from render during layout effect update', async () => {
+    let _setState = null;
+
+    function Component({prop}) {
+      const [, setLayoutState] = React.useState({});
+      const [state, setState] = React.useState(0);
+      _setState = setState;
+
+      Scheduler.log(`Render: ${state}`);
+
+      if (state !== prop) {
+        Scheduler.log(`setState in render ${state} -> ${prop}`);
+        setState(prop);
+      }
+
+      React.useLayoutEffect(() => {
+        if (prop === 1) {
+          Scheduler.log(`Layout effect setState`);
+          setLayoutState({});
+        }
+      }, [prop]);
+
+      return <div>{state}</div>;
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<Component prop={0} />);
+    });
+
+    assertLog(['Render: 0']);
+    expect(container.firstChild.textContent).toBe('0');
+
+    await act(() => {
+      // Schedue a transtion to update the state, this means baseQueue is non-empty.
+      React.startTransition(() => {
+        _setState(c => c + 1);
+      });
+
+      // Now schedule a blocking update.
+      root.render(<Component prop={1} />);
+    });
+
+    assertLog([
+      // Prop change from 0 -> 1
+      'Render: 0',
+      'setState in render 0 -> 1',
+      'Render: 1',
+
+      // Layout effect runs with prop 1
+      'Layout effect setState',
+
+      // Render layout effect update
+      // BUG!! Renders with base state 0 instead of 1
+      // 'Render: 0',
+      // 'setState in render 0 -> 1',
+
+      'Render: 1',
+      // Transition completes
+      'Render: 1',
+    ]);
+    expect(container.firstChild.textContent).toBe('1');
+  });
+
   it('should batch state when updating two different states', async () => {
     let componentStateA;
     let componentStateB;
