@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {parse as babelParse, ParserPlugin} from '@babel/parser';
+import {parse as babelParse} from '@babel/parser';
 import * as HermesParser from 'hermes-parser';
 import traverse, {NodePath} from '@babel/traverse';
 import * as t from '@babel/types';
@@ -15,10 +15,8 @@ import {
   Effect,
   ErrorSeverity,
   parseConfigPragma,
-  printHIR,
-  printReactiveFunction,
-  run,
   ValueKind,
+  runPlayground,
   type Hook,
 } from 'babel-plugin-react-compiler/src';
 import {type ReactFunctionType} from 'babel-plugin-react-compiler/src/HIR/Environment';
@@ -214,17 +212,13 @@ function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
 
     for (const fn of parseFunctions(source, language)) {
       const id = withIdentifier(getFunctionIdentifier(fn));
-      for (const result of run(
+      for (const result of runPlayground(
         fn,
         {
           ...config,
           customHooks: new Map([...COMMON_HOOKS]),
         },
         getReactFunctionType(id),
-        '_c',
-        null,
-        null,
-        null,
       )) {
         const fnName = id.name;
         switch (result.kind) {
