@@ -373,6 +373,11 @@ type TransitionTracingOnlyFiberRootProperties = {
   incompleteTransitions: Map<Transition, TracingMarkerInstance>,
 };
 
+type ProfilerCommitHooksOnlyFiberRootProperties = {
+  effectDuration: number,
+  passiveEffectDuration: number,
+};
+
 // Exported FiberRoot type includes all properties,
 // To avoid requiring potentially error-prone :any casts throughout the project.
 // The types are defined separately within this file to ensure they stay in sync.
@@ -381,7 +386,7 @@ export type FiberRoot = {
   ...SuspenseCallbackOnlyFiberRootProperties,
   ...UpdaterTrackingOnlyFiberRootProperties,
   ...TransitionTracingOnlyFiberRootProperties,
-  ...
+  ...ProfilerCommitHooksOnlyFiberRootProperties,
 };
 
 type BasicStateAction<S> = (S => S) | S;

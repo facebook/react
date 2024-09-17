@@ -1033,8 +1033,8 @@ function updateProfiler(
       // Reset effect durations for the next eventual effect phase.
       // These are reset during render to allow the DevTools commit hook a chance to read them,
       const stateNode = workInProgress.stateNode;
-      stateNode.effectDuration = 0;
-      stateNode.passiveEffectDuration = 0;
+      stateNode.effectDuration = -0;
+      stateNode.passiveEffectDuration = -0;
     }
   }
   const nextProps = workInProgress.pendingProps;
@@ -3711,8 +3711,8 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
           // Reset effect durations for the next eventual effect phase.
           // These are reset during render to allow the DevTools commit hook a chance to read them,
           const stateNode = workInProgress.stateNode;
-          stateNode.effectDuration = 0;
-          stateNode.passiveEffectDuration = 0;
+          stateNode.effectDuration = -0;
+          stateNode.passiveEffectDuration = -0;
         }
       }
       break;

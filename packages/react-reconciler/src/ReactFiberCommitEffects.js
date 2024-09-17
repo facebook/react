@@ -31,10 +31,8 @@ import {NoFlags} from './ReactFiberFlags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import {resolveClassComponentProps} from './ReactFiberClassComponent';
 import {
-  recordLayoutEffectDuration,
-  startLayoutEffectTimer,
-  recordPassiveEffectDuration,
-  startPassiveEffectTimer,
+  recordEffectDuration,
+  startEffectTimer,
   isCurrentUpdateNested,
 } from './ReactProfilerTimer';
 import {NoMode, ProfileMode} from './ReactTypeOfMode';
@@ -91,11 +89,38 @@ export function commitHookLayoutEffects(
   // e.g. a destroy function in one component should never override a ref set
   // by a create function in another component during the same commit.
   if (shouldProfile(finishedWork)) {
-    startLayoutEffectTimer();
+    startEffectTimer();
     commitHookEffectListMount(hookFlags, finishedWork);
-    recordLayoutEffectDuration(finishedWork);
+    recordEffectDuration(finishedWork);
   } else {
     commitHookEffectListMount(hookFlags, finishedWork);
+  }
+}
+
+export function commitHookLayoutUnmountEffects(
+  finishedWork: Fiber,
+  nearestMountedAncestor: null | Fiber,
+  hookFlags: HookFlags,
+) {
+  // Layout effects are destroyed during the mutation phase so that all
+  // destroy functions for all fibers are called before any create functions.
+  // This prevents sibling component effects from interfering with each other,
+  // e.g. a destroy function in one component should never override a ref set
+  // by a create function in another component during the same commit.
+  if (shouldProfile(finishedWork)) {
+    startEffectTimer();
+    commitHookEffectListUnmount(
+      hookFlags,
+      finishedWork,
+      nearestMountedAncestor,
+    );
+    recordEffectDuration(finishedWork);
+  } else {
+    commitHookEffectListUnmount(
+      hookFlags,
+      finishedWork,
+      nearestMountedAncestor,
+    );
   }
 }
 
@@ -265,9 +290,9 @@ export function commitHookPassiveMountEffects(
   hookFlags: HookFlags,
 ) {
   if (shouldProfile(finishedWork)) {
-    startPassiveEffectTimer();
+    startEffectTimer();
     commitHookEffectListMount(hookFlags, finishedWork);
-    recordPassiveEffectDuration(finishedWork);
+    recordEffectDuration(finishedWork);
   } else {
     commitHookEffectListMount(hookFlags, finishedWork);
   }
@@ -279,13 +304,13 @@ export function commitHookPassiveUnmountEffects(
   hookFlags: HookFlags,
 ) {
   if (shouldProfile(finishedWork)) {
-    startPassiveEffectTimer();
+    startEffectTimer();
     commitHookEffectListUnmount(
       hookFlags,
       finishedWork,
       nearestMountedAncestor,
     );
-    recordPassiveEffectDuration(finishedWork);
+    recordEffectDuration(finishedWork);
   } else {
     commitHookEffectListUnmount(
       hookFlags,
@@ -333,7 +358,7 @@ export function commitClassLayoutLifecycles(
       }
     }
     if (shouldProfile(finishedWork)) {
-      startLayoutEffectTimer();
+      startEffectTimer();
       if (__DEV__) {
         runWithFiberInDEV(
           finishedWork,
@@ -348,7 +373,7 @@ export function commitClassLayoutLifecycles(
           captureCommitPhaseError(finishedWork, finishedWork.return, error);
         }
       }
-      recordLayoutEffectDuration(finishedWork);
+      recordEffectDuration(finishedWork);
     } else {
       if (__DEV__) {
         runWithFiberInDEV(
@@ -404,7 +429,7 @@ export function commitClassLayoutLifecycles(
       }
     }
     if (shouldProfile(finishedWork)) {
-      startLayoutEffectTimer();
+      startEffectTimer();
       if (__DEV__) {
         runWithFiberInDEV(
           finishedWork,
@@ -426,7 +451,7 @@ export function commitClassLayoutLifecycles(
           captureCommitPhaseError(finishedWork, finishedWork.return, error);
         }
       }
-      recordLayoutEffectDuration(finishedWork);
+      recordEffectDuration(finishedWork);
     } else {
       if (__DEV__) {
         runWithFiberInDEV(
@@ -679,7 +704,7 @@ export function safelyCallComponentWillUnmount(
   );
   instance.state = current.memoizedState;
   if (shouldProfile(current)) {
-    startLayoutEffectTimer();
+    startEffectTimer();
     if (__DEV__) {
       runWithFiberInDEV(
         current,
@@ -695,7 +720,7 @@ export function safelyCallComponentWillUnmount(
         captureCommitPhaseError(current, nearestMountedAncestor, error);
       }
     }
-    recordLayoutEffectDuration(current);
+    recordEffectDuration(current);
   } else {
     if (__DEV__) {
       runWithFiberInDEV(
@@ -736,10 +761,10 @@ function commitAttachRef(finishedWork: Fiber) {
     if (typeof ref === 'function') {
       if (shouldProfile(finishedWork)) {
         try {
-          startLayoutEffectTimer();
+          startEffectTimer();
           finishedWork.refCleanup = ref(instanceToUse);
         } finally {
-          recordLayoutEffectDuration(finishedWork);
+          recordEffectDuration(finishedWork);
         }
       } else {
         finishedWork.refCleanup = ref(instanceToUse);
@@ -793,14 +818,14 @@ export function safelyDetachRef(
       try {
         if (shouldProfile(current)) {
           try {
-            startLayoutEffectTimer();
+            startEffectTimer();
             if (__DEV__) {
               runWithFiberInDEV(current, refCleanup);
             } else {
               refCleanup();
             }
           } finally {
-            recordLayoutEffectDuration(current);
+            recordEffectDuration(current);
           }
         } else {
           if (__DEV__) {
@@ -823,14 +848,14 @@ export function safelyDetachRef(
       try {
         if (shouldProfile(current)) {
           try {
-            startLayoutEffectTimer();
+            startEffectTimer();
             if (__DEV__) {
               (runWithFiberInDEV(current, ref, null): void);
             } else {
               ref(null);
             }
           } finally {
-            recordLayoutEffectDuration(current);
+            recordEffectDuration(current);
           }
         } else {
           if (__DEV__) {
@@ -849,7 +874,7 @@ export function safelyDetachRef(
   }
 }
 
-export function safelyCallDestroy(
+function safelyCallDestroy(
   current: Fiber,
   nearestMountedAncestor: Fiber | null,
   destroy: () => void,
