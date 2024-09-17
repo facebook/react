@@ -35,6 +35,7 @@ import {
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {entangleAsyncAction} from './ReactFiberAsyncAction';
+import {startAsyncTransitionTimer} from './ReactProfilerTimer';
 
 export const NoTransition = null;
 
@@ -69,6 +70,13 @@ ReactSharedInternals.S = function onStartTransitionFinishForReconciler(
     returnValue !== null &&
     typeof returnValue.then === 'function'
   ) {
+    // If we're going to wait on some async work before scheduling an update.
+    // We mark the time so we can later log how long we were blocked on the Action.
+    // Ideally, we'd include the sync part of the action too but since that starts
+    // in isomorphic code it currently leads to tricky layering. We'd have to pass
+    // in performance.now() to this callback but we sometimes use a polyfill.
+    startAsyncTransitionTimer();
+
     // This is an async action
     const thenable: Thenable<mixed> = (returnValue: any);
     entangleAsyncAction(transition, thenable);

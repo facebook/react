@@ -13,6 +13,7 @@ import {
   enableProfilerCommitHooks,
   enableProfilerNestedUpdatePhase,
   enableProfilerTimer,
+  enableComponentPerformanceTrack,
 } from 'shared/ReactFeatureFlags';
 
 // Intentionally not named imports because Rollup would use dynamic dispatch for
@@ -28,6 +29,69 @@ export let profilerEffectDuration: number = -0;
 export let componentEffectDuration: number = -0;
 export let componentEffectStartTime: number = -1.1;
 export let componentEffectEndTime: number = -1.1;
+
+export let blockingUpdateTime: number = -1.1; // First sync setState scheduled.
+// TODO: This should really be one per Transition lane.
+export let transitionStartTime: number = -1.1; // First startTransition call before setState.
+export let transitionUpdateTime: number = -1.1; // First transition setState scheduled.
+
+export function startBlockingUpdateTimer(): void {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  if (blockingUpdateTime < 0) {
+    blockingUpdateTime = now();
+  }
+}
+
+export function clearBlockingTimers(): void {
+  blockingUpdateTime = -1.1;
+}
+
+export function startTransitionUpdateTimer(): void {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  if (transitionUpdateTime < 0) {
+    transitionUpdateTime = now();
+  }
+}
+
+export function startAsyncTransitionTimer(): void {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  if (transitionStartTime < 0 && transitionUpdateTime < 0) {
+    transitionStartTime = now();
+  }
+}
+
+export function hasScheduledTransitionWork(): boolean {
+  // If we have setState on a transition or scheduled useActionState update.
+  return transitionUpdateTime > -1;
+}
+
+// We use this marker to indicate that we have scheduled a render to be performed
+// but it's not an explicit state update.
+const ACTION_STATE_MARKER = -0.5;
+
+export function startActionStateUpdate(): void {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  if (transitionUpdateTime < 0) {
+    transitionUpdateTime = ACTION_STATE_MARKER;
+  }
+}
+
+export function clearAsyncTransitionTimer(): void {
+  transitionStartTime = -1.1;
+}
+
+export function clearTransitionTimers(): void {
+  transitionStartTime = -1.1;
+  transitionUpdateTime = -1.1;
+}
 
 export function pushNestedEffectDurations(): number {
   if (!enableProfilerTimer || !enableProfilerCommitHooks) {
