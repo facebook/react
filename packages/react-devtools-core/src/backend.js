@@ -20,7 +20,10 @@ import type {
   ComponentFilter,
   Wall,
 } from 'react-devtools-shared/src/frontend/types';
-import type {DevToolsHook} from 'react-devtools-shared/src/backend/types';
+import type {
+  DevToolsHook,
+  DevToolsHookSettings,
+} from 'react-devtools-shared/src/backend/types';
 import type {ResolveNativeStyle} from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
 
 type ConnectOptions = {
@@ -32,11 +35,8 @@ type ConnectOptions = {
   retryConnectionDelay?: number,
   isAppActive?: () => boolean,
   websocket?: ?WebSocket,
+  onSettingsUpdated?: (settings: $ReadOnly<DevToolsHookSettings>) => void,
 };
-
-installHook(window);
-
-const hook: ?DevToolsHook = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
 
 let savedComponentFilters: Array<ComponentFilter> =
   getDefaultComponentFilters();
@@ -52,11 +52,21 @@ function debug(methodName: string, ...args: Array<mixed>) {
   }
 }
 
+export function initialize(
+  maybeSettingsOrSettingsPromise?:
+    | DevToolsHookSettings
+    | Promise<DevToolsHookSettings>,
+) {
+  installHook(window, maybeSettingsOrSettingsPromise);
+}
+
 export function connectToDevTools(options: ?ConnectOptions) {
+  const hook: ?DevToolsHook = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (hook == null) {
     // DevTools didn't get injected into this page (maybe b'c of the contentType).
     return;
   }
+
   const {
     host = 'localhost',
     nativeStyleEditorValidAttributes,
@@ -66,6 +76,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
     resolveRNStyle = (null: $FlowFixMe),
     retryConnectionDelay = 2000,
     isAppActive = () => true,
+    onSettingsUpdated,
   } = options || {};
 
   const protocol = useHttps ? 'wss' : 'ws';
@@ -160,7 +171,14 @@ export function connectToDevTools(options: ?ConnectOptions) {
     // TODO (npm-packages) Warn if "isBackendStorageAPISupported"
     // $FlowFixMe[incompatible-call] found when upgrading Flow
     const agent = new Agent(bridge);
+    if (onSettingsUpdated != null) {
+      agent.addListener('updateHookSettings', onSettingsUpdated);
+    }
     agent.addListener('shutdown', () => {
+      if (onSettingsUpdated != null) {
+        agent.removeListener('updateHookSettings', onSettingsUpdated);
+      }
+
       // If we received 'shutdown' from `agent`, we assume the `bridge` is already shutting down,
       // and that caused the 'shutdown' event on the `agent`, so we don't need to call `bridge.shutdown()` here.
       hook.emit('shutdown');
@@ -290,6 +308,7 @@ type ConnectWithCustomMessagingOptions = {
   onMessage: (event: string, payload: any) => void,
   nativeStyleEditorValidAttributes?: $ReadOnlyArray<string>,
   resolveRNStyle?: ResolveNativeStyle,
+  onSettingsUpdated?: (settings: $ReadOnly<DevToolsHookSettings>) => void,
 };
 
 export function connectWithCustomMessagingProtocol({
@@ -298,7 +317,9 @@ export function connectWithCustomMessagingProtocol({
   onMessage,
   nativeStyleEditorValidAttributes,
   resolveRNStyle,
+  onSettingsUpdated,
 }: ConnectWithCustomMessagingOptions): Function {
+  const hook: ?DevToolsHook = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (hook == null) {
     // DevTools didn't get injected into this page (maybe b'c of the contentType).
     return;
@@ -334,7 +355,14 @@ export function connectWithCustomMessagingProtocol({
   }
 
   const agent = new Agent(bridge);
+  if (onSettingsUpdated != null) {
+    agent.addListener('updateHookSettings', onSettingsUpdated);
+  }
   agent.addListener('shutdown', () => {
+    if (onSettingsUpdated != null) {
+      agent.removeListener('updateHookSettings', onSettingsUpdated);
+    }
+
     // If we received 'shutdown' from `agent`, we assume the `bridge` is already shutting down,
     // and that caused the 'shutdown' event on the `agent`, so we don't need to call `bridge.shutdown()` here.
     hook.emit('shutdown');
