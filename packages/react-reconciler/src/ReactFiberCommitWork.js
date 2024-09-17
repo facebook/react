@@ -598,6 +598,7 @@ function commitLayoutEffectOnFiber(
 
   if (
     enableProfilerTimer &&
+    enableProfilerCommitHooks &&
     enableComponentPerformanceTrack &&
     (finishedWork.mode & ProfileMode) !== NoMode &&
     componentEffectStartTime >= 0 &&
@@ -1556,6 +1557,8 @@ export function commitMutationEffects(
   inProgressLanes = committedLanes;
   inProgressRoot = root;
 
+  resetComponentEffectTimers();
+
   commitMutationEffectsOnFiber(finishedWork, root, committedLanes);
 
   inProgressLanes = null;
@@ -1596,6 +1599,8 @@ function commitMutationEffectsOnFiber(
   root: FiberRoot,
   lanes: Lanes,
 ) {
+  const prevEffectStart = pushComponentEffectStart();
+
   const current = finishedWork.alternate;
   const flags = finishedWork.flags;
 
@@ -1624,7 +1629,7 @@ function commitMutationEffectsOnFiber(
           HookLayout | HookHasEffect,
         );
       }
-      return;
+      break;
     }
     case ClassComponent: {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
@@ -1643,7 +1648,7 @@ function commitMutationEffectsOnFiber(
           deferHiddenCallbacks(updateQueue);
         }
       }
-      return;
+      break;
     }
     case HostHoistable: {
       if (supportsResources) {
@@ -1719,7 +1724,7 @@ function commitMutationEffectsOnFiber(
             );
           }
         }
-        return;
+        break;
       }
       // Fall through
     }
@@ -1782,7 +1787,7 @@ function commitMutationEffectsOnFiber(
           }
         }
       }
-      return;
+      break;
     }
     case HostText: {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
@@ -1807,7 +1812,7 @@ function commitMutationEffectsOnFiber(
           commitHostTextUpdate(finishedWork, newText, oldText);
         }
       }
-      return;
+      break;
     }
     case HostRoot: {
       const prevEffectDuration = pushNestedEffectDurations();
@@ -1859,7 +1864,7 @@ function commitMutationEffectsOnFiber(
         root.effectDuration += popNestedEffectDurations(prevEffectDuration);
       }
 
-      return;
+      break;
     }
     case HostPortal: {
       if (supportsResources) {
@@ -1884,7 +1889,7 @@ function commitMutationEffectsOnFiber(
           );
         }
       }
-      return;
+      break;
     }
     case Profiler: {
       const prevEffectDuration = pushNestedEffectDurations();
@@ -1899,7 +1904,7 @@ function commitMutationEffectsOnFiber(
         profilerInstance.effectDuration +=
           bubbleNestedEffectDurations(prevEffectDuration);
       }
-      return;
+      break;
     }
     case SuspenseComponent: {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
@@ -1951,7 +1956,7 @@ function commitMutationEffectsOnFiber(
           attachSuspenseRetryListeners(finishedWork, retryQueue);
         }
       }
-      return;
+      break;
     }
     case OffscreenComponent: {
       if (flags & Ref) {
@@ -2044,7 +2049,7 @@ function commitMutationEffectsOnFiber(
           }
         }
       }
-      return;
+      break;
     }
     case SuspenseListComponent: {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
@@ -2058,7 +2063,7 @@ function commitMutationEffectsOnFiber(
           attachSuspenseRetryListeners(finishedWork, retryQueue);
         }
       }
-      return;
+      break;
     }
     case ScopeComponent: {
       if (enableScopeAPI) {
@@ -2078,16 +2083,34 @@ function commitMutationEffectsOnFiber(
           prepareScopeUpdate(scopeInstance, finishedWork);
         }
       }
-      return;
+      break;
     }
     default: {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
 
-      return;
+      break;
     }
   }
+
+  if (
+    enableProfilerTimer &&
+    enableProfilerCommitHooks &&
+    enableComponentPerformanceTrack &&
+    (finishedWork.mode & ProfileMode) !== NoMode &&
+    componentEffectStartTime >= 0 &&
+    componentEffectEndTime >= 0
+  ) {
+    logComponentEffect(
+      finishedWork,
+      componentEffectStartTime,
+      componentEffectEndTime,
+    );
+  }
+
+  popComponentEffectStart(prevEffectStart);
 }
+
 function commitReconciliationEffects(finishedWork: Fiber) {
   // Placement effects (insertions, reorders) can be scheduled on any fiber
   // type. They needs to happen after the children effects have fired, but
@@ -2543,6 +2566,8 @@ export function commitPassiveMountEffects(
   committedLanes: Lanes,
   committedTransitions: Array<Transition> | null,
 ): void {
+  resetComponentEffectTimers();
+
   commitPassiveMountOnFiber(
     root,
     finishedWork,
@@ -2605,6 +2630,8 @@ function commitPassiveMountOnFiber(
   committedTransitions: Array<Transition> | null,
   endTime: number, // Profiling-only. The start time of the next Fiber or root completion.
 ): void {
+  const prevEffectStart = pushComponentEffectStart();
+
   // If this component rendered in Profiling mode (DEV or in Profiler component) then log its
   // render time. We do this after the fact in the passive effect to avoid the overhead of this
   // getting in the way of the render characteristics and avoid the overhead of unwinding
@@ -2888,6 +2915,23 @@ function commitPassiveMountOnFiber(
       break;
     }
   }
+
+  if (
+    enableProfilerTimer &&
+    enableProfilerCommitHooks &&
+    enableComponentPerformanceTrack &&
+    (finishedWork.mode & ProfileMode) !== NoMode &&
+    componentEffectStartTime >= 0 &&
+    componentEffectEndTime >= 0
+  ) {
+    logComponentEffect(
+      finishedWork,
+      componentEffectStartTime,
+      componentEffectEndTime,
+    );
+  }
+
+  popComponentEffectStart(prevEffectStart);
 }
 
 function recursivelyTraverseReconnectPassiveEffects(
@@ -3159,6 +3203,7 @@ function commitAtomicPassiveEffects(
 }
 
 export function commitPassiveUnmountEffects(finishedWork: Fiber): void {
+  resetComponentEffectTimers();
   commitPassiveUnmountOnFiber(finishedWork);
 }
 
@@ -3317,6 +3362,8 @@ function recursivelyTraversePassiveUnmountEffects(parentFiber: Fiber): void {
 }
 
 function commitPassiveUnmountOnFiber(finishedWork: Fiber): void {
+  const prevEffectStart = pushComponentEffectStart();
+
   switch (finishedWork.tag) {
     case FunctionComponent:
     case ForwardRef:
@@ -3386,6 +3433,23 @@ function commitPassiveUnmountOnFiber(finishedWork: Fiber): void {
       break;
     }
   }
+
+  if (
+    enableProfilerTimer &&
+    enableProfilerCommitHooks &&
+    enableComponentPerformanceTrack &&
+    (finishedWork.mode & ProfileMode) !== NoMode &&
+    componentEffectStartTime >= 0 &&
+    componentEffectEndTime >= 0
+  ) {
+    logComponentEffect(
+      finishedWork,
+      componentEffectStartTime,
+      componentEffectEndTime,
+    );
+  }
+
+  popComponentEffectStart(prevEffectStart);
 }
 
 function recursivelyTraverseDisconnectPassiveEffects(parentFiber: Fiber): void {
