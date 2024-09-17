@@ -7408,7 +7408,7 @@ module.exports = function ($$$config) {
   function commitHookEffectListUnmount(
     flags,
     finishedWork,
-    nearestMountedAncestor
+    nearestMountedAncestor$jscomp$0
   ) {
     try {
       var updateQueue = finishedWork.updateQueue,
@@ -7420,9 +7420,20 @@ module.exports = function ($$$config) {
           if ((updateQueue.tag & flags) === flags) {
             var inst = updateQueue.inst,
               destroy = inst.destroy;
-            void 0 !== destroy &&
-              ((inst.destroy = void 0),
-              safelyCallDestroy(finishedWork, nearestMountedAncestor, destroy));
+            if (void 0 !== destroy) {
+              inst.destroy = void 0;
+              lastEffect = finishedWork;
+              var nearestMountedAncestor = nearestMountedAncestor$jscomp$0;
+              try {
+                destroy();
+              } catch (error) {
+                captureCommitPhaseError(
+                  lastEffect,
+                  nearestMountedAncestor,
+                  error
+                );
+              }
+            }
           }
           updateQueue = updateQueue.next;
         } while (updateQueue !== firstEffect);
@@ -7504,11 +7515,25 @@ module.exports = function ($$$config) {
         }
       else ref.current = null;
   }
-  function safelyCallDestroy(current, nearestMountedAncestor, destroy) {
+  function commitProfilerPostCommit(
+    finishedWork,
+    current,
+    commitTime,
+    passiveEffectDuration
+  ) {
     try {
-      destroy();
+      var _finishedWork$memoize2 = finishedWork.memoizedProps,
+        id = _finishedWork$memoize2.id,
+        onPostCommit = _finishedWork$memoize2.onPostCommit;
+      "function" === typeof onPostCommit &&
+        onPostCommit(
+          id,
+          null === current ? "mount" : "update",
+          passiveEffectDuration,
+          commitTime
+        );
     } catch (error) {
-      captureCommitPhaseError(current, nearestMountedAncestor, error);
+      captureCommitPhaseError(finishedWork, finishedWork.return, error);
     }
   }
   function commitHostMount(finishedWork) {
@@ -7804,23 +7829,6 @@ module.exports = function ($$$config) {
         break;
       case 12:
         recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
-        if (flags & 4)
-          a: for (
-            flags = finishedWork.stateNode.effectDuration,
-              finishedWork = finishedWork.return;
-            null !== finishedWork;
-
-          ) {
-            switch (finishedWork.tag) {
-              case 3:
-                finishedWork.stateNode.effectDuration += flags;
-                break a;
-              case 12:
-                finishedWork.stateNode.effectDuration += flags;
-                break a;
-            }
-            finishedWork = finishedWork.return;
-          }
         break;
       case 13:
         recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
@@ -8215,67 +8223,11 @@ module.exports = function ($$$config) {
       case 11:
       case 14:
       case 15:
-        if (enableHiddenSubtreeInsertionEffectCleanup) {
-          if (
-            ((prevHostParent = deletedFiber.updateQueue),
-            null !== prevHostParent &&
-              ((prevHostParent = prevHostParent.lastEffect),
-              null !== prevHostParent))
-          ) {
-            prevHostParentIsContainer = prevHostParent = prevHostParent.next;
-            do {
-              var tag = prevHostParentIsContainer.tag,
-                inst = prevHostParentIsContainer.inst,
-                destroy = inst.destroy;
-              void 0 !== destroy &&
-                (0 !== (tag & 2)
-                  ? ((inst.destroy = void 0),
-                    safelyCallDestroy(
-                      deletedFiber,
-                      nearestMountedAncestor,
-                      destroy
-                    ))
-                  : offscreenSubtreeWasHidden ||
-                    0 === (tag & 4) ||
-                    ((inst.destroy = void 0),
-                    safelyCallDestroy(
-                      deletedFiber,
-                      nearestMountedAncestor,
-                      destroy
-                    )));
-              prevHostParentIsContainer = prevHostParentIsContainer.next;
-            } while (prevHostParentIsContainer !== prevHostParent);
-          }
-        } else if (
-          !offscreenSubtreeWasHidden &&
-          ((prevHostParent = deletedFiber.updateQueue),
-          null !== prevHostParent &&
-            ((prevHostParent = prevHostParent.lastEffect),
-            null !== prevHostParent))
-        ) {
-          prevHostParentIsContainer = prevHostParent = prevHostParent.next;
-          do
-            (tag = prevHostParentIsContainer.tag),
-              (inst = prevHostParentIsContainer.inst),
-              (destroy = inst.destroy),
-              void 0 !== destroy &&
-                (0 !== (tag & 2)
-                  ? ((inst.destroy = void 0),
-                    safelyCallDestroy(
-                      deletedFiber,
-                      nearestMountedAncestor,
-                      destroy
-                    ))
-                  : 0 !== (tag & 4) &&
-                    ((inst.destroy = void 0),
-                    safelyCallDestroy(
-                      deletedFiber,
-                      nearestMountedAncestor,
-                      destroy
-                    ))),
-              (prevHostParentIsContainer = prevHostParentIsContainer.next);
-          while (prevHostParentIsContainer !== prevHostParent);
-        }
+        (!enableHiddenSubtreeInsertionEffectCleanup &&
+          offscreenSubtreeWasHidden) ||
+          commitHookEffectListUnmount(2, deletedFiber, nearestMountedAncestor);
+        offscreenSubtreeWasHidden ||
+          commitHookEffectListUnmount(4, deletedFiber, nearestMountedAncestor);
         recursivelyTraverseDeletionEffects(
           finishedRoot,
           nearestMountedAncestor,
@@ -8334,15 +8286,15 @@ module.exports = function ($$$config) {
   }
   function commitSuspenseHydrationCallbacks(finishedRoot, finishedWork) {
     if (supportsHydration && null === finishedWork.memoizedState) {
-      var current$170 = finishedWork.alternate;
+      var current$163 = finishedWork.alternate;
       if (
-        null !== current$170 &&
-        ((current$170 = current$170.memoizedState),
-        null !== current$170 &&
-          ((current$170 = current$170.dehydrated), null !== current$170))
+        null !== current$163 &&
+        ((current$163 = current$163.memoizedState),
+        null !== current$163 &&
+          ((current$163 = current$163.dehydrated), null !== current$163))
       ) {
         try {
-          commitHydratedSuspenseInstance(current$170);
+          commitHydratedSuspenseInstance(current$163);
         } catch (error) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error);
         }
@@ -8350,7 +8302,7 @@ module.exports = function ($$$config) {
           var hydrationCallbacks = finishedRoot.hydrationCallbacks;
           if (null !== hydrationCallbacks) {
             var onHydrated = hydrationCallbacks.onHydrated;
-            onHydrated && onHydrated(current$170);
+            onHydrated && onHydrated(current$163);
           }
         } catch (error) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error);
@@ -8648,6 +8600,10 @@ module.exports = function ($$$config) {
             finishedWork.stateNode.pendingChildren
           );
         break;
+      case 12:
+        recursivelyTraverseMutationEffects(root, finishedWork);
+        commitReconciliationEffects(finishedWork);
+        break;
       case 13:
         recursivelyTraverseMutationEffects(root, finishedWork);
         commitReconciliationEffects(finishedWork);
@@ -8930,7 +8886,7 @@ module.exports = function ($$$config) {
     includeWorkInProgressEffects =
       includeWorkInProgressEffects && 0 !== (parentFiber.subtreeFlags & 8772);
     for (parentFiber = parentFiber.child; null !== parentFiber; ) {
-      var current$176 = parentFiber.alternate,
+      var current$169 = parentFiber.alternate,
         finishedRoot = finishedRoot$jscomp$0,
         finishedWork = parentFiber,
         flags = finishedWork.flags;
@@ -8951,18 +8907,18 @@ module.exports = function ($$$config) {
             finishedWork,
             includeWorkInProgressEffects
           );
-          current$176 = finishedWork;
-          finishedRoot = current$176.stateNode;
+          current$169 = finishedWork;
+          finishedRoot = current$169.stateNode;
           if ("function" === typeof finishedRoot.componentDidMount)
             try {
               finishedRoot.componentDidMount();
             } catch (error) {
-              captureCommitPhaseError(current$176, current$176.return, error);
+              captureCommitPhaseError(current$169, current$169.return, error);
             }
-          current$176 = finishedWork;
-          finishedRoot = current$176.updateQueue;
+          current$169 = finishedWork;
+          finishedRoot = current$169.updateQueue;
           if (null !== finishedRoot) {
-            var instance = current$176.stateNode;
+            var instance = current$169.stateNode;
             try {
               var hiddenCallbacks = finishedRoot.shared.hiddenCallbacks;
               if (null !== hiddenCallbacks)
@@ -8973,7 +8929,7 @@ module.exports = function ($$$config) {
                 )
                   callCallback(hiddenCallbacks[finishedRoot], instance);
             } catch (error) {
-              captureCommitPhaseError(current$176, current$176.return, error);
+              captureCommitPhaseError(current$169, current$169.return, error);
             }
           }
           includeWorkInProgressEffects &&
@@ -8990,7 +8946,7 @@ module.exports = function ($$$config) {
             includeWorkInProgressEffects
           );
           includeWorkInProgressEffects &&
-            null === current$176 &&
+            null === current$169 &&
             flags & 4 &&
             commitHostMount(finishedWork);
           safelyAttachRef(finishedWork, finishedWork.return);
@@ -9001,23 +8957,6 @@ module.exports = function ($$$config) {
             finishedWork,
             includeWorkInProgressEffects
           );
-          if (includeWorkInProgressEffects && flags & 4)
-            a: for (
-              flags = finishedWork.stateNode.effectDuration,
-                finishedWork = finishedWork.return;
-              null !== finishedWork;
-
-            ) {
-              switch (finishedWork.tag) {
-                case 3:
-                  finishedWork.stateNode.effectDuration += flags;
-                  break a;
-                case 12:
-                  finishedWork.stateNode.effectDuration += flags;
-                  break a;
-              }
-              finishedWork = finishedWork.return;
-            }
           break;
         case 13:
           recursivelyTraverseReappearLayoutEffects(
@@ -9219,12 +9158,25 @@ module.exports = function ($$$config) {
         }
         break;
       case 12:
-        recursivelyTraversePassiveMountEffects(
-          finishedRoot,
-          finishedWork,
-          committedLanes,
-          committedTransitions
-        );
+        flags & 2048
+          ? (recursivelyTraversePassiveMountEffects(
+              finishedRoot,
+              finishedWork,
+              committedLanes,
+              committedTransitions
+            ),
+            commitProfilerPostCommit(
+              finishedWork,
+              finishedWork.alternate,
+              -0,
+              finishedWork.stateNode.passiveEffectDuration
+            ))
+          : recursivelyTraversePassiveMountEffects(
+              finishedRoot,
+              finishedWork,
+              committedLanes,
+              committedTransitions
+            );
         break;
       case 23:
         recursivelyTraversePassiveMountEffects(
@@ -9359,9 +9311,9 @@ module.exports = function ($$$config) {
             );
           break;
         case 22:
-          var instance$182 = finishedWork.stateNode;
+          var instance$175 = finishedWork.stateNode;
           null !== finishedWork.memoizedState
-            ? instance$182._visibility & 4
+            ? instance$175._visibility & 4
               ? recursivelyTraverseReconnectPassiveEffects(
                   finishedRoot,
                   finishedWork,
@@ -9374,7 +9326,7 @@ module.exports = function ($$$config) {
                     finishedRoot,
                     finishedWork
                   )
-                : ((instance$182._visibility |= 4),
+                : ((instance$175._visibility |= 4),
                   recursivelyTraverseReconnectPassiveEffects(
                     finishedRoot,
                     finishedWork,
@@ -9382,7 +9334,7 @@ module.exports = function ($$$config) {
                     committedTransitions,
                     includeWorkInProgressEffects
                   ))
-            : ((instance$182._visibility |= 4),
+            : ((instance$175._visibility |= 4),
               recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork,
@@ -9395,7 +9347,7 @@ module.exports = function ($$$config) {
             commitOffscreenPassiveMountEffects(
               finishedWork.alternate,
               finishedWork,
-              instance$182
+              instance$175
             );
           break;
         case 24:
@@ -9560,6 +9512,12 @@ module.exports = function ($$$config) {
         recursivelyTraversePassiveUnmountEffects(finishedWork);
         finishedWork.flags & 2048 &&
           commitHookEffectListUnmount(9, finishedWork, finishedWork.return);
+        break;
+      case 3:
+        recursivelyTraversePassiveUnmountEffects(finishedWork);
+        break;
+      case 12:
+        recursivelyTraversePassiveUnmountEffects(finishedWork);
         break;
       case 22:
         var instance = finishedWork.stateNode;
@@ -10510,8 +10468,8 @@ module.exports = function ($$$config) {
         }
         workLoopSync();
         break;
-      } catch (thrownValue$196) {
-        handleThrow(root, thrownValue$196);
+      } catch (thrownValue$189) {
+        handleThrow(root, thrownValue$189);
       }
     while (1);
     lanes && root.shellSuspendCounter++;
@@ -10632,8 +10590,8 @@ module.exports = function ($$$config) {
         }
         workLoopConcurrent();
         break;
-      } catch (thrownValue$198) {
-        handleThrow(root, thrownValue$198);
+      } catch (thrownValue$191) {
+        handleThrow(root, thrownValue$191);
       }
     while (1);
     resetContextDependencies();
@@ -12891,7 +12849,7 @@ module.exports = function ($$$config) {
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
       findFiberByHostInstance: getInstanceFromNode,
-      reconcilerVersion: "19.0.0-www-classic-7b56a542-20240917"
+      reconcilerVersion: "19.0.0-www-classic-4549be0f-20240917"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

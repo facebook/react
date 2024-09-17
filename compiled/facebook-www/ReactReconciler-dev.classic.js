@@ -1253,20 +1253,6 @@ __DEV__ &&
           typeof injectedProfilingHooks.markComponentRenderStopped &&
         injectedProfilingHooks.markComponentRenderStopped();
     }
-    function markComponentLayoutEffectUnmountStarted(fiber) {
-      enableSchedulingProfiler &&
-        null !== injectedProfilingHooks &&
-        "function" ===
-          typeof injectedProfilingHooks.markComponentLayoutEffectUnmountStarted &&
-        injectedProfilingHooks.markComponentLayoutEffectUnmountStarted(fiber);
-    }
-    function markComponentLayoutEffectUnmountStopped() {
-      enableSchedulingProfiler &&
-        null !== injectedProfilingHooks &&
-        "function" ===
-          typeof injectedProfilingHooks.markComponentLayoutEffectUnmountStopped &&
-        injectedProfilingHooks.markComponentLayoutEffectUnmountStopped();
-    }
     function markRenderStarted(lanes) {
       enableSchedulingProfiler &&
         null !== injectedProfilingHooks &&
@@ -5672,6 +5658,21 @@ __DEV__ &&
       }
       enableSchedulingProfiler && markStateUpdateScheduled(fiber, lane);
     }
+    function pushNestedEffectDurations() {
+      var prevEffectDuration = profilerEffectDuration;
+      profilerEffectDuration = 0;
+      return prevEffectDuration;
+    }
+    function popNestedEffectDurations(prevEffectDuration) {
+      var elapsedTime = profilerEffectDuration;
+      profilerEffectDuration = prevEffectDuration;
+      return elapsedTime;
+    }
+    function bubbleNestedEffectDurations(prevEffectDuration) {
+      var elapsedTime = profilerEffectDuration;
+      profilerEffectDuration += prevEffectDuration;
+      return elapsedTime;
+    }
     function startProfilerTimer(fiber) {
       profilerStartTime = now();
       0 > fiber.actualStartTime && (fiber.actualStartTime = profilerStartTime);
@@ -5691,44 +5692,15 @@ __DEV__ &&
         profilerStartTime = -1;
       }
     }
-    function recordLayoutEffectDuration(fiber) {
-      if (0 <= layoutEffectStartTime) {
-        var elapsedTime = now() - layoutEffectStartTime;
-        layoutEffectStartTime = -1;
-        for (fiber = fiber.return; null !== fiber; ) {
-          switch (fiber.tag) {
-            case 3:
-              fiber.stateNode.effectDuration += elapsedTime;
-              return;
-            case 12:
-              fiber.stateNode.effectDuration += elapsedTime;
-              return;
-          }
-          fiber = fiber.return;
-        }
+    function recordEffectDuration() {
+      if (0 <= profilerStartTime) {
+        var elapsedTime = now() - profilerStartTime;
+        profilerStartTime = -1;
+        profilerEffectDuration += elapsedTime;
       }
     }
-    function recordPassiveEffectDuration(fiber) {
-      if (0 <= passiveEffectStartTime) {
-        var elapsedTime = now() - passiveEffectStartTime;
-        passiveEffectStartTime = -1;
-        for (fiber = fiber.return; null !== fiber; ) {
-          switch (fiber.tag) {
-            case 3:
-              fiber = fiber.stateNode;
-              null !== fiber && (fiber.passiveEffectDuration += elapsedTime);
-              return;
-            case 12:
-              fiber = fiber.stateNode;
-              null !== fiber && (fiber.passiveEffectDuration += elapsedTime);
-              return;
-          }
-          fiber = fiber.return;
-        }
-      }
-    }
-    function startLayoutEffectTimer() {
-      layoutEffectStartTime = now();
+    function startEffectTimer() {
+      profilerStartTime = now();
     }
     function transferActualDuration(fiber) {
       for (var child = fiber.child; child; )
@@ -8281,8 +8253,8 @@ __DEV__ &&
             (workInProgress.flags |= 4);
           workInProgress.flags |= 2048;
           var stateNode = workInProgress.stateNode;
-          stateNode.effectDuration = 0;
-          stateNode.passiveEffectDuration = 0;
+          stateNode.effectDuration = -0;
+          stateNode.passiveEffectDuration = -0;
           break;
         case 13:
           stateNode = workInProgress.memoizedState;
@@ -8924,8 +8896,8 @@ __DEV__ &&
             (workInProgress.flags |= 4),
             (workInProgress.flags |= 2048),
             (returnFiber = workInProgress.stateNode),
-            (returnFiber.effectDuration = 0),
-            (returnFiber.passiveEffectDuration = 0),
+            (returnFiber.effectDuration = -0),
+            (returnFiber.passiveEffectDuration = -0),
             reconcileChildren(
               current,
               workInProgress,
@@ -10675,15 +10647,34 @@ __DEV__ &&
             pop(markerInstanceStack, interruptedWork);
       }
     }
-    function shouldProfile$1(current) {
+    function shouldProfile(current) {
       return (current.mode & 2) !== NoMode;
     }
     function commitHookLayoutEffects(finishedWork, hookFlags) {
-      shouldProfile$1(finishedWork)
-        ? (startLayoutEffectTimer(),
+      shouldProfile(finishedWork)
+        ? (startEffectTimer(),
           commitHookEffectListMount(hookFlags, finishedWork),
-          recordLayoutEffectDuration(finishedWork))
+          recordEffectDuration())
         : commitHookEffectListMount(hookFlags, finishedWork);
+    }
+    function commitHookLayoutUnmountEffects(
+      finishedWork,
+      nearestMountedAncestor,
+      hookFlags
+    ) {
+      shouldProfile(finishedWork)
+        ? (startEffectTimer(),
+          commitHookEffectListUnmount(
+            hookFlags,
+            finishedWork,
+            nearestMountedAncestor
+          ),
+          recordEffectDuration())
+        : commitHookEffectListUnmount(
+            hookFlags,
+            finishedWork,
+            nearestMountedAncestor
+          );
     }
     function commitHookEffectListMount(flags, finishedWork) {
       try {
@@ -10802,10 +10793,18 @@ __DEV__ &&
                         finishedWork
                       )
                     : (flags & Layout) !== NoFlags &&
-                      markComponentLayoutEffectUnmountStarted(finishedWork)),
+                      enableSchedulingProfiler &&
+                      null !== injectedProfilingHooks &&
+                      "function" ===
+                        typeof injectedProfilingHooks.markComponentLayoutEffectUnmountStarted &&
+                      injectedProfilingHooks.markComponentLayoutEffectUnmountStarted(
+                        finishedWork
+                      )),
                 (flags & Insertion) !== NoFlags &&
                   (isRunningInsertionEffect = !0),
-                safelyCallDestroy(
+                runWithFiberInDEV(
+                  finishedWork,
+                  callDestroyInDEV,
                   finishedWork,
                   nearestMountedAncestor,
                   destroy
@@ -10820,7 +10819,11 @@ __DEV__ &&
                         typeof injectedProfilingHooks.markComponentPassiveEffectUnmountStopped &&
                       injectedProfilingHooks.markComponentPassiveEffectUnmountStopped()
                     : (flags & Layout) !== NoFlags &&
-                      markComponentLayoutEffectUnmountStopped()));
+                      enableSchedulingProfiler &&
+                      null !== injectedProfilingHooks &&
+                      "function" ===
+                        typeof injectedProfilingHooks.markComponentLayoutEffectUnmountStopped &&
+                      injectedProfilingHooks.markComponentLayoutEffectUnmountStopped()));
             }
             updateQueue = updateQueue.next;
           } while (updateQueue !== firstEffect);
@@ -10830,10 +10833,10 @@ __DEV__ &&
       }
     }
     function commitHookPassiveMountEffects(finishedWork, hookFlags) {
-      shouldProfile$1(finishedWork)
-        ? ((passiveEffectStartTime = now()),
+      shouldProfile(finishedWork)
+        ? (startEffectTimer(),
           commitHookEffectListMount(hookFlags, finishedWork),
-          recordPassiveEffectDuration(finishedWork))
+          recordEffectDuration())
         : commitHookEffectListMount(hookFlags, finishedWork);
     }
     function commitHookPassiveUnmountEffects(
@@ -10841,14 +10844,14 @@ __DEV__ &&
       nearestMountedAncestor,
       hookFlags
     ) {
-      shouldProfile$1(finishedWork)
-        ? ((passiveEffectStartTime = now()),
+      shouldProfile(finishedWork)
+        ? (startEffectTimer(),
           commitHookEffectListUnmount(
             hookFlags,
             finishedWork,
             nearestMountedAncestor
           ),
-          recordPassiveEffectDuration(finishedWork))
+          recordEffectDuration())
         : commitHookEffectListUnmount(
             hookFlags,
             finishedWork,
@@ -10953,8 +10956,8 @@ __DEV__ &&
         current.elementType === current.type
       );
       instance.state = current.memoizedState;
-      shouldProfile$1(current)
-        ? (startLayoutEffectTimer(),
+      shouldProfile(current)
+        ? (startEffectTimer(),
           runWithFiberInDEV(
             current,
             callComponentWillUnmountInDEV,
@@ -10962,7 +10965,7 @@ __DEV__ &&
             nearestMountedAncestor,
             instance
           ),
-          recordLayoutEffectDuration(current))
+          recordEffectDuration())
         : runWithFiberInDEV(
             current,
             callComponentWillUnmountInDEV,
@@ -10986,12 +10989,12 @@ __DEV__ &&
         }
         21 === finishedWork.tag && (instanceToUse = instance);
         if ("function" === typeof ref)
-          if (shouldProfile$1(finishedWork))
+          if (shouldProfile(finishedWork))
             try {
-              startLayoutEffectTimer(),
+              startEffectTimer(),
                 (finishedWork.refCleanup = ref(instanceToUse));
             } finally {
-              recordLayoutEffectDuration(finishedWork);
+              recordEffectDuration();
             }
           else finishedWork.refCleanup = ref(instanceToUse);
         else
@@ -11016,12 +11019,11 @@ __DEV__ &&
       if (null !== ref)
         if ("function" === typeof refCleanup)
           try {
-            if (shouldProfile$1(current))
+            if (shouldProfile(current))
               try {
-                startLayoutEffectTimer(),
-                  runWithFiberInDEV(current, refCleanup);
+                startEffectTimer(), runWithFiberInDEV(current, refCleanup);
               } finally {
-                recordLayoutEffectDuration(current);
+                recordEffectDuration(current);
               }
             else runWithFiberInDEV(current, refCleanup);
           } catch (error$18) {
@@ -11033,26 +11035,17 @@ __DEV__ &&
           }
         else if ("function" === typeof ref)
           try {
-            if (shouldProfile$1(current))
+            if (shouldProfile(current))
               try {
-                startLayoutEffectTimer(), runWithFiberInDEV(current, ref, null);
+                startEffectTimer(), runWithFiberInDEV(current, ref, null);
               } finally {
-                recordLayoutEffectDuration(current);
+                recordEffectDuration(current);
               }
             else runWithFiberInDEV(current, ref, null);
           } catch (error$19) {
             captureCommitPhaseError(current, nearestMountedAncestor, error$19);
           }
         else ref.current = null;
-    }
-    function safelyCallDestroy(current, nearestMountedAncestor, destroy) {
-      runWithFiberInDEV(
-        current,
-        callDestroyInDEV,
-        current,
-        nearestMountedAncestor,
-        destroy
-      );
     }
     function commitProfiler(finishedWork, current, commitTime, effectDuration) {
       var _finishedWork$memoize = finishedWork.memoizedProps,
@@ -11413,15 +11406,15 @@ __DEV__ &&
                     "Expected %s state to match memoized state before componentDidMount. This might either be because of a bug in React, or because a component reassigns its own `this.state`. Please file an issue.",
                     getComponentNameFromFiber(finishedWork) || "instance"
                   )),
-                shouldProfile$1(finishedWork)
-                  ? (startLayoutEffectTimer(),
+                shouldProfile(finishedWork)
+                  ? (startEffectTimer(),
                     runWithFiberInDEV(
                       finishedWork,
                       callComponentDidMountInDEV,
                       finishedWork,
                       finishedRoot
                     ),
-                    recordLayoutEffectDuration(finishedWork))
+                    recordEffectDuration())
                   : runWithFiberInDEV(
                       finishedWork,
                       callComponentDidMountInDEV,
@@ -11448,8 +11441,8 @@ __DEV__ &&
                     "Expected %s state to match memoized state before componentDidUpdate. This might either be because of a bug in React, or because a component reassigns its own `this.state`. Please file an issue.",
                     getComponentNameFromFiber(finishedWork) || "instance"
                   ));
-              shouldProfile$1(finishedWork)
-                ? (startLayoutEffectTimer(),
+              shouldProfile(finishedWork)
+                ? (startEffectTimer(),
                   runWithFiberInDEV(
                     finishedWork,
                     callComponentDidUpdateInDEV,
@@ -11459,7 +11452,7 @@ __DEV__ &&
                     current,
                     finishedRoot.__reactInternalSnapshotBeforeUpdate
                   ),
-                  recordLayoutEffectDuration(finishedWork))
+                  recordEffectDuration())
                 : runWithFiberInDEV(
                     finishedWork,
                     callComponentDidUpdateInDEV,
@@ -11474,29 +11467,28 @@ __DEV__ &&
           flags & 512 && safelyAttachRef(finishedWork, finishedWork.return);
           break;
         case 3:
+          current = pushNestedEffectDurations();
           recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
           if (
             flags & 64 &&
             ((flags = finishedWork.updateQueue), null !== flags)
           ) {
-            finishedRoot = null;
+            prevProps = null;
             if (null !== finishedWork.child)
               switch (finishedWork.child.tag) {
                 case 27:
                 case 5:
-                  finishedRoot = getPublicInstance(
-                    finishedWork.child.stateNode
-                  );
+                  prevProps = getPublicInstance(finishedWork.child.stateNode);
                   break;
                 case 1:
-                  finishedRoot = finishedWork.child.stateNode;
+                  prevProps = finishedWork.child.stateNode;
               }
             try {
               runWithFiberInDEV(
                 finishedWork,
                 commitCallbacks,
                 flags,
-                finishedRoot
+                prevProps
               );
             } catch (error$15) {
               captureCommitPhaseError(
@@ -11506,6 +11498,7 @@ __DEV__ &&
               );
             }
           }
+          finishedRoot.effectDuration += popNestedEffectDurations(current);
           break;
         case 26:
           if (supportsResources) {
@@ -11520,9 +11513,11 @@ __DEV__ &&
           flags & 512 && safelyAttachRef(finishedWork, finishedWork.return);
           break;
         case 12:
-          recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
           if (flags & 4) {
-            flags = finishedWork.stateNode.effectDuration;
+            flags = pushNestedEffectDurations();
+            recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
+            finishedRoot = finishedWork.stateNode;
+            finishedRoot.effectDuration += bubbleNestedEffectDurations(flags);
             try {
               runWithFiberInDEV(
                 finishedWork,
@@ -11530,7 +11525,7 @@ __DEV__ &&
                 finishedWork,
                 current,
                 commitTime,
-                flags
+                finishedRoot.effectDuration
               );
             } catch (error$20) {
               captureCommitPhaseError(
@@ -11539,19 +11534,7 @@ __DEV__ &&
                 error$20
               );
             }
-            finishedWork = finishedWork.return;
-            a: for (; null !== finishedWork; ) {
-              switch (finishedWork.tag) {
-                case 3:
-                  finishedWork.stateNode.effectDuration += flags;
-                  break a;
-                case 12:
-                  finishedWork.stateNode.effectDuration += flags;
-                  break a;
-              }
-              finishedWork = finishedWork.return;
-            }
-          }
+          } else recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
           break;
         case 13:
           recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
@@ -11970,95 +11953,19 @@ __DEV__ &&
         case 11:
         case 14:
         case 15:
-          if (enableHiddenSubtreeInsertionEffectCleanup) {
-            if (
-              ((prevHostParent = deletedFiber.updateQueue),
-              null !== prevHostParent &&
-                ((prevHostParent = prevHostParent.lastEffect),
-                null !== prevHostParent))
-            ) {
-              prevHostParentIsContainer = prevHostParent = prevHostParent.next;
-              do {
-                var tag = prevHostParentIsContainer.tag,
-                  inst = prevHostParentIsContainer.inst,
-                  destroy = inst.destroy;
-                void 0 !== destroy &&
-                  ((tag & Insertion) !== NoFlags
-                    ? ((isRunningInsertionEffect = !0),
-                      (inst.destroy = void 0),
-                      safelyCallDestroy(
-                        deletedFiber,
-                        nearestMountedAncestor,
-                        destroy
-                      ),
-                      (isRunningInsertionEffect = !1))
-                    : offscreenSubtreeWasHidden ||
-                      (tag & Layout) === NoFlags ||
-                      (enableSchedulingProfiler &&
-                        markComponentLayoutEffectUnmountStarted(deletedFiber),
-                      (deletedFiber.mode & 2) !== NoMode
-                        ? (startLayoutEffectTimer(),
-                          (inst.destroy = void 0),
-                          safelyCallDestroy(
-                            deletedFiber,
-                            nearestMountedAncestor,
-                            destroy
-                          ),
-                          recordLayoutEffectDuration(deletedFiber))
-                        : ((inst.destroy = void 0),
-                          safelyCallDestroy(
-                            deletedFiber,
-                            nearestMountedAncestor,
-                            destroy
-                          )),
-                      enableSchedulingProfiler &&
-                        markComponentLayoutEffectUnmountStopped()));
-                prevHostParentIsContainer = prevHostParentIsContainer.next;
-              } while (prevHostParentIsContainer !== prevHostParent);
-            }
-          } else if (
-            !offscreenSubtreeWasHidden &&
-            ((prevHostParent = deletedFiber.updateQueue),
-            null !== prevHostParent &&
-              ((prevHostParent = prevHostParent.lastEffect),
-              null !== prevHostParent))
-          ) {
-            prevHostParentIsContainer = prevHostParent = prevHostParent.next;
-            do
-              (tag = prevHostParentIsContainer.tag),
-                (inst = prevHostParentIsContainer.inst),
-                (destroy = inst.destroy),
-                void 0 !== destroy &&
-                  ((tag & Insertion) !== NoFlags
-                    ? ((inst.destroy = void 0),
-                      safelyCallDestroy(
-                        deletedFiber,
-                        nearestMountedAncestor,
-                        destroy
-                      ))
-                    : (tag & Layout) !== NoFlags &&
-                      (enableSchedulingProfiler &&
-                        markComponentLayoutEffectUnmountStarted(deletedFiber),
-                      (deletedFiber.mode & 2) !== NoMode
-                        ? (startLayoutEffectTimer(),
-                          (inst.destroy = void 0),
-                          safelyCallDestroy(
-                            deletedFiber,
-                            nearestMountedAncestor,
-                            destroy
-                          ),
-                          recordLayoutEffectDuration(deletedFiber))
-                        : ((inst.destroy = void 0),
-                          safelyCallDestroy(
-                            deletedFiber,
-                            nearestMountedAncestor,
-                            destroy
-                          )),
-                      enableSchedulingProfiler &&
-                        markComponentLayoutEffectUnmountStopped())),
-                (prevHostParentIsContainer = prevHostParentIsContainer.next);
-            while (prevHostParentIsContainer !== prevHostParent);
-          }
+          (!enableHiddenSubtreeInsertionEffectCleanup &&
+            offscreenSubtreeWasHidden) ||
+            commitHookEffectListUnmount(
+              Insertion,
+              deletedFiber,
+              nearestMountedAncestor
+            );
+          offscreenSubtreeWasHidden ||
+            commitHookLayoutUnmountEffects(
+              deletedFiber,
+              nearestMountedAncestor,
+              Layout
+            );
           recursivelyTraverseDeletionEffects(
             finishedRoot,
             nearestMountedAncestor,
@@ -12288,19 +12195,11 @@ __DEV__ &&
               finishedWork.return
             ),
             commitHookEffectListMount(Insertion | HasEffect, finishedWork),
-            (finishedWork.mode & 2) !== NoMode
-              ? (startLayoutEffectTimer(),
-                commitHookEffectListUnmount(
-                  Layout | HasEffect,
-                  finishedWork,
-                  finishedWork.return
-                ),
-                recordLayoutEffectDuration(finishedWork))
-              : commitHookEffectListUnmount(
-                  Layout | HasEffect,
-                  finishedWork,
-                  finishedWork.return
-                ));
+            commitHookLayoutUnmountEffects(
+              finishedWork,
+              finishedWork.return,
+              Layout | HasEffect
+            ));
           break;
         case 1:
           recursivelyTraverseMutationEffects(root, finishedWork);
@@ -12463,12 +12362,13 @@ __DEV__ &&
           }
           break;
         case 3:
+          hoistableRoot = pushNestedEffectDurations();
           supportsResources
             ? (prepareToCommitHoistables(),
-              (hoistableRoot = currentHoistableRoot),
+              (props = currentHoistableRoot),
               (currentHoistableRoot = getHoistableRoot(root.containerInfo)),
               recursivelyTraverseMutationEffects(root, finishedWork),
-              (currentHoistableRoot = hoistableRoot))
+              (currentHoistableRoot = props))
             : recursivelyTraverseMutationEffects(root, finishedWork);
           commitReconciliationEffects(finishedWork);
           if (flags & 4) {
@@ -12512,6 +12412,7 @@ __DEV__ &&
           }
           needsFormReset &&
             ((needsFormReset = !1), recursivelyResetForms(finishedWork));
+          root.effectDuration += popNestedEffectDurations(hoistableRoot);
           break;
         case 4:
           supportsResources
@@ -12531,6 +12432,13 @@ __DEV__ &&
               finishedWork,
               finishedWork.stateNode.pendingChildren
             );
+          break;
+        case 12:
+          flags = pushNestedEffectDurations();
+          recursivelyTraverseMutationEffects(root, finishedWork);
+          commitReconciliationEffects(finishedWork);
+          finishedWork.stateNode.effectDuration +=
+            bubbleNestedEffectDurations(flags);
           break;
         case 13:
           recursivelyTraverseMutationEffects(root, finishedWork);
@@ -12753,23 +12661,11 @@ __DEV__ &&
         case 11:
         case 14:
         case 15:
-          if ((finishedWork.mode & 2) !== NoMode)
-            try {
-              startLayoutEffectTimer(),
-                commitHookEffectListUnmount(
-                  Layout,
-                  finishedWork,
-                  finishedWork.return
-                );
-            } finally {
-              recordLayoutEffectDuration(finishedWork);
-            }
-          else
-            commitHookEffectListUnmount(
-              Layout,
-              finishedWork,
-              finishedWork.return
-            );
+          commitHookLayoutUnmountEffects(
+            finishedWork,
+            finishedWork.return,
+            Layout
+          );
           recursivelyTraverseDisappearLayoutEffects(finishedWork);
           break;
         case 1:
@@ -12866,14 +12762,16 @@ __DEV__ &&
           safelyAttachRef(finishedWork, finishedWork.return);
           break;
         case 12:
-          recursivelyTraverseReappearLayoutEffects(
-            finishedRoot,
-            finishedWork,
-            includeWorkInProgressEffects
-          );
           if (includeWorkInProgressEffects && flags & 4) {
-            includeWorkInProgressEffects =
-              finishedWork.stateNode.effectDuration;
+            flags = pushNestedEffectDurations();
+            recursivelyTraverseReappearLayoutEffects(
+              finishedRoot,
+              finishedWork,
+              includeWorkInProgressEffects
+            );
+            includeWorkInProgressEffects = finishedWork.stateNode;
+            includeWorkInProgressEffects.effectDuration +=
+              bubbleNestedEffectDurations(flags);
             try {
               runWithFiberInDEV(
                 finishedWork,
@@ -12881,7 +12779,7 @@ __DEV__ &&
                 finishedWork,
                 current,
                 commitTime,
-                includeWorkInProgressEffects
+                includeWorkInProgressEffects.effectDuration
               );
             } catch (error$20) {
               captureCommitPhaseError(
@@ -12890,21 +12788,12 @@ __DEV__ &&
                 error$20
               );
             }
-            finishedWork = finishedWork.return;
-            a: for (; null !== finishedWork; ) {
-              switch (finishedWork.tag) {
-                case 3:
-                  finishedWork.stateNode.effectDuration +=
-                    includeWorkInProgressEffects;
-                  break a;
-                case 12:
-                  finishedWork.stateNode.effectDuration +=
-                    includeWorkInProgressEffects;
-                  break a;
-              }
-              finishedWork = finishedWork.return;
-            }
-          }
+          } else
+            recursivelyTraverseReappearLayoutEffects(
+              finishedRoot,
+              finishedWork,
+              includeWorkInProgressEffects
+            );
           break;
         case 13:
           recursivelyTraverseReappearLayoutEffects(
@@ -13060,6 +12949,7 @@ __DEV__ &&
             commitHookPassiveMountEffects(finishedWork, Passive | HasEffect);
           break;
         case 3:
+          var prevEffectDuration = pushNestedEffectDurations();
           recursivelyTraversePassiveMountEffects(
             finishedRoot,
             finishedWork,
@@ -13127,37 +13017,33 @@ __DEV__ &&
               clearTransitionsForLanes(finishedRoot, committedLanes);
             }
           }
+          finishedRoot.passiveEffectDuration +=
+            popNestedEffectDurations(prevEffectDuration);
           break;
         case 12:
-          recursivelyTraversePassiveMountEffects(
-            finishedRoot,
-            finishedWork,
-            committedLanes,
-            committedTransitions
-          );
-          if (flags & 2048)
-            a: for (
-              finishedRoot = finishedWork.stateNode.passiveEffectDuration,
-                commitProfilerPostCommit(
-                  finishedWork,
-                  finishedWork.alternate,
-                  commitTime,
-                  finishedRoot
-                ),
-                finishedWork = finishedWork.return;
-              null !== finishedWork;
-
-            ) {
-              switch (finishedWork.tag) {
-                case 3:
-                  finishedWork.stateNode.passiveEffectDuration += finishedRoot;
-                  break a;
-                case 12:
-                  finishedWork.stateNode.passiveEffectDuration += finishedRoot;
-                  break a;
-              }
-              finishedWork = finishedWork.return;
-            }
+          flags & 2048
+            ? ((prevEffectDuration = pushNestedEffectDurations()),
+              recursivelyTraversePassiveMountEffects(
+                finishedRoot,
+                finishedWork,
+                committedLanes,
+                committedTransitions
+              ),
+              (finishedRoot = finishedWork.stateNode),
+              (finishedRoot.passiveEffectDuration +=
+                bubbleNestedEffectDurations(prevEffectDuration)),
+              commitProfilerPostCommit(
+                finishedWork,
+                finishedWork.alternate,
+                commitTime,
+                finishedRoot.passiveEffectDuration
+              ))
+            : recursivelyTraversePassiveMountEffects(
+                finishedRoot,
+                finishedWork,
+                committedLanes,
+                committedTransitions
+              );
           break;
         case 23:
           recursivelyTraversePassiveMountEffects(
@@ -13174,9 +13060,9 @@ __DEV__ &&
             );
           break;
         case 22:
-          nextCache = finishedWork.stateNode;
+          prevEffectDuration = finishedWork.stateNode;
           null !== finishedWork.memoizedState
-            ? nextCache._visibility & 4
+            ? prevEffectDuration._visibility & 4
               ? recursivelyTraversePassiveMountEffects(
                   finishedRoot,
                   finishedWork,
@@ -13188,21 +13074,21 @@ __DEV__ &&
                     finishedRoot,
                     finishedWork
                   )
-                : ((nextCache._visibility |= 4),
+                : ((prevEffectDuration._visibility |= 4),
                   recursivelyTraversePassiveMountEffects(
                     finishedRoot,
                     finishedWork,
                     committedLanes,
                     committedTransitions
                   ))
-            : nextCache._visibility & 4
+            : prevEffectDuration._visibility & 4
               ? recursivelyTraversePassiveMountEffects(
                   finishedRoot,
                   finishedWork,
                   committedLanes,
                   committedTransitions
                 )
-              : ((nextCache._visibility |= 4),
+              : ((prevEffectDuration._visibility |= 4),
                 recursivelyTraverseReconnectPassiveEffects(
                   finishedRoot,
                   finishedWork,
@@ -13214,7 +13100,7 @@ __DEV__ &&
             commitOffscreenPassiveMountEffects(
               finishedWork.alternate,
               finishedWork,
-              nextCache
+              prevEffectDuration
             );
           break;
         case 24:
@@ -13518,12 +13404,24 @@ __DEV__ &&
               Passive | HasEffect
             );
           break;
+        case 3:
+          var prevEffectDuration = pushNestedEffectDurations();
+          recursivelyTraversePassiveUnmountEffects(finishedWork);
+          finishedWork.stateNode.passiveEffectDuration +=
+            popNestedEffectDurations(prevEffectDuration);
+          break;
+        case 12:
+          prevEffectDuration = pushNestedEffectDurations();
+          recursivelyTraversePassiveUnmountEffects(finishedWork);
+          finishedWork.stateNode.passiveEffectDuration +=
+            bubbleNestedEffectDurations(prevEffectDuration);
+          break;
         case 22:
-          var instance = finishedWork.stateNode;
+          prevEffectDuration = finishedWork.stateNode;
           null !== finishedWork.memoizedState &&
-          instance._visibility & 4 &&
+          prevEffectDuration._visibility & 4 &&
           (null === finishedWork.return || 13 !== finishedWork.return.tag)
-            ? ((instance._visibility &= -5),
+            ? ((prevEffectDuration._visibility &= -5),
               recursivelyTraverseDisconnectPassiveEffects(finishedWork))
             : recursivelyTraversePassiveUnmountEffects(finishedWork);
           break;
@@ -16369,7 +16267,7 @@ __DEV__ &&
           identifierPrefix++
         )
           containerInfo.push(null);
-      this.passiveEffectDuration = this.effectDuration = 0;
+      this.passiveEffectDuration = this.effectDuration = -0;
       this.memoizedUpdaters = new Set();
       containerInfo = this.pendingUpdatersLaneMap = [];
       for (identifierPrefix = 0; 31 > identifierPrefix; identifierPrefix++)
@@ -18438,10 +18336,9 @@ __DEV__ &&
         return unstable_useContextWithBailout(context, select);
       };
     var now = Scheduler.unstable_now,
-      commitTime = 0,
-      layoutEffectStartTime = -1,
-      profilerStartTime = -1,
-      passiveEffectStartTime = -1,
+      commitTime = -0,
+      profilerStartTime = -1.1,
+      profilerEffectDuration = -0,
       currentUpdateIsNested = !1,
       nestedUpdateScheduled = !1,
       fakeInternalInstance = {};
@@ -19315,7 +19212,7 @@ __DEV__ &&
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-www-classic-7b56a542-20240917"
+        reconcilerVersion: "19.0.0-www-classic-4549be0f-20240917"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
