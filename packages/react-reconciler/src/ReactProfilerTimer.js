@@ -21,27 +21,14 @@ import * as Scheduler from 'scheduler';
 
 const {unstable_now: now} = Scheduler;
 
-export type ProfilerTimer = {
-  getCommitTime(): number,
-  isCurrentUpdateNested(): boolean,
-  markNestedUpdateScheduled(): void,
-  recordCommitTime(): void,
-  startProfilerTimer(fiber: Fiber): void,
-  stopProfilerTimerIfRunning(fiber: Fiber): void,
-  stopProfilerTimerIfRunningAndRecordDuration(fiber: Fiber): void,
-  stopProfilerTimerIfRunningAndRecordIncompleteDuration(fiber: Fiber): void,
-  syncNestedUpdateFlag(): void,
-  ...
-};
+export let completeTime: number = -0;
+export let commitTime: number = -0;
+export let profilerStartTime: number = -1.1;
+export let profilerEffectDuration: number = -0;
+export let componentEffectStartTime: number = -1.1;
+export let componentEffectEndTime: number = -1.1;
 
-let completeTime: number = -0;
-let commitTime: number = -0;
-let profilerStartTime: number = -1.1;
-let profilerEffectDuration: number = -0;
-let componentEffectStartTime: number = -1.1;
-let componentEffectEndTime: number = -1.1;
-
-function pushNestedEffectDurations(): number {
+export function pushNestedEffectDurations(): number {
   if (!enableProfilerTimer || !enableProfilerCommitHooks) {
     return 0;
   }
@@ -50,7 +37,7 @@ function pushNestedEffectDurations(): number {
   return prevEffectDuration;
 }
 
-function popNestedEffectDurations(prevEffectDuration: number): number {
+export function popNestedEffectDurations(prevEffectDuration: number): number {
   if (!enableProfilerTimer || !enableProfilerCommitHooks) {
     return 0;
   }
@@ -60,7 +47,9 @@ function popNestedEffectDurations(prevEffectDuration: number): number {
 }
 
 // Like pop but it also adds the current elapsed time to the parent scope.
-function bubbleNestedEffectDurations(prevEffectDuration: number): number {
+export function bubbleNestedEffectDurations(
+  prevEffectDuration: number,
+): number {
   if (!enableProfilerTimer || !enableProfilerCommitHooks) {
     return 0;
   }
@@ -69,7 +58,7 @@ function bubbleNestedEffectDurations(prevEffectDuration: number): number {
   return elapsedTime;
 }
 
-function resetComponentEffectTimers(): void {
+export function resetComponentEffectTimers(): void {
   if (!enableProfilerTimer || !enableProfilerCommitHooks) {
     return;
   }
@@ -77,7 +66,7 @@ function resetComponentEffectTimers(): void {
   componentEffectEndTime = -1.1;
 }
 
-function pushComponentEffectStart(): number {
+export function pushComponentEffectStart(): number {
   if (!enableProfilerTimer || !enableProfilerCommitHooks) {
     return 0;
   }
@@ -86,7 +75,7 @@ function pushComponentEffectStart(): number {
   return prevEffectStart;
 }
 
-function popComponentEffectStart(prevEffectStart: number): void {
+export function popComponentEffectStart(prevEffectStart: number): void {
   if (!enableProfilerTimer || !enableProfilerCommitHooks) {
     return;
   }
@@ -121,53 +110,45 @@ function popComponentEffectStart(prevEffectStart: number): void {
 let currentUpdateIsNested: boolean = false;
 let nestedUpdateScheduled: boolean = false;
 
-function isCurrentUpdateNested(): boolean {
+export function isCurrentUpdateNested(): boolean {
   return currentUpdateIsNested;
 }
 
-function markNestedUpdateScheduled(): void {
+export function markNestedUpdateScheduled(): void {
   if (enableProfilerNestedUpdatePhase) {
     nestedUpdateScheduled = true;
   }
 }
 
-function resetNestedUpdateFlag(): void {
+export function resetNestedUpdateFlag(): void {
   if (enableProfilerNestedUpdatePhase) {
     currentUpdateIsNested = false;
     nestedUpdateScheduled = false;
   }
 }
 
-function syncNestedUpdateFlag(): void {
+export function syncNestedUpdateFlag(): void {
   if (enableProfilerNestedUpdatePhase) {
     currentUpdateIsNested = nestedUpdateScheduled;
     nestedUpdateScheduled = false;
   }
 }
 
-function getCompleteTime(): number {
-  return completeTime;
-}
-
-function recordCompleteTime(): void {
+export function recordCompleteTime(): void {
   if (!enableProfilerTimer) {
     return;
   }
   completeTime = now();
 }
 
-function getCommitTime(): number {
-  return commitTime;
-}
-
-function recordCommitTime(): void {
+export function recordCommitTime(): void {
   if (!enableProfilerTimer) {
     return;
   }
   commitTime = now();
 }
 
-function startProfilerTimer(fiber: Fiber): void {
+export function startProfilerTimer(fiber: Fiber): void {
   if (!enableProfilerTimer) {
     return;
   }
@@ -179,14 +160,16 @@ function startProfilerTimer(fiber: Fiber): void {
   }
 }
 
-function stopProfilerTimerIfRunning(fiber: Fiber): void {
+export function stopProfilerTimerIfRunning(fiber: Fiber): void {
   if (!enableProfilerTimer) {
     return;
   }
   profilerStartTime = -1;
 }
 
-function stopProfilerTimerIfRunningAndRecordDuration(fiber: Fiber): void {
+export function stopProfilerTimerIfRunningAndRecordDuration(
+  fiber: Fiber,
+): void {
   if (!enableProfilerTimer) {
     return;
   }
@@ -199,7 +182,7 @@ function stopProfilerTimerIfRunningAndRecordDuration(fiber: Fiber): void {
   }
 }
 
-function stopProfilerTimerIfRunningAndRecordIncompleteDuration(
+export function stopProfilerTimerIfRunningAndRecordIncompleteDuration(
   fiber: Fiber,
 ): void {
   if (!enableProfilerTimer) {
@@ -214,7 +197,7 @@ function stopProfilerTimerIfRunningAndRecordIncompleteDuration(
   }
 }
 
-function recordEffectDuration(fiber: Fiber): void {
+export function recordEffectDuration(fiber: Fiber): void {
   if (!enableProfilerTimer || !enableProfilerCommitHooks) {
     return;
   }
@@ -234,7 +217,7 @@ function recordEffectDuration(fiber: Fiber): void {
   }
 }
 
-function startEffectTimer(): void {
+export function startEffectTimer(): void {
   if (!enableProfilerTimer || !enableProfilerCommitHooks) {
     return;
   }
@@ -245,7 +228,7 @@ function startEffectTimer(): void {
   }
 }
 
-function transferActualDuration(fiber: Fiber): void {
+export function transferActualDuration(fiber: Fiber): void {
   // Transfer time spent rendering these children so we don't lose it
   // after we rerender. This is used as a helper in special cases
   // where we should count the work of multiple passes.
@@ -256,29 +239,3 @@ function transferActualDuration(fiber: Fiber): void {
     child = child.sibling;
   }
 }
-
-export {
-  getCompleteTime,
-  recordCompleteTime,
-  getCommitTime,
-  recordCommitTime,
-  isCurrentUpdateNested,
-  markNestedUpdateScheduled,
-  recordEffectDuration,
-  resetNestedUpdateFlag,
-  startEffectTimer,
-  startProfilerTimer,
-  stopProfilerTimerIfRunning,
-  stopProfilerTimerIfRunningAndRecordDuration,
-  stopProfilerTimerIfRunningAndRecordIncompleteDuration,
-  syncNestedUpdateFlag,
-  transferActualDuration,
-  pushNestedEffectDurations,
-  popNestedEffectDurations,
-  bubbleNestedEffectDurations,
-  resetComponentEffectTimers,
-  pushComponentEffectStart,
-  popComponentEffectStart,
-  componentEffectStartTime,
-  componentEffectEndTime,
-};

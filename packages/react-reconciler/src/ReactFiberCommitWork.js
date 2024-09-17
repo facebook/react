@@ -99,8 +99,8 @@ import {
   Cloned,
 } from './ReactFiberFlags';
 import {
-  getCommitTime,
-  getCompleteTime,
+  commitTime,
+  completeTime,
   pushNestedEffectDurations,
   popNestedEffectDurations,
   bubbleNestedEffectDurations,
@@ -504,7 +504,7 @@ function commitLayoutEffectOnFiber(
         commitProfilerUpdate(
           finishedWork,
           current,
-          getCommitTime(),
+          commitTime,
           profilerInstance.effectDuration,
         );
       } else {
@@ -2342,7 +2342,7 @@ export function reappearLayoutEffects(
         commitProfilerUpdate(
           finishedWork,
           current,
-          getCommitTime(),
+          commitTime,
           profilerInstance.effectDuration,
         );
       } else {
@@ -2573,9 +2573,7 @@ export function commitPassiveMountEffects(
     finishedWork,
     committedLanes,
     committedTransitions,
-    enableProfilerTimer && enableComponentPerformanceTrack
-      ? getCompleteTime()
-      : 0,
+    enableProfilerTimer && enableComponentPerformanceTrack ? completeTime : 0,
   );
 }
 
@@ -2762,7 +2760,7 @@ function commitPassiveMountOnFiber(
           finishedWork.alternate,
           // This value will still reflect the previous commit phase.
           // It does not get reset until the start of the next commit phase.
-          getCommitTime(),
+          commitTime,
           profilerInstance.passiveEffectDuration,
         );
       } else {
