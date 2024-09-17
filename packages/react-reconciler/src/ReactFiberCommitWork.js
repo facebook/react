@@ -109,6 +109,7 @@ import {
   popComponentEffectStart,
   componentEffectStartTime,
   componentEffectEndTime,
+  componentEffectDuration,
 } from './ReactProfilerTimer';
 import {
   logComponentRender,
@@ -608,6 +609,7 @@ function commitLayoutEffectOnFiber(
       finishedWork,
       componentEffectStartTime,
       componentEffectEndTime,
+      componentEffectDuration,
     );
   }
 
@@ -2105,6 +2107,7 @@ function commitMutationEffectsOnFiber(
       finishedWork,
       componentEffectStartTime,
       componentEffectEndTime,
+      componentEffectDuration,
     );
   }
 
@@ -2926,6 +2929,7 @@ function commitPassiveMountOnFiber(
       finishedWork,
       componentEffectStartTime,
       componentEffectEndTime,
+      componentEffectDuration,
     );
   }
 
@@ -3444,6 +3448,7 @@ function commitPassiveUnmountOnFiber(finishedWork: Fiber): void {
       finishedWork,
       componentEffectStartTime,
       componentEffectEndTime,
+      componentEffectDuration,
     );
   }
 

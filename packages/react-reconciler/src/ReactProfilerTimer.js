@@ -25,6 +25,7 @@ export let completeTime: number = -0;
 export let commitTime: number = -0;
 export let profilerStartTime: number = -1.1;
 export let profilerEffectDuration: number = -0;
+export let componentEffectDuration: number = -0;
 export let componentEffectStartTime: number = -1.1;
 export let componentEffectEndTime: number = -1.1;
 
@@ -72,6 +73,7 @@ export function pushComponentEffectStart(): number {
   }
   const prevEffectStart = componentEffectStartTime;
   componentEffectStartTime = -1.1; // Track the next start.
+  componentEffectDuration = -0; // Reset component level duration.
   return prevEffectStart;
 }
 
@@ -211,6 +213,7 @@ export function recordEffectDuration(fiber: Fiber): void {
     // Store duration on the next nearest Profiler ancestor
     // Or the root (for the DevTools Profiler to read)
     profilerEffectDuration += elapsedTime;
+    componentEffectDuration += elapsedTime;
 
     // Keep track of the last end time of the effects.
     componentEffectEndTime = endTime;
