@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<298735d4c96c058787833ff7f63746e0>>
+ * @generated SignedSource<<47bc21816711252981ee9a683ba241a6>>
  */
 
 "use strict";
@@ -1588,15 +1588,14 @@ __DEV__ &&
     };
     exports.startTransition = function (scope) {
       var prevTransition = ReactSharedInternals.T,
-        transition = {};
-      ReactSharedInternals.T = transition;
-      var currentTransition = ReactSharedInternals.T;
-      ReactSharedInternals.T._updatedFibers = new Set();
+        currentTransition = {};
+      ReactSharedInternals.T = currentTransition;
+      currentTransition._updatedFibers = new Set();
       try {
         var returnValue = scope(),
           onStartTransitionFinish = ReactSharedInternals.S;
         null !== onStartTransitionFinish &&
-          onStartTransitionFinish(transition, returnValue);
+          onStartTransitionFinish(currentTransition, returnValue);
         "object" === typeof returnValue &&
           null !== returnValue &&
           "function" === typeof returnValue.then &&
@@ -1705,7 +1704,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.0.0-native-fb-4549be0f-20240917";
+    exports.version = "19.0.0-native-fb-15da9174-20240917";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
