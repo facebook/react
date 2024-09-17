@@ -55,8 +55,10 @@ export function logComponentRender(
   }
   if (supportsUserTiming) {
     let selfTime: number = (fiber.actualDuration: any);
-    for (let child = fiber.child; child !== null; child = child.sibling) {
-      selfTime -= (child.actualDuration: any);
+    if (fiber.alternate === null || fiber.alternate.child !== fiber.child) {
+      for (let child = fiber.child; child !== null; child = child.sibling) {
+        selfTime -= (child.actualDuration: any);
+      }
     }
     reusableComponentDevToolDetails.color =
       selfTime < 0.5
