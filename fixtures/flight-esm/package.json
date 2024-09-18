@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "body-parser": "^1.20.1",
+    "body-parser": "^1.20.3",
     "browserslist": "^4.18.1",
     "busboy": "^1.6.0",
     "compression": "^1.7.4",
