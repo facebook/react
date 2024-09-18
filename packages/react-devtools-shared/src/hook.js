@@ -24,6 +24,8 @@ import {
   ANSI_STYLE_DIMMING_TEMPLATE_WITH_COMPONENT_STACK,
 } from 'react-devtools-shared/src/constants';
 import attachRenderer from './attachRenderer';
+import formatConsoleArguments from 'react-devtools-shared/src/backend/utils/formatConsoleArguments';
+import formatWithStyles from 'react-devtools-shared/src/backend/utils/formatWithStyles';
 
 // React's custom built component stack strings match "\s{4}in"
 // Chrome's prefix matches "\s{4}at"
@@ -188,100 +190,6 @@ export function installHook(
         });
       }
     } catch (err) {}
-  }
-
-  // NOTE: KEEP IN SYNC with src/backend/utils.js
-  function formatWithStyles(inputArgs: Array<any>, style?: string): Array<any> {
-    if (
-      inputArgs === undefined ||
-      inputArgs === null ||
-      inputArgs.length === 0 ||
-      // Matches any of %c but not %%c
-      (typeof inputArgs[0] === 'string' &&
-        inputArgs[0].match(/([^%]|^)(%c)/g)) ||
-      style === undefined
-    ) {
-      return inputArgs;
-    }
-
-    // Matches any of %(o|O|d|i|s|f), but not %%(o|O|d|i|s|f)
-    const REGEXP = /([^%]|^)((%%)*)(%([oOdisf]))/g;
-    if (typeof inputArgs[0] === 'string' && inputArgs[0].match(REGEXP)) {
-      return [`%c${inputArgs[0]}`, style, ...inputArgs.slice(1)];
-    } else {
-      const firstArg = inputArgs.reduce((formatStr, elem, i) => {
-        if (i > 0) {
-          formatStr += ' ';
-        }
-        switch (typeof elem) {
-          case 'string':
-          case 'boolean':
-          case 'symbol':
-            return (formatStr += '%s');
-          case 'number':
-            const formatting = Number.isInteger(elem) ? '%i' : '%f';
-            return (formatStr += formatting);
-          default:
-            return (formatStr += '%o');
-        }
-      }, '%c');
-      return [firstArg, style, ...inputArgs];
-    }
-  }
-  // NOTE: KEEP IN SYNC with src/backend/utils.js
-  function formatConsoleArguments(
-    maybeMessage: any,
-    ...inputArgs: $ReadOnlyArray<any>
-  ): $ReadOnlyArray<any> {
-    if (inputArgs.length === 0 || typeof maybeMessage !== 'string') {
-      return [maybeMessage, ...inputArgs];
-    }
-
-    const args = inputArgs.slice();
-
-    let template = '';
-    let argumentsPointer = 0;
-    for (let i = 0; i < maybeMessage.length; ++i) {
-      const currentChar = maybeMessage[i];
-      if (currentChar !== '%') {
-        template += currentChar;
-        continue;
-      }
-
-      const nextChar = maybeMessage[i + 1];
-      ++i;
-
-      // Only keep CSS and objects, inline other arguments
-      switch (nextChar) {
-        case 'c':
-        case 'O':
-        case 'o': {
-          ++argumentsPointer;
-          template += `%${nextChar}`;
-
-          break;
-        }
-        case 'd':
-        case 'i': {
-          const [arg] = args.splice(argumentsPointer, 1);
-          template += parseInt(arg, 10).toString();
-
-          break;
-        }
-        case 'f': {
-          const [arg] = args.splice(argumentsPointer, 1);
-          template += parseFloat(arg).toString();
-
-          break;
-        }
-        case 's': {
-          const [arg] = args.splice(argumentsPointer, 1);
-          template += arg.toString();
-        }
-      }
-    }
-
-    return [template, ...args];
   }
 
   let uidCounter = 0;
@@ -658,13 +566,16 @@ export function installHook(
           // Dim the text color of the double logs if we're not hiding them.
           // Firefox doesn't support ANSI escape sequences
           if (__IS_FIREFOX__) {
-            const argsWithCSSStyles = formatWithStyles(
+            let argsWithCSSStyles = formatWithStyles(
               args,
               FIREFOX_CONSOLE_DIMMING_COLOR,
             );
 
             if (injectedComponentStackAsFakeError) {
-              argsWithCSSStyles[0] = `${argsWithCSSStyles[0]} %o`;
+              argsWithCSSStyles = [
+                `${argsWithCSSStyles[0]} %o`,
+                ...argsWithCSSStyles.slice(1),
+              ];
             }
 
             originalMethod(...argsWithCSSStyles);
