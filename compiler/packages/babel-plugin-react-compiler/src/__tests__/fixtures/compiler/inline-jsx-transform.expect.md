@@ -27,10 +27,10 @@ function ParentAndRefAndKey(props) {
 
 function ParentAndChildren(props) {
   return (
-    <Parent foo={props.foo}>
+    <Parent>
       <Child key="a" />
       <Child key="b">
-        <GrandChild className="gc-1" />
+        <GrandChild className={props.foo} />
       </Child>
     </Parent>
   );
@@ -63,7 +63,7 @@ function Parent(t0) {
       type: "div",
       ref: ref,
       key: null,
-      props: { children: [children] },
+      props: { children: children },
     };
     $[0] = children;
     $[1] = t1;
@@ -83,7 +83,7 @@ function Child(t0) {
       type: Symbol.for("react.fragment"),
       ref: null,
       key: null,
-      props: { children: [children] },
+      props: { children: children },
     };
     $[0] = children;
     $[1] = t1;
@@ -103,7 +103,7 @@ function GrandChild(t0) {
       type: React.Fragment,
       ref: null,
       key: "fragmentKey",
-      props: { children: ["Hello world"] },
+      props: { children: "Hello world" },
     };
     $[0] = t1;
   } else {
@@ -116,7 +116,7 @@ function GrandChild(t0) {
       type: "span",
       ref: null,
       key: null,
-      props: { className: className, children: [t1] },
+      props: { className: className, children: t1 },
     };
     $[1] = className;
     $[2] = t2;
@@ -146,7 +146,7 @@ function ParentAndRefAndKey(props) {
 }
 
 function ParentAndChildren(props) {
-  const $ = _c2(4);
+  const $ = _c2(3);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = {
@@ -161,43 +161,39 @@ function ParentAndChildren(props) {
     t0 = $[0];
   }
   let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[1] !== props.foo) {
     t1 = {
-      $$typeof: Symbol.for("react.transitional.element"),
-      type: Child,
-      ref: null,
-      key: "b",
-      props: {
-        children: [
-          {
-            $$typeof: Symbol.for("react.transitional.element"),
-            type: GrandChild,
-            ref: null,
-            key: null,
-            props: { className: "gc-1" },
-          },
-        ],
-      },
-    };
-    $[1] = t1;
-  } else {
-    t1 = $[1];
-  }
-  let t2;
-  if ($[2] !== props.foo) {
-    t2 = {
       $$typeof: Symbol.for("react.transitional.element"),
       type: Parent,
       ref: null,
       key: null,
-      props: { foo: props.foo, children: [t0, t1] },
+      props: {
+        children: [
+          t0,
+          {
+            $$typeof: Symbol.for("react.transitional.element"),
+            type: Child,
+            ref: null,
+            key: "b",
+            props: {
+              children: {
+                $$typeof: Symbol.for("react.transitional.element"),
+                type: GrandChild,
+                ref: null,
+                key: null,
+                props: { className: props.foo },
+              },
+            },
+          },
+        ],
+      },
     };
-    $[2] = props.foo;
-    $[3] = t2;
+    $[1] = props.foo;
+    $[2] = t1;
   } else {
-    t2 = $[3];
+    t1 = $[2];
   }
-  return t2;
+  return t1;
 }
 
 const propsToSpread = { a: "a", b: "b", c: "c" };
@@ -227,4 +223,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: ok) <div><span class="gc-1">Hello world</span></div>
+(kind: ok) <div><span class="abc">Hello world</span></div>

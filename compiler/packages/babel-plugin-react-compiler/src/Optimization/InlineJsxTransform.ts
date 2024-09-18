@@ -191,27 +191,38 @@ function createPropsProperties(
   });
   const propsPropertyPlace = createTemporaryPlace(fn.env, instr.value.loc);
   if (children) {
-    const childrenPropPropertyPlace = createTemporaryPlace(
-      fn.env,
-      instr.value.loc,
-    );
-    const childrenPropInstruction: Instruction = {
-      id: makeInstructionId(0),
-      lvalue: {...childrenPropPropertyPlace, effect: Effect.Mutate},
-      value: {
-        kind: 'ArrayExpression',
-        elements: [...children],
-        loc: instr.value.loc,
-      },
-      loc: instr.loc,
-    };
-    nextInstructions.push(childrenPropInstruction);
-    const childrenPropProperty: ObjectProperty = {
-      kind: 'ObjectProperty',
-      key: {name: 'children', kind: 'string'},
-      type: 'property',
-      place: {...childrenPropPropertyPlace, effect: Effect.Capture},
-    };
+    let childrenPropProperty: ObjectProperty;
+    if (children.length === 1) {
+      childrenPropProperty = {
+        kind: 'ObjectProperty',
+        key: {name: 'children', kind: 'string'},
+        type: 'property',
+        place: {...children[0], effect: Effect.Capture},
+      };
+    } else {
+      const childrenPropPropertyPlace = createTemporaryPlace(
+        fn.env,
+        instr.value.loc,
+      );
+
+      const childrenPropInstruction: Instruction = {
+        id: makeInstructionId(0),
+        lvalue: {...childrenPropPropertyPlace, effect: Effect.Mutate},
+        value: {
+          kind: 'ArrayExpression',
+          elements: [...children],
+          loc: instr.value.loc,
+        },
+        loc: instr.loc,
+      };
+      nextInstructions.push(childrenPropInstruction);
+      childrenPropProperty = {
+        kind: 'ObjectProperty',
+        key: {name: 'children', kind: 'string'},
+        type: 'property',
+        place: {...childrenPropPropertyPlace, effect: Effect.Capture},
+      };
+    }
     props.push(childrenPropProperty);
   }
 

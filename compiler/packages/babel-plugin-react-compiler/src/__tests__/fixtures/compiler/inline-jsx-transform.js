@@ -23,10 +23,10 @@ function ParentAndRefAndKey(props) {
 
 function ParentAndChildren(props) {
   return (
-    <Parent foo={props.foo}>
+    <Parent>
       <Child key="a" />
       <Child key="b">
-        <GrandChild className="gc-1" />
+        <GrandChild className={props.foo} />
       </Child>
     </Parent>
   );
