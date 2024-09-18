@@ -10853,13 +10853,13 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1439 = {
   bundleType: 0,
-  version: "19.0.0-www-classic-8dfbd16f-20240917",
+  version: "19.0.0-www-classic-5dcb0097-20240918",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: function () {
     return null;
   },
-  reconcilerVersion: "19.0.0-www-classic-8dfbd16f-20240917"
+  reconcilerVersion: "19.0.0-www-classic-5dcb0097-20240918"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1440 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -10885,4 +10885,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.0.0-www-classic-8dfbd16f-20240917";
+exports.version = "19.0.0-www-classic-5dcb0097-20240918";
