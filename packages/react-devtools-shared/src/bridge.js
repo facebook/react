@@ -15,7 +15,7 @@ import type {
   OwnersList,
   ProfilingDataBackend,
   RendererID,
-  ConsolePatchSettings,
+  DevToolsHookSettings,
 } from 'react-devtools-shared/src/backend/types';
 import type {StyleAndLayout as StyleAndLayoutPayload} from 'react-devtools-shared/src/backend/NativeStyleEditor/types';
 
@@ -241,7 +241,7 @@ type FrontendEvents = {
   storeAsGlobal: [StoreAsGlobalParams],
   updateComponentFilters: [Array<ComponentFilter>],
   getEnvironmentNames: [],
-  updateConsolePatchSettings: [ConsolePatchSettings],
+  updateConsolePatchSettings: [DevToolsHookSettings],
   viewAttributeSource: [ViewAttributeSourceParams],
   viewElementSource: [ElementAndRendererID],
 

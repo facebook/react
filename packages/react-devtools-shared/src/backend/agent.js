@@ -24,7 +24,6 @@ import {
   initialize as setupTraceUpdates,
   toggleEnabled as setTraceUpdatesEnabled,
 } from './views/TraceUpdates';
-import {patch as patchConsole} from './console';
 import {currentBridgeProtocol} from 'react-devtools-shared/src/bridge';
 
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
@@ -36,7 +35,6 @@ import type {
   PathMatch,
   RendererID,
   RendererInterface,
-  ConsolePatchSettings,
   DevToolsHookSettings,
 } from './types';
 import type {ComponentFilter} from 'react-devtools-shared/src/frontend/types';
@@ -805,7 +803,7 @@ export default class Agent extends EventEmitter<{
   };
 
   updateConsolePatchSettings: (
-    settings: $ReadOnly<ConsolePatchSettings>,
+    settings: $ReadOnly<DevToolsHookSettings>,
   ) => void = settings => {
     // Propagate the settings, so Backend can subscribe to it and modify hook
     this.emit('updateHookSettings', {
@@ -814,12 +812,6 @@ export default class Agent extends EventEmitter<{
       showInlineWarningsAndErrors: settings.showInlineWarningsAndErrors,
       hideConsoleLogsInStrictMode: settings.hideConsoleLogsInStrictMode,
     });
-
-    // If the frontend preferences have changed,
-    // or in the case of React Native- if the backend is just finding out the preferences-
-    // then reinstall the console overrides.
-    // It's safe to call `patchConsole` multiple times.
-    patchConsole(settings);
   };
 
   updateComponentFilters: (componentFilters: Array<ComponentFilter>) => void =

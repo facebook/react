@@ -72,12 +72,6 @@ import {
 } from '../../constants';
 import {inspectHooksOfFiber} from 'react-debug-tools';
 import {
-  patchConsoleUsingWindowValues,
-  registerRenderer as registerRendererWithConsole,
-  patchForStrictMode as patchConsoleForStrictMode,
-  unpatchForStrictMode as unpatchConsoleForStrictMode,
-} from '../console';
-import {
   CONCURRENT_MODE_NUMBER,
   CONCURRENT_MODE_SYMBOL_STRING,
   DEPRECATED_ASYNC_MODE_SYMBOL_STRING,
@@ -1197,16 +1191,6 @@ export function attach(
     // handlePostCommitFiberRoot again to ensure that we flush the changes after passive.
     needsToFlushComponentLogs = true;
   }
-
-  // Patching the console enables DevTools to do a few useful things:
-  // * Append component stacks to warnings and error messages
-  // * Disable logging during re-renders to inspect hooks (see inspectHooksOfFiber)
-  registerRendererWithConsole(onErrorOrWarning, getComponentStack);
-
-  // The renderer interface can't read these preferences directly,
-  // because it is stored in localStorage within the context of the extension.
-  // It relies on the extension to pass the preference through via the global.
-  patchConsoleUsingWindowValues();
 
   function debug(
     name: string,
@@ -5788,7 +5772,6 @@ export function attach(
     hasElementWithId,
     inspectElement,
     logElementToConsole,
-    patchConsoleForStrictMode,
     getComponentStack,
     getElementAttributeByPath,
     getElementSourceFunctionById,
@@ -5803,7 +5786,6 @@ export function attach(
     startProfiling,
     stopProfiling,
     storeAsGlobal,
-    unpatchConsoleForStrictMode,
     updateComponentFilters,
     getEnvironmentNames,
   };

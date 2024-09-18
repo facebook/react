@@ -404,7 +404,6 @@ export type RendererInterface = {
     path: Array<string | number>,
     value: any,
   ) => void,
-  patchConsoleForStrictMode: () => void,
   getElementAttributeByPath: (
     id: number,
     path: Array<string | number>,
@@ -427,7 +426,6 @@ export type RendererInterface = {
     path: Array<string | number>,
     count: number,
   ) => void,
-  unpatchConsoleForStrictMode: () => void,
   updateComponentFilters: (componentFilters: Array<ComponentFilter>) => void,
   getEnvironmentNames: () => Array<string>,
 
