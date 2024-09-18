@@ -534,6 +534,3 @@ export type DevToolsHookSettings = {
   showInlineWarningsAndErrors: boolean,
   hideConsoleLogsInStrictMode: boolean,
 };
-
-// Will be removed together with console patching from backend/console.js to hook.js
-export type ConsolePatchSettings = DevToolsHookSettings;
