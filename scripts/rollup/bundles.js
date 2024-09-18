@@ -183,6 +183,7 @@ const bundles = [
     wrapWithModuleBoundaries: true,
     externals: ['react'],
   },
+
   /******* React DOM Client *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
@@ -204,7 +205,8 @@ const bundles = [
     wrapWithModuleBoundaries: true,
     externals: ['react', 'react-dom'],
   },
-  /******* React DOM FB *******/
+
+  /******* React DOM (www) *******/
   {
     bundleTypes: [FB_WWW_DEV, FB_WWW_PROD, FB_WWW_PROFILING],
     moduleType: RENDERER,
@@ -213,6 +215,50 @@ const bundles = [
     minifyWithProdErrorCodes: true,
     wrapWithModuleBoundaries: true,
     externals: ['react'],
+  },
+
+  /******* React DOM (fbsource) *******/
+  {
+    bundleTypes: [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING],
+    moduleType: RENDERER,
+    entry: 'react-dom',
+    global: 'ReactDOM',
+    minifyWithProdErrorCodes: true,
+    wrapWithModuleBoundaries: false,
+    externals: ['react', 'ReactNativeInternalFeatureFlags'],
+  },
+
+  /******* React DOM Client (fbsource) *******/
+  {
+    bundleTypes: [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING],
+    moduleType: RENDERER,
+    entry: 'react-dom/client',
+    global: 'ReactDOMClient',
+    minifyWithProdErrorCodes: true,
+    wrapWithModuleBoundaries: false,
+    externals: ['react', 'react-dom', 'ReactNativeInternalFeatureFlags'],
+  },
+
+  /******* React DOM Profiling (fbsource) *******/
+  {
+    bundleTypes: [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING],
+    moduleType: RENDERER,
+    entry: 'react-dom/profiling',
+    global: 'ReactDOMProfiling',
+    minifyWithProdErrorCodes: true,
+    wrapWithModuleBoundaries: true,
+    externals: ['react', 'react-dom', 'ReactNativeInternalFeatureFlags'],
+  },
+
+  /******* React DOM Test Utils (fbsource) *******/
+  {
+    moduleType: RENDERER_UTILS,
+    bundleTypes: [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING],
+    entry: 'react-dom/test-utils',
+    global: 'ReactDOMTestUtils',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react', 'react-dom', 'ReactNativeInternalFeatureFlags'],
   },
 
   /******* React DOM React Server *******/
