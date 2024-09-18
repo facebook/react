@@ -41,6 +41,7 @@ import {
   constantPropagation,
   deadCodeElimination,
   pruneMaybeThrows,
+  inlineJsxTransform,
 } from '../Optimization';
 import {instructionReordering} from '../Optimization/InstructionReordering';
 import {
@@ -347,6 +348,15 @@ function* runWithEnvironment(
     yield log({
       kind: 'hir',
       name: 'PropagateScopeDependenciesHIR',
+      value: hir,
+    });
+  }
+
+  if (env.config.enableInlineJsxTransform) {
+    inlineJsxTransform(hir);
+    yield log({
+      kind: 'hir',
+      name: 'inlineJsxTransform',
       value: hir,
     });
   }
