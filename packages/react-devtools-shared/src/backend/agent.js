@@ -37,11 +37,9 @@ import type {
   RendererID,
   RendererInterface,
   ConsolePatchSettings,
+  DevToolsHookSettings,
 } from './types';
-import type {
-  ComponentFilter,
-  BrowserTheme,
-} from 'react-devtools-shared/src/frontend/types';
+import type {ComponentFilter} from 'react-devtools-shared/src/frontend/types';
 import {isSynchronousXHRSupported, isReactNativeEnvironment} from './utils';
 
 const debug = (methodName: string, ...args: Array<string>) => {
@@ -153,6 +151,7 @@ export default class Agent extends EventEmitter<{
   drawTraceUpdates: [Array<HostInstance>],
   disableTraceUpdates: [],
   getIfHasUnsupportedRendererVersion: [],
+  updateHookSettings: [DevToolsHookSettings],
 }> {
   _bridge: BackendBridge;
   _isProfiling: boolean = false;
@@ -805,30 +804,22 @@ export default class Agent extends EventEmitter<{
     }
   };
 
-  updateConsolePatchSettings: ({
-    appendComponentStack: boolean,
-    breakOnConsoleErrors: boolean,
-    browserTheme: BrowserTheme,
-    hideConsoleLogsInStrictMode: boolean,
-    showInlineWarningsAndErrors: boolean,
-  }) => void = ({
-    appendComponentStack,
-    breakOnConsoleErrors,
-    showInlineWarningsAndErrors,
-    hideConsoleLogsInStrictMode,
-    browserTheme,
-  }: ConsolePatchSettings) => {
+  updateConsolePatchSettings: (
+    settings: $ReadOnly<ConsolePatchSettings>,
+  ) => void = settings => {
+    // Propagate the settings, so Backend can subscribe to it and modify hook
+    this.emit('updateHookSettings', {
+      appendComponentStack: settings.appendComponentStack,
+      breakOnConsoleErrors: settings.breakOnConsoleErrors,
+      showInlineWarningsAndErrors: settings.showInlineWarningsAndErrors,
+      hideConsoleLogsInStrictMode: settings.hideConsoleLogsInStrictMode,
+    });
+
     // If the frontend preferences have changed,
     // or in the case of React Native- if the backend is just finding out the preferences-
     // then reinstall the console overrides.
     // It's safe to call `patchConsole` multiple times.
-    patchConsole({
-      appendComponentStack,
-      breakOnConsoleErrors,
-      showInlineWarningsAndErrors,
-      hideConsoleLogsInStrictMode,
-      browserTheme,
-    });
+    patchConsole(settings);
   };
 
   updateComponentFilters: (componentFilters: Array<ComponentFilter>) => void =

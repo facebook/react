@@ -15,6 +15,7 @@ import type {
   RendererID,
   RendererInterface,
   DevToolsBackend,
+  DevToolsHookSettings,
 } from './backend/types';
 
 import {
@@ -25,7 +26,12 @@ import attachRenderer from './attachRenderer';
 
 declare var window: any;
 
-export function installHook(target: any): DevToolsHook | null {
+export function installHook(
+  target: any,
+  maybeSettingsOrSettingsPromise?:
+    | DevToolsHookSettings
+    | Promise<DevToolsHookSettings>,
+): DevToolsHook | null {
   if (target.hasOwnProperty('__REACT_DEVTOOLS_GLOBAL_HOOK__')) {
     return null;
   }
@@ -565,6 +571,26 @@ export function installHook(target: any): DevToolsHook | null {
     registerInternalModuleStart,
     registerInternalModuleStop,
   };
+
+  if (maybeSettingsOrSettingsPromise == null) {
+    // Set default settings
+    hook.settings = {
+      appendComponentStack: true,
+      breakOnConsoleErrors: false,
+      showInlineWarningsAndErrors: true,
+      hideConsoleLogsInStrictMode: false,
+    };
+  } else {
+    Promise.resolve(maybeSettingsOrSettingsPromise)
+      .then(settings => {
+        hook.settings = settings;
+      })
+      .catch(() => {
+        targetConsole.error(
+          "React DevTools failed to get Console Patching settings. Console won't be patched and some console features will not work.",
+        );
+      });
+  }
 
   if (__TEST__) {
     hook.dangerous_setTargetConsoleForTesting =
