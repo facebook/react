@@ -96,6 +96,7 @@ export default class Store extends EventEmitter<{
   componentFilters: [],
   error: [Error],
   hookSettings: [$ReadOnly<DevToolsHookSettings>],
+  settingsUpdated: [$ReadOnly<DevToolsHookSettings>],
   mutated: [[Array<number>, Map<number, number>]],
   recordChangeDescriptions: [],
   roots: [],
@@ -1519,7 +1520,9 @@ export default class Store extends EventEmitter<{
   updateHookSettings: (settings: $ReadOnly<DevToolsHookSettings>) => void =
     settings => {
       this._hookSettings = settings;
+
       this._bridge.send('updateHookSettings', settings);
+      this.emit('settingsUpdated', settings);
     };
 
   onHookSettings: (settings: $ReadOnly<DevToolsHookSettings>) => void =

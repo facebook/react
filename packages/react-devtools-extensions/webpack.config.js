@@ -56,6 +56,7 @@ module.exports = {
     proxy: './src/contentScripts/proxy.js',
     prepareInjection: './src/contentScripts/prepareInjection.js',
     installHook: './src/contentScripts/installHook.js',
+    hookSettingsInjector: './src/contentScripts/hookSettingsInjector.js',
   },
   output: {
     path: __dirname + '/build',

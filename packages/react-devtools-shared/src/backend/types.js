@@ -524,7 +524,7 @@ export type DevToolsHook = {
   // Testing
   dangerous_setTargetConsoleForTesting?: (fakeConsole: Object) => void,
 
-  settings?: DevToolsHookSettings,
+  settings?: $ReadOnly<DevToolsHookSettings>,
   ...
 };
 
