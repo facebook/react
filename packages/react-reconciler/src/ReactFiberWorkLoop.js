@@ -129,7 +129,6 @@ import {
   DidDefer,
   ShouldSuspendCommit,
   MaySuspendCommit,
-  ScheduleRetry,
 } from './ReactFiberFlags';
 import {
   NoLanes,
@@ -369,11 +368,8 @@ let workInProgressRootInterleavedUpdatedLanes: Lanes = NoLanes;
 let workInProgressRootRenderPhaseUpdatedLanes: Lanes = NoLanes;
 // Lanes that were pinged (in an interleaved event) during this render.
 let workInProgressRootPingedLanes: Lanes = NoLanes;
-// If this render scheduled deferred work, this is the lane of the deferred task.
+// If this lane scheduled deferred work, this is the lane of the deferred task.
 let workInProgressDeferredLane: Lane = NoLane;
-// Represents the retry lanes that were spawned by this render and have not
-// been pinged since, implying that they are still suspended.
-let workInProgressSuspendedRetryLanes: Lanes = NoLanes;
 // Errors that are thrown during the render phase.
 let workInProgressRootConcurrentErrors: Array<CapturedValue<mixed>> | null =
   null;
@@ -999,6 +995,8 @@ export function performConcurrentWorkOnRoot(
 
         // We now have a consistent tree. The next step is either to commit it,
         // or, if something suspended, wait to commit it after a timeout.
+        root.finishedWork = finishedWork;
+        root.finishedLanes = lanes;
         finishConcurrentRender(root, exitStatus, finishedWork, lanes);
       }
       break;
@@ -1148,12 +1146,6 @@ function finishConcurrentRender(
     }
   }
 
-  // Only set these if we have a complete tree that is ready to be committed.
-  // We use these fields to determine later whether or not the work should be
-  // discarded for a fresh render attempt.
-  root.finishedWork = finishedWork;
-  root.finishedLanes = lanes;
-
   if (shouldForceFlushFallbacksInDEV()) {
     // We're inside an `act` scope. Commit immediately.
     commitRoot(
@@ -1162,8 +1154,6 @@ function finishConcurrentRender(
       workInProgressTransitions,
       workInProgressRootDidIncludeRecursiveRenderUpdate,
       workInProgressDeferredLane,
-      workInProgressRootInterleavedUpdatedLanes,
-      workInProgressSuspendedRetryLanes,
     );
   } else {
     if (
@@ -1206,8 +1196,6 @@ function finishConcurrentRender(
             workInProgressRootDidIncludeRecursiveRenderUpdate,
             lanes,
             workInProgressDeferredLane,
-            workInProgressRootInterleavedUpdatedLanes,
-            workInProgressSuspendedRetryLanes,
             workInProgressRootDidSkipSuspendedSiblings,
           ),
           msUntilTimeout,
@@ -1223,8 +1211,6 @@ function finishConcurrentRender(
       workInProgressRootDidIncludeRecursiveRenderUpdate,
       lanes,
       workInProgressDeferredLane,
-      workInProgressRootInterleavedUpdatedLanes,
-      workInProgressSuspendedRetryLanes,
       workInProgressRootDidSkipSuspendedSiblings,
     );
   }
@@ -1238,8 +1224,6 @@ function commitRootWhenReady(
   didIncludeRenderPhaseUpdate: boolean,
   lanes: Lanes,
   spawnedLane: Lane,
-  updatedLanes: Lanes,
-  suspendedRetryLanes: Lanes,
   didSkipSuspendedSiblings: boolean,
 ) {
   // TODO: Combine retry throttling with Suspensey commits. Right now they run
@@ -1278,9 +1262,6 @@ function commitRootWhenReady(
           recoverableErrors,
           transitions,
           didIncludeRenderPhaseUpdate,
-          spawnedLane,
-          updatedLanes,
-          suspendedRetryLanes,
         ),
       );
       markRootSuspended(root, lanes, spawnedLane, didSkipSuspendedSiblings);
@@ -1288,15 +1269,13 @@ function commitRootWhenReady(
     }
   }
 
-  // Otherwise, commit immediately.;
+  // Otherwise, commit immediately.
   commitRoot(
     root,
     recoverableErrors,
     transitions,
     didIncludeRenderPhaseUpdate,
     spawnedLane,
-    updatedLanes,
-    suspendedRetryLanes,
   );
 }
 
@@ -1306,13 +1285,7 @@ function isRenderConsistentWithExternalStores(finishedWork: Fiber): boolean {
   // loop instead of recursion so we can exit early.
   let node: Fiber = finishedWork;
   while (true) {
-    const tag = node.tag;
-    if (
-      (tag === FunctionComponent ||
-        tag === ForwardRef ||
-        tag === SimpleMemoComponent) &&
-      node.flags & StoreConsistency
-    ) {
+    if (node.flags & StoreConsistency) {
       const updateQueue: FunctionComponentUpdateQueue | null =
         (node.updateQueue: any);
       if (updateQueue !== null) {
@@ -1503,8 +1476,6 @@ export function performSyncWorkOnRoot(root: FiberRoot, lanes: Lanes): null {
     workInProgressTransitions,
     workInProgressRootDidIncludeRecursiveRenderUpdate,
     workInProgressDeferredLane,
-    workInProgressRootInterleavedUpdatedLanes,
-    workInProgressSuspendedRetryLanes,
   );
 
   // Before exiting, make sure there's a callback scheduled for the next
@@ -1732,7 +1703,6 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   workInProgressRootRenderPhaseUpdatedLanes = NoLanes;
   workInProgressRootPingedLanes = NoLanes;
   workInProgressDeferredLane = NoLane;
-  workInProgressSuspendedRetryLanes = NoLanes;
   workInProgressRootConcurrentErrors = null;
   workInProgressRootRecoverableErrors = null;
   workInProgressRootDidIncludeRecursiveRenderUpdate = false;
@@ -2146,10 +2116,9 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
           }
           default: {
             // Unwind then continue with the normal work loop.
-            const reason = workInProgressSuspendedReason;
             workInProgressSuspendedReason = NotSuspended;
             workInProgressThrownValue = null;
-            throwAndUnwindWorkLoop(root, unitOfWork, thrownValue, reason);
+            throwAndUnwindWorkLoop(root, unitOfWork, thrownValue);
             break;
           }
         }
@@ -2242,14 +2211,6 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
     workInProgressTransitions = getTransitionsForLanes(root, lanes);
     resetRenderTimer();
     prepareFreshStack(root, lanes);
-  } else {
-    // This is a continuation of an existing work-in-progress.
-    //
-    // If we were previously in prerendering mode, check if we received any new
-    // data during an interleaved event.
-    if (workInProgressRootIsPrerendering) {
-      workInProgressRootIsPrerendering = checkIfRootIsPrerendering(root, lanes);
-    }
   }
 
   if (__DEV__) {
@@ -2277,12 +2238,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             // Unwind then continue with the normal work loop.
             workInProgressSuspendedReason = NotSuspended;
             workInProgressThrownValue = null;
-            throwAndUnwindWorkLoop(
-              root,
-              unitOfWork,
-              thrownValue,
-              SuspendedOnError,
-            );
+            throwAndUnwindWorkLoop(root, unitOfWork, thrownValue);
             break;
           }
           case SuspendedOnData: {
@@ -2340,12 +2296,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
               // Otherwise, unwind then continue with the normal work loop.
               workInProgressSuspendedReason = NotSuspended;
               workInProgressThrownValue = null;
-              throwAndUnwindWorkLoop(
-                root,
-                unitOfWork,
-                thrownValue,
-                SuspendedAndReadyToContinue,
-              );
+              throwAndUnwindWorkLoop(root, unitOfWork, thrownValue);
             }
             break;
           }
@@ -2408,12 +2359,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             // Otherwise, unwind then continue with the normal work loop.
             workInProgressSuspendedReason = NotSuspended;
             workInProgressThrownValue = null;
-            throwAndUnwindWorkLoop(
-              root,
-              unitOfWork,
-              thrownValue,
-              SuspendedOnInstanceAndReadyToContinue,
-            );
+            throwAndUnwindWorkLoop(root, unitOfWork, thrownValue);
             break;
           }
           case SuspendedOnDeprecatedThrowPromise: {
@@ -2423,12 +2369,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             // always unwind.
             workInProgressSuspendedReason = NotSuspended;
             workInProgressThrownValue = null;
-            throwAndUnwindWorkLoop(
-              root,
-              unitOfWork,
-              thrownValue,
-              SuspendedOnDeprecatedThrowPromise,
-            );
+            throwAndUnwindWorkLoop(root, unitOfWork, thrownValue);
             break;
           }
           case SuspendedOnHydration: {
@@ -2682,7 +2623,6 @@ function throwAndUnwindWorkLoop(
   root: FiberRoot,
   unitOfWork: Fiber,
   thrownValue: mixed,
-  suspendedReason: SuspendedReason,
 ) {
   // This is a fork of performUnitOfWork specifcally for unwinding a fiber
   // that threw an exception.
@@ -2730,43 +2670,16 @@ function throwAndUnwindWorkLoop(
         // The current algorithm for both hydration and error handling assumes
         // that the tree is rendered sequentially. So we always skip the siblings.
         getIsHydrating() ||
-        suspendedReason === SuspendedOnError
+        workInProgressSuspendedReason === SuspendedOnError
       ) {
         skipSiblings = true;
         // We intentionally don't set workInProgressRootDidSkipSuspendedSiblings,
         // because we don't want to trigger another prerender attempt.
-      } else if (
-        // Check whether this is a prerender
-        !workInProgressRootIsPrerendering &&
-        // Offscreen rendering is also a form of speculative rendering
-        !includesSomeLane(workInProgressRootRenderLanes, OffscreenLane)
-      ) {
+      } else if (!workInProgressRootIsPrerendering) {
         // This is not a prerender. Skip the siblings during this render. A
         // separate prerender will be scheduled for later.
         skipSiblings = true;
         workInProgressRootDidSkipSuspendedSiblings = true;
-
-        // Because we're skipping the siblings, schedule an immediate retry of
-        // this boundary.
-        //
-        // The reason we do this is because a prerender is only scheduled when
-        // the root is blocked from committing, i.e. RootSuspendedWithDelay.
-        // When the root is not blocked, as in the case when we render a
-        // fallback, the original lane is considered to be finished, and
-        // therefore no longer in need of being prerendered. However, there's
-        // still a pending retry that will happen once the data streams in.
-        // We should start rendering that even before the data streams in so we
-        // can prerender the siblings.
-        if (
-          suspendedReason === SuspendedOnData ||
-          suspendedReason === SuspendedOnImmediate ||
-          suspendedReason === SuspendedOnDeprecatedThrowPromise
-        ) {
-          const boundary = getSuspenseHandler();
-          if (boundary !== null && boundary.tag === SuspenseComponent) {
-            boundary.flags |= ScheduleRetry;
-          }
-        }
       } else {
         // This is a prerender. Don't skip the siblings.
         skipSiblings = false;
@@ -2785,16 +2698,6 @@ function throwAndUnwindWorkLoop(
     // this particular path is how that would be implemented.
     completeUnitOfWork(unitOfWork);
   }
-}
-
-export function markSpawnedRetryLane(lane: Lane): void {
-  // Keep track of the retry lanes that were spawned by a fallback during the
-  // current render and were not later pinged. This will represent the lanes
-  // that are known to still be suspended.
-  workInProgressSuspendedRetryLanes = mergeLanes(
-    workInProgressSuspendedRetryLanes,
-    lane,
-  );
 }
 
 function panicOnRootError(root: FiberRoot, error: mixed) {
@@ -2962,8 +2865,6 @@ function commitRoot(
   transitions: Array<Transition> | null,
   didIncludeRenderPhaseUpdate: boolean,
   spawnedLane: Lane,
-  updatedLanes: Lanes,
-  suspendedRetryLanes: Lanes,
 ) {
   // TODO: This no longer makes any sense. We already wrap the mutation and
   // layout phases. Should be able to remove.
@@ -2979,8 +2880,6 @@ function commitRoot(
       didIncludeRenderPhaseUpdate,
       previousUpdateLanePriority,
       spawnedLane,
-      updatedLanes,
-      suspendedRetryLanes,
     );
   } finally {
     ReactSharedInternals.T = prevTransition;
@@ -2997,8 +2896,6 @@ function commitRootImpl(
   didIncludeRenderPhaseUpdate: boolean,
   renderPriorityLevel: EventPriority,
   spawnedLane: Lane,
-  updatedLanes: Lanes,
-  suspendedRetryLanes: Lanes,
 ) {
   do {
     // `flushPassiveEffects` will call `flushSyncUpdateQueue` at the end, which
@@ -3075,14 +2972,7 @@ function commitRootImpl(
   const concurrentlyUpdatedLanes = getConcurrentlyUpdatedLanes();
   remainingLanes = mergeLanes(remainingLanes, concurrentlyUpdatedLanes);
 
-  markRootFinished(
-    root,
-    lanes,
-    remainingLanes,
-    spawnedLane,
-    updatedLanes,
-    suspendedRetryLanes,
-  );
+  markRootFinished(root, remainingLanes, spawnedLane);
 
   // Reset this before firing side effects so we can detect recursive updates.
   didIncludeCommitPhaseUpdate = false;
@@ -3774,17 +3664,6 @@ function pingSuspendedRoot(
         workInProgressRootPingedLanes,
         pingedLanes,
       );
-    }
-
-    // If something pings the work-in-progress render, any work that suspended
-    // up to this point may now be unblocked; in other words, no
-    // longer suspended.
-    //
-    // Unlike the broader check above, we only need do this if the lanes match
-    // exactly. If the lanes don't exactly match, that implies the promise
-    // was created by an older render.
-    if (workInProgressSuspendedRetryLanes === workInProgressRootRenderLanes) {
-      workInProgressSuspendedRetryLanes = NoLanes;
     }
   }
 

@@ -187,26 +187,12 @@ describe('DebugTracing', () => {
       `group: ⚛ render (${DEFAULT_LANE_STRING})`,
       'log: ⚛ Example suspended',
       `groupEnd: ⚛ render (${DEFAULT_LANE_STRING})`,
-
-      ...(gate('enableSiblingPrerendering')
-        ? [
-            `group: ⚛ render (${RETRY_LANE_STRING})`,
-            'log: ⚛ Example suspended',
-            `groupEnd: ⚛ render (${RETRY_LANE_STRING})`,
-          ]
-        : []),
     ]);
 
     logs.splice(0);
 
     await act(async () => await resolveFakeSuspensePromise());
-    expect(logs).toEqual([
-      'log: ⚛ Example resolved',
-
-      ...(gate('enableSiblingPrerendering')
-        ? ['log: ⚛ Example resolved']
-        : []),
-    ]);
+    expect(logs).toEqual(['log: ⚛ Example resolved']);
   });
 
   // @gate experimental && build === 'development' && enableDebugTracing && enableCPUSuspense

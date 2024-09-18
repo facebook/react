@@ -1459,23 +1459,13 @@ describe('ReactDOMForm', () => {
         </Suspense>,
       ),
     );
-    assertLog([
-      'Suspend! [Count: 0]',
-      'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Count: 0]'] : []),
-    ]);
+    assertLog(['Suspend! [Count: 0]', 'Loading...']);
     await act(() => resolveText('Count: 0'));
     assertLog(['Count: 0']);
 
     // Dispatch outside of a transition. This will trigger a loading state.
     await act(() => dispatch());
-    assertLog([
-      'Suspend! [Count: 1]',
-      'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Count: 1]'] : []),
-    ]);
+    assertLog(['Suspend! [Count: 1]', 'Loading...']);
     expect(container.textContent).toBe('Loading...');
 
     await act(() => resolveText('Count: 1'));

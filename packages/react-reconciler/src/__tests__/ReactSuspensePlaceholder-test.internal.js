@@ -135,13 +135,7 @@ describe('ReactSuspensePlaceholder', () => {
     // Initial mount
     ReactNoop.render(<App middleText="B" />);
 
-    await waitForAll([
-      'A',
-      'Suspend! [B]',
-      'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['A', 'Suspend! [B]', 'C'] : []),
-    ]);
+    await waitForAll(['A', 'Suspend! [B]', 'Loading...']);
     expect(ReactNoop).toMatchRenderedOutput('Loading...');
 
     await act(() => jest.advanceTimersByTime(1000));
@@ -157,12 +151,7 @@ describe('ReactSuspensePlaceholder', () => {
 
     // Update
     ReactNoop.render(<App middleText="B2" />);
-    await waitForAll([
-      'Suspend! [B2]',
-      'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [B2]', 'C'] : []),
-    ]);
+    await waitForAll(['Suspend! [B2]', 'Loading...']);
 
     // Time out the update
     jest.advanceTimersByTime(750);
@@ -205,13 +194,7 @@ describe('ReactSuspensePlaceholder', () => {
     // Initial mount
     ReactNoop.render(<App middleText="B" />);
 
-    await waitForAll([
-      'A',
-      'Suspend! [B]',
-      'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['A', 'Suspend! [B]', 'C'] : []),
-    ]);
+    await waitForAll(['A', 'Suspend! [B]', 'Loading...']);
 
     expect(ReactNoop).not.toMatchRenderedOutput('ABC');
 
@@ -221,13 +204,7 @@ describe('ReactSuspensePlaceholder', () => {
 
     // Update
     ReactNoop.render(<App middleText="B2" />);
-    await waitForAll([
-      'A',
-      'Suspend! [B2]',
-      'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['A', 'Suspend! [B2]', 'C'] : []),
-    ]);
+    await waitForAll(['A', 'Suspend! [B2]', 'Loading...']);
     // Time out the update
     jest.advanceTimersByTime(750);
     await waitForAll([]);
@@ -260,13 +237,7 @@ describe('ReactSuspensePlaceholder', () => {
     // Initial mount
     ReactNoop.render(<App middleText="b" />);
 
-    await waitForAll([
-      'a',
-      'Suspend! [b]',
-      'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['a', 'Suspend! [b]', 'c'] : []),
-    ]);
+    await waitForAll(['a', 'Suspend! [b]', 'Loading...']);
 
     expect(ReactNoop).toMatchRenderedOutput(<uppercase>LOADING...</uppercase>);
 
@@ -276,13 +247,7 @@ describe('ReactSuspensePlaceholder', () => {
 
     // Update
     ReactNoop.render(<App middleText="b2" />);
-    await waitForAll([
-      'a',
-      'Suspend! [b2]',
-      'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['a', 'Suspend! [b2]', 'c'] : []),
-    ]);
+    await waitForAll(['a', 'Suspend! [b2]', 'Loading...']);
     // Time out the update
     jest.advanceTimersByTime(750);
     await waitForAll([]);
@@ -375,10 +340,6 @@ describe('ReactSuspensePlaceholder', () => {
           'Suspending',
           'Suspend! [Loaded]',
           'Fallback',
-
-          ...(gate('enableSiblingPrerendering')
-            ? ['Suspending', 'Suspend! [Loaded]', 'Text']
-            : []),
         ]);
         // Since this is initial render we immediately commit the fallback. Another test below
         // deals with the update case where this suspends.
@@ -400,22 +361,12 @@ describe('ReactSuspensePlaceholder', () => {
           'Text',
         ]);
         expect(ReactNoop).toMatchRenderedOutput('LoadedText');
+        expect(onRender).toHaveBeenCalledTimes(2);
 
-        if (gate('enableSiblingPrerendering')) {
-          expect(onRender).toHaveBeenCalledTimes(3);
-
-          // When the suspending data is resolved and our final UI is rendered,
-          // both times should include the 8ms re-rendering Suspending and AsyncText.
-          expect(onRender.mock.calls[2][2]).toBe(8);
-          expect(onRender.mock.calls[2][3]).toBe(8);
-        } else {
-          expect(onRender).toHaveBeenCalledTimes(2);
-
-          // When the suspending data is resolved and our final UI is rendered,
-          // both times should include the 8ms re-rendering Suspending and AsyncText.
-          expect(onRender.mock.calls[1][2]).toBe(8);
-          expect(onRender.mock.calls[1][3]).toBe(8);
-        }
+        // When the suspending data is resolved and our final UI is rendered,
+        // both times should include the 8ms re-rendering Suspending and AsyncText.
+        expect(onRender.mock.calls[1][2]).toBe(8);
+        expect(onRender.mock.calls[1][3]).toBe(8);
       });
     });
 
@@ -536,10 +487,6 @@ describe('ReactSuspensePlaceholder', () => {
           'Suspending',
           'Suspend! [Loaded]',
           'Fallback',
-
-          ...(gate('enableSiblingPrerendering')
-            ? ['Suspending', 'Suspend! [Loaded]', 'Text']
-            : []),
         ]);
         // Show the fallback UI.
         expect(ReactNoop).toMatchRenderedOutput('Loading...');
@@ -579,16 +526,9 @@ describe('ReactSuspensePlaceholder', () => {
           'Suspend! [Loaded]',
           'Fallback',
           'Suspend! [Sibling]',
-
-          ...(gate('enableSiblingPrerendering')
-            ? ['Suspending', 'Suspend! [Loaded]', 'New', 'Suspend! [Sibling]']
-            : []),
         ]);
         expect(ReactNoop).toMatchRenderedOutput('Loading...');
-
-        expect(onRender).toHaveBeenCalledTimes(
-          gate('enableSiblingPrerendering') ? 4 : 3,
-        );
+        expect(onRender).toHaveBeenCalledTimes(3);
 
         // Resolve the pending promise.
         await act(async () => {
@@ -599,24 +539,13 @@ describe('ReactSuspensePlaceholder', () => {
           ]);
           await waitForAll(['Suspending', 'Loaded', 'New', 'Sibling']);
         });
+        expect(onRender).toHaveBeenCalledTimes(4);
 
-        if (gate('enableSiblingPrerendering')) {
-          expect(onRender).toHaveBeenCalledTimes(5);
-
-          // When the suspending data is resolved and our final UI is rendered,
-          // both times should include the 6ms rendering Text,
-          // the 2ms rendering Suspending, and the 1ms rendering AsyncText.
-          expect(onRender.mock.calls[4][2]).toBe(9);
-          expect(onRender.mock.calls[4][3]).toBe(9);
-        } else {
-          expect(onRender).toHaveBeenCalledTimes(4);
-
-          // When the suspending data is resolved and our final UI is rendered,
-          // both times should include the 6ms rendering Text,
-          // the 2ms rendering Suspending, and the 1ms rendering AsyncText.
-          expect(onRender.mock.calls[3][2]).toBe(9);
-          expect(onRender.mock.calls[3][3]).toBe(9);
-        }
+        // When the suspending data is resolved and our final UI is rendered,
+        // both times should include the 6ms rendering Text,
+        // the 2ms rendering Suspending, and the 1ms rendering AsyncText.
+        expect(onRender.mock.calls[3][2]).toBe(9);
+        expect(onRender.mock.calls[3][3]).toBe(9);
       });
     });
   });

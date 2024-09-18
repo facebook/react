@@ -192,13 +192,7 @@ test('regression (#20932): return pointer is correct before entering deleted tre
   await act(() => {
     root.render(<App />);
   });
-  assertLog([
-    'Suspend! [0]',
-    'Loading Async...',
-    'Loading Tail...',
-
-    ...(gate('enableSiblingPrerendering') ? ['Suspend! [0]'] : []),
-  ]);
+  assertLog(['Suspend! [0]', 'Loading Async...', 'Loading Tail...']);
   await act(() => {
     resolveText(0);
   });
@@ -211,7 +205,5 @@ test('regression (#20932): return pointer is correct before entering deleted tre
     'Loading Async...',
     'Suspend! [1]',
     'Loading Async...',
-
-    ...(gate('enableSiblingPrerendering') ? ['Suspend! [1]'] : []),
   ]);
 });

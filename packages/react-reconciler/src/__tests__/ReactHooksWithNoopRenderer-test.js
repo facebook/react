@@ -3597,13 +3597,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         ReactNoop.render(<App />);
       });
 
-      assertLog([
-        'A',
-        'Suspend! [A]',
-        'Loading',
-
-        ...(gate('enableSiblingPrerendering') ? ['Suspend! [A]'] : []),
-      ]);
+      assertLog(['A', 'Suspend! [A]', 'Loading']);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
           <span prop="A" />
@@ -4260,7 +4254,13 @@ describe('ReactHooksWithNoopRenderer', () => {
     await act(async () => {
       await resolveText('A');
     });
-    assertLog(['Promise resolved [A]', 'A', 'Suspend! [B]']);
+    assertLog([
+      'Promise resolved [A]',
+      'A',
+      'Suspend! [B]',
+
+      ...(gate('enableSiblingPrerendering') ? ['A', 'Suspend! [B]'] : []),
+    ]);
 
     await act(() => {
       root.render(null);

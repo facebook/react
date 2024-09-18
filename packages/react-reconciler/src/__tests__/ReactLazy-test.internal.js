@@ -198,7 +198,11 @@ describe('ReactLazy', () => {
 
     await resolveFakeImport(Foo);
 
-    await waitForAll(['Foo']);
+    await waitForAll([
+      'Foo',
+
+      ...(gate('enableSiblingPrerendering') ? ['Foo'] : []),
+    ]);
     expect(root).not.toMatchRenderedOutput('FooBar');
 
     await act(() => resolveFakeImport(Bar));
@@ -235,6 +239,13 @@ describe('ReactLazy', () => {
     assertConsoleErrorDev([
       'Expected the result of a dynamic import() call',
       'Expected the result of a dynamic import() call',
+
+      ...(gate('enableSiblingPrerendering')
+        ? [
+            'Expected the result of a dynamic import() call',
+            'Expected the result of a dynamic import() call',
+          ]
+        : []),
     ]);
     expect(root).not.toMatchRenderedOutput('Hi');
   });
@@ -309,12 +320,7 @@ describe('ReactLazy', () => {
       unstable_isConcurrent: true,
     });
 
-    await waitForAll([
-      'Suspend! [LazyChildA]',
-      'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Suspend! [LazyChildB]'] : []),
-    ]);
+    await waitForAll(['Suspend! [LazyChildA]', 'Loading...']);
     expect(root).not.toMatchRenderedOutput('AB');
 
     await act(async () => {
@@ -323,23 +329,9 @@ describe('ReactLazy', () => {
       // B suspends even though it happens to share the same import as A.
       // TODO: React.lazy should implement the `status` and `value` fields, so
       // we can unwrap the result synchronously if it already loaded. Like `use`.
-      await waitFor([
-        'A',
-
-        // When enableSiblingPrerendering is on, LazyChildB was already
-        // initialized. So it also already resolved when we called
-        // resolveFakeImport above. So it doesn't suspend again.
-        ...(gate('enableSiblingPrerendering')
-          ? ['B']
-          : ['Suspend! [LazyChildB]']),
-      ]);
+      await waitFor(['A', 'Suspend! [LazyChildB]']);
     });
-    assertLog([
-      ...(gate('enableSiblingPrerendering') ? [] : ['A', 'B']),
-
-      'Did mount: A',
-      'Did mount: B',
-    ]);
+    assertLog(['A', 'B', 'Did mount: A', 'Did mount: B']);
     expect(root).toMatchRenderedOutput('AB');
 
     // Swap the position of A and B
@@ -1403,20 +1395,15 @@ describe('ReactLazy', () => {
       unstable_isConcurrent: true,
     });
 
-    await waitForAll([
-      'Init A',
-      'Loading...',
-
-      ...(gate('enableSiblingPrerendering') ? ['Init B'] : []),
-    ]);
+    await waitForAll(['Init A', 'Loading...']);
     expect(root).not.toMatchRenderedOutput('AB');
 
     await act(() => resolveFakeImport(ChildA));
     assertLog([
       'A',
+      'Init B',
 
-      // When enableSiblingPrerendering is on, B was already initialized.
-      ...(gate('enableSiblingPrerendering') ? ['A'] : ['Init B']),
+      ...(gate('enableSiblingPrerendering') ? ['A'] : []),
     ]);
 
     await act(() => resolveFakeImport(ChildB));
