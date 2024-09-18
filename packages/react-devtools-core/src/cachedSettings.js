@@ -9,7 +9,7 @@
 
 import type {ConsolePatchSettings} from 'react-devtools-shared/src/backend/types';
 import {writeConsolePatchSettingsToWindow} from 'react-devtools-shared/src/backend/console';
-import {castBool, castBrowserTheme} from 'react-devtools-shared/src/utils';
+import {castBool} from 'react-devtools-shared/src/utils';
 
 // Note: all keys should be optional in this type, because users can use newer
 // versions of React DevTools with older versions of React Native, and the object
@@ -54,14 +54,13 @@ function parseConsolePatchSettings(
     breakOnConsoleErrors,
     showInlineWarningsAndErrors,
     hideConsoleLogsInStrictMode,
-    browserTheme,
   } = parsedValue;
+
   return {
     appendComponentStack: castBool(appendComponentStack) ?? true,
     breakOnConsoleErrors: castBool(breakOnConsoleErrors) ?? false,
     showInlineWarningsAndErrors: castBool(showInlineWarningsAndErrors) ?? true,
     hideConsoleLogsInStrictMode: castBool(hideConsoleLogsInStrictMode) ?? false,
-    browserTheme: castBrowserTheme(browserTheme) ?? 'dark',
   };
 }
 
