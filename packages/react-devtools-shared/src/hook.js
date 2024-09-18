@@ -655,6 +655,8 @@ export function installHook(
     Promise.resolve(maybeSettingsOrSettingsPromise)
       .then(settings => {
         hook.settings = settings;
+        hook.emit('settingsInitialized', settings);
+
         patchConsoleForErrorsAndWarnings();
       })
       .catch(() => {

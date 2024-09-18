@@ -66,7 +66,7 @@ function parseConsolePatchSettings(
 
 export function cacheConsolePatchSettings(
   devToolsSettingsManager: DevToolsSettingsManager,
-  value: ConsolePatchSettings,
+  value: $ReadOnly<ConsolePatchSettings>,
 ): void {
   if (devToolsSettingsManager.setConsolePatchSettings == null) {
     return;

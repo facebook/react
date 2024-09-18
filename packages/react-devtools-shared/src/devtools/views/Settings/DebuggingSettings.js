@@ -8,22 +8,49 @@
  */
 
 import * as React from 'react';
-import {useContext} from 'react';
-import {SettingsContext} from './SettingsContext';
+import {use, useState, useEffect} from 'react';
+
+import type {DevToolsHookSettings} from 'react-devtools-shared/src/backend/types';
+import type Store from 'react-devtools-shared/src/devtools/store';
 
 import styles from './SettingsShared.css';
 
-export default function DebuggingSettings(_: {}): React.Node {
-  const {
+type Props = {
+  hookSettings: Promise<$ReadOnly<DevToolsHookSettings>>,
+  store: Store,
+};
+
+export default function DebuggingSettings({
+  hookSettings,
+  store,
+}: Props): React.Node {
+  const usedHookSettings = use(hookSettings);
+
+  const [appendComponentStack, setAppendComponentStack] = useState(
+    usedHookSettings.appendComponentStack,
+  );
+  const [breakOnConsoleErrors, setBreakOnConsoleErrors] = useState(
+    usedHookSettings.breakOnConsoleErrors,
+  );
+  const [hideConsoleLogsInStrictMode, setHideConsoleLogsInStrictMode] =
+    useState(usedHookSettings.hideConsoleLogsInStrictMode);
+  const [showInlineWarningsAndErrors, setShowInlineWarningsAndErrors] =
+    useState(usedHookSettings.showInlineWarningsAndErrors);
+
+  useEffect(() => {
+    store.updateHookSettings({
+      appendComponentStack,
+      breakOnConsoleErrors,
+      showInlineWarningsAndErrors,
+      hideConsoleLogsInStrictMode,
+    });
+  }, [
+    store,
     appendComponentStack,
     breakOnConsoleErrors,
-    hideConsoleLogsInStrictMode,
-    setAppendComponentStack,
-    setBreakOnConsoleErrors,
-    setShowInlineWarningsAndErrors,
     showInlineWarningsAndErrors,
-    setHideConsoleLogsInStrictMode,
-  } = useContext(SettingsContext);
+    hideConsoleLogsInStrictMode,
+  ]);
 
   return (
     <div className={styles.Settings}>

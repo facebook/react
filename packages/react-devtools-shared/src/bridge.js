@@ -207,6 +207,8 @@ export type BackendEvents = {
     {isSupported: boolean, validAttributes: ?$ReadOnlyArray<string>},
   ],
   NativeStyleEditor_styleAndLayout: [StyleAndLayoutPayload],
+
+  hookSettings: [$ReadOnly<DevToolsHookSettings>],
 };
 
 type FrontendEvents = {
@@ -241,7 +243,7 @@ type FrontendEvents = {
   storeAsGlobal: [StoreAsGlobalParams],
   updateComponentFilters: [Array<ComponentFilter>],
   getEnvironmentNames: [],
-  updateConsolePatchSettings: [DevToolsHookSettings],
+  updateHookSettings: [$ReadOnly<DevToolsHookSettings>],
   viewAttributeSource: [ViewAttributeSourceParams],
   viewElementSource: [ElementAndRendererID],
 
@@ -267,6 +269,8 @@ type FrontendEvents = {
 
   resumeElementPolling: [],
   pauseElementPolling: [],
+
+  getHookSettings: [],
 };
 
 class Bridge<
