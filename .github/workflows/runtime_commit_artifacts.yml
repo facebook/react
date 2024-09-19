@@ -125,7 +125,7 @@ jobs:
           mv build/react-native/shims/ $BASE_FOLDER/react-native-github/Libraries/Renderer/
           mv build/facebook-react-native/scheduler/cjs/ $BASE_FOLDER/RKJSModules/vendor/react/scheduler/
           mv build/facebook-react-native/react/cjs/ $BASE_FOLDER/RKJSModules/vendor/react/react/
-          mv build/facebook-react-native/react/dom/ $BASE_FOLDER/RKJSModules/vendor/react/react-dom/
+          mv build/facebook-react-native/react-dom/cjs $BASE_FOLDER/RKJSModules/vendor/react/react-dom/
           mv build/facebook-react-native/react-is/cjs/ $BASE_FOLDER/RKJSModules/vendor/react/react-is/
           mv build/facebook-react-native/react-test-renderer/cjs/ $BASE_FOLDER/RKJSModules/vendor/react/react-test-renderer/
 
