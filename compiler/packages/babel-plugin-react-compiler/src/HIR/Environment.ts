@@ -50,10 +50,12 @@ import {
 import {Scope as BabelScope} from '@babel/traverse';
 import {TypeSchema} from './TypeSchema';
 
-export const ReactElementSymbolSchema = z.union([
-  z.literal('react.element'),
-  z.literal('react.transitional.element'),
-]);
+export const ReactElementSymbolSchema = z.object({
+  elementSymbol: z.union([
+    z.literal('react.element'),
+    z.literal('react.transitional.element'),
+  ]),
+});
 
 export const ExternalFunctionSchema = z.object({
   // Source for the imported module that exports the `importSpecifierName` functions

@@ -23,7 +23,7 @@ import {
   markPredecessors,
   reversePostorderBlocks,
 } from '../HIR/HIRBuilder';
-import {CompilerError} from '..';
+import {CompilerError, EnvironmentConfig} from '..';
 
 function createSymbolProperty(
   fn: HIRFunction,
@@ -318,7 +318,9 @@ function createPropsProperties(
 // TODO: Make PROD only with conditional statements
 export function inlineJsxTransform(
   fn: HIRFunction,
-  elementSymbol: 'react.element' | 'react.transitional.element',
+  inlineJsxTransformConfig: NonNullable<
+    EnvironmentConfig['inlineJsxTransform']
+  >,
 ): void {
   for (const [, block] of fn.body.blocks) {
     let nextInstructions: Array<Instruction> | null = null;
@@ -347,7 +349,7 @@ export function inlineJsxTransform(
                   instr,
                   nextInstructions,
                   '$$typeof',
-                  elementSymbol,
+                  inlineJsxTransformConfig.elementSymbol,
                 ),
                 createTagProperty(fn, instr, nextInstructions, instr.value.tag),
                 refProperty,
@@ -383,7 +385,7 @@ export function inlineJsxTransform(
                   instr,
                   nextInstructions,
                   '$$typeof',
-                  elementSymbol,
+                  inlineJsxTransformConfig.elementSymbol,
                 ),
                 createSymbolProperty(
                   fn,
