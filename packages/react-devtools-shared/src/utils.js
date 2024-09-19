@@ -36,10 +36,6 @@ import {
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
   LOCAL_STORAGE_COMPONENT_FILTER_PREFERENCES_KEY,
   LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
-  LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
-  LOCAL_STORAGE_SHOULD_APPEND_COMPONENT_STACK_KEY,
-  LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
-  LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
 } from './constants';
 import {
   ComponentFilterElementType,
@@ -61,7 +57,6 @@ import isArray from './isArray';
 import type {
   ComponentFilter,
   ElementType,
-  BrowserTheme,
   SerializedElement as SerializedElementFrontend,
   LRUCache,
 } from 'react-devtools-shared/src/frontend/types';
@@ -372,53 +367,6 @@ export function filterOutLocationComponentFilters(
   }
 
   return componentFilters.filter(f => f.type !== ComponentFilterLocation);
-}
-
-function parseBool(s: ?string): ?boolean {
-  if (s === 'true') {
-    return true;
-  }
-  if (s === 'false') {
-    return false;
-  }
-}
-
-export function castBool(v: any): ?boolean {
-  if (v === true || v === false) {
-    return v;
-  }
-}
-
-export function castBrowserTheme(v: any): ?BrowserTheme {
-  if (v === 'light' || v === 'dark' || v === 'auto') {
-    return v;
-  }
-}
-
-export function getAppendComponentStack(): boolean {
-  const raw = localStorageGetItem(
-    LOCAL_STORAGE_SHOULD_APPEND_COMPONENT_STACK_KEY,
-  );
-  return parseBool(raw) ?? true;
-}
-
-export function getBreakOnConsoleErrors(): boolean {
-  const raw = localStorageGetItem(LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS);
-  return parseBool(raw) ?? false;
-}
-
-export function getHideConsoleLogsInStrictMode(): boolean {
-  const raw = localStorageGetItem(
-    LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
-  );
-  return parseBool(raw) ?? false;
-}
-
-export function getShowInlineWarningsAndErrors(): boolean {
-  const raw = localStorageGetItem(
-    LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
-  );
-  return parseBool(raw) ?? true;
 }
 
 export function getDefaultOpenInEditorURL(): string {
