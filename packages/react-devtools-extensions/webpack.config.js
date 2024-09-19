@@ -154,6 +154,62 @@ module.exports = {
         );
       },
     }),
+    {
+      apply(compiler) {
+        if (__DEV__) {
+          return;
+        }
+
+        const {RawSource} = compiler.webpack.sources;
+        compiler.hooks.compilation.tap(
+          'CustomContentForHookScriptPlugin',
+          compilation => {
+            compilation.hooks.processAssets.tap(
+              {
+                name: 'CustomContentForHookScriptPlugin',
+                stage: Webpack.Compilation.PROCESS_ASSETS_STAGE_DEV_TOOLING,
+                additionalAssets: true,
+              },
+              assets => {
+                // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+                for (const [name, asset] of Object.entries(assets)) {
+                  if (name !== 'installHook.js.map') {
+                    continue;
+                  }
+
+                  const mapContent = asset.source().toString();
+                  if (!mapContent) {
+                    continue;
+                  }
+
+                  const map = JSON.parse(mapContent);
+                  map.sourcesContent = map.sources.map(sourceName => {
+                    if (!sourceName.endsWith('/hook.js')) {
+                      return null;
+                    }
+
+                    return (
+                      '/*\n' +
+                      ' * This script is from React DevTools.\n' +
+                      " * You're likely here because you thought it sent an error or warning to the console.\n" +
+                      ' * React DevTools patches the console to support features like appending component stacks, \n' +
+                      ' * so this file appears as a source. However, the console call actually came from another script.\n' +
+                      " * To remove this script from stack traces, open your browser's DevTools (to enable source mapping) before these console calls happen.\n" +
+                      ' */'
+                    );
+                  });
+
+                  compilation.updateAsset(
+                    name,
+                    new RawSource(JSON.stringify(map)),
+                  );
+                }
+              },
+            );
+          },
+        );
+      },
+    },
   ],
   module: {
     defaultRules: [
