@@ -23,6 +23,7 @@ import {
   markPredecessors,
   reversePostorderBlocks,
 } from '../HIR/HIRBuilder';
+import {CompilerError} from '..';
 
 function createSymbolProperty(
   fn: HIRFunction,
@@ -151,6 +152,16 @@ function createPropsProperties(
   let refProperty: ObjectProperty | undefined;
   let keyProperty: ObjectProperty | undefined;
   const props: Array<ObjectProperty | SpreadPattern> = [];
+  const jsxAttributesWithoutKeyAndRef = propAttributes.filter(
+    p => p.kind === 'JsxAttribute' && p.name !== 'key' && p.name !== 'ref',
+  );
+  const jsxSpreadAttributes = propAttributes.filter(
+    p => p.kind === 'JsxSpreadAttribute',
+  );
+  const spreadPropsOnly =
+    jsxAttributesWithoutKeyAndRef.length === 0 &&
+    jsxSpreadAttributes.length === 1;
+
   propAttributes.forEach(prop => {
     switch (prop.kind) {
       case 'JsxAttribute': {
@@ -180,7 +191,6 @@ function createPropsProperties(
         break;
       }
       case 'JsxSpreadAttribute': {
-        // TODO: Optimize spreads to pass object directly if none of its properties are mutated
         props.push({
           kind: 'Spread',
           place: {...prop.argument},
@@ -189,6 +199,7 @@ function createPropsProperties(
       }
     }
   });
+
   const propsPropertyPlace = createTemporaryPlace(fn.env, instr.value.loc);
   if (children) {
     let childrenPropProperty: ObjectProperty;
@@ -268,23 +279,39 @@ function createPropsProperties(
     nextInstructions.push(keyInstruction);
   }
 
-  const propsInstruction: Instruction = {
-    id: makeInstructionId(0),
-    lvalue: {...propsPropertyPlace, effect: Effect.Mutate},
-    value: {
-      kind: 'ObjectExpression',
-      properties: props,
-      loc: instr.value.loc,
-    },
-    loc: instr.loc,
-  };
-  const propsProperty: ObjectProperty = {
-    kind: 'ObjectProperty',
-    key: {name: 'props', kind: 'string'},
-    type: 'property',
-    place: {...propsPropertyPlace, effect: Effect.Capture},
-  };
-  nextInstructions.push(propsInstruction);
+  let propsProperty: ObjectProperty;
+  if (spreadPropsOnly) {
+    const spreadProp = jsxSpreadAttributes[0];
+    CompilerError.invariant(spreadProp.kind === 'JsxSpreadAttribute', {
+      reason: 'Spread prop attribute must be of kind JSXSpreadAttribute',
+      loc: instr.loc,
+    });
+    propsProperty = {
+      kind: 'ObjectProperty',
+      key: {name: 'props', kind: 'string'},
+      type: 'property',
+      place: {...spreadProp.argument, effect: Effect.Mutate},
+    };
+  } else {
+    const propsInstruction: Instruction = {
+      id: makeInstructionId(0),
+      lvalue: {...propsPropertyPlace, effect: Effect.Mutate},
+      value: {
+        kind: 'ObjectExpression',
+        properties: props,
+        loc: instr.value.loc,
+      },
+      loc: instr.loc,
+    };
+    propsProperty = {
+      kind: 'ObjectProperty',
+      key: {name: 'props', kind: 'string'},
+      type: 'property',
+      place: {...propsPropertyPlace, effect: Effect.Capture},
+    };
+    nextInstructions.push(propsInstruction);
+  }
+
   return {refProperty, keyProperty, propsProperty};
 }
 
