@@ -92,14 +92,24 @@ describe('ReactUpdates', () => {
 
     function Component({prop}) {
       const [, setLayoutState] = React.useState({});
-      const [state, setState] = React.useState(0);
+      const [state, setState] = React.useState({prop, count: 0});
       _setState = setState;
 
-      Scheduler.log(`Render: ${state}`);
+      Scheduler.log(`Render: ${state.prop} ${state.count}`);
 
-      if (state !== prop) {
-        Scheduler.log(`setState in render ${state} -> ${prop}`);
-        setState(prop);
+      if (state.prop !== prop) {
+        Scheduler.log(
+          `setState in render ${state.prop} ${state.count} -> ${prop} ${state.count + 1}`,
+        );
+        setState(currentState => {
+          Scheduler.log(
+            `Render reducer: ${currentState.prop} ${currentState.count} -> ${prop} ${currentState.count + 1}`,
+          );
+          return {
+            prop,
+            count: currentState.count + 1,
+          };
+        });
       }
 
       React.useLayoutEffect(() => {
@@ -109,7 +119,11 @@ describe('ReactUpdates', () => {
         }
       }, [prop]);
 
-      return <div>{state}</div>;
+      return (
+        <div>
+          {state.prop} {state.count}
+        </div>
+      );
     }
 
     const container = document.createElement('div');
@@ -118,13 +132,21 @@ describe('ReactUpdates', () => {
       root.render(<Component prop={0} />);
     });
 
-    assertLog(['Render: 0']);
-    expect(container.firstChild.textContent).toBe('0');
+    assertLog(['Render: 0 0']);
+    expect(container.firstChild.textContent).toBe('0 0');
 
     await act(() => {
       // Schedule a transition to update the state, this means baseQueue is non-empty.
       React.startTransition(() => {
-        _setState(c => c + 1);
+        _setState(currentState => {
+          Scheduler.log(
+            `Transition reducer: ${currentState.count} ${currentState.prop} -> ${currentState.prop} ${currentState.count + 1}`,
+          );
+          return {
+            prop: currentState.prop,
+            count: currentState.count + 1,
+          };
+        });
       });
 
       // Now schedule a blocking update.
@@ -132,21 +154,30 @@ describe('ReactUpdates', () => {
     });
 
     assertLog([
+      // Transition setState
+      'Transition reducer: 0 0 -> 0 1',
+
       // Prop change from 0 -> 1
-      'Render: 0',
-      'setState in render 0 -> 1',
-      'Render: 1',
+      'Render: 0 0',
+      'setState in render 0 0 -> 1 1',
+      'Render reducer: 0 0 -> 1 1',
+      'Render: 1 1',
 
       // Layout effect runs with prop 1
       'Layout effect setState',
+      // 'Render: 0 0',
+      // 'setState in render 0 0 -> 1 1',
+      // 'Render reducer: 0 0 -> 1 1',
+      'Render: 1 1',
 
-      // Render layout effect update
-      'Render: 1',
-
-      // Render transition completes
-      'Render: 1',
+      // Transition
+      // !!! BUG?
+      'Render: 0 1',
+      'setState in render 0 1 -> 1 2',
+      'Render reducer: 0 1 -> 1 2',
+      'Render: 1 2',
     ]);
-    expect(container.firstChild.textContent).toBe('1');
+    expect(container.firstChild.textContent).toBe('1 2');
   });
 
   it('should batch state when updating two different states', async () => {

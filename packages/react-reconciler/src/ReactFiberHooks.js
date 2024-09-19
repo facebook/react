@@ -1620,7 +1620,16 @@ function rerenderReducer<S, I, A>(
     }
 
     hook.memoizedState = newState;
+    // Don't persist the state accumulated from the render phase updates to
+    // the base state unless the queue is empty.
+    // TODO: Not sure if this is the desired semantics, but it's what we
+    // do for gDSFP. I can't remember why.
+
+    // TODO: Removing this condition fixes the tests
+    // if (hook.baseQueue === null) {
     hook.baseState = newState;
+    // }
+
     queue.lastRenderedState = newState;
   }
   return [newState, dispatch];
