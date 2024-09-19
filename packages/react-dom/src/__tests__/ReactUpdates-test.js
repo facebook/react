@@ -122,7 +122,7 @@ describe('ReactUpdates', () => {
     expect(container.firstChild.textContent).toBe('0');
 
     await act(() => {
-      // Schedue a transtion to update the state, this means baseQueue is non-empty.
+      // Schedule a transition to update the state, this means baseQueue is non-empty.
       React.startTransition(() => {
         _setState(c => c + 1);
       });
@@ -141,12 +141,9 @@ describe('ReactUpdates', () => {
       'Layout effect setState',
 
       // Render layout effect update
-      // BUG!! Renders with base state 0 instead of 1
-      // 'Render: 0',
-      // 'setState in render 0 -> 1',
-
       'Render: 1',
-      // Transition completes
+
+      // Render transition completes
       'Render: 1',
     ]);
     expect(container.firstChild.textContent).toBe('1');
