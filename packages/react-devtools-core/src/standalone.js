@@ -12,13 +12,7 @@ import {flushSync} from 'react-dom';
 import {createRoot} from 'react-dom/client';
 import Bridge from 'react-devtools-shared/src/bridge';
 import Store from 'react-devtools-shared/src/devtools/store';
-import {
-  getAppendComponentStack,
-  getBreakOnConsoleErrors,
-  getSavedComponentFilters,
-  getShowInlineWarningsAndErrors,
-  getHideConsoleLogsInStrictMode,
-} from 'react-devtools-shared/src/utils';
+import {getSavedComponentFilters} from 'react-devtools-shared/src/utils';
 import {registerDevToolsEventLogger} from 'react-devtools-shared/src/registerDevToolsEventLogger';
 import {Server} from 'ws';
 import {join} from 'path';
@@ -368,20 +362,8 @@ function startServer(
     // Because of this it relies on the extension to pass filters, so include them wth the response here.
     // This will ensure that saved filters are shared across different web pages.
     const savedPreferencesString = `
-      window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = ${JSON.stringify(
-        getAppendComponentStack(),
-      )};
-      window.__REACT_DEVTOOLS_BREAK_ON_CONSOLE_ERRORS__ = ${JSON.stringify(
-        getBreakOnConsoleErrors(),
-      )};
       window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = ${JSON.stringify(
         getSavedComponentFilters(),
-      )};
-      window.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ = ${JSON.stringify(
-        getShowInlineWarningsAndErrors(),
-      )};
-      window.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ = ${JSON.stringify(
-        getHideConsoleLogsInStrictMode(),
       )};`;
 
     response.end(

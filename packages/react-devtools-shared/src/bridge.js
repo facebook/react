@@ -170,11 +170,7 @@ type NativeStyleEditor_SetValueParams = {
 };
 
 type SavedPreferencesParams = {
-  appendComponentStack: boolean,
-  breakOnConsoleErrors: boolean,
   componentFilters: Array<ComponentFilter>,
-  showInlineWarningsAndErrors: boolean,
-  hideConsoleLogsInStrictMode: boolean,
 };
 
 export type BackendEvents = {

@@ -24,7 +24,6 @@ import type {FrontendBridge} from '../../../bridge';
 import type {DevToolsHookSettings} from '../../../backend/types';
 import type Store from '../../store';
 
-export type DisplayDensity = 'comfortable' | 'compact';
 export type Theme = 'auto' | 'light' | 'dark';
 
 type Context = {

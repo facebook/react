@@ -43,17 +43,9 @@ export const SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY =
   'React::DevTools::recordChangeDescriptions';
 export const SESSION_STORAGE_RELOAD_AND_PROFILE_KEY =
   'React::DevTools::reloadAndProfile';
-export const LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS =
-  'React::DevTools::breakOnConsoleErrors';
 export const LOCAL_STORAGE_BROWSER_THEME = 'React::DevTools::theme';
-export const LOCAL_STORAGE_SHOULD_APPEND_COMPONENT_STACK_KEY =
-  'React::DevTools::appendComponentStack';
-export const LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY =
-  'React::DevTools::showInlineWarningsAndErrors';
 export const LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY =
   'React::DevTools::traceUpdatesEnabled';
-export const LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE =
-  'React::DevTools::hideConsoleLogsInStrictMode';
 export const LOCAL_STORAGE_SUPPORTS_PROFILING_KEY =
   'React::DevTools::supportsProfiling';
 
