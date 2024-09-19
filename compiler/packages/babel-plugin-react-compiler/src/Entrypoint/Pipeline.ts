@@ -352,8 +352,8 @@ function* runWithEnvironment(
     });
   }
 
-  if (env.config.enableInlineJsxTransform) {
-    inlineJsxTransform(hir);
+  if (env.config.inlineJsxTransform) {
+    inlineJsxTransform(hir, env.config.inlineJsxTransform);
     yield log({
       kind: 'hir',
       name: 'inlineJsxTransform',

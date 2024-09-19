@@ -21,6 +21,7 @@ import type {
 } from 'babel-plugin-react-compiler/src/Entrypoint';
 import type {Effect, ValueKind} from 'babel-plugin-react-compiler/src/HIR';
 import type {
+  EnvironmentConfig,
   Macro,
   MacroMethod,
   parseConfigPragma as ParseConfigPragma,
@@ -201,6 +202,11 @@ function makePluginOptions(
     };
   }
 
+  let inlineJsxTransform: EnvironmentConfig['inlineJsxTransform'] = null;
+  if (firstLine.includes('@enableInlineJsxTransform')) {
+    inlineJsxTransform = {elementSymbol: 'react.transitional.element'};
+  }
+
   let logs: Array<{filename: string | null; event: LoggerEvent}> = [];
   let logger: Logger | null = null;
   if (firstLine.includes('@logger')) {
@@ -230,6 +236,7 @@ function makePluginOptions(
       enableChangeDetectionForDebugging,
       lowerContextAccess,
       validateBlocklistedImports,
+      inlineJsxTransform,
     },
     compilationMode,
     logger,

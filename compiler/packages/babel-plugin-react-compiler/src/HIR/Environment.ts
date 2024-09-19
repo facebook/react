@@ -50,6 +50,13 @@ import {
 import {Scope as BabelScope} from '@babel/traverse';
 import {TypeSchema} from './TypeSchema';
 
+export const ReactElementSymbolSchema = z.object({
+  elementSymbol: z.union([
+    z.literal('react.element'),
+    z.literal('react.transitional.element'),
+  ]),
+});
+
 export const ExternalFunctionSchema = z.object({
   // Source for the imported module that exports the `importSpecifierName` functions
   source: z.string(),
@@ -237,8 +244,10 @@ const EnvironmentConfigSchema = z.object({
    * Enables inlining ReactElement object literals in place of JSX
    * An alternative to the standard JSX transform which replaces JSX with React's jsxProd() runtime
    * Currently a prod-only optimization, requiring Fast JSX dependencies
+   *
+   * The symbol configuration is set for backwards compatability with pre-React 19 transforms
    */
-  enableInlineJsxTransform: z.boolean().default(false),
+  inlineJsxTransform: ReactElementSymbolSchema.nullish(),
 
   /*
    * Enable validation of hooks to partially check that the component honors the rules of hooks.
