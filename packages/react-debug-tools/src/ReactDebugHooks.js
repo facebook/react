@@ -568,7 +568,8 @@ function useMemoCache(size: number): Array<any> {
   }
 
   // $FlowFixMe[incompatible-use]: updateQueue is mixed
-  const memoCache = fiber.updateQueue?.memoCache;
+  const memoCache =
+    fiber.updateQueue != null ? fiber.updateQueue.memoCache : null;
   if (memoCache == null) {
     return [];
   }

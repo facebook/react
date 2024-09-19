@@ -23,6 +23,7 @@ module.exports = {
     'babel',
     'ft-flow',
     'jest',
+    'es',
     'no-for-of-loops',
     'no-function-declare-after-return',
     'react',
@@ -47,7 +48,7 @@ module.exports = {
     'ft-flow/no-unused-expressions': ERROR,
     // 'ft-flow/no-weak-types': WARNING,
     // 'ft-flow/require-valid-file-annotation': ERROR,
-
+    'es/no-optional-chaining': ERROR,
     'no-cond-assign': OFF,
     'no-constant-condition': OFF,
     'no-control-regex': OFF,
@@ -435,6 +436,7 @@ module.exports = {
         'packages/react-dom/src/test-utils/*.js',
       ],
       rules: {
+        'es/no-optional-chaining': OFF,
         'react-internal/no-production-logging': OFF,
         'react-internal/warning-args': OFF,
         'react-internal/safe-string-coercion': [
