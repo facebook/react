@@ -3020,7 +3020,12 @@ function startTransition<S>(
     dispatchOptimisticSetState(fiber, false, queue, pendingState);
   } else {
     ReactSharedInternals.T = null;
-    dispatchSetState(fiber, queue, pendingState);
+    dispatchSetStateInternal(
+      fiber,
+      queue,
+      pendingState,
+      requestUpdateLane(fiber),
+    );
     ReactSharedInternals.T = currentTransition;
   }
 
@@ -3063,13 +3068,28 @@ function startTransition<S>(
           thenable,
           finishedState,
         );
-        dispatchSetState(fiber, queue, (thenableForFinishedState: any));
+        dispatchSetStateInternal(
+          fiber,
+          queue,
+          (thenableForFinishedState: any),
+          requestUpdateLane(fiber),
+        );
       } else {
-        dispatchSetState(fiber, queue, finishedState);
+        dispatchSetStateInternal(
+          fiber,
+          queue,
+          finishedState,
+          requestUpdateLane(fiber),
+        );
       }
     } else {
       // Async actions are not enabled.
-      dispatchSetState(fiber, queue, finishedState);
+      dispatchSetStateInternal(
+        fiber,
+        queue,
+        finishedState,
+        requestUpdateLane(fiber),
+      );
       callback();
     }
   } catch (error) {
@@ -3082,7 +3102,12 @@ function startTransition<S>(
         status: 'rejected',
         reason: error,
       };
-      dispatchSetState(fiber, queue, rejectedThenable);
+      dispatchSetStateInternal(
+        fiber,
+        queue,
+        rejectedThenable,
+        requestUpdateLane(fiber),
+      );
     } else {
       // The error rethrowing behavior is only enabled when the async actions
       // feature is on, even for sync actions.
@@ -3254,7 +3279,12 @@ export function requestFormReset(formFiber: Fiber) {
   const newResetState = {};
   const resetStateHook: Hook = (stateHook.next: any);
   const resetStateQueue = resetStateHook.queue;
-  dispatchSetState(formFiber, resetStateQueue, newResetState);
+  dispatchSetStateInternal(
+    formFiber,
+    resetStateQueue,
+    newResetState,
+    requestUpdateLane(formFiber),
+  );
 }
 
 function mountTransition(): [
@@ -3477,7 +3507,24 @@ function dispatchSetState<S, A>(
   }
 
   const lane = requestUpdateLane(fiber);
+  const didScheduleUpdate = dispatchSetStateInternal(
+    fiber,
+    queue,
+    action,
+    lane,
+  );
+  if (didScheduleUpdate) {
+    startUpdateTimerByLane(lane);
+  }
+  markUpdateInDevTools(fiber, lane, action);
+}
 
+function dispatchSetStateInternal<S, A>(
+  fiber: Fiber,
+  queue: UpdateQueue<S, A>,
+  action: A,
+  lane: Lane,
+): boolean {
   const update: Update<S, A> = {
     lane,
     revertLane: NoLane,
@@ -3521,7 +3568,7 @@ function dispatchSetState<S, A>(
             // time the reducer has changed.
             // TODO: Do we still need to entangle transitions in this case?
             enqueueConcurrentHookUpdateAndEagerlyBailout(fiber, queue, update);
-            return;
+            return false;
           }
         } catch (error) {
           // Suppress the error. It will throw again in the render phase.
@@ -3535,13 +3582,12 @@ function dispatchSetState<S, A>(
 
     const root = enqueueConcurrentHookUpdate(fiber, queue, update, lane);
     if (root !== null) {
-      startUpdateTimerByLane(lane);
       scheduleUpdateOnFiber(root, fiber, lane);
       entangleTransitionUpdate(root, queue, lane);
+      return true;
     }
   }
-
-  markUpdateInDevTools(fiber, lane, action);
+  return false;
 }
 
 function dispatchOptimisticSetState<S, A>(
