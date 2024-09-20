@@ -4284,4 +4284,84 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       </>,
     );
   });
+
+  // @gate enableLegacyCache
+  it('recurring transition updates in siblings should not block expensive content in suspense boundary from committing', async () => {
+    const {useState, startTransition} = React;
+
+    let setText;
+    function UpdatingText() {
+      const [text, _setText] = useState('1');
+      setText = _setText;
+      return <Text text={text} />;
+    }
+
+    function ExpensiveText({text, ms}) {
+      Scheduler.log(text);
+      Scheduler.unstable_advanceTime(ms);
+      return <span prop={text} />;
+    }
+
+    function App() {
+      return (
+        <>
+          <UpdatingText />
+          <Suspense fallback={<Text text="Loading..." />}>
+            <AsyncText text="Async" />
+            <ExpensiveText text="A" ms={1000} />
+            <ExpensiveText text="B" ms={3999} />
+            <ExpensiveText text="C" ms={100000} />
+          </Suspense>
+        </>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    root.render(<App />);
+    await waitForAll([
+      '1',
+      'Suspend! [Async]',
+      'Loading...',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['Suspend! [Async]', 'A', 'B', 'C']
+        : []),
+    ]);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span prop="1" />
+        <span prop="Loading..." />
+      </>,
+    );
+
+    await resolveText('Async');
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span prop="1" />
+        <span prop="Loading..." />
+      </>,
+    );
+
+    await waitFor(['Async', 'A', 'B']);
+    ReactNoop.expire(100000);
+    await advanceTimers(100000);
+    startTransition(() => {
+      setText('2');
+    });
+    await waitForPaint(['2']);
+
+    await waitForMicrotasks();
+    Scheduler.unstable_flushNumberOfYields(1);
+    assertLog(['Async', 'A', 'B', 'C']);
+
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span prop="2" />
+        <span prop="Async" />
+        <span prop="A" />
+        <span prop="B" />
+        <span prop="C" />
+      </>,
+    );
+  });
 });
