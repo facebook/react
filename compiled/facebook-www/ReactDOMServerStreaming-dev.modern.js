@@ -5997,26 +5997,27 @@ __DEV__ &&
         if (6 === segment.status) return;
         segment.status = 3;
       }
+      segment = getThrownInfo(task.componentStack);
       if (null === boundary) {
-        if (((boundary = {}), 2 !== request.status && 3 !== request.status)) {
-          task = task.replay;
-          if (null === task) {
-            logRecoverableError(request, error, boundary);
+        if (2 !== request.status && 3 !== request.status) {
+          boundary = task.replay;
+          if (null === boundary) {
+            logRecoverableError(request, error, segment);
             fatalError(request, error);
             return;
           }
-          task.pendingTasks--;
-          0 === task.pendingTasks &&
-            0 < task.nodes.length &&
-            ((segment = logRecoverableError(request, error, boundary)),
+          boundary.pendingTasks--;
+          0 === boundary.pendingTasks &&
+            0 < boundary.nodes.length &&
+            ((task = logRecoverableError(request, error, segment)),
             abortRemainingReplayNodes(
               request,
               null,
-              task.nodes,
-              task.slots,
+              boundary.nodes,
+              boundary.slots,
               error,
+              task,
               segment,
-              boundary,
               !0
             ));
           request.pendingRootTasks--;
@@ -6024,12 +6025,11 @@ __DEV__ &&
         }
       } else
         boundary.pendingTasks--,
-          (task = getThrownInfo(task.componentStack)),
           4 !== boundary.status &&
             ((boundary.status = 4),
-            (segment = logRecoverableError(request, error, task)),
+            (task = logRecoverableError(request, error, segment)),
             (boundary.status = 4),
-            encodeErrorForBoundary(boundary, segment, error, task, !0),
+            encodeErrorForBoundary(boundary, task, error, segment, !0),
             untrackBoundary(request, boundary),
             boundary.parentFlushed &&
               request.clientRenderedBoundaries.push(boundary)),
