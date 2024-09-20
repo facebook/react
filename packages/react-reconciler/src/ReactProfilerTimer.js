@@ -9,10 +9,16 @@
 
 import type {Fiber} from './ReactInternalTypes';
 
+import type {Lane} from './ReactFiberLane';
+import {isTransitionLane, isBlockingLane, isSyncLane} from './ReactFiberLane';
+
+import {resolveEventType, resolveEventTimeStamp} from './ReactFiberConfig';
+
 import {
   enableProfilerCommitHooks,
   enableProfilerNestedUpdatePhase,
   enableProfilerTimer,
+  enableComponentPerformanceTrack,
 } from 'shared/ReactFeatureFlags';
 
 // Intentionally not named imports because Rollup would use dynamic dispatch for
@@ -21,6 +27,7 @@ import * as Scheduler from 'scheduler';
 
 const {unstable_now: now} = Scheduler;
 
+export let renderStartTime: number = -0;
 export let completeTime: number = -0;
 export let commitTime: number = -0;
 export let profilerStartTime: number = -1.1;
@@ -28,6 +35,111 @@ export let profilerEffectDuration: number = -0;
 export let componentEffectDuration: number = -0;
 export let componentEffectStartTime: number = -1.1;
 export let componentEffectEndTime: number = -1.1;
+
+export let blockingUpdateTime: number = -1.1; // First sync setState scheduled.
+export let blockingEventTime: number = -1.1; // Event timeStamp of the first setState.
+export let blockingEventType: null | string = null; // Event type of the first setState.
+// TODO: This should really be one per Transition lane.
+export let transitionStartTime: number = -1.1; // First startTransition call before setState.
+export let transitionUpdateTime: number = -1.1; // First transition setState scheduled.
+export let transitionEventTime: number = -1.1; // Event timeStamp of the first transition.
+export let transitionEventType: null | string = null; // Event type of the first transition.
+
+export function startUpdateTimerByLane(lane: Lane): void {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  if (isSyncLane(lane) || isBlockingLane(lane)) {
+    if (blockingUpdateTime < 0) {
+      blockingUpdateTime = now();
+      blockingEventTime = resolveEventTimeStamp();
+      blockingEventType = resolveEventType();
+    }
+  } else if (isTransitionLane(lane)) {
+    if (transitionUpdateTime < 0) {
+      transitionUpdateTime = now();
+      if (transitionStartTime < 0) {
+        transitionEventTime = resolveEventTimeStamp();
+        transitionEventType = resolveEventType();
+      }
+    }
+  }
+}
+
+export function clearBlockingTimers(): void {
+  blockingUpdateTime = -1.1;
+}
+
+export function startAsyncTransitionTimer(): void {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  if (transitionStartTime < 0 && transitionUpdateTime < 0) {
+    transitionStartTime = now();
+    transitionEventTime = resolveEventTimeStamp();
+    transitionEventType = resolveEventType();
+  }
+}
+
+export function hasScheduledTransitionWork(): boolean {
+  // If we have setState on a transition or scheduled useActionState update.
+  return transitionUpdateTime > -1;
+}
+
+// We use this marker to indicate that we have scheduled a render to be performed
+// but it's not an explicit state update.
+const ACTION_STATE_MARKER = -0.5;
+
+export function startActionStateUpdate(): void {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  if (transitionUpdateTime < 0) {
+    transitionUpdateTime = ACTION_STATE_MARKER;
+  }
+}
+
+export function clearAsyncTransitionTimer(): void {
+  transitionStartTime = -1.1;
+}
+
+export function clearTransitionTimers(): void {
+  transitionStartTime = -1.1;
+  transitionUpdateTime = -1.1;
+}
+
+export function clampBlockingTimers(finalTime: number): void {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  // If we had new updates come in while we were still rendering or committing, we don't want
+  // those update times to create overlapping tracks in the performance timeline so we clamp
+  // them to the end of the commit phase.
+  if (blockingUpdateTime >= 0 && blockingUpdateTime < finalTime) {
+    blockingUpdateTime = finalTime;
+  }
+  if (blockingEventTime >= 0 && blockingEventTime < finalTime) {
+    blockingEventTime = finalTime;
+  }
+}
+
+export function clampTransitionTimers(finalTime: number): void {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  // If we had new updates come in while we were still rendering or committing, we don't want
+  // those update times to create overlapping tracks in the performance timeline so we clamp
+  // them to the end of the commit phase.
+  if (transitionStartTime >= 0 && transitionStartTime < finalTime) {
+    transitionStartTime = finalTime;
+  }
+  if (transitionUpdateTime >= 0 && transitionUpdateTime < finalTime) {
+    transitionUpdateTime = finalTime;
+  }
+  if (transitionEventTime >= 0 && transitionEventTime < finalTime) {
+    transitionEventTime = finalTime;
+  }
+}
 
 export function pushNestedEffectDurations(): number {
   if (!enableProfilerTimer || !enableProfilerCommitHooks) {
@@ -134,6 +246,13 @@ export function syncNestedUpdateFlag(): void {
     currentUpdateIsNested = nestedUpdateScheduled;
     nestedUpdateScheduled = false;
   }
+}
+
+export function recordRenderTime(): void {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  renderStartTime = now();
 }
 
 export function recordCompleteTime(): void {

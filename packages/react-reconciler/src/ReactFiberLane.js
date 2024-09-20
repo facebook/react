@@ -592,6 +592,10 @@ export function includesSyncLane(lanes: Lanes): boolean {
   return (lanes & (SyncLane | SyncHydrationLane)) !== NoLanes;
 }
 
+export function isSyncLane(lanes: Lanes): boolean {
+  return (lanes & (SyncLane | SyncHydrationLane)) !== NoLanes;
+}
+
 export function includesNonIdleWork(lanes: Lanes): boolean {
   return (lanes & NonIdleLanes) !== NoLanes;
 }
@@ -608,6 +612,10 @@ export function includesOnlyTransitions(lanes: Lanes): boolean {
   return (lanes & TransitionLanes) === lanes;
 }
 
+export function includesTransitionLane(lanes: Lanes): boolean {
+  return (lanes & TransitionLanes) !== NoLanes;
+}
+
 export function includesBlockingLane(lanes: Lanes): boolean {
   const SyncDefaultLanes =
     InputContinuousHydrationLane |
@@ -621,6 +629,15 @@ export function includesExpiredLane(root: FiberRoot, lanes: Lanes): boolean {
   // This is a separate check from includesBlockingLane because a lane can
   // expire after a render has already started.
   return (lanes & root.expiredLanes) !== NoLanes;
+}
+
+export function isBlockingLane(lane: Lane): boolean {
+  const SyncDefaultLanes =
+    InputContinuousHydrationLane |
+    InputContinuousLane |
+    DefaultHydrationLane |
+    DefaultLane;
+  return (lane & SyncDefaultLanes) !== NoLanes;
 }
 
 export function isTransitionLane(lane: Lane): boolean {

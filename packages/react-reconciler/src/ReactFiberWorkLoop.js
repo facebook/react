@@ -68,6 +68,10 @@ import {
   logRenderStarted,
   logRenderStopped,
 } from './DebugTracing';
+import {
+  logBlockingStart,
+  logTransitionStart,
+} from './ReactFiberPerformanceTrack';
 
 import {
   resetAfterCommit,
@@ -145,6 +149,7 @@ import {
   includesOnlyRetries,
   includesOnlyTransitions,
   includesBlockingLane,
+  includesTransitionLane,
   includesExpiredLane,
   getNextLanes,
   getEntangledLanes,
@@ -221,7 +226,20 @@ import {
 } from './ReactFiberConcurrentUpdates';
 
 import {
+  blockingUpdateTime,
+  blockingEventTime,
+  blockingEventType,
+  transitionStartTime,
+  transitionUpdateTime,
+  transitionEventTime,
+  transitionEventType,
+  clearBlockingTimers,
+  clearTransitionTimers,
+  clampBlockingTimers,
+  clampTransitionTimers,
   markNestedUpdateScheduled,
+  renderStartTime,
+  recordRenderTime,
   recordCompleteTime,
   recordCommitTime,
   resetNestedUpdateFlag,
@@ -1698,7 +1716,48 @@ function resetWorkInProgressStack() {
   workInProgress = null;
 }
 
+function finalizeRender(lanes: Lanes, finalizationTime: number): void {
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    if (includesSyncLane(lanes) || includesBlockingLane(lanes)) {
+      clampBlockingTimers(finalizationTime);
+    }
+    if (includesTransitionLane(lanes)) {
+      clampTransitionTimers(finalizationTime);
+    }
+  }
+}
+
 function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // Starting a new render. Log the end of any previous renders and the
+    // blocked time before the render started.
+    recordRenderTime();
+    // If this was a restart, e.g. due to an interrupting update, then there's no space
+    // in the track to log the cause since we'll have rendered all the way up until the
+    // restart so we need to clamp that.
+    finalizeRender(workInProgressRootRenderLanes, renderStartTime);
+
+    if (includesSyncLane(lanes) || includesBlockingLane(lanes)) {
+      logBlockingStart(
+        blockingUpdateTime,
+        blockingEventTime,
+        blockingEventType,
+        renderStartTime,
+      );
+      clearBlockingTimers();
+    }
+    if (includesTransitionLane(lanes)) {
+      logTransitionStart(
+        transitionStartTime,
+        transitionUpdateTime,
+        transitionEventTime,
+        transitionEventType,
+        renderStartTime,
+      );
+      clearTransitionTimers();
+    }
+  }
+
   root.finishedWork = null;
   root.finishedLanes = NoLanes;
 
@@ -2240,6 +2299,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
     }
 
     workInProgressTransitions = getTransitionsForLanes(root, lanes);
+
     resetRenderTimer();
     prepareFreshStack(root, lanes);
   } else {
@@ -3358,6 +3418,12 @@ function commitRootImpl(
     nestedUpdateCount = 0;
   }
 
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    if (!rootDidHavePassiveEffects) {
+      finalizeRender(lanes, now());
+    }
+  }
+
   // If layout work was scheduled, flush it now.
   flushSyncWorkOnAllRoots();
 
@@ -3538,6 +3604,10 @@ function flushPassiveEffectsImpl() {
   }
 
   executionContext = prevExecutionContext;
+
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    finalizeRender(lanes, now());
+  }
 
   flushSyncWorkOnAllRoots();
 

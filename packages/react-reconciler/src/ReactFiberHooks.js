@@ -131,6 +131,7 @@ import {
   markStateUpdateScheduled,
   setIsStrictModeForDevtools,
 } from './ReactFiberDevToolsHook';
+import {startUpdateTimerByLane} from './ReactProfilerTimer';
 import {createCache} from './ReactFiberCacheComponent';
 import {
   createUpdate as createLegacyQueueUpdate,
@@ -3019,7 +3020,12 @@ function startTransition<S>(
     dispatchOptimisticSetState(fiber, false, queue, pendingState);
   } else {
     ReactSharedInternals.T = null;
-    dispatchSetState(fiber, queue, pendingState);
+    dispatchSetStateInternal(
+      fiber,
+      queue,
+      pendingState,
+      requestUpdateLane(fiber),
+    );
     ReactSharedInternals.T = currentTransition;
   }
 
@@ -3062,13 +3068,28 @@ function startTransition<S>(
           thenable,
           finishedState,
         );
-        dispatchSetState(fiber, queue, (thenableForFinishedState: any));
+        dispatchSetStateInternal(
+          fiber,
+          queue,
+          (thenableForFinishedState: any),
+          requestUpdateLane(fiber),
+        );
       } else {
-        dispatchSetState(fiber, queue, finishedState);
+        dispatchSetStateInternal(
+          fiber,
+          queue,
+          finishedState,
+          requestUpdateLane(fiber),
+        );
       }
     } else {
       // Async actions are not enabled.
-      dispatchSetState(fiber, queue, finishedState);
+      dispatchSetStateInternal(
+        fiber,
+        queue,
+        finishedState,
+        requestUpdateLane(fiber),
+      );
       callback();
     }
   } catch (error) {
@@ -3081,7 +3102,12 @@ function startTransition<S>(
         status: 'rejected',
         reason: error,
       };
-      dispatchSetState(fiber, queue, rejectedThenable);
+      dispatchSetStateInternal(
+        fiber,
+        queue,
+        rejectedThenable,
+        requestUpdateLane(fiber),
+      );
     } else {
       // The error rethrowing behavior is only enabled when the async actions
       // feature is on, even for sync actions.
@@ -3253,7 +3279,12 @@ export function requestFormReset(formFiber: Fiber) {
   const newResetState = {};
   const resetStateHook: Hook = (stateHook.next: any);
   const resetStateQueue = resetStateHook.queue;
-  dispatchSetState(formFiber, resetStateQueue, newResetState);
+  dispatchSetStateInternal(
+    formFiber,
+    resetStateQueue,
+    newResetState,
+    requestUpdateLane(formFiber),
+  );
 }
 
 function mountTransition(): [
@@ -3385,6 +3416,7 @@ function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T): void {
         const refreshUpdate = createLegacyQueueUpdate(lane);
         const root = enqueueLegacyQueueUpdate(provider, refreshUpdate, lane);
         if (root !== null) {
+          startUpdateTimerByLane(lane);
           scheduleUpdateOnFiber(root, provider, lane);
           entangleLegacyQueueTransitions(root, provider, lane);
         }
@@ -3450,6 +3482,7 @@ function dispatchReducerAction<S, A>(
   } else {
     const root = enqueueConcurrentHookUpdate(fiber, queue, update, lane);
     if (root !== null) {
+      startUpdateTimerByLane(lane);
       scheduleUpdateOnFiber(root, fiber, lane);
       entangleTransitionUpdate(root, queue, lane);
     }
@@ -3474,7 +3507,24 @@ function dispatchSetState<S, A>(
   }
 
   const lane = requestUpdateLane(fiber);
+  const didScheduleUpdate = dispatchSetStateInternal(
+    fiber,
+    queue,
+    action,
+    lane,
+  );
+  if (didScheduleUpdate) {
+    startUpdateTimerByLane(lane);
+  }
+  markUpdateInDevTools(fiber, lane, action);
+}
 
+function dispatchSetStateInternal<S, A>(
+  fiber: Fiber,
+  queue: UpdateQueue<S, A>,
+  action: A,
+  lane: Lane,
+): boolean {
   const update: Update<S, A> = {
     lane,
     revertLane: NoLane,
@@ -3518,7 +3568,7 @@ function dispatchSetState<S, A>(
             // time the reducer has changed.
             // TODO: Do we still need to entangle transitions in this case?
             enqueueConcurrentHookUpdateAndEagerlyBailout(fiber, queue, update);
-            return;
+            return false;
           }
         } catch (error) {
           // Suppress the error. It will throw again in the render phase.
@@ -3534,10 +3584,10 @@ function dispatchSetState<S, A>(
     if (root !== null) {
       scheduleUpdateOnFiber(root, fiber, lane);
       entangleTransitionUpdate(root, queue, lane);
+      return true;
     }
   }
-
-  markUpdateInDevTools(fiber, lane, action);
+  return false;
 }
 
 function dispatchOptimisticSetState<S, A>(
@@ -3619,6 +3669,7 @@ function dispatchOptimisticSetState<S, A>(
       // will never be attempted before the optimistic update. This currently
       // holds because the optimistic update is always synchronous. If we ever
       // change that, we'll need to account for this.
+      startUpdateTimerByLane(SyncLane);
       scheduleUpdateOnFiber(root, fiber, SyncLane);
       // Optimistic updates are always synchronous, so we don't need to call
       // entangleTransitionUpdate here.
