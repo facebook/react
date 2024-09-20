@@ -3218,6 +3218,12 @@ function commitRootImpl(
     // of the effect list for each phase: all mutation effects come before all
     // layout effects, and so on.
 
+    if (enableProfilerTimer) {
+      // Mark the current commit time to be shared by all Profilers in this
+      // batch. This enables them to be grouped later.
+      recordCommitTime();
+    }
+
     // The first phase a "before mutation" phase. We use this phase to read the
     // state of the host tree right before we mutate it. This is where
     // getSnapshotBeforeUpdate is called.
@@ -3225,12 +3231,6 @@ function commitRootImpl(
       root,
       finishedWork,
     );
-
-    if (enableProfilerTimer) {
-      // Mark the current commit time to be shared by all Profilers in this
-      // batch. This enables them to be grouped later.
-      recordCommitTime();
-    }
 
     // The next phase is the mutation phase, where we mutate the host tree.
     commitMutationEffects(root, finishedWork, lanes);
