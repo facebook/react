@@ -3870,8 +3870,9 @@ function abortTask(task: Task, request: Request, error: mixed): void {
     segment.status = ABORTED;
   }
 
+  const errorInfo = getThrownInfo(task.componentStack);
+
   if (boundary === null) {
-    const errorInfo: ThrownInfo = {};
     if (request.status !== CLOSING && request.status !== CLOSED) {
       const replay: null | ReplaySet = task.replay;
       if (replay === null) {
@@ -3957,7 +3958,6 @@ function abortTask(task: Task, request: Request, error: mixed): void {
     boundary.pendingTasks--;
     // We construct an errorInfo from the boundary's componentStack so the error in dev will indicate which
     // boundary the message is referring to
-    const errorInfo = getThrownInfo(task.componentStack);
     const trackedPostpones = request.trackedPostpones;
     if (boundary.status !== CLIENT_RENDERED) {
       if (enableHalt) {
