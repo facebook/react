@@ -68,6 +68,10 @@ import {
   logRenderStarted,
   logRenderStopped,
 } from './DebugTracing';
+import {
+  logBlockingStart,
+  logTransitionStart,
+} from './ReactFiberPerformanceTrack';
 
 import {
   resetAfterCommit,
@@ -145,6 +149,7 @@ import {
   includesOnlyRetries,
   includesOnlyTransitions,
   includesBlockingLane,
+  includesTransitionLane,
   includesExpiredLane,
   getNextLanes,
   getEntangledLanes,
@@ -221,7 +226,18 @@ import {
 } from './ReactFiberConcurrentUpdates';
 
 import {
+  blockingUpdateTime,
+  blockingEventTime,
+  blockingEventType,
+  transitionStartTime,
+  transitionUpdateTime,
+  transitionEventTime,
+  transitionEventType,
+  clearBlockingTimers,
+  clearTransitionTimers,
   markNestedUpdateScheduled,
+  renderStartTime,
+  recordRenderTime,
   recordCompleteTime,
   recordCommitTime,
   resetNestedUpdateFlag,
@@ -1699,6 +1715,31 @@ function resetWorkInProgressStack() {
 }
 
 function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // Starting a new render. Log the end of any previous renders and the
+    // blocked time before the render started.
+    recordRenderTime();
+    if (includesBlockingLane(lanes)) {
+      logBlockingStart(
+        blockingUpdateTime,
+        blockingEventTime,
+        blockingEventType,
+        renderStartTime,
+      );
+      clearBlockingTimers();
+    }
+    if (includesTransitionLane(lanes)) {
+      logTransitionStart(
+        transitionStartTime,
+        transitionUpdateTime,
+        transitionEventTime,
+        transitionEventType,
+        renderStartTime,
+      );
+      clearTransitionTimers();
+    }
+  }
+
   root.finishedWork = null;
   root.finishedLanes = NoLanes;
 
@@ -2240,6 +2281,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
     }
 
     workInProgressTransitions = getTransitionsForLanes(root, lanes);
+
     resetRenderTimer();
     prepareFreshStack(root, lanes);
   } else {

@@ -27,6 +27,7 @@ import * as Scheduler from 'scheduler';
 
 const {unstable_now: now} = Scheduler;
 
+export let renderStartTime: number = -0;
 export let completeTime: number = -0;
 export let commitTime: number = -0;
 export let profilerStartTime: number = -1.1;
@@ -212,6 +213,13 @@ export function syncNestedUpdateFlag(): void {
     currentUpdateIsNested = nestedUpdateScheduled;
     nestedUpdateScheduled = false;
   }
+}
+
+export function recordRenderTime(): void {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  renderStartTime = now();
 }
 
 export function recordCompleteTime(): void {
