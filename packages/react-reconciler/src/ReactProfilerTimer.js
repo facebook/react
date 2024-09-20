@@ -10,7 +10,7 @@
 import type {Fiber} from './ReactInternalTypes';
 
 import type {Lane} from './ReactFiberLane';
-import {isTransitionLane, isBlockingLane} from './ReactFiberLane';
+import {isTransitionLane, isBlockingLane, isSyncLane} from './ReactFiberLane';
 
 import {resolveEventType, resolveEventTimeStamp} from './ReactFiberConfig';
 
@@ -49,7 +49,7 @@ export function startUpdateTimerByLane(lane: Lane): void {
   if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
     return;
   }
-  if (isBlockingLane(lane)) {
+  if (isSyncLane(lane) || isBlockingLane(lane)) {
     if (blockingUpdateTime < 0) {
       blockingUpdateTime = now();
       blockingEventTime = resolveEventTimeStamp();

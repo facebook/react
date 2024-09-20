@@ -1718,7 +1718,7 @@ function resetWorkInProgressStack() {
 
 function finalizeRender(lanes: Lanes, finalizationTime: number): void {
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
-    if (includesBlockingLane(lanes)) {
+    if (includesSyncLane(lanes) || includesBlockingLane(lanes)) {
       clampBlockingTimers(finalizationTime);
     }
     if (includesTransitionLane(lanes)) {
@@ -1737,7 +1737,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
     // restart so we need to clamp that.
     finalizeRender(workInProgressRootRenderLanes, renderStartTime);
 
-    if (includesBlockingLane(lanes)) {
+    if (includesSyncLane(lanes) || includesBlockingLane(lanes)) {
       logBlockingStart(
         blockingUpdateTime,
         blockingEventTime,
