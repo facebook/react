@@ -1029,6 +1029,10 @@ export function attach(
       if (devtoolsInstance.kind === FIBER_INSTANCE) {
         const fiber = devtoolsInstance.data;
         componentLogsEntry = fiberToComponentLogsMap.get(fiber);
+
+        if (componentLogsEntry === undefined && fiber.alternate !== null) {
+          componentLogsEntry = fiberToComponentLogsMap.get(fiber.alternate);
+        }
       } else {
         const componentInfo = devtoolsInstance.data;
         componentLogsEntry = componentInfoToComponentLogsMap.get(componentInfo);
@@ -4248,7 +4252,10 @@ export function attach(
       source = getSourceForFiberInstance(fiberInstance);
     }
 
-    const componentLogsEntry = fiberToComponentLogsMap.get(fiber);
+    let componentLogsEntry = fiberToComponentLogsMap.get(fiber);
+    if (componentLogsEntry === undefined && fiber.alternate !== null) {
+      componentLogsEntry = fiberToComponentLogsMap.get(fiber.alternate);
+    }
 
     return {
       id: fiberInstance.id,
