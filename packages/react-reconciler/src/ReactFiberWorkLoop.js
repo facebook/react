@@ -71,6 +71,7 @@ import {
 import {
   logBlockingStart,
   logTransitionStart,
+  logRenderPhase,
 } from './ReactFiberPerformanceTrack';
 
 import {
@@ -239,6 +240,7 @@ import {
   clampTransitionTimers,
   markNestedUpdateScheduled,
   renderStartTime,
+  renderEndTime,
   recordRenderTime,
   recordCompleteTime,
   recordCommitTime,
@@ -1124,6 +1126,8 @@ function finishConcurrentRender(
     // Track when we finished the last unit of work, before we actually commit it.
     // The commit can be suspended/blocked until we commit it.
     recordCompleteTime();
+    setCurrentTrackFromLanes(lanes);
+    logRenderPhase(renderStartTime, renderEndTime);
   }
 
   // TODO: The fact that most of these branches are identical suggests that some
@@ -1509,6 +1513,8 @@ export function performSyncWorkOnRoot(root: FiberRoot, lanes: Lanes): null {
 
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     recordCompleteTime();
+    setCurrentTrackFromLanes(lanes);
+    logRenderPhase(renderStartTime, renderEndTime);
   }
 
   // We now have a consistent tree. Because this is a sync render, we

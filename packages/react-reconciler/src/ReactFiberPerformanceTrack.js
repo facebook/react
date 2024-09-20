@@ -164,3 +164,12 @@ export function logTransitionStart(
     }
   }
 }
+
+export function logRenderPhase(startTime: number, endTime: number): void {
+  if (supportsUserTiming) {
+    reusableComponentDevToolDetails.color = 'primary-light';
+    reusableComponentOptions.start = startTime;
+    reusableComponentOptions.end = endTime;
+    performance.measure('Render', reusableComponentOptions);
+  }
+}
