@@ -242,6 +242,7 @@ import {
   recordRenderTime,
   recordCompleteTime,
   recordCommitTime,
+  recordCommitEndTime,
   resetNestedUpdateFlag,
   startProfilerTimer,
   stopProfilerTimerIfRunningAndRecordDuration,
@@ -3270,6 +3271,10 @@ function commitRootImpl(
       markLayoutEffectsStopped();
     }
 
+    if (enableProfilerTimer && enableComponentPerformanceTrack) {
+      recordCommitEndTime();
+    }
+
     // Tell Scheduler to yield at the end of the frame, so the browser has an
     // opportunity to paint.
     requestPaint();
@@ -3287,6 +3292,9 @@ function commitRootImpl(
     // TODO: Maybe there's a better way to report this.
     if (enableProfilerTimer) {
       recordCommitTime();
+      if (enableComponentPerformanceTrack) {
+        recordCommitEndTime();
+      }
     }
   }
 
