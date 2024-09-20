@@ -12,6 +12,8 @@ import type {Fiber} from './ReactInternalTypes';
 import type {Lane} from './ReactFiberLane';
 import {isTransitionLane, isBlockingLane} from './ReactFiberLane';
 
+import {resolveEventType, resolveEventTimeStamp} from './ReactFiberConfig';
+
 import {
   enableProfilerCommitHooks,
   enableProfilerNestedUpdatePhase,
@@ -34,9 +36,13 @@ export let componentEffectStartTime: number = -1.1;
 export let componentEffectEndTime: number = -1.1;
 
 export let blockingUpdateTime: number = -1.1; // First sync setState scheduled.
+export let blockingEventTime: number = -1.1; // Event timeStamp of the first setState.
+export let blockingEventType: null | string = null; // Event type of the first setState.
 // TODO: This should really be one per Transition lane.
 export let transitionStartTime: number = -1.1; // First startTransition call before setState.
 export let transitionUpdateTime: number = -1.1; // First transition setState scheduled.
+export let transitionEventTime: number = -1.1; // Event timeStamp of the first transition.
+export let transitionEventType: null | string = null; // Event type of the first transition.
 
 export function startUpdateTimerByLane(lane: Lane): void {
   if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
@@ -45,10 +51,16 @@ export function startUpdateTimerByLane(lane: Lane): void {
   if (isBlockingLane(lane)) {
     if (blockingUpdateTime < 0) {
       blockingUpdateTime = now();
+      blockingEventTime = resolveEventTimeStamp();
+      blockingEventType = resolveEventType();
     }
   } else if (isTransitionLane(lane)) {
     if (transitionUpdateTime < 0) {
       transitionUpdateTime = now();
+      if (transitionStartTime < 0) {
+        transitionEventTime = resolveEventTimeStamp();
+        transitionEventType = resolveEventType();
+      }
     }
   }
 }
@@ -63,6 +75,8 @@ export function startAsyncTransitionTimer(): void {
   }
   if (transitionStartTime < 0 && transitionUpdateTime < 0) {
     transitionStartTime = now();
+    transitionEventTime = resolveEventTimeStamp();
+    transitionEventType = resolveEventType();
   }
 }
 
