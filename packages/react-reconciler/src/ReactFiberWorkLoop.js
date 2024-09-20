@@ -235,6 +235,8 @@ import {
   transitionEventType,
   clearBlockingTimers,
   clearTransitionTimers,
+  clampBlockingTimers,
+  clampTransitionTimers,
   markNestedUpdateScheduled,
   renderStartTime,
   recordRenderTime,
@@ -1712,6 +1714,18 @@ function resetWorkInProgressStack() {
     interruptedWork = interruptedWork.return;
   }
   workInProgress = null;
+}
+
+function finalizeRender(lanes: Lanes): void {
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    const finalizationTime = now();
+    if (includesBlockingLane(lanes)) {
+      clampBlockingTimers(finalizationTime);
+    }
+    if (includesTransitionLane(lanes)) {
+      clampTransitionTimers(finalizationTime);
+    }
+  }
 }
 
 function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
@@ -3400,6 +3414,10 @@ function commitRootImpl(
     nestedUpdateCount = 0;
   }
 
+  if (!rootDidHavePassiveEffects) {
+    finalizeRender(lanes);
+  }
+
   // If layout work was scheduled, flush it now.
   flushSyncWorkOnAllRoots();
 
@@ -3580,6 +3598,8 @@ function flushPassiveEffectsImpl() {
   }
 
   executionContext = prevExecutionContext;
+
+  finalizeRender(lanes);
 
   flushSyncWorkOnAllRoots();
 

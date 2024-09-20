@@ -108,6 +108,39 @@ export function clearTransitionTimers(): void {
   transitionUpdateTime = -1.1;
 }
 
+export function clampBlockingTimers(finalTime: number): void {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  // If we had new updates come in while we were still rendering or committing, we don't want
+  // those update times to create overlapping tracks in the performance timeline so we clamp
+  // them to the end of the commit phase.
+  if (blockingUpdateTime >= 0 && blockingUpdateTime < finalTime) {
+    blockingUpdateTime = finalTime;
+  }
+  if (blockingEventTime >= 0 && blockingEventTime < finalTime) {
+    blockingEventTime = finalTime;
+  }
+}
+
+export function clampTransitionTimers(finalTime: number): void {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  // If we had new updates come in while we were still rendering or committing, we don't want
+  // those update times to create overlapping tracks in the performance timeline so we clamp
+  // them to the end of the commit phase.
+  if (transitionStartTime >= 0 && transitionStartTime < finalTime) {
+    transitionStartTime = finalTime;
+  }
+  if (transitionUpdateTime >= 0 && transitionUpdateTime < finalTime) {
+    transitionUpdateTime = finalTime;
+  }
+  if (transitionEventTime >= 0 && transitionEventTime < finalTime) {
+    transitionEventTime = finalTime;
+  }
+}
+
 export function pushNestedEffectDurations(): number {
   if (!enableProfilerTimer || !enableProfilerCommitHooks) {
     return 0;
