@@ -1716,9 +1716,8 @@ function resetWorkInProgressStack() {
   workInProgress = null;
 }
 
-function finalizeRender(lanes: Lanes): void {
+function finalizeRender(lanes: Lanes, finalizationTime: number): void {
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
-    const finalizationTime = now();
     if (includesBlockingLane(lanes)) {
       clampBlockingTimers(finalizationTime);
     }
@@ -1733,6 +1732,11 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
     // Starting a new render. Log the end of any previous renders and the
     // blocked time before the render started.
     recordRenderTime();
+    // If this was a restart, e.g. due to an interrupting update, then there's no space
+    // in the track to log the cause since we'll have rendered all the way up until the
+    // restart so we need to clamp that.
+    finalizeRender(workInProgressRootRenderLanes, renderStartTime);
+
     if (includesBlockingLane(lanes)) {
       logBlockingStart(
         blockingUpdateTime,
@@ -3414,8 +3418,10 @@ function commitRootImpl(
     nestedUpdateCount = 0;
   }
 
-  if (!rootDidHavePassiveEffects) {
-    finalizeRender(lanes);
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    if (!rootDidHavePassiveEffects) {
+      finalizeRender(lanes, now());
+    }
   }
 
   // If layout work was scheduled, flush it now.
@@ -3599,7 +3605,9 @@ function flushPassiveEffectsImpl() {
 
   executionContext = prevExecutionContext;
 
-  finalizeRender(lanes);
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    finalizeRender(lanes, now());
+  }
 
   flushSyncWorkOnAllRoots();
 
