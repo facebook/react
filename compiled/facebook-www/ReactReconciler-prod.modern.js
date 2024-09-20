@@ -1140,8 +1140,8 @@ module.exports = function ($$$config) {
   }
   function pingEngtangledActionScope() {
     if (
-      null !== currentEntangledListeners &&
-      0 === --currentEntangledPendingCount
+      0 === --currentEntangledPendingCount &&
+      null !== currentEntangledListeners
     ) {
       null !== currentEntangledActionThenable &&
         (currentEntangledActionThenable.status = "fulfilled");
@@ -3221,14 +3221,26 @@ module.exports = function ($$$config) {
           returnValue,
           finishedState
         );
-        dispatchSetState(fiber, queue, thenableForFinishedState);
-      } else dispatchSetState(fiber, queue, finishedState);
+        dispatchSetStateInternal(
+          fiber,
+          queue,
+          thenableForFinishedState,
+          requestUpdateLane(fiber)
+        );
+      } else
+        dispatchSetStateInternal(
+          fiber,
+          queue,
+          finishedState,
+          requestUpdateLane(fiber)
+        );
     } catch (error) {
-      dispatchSetState(fiber, queue, {
-        then: function () {},
-        status: "rejected",
-        reason: error
-      });
+      dispatchSetStateInternal(
+        fiber,
+        queue,
+        { then: function () {}, status: "rejected", reason: error },
+        requestUpdateLane()
+      );
     } finally {
       setCurrentUpdatePriority(previousPriority),
         (ReactSharedInternals.T = prevTransition);
@@ -3318,15 +3330,18 @@ module.exports = function ($$$config) {
           entangleTransitionUpdate(action, queue, lane)));
   }
   function dispatchSetState(fiber, queue, action) {
-    var lane = requestUpdateLane(),
-      update = {
-        lane: lane,
-        revertLane: 0,
-        action: action,
-        hasEagerState: !1,
-        eagerState: null,
-        next: null
-      };
+    var lane = requestUpdateLane();
+    dispatchSetStateInternal(fiber, queue, action, lane);
+  }
+  function dispatchSetStateInternal(fiber, queue, action, lane) {
+    var update = {
+      lane: lane,
+      revertLane: 0,
+      action: action,
+      hasEagerState: !1,
+      eagerState: null,
+      next: null
+    };
     if (isRenderPhaseUpdate(fiber)) enqueueRenderPhaseUpdate(queue, update);
     else {
       var alternate = fiber.alternate;
@@ -3340,19 +3355,24 @@ module.exports = function ($$$config) {
             eagerState = alternate(currentState, action);
           update.hasEagerState = !0;
           update.eagerState = eagerState;
-          if (objectIs(eagerState, currentState)) {
-            enqueueUpdate$1(fiber, queue, update, 0);
-            null === workInProgressRoot && finishQueueingConcurrentUpdates();
-            return;
-          }
+          if (objectIs(eagerState, currentState))
+            return (
+              enqueueUpdate$1(fiber, queue, update, 0),
+              null === workInProgressRoot && finishQueueingConcurrentUpdates(),
+              !1
+            );
         } catch (error) {
         } finally {
         }
       action = enqueueConcurrentHookUpdate(fiber, queue, update, lane);
-      null !== action &&
-        (scheduleUpdateOnFiber(action, fiber, lane),
-        entangleTransitionUpdate(action, queue, lane));
+      if (null !== action)
+        return (
+          scheduleUpdateOnFiber(action, fiber, lane),
+          entangleTransitionUpdate(action, queue, lane),
+          !0
+        );
     }
+    return !1;
   }
   function dispatchOptimisticSetState(
     fiber,
@@ -11280,8 +11300,10 @@ module.exports = function ($$$config) {
     getInstanceFromScope = $$$config.getInstanceFromScope,
     setCurrentUpdatePriority = $$$config.setCurrentUpdatePriority,
     getCurrentUpdatePriority = $$$config.getCurrentUpdatePriority,
-    resolveUpdatePriority = $$$config.resolveUpdatePriority,
-    shouldAttemptEagerTransition = $$$config.shouldAttemptEagerTransition,
+    resolveUpdatePriority = $$$config.resolveUpdatePriority;
+  $$$config.resolveEventType;
+  $$$config.resolveEventTimeStamp;
+  var shouldAttemptEagerTransition = $$$config.shouldAttemptEagerTransition,
     detachDeletedInstance = $$$config.detachDeletedInstance,
     requestPostPaintCallback = $$$config.requestPostPaintCallback,
     maySuspendCommit = $$$config.maySuspendCommit,
@@ -12342,7 +12364,7 @@ module.exports = function ($$$config) {
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
       findFiberByHostInstance: getInstanceFromNode,
-      reconcilerVersion: "19.0.0-www-modern-ae75d5a3-20240920"
+      reconcilerVersion: "19.0.0-www-modern-d4688dfa-20240920"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
@@ -12405,7 +12427,12 @@ module.exports = function ($$$config) {
         : function () {
             var resetStateQueue =
               ensureFormComponentIsStateful(formFiber).next.queue;
-            dispatchSetState(formFiber, resetStateQueue, {});
+            dispatchSetStateInternal(
+              formFiber,
+              resetStateQueue,
+              {},
+              requestUpdateLane()
+            );
             return action(formData);
           }
     );
