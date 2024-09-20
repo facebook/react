@@ -623,6 +623,15 @@ export function includesExpiredLane(root: FiberRoot, lanes: Lanes): boolean {
   return (lanes & root.expiredLanes) !== NoLanes;
 }
 
+export function isBlockingLane(lane: Lane): boolean {
+  const SyncDefaultLanes =
+    InputContinuousHydrationLane |
+    InputContinuousLane |
+    DefaultHydrationLane |
+    DefaultLane;
+  return (lane & SyncDefaultLanes) !== NoLanes;
+}
+
 export function isTransitionLane(lane: Lane): boolean {
   return (lane & TransitionLanes) !== NoLanes;
 }

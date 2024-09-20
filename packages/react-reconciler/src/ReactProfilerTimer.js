@@ -9,6 +9,9 @@
 
 import type {Fiber} from './ReactInternalTypes';
 
+import type {Lane} from './ReactFiberLane';
+import {isTransitionLane, isBlockingLane} from './ReactFiberLane';
+
 import {
   enableProfilerCommitHooks,
   enableProfilerNestedUpdatePhase,
@@ -35,26 +38,23 @@ export let blockingUpdateTime: number = -1.1; // First sync setState scheduled.
 export let transitionStartTime: number = -1.1; // First startTransition call before setState.
 export let transitionUpdateTime: number = -1.1; // First transition setState scheduled.
 
-export function startBlockingUpdateTimer(): void {
+export function startUpdateTimerByLane(lane: Lane): void {
   if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
     return;
   }
-  if (blockingUpdateTime < 0) {
-    blockingUpdateTime = now();
+  if (isBlockingLane(lane)) {
+    if (blockingUpdateTime < 0) {
+      blockingUpdateTime = now();
+    }
+  } else if (isTransitionLane(lane)) {
+    if (transitionUpdateTime < 0) {
+      transitionUpdateTime = now();
+    }
   }
 }
 
 export function clearBlockingTimers(): void {
   blockingUpdateTime = -1.1;
-}
-
-export function startTransitionUpdateTimer(): void {
-  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
-    return;
-  }
-  if (transitionUpdateTime < 0) {
-    transitionUpdateTime = now();
-  }
 }
 
 export function startAsyncTransitionTimer(): void {
