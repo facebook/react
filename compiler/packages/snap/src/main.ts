@@ -5,48 +5,60 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {fork} from 'child_process';
+import { fork } from 'child_process';
 import invariant from 'invariant';
 import process from 'process';
 import * as readline from 'readline';
-import {hideBin} from 'yargs/helpers';
+import { hideBin } from 'yargs/helpers';
 
+// Setup keypress event listeners
 readline.emitKeypressEvents(process.stdin);
 
 if (process.stdin.isTTY) {
   process.stdin.setRawMode(true);
 }
 
-process.stdin.on('keypress', function (_, key) {
+let childProc; // Declare variable to hold the child process
+
+/**
+ * Handles 'keypress' events, specifically CTRL + C
+ * for killing the child process gracefully.
+ */
+process.stdin.on('keypress', (_, key) => {
   if (key && key.name === 'c' && key.ctrl) {
-    // handle sigint
     if (childProc) {
-      console.log('Interrupted!!');
+      console.log('Interrupted! Killing child process...');
       childProc.kill('SIGINT');
       childProc.unref();
-      process.exit(-1);
+      process.exit(-1); // Exit with error code
     }
   }
 });
 
-const childProc = fork(require.resolve('./runner.js'), hideBin(process.argv), {
-  // for some reason, keypress events aren't sent to handlers in both processes
-  // when we `inherit` stdin.
-  // pipe stdout and stderr so we can silence child process after parent exits
-  stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
-  // forward existing env variables, like `NODE_OPTIONS` which VSCode uses to attach
-  // its debugger
-  env: {...process.env, FORCE_COLOR: 'true'},
-});
+try {
+  // Fork the child process
+  childProc = fork(require.resolve('./runner.js'), hideBin(process.argv), {
+    stdio: ['pipe', 'pipe', 'pipe', 'ipc'], // Use pipes for stdio
+    env: { ...process.env, FORCE_COLOR: 'true' }, // Forward environment variables
+  });
 
-invariant(
-  childProc.stdin && childProc.stdout && childProc.stderr,
-  'Expected forked process to have piped stdio',
-);
-process.stdin.pipe(childProc.stdin);
-childProc.stdout.pipe(process.stdout);
-childProc.stderr.pipe(process.stderr);
+  invariant(
+    childProc.stdin && childProc.stdout && childProc.stderr,
+    'Expected forked process to have piped stdio',
+  );
 
-childProc.on('exit', code => {
-  process.exit(code ?? -1);
-});
+  // Pipe parent stdin to child stdin, and child's output to parent's output
+  process.stdin.pipe(childProc.stdin);
+  childProc.stdout.pipe(process.stdout);
+  childProc.stderr.pipe(process.stderr);
+
+  // Handle child process exit event
+  childProc.on('exit', (code) => {
+    console.log(`Child process exited with code ${code}`);
+    process.exit(code ?? -1);
+  });
+  
+} catch (error) {
+  console.error('Failed to start the child process:', error);
+  process.exit(1); // Exit with failure
+}
