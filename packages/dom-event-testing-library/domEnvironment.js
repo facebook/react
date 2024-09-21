@@ -49,7 +49,7 @@ export const platform = {
   get() {
     return global.navigator.platform === 'MacIntel' ? 'mac' : 'windows';
   },
-  set(name: 'mac' | 'windows') {
+  set(name) {
     switch (name) {
       case 'mac': {
         platformGetter.mockReturnValue('MacIntel');
