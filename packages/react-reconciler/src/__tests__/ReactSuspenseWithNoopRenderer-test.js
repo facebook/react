@@ -4395,10 +4395,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       );
     } else {
       // Since there's an interruption, the expired content is pushed out.
-      assertLog([
-        'Async',
-        ...(gate('enableRetryLaneExpiration') ? ['A', 'B', 'C'] : []),
-      ]);
+      assertLog(['Async', 'A', 'B', 'C']);
 
       expect(root).toMatchRenderedOutput(
         <>
