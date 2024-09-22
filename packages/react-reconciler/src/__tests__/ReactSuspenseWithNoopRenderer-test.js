@@ -4209,11 +4209,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
   // @gate enableLegacyCache
   it('recurring updates in siblings should not block expensive content in suspense boundary from committing', async () => {
-    const {useState} = React;
-
     let setText;
     function UpdatingText() {
-      const [text, _setText] = useState('1');
+      const [text, _setText] = React.useState('1');
       setText = _setText;
       return <Text text={text} />;
     }
@@ -4314,11 +4312,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
   // @gate enableLegacyCache
   it('recurring transition updates in siblings should not block expensive content in suspense boundary from committing', async () => {
-    const {useState, startTransition} = React;
-
     let setText;
     function UpdatingText() {
-      const [text, _setText] = useState('1');
+      const [text, _setText] = React.useState('1');
       setText = _setText;
       return <Text text={text} />;
     }
