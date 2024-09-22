@@ -4208,7 +4208,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   );
 
   // @gate enableLegacyCache
-  it.only('recurring updates in siblings should not block expensive content in suspense boundary from committing', async () => {
+  it('recurring updates in siblings should not block expensive content in suspense boundary from committing', async () => {
     const {useState} = React;
 
     let setText;
@@ -4313,7 +4313,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   // @gate enableLegacyCache
-  it.only('recurring transition updates in siblings should not block expensive content in suspense boundary from committing', async () => {
+  it('recurring transition updates in siblings should not block expensive content in suspense boundary from committing', async () => {
     const {useState, startTransition} = React;
 
     let setText;
