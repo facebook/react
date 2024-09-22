@@ -4207,8 +4207,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     },
   );
 
-  // @gate enableLegacyCache && enableRetryLaneExpiration
-  it('recurring updates in siblings should not block expensive content in suspense boundary from committing', async () => {
+  // @gate enableLegacyCache
+  it.only('recurring updates in siblings should not block expensive content in suspense boundary from committing', async () => {
     const {useState} = React;
 
     let setText;
@@ -4272,21 +4272,48 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     await waitForMicrotasks();
     Scheduler.unstable_flushNumberOfYields(1);
-    assertLog(['Async', 'A', 'B', 'C']);
 
-    expect(root).toMatchRenderedOutput(
-      <>
-        <span prop="2" />
-        <span prop="Async" />
-        <span prop="A" />
-        <span prop="B" />
-        <span prop="C" />
-      </>,
-    );
+    if (gate('enableRetryLaneExpiration')) {
+      // Even with an interruption, the expired retry is included.
+      assertLog(['Async', 'A', 'B', 'C']);
+
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span prop="2" />
+          <span prop="Async" />
+          <span prop="A" />
+          <span prop="B" />
+          <span prop="C" />
+        </>,
+      );
+    } else {
+      // Since there's an interruption, the expired content is pushed out.
+      assertLog(['Async']);
+
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span prop="2" />
+          <span prop="Loading..." />
+        </>,
+      );
+
+      // Now flush without interrupting
+      await waitForAll(['A', 'B', 'C']);
+
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span prop="2" />
+          <span prop="Async" />
+          <span prop="A" />
+          <span prop="B" />
+          <span prop="C" />
+        </>,
+      );
+    }
   });
 
   // @gate enableLegacyCache
-  it('recurring transition updates in siblings should not block expensive content in suspense boundary from committing', async () => {
+  it.only('recurring transition updates in siblings should not block expensive content in suspense boundary from committing', async () => {
     const {useState, startTransition} = React;
 
     let setText;
@@ -4352,16 +4379,46 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     await waitForMicrotasks();
     Scheduler.unstable_flushNumberOfYields(1);
-    assertLog(['Async', 'A', 'B', 'C']);
 
-    expect(root).toMatchRenderedOutput(
-      <>
-        <span prop="2" />
-        <span prop="Async" />
-        <span prop="A" />
-        <span prop="B" />
-        <span prop="C" />
-      </>,
-    );
+    if (gate('enableRetryLaneExpiration')) {
+      // Even with an interruption, the expired retry is included.
+      assertLog(['Async', 'A', 'B', 'C']);
+
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span prop="2" />
+          <span prop="Async" />
+          <span prop="A" />
+          <span prop="B" />
+          <span prop="C" />
+        </>,
+      );
+    } else {
+      // Since there's an interruption, the expired content is pushed out.
+      assertLog([
+        'Async',
+        ...(gate('enableRetryLaneExpiration') ? ['A', 'B', 'C'] : []),
+      ]);
+
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span prop="2" />
+          <span prop="Loading..." />
+        </>,
+      );
+
+      // Now flush without interrupting
+      await waitForAll(['A', 'B', 'C']);
+
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span prop="2" />
+          <span prop="Async" />
+          <span prop="A" />
+          <span prop="B" />
+          <span prop="C" />
+        </>,
+      );
+    }
   });
 });
