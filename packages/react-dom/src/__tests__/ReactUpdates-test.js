@@ -96,30 +96,31 @@ describe('ReactUpdates', () => {
       Scheduler.log(`Render: ${state.prop} ${state.count}`);
 
       if (state.prop !== prop) {
-        Scheduler.log(
-          `setState in render ${state.prop} ${state.count} -> ${prop} ${state.count + 1}`,
-        );
+        Scheduler.log(`setState in render: ${state.prop} ${state.count}`);
         setState(currentState => {
-          Scheduler.log(
-            `Render reducer: ${currentState.prop} ${currentState.count} -> ${prop} ${currentState.count + 1}`,
-          );
-          return {
+          const nextState = {
             prop,
             count: currentState.count + 1,
           };
+
+          Scheduler.log(
+            `Render reducer: ${currentState.prop} ${currentState.count} -> ${nextState.prop} ${nextState.count}`,
+          );
+          return nextState;
         });
       }
 
       _setTransitionState = () => {
         React.startTransition(() => {
           setState(currentState => {
-            Scheduler.log(
-              `Transition reducer: ${currentState.count} ${currentState.prop} -> ${currentState.prop} ${currentState.count + 1}`,
-            );
-            return {
-              prop: currentState.prop,
+            const nextState = {
+              prop,
               count: currentState.count + 10,
             };
+            Scheduler.log(
+              `Transition reducer: ${currentState.count} ${currentState.prop} -> ${nextState.prop} ${nextState.count}`,
+            );
+            return nextState;
           });
         });
       };
@@ -160,11 +161,11 @@ describe('ReactUpdates', () => {
       // Transition setState
       // For isomorphic startTransition,
       // This runs first, not during transition render.
-      'Transition reducer: 0 0 -> 0 1',
+      'Transition reducer: 0 0 -> 0 10',
 
       // Prop change from 0 -> 1
       'Render: 0 0',
-      'setState in render 0 0 -> 1 1',
+      'setState in render: 0 0',
       'Render reducer: 0 0 -> 1 1',
       'Render: 1 1',
 
@@ -174,14 +175,14 @@ describe('ReactUpdates', () => {
         ? []
         : [
             'Render: 0 0',
-            'setState in render 0 0 -> 1 1',
+            'setState in render: 0 0',
             'Render reducer: 0 0 -> 1 1',
           ]),
       'Render: 1 1',
 
       // Transition
       'Render: 0 10',
-      'setState in render 0 10 -> 1 11',
+      'setState in render: 0 10',
       'Render reducer: 0 10 -> 1 11',
       'Render: 1 11',
     ]);
@@ -199,29 +200,29 @@ describe('ReactUpdates', () => {
       Scheduler.log(`Render: ${state.prop} ${state.count}`);
 
       if (state.prop !== prop) {
-        Scheduler.log(
-          `setState in render ${state.prop} ${state.count} -> ${prop} ${state.count + 1}`,
-        );
+        Scheduler.log(`setState in render: ${state.prop} ${state.count}`);
         setState(currentState => {
-          Scheduler.log(
-            `Render reducer: ${currentState.prop} ${currentState.count} -> ${prop} ${currentState.count + 1}`,
-          );
-          return {
+          const nextState = {
             prop,
             count: currentState.count + 1,
           };
+          Scheduler.log(
+            `Render reducer: ${currentState.prop} ${currentState.count} -> ${nextState.prop} ${nextState.count}`,
+          );
+          return nextState;
         });
       }
       _setTransitionState = () => {
         startTransition(() => {
           setState(currentState => {
-            Scheduler.log(
-              `Transition reducer: ${currentState.prop} ${currentState.count} -> ${prop} ${currentState.count + 10}`,
-            );
-            return {
+            const nextState = {
               prop,
               count: currentState.count + 10,
             };
+            Scheduler.log(
+              `Transition reducer: ${currentState.prop} ${currentState.count} -> ${nextState.prop} ${nextState.count}`,
+            );
+            return nextState;
           });
         });
       };
@@ -262,7 +263,7 @@ describe('ReactUpdates', () => {
       assertLog([
         // Prop change from 0 -> 1
         'Render: 0 0',
-        'setState in render 0 0 -> 1 1',
+        'setState in render: 0 0',
         'Render reducer: 0 0 -> 1 1',
         'Render: 1 1',
 
@@ -275,7 +276,7 @@ describe('ReactUpdates', () => {
         // currentProp currentState -> prop currentState + 10.
         'Transition reducer: 1 1 -> 0 11',
         'Render: 0 11',
-        'setState in render 0 11 -> 1 12',
+        'setState in render: 0 11',
         'Render reducer: 0 11 -> 1 12',
         'Render: 1 12',
       ]);
@@ -285,7 +286,7 @@ describe('ReactUpdates', () => {
       assertLog([
         // Prop change from 0 -> 1
         'Render: 0 0',
-        'setState in render 0 0 -> 1 1',
+        'setState in render: 0 0',
         'Render reducer: 0 0 -> 1 1',
         'Render: 1 1',
 
@@ -293,14 +294,14 @@ describe('ReactUpdates', () => {
         'Layout effect setState',
         // Extra render
         'Render: 0 0',
-        'setState in render 0 0 -> 1 1',
+        'setState in render: 0 0',
         'Render reducer: 0 0 -> 1 1',
         'Render: 1 1',
 
         // Transition
         'Transition reducer: 0 0 -> 0 10',
         'Render: 0 10',
-        'setState in render 0 10 -> 1 11',
+        'setState in render: 0 10',
         'Render reducer: 0 10 -> 1 11',
         'Render: 1 11',
       ]);
