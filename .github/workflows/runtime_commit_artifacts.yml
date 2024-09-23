@@ -12,7 +12,7 @@ on:
         required: false
         type: string
       force:
-        description: 'True to force a commit to the builds/... branches even if the only change is to the revision'
+        description: 'True to force a commit to the builds/... branches'
         required: true
         default: false
         type: boolean
