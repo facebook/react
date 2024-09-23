@@ -238,4 +238,55 @@ describe('ReactDOMSVG', () => {
     expect(div.namespaceURI).toBe('http://www.w3.org/1999/xhtml');
     expect(div.tagName).toBe('DIV');
   });
+
+  it('should trigger click event on first focus', async () => {
+    const log = [];
+    const handleClick = () => {
+      log.push('svg click');
+    };
+
+    function App() {
+      const [focused, setFocused] = React.useState(false);
+      const handleFocus = () => {
+        setFocused(true);
+      };
+
+      return (
+        <svg
+          onFocus={handleFocus}
+          tabIndex={1}
+          onClick={handleClick}
+          viewBox="0 0 512 512"
+          dangerouslySetInnerHTML={{
+            __html: '<path d="M256 352 128 160h256z" />',
+          }}
+        ></svg>
+      );
+    }
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = ReactDOMClient.createRoot(container);
+
+    try {
+      await act(() => {
+        root.render(<App />);
+      });
+
+      const svgElement = container.querySelector('svg');
+      svgElement.focus();
+
+      // Simulate click event
+      const clickEvent = new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+      });
+      svgElement.dispatchEvent(clickEvent);
+
+      expect(log).toEqual(['svg click']);
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
 });
