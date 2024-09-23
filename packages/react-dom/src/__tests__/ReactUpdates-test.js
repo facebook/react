@@ -87,7 +87,7 @@ describe('ReactUpdates', () => {
     expect(container.firstChild.textContent).toBe('2');
   });
 
-  it.only('should keep state from render during layout effect update', async () => {
+  it('should keep state from render during layout effect update', async () => {
     let _setState = null;
 
     function Component({prop}) {
