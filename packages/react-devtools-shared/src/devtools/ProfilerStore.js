@@ -289,6 +289,10 @@ export default class ProfilerStore extends EventEmitter<{
   };
 
   onProfilingStatus: (isProfiling: boolean) => void = isProfiling => {
+    if (this._isProfiling === isProfiling) {
+      return;
+    }
+
     if (isProfiling) {
       this._dataBackends.splice(0);
       this._dataFrontend = null;
@@ -315,36 +319,34 @@ export default class ProfilerStore extends EventEmitter<{
       });
     }
 
-    if (this._isProfiling !== isProfiling) {
-      this._isProfiling = isProfiling;
+    this._isProfiling = isProfiling;
 
-      // Invalidate suspense cache if profiling data is being (re-)recorded.
-      // Note that we clear again, in case any views read from the cache while profiling.
-      // (That would have resolved a now-stale value without any profiling data.)
-      this._cache.invalidate();
+    // Invalidate suspense cache if profiling data is being (re-)recorded.
+    // Note that we clear again, in case any views read from the cache while profiling.
+    // (That would have resolved a now-stale value without any profiling data.)
+    this._cache.invalidate();
 
-      this.emit('isProfiling');
+    this.emit('isProfiling');
 
-      // If we've just finished a profiling session, we need to fetch data stored in each renderer interface
-      // and re-assemble it on the front-end into a format (ProfilingDataFrontend) that can power the Profiler UI.
-      // During this time, DevTools UI should probably not be interactive.
-      if (!isProfiling) {
-        this._dataBackends.splice(0);
-        this._rendererQueue.clear();
+    // If we've just finished a profiling session, we need to fetch data stored in each renderer interface
+    // and re-assemble it on the front-end into a format (ProfilingDataFrontend) that can power the Profiler UI.
+    // During this time, DevTools UI should probably not be interactive.
+    if (!isProfiling) {
+      this._dataBackends.splice(0);
+      this._rendererQueue.clear();
 
-        // Only request data from renderers that actually logged it.
-        // This avoids unnecessary bridge requests and also avoids edge case mixed renderer bugs.
-        // (e.g. when v15 and v16 are both present)
-        this._rendererIDsThatReportedProfilingData.forEach(rendererID => {
-          if (!this._rendererQueue.has(rendererID)) {
-            this._rendererQueue.add(rendererID);
+      // Only request data from renderers that actually logged it.
+      // This avoids unnecessary bridge requests and also avoids edge case mixed renderer bugs.
+      // (e.g. when v15 and v16 are both present)
+      this._rendererIDsThatReportedProfilingData.forEach(rendererID => {
+        if (!this._rendererQueue.has(rendererID)) {
+          this._rendererQueue.add(rendererID);
 
-            this._bridge.send('getProfilingData', {rendererID});
-          }
-        });
+          this._bridge.send('getProfilingData', {rendererID});
+        }
+      });
 
-        this.emit('isProcessingData');
-      }
+      this.emit('isProcessingData');
     }
   };
 }
