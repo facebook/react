@@ -8,7 +8,7 @@ import {
   HIRFunction,
   Identifier,
   IdentifierId,
-  Place,
+  InstructionId,
   ReactiveScopeDependency,
   ScopeId,
 } from './HIR';
@@ -66,7 +66,7 @@ export function collectHoistablePropertyLoads(
   fn: HIRFunction,
   temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
 ): ReadonlyMap<ScopeId, BlockInfo> {
-  const nodes = collectPropertyLoadsInBlocks(fn, temporaries);
+  const nodes = collectNonNullsInBlocks(fn, temporaries);
   propagateNonNull(fn, nodes);
 
   const nodesKeyedByScopeId = new Map<ScopeId, BlockInfo>();
@@ -84,152 +84,108 @@ export function collectHoistablePropertyLoads(
 
 export type BlockInfo = {
   block: BasicBlock;
-  assumedNonNullObjects: ReadonlySet<PropertyLoadNode>;
+  assumedNonNullObjects: ReadonlySet<DedupedNode>;
 };
-
-export function getProperty(
-  object: Place,
-  propertyName: string,
-  temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
-): ReactiveScopeDependency {
-  /*
-   * (1) Get the base object either from the temporary sidemap (e.g. a LoadLocal)
-   * or a deep copy of an existing property dependency.
-   *  Example 1:
-   *    $0 = LoadLocal x
-   *    $1 = PropertyLoad $0.y
-   *  getProperty($0, ...) -> resolvedObject = x, resolvedDependency = null
-   *
-   *  Example 2:
-   *    $0 = LoadLocal x
-   *    $1 = PropertyLoad $0.y
-   *    $2 = PropertyLoad $1.z
-   *  getProperty($1, ...) -> resolvedObject = null, resolvedDependency = x.y
-   *
-   *  Example 3:
-   *    $0 = Call(...)
-   *    $1 = PropertyLoad $0.y
-   *  getProperty($0, ...) -> resolvedObject = null, resolvedDependency = null
-   */
-  const resolvedDependency = temporaries.get(object.identifier.id);
-
-  /**
-   * (2) Push the last PropertyLoad
-   * TODO(mofeiZ): understand optional chaining
-   */
-  let property: ReactiveScopeDependency;
-  if (resolvedDependency == null) {
-    property = {
-      identifier: object.identifier,
-      path: [{property: propertyName, optional: false}],
-    };
-  } else {
-    property = {
-      identifier: resolvedDependency.identifier,
-      path: [
-        ...resolvedDependency.path,
-        {property: propertyName, optional: false},
-      ],
-    };
-  }
-  return property;
-}
-
-export function resolveTemporary(
-  place: Place,
-  temporaries: ReadonlyMap<IdentifierId, Identifier>,
-): Identifier {
-  return temporaries.get(place.identifier.id) ?? place.identifier;
-}
 
 /**
  * Tree data structure to dedupe property loads (e.g. a.b.c)
  * and make computing sets intersections simpler.
  */
-type RootNode = {
-  properties: Map<string, PropertyLoadNode>;
-  parent: null;
-  // Recorded to make later computations simpler
-  fullPath: ReactiveScopeDependency;
-  root: Identifier;
+type DedupedNode = {
+  key: string;
+  dep: ReactiveScopeDependency;
 };
-
-type PropertyLoadNode =
-  | {
-      properties: Map<string, PropertyLoadNode>;
-      parent: PropertyLoadNode;
-      fullPath: ReactiveScopeDependency;
+function depToKey(dep: ReactiveScopeDependency): string {
+  let key = dep.identifier.id.toString();
+  for (let path of dep.path) {
+    if (path.optional) {
+      key += ' ?. ' + path.property;
+    } else {
+      key += ' . ' + path.property;
     }
-  | RootNode;
-
-class Tree {
-  roots: Map<Identifier, RootNode> = new Map();
-
-  #getOrCreateRoot(identifier: Identifier): PropertyLoadNode {
-    /**
-     * Reads from a statically scoped variable are always safe in JS,
-     * with the exception of TDZ (not addressed by this pass).
-     */
-    let rootNode = this.roots.get(identifier);
-
-    if (rootNode === undefined) {
-      rootNode = {
-        root: identifier,
-        properties: new Map(),
-        fullPath: {
-          identifier,
-          path: [],
-        },
-        parent: null,
-      };
-      this.roots.set(identifier, rootNode);
-    }
-    return rootNode;
   }
+  return key;
+}
+function findSuperpaths(
+  match: ReactiveScopeDependency,
+  nodes: Set<DedupedNode>,
+): Set<DedupedNode> {
+  const key = depToKey(match) + ' ';
+  const result = new Set<DedupedNode>();
 
-  static #getOrCreateProperty(
-    node: PropertyLoadNode,
-    property: string,
-  ): PropertyLoadNode {
-    let child = node.properties.get(property);
-    if (child == null) {
-      child = {
-        properties: new Map(),
-        parent: node,
-        fullPath: {
-          identifier: node.fullPath.identifier,
-          path: node.fullPath.path.concat([{property, optional: false}]),
-        },
-      };
-      node.properties.set(property, child);
+  for (const n of nodes) {
+    if (n.key.startsWith(key)) {
+      result.add(n);
     }
-    return child;
   }
+  return result;
+}
 
-  getPropertyLoadNode(n: ReactiveScopeDependency): PropertyLoadNode {
-    CompilerError.invariant(n.path.length > 0, {
-      reason:
-        '[CollectHoistablePropertyLoads] Expected property node, found root node',
-      loc: GeneratedSource,
-    });
-    /**
-     * We add ReactiveScopeDependencies according to instruction ordering,
-     * so all subpaths of a PropertyLoad should already exist
-     * (e.g. a.b is added before a.b.c),
-     */
-    let currNode = this.#getOrCreateRoot(n.identifier);
-    for (let i = 0; i < n.path.length - 1; i++) {
-      currNode = assertNonNull(currNode.properties.get(n.path[i].property));
+class DedupeMap {
+  nodes: Map<string, DedupedNode> = new Map();
+
+  getOrCreateIdentifier(id: Identifier): DedupedNode {
+    const key = id.id.toString();
+    let result = this.nodes.get(key);
+    if (result != null) {
+      return result;
     }
-
-    return Tree.#getOrCreateProperty(currNode, n.path.at(-1)!.property);
+    result = {
+      key,
+      dep: {identifier: id, path: []},
+    };
+    this.nodes.set(key, result);
+    return result;
+  }
+  getOrCreateProperty(dep: ReactiveScopeDependency): DedupedNode {
+    const key = depToKey(dep);
+    let result = this.nodes.get(key);
+    if (result != null) {
+      return result;
+    }
+    result = {
+      key,
+      dep,
+    };
+    this.nodes.set(key, result);
+    return result;
   }
 }
 
-function collectPropertyLoadsInBlocks(
+function pushPropertyLoadNode(
+  node: DedupedNode,
+  instrId: InstructionId,
+  knownImmutableIdentifiers: Set<IdentifierId>,
+  result: Set<DedupedNode>,
+): void {
+  const object = node.dep.identifier;
+  /**
+   * Since this runs *after* buildReactiveScopeTerminals, identifier mutable ranges
+   * are not valid with respect to current instruction id numbering.
+   * We use attached reactive scope ranges as a proxy for mutable range, but this
+   * is an overestimate as (1) scope ranges merge and align to form valid program
+   * blocks and (2) passes like MemoizeFbtAndMacroOperands may assign scopes to
+   * non-mutable identifiers.
+   *
+   * See comment at top of function for why we track known immutable identifiers.
+   */
+  const isMutableAtInstr =
+    object.mutableRange.end > object.mutableRange.start + 1 &&
+    object.scope != null &&
+    inRange({id: instrId}, object.scope.range);
+  if (
+    !isMutableAtInstr ||
+    knownImmutableIdentifiers.has(node.dep.identifier.id)
+  ) {
+    result.add(node);
+  }
+}
+
+function collectNonNullsInBlocks(
   fn: HIRFunction,
   temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
 ): ReadonlyMap<BlockId, BlockInfo> {
+  const tree = new DedupeMap();
   /**
    * Due to current limitations of mutable range inference, there are edge cases in
    * which we infer known-immutable values (e.g. props or hook params) to have a
@@ -238,59 +194,94 @@ function collectPropertyLoadsInBlocks(
    * We track known immutable identifiers to reduce regressions (as PropagateScopeDeps
    * is being rewritten to HIR).
    */
-  const knownImmutableIdentifiers = new Set<Identifier>();
+  const knownImmutableIdentifiers = new Set<IdentifierId>();
   if (fn.fnType === 'Component' || fn.fnType === 'Hook') {
     for (const p of fn.params) {
       if (p.kind === 'Identifier') {
-        knownImmutableIdentifiers.add(p.identifier);
+        knownImmutableIdentifiers.add(p.identifier.id);
       }
     }
   }
-  const tree = new Tree();
+  /**
+   * Known non-null objects such as functional component props can be safely
+   * read from any block.
+   */
+  const knownNonNullIdentifiers = new Set<DedupedNode>();
+  if (
+    fn.env.config.enablePropagateDepsInHIR === 'enabled_with_optimizations' &&
+    fn.fnType === 'Component' &&
+    fn.params.length > 0 &&
+    fn.params[0].kind === 'Identifier'
+  ) {
+    const identifier = fn.params[0].identifier;
+    knownNonNullIdentifiers.add(tree.getOrCreateIdentifier(identifier));
+  }
   const nodes = new Map<BlockId, BlockInfo>();
   for (const [_, block] of fn.body.blocks) {
-    const assumedNonNullObjects = new Set<PropertyLoadNode>();
-    for (const instr of block.instructions) {
-      if (instr.value.kind === 'PropertyLoad') {
-        const property = getProperty(
-          instr.value.object,
-          instr.value.property,
-          temporaries,
-        );
-        const propertyNode = tree.getPropertyLoadNode(property);
-        const object = instr.value.object.identifier;
-        /**
-         * Since this runs *after* buildReactiveScopeTerminals, identifier mutable ranges
-         * are not valid with respect to current instruction id numbering.
-         * We use attached reactive scope ranges as a proxy for mutable range, but this
-         * is an overestimate as (1) scope ranges merge and align to form valid program
-         * blocks and (2) passes like MemoizeFbtAndMacroOperands may assign scopes to
-         * non-mutable identifiers.
-         *
-         * See comment at top of function for why we track known immutable identifiers.
-         */
-        const isMutableAtInstr =
-          object.mutableRange.end > object.mutableRange.start + 1 &&
-          object.scope != null &&
-          inRange(instr, object.scope.range);
-        if (
-          !isMutableAtInstr ||
-          knownImmutableIdentifiers.has(propertyNode.fullPath.identifier)
-        ) {
-          let curr = propertyNode.parent;
-          while (curr != null) {
-            assumedNonNullObjects.add(curr);
-            curr = curr.parent;
-          }
-        }
-      }
-      // TODO handle destructuring
-    }
+    const assumedNonNullObjects = new Set<DedupedNode>(knownNonNullIdentifiers);
 
     nodes.set(block.id, {
       block,
       assumedNonNullObjects,
     });
+    for (const phi of block.phis) {
+      const source = temporaries.get(phi.id.id);
+      if (source) {
+        const propertyNode = tree.getOrCreateProperty(source);
+        pushPropertyLoadNode(
+          propertyNode,
+          // TODO double check which instr id
+          block.instructions.length > 0
+            ? block.instructions[0].id
+            : block.terminal.id,
+          knownImmutableIdentifiers,
+          assumedNonNullObjects,
+        );
+      }
+    }
+    for (const instr of block.instructions) {
+      if (instr.value.kind === 'PropertyLoad') {
+        const source = temporaries.get(instr.value.object.identifier.id) ?? {
+          identifier: instr.value.object.identifier,
+          path: [],
+        };
+        const propertyNode = tree.getOrCreateProperty(source);
+        pushPropertyLoadNode(
+          propertyNode,
+          instr.id,
+          knownImmutableIdentifiers,
+          assumedNonNullObjects,
+        );
+      } else if (
+        instr.value.kind === 'Destructure' &&
+        fn.env.config.enablePropagateDepsInHIR === 'enabled_with_optimizations'
+      ) {
+        const source = instr.value.value.identifier.id;
+        const sourceNode = temporaries.get(source);
+        if (sourceNode != null) {
+          pushPropertyLoadNode(
+            tree.getOrCreateProperty(sourceNode),
+            instr.id,
+            knownImmutableIdentifiers,
+            assumedNonNullObjects,
+          );
+        }
+      } else if (
+        instr.value.kind === 'ComputedLoad' &&
+        fn.env.config.enablePropagateDepsInHIR === 'enabled_with_optimizations'
+      ) {
+        const source = instr.value.object.identifier.id;
+        const sourceNode = temporaries.get(source);
+        if (sourceNode != null) {
+          pushPropertyLoadNode(
+            tree.getOrCreateProperty(sourceNode),
+            instr.id,
+            knownImmutableIdentifiers,
+            assumedNonNullObjects,
+          );
+        }
+      }
+    }
   }
   return nodes;
 }
@@ -320,7 +311,7 @@ function propagateNonNull(
     nodeId: BlockId,
     direction: 'forward' | 'backward',
     traversalState: Map<BlockId, 'active' | 'done'>,
-    nonNullObjectsByBlock: Map<BlockId, ReadonlySet<PropertyLoadNode>>,
+    nonNullObjectsByBlock: Map<BlockId, ReadonlySet<DedupedNode>>,
   ): boolean {
     /**
      * Avoid re-visiting computed or currently active nodes, which can
@@ -391,8 +382,8 @@ function propagateNonNull(
     changed ||= prevObjects.size !== newObjects.size;
     return changed;
   }
-  const fromEntry = new Map<BlockId, ReadonlySet<PropertyLoadNode>>();
-  const fromExit = new Map<BlockId, ReadonlySet<PropertyLoadNode>>();
+  const fromEntry = new Map<BlockId, ReadonlySet<DedupedNode>>();
+  const fromExit = new Map<BlockId, ReadonlySet<DedupedNode>>();
   for (const [blockId, blockInfo] of nodes) {
     fromEntry.set(blockId, blockInfo.assumedNonNullObjects);
     fromExit.set(blockId, blockInfo.assumedNonNullObjects);
@@ -449,14 +440,15 @@ function propagateNonNull(
   );
 
   for (const [id, node] of nodes) {
-    node.assumedNonNullObjects = Set_union(
+    const assumedNonNullObjects = Set_union(
       assertNonNull(fromEntry.get(id)),
       assertNonNull(fromExit.get(id)),
     );
+    node.assumedNonNullObjects = assumedNonNullObjects;
   }
 }
 
-function assertNonNull<T extends NonNullable<U>, U>(
+export function assertNonNull<T extends NonNullable<U>, U>(
   value: T | null | undefined,
   source?: string,
 ): T {
