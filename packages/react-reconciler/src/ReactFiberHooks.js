@@ -48,6 +48,7 @@ import {
   disableLegacyMode,
   enableNoCloningMemoCache,
   enableContextProfiling,
+  alwaysResetBaseQueue,
 } from 'shared/ReactFeatureFlags';
 import {
   REACT_CONTEXT_TYPE,
@@ -1625,9 +1626,9 @@ function rerenderReducer<S, I, A>(
     // TODO: Not sure if this is the desired semantics, but it's what we
     // do for gDSFP. I can't remember why.
 
-    // if (hook.baseQueue === null) {
-    hook.baseState = newState;
-    // }
+    if (alwaysResetBaseQueue || hook.baseQueue === null) {
+      hook.baseState = newState;
+    }
 
     queue.lastRenderedState = newState;
   }
