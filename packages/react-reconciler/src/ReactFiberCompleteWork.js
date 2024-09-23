@@ -42,6 +42,7 @@ import {
   enableRenderableContext,
   passChildrenWhenCloningPersistedNodes,
   disableLegacyMode,
+  enableSiblingPrerendering,
 } from 'shared/ReactFeatureFlags';
 
 import {now} from './Scheduler';
@@ -622,7 +623,9 @@ function scheduleRetryEffect(
 
     // Track the lanes that have been scheduled for an immediate retry so that
     // we can mark them as suspended upon committing the root.
-    markSpawnedRetryLane(retryLane);
+    if (enableSiblingPrerendering) {
+      markSpawnedRetryLane(retryLane);
+    }
   }
 }
 
