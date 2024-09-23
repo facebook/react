@@ -1133,8 +1133,6 @@ function finishConcurrentRender(
     // Track when we finished the last unit of work, before we actually commit it.
     // The commit can be suspended/blocked until we commit it.
     renderEndTime = now();
-    setCurrentTrackFromLanes(lanes);
-    logRenderPhase(renderStartTime, renderEndTime);
   }
 
   // TODO: The fact that most of these branches are identical suggests that some
@@ -1537,8 +1535,6 @@ export function performSyncWorkOnRoot(root: FiberRoot, lanes: Lanes): null {
   let renderEndTime = 0;
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     renderEndTime = now();
-    setCurrentTrackFromLanes(lanes);
-    logRenderPhase(renderStartTime, renderEndTime);
   }
 
   // We now have a consistent tree. Because this is a sync render, we
@@ -3125,6 +3121,12 @@ function commitRootImpl(
 
   const finishedWork = root.finishedWork;
   const lanes = root.finishedLanes;
+
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // Log the previous render phase once we commit. I.e. we weren't interrupted.
+    setCurrentTrackFromLanes(lanes);
+    logRenderPhase(completedRenderStartTime, completedRenderEndTime);
+  }
 
   if (__DEV__) {
     if (enableDebugTracing) {
