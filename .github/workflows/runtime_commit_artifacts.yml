@@ -367,7 +367,7 @@ jobs:
             try {
               const result = execSync(`git status --porcelain ${directory}`, {encoding: 'utf8'});
 
-              // Parse the git status output to get file paths
+              // Parse the git status output to get file paths!
               const files = result.split('\n').filter(file => file.endsWith('.js'));
 
               if (files.length === 0) {
@@ -376,6 +376,9 @@ jobs:
                 );
               } else {
                 files.forEach(line => {
+                  if (line.startsWith(' D ')) {
+                    return;
+                  }
                   const file = line.slice(3).trim();
                   if (file) {
                     console.log('  Signing file:', file);
