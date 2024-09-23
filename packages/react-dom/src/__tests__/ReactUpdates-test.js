@@ -88,12 +88,10 @@ describe('ReactUpdates', () => {
   });
 
   it('should keep state from render during layout effect update with useTransition', async () => {
-    let _setState = null;
     let _setTransitionState = null;
     function Component({prop}) {
       const [, setLayoutState] = React.useState({});
       const [state, setState] = React.useState({prop, count: 0});
-      _setState = setState;
 
       Scheduler.log(`Render: ${state.prop} ${state.count}`);
 
@@ -114,7 +112,7 @@ describe('ReactUpdates', () => {
 
       _setTransitionState = () => {
         React.startTransition(() => {
-          _setState(currentState => {
+          setState(currentState => {
             Scheduler.log(
               `Transition reducer: ${currentState.count} ${currentState.prop} -> ${currentState.prop} ${currentState.count + 1}`,
             );
@@ -191,14 +189,12 @@ describe('ReactUpdates', () => {
   });
 
   it('should keep state from render during layout effect update with isomorphic transition', async () => {
-    let _setState = null;
     let _setTransitionState = null;
 
     function Component({prop}) {
-      const [_, startTransition] = React.useTransition();
+      const [, startTransition] = React.useTransition();
       const [, setLayoutState] = React.useState({});
       const [state, setState] = React.useState({prop, count: 0});
-      _setState = setState;
 
       Scheduler.log(`Render: ${state.prop} ${state.count}`);
 
