@@ -50,6 +50,7 @@ const skipFilter = new Set([
   'component',
   'cond-deps-conditional-member-expr',
   'conditional-break-labeled',
+  'propagate-scope-deps-hir-fork/conditional-break-labeled',
   'conditional-set-state-in-render',
   'constant-computed',
   'constant-propagation-phi',
