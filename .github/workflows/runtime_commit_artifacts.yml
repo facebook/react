@@ -171,7 +171,7 @@ jobs:
 
   commit_www_artifacts:
     needs: download_artifacts
-    if: ${{ inputs.force == 'true' || (github.ref == 'refs/heads/main' && needs.download_artifacts.outputs.www_branch_count == '0') }}
+    if: inputs.force == 'true' || (github.ref == 'refs/heads/main' && needs.download_artifacts.outputs.www_branch_count == '0')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -255,7 +255,7 @@ jobs:
 
   commit_fbsource_artifacts:
     needs: download_artifacts
-    if: ${{ inputs.force == 'true' || (github.ref == 'refs/heads/main' && needs.download_artifacts.outputs.fbsource_branch_count == '0') }}
+    if: inputs.force == 'true' || (github.ref == 'refs/heads/main' && needs.download_artifacts.outputs.fbsource_branch_count == '0')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
