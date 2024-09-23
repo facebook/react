@@ -377,10 +377,14 @@ jobs:
                 );
               } else {
                 files.forEach(line => {
-                  if (line.startsWith(' D ')) {
+                  let file = null;
+                  if (line.startsWith('D ')) {
                     return;
+                  } else if (line.startsWith('R ')) {
+                    file = line.slice(line.indexOf('->') + 3);
+                  } else {
+                    file = line.slice(3).trim();
                   }
-                  const file = line.slice(3).trim();
                   if (file) {
                     console.log('  Signing file:', file);
                     const originalContents = fs.readFileSync(file, 'utf8');
