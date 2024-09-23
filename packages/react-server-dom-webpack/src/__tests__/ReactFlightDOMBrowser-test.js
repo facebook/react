@@ -707,6 +707,40 @@ describe('ReactFlightDOMBrowser', () => {
     });
 
     expect(container.innerHTML).toBe(expectedHtml);
+
+    if (__DEV__) {
+      const resolvedPath1b = await response.value[0].props.children[1]._payload;
+
+      expect(resolvedPath1b._owner).toEqual(
+        expect.objectContaining({
+          name: 'Svg1',
+          env: 'Server',
+          key: null,
+          owner: expect.objectContaining({
+            name: 'Server',
+            env: 'Server',
+            key: null,
+            owner: null,
+          }),
+        }),
+      );
+
+      const resolvedPath2 = response.value[1].props.children;
+
+      expect(resolvedPath2._owner).toEqual(
+        expect.objectContaining({
+          name: 'Svg2',
+          env: 'Server',
+          key: null,
+          owner: expect.objectContaining({
+            name: 'Server',
+            env: 'Server',
+            key: null,
+            owner: null,
+          }),
+        }),
+      );
+    }
   });
 
   it('should progressively reveal server components', async () => {
