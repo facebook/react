@@ -366,6 +366,7 @@ jobs:
             console.log('Signing files in directory:', directory);
             try {
               const result = execSync(`git status --porcelain ${directory}`, {encoding: 'utf8'});
+              console.log(result);
 
               // Parse the git status output to get file paths!
               const files = result.split('\n').filter(file => file.endsWith('.js'));
