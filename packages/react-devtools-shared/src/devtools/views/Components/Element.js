@@ -8,7 +8,14 @@
  */
 
 import * as React from 'react';
-import {Fragment, useContext, useMemo, useState, useEffect, useRef} from 'react';
+import {
+  Fragment,
+  useContext,
+  useMemo,
+  useState,
+  useEffect,
+  useRef,
+} from 'react';
 import Store from 'react-devtools-shared/src/devtools/store';
 import ButtonIcon from '../ButtonIcon';
 import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
@@ -93,7 +100,6 @@ export default function Element({data, index, style}: Props): React.Node {
 
   const handleFocus = () => {
     userInteractedRef.current = true;
-    setFocused(true);
   };
 
   const handleMouseEnter = () => {
@@ -125,7 +131,7 @@ export default function Element({data, index, style}: Props): React.Node {
     }
   }, [id, dispatch]);
 
-   // Handle elements that are removed from the tree while an async render is in progress.
+  // Handle elements that are removed from the tree while an async render is in progress.
   if (element == null) {
     console.warn(`<Element> Could not find element at index ${index}`);
 

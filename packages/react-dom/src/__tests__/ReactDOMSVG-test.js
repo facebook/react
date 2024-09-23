@@ -246,7 +246,7 @@ describe('ReactDOMSVG', () => {
     };
 
     function App() {
-      const [focused, setFocused] = React.useState(false);
+      const [, setFocused] = React.useState(false);
       const handleFocus = () => {
         setFocused(true);
       };
@@ -260,7 +260,7 @@ describe('ReactDOMSVG', () => {
           dangerouslySetInnerHTML={{
             __html: '<path d="M256 352 128 160h256z" />',
           }}
-        ></svg>
+        />
       );
     }
 
