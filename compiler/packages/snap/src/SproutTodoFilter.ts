@@ -478,6 +478,7 @@ const skipFilter = new Set([
   'fbt/bug-fbt-plural-multiple-function-calls',
   'fbt/bug-fbt-plural-multiple-mixed-call-tag',
   'bug-invalid-hoisting-functionexpr',
+  'bug-try-catch-maybe-null-dependency',
   'original-reactive-scopes-fork/bug-nonmutating-capture-in-unsplittable-memo-block',
   'original-reactive-scopes-fork/bug-hoisted-declaration-with-scope',
   'bug-codegen-inline-iife',
