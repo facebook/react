@@ -7139,7 +7139,7 @@ module.exports = function ($$$config) {
   function commitProfilerPostCommit(
     finishedWork,
     current,
-    commitTime,
+    commitStartTime,
     passiveEffectDuration
   ) {
     try {
@@ -7151,7 +7151,7 @@ module.exports = function ($$$config) {
           id,
           null === current ? "mount" : "update",
           passiveEffectDuration,
-          commitTime
+          commitStartTime
         );
     } catch (error) {
       captureCommitPhaseError(finishedWork, finishedWork.return, error);
@@ -9648,7 +9648,10 @@ module.exports = function ($$$config) {
                   workInProgressDeferredLane,
                   workInProgressRootInterleavedUpdatedLanes,
                   workInProgressSuspendedRetryLanes,
-                  workInProgressRootDidSkipSuspendedSiblings
+                  workInProgressRootDidSkipSuspendedSiblings,
+                  2,
+                  -0,
+                  0
                 ),
                 exitStatus
               );
@@ -9664,7 +9667,10 @@ module.exports = function ($$$config) {
               workInProgressDeferredLane,
               workInProgressRootInterleavedUpdatedLanes,
               workInProgressSuspendedRetryLanes,
-              workInProgressRootDidSkipSuspendedSiblings
+              workInProgressRootDidSkipSuspendedSiblings,
+              0,
+              -0,
+              0
             );
           }
         }
@@ -9722,7 +9728,10 @@ module.exports = function ($$$config) {
     spawnedLane,
     updatedLanes,
     suspendedRetryLanes,
-    didSkipSuspendedSiblings
+    didSkipSuspendedSiblings,
+    suspendedCommitReason,
+    completedRenderStartTime,
+    completedRenderEndTime
   ) {
     var subtreeFlags = finishedWork.subtreeFlags;
     if (subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408))
@@ -9741,7 +9750,8 @@ module.exports = function ($$$config) {
             didIncludeRenderPhaseUpdate,
             spawnedLane,
             updatedLanes,
-            suspendedRetryLanes
+            suspendedRetryLanes,
+            1
           )
         );
         markRootSuspended(root, lanes, spawnedLane, didSkipSuspendedSiblings);
@@ -9754,7 +9764,10 @@ module.exports = function ($$$config) {
       didIncludeRenderPhaseUpdate,
       spawnedLane,
       updatedLanes,
-      suspendedRetryLanes
+      suspendedRetryLanes,
+      suspendedCommitReason,
+      completedRenderStartTime,
+      completedRenderEndTime
     );
   }
   function isRenderConsistentWithExternalStores(finishedWork) {
@@ -9867,7 +9880,10 @@ module.exports = function ($$$config) {
       workInProgressRootDidIncludeRecursiveRenderUpdate,
       workInProgressDeferredLane,
       workInProgressRootInterleavedUpdatedLanes,
-      workInProgressSuspendedRetryLanes
+      workInProgressSuspendedRetryLanes,
+      0,
+      -0,
+      0
     );
     ensureRootIsScheduled(root);
     return null;
@@ -10375,7 +10391,10 @@ module.exports = function ($$$config) {
     didIncludeRenderPhaseUpdate,
     spawnedLane,
     updatedLanes,
-    suspendedRetryLanes
+    suspendedRetryLanes,
+    suspendedCommitReason,
+    completedRenderStartTime,
+    completedRenderEndTime
   ) {
     var prevTransition = ReactSharedInternals.T,
       previousUpdateLanePriority = getCurrentUpdatePriority();
@@ -10390,7 +10409,10 @@ module.exports = function ($$$config) {
           previousUpdateLanePriority,
           spawnedLane,
           updatedLanes,
-          suspendedRetryLanes
+          suspendedRetryLanes,
+          suspendedCommitReason,
+          completedRenderStartTime,
+          completedRenderEndTime
         );
     } finally {
       (ReactSharedInternals.T = prevTransition),
@@ -10441,7 +10463,7 @@ module.exports = function ($$$config) {
       (pendingPassiveEffectsRemainingLanes = remainingLanes),
       (pendingPassiveTransitions = transitions),
       scheduleCallback(NormalPriority$1, function () {
-        flushPassiveEffects();
+        flushPassiveEffects(!0);
         return null;
       }));
     transitions = 0 !== (finishedWork.flags & 15990);
@@ -10518,7 +10540,7 @@ module.exports = function ($$$config) {
       null != remainingLanes &&
         ((root.pooledCache = null), releaseCache(remainingLanes)));
   }
-  function flushPassiveEffects() {
+  function flushPassiveEffects(wasDelayedCommit) {
     if (null !== rootWithPendingPassiveEffects) {
       var root = rootWithPendingPassiveEffects,
         remainingLanes = pendingPassiveEffectsRemainingLanes;
@@ -10531,7 +10553,7 @@ module.exports = function ($$$config) {
         return (
           setCurrentUpdatePriority(renderPriority),
           (ReactSharedInternals.T = null),
-          flushPassiveEffectsImpl()
+          flushPassiveEffectsImpl(wasDelayedCommit)
         );
       } finally {
         setCurrentUpdatePriority(previousPriority),
@@ -12364,7 +12386,7 @@ module.exports = function ($$$config) {
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
       findFiberByHostInstance: getInstanceFromNode,
-      reconcilerVersion: "19.0.0-www-modern-d4688dfa-20240920"
+      reconcilerVersion: "19.0.0-www-modern-4e9540e3-20240923"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

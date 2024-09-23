@@ -8686,7 +8686,7 @@ function safelyDetachRef(current, nearestMountedAncestor) {
 function commitProfilerPostCommit(
   finishedWork,
   current,
-  commitTime,
+  commitStartTime,
   passiveEffectDuration
 ) {
   try {
@@ -8698,7 +8698,7 @@ function commitProfilerPostCommit(
         id,
         null === current ? "mount" : "update",
         passiveEffectDuration,
-        commitTime
+        commitStartTime
       );
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
@@ -11444,7 +11444,10 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
                 workInProgressDeferredLane,
                 workInProgressRootInterleavedUpdatedLanes,
                 workInProgressSuspendedRetryLanes,
-                workInProgressRootDidSkipSuspendedSiblings
+                workInProgressRootDidSkipSuspendedSiblings,
+                2,
+                -0,
+                0
               ),
               exitStatus
             );
@@ -11460,7 +11463,10 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
             workInProgressDeferredLane,
             workInProgressRootInterleavedUpdatedLanes,
             workInProgressSuspendedRetryLanes,
-            workInProgressRootDidSkipSuspendedSiblings
+            workInProgressRootDidSkipSuspendedSiblings,
+            0,
+            -0,
+            0
           );
         }
       }
@@ -11515,7 +11521,10 @@ function commitRootWhenReady(
   spawnedLane,
   updatedLanes,
   suspendedRetryLanes,
-  didSkipSuspendedSiblings
+  didSkipSuspendedSiblings,
+  suspendedCommitReason,
+  completedRenderStartTime,
+  completedRenderEndTime
 ) {
   var subtreeFlags = finishedWork.subtreeFlags;
   if (subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408))
@@ -11534,7 +11543,8 @@ function commitRootWhenReady(
           didIncludeRenderPhaseUpdate,
           spawnedLane,
           updatedLanes,
-          suspendedRetryLanes
+          suspendedRetryLanes,
+          1
         )
       );
       markRootSuspended(root, lanes, spawnedLane, didSkipSuspendedSiblings);
@@ -11547,7 +11557,10 @@ function commitRootWhenReady(
     didIncludeRenderPhaseUpdate,
     spawnedLane,
     updatedLanes,
-    suspendedRetryLanes
+    suspendedRetryLanes,
+    suspendedCommitReason,
+    completedRenderStartTime,
+    completedRenderEndTime
   );
 }
 function isRenderConsistentWithExternalStores(finishedWork) {
@@ -11660,7 +11673,10 @@ function performSyncWorkOnRoot(root, lanes) {
     workInProgressRootDidIncludeRecursiveRenderUpdate,
     workInProgressDeferredLane,
     workInProgressRootInterleavedUpdatedLanes,
-    workInProgressSuspendedRetryLanes
+    workInProgressSuspendedRetryLanes,
+    0,
+    -0,
+    0
   );
   ensureRootIsScheduled(root);
   return null;
@@ -12167,7 +12183,10 @@ function commitRoot(
   didIncludeRenderPhaseUpdate,
   spawnedLane,
   updatedLanes,
-  suspendedRetryLanes
+  suspendedRetryLanes,
+  suspendedCommitReason,
+  completedRenderStartTime,
+  completedRenderEndTime
 ) {
   var prevTransition = ReactSharedInternals.T,
     previousUpdateLanePriority = Internals.p;
@@ -12182,7 +12201,10 @@ function commitRoot(
         previousUpdateLanePriority,
         spawnedLane,
         updatedLanes,
-        suspendedRetryLanes
+        suspendedRetryLanes,
+        suspendedCommitReason,
+        completedRenderStartTime,
+        completedRenderEndTime
       );
   } finally {
     (ReactSharedInternals.T = prevTransition),
@@ -12233,7 +12255,7 @@ function commitRootImpl(
     (pendingPassiveEffectsRemainingLanes = remainingLanes),
     (pendingPassiveTransitions = transitions),
     scheduleCallback(NormalPriority$1, function () {
-      flushPassiveEffects();
+      flushPassiveEffects(!0);
       return null;
     }));
   transitions = 0 !== (finishedWork.flags & 15990);
@@ -12316,7 +12338,7 @@ function releaseRootPooledCache(root, remainingLanes) {
     null != remainingLanes &&
       ((root.pooledCache = null), releaseCache(remainingLanes)));
 }
-function flushPassiveEffects() {
+function flushPassiveEffects(wasDelayedCommit) {
   if (null !== rootWithPendingPassiveEffects) {
     var root$216 = rootWithPendingPassiveEffects,
       remainingLanes = pendingPassiveEffectsRemainingLanes;
@@ -12328,7 +12350,7 @@ function flushPassiveEffects() {
       return (
         (Internals.p = 32 > renderPriority ? 32 : renderPriority),
         (ReactSharedInternals.T = null),
-        flushPassiveEffectsImpl()
+        flushPassiveEffectsImpl(wasDelayedCommit)
       );
     } finally {
       (Internals.p = previousPriority),
@@ -13654,14 +13676,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$384;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1583 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1583) {
-      var element$jscomp$inline_1584 = document.createElement("div");
-      element$jscomp$inline_1584.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1583 =
-        "function" === typeof element$jscomp$inline_1584.oninput;
+    var isSupported$jscomp$inline_1585 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1585) {
+      var element$jscomp$inline_1586 = document.createElement("div");
+      element$jscomp$inline_1586.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1585 =
+        "function" === typeof element$jscomp$inline_1586.oninput;
     }
-    JSCompiler_inline_result$jscomp$384 = isSupported$jscomp$inline_1583;
+    JSCompiler_inline_result$jscomp$384 = isSupported$jscomp$inline_1585;
   } else JSCompiler_inline_result$jscomp$384 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$384 &&
@@ -14075,20 +14097,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1624 = 0;
-  i$jscomp$inline_1624 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1624++
+  var i$jscomp$inline_1626 = 0;
+  i$jscomp$inline_1626 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1626++
 ) {
-  var eventName$jscomp$inline_1625 =
-      simpleEventPluginEvents[i$jscomp$inline_1624],
-    domEventName$jscomp$inline_1626 =
-      eventName$jscomp$inline_1625.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1627 =
-      eventName$jscomp$inline_1625[0].toUpperCase() +
-      eventName$jscomp$inline_1625.slice(1);
+  var eventName$jscomp$inline_1627 =
+      simpleEventPluginEvents[i$jscomp$inline_1626],
+    domEventName$jscomp$inline_1628 =
+      eventName$jscomp$inline_1627.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1629 =
+      eventName$jscomp$inline_1627[0].toUpperCase() +
+      eventName$jscomp$inline_1627.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1626,
-    "on" + capitalizedEvent$jscomp$inline_1627
+    domEventName$jscomp$inline_1628,
+    "on" + capitalizedEvent$jscomp$inline_1629
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17754,16 +17776,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_1797 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1799 = React.version;
 if (
-  "19.0.0-www-classic-d4688dfa-20240920" !==
-  isomorphicReactPackageVersion$jscomp$inline_1797
+  "19.0.0-www-classic-4e9540e3-20240923" !==
+  isomorphicReactPackageVersion$jscomp$inline_1799
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1797,
-      "19.0.0-www-classic-d4688dfa-20240920"
+      isomorphicReactPackageVersion$jscomp$inline_1799,
+      "19.0.0-www-classic-4e9540e3-20240923"
     )
   );
 function flushSyncFromReconciler(fn) {
@@ -17806,25 +17828,25 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2310 = {
+var internals$jscomp$inline_2312 = {
   bundleType: 0,
-  version: "19.0.0-www-classic-d4688dfa-20240920",
+  version: "19.0.0-www-classic-4e9540e3-20240923",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-www-classic-d4688dfa-20240920"
+  reconcilerVersion: "19.0.0-www-classic-4e9540e3-20240923"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2311 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2313 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2311.isDisabled &&
-    hook$jscomp$inline_2311.supportsFiber
+    !hook$jscomp$inline_2313.isDisabled &&
+    hook$jscomp$inline_2313.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2311.inject(
-        internals$jscomp$inline_2310
+      (rendererID = hook$jscomp$inline_2313.inject(
+        internals$jscomp$inline_2312
       )),
-        (injectedHook = hook$jscomp$inline_2311);
+        (injectedHook = hook$jscomp$inline_2313);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -18419,4 +18441,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-d4688dfa-20240920";
+exports.version = "19.0.0-www-classic-4e9540e3-20240923";
