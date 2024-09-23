@@ -84,98 +84,81 @@ export function collectHoistablePropertyLoads(
 
 export type BlockInfo = {
   block: BasicBlock;
-  assumedNonNullObjects: ReadonlySet<PropertyLoadNode>;
+  assumedNonNullObjects: ReadonlySet<DedupedNode>;
 };
 
 /**
  * Tree data structure to dedupe property loads (e.g. a.b.c)
  * and make computing sets intersections simpler.
  */
-type RootNode = {
-  properties: Map<string, PropertyLoadNode>;
-  parent: null;
-  // Recorded to make later computations simpler
-  fullPath: ReactiveScopeDependency;
-  root: IdentifierId;
+type DedupedNode = {
+  key: string;
+  dep: ReactiveScopeDependency;
 };
-
-type PropertyLoadNode =
-  | {
-      properties: Map<string, PropertyLoadNode>;
-      parent: PropertyLoadNode;
-      fullPath: ReactiveScopeDependency;
+function depToKey(dep: ReactiveScopeDependency): string {
+  let key = dep.identifier.id.toString();
+  for (let path of dep.path) {
+    if (path.optional) {
+      key += ' ?. ' + path.property;
+    } else {
+      key += ' . ' + path.property;
     }
-  | RootNode;
-
-class Tree {
-  roots: Map<IdentifierId, RootNode> = new Map();
-
-  getOrCreateRoot(identifier: Identifier): PropertyLoadNode {
-    /**
-     * Reads from a statically scoped variable are always safe in JS,
-     * with the exception of TDZ (not addressed by this pass).
-     */
-    let rootNode = this.roots.get(identifier.id);
-
-    if (rootNode === undefined) {
-      rootNode = {
-        root: identifier.id,
-        properties: new Map(),
-        fullPath: {
-          identifier,
-          path: [],
-        },
-        parent: null,
-      };
-      this.roots.set(identifier.id, rootNode);
-    }
-    return rootNode;
   }
+  return key;
+}
+function findSuperpaths(
+  match: ReactiveScopeDependency,
+  nodes: Set<DedupedNode>,
+): Set<DedupedNode> {
+  const key = depToKey(match) + ' ';
+  const result = new Set<DedupedNode>();
 
-  static #getOrCreateProperty(
-    node: PropertyLoadNode,
-    property: string,
-  ): PropertyLoadNode {
-    let child = node.properties.get(property);
-    if (child == null) {
-      child = {
-        properties: new Map(),
-        parent: node,
-        fullPath: {
-          identifier: node.fullPath.identifier,
-          path: node.fullPath.path.concat([{property, optional: false}]),
-        },
-      };
-      node.properties.set(property, child);
+  for (const n of nodes) {
+    if (n.key.startsWith(key)) {
+      result.add(n);
     }
-    return child;
   }
+  return result;
+}
 
-  getPropertyLoadNode(n: ReactiveScopeDependency): PropertyLoadNode {
-    /**
-     * We add ReactiveScopeDependencies according to instruction ordering,
-     * so all subpaths of a PropertyLoad should already exist
-     * (e.g. a.b is added before a.b.c),
-     */
-    let currNode = this.getOrCreateRoot(n.identifier);
-    if (n.path.length === 0) {
-      return currNode;
-    }
-    for (let i = 0; i < n.path.length - 1; i++) {
-      currNode = assertNonNull(currNode.properties.get(n.path[i].property));
-    }
+class DedupeMap {
+  nodes: Map<string, DedupedNode> = new Map();
 
-    return Tree.#getOrCreateProperty(currNode, n.path.at(-1)!.property);
+  getOrCreateIdentifier(id: Identifier): DedupedNode {
+    const key = id.id.toString();
+    let result = this.nodes.get(key);
+    if (result != null) {
+      return result;
+    }
+    result = {
+      key,
+      dep: {identifier: id, path: []},
+    };
+    this.nodes.set(key, result);
+    return result;
+  }
+  getOrCreateProperty(dep: ReactiveScopeDependency): DedupedNode {
+    const key = depToKey(dep);
+    let result = this.nodes.get(key);
+    if (result != null) {
+      return result;
+    }
+    result = {
+      key,
+      dep,
+    };
+    this.nodes.set(key, result);
+    return result;
   }
 }
 
 function pushPropertyLoadNode(
-  node: PropertyLoadNode,
+  node: DedupedNode,
   instrId: InstructionId,
   knownImmutableIdentifiers: Set<IdentifierId>,
-  result: Set<PropertyLoadNode>,
+  result: Set<DedupedNode>,
 ): void {
-  const object = node.fullPath.identifier;
+  const object = node.dep.identifier;
   /**
    * Since this runs *after* buildReactiveScopeTerminals, identifier mutable ranges
    * are not valid with respect to current instruction id numbering.
@@ -192,13 +175,9 @@ function pushPropertyLoadNode(
     inRange({id: instrId}, object.scope.range);
   if (
     !isMutableAtInstr ||
-    knownImmutableIdentifiers.has(node.fullPath.identifier.id)
+    knownImmutableIdentifiers.has(node.dep.identifier.id)
   ) {
-    let curr: PropertyLoadNode | null = node;
-    while (curr != null) {
-      result.add(curr);
-      curr = curr.parent;
-    }
+    result.add(node);
   }
 }
 
@@ -206,7 +185,7 @@ function collectNonNullsInBlocks(
   fn: HIRFunction,
   temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
 ): ReadonlyMap<BlockId, BlockInfo> {
-  const tree = new Tree();
+  const tree = new DedupeMap();
   /**
    * Due to current limitations of mutable range inference, there are edge cases in
    * which we infer known-immutable values (e.g. props or hook params) to have a
@@ -227,7 +206,7 @@ function collectNonNullsInBlocks(
    * Known non-null objects such as functional component props can be safely
    * read from any block.
    */
-  const knownNonNullIdentifiers = new Set<PropertyLoadNode>();
+  const knownNonNullIdentifiers = new Set<DedupedNode>();
   if (
     fn.env.config.enablePropagateDepsInHIR === 'enabled_with_optimizations' &&
     fn.fnType === 'Component' &&
@@ -235,20 +214,38 @@ function collectNonNullsInBlocks(
     fn.params[0].kind === 'Identifier'
   ) {
     const identifier = fn.params[0].identifier;
-    knownNonNullIdentifiers.add(tree.getOrCreateRoot(identifier));
+    knownNonNullIdentifiers.add(tree.getOrCreateIdentifier(identifier));
   }
   const nodes = new Map<BlockId, BlockInfo>();
   for (const [_, block] of fn.body.blocks) {
-    const assumedNonNullObjects = new Set<PropertyLoadNode>(
-      knownNonNullIdentifiers,
-    );
+    const assumedNonNullObjects = new Set<DedupedNode>(knownNonNullIdentifiers);
+
+    nodes.set(block.id, {
+      block,
+      assumedNonNullObjects,
+    });
+    for (const phi of block.phis) {
+      const source = temporaries.get(phi.id.id);
+      if (source) {
+        const propertyNode = tree.getOrCreateProperty(source);
+        pushPropertyLoadNode(
+          propertyNode,
+          // TODO double check which instr id
+          block.instructions.length > 0
+            ? block.instructions[0].id
+            : block.terminal.id,
+          knownImmutableIdentifiers,
+          assumedNonNullObjects,
+        );
+      }
+    }
     for (const instr of block.instructions) {
       if (instr.value.kind === 'PropertyLoad') {
         const source = temporaries.get(instr.value.object.identifier.id) ?? {
           identifier: instr.value.object.identifier,
           path: [],
         };
-        const propertyNode = tree.getPropertyLoadNode(source);
+        const propertyNode = tree.getOrCreateProperty(source);
         pushPropertyLoadNode(
           propertyNode,
           instr.id,
@@ -263,7 +260,7 @@ function collectNonNullsInBlocks(
         const sourceNode = temporaries.get(source);
         if (sourceNode != null) {
           pushPropertyLoadNode(
-            tree.getPropertyLoadNode(sourceNode),
+            tree.getOrCreateProperty(sourceNode),
             instr.id,
             knownImmutableIdentifiers,
             assumedNonNullObjects,
@@ -277,7 +274,7 @@ function collectNonNullsInBlocks(
         const sourceNode = temporaries.get(source);
         if (sourceNode != null) {
           pushPropertyLoadNode(
-            tree.getPropertyLoadNode(sourceNode),
+            tree.getOrCreateProperty(sourceNode),
             instr.id,
             knownImmutableIdentifiers,
             assumedNonNullObjects,
@@ -285,11 +282,6 @@ function collectNonNullsInBlocks(
         }
       }
     }
-
-    nodes.set(block.id, {
-      block,
-      assumedNonNullObjects,
-    });
   }
   return nodes;
 }
@@ -319,7 +311,7 @@ function propagateNonNull(
     nodeId: BlockId,
     direction: 'forward' | 'backward',
     traversalState: Map<BlockId, 'active' | 'done'>,
-    nonNullObjectsByBlock: Map<BlockId, ReadonlySet<PropertyLoadNode>>,
+    nonNullObjectsByBlock: Map<BlockId, ReadonlySet<DedupedNode>>,
   ): boolean {
     /**
      * Avoid re-visiting computed or currently active nodes, which can
@@ -390,8 +382,8 @@ function propagateNonNull(
     changed ||= prevObjects.size !== newObjects.size;
     return changed;
   }
-  const fromEntry = new Map<BlockId, ReadonlySet<PropertyLoadNode>>();
-  const fromExit = new Map<BlockId, ReadonlySet<PropertyLoadNode>>();
+  const fromEntry = new Map<BlockId, ReadonlySet<DedupedNode>>();
+  const fromExit = new Map<BlockId, ReadonlySet<DedupedNode>>();
   for (const [blockId, blockInfo] of nodes) {
     fromEntry.set(blockId, blockInfo.assumedNonNullObjects);
     fromExit.set(blockId, blockInfo.assumedNonNullObjects);
@@ -456,7 +448,7 @@ function propagateNonNull(
   }
 }
 
-function assertNonNull<T extends NonNullable<U>, U>(
+export function assertNonNull<T extends NonNullable<U>, U>(
   value: T | null | undefined,
   source?: string,
 ): T {
