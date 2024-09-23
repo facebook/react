@@ -24,7 +24,7 @@ function typeName(value: mixed): string {
     const hasToStringTag = typeof Symbol === 'function' && Symbol.toStringTag;
     const type =
       (hasToStringTag && (value: any)[Symbol.toStringTag]) ||
-      (value: any).constructor.name ||
+      (value: any).constructor?.name ||
       'Object';
     // $FlowFixMe[incompatible-return]
     return type;
