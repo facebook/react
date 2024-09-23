@@ -1625,7 +1625,6 @@ function rerenderReducer<S, I, A>(
     // TODO: Not sure if this is the desired semantics, but it's what we
     // do for gDSFP. I can't remember why.
 
-    // TODO: Removing this condition fixes the tests
     // if (hook.baseQueue === null) {
     hook.baseState = newState;
     // }

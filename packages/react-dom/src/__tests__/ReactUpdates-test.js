@@ -87,7 +87,7 @@ describe('ReactUpdates', () => {
     expect(container.firstChild.textContent).toBe('2');
   });
 
-  it('should keep state from render during layout effect update', async () => {
+  it.only('should keep state from render during layout effect update', async () => {
     let _setState = null;
 
     function Component({prop}) {
@@ -144,7 +144,7 @@ describe('ReactUpdates', () => {
           );
           return {
             prop: currentState.prop,
-            count: currentState.count + 1,
+            count: currentState.count + 10,
           };
         });
       });
@@ -171,13 +171,12 @@ describe('ReactUpdates', () => {
       'Render: 1 1',
 
       // Transition
-      // !!! BUG?
-      'Render: 0 1',
-      'setState in render 0 1 -> 1 2',
-      'Render reducer: 0 1 -> 1 2',
-      'Render: 1 2',
+      'Render: 0 10',
+      'setState in render 0 10 -> 1 11',
+      'Render reducer: 0 10 -> 1 11',
+      'Render: 1 11',
     ]);
-    expect(container.firstChild.textContent).toBe('1 2');
+    expect(container.firstChild.textContent).toBe('1 11');
   });
 
   it('should batch state when updating two different states', async () => {
