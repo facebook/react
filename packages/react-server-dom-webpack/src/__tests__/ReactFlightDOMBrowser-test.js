@@ -691,7 +691,7 @@ describe('ReactFlightDOMBrowser', () => {
     // of the path in Svg1 is fully inlined. The owner of the owner of the path
     // in Svg2 is Server, which is deduped and replaced with a reference to the
     // owner of the owner of the path in Svg1. This nested owner is actually
-    // Server from the previous render pass, which is kinda broken and libaries
+    // Server from the previous render pass, which is kinda broken and libraries
     // probably shouldn't generate code like this. This reference can only be
     // resolved properly if owners are specifically handled when resolving
     // outlined models.
