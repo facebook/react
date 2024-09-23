@@ -11,6 +11,11 @@ on:
       commit_sha:
         required: false
         type: string
+      force:
+        description: 'Force a commit to the builds/... branches'
+        required: true
+        default: false
+        type: boolean
 
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
@@ -196,6 +201,7 @@ jobs:
           grep -rl "$CURRENT_VERSION_MODERN" ./compiled | xargs -r sed -i -e "s/$CURRENT_VERSION_MODERN/$LAST_VERSION_MODERN/g"
           grep -rl "$CURRENT_VERSION_MODERN" ./compiled || echo "Modern version reverted"
       - name: Check for changes
+        if: !inputs.force
         id: check_should_commit
         run: |
           echo "Full git status"
@@ -213,7 +219,7 @@ jobs:
             echo "should_commit=false" >> "$GITHUB_OUTPUT"
           fi
       - name: Re-apply version changes
-        if: steps.check_should_commit.outputs.should_commit == 'true' && needs.download_artifacts.outputs.last_version_classic != '' && needs.download_artifacts.outputs.last_version_modern != ''
+        if: inputs.force || (steps.check_should_commit.outputs.should_commit == 'true' && needs.download_artifacts.outputs.last_version_classic != '' && needs.download_artifacts.outputs.last_version_modern != '')
         env:
           CURRENT_VERSION_CLASSIC: ${{ needs.download_artifacts.outputs.current_version_classic }}
           CURRENT_VERSION_MODERN: ${{ needs.download_artifacts.outputs.current_version_modern }}
@@ -230,12 +236,12 @@ jobs:
           grep -rl "$LAST_VERSION_MODERN" ./compiled | xargs -r sed -i -e "s/$LAST_VERSION_MODERN/$CURRENT_VERSION_MODERN/g"
           grep -rl "$LAST_VERSION_MODERN" ./compiled || echo "Classic version re-applied"
       - name: Will commit these changes
-        if: steps.check_should_commit.outputs.should_commit == 'true'
+        if: inputs.force || steps.check_should_commit.outputs.should_commit == 'true'
         run: |
           echo ":"
           git status -u
       - name: Commit changes to branch
-        if: steps.check_should_commit.outputs.should_commit == 'true'
+        if: inputs.force || steps.check_should_commit.outputs.should_commit == 'true'
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: |
@@ -272,6 +278,7 @@ jobs:
           grep -rl "$CURRENT_VERSION" ./compiled-rn | xargs -r sed -i -e "s/$CURRENT_VERSION/$LAST_VERSION/g"
           grep -rl "$CURRENT_VERSION" ./compiled-rn || echo "Version reverted"
       - name: Check for changes
+        if: !inputs.force
         id: check_should_commit
         run: |
           echo "Full git status"
@@ -290,7 +297,7 @@ jobs:
             echo "should_commit=false" >> "$GITHUB_OUTPUT"
           fi
       - name: Re-apply version changes
-        if: steps.check_should_commit.outputs.should_commit == 'true' && needs.download_artifacts.outputs.last_version_rn != ''
+        if: inputs.force || (steps.check_should_commit.outputs.should_commit == 'true' && needs.download_artifacts.outputs.last_version_rn != '')
         env:
           CURRENT_VERSION: ${{ needs.download_artifacts.outputs.current_version_rn }}
           LAST_VERSION: ${{ needs.download_artifacts.outputs.last_version_rn }}
@@ -300,12 +307,12 @@ jobs:
           grep -rl "$LAST_VERSION" ./compiled-rn | xargs -r sed -i -e "s/$LAST_VERSION/$CURRENT_VERSION/g"
           grep -rl "$LAST_VERSION" ./compiled-rn || echo "Version re-applied"
       - name: Add files for signing
-        if: steps.check_should_commit.outputs.should_commit == 'true'
+        if: inputs.force || steps.check_should_commit.outputs.should_commit == 'true'
         run: |
           echo ":"
           git add .
       - name: Signing files
-        if: steps.check_should_commit.outputs.should_commit == 'true'
+        if: inputs.force || steps.check_should_commit.outputs.should_commit == 'true'
         uses: actions/github-script@v7
         with:
           script: |
@@ -388,12 +395,12 @@ jobs:
               console.error('Error signing files:', e);
             }
       - name: Will commit these changes
-        if: steps.check_should_commit.outputs.should_commit == 'true'
+        if: inputs.force || steps.check_should_commit.outputs.should_commit == 'true'
         run: |
           git add .
           git status
       - name: Commit changes to branch
-        if: steps.check_should_commit.outputs.should_commit == 'true'
+        if: inputs.force || steps.check_should_commit.outputs.should_commit == 'true'
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: |
