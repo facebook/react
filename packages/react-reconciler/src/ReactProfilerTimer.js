@@ -28,7 +28,6 @@ import * as Scheduler from 'scheduler';
 const {unstable_now: now} = Scheduler;
 
 export let renderStartTime: number = -0;
-export let renderEndTime: number = -0;
 export let commitStartTime: number = -0;
 export let commitEndTime: number = -0;
 export let profilerStartTime: number = -1.1;
@@ -254,13 +253,6 @@ export function recordRenderTime(): void {
     return;
   }
   renderStartTime = now();
-}
-
-export function recordCompleteTime(): void {
-  if (!enableProfilerTimer) {
-    return;
-  }
-  renderEndTime = now();
 }
 
 export function recordCommitTime(): void {

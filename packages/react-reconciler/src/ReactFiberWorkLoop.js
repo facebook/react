@@ -245,11 +245,9 @@ import {
   clampTransitionTimers,
   markNestedUpdateScheduled,
   renderStartTime,
-  renderEndTime,
   commitStartTime,
   commitEndTime,
   recordRenderTime,
-  recordCompleteTime,
   recordCommitTime,
   recordCommitEndTime,
   resetNestedUpdateFlag,
@@ -611,6 +609,7 @@ let rootDoesHavePassiveEffects: boolean = false;
 let rootWithPendingPassiveEffects: FiberRoot | null = null;
 let pendingPassiveEffectsLanes: Lanes = NoLanes;
 let pendingPassiveEffectsRemainingLanes: Lanes = NoLanes;
+let pendingPassiveEffectsRenderEndTime: number = -0; // Profiling-only
 let pendingPassiveTransitions: Array<Transition> | null = null;
 
 // Use these to prevent an infinite loop of nested updates
@@ -1129,10 +1128,11 @@ function finishConcurrentRender(
   finishedWork: Fiber,
   lanes: Lanes,
 ) {
+  let renderEndTime = 0;
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     // Track when we finished the last unit of work, before we actually commit it.
     // The commit can be suspended/blocked until we commit it.
-    recordCompleteTime();
+    renderEndTime = now();
     setCurrentTrackFromLanes(lanes);
     logRenderPhase(renderStartTime, renderEndTime);
   }
@@ -1195,6 +1195,8 @@ function finishConcurrentRender(
       workInProgressRootInterleavedUpdatedLanes,
       workInProgressSuspendedRetryLanes,
       IMMEDIATE_COMMIT,
+      renderStartTime,
+      renderEndTime,
     );
   } else {
     if (
@@ -1241,6 +1243,8 @@ function finishConcurrentRender(
             workInProgressSuspendedRetryLanes,
             workInProgressRootDidSkipSuspendedSiblings,
             THROTTLED_COMMIT,
+            renderStartTime,
+            renderEndTime,
           ),
           msUntilTimeout,
         );
@@ -1259,6 +1263,8 @@ function finishConcurrentRender(
       workInProgressSuspendedRetryLanes,
       workInProgressRootDidSkipSuspendedSiblings,
       IMMEDIATE_COMMIT,
+      renderStartTime,
+      renderEndTime,
     );
   }
 }
@@ -1274,7 +1280,9 @@ function commitRootWhenReady(
   updatedLanes: Lanes,
   suspendedRetryLanes: Lanes,
   didSkipSuspendedSiblings: boolean,
-  suspendedCommitReason: SuspendedCommitReason,
+  suspendedCommitReason: SuspendedCommitReason, // Profiling-only
+  completedRenderStartTime: number, // Profiling-only
+  completedRenderEndTime: number, // Profiling-only
 ) {
   // TODO: Combine retry throttling with Suspensey commits. Right now they run
   // one after the other.
@@ -1333,6 +1341,8 @@ function commitRootWhenReady(
     updatedLanes,
     suspendedRetryLanes,
     suspendedCommitReason,
+    completedRenderStartTime,
+    completedRenderEndTime,
   );
 }
 
@@ -1524,8 +1534,9 @@ export function performSyncWorkOnRoot(root: FiberRoot, lanes: Lanes): null {
     return null;
   }
 
+  let renderEndTime = 0;
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
-    recordCompleteTime();
+    renderEndTime = now();
     setCurrentTrackFromLanes(lanes);
     logRenderPhase(renderStartTime, renderEndTime);
   }
@@ -1544,6 +1555,8 @@ export function performSyncWorkOnRoot(root: FiberRoot, lanes: Lanes): null {
     workInProgressRootInterleavedUpdatedLanes,
     workInProgressSuspendedRetryLanes,
     IMMEDIATE_COMMIT,
+    renderStartTime,
+    renderEndTime,
   );
 
   // Before exiting, make sure there's a callback scheduled for the next
@@ -3050,7 +3063,9 @@ function commitRoot(
   spawnedLane: Lane,
   updatedLanes: Lanes,
   suspendedRetryLanes: Lanes,
-  suspendedCommitReason: SuspendedCommitReason,
+  suspendedCommitReason: SuspendedCommitReason, // Profiling-only
+  completedRenderStartTime: number, // Profiling-only
+  completedRenderEndTime: number, // Profiling-only
 ) {
   // TODO: This no longer makes any sense. We already wrap the mutation and
   // layout phases. Should be able to remove.
@@ -3069,6 +3084,8 @@ function commitRoot(
       updatedLanes,
       suspendedRetryLanes,
       suspendedCommitReason,
+      completedRenderStartTime,
+      completedRenderEndTime,
     );
   } finally {
     ReactSharedInternals.T = prevTransition;
@@ -3087,7 +3104,9 @@ function commitRootImpl(
   spawnedLane: Lane,
   updatedLanes: Lanes,
   suspendedRetryLanes: Lanes,
-  suspendedCommitReason: SuspendedCommitReason,
+  suspendedCommitReason: SuspendedCommitReason, // Profiling-only
+  completedRenderStartTime: number, // Profiling-only
+  completedRenderEndTime: number, // Profiling-only
 ) {
   do {
     // `flushPassiveEffects` will call `flushSyncUpdateQueue` at the end, which
@@ -3203,6 +3222,7 @@ function commitRootImpl(
     if (!rootDoesHavePassiveEffects) {
       rootDoesHavePassiveEffects = true;
       pendingPassiveEffectsRemainingLanes = remainingLanes;
+      pendingPassiveEffectsRenderEndTime = completedRenderEndTime;
       // workInProgressTransitions might be overwritten, so we want
       // to store it in pendingPassiveTransitions until they get processed
       // We need to pass this through as an argument to commitRoot
@@ -3226,9 +3246,9 @@ function commitRootImpl(
     recordCommitTime();
     if (enableComponentPerformanceTrack) {
       if (suspendedCommitReason === SUSPENDED_COMMIT) {
-        logSuspendedCommitPhase(renderEndTime, commitStartTime);
+        logSuspendedCommitPhase(completedRenderEndTime, commitStartTime);
       } else if (suspendedCommitReason === THROTTLED_COMMIT) {
-        logSuspenseThrottlePhase(renderEndTime, commitStartTime);
+        logSuspenseThrottlePhase(completedRenderEndTime, commitStartTime);
       }
     }
   }
@@ -3628,7 +3648,13 @@ function flushPassiveEffectsImpl(wasDelayedCommit: void | boolean) {
   executionContext |= CommitContext;
 
   commitPassiveUnmountEffects(root.current);
-  commitPassiveMountEffects(root, root.current, lanes, transitions);
+  commitPassiveMountEffects(
+    root,
+    root.current,
+    lanes,
+    transitions,
+    pendingPassiveEffectsRenderEndTime,
+  );
 
   if (__DEV__) {
     if (enableDebugTracing) {

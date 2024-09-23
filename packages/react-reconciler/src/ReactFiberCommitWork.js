@@ -100,7 +100,6 @@ import {
 } from './ReactFiberFlags';
 import {
   commitStartTime,
-  renderEndTime,
   pushNestedEffectDurations,
   popNestedEffectDurations,
   bubbleNestedEffectDurations,
@@ -2568,6 +2567,7 @@ export function commitPassiveMountEffects(
   finishedWork: Fiber,
   committedLanes: Lanes,
   committedTransitions: Array<Transition> | null,
+  renderEndTime: number, // Profiling-only
 ): void {
   resetComponentEffectTimers();
 
