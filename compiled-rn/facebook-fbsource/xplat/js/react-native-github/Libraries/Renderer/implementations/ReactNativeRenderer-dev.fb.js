@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6bfed4e6bd94365d6be8595527f3f74a>>
+ * @generated SignedSource<<467b7c716f31c669f26081a85f1c0464>>
  */
 
 "use strict";
@@ -10267,7 +10267,12 @@ __DEV__ &&
           }
         else ref.current = null;
     }
-    function commitProfiler(finishedWork, current, commitTime, effectDuration) {
+    function commitProfiler(
+      finishedWork,
+      current,
+      commitStartTime,
+      effectDuration
+    ) {
       var _finishedWork$memoize = finishedWork.memoizedProps,
         id = _finishedWork$memoize.id,
         onCommit = _finishedWork$memoize.onCommit;
@@ -10281,20 +10286,20 @@ __DEV__ &&
           finishedWork.actualDuration,
           finishedWork.treeBaseDuration,
           finishedWork.actualStartTime,
-          commitTime
+          commitStartTime
         );
       "function" === typeof onCommit &&
         onCommit(
           finishedWork.memoizedProps.id,
           current,
           effectDuration,
-          commitTime
+          commitStartTime
         );
     }
     function commitProfilerPostCommitImpl(
       finishedWork,
       current,
-      commitTime,
+      commitStartTime,
       passiveEffectDuration
     ) {
       var _finishedWork$memoize2 = finishedWork.memoizedProps;
@@ -10307,7 +10312,7 @@ __DEV__ &&
           finishedWork,
           current,
           passiveEffectDuration,
-          commitTime
+          commitStartTime
         );
     }
     function commitHostMount(finishedWork) {
@@ -10658,7 +10663,7 @@ __DEV__ &&
                 commitProfiler,
                 finishedWork,
                 current,
-                commitTime,
+                commitStartTime,
                 finishedRoot.effectDuration
               );
             } catch (error$21) {
@@ -11445,7 +11450,7 @@ __DEV__ &&
                 commitProfiler,
                 finishedWork,
                 current,
-                commitTime,
+                commitStartTime,
                 includeWorkInProgressEffects.effectDuration
               );
             } catch (error$21) {
@@ -11597,7 +11602,7 @@ __DEV__ &&
                 commitProfilerPostCommitImpl,
                 finishedWork,
                 finishedWork.alternate,
-                commitTime,
+                commitStartTime,
                 finishedRoot.passiveEffectDuration
               );
             } catch (error$22) {
@@ -12278,7 +12283,10 @@ __DEV__ &&
                   workInProgressRootDidIncludeRecursiveRenderUpdate,
                   workInProgressDeferredLane,
                   workInProgressRootInterleavedUpdatedLanes,
-                  workInProgressSuspendedRetryLanes
+                  workInProgressSuspendedRetryLanes,
+                  IMMEDIATE_COMMIT,
+                  renderStartTime,
+                  0
                 );
               else {
                 if (
@@ -12309,7 +12317,10 @@ __DEV__ &&
                       workInProgressDeferredLane,
                       workInProgressRootInterleavedUpdatedLanes,
                       workInProgressSuspendedRetryLanes,
-                      workInProgressRootDidSkipSuspendedSiblings
+                      workInProgressRootDidSkipSuspendedSiblings,
+                      THROTTLED_COMMIT,
+                      renderStartTime,
+                      0
                     ),
                     didTimeout
                   );
@@ -12325,7 +12336,10 @@ __DEV__ &&
                   workInProgressDeferredLane,
                   workInProgressRootInterleavedUpdatedLanes,
                   workInProgressSuspendedRetryLanes,
-                  workInProgressRootDidSkipSuspendedSiblings
+                  workInProgressRootDidSkipSuspendedSiblings,
+                  IMMEDIATE_COMMIT,
+                  renderStartTime,
+                  0
                 );
               }
             }
@@ -12379,7 +12393,11 @@ __DEV__ &&
       lanes,
       spawnedLane,
       updatedLanes,
-      suspendedRetryLanes
+      suspendedRetryLanes,
+      didSkipSuspendedSiblings,
+      suspendedCommitReason,
+      completedRenderStartTime,
+      completedRenderEndTime
     ) {
       lanes = finishedWork.subtreeFlags;
       (lanes & 8192 || 16785408 === (lanes & 16785408)) &&
@@ -12391,7 +12409,10 @@ __DEV__ &&
         didIncludeRenderPhaseUpdate,
         spawnedLane,
         updatedLanes,
-        suspendedRetryLanes
+        suspendedRetryLanes,
+        suspendedCommitReason,
+        completedRenderStartTime,
+        completedRenderEndTime
       );
     }
     function isRenderConsistentWithExternalStores(finishedWork) {
@@ -12509,7 +12530,10 @@ __DEV__ &&
         workInProgressRootDidIncludeRecursiveRenderUpdate,
         workInProgressDeferredLane,
         workInProgressRootInterleavedUpdatedLanes,
-        workInProgressSuspendedRetryLanes
+        workInProgressSuspendedRetryLanes,
+        IMMEDIATE_COMMIT,
+        renderStartTime,
+        0
       );
       ensureRootIsScheduled(root);
       return null;
@@ -13149,7 +13173,10 @@ __DEV__ &&
       didIncludeRenderPhaseUpdate,
       spawnedLane,
       updatedLanes,
-      suspendedRetryLanes
+      suspendedRetryLanes,
+      suspendedCommitReason,
+      completedRenderStartTime,
+      completedRenderEndTime
     ) {
       var prevTransition = ReactSharedInternals.T,
         previousUpdateLanePriority = currentUpdatePriority;
@@ -13164,7 +13191,10 @@ __DEV__ &&
             previousUpdateLanePriority,
             spawnedLane,
             updatedLanes,
-            suspendedRetryLanes
+            suspendedRetryLanes,
+            suspendedCommitReason,
+            completedRenderStartTime,
+            completedRenderEndTime
           );
       } finally {
         (ReactSharedInternals.T = prevTransition),
@@ -13228,9 +13258,10 @@ __DEV__ &&
         (pendingPassiveEffectsRemainingLanes = remainingLanes),
         (pendingPassiveTransitions = transitions),
         scheduleCallback(NormalPriority$1, function () {
-          flushPassiveEffects();
+          flushPassiveEffects(!0);
           return null;
         }));
+      commitStartTime = now();
       transitions = 0 !== (finishedWork.flags & 15990);
       0 !== (finishedWork.subtreeFlags & 15990) || transitions
         ? ((transitions = ReactSharedInternals.T),
@@ -13240,7 +13271,6 @@ __DEV__ &&
           (updatedLanes = executionContext),
           (executionContext |= CommitContext),
           commitBeforeMutationEffects(root, finishedWork),
-          (commitTime = now()),
           commitMutationEffects(root, finishedWork, lanes),
           (root.current = finishedWork),
           null !== injectedProfilingHooks &&
@@ -13256,7 +13286,7 @@ __DEV__ &&
           (executionContext = updatedLanes),
           (currentUpdatePriority = spawnedLane),
           (ReactSharedInternals.T = transitions))
-        : ((root.current = finishedWork), (commitTime = now()));
+        : (root.current = finishedWork);
       (transitions = rootDoesHavePassiveEffects)
         ? ((rootDoesHavePassiveEffects = !1),
           (rootWithPendingPassiveEffects = root),
@@ -15520,7 +15550,8 @@ __DEV__ &&
       currentEventTransitionLane = 0,
       fakeActCallbackNode$1 = {},
       now = Scheduler.unstable_now,
-      commitTime = -0,
+      renderStartTime = -0,
+      commitStartTime = -0,
       profilerStartTime = -1.1,
       profilerEffectDuration = -0,
       currentUpdateIsNested = !1,
@@ -17222,6 +17253,8 @@ __DEV__ &&
       nestedPassiveUpdateCount = 0,
       rootWithPassiveNestedUpdates = null,
       isRunningInsertionEffect = !1,
+      IMMEDIATE_COMMIT = 0,
+      THROTTLED_COMMIT = 2,
       didWarnStateUpdateForNotYetMountedComponent = null,
       didWarnAboutUpdateInRender = !1;
     var didWarnAboutUpdateInRenderForAnotherComponent = new Set();
@@ -17313,11 +17346,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.0.0-native-fb-d4688dfa-20240920" !== isomorphicReactPackageVersion)
+    if ("19.0.0-native-fb-4e9540e3-20240923" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.0.0-native-fb-d4688dfa-20240920\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.0.0-native-fb-4e9540e3-20240923\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17343,11 +17376,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-d4688dfa-20240920",
+        version: "19.0.0-native-fb-4e9540e3-20240923",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromTag,
-        reconcilerVersion: "19.0.0-native-fb-d4688dfa-20240920"
+        reconcilerVersion: "19.0.0-native-fb-4e9540e3-20240923"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

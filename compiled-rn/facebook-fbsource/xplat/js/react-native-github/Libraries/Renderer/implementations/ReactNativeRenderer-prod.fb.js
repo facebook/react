@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d5c28ff92c118ae068bb66796317be4a>>
+ * @generated SignedSource<<011d882ddebb71c0bdcf2c8ab9a47bd5>>
  */
 
 "use strict";
@@ -9789,7 +9789,10 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
                 workInProgressDeferredLane,
                 workInProgressRootInterleavedUpdatedLanes,
                 workInProgressSuspendedRetryLanes,
-                workInProgressRootDidSkipSuspendedSiblings
+                workInProgressRootDidSkipSuspendedSiblings,
+                2,
+                -0,
+                0
               ),
               exitStatus
             );
@@ -9804,7 +9807,11 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
             lanes,
             workInProgressDeferredLane,
             workInProgressRootInterleavedUpdatedLanes,
-            workInProgressSuspendedRetryLanes
+            workInProgressSuspendedRetryLanes,
+            workInProgressRootDidSkipSuspendedSiblings,
+            0,
+            -0,
+            0
           );
         }
       }
@@ -9856,7 +9863,11 @@ function commitRootWhenReady(
   lanes,
   spawnedLane,
   updatedLanes,
-  suspendedRetryLanes
+  suspendedRetryLanes,
+  didSkipSuspendedSiblings,
+  suspendedCommitReason,
+  completedRenderStartTime,
+  completedRenderEndTime
 ) {
   lanes = finishedWork.subtreeFlags;
   (lanes & 8192 || 16785408 === (lanes & 16785408)) &&
@@ -9868,7 +9879,10 @@ function commitRootWhenReady(
     didIncludeRenderPhaseUpdate,
     spawnedLane,
     updatedLanes,
-    suspendedRetryLanes
+    suspendedRetryLanes,
+    suspendedCommitReason,
+    completedRenderStartTime,
+    completedRenderEndTime
   );
 }
 function isRenderConsistentWithExternalStores(finishedWork) {
@@ -9981,7 +9995,10 @@ function performSyncWorkOnRoot(root, lanes) {
     workInProgressRootDidIncludeRecursiveRenderUpdate,
     workInProgressDeferredLane,
     workInProgressRootInterleavedUpdatedLanes,
-    workInProgressSuspendedRetryLanes
+    workInProgressSuspendedRetryLanes,
+    0,
+    -0,
+    0
   );
   ensureRootIsScheduled(root);
   return null;
@@ -10460,7 +10477,10 @@ function commitRoot(
   didIncludeRenderPhaseUpdate,
   spawnedLane,
   updatedLanes,
-  suspendedRetryLanes
+  suspendedRetryLanes,
+  suspendedCommitReason,
+  completedRenderStartTime,
+  completedRenderEndTime
 ) {
   var prevTransition = ReactSharedInternals.T,
     previousUpdateLanePriority = currentUpdatePriority;
@@ -10475,7 +10495,10 @@ function commitRoot(
         previousUpdateLanePriority,
         spawnedLane,
         updatedLanes,
-        suspendedRetryLanes
+        suspendedRetryLanes,
+        suspendedCommitReason,
+        completedRenderStartTime,
+        completedRenderEndTime
       );
   } finally {
     (ReactSharedInternals.T = prevTransition),
@@ -10530,7 +10553,7 @@ function commitRootImpl(
     (pendingPassiveEffectsRemainingLanes = remainingLanes),
     (pendingPassiveTransitions = transitions),
     scheduleCallback(NormalPriority$1, function () {
-      flushPassiveEffects();
+      flushPassiveEffects(!0);
       return null;
     }));
   transitions = 0 !== (finishedWork.flags & 15990);
@@ -11184,11 +11207,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.0.0-native-fb-d4688dfa-20240920" !== isomorphicReactPackageVersion)
+if ("19.0.0-native-fb-4e9540e3-20240923" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.0.0-native-fb-d4688dfa-20240920\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.0.0-native-fb-4e9540e3-20240923\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11235,27 +11258,27 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1229 = {
+  internals$jscomp$inline_1232 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-d4688dfa-20240920",
+    version: "19.0.0-native-fb-4e9540e3-20240923",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromTag,
-    reconcilerVersion: "19.0.0-native-fb-d4688dfa-20240920"
+    reconcilerVersion: "19.0.0-native-fb-4e9540e3-20240923"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1229.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1232.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1542 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1545 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1542.isDisabled &&
-    hook$jscomp$inline_1542.supportsFiber
+    !hook$jscomp$inline_1545.isDisabled &&
+    hook$jscomp$inline_1545.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1542.inject(
-        internals$jscomp$inline_1229
+      (rendererID = hook$jscomp$inline_1545.inject(
+        internals$jscomp$inline_1232
       )),
-        (injectedHook = hook$jscomp$inline_1542);
+        (injectedHook = hook$jscomp$inline_1545);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {

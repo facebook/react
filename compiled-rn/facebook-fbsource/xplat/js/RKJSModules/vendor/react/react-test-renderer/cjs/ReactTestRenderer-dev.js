@@ -7,13 +7,13 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ff2bb7d3e9f8f462aacbe71804f0fa9f>>
+ * @generated SignedSource<<773ac5f2e858ce9a8699f96afe898928>>
  */
 
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1098() {
+    function JSCompiler_object_inline_createNodeMock_1100() {
       return null;
     }
     function findHook(fiber, id) {
@@ -8882,7 +8882,12 @@ __DEV__ &&
           }
         else ref.current = null;
     }
-    function commitProfiler(finishedWork, current, commitTime, effectDuration) {
+    function commitProfiler(
+      finishedWork,
+      current,
+      commitStartTime,
+      effectDuration
+    ) {
       var _finishedWork$memoize = finishedWork.memoizedProps,
         id = _finishedWork$memoize.id,
         onCommit = _finishedWork$memoize.onCommit;
@@ -8896,20 +8901,20 @@ __DEV__ &&
           finishedWork.actualDuration,
           finishedWork.treeBaseDuration,
           finishedWork.actualStartTime,
-          commitTime
+          commitStartTime
         );
       "function" === typeof onCommit &&
         onCommit(
           finishedWork.memoizedProps.id,
           current,
           effectDuration,
-          commitTime
+          commitStartTime
         );
     }
     function commitProfilerPostCommitImpl(
       finishedWork,
       current,
-      commitTime,
+      commitStartTime,
       passiveEffectDuration
     ) {
       var _finishedWork$memoize2 = finishedWork.memoizedProps;
@@ -8922,7 +8927,7 @@ __DEV__ &&
           finishedWork,
           current,
           passiveEffectDuration,
-          commitTime
+          commitStartTime
         );
     }
     function commitHostMount(finishedWork) {
@@ -9227,7 +9232,7 @@ __DEV__ &&
                 commitProfiler,
                 finishedWork,
                 current,
-                commitTime,
+                commitStartTime,
                 finishedRoot.effectDuration
               );
             } catch (error$20) {
@@ -9966,7 +9971,7 @@ __DEV__ &&
                 commitProfiler,
                 finishedWork,
                 current,
-                commitTime,
+                commitStartTime,
                 includeWorkInProgressEffects.effectDuration
               );
             } catch (error$20) {
@@ -10118,7 +10123,7 @@ __DEV__ &&
                 commitProfilerPostCommitImpl,
                 finishedWork,
                 finishedWork.alternate,
-                commitTime,
+                commitStartTime,
                 finishedRoot.passiveEffectDuration
               );
             } catch (error$21) {
@@ -10798,7 +10803,10 @@ __DEV__ &&
                   workInProgressRootDidIncludeRecursiveRenderUpdate,
                   workInProgressDeferredLane,
                   workInProgressRootInterleavedUpdatedLanes,
-                  workInProgressSuspendedRetryLanes
+                  workInProgressSuspendedRetryLanes,
+                  IMMEDIATE_COMMIT,
+                  renderStartTime,
+                  0
                 );
               else {
                 if (
@@ -10829,7 +10837,10 @@ __DEV__ &&
                       workInProgressDeferredLane,
                       workInProgressRootInterleavedUpdatedLanes,
                       workInProgressSuspendedRetryLanes,
-                      workInProgressRootDidSkipSuspendedSiblings
+                      workInProgressRootDidSkipSuspendedSiblings,
+                      THROTTLED_COMMIT,
+                      renderStartTime,
+                      0
                     ),
                     didTimeout
                   );
@@ -10845,7 +10856,10 @@ __DEV__ &&
                   workInProgressDeferredLane,
                   workInProgressRootInterleavedUpdatedLanes,
                   workInProgressSuspendedRetryLanes,
-                  workInProgressRootDidSkipSuspendedSiblings
+                  workInProgressRootDidSkipSuspendedSiblings,
+                  IMMEDIATE_COMMIT,
+                  renderStartTime,
+                  0
                 );
               }
             }
@@ -10899,7 +10913,11 @@ __DEV__ &&
       lanes,
       spawnedLane,
       updatedLanes,
-      suspendedRetryLanes
+      suspendedRetryLanes,
+      didSkipSuspendedSiblings,
+      suspendedCommitReason,
+      completedRenderStartTime,
+      completedRenderEndTime
     ) {
       lanes = finishedWork.subtreeFlags;
       (lanes & 8192 || 16785408 === (lanes & 16785408)) &&
@@ -10911,7 +10929,10 @@ __DEV__ &&
         didIncludeRenderPhaseUpdate,
         spawnedLane,
         updatedLanes,
-        suspendedRetryLanes
+        suspendedRetryLanes,
+        suspendedCommitReason,
+        completedRenderStartTime,
+        completedRenderEndTime
       );
     }
     function isRenderConsistentWithExternalStores(finishedWork) {
@@ -11029,7 +11050,10 @@ __DEV__ &&
         workInProgressRootDidIncludeRecursiveRenderUpdate,
         workInProgressDeferredLane,
         workInProgressRootInterleavedUpdatedLanes,
-        workInProgressSuspendedRetryLanes
+        workInProgressSuspendedRetryLanes,
+        IMMEDIATE_COMMIT,
+        renderStartTime,
+        0
       );
       ensureRootIsScheduled(root);
       return null;
@@ -11623,7 +11647,10 @@ __DEV__ &&
       didIncludeRenderPhaseUpdate,
       spawnedLane,
       updatedLanes,
-      suspendedRetryLanes
+      suspendedRetryLanes,
+      suspendedCommitReason,
+      completedRenderStartTime,
+      completedRenderEndTime
     ) {
       var prevTransition = ReactSharedInternals.T,
         previousUpdateLanePriority = currentUpdatePriority;
@@ -11638,7 +11665,10 @@ __DEV__ &&
             previousUpdateLanePriority,
             spawnedLane,
             updatedLanes,
-            suspendedRetryLanes
+            suspendedRetryLanes,
+            suspendedCommitReason,
+            completedRenderStartTime,
+            completedRenderEndTime
           );
       } finally {
         (ReactSharedInternals.T = prevTransition),
@@ -11702,9 +11732,10 @@ __DEV__ &&
         (pendingPassiveEffectsRemainingLanes = remainingLanes),
         (pendingPassiveTransitions = transitions),
         scheduleCallback(NormalPriority$1, function () {
-          flushPassiveEffects();
+          flushPassiveEffects(!0);
           return null;
         }));
+      commitStartTime = now();
       transitions = 0 !== (finishedWork.flags & 15990);
       0 !== (finishedWork.subtreeFlags & 15990) || transitions
         ? ((transitions = ReactSharedInternals.T),
@@ -11714,7 +11745,6 @@ __DEV__ &&
           (updatedLanes = executionContext),
           (executionContext |= CommitContext),
           commitBeforeMutationEffects(root, finishedWork),
-          (commitTime = now()),
           commitMutationEffectsOnFiber(finishedWork, root),
           (root.current = finishedWork),
           null !== injectedProfilingHooks &&
@@ -11730,7 +11760,7 @@ __DEV__ &&
           (executionContext = updatedLanes),
           (currentUpdatePriority = spawnedLane),
           (ReactSharedInternals.T = transitions))
-        : ((root.current = finishedWork), (commitTime = now()));
+        : (root.current = finishedWork);
       (transitions = rootDoesHavePassiveEffects)
         ? ((rootDoesHavePassiveEffects = !1),
           (rootWithPendingPassiveEffects = root),
@@ -13170,7 +13200,8 @@ __DEV__ &&
       currentEventTransitionLane = 0,
       fakeActCallbackNode$1 = {},
       now = Scheduler$1.unstable_now,
-      commitTime = -0,
+      renderStartTime = -0,
+      commitStartTime = -0,
       profilerStartTime = -1.1,
       profilerEffectDuration = -0,
       currentUpdateIsNested = !1,
@@ -14868,6 +14899,8 @@ __DEV__ &&
       nestedPassiveUpdateCount = 0,
       rootWithPassiveNestedUpdates = null,
       isRunningInsertionEffect = !1,
+      IMMEDIATE_COMMIT = 0,
+      THROTTLED_COMMIT = 2,
       didWarnStateUpdateForNotYetMountedComponent = null,
       didWarnAboutUpdateInRender = !1;
     var didWarnAboutUpdateInRenderForAnotherComponent = new Set();
@@ -15085,11 +15118,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-d4688dfa-20240920",
+        version: "19.0.0-native-fb-4e9540e3-20240923",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-native-fb-d4688dfa-20240920"
+        reconcilerVersion: "19.0.0-native-fb-4e9540e3-20240923"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15111,7 +15144,7 @@ __DEV__ &&
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1098,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1100,
         isConcurrent = !1,
         isStrictMode = !1;
       "object" === typeof options &&
@@ -15234,5 +15267,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.0.0-native-fb-d4688dfa-20240920";
+    exports.version = "19.0.0-native-fb-4e9540e3-20240923";
   })();

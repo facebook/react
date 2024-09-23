@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<395bbf54ab897d275388ed453432e188>>
+ * @generated SignedSource<<5b86fc32bca355bd63b4024ed0e46035>>
  */
 
 "use strict";
@@ -7850,7 +7850,10 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
                 workInProgressDeferredLane,
                 workInProgressRootInterleavedUpdatedLanes,
                 workInProgressSuspendedRetryLanes,
-                workInProgressRootDidSkipSuspendedSiblings
+                workInProgressRootDidSkipSuspendedSiblings,
+                2,
+                -0,
+                0
               ),
               exitStatus
             );
@@ -7865,7 +7868,11 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
             lanes,
             workInProgressDeferredLane,
             workInProgressRootInterleavedUpdatedLanes,
-            workInProgressSuspendedRetryLanes
+            workInProgressSuspendedRetryLanes,
+            workInProgressRootDidSkipSuspendedSiblings,
+            0,
+            -0,
+            0
           );
         }
       }
@@ -7917,7 +7924,11 @@ function commitRootWhenReady(
   lanes,
   spawnedLane,
   updatedLanes,
-  suspendedRetryLanes
+  suspendedRetryLanes,
+  didSkipSuspendedSiblings,
+  suspendedCommitReason,
+  completedRenderStartTime,
+  completedRenderEndTime
 ) {
   lanes = finishedWork.subtreeFlags;
   (lanes & 8192 || 16785408 === (lanes & 16785408)) &&
@@ -7929,7 +7940,10 @@ function commitRootWhenReady(
     didIncludeRenderPhaseUpdate,
     spawnedLane,
     updatedLanes,
-    suspendedRetryLanes
+    suspendedRetryLanes,
+    suspendedCommitReason,
+    completedRenderStartTime,
+    completedRenderEndTime
   );
 }
 function isRenderConsistentWithExternalStores(finishedWork) {
@@ -8042,7 +8056,10 @@ function performSyncWorkOnRoot(root, lanes) {
     workInProgressRootDidIncludeRecursiveRenderUpdate,
     workInProgressDeferredLane,
     workInProgressRootInterleavedUpdatedLanes,
-    workInProgressSuspendedRetryLanes
+    workInProgressSuspendedRetryLanes,
+    0,
+    -0,
+    0
   );
   ensureRootIsScheduled(root);
   return null;
@@ -8495,7 +8512,10 @@ function commitRoot(
   didIncludeRenderPhaseUpdate,
   spawnedLane,
   updatedLanes,
-  suspendedRetryLanes
+  suspendedRetryLanes,
+  suspendedCommitReason,
+  completedRenderStartTime,
+  completedRenderEndTime
 ) {
   var prevTransition = ReactSharedInternals.T,
     previousUpdateLanePriority = currentUpdatePriority;
@@ -8510,7 +8530,10 @@ function commitRoot(
         previousUpdateLanePriority,
         spawnedLane,
         updatedLanes,
-        suspendedRetryLanes
+        suspendedRetryLanes,
+        suspendedCommitReason,
+        completedRenderStartTime,
+        completedRenderEndTime
       );
   } finally {
     (ReactSharedInternals.T = prevTransition),
@@ -8565,7 +8588,7 @@ function commitRootImpl(
     (pendingPassiveEffectsRemainingLanes = remainingLanes),
     (pendingPassiveTransitions = transitions),
     scheduleCallback(NormalPriority$1, function () {
-      flushPassiveEffects();
+      flushPassiveEffects(!0);
       return null;
     }));
   transitions = 0 !== (finishedWork.flags & 15990);
@@ -9492,28 +9515,28 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var internals$jscomp$inline_1293 = {
+var internals$jscomp$inline_1296 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-d4688dfa-20240920",
+  version: "19.0.0-native-fb-4e9540e3-20240923",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: function (mockNode) {
     mockNode = nodeToInstanceMap.get(mockNode);
     return void 0 !== mockNode ? mockNode.internalInstanceHandle : null;
   },
-  reconcilerVersion: "19.0.0-native-fb-d4688dfa-20240920"
+  reconcilerVersion: "19.0.0-native-fb-4e9540e3-20240923"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1294 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1297 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1294.isDisabled &&
-    hook$jscomp$inline_1294.supportsFiber
+    !hook$jscomp$inline_1297.isDisabled &&
+    hook$jscomp$inline_1297.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1294.inject(
-        internals$jscomp$inline_1293
+      (rendererID = hook$jscomp$inline_1297.inject(
+        internals$jscomp$inline_1296
       )),
-        (injectedHook = hook$jscomp$inline_1294);
+        (injectedHook = hook$jscomp$inline_1297);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
@@ -9637,4 +9660,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.0.0-native-fb-d4688dfa-20240920";
+exports.version = "19.0.0-native-fb-4e9540e3-20240923";

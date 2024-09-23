@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c5139b341c5debc74297a176c9ac2b73>>
+ * @generated SignedSource<<a88506b217bf042c30d3b5e27ac98130>>
  */
 
 /*
@@ -2666,7 +2666,7 @@ function invalidateContextProvider(workInProgress, type, didChange) {
   push(didPerformWorkStackCursor, didChange);
 }
 var now = Scheduler.unstable_now,
-  commitTime = -0,
+  commitStartTime = -0,
   profilerStartTime = -1.1,
   profilerEffectDuration = -0;
 function pushNestedEffectDurations() {
@@ -8422,7 +8422,7 @@ function safelyDetachRef(current, nearestMountedAncestor) {
 function commitProfilerUpdate(
   finishedWork,
   current,
-  commitTime,
+  commitStartTime,
   effectDuration
 ) {
   try {
@@ -8439,14 +8439,14 @@ function commitProfilerUpdate(
         finishedWork.actualDuration,
         finishedWork.treeBaseDuration,
         finishedWork.actualStartTime,
-        commitTime
+        commitStartTime
       );
     "function" === typeof onCommit &&
       onCommit(
         finishedWork.memoizedProps.id,
         current,
         effectDuration,
-        commitTime
+        commitStartTime
       );
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
@@ -8828,7 +8828,7 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
           commitProfilerUpdate(
             finishedWork,
             current,
-            commitTime,
+            commitStartTime,
             finishedRoot.effectDuration
           ))
         : recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
@@ -9821,7 +9821,7 @@ function recursivelyTraverseReappearLayoutEffects(
             commitProfilerUpdate(
               finishedWork,
               current,
-              commitTime,
+              commitStartTime,
               finishedRoot.effectDuration
             ))
           : recursivelyTraverseReappearLayoutEffects(
@@ -9958,7 +9958,7 @@ function commitPassiveMountOnFiber(
               id,
               phase,
               finishedRoot.passiveEffectDuration,
-              commitTime
+              commitStartTime
             );
         } catch (error) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error);
@@ -11540,7 +11540,10 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
                 workInProgressDeferredLane,
                 workInProgressRootInterleavedUpdatedLanes,
                 workInProgressSuspendedRetryLanes,
-                workInProgressRootDidSkipSuspendedSiblings
+                workInProgressRootDidSkipSuspendedSiblings,
+                2,
+                -0,
+                0
               ),
               exitStatus
             );
@@ -11556,7 +11559,10 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
             workInProgressDeferredLane,
             workInProgressRootInterleavedUpdatedLanes,
             workInProgressSuspendedRetryLanes,
-            workInProgressRootDidSkipSuspendedSiblings
+            workInProgressRootDidSkipSuspendedSiblings,
+            0,
+            -0,
+            0
           );
         }
       }
@@ -11611,7 +11617,10 @@ function commitRootWhenReady(
   spawnedLane,
   updatedLanes,
   suspendedRetryLanes,
-  didSkipSuspendedSiblings
+  didSkipSuspendedSiblings,
+  suspendedCommitReason,
+  completedRenderStartTime,
+  completedRenderEndTime
 ) {
   var subtreeFlags = finishedWork.subtreeFlags;
   if (subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408))
@@ -11630,7 +11639,8 @@ function commitRootWhenReady(
           didIncludeRenderPhaseUpdate,
           spawnedLane,
           updatedLanes,
-          suspendedRetryLanes
+          suspendedRetryLanes,
+          1
         )
       );
       markRootSuspended(root, lanes, spawnedLane, didSkipSuspendedSiblings);
@@ -11643,7 +11653,10 @@ function commitRootWhenReady(
     didIncludeRenderPhaseUpdate,
     spawnedLane,
     updatedLanes,
-    suspendedRetryLanes
+    suspendedRetryLanes,
+    suspendedCommitReason,
+    completedRenderStartTime,
+    completedRenderEndTime
   );
 }
 function isRenderConsistentWithExternalStores(finishedWork) {
@@ -11757,7 +11770,10 @@ function performSyncWorkOnRoot(root, lanes) {
     workInProgressRootDidIncludeRecursiveRenderUpdate,
     workInProgressDeferredLane,
     workInProgressRootInterleavedUpdatedLanes,
-    workInProgressSuspendedRetryLanes
+    workInProgressSuspendedRetryLanes,
+    0,
+    -0,
+    0
   );
   ensureRootIsScheduled(root);
   return null;
@@ -12312,7 +12328,10 @@ function commitRoot(
   didIncludeRenderPhaseUpdate,
   spawnedLane,
   updatedLanes,
-  suspendedRetryLanes
+  suspendedRetryLanes,
+  suspendedCommitReason,
+  completedRenderStartTime,
+  completedRenderEndTime
 ) {
   var prevTransition = ReactSharedInternals.T,
     previousUpdateLanePriority = ReactDOMSharedInternals.p;
@@ -12327,7 +12346,10 @@ function commitRoot(
         previousUpdateLanePriority,
         spawnedLane,
         updatedLanes,
-        suspendedRetryLanes
+        suspendedRetryLanes,
+        suspendedCommitReason,
+        completedRenderStartTime,
+        completedRenderEndTime
       );
   } finally {
     (ReactSharedInternals.T = prevTransition),
@@ -12381,9 +12403,10 @@ function commitRootImpl(
     (pendingPassiveEffectsRemainingLanes = remainingLanes),
     (pendingPassiveTransitions = transitions),
     scheduleCallback$1(NormalPriority$1, function () {
-      flushPassiveEffects();
+      flushPassiveEffects(!0);
       return null;
     }));
+  commitStartTime = now();
   transitions = 0 !== (finishedWork.flags & 15990);
   0 !== (finishedWork.subtreeFlags & 15990) || transitions
     ? ((transitions = ReactSharedInternals.T),
@@ -12393,7 +12416,6 @@ function commitRootImpl(
       (updatedLanes = executionContext),
       (executionContext |= 4),
       commitBeforeMutationEffects(root, finishedWork),
-      (commitTime = now()),
       commitMutationEffects(root, finishedWork, lanes),
       restoreSelection(selectionInformation, root.containerInfo),
       (_enabled = !!eventsEnabled),
@@ -12410,7 +12432,7 @@ function commitRootImpl(
       (executionContext = updatedLanes),
       (ReactDOMSharedInternals.p = spawnedLane),
       (ReactSharedInternals.T = transitions))
-    : ((root.current = finishedWork), (commitTime = now()));
+    : (root.current = finishedWork);
   rootDoesHavePassiveEffects
     ? ((rootDoesHavePassiveEffects = !1),
       (rootWithPendingPassiveEffects = root),
@@ -12913,20 +12935,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1540 = 0;
-  i$jscomp$inline_1540 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1540++
+  var i$jscomp$inline_1542 = 0;
+  i$jscomp$inline_1542 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1542++
 ) {
-  var eventName$jscomp$inline_1541 =
-      simpleEventPluginEvents[i$jscomp$inline_1540],
-    domEventName$jscomp$inline_1542 =
-      eventName$jscomp$inline_1541.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1543 =
-      eventName$jscomp$inline_1541[0].toUpperCase() +
-      eventName$jscomp$inline_1541.slice(1);
+  var eventName$jscomp$inline_1543 =
+      simpleEventPluginEvents[i$jscomp$inline_1542],
+    domEventName$jscomp$inline_1544 =
+      eventName$jscomp$inline_1543.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1545 =
+      eventName$jscomp$inline_1543[0].toUpperCase() +
+      eventName$jscomp$inline_1543.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1542,
-    "on" + capitalizedEvent$jscomp$inline_1543
+    domEventName$jscomp$inline_1544,
+    "on" + capitalizedEvent$jscomp$inline_1545
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -16415,16 +16437,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_1785 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1787 = React.version;
 if (
-  "19.0.0-native-fb-d4688dfa-20240920" !==
-  isomorphicReactPackageVersion$jscomp$inline_1785
+  "19.0.0-native-fb-4e9540e3-20240923" !==
+  isomorphicReactPackageVersion$jscomp$inline_1787
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1785,
-      "19.0.0-native-fb-d4688dfa-20240920"
+      isomorphicReactPackageVersion$jscomp$inline_1787,
+      "19.0.0-native-fb-4e9540e3-20240923"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16444,13 +16466,13 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_1792 = {
+var internals$jscomp$inline_1794 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-d4688dfa-20240920",
+  version: "19.0.0-native-fb-4e9540e3-20240923",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-native-fb-d4688dfa-20240920",
+  reconcilerVersion: "19.0.0-native-fb-4e9540e3-20240923",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$287 = 0;
@@ -16468,16 +16490,16 @@ var internals$jscomp$inline_1792 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2187 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2189 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2187.isDisabled &&
-    hook$jscomp$inline_2187.supportsFiber
+    !hook$jscomp$inline_2189.isDisabled &&
+    hook$jscomp$inline_2189.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2187.inject(
-        internals$jscomp$inline_1792
+      (rendererID = hook$jscomp$inline_2189.inject(
+        internals$jscomp$inline_1794
       )),
-        (injectedHook = hook$jscomp$inline_2187);
+        (injectedHook = hook$jscomp$inline_2189);
     } catch (err) {}
 }
 function noop() {}
@@ -16723,7 +16745,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-native-fb-d4688dfa-20240920";
+exports.version = "19.0.0-native-fb-4e9540e3-20240923";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

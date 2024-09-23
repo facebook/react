@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2473477da0bff4afe25fb27335bd898f>>
+ * @generated SignedSource<<4c12a2b5470a63a4653e2befeeb62d30>>
  */
 
 "use strict";
@@ -1199,7 +1199,7 @@ function requestTransitionLane() {
   return currentEventTransitionLane;
 }
 var now = Scheduler$1.unstable_now,
-  commitTime = -0,
+  commitStartTime = -0,
   profilerStartTime = -1.1,
   profilerEffectDuration = -0;
 function pushNestedEffectDurations() {
@@ -6663,7 +6663,7 @@ function safelyDetachRef(current, nearestMountedAncestor) {
 function commitProfilerUpdate(
   finishedWork,
   current,
-  commitTime,
+  commitStartTime,
   effectDuration
 ) {
   try {
@@ -6680,14 +6680,14 @@ function commitProfilerUpdate(
         finishedWork.actualDuration,
         finishedWork.treeBaseDuration,
         finishedWork.actualStartTime,
-        commitTime
+        commitStartTime
       );
     "function" === typeof onCommit &&
       onCommit(
         finishedWork.memoizedProps.id,
         current,
         effectDuration,
-        commitTime
+        commitStartTime
       );
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
@@ -6931,7 +6931,7 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
           commitProfilerUpdate(
             finishedWork,
             current,
-            commitTime,
+            commitStartTime,
             finishedRoot.effectDuration
           ))
         : recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
@@ -7588,7 +7588,7 @@ function recursivelyTraverseReappearLayoutEffects(
             commitProfilerUpdate(
               finishedWork,
               current,
-              commitTime,
+              commitStartTime,
               finishedRoot.effectDuration
             ))
           : recursivelyTraverseReappearLayoutEffects(
@@ -7722,7 +7722,7 @@ function commitPassiveMountOnFiber(
               id,
               phase,
               finishedRoot.passiveEffectDuration,
-              commitTime
+              commitStartTime
             );
         } catch (error) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error);
@@ -8318,7 +8318,10 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
                 workInProgressDeferredLane,
                 workInProgressRootInterleavedUpdatedLanes,
                 workInProgressSuspendedRetryLanes,
-                workInProgressRootDidSkipSuspendedSiblings
+                workInProgressRootDidSkipSuspendedSiblings,
+                2,
+                -0,
+                0
               ),
               exitStatus
             );
@@ -8333,7 +8336,11 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
             lanes,
             workInProgressDeferredLane,
             workInProgressRootInterleavedUpdatedLanes,
-            workInProgressSuspendedRetryLanes
+            workInProgressSuspendedRetryLanes,
+            workInProgressRootDidSkipSuspendedSiblings,
+            0,
+            -0,
+            0
           );
         }
       }
@@ -8385,7 +8392,11 @@ function commitRootWhenReady(
   lanes,
   spawnedLane,
   updatedLanes,
-  suspendedRetryLanes
+  suspendedRetryLanes,
+  didSkipSuspendedSiblings,
+  suspendedCommitReason,
+  completedRenderStartTime,
+  completedRenderEndTime
 ) {
   lanes = finishedWork.subtreeFlags;
   (lanes & 8192 || 16785408 === (lanes & 16785408)) &&
@@ -8397,7 +8408,10 @@ function commitRootWhenReady(
     didIncludeRenderPhaseUpdate,
     spawnedLane,
     updatedLanes,
-    suspendedRetryLanes
+    suspendedRetryLanes,
+    suspendedCommitReason,
+    completedRenderStartTime,
+    completedRenderEndTime
   );
 }
 function isRenderConsistentWithExternalStores(finishedWork) {
@@ -8512,7 +8526,10 @@ function performSyncWorkOnRoot(root, lanes) {
     workInProgressRootDidIncludeRecursiveRenderUpdate,
     workInProgressDeferredLane,
     workInProgressRootInterleavedUpdatedLanes,
-    workInProgressSuspendedRetryLanes
+    workInProgressSuspendedRetryLanes,
+    0,
+    -0,
+    0
   );
   ensureRootIsScheduled(root);
   return null;
@@ -9021,7 +9038,10 @@ function commitRoot(
   didIncludeRenderPhaseUpdate,
   spawnedLane,
   updatedLanes,
-  suspendedRetryLanes
+  suspendedRetryLanes,
+  suspendedCommitReason,
+  completedRenderStartTime,
+  completedRenderEndTime
 ) {
   var prevTransition = ReactSharedInternals.T,
     previousUpdateLanePriority = currentUpdatePriority;
@@ -9036,7 +9056,10 @@ function commitRoot(
         previousUpdateLanePriority,
         spawnedLane,
         updatedLanes,
-        suspendedRetryLanes
+        suspendedRetryLanes,
+        suspendedCommitReason,
+        completedRenderStartTime,
+        completedRenderEndTime
       );
   } finally {
     (ReactSharedInternals.T = prevTransition),
@@ -9094,9 +9117,10 @@ function commitRootImpl(
     (pendingPassiveEffectsRemainingLanes = remainingLanes),
     (pendingPassiveTransitions = transitions),
     scheduleCallback(NormalPriority$1, function () {
-      flushPassiveEffects();
+      flushPassiveEffects(!0);
       return null;
     }));
+  commitStartTime = now();
   transitions = 0 !== (finishedWork.flags & 15990);
   0 !== (finishedWork.subtreeFlags & 15990) || transitions
     ? ((transitions = ReactSharedInternals.T),
@@ -9106,7 +9130,6 @@ function commitRootImpl(
       (updatedLanes = executionContext),
       (executionContext |= 4),
       commitBeforeMutationEffects(root, finishedWork),
-      (commitTime = now()),
       commitMutationEffectsOnFiber(finishedWork, root),
       (root.current = finishedWork),
       null !== injectedProfilingHooks &&
@@ -9120,7 +9143,7 @@ function commitRootImpl(
       (executionContext = updatedLanes),
       (currentUpdatePriority = spawnedLane),
       (ReactSharedInternals.T = transitions))
-    : ((root.current = finishedWork), (commitTime = now()));
+    : (root.current = finishedWork);
   rootDoesHavePassiveEffects
     ? ((rootDoesHavePassiveEffects = !1),
       (rootWithPendingPassiveEffects = root),
@@ -10058,16 +10081,16 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var internals$jscomp$inline_1151 = {
+var internals$jscomp$inline_1153 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-d4688dfa-20240920",
+  version: "19.0.0-native-fb-4e9540e3-20240923",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: function (mockNode) {
     mockNode = nodeToInstanceMap.get(mockNode);
     return void 0 !== mockNode ? mockNode.internalInstanceHandle : null;
   },
-  reconcilerVersion: "19.0.0-native-fb-d4688dfa-20240920",
+  reconcilerVersion: "19.0.0-native-fb-4e9540e3-20240923",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$141 = 0;
@@ -10085,16 +10108,16 @@ var internals$jscomp$inline_1151 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1351 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1353 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1351.isDisabled &&
-    hook$jscomp$inline_1351.supportsFiber
+    !hook$jscomp$inline_1353.isDisabled &&
+    hook$jscomp$inline_1353.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1351.inject(
-        internals$jscomp$inline_1151
+      (rendererID = hook$jscomp$inline_1353.inject(
+        internals$jscomp$inline_1153
       )),
-        (injectedHook = hook$jscomp$inline_1351);
+        (injectedHook = hook$jscomp$inline_1353);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
@@ -10218,4 +10241,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.0.0-native-fb-d4688dfa-20240920";
+exports.version = "19.0.0-native-fb-4e9540e3-20240923";
