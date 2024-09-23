@@ -150,7 +150,8 @@ describe('ReactUpdates', () => {
     expect(container.firstChild.textContent).toBe('0 0');
 
     await act(() => {
-      // Schedule a transition to update the state, this means baseQueue is non-empty.
+      // Schedule a transition to update the state.
+      // This means baseQueue is non-empty.
       _setTransitionState();
 
       // Now schedule a blocking update.
@@ -159,7 +160,8 @@ describe('ReactUpdates', () => {
 
     assertLog([
       // Transition setState
-      // For isomorphic startTransition, this runs first, not during transition render.
+      // For isomorphic startTransition,
+      // This runs first, not during transition render.
       'Transition reducer: 0 0 -> 0 1',
 
       // Prop change from 0 -> 1
@@ -252,7 +254,8 @@ describe('ReactUpdates', () => {
     expect(container.firstChild.textContent).toBe('0 0');
 
     await act(() => {
-      // Schedule a transition to update the state, this means baseQueue is non-empty.
+      // Schedule a transition to update the state.
+      // This means baseQueue is non-empty.
       _setTransitionState();
 
       // Now schedule a blocking update.
