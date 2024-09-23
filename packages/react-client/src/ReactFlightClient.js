@@ -947,7 +947,7 @@ function waitForReference<T>(
     }
 
     // If the parent object is an unparsed React element tuple, we also need to
-    // update the props, owner, and stack of the parsed element object (i.e.
+    // update the props and owner of the parsed element object (i.e.
     // handler.value).
     if (
       parentObject[0] === REACT_ELEMENT_TYPE &&
@@ -961,15 +961,9 @@ function waitForReference<T>(
           element.props = mappedValue;
           break;
         case '4':
-          element._owner = mappedValue;
-          break;
-        case '5':
-          Object.defineProperty(element, '_debugStack', {
-            configurable: false,
-            enumerable: false,
-            writable: true,
-            value: mappedValue,
-          });
+          if (__DEV__) {
+            element._owner = mappedValue;
+          }
           break;
       }
     }
