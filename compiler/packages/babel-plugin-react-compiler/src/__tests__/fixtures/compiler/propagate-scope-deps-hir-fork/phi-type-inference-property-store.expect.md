@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @debug
+// @debug @enablePropagateDepsInHIR
 function Component(props) {
   const x = {};
   let y;
@@ -30,9 +30,9 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @debug
+import { c as _c } from "react/compiler-runtime"; // @debug @enablePropagateDepsInHIR
 function Component(props) {
-  const $ = _c(3);
+  const $ = _c(4);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = {};
@@ -42,7 +42,7 @@ function Component(props) {
   }
   const x = t0;
   let t1;
-  if ($[1] !== props) {
+  if ($[1] !== props.cond || $[2] !== props.a) {
     let y;
     if (props.cond) {
       y = {};
@@ -53,10 +53,11 @@ function Component(props) {
     y.x = x;
 
     t1 = [x, y];
-    $[1] = props;
-    $[2] = t1;
+    $[1] = props.cond;
+    $[2] = props.a;
+    $[3] = t1;
   } else {
-    t1 = $[2];
+    t1 = $[3];
   }
   return t1;
 }

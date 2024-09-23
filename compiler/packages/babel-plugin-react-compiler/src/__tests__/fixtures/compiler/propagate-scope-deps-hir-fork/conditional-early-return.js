@@ -1,3 +1,4 @@
+// @enablePropagateDepsInHIR
 /**
  * props.b does *not* influence `a`
  */

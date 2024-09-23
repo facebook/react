@@ -1,3 +1,4 @@
+// @enablePropagateDepsInHIR
 function useFoo(props: {value: {x: string; y: string} | null}) {
   const value = props.value;
   return createArray(value?.x, value?.y)?.join(', ');

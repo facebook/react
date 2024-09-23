@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @enablePropagateDepsInHIR
 /**
  * props.b does *not* influence `a`
  */
@@ -66,14 +67,15 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; /**
+import { c as _c } from "react/compiler-runtime"; // @enablePropagateDepsInHIR
+/**
  * props.b does *not* influence `a`
  */
 function ComponentA(props) {
-  const $ = _c(3);
+  const $ = _c(5);
   let a_DEBUG;
   let t0;
-  if ($[0] !== props) {
+  if ($[0] !== props.a || $[1] !== props.b || $[2] !== props.d) {
     t0 = Symbol.for("react.early_return_sentinel");
     bb0: {
       a_DEBUG = [];
@@ -85,12 +87,14 @@ function ComponentA(props) {
 
       a_DEBUG.push(props.d);
     }
-    $[0] = props;
-    $[1] = a_DEBUG;
-    $[2] = t0;
+    $[0] = props.a;
+    $[1] = props.b;
+    $[2] = props.d;
+    $[3] = a_DEBUG;
+    $[4] = t0;
   } else {
-    a_DEBUG = $[1];
-    t0 = $[2];
+    a_DEBUG = $[3];
+    t0 = $[4];
   }
   if (t0 !== Symbol.for("react.early_return_sentinel")) {
     return t0;
@@ -102,9 +106,14 @@ function ComponentA(props) {
  * props.b *does* influence `a`
  */
 function ComponentB(props) {
-  const $ = _c(2);
+  const $ = _c(5);
   let a;
-  if ($[0] !== props) {
+  if (
+    $[0] !== props.a ||
+    $[1] !== props.b ||
+    $[2] !== props.c ||
+    $[3] !== props.d
+  ) {
     a = [];
     a.push(props.a);
     if (props.b) {
@@ -112,10 +121,13 @@ function ComponentB(props) {
     }
 
     a.push(props.d);
-    $[0] = props;
-    $[1] = a;
+    $[0] = props.a;
+    $[1] = props.b;
+    $[2] = props.c;
+    $[3] = props.d;
+    $[4] = a;
   } else {
-    a = $[1];
+    a = $[4];
   }
   return a;
 }
@@ -124,10 +136,15 @@ function ComponentB(props) {
  * props.b *does* influence `a`, but only in a way that is never observable
  */
 function ComponentC(props) {
-  const $ = _c(3);
+  const $ = _c(6);
   let a;
   let t0;
-  if ($[0] !== props) {
+  if (
+    $[0] !== props.a ||
+    $[1] !== props.b ||
+    $[2] !== props.c ||
+    $[3] !== props.d
+  ) {
     t0 = Symbol.for("react.early_return_sentinel");
     bb0: {
       a = [];
@@ -140,12 +157,15 @@ function ComponentC(props) {
 
       a.push(props.d);
     }
-    $[0] = props;
-    $[1] = a;
-    $[2] = t0;
+    $[0] = props.a;
+    $[1] = props.b;
+    $[2] = props.c;
+    $[3] = props.d;
+    $[4] = a;
+    $[5] = t0;
   } else {
-    a = $[1];
-    t0 = $[2];
+    a = $[4];
+    t0 = $[5];
   }
   if (t0 !== Symbol.for("react.early_return_sentinel")) {
     return t0;
@@ -157,10 +177,15 @@ function ComponentC(props) {
  * props.b *does* influence `a`
  */
 function ComponentD(props) {
-  const $ = _c(3);
+  const $ = _c(6);
   let a;
   let t0;
-  if ($[0] !== props) {
+  if (
+    $[0] !== props.a ||
+    $[1] !== props.b ||
+    $[2] !== props.c ||
+    $[3] !== props.d
+  ) {
     t0 = Symbol.for("react.early_return_sentinel");
     bb0: {
       a = [];
@@ -173,12 +198,15 @@ function ComponentD(props) {
 
       a.push(props.d);
     }
-    $[0] = props;
-    $[1] = a;
-    $[2] = t0;
+    $[0] = props.a;
+    $[1] = props.b;
+    $[2] = props.c;
+    $[3] = props.d;
+    $[4] = a;
+    $[5] = t0;
   } else {
-    a = $[1];
-    t0 = $[2];
+    a = $[4];
+    t0 = $[5];
   }
   if (t0 !== Symbol.for("react.early_return_sentinel")) {
     return t0;
