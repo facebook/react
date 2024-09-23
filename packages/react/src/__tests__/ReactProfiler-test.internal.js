@@ -181,6 +181,7 @@ describe(`onRender`, () => {
           'read current time',
           'read current time',
           'read current time',
+          'read current time',
         ]);
       } else {
         assertLog([
@@ -200,6 +201,7 @@ describe(`onRender`, () => {
     } else {
       if (gate(flags => flags.enableComponentPerformanceTrack)) {
         assertLog([
+          'read current time',
           'read current time',
           'read current time',
           'read current time',

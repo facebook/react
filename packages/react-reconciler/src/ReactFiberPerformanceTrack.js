@@ -164,3 +164,68 @@ export function logTransitionStart(
     }
   }
 }
+
+export function logRenderPhase(startTime: number, endTime: number): void {
+  if (supportsUserTiming) {
+    reusableComponentDevToolDetails.color = 'primary-dark';
+    reusableComponentOptions.start = startTime;
+    reusableComponentOptions.end = endTime;
+    performance.measure('Render', reusableComponentOptions);
+  }
+}
+
+export function logSuspenseThrottlePhase(
+  startTime: number,
+  endTime: number,
+): void {
+  // This was inside a throttled Suspense boundary commit.
+  if (supportsUserTiming) {
+    reusableComponentDevToolDetails.color = 'secondary-light';
+    reusableComponentOptions.start = startTime;
+    reusableComponentOptions.end = endTime;
+    performance.measure('Throttled', reusableComponentOptions);
+  }
+}
+
+export function logSuspendedCommitPhase(
+  startTime: number,
+  endTime: number,
+): void {
+  // This means the commit was suspended on CSS or images.
+  if (supportsUserTiming) {
+    reusableComponentDevToolDetails.color = 'secondary-light';
+    reusableComponentOptions.start = startTime;
+    reusableComponentOptions.end = endTime;
+    performance.measure('Suspended', reusableComponentOptions);
+  }
+}
+
+export function logCommitPhase(startTime: number, endTime: number): void {
+  if (supportsUserTiming) {
+    reusableComponentDevToolDetails.color = 'secondary-dark';
+    reusableComponentOptions.start = startTime;
+    reusableComponentOptions.end = endTime;
+    performance.measure('Commit', reusableComponentOptions);
+  }
+}
+
+export function logPaintYieldPhase(startTime: number, endTime: number): void {
+  if (supportsUserTiming) {
+    reusableComponentDevToolDetails.color = 'secondary-light';
+    reusableComponentOptions.start = startTime;
+    reusableComponentOptions.end = endTime;
+    performance.measure('Waiting for Paint', reusableComponentOptions);
+  }
+}
+
+export function logPassiveCommitPhase(
+  startTime: number,
+  endTime: number,
+): void {
+  if (supportsUserTiming) {
+    reusableComponentDevToolDetails.color = 'secondary-dark';
+    reusableComponentOptions.start = startTime;
+    reusableComponentOptions.end = endTime;
+    performance.measure('Remaining Effects', reusableComponentOptions);
+  }
+}

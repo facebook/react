@@ -28,8 +28,8 @@ import * as Scheduler from 'scheduler';
 const {unstable_now: now} = Scheduler;
 
 export let renderStartTime: number = -0;
-export let completeTime: number = -0;
-export let commitTime: number = -0;
+export let commitStartTime: number = -0;
+export let commitEndTime: number = -0;
 export let profilerStartTime: number = -1.1;
 export let profilerEffectDuration: number = -0;
 export let componentEffectDuration: number = -0;
@@ -255,18 +255,18 @@ export function recordRenderTime(): void {
   renderStartTime = now();
 }
 
-export function recordCompleteTime(): void {
-  if (!enableProfilerTimer) {
-    return;
-  }
-  completeTime = now();
-}
-
 export function recordCommitTime(): void {
   if (!enableProfilerTimer) {
     return;
   }
-  commitTime = now();
+  commitStartTime = now();
+}
+
+export function recordCommitEndTime(): void {
+  if (!enableProfilerTimer) {
+    return;
+  }
+  commitEndTime = now();
 }
 
 export function startProfilerTimer(fiber: Fiber): void {

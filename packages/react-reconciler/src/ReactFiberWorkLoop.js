@@ -71,6 +71,12 @@ import {
 import {
   logBlockingStart,
   logTransitionStart,
+  logRenderPhase,
+  logSuspenseThrottlePhase,
+  logSuspendedCommitPhase,
+  logCommitPhase,
+  logPaintYieldPhase,
+  logPassiveCommitPhase,
 } from './ReactFiberPerformanceTrack';
 
 import {
@@ -239,9 +245,11 @@ import {
   clampTransitionTimers,
   markNestedUpdateScheduled,
   renderStartTime,
+  commitStartTime,
+  commitEndTime,
   recordRenderTime,
-  recordCompleteTime,
   recordCommitTime,
+  recordCommitEndTime,
   resetNestedUpdateFlag,
   startProfilerTimer,
   stopProfilerTimerIfRunningAndRecordDuration,
@@ -601,6 +609,7 @@ let rootDoesHavePassiveEffects: boolean = false;
 let rootWithPendingPassiveEffects: FiberRoot | null = null;
 let pendingPassiveEffectsLanes: Lanes = NoLanes;
 let pendingPassiveEffectsRemainingLanes: Lanes = NoLanes;
+let pendingPassiveEffectsRenderEndTime: number = -0; // Profiling-only
 let pendingPassiveTransitions: Array<Transition> | null = null;
 
 // Use these to prevent an infinite loop of nested updates
@@ -1119,10 +1128,11 @@ function finishConcurrentRender(
   finishedWork: Fiber,
   lanes: Lanes,
 ) {
+  let renderEndTime = 0;
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     // Track when we finished the last unit of work, before we actually commit it.
     // The commit can be suspended/blocked until we commit it.
-    recordCompleteTime();
+    renderEndTime = now();
   }
 
   // TODO: The fact that most of these branches are identical suggests that some
@@ -1182,6 +1192,9 @@ function finishConcurrentRender(
       workInProgressDeferredLane,
       workInProgressRootInterleavedUpdatedLanes,
       workInProgressSuspendedRetryLanes,
+      IMMEDIATE_COMMIT,
+      renderStartTime,
+      renderEndTime,
     );
   } else {
     if (
@@ -1227,6 +1240,9 @@ function finishConcurrentRender(
             workInProgressRootInterleavedUpdatedLanes,
             workInProgressSuspendedRetryLanes,
             workInProgressRootDidSkipSuspendedSiblings,
+            THROTTLED_COMMIT,
+            renderStartTime,
+            renderEndTime,
           ),
           msUntilTimeout,
         );
@@ -1244,6 +1260,9 @@ function finishConcurrentRender(
       workInProgressRootInterleavedUpdatedLanes,
       workInProgressSuspendedRetryLanes,
       workInProgressRootDidSkipSuspendedSiblings,
+      IMMEDIATE_COMMIT,
+      renderStartTime,
+      renderEndTime,
     );
   }
 }
@@ -1259,6 +1278,9 @@ function commitRootWhenReady(
   updatedLanes: Lanes,
   suspendedRetryLanes: Lanes,
   didSkipSuspendedSiblings: boolean,
+  suspendedCommitReason: SuspendedCommitReason, // Profiling-only
+  completedRenderStartTime: number, // Profiling-only
+  completedRenderEndTime: number, // Profiling-only
 ) {
   // TODO: Combine retry throttling with Suspensey commits. Right now they run
   // one after the other.
@@ -1299,6 +1321,7 @@ function commitRootWhenReady(
           spawnedLane,
           updatedLanes,
           suspendedRetryLanes,
+          SUSPENDED_COMMIT,
         ),
       );
       markRootSuspended(root, lanes, spawnedLane, didSkipSuspendedSiblings);
@@ -1315,6 +1338,9 @@ function commitRootWhenReady(
     spawnedLane,
     updatedLanes,
     suspendedRetryLanes,
+    suspendedCommitReason,
+    completedRenderStartTime,
+    completedRenderEndTime,
   );
 }
 
@@ -1506,8 +1532,9 @@ export function performSyncWorkOnRoot(root: FiberRoot, lanes: Lanes): null {
     return null;
   }
 
+  let renderEndTime = 0;
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
-    recordCompleteTime();
+    renderEndTime = now();
   }
 
   // We now have a consistent tree. Because this is a sync render, we
@@ -1523,6 +1550,9 @@ export function performSyncWorkOnRoot(root: FiberRoot, lanes: Lanes): null {
     workInProgressDeferredLane,
     workInProgressRootInterleavedUpdatedLanes,
     workInProgressSuspendedRetryLanes,
+    IMMEDIATE_COMMIT,
+    renderStartTime,
+    renderEndTime,
   );
 
   // Before exiting, make sure there's a callback scheduled for the next
@@ -3016,6 +3046,11 @@ function unwindUnitOfWork(unitOfWork: Fiber, skipSiblings: boolean): void {
   workInProgress = null;
 }
 
+type SuspendedCommitReason = 0 | 1 | 2;
+const IMMEDIATE_COMMIT = 0;
+const SUSPENDED_COMMIT = 1;
+const THROTTLED_COMMIT = 2;
+
 function commitRoot(
   root: FiberRoot,
   recoverableErrors: null | Array<CapturedValue<mixed>>,
@@ -3024,6 +3059,9 @@ function commitRoot(
   spawnedLane: Lane,
   updatedLanes: Lanes,
   suspendedRetryLanes: Lanes,
+  suspendedCommitReason: SuspendedCommitReason, // Profiling-only
+  completedRenderStartTime: number, // Profiling-only
+  completedRenderEndTime: number, // Profiling-only
 ) {
   // TODO: This no longer makes any sense. We already wrap the mutation and
   // layout phases. Should be able to remove.
@@ -3041,6 +3079,9 @@ function commitRoot(
       spawnedLane,
       updatedLanes,
       suspendedRetryLanes,
+      suspendedCommitReason,
+      completedRenderStartTime,
+      completedRenderEndTime,
     );
   } finally {
     ReactSharedInternals.T = prevTransition;
@@ -3059,6 +3100,9 @@ function commitRootImpl(
   spawnedLane: Lane,
   updatedLanes: Lanes,
   suspendedRetryLanes: Lanes,
+  suspendedCommitReason: SuspendedCommitReason, // Profiling-only
+  completedRenderStartTime: number, // Profiling-only
+  completedRenderEndTime: number, // Profiling-only
 ) {
   do {
     // `flushPassiveEffects` will call `flushSyncUpdateQueue` at the end, which
@@ -3077,6 +3121,12 @@ function commitRootImpl(
 
   const finishedWork = root.finishedWork;
   const lanes = root.finishedLanes;
+
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // Log the previous render phase once we commit. I.e. we weren't interrupted.
+    setCurrentTrackFromLanes(lanes);
+    logRenderPhase(completedRenderStartTime, completedRenderEndTime);
+  }
 
   if (__DEV__) {
     if (enableDebugTracing) {
@@ -3174,6 +3224,7 @@ function commitRootImpl(
     if (!rootDoesHavePassiveEffects) {
       rootDoesHavePassiveEffects = true;
       pendingPassiveEffectsRemainingLanes = remainingLanes;
+      pendingPassiveEffectsRenderEndTime = completedRenderEndTime;
       // workInProgressTransitions might be overwritten, so we want
       // to store it in pendingPassiveTransitions until they get processed
       // We need to pass this through as an argument to commitRoot
@@ -3182,12 +3233,25 @@ function commitRootImpl(
       // with setTimeout
       pendingPassiveTransitions = transitions;
       scheduleCallback(NormalSchedulerPriority, () => {
-        flushPassiveEffects();
+        flushPassiveEffects(true);
         // This render triggered passive effects: release the root cache pool
         // *after* passive effects fire to avoid freeing a cache pool that may
         // be referenced by a node in the tree (HostRoot, Cache boundary etc)
         return null;
       });
+    }
+  }
+
+  if (enableProfilerTimer) {
+    // Mark the current commit time to be shared by all Profilers in this
+    // batch. This enables them to be grouped later.
+    recordCommitTime();
+    if (enableComponentPerformanceTrack) {
+      if (suspendedCommitReason === SUSPENDED_COMMIT) {
+        logSuspendedCommitPhase(completedRenderEndTime, commitStartTime);
+      } else if (suspendedCommitReason === THROTTLED_COMMIT) {
+        logSuspenseThrottlePhase(completedRenderEndTime, commitStartTime);
+      }
     }
   }
 
@@ -3225,12 +3289,6 @@ function commitRootImpl(
       root,
       finishedWork,
     );
-
-    if (enableProfilerTimer) {
-      // Mark the current commit time to be shared by all Profilers in this
-      // batch. This enables them to be grouped later.
-      recordCommitTime();
-    }
 
     // The next phase is the mutation phase, where we mutate the host tree.
     commitMutationEffects(root, finishedWork, lanes);
@@ -3282,12 +3340,11 @@ function commitRootImpl(
   } else {
     // No effects.
     root.current = finishedWork;
-    // Measure these anyway so the flamegraph explicitly shows that there were
-    // no effects.
-    // TODO: Maybe there's a better way to report this.
-    if (enableProfilerTimer) {
-      recordCommitTime();
-    }
+  }
+
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    recordCommitEndTime();
+    logCommitPhase(commitStartTime, commitEndTime);
   }
 
   const rootDidHavePassiveEffects = rootDoesHavePassiveEffects;
@@ -3504,7 +3561,7 @@ function releaseRootPooledCache(root: FiberRoot, remainingLanes: Lanes) {
   }
 }
 
-export function flushPassiveEffects(): boolean {
+export function flushPassiveEffects(wasDelayedCommit?: boolean): boolean {
   // Returns whether passive effects were flushed.
   // TODO: Combine this check with the one in flushPassiveEFfectsImpl. We should
   // probably just combine the two functions. I believe they were only separate
@@ -3529,7 +3586,7 @@ export function flushPassiveEffects(): boolean {
     try {
       setCurrentUpdatePriority(priority);
       ReactSharedInternals.T = null;
-      return flushPassiveEffectsImpl();
+      return flushPassiveEffectsImpl(wasDelayedCommit);
     } finally {
       setCurrentUpdatePriority(previousPriority);
       ReactSharedInternals.T = prevTransition;
@@ -3543,7 +3600,7 @@ export function flushPassiveEffects(): boolean {
   return false;
 }
 
-function flushPassiveEffectsImpl() {
+function flushPassiveEffectsImpl(wasDelayedCommit: void | boolean) {
   if (rootWithPendingPassiveEffects === null) {
     return false;
   }
@@ -3579,6 +3636,12 @@ function flushPassiveEffectsImpl() {
     }
   }
 
+  let passiveEffectStartTime = 0;
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    passiveEffectStartTime = now();
+    logPaintYieldPhase(commitEndTime, passiveEffectStartTime);
+  }
+
   if (enableSchedulingProfiler) {
     markPassiveEffectsStarted(lanes);
   }
@@ -3587,7 +3650,13 @@ function flushPassiveEffectsImpl() {
   executionContext |= CommitContext;
 
   commitPassiveUnmountEffects(root.current);
-  commitPassiveMountEffects(root, root.current, lanes, transitions);
+  commitPassiveMountEffects(
+    root,
+    root.current,
+    lanes,
+    transitions,
+    pendingPassiveEffectsRenderEndTime,
+  );
 
   if (__DEV__) {
     if (enableDebugTracing) {
@@ -3606,7 +3675,11 @@ function flushPassiveEffectsImpl() {
   executionContext = prevExecutionContext;
 
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
-    finalizeRender(lanes, now());
+    const passiveEffectsEndTime = now();
+    if (wasDelayedCommit) {
+      logPassiveCommitPhase(passiveEffectStartTime, passiveEffectsEndTime);
+    }
+    finalizeRender(lanes, passiveEffectsEndTime);
   }
 
   flushSyncWorkOnAllRoots();
