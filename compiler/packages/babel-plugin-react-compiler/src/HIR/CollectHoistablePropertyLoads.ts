@@ -1,9 +1,17 @@
 import {CompilerError} from '../CompilerError';
 import {inRange} from '../ReactiveScopes/InferReactiveScopeVariables';
-import {Set_intersect, Set_union, getOrInsertDefault} from '../Utils/utils';
+import {printDependency} from '../ReactiveScopes/PrintReactiveFunction';
+import {
+  Set_intersect,
+  Set_union,
+  getOrInsertDefault,
+  getOrInsertWith,
+} from '../Utils/utils';
 import {
   BasicBlock,
   BlockId,
+  DependencyPath,
+  DependencyPathEntry,
   GeneratedSource,
   HIRFunction,
   Identifier,
@@ -65,9 +73,12 @@ import {
 export function collectHoistablePropertyLoads(
   fn: HIRFunction,
   temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
+  optionals: ReadonlyMap<BlockId, ReactiveScopeDependency>,
 ): ReadonlyMap<ScopeId, BlockInfo> {
-  const nodes = collectNonNullsInBlocks(fn, temporaries);
-  propagateNonNull(fn, nodes);
+  const dedupeMap = new DedupeMap();
+
+  const nodes = collectNonNullsInBlocks(fn, temporaries, optionals, dedupeMap);
+  propagateNonNull(fn, nodes, dedupeMap);
 
   const nodesKeyedByScopeId = new Map<ScopeId, BlockInfo>();
   for (const [_, block] of fn.body.blocks) {
@@ -88,7 +99,7 @@ export type BlockInfo = {
 };
 
 /**
- * Tree data structure to dedupe property loads (e.g. a.b.c)
+ * Map to dedupe property loads (e.g. a.b.c)
  * and make computing sets intersections simpler.
  */
 type DedupedNode = {
@@ -106,15 +117,14 @@ function depToKey(dep: ReactiveScopeDependency): string {
   }
   return key;
 }
-function findSuperpaths(
-  match: ReactiveScopeDependency,
-  nodes: Set<DedupedNode>,
-): Set<DedupedNode> {
-  const key = depToKey(match) + ' ';
+function normalizeKey(key: string): string {
+  return key.replace(' . ', '   ').replace(' ?. ', '   ');
+}
+function findOptionals(nodes: Set<DedupedNode>): Set<DedupedNode> {
   const result = new Set<DedupedNode>();
 
   for (const n of nodes) {
-    if (n.key.startsWith(key)) {
+    if (n.key.includes(' ?. ')) {
       result.add(n);
     }
   }
@@ -181,11 +191,105 @@ function pushPropertyLoadNode(
   }
 }
 
+function toNormalizedMap(
+  nodes: Set<DedupedNode>,
+): Map<string, Set<DedupedNode>> {
+  const normalized = new Map<string, Set<DedupedNode>>();
+
+  for (const n of nodes) {
+    const entry = getOrInsertWith(
+      normalized,
+      normalizeKey(n.key),
+      () => new Set(),
+    );
+    entry.add(n);
+  }
+  return normalized;
+}
+
+function assertNormalizedNodes(nodes: Set<DedupedNode>) {
+  const normalized = toNormalizedMap(nodes);
+
+  for (const [_, n] of normalized) {
+    CompilerError.invariant(n.size === 1, {
+      reason: 'More than one after reducing!',
+      loc: GeneratedSource,
+    });
+  }
+}
+
+function _printDedupedNodes(nodes: ReadonlySet<DedupedNode>): string {
+  return [...nodes].map(n => printDependency(n.dep)).join(' ');
+}
+
+/**
+ * TODO: replace with a cleaner tree-based version. Any two optional chains with
+ * the same set of property strings (and potentially different ops . vs ?.)
+ * dedupes to the same set of ops. Given <base>?.b, we either know <base> to be
+ * hoistable or not
+ *
+ * if <base> is hoistable, we reduce all <base>?.PROPERTY_STRING subpaths to
+ * <base>.PROPERTY_STRING
+ */
+function reduceMaybeOptionalChains(
+  nodes: Set<DedupedNode>,
+  dedupeMap: DedupeMap,
+): Set<DedupedNode> {
+  const optionalsWithDups = findOptionals(nodes);
+  if (optionalsWithDups.size === 0) {
+    return nodes;
+  }
+  const map = new Map([...nodes].map(n => [n.key, n]));
+  let changed;
+  do {
+    changed = false;
+
+    for (const optional of optionalsWithDups) {
+      let {identifier, path: origPath} = optional.dep;
+      const currPath: DependencyPath = [];
+      // Try to replace optional subpaths of curr
+      for (let i = 0; i < origPath.length; i++) {
+        let nextEntry: DependencyPathEntry;
+        const entry = origPath[i];
+        if (entry.optional) {
+          // See if the base is known to be non-null
+          if (map.get(depToKey({identifier, path: currPath}))) {
+            // replace with the non-optional version
+            nextEntry = {property: entry.property, optional: false};
+          } else {
+            nextEntry = entry;
+          }
+        } else {
+          nextEntry = entry;
+        }
+        currPath.push(nextEntry);
+      }
+      const replacement: DedupedNode = dedupeMap.getOrCreateProperty({
+        identifier: identifier,
+        path: [...currPath],
+      });
+
+      if (replacement !== optional) {
+        changed = true;
+        optionalsWithDups.delete(optional);
+        optionalsWithDups.add(replacement);
+        nodes.delete(optional);
+        nodes.add(replacement);
+        map.set(replacement.key, replacement);
+      }
+    }
+  } while (changed);
+  assertNormalizedNodes(nodes);
+
+  return nodes;
+}
+
 function collectNonNullsInBlocks(
   fn: HIRFunction,
   temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
+  optionals: ReadonlyMap<BlockId, ReactiveScopeDependency>,
+  dedupeMap: DedupeMap,
 ): ReadonlyMap<BlockId, BlockInfo> {
-  const tree = new DedupeMap();
   /**
    * Due to current limitations of mutable range inference, there are edge cases in
    * which we infer known-immutable values (e.g. props or hook params) to have a
@@ -214,20 +318,42 @@ function collectNonNullsInBlocks(
     fn.params[0].kind === 'Identifier'
   ) {
     const identifier = fn.params[0].identifier;
-    knownNonNullIdentifiers.add(tree.getOrCreateIdentifier(identifier));
+    knownNonNullIdentifiers.add(dedupeMap.getOrCreateIdentifier(identifier));
   }
   const nodes = new Map<BlockId, BlockInfo>();
   for (const [_, block] of fn.body.blocks) {
     const assumedNonNullObjects = new Set<DedupedNode>(knownNonNullIdentifiers);
-
     nodes.set(block.id, {
       block,
       assumedNonNullObjects,
     });
+    const maybeOptionalChain = optionals.get(block.id);
+    if (maybeOptionalChain != null) {
+      /**
+       * The 'non-null' properties are NOT guaranteed to be connected in an optional chain.
+       * e.g. NonNulls(`a?.b.c?.d.e`) -> `{a?.b, a?.b.c?.d, a?.b.c?.d.e}`
+       */
+      for (let i = 0; i < maybeOptionalChain.path.length; i++) {
+        // a?.b.c -> path[0] is a?.b, path[1] is not optional
+        if (!maybeOptionalChain.path[i].optional) {
+          assumedNonNullObjects.add(
+            dedupeMap.getOrCreateProperty({
+              identifier: maybeOptionalChain.identifier,
+              // non-optional load means that the base is non-null
+              path: maybeOptionalChain.path.slice(0, i),
+            }),
+          );
+        }
+      }
+      assumedNonNullObjects.add(
+        dedupeMap.getOrCreateProperty(maybeOptionalChain),
+      );
+      continue;
+    }
     for (const phi of block.phis) {
       const source = temporaries.get(phi.id.id);
       if (source) {
-        const propertyNode = tree.getOrCreateProperty(source);
+        const propertyNode = dedupeMap.getOrCreateProperty(source);
         pushPropertyLoadNode(
           propertyNode,
           // TODO double check which instr id
@@ -245,7 +371,7 @@ function collectNonNullsInBlocks(
           identifier: instr.value.object.identifier,
           path: [],
         };
-        const propertyNode = tree.getOrCreateProperty(source);
+        const propertyNode = dedupeMap.getOrCreateProperty(source);
         pushPropertyLoadNode(
           propertyNode,
           instr.id,
@@ -260,7 +386,7 @@ function collectNonNullsInBlocks(
         const sourceNode = temporaries.get(source);
         if (sourceNode != null) {
           pushPropertyLoadNode(
-            tree.getOrCreateProperty(sourceNode),
+            dedupeMap.getOrCreateProperty(sourceNode),
             instr.id,
             knownImmutableIdentifiers,
             assumedNonNullObjects,
@@ -274,7 +400,7 @@ function collectNonNullsInBlocks(
         const sourceNode = temporaries.get(source);
         if (sourceNode != null) {
           pushPropertyLoadNode(
-            tree.getOrCreateProperty(sourceNode),
+            dedupeMap.getOrCreateProperty(sourceNode),
             instr.id,
             knownImmutableIdentifiers,
             assumedNonNullObjects,
@@ -289,6 +415,7 @@ function collectNonNullsInBlocks(
 function propagateNonNull(
   fn: HIRFunction,
   nodes: ReadonlyMap<BlockId, BlockInfo>,
+  dedupeMap: DedupeMap,
 ): void {
   const blockSuccessors = new Map<BlockId, Set<BlockId>>();
   const terminalPreds = new Set<BlockId>();
@@ -311,7 +438,6 @@ function propagateNonNull(
     nodeId: BlockId,
     direction: 'forward' | 'backward',
     traversalState: Map<BlockId, 'active' | 'done'>,
-    nonNullObjectsByBlock: Map<BlockId, ReadonlySet<DedupedNode>>,
   ): boolean {
     /**
      * Avoid re-visiting computed or currently active nodes, which can
@@ -342,7 +468,6 @@ function propagateNonNull(
           pred,
           direction,
           traversalState,
-          nonNullObjectsByBlock,
         );
         changed ||= neighborChanged;
       }
@@ -371,22 +496,23 @@ function propagateNonNull(
     const neighborAccesses = Set_intersect(
       Array.from(neighbors)
         .filter(n => traversalState.get(n) === 'done')
-        .map(n => assertNonNull(nonNullObjectsByBlock.get(n))),
+        .map(n => assertNonNull(nodes.get(n)).assumedNonNullObjects),
     );
 
-    const prevObjects = assertNonNull(nonNullObjectsByBlock.get(nodeId));
-    const newObjects = Set_union(prevObjects, neighborAccesses);
+    const prevObjects = assertNonNull(nodes.get(nodeId)).assumedNonNullObjects;
+    const mergedObjects = Set_union(prevObjects, neighborAccesses);
+    reduceMaybeOptionalChains(mergedObjects, dedupeMap);
 
-    nonNullObjectsByBlock.set(nodeId, newObjects);
+    assertNonNull(nodes.get(nodeId)).assumedNonNullObjects = mergedObjects;
     traversalState.set(nodeId, 'done');
-    changed ||= prevObjects.size !== newObjects.size;
+    // reduceMaybeOptionalChains may replace optional chains with equivalent
+    // inferred unconditional loads. TODO: this likely affects fixpoint
+    // iteration logic, update `changed` accordingly
+    //
+    // e.g. reduceMaybeOptionalChain({a, a?.b}) -> {a, a.b} the difference
+    // between a?.b and a.b affects a neighbor's Intersect(...)
+    changed ||= prevObjects.size !== mergedObjects.size;
     return changed;
-  }
-  const fromEntry = new Map<BlockId, ReadonlySet<DedupedNode>>();
-  const fromExit = new Map<BlockId, ReadonlySet<DedupedNode>>();
-  for (const [blockId, blockInfo] of nodes) {
-    fromEntry.set(blockId, blockInfo.assumedNonNullObjects);
-    fromExit.set(blockId, blockInfo.assumedNonNullObjects);
   }
   const traversalState = new Map<BlockId, 'done' | 'active'>();
   const reversedBlocks = [...fn.body.blocks];
@@ -402,7 +528,6 @@ function propagateNonNull(
         blockId,
         'forward',
         traversalState,
-        fromEntry,
       );
       changed ||= forwardChanged;
     }
@@ -412,40 +537,11 @@ function propagateNonNull(
         blockId,
         'backward',
         traversalState,
-        fromExit,
       );
       changed ||= backwardChanged;
     }
     traversalState.clear();
   } while (changed);
-
-  /**
-   * TODO: validate against meta internal code, then remove in future PR.
-   * Currently cannot come up with a case that requires fixed-point iteration.
-   */
-  CompilerError.invariant(i <= 2, {
-    reason: 'require fixed-point iteration',
-    description: `#iterations = ${i}`,
-    loc: GeneratedSource,
-  });
-
-  CompilerError.invariant(
-    fromEntry.size === fromExit.size && fromEntry.size === nodes.size,
-    {
-      reason:
-        'bad sizes after calculating fromEntry + fromExit ' +
-        `${fromEntry.size} ${fromExit.size} ${nodes.size}`,
-      loc: GeneratedSource,
-    },
-  );
-
-  for (const [id, node] of nodes) {
-    const assumedNonNullObjects = Set_union(
-      assertNonNull(fromEntry.get(id)),
-      assertNonNull(fromExit.get(id)),
-    );
-    node.assumedNonNullObjects = assumedNonNullObjects;
-  }
 }
 
 export function assertNonNull<T extends NonNullable<U>, U>(

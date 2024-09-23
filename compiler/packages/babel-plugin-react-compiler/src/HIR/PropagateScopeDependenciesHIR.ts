@@ -16,9 +16,19 @@ import {
   DeclarationId,
   areEqualPaths,
   IdentifierId,
+  BlockId,
+  BasicBlock,
+  TInstruction,
+  OptionalTerminal,
+  PropertyLoad,
+  StoreLocal,
+  BranchTerminal,
+  TBasicBlock,
+  DependencyPath,
+  GotoVariant,
 } from './HIR';
 import {
-  BlockInfo,
+  assertNonNull,
   collectHoistablePropertyLoads,
 } from './CollectHoistablePropertyLoads';
 import {
@@ -32,37 +42,61 @@ import {Stack, empty} from '../Utils/Stack';
 import {CompilerError} from '../CompilerError';
 import {Iterable_some} from '../Utils/utils';
 import {ReactiveScopeDependencyTreeHIR} from './DeriveMinimalDependenciesHIR';
+import {printIdentifier} from './PrintHIR';
+import {printDependency} from '../ReactiveScopes/PrintReactiveFunction';
 
 export function propagateScopeDependenciesHIR(fn: HIRFunction): void {
   const usedOutsideDeclaringScope =
     findTemporariesUsedOutsideDeclaringScope(fn);
-  const temporaries = collectTemporariesSidemap(fn, usedOutsideDeclaringScope);
+  const {temporaries, optionals, processedInstrsInOptional} =
+    collectTemporariesSidemap(fn, usedOutsideDeclaringScope);
 
-  const hoistablePropertyLoads = collectHoistablePropertyLoads(fn, temporaries);
+  const hoistablePropertyLoads = collectHoistablePropertyLoads(
+    fn,
+    temporaries,
+    optionals,
+  );
 
   const scopeDeps = collectDependencies(
     fn,
     usedOutsideDeclaringScope,
     temporaries,
+    processedInstrsInOptional,
   );
 
   /**
    * Derive the minimal set of hoistable dependencies for each scope.
    */
   for (const [scope, deps] of scopeDeps) {
-    const tree = new ReactiveScopeDependencyTreeHIR();
+    if (deps.length === 0) {
+      continue;
+    }
 
     /**
-     * Step 1: Add every dependency used by this scope (e.g. `a.b.c`)
+     * Step 1:
+     * Find hoistable accesses, given the basic block in which the scope
+     * begins.
      */
+    const hoistables = hoistablePropertyLoads.get(scope.id);
+    CompilerError.invariant(hoistables != null, {
+      reason: '[PropagateScopeDependencies] Scope not found in tracked blocks',
+      loc: GeneratedSource,
+    });
+    const tree = new ReactiveScopeDependencyTreeHIR(
+      [...hoistables.assumedNonNullObjects].map(o => o.dep),
+    );
+
+    /**
+     * Step 2: Mark hoistable dependencies
+     */
+
     for (const dep of deps) {
       tree.addDependency({...dep});
     }
+
     /**
-     * Step 2: Mark hoistable dependencies, given the basic block in
-     * which the scope begins.
+     * Step 3: Derive minimal
      */
-    recordHoistablePropertyReads(hoistablePropertyLoads, scope.id, tree);
     const candidates = tree.deriveMinimalDependencies();
     for (const candidateDep of candidates) {
       if (
@@ -141,6 +175,409 @@ function findTemporariesUsedOutsideDeclaringScope(
   return usedOutsideDeclaringScope;
 }
 
+function matchOptionalTestBlock(
+  terminal: BranchTerminal,
+  blocks: ReadonlyMap<BlockId, BasicBlock>,
+): {
+  id: IdentifierId;
+  property: string;
+  propertyId: IdentifierId;
+  storeLocalInstrId: InstructionId;
+  consequentGoto: BlockId;
+} | null {
+  const consequentBlock = assertNonNull(blocks.get(terminal.consequent));
+  if (
+    consequentBlock.instructions.length === 2 &&
+    consequentBlock.instructions[0].value.kind === 'PropertyLoad' &&
+    consequentBlock.instructions[1].value.kind === 'StoreLocal'
+  ) {
+    const propertyLoad: TInstruction<PropertyLoad> = consequentBlock
+      .instructions[0] as TInstruction<PropertyLoad>;
+    const storeLocal: StoreLocal = consequentBlock.instructions[1].value;
+    const storeLocalInstrId = consequentBlock.instructions[1].id;
+    CompilerError.invariant(
+      propertyLoad.value.object.identifier.id === terminal.test.identifier.id,
+      {
+        reason:
+          '[OptionalChainDeps] Inconsistent optional chaining property load',
+        description: `Test=${printIdentifier(terminal.test.identifier)} PropertyLoad base=${printIdentifier(propertyLoad.value.object.identifier)}`,
+        loc: propertyLoad.loc,
+      },
+    );
+
+    CompilerError.invariant(
+      storeLocal.value.identifier.id === propertyLoad.lvalue.identifier.id,
+      {
+        reason: '[OptionalChainDeps] Unexpected storeLocal',
+        loc: propertyLoad.loc,
+      },
+    );
+    if (
+      consequentBlock.terminal.kind !== 'goto' ||
+      consequentBlock.terminal.variant !== GotoVariant.Break
+    ) {
+      return null;
+    }
+    return {
+      id: storeLocal.lvalue.place.identifier.id,
+      property: propertyLoad.value.property,
+      propertyId: propertyLoad.lvalue.identifier.id,
+      storeLocalInstrId,
+      consequentGoto: consequentBlock.terminal.block,
+    };
+  }
+  return null;
+}
+
+function matchOptionalAlternateBlock(
+  terminal: BranchTerminal,
+  blocks: ReadonlyMap<BlockId, BasicBlock>,
+): IdentifierId {
+  const alternate = assertNonNull(blocks.get(terminal.alternate));
+
+  CompilerError.invariant(
+    alternate.instructions.length === 2 &&
+      alternate.instructions[0].value.kind === 'Primitive' &&
+      alternate.instructions[1].value.kind === 'StoreLocal',
+    {
+      reason: 'Unexpected alternate structure',
+      loc: terminal.loc,
+    },
+  );
+  return alternate.instructions[1].value.lvalue.place.identifier.id;
+}
+
+/**
+ * Result:
+ * - deriveNonNullIdentifiers only needs the outermost (maximal) property load
+ *
+ * - getDeps logic needs
+ *   1. the entire temporaries map. note that it doesn't suffice to return the
+ *      maximal load because some PropertyLoad rvalues are used multiple times
+ *      e.g. MethodCall callees
+ *   2. either a list of branch terminals to ignore (test condition) or a list
+ *      of instruction ids (LoadLocal, PropertyLoad, and test terminals)
+ */
+type ReadOptionalBlockResult = {
+  // Track optional blocks to avoid outer calls into nested optionals
+  seenOptionals: Set<BlockId>;
+
+  // Identifiers to ignore when deriving dependencies
+  // Note that we should be able to track BlockIds here
+  // because we currently only match a block if it only consists of
+  /**
+   * -- base --
+   * bbN:
+   *  Optional test=bbM
+   * bbM:
+   *  LoadLocal | LoadGlobal
+   *  (PropertyLoad <prev> )*
+   *  BranchTerminal test=<prev>
+   *
+   * -- recursive --
+   * bbN:
+   *  Optional test=bbM
+   * bbM:
+   *  Optional ... fallthrough=bbO
+   * bbO:
+   *  Branch test=<id from bbM's StoreLocal> then=bbP
+   * bbP:
+   *  PropertyLoad <id from bbM's StoreLocal>
+   *  StoreLocal <prev>
+   */
+  processedInstrsInOptional: Set<InstructionId>;
+
+  innerProperties: Map<IdentifierId, ReactiveScopeDependency>;
+
+  lastNonOptionalLoad: ReactiveScopeDependency | null;
+};
+
+//   (a.b)?.[consequent]
+//   (a?.b)?.[consequent]  <-- chaining is diff than left to right, so.. no!
+// Optional_t test=(Optional_f test=(Optional_t test=a load='b') load='c') load='d'
+// 0. Optional_t test=a  load='b'
+// 1. Optional_f test=$0 load='c'  <-- Optional_f means that this participates in the optional chain of the test (i.e. cond control flow) but does not start one
+// 2. Optional_t test=$1 load='d'
+//  a?.b.c?.d    --> .d never evaluated if a is nullish
+function readOptionalBlockInner(
+  optional: TBasicBlock<OptionalTerminal>,
+  blocks: ReadonlyMap<BlockId, BasicBlock>,
+  temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
+  result: ReadOptionalBlockResult,
+): {consequent: IdentifierId; alternateBlock: BlockId} | null {
+  // we should never encounter already seen nodes in the recursive case
+  result.seenOptionals.add(optional.id);
+  const maybeTest = blocks.get(optional.terminal.test)!;
+  if (maybeTest.terminal.kind === 'optional') {
+    // chained optional i.e. base=<inner>?.b or <inner>.b
+    const testBlock = blocks.get(maybeTest.terminal.fallthrough)!;
+    if (testBlock!.terminal.kind !== 'branch') {
+      CompilerError.throwTodo({
+        reason: `Unexpected terminal kind \`${testBlock.terminal.kind}\` for optional fallthrough block`,
+        loc: maybeTest.terminal.loc,
+      });
+    }
+    /**
+     * Step 1:
+     *   recurse into the inner optional expr and get the relevant StoreLocal
+     *
+     * Step 2:
+     *   fallthrough of the inner optional should be a block with no instructions,
+     *   terminating with Test($<temporary written to from StoreLocal>)
+     */
+
+    // maybeOptional is the base of the optional expression
+    // If the base is a reorderable member expression / load, result.get(maybeOptional) represents it
+    // Otherwise, the base is an opaque temporary and we cannot easily rewrite
+    const innerOptional = readOptionalBlockInner(
+      maybeTest as TBasicBlock<OptionalTerminal>,
+      blocks,
+      temporaries,
+      result,
+    );
+    if (innerOptional == null) {
+      return null;
+    }
+    if (testBlock.terminal.test.identifier.id !== innerOptional.consequent) {
+      /**
+       * Check that the inner optional is part of the same optional-chain as the
+       * outer one. This is not guaranteed, e.g. given a(c?.d)?.d, we get
+       *
+       * bb0:
+       *   Optional test=bb1
+       * bb1:
+       *   $0 = LoadLocal a
+       *   Optional test=bb2 fallthrough=bb5 <-- start of optional chain for c?.d
+       * bb2:
+       *   ... (optional chain for c?.d)
+       * ...
+       * bb5:
+       *   $1 = phi(c.d, undefined)
+       *   $2 = Call $0($1)
+       *   Branch $2 ...
+       */
+      CompilerError.throwTodo({
+        reason: '[OptionalChainDeps] Support nested optional-chaining',
+        description: `Value written to from inner optional ${innerOptional.consequent} (${printDependency(result.innerProperties.get(innerOptional.consequent)!)}), value tested by outer optional ${testBlock.terminal.test.identifier.id}`,
+        loc: testBlock.terminal.loc,
+      });
+    }
+    if (!optional.terminal.optional) {
+      // even if this loads from this node is not hoistable, loads from its
+      // parent might be
+      //
+      // For example, a MethodCall a?.b() translates to
+      //
+      // Optional optional=false
+      //   Optional optional=true (test=a, cons=a.b)
+      //   cons=a.b()
+      // we want to track that a?.b is inferred to be non-null
+      result.lastNonOptionalLoad = assertNonNull(
+        result.innerProperties.get(innerOptional.consequent),
+      );
+    }
+    const matchConsequentResult = matchOptionalTestBlock(
+      testBlock.terminal,
+      blocks,
+    );
+
+    if (matchConsequentResult) {
+      if (
+        matchConsequentResult.consequentGoto !== optional.terminal.fallthrough
+      ) {
+        CompilerError.throwTodo({
+          reason: '[OptionalChainDeps] Unexpected optional goto-fallthrough',
+          loc: optional.terminal.loc,
+        });
+      }
+      CompilerError.invariant(
+        innerOptional.alternateBlock === testBlock.terminal.alternate,
+        {
+          reason: '[OptionalChainDeps] Inconsistent optional alternate',
+          loc: optional.terminal.loc,
+        },
+      );
+      // only add known loads
+      const baseObject = result.innerProperties.get(innerOptional.consequent)!;
+      const load = {
+        identifier: baseObject.identifier,
+        path: [
+          ...baseObject.path,
+          {
+            property: matchConsequentResult.property,
+            optional: optional.terminal.optional,
+          },
+        ],
+      };
+      result.innerProperties.set(matchConsequentResult.id, load);
+      // duplicate so that we overwrite the correct Property mapping in
+      // temporaries for dependency calculation
+      // TODO: store this in a separate map (to be read only in `getDependencies` logic)
+      result.innerProperties.set(matchConsequentResult.propertyId, load);
+      /**
+       * a?.b.c()
+       *  ->
+       * bb0
+       *   $0 = LoadLocal 'a'
+       *   test $0 then=bb1
+       * bb1
+       *   $1 = PropertyLoad $0.'b'
+       *   StoreLocal $2 = $1
+       *   goto bb2
+       * bb2
+       *   test $2 then=bb3
+       * bb3:
+       *   $3 = PropertyLoad $2.'c'
+       *   StoreLocal $4 = $3
+       *   goto bb4
+       * bb4
+       *   test $4 then=bb5
+       * bb5:
+       *   $5 = MethodCall $2.$4() <--- here we want to take a dep on $2 and $4!
+       */
+      result.processedInstrsInOptional.add(testBlock.terminal.id);
+      result.processedInstrsInOptional.add(
+        matchConsequentResult.storeLocalInstrId,
+      );
+      return {
+        consequent: matchConsequentResult.id,
+        alternateBlock: innerOptional.alternateBlock,
+      };
+    } else {
+      // Optional chain not hoistable e.g.
+      // a?.[0]
+      return null;
+    }
+  } else if (maybeTest.terminal.kind === 'branch') {
+    CompilerError.invariant(optional.terminal.optional, {
+      reason:
+        '[OptionalChainDeps] Expect base optional case to be always optional',
+      loc: optional.terminal.loc,
+    });
+    // (instruction 0 -> test instruction)
+    // Note that this might not be true when chaining value-block exprssions but let's keep it when developing
+    // normal test cases
+    //  (a ?? b)?.c
+    CompilerError.invariant(maybeTest.instructions.length >= 1, {
+      reason:
+        '[OptionalChainDeps] Expected direct optional test branch (base case) to have at least two instructions',
+      loc: maybeTest.terminal.loc,
+    });
+    /**
+     * Step 1: Explicitly calculate base of load
+     *
+     * (REMOVED) replace this with a lookup from the temporary map
+
+    const testValue = assertNonNull(maybeTest.instructions.at(-1)).lvalue
+      .identifier;
+
+    Ideally, we would be able to flatten base instructions out of optional blocks, but optional bases are currently
+    within value blocks (which cannot be interrupted by scope boundaries).
+    As such, the only dependencies we can hoist out of optional chains are property chains (with no other instructions)
+     */
+
+    let baseIdentifier: Identifier;
+    let lastLval: IdentifierId;
+    const path: DependencyPath = [];
+    const seenLvals = new Set<IdentifierId>();
+
+    if (maybeTest.instructions[0].value.kind === 'LoadLocal') {
+      baseIdentifier = maybeTest.instructions[0].value.place.identifier;
+      lastLval = maybeTest.instructions[0].lvalue.identifier.id;
+      seenLvals.add(lastLval);
+    } else {
+      return null;
+    }
+    for (let i = 1; i < maybeTest.instructions.length; i++) {
+      const instrVal = maybeTest.instructions[i].value;
+      if (
+        instrVal.kind === 'PropertyLoad' &&
+        instrVal.object.identifier.id === lastLval
+      ) {
+        path.push({property: instrVal.property, optional: false});
+        lastLval = maybeTest.instructions[i].lvalue.identifier.id;
+        seenLvals.add(lastLval);
+      } else {
+        // not hoistable base case
+        return null;
+      }
+    }
+    CompilerError.invariant(
+      maybeTest.terminal.test.identifier.id === lastLval,
+      {
+        reason: '[OptionalChainDeps] Unexpected lval',
+        loc: maybeTest.terminal.loc,
+      },
+    );
+    const matchConsequentResult = matchOptionalTestBlock(
+      maybeTest.terminal,
+      blocks,
+    );
+    if (matchConsequentResult) {
+      CompilerError.invariant(
+        matchConsequentResult.consequentGoto === optional.terminal.fallthrough,
+        {
+          reason: '[OptionalChainDeps] Unexpected optional goto-fallthrough',
+          loc: optional.terminal.loc,
+        },
+      );
+      const load = {
+        identifier: baseIdentifier,
+        path: [
+          ...path,
+          {
+            property: matchConsequentResult.property,
+            optional: optional.terminal.optional,
+          },
+        ],
+      };
+      result.innerProperties.set(matchConsequentResult.id, load);
+      // duplicate so that we overwrite the correct Property mapping in
+      // temporaries for dependency calculation
+      result.innerProperties.set(matchConsequentResult.propertyId, load);
+      result.processedInstrsInOptional.add(maybeTest.terminal.id);
+      result.processedInstrsInOptional.add(
+        matchConsequentResult.storeLocalInstrId,
+      );
+      matchOptionalAlternateBlock(maybeTest.terminal, blocks);
+      return {
+        consequent: matchConsequentResult.id,
+        alternateBlock: maybeTest.terminal.alternate,
+      };
+    } else {
+      // Optional chain not hoistable e.g.
+      // a?.[0]
+      return null;
+    }
+  } else {
+    // might be some nested value-block e.g.
+    // (a ?? b)?.c
+    return null;
+  }
+}
+
+function readOptionalBlock(
+  optional: TBasicBlock<OptionalTerminal>,
+  blocks: ReadonlyMap<BlockId, BasicBlock>,
+  temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
+): ReadOptionalBlockResult {
+  const result: ReadOptionalBlockResult = {
+    seenOptionals: new Set(),
+    processedInstrsInOptional: new Set(),
+    innerProperties: new Map(),
+    lastNonOptionalLoad: null,
+  };
+
+  readOptionalBlockInner(optional, blocks, temporaries, result);
+  return result;
+}
+
+type HIRSidemap = {
+  temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>;
+  // Instructions to skip when processing dependencies
+  processedInstrsInOptional: Set<InstructionId>;
+  optionals: ReadonlyMap<BlockId, ReactiveScopeDependency>;
+};
 /**
  * @returns mapping of LoadLocal and PropertyLoad to the source of the load.
  * ```js
@@ -191,7 +628,7 @@ function findTemporariesUsedOutsideDeclaringScope(
 function collectTemporariesSidemap(
   fn: HIRFunction,
   usedOutsideDeclaringScope: ReadonlySet<DeclarationId>,
-): ReadonlyMap<IdentifierId, ReactiveScopeDependency> {
+): HIRSidemap {
   const temporaries = new Map<IdentifierId, ReactiveScopeDependency>();
   for (const [_, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
@@ -201,7 +638,12 @@ function collectTemporariesSidemap(
       );
 
       if (value.kind === 'PropertyLoad' && !usedOutside) {
-        const property = getProperty(value.object, value.property, temporaries);
+        const property = getProperty(
+          value.object,
+          value.property,
+          false,
+          temporaries,
+        );
         temporaries.set(lvalue.identifier.id, property);
       } else if (
         value.kind === 'LoadLocal' &&
@@ -216,12 +658,93 @@ function collectTemporariesSidemap(
       }
     }
   }
-  return temporaries;
+
+  const seen = new Set<BlockId>();
+  const optionals = new Map<BlockId, ReactiveScopeDependency>();
+  let processedInstrsInOptional = new Set<InstructionId>();
+  for (const [_, block] of fn.body.blocks) {
+    if (block.terminal.kind === 'optional' && !seen.has(block.id)) {
+      const optionalBlockResult = readOptionalBlock(
+        block as TBasicBlock<OptionalTerminal>,
+        fn.body.blocks,
+        temporaries,
+      );
+      for (const id of optionalBlockResult.seenOptionals) {
+        seen.add(id);
+      }
+      if (optionalBlockResult) {
+        /**
+         * This is definitely a hack. We know that intermediate rvalues are used
+         * only in the optional chain itself. If we mapped to the real identifierId,
+         * it would (incorrectly) be considered an optional dependency.
+         *
+         * the phi is hte best way of expressing "the value that a optional chain evaluates to".
+         * Instead of storing the precise value, we store a subset (a?.b.c().d -> a?.b)
+         */
+
+        // // // This means that the optional block is an outermost optional block
+        // // const {consequent, alternate} = optionalBlockResult;
+        // const optionalFallthrough = assertNonNull(
+        //   fn.body.blocks.get(block.terminal.fallthrough),
+        // );
+
+        // if (optionalFallthrough.phis.size === 0) {
+        //   // might have been DCE'd
+        //   continue;
+        // }
+        // CompilerError.invariant(optionalFallthrough.phis.size === 1, {
+        //   reason: 'Unexpected phi size',
+        //   description: `Expected 1 found ${optionalFallthrough.phis.size}`,
+        //   loc: block.terminal.loc,
+        // });
+        // // for (const phi of optionalFallthrough.phis) {
+        // const phi = [...optionalFallthrough.phis][0];
+        // const operands = [...phi.operands];
+        // CompilerError.invariant(
+        //   operands.length === 2 &&
+        //     operands.some(([_, id]) => id.id === consequent) &&
+        //     operands.some(([_, id]) => id.id === alternate),
+        //   {
+        //     reason: 'Unexpected phi operands',
+        //     description: `Found ${printPhi(phi)}`,
+        //     loc: block.terminal.loc,
+        //   },
+        // );
+        // temporaries.set(phi.id.id, mostPreciseHoistable);
+
+        // const mostPreciseHoistable = assertNonNull(
+        //   [...optionalBlockResult.innerProperties.values()].at(-1),
+        // );
+
+        if (optionalBlockResult.lastNonOptionalLoad) {
+          // It might be more precise to set the fallthrough id here, but it
+          // should be same as value blocks cannot jump / have non-linear
+          // control flow
+          optionals.set(block.id, optionalBlockResult.lastNonOptionalLoad);
+        }
+
+        for (const [id, val] of optionalBlockResult.innerProperties) {
+          temporaries.set(id, val);
+        }
+
+        let size = optionalBlockResult.processedInstrsInOptional.size;
+        // Hacky: don't add the last processed instruction -- this is the rvalue
+        // we need when adding a dependency!
+        for (const id of optionalBlockResult.processedInstrsInOptional) {
+          if (--size > 0) {
+            processedInstrsInOptional.add(id);
+          }
+        }
+      }
+    }
+  }
+  return {temporaries, processedInstrsInOptional, optionals};
 }
 
 function getProperty(
   object: Place,
   propertyName: string,
+  optional: boolean,
   temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
 ): ReactiveScopeDependency {
   /*
@@ -253,15 +776,12 @@ function getProperty(
   if (resolvedDependency == null) {
     property = {
       identifier: object.identifier,
-      path: [{property: propertyName, optional: false}],
+      path: [{property: propertyName, optional}],
     };
   } else {
     property = {
       identifier: resolvedDependency.identifier,
-      path: [
-        ...resolvedDependency.path,
-        {property: propertyName, optional: false},
-      ],
+      path: [...resolvedDependency.path, {property: propertyName, optional}],
     };
   }
   return property;
@@ -409,8 +929,13 @@ class Context {
     );
   }
 
-  visitProperty(object: Place, property: string): void {
-    const nextDependency = getProperty(object, property, this.#temporaries);
+  visitProperty(object: Place, property: string, optional: boolean): void {
+    const nextDependency = getProperty(
+      object,
+      property,
+      optional,
+      this.#temporaries,
+    );
     this.visitDependency(nextDependency);
   }
 
@@ -489,7 +1014,7 @@ function handleInstruction(instr: Instruction, context: Context): void {
     }
   } else if (value.kind === 'PropertyLoad') {
     if (context.isUsedOutsideDeclaringScope(lvalue)) {
-      context.visitProperty(value.object, value.property);
+      context.visitProperty(value.object, value.property, false);
     }
   } else if (value.kind === 'StoreLocal') {
     context.visitOperand(value.value);
@@ -544,6 +1069,7 @@ function collectDependencies(
   fn: HIRFunction,
   usedOutsideDeclaringScope: ReadonlySet<DeclarationId>,
   temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
+  processedInstrsInOptional: ReadonlySet<InstructionId>,
 ): Map<ReactiveScope, Array<ReactiveScopeDependency>> {
   const context = new Context(usedOutsideDeclaringScope, temporaries);
 
@@ -573,32 +1099,17 @@ function collectDependencies(
     }
 
     for (const instr of block.instructions) {
-      handleInstruction(instr, context);
+      if (!processedInstrsInOptional.has(instr.id)) {
+        handleInstruction(instr, context);
+      }
     }
-    for (const place of eachTerminalOperand(block.terminal)) {
-      context.visitOperand(place);
+
+    if (!processedInstrsInOptional.has(block.terminal.id)) {
+      // avoid visiting branch tests of optional blocks
+      for (const place of eachTerminalOperand(block.terminal)) {
+        context.visitOperand(place);
+      }
     }
   }
   return context.deps;
-}
-
-/**
- * Compute the set of hoistable property reads.
- */
-function recordHoistablePropertyReads(
-  nodes: ReadonlyMap<ScopeId, BlockInfo>,
-  scopeId: ScopeId,
-  tree: ReactiveScopeDependencyTreeHIR,
-): void {
-  const node = nodes.get(scopeId);
-  CompilerError.invariant(node != null, {
-    reason: '[PropagateScopeDependencies] Scope not found in tracked blocks',
-    loc: GeneratedSource,
-  });
-
-  for (const item of node.assumedNonNullObjects) {
-    tree.markNodesNonNull({
-      ...item.fullPath,
-    });
-  }
 }
