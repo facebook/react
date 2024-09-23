@@ -87,7 +87,7 @@ describe('ReactUpdates', () => {
     expect(container.firstChild.textContent).toBe('2');
   });
 
-  it('should keep state from render during layout effect update with useTransition', async () => {
+  it('should keep state from render during layout effect update with isomorphic transition', async () => {
     let _setTransitionState = null;
     function Component({prop}) {
       const [, setLayoutState] = React.useState({});
@@ -188,7 +188,7 @@ describe('ReactUpdates', () => {
     expect(container.firstChild.textContent).toBe('1 11');
   });
 
-  it('should keep state from render during layout effect update with isomorphic transition', async () => {
+  it('should keep state from render during layout effect update with useTransition', async () => {
     let _setTransitionState = null;
 
     function Component({prop}) {
