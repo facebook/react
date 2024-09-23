@@ -258,7 +258,7 @@ function collectPropertyLoadsInBlocks(
           temporaries,
         );
         const propertyNode = tree.getPropertyLoadNode(property);
-        const object = instr.value.object.identifier;
+        const object = propertyNode.fullPath.identifier;
         /**
          * Since this runs *after* buildReactiveScopeTerminals, identifier mutable ranges
          * are not valid with respect to current instruction id numbering.
