@@ -13,7 +13,10 @@ import {installHook} from 'react-devtools-shared/src/hook';
 import {initBackend} from 'react-devtools-shared/src/backend';
 import {__DEBUG__} from 'react-devtools-shared/src/constants';
 import setupNativeStyleEditor from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
-import {getDefaultComponentFilters} from 'react-devtools-shared/src/utils';
+import {
+  getDefaultComponentFilters,
+  getIsReloadAndProfileSupported,
+} from 'react-devtools-shared/src/utils';
 
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
 import type {
@@ -36,6 +39,7 @@ type ConnectOptions = {
   isAppActive?: () => boolean,
   websocket?: ?WebSocket,
   onSettingsUpdated?: (settings: $ReadOnly<DevToolsHookSettings>) => void,
+  isReloadAndProfileSupported?: boolean,
 };
 
 let savedComponentFilters: Array<ComponentFilter> =
@@ -77,6 +81,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
     retryConnectionDelay = 2000,
     isAppActive = () => true,
     onSettingsUpdated,
+    isReloadAndProfileSupported = getIsReloadAndProfileSupported(),
   } = options || {};
 
   const protocol = useHttps ? 'wss' : 'ws';
@@ -184,7 +189,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
       hook.emit('shutdown');
     });
 
-    initBackend(hook, agent, window);
+    initBackend(hook, agent, window, isReloadAndProfileSupported);
 
     // Setup React Native style editor if the environment supports it.
     if (resolveRNStyle != null || hook.resolveRNStyle != null) {
@@ -309,6 +314,7 @@ type ConnectWithCustomMessagingOptions = {
   nativeStyleEditorValidAttributes?: $ReadOnlyArray<string>,
   resolveRNStyle?: ResolveNativeStyle,
   onSettingsUpdated?: (settings: $ReadOnly<DevToolsHookSettings>) => void,
+  isReloadAndProfileSupported?: boolean,
 };
 
 export function connectWithCustomMessagingProtocol({
@@ -318,6 +324,7 @@ export function connectWithCustomMessagingProtocol({
   nativeStyleEditorValidAttributes,
   resolveRNStyle,
   onSettingsUpdated,
+  isReloadAndProfileSupported = getIsReloadAndProfileSupported(),
 }: ConnectWithCustomMessagingOptions): Function {
   const hook: ?DevToolsHook = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (hook == null) {
@@ -368,7 +375,12 @@ export function connectWithCustomMessagingProtocol({
     hook.emit('shutdown');
   });
 
-  const unsubscribeBackend = initBackend(hook, agent, window);
+  const unsubscribeBackend = initBackend(
+    hook,
+    agent,
+    window,
+    isReloadAndProfileSupported,
+  );
 
   const nativeStyleResolver: ResolveNativeStyle | void =
     resolveRNStyle || hook.resolveRNStyle;
