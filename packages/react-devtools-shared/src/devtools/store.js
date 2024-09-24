@@ -114,8 +114,8 @@ export default class Store extends EventEmitter<{
   _bridge: FrontendBridge;
 
   // Computed whenever _errorsAndWarnings Map changes.
-  _cachedErrorCount: number = 0;
-  _cachedWarningCount: number = 0;
+  _cachedComponentWithErrorCount: number = 0;
+  _cachedComponentWithWarningCount: number = 0;
   _cachedErrorAndWarningTuples: ErrorAndWarningTuples | null = null;
 
   // Should new nodes be collapsed by default when added to the tree?
@@ -196,6 +196,7 @@ export default class Store extends EventEmitter<{
 
   _shouldCheckBridgeProtocolCompatibility: boolean = false;
   _hookSettings: $ReadOnly<DevToolsHookSettings> | null = null;
+  _shouldShowWarningsAndErrors: boolean = false;
 
   constructor(bridge: FrontendBridge, config?: Config) {
     super();
@@ -383,8 +384,24 @@ export default class Store extends EventEmitter<{
     return this._bridgeProtocol;
   }
 
-  get errorCount(): number {
-    return this._cachedErrorCount;
+  get componentWithErrorCount(): number {
+    if (!this._shouldShowWarningsAndErrors) {
+      return 0;
+    }
+
+    return this._cachedComponentWithErrorCount;
+  }
+
+  get componentWithWarningCount(): number {
+    if (!this._shouldShowWarningsAndErrors) {
+      return 0;
+    }
+
+    return this._cachedComponentWithWarningCount;
+  }
+
+  get displayingErrorsAndWarningsEnabled(): boolean {
+    return this._shouldShowWarningsAndErrors;
   }
 
   get hasOwnerMetadata(): boolean {
@@ -478,10 +495,6 @@ export default class Store extends EventEmitter<{
 
   get unsupportedRendererVersionDetected(): boolean {
     return this._unsupportedRendererVersionDetected;
-  }
-
-  get warningCount(): number {
-    return this._cachedWarningCount;
   }
 
   containsElement(id: number): boolean {
@@ -581,7 +594,11 @@ export default class Store extends EventEmitter<{
   }
 
   // Returns a tuple of [id, index]
-  getElementsWithErrorsAndWarnings(): Array<{id: number, index: number}> {
+  getElementsWithErrorsAndWarnings(): ErrorAndWarningTuples {
+    if (!this._shouldShowWarningsAndErrors) {
+      return [];
+    }
+
     if (this._cachedErrorAndWarningTuples !== null) {
       return this._cachedErrorAndWarningTuples;
     }
@@ -615,6 +632,10 @@ export default class Store extends EventEmitter<{
     errorCount: number,
     warningCount: number,
   } {
+    if (!this._shouldShowWarningsAndErrors) {
+      return {errorCount: 0, warningCount: 0};
+    }
+
     return this._errorsAndWarnings.get(id) || {errorCount: 0, warningCount: 0};
   }
 
@@ -1325,16 +1346,21 @@ export default class Store extends EventEmitter<{
     this._cachedErrorAndWarningTuples = null;
 
     if (haveErrorsOrWarningsChanged) {
-      let errorCount = 0;
-      let warningCount = 0;
+      let componentWithErrorCount = 0;
+      let componentWithWarningCount = 0;
 
       this._errorsAndWarnings.forEach(entry => {
-        errorCount += entry.errorCount;
-        warningCount += entry.warningCount;
+        if (entry.errorCount > 0) {
+          componentWithErrorCount++;
+        }
+
+        if (entry.warningCount > 0) {
+          componentWithWarningCount++;
+        }
       });
 
-      this._cachedErrorCount = errorCount;
-      this._cachedWarningCount = warningCount;
+      this._cachedComponentWithErrorCount = componentWithErrorCount;
+      this._cachedComponentWithWarningCount = componentWithWarningCount;
     }
 
     if (haveRootsChanged) {
@@ -1528,8 +1554,20 @@ export default class Store extends EventEmitter<{
   onHookSettings: (settings: $ReadOnly<DevToolsHookSettings>) => void =
     settings => {
       this._hookSettings = settings;
+
+      this.setShouldShowWarningsAndErrors(settings.showInlineWarningsAndErrors);
       this.emit('hookSettings', settings);
     };
+
+  setShouldShowWarningsAndErrors(status: boolean): void {
+    const previousStatus = this._shouldShowWarningsAndErrors;
+    this._shouldShowWarningsAndErrors = status;
+
+    if (previousStatus !== status) {
+      // Propagate to subscribers, although tree state has not changed
+      this.emit('mutated', [[], new Map()]);
+    }
+  }
 
   // The Store should never throw an Error without also emitting an event.
   // Otherwise Store errors will be invisible to users,
