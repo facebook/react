@@ -24,7 +24,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees
+import { c as _c } from "react-compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees
 import { useCallback } from "react";
 
 // Compiler can produce any memoization it finds valid if the

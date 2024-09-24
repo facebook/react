@@ -25,7 +25,7 @@ function Component({name, data, icon}) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react-compiler-runtime";
 import fbt from "fbt";
 
 function Component(t0) {

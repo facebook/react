@@ -32,7 +32,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enableTransitivelyFreezeFunctionExpressions:false
+import { c as _c } from "react-compiler-runtime"; // @enableTransitivelyFreezeFunctionExpressions:false
 
 function Component(props) {
   const $ = _c(9);

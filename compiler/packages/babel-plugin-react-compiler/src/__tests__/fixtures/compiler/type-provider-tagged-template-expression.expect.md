@@ -32,7 +32,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react-compiler-runtime";
 import { graphql } from "shared-runtime";
 
 export function Component(t0) {

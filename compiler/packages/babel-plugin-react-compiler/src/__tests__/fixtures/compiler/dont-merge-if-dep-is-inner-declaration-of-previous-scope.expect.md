@@ -44,7 +44,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react-compiler-runtime";
 import { ValidateMemoization } from "shared-runtime";
 
 // Achieving Forget's level of memoization precision in this example isn't possible with useMemo

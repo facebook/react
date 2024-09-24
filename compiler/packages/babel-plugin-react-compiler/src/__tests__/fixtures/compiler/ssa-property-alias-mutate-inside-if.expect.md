@@ -20,7 +20,7 @@ function foo(a) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react-compiler-runtime";
 function foo(a) {
   const $ = _c(3);
   let x;

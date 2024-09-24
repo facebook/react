@@ -15,7 +15,7 @@ function Component(listItem, thread) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react-compiler-runtime";
 function Component(listItem, thread) {
   const $ = _c(7);
   let t0;

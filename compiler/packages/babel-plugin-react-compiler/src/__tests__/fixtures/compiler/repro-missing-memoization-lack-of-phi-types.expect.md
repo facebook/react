@@ -27,7 +27,7 @@ function Component() {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react-compiler-runtime";
 import { useMemo } from "react";
 import { useFragment } from "shared-runtime";
 

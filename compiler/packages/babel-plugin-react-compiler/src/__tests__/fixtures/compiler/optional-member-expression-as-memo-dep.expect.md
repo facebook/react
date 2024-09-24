@@ -15,7 +15,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees @enableOptionalDependencies
+import { c as _c } from "react-compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees @enableOptionalDependencies
 function Component(props) {
   const $ = _c(4);
 

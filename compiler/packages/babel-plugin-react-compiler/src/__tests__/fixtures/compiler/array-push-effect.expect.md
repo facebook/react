@@ -19,7 +19,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // arrayInstance.push should have the following effects:
+import { c as _c } from "react-compiler-runtime"; // arrayInstance.push should have the following effects:
 //  - read on all args (rest parameter)
 //  - mutate on receiver
 function Component(props) {

@@ -49,7 +49,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // note: comments are for the ideal scopes, not what is currently
+import { c as _c } from "react-compiler-runtime"; // note: comments are for the ideal scopes, not what is currently
 // emitted
 function foo(props) {
   const $ = _c(14);

@@ -37,7 +37,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enableCustomTypeDefinitionForReanimated
+import { c as _c } from "react-compiler-runtime"; // @enableCustomTypeDefinitionForReanimated
 function Component() {
   const $ = _c(2);
   const radius = useSharedValue(50);

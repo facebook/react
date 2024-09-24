@@ -21,7 +21,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @customMacros(idx)
+import { c as _c } from "react-compiler-runtime"; // @customMacros(idx)
 
 function Component(props) {
   var _ref2;

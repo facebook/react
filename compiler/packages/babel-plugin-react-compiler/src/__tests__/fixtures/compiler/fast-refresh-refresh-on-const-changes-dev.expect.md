@@ -46,7 +46,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @compilationMode(infer) @enableResetCacheOnSourceFileChanges
+import { c as _c } from "react-compiler-runtime"; // @compilationMode(infer) @enableResetCacheOnSourceFileChanges
 import { useEffect, useMemo, useState } from "react";
 import { ValidateMemoization } from "shared-runtime";
 

@@ -24,7 +24,7 @@ function Component2(props) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react-compiler-runtime";
 import * as React from "react";
 import { useState, useMemo } from "react";
 

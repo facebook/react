@@ -1,4 +1,4 @@
-import {c as useMemoCache} from 'react/compiler-runtime';
+import {c as useMemoCache} from 'react-compiler-runtime';
 
 function Component(props) {
   const $ = useMemoCache();

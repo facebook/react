@@ -31,7 +31,7 @@ function V0({v1}: V2<{v1?: V3}>): V2b.V2a {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react-compiler-runtime";
 function V0(t0) {
   const $ = _c(2);
   const { v1 } = t0;

@@ -22,7 +22,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // Determine that we only need to track p.a here
+import { c as _c } from "react-compiler-runtime"; // Determine that we only need to track p.a here
 // Ordering of access should not matter
 function TestDepsSubpathOrder3(props) {
   const $ = _c(2);

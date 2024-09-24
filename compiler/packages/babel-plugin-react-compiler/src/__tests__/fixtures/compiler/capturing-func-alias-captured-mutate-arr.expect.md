@@ -20,7 +20,7 @@ function component(foo, bar) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react-compiler-runtime";
 function component(foo, bar) {
   const $ = _c(3);
   let y;

@@ -24,7 +24,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react-compiler-runtime";
 const { shallowCopy, throwErrorWithMessage } = require("shared-runtime");
 
 function Component(props) {

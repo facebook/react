@@ -19,7 +19,7 @@ function component({mutator}) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react-compiler-runtime";
 function component(t0) {
   const $ = _c(7);
   const { mutator } = t0;

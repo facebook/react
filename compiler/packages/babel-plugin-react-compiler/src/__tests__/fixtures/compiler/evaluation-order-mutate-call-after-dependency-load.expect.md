@@ -31,7 +31,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; /**
+import { c as _c } from "react-compiler-runtime"; /**
  * Test that we preserve order of evaluation on the following case scope@0
  * ```js
  * // simplified HIR
