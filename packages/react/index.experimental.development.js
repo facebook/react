@@ -70,3 +70,5 @@ export function experimental_useOptimistic<S, A>(
   }
   return useOptimistic(passthrough, reducer);
 }
+
+export {useMemoCache as c} from './src/ReactHooks';
