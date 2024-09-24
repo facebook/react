@@ -485,7 +485,6 @@ function areHookInputsEqual(
         `[${prevDeps.join(', ')}]`,
         `[${nextDeps.join(', ')}]`,
       );
-      return false;
     }
   }
 
