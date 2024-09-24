@@ -485,15 +485,14 @@ function areHookInputsEqual(
         `[${prevDeps.join(', ')}]`,
         `[${nextDeps.join(', ')}]`,
       );
+      return false;
     }
   }
-  // $FlowFixMe[incompatible-use] found when upgrading Flow
+
   for (let i = 0; i < Math.min(prevDeps.length, nextDeps.length); i++) {
-    // $FlowFixMe[incompatible-use] found when upgrading Flow
-    if (is(nextDeps[i], prevDeps[i])) {
-      continue;
+    if (!is(nextDeps[i], prevDeps[i])) {
+      return false;
     }
-    return false;
   }
   return true;
 }
