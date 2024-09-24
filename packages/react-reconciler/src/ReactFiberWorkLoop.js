@@ -765,11 +765,12 @@ export function scheduleUpdateOnFiber(
     // The incoming update might unblock the current render. Interrupt the
     // current attempt and restart from the top.
     prepareFreshStack(root, NoLanes);
+    const didAttemptEntireTree = false;
     markRootSuspended(
       root,
       workInProgressRootRenderLanes,
       workInProgressDeferredLane,
-      workInProgressRootDidSkipSuspendedSiblings,
+      didAttemptEntireTree,
     );
   }
 
@@ -832,11 +833,12 @@ export function scheduleUpdateOnFiber(
         // effect of interrupting the current render and switching to the update.
         // TODO: Make sure this doesn't override pings that happen while we've
         // already started rendering.
+        const didAttemptEntireTree = false;
         markRootSuspended(
           root,
           workInProgressRootRenderLanes,
           workInProgressDeferredLane,
-          workInProgressRootDidSkipSuspendedSiblings,
+          didAttemptEntireTree,
         );
       }
     }
@@ -898,100 +900,120 @@ export function performWorkOnRoot(
   // for too long ("expired" work, to prevent starvation), or we're in
   // sync-updates-by-default mode.
   const shouldTimeSlice =
-    !forceSync &&
-    !includesBlockingLane(lanes) &&
-    !includesExpiredLane(root, lanes);
+    (!forceSync &&
+      !includesBlockingLane(lanes) &&
+      !includesExpiredLane(root, lanes)) ||
+    // If we're prerendering, then we should use the concurrent work loop
+    // even if the lanes are synchronous, so that prerendering never blocks
+    // the main thread.
+    // TODO: We should consider doing this whenever a sync lane is suspended,
+    // even for regular pings.
+    (enableSiblingPrerendering && checkIfRootIsPrerendering(root, lanes));
+
   let exitStatus = shouldTimeSlice
     ? renderRootConcurrent(root, lanes)
-    : renderRootSync(root, lanes);
+    : renderRootSync(root, lanes, true);
 
-  if (exitStatus !== RootInProgress) {
+  do {
     let renderWasConcurrent = shouldTimeSlice;
-    do {
-      if (exitStatus === RootDidNotComplete) {
-        // The render unwound without completing the tree. This happens in special
-        // cases where need to exit the current render without producing a
-        // consistent tree or committing.
-        markRootSuspended(
-          root,
-          lanes,
-          NoLane,
-          workInProgressRootDidSkipSuspendedSiblings,
-        );
-      } else {
-        // The render completed.
-
-        // Check if this render may have yielded to a concurrent event, and if so,
-        // confirm that any newly rendered stores are consistent.
-        // TODO: It's possible that even a concurrent render may never have yielded
-        // to the main thread, if it was fast enough, or if it expired. We could
-        // skip the consistency check in that case, too.
-        const finishedWork: Fiber = (root.current.alternate: any);
-        if (
-          renderWasConcurrent &&
-          !isRenderConsistentWithExternalStores(finishedWork)
-        ) {
-          // A store was mutated in an interleaved event. Render again,
-          // synchronously, to block further mutations.
-          exitStatus = renderRootSync(root, lanes);
-          // We assume the tree is now consistent because we didn't yield to any
-          // concurrent events.
-          renderWasConcurrent = false;
-          // Need to check the exit status again.
-          continue;
-        }
-
-        // Check if something threw
-        if (
-          (disableLegacyMode || root.tag !== LegacyRoot) &&
-          exitStatus === RootErrored
-        ) {
-          const lanesThatJustErrored = lanes;
-          const errorRetryLanes = getLanesToRetrySynchronouslyOnError(
-            root,
-            lanesThatJustErrored,
-          );
-          if (errorRetryLanes !== NoLanes) {
-            lanes = errorRetryLanes;
-            exitStatus = recoverFromConcurrentError(
-              root,
-              lanesThatJustErrored,
-              errorRetryLanes,
-            );
-            renderWasConcurrent = false;
-            // Need to check the exit status again.
-            if (exitStatus !== RootErrored) {
-              // The root did not error this time. Restart the exit algorithm
-              // from the beginning.
-              // TODO: Refactor the exit algorithm to be less confusing. Maybe
-              // more branches + recursion instead of a loop. I think the only
-              // thing that causes it to be a loop is the RootDidNotComplete
-              // check. If that's true, then we don't need a loop/recursion
-              // at all.
-              continue;
-            } else {
-              // The root errored yet again. Proceed to commit the tree.
-            }
-          }
-        }
-        if (exitStatus === RootFatalErrored) {
-          prepareFreshStack(root, NoLanes);
-          markRootSuspended(
-            root,
-            lanes,
-            NoLane,
-            workInProgressRootDidSkipSuspendedSiblings,
-          );
-          break;
-        }
-
-        // We now have a consistent tree. The next step is either to commit it,
-        // or, if something suspended, wait to commit it after a timeout.
-        finishConcurrentRender(root, exitStatus, finishedWork, lanes);
+    if (exitStatus === RootInProgress) {
+      // Render phase is still in progress.
+      if (
+        enableSiblingPrerendering &&
+        workInProgressRootIsPrerendering &&
+        !shouldTimeSlice
+      ) {
+        // We're in prerendering mode, but time slicing is not enabled. This
+        // happens when something suspends during a synchronous update. Exit the
+        // the work loop. When we resume, we'll use the concurrent work loop so
+        // that prerendering is non-blocking.
+        //
+        // Mark the root as suspended. Usually we do this at the end of the
+        // render phase, but we do it here so that we resume in
+        // prerendering mode.
+        // TODO: Consider always calling markRootSuspended immediately.
+        // Needs to be *after* we attach a ping listener, though.
+        const didAttemptEntireTree = false;
+        markRootSuspended(root, lanes, NoLane, didAttemptEntireTree);
       }
       break;
-    } while (true);
-  }
+    } else if (exitStatus === RootDidNotComplete) {
+      // The render unwound without completing the tree. This happens in special
+      // cases where need to exit the current render without producing a
+      // consistent tree or committing.
+      const didAttemptEntireTree = !workInProgressRootDidSkipSuspendedSiblings;
+      markRootSuspended(root, lanes, NoLane, didAttemptEntireTree);
+    } else {
+      // The render completed.
+
+      // Check if this render may have yielded to a concurrent event, and if so,
+      // confirm that any newly rendered stores are consistent.
+      // TODO: It's possible that even a concurrent render may never have yielded
+      // to the main thread, if it was fast enough, or if it expired. We could
+      // skip the consistency check in that case, too.
+      const finishedWork: Fiber = (root.current.alternate: any);
+      if (
+        renderWasConcurrent &&
+        !isRenderConsistentWithExternalStores(finishedWork)
+      ) {
+        // A store was mutated in an interleaved event. Render again,
+        // synchronously, to block further mutations.
+        exitStatus = renderRootSync(root, lanes, false);
+        // We assume the tree is now consistent because we didn't yield to any
+        // concurrent events.
+        renderWasConcurrent = false;
+        // Need to check the exit status again.
+        continue;
+      }
+
+      // Check if something threw
+      if (
+        (disableLegacyMode || root.tag !== LegacyRoot) &&
+        exitStatus === RootErrored
+      ) {
+        const lanesThatJustErrored = lanes;
+        const errorRetryLanes = getLanesToRetrySynchronouslyOnError(
+          root,
+          lanesThatJustErrored,
+        );
+        if (errorRetryLanes !== NoLanes) {
+          lanes = errorRetryLanes;
+          exitStatus = recoverFromConcurrentError(
+            root,
+            lanesThatJustErrored,
+            errorRetryLanes,
+          );
+          renderWasConcurrent = false;
+          // Need to check the exit status again.
+          if (exitStatus !== RootErrored) {
+            // The root did not error this time. Restart the exit algorithm
+            // from the beginning.
+            // TODO: Refactor the exit algorithm to be less confusing. Maybe
+            // more branches + recursion instead of a loop. I think the only
+            // thing that causes it to be a loop is the RootDidNotComplete
+            // check. If that's true, then we don't need a loop/recursion
+            // at all.
+            continue;
+          } else {
+            // The root errored yet again. Proceed to commit the tree.
+          }
+        }
+      }
+      if (exitStatus === RootFatalErrored) {
+        prepareFreshStack(root, NoLanes);
+        // Since this is a fatal error, we're going to pretend we attempted
+        // the entire tree, to avoid scheduling a prerender.
+        const didAttemptEntireTree = true;
+        markRootSuspended(root, lanes, NoLane, didAttemptEntireTree);
+        break;
+      }
+
+      // We now have a consistent tree. The next step is either to commit it,
+      // or, if something suspended, wait to commit it after a timeout.
+      finishConcurrentRender(root, exitStatus, finishedWork, lanes);
+    }
+    break;
+  } while (true);
 
   ensureRootIsScheduled(root);
 }
@@ -1024,7 +1046,7 @@ function recoverFromConcurrentError(
     rootWorkInProgress.flags |= ForceClientRender;
   }
 
-  const exitStatus = renderRootSync(root, errorRetryLanes);
+  const exitStatus = renderRootSync(root, errorRetryLanes, false);
   if (exitStatus !== RootErrored) {
     // Successfully finished rendering on retry
 
@@ -1108,11 +1130,13 @@ function finishConcurrentRender(
         // This is a transition, so we should exit without committing a
         // placeholder and without scheduling a timeout. Delay indefinitely
         // until we receive more data.
+        const didAttemptEntireTree =
+          !workInProgressRootDidSkipSuspendedSiblings;
         markRootSuspended(
           root,
           lanes,
           workInProgressDeferredLane,
-          workInProgressRootDidSkipSuspendedSiblings,
+          didAttemptEntireTree,
         );
         return;
       }
@@ -1168,11 +1192,13 @@ function finishConcurrentRender(
 
       // Don't bother with a very short suspense time.
       if (msUntilTimeout > 10) {
+        const didAttemptEntireTree =
+          !workInProgressRootDidSkipSuspendedSiblings;
         markRootSuspended(
           root,
           lanes,
           workInProgressDeferredLane,
-          workInProgressRootDidSkipSuspendedSiblings,
+          didAttemptEntireTree,
         );
 
         const nextLanes = getNextLanes(root, NoLanes);
@@ -1284,7 +1310,8 @@ function commitRootWhenReady(
           SUSPENDED_COMMIT,
         ),
       );
-      markRootSuspended(root, lanes, spawnedLane, didSkipSuspendedSiblings);
+      const didAttemptEntireTree = !didSkipSuspendedSiblings;
+      markRootSuspended(root, lanes, spawnedLane, didAttemptEntireTree);
       return;
     }
   }
@@ -1407,7 +1434,7 @@ function markRootSuspended(
   root: FiberRoot,
   suspendedLanes: Lanes,
   spawnedLane: Lane,
-  didSkipSuspendedSiblings: boolean,
+  didAttemptEntireTree: boolean,
 ) {
   // When suspending, we should always exclude lanes that were pinged or (more
   // rarely, since we try to avoid it) updated during the render phase.
@@ -1416,12 +1443,7 @@ function markRootSuspended(
     suspendedLanes,
     workInProgressRootInterleavedUpdatedLanes,
   );
-  _markRootSuspended(
-    root,
-    suspendedLanes,
-    spawnedLane,
-    didSkipSuspendedSiblings,
-  );
+  _markRootSuspended(root, suspendedLanes, spawnedLane, didAttemptEntireTree);
 }
 
 export function flushRoot(root: FiberRoot, lanes: Lanes) {
@@ -1963,7 +1985,12 @@ export function renderDidSuspendDelayIfPossible(): void {
 
   if (
     !workInProgressRootDidSkipSuspendedSiblings &&
-    !includesBlockingLane(workInProgressRootRenderLanes)
+    // Check if the root will be blocked from committing.
+    // TODO: Consider aligning this better with the rest of the logic. Maybe
+    // we should only set the exit status to RootSuspendedWithDelay if this
+    // condition is true? And remove the equivalent checks elsewhere.
+    (includesOnlyTransitions(workInProgressRootRenderLanes) ||
+      getSuspenseHandler() === null)
   ) {
     // This render may not have originally been scheduled as a prerender, but
     // something suspended inside the visible part of the tree, which means we
@@ -1989,11 +2016,12 @@ export function renderDidSuspendDelayIfPossible(): void {
     // pinged or updated while we were rendering.
     // TODO: Consider unwinding immediately, using the
     // SuspendedOnHydration mechanism.
+    const didAttemptEntireTree = false;
     markRootSuspended(
       workInProgressRoot,
       workInProgressRootRenderLanes,
       workInProgressDeferredLane,
-      workInProgressRootDidSkipSuspendedSiblings,
+      didAttemptEntireTree,
     );
   }
 }
@@ -2023,7 +2051,11 @@ export function renderHasNotSuspendedYet(): boolean {
 // TODO: Over time, this function and renderRootConcurrent have become more
 // and more similar. Not sure it makes sense to maintain forked paths. Consider
 // unifying them again.
-function renderRootSync(root: FiberRoot, lanes: Lanes) {
+function renderRootSync(
+  root: FiberRoot,
+  lanes: Lanes,
+  shouldYieldForPrerendering: boolean,
+): RootExitStatus {
   const prevExecutionContext = executionContext;
   executionContext |= RenderContext;
   const prevDispatcher = pushDispatcher(root.containerInfo);
@@ -2063,6 +2095,7 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
   }
 
   let didSuspendInShell = false;
+  let exitStatus = workInProgressRootExitStatus;
   outer: do {
     try {
       if (
@@ -2084,16 +2117,37 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
             // Selective hydration. An update flowed into a dehydrated tree.
             // Interrupt the current render so the work loop can switch to the
             // hydration lane.
+            // TODO: I think we might not need to reset the stack here; we can
+            // just yield and reset the stack when we re-enter the work loop,
+            // like normal.
             resetWorkInProgressStack();
-            workInProgressRootExitStatus = RootDidNotComplete;
+            exitStatus = RootDidNotComplete;
             break outer;
           }
           case SuspendedOnImmediate:
-          case SuspendedOnData: {
-            if (!didSuspendInShell && getSuspenseHandler() === null) {
+          case SuspendedOnData:
+          case SuspendedOnDeprecatedThrowPromise: {
+            if (getSuspenseHandler() === null) {
               didSuspendInShell = true;
             }
-            // Intentional fallthrough
+            const reason = workInProgressSuspendedReason;
+            workInProgressSuspendedReason = NotSuspended;
+            workInProgressThrownValue = null;
+            throwAndUnwindWorkLoop(root, unitOfWork, thrownValue, reason);
+            if (
+              enableSiblingPrerendering &&
+              shouldYieldForPrerendering &&
+              workInProgressRootIsPrerendering
+            ) {
+              // We've switched into prerendering mode. This implies that we
+              // suspended outside of a Suspense boundary, which means this
+              // render will be blocked from committing. Yield to the main
+              // thread so we can switch to prerendering using the concurrent
+              // work loop.
+              exitStatus = RootInProgress;
+              break outer;
+            }
+            break;
           }
           default: {
             // Unwind then continue with the normal work loop.
@@ -2106,6 +2160,7 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
         }
       }
       workLoopSync();
+      exitStatus = workInProgressRootExitStatus;
       break;
     } catch (thrownValue) {
       handleThrow(root, thrownValue);
@@ -2128,14 +2183,6 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
   popDispatcher(prevDispatcher);
   popAsyncDispatcher(prevAsyncDispatcher);
 
-  if (workInProgress !== null) {
-    // This is a sync render, so we should have finished the whole tree.
-    throw new Error(
-      'Cannot commit an incomplete root. This error is likely caused by a ' +
-        'bug in React. Please file an issue.',
-    );
-  }
-
   if (__DEV__) {
     if (enableDebugTracing) {
       logRenderStopped();
@@ -2146,14 +2193,21 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
     markRenderStopped();
   }
 
-  // Set this to null to indicate there's no in-progress render.
-  workInProgressRoot = null;
-  workInProgressRootRenderLanes = NoLanes;
+  if (workInProgress !== null) {
+    // Did not complete the tree. This can happen if something suspended in
+    // the shell.
+  } else {
+    // Normal case. We completed the whole tree.
 
-  // It's safe to process the queue now that the render phase is complete.
-  finishQueueingConcurrentUpdates();
+    // Set this to null to indicate there's no in-progress render.
+    workInProgressRoot = null;
+    workInProgressRootRenderLanes = NoLanes;
 
-  return workInProgressRootExitStatus;
+    // It's safe to process the queue now that the render phase is complete.
+    finishQueueingConcurrentUpdates();
+  }
+
+  return exitStatus;
 }
 
 // The work loop is an extremely hot path. Tell Closure not to inline it.
@@ -2199,9 +2253,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
     //
     // If we were previously in prerendering mode, check if we received any new
     // data during an interleaved event.
-    if (workInProgressRootIsPrerendering) {
-      workInProgressRootIsPrerendering = checkIfRootIsPrerendering(root, lanes);
-    }
+    workInProgressRootIsPrerendering = checkIfRootIsPrerendering(root, lanes);
   }
 
   if (__DEV__) {
@@ -3753,6 +3805,9 @@ function pingSuspendedRoot(
     // the logic of whether or not a root suspends once it completes.
     // TODO: If we're rendering sync either due to Sync, Batched or expired,
     // we should probably never restart.
+    // TODO: Attach different listeners depending on whether the listener was
+    // attached during prerendering. Prerender pings should not interrupt
+    // normal renders.
 
     // If we're suspended with delay, or if it's a retry, we'll always suspend
     // so we can always restart.
