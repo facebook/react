@@ -19,7 +19,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @ignoreUseNoForget
+import { c as _c } from "react-compiler-runtime"; // @ignoreUseNoForget
 function Component(prop) {
   "use no forget";
   const $ = _c(4);

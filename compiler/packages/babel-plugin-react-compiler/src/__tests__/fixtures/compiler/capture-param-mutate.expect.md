@@ -45,7 +45,7 @@ function getNativeLogFunction(level) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react-compiler-runtime";
 function getNativeLogFunction(level) {
   const $ = _c(2);
   let t0;

@@ -27,7 +27,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react-compiler-runtime";
 import { createHookWrapper, setProperty } from "shared-runtime";
 function useHook(props) {
   const $ = _c(2);

@@ -22,7 +22,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enableMemoizationComments
+import { c as _c } from "react-compiler-runtime"; // @enableMemoizationComments
 import { addOne, getNumber, identity } from "shared-runtime";
 
 function Component(props) {

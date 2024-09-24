@@ -39,7 +39,7 @@ const styles = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react-compiler-runtime";
 import { identity } from "shared-runtime";
 
 const DISPLAY = true;

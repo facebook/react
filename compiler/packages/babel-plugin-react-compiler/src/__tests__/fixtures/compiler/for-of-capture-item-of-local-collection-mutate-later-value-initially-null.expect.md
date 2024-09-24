@@ -27,7 +27,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react-compiler-runtime";
 import { makeObject_Primitives } from "shared-runtime";
 
 function Component(props) {

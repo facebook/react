@@ -21,7 +21,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // Note that `a?.b.c` is semantically different from `(a?.b).c`
+import { c as _c } from "react-compiler-runtime"; // Note that `a?.b.c` is semantically different from `(a?.b).c`
 // We should codegen the correct member expressions
 function Component(props) {
   const $ = _c(3);

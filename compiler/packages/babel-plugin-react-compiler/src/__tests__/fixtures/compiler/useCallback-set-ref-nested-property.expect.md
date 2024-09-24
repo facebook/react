@@ -28,7 +28,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react-compiler-runtime";
 import { useCallback, useRef } from "react";
 
 // Identical to useCallback-set-ref-nested-property-preserve-memoization,

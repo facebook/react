@@ -21,7 +21,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @disableMemoizationForDebugging
+import { c as _c } from "react-compiler-runtime"; // @disableMemoizationForDebugging
 import { useMemo } from "react";
 
 function Component(t0) {

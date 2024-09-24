@@ -298,7 +298,7 @@ export function compileProgram(
     return;
   }
   const useMemoCacheIdentifier = program.scope.generateUidIdentifier('c');
-  const moduleName = pass.opts.runtimeModule ?? 'react/compiler-runtime';
+  const moduleName = pass.opts.runtimeModule ?? 'react-compiler-runtime';
 
   /*
    * Record lint errors and critical errors as depending on Forget's config,
@@ -638,7 +638,7 @@ function shouldSkipCompilation(
     }
   }
 
-  const moduleName = pass.opts.runtimeModule ?? 'react/compiler-runtime';
+  const moduleName = pass.opts.runtimeModule ?? 'react-compiler-runtime';
   if (hasMemoCacheFunctionImport(program, moduleName)) {
     return true;
   }

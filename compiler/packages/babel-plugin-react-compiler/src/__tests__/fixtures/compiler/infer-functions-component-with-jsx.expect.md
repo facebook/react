@@ -12,7 +12,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @compilationMode(infer)
+import { c as _c } from "react-compiler-runtime"; // @compilationMode(infer)
 function Component(props) {
   const $ = _c(1);
   let t0;

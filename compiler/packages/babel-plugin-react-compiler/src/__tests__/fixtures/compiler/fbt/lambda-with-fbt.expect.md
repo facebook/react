@@ -38,7 +38,7 @@ function Component() {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react-compiler-runtime";
 import { fbt } from "fbt";
 
 function Component() {

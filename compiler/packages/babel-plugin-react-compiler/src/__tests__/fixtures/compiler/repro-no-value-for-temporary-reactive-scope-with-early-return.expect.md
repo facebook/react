@@ -33,7 +33,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react-compiler-runtime";
 import { identity, makeObject_Primitives } from "shared-runtime";
 import fbt from "fbt";
 

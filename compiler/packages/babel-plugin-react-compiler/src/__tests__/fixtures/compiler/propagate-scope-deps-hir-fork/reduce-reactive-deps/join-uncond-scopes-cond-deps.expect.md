@@ -42,7 +42,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enablePropagateDepsInHIR
+import { c as _c } from "react-compiler-runtime"; // @enablePropagateDepsInHIR
 // This tests an optimization, NOT a correctness property.
 // When propagating reactive dependencies of an inner scope up to its parent,
 // we prefer to retain granularity.

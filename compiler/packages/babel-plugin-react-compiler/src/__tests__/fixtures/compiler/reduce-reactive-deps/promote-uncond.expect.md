@@ -27,7 +27,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // When a conditional dependency `props.a.b.c` has no unconditional dependency
+import { c as _c } from "react-compiler-runtime"; // When a conditional dependency `props.a.b.c` has no unconditional dependency
 // in its subpath or superpath, we should find the nearest unconditional access
 
 import { identity } from "shared-runtime";

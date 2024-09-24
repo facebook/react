@@ -18,7 +18,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react-compiler-runtime";
 import * as SharedRuntime from "shared-runtime";
 function useFoo() {
   const $ = _c(1);

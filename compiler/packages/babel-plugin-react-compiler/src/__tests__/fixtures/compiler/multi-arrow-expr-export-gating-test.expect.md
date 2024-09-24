@@ -18,7 +18,7 @@ export const Renderer = props => (
 
 ```javascript
 import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
-import { c as _c } from "react/compiler-runtime"; // @gating
+import { c as _c } from "react-compiler-runtime"; // @gating
 const ErrorView = isForgetEnabled_Fixtures()
   ? (error, _retry) => {
       const $ = _c(2);

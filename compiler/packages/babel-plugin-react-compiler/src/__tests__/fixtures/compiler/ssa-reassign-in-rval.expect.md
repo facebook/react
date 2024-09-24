@@ -14,7 +14,7 @@ function Component() {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // Forget should call the original x (x = foo()) to compute result
+import { c as _c } from "react-compiler-runtime"; // Forget should call the original x (x = foo()) to compute result
 function Component() {
   const $ = _c(1);
   let t0;

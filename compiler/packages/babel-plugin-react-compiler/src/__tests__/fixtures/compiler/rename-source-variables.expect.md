@@ -26,7 +26,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enableChangeVariableCodegen
+import { c as _c } from "react-compiler-runtime"; // @enableChangeVariableCodegen
 import { identity } from "shared-runtime";
 
 const $ = "module_$";

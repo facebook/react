@@ -23,7 +23,7 @@ function Component() {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enableInstructionReordering
+import { c as _c } from "react-compiler-runtime"; // @enableInstructionReordering
 import { useState } from "react";
 
 function Component() {

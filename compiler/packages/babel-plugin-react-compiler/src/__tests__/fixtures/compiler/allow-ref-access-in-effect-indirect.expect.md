@@ -42,7 +42,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @validateRefAccessDuringRender @validateNoSetStateInRender:false
+import { c as _c } from "react-compiler-runtime"; // @validateRefAccessDuringRender @validateNoSetStateInRender:false
 import { useCallback, useEffect, useRef, useState } from "react";
 
 function Component() {

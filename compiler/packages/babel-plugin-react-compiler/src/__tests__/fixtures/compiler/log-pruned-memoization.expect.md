@@ -56,7 +56,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @logger
+import { c as _c } from "react-compiler-runtime"; // @logger
 import { createContext, use, useState } from "react";
 import {
   Stringify,

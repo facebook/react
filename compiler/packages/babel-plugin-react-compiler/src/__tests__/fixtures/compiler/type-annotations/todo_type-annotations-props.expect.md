@@ -20,7 +20,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enableUseTypeAnnotations
+import { c as _c } from "react-compiler-runtime"; // @enableUseTypeAnnotations
 function useArray(items) {
   const $ = _c(2);
   let t0;

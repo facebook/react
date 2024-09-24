@@ -14,7 +14,7 @@ const FancyButton = React.forwardRef(function (props, ref) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // Valid because hooks can be used in anonymous function arguments to
+import { c as _c } from "react-compiler-runtime"; // Valid because hooks can be used in anonymous function arguments to
 // forwardRef.
 const FancyButton = React.forwardRef(function (props, ref) {
   const $ = _c(3);

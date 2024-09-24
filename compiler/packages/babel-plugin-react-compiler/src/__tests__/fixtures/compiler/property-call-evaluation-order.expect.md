@@ -27,7 +27,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // Should print A, arg, original
+import { c as _c } from "react-compiler-runtime"; // Should print A, arg, original
 
 function Component() {
   const $ = _c(1);

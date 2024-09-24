@@ -40,7 +40,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees:true
+import { c as _c } from "react-compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees:true
 
 import { useCallback } from "react";
 import { Stringify, useIdentity } from "shared-runtime";

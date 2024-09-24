@@ -36,7 +36,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @validateRefAccessDuringRender
+import { c as _c } from "react-compiler-runtime"; // @validateRefAccessDuringRender
 import { useRef } from "react";
 
 function Component() {

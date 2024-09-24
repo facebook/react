@@ -29,7 +29,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react-compiler-runtime";
 import { useFragment } from "shared-runtime";
 
 function Component(props) {

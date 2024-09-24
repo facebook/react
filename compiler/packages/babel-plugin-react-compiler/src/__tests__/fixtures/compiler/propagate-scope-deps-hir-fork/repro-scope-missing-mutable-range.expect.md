@@ -19,7 +19,7 @@ function HomeDiscoStoreItemTileRating(props) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enablePropagateDepsInHIR
+import { c as _c } from "react-compiler-runtime"; // @enablePropagateDepsInHIR
 function HomeDiscoStoreItemTileRating(props) {
   const $ = _c(4);
   const item = useFragment();
