@@ -80,7 +80,7 @@ export function propagateScopeDependenciesHIR(fn: HIRFunction): void {
   }
 }
 
-function findTemporariesUsedOutsideDeclaringScope(
+export function findTemporariesUsedOutsideDeclaringScope(
   fn: HIRFunction,
 ): ReadonlySet<DeclarationId> {
   /*
@@ -189,7 +189,7 @@ function findTemporariesUsedOutsideDeclaringScope(
  * of $1, as the evaluation of `arr.length` changes between instructions $1 and
  * $3. We do not track $1 -> arr.length in this case.
  */
-function collectTemporariesSidemap(
+export function collectTemporariesSidemap(
   fn: HIRFunction,
   usedOutsideDeclaringScope: ReadonlySet<DeclarationId>,
 ): ReadonlyMap<IdentifierId, ReactiveScopeDependency> {
