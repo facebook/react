@@ -488,7 +488,7 @@ function areHookInputsEqual(
     }
   }
   // $FlowFixMe[incompatible-use] found when upgrading Flow
-  for (let i = 0; i < prevDeps.length && i < nextDeps.length; i++) {
+  for (let i = 0; i < Math.min(prevDeps.length, nextDeps.length); i++) {
     // $FlowFixMe[incompatible-use] found when upgrading Flow
     if (is(nextDeps[i], prevDeps[i])) {
       continue;
