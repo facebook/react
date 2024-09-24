@@ -245,9 +245,9 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: |
-            ${{ github.event.workflow_run.head_commit.message }}
+            ${{ github.event.workflow_run.head_commit.message || 'No commit message' }}
 
-            DiffTrain build for [${{ github.event.workflow_run.head_sha }}](https://github.com/facebook/react/commit/${{ github.event.workflow_run.head_sha }})
+            DiffTrain build for [${{ github.sha }}](https://github.com/facebook/react/commit/${{ github.sha }})
           branch: builds/facebook-www
           commit_user_name: ${{ github.triggering_actor }}
           commit_user_email: ${{ format('{0}@users.noreply.github.com', github.triggering_actor) }}
@@ -412,9 +412,9 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: |
-            ${{ github.event.workflow_run.head_commit.message }}
+            ${{ github.event.workflow_run.head_commit.message || 'No commit message' }}
 
-            DiffTrain build for commit https://github.com/facebook/react/commit/${{ github.event.workflow_run.head_sha }}.
+            DiffTrain build for commit https://github.com/facebook/react/commit/${{ github.sha }}.
           branch: builds/facebook-fbsource
           commit_user_name: ${{ github.triggering_actor }}
           commit_user_email: ${{ format('{0}@users.noreply.github.com', github.triggering_actor) }}
