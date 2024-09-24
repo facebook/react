@@ -78,3 +78,5 @@ export {
   act, // DEV-only
   captureOwnerStack, // DEV-only
 } from './src/ReactClient';
+
+export {useMemoCache as c} from './src/ReactHooks';
