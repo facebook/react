@@ -77,3 +77,5 @@ export {
   useActionState,
   version,
 } from './src/ReactClient';
+
+export {useMemoCache as c} from './src/ReactHooks';
