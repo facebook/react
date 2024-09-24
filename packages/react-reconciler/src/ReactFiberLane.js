@@ -765,12 +765,14 @@ export function markRootSuspended(
   root: FiberRoot,
   suspendedLanes: Lanes,
   spawnedLane: Lane,
-  didSkipSuspendedSiblings: boolean,
+  didAttemptEntireTree: boolean,
 ) {
+  // TODO: Split this into separate functions for marking the root at the end of
+  // a render attempt versus suspending while the root is still in progress.
   root.suspendedLanes |= suspendedLanes;
   root.pingedLanes &= ~suspendedLanes;
 
-  if (enableSiblingPrerendering && !didSkipSuspendedSiblings) {
+  if (enableSiblingPrerendering && didAttemptEntireTree) {
     // Mark these lanes as warm so we know there's nothing else to work on.
     root.warmLanes |= suspendedLanes;
   } else {
