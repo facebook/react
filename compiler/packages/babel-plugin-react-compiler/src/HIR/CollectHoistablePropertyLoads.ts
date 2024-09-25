@@ -70,7 +70,7 @@ export function collectHoistablePropertyLoads(
   const tree = new Tree();
 
   const nodes = collectNonNullsInBlocks(fn, temporaries, tree);
-  propagateNonNull(fn, nodes, tree);
+  propagateNonNull(fn, nodes);
 
   const nodesKeyedByScopeId = new Map<ScopeId, BlockInfo>();
   for (const [_, block] of fn.body.blocks) {
@@ -302,7 +302,6 @@ function collectNonNullsInBlocks(
 function propagateNonNull(
   fn: HIRFunction,
   nodes: ReadonlyMap<BlockId, BlockInfo>,
-  tree: Tree,
 ): void {
   const blockSuccessors = new Map<BlockId, Set<BlockId>>();
   const terminalPreds = new Set<BlockId>();
@@ -391,7 +390,7 @@ function propagateNonNull(
 
     assertNonNull(nodes.get(nodeId)).assumedNonNullObjects = mergedObjects;
     traversalState.set(nodeId, 'done');
-    changed ||= prevObjects.size === mergedObjects.size;
+    changed ||= prevObjects.size !== mergedObjects.size;
     return changed;
   }
   const traversalState = new Map<BlockId, 'done' | 'active'>();
@@ -401,10 +400,9 @@ function propagateNonNull(
   let changed;
   let i = 0;
   do {
-    i++;
     CompilerError.invariant(i++ < 100, {
       reason:
-        '[CollectHoistablePropertyLoads] fixed point iteration did not terminate after 1000 loops',
+        '[CollectHoistablePropertyLoads] fixed point iteration did not terminate after 100 loops',
       loc: GeneratedSource,
     });
 
