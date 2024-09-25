@@ -19,7 +19,6 @@ export const {
   disableDefaultPropsExceptForClasses,
   disableLegacyContextForFunctionComponents,
   disableSchedulerTimeoutInWorkLoop,
-  enableAddPropertiesFastPath,
   enableDebugTracing,
   enableDeferRootSchedulingToMicrotask,
   enableDO_NOT_USE_disableStrictPassiveEffect,

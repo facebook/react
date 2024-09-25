@@ -78,7 +78,6 @@ export const disableClientCache = true;
 
 export const enableServerComponentLogs = true;
 export const enableInfiniteRenderLoopDetection = false;
-export const enableAddPropertiesFastPath = false;
 
 export const renameElementSymbol = true;
 export const enableShallowPropDiffing = false;
