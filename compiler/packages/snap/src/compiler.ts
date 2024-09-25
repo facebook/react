@@ -207,7 +207,10 @@ function makePluginOptions(
 
   let inlineJsxTransform: EnvironmentConfig['inlineJsxTransform'] = null;
   if (firstLine.includes('@enableInlineJsxTransform')) {
-    inlineJsxTransform = {elementSymbol: 'react.transitional.element'};
+    inlineJsxTransform = {
+      elementSymbol: 'react.transitional.element',
+      globalDevVar: 'DEV',
+    };
   }
 
   let logs: Array<{filename: string | null; event: LoggerEvent}> = [];
