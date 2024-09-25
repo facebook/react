@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<738b0c65421b2c9d0b7fd6a73005dd48>>
+ * @generated SignedSource<<aa2efc0b919eb4cf21d1b7cadb0a6753>>
  */
 
 /*
@@ -12652,7 +12652,7 @@ function resolveRetryWakeable(boundaryFiber, wakeable) {
   retryTimedOutBoundary(boundaryFiber, retryLane);
 }
 function throwIfInfiniteUpdateLoopDetected() {
-  if (50 < nestedUpdateCount)
+  if (100 < nestedUpdateCount)
     throw (
       ((nestedUpdateCount = 0),
       (rootWithNestedUpdates = null),
@@ -16439,14 +16439,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1787 = React.version;
 if (
-  "19.0.0-native-fb-04bd67a4-20240924" !==
+  "19.0.0-native-fb-f9ebd85a-20240925" !==
   isomorphicReactPackageVersion$jscomp$inline_1787
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1787,
-      "19.0.0-native-fb-04bd67a4-20240924"
+      "19.0.0-native-fb-f9ebd85a-20240925"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16468,11 +16468,11 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_1794 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-04bd67a4-20240924",
+  version: "19.0.0-native-fb-f9ebd85a-20240925",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-native-fb-04bd67a4-20240924",
+  reconcilerVersion: "19.0.0-native-fb-f9ebd85a-20240925",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$287 = 0;
@@ -16745,7 +16745,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-native-fb-04bd67a4-20240924";
+exports.version = "19.0.0-native-fb-f9ebd85a-20240925";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

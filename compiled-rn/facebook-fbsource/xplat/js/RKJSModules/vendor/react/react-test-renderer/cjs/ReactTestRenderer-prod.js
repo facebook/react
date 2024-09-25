@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<4226a7214cc69d38b1a129852209798f>>
+ * @generated SignedSource<<7ed2a394da68a959e7b0a16fe433a6b4>>
  */
 
 "use strict";
@@ -8819,7 +8819,7 @@ function resolveRetryWakeable(boundaryFiber, wakeable) {
   retryTimedOutBoundary(boundaryFiber, retryLane);
 }
 function throwIfInfiniteUpdateLoopDetected() {
-  if (50 < nestedUpdateCount)
+  if (100 < nestedUpdateCount)
     throw (
       ((nestedUpdateCount = 0),
       (rootWithNestedUpdates = null),
@@ -9517,14 +9517,14 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1296 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-04bd67a4-20240924",
+  version: "19.0.0-native-fb-f9ebd85a-20240925",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: function (mockNode) {
     mockNode = nodeToInstanceMap.get(mockNode);
     return void 0 !== mockNode ? mockNode.internalInstanceHandle : null;
   },
-  reconcilerVersion: "19.0.0-native-fb-04bd67a4-20240924"
+  reconcilerVersion: "19.0.0-native-fb-f9ebd85a-20240925"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1297 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -9660,4 +9660,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.0.0-native-fb-04bd67a4-20240924";
+exports.version = "19.0.0-native-fb-f9ebd85a-20240925";

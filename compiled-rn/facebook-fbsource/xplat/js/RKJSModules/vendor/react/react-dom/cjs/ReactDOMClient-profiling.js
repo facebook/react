@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ad0b3f32af4e7b609718f4b638bf0fe2>>
+ * @generated SignedSource<<9d86d10b27675e60f4b436f2006dc0ed>>
  */
 
 /*
@@ -12648,7 +12648,7 @@ function resolveRetryWakeable(boundaryFiber, wakeable) {
   retryTimedOutBoundary(boundaryFiber, retryLane);
 }
 function throwIfInfiniteUpdateLoopDetected() {
-  if (50 < nestedUpdateCount)
+  if (100 < nestedUpdateCount)
     throw (
       ((nestedUpdateCount = 0),
       (rootWithNestedUpdates = null),
@@ -16424,14 +16424,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1786 = React.version;
 if (
-  "19.0.0-native-fb-04bd67a4-20240924" !==
+  "19.0.0-native-fb-f9ebd85a-20240925" !==
   isomorphicReactPackageVersion$jscomp$inline_1786
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1786,
-      "19.0.0-native-fb-04bd67a4-20240924"
+      "19.0.0-native-fb-f9ebd85a-20240925"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16453,11 +16453,11 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_1793 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-04bd67a4-20240924",
+  version: "19.0.0-native-fb-f9ebd85a-20240925",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-native-fb-04bd67a4-20240924",
+  reconcilerVersion: "19.0.0-native-fb-f9ebd85a-20240925",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$287 = 0;
@@ -16576,4 +16576,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.0.0-native-fb-04bd67a4-20240924";
+exports.version = "19.0.0-native-fb-f9ebd85a-20240925";

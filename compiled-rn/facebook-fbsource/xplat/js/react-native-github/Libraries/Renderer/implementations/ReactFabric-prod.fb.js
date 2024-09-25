@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<733f09c01c0718c3b489acea1e38dc36>>
+ * @generated SignedSource<<9a53255eae6280aebb744270e010974d>>
  */
 
 "use strict";
@@ -10352,7 +10352,7 @@ function resolveRetryWakeable(boundaryFiber, wakeable) {
   retryTimedOutBoundary(boundaryFiber, retryLane);
 }
 function throwIfInfiniteUpdateLoopDetected() {
-  if (50 < nestedUpdateCount)
+  if (100 < nestedUpdateCount)
     throw (
       ((nestedUpdateCount = 0),
       (rootWithNestedUpdates = null),
@@ -11077,11 +11077,11 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1166 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-04bd67a4-20240924",
+    version: "19.0.0-native-fb-f9ebd85a-20240925",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromNode,
-    reconcilerVersion: "19.0.0-native-fb-04bd67a4-20240924"
+    reconcilerVersion: "19.0.0-native-fb-f9ebd85a-20240925"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1166.rendererConfig = extraDevToolsConfig);

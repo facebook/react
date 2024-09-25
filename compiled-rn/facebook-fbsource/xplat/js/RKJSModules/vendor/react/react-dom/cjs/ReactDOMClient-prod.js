@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<03669ee0072e38206a4133aa8ea5b6ca>>
+ * @generated SignedSource<<8d71279016b09d892d1a5374998f4b58>>
  */
 
 /*
@@ -12007,7 +12007,7 @@ function resolveRetryWakeable(boundaryFiber, wakeable) {
   retryTimedOutBoundary(boundaryFiber, retryLane);
 }
 function throwIfInfiniteUpdateLoopDetected() {
-  if (50 < nestedUpdateCount)
+  if (100 < nestedUpdateCount)
     throw (
       ((nestedUpdateCount = 0),
       (rootWithNestedUpdates = null),
@@ -15769,14 +15769,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1696 = React.version;
 if (
-  "19.0.0-native-fb-04bd67a4-20240924" !==
+  "19.0.0-native-fb-f9ebd85a-20240925" !==
   isomorphicReactPackageVersion$jscomp$inline_1696
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1696,
-      "19.0.0-native-fb-04bd67a4-20240924"
+      "19.0.0-native-fb-f9ebd85a-20240925"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -15798,11 +15798,11 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2134 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-04bd67a4-20240924",
+  version: "19.0.0-native-fb-f9ebd85a-20240925",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-native-fb-04bd67a4-20240924"
+  reconcilerVersion: "19.0.0-native-fb-f9ebd85a-20240925"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2135 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -15906,4 +15906,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.0.0-native-fb-04bd67a4-20240924";
+exports.version = "19.0.0-native-fb-f9ebd85a-20240925";
