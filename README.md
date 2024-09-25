@@ -8,6 +8,31 @@ React is a JavaScript library for building user interfaces.
 
 [Learn how to use React in your project](https://react.dev/learn).
 
+## Table of Contents 
+1. Why use React? 
+2. Key Features of React
+3. Installation 
+4. Documentation 
+5. Examples 
+6. Steps to Clone and Interact with the Repository 
+7. Contributing 
+
+## Why use React? 
+Integrating React.js in a front-end project is crucial in cases where you want a dynamic and responsive
+interface for user experience purposes. React allows developers to build encapsulated components that
+make it easy to develop, test, and maintain the state of the application. React also updates the Document
+Object Model (DOM) to optimize rendering of components on the user interface. 
+Additionally, React has a large base of tools, extensions, and libraries, making it easier to customize applications towards user needs. 
+This allows for greater efficiency of user interfaces in serving the goals of the application at large. 
+
+## Key Features of React 
+Below are common key features of React.js that make it effective in full stack applications: 
+ 1. JSX (JavaScript XML) - JSX allows you to create React componens in a simplified manner as opposed 
+ to creating multiple redundant functions within a JavaScript code file. 
+ 2. React Router - React Router allows you to navigate betweeen different pages of the User Interface (UI) without redundant functions in the code file for each page. This makes your application faster. 
+ 3. Virtual DOM - React.js creates a virtual representation of the DOM in memory, specifically updating the parts of the DOM that are relevant to the project. 
+ More information about the implementation and uses of these features can be found on the React documentation: (https://react.dev/learn). 
+
 ## Installation
 
 React has been designed for gradual adoption from the start, and **you can use as little or as much React as you need**:
@@ -56,6 +81,15 @@ root.render(<HelloMessage name="Taylor" />);
 This example will render "Hello Taylor" into a container on the page.
 
 You'll notice that we used an HTML-like syntax; [we call it JSX](https://react.dev/learn#writing-markup-with-jsx). JSX is not required to use React, but it makes code more readable, and writing it feels like writing HTML.
+
+## Steps to Clone and Interact with this Repository 
+If you are a beginner to Github and Git, or just open source projects in general, follow these steps to clone and interact with the repository. 
+ 1. Fork the repository on Github using the 'Fork' button
+ 2. On your forked repository, click on the Green 'Code' button, copy the link, and type 'git clone [link here]' in your VSCode terminal. 
+ 3. Navigate to the 'react' directory by using the 'cd' command. 
+ 4. You can then open the specific code files, or the ReadME.md file, that you are interested in modifying or learning about. 
+ 5. If you want to see the output of the codebase, or test modifications, type 'npm run' in the VSCode terminal. 
+NOTE: If you do not have React installed, type 'npm install' in the VSCode terminal, and follow instructions in the React documentation. 
 
 ## Contributing
 
