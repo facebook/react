@@ -343,7 +343,7 @@ function* runWithEnvironment(
   });
   assertTerminalSuccessorsExist(hir);
   assertTerminalPredsExist(hir);
-  if (env.config.enablePropagateDepsInHIR) {
+  if (env.config.enablePropagateDepsInHIR !== 'disabled') {
     propagateScopeDependenciesHIR(hir);
     yield log({
       kind: 'hir',
@@ -378,7 +378,7 @@ function* runWithEnvironment(
   });
   assertScopeInstructionsWithinScopes(reactiveFunction);
 
-  if (!env.config.enablePropagateDepsInHIR) {
+  if (env.config.enablePropagateDepsInHIR === 'disabled') {
     propagateScopeDependencies(reactiveFunction);
     yield log({
       kind: 'reactive',

@@ -24,14 +24,14 @@ function HomeDiscoStoreItemTileRating(props) {
   const $ = _c(4);
   const item = useFragment();
   let count;
-  if ($[0] !== item) {
+  if ($[0] !== item?.aggregates) {
     count = 0;
     const aggregates = item?.aggregates || [];
     aggregates.forEach((aggregate) => {
       count = count + (aggregate.count || 0);
       count;
     });
-    $[0] = item;
+    $[0] = item?.aggregates;
     $[1] = count;
   } else {
     count = $[1];
