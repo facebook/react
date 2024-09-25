@@ -8,18 +8,10 @@
  */
 
 import * as React from 'react';
-import {
-  Fragment,
-  useContext,
-  useMemo,
-  useState,
-  useEffect,
-  useRef,
-} from 'react';
+import {Fragment, useContext, useMemo, useState} from 'react';
 import Store from 'react-devtools-shared/src/devtools/store';
 import ButtonIcon from '../ButtonIcon';
 import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
-import {SettingsContext} from '../Settings/SettingsContext';
 import {StoreContext} from '../context';
 import {useSubscription} from '../hooks';
 import {logEvent} from 'react-devtools-shared/src/Logger';
@@ -44,7 +36,6 @@ export default function Element({data, index, style}: Props): React.Node {
   const {ownerFlatTree, ownerID, selectedElementID} =
     useContext(TreeStateContext);
   const dispatch = useContext(TreeDispatcherContext);
-  const {showInlineWarningsAndErrors} = React.useContext(SettingsContext);
 
   const element =
     ownerFlatTree !== null
@@ -81,12 +72,9 @@ export default function Element({data, index, style}: Props): React.Node {
     }
   };
 
-  const userInteractedRef = useRef(false);
-
   // $FlowFixMe[missing-local-annot]
   const handleClick = ({metaKey}) => {
     if (id !== null) {
-      userInteractedRef.current = true;
       logEvent({
         event_name: 'select-element',
         metadata: {source: 'click-element'},
@@ -96,10 +84,6 @@ export default function Element({data, index, style}: Props): React.Node {
         payload: metaKey ? null : id,
       });
     }
-  };
-
-  const handleFocus = () => {
-    userInteractedRef.current = true;
   };
 
   const handleMouseEnter = () => {
@@ -120,16 +104,6 @@ export default function Element({data, index, style}: Props): React.Node {
     event.stopPropagation();
     event.preventDefault();
   };
-
-  useEffect(() => {
-    if (id !== null && userInteractedRef.current) {
-      userInteractedRef.current = false; // Reset the flag
-      dispatch({
-        type: 'SELECT_ELEMENT_BY_ID',
-        payload: id,
-      });
-    }
-  }, [id, dispatch]);
 
   // Handle elements that are removed from the tree while an async render is in progress.
   if (element == null) {
@@ -168,7 +142,6 @@ export default function Element({data, index, style}: Props): React.Node {
       onMouseLeave={handleMouseLeave}
       onMouseDown={handleClick}
       onDoubleClick={handleDoubleClick}
-      onFocus={handleFocus}
       style={style}
       data-testname="ComponentTreeListItem"
       data-depth={depth}>
@@ -206,7 +179,7 @@ export default function Element({data, index, style}: Props): React.Node {
           className={styles.BadgesBlock}
         />
 
-        {showInlineWarningsAndErrors && errorCount > 0 && (
+        {errorCount > 0 && (
           <Icon
             type="error"
             className={
@@ -216,7 +189,7 @@ export default function Element({data, index, style}: Props): React.Node {
             }
           />
         )}
-        {showInlineWarningsAndErrors && warningCount > 0 && (
+        {warningCount > 0 && (
           <Icon
             type="warning"
             className={

@@ -541,7 +541,22 @@ function setProp(
         if (__DEV__ && typeof value !== 'function') {
           warnForInvalidEventListener(key, value);
         }
-        trapClickOnNonInteractiveElement(((domElement: any): HTMLElement));
+        if (tag === 'svg') {
+          if (typeof value === 'function') {
+            // Use a wrapper function to ensure the value is a string
+            const clickHandler = function(event: Event) {
+              ((value: any): (event: Event) => void)(event);
+            };
+            domElement.setAttribute('onclick', clickHandler.toString());
+          } else if (__DEV__) {
+            console.warn(
+              'Invalid onClick prop for SVG element. Expected a function, but received: %s',
+              typeof value
+            );
+          }
+        } else {
+          trapClickOnNonInteractiveElement(((domElement: any): HTMLElement));
+        }
       }
       break;
     }
