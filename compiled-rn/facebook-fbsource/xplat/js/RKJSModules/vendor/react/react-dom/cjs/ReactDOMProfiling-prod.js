@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<12d0f35a67264fce7b09d1463c9fab19>>
+ * @generated SignedSource<<74da68ece113c9837fd5a5f7ffa9656d>>
  */
 
 /*
@@ -11099,7 +11099,9 @@ function commitRootWhenReady(
           spawnedLane,
           updatedLanes,
           suspendedRetryLanes,
-          1
+          1,
+          completedRenderStartTime,
+          completedRenderEndTime
         )
       );
       markRootSuspended(root, lanes, spawnedLane, !didSkipSuspendedSiblings);
@@ -11698,7 +11700,6 @@ function commitRoot(
     (ReactSharedInternals.T = prevTransition),
       (ReactDOMSharedInternals.p = previousUpdateLanePriority);
   }
-  return null;
 }
 function commitRootImpl(
   root,
@@ -15763,14 +15764,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1709 = React.version;
 if (
-  "19.0.0-native-fb-0f1856c4-20240925" !==
+  "19.0.0-native-fb-778e1ed2-20240926" !==
   isomorphicReactPackageVersion$jscomp$inline_1709
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1709,
-      "19.0.0-native-fb-0f1856c4-20240925"
+      "19.0.0-native-fb-778e1ed2-20240926"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -15792,11 +15793,11 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2154 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-0f1856c4-20240925",
+  version: "19.0.0-native-fb-778e1ed2-20240926",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-native-fb-0f1856c4-20240925"
+  reconcilerVersion: "19.0.0-native-fb-778e1ed2-20240926"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2155 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16054,4 +16055,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-native-fb-0f1856c4-20240925";
+exports.version = "19.0.0-native-fb-778e1ed2-20240926";

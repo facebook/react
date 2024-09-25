@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b1ac4947f51339b21cd9d052b58ce585>>
+ * @generated SignedSource<<6b3cd9d9c7d3cbb046df3c717c012861>>
  */
 
 "use strict";
@@ -11963,20 +11963,39 @@ __DEV__ &&
             }
             shouldTimeSlice.finishedWork = forceSync;
             shouldTimeSlice.finishedLanes = lanes;
-            if (null !== ReactSharedInternals.actQueue)
-              commitRoot(
-                shouldTimeSlice,
-                workInProgressRootRecoverableErrors,
-                workInProgressTransitions,
-                workInProgressRootDidIncludeRecursiveRenderUpdate,
-                workInProgressDeferredLane,
-                workInProgressRootInterleavedUpdatedLanes,
-                workInProgressSuspendedRetryLanes,
-                IMMEDIATE_COMMIT,
-                -0,
-                0
-              );
-            else {
+            if (null !== ReactSharedInternals.actQueue) {
+              lanes = shouldTimeSlice;
+              forceSync = workInProgressRootRecoverableErrors;
+              shouldTimeSlice = workInProgressTransitions;
+              renderWasConcurrent =
+                workInProgressRootDidIncludeRecursiveRenderUpdate;
+              exitStatus = workInProgressDeferredLane;
+              lanesThatJustErrored = workInProgressRootInterleavedUpdatedLanes;
+              originallyAttemptedLanes = workInProgressSuspendedRetryLanes;
+              wasRootDehydrated = IMMEDIATE_COMMIT;
+              var prevTransition = ReactSharedInternals.T,
+                previousUpdateLanePriority = currentUpdatePriority;
+              try {
+                (currentUpdatePriority = DiscreteEventPriority),
+                  (ReactSharedInternals.T = null),
+                  commitRootImpl(
+                    lanes,
+                    forceSync,
+                    shouldTimeSlice,
+                    renderWasConcurrent,
+                    previousUpdateLanePriority,
+                    exitStatus,
+                    lanesThatJustErrored,
+                    originallyAttemptedLanes,
+                    wasRootDehydrated,
+                    -0,
+                    0
+                  );
+              } finally {
+                (ReactSharedInternals.T = prevTransition),
+                  (currentUpdatePriority = previousUpdateLanePriority);
+              }
+            } else {
               if (
                 (lanes & 62914560) === lanes &&
                 (alwaysThrottleRetries ||
@@ -12063,18 +12082,28 @@ __DEV__ &&
       lanes = finishedWork.subtreeFlags;
       (lanes & 8192 || 16785408 === (lanes & 16785408)) &&
         accumulateSuspenseyCommitOnFiber(finishedWork);
-      commitRoot(
-        root,
-        recoverableErrors,
-        transitions,
-        didIncludeRenderPhaseUpdate,
-        spawnedLane,
-        updatedLanes,
-        suspendedRetryLanes,
-        suspendedCommitReason,
-        completedRenderStartTime,
-        completedRenderEndTime
-      );
+      finishedWork = ReactSharedInternals.T;
+      lanes = currentUpdatePriority;
+      try {
+        (currentUpdatePriority = DiscreteEventPriority),
+          (ReactSharedInternals.T = null),
+          commitRootImpl(
+            root,
+            recoverableErrors,
+            transitions,
+            didIncludeRenderPhaseUpdate,
+            lanes,
+            spawnedLane,
+            updatedLanes,
+            suspendedRetryLanes,
+            suspendedCommitReason,
+            completedRenderStartTime,
+            completedRenderEndTime
+          );
+      } finally {
+        (ReactSharedInternals.T = finishedWork),
+          (currentUpdatePriority = lanes);
+      }
     }
     function isRenderConsistentWithExternalStores(finishedWork) {
       for (var node = finishedWork; ; ) {
@@ -12774,42 +12803,6 @@ __DEV__ &&
       } while (null !== unitOfWork);
       workInProgressRootExitStatus = RootDidNotComplete;
       workInProgress = null;
-    }
-    function commitRoot(
-      root,
-      recoverableErrors,
-      transitions,
-      didIncludeRenderPhaseUpdate,
-      spawnedLane,
-      updatedLanes,
-      suspendedRetryLanes,
-      suspendedCommitReason,
-      completedRenderStartTime,
-      completedRenderEndTime
-    ) {
-      var prevTransition = ReactSharedInternals.T,
-        previousUpdateLanePriority = currentUpdatePriority;
-      try {
-        (currentUpdatePriority = DiscreteEventPriority),
-          (ReactSharedInternals.T = null),
-          commitRootImpl(
-            root,
-            recoverableErrors,
-            transitions,
-            didIncludeRenderPhaseUpdate,
-            previousUpdateLanePriority,
-            spawnedLane,
-            updatedLanes,
-            suspendedRetryLanes,
-            suspendedCommitReason,
-            completedRenderStartTime,
-            completedRenderEndTime
-          );
-      } finally {
-        (ReactSharedInternals.T = prevTransition),
-          (currentUpdatePriority = previousUpdateLanePriority);
-      }
-      return null;
     }
     function commitRootImpl(
       root,
@@ -17096,11 +17089,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-0f1856c4-20240925",
+        version: "19.0.0-native-fb-778e1ed2-20240926",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-native-fb-0f1856c4-20240925"
+        reconcilerVersion: "19.0.0-native-fb-778e1ed2-20240926"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

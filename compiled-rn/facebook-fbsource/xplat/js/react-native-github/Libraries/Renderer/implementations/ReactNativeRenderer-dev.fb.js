@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f517ec785ade344e9fbc7c3e3dd78d83>>
+ * @generated SignedSource<<df97bddfc27a5b9332aceb4eec9bc52f>>
  */
 
 "use strict";
@@ -12323,20 +12323,38 @@ __DEV__ &&
             }
             shouldTimeSlice.finishedWork = forceSync;
             shouldTimeSlice.finishedLanes = lanes;
-            if (null !== ReactSharedInternals.actQueue)
-              commitRoot(
-                shouldTimeSlice,
-                workInProgressRootRecoverableErrors,
-                workInProgressTransitions,
-                workInProgressRootDidIncludeRecursiveRenderUpdate,
-                workInProgressDeferredLane,
-                workInProgressRootInterleavedUpdatedLanes,
-                workInProgressSuspendedRetryLanes,
-                IMMEDIATE_COMMIT,
-                -0,
-                0
-              );
-            else {
+            if (null !== ReactSharedInternals.actQueue) {
+              lanes = shouldTimeSlice;
+              forceSync = workInProgressRootRecoverableErrors;
+              shouldTimeSlice = workInProgressTransitions;
+              exitStatus = workInProgressRootDidIncludeRecursiveRenderUpdate;
+              renderWasConcurrent = workInProgressDeferredLane;
+              lanesThatJustErrored = workInProgressRootInterleavedUpdatedLanes;
+              originallyAttemptedLanes = workInProgressSuspendedRetryLanes;
+              var suspendedCommitReason = IMMEDIATE_COMMIT,
+                prevTransition = ReactSharedInternals.T,
+                previousUpdateLanePriority = currentUpdatePriority;
+              try {
+                (currentUpdatePriority = DiscreteEventPriority),
+                  (ReactSharedInternals.T = null),
+                  commitRootImpl(
+                    lanes,
+                    forceSync,
+                    shouldTimeSlice,
+                    exitStatus,
+                    previousUpdateLanePriority,
+                    renderWasConcurrent,
+                    lanesThatJustErrored,
+                    originallyAttemptedLanes,
+                    suspendedCommitReason,
+                    -0,
+                    0
+                  );
+              } finally {
+                (ReactSharedInternals.T = prevTransition),
+                  (currentUpdatePriority = previousUpdateLanePriority);
+              }
+            } else {
               if (
                 (lanes & 62914560) === lanes &&
                 (alwaysThrottleRetries || exitStatus === RootSuspended) &&
@@ -12422,18 +12440,28 @@ __DEV__ &&
       lanes = finishedWork.subtreeFlags;
       (lanes & 8192 || 16785408 === (lanes & 16785408)) &&
         accumulateSuspenseyCommitOnFiber(finishedWork);
-      commitRoot(
-        root,
-        recoverableErrors,
-        transitions,
-        didIncludeRenderPhaseUpdate,
-        spawnedLane,
-        updatedLanes,
-        suspendedRetryLanes,
-        suspendedCommitReason,
-        completedRenderStartTime,
-        completedRenderEndTime
-      );
+      finishedWork = ReactSharedInternals.T;
+      lanes = currentUpdatePriority;
+      try {
+        (currentUpdatePriority = DiscreteEventPriority),
+          (ReactSharedInternals.T = null),
+          commitRootImpl(
+            root,
+            recoverableErrors,
+            transitions,
+            didIncludeRenderPhaseUpdate,
+            lanes,
+            spawnedLane,
+            updatedLanes,
+            suspendedRetryLanes,
+            suspendedCommitReason,
+            completedRenderStartTime,
+            completedRenderEndTime
+          );
+      } finally {
+        (ReactSharedInternals.T = finishedWork),
+          (currentUpdatePriority = lanes);
+      }
     }
     function isRenderConsistentWithExternalStores(finishedWork) {
       for (var node = finishedWork; ; ) {
@@ -13133,42 +13161,6 @@ __DEV__ &&
       } while (null !== unitOfWork);
       workInProgressRootExitStatus = RootDidNotComplete;
       workInProgress = null;
-    }
-    function commitRoot(
-      root,
-      recoverableErrors,
-      transitions,
-      didIncludeRenderPhaseUpdate,
-      spawnedLane,
-      updatedLanes,
-      suspendedRetryLanes,
-      suspendedCommitReason,
-      completedRenderStartTime,
-      completedRenderEndTime
-    ) {
-      var prevTransition = ReactSharedInternals.T,
-        previousUpdateLanePriority = currentUpdatePriority;
-      try {
-        (currentUpdatePriority = DiscreteEventPriority),
-          (ReactSharedInternals.T = null),
-          commitRootImpl(
-            root,
-            recoverableErrors,
-            transitions,
-            didIncludeRenderPhaseUpdate,
-            previousUpdateLanePriority,
-            spawnedLane,
-            updatedLanes,
-            suspendedRetryLanes,
-            suspendedCommitReason,
-            completedRenderStartTime,
-            completedRenderEndTime
-          );
-      } finally {
-        (ReactSharedInternals.T = prevTransition),
-          (currentUpdatePriority = previousUpdateLanePriority);
-      }
-      return null;
     }
     function commitRootImpl(
       root,
@@ -17313,11 +17305,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.0.0-native-fb-0f1856c4-20240925" !== isomorphicReactPackageVersion)
+    if ("19.0.0-native-fb-778e1ed2-20240926" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.0.0-native-fb-0f1856c4-20240925\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.0.0-native-fb-778e1ed2-20240926\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17343,11 +17335,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-0f1856c4-20240925",
+        version: "19.0.0-native-fb-778e1ed2-20240926",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromTag,
-        reconcilerVersion: "19.0.0-native-fb-0f1856c4-20240925"
+        reconcilerVersion: "19.0.0-native-fb-778e1ed2-20240926"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
