@@ -422,10 +422,9 @@ function propagateNonNull(
   let changed;
   let i = 0;
   do {
-    i++;
     CompilerError.invariant(i++ < 100, {
       reason:
-        '[CollectHoistablePropertyLoads] fixed point iteration did not terminate after 1000 loops',
+        '[CollectHoistablePropertyLoads] fixed point iteration did not terminate after 100 loops',
       loc: GeneratedSource,
     });
 
