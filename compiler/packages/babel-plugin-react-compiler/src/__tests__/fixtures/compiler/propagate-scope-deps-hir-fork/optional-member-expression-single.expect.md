@@ -36,24 +36,25 @@ function Component(props) {
   }
   t0 = x;
   const data = t0;
-  let t1;
-  if ($[2] !== props?.items) {
-    t1 = [props?.items];
-    $[2] = props?.items;
-    $[3] = t1;
-  } else {
-    t1 = $[3];
-  }
+  const t1 = props?.items;
   let t2;
-  if ($[4] !== t1 || $[5] !== data) {
-    t2 = <ValidateMemoization inputs={t1} output={data} />;
-    $[4] = t1;
-    $[5] = data;
-    $[6] = t2;
+  if ($[2] !== t1) {
+    t2 = [t1];
+    $[2] = t1;
+    $[3] = t2;
   } else {
-    t2 = $[6];
+    t2 = $[3];
   }
-  return t2;
+  let t3;
+  if ($[4] !== t2 || $[5] !== data) {
+    t3 = <ValidateMemoization inputs={t2} output={data} />;
+    $[4] = t2;
+    $[5] = data;
+    $[6] = t3;
+  } else {
+    t3 = $[6];
+  }
+  return t3;
 }
 
 ```

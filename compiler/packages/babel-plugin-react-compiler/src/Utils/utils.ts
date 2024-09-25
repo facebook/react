@@ -145,6 +145,19 @@ export function arrayNonNulls<T extends NonNullable<U>, U>(
   return arr.every(e => e != null);
 }
 
+export function Set_filter<T>(
+  source: ReadonlySet<T>,
+  fn: (arg: T) => boolean,
+): Set<T> {
+  const result = new Set<T>();
+  for (const entry of source) {
+    if (fn(entry)) {
+      result.add(entry);
+    }
+  }
+  return result;
+}
+
 export function hasNode<T>(
   input: NodePath<T | null | undefined>,
 ): input is NodePath<NonNullable<T>> {

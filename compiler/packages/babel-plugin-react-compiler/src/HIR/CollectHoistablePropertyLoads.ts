@@ -1,17 +1,15 @@
 import {CompilerError} from '../CompilerError';
 import {inRange} from '../ReactiveScopes/InferReactiveScopeVariables';
-import {printDependency} from '../ReactiveScopes/PrintReactiveFunction';
 import {
   Set_equal,
+  Set_filter,
   Set_intersect,
   Set_union,
   getOrInsertDefault,
-  getOrInsertWith,
 } from '../Utils/utils';
 import {
   BasicBlock,
   BlockId,
-  DependencyPath,
   DependencyPathEntry,
   GeneratedSource,
   HIRFunction,
@@ -22,7 +20,6 @@ import {
   ScopeId,
 } from './HIR';
 
-const DEBUG = false;
 /**
  * Helper function for `PropagateScopeDependencies`.
  * Uses control flow graph analysis to determine which `Identifier`s can
@@ -77,10 +74,10 @@ export function collectHoistablePropertyLoads(
   temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
   optionals: ReadonlyMap<BlockId, ReactiveScopeDependency>,
 ): ReadonlyMap<ScopeId, BlockInfo> {
-  const dedupeMap = new DedupeMap();
+  const tree = new Tree();
 
-  const nodes = collectNonNullsInBlocks(fn, temporaries, optionals, dedupeMap);
-  propagateNonNull(fn, nodes, dedupeMap);
+  const nodes = collectNonNullsInBlocks(fn, temporaries, optionals, tree);
+  propagateNonNull(fn, nodes, tree);
 
   const nodesKeyedByScopeId = new Map<ScopeId, BlockInfo>();
   for (const [_, block] of fn.body.blocks) {
@@ -97,105 +94,107 @@ export function collectHoistablePropertyLoads(
 
 export type BlockInfo = {
   block: BasicBlock;
-  assumedNonNullObjects: ReadonlySet<DedupedNode>;
+  assumedNonNullObjects: ReadonlySet<PropertyLoadNode>;
 };
 
 /**
- * Map to dedupe property loads (e.g. a.b.c) and make computing sets
- * intersections simpler.
+ * Tree data structure to dedupe property loads (e.g. a.b.c)
+ * and make computing sets intersections simpler.
  */
-type DedupedNode = {
-  key: string;
-  dep: ReactiveScopeDependency;
+type RootNode = {
+  properties: Map<string, PropertyLoadNode>;
+  optionalProperties: Map<string, PropertyLoadNode>;
+  parent: null;
+  // Recorded to make later computations simpler
+  fullPath: ReactiveScopeDependency;
+  hasOptional: boolean;
+  root: IdentifierId;
 };
 
-class DedupeMap {
-  #nodes: Map<string, DedupedNode> = new Map();
-
-  getOrCreateIdentifier(id: Identifier): DedupedNode {
-    const key = id.id.toString();
-    let result = this.#nodes.get(key);
-    if (result != null) {
-      return result;
+type PropertyLoadNode =
+  | {
+      properties: Map<string, PropertyLoadNode>;
+      optionalProperties: Map<string, PropertyLoadNode>;
+      parent: PropertyLoadNode;
+      fullPath: ReactiveScopeDependency;
+      hasOptional: boolean;
     }
-    result = {
-      key,
-      dep: {identifier: id, path: []},
-    };
-    this.#nodes.set(key, result);
-    return result;
-  }
-  getOrCreateProperty(dep: ReactiveScopeDependency): DedupedNode {
-    const key = DedupeMap.getKey(dep);
-    let result = this.#nodes.get(key);
-    if (result != null) {
-      return result;
+  | RootNode;
+
+class Tree {
+  roots: Map<IdentifierId, RootNode> = new Map();
+
+  getOrCreateIdentifier(identifier: Identifier): PropertyLoadNode {
+    /**
+     * Reads from a statically scoped variable are always safe in JS,
+     * with the exception of TDZ (not addressed by this pass).
+     */
+    let rootNode = this.roots.get(identifier.id);
+
+    if (rootNode === undefined) {
+      rootNode = {
+        root: identifier.id,
+        properties: new Map(),
+        optionalProperties: new Map(),
+        fullPath: {
+          identifier,
+          path: [],
+        },
+        hasOptional: false,
+        parent: null,
+      };
+      this.roots.set(identifier.id, rootNode);
     }
-    result = {
-      key,
-      dep,
-    };
-    this.#nodes.set(key, result);
-    return result;
+    return rootNode;
   }
 
-  get(key: string): DedupedNode | undefined {
-    return this.#nodes.get(key);
-  }
-
-  static filterOptionals(nodes: ReadonlySet<DedupedNode>): Set<DedupedNode> {
-    const result = new Set<DedupedNode>();
-
-    for (const n of nodes) {
-      if (n.key.includes(' ?. ')) {
-        result.add(n);
-      }
+  static getOrCreatePropertyEntry(
+    parent: PropertyLoadNode,
+    entry: DependencyPathEntry,
+  ): PropertyLoadNode {
+    const map = entry.optional ? parent.optionalProperties : parent.properties;
+    let child = map.get(entry.property);
+    if (child == null) {
+      child = {
+        properties: new Map(),
+        optionalProperties: new Map(),
+        parent: parent,
+        fullPath: {
+          identifier: parent.fullPath.identifier,
+          path: parent.fullPath.path.concat(entry),
+        },
+        hasOptional: parent.hasOptional || entry.optional,
+      };
+      map.set(entry.property, child);
     }
-    return result;
+    return child;
   }
 
-  static getKey(dep: ReactiveScopeDependency): string {
-    let key = dep.identifier.id.toString();
-    for (let entry of dep.path) {
-      key = DedupeMap.concatEntryToKey(key, entry);
+  getOrCreateProperty(n: ReactiveScopeDependency): PropertyLoadNode {
+    /**
+     * We add ReactiveScopeDependencies according to instruction ordering,
+     * so all subpaths of a PropertyLoad should already exist
+     * (e.g. a.b is added before a.b.c),
+     */
+    let currNode = this.getOrCreateIdentifier(n.identifier);
+    if (n.path.length === 0) {
+      return currNode;
     }
-    return key;
-  }
-
-  static concatEntryToKey(key: string, entry: DependencyPathEntry): string {
-    return entry.optional
-      ? key + ' ?. ' + entry.property
-      : key + ' . ' + entry.property;
-  }
-
-  static normalizeKey(key: string): string {
-    return key.replace(' . ', '   ').replace(' ?. ', '   ');
-  }
-
-  static toNormalizedMap(
-    nodes: Set<DedupedNode>,
-  ): Map<string, Set<DedupedNode>> {
-    const normalized = new Map<string, Set<DedupedNode>>();
-
-    for (const n of nodes) {
-      const entry = getOrInsertWith(
-        normalized,
-        DedupeMap.normalizeKey(n.key),
-        () => new Set(),
-      );
-      entry.add(n);
+    for (let i = 0; i < n.path.length - 1; i++) {
+      currNode = Tree.getOrCreatePropertyEntry(currNode, n.path[i]);
     }
-    return normalized;
+
+    return Tree.getOrCreatePropertyEntry(currNode, n.path.at(-1)!);
   }
 }
 
 function pushPropertyLoadNode(
-  node: DedupedNode,
+  node: PropertyLoadNode,
   instrId: InstructionId,
   knownImmutableIdentifiers: Set<IdentifierId>,
-  result: Set<DedupedNode>,
+  result: Set<PropertyLoadNode>,
 ): void {
-  const object = node.dep.identifier;
+  const object = node.fullPath.identifier;
   /**
    * Since this runs *after* buildReactiveScopeTerminals, identifier mutable ranges
    * are not valid with respect to current instruction id numbering.
@@ -212,85 +211,17 @@ function pushPropertyLoadNode(
     inRange({id: instrId}, object.scope.range);
   if (
     !isMutableAtInstr ||
-    knownImmutableIdentifiers.has(node.dep.identifier.id)
+    knownImmutableIdentifiers.has(node.fullPath.identifier.id)
   ) {
     result.add(node);
   }
-}
-
-function assertNormalizedNodes(nodes: Set<DedupedNode>): void {
-  const normalized = DedupeMap.toNormalizedMap(nodes);
-
-  for (const [_, n] of normalized) {
-    CompilerError.invariant(n.size === 1, {
-      reason: 'More than one after reducing!',
-      loc: GeneratedSource,
-    });
-  }
-}
-
-function _printDedupedNodes(nodes: ReadonlySet<DedupedNode>): string {
-  return [...nodes].map(n => printDependency(n.dep)).join(' ');
-}
-
-/**
- * Any two optional chains with different ops . vs ?. but the same set of
- * property strings dedupes. Intuitively: given <base>?.b, we either know <base>
- * to be hoistable or not. If <base> is hoistable, we can replace all
- * <base>?.PROPERTY_STRING subpaths with
- * <base>.PROPERTY_STRING
- */
-function reduceMaybeOptionalChains(
-  nodes: Set<DedupedNode>,
-  dedupeMap: DedupeMap,
-): void {
-  let optionalChainNodes = DedupeMap.filterOptionals(nodes);
-  if (optionalChainNodes.size === 0) {
-    return;
-  }
-  const knownNonNulls = new Set([...nodes].map(n => n.key));
-  let changed: boolean;
-  do {
-    changed = false;
-
-    for (const original of optionalChainNodes) {
-      let {identifier, path: origPath} = original.dep;
-      const currPath: DependencyPath = [];
-      let currKey = DedupeMap.getKey({identifier, path: currPath});
-      for (let i = 0; i < origPath.length; i++) {
-        const entry = origPath[i];
-        // If the base is known to be non-null, replace with a non-optional load
-        const nextEntry: DependencyPathEntry =
-          entry.optional && knownNonNulls.has(currKey)
-            ? {property: entry.property, optional: false}
-            : entry;
-        currKey = DedupeMap.concatEntryToKey(currKey, nextEntry);
-        currPath.push(nextEntry);
-      }
-
-      const replacement: DedupedNode = dedupeMap.getOrCreateProperty({
-        identifier: identifier,
-        path: [...currPath],
-      });
-
-      if (replacement !== original) {
-        changed = true;
-        optionalChainNodes.delete(original);
-        optionalChainNodes.add(replacement);
-        nodes.delete(original);
-        nodes.add(replacement);
-        knownNonNulls.add(replacement.key);
-      }
-    }
-  } while (changed);
-  DEBUG && assertNormalizedNodes(nodes);
 }
 
 function collectNonNullsInBlocks(
   fn: HIRFunction,
   temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
   optionals: ReadonlyMap<BlockId, ReactiveScopeDependency>,
-  dedupeMap: DedupeMap,
+  tree: Tree,
 ): ReadonlyMap<BlockId, BlockInfo> {
   /**
    * Due to current limitations of mutable range inference, there are edge cases in
@@ -312,7 +243,7 @@ function collectNonNullsInBlocks(
    * Known non-null objects such as functional component props can be safely
    * read from any block.
    */
-  const knownNonNullIdentifiers = new Set<DedupedNode>();
+  const knownNonNullIdentifiers = new Set<PropertyLoadNode>();
   if (
     fn.env.config.enablePropagateDepsInHIR === 'enabled_with_optimizations' &&
     fn.fnType === 'Component' &&
@@ -320,11 +251,13 @@ function collectNonNullsInBlocks(
     fn.params[0].kind === 'Identifier'
   ) {
     const identifier = fn.params[0].identifier;
-    knownNonNullIdentifiers.add(dedupeMap.getOrCreateIdentifier(identifier));
+    knownNonNullIdentifiers.add(tree.getOrCreateIdentifier(identifier));
   }
   const nodes = new Map<BlockId, BlockInfo>();
   for (const [_, block] of fn.body.blocks) {
-    const assumedNonNullObjects = new Set<DedupedNode>(knownNonNullIdentifiers);
+    const assumedNonNullObjects = new Set<PropertyLoadNode>(
+      knownNonNullIdentifiers,
+    );
 
     nodes.set(block.id, {
       block,
@@ -332,41 +265,8 @@ function collectNonNullsInBlocks(
     });
     const maybeOptionalChain = optionals.get(block.id);
     if (maybeOptionalChain != null) {
-      /**
-       * The 'non-null' properties are NOT guaranteed to be connected in an optional chain.
-       * e.g. NonNulls(`a?.b.c?.d.e`) -> `{a?.b, a?.b.c?.d, a?.b.c?.d.e}`
-       */
-      for (let i = 0; i < maybeOptionalChain.path.length; i++) {
-        // a?.b.c -> path[0] is a?.b, path[1] is not optional
-        if (!maybeOptionalChain.path[i].optional) {
-          assumedNonNullObjects.add(
-            dedupeMap.getOrCreateProperty({
-              identifier: maybeOptionalChain.identifier,
-              // non-optional load means that the base is non-null
-              path: maybeOptionalChain.path.slice(0, i),
-            }),
-          );
-        }
-      }
-      assumedNonNullObjects.add(
-        dedupeMap.getOrCreateProperty(maybeOptionalChain),
-      );
+      assumedNonNullObjects.add(tree.getOrCreateProperty(maybeOptionalChain));
       continue;
-    }
-    for (const phi of block.phis) {
-      const source = temporaries.get(phi.id.id);
-      if (source) {
-        const propertyNode = dedupeMap.getOrCreateProperty(source);
-        pushPropertyLoadNode(
-          propertyNode,
-          // TODO double check which instr id
-          block.instructions.length > 0
-            ? block.instructions[0].id
-            : block.terminal.id,
-          knownImmutableIdentifiers,
-          assumedNonNullObjects,
-        );
-      }
     }
     for (const instr of block.instructions) {
       if (instr.value.kind === 'PropertyLoad') {
@@ -374,7 +274,7 @@ function collectNonNullsInBlocks(
           identifier: instr.value.object.identifier,
           path: [],
         };
-        const propertyNode = dedupeMap.getOrCreateProperty(source);
+        const propertyNode = tree.getOrCreateProperty(source);
         pushPropertyLoadNode(
           propertyNode,
           instr.id,
@@ -389,7 +289,7 @@ function collectNonNullsInBlocks(
         const sourceNode = temporaries.get(source);
         if (sourceNode != null) {
           pushPropertyLoadNode(
-            dedupeMap.getOrCreateProperty(sourceNode),
+            tree.getOrCreateProperty(sourceNode),
             instr.id,
             knownImmutableIdentifiers,
             assumedNonNullObjects,
@@ -403,7 +303,7 @@ function collectNonNullsInBlocks(
         const sourceNode = temporaries.get(source);
         if (sourceNode != null) {
           pushPropertyLoadNode(
-            dedupeMap.getOrCreateProperty(sourceNode),
+            tree.getOrCreateProperty(sourceNode),
             instr.id,
             knownImmutableIdentifiers,
             assumedNonNullObjects,
@@ -418,7 +318,7 @@ function collectNonNullsInBlocks(
 function propagateNonNull(
   fn: HIRFunction,
   nodes: ReadonlyMap<BlockId, BlockInfo>,
-  dedupeMap: DedupeMap,
+  tree: Tree,
 ): void {
   const blockSuccessors = new Map<BlockId, Set<BlockId>>();
   const terminalPreds = new Set<BlockId>();
@@ -504,7 +404,7 @@ function propagateNonNull(
 
     const prevObjects = assertNonNull(nodes.get(nodeId)).assumedNonNullObjects;
     const mergedObjects = Set_union(prevObjects, neighborAccesses);
-    reduceMaybeOptionalChains(mergedObjects, dedupeMap);
+    reduceMaybeOptionalChains(mergedObjects, tree);
 
     assertNonNull(nodes.get(nodeId)).assumedNonNullObjects = mergedObjects;
     traversalState.set(nodeId, 'done');
@@ -520,7 +420,15 @@ function propagateNonNull(
   reversedBlocks.reverse();
 
   let changed;
+  let i = 0;
   do {
+    i++;
+    CompilerError.invariant(i++ < 100, {
+      reason:
+        '[CollectHoistablePropertyLoads] fixed point iteration did not terminate after 1000 loops',
+      loc: GeneratedSource,
+    });
+
     changed = false;
     for (const [blockId] of fn.body.blocks) {
       const forwardChanged = recursivelyPropagateNonNull(
@@ -553,4 +461,49 @@ export function assertNonNull<T extends NonNullable<U>, U>(
     loc: GeneratedSource,
   });
   return value;
+}
+
+/**
+ * Any two optional chains with different operations . vs ?. but the same set of
+ * property strings paths de-duplicates.
+ *
+ * Intuitively: given <base>?.b, we know <base> to be either hoistable or not.
+ * If <base> is hoistable, we can replace all <base>?.PROPERTY_STRING subpaths
+ * with <base>.PROPERTY_STRING
+ */
+function reduceMaybeOptionalChains(
+  nodes: Set<PropertyLoadNode>,
+  tree: Tree,
+): void {
+  let optionalChainNodes = Set_filter(nodes, n => n.hasOptional);
+  if (optionalChainNodes.size === 0) {
+    return;
+  }
+  const knownNonNulls = new Set(nodes);
+  let changed: boolean;
+  do {
+    changed = false;
+
+    for (const original of optionalChainNodes) {
+      let {identifier, path: origPath} = original.fullPath;
+      let currNode: PropertyLoadNode = tree.getOrCreateIdentifier(identifier);
+      for (let i = 0; i < origPath.length; i++) {
+        const entry = origPath[i];
+        // If the base is known to be non-null, replace with a non-optional load
+        const nextEntry: DependencyPathEntry =
+          entry.optional && knownNonNulls.has(currNode)
+            ? {property: entry.property, optional: false}
+            : entry;
+        currNode = Tree.getOrCreatePropertyEntry(currNode, nextEntry);
+      }
+      if (currNode !== original) {
+        changed = true;
+        optionalChainNodes.delete(original);
+        optionalChainNodes.add(currNode);
+        nodes.delete(original);
+        nodes.add(currNode);
+        knownNonNulls.add(currNode);
+      }
+    }
+  } while (changed);
 }
