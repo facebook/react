@@ -499,7 +499,8 @@ module.exports = function ($$$config) {
           : ((pingedLanes &= nonIdlePendingLanes),
             0 !== pingedLanes
               ? (nextLanes = getHighestPriorityLanes(pingedLanes))
-              : root ||
+              : enableSiblingPrerendering &&
+                !root &&
                 ((warmLanes = nonIdlePendingLanes & ~warmLanes),
                 0 !== warmLanes &&
                   (nextLanes = getHighestPriorityLanes(warmLanes)))))
@@ -508,7 +509,8 @@ module.exports = function ($$$config) {
           ? (nextLanes = getHighestPriorityLanes(nonIdlePendingLanes))
           : 0 !== pingedLanes
             ? (nextLanes = getHighestPriorityLanes(pingedLanes))
-            : root ||
+            : enableSiblingPrerendering &&
+              !root &&
               ((warmLanes = pendingLanes & ~warmLanes),
               0 !== warmLanes &&
                 (nextLanes = getHighestPriorityLanes(warmLanes))));
@@ -523,6 +525,14 @@ module.exports = function ($$$config) {
             (32 === suspendedLanes && 0 !== (warmLanes & 4194176)))
         ? wipLanes
         : nextLanes;
+  }
+  function checkIfRootIsPrerendering(root, renderLanes) {
+    return (
+      0 ===
+      (root.pendingLanes &
+        ~(root.suspendedLanes & ~root.pingedLanes) &
+        renderLanes)
+    );
   }
   function computeExpirationTime(lane, currentTime) {
     switch (lane) {
@@ -625,7 +635,8 @@ module.exports = function ($$$config) {
       remainingLanes &= ~lane;
     }
     0 !== spawnedLane && markSpawnedDeferredLane(root, spawnedLane, 0);
-    0 !== suspendedRetryLanes &&
+    enableSiblingPrerendering &&
+      0 !== suspendedRetryLanes &&
       0 === updatedLanes &&
       0 !== root.tag &&
       (root.suspendedLanes |=
@@ -993,7 +1004,8 @@ module.exports = function ($$$config) {
                   root,
                   root === workInProgressRoot ? JSCompiler_inline_result : 0
                 )),
-                0 !== (JSCompiler_inline_result & 3) &&
+                0 === (JSCompiler_inline_result & 3) ||
+                  checkIfRootIsPrerendering(root, JSCompiler_inline_result) ||
                   ((didPerformSomeWork = !0),
                   performSyncWorkOnRoot(root, JSCompiler_inline_result));
           root = root.next;
@@ -1068,39 +1080,40 @@ module.exports = function ($$$config) {
         (root.callbackNode = null),
         (root.callbackPriority = 0)
       );
-    if (0 !== (suspendedLanes & 3))
-      return (
-        null !== pingedLanes &&
-          null !== pingedLanes &&
-          cancelCallback$1(pingedLanes),
-        (root.callbackPriority = 2),
-        (root.callbackNode = null),
-        2
-      );
-    currentTime = suspendedLanes & -suspendedLanes;
-    if (currentTime === root.callbackPriority) return currentTime;
-    null !== pingedLanes && cancelCallback$1(pingedLanes);
-    switch (lanesToEventPriority(suspendedLanes)) {
-      case 2:
-        suspendedLanes = ImmediatePriority;
-        break;
-      case 8:
-        suspendedLanes = UserBlockingPriority;
-        break;
-      case 32:
-        suspendedLanes = NormalPriority$1;
-        break;
-      case 268435456:
-        suspendedLanes = IdlePriority;
-        break;
-      default:
-        suspendedLanes = NormalPriority$1;
+    if (
+      0 === (suspendedLanes & 3) ||
+      (enableSiblingPrerendering &&
+        checkIfRootIsPrerendering(root, suspendedLanes))
+    ) {
+      currentTime = suspendedLanes & -suspendedLanes;
+      if (currentTime === root.callbackPriority) return currentTime;
+      null !== pingedLanes && cancelCallback$1(pingedLanes);
+      switch (lanesToEventPriority(suspendedLanes)) {
+        case 2:
+        case 8:
+          suspendedLanes = UserBlockingPriority;
+          break;
+        case 32:
+          suspendedLanes = NormalPriority$1;
+          break;
+        case 268435456:
+          suspendedLanes = IdlePriority;
+          break;
+        default:
+          suspendedLanes = NormalPriority$1;
+      }
+      pingedLanes = performWorkOnRootViaSchedulerTask.bind(null, root);
+      suspendedLanes = scheduleCallback$3(suspendedLanes, pingedLanes);
+      root.callbackPriority = currentTime;
+      root.callbackNode = suspendedLanes;
+      return currentTime;
     }
-    pingedLanes = performWorkOnRootViaSchedulerTask.bind(null, root);
-    suspendedLanes = scheduleCallback$3(suspendedLanes, pingedLanes);
-    root.callbackPriority = currentTime;
-    root.callbackNode = suspendedLanes;
-    return currentTime;
+    null !== pingedLanes &&
+      null !== pingedLanes &&
+      cancelCallback$1(pingedLanes);
+    root.callbackPriority = 2;
+    root.callbackNode = null;
+    return 2;
   }
   function performWorkOnRootViaSchedulerTask(root, didTimeout) {
     var originalCallbackNode = root.callbackNode;
@@ -6374,7 +6387,8 @@ module.exports = function ($$$config) {
       ((retryQueue =
         22 !== workInProgress.tag ? claimNextRetryLane() : 536870912),
       (workInProgress.lanes |= retryQueue),
-      (workInProgressSuspendedRetryLanes |= retryQueue));
+      enableSiblingPrerendering &&
+        (workInProgressSuspendedRetryLanes |= retryQueue));
   }
   function cutOffTailIfNeeded(renderState, hasRenderedATailFallback) {
     if (!isHydrating)
@@ -9517,7 +9531,7 @@ module.exports = function ($$$config) {
           root,
           workInProgressRootRenderLanes,
           workInProgressDeferredLane,
-          workInProgressRootDidSkipSuspendedSiblings
+          !1
         );
     markRootUpdated(root, lane);
     if (0 === (executionContext & 2) || root !== workInProgressRoot) {
@@ -9544,180 +9558,182 @@ module.exports = function ($$$config) {
             root,
             workInProgressRootRenderLanes,
             workInProgressDeferredLane,
-            workInProgressRootDidSkipSuspendedSiblings
+            !1
           ));
       ensureRootIsScheduled(root);
     }
   }
   function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
     if (0 !== (executionContext & 6)) throw Error(formatProdErrorMessage(327));
-    var exitStatus = (forceSync =
-      !forceSync &&
-      0 === (lanes & 60) &&
-      0 === (lanes & root$jscomp$0.expiredLanes))
-      ? renderRootConcurrent(root$jscomp$0, lanes)
-      : renderRootSync(root$jscomp$0, lanes);
-    if (0 !== exitStatus) {
-      var renderWasConcurrent = forceSync;
-      do {
-        if (6 === exitStatus)
-          markRootSuspended(
-            root$jscomp$0,
-            lanes,
-            0,
-            workInProgressRootDidSkipSuspendedSiblings
-          );
-        else {
-          forceSync = root$jscomp$0.current.alternate;
-          if (
-            renderWasConcurrent &&
-            !isRenderConsistentWithExternalStores(forceSync)
-          ) {
-            exitStatus = renderRootSync(root$jscomp$0, lanes);
-            renderWasConcurrent = !1;
-            continue;
-          }
-          if (2 === exitStatus) {
-            renderWasConcurrent = lanes;
-            if (root$jscomp$0.errorRecoveryDisabledLanes & renderWasConcurrent)
-              var JSCompiler_inline_result = 0;
-            else
+    var shouldTimeSlice =
+        (!forceSync &&
+          0 === (lanes & 60) &&
+          0 === (lanes & root$jscomp$0.expiredLanes)) ||
+        (enableSiblingPrerendering &&
+          checkIfRootIsPrerendering(root$jscomp$0, lanes)),
+      exitStatus = shouldTimeSlice
+        ? renderRootConcurrent(root$jscomp$0, lanes)
+        : renderRootSync(root$jscomp$0, lanes, !0);
+    do {
+      var renderWasConcurrent = shouldTimeSlice;
+      if (0 === exitStatus) {
+        enableSiblingPrerendering &&
+          workInProgressRootIsPrerendering &&
+          !shouldTimeSlice &&
+          markRootSuspended(root$jscomp$0, lanes, 0, !1);
+        break;
+      } else if (6 === exitStatus)
+        markRootSuspended(
+          root$jscomp$0,
+          lanes,
+          0,
+          !workInProgressRootDidSkipSuspendedSiblings
+        );
+      else {
+        forceSync = root$jscomp$0.current.alternate;
+        if (
+          renderWasConcurrent &&
+          !isRenderConsistentWithExternalStores(forceSync)
+        ) {
+          exitStatus = renderRootSync(root$jscomp$0, lanes, !1);
+          continue;
+        }
+        if (2 === exitStatus) {
+          renderWasConcurrent = lanes;
+          if (root$jscomp$0.errorRecoveryDisabledLanes & renderWasConcurrent)
+            var JSCompiler_inline_result = 0;
+          else
+            (JSCompiler_inline_result =
+              root$jscomp$0.pendingLanes & -536870913),
               (JSCompiler_inline_result =
-                root$jscomp$0.pendingLanes & -536870913),
-                (JSCompiler_inline_result =
-                  0 !== JSCompiler_inline_result
-                    ? JSCompiler_inline_result
-                    : JSCompiler_inline_result & 536870912
-                      ? 536870912
-                      : 0);
-            if (0 !== JSCompiler_inline_result) {
-              lanes = JSCompiler_inline_result;
-              a: {
-                var root = root$jscomp$0;
-                exitStatus = workInProgressRootConcurrentErrors;
-                var wasRootDehydrated =
-                  supportsHydration && root.current.memoizedState.isDehydrated;
-                wasRootDehydrated &&
-                  (prepareFreshStack(root, JSCompiler_inline_result).flags |=
-                    256);
-                JSCompiler_inline_result = renderRootSync(
-                  root,
-                  JSCompiler_inline_result
-                );
-                if (2 !== JSCompiler_inline_result) {
-                  if (
-                    workInProgressRootDidAttachPingListener &&
-                    !wasRootDehydrated
-                  ) {
-                    root.errorRecoveryDisabledLanes |= renderWasConcurrent;
-                    workInProgressRootInterleavedUpdatedLanes |=
-                      renderWasConcurrent;
-                    exitStatus = 4;
-                    break a;
-                  }
-                  renderWasConcurrent = workInProgressRootRecoverableErrors;
-                  workInProgressRootRecoverableErrors = exitStatus;
-                  null !== renderWasConcurrent &&
-                    queueRecoverableErrors(renderWasConcurrent);
-                }
-                exitStatus = JSCompiler_inline_result;
-              }
-              renderWasConcurrent = !1;
-              if (2 !== exitStatus) continue;
-            }
-          }
-          if (1 === exitStatus) {
-            prepareFreshStack(root$jscomp$0, 0);
-            markRootSuspended(
-              root$jscomp$0,
-              lanes,
-              0,
-              workInProgressRootDidSkipSuspendedSiblings
-            );
-            break;
-          }
-          a: {
-            renderWasConcurrent = root$jscomp$0;
-            switch (exitStatus) {
-              case 0:
-              case 1:
-                throw Error(formatProdErrorMessage(345));
-              case 4:
-                if ((lanes & 4194176) === lanes) {
-                  markRootSuspended(
-                    renderWasConcurrent,
-                    lanes,
-                    workInProgressDeferredLane,
-                    workInProgressRootDidSkipSuspendedSiblings
-                  );
+                0 !== JSCompiler_inline_result
+                  ? JSCompiler_inline_result
+                  : JSCompiler_inline_result & 536870912
+                    ? 536870912
+                    : 0);
+          if (0 !== JSCompiler_inline_result) {
+            lanes = JSCompiler_inline_result;
+            a: {
+              var root = root$jscomp$0;
+              exitStatus = workInProgressRootConcurrentErrors;
+              var wasRootDehydrated =
+                supportsHydration && root.current.memoizedState.isDehydrated;
+              wasRootDehydrated &&
+                (prepareFreshStack(root, JSCompiler_inline_result).flags |=
+                  256);
+              JSCompiler_inline_result = renderRootSync(
+                root,
+                JSCompiler_inline_result,
+                !1
+              );
+              if (2 !== JSCompiler_inline_result) {
+                if (
+                  workInProgressRootDidAttachPingListener &&
+                  !wasRootDehydrated
+                ) {
+                  root.errorRecoveryDisabledLanes |= renderWasConcurrent;
+                  workInProgressRootInterleavedUpdatedLanes |=
+                    renderWasConcurrent;
+                  exitStatus = 4;
                   break a;
                 }
-                break;
-              case 2:
-                workInProgressRootRecoverableErrors = null;
-                break;
-              case 3:
-              case 5:
-                break;
-              default:
-                throw Error(formatProdErrorMessage(329));
+                renderWasConcurrent = workInProgressRootRecoverableErrors;
+                workInProgressRootRecoverableErrors = exitStatus;
+                null !== renderWasConcurrent &&
+                  queueRecoverableErrors(renderWasConcurrent);
+              }
+              exitStatus = JSCompiler_inline_result;
             }
-            renderWasConcurrent.finishedWork = forceSync;
-            renderWasConcurrent.finishedLanes = lanes;
-            if (
-              (lanes & 62914560) === lanes &&
-              (alwaysThrottleRetries || 3 === exitStatus) &&
-              ((exitStatus = globalMostRecentFallbackTime + 300 - now()),
-              10 < exitStatus)
-            ) {
-              markRootSuspended(
-                renderWasConcurrent,
-                lanes,
-                workInProgressDeferredLane,
-                workInProgressRootDidSkipSuspendedSiblings
-              );
-              if (0 !== getNextLanes(renderWasConcurrent, 0)) break a;
-              renderWasConcurrent.timeoutHandle = scheduleTimeout(
-                commitRootWhenReady.bind(
-                  null,
-                  renderWasConcurrent,
-                  forceSync,
-                  workInProgressRootRecoverableErrors,
-                  workInProgressTransitions,
-                  workInProgressRootDidIncludeRecursiveRenderUpdate,
-                  lanes,
-                  workInProgressDeferredLane,
-                  workInProgressRootInterleavedUpdatedLanes,
-                  workInProgressSuspendedRetryLanes,
-                  workInProgressRootDidSkipSuspendedSiblings,
-                  2,
-                  -0,
-                  0
-                ),
-                exitStatus
-              );
-              break a;
-            }
-            commitRootWhenReady(
-              renderWasConcurrent,
-              forceSync,
-              workInProgressRootRecoverableErrors,
-              workInProgressTransitions,
-              workInProgressRootDidIncludeRecursiveRenderUpdate,
-              lanes,
-              workInProgressDeferredLane,
-              workInProgressRootInterleavedUpdatedLanes,
-              workInProgressSuspendedRetryLanes,
-              workInProgressRootDidSkipSuspendedSiblings,
-              0,
-              -0,
-              0
-            );
+            if (2 !== exitStatus) continue;
           }
         }
-        break;
-      } while (1);
-    }
+        if (1 === exitStatus) {
+          prepareFreshStack(root$jscomp$0, 0);
+          markRootSuspended(root$jscomp$0, lanes, 0, !0);
+          break;
+        }
+        a: {
+          shouldTimeSlice = root$jscomp$0;
+          renderWasConcurrent = exitStatus;
+          switch (renderWasConcurrent) {
+            case 0:
+            case 1:
+              throw Error(formatProdErrorMessage(345));
+            case 4:
+              if ((lanes & 4194176) === lanes) {
+                markRootSuspended(
+                  shouldTimeSlice,
+                  lanes,
+                  workInProgressDeferredLane,
+                  !workInProgressRootDidSkipSuspendedSiblings
+                );
+                break a;
+              }
+              break;
+            case 2:
+              workInProgressRootRecoverableErrors = null;
+              break;
+            case 3:
+            case 5:
+              break;
+            default:
+              throw Error(formatProdErrorMessage(329));
+          }
+          shouldTimeSlice.finishedWork = forceSync;
+          shouldTimeSlice.finishedLanes = lanes;
+          if (
+            (lanes & 62914560) === lanes &&
+            (alwaysThrottleRetries || 3 === renderWasConcurrent) &&
+            ((renderWasConcurrent = globalMostRecentFallbackTime + 300 - now()),
+            10 < renderWasConcurrent)
+          ) {
+            markRootSuspended(
+              shouldTimeSlice,
+              lanes,
+              workInProgressDeferredLane,
+              !workInProgressRootDidSkipSuspendedSiblings
+            );
+            if (0 !== getNextLanes(shouldTimeSlice, 0)) break a;
+            shouldTimeSlice.timeoutHandle = scheduleTimeout(
+              commitRootWhenReady.bind(
+                null,
+                shouldTimeSlice,
+                forceSync,
+                workInProgressRootRecoverableErrors,
+                workInProgressTransitions,
+                workInProgressRootDidIncludeRecursiveRenderUpdate,
+                lanes,
+                workInProgressDeferredLane,
+                workInProgressRootInterleavedUpdatedLanes,
+                workInProgressSuspendedRetryLanes,
+                workInProgressRootDidSkipSuspendedSiblings,
+                2,
+                -0,
+                0
+              ),
+              renderWasConcurrent
+            );
+            break a;
+          }
+          commitRootWhenReady(
+            shouldTimeSlice,
+            forceSync,
+            workInProgressRootRecoverableErrors,
+            workInProgressTransitions,
+            workInProgressRootDidIncludeRecursiveRenderUpdate,
+            lanes,
+            workInProgressDeferredLane,
+            workInProgressRootInterleavedUpdatedLanes,
+            workInProgressSuspendedRetryLanes,
+            workInProgressRootDidSkipSuspendedSiblings,
+            0,
+            -0,
+            0
+          );
+        }
+      }
+      break;
+    } while (1);
     ensureRootIsScheduled(root$jscomp$0);
   }
   function queueRecoverableErrors(errors) {
@@ -9764,7 +9780,7 @@ module.exports = function ($$$config) {
             1
           )
         );
-        markRootSuspended(root, lanes, spawnedLane, didSkipSuspendedSiblings);
+        markRootSuspended(root, lanes, spawnedLane, !didSkipSuspendedSiblings);
         return;
       }
     commitRoot(
@@ -9828,18 +9844,20 @@ module.exports = function ($$$config) {
     root,
     suspendedLanes,
     spawnedLane,
-    didSkipSuspendedSiblings
+    didAttemptEntireTree
   ) {
     suspendedLanes &= ~workInProgressRootPingedLanes;
     suspendedLanes &= ~workInProgressRootInterleavedUpdatedLanes;
     root.suspendedLanes |= suspendedLanes;
     root.pingedLanes &= ~suspendedLanes;
-    didSkipSuspendedSiblings || (root.warmLanes |= suspendedLanes);
-    didSkipSuspendedSiblings = root.expirationTimes;
+    enableSiblingPrerendering &&
+      didAttemptEntireTree &&
+      (root.warmLanes |= suspendedLanes);
+    didAttemptEntireTree = root.expirationTimes;
     for (var lanes = suspendedLanes; 0 < lanes; ) {
       var index$7 = 31 - clz32(lanes),
         lane = 1 << index$7;
-      didSkipSuspendedSiblings[index$7] = -1;
+      didAttemptEntireTree[index$7] = -1;
       lanes &= ~lane;
     }
     0 !== spawnedLane &&
@@ -9883,9 +9901,7 @@ module.exports = function ($$$config) {
     workInProgressSuspendedReason = 0;
     workInProgressThrownValue = null;
     workInProgressRootDidSkipSuspendedSiblings = !1;
-    workInProgressRootIsPrerendering =
-      0 ===
-      (root.pendingLanes & ~(root.suspendedLanes & ~root.pingedLanes) & lanes);
+    workInProgressRootIsPrerendering = checkIfRootIsPrerendering(root, lanes);
     workInProgressRootDidAttachPingListener = !1;
     workInProgressSuspendedRetryLanes =
       workInProgressDeferredLane =
@@ -9974,7 +9990,9 @@ module.exports = function ($$$config) {
   function renderDidSuspendDelayIfPossible() {
     workInProgressRootExitStatus = 4;
     workInProgressRootDidSkipSuspendedSiblings ||
-      0 !== (workInProgressRootRenderLanes & 60) ||
+      ((workInProgressRootRenderLanes & 4194176) !==
+        workInProgressRootRenderLanes &&
+        null !== suspenseHandlerStackCursor.current) ||
       (workInProgressRootIsPrerendering = !0);
     (0 === (workInProgressRootSkippedLanes & 134217727) &&
       0 === (workInProgressRootInterleavedUpdatedLanes & 134217727)) ||
@@ -9983,10 +10001,10 @@ module.exports = function ($$$config) {
         workInProgressRoot,
         workInProgressRootRenderLanes,
         workInProgressDeferredLane,
-        workInProgressRootDidSkipSuspendedSiblings
+        !1
       );
   }
-  function renderRootSync(root, lanes) {
+  function renderRootSync(root, lanes, shouldYieldForPrerendering) {
     var prevExecutionContext = executionContext;
     executionContext |= 2;
     var prevDispatcher = pushDispatcher(),
@@ -9995,6 +10013,7 @@ module.exports = function ($$$config) {
       (workInProgressTransitions = getTransitionsForLanes(root, lanes)),
         prepareFreshStack(root, lanes);
     lanes = !1;
+    var exitStatus = workInProgressRootExitStatus;
     a: do
       try {
         if (0 !== workInProgressSuspendedReason && null !== workInProgress) {
@@ -10003,24 +10022,37 @@ module.exports = function ($$$config) {
           switch (workInProgressSuspendedReason) {
             case 8:
               resetWorkInProgressStack();
-              workInProgressRootExitStatus = 6;
+              exitStatus = 6;
               break a;
             case 3:
             case 2:
-              lanes ||
-                null !== suspenseHandlerStackCursor.current ||
-                (lanes = !0);
-            default:
+            case 6:
+              null === suspenseHandlerStackCursor.current && (lanes = !0);
               var reason = workInProgressSuspendedReason;
               workInProgressSuspendedReason = 0;
               workInProgressThrownValue = null;
               throwAndUnwindWorkLoop(root, unitOfWork, thrownValue, reason);
+              if (
+                enableSiblingPrerendering &&
+                shouldYieldForPrerendering &&
+                workInProgressRootIsPrerendering
+              ) {
+                exitStatus = 0;
+                break a;
+              }
+              break;
+            default:
+              (reason = workInProgressSuspendedReason),
+                (workInProgressSuspendedReason = 0),
+                (workInProgressThrownValue = null),
+                throwAndUnwindWorkLoop(root, unitOfWork, thrownValue, reason);
           }
         }
         workLoopSync();
+        exitStatus = workInProgressRootExitStatus;
         break;
-      } catch (thrownValue$180) {
-        handleThrow(root, thrownValue$180);
+      } catch (thrownValue$185) {
+        handleThrow(root, thrownValue$185);
       }
     while (1);
     lanes && root.shellSuspendCounter++;
@@ -10028,11 +10060,11 @@ module.exports = function ($$$config) {
     executionContext = prevExecutionContext;
     ReactSharedInternals.H = prevDispatcher;
     ReactSharedInternals.A = prevAsyncDispatcher;
-    if (null !== workInProgress) throw Error(formatProdErrorMessage(261));
-    workInProgressRoot = null;
-    workInProgressRootRenderLanes = 0;
-    finishQueueingConcurrentUpdates();
-    return workInProgressRootExitStatus;
+    null === workInProgress &&
+      ((workInProgressRoot = null),
+      (workInProgressRootRenderLanes = 0),
+      finishQueueingConcurrentUpdates());
+    return exitStatus;
   }
   function workLoopSync() {
     for (; null !== workInProgress; ) performUnitOfWork(workInProgress);
@@ -10046,12 +10078,10 @@ module.exports = function ($$$config) {
       ? ((workInProgressTransitions = getTransitionsForLanes(root, lanes)),
         (workInProgressRootRenderTargetTime = now() + 500),
         prepareFreshStack(root, lanes))
-      : workInProgressRootIsPrerendering &&
-        (workInProgressRootIsPrerendering =
-          0 ===
-          (root.pendingLanes &
-            ~(root.suspendedLanes & ~root.pingedLanes) &
-            lanes));
+      : (workInProgressRootIsPrerendering = checkIfRootIsPrerendering(
+          root,
+          lanes
+        ));
     a: do
       try {
         if (0 !== workInProgressSuspendedReason && null !== workInProgress) {
@@ -10141,8 +10171,8 @@ module.exports = function ($$$config) {
         }
         workLoopConcurrent();
         break;
-      } catch (thrownValue$182) {
-        handleThrow(root, thrownValue$182);
+      } catch (thrownValue$187) {
+        handleThrow(root, thrownValue$187);
       }
     while (1);
     resetContextDependencies();
@@ -12343,7 +12373,7 @@ module.exports = function ($$$config) {
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
       findFiberByHostInstance: getInstanceFromNode,
-      reconcilerVersion: "19.0.0-www-modern-3c7667a6-20240925"
+      reconcilerVersion: "19.0.0-www-modern-0f1856c4-20240925"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
