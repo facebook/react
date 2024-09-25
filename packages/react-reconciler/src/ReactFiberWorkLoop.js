@@ -1322,6 +1322,8 @@ function commitRootWhenReady(
           updatedLanes,
           suspendedRetryLanes,
           SUSPENDED_COMMIT,
+          completedRenderStartTime,
+          completedRenderEndTime,
         ),
       );
       markRootSuspended(root, lanes, spawnedLane, didSkipSuspendedSiblings);
