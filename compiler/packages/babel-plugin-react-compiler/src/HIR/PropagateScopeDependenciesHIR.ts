@@ -24,7 +24,6 @@ import {
   StoreLocal,
   BranchTerminal,
   TBasicBlock,
-  DependencyPath,
   GotoVariant,
 } from './HIR';
 import {
@@ -40,27 +39,30 @@ import {
 } from './visitors';
 import {Stack, empty} from '../Utils/Stack';
 import {CompilerError} from '../CompilerError';
-import {Iterable_some} from '../Utils/utils';
+import {arrayNonNulls, Iterable_some} from '../Utils/utils';
 import {ReactiveScopeDependencyTreeHIR} from './DeriveMinimalDependenciesHIR';
-import {printIdentifier} from './PrintHIR';
-import {printDependency} from '../ReactiveScopes/PrintReactiveFunction';
+import {printIdentifier, printInstruction} from './PrintHIR';
 
 export function propagateScopeDependenciesHIR(fn: HIRFunction): void {
   const usedOutsideDeclaringScope =
     findTemporariesUsedOutsideDeclaringScope(fn);
-  const {temporaries, optionals, processedInstrsInOptional} =
-    collectTemporariesSidemap(fn, usedOutsideDeclaringScope);
+  const temporaries = collectTemporariesSidemap(fn, usedOutsideDeclaringScope);
+  const {
+    temporariesReadInOptional,
+    processedInstrsInOptional,
+    hoistableObjects,
+  } = collectOptionalChainSidemap(fn);
 
   const hoistablePropertyLoads = collectHoistablePropertyLoads(
     fn,
     temporaries,
-    optionals,
+    hoistableObjects,
   );
 
   const scopeDeps = collectDependencies(
     fn,
     usedOutsideDeclaringScope,
-    temporaries,
+    new Map([...temporaries, ...temporariesReadInOptional]),
     processedInstrsInOptional,
   );
 
@@ -179,7 +181,7 @@ function matchOptionalTestBlock(
   terminal: BranchTerminal,
   blocks: ReadonlyMap<BlockId, BasicBlock>,
 ): {
-  id: IdentifierId;
+  consequentId: IdentifierId;
   property: string;
   propertyId: IdentifierId;
   storeLocalInstrId: InstructionId;
@@ -218,8 +220,9 @@ function matchOptionalTestBlock(
     ) {
       return null;
     }
+    assertOptionalAlternateBlock(terminal, blocks);
     return {
-      id: storeLocal.lvalue.place.identifier.id,
+      consequentId: storeLocal.lvalue.place.identifier.id,
       property: propertyLoad.value.property,
       propertyId: propertyLoad.lvalue.identifier.id,
       storeLocalInstrId,
@@ -229,10 +232,10 @@ function matchOptionalTestBlock(
   return null;
 }
 
-function matchOptionalAlternateBlock(
+function assertOptionalAlternateBlock(
   terminal: BranchTerminal,
   blocks: ReadonlyMap<BlockId, BasicBlock>,
-): IdentifierId {
+): void {
   const alternate = assertNonNull(blocks.get(terminal.alternate));
 
   CompilerError.invariant(
@@ -244,339 +247,273 @@ function matchOptionalAlternateBlock(
       loc: terminal.loc,
     },
   );
-  return alternate.instructions[1].value.lvalue.place.identifier.id;
 }
 
-/**
- * Result:
- * - deriveNonNullIdentifiers only needs the outermost (maximal) property load
- *
- * - getDeps logic needs
- *   1. the entire temporaries map. note that it doesn't suffice to return the
- *      maximal load because some PropertyLoad rvalues are used multiple times
- *      e.g. MethodCall callees
- *   2. either a list of branch terminals to ignore (test condition) or a list
- *      of instruction ids (LoadLocal, PropertyLoad, and test terminals)
- */
-type ReadOptionalBlockResult = {
+type OptionalTraversalContext = {
+  blocks: ReadonlyMap<BlockId, BasicBlock>;
+
   // Track optional blocks to avoid outer calls into nested optionals
   seenOptionals: Set<BlockId>;
 
-  // Identifiers to ignore when deriving dependencies
-  // Note that we should be able to track BlockIds here
-  // because we currently only match a block if it only consists of
   /**
-   * -- base --
-   * bbN:
-   *  Optional test=bbM
-   * bbM:
-   *  LoadLocal | LoadGlobal
-   *  (PropertyLoad <prev> )*
-   *  BranchTerminal test=<prev>
+   * When extracting dependencies in PropagateScopeDependencies, skip instructions already
+   * processed in this pass.
    *
-   * -- recursive --
-   * bbN:
-   *  Optional test=bbM
-   * bbM:
-   *  Optional ... fallthrough=bbO
-   * bbO:
-   *  Branch test=<id from bbM's StoreLocal> then=bbP
-   * bbP:
-   *  PropertyLoad <id from bbM's StoreLocal>
-   *  StoreLocal <prev>
+   * E.g. given a?.b
+   * ```
+   * bb0
+   *   $0 = LoadLocal 'a'
+   *   test $0 then=bb1         <- Avoid adding dependencies from these instructions, as
+   * bb1                           the sidemap produced by readOptionalBlock already maps
+   *   $1 = PropertyLoad $0.'b' <- $1 and $2 back to a?.b. Instead, we want to add a?.b
+   *   StoreLocal $2 = $1       <- as a dependency when $1 or $2 are later used in either
+   *                                 - an unhoistable expression within an outer optional
+   *                                   block e.g. MethodCall
+   *                                 - a phi node (if the entire optional value is hoistable)
+   * ```
+   *
+   * Note that mapping blockIds to their evaluated dependency path does not
+   * work, since values produced by inner optional chains may be referenced in
+   * outer ones
+   * ```
+   * a?.b.c()
+   *  ->
+   * bb0
+   *   $0 = LoadLocal 'a'
+   *   test $0 then=bb1
+   * bb1
+   *   $1 = PropertyLoad $0.'b'
+   *   StoreLocal $2 = $1
+   *   goto bb2
+   * bb2
+   *   test $2 then=bb3
+   * bb3:
+   *   $3 = PropertyLoad $2.'c'
+   *   StoreLocal $4 = $3
+   *   goto bb4
+   * bb4
+   *   test $4 then=bb5
+   * bb5:
+   *   $5 = MethodCall $2.$4() <--- here, we want to take a dep on $2 and $4!
+   * ```
    */
   processedInstrsInOptional: Set<InstructionId>;
 
-  innerProperties: Map<IdentifierId, ReactiveScopeDependency>;
-
-  lastNonOptionalLoad: ReactiveScopeDependency | null;
+  /**
+   * Store the correct property mapping (e.g. `a?.b` instead of `a.b`) for
+   * dependency calculation
+   */
+  temporariesReadInOptional: Map<IdentifierId, ReactiveScopeDependency>;
+  hoistableObjects: Map<BlockId, ReactiveScopeDependency>;
 };
 
-//   (a.b)?.[consequent]
-//   (a?.b)?.[consequent]  <-- chaining is diff than left to right, so.. no!
-// Optional_t test=(Optional_f test=(Optional_t test=a load='b') load='c') load='d'
-// 0. Optional_t test=a  load='b'
-// 1. Optional_f test=$0 load='c'  <-- Optional_f means that this participates in the optional chain of the test (i.e. cond control flow) but does not start one
-// 2. Optional_t test=$1 load='d'
-//  a?.b.c?.d    --> .d never evaluated if a is nullish
-function readOptionalBlockInner(
+/**
+ * Traverse into the optional block and all transitively referenced blocks to
+ * collect a sidemaps identifier and block ids -> optional chain dependencies.
+ *
+ * @returns the IdentifierId representing the optional block if the block and
+ * all transitively referenced optionals precisely represent a chain of property
+ * loads. If any part of the optional chain is not hoistable, returns null.
+ */
+function traverseOptionalBlock(
   optional: TBasicBlock<OptionalTerminal>,
-  blocks: ReadonlyMap<BlockId, BasicBlock>,
-  temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
-  result: ReadOptionalBlockResult,
-): {consequent: IdentifierId; alternateBlock: BlockId} | null {
-  // we should never encounter already seen nodes in the recursive case
-  result.seenOptionals.add(optional.id);
-  const maybeTest = blocks.get(optional.terminal.test)!;
-  if (maybeTest.terminal.kind === 'optional') {
-    // chained optional i.e. base=<inner>?.b or <inner>.b
-    const testBlock = blocks.get(maybeTest.terminal.fallthrough)!;
+  context: OptionalTraversalContext,
+  outerAlternate: BlockId | null,
+): IdentifierId | null {
+  context.seenOptionals.add(optional.id);
+  const maybeTest = context.blocks.get(optional.terminal.test)!;
+  let test: BranchTerminal;
+  let baseObject: ReactiveScopeDependency;
+  if (maybeTest.terminal.kind === 'branch') {
+    /**
+     * Explicitly calculate base of load
+     *
+     * Optional base expressions are currently within value blocks which cannot
+     * be interrupted by scope boundaries. As such, the only dependencies we can
+     * hoist out of optional chains are property load chains with no intervening
+     * instructions.
+     *
+     * Ideally, we would be able to flatten base instructions out of optional
+     * blocks, but this would require changes to HIR.
+     */
+    CompilerError.invariant(optional.terminal.optional, {
+      reason:
+        '[OptionalChainDeps] Expect base optional case to be always optional',
+      loc: optional.terminal.loc,
+    });
+    CompilerError.invariant(maybeTest.instructions.length >= 1, {
+      reason:
+        '[OptionalChainDeps] Expected direct optional test branch (base case) to have at least one instruction',
+      loc: maybeTest.terminal.loc,
+    });
+
+    /**
+     * Only match base expressions that are straightforward PropertyLoad chains
+     */
+    if (maybeTest.instructions[0].value.kind !== 'LoadLocal') {
+      return null;
+    }
+    const path = maybeTest.instructions.slice(1).map((entry, i) => {
+      const instrVal = entry.value;
+      if (
+        instrVal.kind === 'PropertyLoad' &&
+        instrVal.object.identifier.id ===
+          maybeTest.instructions[i].lvalue.identifier.id
+      ) {
+        return {property: instrVal.property, optional: false};
+      } else {
+        return null;
+      }
+    });
+    if (!arrayNonNulls(path)) {
+      return null;
+    }
+    CompilerError.invariant(
+      maybeTest.terminal.test.identifier.id ===
+        maybeTest.instructions.at(-1)!.lvalue.identifier.id,
+      {
+        reason: '[OptionalChainDeps] Unexpected test expression',
+        loc: maybeTest.terminal.loc,
+      },
+    );
+    baseObject = {
+      identifier: maybeTest.instructions[0].value.place.identifier,
+      path,
+    };
+    test = maybeTest.terminal;
+  } else if (maybeTest.terminal.kind === 'optional') {
+    /**
+     * This is either
+     * - a chained optional i.e. base=<inner_optional>?.b or <inner_optional>.b
+     * - a optional base block with a separate nested optional-chain (e.g. a(c?.d)?.d)
+     */
+    const testBlock = context.blocks.get(maybeTest.terminal.fallthrough)!;
     if (testBlock!.terminal.kind !== 'branch') {
+      /**
+       * Fallthrough of the inner optional should be a block with no
+       * instructions, terminating with Test($<temporary written to from
+       * StoreLocal>)
+       */
       CompilerError.throwTodo({
         reason: `Unexpected terminal kind \`${testBlock.terminal.kind}\` for optional fallthrough block`,
         loc: maybeTest.terminal.loc,
       });
     }
     /**
-     * Step 1:
-     *   recurse into the inner optional expr and get the relevant StoreLocal
-     *
-     * Step 2:
-     *   fallthrough of the inner optional should be a block with no instructions,
-     *   terminating with Test($<temporary written to from StoreLocal>)
+     * Recurse into inner optional blocks to collect inner optional-chain
+     * expressions, regardless of whether we can match the outer one to a
+     * PropertyLoad.
      */
-
-    // maybeOptional is the base of the optional expression
-    // If the base is a reorderable member expression / load, result.get(maybeOptional) represents it
-    // Otherwise, the base is an opaque temporary and we cannot easily rewrite
-    const innerOptional = readOptionalBlockInner(
+    const innerOptional = traverseOptionalBlock(
       maybeTest as TBasicBlock<OptionalTerminal>,
-      blocks,
-      temporaries,
-      result,
+      context,
+      testBlock.terminal.alternate,
     );
     if (innerOptional == null) {
       return null;
     }
-    if (testBlock.terminal.test.identifier.id !== innerOptional.consequent) {
+
+    /**
+     * Check that the inner optional is part of the same optional-chain as the
+     * outer one. This is not guaranteed, e.g. given a(c?.d)?.d
+     * ```
+     * bb0:
+     *   Optional test=bb1
+     * bb1:
+     *   $0 = LoadLocal a               <-- part 1 of the outer optional-chaining base
+     *   Optional test=bb2 fallth=bb5   <-- start of optional chain for c?.d
+     * bb2:
+     *   ... (optional chain for c?.d)
+     * ...
+     * bb5:
+     *   $1 = phi(c.d, undefined)       <-- part 2 (continuation) of the outer optional-base
+     *   $2 = Call $0($1)
+     *   Branch $2 ...
+     * ```
+     */
+    if (testBlock.terminal.test.identifier.id !== innerOptional) {
+      mapOutermostOptionalPhi(
+        maybeTest as TBasicBlock<OptionalTerminal>,
+        innerOptional,
+        context,
+      );
+
+      return null;
+    }
+
+    if (!optional.terminal.optional) {
       /**
-       * Check that the inner optional is part of the same optional-chain as the
-       * outer one. This is not guaranteed, e.g. given a(c?.d)?.d, we get
-       *
-       * bb0:
-       *   Optional test=bb1
-       * bb1:
-       *   $0 = LoadLocal a
-       *   Optional test=bb2 fallthrough=bb5 <-- start of optional chain for c?.d
-       * bb2:
-       *   ... (optional chain for c?.d)
-       * ...
-       * bb5:
-       *   $1 = phi(c.d, undefined)
-       *   $2 = Call $0($1)
-       *   Branch $2 ...
+       * If this is an non-optional load participating in an optional chain
+       * (e.g. loading the `c` property in `a?.b.c`), record that PropertyLoads
+       * from the inner optional value are hoistable.
        */
-      CompilerError.throwTodo({
-        reason: '[OptionalChainDeps] Support nested optional-chaining',
-        description: `Value written to from inner optional ${innerOptional.consequent} (${printDependency(result.innerProperties.get(innerOptional.consequent)!)}), value tested by outer optional ${testBlock.terminal.test.identifier.id}`,
-        loc: testBlock.terminal.loc,
+      context.hoistableObjects.set(
+        optional.id,
+        assertNonNull(context.temporariesReadInOptional.get(innerOptional)),
+      );
+    }
+    baseObject = assertNonNull(
+      context.temporariesReadInOptional.get(innerOptional),
+    );
+    test = testBlock.terminal;
+    if (test.alternate === outerAlternate) {
+      CompilerError.invariant(optional.instructions.length === 0, {
+        reason:
+          '[OptionalChainDeps] Unexpected instructions an inner optional block. ' +
+          'This indicates that the compiler may be incorrectly concatenating two unrelated optional chains',
+        description: `bb${optional.id}\n ${testBlock.id}\n${optional.instructions.map(printInstruction).join('\n')}`,
+        loc: optional.terminal.loc,
       });
     }
-    if (!optional.terminal.optional) {
-      // even if this loads from this node is not hoistable, loads from its
-      // parent might be
-      //
-      // For example, a MethodCall a?.b() translates to
-      //
-      // Optional optional=false
-      //   Optional optional=true (test=a, cons=a.b)
-      //   cons=a.b()
-      // we want to track that a?.b is inferred to be non-null
-      result.lastNonOptionalLoad = assertNonNull(
-        result.innerProperties.get(innerOptional.consequent),
-      );
-    }
-    const matchConsequentResult = matchOptionalTestBlock(
-      testBlock.terminal,
-      blocks,
-    );
-
-    if (matchConsequentResult) {
-      if (
-        matchConsequentResult.consequentGoto !== optional.terminal.fallthrough
-      ) {
-        CompilerError.throwTodo({
-          reason: '[OptionalChainDeps] Unexpected optional goto-fallthrough',
-          loc: optional.terminal.loc,
-        });
-      }
-      CompilerError.invariant(
-        innerOptional.alternateBlock === testBlock.terminal.alternate,
-        {
-          reason: '[OptionalChainDeps] Inconsistent optional alternate',
-          loc: optional.terminal.loc,
-        },
-      );
-      // only add known loads
-      const baseObject = result.innerProperties.get(innerOptional.consequent)!;
-      const load = {
-        identifier: baseObject.identifier,
-        path: [
-          ...baseObject.path,
-          {
-            property: matchConsequentResult.property,
-            optional: optional.terminal.optional,
-          },
-        ],
-      };
-      result.innerProperties.set(matchConsequentResult.id, load);
-      // duplicate so that we overwrite the correct Property mapping in
-      // temporaries for dependency calculation
-      // TODO: store this in a separate map (to be read only in `getDependencies` logic)
-      result.innerProperties.set(matchConsequentResult.propertyId, load);
-      /**
-       * a?.b.c()
-       *  ->
-       * bb0
-       *   $0 = LoadLocal 'a'
-       *   test $0 then=bb1
-       * bb1
-       *   $1 = PropertyLoad $0.'b'
-       *   StoreLocal $2 = $1
-       *   goto bb2
-       * bb2
-       *   test $2 then=bb3
-       * bb3:
-       *   $3 = PropertyLoad $2.'c'
-       *   StoreLocal $4 = $3
-       *   goto bb4
-       * bb4
-       *   test $4 then=bb5
-       * bb5:
-       *   $5 = MethodCall $2.$4() <--- here we want to take a dep on $2 and $4!
-       */
-      result.processedInstrsInOptional.add(testBlock.terminal.id);
-      result.processedInstrsInOptional.add(
-        matchConsequentResult.storeLocalInstrId,
-      );
-      return {
-        consequent: matchConsequentResult.id,
-        alternateBlock: innerOptional.alternateBlock,
-      };
-    } else {
-      // Optional chain not hoistable e.g.
-      // a?.[0]
-      return null;
-    }
-  } else if (maybeTest.terminal.kind === 'branch') {
-    CompilerError.invariant(optional.terminal.optional, {
+  } else {
+    CompilerError.throwTodo({
       reason:
-        '[OptionalChainDeps] Expect base optional case to be always optional',
-      loc: optional.terminal.loc,
-    });
-    // (instruction 0 -> test instruction)
-    // Note that this might not be true when chaining value-block exprssions but let's keep it when developing
-    // normal test cases
-    //  (a ?? b)?.c
-    CompilerError.invariant(maybeTest.instructions.length >= 1, {
-      reason:
-        '[OptionalChainDeps] Expected direct optional test branch (base case) to have at least two instructions',
+        '[OptionalChainDeps] Unexpected terminal kind for optional test block',
+      description: `Expected branch or optional, found ${maybeTest.terminal.kind}`,
       loc: maybeTest.terminal.loc,
     });
-    /**
-     * Step 1: Explicitly calculate base of load
-     *
-     * (REMOVED) replace this with a lookup from the temporary map
+  }
 
-    const testValue = assertNonNull(maybeTest.instructions.at(-1)).lvalue
-      .identifier;
-
-    Ideally, we would be able to flatten base instructions out of optional blocks, but optional bases are currently
-    within value blocks (which cannot be interrupted by scope boundaries).
-    As such, the only dependencies we can hoist out of optional chains are property chains (with no other instructions)
-     */
-
-    let baseIdentifier: Identifier;
-    let lastLval: IdentifierId;
-    const path: DependencyPath = [];
-    const seenLvals = new Set<IdentifierId>();
-
-    if (maybeTest.instructions[0].value.kind === 'LoadLocal') {
-      baseIdentifier = maybeTest.instructions[0].value.place.identifier;
-      lastLval = maybeTest.instructions[0].lvalue.identifier.id;
-      seenLvals.add(lastLval);
-    } else {
-      return null;
-    }
-    for (let i = 1; i < maybeTest.instructions.length; i++) {
-      const instrVal = maybeTest.instructions[i].value;
-      if (
-        instrVal.kind === 'PropertyLoad' &&
-        instrVal.object.identifier.id === lastLval
-      ) {
-        path.push({property: instrVal.property, optional: false});
-        lastLval = maybeTest.instructions[i].lvalue.identifier.id;
-        seenLvals.add(lastLval);
-      } else {
-        // not hoistable base case
-        return null;
-      }
-    }
-    CompilerError.invariant(
-      maybeTest.terminal.test.identifier.id === lastLval,
-      {
-        reason: '[OptionalChainDeps] Unexpected lval',
-        loc: maybeTest.terminal.loc,
-      },
-    );
-    const matchConsequentResult = matchOptionalTestBlock(
-      maybeTest.terminal,
-      blocks,
-    );
-    if (matchConsequentResult) {
-      CompilerError.invariant(
-        matchConsequentResult.consequentGoto === optional.terminal.fallthrough,
-        {
-          reason: '[OptionalChainDeps] Unexpected optional goto-fallthrough',
-          loc: optional.terminal.loc,
-        },
-      );
-      const load = {
-        identifier: baseIdentifier,
-        path: [
-          ...path,
-          {
-            property: matchConsequentResult.property,
-            optional: optional.terminal.optional,
-          },
-        ],
-      };
-      result.innerProperties.set(matchConsequentResult.id, load);
-      // duplicate so that we overwrite the correct Property mapping in
-      // temporaries for dependency calculation
-      result.innerProperties.set(matchConsequentResult.propertyId, load);
-      result.processedInstrsInOptional.add(maybeTest.terminal.id);
-      result.processedInstrsInOptional.add(
-        matchConsequentResult.storeLocalInstrId,
-      );
-      matchOptionalAlternateBlock(maybeTest.terminal, blocks);
-      return {
-        consequent: matchConsequentResult.id,
-        alternateBlock: maybeTest.terminal.alternate,
-      };
-    } else {
-      // Optional chain not hoistable e.g.
-      // a?.[0]
-      return null;
-    }
-  } else {
-    // might be some nested value-block e.g.
-    // (a ?? b)?.c
+  const matchConsequentResult = matchOptionalTestBlock(test, context.blocks);
+  if (!matchConsequentResult) {
+    // Optional chain consequent is not hoistable e.g. a?.[computed()]
     return null;
   }
-}
-
-function readOptionalBlock(
-  optional: TBasicBlock<OptionalTerminal>,
-  blocks: ReadonlyMap<BlockId, BasicBlock>,
-  temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
-): ReadOptionalBlockResult {
-  const result: ReadOptionalBlockResult = {
-    seenOptionals: new Set(),
-    processedInstrsInOptional: new Set(),
-    innerProperties: new Map(),
-    lastNonOptionalLoad: null,
+  CompilerError.invariant(
+    matchConsequentResult.consequentGoto === optional.terminal.fallthrough,
+    {
+      reason: '[OptionalChainDeps] Unexpected optional goto-fallthrough',
+      description: `${matchConsequentResult.consequentGoto} != ${optional.terminal.fallthrough}`,
+      loc: optional.terminal.loc,
+    },
+  );
+  const load = {
+    identifier: baseObject.identifier,
+    path: [
+      ...baseObject.path,
+      {
+        property: matchConsequentResult.property,
+        optional: optional.terminal.optional,
+      },
+    ],
   };
-
-  readOptionalBlockInner(optional, blocks, temporaries, result);
-  return result;
+  context.processedInstrsInOptional.add(
+    matchConsequentResult.storeLocalInstrId,
+  );
+  context.processedInstrsInOptional.add(test.id);
+  context.temporariesReadInOptional.set(
+    matchConsequentResult.consequentId,
+    load,
+  );
+  context.temporariesReadInOptional.set(matchConsequentResult.propertyId, load);
+  return matchConsequentResult.consequentId;
 }
 
-type HIRSidemap = {
-  temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>;
+type OptionalChainSidemap = {
+  temporariesReadInOptional: ReadonlyMap<IdentifierId, ReactiveScopeDependency>;
   // Instructions to skip when processing dependencies
-  processedInstrsInOptional: Set<InstructionId>;
-  optionals: ReadonlyMap<BlockId, ReactiveScopeDependency>;
+  processedInstrsInOptional: ReadonlySet<InstructionId>;
+  hoistableObjects: ReadonlyMap<BlockId, ReactiveScopeDependency>;
 };
 /**
  * @returns mapping of LoadLocal and PropertyLoad to the source of the load.
@@ -628,7 +565,7 @@ type HIRSidemap = {
 function collectTemporariesSidemap(
   fn: HIRFunction,
   usedOutsideDeclaringScope: ReadonlySet<DeclarationId>,
-): HIRSidemap {
+): ReadonlyMap<IdentifierId, ReactiveScopeDependency> {
   const temporaries = new Map<IdentifierId, ReactiveScopeDependency>();
   for (const [_, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
@@ -658,87 +595,64 @@ function collectTemporariesSidemap(
       }
     }
   }
+  return temporaries;
+}
 
-  const seen = new Set<BlockId>();
-  const optionals = new Map<BlockId, ReactiveScopeDependency>();
-  let processedInstrsInOptional = new Set<InstructionId>();
+function mapOutermostOptionalPhi(
+  optional: TBasicBlock<OptionalTerminal>,
+  outermostConsequent: IdentifierId,
+  context: OptionalTraversalContext,
+): void {
+  const fallthrough = assertNonNull(
+    context.blocks.get(optional.terminal.fallthrough),
+  );
+
+  const matchingPhi = [...fallthrough.phis].find(phi =>
+    [...phi.operands.values()].some(
+      operand => operand.id === outermostConsequent,
+    ),
+  );
+  if (matchingPhi != null) {
+    context.temporariesReadInOptional.set(
+      matchingPhi.id.id,
+      assertNonNull(context.temporariesReadInOptional.get(outermostConsequent)),
+    );
+  }
+}
+
+function collectOptionalChainSidemap(fn: HIRFunction): OptionalChainSidemap {
+  const context: OptionalTraversalContext = {
+    blocks: fn.body.blocks,
+    seenOptionals: new Set(),
+    processedInstrsInOptional: new Set(),
+    temporariesReadInOptional: new Map(),
+    hoistableObjects: new Map(),
+  };
   for (const [_, block] of fn.body.blocks) {
-    if (block.terminal.kind === 'optional' && !seen.has(block.id)) {
-      const optionalBlockResult = readOptionalBlock(
+    if (
+      block.terminal.kind === 'optional' &&
+      !context.seenOptionals.has(block.id)
+    ) {
+      const optionalResult = traverseOptionalBlock(
         block as TBasicBlock<OptionalTerminal>,
-        fn.body.blocks,
-        temporaries,
+        context,
+        null,
       );
-      for (const id of optionalBlockResult.seenOptionals) {
-        seen.add(id);
-      }
-      if (optionalBlockResult) {
-        /**
-         * This is definitely a hack. We know that intermediate rvalues are used
-         * only in the optional chain itself. If we mapped to the real identifierId,
-         * it would (incorrectly) be considered an optional dependency.
-         *
-         * the phi is hte best way of expressing "the value that a optional chain evaluates to".
-         * Instead of storing the precise value, we store a subset (a?.b.c().d -> a?.b)
-         */
-
-        // // // This means that the optional block is an outermost optional block
-        // // const {consequent, alternate} = optionalBlockResult;
-        // const optionalFallthrough = assertNonNull(
-        //   fn.body.blocks.get(block.terminal.fallthrough),
-        // );
-
-        // if (optionalFallthrough.phis.size === 0) {
-        //   // might have been DCE'd
-        //   continue;
-        // }
-        // CompilerError.invariant(optionalFallthrough.phis.size === 1, {
-        //   reason: 'Unexpected phi size',
-        //   description: `Expected 1 found ${optionalFallthrough.phis.size}`,
-        //   loc: block.terminal.loc,
-        // });
-        // // for (const phi of optionalFallthrough.phis) {
-        // const phi = [...optionalFallthrough.phis][0];
-        // const operands = [...phi.operands];
-        // CompilerError.invariant(
-        //   operands.length === 2 &&
-        //     operands.some(([_, id]) => id.id === consequent) &&
-        //     operands.some(([_, id]) => id.id === alternate),
-        //   {
-        //     reason: 'Unexpected phi operands',
-        //     description: `Found ${printPhi(phi)}`,
-        //     loc: block.terminal.loc,
-        //   },
-        // );
-        // temporaries.set(phi.id.id, mostPreciseHoistable);
-
-        // const mostPreciseHoistable = assertNonNull(
-        //   [...optionalBlockResult.innerProperties.values()].at(-1),
-        // );
-
-        if (optionalBlockResult.lastNonOptionalLoad) {
-          // It might be more precise to set the fallthrough id here, but it
-          // should be same as value blocks cannot jump / have non-linear
-          // control flow
-          optionals.set(block.id, optionalBlockResult.lastNonOptionalLoad);
-        }
-
-        for (const [id, val] of optionalBlockResult.innerProperties) {
-          temporaries.set(id, val);
-        }
-
-        let size = optionalBlockResult.processedInstrsInOptional.size;
-        // Hacky: don't add the last processed instruction -- this is the rvalue
-        // we need when adding a dependency!
-        for (const id of optionalBlockResult.processedInstrsInOptional) {
-          if (--size > 0) {
-            processedInstrsInOptional.add(id);
-          }
-        }
+      if (optionalResult != null) {
+        mapOutermostOptionalPhi(
+          block as TBasicBlock<OptionalTerminal>,
+          optionalResult,
+          context,
+        );
       }
     }
   }
-  return {temporaries, processedInstrsInOptional, optionals};
+
+  return {
+    temporariesReadInOptional: context.temporariesReadInOptional,
+    processedInstrsInOptional: context.processedInstrsInOptional,
+    hoistableObjects: context.hoistableObjects,
+  };
 }
 
 function getProperty(
@@ -1105,7 +1019,6 @@ function collectDependencies(
     }
 
     if (!processedInstrsInOptional.has(block.terminal.id)) {
-      // avoid visiting branch tests of optional blocks
       for (const place of eachTerminalOperand(block.terminal)) {
         context.visitOperand(place);
       }

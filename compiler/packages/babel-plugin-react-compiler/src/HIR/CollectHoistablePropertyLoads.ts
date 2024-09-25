@@ -2,6 +2,7 @@ import {CompilerError} from '../CompilerError';
 import {inRange} from '../ReactiveScopes/InferReactiveScopeVariables';
 import {printDependency} from '../ReactiveScopes/PrintReactiveFunction';
 import {
+  Set_equal,
   Set_intersect,
   Set_union,
   getOrInsertDefault,
@@ -21,6 +22,7 @@ import {
   ScopeId,
 } from './HIR';
 
+const DEBUG = false;
 /**
  * Helper function for `PropagateScopeDependencies`.
  * Uses control flow graph analysis to determine which `Identifier`s can
@@ -99,44 +101,20 @@ export type BlockInfo = {
 };
 
 /**
- * Map to dedupe property loads (e.g. a.b.c)
- * and make computing sets intersections simpler.
+ * Map to dedupe property loads (e.g. a.b.c) and make computing sets
+ * intersections simpler.
  */
 type DedupedNode = {
   key: string;
   dep: ReactiveScopeDependency;
 };
-function depToKey(dep: ReactiveScopeDependency): string {
-  let key = dep.identifier.id.toString();
-  for (let path of dep.path) {
-    if (path.optional) {
-      key += ' ?. ' + path.property;
-    } else {
-      key += ' . ' + path.property;
-    }
-  }
-  return key;
-}
-function normalizeKey(key: string): string {
-  return key.replace(' . ', '   ').replace(' ?. ', '   ');
-}
-function findOptionals(nodes: Set<DedupedNode>): Set<DedupedNode> {
-  const result = new Set<DedupedNode>();
-
-  for (const n of nodes) {
-    if (n.key.includes(' ?. ')) {
-      result.add(n);
-    }
-  }
-  return result;
-}
 
 class DedupeMap {
-  nodes: Map<string, DedupedNode> = new Map();
+  #nodes: Map<string, DedupedNode> = new Map();
 
   getOrCreateIdentifier(id: Identifier): DedupedNode {
     const key = id.id.toString();
-    let result = this.nodes.get(key);
+    let result = this.#nodes.get(key);
     if (result != null) {
       return result;
     }
@@ -144,12 +122,12 @@ class DedupeMap {
       key,
       dep: {identifier: id, path: []},
     };
-    this.nodes.set(key, result);
+    this.#nodes.set(key, result);
     return result;
   }
   getOrCreateProperty(dep: ReactiveScopeDependency): DedupedNode {
-    const key = depToKey(dep);
-    let result = this.nodes.get(key);
+    const key = DedupeMap.getKey(dep);
+    let result = this.#nodes.get(key);
     if (result != null) {
       return result;
     }
@@ -157,8 +135,57 @@ class DedupeMap {
       key,
       dep,
     };
-    this.nodes.set(key, result);
+    this.#nodes.set(key, result);
     return result;
+  }
+
+  get(key: string): DedupedNode | undefined {
+    return this.#nodes.get(key);
+  }
+
+  static filterOptionals(nodes: ReadonlySet<DedupedNode>): Set<DedupedNode> {
+    const result = new Set<DedupedNode>();
+
+    for (const n of nodes) {
+      if (n.key.includes(' ?. ')) {
+        result.add(n);
+      }
+    }
+    return result;
+  }
+
+  static getKey(dep: ReactiveScopeDependency): string {
+    let key = dep.identifier.id.toString();
+    for (let entry of dep.path) {
+      key = DedupeMap.concatEntryToKey(key, entry);
+    }
+    return key;
+  }
+
+  static concatEntryToKey(key: string, entry: DependencyPathEntry): string {
+    return entry.optional
+      ? key + ' ?. ' + entry.property
+      : key + ' . ' + entry.property;
+  }
+
+  static normalizeKey(key: string): string {
+    return key.replace(' . ', '   ').replace(' ?. ', '   ');
+  }
+
+  static toNormalizedMap(
+    nodes: Set<DedupedNode>,
+  ): Map<string, Set<DedupedNode>> {
+    const normalized = new Map<string, Set<DedupedNode>>();
+
+    for (const n of nodes) {
+      const entry = getOrInsertWith(
+        normalized,
+        DedupeMap.normalizeKey(n.key),
+        () => new Set(),
+      );
+      entry.add(n);
+    }
+    return normalized;
   }
 }
 
@@ -191,24 +218,8 @@ function pushPropertyLoadNode(
   }
 }
 
-function toNormalizedMap(
-  nodes: Set<DedupedNode>,
-): Map<string, Set<DedupedNode>> {
-  const normalized = new Map<string, Set<DedupedNode>>();
-
-  for (const n of nodes) {
-    const entry = getOrInsertWith(
-      normalized,
-      normalizeKey(n.key),
-      () => new Set(),
-    );
-    entry.add(n);
-  }
-  return normalized;
-}
-
-function assertNormalizedNodes(nodes: Set<DedupedNode>) {
-  const normalized = toNormalizedMap(nodes);
+function assertNormalizedNodes(nodes: Set<DedupedNode>): void {
+  const normalized = DedupeMap.toNormalizedMap(nodes);
 
   for (const [_, n] of normalized) {
     CompilerError.invariant(n.size === 1, {
@@ -223,65 +234,56 @@ function _printDedupedNodes(nodes: ReadonlySet<DedupedNode>): string {
 }
 
 /**
- * TODO: replace with a cleaner tree-based version. Any two optional chains with
- * the same set of property strings (and potentially different ops . vs ?.)
- * dedupes to the same set of ops. Given <base>?.b, we either know <base> to be
- * hoistable or not
- *
- * if <base> is hoistable, we reduce all <base>?.PROPERTY_STRING subpaths to
+ * Any two optional chains with different ops . vs ?. but the same set of
+ * property strings dedupes. Intuitively: given <base>?.b, we either know <base>
+ * to be hoistable or not. If <base> is hoistable, we can replace all
+ * <base>?.PROPERTY_STRING subpaths with
  * <base>.PROPERTY_STRING
  */
 function reduceMaybeOptionalChains(
   nodes: Set<DedupedNode>,
   dedupeMap: DedupeMap,
-): Set<DedupedNode> {
-  const optionalsWithDups = findOptionals(nodes);
-  if (optionalsWithDups.size === 0) {
-    return nodes;
+): void {
+  let optionalChainNodes = DedupeMap.filterOptionals(nodes);
+  if (optionalChainNodes.size === 0) {
+    return;
   }
-  const map = new Map([...nodes].map(n => [n.key, n]));
-  let changed;
+  const knownNonNulls = new Set([...nodes].map(n => n.key));
+  let changed: boolean;
   do {
     changed = false;
 
-    for (const optional of optionalsWithDups) {
-      let {identifier, path: origPath} = optional.dep;
+    for (const original of optionalChainNodes) {
+      let {identifier, path: origPath} = original.dep;
       const currPath: DependencyPath = [];
-      // Try to replace optional subpaths of curr
+      let currKey = DedupeMap.getKey({identifier, path: currPath});
       for (let i = 0; i < origPath.length; i++) {
-        let nextEntry: DependencyPathEntry;
         const entry = origPath[i];
-        if (entry.optional) {
-          // See if the base is known to be non-null
-          if (map.get(depToKey({identifier, path: currPath}))) {
-            // replace with the non-optional version
-            nextEntry = {property: entry.property, optional: false};
-          } else {
-            nextEntry = entry;
-          }
-        } else {
-          nextEntry = entry;
-        }
+        // If the base is known to be non-null, replace with a non-optional load
+        const nextEntry: DependencyPathEntry =
+          entry.optional && knownNonNulls.has(currKey)
+            ? {property: entry.property, optional: false}
+            : entry;
+        currKey = DedupeMap.concatEntryToKey(currKey, nextEntry);
         currPath.push(nextEntry);
       }
+
       const replacement: DedupedNode = dedupeMap.getOrCreateProperty({
         identifier: identifier,
         path: [...currPath],
       });
 
-      if (replacement !== optional) {
+      if (replacement !== original) {
         changed = true;
-        optionalsWithDups.delete(optional);
-        optionalsWithDups.add(replacement);
-        nodes.delete(optional);
+        optionalChainNodes.delete(original);
+        optionalChainNodes.add(replacement);
+        nodes.delete(original);
         nodes.add(replacement);
-        map.set(replacement.key, replacement);
+        knownNonNulls.add(replacement.key);
       }
     }
   } while (changed);
-  assertNormalizedNodes(nodes);
-
-  return nodes;
+  DEBUG && assertNormalizedNodes(nodes);
 }
 
 function collectNonNullsInBlocks(
@@ -323,6 +325,7 @@ function collectNonNullsInBlocks(
   const nodes = new Map<BlockId, BlockInfo>();
   for (const [_, block] of fn.body.blocks) {
     const assumedNonNullObjects = new Set<DedupedNode>(knownNonNullIdentifiers);
+
     nodes.set(block.id, {
       block,
       assumedNonNullObjects,
@@ -505,23 +508,19 @@ function propagateNonNull(
 
     assertNonNull(nodes.get(nodeId)).assumedNonNullObjects = mergedObjects;
     traversalState.set(nodeId, 'done');
-    // reduceMaybeOptionalChains may replace optional chains with equivalent
-    // inferred unconditional loads. TODO: this likely affects fixpoint
-    // iteration logic, update `changed` accordingly
-    //
-    // e.g. reduceMaybeOptionalChain({a, a?.b}) -> {a, a.b} the difference
-    // between a?.b and a.b affects a neighbor's Intersect(...)
-    changed ||= prevObjects.size !== mergedObjects.size;
+    /**
+     * Note that it might not sufficient to compare set sizes since reduceMaybeOptionalChains
+     * may replace optional-chain loads with unconditional loads
+     */
+    changed ||= !Set_equal(prevObjects, mergedObjects);
     return changed;
   }
   const traversalState = new Map<BlockId, 'done' | 'active'>();
   const reversedBlocks = [...fn.body.blocks];
   reversedBlocks.reverse();
 
-  let i = 0;
   let changed;
   do {
-    i++;
     changed = false;
     for (const [blockId] of fn.body.blocks) {
       const forwardChanged = recursivelyPropagateNonNull(

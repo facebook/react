@@ -88,28 +88,33 @@ export class ReactiveScopeDependencyTreeHIR {
       this.#roots,
       PropertyAccessType.UnconditionalAccess,
     );
-    // null if depCursor is not known to be an object we can hoist property reads from
-    // otherwise, it represents the same node in the hoistable / cfg-informed tree
+    /**
+     * hoistableCursor is null if depCursor is not an object we can hoist
+     * property reads from otherwise, it represents the same node in the
+     * hoistable / cfg-informed tree
+     */
     let hoistableCursor: HoistableNode | undefined =
       this.#hoistables.get(identifier);
 
-    // mark the correct node as a dependency
+    // All properties read 'on the way' to a dependency are marked as 'access'
     for (const item of path) {
       let nextHoistableCursor: HoistableNode | undefined;
       let nextDepCursor: DependencyNode;
-      // all properties read 'on the way' to a dependency are marked as 'access'
       if (item.optional) {
-        // no need to check the access type since we can match both optional or non-optionals
-        // in the hoistable
-        // e.g. a?.b<rest> is hoistable if a.b<rest> is hoistable
+        /**
+         * No need to check the access type since we can match both optional or non-optionals
+         * in the hoistable
+         *  e.g. a?.b<rest> is hoistable if a.b<rest> is hoistable
+         */
         if (hoistableCursor != null) {
-          // && hoistableCursor.properties.get(item.property)?.accessType)
           nextHoistableCursor = hoistableCursor?.properties.get(item.property);
         }
 
-        // say the dep is `a?.b`
-        // if the hoistable tree only contains `a`, we can keep either `a?.b` or 'a.b' as a dependency
-        //   (note that we currently do the latter for perf, although we can do the former)
+        /**
+         * Given a dep `a?.b`
+         * if the hoistable tree only contains `a`, we can keep either `a?.b` or 'a.b' as a dependency.
+         * (note that we currently do the latter for perf)
+         */
         let accessType;
         if (
           hoistableCursor != null &&
@@ -129,7 +134,7 @@ export class ReactiveScopeDependencyTreeHIR {
           hoistableCursor != null &&
           hoistableCursor.accessType === 'NonNull'
         ) {
-          // not optional and unconditional PropertyLoad is hoistable
+          // unconditional + not optional PropertyLoad is hoistable
           nextHoistableCursor = hoistableCursor.properties.get(item.property);
           nextDepCursor = makeOrMergeProperty(
             depCursor,
@@ -143,6 +148,7 @@ export class ReactiveScopeDependencyTreeHIR {
       depCursor = nextDepCursor;
       hoistableCursor = nextHoistableCursor;
     }
+    // mark the final node as a dependency
     depCursor.accessType = merge(
       depCursor.accessType,
       PropertyAccessType.OptionalDependency,
@@ -185,7 +191,7 @@ export class ReactiveScopeDependencyTreeHIR {
    * @returns string representation of DependencyTree
    */
   printDeps(includeAccesses: boolean): string {
-    let res = [];
+    let res: Array<Array<string>> = [];
 
     for (const [rootId, rootNode] of this.#roots.entries()) {
       const rootResults = printSubtree(rootNode, includeAccesses).map(
@@ -331,7 +337,9 @@ function prependPath(
 }
 
 /**
- * TODO: simplify
+ * TODO: this is directly pasted from DeriveMinimalDependencies. Since we no
+ * longer have conditionally accessed nodes, we can simplify
+ *
  * Recursively calculates minimal dependencies in a subtree.
  * @param dep DependencyNode representing a dependency subtree.
  * @returns a minimal list of dependencies in this subtree.
