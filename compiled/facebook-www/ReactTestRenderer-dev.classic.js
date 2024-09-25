@@ -14792,12 +14792,12 @@ __DEV__ &&
       pendingPassiveEffectsLanes = 0,
       pendingPassiveEffectsRemainingLanes = 0,
       pendingPassiveTransitions = null,
-      NESTED_UPDATE_LIMIT = 50,
+      NESTED_UPDATE_LIMIT = 100,
       nestedUpdateCount = 0,
       rootWithNestedUpdates = null,
       isFlushingPassiveEffects = !1,
       didScheduleUpdateDuringPassiveEffects = !1,
-      NESTED_PASSIVE_UPDATE_LIMIT = 50,
+      NESTED_PASSIVE_UPDATE_LIMIT = 100,
       nestedPassiveUpdateCount = 0,
       rootWithPassiveNestedUpdates = null,
       isRunningInsertionEffect = !1,
@@ -15020,11 +15020,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-www-classic-04bd67a4-20240924",
+        version: "19.0.0-www-classic-f9ebd85a-20240925",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-www-classic-04bd67a4-20240924"
+        reconcilerVersion: "19.0.0-www-classic-f9ebd85a-20240925"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15159,5 +15159,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.0.0-www-classic-04bd67a4-20240924";
+    exports.version = "19.0.0-www-classic-f9ebd85a-20240925";
   })();
