@@ -11296,7 +11296,9 @@ function commitRootWhenReady(
           spawnedLane,
           updatedLanes,
           suspendedRetryLanes,
-          1
+          1,
+          completedRenderStartTime,
+          completedRenderEndTime
         )
       );
       markRootSuspended(root, lanes, spawnedLane, !didSkipSuspendedSiblings);
@@ -11923,7 +11925,6 @@ function commitRoot(
     (ReactSharedInternals.T = prevTransition),
       (Internals.p = previousUpdateLanePriority);
   }
-  return null;
 }
 function commitRootImpl(
   root,
@@ -17434,14 +17435,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1781 = React.version;
 if (
-  "19.0.0-www-classic-0f1856c4-20240925" !==
+  "19.0.0-www-classic-778e1ed2-20240926" !==
   isomorphicReactPackageVersion$jscomp$inline_1781
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1781,
-      "19.0.0-www-classic-0f1856c4-20240925"
+      "19.0.0-www-classic-778e1ed2-20240926"
     )
   );
 function flushSyncFromReconciler(fn) {
@@ -17486,11 +17487,11 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2294 = {
   bundleType: 0,
-  version: "19.0.0-www-classic-0f1856c4-20240925",
+  version: "19.0.0-www-classic-778e1ed2-20240926",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-www-classic-0f1856c4-20240925"
+  reconcilerVersion: "19.0.0-www-classic-778e1ed2-20240926"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2295 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17946,4 +17947,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-0f1856c4-20240925";
+exports.version = "19.0.0-www-classic-778e1ed2-20240926";

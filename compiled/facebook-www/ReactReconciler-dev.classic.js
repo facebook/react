@@ -14264,7 +14264,9 @@ __DEV__ &&
               spawnedLane,
               updatedLanes,
               suspendedRetryLanes,
-              SUSPENDED_COMMIT
+              SUSPENDED_COMMIT,
+              completedRenderStartTime,
+              completedRenderEndTime
             )
           );
           markRootSuspended(
@@ -15052,7 +15054,6 @@ __DEV__ &&
         (ReactSharedInternals.T = prevTransition),
           setCurrentUpdatePriority(previousUpdateLanePriority);
       }
-      return null;
     }
     function commitRootImpl(
       root,
@@ -19242,7 +19243,7 @@ __DEV__ &&
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-www-classic-0f1856c4-20240925"
+        reconcilerVersion: "19.0.0-www-classic-778e1ed2-20240926"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

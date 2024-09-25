@@ -15593,7 +15593,9 @@ __DEV__ &&
               spawnedLane,
               updatedLanes,
               suspendedRetryLanes,
-              SUSPENDED_COMMIT
+              SUSPENDED_COMMIT,
+              completedRenderStartTime,
+              completedRenderEndTime
             )
           );
           markRootSuspended(
@@ -16371,7 +16373,6 @@ __DEV__ &&
         (ReactSharedInternals.T = prevTransition),
           (Internals.p = previousUpdateLanePriority);
       }
-      return null;
     }
     function commitRootImpl(
       root,
@@ -27243,11 +27244,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.0.0-www-modern-0f1856c4-20240925" !== isomorphicReactPackageVersion)
+      if ("19.0.0-www-modern-778e1ed2-20240926" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.0.0-www-modern-0f1856c4-20240925\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.0.0-www-modern-778e1ed2-20240926\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -27290,11 +27291,11 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.0.0-www-modern-0f1856c4-20240925",
+          version: "19.0.0-www-modern-778e1ed2-20240926",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
           findFiberByHostInstance: getClosestInstanceFromNode,
-          reconcilerVersion: "19.0.0-www-modern-0f1856c4-20240925"
+          reconcilerVersion: "19.0.0-www-modern-778e1ed2-20240926"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -28065,5 +28066,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.0.0-www-modern-0f1856c4-20240925";
+    exports.version = "19.0.0-www-modern-778e1ed2-20240926";
   })();

@@ -10871,20 +10871,38 @@ __DEV__ &&
             }
             shouldTimeSlice.finishedWork = forceSync;
             shouldTimeSlice.finishedLanes = lanes;
-            if (null !== ReactSharedInternals.actQueue)
-              commitRoot(
-                shouldTimeSlice,
-                workInProgressRootRecoverableErrors,
-                workInProgressTransitions,
-                workInProgressRootDidIncludeRecursiveRenderUpdate,
-                workInProgressDeferredLane,
-                workInProgressRootInterleavedUpdatedLanes,
-                workInProgressSuspendedRetryLanes,
-                IMMEDIATE_COMMIT,
-                -0,
-                0
-              );
-            else {
+            if (null !== ReactSharedInternals.actQueue) {
+              lanes = shouldTimeSlice;
+              forceSync = workInProgressRootRecoverableErrors;
+              shouldTimeSlice = workInProgressTransitions;
+              exitStatus = workInProgressRootDidIncludeRecursiveRenderUpdate;
+              renderWasConcurrent = workInProgressDeferredLane;
+              lanesThatJustErrored = workInProgressRootInterleavedUpdatedLanes;
+              originallyAttemptedLanes = workInProgressSuspendedRetryLanes;
+              var suspendedCommitReason = IMMEDIATE_COMMIT,
+                prevTransition = ReactSharedInternals.T,
+                previousUpdateLanePriority = currentUpdatePriority;
+              try {
+                (currentUpdatePriority = DiscreteEventPriority),
+                  (ReactSharedInternals.T = null),
+                  commitRootImpl(
+                    lanes,
+                    forceSync,
+                    shouldTimeSlice,
+                    exitStatus,
+                    previousUpdateLanePriority,
+                    renderWasConcurrent,
+                    lanesThatJustErrored,
+                    originallyAttemptedLanes,
+                    suspendedCommitReason,
+                    -0,
+                    0
+                  );
+              } finally {
+                (ReactSharedInternals.T = prevTransition),
+                  (currentUpdatePriority = previousUpdateLanePriority);
+              }
+            } else {
               if (
                 (lanes & 62914560) === lanes &&
                 ((exitStatus =
@@ -10968,18 +10986,28 @@ __DEV__ &&
       lanes = finishedWork.subtreeFlags;
       (lanes & 8192 || 16785408 === (lanes & 16785408)) &&
         accumulateSuspenseyCommitOnFiber(finishedWork);
-      commitRoot(
-        root,
-        recoverableErrors,
-        transitions,
-        didIncludeRenderPhaseUpdate,
-        spawnedLane,
-        updatedLanes,
-        suspendedRetryLanes,
-        suspendedCommitReason,
-        completedRenderStartTime,
-        completedRenderEndTime
-      );
+      finishedWork = ReactSharedInternals.T;
+      lanes = currentUpdatePriority;
+      try {
+        (currentUpdatePriority = DiscreteEventPriority),
+          (ReactSharedInternals.T = null),
+          commitRootImpl(
+            root,
+            recoverableErrors,
+            transitions,
+            didIncludeRenderPhaseUpdate,
+            lanes,
+            spawnedLane,
+            updatedLanes,
+            suspendedRetryLanes,
+            suspendedCommitReason,
+            completedRenderStartTime,
+            completedRenderEndTime
+          );
+      } finally {
+        (ReactSharedInternals.T = finishedWork),
+          (currentUpdatePriority = lanes);
+      }
     }
     function isRenderConsistentWithExternalStores(finishedWork) {
       for (var node = finishedWork; ; ) {
@@ -11589,42 +11617,6 @@ __DEV__ &&
       } while (null !== unitOfWork);
       workInProgressRootExitStatus = RootDidNotComplete;
       workInProgress = null;
-    }
-    function commitRoot(
-      root,
-      recoverableErrors,
-      transitions,
-      didIncludeRenderPhaseUpdate,
-      spawnedLane,
-      updatedLanes,
-      suspendedRetryLanes,
-      suspendedCommitReason,
-      completedRenderStartTime,
-      completedRenderEndTime
-    ) {
-      var prevTransition = ReactSharedInternals.T,
-        previousUpdateLanePriority = currentUpdatePriority;
-      try {
-        (currentUpdatePriority = DiscreteEventPriority),
-          (ReactSharedInternals.T = null),
-          commitRootImpl(
-            root,
-            recoverableErrors,
-            transitions,
-            didIncludeRenderPhaseUpdate,
-            previousUpdateLanePriority,
-            spawnedLane,
-            updatedLanes,
-            suspendedRetryLanes,
-            suspendedCommitReason,
-            completedRenderStartTime,
-            completedRenderEndTime
-          );
-      } finally {
-        (ReactSharedInternals.T = prevTransition),
-          (currentUpdatePriority = previousUpdateLanePriority);
-      }
-      return null;
     }
     function commitRootImpl(
       root,
@@ -14936,11 +14928,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-www-classic-0f1856c4-20240925",
+        version: "19.0.0-www-classic-778e1ed2-20240926",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-www-classic-0f1856c4-20240925"
+        reconcilerVersion: "19.0.0-www-classic-778e1ed2-20240926"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15075,5 +15067,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.0.0-www-classic-0f1856c4-20240925";
+    exports.version = "19.0.0-www-classic-778e1ed2-20240926";
   })();

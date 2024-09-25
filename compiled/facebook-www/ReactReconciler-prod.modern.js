@@ -9777,7 +9777,9 @@ module.exports = function ($$$config) {
             spawnedLane,
             updatedLanes,
             suspendedRetryLanes,
-            1
+            1,
+            completedRenderStartTime,
+            completedRenderEndTime
           )
         );
         markRootSuspended(root, lanes, spawnedLane, !didSkipSuspendedSiblings);
@@ -10405,7 +10407,6 @@ module.exports = function ($$$config) {
       (ReactSharedInternals.T = prevTransition),
         setCurrentUpdatePriority(previousUpdateLanePriority);
     }
-    return null;
   }
   function commitRootImpl(
     root,
@@ -12373,7 +12374,7 @@ module.exports = function ($$$config) {
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
       findFiberByHostInstance: getInstanceFromNode,
-      reconcilerVersion: "19.0.0-www-modern-0f1856c4-20240925"
+      reconcilerVersion: "19.0.0-www-modern-778e1ed2-20240926"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
