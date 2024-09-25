@@ -3089,8 +3089,6 @@ function commitRoot(
     ReactSharedInternals.T = prevTransition;
     setCurrentUpdatePriority(previousUpdateLanePriority);
   }
-
-  return null;
 }
 
 function commitRootImpl(
