@@ -1308,6 +1308,8 @@ function commitRootWhenReady(
           updatedLanes,
           suspendedRetryLanes,
           SUSPENDED_COMMIT,
+          completedRenderStartTime,
+          completedRenderEndTime,
         ),
       );
       const didAttemptEntireTree = !didSkipSuspendedSiblings;
@@ -3001,8 +3003,6 @@ function commitRoot(
     ReactSharedInternals.T = prevTransition;
     setCurrentUpdatePriority(previousUpdateLanePriority);
   }
-
-  return null;
 }
 
 function commitRootImpl(
