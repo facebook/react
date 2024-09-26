@@ -6,5 +6,5 @@
 
 set -eo pipefail
 
-yarn workspace react-compiler-runtime link
-yarn workspace snap link react-compiler-runtime
+yarn --silent workspace react-compiler-runtime link
+yarn --silent workspace snap link react-compiler-runtime
