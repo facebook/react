@@ -485,6 +485,20 @@ export type DevToolsBackend = {
   setupNativeStyleEditor?: SetupNativeStyleEditor,
 };
 
+export type ReloadAndProfileConfig = {
+  shouldReloadAndProfile: boolean,
+  recordChangeDescriptions: boolean,
+};
+
+// Linter doesn't speak Flow's `Partial` type
+// eslint-disable-next-line no-undef
+type PartialReloadAndProfileConfig = Partial<ReloadAndProfileConfig>;
+
+export type ReloadAndProfileConfigPersistence = {
+  setReloadAndProfileConfig: (config: PartialReloadAndProfileConfig) => void,
+  getReloadAndProfileConfig: () => ReloadAndProfileConfig,
+};
+
 export type DevToolsHook = {
   listeners: {[key: string]: Array<Handler>, ...},
   rendererInterfaces: Map<RendererID, RendererInterface>,
