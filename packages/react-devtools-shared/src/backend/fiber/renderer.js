@@ -42,7 +42,6 @@ import {
   utfEncodeString,
   filterOutLocationComponentFilters,
 } from 'react-devtools-shared/src/utils';
-import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
 import {
   formatConsoleArgumentsToSingleString,
   gt,
@@ -61,8 +60,6 @@ import {
   __DEBUG__,
   PROFILING_FLAG_BASIC_SUPPORT,
   PROFILING_FLAG_TIMELINE_SUPPORT,
-  SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
-  SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_REORDER_CHILDREN,
@@ -106,6 +103,7 @@ import {
   supportsOwnerStacks,
   supportsConsoleTasks,
 } from './DevToolsFiberComponentStack';
+import type {ReloadAndProfileConfig} from '../types';
 
 // $FlowFixMe[method-unbinding]
 const toString = Object.prototype.toString;
@@ -763,16 +761,30 @@ const hostResourceToDevToolsInstanceMap: Map<
   Set<DevToolsInstance>,
 > = new Map();
 
+// Ideally, this should be injected from Reconciler config
 function getPublicInstance(instance: HostInstance): HostInstance {
   // Typically the PublicInstance and HostInstance is the same thing but not in Fabric.
   // So we need to detect this and use that as the public instance.
-  return typeof instance === 'object' &&
-    instance !== null &&
-    typeof instance.canonical === 'object'
-    ? (instance.canonical: any)
-    : typeof instance._nativeTag === 'number'
-      ? instance._nativeTag
-      : instance;
+
+  // React Native. Modern. Fabric.
+  if (typeof instance === 'object' && instance !== null) {
+    if (typeof instance.canonical === 'object' && instance.canonical !== null) {
+      if (
+        typeof instance.canonical.publicInstance === 'object' &&
+        instance.canonical.publicInstance !== null
+      ) {
+        return instance.canonical.publicInstance;
+      }
+    }
+
+    // React Native. Legacy. Paper.
+    if (typeof instance._nativeTag === 'number') {
+      return instance._nativeTag;
+    }
+  }
+
+  // React Web. Usually a DOM element.
+  return instance;
 }
 
 function aquireHostInstance(
@@ -851,6 +863,7 @@ export function attach(
   rendererID: number,
   renderer: ReactRenderer,
   global: Object,
+  reloadAndProfileConfig: ReloadAndProfileConfig,
 ): RendererInterface {
   // Newer versions of the reconciler package also specific reconciler version.
   // If that version number is present, use it.
@@ -5199,13 +5212,10 @@ export function attach(
   }
 
   // Automatically start profiling so that we don't miss timing info from initial "mount".
-  if (
-    sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true'
-  ) {
-    startProfiling(
-      sessionStorageGetItem(SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY) ===
-        'true',
-    );
+  if (reloadAndProfileConfig.shouldReloadAndProfile) {
+    const shouldRecordChangeDescriptions =
+      reloadAndProfileConfig.recordChangeDescriptions;
+    startProfiling(shouldRecordChangeDescriptions);
   }
 
   function getNearestFiber(devtoolsInstance: DevToolsInstance): null | Fiber {
