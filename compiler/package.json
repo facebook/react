@@ -43,7 +43,7 @@
     "prettier": "^3.3.3",
     "prettier-plugin-hermes-parser": "^0.23.0",
     "prompt-promise": "^1.0.3",
-    "rollup": "^4.13.2",
+    "rollup": "^4.22.4",
     "rollup-plugin-banner2": "^1.2.3",
     "rollup-plugin-prettier": "^4.1.1",
     "typescript": "^5.4.3",
