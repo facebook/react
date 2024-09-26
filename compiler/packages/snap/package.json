@@ -9,7 +9,7 @@
     "src"
   ],
   "scripts": {
-    "prebuild": "yarn --silent workspace react-compiler-runtime build --silent",
+    "prebuild": "yarn --silent workspace react-compiler-runtime build --silent && ./scripts/link-react-compiler-runtime.sh && yarn workspace snap install",
     "build": "rimraf dist && tsc --build",
     "test": "echo 'no tests'",
     "prettier": "prettier --write 'src/**/*.ts'"
@@ -37,7 +37,7 @@
     "react-dom": "19.0.0-beta-b498834eab-20240506",
     "readline": "^1.3.0",
     "yargs": "^17.7.1",
-    "react-compiler-runtime": "file:../react-compiler-runtime"
+    "react-compiler-runtime": "*"
   },
   "devDependencies": {
     "@babel/core": "^7.19.1",
