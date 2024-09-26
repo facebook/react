@@ -13,6 +13,7 @@ import type {
 } from 'react-devtools-shared/src/backend/types';
 import {hasAssignedBackend} from 'react-devtools-shared/src/backend/utils';
 import {COMPACT_VERSION_NAME} from 'react-devtools-extensions/src/utils';
+import {getIsReloadAndProfileSupported} from 'react-devtools-shared/src/utils';
 
 let welcomeHasInitialized = false;
 
@@ -140,7 +141,7 @@ function activateBackend(version: string, hook: DevToolsHook) {
     hook.emit('shutdown');
   });
 
-  initBackend(hook, agent, window);
+  initBackend(hook, agent, window, getIsReloadAndProfileSupported());
 
   // Setup React Native style editor if a renderer like react-native-web has injected it.
   if (typeof setupNativeStyleEditor === 'function' && hook.resolveRNStyle) {
