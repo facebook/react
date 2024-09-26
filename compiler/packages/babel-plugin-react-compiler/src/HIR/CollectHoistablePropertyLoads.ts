@@ -170,12 +170,12 @@ class Tree {
 }
 
 function pushPropertyLoadNode(
-  node: PropertyLoadNode,
+  loadSource: Identifier,
+  loadSourceNode: PropertyLoadNode,
   instrId: InstructionId,
   knownImmutableIdentifiers: Set<IdentifierId>,
   result: Set<PropertyLoadNode>,
 ): void {
-  const object = node.fullPath.identifier;
   /**
    * Since this runs *after* buildReactiveScopeTerminals, identifier mutable ranges
    * are not valid with respect to current instruction id numbering.
@@ -187,14 +187,14 @@ function pushPropertyLoadNode(
    * See comment at top of function for why we track known immutable identifiers.
    */
   const isMutableAtInstr =
-    object.mutableRange.end > object.mutableRange.start + 1 &&
-    object.scope != null &&
-    inRange({id: instrId}, object.scope.range);
+    loadSource.mutableRange.end > loadSource.mutableRange.start + 1 &&
+    loadSource.scope != null &&
+    inRange({id: instrId}, loadSource.scope.range);
   if (
     !isMutableAtInstr ||
-    knownImmutableIdentifiers.has(node.fullPath.identifier.id)
+    knownImmutableIdentifiers.has(loadSourceNode.fullPath.identifier.id)
   ) {
-    let curr: PropertyLoadNode | null = node;
+    let curr: PropertyLoadNode | null = loadSourceNode;
     while (curr != null) {
       result.add(curr);
       curr = curr.parent;
@@ -248,9 +248,9 @@ function collectNonNullsInBlocks(
           identifier: instr.value.object.identifier,
           path: [],
         };
-        const propertyNode = tree.getPropertyLoadNode(source);
         pushPropertyLoadNode(
-          propertyNode,
+          instr.value.object.identifier,
+          tree.getPropertyLoadNode(source),
           instr.id,
           knownImmutableIdentifiers,
           assumedNonNullObjects,
@@ -263,6 +263,7 @@ function collectNonNullsInBlocks(
         const sourceNode = temporaries.get(source);
         if (sourceNode != null) {
           pushPropertyLoadNode(
+            instr.value.value.identifier,
             tree.getPropertyLoadNode(sourceNode),
             instr.id,
             knownImmutableIdentifiers,
@@ -277,6 +278,7 @@ function collectNonNullsInBlocks(
         const sourceNode = temporaries.get(source);
         if (sourceNode != null) {
           pushPropertyLoadNode(
+            instr.value.object.identifier,
             tree.getPropertyLoadNode(sourceNode),
             instr.id,
             knownImmutableIdentifiers,
