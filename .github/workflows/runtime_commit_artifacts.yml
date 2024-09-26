@@ -82,7 +82,7 @@ jobs:
         working-directory: scripts/release
       - name: Download artifacts for base revision
         run: |
-          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=${{ inputs.commit_sha || github.event.workflow_run.head_sha }}
+          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=${{ inputs.commit_sha || github.sha }}
       - name: Display structure of build
         run: ls -R build
       - name: Strip @license from eslint plugin and react-refresh
@@ -145,9 +145,9 @@ jobs:
           ls -R ./compiled-rn
       - name: Add REVISION files
         run: |
-          echo ${{ github.event.workflow_run.head_sha }} >> ./compiled/facebook-www/REVISION
+          echo ${{ github.sha }} >> ./compiled/facebook-www/REVISION
           cp ./compiled/facebook-www/REVISION ./compiled/facebook-www/REVISION_TRANSFORMS
-          echo ${{ github.event.workflow_run.head_sha}} >> ./compiled-rn/facebook-fbsource/xplat/js/react-native-github/Libraries/Renderer/REVISION
+          echo ${{ github.sha}} >> ./compiled-rn/facebook-fbsource/xplat/js/react-native-github/Libraries/Renderer/REVISION
       - name: "Get current version string"
         id: get_current_version
         run: |
@@ -245,12 +245,12 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: |
-            ${{ github.event.workflow_run.head_commit.message }}
+            ${{ github.event.workflow_run.head_commit.message || 'No commit message' }}
 
-            DiffTrain build for [${{ github.event.workflow_run.head_sha }}](https://github.com/facebook/react/commit/${{ github.event.workflow_run.head_sha }})
+            DiffTrain build for [${{ github.sha }}](https://github.com/facebook/react/commit/${{ github.sha }})
           branch: builds/facebook-www
-          commit_user_name: ${{ github.event.workflow_run.triggering_actor.login }}
-          commit_user_email: ${{ github.event.workflow_run.triggering_actor.email || format('{0}@users.noreply.github.com', github.event.workflow_run.triggering_actor.login) }}
+          commit_user_name: ${{ github.triggering_actor }}
+          commit_user_email: ${{ format('{0}@users.noreply.github.com', github.triggering_actor) }}
           create_branch: true
 
   commit_fbsource_artifacts:
@@ -412,10 +412,10 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: |
-            ${{ github.event.workflow_run.head_commit.message }}
+            ${{ github.event.workflow_run.head_commit.message || 'No commit message' }}
 
-            DiffTrain build for commit https://github.com/facebook/react/commit/${{ github.event.workflow_run.head_sha }}.
+            DiffTrain build for commit https://github.com/facebook/react/commit/${{ github.sha }}.
           branch: builds/facebook-fbsource
-          commit_user_name: ${{ github.event.workflow_run.triggering_actor.login }}
-          commit_user_email: ${{ github.event.workflow_run.triggering_actor.email || format('{0}@users.noreply.github.com', github.event.workflow_run.triggering_actor.login) }}
+          commit_user_name: ${{ github.triggering_actor }}
+          commit_user_email: ${{ format('{0}@users.noreply.github.com', github.triggering_actor) }}
           create_branch: true
