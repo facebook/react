@@ -2,7 +2,7 @@ name: (Runtime) Build and Test
 
 on:
   push:
-    branches: [main]
+    branches: [*]
   pull_request:
     paths-ignore:
       - compiler/**
@@ -142,6 +142,7 @@ jobs:
 #          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
 #      - run: yarn install --frozen-lockfile
 #      - run: yarn test ${{ matrix.params }} --ci --shard=${{ matrix.shard }}
+
   # ----- BUILD -----
   build_and_lint:
     name: yarn build and lint
