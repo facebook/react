@@ -60,6 +60,7 @@ const ExportSchema = z.object({
   FIXTURE_ENTRYPOINT: EntrypointSchema,
 });
 
+const NO_ERROR_SENTINEL = Symbol();
 /**
  * Wraps WrapperTestComponent in an error boundary to simplify re-rendering
  * when an exception is thrown.
@@ -67,31 +68,47 @@ const ExportSchema = z.object({
  */
 class WrapperTestComponentWithErrorBoundary extends React.Component<
   {fn: any; params: Array<any>},
-  {hasError: boolean; error: any}
+  {errorFromLastRender: any}
 > {
-  propsErrorMap: MutableRefObject<Map<any, any>>;
+  /**
+   * Limit retries of the child component by caching seen errors.
+   */
+  propsErrorMap: Map<any, any>;
+  lastProps: any | null;
+  // lastProps: object | null;
   constructor(props: any) {
     super(props);
-    this.state = {hasError: false, error: null};
-    this.propsErrorMap = React.createRef() as MutableRefObject<Map<any, any>>;
-    this.propsErrorMap.current = new Map();
+    this.lastProps = null;
+    this.propsErrorMap = new Map<any, any>();
+    this.state = {
+      errorFromLastRender: NO_ERROR_SENTINEL,
+    };
   }
   static getDerivedStateFromError(error: any) {
-    return {hasError: true, error: error};
+    // Reschedule a second render that immediately returns the cached error
+    return {errorFromLastRender: error};
   }
   override componentDidUpdate() {
-    if (this.state.hasError) {
-      this.setState({hasError: false, error: null});
+    if (this.state.errorFromLastRender !== NO_ERROR_SENTINEL) {
+      // Reschedule a third render that immediately returns the cached error
+      this.setState({errorFromLastRender: NO_ERROR_SENTINEL});
     }
   }
   override render() {
-    if (this.state.hasError) {
-      this.propsErrorMap.current!.set(
-        this.props,
-        `[[ (exception in render) ${this.state.error?.toString()} ]]`,
-      );
+    if (
+      this.state.errorFromLastRender !== NO_ERROR_SENTINEL &&
+      this.props === this.lastProps
+    ) {
+      /**
+       * The last render errored, cache the error message to avoid running the
+       * test fixture more than once
+       */
+      const errorMsg = `[[ (exception in render) ${this.state.errorFromLastRender?.toString()} ]]`;
+      this.propsErrorMap.set(this.lastProps, errorMsg);
+      return errorMsg;
     }
-    const cachedError = this.propsErrorMap.current!.get(this.props);
+    this.lastProps = this.props;
+    const cachedError = this.propsErrorMap.get(this.props);
     if (cachedError != null) {
       return cachedError;
     }

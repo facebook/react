@@ -67,9 +67,9 @@ export function collectHoistablePropertyLoads(
   fn: HIRFunction,
   temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
 ): ReadonlyMap<ScopeId, BlockInfo> {
-  const tree = new Tree();
+  const registry = new PropertyPathRegistry();
 
-  const nodes = collectNonNullsInBlocks(fn, temporaries, tree);
+  const nodes = collectNonNullsInBlocks(fn, temporaries, registry);
   propagateNonNull(fn, nodes);
 
   const nodesKeyedByScopeId = new Map<ScopeId, BlockInfo>();
@@ -87,33 +87,33 @@ export function collectHoistablePropertyLoads(
 
 export type BlockInfo = {
   block: BasicBlock;
-  assumedNonNullObjects: ReadonlySet<PropertyLoadNode>;
+  assumedNonNullObjects: ReadonlySet<PropertyPathNode>;
 };
 
 /**
- * Tree data structure to dedupe property loads (e.g. a.b.c)
+ * PropertyLoadRegistry data structure to dedupe property loads (e.g. a.b.c)
  * and make computing sets intersections simpler.
  */
 type RootNode = {
-  properties: Map<string, PropertyLoadNode>;
+  properties: Map<string, PropertyPathNode>;
   parent: null;
   // Recorded to make later computations simpler
   fullPath: ReactiveScopeDependency;
   root: IdentifierId;
 };
 
-type PropertyLoadNode =
+type PropertyPathNode =
   | {
-      properties: Map<string, PropertyLoadNode>;
-      parent: PropertyLoadNode;
+      properties: Map<string, PropertyPathNode>;
+      parent: PropertyPathNode;
       fullPath: ReactiveScopeDependency;
     }
   | RootNode;
 
-class Tree {
+class PropertyPathRegistry {
   roots: Map<IdentifierId, RootNode> = new Map();
 
-  getOrCreateIdentifier(identifier: Identifier): PropertyLoadNode {
+  getOrCreateIdentifier(identifier: Identifier): PropertyPathNode {
     /**
      * Reads from a statically scoped variable are always safe in JS,
      * with the exception of TDZ (not addressed by this pass).
@@ -136,9 +136,9 @@ class Tree {
   }
 
   static getOrCreatePropertyEntry(
-    parent: PropertyLoadNode,
+    parent: PropertyPathNode,
     entry: DependencyPathEntry,
-  ): PropertyLoadNode {
+  ): PropertyPathNode {
     if (entry.optional) {
       CompilerError.throwTodo({
         reason: 'handle optional nodes',
@@ -160,7 +160,7 @@ class Tree {
     return child;
   }
 
-  getOrCreateProperty(n: ReactiveScopeDependency): PropertyLoadNode {
+  getOrCreateProperty(n: ReactiveScopeDependency): PropertyPathNode {
     /**
      * We add ReactiveScopeDependencies according to instruction ordering,
      * so all subpaths of a PropertyLoad should already exist
@@ -171,18 +171,24 @@ class Tree {
       return currNode;
     }
     for (let i = 0; i < n.path.length - 1; i++) {
-      currNode = Tree.getOrCreatePropertyEntry(currNode, n.path[i]);
+      currNode = PropertyPathRegistry.getOrCreatePropertyEntry(
+        currNode,
+        n.path[i],
+      );
     }
 
-    return Tree.getOrCreatePropertyEntry(currNode, n.path.at(-1)!);
+    return PropertyPathRegistry.getOrCreatePropertyEntry(
+      currNode,
+      n.path.at(-1)!,
+    );
   }
 }
 
-function pushPropertyLoadNode(
-  node: PropertyLoadNode,
+function addNonNullPropertyPath(
+  node: PropertyPathNode,
   instrId: InstructionId,
   knownImmutableIdentifiers: Set<IdentifierId>,
-  result: Set<PropertyLoadNode>,
+  result: Set<PropertyPathNode>,
 ): void {
   const object = node.fullPath.identifier;
   /**
@@ -210,7 +216,7 @@ function pushPropertyLoadNode(
 function collectNonNullsInBlocks(
   fn: HIRFunction,
   temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
-  tree: Tree,
+  registry: PropertyPathRegistry,
 ): ReadonlyMap<BlockId, BlockInfo> {
   /**
    * Due to current limitations of mutable range inference, there are edge cases in
@@ -232,7 +238,7 @@ function collectNonNullsInBlocks(
    * Known non-null objects such as functional component props can be safely
    * read from any block.
    */
-  const knownNonNullIdentifiers = new Set<PropertyLoadNode>();
+  const knownNonNullIdentifiers = new Set<PropertyPathNode>();
   if (
     fn.env.config.enablePropagateDepsInHIR === 'enabled_with_optimizations' &&
     fn.fnType === 'Component' &&
@@ -240,11 +246,11 @@ function collectNonNullsInBlocks(
     fn.params[0].kind === 'Identifier'
   ) {
     const identifier = fn.params[0].identifier;
-    knownNonNullIdentifiers.add(tree.getOrCreateIdentifier(identifier));
+    knownNonNullIdentifiers.add(registry.getOrCreateIdentifier(identifier));
   }
   const nodes = new Map<BlockId, BlockInfo>();
   for (const [_, block] of fn.body.blocks) {
-    const assumedNonNullObjects = new Set<PropertyLoadNode>(
+    const assumedNonNullObjects = new Set<PropertyPathNode>(
       knownNonNullIdentifiers,
     );
     for (const instr of block.instructions) {
@@ -253,8 +259,8 @@ function collectNonNullsInBlocks(
           identifier: instr.value.object.identifier,
           path: [],
         };
-        const propertyNode = tree.getOrCreateProperty(source);
-        pushPropertyLoadNode(
+        const propertyNode = registry.getOrCreateProperty(source);
+        addNonNullPropertyPath(
           propertyNode,
           instr.id,
           knownImmutableIdentifiers,
@@ -267,8 +273,8 @@ function collectNonNullsInBlocks(
         const source = instr.value.value.identifier.id;
         const sourceNode = temporaries.get(source);
         if (sourceNode != null) {
-          pushPropertyLoadNode(
-            tree.getOrCreateProperty(sourceNode),
+          addNonNullPropertyPath(
+            registry.getOrCreateProperty(sourceNode),
             instr.id,
             knownImmutableIdentifiers,
             assumedNonNullObjects,
@@ -281,8 +287,8 @@ function collectNonNullsInBlocks(
         const source = instr.value.object.identifier.id;
         const sourceNode = temporaries.get(source);
         if (sourceNode != null) {
-          pushPropertyLoadNode(
-            tree.getOrCreateProperty(sourceNode),
+          addNonNullPropertyPath(
+            registry.getOrCreateProperty(sourceNode),
             instr.id,
             knownImmutableIdentifiers,
             assumedNonNullObjects,
