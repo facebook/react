@@ -138,16 +138,6 @@ export default class Store extends EventEmitter<{
   // Should the React Native style editor panel be shown?
   _isNativeStyleEditorSupported: boolean = false;
 
-  // Can the backend use the Storage API (e.g. localStorage)?
-  // If not, features like reload-and-profile will not work correctly and must be disabled.
-  _isBackendStorageAPISupported: boolean = false;
-
-  // Can DevTools use sync XHR requests?
-  // If not, features like reload-and-profile will not work correctly and must be disabled.
-  // This current limitation applies only to web extension builds
-  // and will need to be reconsidered in the future if we add support for reload to React Native.
-  _isSynchronousXHRSupported: boolean = false;
-
   _nativeStyleEditorValidAttributes: $ReadOnlyArray<string> | null = null;
 
   // Older backends don't support an explicit bridge protocol,
@@ -178,9 +168,11 @@ export default class Store extends EventEmitter<{
   // These options may be initially set by a configuration option when constructing the Store.
   _supportsInspectMatchingDOMElement: boolean = false;
   _supportsClickToInspect: boolean = false;
-  _supportsReloadAndProfile: boolean = false;
   _supportsTimeline: boolean = false;
   _supportsTraceUpdates: boolean = false;
+
+  _isReloadAndProfileFrontendSupported: boolean = false;
+  _isReloadAndProfileBackendSupported: boolean = false;
 
   // These options default to false but may be updated as roots are added and removed.
   _rootSupportsBasicProfiling: boolean = false;
@@ -234,7 +226,7 @@ export default class Store extends EventEmitter<{
         this._supportsClickToInspect = true;
       }
       if (supportsReloadAndProfile) {
-        this._supportsReloadAndProfile = true;
+        this._isReloadAndProfileFrontendSupported = true;
       }
       if (supportsTimeline) {
         this._supportsTimeline = true;
@@ -255,16 +247,12 @@ export default class Store extends EventEmitter<{
     );
     bridge.addListener('shutdown', this.onBridgeShutdown);
     bridge.addListener(
-      'isBackendStorageAPISupported',
-      this.onBackendStorageAPISupported,
+      'isReloadAndProfileSupportedByBackend',
+      this.onBackendReloadAndProfileSupported,
     );
     bridge.addListener(
       'isNativeStyleEditorSupported',
       this.onBridgeNativeStyleEditorSupported,
-    );
-    bridge.addListener(
-      'isSynchronousXHRSupported',
-      this.onBridgeSynchronousXHRSupported,
     );
     bridge.addListener(
       'unsupportedRendererVersion',
@@ -469,13 +457,9 @@ export default class Store extends EventEmitter<{
   }
 
   get supportsReloadAndProfile(): boolean {
-    // Does the DevTools shell support reloading and eagerly injecting the renderer interface?
-    // And if so, can the backend use the localStorage API and sync XHR?
-    // All of these are currently required for the reload-and-profile feature to work.
     return (
-      this._supportsReloadAndProfile &&
-      this._isBackendStorageAPISupported &&
-      this._isSynchronousXHRSupported
+      this._isReloadAndProfileFrontendSupported &&
+      this._isReloadAndProfileBackendSupported
     );
   }
 
@@ -1433,16 +1417,12 @@ export default class Store extends EventEmitter<{
     );
     bridge.removeListener('shutdown', this.onBridgeShutdown);
     bridge.removeListener(
-      'isBackendStorageAPISupported',
-      this.onBackendStorageAPISupported,
+      'isReloadAndProfileSupportedByBackend',
+      this.onBackendReloadAndProfileSupported,
     );
     bridge.removeListener(
       'isNativeStyleEditorSupported',
       this.onBridgeNativeStyleEditorSupported,
-    );
-    bridge.removeListener(
-      'isSynchronousXHRSupported',
-      this.onBridgeSynchronousXHRSupported,
     );
     bridge.removeListener(
       'unsupportedRendererVersion',
@@ -1458,18 +1438,10 @@ export default class Store extends EventEmitter<{
     }
   };
 
-  onBackendStorageAPISupported: (
-    isBackendStorageAPISupported: boolean,
-  ) => void = isBackendStorageAPISupported => {
-    this._isBackendStorageAPISupported = isBackendStorageAPISupported;
-
-    this.emit('supportsReloadAndProfile');
-  };
-
-  onBridgeSynchronousXHRSupported: (
-    isSynchronousXHRSupported: boolean,
-  ) => void = isSynchronousXHRSupported => {
-    this._isSynchronousXHRSupported = isSynchronousXHRSupported;
+  onBackendReloadAndProfileSupported: (
+    isReloadAndProfileSupported: boolean,
+  ) => void = isReloadAndProfileSupported => {
+    this._isReloadAndProfileBackendSupported = isReloadAndProfileSupported;
 
     this.emit('supportsReloadAndProfile');
   };
