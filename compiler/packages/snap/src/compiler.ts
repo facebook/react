@@ -56,6 +56,8 @@ function makePluginOptions(
   let enableChangeDetectionForDebugging = null;
   let customMacros: null | Array<Macro> = null;
   let validateBlocklistedImports = null;
+  let enablePropagateDepsInHIR: EnvironmentConfig['enablePropagateDepsInHIR'] =
+    'disabled';
 
   if (firstLine.indexOf('@compilationMode(annotation)') !== -1) {
     assert(
@@ -139,6 +141,16 @@ function makePluginOptions(
       importSpecifierName: '$structuralCheck',
     };
   }
+  if (firstLine.includes('@enablePropagateDepsInHIR:false')) {
+    enablePropagateDepsInHIR = 'disabled';
+  } else if (
+    firstLine.includes('@enablePropagateDepsInHIR:enabled_with_optimizations')
+  ) {
+    enablePropagateDepsInHIR = 'enabled_with_optimizations';
+  } else if (firstLine.includes('@enablePropagateDepsInHIR')) {
+    enablePropagateDepsInHIR = 'enabled_baseline';
+  }
+
   const hookPatternMatch = /@hookPattern:"([^"]+)"/.exec(firstLine);
   if (
     hookPatternMatch &&
@@ -237,6 +249,7 @@ function makePluginOptions(
       lowerContextAccess,
       validateBlocklistedImports,
       inlineJsxTransform,
+      enablePropagateDepsInHIR,
     },
     compilationMode,
     logger,
