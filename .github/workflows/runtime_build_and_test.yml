@@ -151,7 +151,7 @@ jobs:
         worker_id: [0,1,2]
         release_channel: [stable, experimental]
     env:
-      UCACHER_INSTRUMENTER:strace
+      UCACHER_INSTRUMENTER: strace
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
