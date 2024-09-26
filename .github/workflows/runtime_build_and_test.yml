@@ -2,10 +2,8 @@ name: (Runtime) Build and Test
 
 on:
   push:
-    branches: [*]
-  pull_request:
-    paths-ignore:
-      - compiler/**
+    branches:
+      - '**'
 
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
