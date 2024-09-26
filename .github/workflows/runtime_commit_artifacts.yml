@@ -242,7 +242,7 @@ jobs:
           git status -u
       - name: Commit changes to branch
         if: inputs.force == true || steps.check_should_commit.outputs.should_commit == 'true'
-        uses: stefanzweifel/git-auto-commit-action@v4
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: |
             ${{ github.event.workflow_run.head_commit.message || 'No commit message' }}
@@ -409,7 +409,7 @@ jobs:
           git status
       - name: Commit changes to branch
         if: inputs.force == true || steps.check_should_commit.outputs.should_commit == 'true'
-        uses: stefanzweifel/git-auto-commit-action@v4
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: |
             ${{ github.event.workflow_run.head_commit.message || 'No commit message' }}
