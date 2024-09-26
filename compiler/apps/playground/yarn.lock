@@ -2782,6 +2782,11 @@ re-resizable@^6.9.16:
   resolved "https://registry.yarnpkg.com/re-resizable/-/re-resizable-6.10.0.tgz#d684a096ab438f1a93f59ad3a580a206b0ce31ee"
   integrity sha512-hysSK0xmA5nz24HBVztlk4yCqCLCvS32E6ZpWxVKop9x3tqCa4yAj1++facrmkOf62JsJHjmjABdKxXofYioCw==
 
+react-compiler-runtime@*:
+  version "0.0.0"
+  resolved "https://registry.yarnpkg.com/react-compiler-runtime/-/react-compiler-runtime-0.0.0.tgz#906990637c0f367f836746931f4824b2acf8a05c"
+  integrity sha512-ZaNBKRbqg6eZc+YKtJ3MeOwUJ/XjBnEzYnUURWTcvOFGlA79g45QFj7bbVP2ITeUPkiY2PsZZu+NmFEje4p0RA==
+
 react-dom@18.2.0:
   version "18.2.0"
   resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-18.2.0.tgz#22aaf38708db2674ed9ada224ca4aa708d821e3d"
