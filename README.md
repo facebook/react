@@ -35,6 +35,10 @@ The documentation is divided into several sections:
 * [API Reference](https://react.dev/reference/react)
 * [Where to Get Support](https://react.dev/community)
 * [Contributing Guide](https://legacy.reactjs.org/docs/how-to-contribute.html)
+* [Patch History](https://reactjs.org/docs/patch-history.html)
+A website based on the reactjs.org domain that details with each patch what new features or changes have been made visually through gifs comparing a before the patch and after the patch side-by-side. Additionally, it would be good to supplement the code used to document the changes so that a user can test and see how the changes look on their end too. 
+This will help developers see visually what direction is React developing in, and can make collaboration easier to contribute to React as an open-source project. 
+
 
 You can improve it by sending pull requests to [this repository](https://github.com/reactjs/react.dev).
 
