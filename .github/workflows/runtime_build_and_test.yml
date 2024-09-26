@@ -150,6 +150,8 @@ jobs:
         # yml is dumb. update the --total arg to yarn build if you change the number of workers
         worker_id: [0,1,2]
         release_channel: [stable, experimental]
+    env:
+      UCACHER_INSTRUMENTER:strace
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
