@@ -185,12 +185,12 @@ class PropertyPathRegistry {
 }
 
 function addNonNullPropertyPath(
-  node: PropertyPathNode,
+  source: Identifier,
+  sourceNode: PropertyPathNode,
   instrId: InstructionId,
   knownImmutableIdentifiers: Set<IdentifierId>,
   result: Set<PropertyPathNode>,
 ): void {
-  const object = node.fullPath.identifier;
   /**
    * Since this runs *after* buildReactiveScopeTerminals, identifier mutable ranges
    * are not valid with respect to current instruction id numbering.
@@ -202,14 +202,14 @@ function addNonNullPropertyPath(
    * See comment at top of function for why we track known immutable identifiers.
    */
   const isMutableAtInstr =
-    object.mutableRange.end > object.mutableRange.start + 1 &&
-    object.scope != null &&
-    inRange({id: instrId}, object.scope.range);
+    source.mutableRange.end > source.mutableRange.start + 1 &&
+    source.scope != null &&
+    inRange({id: instrId}, source.scope.range);
   if (
     !isMutableAtInstr ||
-    knownImmutableIdentifiers.has(node.fullPath.identifier.id)
+    knownImmutableIdentifiers.has(sourceNode.fullPath.identifier.id)
   ) {
-    result.add(node);
+    result.add(sourceNode);
   }
 }
 
@@ -259,9 +259,9 @@ function collectNonNullsInBlocks(
           identifier: instr.value.object.identifier,
           path: [],
         };
-        const propertyNode = registry.getOrCreateProperty(source);
         addNonNullPropertyPath(
-          propertyNode,
+          instr.value.object.identifier,
+          registry.getOrCreateProperty(source),
           instr.id,
           knownImmutableIdentifiers,
           assumedNonNullObjects,
@@ -274,6 +274,7 @@ function collectNonNullsInBlocks(
         const sourceNode = temporaries.get(source);
         if (sourceNode != null) {
           addNonNullPropertyPath(
+            instr.value.value.identifier,
             registry.getOrCreateProperty(sourceNode),
             instr.id,
             knownImmutableIdentifiers,
@@ -288,6 +289,7 @@ function collectNonNullsInBlocks(
         const sourceNode = temporaries.get(source);
         if (sourceNode != null) {
           addNonNullPropertyPath(
+            instr.value.object.identifier,
             registry.getOrCreateProperty(sourceNode),
             instr.id,
             knownImmutableIdentifiers,
