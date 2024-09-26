@@ -8,17 +8,7 @@
  */
 
 import EventEmitter from '../events';
-import {
-  SESSION_STORAGE_LAST_SELECTION_KEY,
-  SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
-  SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
-  __DEBUG__,
-} from '../constants';
-import {
-  sessionStorageGetItem,
-  sessionStorageRemoveItem,
-  sessionStorageSetItem,
-} from 'react-devtools-shared/src/storage';
+import {SESSION_STORAGE_LAST_SELECTION_KEY, __DEBUG__} from '../constants';
 import setupHighlighter from './views/Highlighter';
 import {
   initialize as setupTraceUpdates,
@@ -36,9 +26,16 @@ import type {
   RendererID,
   RendererInterface,
   DevToolsHookSettings,
+  ReloadAndProfileConfigPersistence,
 } from './types';
 import type {ComponentFilter} from 'react-devtools-shared/src/frontend/types';
 import {isReactNativeEnvironment} from './utils';
+import {defaultReloadAndProfileConfigPersistence} from '../utils';
+import {
+  sessionStorageGetItem,
+  sessionStorageRemoveItem,
+  sessionStorageSetItem,
+} from '../storage';
 
 const debug = (methodName: string, ...args: Array<string>) => {
   if (__DEBUG__) {
@@ -159,21 +156,27 @@ export default class Agent extends EventEmitter<{
   _persistedSelection: PersistedSelection | null = null;
   _persistedSelectionMatch: PathMatch | null = null;
   _traceUpdatesEnabled: boolean = false;
+  _reloadAndProfileConfigPersistence: ReloadAndProfileConfigPersistence;
 
-  constructor(bridge: BackendBridge) {
+  constructor(
+    bridge: BackendBridge,
+    reloadAndProfileConfigPersistence?: ReloadAndProfileConfigPersistence = defaultReloadAndProfileConfigPersistence,
+  ) {
     super();
 
-    if (
-      sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true'
-    ) {
+    this._reloadAndProfileConfigPersistence = reloadAndProfileConfigPersistence;
+    const {getReloadAndProfileConfig, setReloadAndProfileConfig} =
+      reloadAndProfileConfigPersistence;
+    const reloadAndProfileConfig = getReloadAndProfileConfig();
+    if (reloadAndProfileConfig.shouldReloadAndProfile) {
       this._recordChangeDescriptions =
-        sessionStorageGetItem(
-          SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
-        ) === 'true';
+        reloadAndProfileConfig.recordChangeDescriptions;
       this._isProfiling = true;
 
-      sessionStorageRemoveItem(SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY);
-      sessionStorageRemoveItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY);
+      setReloadAndProfileConfig({
+        shouldReloadAndProfile: false,
+        recordChangeDescriptions: false,
+      });
     }
 
     const persistedSelectionString = sessionStorageGetItem(
@@ -671,11 +674,10 @@ export default class Agent extends EventEmitter<{
 
   reloadAndProfile: (recordChangeDescriptions: boolean) => void =
     recordChangeDescriptions => {
-      sessionStorageSetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY, 'true');
-      sessionStorageSetItem(
-        SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
-        recordChangeDescriptions ? 'true' : 'false',
-      );
+      this._reloadAndProfileConfigPersistence.setReloadAndProfileConfig({
+        shouldReloadAndProfile: true,
+        recordChangeDescriptions,
+      });
 
       // This code path should only be hit if the shell has explicitly told the Store that it supports profiling.
       // In that case, the shell must also listen for this specific message to know when it needs to reload the app.
