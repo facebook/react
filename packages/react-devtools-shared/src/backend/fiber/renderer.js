@@ -763,16 +763,30 @@ const hostResourceToDevToolsInstanceMap: Map<
   Set<DevToolsInstance>,
 > = new Map();
 
+// Ideally, this should be injected from Reconciler config
 function getPublicInstance(instance: HostInstance): HostInstance {
   // Typically the PublicInstance and HostInstance is the same thing but not in Fabric.
   // So we need to detect this and use that as the public instance.
-  return typeof instance === 'object' &&
-    instance !== null &&
-    typeof instance.canonical === 'object'
-    ? (instance.canonical: any)
-    : typeof instance._nativeTag === 'number'
-      ? instance._nativeTag
-      : instance;
+
+  // React Native. Modern. Fabric.
+  if (typeof instance === 'object' && instance !== null) {
+    if (typeof instance.canonical === 'object' && instance.canonical !== null) {
+      if (
+        typeof instance.canonical.publicInstance === 'object' &&
+        instance.canonical.publicInstance !== null
+      ) {
+        return instance.canonical.publicInstance;
+      }
+    }
+
+    // React Native. Legacy. Paper.
+    if (typeof instance._nativeTag === 'number') {
+      return instance._nativeTag;
+    }
+  }
+
+  // React Web. Usually a DOM element.
+  return instance;
 }
 
 function aquireHostInstance(
