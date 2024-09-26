@@ -1,7 +1,8 @@
 version: 2
 updates:
   - package-ecosystem: "npm"
-    directories: "/fixtures/*"
+    directories:
+      - "/fixtures/*"
     schedule:
       interval: "monthly"
     open-pull-requests-limit: 0
