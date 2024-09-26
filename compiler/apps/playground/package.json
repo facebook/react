@@ -36,9 +36,9 @@
     "prettier": "^3.3.3",
     "pretty-format": "^29.3.1",
     "re-resizable": "^6.9.16",
-    "react": "18.2.0",
+    "react": "19.0.0-beta-b498834eab-20240506",
     "react-compiler-runtime": "*",
-    "react-dom": "18.2.0"
+    "react-dom": "19.0.0-beta-b498834eab-20240506"
   },
   "devDependencies": {
     "@types/node": "18.11.9",
