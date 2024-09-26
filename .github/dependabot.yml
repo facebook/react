@@ -41,11 +41,6 @@ updates:
       interval: "weekly"
     open-pull-requests-limit: 0
   - package-ecosystem: "npm"
-    directory: "/fixtures/fiber-triangle"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 0
-  - package-ecosystem: "npm"
     directory: "/fixtures/fizz"
     schedule:
       interval: "weekly"
@@ -57,11 +52,6 @@ updates:
     open-pull-requests-limit: 0
   - package-ecosystem: "npm"
     directory: "/fixtures/flight"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 0
-  - package-ecosystem: "npm"
-    directory: "/fixtures/flight-browser"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 0
