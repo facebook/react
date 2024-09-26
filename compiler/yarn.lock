@@ -4366,10 +4366,10 @@ fb-watchman@^2.0.0:
   dependencies:
     bser "2.1.1"
 
-fbt@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/fbt/-/fbt-1.0.0.tgz#1a7c077ee06675e554061160443ed454933a1b4a"
-  integrity sha512-0LORP21IrBntxDEJOf5Kq4Napf/nsH18EwdMl1AO0clilKjiXBoQUVVY8V2IEgQVT92wBxPtpQfhfC3/EM8QdQ==
+fbt@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/fbt/-/fbt-1.0.2.tgz#96dd326546a16ed50398c4321b08f7ea2da22473"
+  integrity sha512-vWIasrcX34OW2EWohjrAQM0jpJBH2FjqxW9XrQd38xhtBVXWaks34ePWBSHO3QEShmirRx6kwJNZJrofsHjvlw==
   dependencies:
     invariant "^2.2.4"
 
@@ -6539,11 +6539,6 @@ nwsapi@^2.2.4:
   version "2.2.7"
   resolved "https://registry.yarnpkg.com/nwsapi/-/nwsapi-2.2.7.tgz#738e0707d3128cb750dddcfe90e4610482df0f30"
   integrity sha512-ub5E4+FBPKwAZx0UwIQOjYWGHTEq5sPqHQNRN8Z9e4A7u3Tj1weLJsL59yH9vmvqEtBHaOmT6cYQKIZOxp35FQ==
-
-object-assign@^4.1.1:
-  version "4.1.1"
-  resolved "https://registry.yarnpkg.com/object-assign/-/object-assign-4.1.1.tgz#2109adc7965887cfc05cbbd442cac8bfbb360863"
-  integrity sha512-rJgTQnkUnH1sFw8yT6VSU3zD3sWmu6sZhIseY8VX+GRu3P6F7Fu+JNDoXfklElbLJSnc3FUQHVe4cU5hj+BcUg==
 
 object-keys@^1.1.1:
   version "1.1.1"
