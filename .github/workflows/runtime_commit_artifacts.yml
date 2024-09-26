@@ -414,7 +414,7 @@ jobs:
           commit_message: |
             ${{ github.event.workflow_run.head_commit.message || 'No commit message' }}
 
-            DiffTrain build for commit https://github.com/facebook/react/commit/${{ github.sha }}.
+            DiffTrain build for [${{ github.sha }}](https://github.com/facebook/react/commit/${{ github.sha }})
           branch: builds/facebook-fbsource
           commit_user_name: ${{ github.triggering_actor }}
           commit_user_email: ${{ format('{0}@users.noreply.github.com', github.triggering_actor) }}
