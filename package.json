@@ -89,7 +89,7 @@
     "random-seed": "^0.3.0",
     "react-lifecycles-compat": "^3.0.4",
     "rimraf": "^3.0.0",
-    "rollup": "^3.17.1",
+    "rollup": "^3.29.5",
     "rollup-plugin-prettier": "^4.1.1",
     "rollup-plugin-strip-banner": "^3.0.0",
     "semver": "^7.1.1",
