@@ -144,7 +144,7 @@ jobs:
   # ----- BUILD -----
   build_and_lint:
     name: yarn build and lint
-    runs-on: ["earthly-satellite#gha-react-${{ matrix.worker_id }}"]
+    runs-on: ["earthly-satellite#gha-react-${{ matrix.worker_id }}", "earthly-cache-folder#/tmp/ucacher"]
     strategy:
       matrix:
         # yml is dumb. update the --total arg to yarn build if you change the number of workers
