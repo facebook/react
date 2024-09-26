@@ -34,6 +34,7 @@
     "@tsconfig/strictest": "^2.0.5",
     "concurrently": "^7.4.0",
     "folder-hash": "^4.0.4",
+    "object-assign": "^4.1.1",
     "ora": "5.4.1",
     "prettier": "^3.3.3",
     "prettier-plugin-hermes-parser": "^0.23.0",
