@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6b3cd9d9c7d3cbb046df3c717c012861>>
+ * @generated SignedSource<<98cea4503264412fc27962778251491b>>
  */
 
 "use strict";
@@ -16950,8 +16950,11 @@ __DEV__ &&
                     closestInstance =
                       internalInstanceHandle.stateNode.canonical
                         .internalInstanceHandle;
-                    var nativeViewTag =
-                      internalInstanceHandle.stateNode.canonical.nativeTag;
+                    var closestPublicInstance =
+                        internalInstanceHandle.stateNode.canonical
+                          .publicInstance,
+                      nativeViewTag =
+                        internalInstanceHandle.stateNode.canonical.nativeTag;
                     nativeFabricUIManager.measure(
                       node,
                       function (x, y, width, height, pageX, pageY) {
@@ -16965,7 +16968,8 @@ __DEV__ &&
                               width: width,
                               height: height
                             },
-                            touchedViewTag: nativeViewTag
+                            touchedViewTag: nativeViewTag,
+                            closestPublicInstance: closestPublicInstance
                           })
                         );
                       }
@@ -16990,7 +16994,8 @@ __DEV__ &&
                           width: width,
                           height: height
                         },
-                        touchedViewTag: nativeViewTag
+                        touchedViewTag: nativeViewTag,
+                        closestPublicInstance: nativeViewTag
                       })
                     );
                   }
@@ -17089,11 +17094,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-778e1ed2-20240926",
+        version: "19.0.0-native-fb-d66fa02a-20240926",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-native-fb-778e1ed2-20240926"
+        reconcilerVersion: "19.0.0-native-fb-d66fa02a-20240926"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

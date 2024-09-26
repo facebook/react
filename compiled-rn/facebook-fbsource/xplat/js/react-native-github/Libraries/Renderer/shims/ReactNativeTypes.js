@@ -7,7 +7,7 @@
  * @noformat
  * @nolint
  * @flow strict
- * @generated SignedSource<<3eb929731c259569c7af3b6479e486fe>>
+ * @generated SignedSource<<b803401b6dd721b9caffdac1f8b6fd1c>>
  */
 
 import type {
@@ -180,6 +180,7 @@ export type TouchedViewDataAtPoint = $ReadOnly<{
     width: number,
     height: number,
   }>,
+  closestPublicInstance?: PublicInstance,
   ...InspectorData,
 }>;
 

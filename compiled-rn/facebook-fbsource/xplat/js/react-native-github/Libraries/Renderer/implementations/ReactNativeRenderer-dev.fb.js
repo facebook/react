@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<df97bddfc27a5b9332aceb4eec9bc52f>>
+ * @generated SignedSource<<0dc549af86c7d2d7c6a05e3de1aa1620>>
  */
 
 "use strict";
@@ -15414,8 +15414,11 @@ __DEV__ &&
                     closestInstance =
                       internalInstanceHandle.stateNode.canonical
                         .internalInstanceHandle;
-                    var nativeViewTag =
-                      internalInstanceHandle.stateNode.canonical.nativeTag;
+                    var closestPublicInstance =
+                        internalInstanceHandle.stateNode.canonical
+                          .publicInstance,
+                      nativeViewTag =
+                        internalInstanceHandle.stateNode.canonical.nativeTag;
                     nativeFabricUIManager.measure(
                       node,
                       function (x, y, width, height, pageX, pageY) {
@@ -15429,7 +15432,8 @@ __DEV__ &&
                               width: width,
                               height: height
                             },
-                            touchedViewTag: nativeViewTag
+                            touchedViewTag: nativeViewTag,
+                            closestPublicInstance: closestPublicInstance
                           })
                         );
                       }
@@ -15454,7 +15458,8 @@ __DEV__ &&
                           width: width,
                           height: height
                         },
-                        touchedViewTag: nativeViewTag
+                        touchedViewTag: nativeViewTag,
+                        closestPublicInstance: nativeViewTag
                       })
                     );
                   }
@@ -17305,11 +17310,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.0.0-native-fb-778e1ed2-20240926" !== isomorphicReactPackageVersion)
+    if ("19.0.0-native-fb-d66fa02a-20240926" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.0.0-native-fb-778e1ed2-20240926\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.0.0-native-fb-d66fa02a-20240926\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17335,11 +17340,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-778e1ed2-20240926",
+        version: "19.0.0-native-fb-d66fa02a-20240926",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromTag,
-        reconcilerVersion: "19.0.0-native-fb-778e1ed2-20240926"
+        reconcilerVersion: "19.0.0-native-fb-d66fa02a-20240926"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
