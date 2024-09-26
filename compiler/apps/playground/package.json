@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "NODE_ENV=development next dev",
     "build:compiler": "cd ../.. && yarn workspace babel-plugin-react-compiler build && yarn workspace react-compiler-runtime build",
-    "build": "./scripts/link-compiler.sh && next build && node ./scripts/downloadFonts.js",
+    "build": "yarn build:compiler && ./scripts/link-compiler.sh && next build && node ./scripts/downloadFonts.js",
     "vercel-build": "yarn build",
     "start": "next start",
     "lint": "next lint",
