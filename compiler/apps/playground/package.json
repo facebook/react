@@ -37,14 +37,14 @@
     "prettier": "^3.3.3",
     "pretty-format": "^29.3.1",
     "re-resizable": "^6.9.16",
-    "react": "18.2.0",
+    "react": "18.3.1",
     "react-compiler-runtime": "*",
-    "react-dom": "18.2.0"
+    "react-dom": "18.3.1"
   },
   "devDependencies": {
     "@types/node": "18.11.9",
-    "@types/react": "18.0.25",
-    "@types/react-dom": "18.0.9",
+    "@types/react": "18.3.9",
+    "@types/react-dom": "18.3.0",
     "autoprefixer": "^10.4.13",
     "clsx": "^1.2.1",
     "eslint": "^8.28.0",
