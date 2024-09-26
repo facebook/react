@@ -4142,7 +4142,7 @@ __DEV__ &&
       this.rootFormatContext = rootFormatContext;
       this.progressiveChunkSize =
         void 0 === progressiveChunkSize ? 12800 : progressiveChunkSize;
-      this.status = 0;
+      this.status = 10;
       this.fatalError = null;
       this.pendingRootTasks = this.allPendingTasks = this.nextSegmentId = 0;
       this.completedRootSegment = null;
@@ -4387,12 +4387,12 @@ __DEV__ &&
       onShellError(error);
       onFatalError(error);
       null !== request.destination
-        ? ((request.status = 3),
+        ? ((request.status = 14),
           (request = request.destination),
           (request.done = !0),
           (request.fatal = !0),
           (request.error = error))
-        : ((request.status = 2), (request.fatalError = error));
+        : ((request.status = 13), (request.fatalError = error));
     }
     function renderWithHooks(
       request,
@@ -4854,7 +4854,7 @@ __DEV__ &&
               }
             else defaultProps.queue = null;
           defaultProps = callRenderInDEV(newProps);
-          if (1 === request.status) throw null;
+          if (12 === request.status) throw null;
           newProps.props !== props &&
             (didWarnAboutReassigningProps ||
               error$jscomp$2(
@@ -4878,7 +4878,7 @@ __DEV__ &&
               ),
               (didWarnAboutBadClass[newProps] = !0)));
           props = renderWithHooks(request, task, keyPath, type, props, void 0);
-          if (1 === request.status) throw null;
+          if (12 === request.status) throw null;
           newProps = 0 !== localIdCounter;
           defaultProps = actionStateCounter;
           addendum = actionStateMatchingIndex;
@@ -5092,7 +5092,7 @@ __DEV__ &&
                     (boundarySegment.status = 1);
                 } catch (thrownValue) {
                   throw (
-                    ((boundarySegment.status = 1 === request.status ? 3 : 4),
+                    ((boundarySegment.status = 12 === request.status ? 3 : 4),
                     thrownValue)
                   );
                 } finally {
@@ -5137,7 +5137,7 @@ __DEV__ &&
                   }
                 } catch (thrownValue$2) {
                   (propName.status = 4),
-                    1 === request.status
+                    12 === request.status
                       ? ((contentRootSegment.status = 3),
                         (newProps = request.fatalError))
                       : ((contentRootSegment.status = 4),
@@ -5245,7 +5245,7 @@ __DEV__ &&
               }
             case REACT_LAZY_TYPE:
               type = callLazyInitInDEV(type);
-              if (1 === request.status) throw null;
+              if (12 === request.status) throw null;
               props = resolveDefaultPropsOnNonClassComponent(type, props);
               renderElement(request, task, keyPath, type, props, ref);
               return;
@@ -5481,7 +5481,7 @@ __DEV__ &&
               );
             case REACT_LAZY_TYPE:
               node = callLazyInitInDEV(node);
-              if (1 === request.status) throw null;
+              if (12 === request.status) throw null;
               renderNodeDestructive(request, task, node, childIndex);
               return;
           }
@@ -5999,7 +5999,7 @@ __DEV__ &&
       }
       segment = getThrownInfo(task.componentStack);
       if (null === boundary) {
-        if (2 !== request.status && 3 !== request.status) {
+        if (13 !== request.status && 14 !== request.status) {
           boundary = task.replay;
           if (null === boundary) {
             logRecoverableError(request, error, segment);
@@ -6729,7 +6729,7 @@ __DEV__ &&
             error$jscomp$2(
               "There was still abortable task at the root when we closed. This is a bug in React."
             ),
-          (request.status = 3),
+          (request.status = 14),
           (destination.done = !0),
           (request.destination = null));
       }
@@ -6741,7 +6741,7 @@ __DEV__ &&
         (request.flushScheduled = !0);
     }
     function abort(request, reason) {
-      0 === request.status && (request.status = 1);
+      if (11 === request.status || 10 === request.status) request.status = 12;
       try {
         var abortableTasks = request.abortableTasks;
         if (0 < abortableTasks.size) {
@@ -8141,7 +8141,7 @@ __DEV__ &&
     exports.renderNextChunk = function (stream) {
       var request = stream.request;
       stream = stream.destination;
-      if (3 !== request.status && 2 !== request.status) {
+      if (14 !== request.status && 13 !== request.status) {
         var prevContext = currentActiveSnapshot,
           prevDispatcher = ReactSharedInternals.H;
         ReactSharedInternals.H = HooksDispatcher;
@@ -8216,7 +8216,7 @@ __DEV__ &&
                     erroredReplay(
                       request$jscomp$1,
                       request$jscomp$0.blockedBoundary,
-                      1 === request$jscomp$1.status
+                      12 === request$jscomp$1.status
                         ? request$jscomp$1.fatalError
                         : x,
                       errorInfo,
@@ -8264,7 +8264,7 @@ __DEV__ &&
                   var x$jscomp$0 =
                     thrownValue === SuspenseException
                       ? getSuspendedThenable()
-                      : 1 === request$jscomp$0.status
+                      : 12 === request$jscomp$0.status
                         ? request$jscomp$0.fatalError
                         : thrownValue;
                   if (
@@ -8331,13 +8331,13 @@ __DEV__ &&
             (currentRequest = prevRequest);
         }
       }
-      if (2 === request.status)
-        (request.status = 3),
+      if (13 === request.status)
+        (request.status = 14),
           (request = request.fatalError),
           (stream.done = !0),
           (stream.fatal = !0),
           (stream.error = request);
-      else if (3 !== request.status && null === request.destination) {
+      else if (14 !== request.status && null === request.destination) {
         request.destination = stream;
         try {
           flushCompletedQueues(request, stream);
