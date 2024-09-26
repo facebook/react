@@ -1427,7 +1427,7 @@ describe('ReactLegacyUpdates', () => {
       }
     }
 
-    let limit = 55;
+    let limit = 105;
     await expect(async () => {
       await act(() => {
         ReactDOM.render(<EventuallyTerminating ref={ref} />, container);
