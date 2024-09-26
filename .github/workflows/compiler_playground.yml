@@ -36,4 +36,4 @@ jobs:
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('compiler/**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
       - run: npx playwright install --with-deps chromium
-      - run: yarn test
+      - run: yarn workspace playground test
