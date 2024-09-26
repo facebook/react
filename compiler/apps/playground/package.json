@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "NODE_ENV=development next dev",
-    "build": "next build && node ./scripts/downloadFonts.js",
-    "vercel-build": "yarn workspaces run build",
+    "build": "./scripts/link-react-compiler-runtime.sh && next build && node ./scripts/downloadFonts.js",
+    "vercel-build": "yarn build",
     "start": "next start",
     "lint": "next lint",
     "test": "playwright test"
