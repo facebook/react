@@ -61,6 +61,7 @@ import type {
   LRUCache,
 } from 'react-devtools-shared/src/frontend/types';
 import type {SerializedElement as SerializedElementBackend} from 'react-devtools-shared/src/backend/types';
+import {isSynchronousXHRSupported} from './backend/utils';
 
 // $FlowFixMe[method-unbinding]
 const hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -964,4 +965,16 @@ export function backendToFrontendSerializedElementMapper(
 // Chrome normalizes urls like webpack-internals:// but new URL don't, so cannot use new URL here.
 export function normalizeUrl(url: string): string {
   return url.replace('/./', '/');
+}
+
+export function getIsReloadAndProfileSupported(): boolean {
+  // Notify the frontend if the backend supports the Storage API (e.g. localStorage).
+  // If not, features like reload-and-profile will not work correctly and must be disabled.
+  let isBackendStorageAPISupported = false;
+  try {
+    localStorage.getItem('test');
+    isBackendStorageAPISupported = true;
+  } catch (error) {}
+
+  return isBackendStorageAPISupported && isSynchronousXHRSupported();
 }

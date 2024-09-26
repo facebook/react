@@ -38,7 +38,7 @@ import type {
   DevToolsHookSettings,
 } from './types';
 import type {ComponentFilter} from 'react-devtools-shared/src/frontend/types';
-import {isSynchronousXHRSupported, isReactNativeEnvironment} from './utils';
+import {isReactNativeEnvironment} from './utils';
 
 const debug = (methodName: string, ...args: Array<string>) => {
   if (__DEBUG__) {
@@ -242,16 +242,6 @@ export default class Agent extends EventEmitter<{
     if (this._isProfiling) {
       bridge.send('profilingStatus', true);
     }
-
-    // Notify the frontend if the backend supports the Storage API (e.g. localStorage).
-    // If not, features like reload-and-profile will not work correctly and must be disabled.
-    let isBackendStorageAPISupported = false;
-    try {
-      localStorage.getItem('test');
-      isBackendStorageAPISupported = true;
-    } catch (error) {}
-    bridge.send('isBackendStorageAPISupported', isBackendStorageAPISupported);
-    bridge.send('isSynchronousXHRSupported', isSynchronousXHRSupported());
   }
 
   get rendererInterfaces(): {[key: RendererID]: RendererInterface, ...} {
@@ -673,6 +663,10 @@ export default class Agent extends EventEmitter<{
         value,
       });
     }
+  };
+
+  onReloadAndProfileSupportedByHost: () => void = () => {
+    this._bridge.send('isReloadAndProfileSupportedByBackend', true);
   };
 
   reloadAndProfile: (recordChangeDescriptions: boolean) => void =
