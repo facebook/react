@@ -82,7 +82,7 @@ jobs:
         working-directory: scripts/release
       - name: Download artifacts for base revision
         run: |
-          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=${{ inputs.commit_sha || github.event.workflow_run.head_sha }}
+          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=${{ inputs.commit_sha || github.sha }}
       - name: Display structure of build
         run: ls -R build
       - name: Strip @license from eslint plugin and react-refresh
@@ -145,9 +145,9 @@ jobs:
           ls -R ./compiled-rn
       - name: Add REVISION files
         run: |
-          echo ${{ github.event.workflow_run.head_sha }} >> ./compiled/facebook-www/REVISION
+          echo ${{ github.sha }} >> ./compiled/facebook-www/REVISION
           cp ./compiled/facebook-www/REVISION ./compiled/facebook-www/REVISION_TRANSFORMS
-          echo ${{ github.event.workflow_run.head_sha}} >> ./compiled-rn/facebook-fbsource/xplat/js/react-native-github/Libraries/Renderer/REVISION
+          echo ${{ github.sha}} >> ./compiled-rn/facebook-fbsource/xplat/js/react-native-github/Libraries/Renderer/REVISION
       - name: "Get current version string"
         id: get_current_version
         run: |
