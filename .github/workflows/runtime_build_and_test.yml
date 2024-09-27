@@ -152,6 +152,8 @@ jobs:
         release_channel: [stable]
     env:
       UCACHER_INSTRUMENTER: strace
+      UCACHER_SHOW_IO : true
+      LOG_LEVEL: debug
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -170,7 +172,6 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: ucacher yarn install --frozen-lockfile
-      - run: sleep 1000
       - run: ucacher yarn build --index=${{ matrix.worker_id }} --total=20 --r=${{ matrix.release_channel }} --ci
         env:
           CI: github
