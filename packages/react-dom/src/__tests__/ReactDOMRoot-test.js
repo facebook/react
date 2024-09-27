@@ -431,4 +431,14 @@ describe('ReactDOMRoot', () => {
       {withoutStack: true},
     );
   });
+
+  it("should not throw an error when window.event is null", () => {
+    expect(() =>    {
+      window.event = null
+      const root = ReactDOMClient.createRoot(container);
+      root.render(<div></div>)
+    }).not.toThrow(
+        "Cannot read properties of null (reading 'type')",
+      )
+    })
 });
