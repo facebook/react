@@ -65,6 +65,7 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('compiler/**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
+      - run: yarn workspace babel-plugin-react-compiler install --frozen-lockfile
       - run: yarn workspace babel-plugin-react-compiler jest
 
   test:
