@@ -161,10 +161,10 @@ jobs:
           node-version-file: '.nvmrc'
           cache: yarn
           cache-dependency-path: yarn.lock
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 11.0.22
+#      - uses: actions/setup-java@v4
+#        with:
+#          distribution: temurin
+#          java-version: 11.0.22
       - name: Restore cached node_modules
         uses: actions/cache@v4
         id: node_modules
@@ -179,6 +179,8 @@ jobs:
           NODE_INDEX: ${{ matrix.worker_id }}
       - name: Lint build
         run: ucacher yarn lint-build
+      - name: Sleep
+        run: sleep 100000
       - name: Display structure of build
         run: ls -R build
       - name: Archive build
