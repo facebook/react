@@ -2,12 +2,7 @@
   "private": true,
   "workspaces": {
     "packages": [
-      "packages/*",
-      "apps/*"
-    ],
-    "nohoist": [
-      "**/next",
-      "**/next/**"
+      "packages/*"
     ]
   },
   "repository": {
@@ -20,11 +15,11 @@
     "start": "yarn workspace playground run start",
     "next": "yarn workspace playground run dev",
     "build": "yarn workspaces run build",
-    "dev": "concurrently --kill-others -n compiler,runtime,playground \"yarn workspace babel-plugin-react-compiler run build --watch\" \"yarn workspace react-compiler-runtime run build --watch\" \"wait-on packages/babel-plugin-react-compiler/dist/index.js && yarn workspace playground run dev\"",
+    "dev": "echo 'DEPRECATED: use `cd apps/playground && yarn dev` instead!' && sleep 5 && cd apps/playground && yarn dev",
     "test": "yarn workspaces run test",
     "snap": "yarn workspace babel-plugin-react-compiler run snap",
     "snap:build": "yarn workspace snap run build",
-    "postinstall": "perl -p -i -e 's/react\\.element/react.transitional.element/' packages/snap/node_modules/fbt/lib/FbtReactUtil.js && perl -p -i -e 's/didWarnAboutUsingAct = false;/didWarnAboutUsingAct = true;/' packages/babel-plugin-react-compiler/node_modules/react-dom/cjs/react-dom-test-utils.development.js",
+    "postinstall": "perl -p -i -e 's/react\\.element/react.transitional.element/' node_modules/fbt/lib/FbtReactUtil.js && perl -p -i -e 's/didWarnAboutUsingAct = false;/didWarnAboutUsingAct = true;/' node_modules/react-dom/cjs/react-dom-test-utils.development.js",
     "npm:publish": "node scripts/release/publish"
   },
   "dependencies": {
@@ -39,6 +34,7 @@
     "@tsconfig/strictest": "^2.0.5",
     "concurrently": "^7.4.0",
     "folder-hash": "^4.0.4",
+    "object-assign": "^4.1.1",
     "ora": "5.4.1",
     "prettier": "^3.3.3",
     "prettier-plugin-hermes-parser": "^0.23.0",
