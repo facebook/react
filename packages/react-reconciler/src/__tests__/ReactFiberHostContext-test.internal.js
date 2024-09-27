@@ -83,6 +83,12 @@ describe('ReactFiberHostContext', () => {
         }
         return DefaultEventPriority;
       },
+      resolveEventType: function () {
+        return null;
+      },
+      resolveEventTimeStamp: function () {
+        return -1.1;
+      },
       shouldAttemptEagerTransition() {
         return false;
       },

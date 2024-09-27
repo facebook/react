@@ -13,6 +13,7 @@ let ReactNoop;
 let Scheduler;
 let act;
 let assertLog;
+let useMemo;
 let useState;
 let useMemoCache;
 let MemoCacheSentinel;
@@ -27,6 +28,7 @@ describe('useMemoCache()', () => {
     Scheduler = require('scheduler');
     act = require('internal-test-utils').act;
     assertLog = require('internal-test-utils').assertLog;
+    useMemo = React.useMemo;
     useMemoCache = require('react/compiler-runtime').c;
     useState = React.useState;
     MemoCacheSentinel = Symbol.for('react.memo_cache_sentinel');
@@ -620,5 +622,58 @@ describe('useMemoCache()', () => {
         <div>Data: A2B2</div>
       </>,
     );
+  });
+
+  // @gate enableUseMemoCacheHook
+  it('(repro) infinite renders when used with setState during render', async () => {
+    // Output of react compiler on `useUserMemo`
+    function useCompilerMemo(value) {
+      let arr;
+      const $ = useMemoCache(2);
+      if ($[0] !== value) {
+        arr = [value];
+        $[0] = value;
+        $[1] = arr;
+      } else {
+        arr = $[1];
+      }
+      return arr;
+    }
+
+    // Baseline / source code
+    function useManualMemo(value) {
+      return useMemo(() => [value], [value]);
+    }
+
+    function makeComponent(hook) {
+      return function Component({value}) {
+        const state = hook(value);
+        const [prevState, setPrevState] = useState(null);
+        if (state !== prevState) {
+          setPrevState(state);
+        }
+        return <div>{state.join(',')}</div>;
+      };
+    }
+
+    /**
+     * Test with useMemoCache
+     */
+    let root = ReactNoop.createRoot();
+    const CompilerMemoComponent = makeComponent(useCompilerMemo);
+    await act(() => {
+      root.render(<CompilerMemoComponent value={2} />);
+    });
+    expect(root).toMatchRenderedOutput(<div>2</div>);
+
+    /**
+     * Test with useMemo
+     */
+    root = ReactNoop.createRoot();
+    const HookMemoComponent = makeComponent(useManualMemo);
+    await act(() => {
+      root.render(<HookMemoComponent value={2} />);
+    });
+    expect(root).toMatchRenderedOutput(<div>2</div>);
   });
 });

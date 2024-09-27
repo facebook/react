@@ -1,6 +1,8 @@
-import { identity, makeObject_Primitives } from "shared-runtime";
+import {identity, makeObject_Primitives} from 'shared-runtime';
 
-function useTest({ cond }) {
+function useHook() {}
+
+function useTest({cond}) {
   const val = makeObject_Primitives();
 
   useHook();
@@ -16,5 +18,5 @@ function useTest({ cond }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useTest,
-  params: [{ cond: true }],
+  params: [{cond: true}],
 };

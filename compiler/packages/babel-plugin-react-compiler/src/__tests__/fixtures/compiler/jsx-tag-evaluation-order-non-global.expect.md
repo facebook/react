@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { StaticText1, StaticText2 } from "shared-runtime";
+import {StaticText1, StaticText2} from 'shared-runtime';
 
 function MaybeMutable() {
   return {};
@@ -25,7 +25,7 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ component: StaticText1, alternateComponent: StaticText2 }],
+  params: [{component: StaticText1, alternateComponent: StaticText2}],
   isComponent: true,
 };
 

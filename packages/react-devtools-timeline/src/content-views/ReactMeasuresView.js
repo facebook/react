@@ -186,8 +186,8 @@ export class ReactMeasuresView extends View {
     context.fillStyle = showHoverHighlight
       ? hoveredFillStyle
       : showGroupHighlight
-      ? groupSelectedFillStyle
-      : fillStyle;
+        ? groupSelectedFillStyle
+        : fillStyle;
     context.fillRect(
       drawableRect.origin.x,
       drawableRect.origin.y,

@@ -95,6 +95,7 @@ import {
 import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
+  disableLegacyContextForFunctionComponents,
   enableProfilerCommitHooks,
   enableProfilerTimer,
   enableScopeAPI,
@@ -177,6 +178,7 @@ import {
   isPrimaryRenderer,
   getResource,
   createHoistableInstance,
+  HostTransitionContext,
 } from './ReactFiberConfig';
 import type {SuspenseInstance} from './ReactFiberConfig';
 import {shouldError, shouldSuspend} from './ReactFiberReconciler';
@@ -184,7 +186,6 @@ import {
   pushHostContext,
   pushHostContainer,
   getRootHostContainer,
-  HostTransitionContext,
 } from './ReactFiberHostContext';
 import {
   suspenseStackCursor,
@@ -316,6 +317,7 @@ let didReceiveUpdate: boolean = false;
 
 let didWarnAboutBadClass;
 let didWarnAboutContextTypeOnFunctionComponent;
+let didWarnAboutContextTypes;
 let didWarnAboutGetDerivedStateOnFunctionComponent;
 let didWarnAboutFunctionRefs;
 export let didWarnAboutReassigningProps: boolean;
@@ -326,6 +328,7 @@ let didWarnAboutDefaultPropsOnFunctionComponent;
 if (__DEV__) {
   didWarnAboutBadClass = ({}: {[string]: boolean});
   didWarnAboutContextTypeOnFunctionComponent = ({}: {[string]: boolean});
+  didWarnAboutContextTypes = ({}: {[string]: boolean});
   didWarnAboutGetDerivedStateOnFunctionComponent = ({}: {[string]: boolean});
   didWarnAboutFunctionRefs = ({}: {[string]: boolean});
   didWarnAboutReassigningProps = false;
@@ -1023,11 +1026,15 @@ function updateProfiler(
     workInProgress.flags |= Update;
 
     if (enableProfilerCommitHooks) {
+      // Schedule a passive effect for this Profiler to call onPostCommit hooks.
+      // This effect should be scheduled even if there is no onPostCommit callback for this Profiler,
+      // because the effect is also where times bubble to parent Profilers.
+      workInProgress.flags |= Passive;
       // Reset effect durations for the next eventual effect phase.
       // These are reset during render to allow the DevTools commit hook a chance to read them,
       const stateNode = workInProgress.stateNode;
-      stateNode.effectDuration = 0;
-      stateNode.passiveEffectDuration = 0;
+      stateNode.effectDuration = -0;
+      stateNode.passiveEffectDuration = -0;
     }
   }
   const nextProps = workInProgress.pendingProps;
@@ -1130,18 +1137,33 @@ function updateFunctionComponent(
       // in updateFuntionComponent but only on mount
       validateFunctionComponentInDev(workInProgress, workInProgress.type);
 
-      if (disableLegacyContext && Component.contextTypes) {
-        console.error(
-          '%s uses the legacy contextTypes API which was removed in React 19. ' +
-            'Use React.createContext() with React.useContext() instead.',
-          getComponentNameFromType(Component) || 'Unknown',
-        );
+      if (Component.contextTypes) {
+        const componentName = getComponentNameFromType(Component) || 'Unknown';
+
+        if (!didWarnAboutContextTypes[componentName]) {
+          didWarnAboutContextTypes[componentName] = true;
+          if (disableLegacyContext) {
+            console.error(
+              '%s uses the legacy contextTypes API which was removed in React 19. ' +
+                'Use React.createContext() with React.useContext() instead. ' +
+                '(https://react.dev/link/legacy-context)',
+              componentName,
+            );
+          } else {
+            console.error(
+              '%s uses the legacy contextTypes API which will be removed soon. ' +
+                'Use React.createContext() with React.useContext() instead. ' +
+                '(https://react.dev/link/legacy-context)',
+              componentName,
+            );
+          }
+        }
       }
     }
   }
 
   let context;
-  if (!disableLegacyContext) {
+  if (!disableLegacyContext && !disableLegacyContextForFunctionComponents) {
     const unmaskedContext = getUnmaskedContext(workInProgress, Component, true);
     context = getMaskedContext(workInProgress, unmaskedContext);
   }
@@ -1873,11 +1895,13 @@ function mountLazyComponent(
     }
   }
 
+  const loggedComponent = getComponentNameFromType(Component) || Component;
+
   // This message intentionally doesn't mention ForwardRef or MemoComponent
   // because the fact that it's a separate type of work is an
   // implementation detail.
   throw new Error(
-    `Element type is invalid. Received a promise that resolves to: ${Component}. ` +
+    `Element type is invalid. Received a promise that resolves to: ${loggedComponent}. ` +
       `Lazy element type must resolve to a class or function.${hint}`,
   );
 }
@@ -1923,14 +1947,12 @@ function mountIncompleteClassComponent(
 
 function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
   if (__DEV__) {
-    if (Component) {
-      if (Component.childContextTypes) {
-        console.error(
-          'childContextTypes cannot be defined on a function component.\n' +
-            '  %s.childContextTypes = ...',
-          Component.displayName || Component.name || 'Component',
-        );
-      }
+    if (Component && Component.childContextTypes) {
+      console.error(
+        'childContextTypes cannot be defined on a function component.\n' +
+          '  %s.childContextTypes = ...',
+        Component.displayName || Component.name || 'Component',
+      );
     }
     if (!enableRefAsProp && workInProgress.ref !== null) {
       let info = '';
@@ -2412,10 +2434,10 @@ function mountSuspenseFallbackChildren(
       // final amounts. This seems counterintuitive, since we're intentionally
       // not measuring part of the render phase, but this makes it match what we
       // do in Concurrent Mode.
-      primaryChildFragment.actualDuration = 0;
-      primaryChildFragment.actualStartTime = -1;
-      primaryChildFragment.selfBaseDuration = 0;
-      primaryChildFragment.treeBaseDuration = 0;
+      primaryChildFragment.actualDuration = -0;
+      primaryChildFragment.actualStartTime = -1.1;
+      primaryChildFragment.selfBaseDuration = -0;
+      primaryChildFragment.treeBaseDuration = -0;
     }
 
     fallbackChildFragment = createFiberFromFragment(
@@ -2542,8 +2564,8 @@ function updateSuspenseFallbackChildren(
       // final amounts. This seems counterintuitive, since we're intentionally
       // not measuring part of the render phase, but this makes it match what we
       // do in Concurrent Mode.
-      primaryChildFragment.actualDuration = 0;
-      primaryChildFragment.actualStartTime = -1;
+      primaryChildFragment.actualDuration = -0;
+      primaryChildFragment.actualStartTime = -1.1;
       primaryChildFragment.selfBaseDuration =
         currentPrimaryChildFragment.selfBaseDuration;
       primaryChildFragment.treeBaseDuration =
@@ -3682,11 +3704,15 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
         }
 
         if (enableProfilerCommitHooks) {
+          // Schedule a passive effect for this Profiler to call onPostCommit hooks.
+          // This effect should be scheduled even if there is no onPostCommit callback for this Profiler,
+          // because the effect is also where times bubble to parent Profilers.
+          workInProgress.flags |= Passive;
           // Reset effect durations for the next eventual effect phase.
           // These are reset during render to allow the DevTools commit hook a chance to read them,
           const stateNode = workInProgress.stateNode;
-          stateNode.effectDuration = 0;
-          stateNode.passiveEffectDuration = 0;
+          stateNode.effectDuration = -0;
+          stateNode.passiveEffectDuration = -0;
         }
       }
       break;

@@ -13,6 +13,7 @@ import type {
   BackendBridge,
   FrontendBridge,
 } from 'react-devtools-shared/src/bridge';
+
 const {getTestFlags} = require('../../../../scripts/jest/TestFlags');
 
 // Argument is serialized when passed from jest-cli script through to setupTests.
@@ -103,56 +104,36 @@ global.gate = fn => {
   return fn(flags);
 };
 
-beforeEach(() => {
-  global.mockClipboardCopy = jest.fn();
-
-  // Test environment doesn't support document methods like execCommand()
-  // Also once the backend components below have been required,
-  // it's too late for a test to mock the clipboard-js modules.
-  jest.mock('clipboard-js', () => ({copy: global.mockClipboardCopy}));
-
-  // These files should be required (and re-required) before each test,
-  // rather than imported at the head of the module.
-  // That's because we reset modules between tests,
-  // which disconnects the DevTool's cache from the current dispatcher ref.
-  const Agent = require('react-devtools-shared/src/backend/agent').default;
-  const {initBackend} = require('react-devtools-shared/src/backend');
-  const Bridge = require('react-devtools-shared/src/bridge').default;
-  const Store = require('react-devtools-shared/src/devtools/store').default;
-  const {installHook} = require('react-devtools-shared/src/hook');
-  const {
-    getDefaultComponentFilters,
-    setSavedComponentFilters,
-  } = require('react-devtools-shared/src/utils');
-
-  // Fake timers let us flush Bridge operations between setup and assertions.
-  jest.useFakeTimers();
-
-  // Use utils.js#withErrorsOrWarningsIgnored instead of directly mutating this array.
-  global._ignoredErrorOrWarningMessages = [
-    'react-test-renderer is deprecated.',
-  ];
-  function shouldIgnoreConsoleErrorOrWarn(args) {
-    let firstArg = args[0];
-    if (
-      firstArg !== null &&
-      typeof firstArg === 'object' &&
-      String(firstArg).indexOf('Error: Uncaught [') === 0
-    ) {
-      firstArg = String(firstArg);
-    } else if (typeof firstArg !== 'string') {
-      return false;
-    }
-    const shouldFilter = global._ignoredErrorOrWarningMessages.some(
-      errorOrWarningMessage => {
-        return firstArg.indexOf(errorOrWarningMessage) !== -1;
-      },
-    );
-
-    return shouldFilter;
+function shouldIgnoreConsoleErrorOrWarn(args) {
+  let firstArg = args[0];
+  if (
+    firstArg !== null &&
+    typeof firstArg === 'object' &&
+    String(firstArg).indexOf('Error: Uncaught [') === 0
+  ) {
+    firstArg = String(firstArg);
+  } else if (typeof firstArg !== 'string') {
+    return false;
   }
 
+  return global._ignoredErrorOrWarningMessages.some(errorOrWarningMessage => {
+    return firstArg.indexOf(errorOrWarningMessage) !== -1;
+  });
+}
+
+function patchConsoleForTestingBeforeHookInstallation() {
   const originalConsoleError = console.error;
+  const originalConsoleWarn = console.warn;
+  const originalConsoleLog = console.log;
+
+  const consoleErrorMock = jest.fn();
+  const consoleWarnMock = jest.fn();
+  const consoleLogMock = jest.fn();
+
+  global.consoleErrorMock = consoleErrorMock;
+  global.consoleWarnMock = consoleWarnMock;
+  global.consoleLogMock = consoleLogMock;
+
   console.error = (...args) => {
     let firstArg = args[0];
     if (typeof firstArg === 'string' && firstArg.startsWith('Warning: ')) {
@@ -179,17 +160,68 @@ beforeEach(() => {
       // Errors can be ignored by running in a special context provided by utils.js#withErrorsOrWarningsIgnored
       return;
     }
+
+    consoleErrorMock(...args);
     originalConsoleError.apply(console, args);
   };
-  const originalConsoleWarn = console.warn;
   console.warn = (...args) => {
     if (shouldIgnoreConsoleErrorOrWarn(args)) {
       // Allows testing how DevTools behaves when it encounters console.warn without cluttering the test output.
       // Warnings can be ignored by running in a special context provided by utils.js#withErrorsOrWarningsIgnored
       return;
     }
+
+    consoleWarnMock(...args);
     originalConsoleWarn.apply(console, args);
   };
+  console.log = (...args) => {
+    consoleLogMock(...args);
+    originalConsoleLog.apply(console, args);
+  };
+}
+
+function unpatchConsoleAfterTesting() {
+  delete global.consoleErrorMock;
+  delete global.consoleWarnMock;
+  delete global.consoleLogMock;
+}
+
+beforeEach(() => {
+  patchConsoleForTestingBeforeHookInstallation();
+
+  global.mockClipboardCopy = jest.fn();
+
+  // Test environment doesn't support document methods like execCommand()
+  // Also once the backend components below have been required,
+  // it's too late for a test to mock the clipboard-js modules.
+  jest.mock('clipboard-js', () => ({copy: global.mockClipboardCopy}));
+
+  // These files should be required (and re-required) before each test,
+  // rather than imported at the head of the module.
+  // That's because we reset modules between tests,
+  // which disconnects the DevTool's cache from the current dispatcher ref.
+  const Agent = require('react-devtools-shared/src/backend/agent').default;
+  const {initBackend} = require('react-devtools-shared/src/backend');
+  const Bridge = require('react-devtools-shared/src/bridge').default;
+  const Store = require('react-devtools-shared/src/devtools/store').default;
+  const {installHook} = require('react-devtools-shared/src/hook');
+  const {
+    getDefaultComponentFilters,
+    setSavedComponentFilters,
+  } = require('react-devtools-shared/src/utils');
+
+  // Fake timers let us flush Bridge operations between setup and assertions.
+  jest.useFakeTimers();
+
+  // We use fake timers heavily in tests but the bridge batching now uses microtasks.
+  global.devtoolsJestTestScheduler = callback => {
+    setTimeout(callback, 0);
+  };
+
+  // Use utils.js#withErrorsOrWarningsIgnored instead of directly mutating this array.
+  global._ignoredErrorOrWarningMessages = [
+    'react-test-renderer is deprecated.',
+  ];
 
   // Initialize filters to a known good state.
   setSavedComponentFilters(getDefaultComponentFilters());
@@ -198,7 +230,12 @@ beforeEach(() => {
   // Also initialize inline warnings so that we can test them.
   global.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ = true;
 
-  installHook(global);
+  installHook(global, {
+    appendComponentStack: true,
+    breakOnConsoleErrors: false,
+    showInlineWarningsAndErrors: true,
+    hideConsoleLogsInStrictMode: false,
+  });
 
   const bridgeListeners = [];
   const bridge = new Bridge({
@@ -216,13 +253,11 @@ beforeEach(() => {
     },
   });
 
-  const agent = new Agent(((bridge: any): BackendBridge));
-
-  const hook = global.__REACT_DEVTOOLS_GLOBAL_HOOK__;
-
-  initBackend(hook, agent, global);
-
   const store = new Store(((bridge: any): FrontendBridge));
+
+  const agent = new Agent(((bridge: any): BackendBridge));
+  const hook = global.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+  initBackend(hook, agent, global);
 
   global.agent = agent;
   global.bridge = bridge;
@@ -238,8 +273,10 @@ beforeEach(() => {
   }
   global.fetch = mockFetch;
 });
+
 afterEach(() => {
   delete global.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+  unpatchConsoleAfterTesting();
 
   // It's important to reset modules between test runs;
   // Without this, ReactDOM won't re-inject itself into the new hook.

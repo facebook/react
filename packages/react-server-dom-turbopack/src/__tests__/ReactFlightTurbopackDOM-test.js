@@ -20,6 +20,7 @@ global.TextDecoder = require('util').TextDecoder;
 let act;
 let use;
 let clientExports;
+let clientExportsESM;
 let turbopackMap;
 let Stream;
 let React;
@@ -29,8 +30,9 @@ let ReactServerDOMClient;
 let Suspense;
 let ReactServerScheduler;
 let reactServerAct;
+let ErrorBoundary;
 
-describe('ReactFlightDOM', () => {
+describe('ReactFlightTurbopackDOM', () => {
   beforeEach(() => {
     // For this first reset we are going to load the dom-node version of react-server-dom-turbopack/server
     // This can be thought of as essentially being the React Server Components scope with react-server
@@ -43,12 +45,13 @@ describe('ReactFlightDOM', () => {
 
     // Simulate the condition resolution
     jest.mock('react-server-dom-turbopack/server', () =>
-      require('react-server-dom-turbopack/server.node.unbundled'),
+      require('react-server-dom-turbopack/server.node'),
     );
     jest.mock('react', () => require('react/react.react-server'));
 
     const TurbopackMock = require('./utils/TurbopackMock');
     clientExports = TurbopackMock.clientExports;
+    clientExportsESM = TurbopackMock.clientExportsESM;
     turbopackMap = TurbopackMock.turbopackMap;
 
     ReactServerDOMServer = require('react-server-dom-turbopack/server');
@@ -63,6 +66,22 @@ describe('ReactFlightDOM', () => {
     Suspense = React.Suspense;
     ReactDOMClient = require('react-dom/client');
     ReactServerDOMClient = require('react-server-dom-turbopack/client');
+
+    ErrorBoundary = class extends React.Component {
+      state = {hasError: false, error: null};
+      static getDerivedStateFromError(error) {
+        return {
+          hasError: true,
+          error,
+        };
+      }
+      render() {
+        if (this.state.hasError) {
+          return this.props.fallback(this.state.error);
+        }
+        return this.props.children;
+      }
+    };
   });
 
   async function serverAct(callback) {
@@ -219,5 +238,106 @@ describe('ReactFlightDOM', () => {
       root.render(<App response={response} />);
     });
     expect(container.innerHTML).toBe('<p>Async: Module</p>');
+  });
+
+  it('should unwrap async ESM module references', async () => {
+    const AsyncModule = Promise.resolve(function AsyncModule({text}) {
+      return 'Async: ' + text;
+    });
+
+    const AsyncModule2 = Promise.resolve({
+      exportName: 'Module',
+    });
+
+    function Print({response}) {
+      return <p>{use(response)}</p>;
+    }
+
+    function App({response}) {
+      return (
+        <Suspense fallback={<h1>Loading...</h1>}>
+          <Print response={response} />
+        </Suspense>
+      );
+    }
+
+    const AsyncModuleRef = await clientExportsESM(AsyncModule);
+    const AsyncModuleRef2 = await clientExportsESM(AsyncModule2);
+
+    const {writable, readable} = getTestStream();
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <AsyncModuleRef text={AsyncModuleRef2.exportName} />,
+        turbopackMap,
+      ),
+    );
+    pipe(writable);
+    const response = ReactServerDOMClient.createFromReadableStream(readable);
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<App response={response} />);
+    });
+    expect(container.innerHTML).toBe('<p>Async: Module</p>');
+  });
+
+  it('should error when a bundler uses async ESM modules with createClientModuleProxy', async () => {
+    const AsyncModule = Promise.resolve(function AsyncModule() {
+      return 'This should not be rendered';
+    });
+
+    function Print({response}) {
+      return <p>{use(response)}</p>;
+    }
+
+    function App({response}) {
+      return (
+        <ErrorBoundary
+          fallback={error => (
+            <p>
+              {__DEV__ ? error.message + ' + ' : null}
+              {error.digest}
+            </p>
+          )}>
+          <Suspense fallback={<h1>Loading...</h1>}>
+            <Print response={response} />
+          </Suspense>
+        </ErrorBoundary>
+      );
+    }
+
+    const AsyncModuleRef = await clientExportsESM(AsyncModule, {
+      forceClientModuleProxy: true,
+    });
+
+    const {writable, readable} = getTestStream();
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <AsyncModuleRef />,
+        turbopackMap,
+        {
+          onError(error) {
+            return __DEV__ ? 'a dev digest' : `digest(${error.message})`;
+          },
+        },
+      ),
+    );
+    pipe(writable);
+    const response = ReactServerDOMClient.createFromReadableStream(readable);
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<App response={response} />);
+    });
+
+    const errorMessage = `The module "${Object.keys(turbopackMap).at(0)}" is marked as an async ESM module but was loaded as a CJS proxy. This is probably a bug in the React Server Components bundler.`;
+
+    expect(container.innerHTML).toBe(
+      __DEV__
+        ? `<p>${errorMessage} + a dev digest</p>`
+        : `<p>digest(${errorMessage})</p>`,
+    );
   });
 });

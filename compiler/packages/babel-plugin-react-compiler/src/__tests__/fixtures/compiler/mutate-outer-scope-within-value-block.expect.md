@@ -2,7 +2,9 @@
 ## Input
 
 ```javascript
-import { CONST_TRUE, identity, shallowCopy } from "shared-runtime";
+import {CONST_TRUE, identity, shallowCopy} from 'shared-runtime';
+
+function mutate(_: unknown) {}
 
 /**
  * There are three values with their own scopes in this fixture.
@@ -25,16 +27,16 @@ import { CONST_TRUE, identity, shallowCopy } from "shared-runtime";
  * Observe that instruction 5 mutates scope 0, which means that scopes 0 and 2
  * should be merged.
  */
-function useFoo({ input }) {
+function useFoo({input}) {
   const arr = shallowCopy(input);
 
   const cond = identity(false);
-  return cond ? { val: CONST_TRUE } : mutate(arr);
+  return cond ? {val: CONST_TRUE} : mutate(arr);
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useFoo,
-  params: [{ input: 3 }],
+  params: [{input: 3}],
 };
 
 ```
@@ -44,6 +46,8 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 import { CONST_TRUE, identity, shallowCopy } from "shared-runtime";
+
+function mutate(_) {}
 
 /**
  * There are three values with their own scopes in this fixture.
@@ -91,4 +95,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: exception) mutate is not defined
+(kind: ok) 

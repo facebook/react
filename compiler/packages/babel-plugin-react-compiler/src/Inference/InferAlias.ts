@@ -11,8 +11,8 @@ import {
   Instruction,
   isPrimitiveType,
   Place,
-} from "../HIR/HIR";
-import DisjointSet from "../Utils/DisjointSet";
+} from '../HIR/HIR';
+import DisjointSet from '../Utils/DisjointSet';
 
 export type AliasSet = Set<Identifier>;
 
@@ -29,34 +29,34 @@ export function inferAliases(func: HIRFunction): DisjointSet<Identifier> {
 
 function inferInstr(
   instr: Instruction,
-  aliases: DisjointSet<Identifier>
+  aliases: DisjointSet<Identifier>,
 ): void {
-  const { lvalue, value: instrValue } = instr;
+  const {lvalue, value: instrValue} = instr;
   let alias: Place | null = null;
   switch (instrValue.kind) {
-    case "LoadLocal":
-    case "LoadContext": {
+    case 'LoadLocal':
+    case 'LoadContext': {
       if (isPrimitiveType(instrValue.place.identifier)) {
         return;
       }
       alias = instrValue.place;
       break;
     }
-    case "StoreLocal":
-    case "StoreContext": {
+    case 'StoreLocal':
+    case 'StoreContext': {
       alias = instrValue.value;
       break;
     }
-    case "Destructure": {
+    case 'Destructure': {
       alias = instrValue.value;
       break;
     }
-    case "ComputedLoad":
-    case "PropertyLoad": {
+    case 'ComputedLoad':
+    case 'PropertyLoad': {
       alias = instrValue.object;
       break;
     }
-    case "TypeCastExpression": {
+    case 'TypeCastExpression': {
       alias = instrValue.value;
       break;
     }

@@ -17,7 +17,6 @@ import type {EventPriority} from './ReactEventPriorities';
 // React which this hook might be in.
 type DevToolsProfilingHooks = any;
 
-import {getLabelForLane, TotalLanes} from 'react-reconciler/src/ReactFiberLane';
 import {DidCapture} from './ReactFiberFlags';
 import {
   consoleManagedByDevToolsDuringStrictMode,
@@ -75,17 +74,6 @@ export function injectInternals(internals: Object): boolean {
     return true;
   }
   try {
-    if (enableSchedulingProfiler) {
-      // Conditionally inject these hooks only if Timeline profiler is supported by this build.
-      // This gives DevTools a way to feature detect that isn't tied to version number
-      // (since profiling and timeline are controlled by different feature flags).
-      internals = {
-        ...internals,
-        getLaneLabelMap,
-        injectProfilingHooks,
-      };
-    }
-
     rendererID = hook.inject(internals);
 
     // We have successfully injected, so now it is safe to set up hooks.
@@ -235,25 +223,10 @@ export function setIsStrictModeForDevtools(newIsStrictMode: boolean) {
 
 // Profiler API hooks
 
-function injectProfilingHooks(profilingHooks: DevToolsProfilingHooks): void {
+export function injectProfilingHooks(
+  profilingHooks: DevToolsProfilingHooks,
+): void {
   injectedProfilingHooks = profilingHooks;
-}
-
-function getLaneLabelMap(): Map<Lane, string> | null {
-  if (enableSchedulingProfiler) {
-    const map: Map<Lane, string> = new Map();
-
-    let lane = 1;
-    for (let index = 0; index < TotalLanes; index++) {
-      const label = ((getLabelForLane(lane): any): string);
-      map.set(lane, label);
-      lane *= 2;
-    }
-
-    return map;
-  } else {
-    return null;
-  }
 }
 
 export function markCommitStarted(lanes: Lanes): void {

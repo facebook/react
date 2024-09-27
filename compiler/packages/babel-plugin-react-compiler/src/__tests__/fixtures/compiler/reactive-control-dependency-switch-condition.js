@@ -1,6 +1,6 @@
 const GLOBAL = 42;
 
-function Component({ value }) {
+function Component({value}) {
   let x;
   switch (GLOBAL) {
     case value: {
@@ -21,13 +21,13 @@ export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [],
   sequentialRenders: [
-    { value: GLOBAL },
-    { value: GLOBAL },
-    { value: null },
-    { value: null },
-    { value: GLOBAL },
-    { value: null },
-    { value: GLOBAL },
-    { value: null },
+    {value: GLOBAL},
+    {value: GLOBAL},
+    {value: null},
+    {value: null},
+    {value: GLOBAL},
+    {value: null},
+    {value: GLOBAL},
+    {value: null},
   ],
 };

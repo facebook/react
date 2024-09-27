@@ -5,18 +5,18 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-"use strict";
+'use strict';
 
 type ROViolationType =
-  | "FORGET_MUTATE_IMMUT"
-  | "FORGET_DELETE_PROP_IMMUT"
-  | "FORGET_CHANGE_PROP_IMMUT"
-  | "FORGET_ADD_PROP_IMMUT";
+  | 'FORGET_MUTATE_IMMUT'
+  | 'FORGET_DELETE_PROP_IMMUT'
+  | 'FORGET_CHANGE_PROP_IMMUT'
+  | 'FORGET_ADD_PROP_IMMUT';
 type ROViolationLogger = (
   violation: ROViolationType,
   source: string,
   key: string,
-  value?: any
+  value?: any,
 ) => void;
 
 /**
@@ -38,21 +38,21 @@ function isWriteable(desc: PropertyDescriptor) {
 
 function getOrInsertDefault(
   m: SavedROObjects,
-  k: object
-): { existed: boolean; entry: SavedROObject } {
+  k: object,
+): {existed: boolean; entry: SavedROObject} {
   const entry = m.get(k);
   if (entry) {
-    return { existed: true, entry };
+    return {existed: true, entry};
   } else {
     const newEntry: SavedROObject = new Map();
     m.set(k, newEntry);
-    return { existed: false, entry: newEntry };
+    return {existed: false, entry: newEntry};
   }
 }
 
 function buildMakeReadOnly(
   logger: ROViolationLogger,
-  skippedClasses: string[]
+  skippedClasses: string[],
 ): <T>(val: T, source: string) => T {
   // All saved proxys
   const savedROObjects: SavedROObjects = new WeakMap();
@@ -63,15 +63,15 @@ function buildMakeReadOnly(
     source: string,
     key: string,
     prop: PropertyDescriptor,
-    savedEntries: Map<string, SavedEntry>
+    savedEntries: Map<string, SavedEntry>,
   ) {
-    const proxy: PropertyDescriptor & { get(): unknown } = {
+    const proxy: PropertyDescriptor & {get(): unknown} = {
       get() {
         // read from backing cache entry
         return makeReadOnly(savedEntries.get(key)!.savedVal, source);
       },
       set(newVal: unknown) {
-        logger("FORGET_MUTATE_IMMUT", source, key, newVal);
+        logger('FORGET_MUTATE_IMMUT', source, key, newVal);
         // update backing cache entry
         savedEntries.get(key)!.savedVal = newVal;
       },
@@ -83,13 +83,13 @@ function buildMakeReadOnly(
       proxy.enumerable = prop.enumerable;
     }
 
-    savedEntries.set(key, { savedVal: (obj as any)[key], getter: proxy.get });
+    savedEntries.set(key, {savedVal: (obj as any)[key], getter: proxy.get});
     Object.defineProperty(obj, key, proxy);
   }
 
   // Changes an object to be read-only, returns its input
   function makeReadOnly<T>(o: T, source: string): T {
-    if (typeof o !== "object" || o == null) {
+    if (typeof o !== 'object' || o == null) {
       return o;
     } else if (
       o.constructor?.name != null &&
@@ -98,7 +98,7 @@ function buildMakeReadOnly(
       return o;
     }
 
-    const { existed, entry: cache } = getOrInsertDefault(savedROObjects, o);
+    const {existed, entry: cache} = getOrInsertDefault(savedROObjects, o);
 
     for (const [k, entry] of cache.entries()) {
       const currentProp = Object.getOwnPropertyDescriptor(o, k);
@@ -116,21 +116,21 @@ function buildMakeReadOnly(
         //     and the current proxied value is stale)
         cache.delete(k);
         if (!currentProp) {
-          logger("FORGET_DELETE_PROP_IMMUT", source, k);
+          logger('FORGET_DELETE_PROP_IMMUT', source, k);
         } else if (currentProp) {
-          logger("FORGET_CHANGE_PROP_IMMUT", source, k);
+          logger('FORGET_CHANGE_PROP_IMMUT', source, k);
           addProperty(o, source, k, currentProp, cache);
         }
       }
     }
     for (const [k, prop] of Object.entries(
-      Object.getOwnPropertyDescriptors(o)
+      Object.getOwnPropertyDescriptors(o),
     )) {
       if (!cache.has(k) && isWriteable(prop)) {
         if (
-          prop.hasOwnProperty("set") ||
-          prop.hasOwnProperty("get") ||
-          k === "current"
+          prop.hasOwnProperty('set') ||
+          prop.hasOwnProperty('get') ||
+          k === 'current'
         ) {
           // - we currently don't handle accessor properties
           // - we currently have no other way of checking whether an object
@@ -139,7 +139,7 @@ function buildMakeReadOnly(
         }
 
         if (existed) {
-          logger("FORGET_ADD_PROP_IMMUT", source, k);
+          logger('FORGET_ADD_PROP_IMMUT', source, k);
         }
         addProperty(o, source, k, prop, cache);
       }

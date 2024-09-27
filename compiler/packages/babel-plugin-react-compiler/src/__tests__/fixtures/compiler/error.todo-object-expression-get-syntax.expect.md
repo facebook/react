@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-function Component({ value }) {
+function Component({value}) {
   const object = {
     get value() {
       return value;
@@ -13,8 +13,8 @@ function Component({ value }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: foo,
-  params: [{ value: 0 }],
-  sequentialRenders: [{ value: 1 }, { value: 2 }],
+  params: [{value: 0}],
+  sequentialRenders: [{value: 1}, {value: 2}],
 };
 
 ```
@@ -23,7 +23,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
-  1 | function Component({ value }) {
+  1 | function Component({value}) {
   2 |   const object = {
 > 3 |     get value() {
     |     ^^^^^^^^^^^^^

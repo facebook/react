@@ -1158,7 +1158,7 @@ describe('ReactIncrementalErrorHandling', () => {
   // because it's used for new context, suspense, and many other features.
   // It has to be tested independently for each feature anyway. So although it
   // doesn't look like it, this test is specific to legacy context.
-  // @gate !disableLegacyContext
+  // @gate !disableLegacyContext && !disableLegacyContextForFunctionComponents
   it('unwinds the context stack correctly on error', async () => {
     class Provider extends React.Component {
       static childContextTypes = {message: PropTypes.string};
@@ -1211,7 +1211,14 @@ describe('ReactIncrementalErrorHandling', () => {
         <Connector />
       </Provider>,
     );
-    await waitForAll([]);
+
+    await expect(async () => {
+      await waitForAll([]);
+    }).toErrorDev([
+      'Provider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'Provider uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+      'Connector uses the legacy contextTypes API which will be removed soon. Use React.createContext() with React.useContext() instead.',
+    ]);
 
     // If the context stack does not unwind, span will get 'abcde'
     expect(ReactNoop).toMatchRenderedOutput(<span prop="a" />);

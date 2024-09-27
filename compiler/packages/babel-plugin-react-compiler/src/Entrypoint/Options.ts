@@ -5,11 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import * as t from "@babel/types";
-import { z } from "zod";
-import { CompilerErrorDetailOptions } from "../CompilerError";
-import { ExternalFunction, PartialEnvironmentConfig } from "../HIR/Environment";
-import { hasOwnProperty } from "../Utils/utils";
+import * as t from '@babel/types';
+import {z} from 'zod';
+import {CompilerError, CompilerErrorDetailOptions} from '../CompilerError';
+import {
+  EnvironmentConfig,
+  ExternalFunction,
+  parseEnvironmentConfig,
+} from '../HIR/Environment';
+import {hasOwnProperty} from '../Utils/utils';
 
 const PanicThresholdOptionsSchema = z.enum([
   /*
@@ -18,21 +22,21 @@ const PanicThresholdOptionsSchema = z.enum([
    * If Forget is invoked through `BabelPluginReactCompiler`, this will at the least
    * skip Forget compilation for the rest of current file.
    */
-  "all_errors",
+  'all_errors',
   /*
    * Panic by throwing an exception only on critical or unrecognized errors.
    * For all other errors, skip the erroring function without inserting
    * a Forget-compiled version (i.e. same behavior as noEmit).
    */
-  "critical_errors",
+  'critical_errors',
   // Never panic by throwing an exception.
-  "none",
+  'none',
 ]);
 
 export type PanicThresholdOptions = z.infer<typeof PanicThresholdOptionsSchema>;
 
 export type PluginOptions = {
-  environment: PartialEnvironmentConfig | null;
+  environment: EnvironmentConfig;
 
   logger: Logger | null;
 
@@ -130,13 +134,13 @@ const CompilationModeSchema = z.enum([
    *     false positives, since compilation has a greater impact than linting.
    * This is the default mode
    */
-  "infer",
+  'infer',
   // Compile only components using Flow component syntax and hooks using hook syntax.
-  "syntax",
+  'syntax',
   // Compile only functions which are explicitly annotated with "use forget"
-  "annotation",
+  'annotation',
   // Compile all top-level functions
-  "all",
+  'all',
 ]);
 
 export type CompilationMode = z.infer<typeof CompilationModeSchema>;
@@ -156,17 +160,23 @@ export type CompilationMode = z.infer<typeof CompilationModeSchema>;
  */
 export type LoggerEvent =
   | {
-      kind: "CompileError";
+      kind: 'CompileError';
       fnLoc: t.SourceLocation | null;
       detail: CompilerErrorDetailOptions;
     }
   | {
-      kind: "CompileDiagnostic";
+      kind: 'CompileDiagnostic';
       fnLoc: t.SourceLocation | null;
-      detail: Omit<Omit<CompilerErrorDetailOptions, "severity">, "suggestions">;
+      detail: Omit<Omit<CompilerErrorDetailOptions, 'severity'>, 'suggestions'>;
     }
   | {
-      kind: "CompileSuccess";
+      kind: 'CompileSkip';
+      fnLoc: t.SourceLocation | null;
+      reason: string;
+      loc: t.SourceLocation | null;
+    }
+  | {
+      kind: 'CompileSuccess';
       fnLoc: t.SourceLocation | null;
       fnName: string | null;
       memoSlots: number;
@@ -176,7 +186,7 @@ export type LoggerEvent =
       prunedMemoValues: number;
     }
   | {
-      kind: "PipelineError";
+      kind: 'PipelineError';
       fnLoc: t.SourceLocation | null;
       data: string;
     };
@@ -186,37 +196,49 @@ export type Logger = {
 };
 
 export const defaultOptions: PluginOptions = {
-  compilationMode: "infer",
-  panicThreshold: "none",
-  environment: {},
+  compilationMode: 'infer',
+  panicThreshold: 'none',
+  environment: parseEnvironmentConfig({}).unwrap(),
   logger: null,
   gating: null,
   noEmit: false,
   runtimeModule: null,
   eslintSuppressionRules: null,
-  flowSuppressions: false,
+  flowSuppressions: true,
   ignoreUseNoForget: false,
-  sources: (filename) => {
-    return filename.indexOf("node_modules") === -1;
+  sources: filename => {
+    return filename.indexOf('node_modules') === -1;
   },
   enableReanimatedCheck: true,
 } as const;
 
 export function parsePluginOptions(obj: unknown): PluginOptions {
-  if (obj == null || typeof obj !== "object") {
+  if (obj == null || typeof obj !== 'object') {
     return defaultOptions;
   }
   const parsedOptions = Object.create(null);
   for (let [key, value] of Object.entries(obj)) {
-    if (typeof value === "string") {
+    if (typeof value === 'string') {
       // normalize string configs to be case insensitive
       value = value.toLowerCase();
     }
-    if (isCompilerFlag(key)) {
+    if (key === 'environment') {
+      const environmentResult = parseEnvironmentConfig(value);
+      if (environmentResult.isErr()) {
+        CompilerError.throwInvalidConfig({
+          reason:
+            'Error in validating environment config. This is an advanced setting and not meant to be used directly',
+          description: environmentResult.unwrapErr().toString(),
+          suggestions: null,
+          loc: null,
+        });
+      }
+      parsedOptions[key] = environmentResult.unwrap();
+    } else if (isCompilerFlag(key)) {
       parsedOptions[key] = value;
     }
   }
-  return { ...defaultOptions, ...parsedOptions };
+  return {...defaultOptions, ...parsedOptions};
 }
 
 function isCompilerFlag(s: string): s is keyof PluginOptions {

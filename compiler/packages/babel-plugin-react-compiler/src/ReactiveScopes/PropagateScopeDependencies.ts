@@ -5,12 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "../CompilerError";
+import {CompilerError} from '../CompilerError';
+import {Environment} from '../HIR';
 import {
+  areEqualPaths,
   BlockId,
+  DeclarationId,
   GeneratedSource,
   Identifier,
-  IdentifierId,
   InstructionId,
   InstructionKind,
   isObjectMethodType,
@@ -21,24 +23,22 @@ import {
   PrunedReactiveScopeBlock,
   ReactiveFunction,
   ReactiveInstruction,
+  ReactiveOptionalCallValue,
   ReactiveScope,
   ReactiveScopeBlock,
   ReactiveScopeDependency,
   ReactiveTerminalStatement,
   ReactiveValue,
   ScopeId,
-} from "../HIR/HIR";
-import {
-  eachInstructionValueOperand,
-  eachPatternOperand,
-} from "../HIR/visitors";
-import { empty, Stack } from "../Utils/Stack";
-import { assertExhaustive } from "../Utils/utils";
+} from '../HIR/HIR';
+import {eachInstructionValueOperand, eachPatternOperand} from '../HIR/visitors';
+import {empty, Stack} from '../Utils/Stack';
+import {assertExhaustive, Iterable_some} from '../Utils/utils';
 import {
   ReactiveScopeDependencyTree,
   ReactiveScopePropertyDependency,
-} from "./DeriveMinimalDependencies";
-import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
+} from './DeriveMinimalDependencies';
+import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
 
 /*
  * Infers the dependencies of each scope to include variables whose values
@@ -55,7 +55,7 @@ export function propagateScopeDependencies(fn: ReactiveFunction): void {
 
   const context = new Context(escapingTemporaries.usedOutsideDeclaringScope);
   for (const param of fn.params) {
-    if (param.kind === "Identifier") {
+    if (param.kind === 'Identifier') {
       context.declare(param.identifier, {
         id: makeInstructionId(0),
         scope: empty(),
@@ -67,11 +67,7 @@ export function propagateScopeDependencies(fn: ReactiveFunction): void {
       });
     }
   }
-  visitReactiveFunction(
-    fn,
-    new PropagationVisitor(fn.env.config.enableTreatFunctionDepsAsConditional),
-    context
-  );
+  visitReactiveFunction(fn, new PropagationVisitor(fn.env), context);
 }
 
 type TemporariesUsedOutsideDefiningScope = {
@@ -79,16 +75,16 @@ type TemporariesUsedOutsideDefiningScope = {
    * tracks all relevant temporary declarations (currently LoadLocal and PropertyLoad)
    * and the scope where they are defined
    */
-  declarations: Map<IdentifierId, ScopeId>;
+  declarations: Map<DeclarationId, ScopeId>;
   // temporaries used outside of their defining scope
-  usedOutsideDeclaringScope: Set<IdentifierId>;
+  usedOutsideDeclaringScope: Set<DeclarationId>;
 };
 class FindPromotedTemporaries extends ReactiveFunctionVisitor<TemporariesUsedOutsideDefiningScope> {
   scopes: Array<ScopeId> = [];
 
   override visitScope(
     scope: ReactiveScopeBlock,
-    state: TemporariesUsedOutsideDefiningScope
+    state: TemporariesUsedOutsideDefiningScope,
   ): void {
     this.scopes.push(scope.scope.id);
     this.traverseScope(scope, state);
@@ -97,7 +93,7 @@ class FindPromotedTemporaries extends ReactiveFunctionVisitor<TemporariesUsedOut
 
   override visitInstruction(
     instruction: ReactiveInstruction,
-    state: TemporariesUsedOutsideDefiningScope
+    state: TemporariesUsedOutsideDefiningScope,
   ): void {
     // Visit all places first, then record temporaries which may need to be promoted
     this.traverseInstruction(instruction, state);
@@ -107,10 +103,13 @@ class FindPromotedTemporaries extends ReactiveFunctionVisitor<TemporariesUsedOut
       return;
     }
     switch (instruction.value.kind) {
-      case "LoadLocal":
-      case "LoadContext":
-      case "PropertyLoad": {
-        state.declarations.set(instruction.lvalue.identifier.id, scope);
+      case 'LoadLocal':
+      case 'LoadContext':
+      case 'PropertyLoad': {
+        state.declarations.set(
+          instruction.lvalue.identifier.declarationId,
+          scope,
+        );
         break;
       }
       default: {
@@ -122,20 +121,22 @@ class FindPromotedTemporaries extends ReactiveFunctionVisitor<TemporariesUsedOut
   override visitPlace(
     _id: InstructionId,
     place: Place,
-    state: TemporariesUsedOutsideDefiningScope
+    state: TemporariesUsedOutsideDefiningScope,
   ): void {
-    const declaringScope = state.declarations.get(place.identifier.id);
+    const declaringScope = state.declarations.get(
+      place.identifier.declarationId,
+    );
     if (declaringScope === undefined) {
       return;
     }
     if (this.scopes.indexOf(declaringScope) === -1) {
       // Declaring scope is not active === used outside declaring scope
-      state.usedOutsideDeclaringScope.add(place.identifier.id);
+      state.usedOutsideDeclaringScope.add(place.identifier.declarationId);
     }
   }
 }
 
-type DeclMap = Map<IdentifierId, Decl>;
+type DeclMap = Map<DeclarationId, Decl>;
 type Decl = {
   id: InstructionId;
   scope: Stack<ScopeTraversalState>;
@@ -164,7 +165,7 @@ class PoisonState {
   constructor(
     poisonedBlocks: Set<BlockId>,
     poisonedScopes: Set<ScopeId>,
-    isPoisoned: boolean
+    isPoisoned: boolean,
   ) {
     this.poisonedBlocks = poisonedBlocks;
     this.poisonedScopes = poisonedScopes;
@@ -175,7 +176,7 @@ class PoisonState {
     return new PoisonState(
       new Set(this.poisonedBlocks),
       new Set(this.poisonedScopes),
-      this.isPoisoned
+      this.isPoisoned,
     );
   }
 
@@ -183,7 +184,7 @@ class PoisonState {
     const copy = new PoisonState(
       this.poisonedBlocks,
       this.poisonedScopes,
-      this.isPoisoned
+      this.isPoisoned,
     );
     this.poisonedBlocks = other.poisonedBlocks;
     this.poisonedScopes = other.poisonedScopes;
@@ -193,7 +194,7 @@ class PoisonState {
 
   merge(
     others: Array<PoisonState>,
-    currentScope: ScopeTraversalState | null
+    currentScope: ScopeTraversalState | null,
   ): void {
     for (const other of others) {
       for (const id of other.poisonedBlocks) {
@@ -212,9 +213,7 @@ class PoisonState {
         this.isPoisoned = true;
         return;
       } else if (
-        currentScope.ownBlocks.find((blockId) =>
-          this.poisonedBlocks.has(blockId)
-        )
+        currentScope.ownBlocks.find(blockId => this.poisonedBlocks.has(blockId))
       ) {
         this.isPoisoned = true;
         return;
@@ -233,7 +232,7 @@ class PoisonState {
    */
   addPoisonTarget(
     target: BlockId | null,
-    activeScopes: Stack<ScopeTraversalState>
+    activeScopes: Stack<ScopeTraversalState>,
   ): void {
     const currentScope = activeScopes.value;
     if (target == null && currentScope != null) {
@@ -255,7 +254,7 @@ class PoisonState {
       this.poisonedBlocks.add(target);
       if (
         !this.isPoisoned &&
-        currentScope?.ownBlocks.find((blockId) => blockId === target)
+        currentScope?.ownBlocks.find(blockId => blockId === target)
       ) {
         this.isPoisoned = true;
       }
@@ -269,7 +268,7 @@ class PoisonState {
    */
   removeMaybePoisonedScope(
     id: ScopeId,
-    currentScope: ScopeTraversalState | null
+    currentScope: ScopeTraversalState | null,
   ): void {
     this.poisonedScopes.delete(id);
     this.#invalidate(currentScope);
@@ -277,7 +276,7 @@ class PoisonState {
 
   removeMaybePoisonedBlock(
     id: BlockId,
-    currentScope: ScopeTraversalState | null
+    currentScope: ScopeTraversalState | null,
   ): void {
     this.poisonedBlocks.delete(id);
     this.#invalidate(currentScope);
@@ -285,7 +284,7 @@ class PoisonState {
 }
 
 class Context {
-  #temporariesUsedOutsideScope: Set<IdentifierId>;
+  #temporariesUsedOutsideScope: Set<DeclarationId>;
   #declarations: DeclMap = new Map();
   #reassignments: Map<Identifier, Decl> = new Map();
   // Reactive dependencies used in the current reactive scope.
@@ -312,7 +311,7 @@ class Context {
   #scopes: Stack<ScopeTraversalState> = empty();
   poisonState: PoisonState = new PoisonState(new Set(), new Set(), false);
 
-  constructor(temporariesUsedOutsideScope: Set<IdentifierId>) {
+  constructor(temporariesUsedOutsideScope: Set<DeclarationId>) {
     this.#temporariesUsedOutsideScope = temporariesUsedOutsideScope;
   }
 
@@ -365,7 +364,7 @@ class Context {
     this.#dependencies.addDepsFromInnerScope(
       scopedDependencies,
       this.#inConditionalWithinScope || this.isPoisoned,
-      this.#checkValidDependency.bind(this)
+      this.#checkValidDependency.bind(this),
     );
 
     if (prevDepsInConditional != null) {
@@ -373,7 +372,7 @@ class Context {
       prevDepsInConditional.addDepsFromInnerScope(
         this.#depsInCurrentConditional,
         true,
-        this.#checkValidDependency.bind(this)
+        this.#checkValidDependency.bind(this),
       );
       this.#depsInCurrentConditional = prevDepsInConditional;
     }
@@ -382,7 +381,9 @@ class Context {
   }
 
   isUsedOutsideDeclaringScope(place: Place): boolean {
-    return this.#temporariesUsedOutsideScope.has(place.identifier.id);
+    return this.#temporariesUsedOutsideScope.has(
+      place.identifier.declarationId,
+    );
   }
 
   /*
@@ -428,13 +429,13 @@ class Context {
    * @param depsInConditionals
    */
   promoteDepsFromExhaustiveConditionals(
-    depsInConditionals: Array<ReactiveScopeDependencyTree>
+    depsInConditionals: Array<ReactiveScopeDependencyTree>,
   ): void {
     this.#dependencies.promoteDepsFromExhaustiveConditionals(
-      depsInConditionals
+      depsInConditionals,
     );
     this.#depsInCurrentConditional.promoteDepsFromExhaustiveConditionals(
-      depsInConditionals
+      depsInConditionals,
     );
   }
 
@@ -445,8 +446,8 @@ class Context {
    * on itself.
    */
   declare(identifier: Identifier, decl: Decl): void {
-    if (!this.#declarations.has(identifier.id)) {
-      this.#declarations.set(identifier.id, decl);
+    if (!this.#declarations.has(identifier.declarationId)) {
+      this.#declarations.set(identifier.declarationId, decl);
     }
     this.#reassignments.set(identifier, decl);
   }
@@ -462,7 +463,7 @@ class Context {
   #getProperty(
     object: Place,
     property: string,
-    isConditional: boolean
+    optional: boolean,
   ): ReactiveScopePropertyDependency {
     const resolvedObject = this.resolveTemporary(object);
     const resolvedDependency = this.#properties.get(resolvedObject.identifier);
@@ -475,36 +476,26 @@ class Context {
       objectDependency = {
         identifier: resolvedObject.identifier,
         path: [],
-        optionalPath: [],
       };
     } else {
       objectDependency = {
         identifier: resolvedDependency.identifier,
         path: [...resolvedDependency.path],
-        optionalPath: [...resolvedDependency.optionalPath],
       };
     }
 
-    // (2) Determine whether property is an optional access
-    if (objectDependency.optionalPath.length > 0) {
-      /*
-       * If the base property dependency represents a optional member expression,
-       * property is on the optionalPath (regardless of whether this PropertyLoad
-       * itself was conditional)
-       * e.g. for `a.b?.c.d`, `d` should be added to optionalPath
-       */
-      objectDependency.optionalPath.push(property);
-    } else if (isConditional) {
-      objectDependency.optionalPath.push(property);
-    } else {
-      objectDependency.path.push(property);
-    }
+    objectDependency.path.push({property, optional});
 
     return objectDependency;
   }
 
-  declareProperty(lvalue: Place, object: Place, property: string): void {
-    const nextDependency = this.#getProperty(object, property, false);
+  declareProperty(
+    lvalue: Place,
+    object: Place,
+    property: string,
+    optional: boolean,
+  ): void {
+    const nextDependency = this.#getProperty(object, property, optional);
     this.#properties.set(lvalue.identifier, nextDependency);
   }
 
@@ -513,7 +504,7 @@ class Context {
     // ref.current access is not a valid dep
     if (
       isUseRefType(maybeDependency.identifier) &&
-      maybeDependency.path.at(0) === "current"
+      maybeDependency.path.at(0)?.property === 'current'
     ) {
       return false;
     }
@@ -538,7 +529,7 @@ class Context {
      */
     const currentDeclaration =
       this.#reassignments.get(identifier) ??
-      this.#declarations.get(identifier.id);
+      this.#declarations.get(identifier.declarationId);
     const currentScope = this.currentScope.value?.value;
     return (
       currentScope != null &&
@@ -553,7 +544,7 @@ class Context {
     if (this.#scopes === null) {
       return false;
     }
-    return this.#scopes.find((state) => state.value === scope);
+    return this.#scopes.find(state => state.value === scope);
   }
 
   get currentScope(): Stack<ScopeTraversalState> {
@@ -574,19 +565,18 @@ class Context {
     let dependency: ReactiveScopePropertyDependency = {
       identifier: resolved.identifier,
       path: [],
-      optionalPath: [],
     };
     if (resolved.identifier.name === null) {
       const propertyDependency = this.#properties.get(resolved.identifier);
       if (propertyDependency !== undefined) {
-        dependency = { ...propertyDependency };
+        dependency = {...propertyDependency};
       }
     }
     this.visitDependency(dependency);
   }
 
-  visitProperty(object: Place, property: string): void {
-    const nextDependency = this.#getProperty(object, property, false);
+  visitProperty(object: Place, property: string, optional: boolean): void {
+    const nextDependency = this.#getProperty(object, property, optional);
     this.visitDependency(nextDependency);
   }
 
@@ -604,14 +594,23 @@ class Context {
      *  (all other decls e.g. `let x;` should be initialized in BuildHIR)
      */
     const originalDeclaration = this.#declarations.get(
-      maybeDependency.identifier.id
+      maybeDependency.identifier.declarationId,
     );
     if (
       originalDeclaration !== undefined &&
       originalDeclaration.scope.value !== null
     ) {
-      originalDeclaration.scope.each((scope) => {
-        if (!this.#isScopeActive(scope.value)) {
+      originalDeclaration.scope.each(scope => {
+        if (
+          !this.#isScopeActive(scope.value) &&
+          // TODO LeaveSSA: key scope.declarations by DeclarationId
+          !Iterable_some(
+            scope.value.declarations.values(),
+            decl =>
+              decl.identifier.declarationId ===
+              maybeDependency.identifier.declarationId,
+          )
+        ) {
           scope.value.declarations.set(maybeDependency.identifier.id, {
             identifier: maybeDependency.identifier,
             scope: originalDeclaration.scope.value!.value,
@@ -629,7 +628,7 @@ class Context {
        */
       this.#dependencies.add(
         maybeDependency,
-        this.#inConditionalWithinScope || isPoisoned
+        this.#inConditionalWithinScope || isPoisoned,
       );
     }
   }
@@ -642,11 +641,14 @@ class Context {
     const currentScope = this.currentScope.value?.value;
     if (
       currentScope != null &&
-      !Array.from(currentScope.reassignments).some(
-        (identifier) => identifier.id === place.identifier.id
+      !Iterable_some(
+        currentScope.reassignments,
+        identifier =>
+          identifier.declarationId === place.identifier.declarationId,
       ) &&
-      this.#checkValidDependency({ identifier: place.identifier, path: [] })
+      this.#checkValidDependency({identifier: place.identifier, path: []})
     ) {
+      // TODO LeaveSSA: scope.reassignments should be keyed by declarationid
       currentScope.reassignments.add(place.identifier);
     }
   }
@@ -664,7 +666,7 @@ class Context {
       currentScope.ownBlocks = currentScope.ownBlocks.pop();
 
       CompilerError.invariant(last != null && last === id, {
-        reason: "[PropagateScopeDependencies] Misformed block stack",
+        reason: '[PropagateScopeDependencies] Misformed block stack',
         loc: GeneratedSource,
       });
     }
@@ -673,24 +675,53 @@ class Context {
 }
 
 class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
-  enableTreatFunctionDepsAsConditional = false;
+  env: Environment;
 
-  constructor(enableTreatFunctionDepsAsConditional: boolean) {
+  constructor(env: Environment) {
     super();
-    this.enableTreatFunctionDepsAsConditional =
-      enableTreatFunctionDepsAsConditional;
+    this.env = env;
   }
 
   override visitScope(scope: ReactiveScopeBlock, context: Context): void {
     const scopeDependencies = context.enter(scope.scope, () => {
       this.visitBlock(scope.instructions, context);
     });
-    scope.scope.dependencies = scopeDependencies;
+    for (const candidateDep of scopeDependencies) {
+      if (
+        !Iterable_some(
+          scope.scope.dependencies,
+          existingDep =>
+            existingDep.identifier.declarationId ===
+              candidateDep.identifier.declarationId &&
+            areEqualPaths(existingDep.path, candidateDep.path),
+        )
+      ) {
+        scope.scope.dependencies.add(candidateDep);
+      }
+    }
+    /*
+     * TODO LeaveSSA: fix existing bug with duplicate deps and reassignments
+     * see fixture ssa-cascading-eliminated-phis, note that we cache `x`
+     * twice because its both a dep and a reassignment.
+     *
+     * for (const reassignment of scope.scope.reassignments) {
+     *   if (
+     *     Iterable_some(
+     *       scope.scope.dependencies.values(),
+     *       dep =>
+     *         dep.identifier.declarationId === reassignment.declarationId &&
+     *         dep.path.length === 0,
+     *     )
+     *   ) {
+     *     scope.scope.reassignments.delete(reassignment);
+     *   }
+     * }
+     */
   }
 
   override visitPrunedScope(
     scopeBlock: PrunedReactiveScopeBlock,
-    context: Context
+    context: Context,
   ): void {
     /*
      * NOTE: we explicitly throw away the deps, we only enter() the scope to record its
@@ -703,9 +734,9 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
 
   override visitInstruction(
     instruction: ReactiveInstruction,
-    context: Context
+    context: Context,
   ): void {
-    const { id, value, lvalue } = instruction;
+    const {id, value, lvalue} = instruction;
     this.visitInstructionValue(context, id, value, lvalue);
     if (lvalue == null) {
       return;
@@ -716,51 +747,288 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
     });
   }
 
+  extractOptionalProperty(
+    context: Context,
+    optionalValue: ReactiveOptionalCallValue,
+    lvalue: Place,
+  ): {
+    lvalue: Place;
+    object: Place;
+    property: string;
+    optional: boolean;
+  } | null {
+    const sequence = optionalValue.value;
+    CompilerError.invariant(sequence.kind === 'SequenceExpression', {
+      reason: 'Expected OptionalExpression value to be a SequenceExpression',
+      description: `Found a \`${sequence.kind}\``,
+      loc: sequence.loc,
+    });
+    /**
+     * Base case: inner `<variable> "?." <property>`
+     *```
+     * <lvalue> = OptionalExpression optional=true (`optionalValue` is here)
+     *  Sequence (`sequence` is here)
+     *    t0 = LoadLocal <variable>
+     *    Sequence
+     *      t1 = PropertyLoad t0 . <property>
+     *      LoadLocal t1
+     * ```
+     */
+    if (
+      sequence.instructions.length === 1 &&
+      sequence.instructions[0].lvalue !== null &&
+      sequence.instructions[0].value.kind === 'LoadLocal' &&
+      sequence.instructions[0].value.place.identifier.name !== null &&
+      !context.isUsedOutsideDeclaringScope(sequence.instructions[0].lvalue) &&
+      sequence.value.kind === 'SequenceExpression' &&
+      sequence.value.instructions.length === 1 &&
+      sequence.value.instructions[0].value.kind === 'PropertyLoad' &&
+      sequence.value.instructions[0].value.object.identifier.id ===
+        sequence.instructions[0].lvalue.identifier.id &&
+      sequence.value.instructions[0].lvalue !== null &&
+      sequence.value.value.kind === 'LoadLocal' &&
+      sequence.value.value.place.identifier.id ===
+        sequence.value.instructions[0].lvalue.identifier.id
+    ) {
+      context.declareTemporary(
+        sequence.instructions[0].lvalue,
+        sequence.instructions[0].value.place,
+      );
+      const propertyLoad = sequence.value.instructions[0].value;
+      return {
+        lvalue,
+        object: propertyLoad.object,
+        property: propertyLoad.property,
+        optional: optionalValue.optional,
+      };
+    }
+    /**
+     * Base case 2: inner `<variable> "." <property1> "?." <property2>
+     * ```
+     * <lvalue> = OptionalExpression optional=true (`optionalValue` is here)
+     *  Sequence (`sequence` is here)
+     *    t0 = Sequence
+     *      t1 = LoadLocal <variable>
+     *      ... // see note
+     *      PropertyLoad t1 . <property1>
+     *    [46] Sequence
+     *      t2 = PropertyLoad t0 . <property2>
+     *      [46] LoadLocal t2
+     * ```
+     *
+     * Note that it's possible to have additional inner chained non-optional
+     * property loads at "...", from an expression like `a?.b.c.d.e`. We could
+     * expand to support this case by relaxing the check on the inner sequence
+     * length, ensuring all instructions after the first LoadLocal are PropertyLoad
+     * and then iterating to ensure that the lvalue of the previous is always
+     * the object of the next PropertyLoad, w the final lvalue as the object
+     * of the sequence.value's object.
+     *
+     * But this case is likely rare in practice, usually once you're optional
+     * chaining all property accesses are optional (not `a?.b.c` but `a?.b?.c`).
+     * Also, HIR-based PropagateScopeDeps will handle this case so it doesn't
+     * seem worth it to optimize for that edge-case here.
+     */
+    if (
+      sequence.instructions.length === 1 &&
+      sequence.instructions[0].lvalue !== null &&
+      sequence.instructions[0].value.kind === 'SequenceExpression' &&
+      sequence.instructions[0].value.instructions.length === 1 &&
+      sequence.instructions[0].value.instructions[0].lvalue !== null &&
+      sequence.instructions[0].value.instructions[0].value.kind ===
+        'LoadLocal' &&
+      sequence.instructions[0].value.instructions[0].value.place.identifier
+        .name !== null &&
+      !context.isUsedOutsideDeclaringScope(
+        sequence.instructions[0].value.instructions[0].lvalue,
+      ) &&
+      sequence.instructions[0].value.value.kind === 'PropertyLoad' &&
+      sequence.instructions[0].value.value.object.identifier.id ===
+        sequence.instructions[0].value.instructions[0].lvalue.identifier.id &&
+      sequence.value.kind === 'SequenceExpression' &&
+      sequence.value.instructions.length === 1 &&
+      sequence.value.instructions[0].lvalue !== null &&
+      sequence.value.instructions[0].value.kind === 'PropertyLoad' &&
+      sequence.value.instructions[0].value.object.identifier.id ===
+        sequence.instructions[0].lvalue.identifier.id &&
+      sequence.value.value.kind === 'LoadLocal' &&
+      sequence.value.value.place.identifier.id ===
+        sequence.value.instructions[0].lvalue.identifier.id
+    ) {
+      // LoadLocal <variable>
+      context.declareTemporary(
+        sequence.instructions[0].value.instructions[0].lvalue,
+        sequence.instructions[0].value.instructions[0].value.place,
+      );
+      // PropertyLoad <variable> . <property1> (the inner non-optional property)
+      context.declareProperty(
+        sequence.instructions[0].lvalue,
+        sequence.instructions[0].value.value.object,
+        sequence.instructions[0].value.value.property,
+        false,
+      );
+      const propertyLoad = sequence.value.instructions[0].value;
+      return {
+        lvalue,
+        object: propertyLoad.object,
+        property: propertyLoad.property,
+        optional: optionalValue.optional,
+      };
+    }
+
+    /**
+     * Composed case:
+     * - `<base-case>      "." or "?."  <property>`
+     * - `<composed-case>  "." or "?>"  <property>`
+     *
+     * This case is convoluted, note how `t0` appears as an lvalue *twice*
+     * and then is an operand of an intermediate LoadLocal and then the
+     * object of the final PropertyLoad:
+     *
+     * ```
+     * <lvalue> = OptionalExpression optional=false (`optionalValue` is here)
+     *  Sequence (`sequence` is here)
+     *      t0 = Sequence
+     *        t0 =
+     *           <nested>
+     *        LoadLocal t0
+     *      Sequence
+     *        t1 = PropertyLoad t0. <property>
+     *        LoadLocal t1
+     * ```
+     */
+    if (
+      sequence.instructions.length === 1 &&
+      sequence.instructions[0].value.kind === 'SequenceExpression' &&
+      sequence.instructions[0].value.instructions.length === 1 &&
+      sequence.instructions[0].value.instructions[0].lvalue !== null &&
+      sequence.instructions[0].value.instructions[0].value.kind ===
+        'OptionalExpression' &&
+      sequence.instructions[0].value.value.kind === 'LoadLocal' &&
+      sequence.instructions[0].value.value.place.identifier.id ===
+        sequence.instructions[0].value.instructions[0].lvalue.identifier.id &&
+      sequence.value.kind === 'SequenceExpression' &&
+      sequence.value.instructions.length === 1 &&
+      sequence.value.instructions[0].lvalue !== null &&
+      sequence.value.instructions[0].value.kind === 'PropertyLoad' &&
+      sequence.value.instructions[0].value.object.identifier.id ===
+        sequence.instructions[0].value.value.place.identifier.id &&
+      sequence.value.value.kind === 'LoadLocal' &&
+      sequence.value.value.place.identifier.id ===
+        sequence.value.instructions[0].lvalue.identifier.id
+    ) {
+      const {lvalue: innerLvalue, value: innerOptional} =
+        sequence.instructions[0].value.instructions[0];
+      const innerProperty = this.extractOptionalProperty(
+        context,
+        innerOptional,
+        innerLvalue,
+      );
+      if (innerProperty === null) {
+        return null;
+      }
+      context.declareProperty(
+        innerProperty.lvalue,
+        innerProperty.object,
+        innerProperty.property,
+        innerProperty.optional,
+      );
+      const propertyLoad = sequence.value.instructions[0].value;
+      return {
+        lvalue,
+        object: propertyLoad.object,
+        property: propertyLoad.property,
+        optional: optionalValue.optional,
+      };
+    }
+    return null;
+  }
+
+  visitOptionalExpression(
+    context: Context,
+    id: InstructionId,
+    value: ReactiveOptionalCallValue,
+    lvalue: Place | null,
+  ): void {
+    /**
+     * If this is the first optional=true optional in a recursive OptionalExpression
+     * subtree, we check to see if the subtree is of the form:
+     * ```
+     * NestedOptional =
+     *   `<variable> . / ?. <property>`
+     *   `<nested-optional> . / ?. <property>`
+     * ```
+     *
+     * Ie strictly a chain like `foo?.bar?.baz` or `a?.b.c`. If the subtree contains
+     * any other types of expressions - for example `foo?.[makeKey(a)]` - then this
+     * will return null and we'll go to the default handling below.
+     *
+     * If the tree does match the NestedOptional shape, then we'll have recorded
+     * a sequence of declareProperty calls, and the final visitProperty call here
+     * will record that optional chain as a dependency (since we know it's about
+     * to be referenced via its lvalue which is non-null).
+     */
+    if (
+      lvalue !== null &&
+      value.optional &&
+      this.env.config.enableOptionalDependencies
+    ) {
+      const inner = this.extractOptionalProperty(context, value, lvalue);
+      if (inner !== null) {
+        context.visitProperty(inner.object, inner.property, inner.optional);
+        return;
+      }
+    }
+
+    // Otherwise we treat everything after the optional as conditional
+    const inner = value.value;
+    /*
+     * OptionalExpression value is a SequenceExpression where the instructions
+     * represent the code prior to the `?` and the final value represents the
+     * conditional code that follows.
+     */
+    CompilerError.invariant(inner.kind === 'SequenceExpression', {
+      reason: 'Expected OptionalExpression value to be a SequenceExpression',
+      description: `Found a \`${value.kind}\``,
+      loc: value.loc,
+      suggestions: null,
+    });
+    // Instructions are the unconditionally executed portion before the `?`
+    for (const instr of inner.instructions) {
+      this.visitInstruction(instr, context);
+    }
+    // The final value is the conditional portion following the `?`
+    context.enterConditional(() => {
+      this.visitReactiveValue(context, id, inner.value, null);
+    });
+  }
+
   visitReactiveValue(
     context: Context,
     id: InstructionId,
-    value: ReactiveValue
+    value: ReactiveValue,
+    lvalue: Place | null,
   ): void {
     switch (value.kind) {
-      case "OptionalExpression": {
-        const inner = value.value;
-        /*
-         * OptionalExpression value is a SequenceExpression where the instructions
-         * represent the code prior to the `?` and the final value represents the
-         * conditional code that follows.
-         */
-        CompilerError.invariant(inner.kind === "SequenceExpression", {
-          reason:
-            "Expected OptionalExpression value to be a SequenceExpression",
-          description: `Found a \`${value.kind}\``,
-          loc: value.loc,
-          suggestions: null,
-        });
-        // Instructions are the unconditionally executed portion before the `?`
-        for (const instr of inner.instructions) {
-          this.visitInstruction(instr, context);
-        }
-        // The final value is the conditional portion following the `?`
+      case 'OptionalExpression': {
+        this.visitOptionalExpression(context, id, value, lvalue);
+        break;
+      }
+      case 'LogicalExpression': {
+        this.visitReactiveValue(context, id, value.left, null);
         context.enterConditional(() => {
-          this.visitReactiveValue(context, id, inner.value);
+          this.visitReactiveValue(context, id, value.right, null);
         });
         break;
       }
-      case "LogicalExpression": {
-        this.visitReactiveValue(context, id, value.left);
-        context.enterConditional(() => {
-          this.visitReactiveValue(context, id, value.right);
-        });
-        break;
-      }
-      case "ConditionalExpression": {
-        this.visitReactiveValue(context, id, value.test);
+      case 'ConditionalExpression': {
+        this.visitReactiveValue(context, id, value.test, null);
 
         const consequentDeps = context.enterConditional(() => {
-          this.visitReactiveValue(context, id, value.consequent);
+          this.visitReactiveValue(context, id, value.consequent, null);
         });
         const alternateDeps = context.enterConditional(() => {
-          this.visitReactiveValue(context, id, value.alternate);
+          this.visitReactiveValue(context, id, value.alternate, null);
         });
         context.promoteDepsFromExhaustiveConditionals([
           consequentDeps,
@@ -768,15 +1036,15 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
         ]);
         break;
       }
-      case "SequenceExpression": {
+      case 'SequenceExpression': {
         for (const instr of value.instructions) {
           this.visitInstruction(instr, context);
         }
         this.visitInstructionValue(context, id, value.value, null);
         break;
       }
-      case "FunctionExpression": {
-        if (this.enableTreatFunctionDepsAsConditional) {
+      case 'FunctionExpression': {
+        if (this.env.config.enableTreatFunctionDepsAsConditional) {
           context.enterConditional(() => {
             for (const operand of eachInstructionValueOperand(value)) {
               context.visitOperand(operand);
@@ -789,7 +1057,7 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
         }
         break;
       }
-      case "ReactiveFunctionValue": {
+      case 'ReactiveFunctionValue': {
         CompilerError.invariant(false, {
           reason: `Unexpected ReactiveFunctionValue`,
           loc: value.loc,
@@ -809,9 +1077,9 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
     context: Context,
     id: InstructionId,
     value: ReactiveValue,
-    lvalue: Place | null
+    lvalue: Place | null,
   ): void {
-    if (value.kind === "LoadLocal" && lvalue !== null) {
+    if (value.kind === 'LoadLocal' && lvalue !== null) {
       if (
         value.place.identifier.name !== null &&
         lvalue.identifier.name === null &&
@@ -821,13 +1089,13 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
       } else {
         context.visitOperand(value.place);
       }
-    } else if (value.kind === "PropertyLoad") {
+    } else if (value.kind === 'PropertyLoad') {
       if (lvalue !== null && !context.isUsedOutsideDeclaringScope(lvalue)) {
-        context.declareProperty(lvalue, value.object, value.property);
+        context.declareProperty(lvalue, value.object, value.property, false);
       } else {
-        context.visitProperty(value.object, value.property);
+        context.visitProperty(value.object, value.property, false);
       }
-    } else if (value.kind === "StoreLocal") {
+    } else if (value.kind === 'StoreLocal') {
       context.visitOperand(value.value);
       if (value.lvalue.kind === InstructionKind.Reassign) {
         context.visitReassignment(value.lvalue.place);
@@ -837,8 +1105,8 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
         scope: context.currentScope,
       });
     } else if (
-      value.kind === "DeclareLocal" ||
-      value.kind === "DeclareContext"
+      value.kind === 'DeclareLocal' ||
+      value.kind === 'DeclareContext'
     ) {
       /*
        * Some variables may be declared and never initialized. We need
@@ -856,7 +1124,7 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
         id,
         scope: context.currentScope,
       });
-    } else if (value.kind === "Destructure") {
+    } else if (value.kind === 'Destructure') {
       context.visitOperand(value.value);
       for (const place of eachPatternOperand(value.lvalue.pattern)) {
         if (value.lvalue.kind === InstructionKind.Reassign) {
@@ -868,7 +1136,7 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
         });
       }
     } else {
-      this.visitReactiveValue(context, id, value);
+      this.visitReactiveValue(context, id, value, lvalue);
     }
   }
 
@@ -878,16 +1146,16 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
     }
     const terminal = stmt.terminal;
     switch (terminal.kind) {
-      case "continue":
-      case "break": {
+      case 'continue':
+      case 'break': {
         context.poisonState.addPoisonTarget(
           terminal.target,
-          context.currentScope
+          context.currentScope,
         );
         break;
       }
-      case "throw":
-      case "return": {
+      case 'throw':
+      case 'return': {
         context.poisonState.addPoisonTarget(null, context.currentScope);
         break;
       }
@@ -901,65 +1169,70 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
 
   override visitTerminal(
     stmt: ReactiveTerminalStatement,
-    context: Context
+    context: Context,
   ): void {
     this.enterTerminal(stmt, context);
     const terminal = stmt.terminal;
     switch (terminal.kind) {
-      case "break":
-      case "continue": {
+      case 'break':
+      case 'continue': {
         break;
       }
-      case "return": {
+      case 'return': {
         context.visitOperand(terminal.value);
         break;
       }
-      case "throw": {
+      case 'throw': {
         context.visitOperand(terminal.value);
         break;
       }
-      case "for": {
-        this.visitReactiveValue(context, terminal.id, terminal.init);
-        this.visitReactiveValue(context, terminal.id, terminal.test);
+      case 'for': {
+        this.visitReactiveValue(context, terminal.id, terminal.init, null);
+        this.visitReactiveValue(context, terminal.id, terminal.test, null);
         context.enterConditional(() => {
           this.visitBlock(terminal.loop, context);
           if (terminal.update !== null) {
-            this.visitReactiveValue(context, terminal.id, terminal.update);
+            this.visitReactiveValue(
+              context,
+              terminal.id,
+              terminal.update,
+              null,
+            );
           }
         });
         break;
       }
-      case "for-of": {
-        this.visitReactiveValue(context, terminal.id, terminal.init);
+      case 'for-of': {
+        this.visitReactiveValue(context, terminal.id, terminal.init, null);
         context.enterConditional(() => {
           this.visitBlock(terminal.loop, context);
         });
         break;
       }
-      case "for-in": {
-        this.visitReactiveValue(context, terminal.id, terminal.init);
+      case 'for-in': {
+        this.visitReactiveValue(context, terminal.id, terminal.init, null);
         context.enterConditional(() => {
           this.visitBlock(terminal.loop, context);
         });
         break;
       }
-      case "do-while": {
+      case 'do-while': {
         this.visitBlock(terminal.loop, context);
         context.enterConditional(() => {
-          this.visitReactiveValue(context, terminal.id, terminal.test);
+          this.visitReactiveValue(context, terminal.id, terminal.test, null);
         });
         break;
       }
-      case "while": {
-        this.visitReactiveValue(context, terminal.id, terminal.test);
+      case 'while': {
+        this.visitReactiveValue(context, terminal.id, terminal.test, null);
         context.enterConditional(() => {
           this.visitBlock(terminal.loop, context);
         });
         break;
       }
-      case "if": {
+      case 'if': {
         context.visitOperand(terminal.test);
-        const { consequent, alternate } = terminal;
+        const {consequent, alternate} = terminal;
         /*
          * Consequent and alternate branches are mutually exclusive,
          * so we save and restore the poison state here.
@@ -975,13 +1248,13 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
           });
           context.poisonState.merge(
             [ifPoisonState],
-            context.currentScope.value
+            context.currentScope.value,
           );
           context.promoteDepsFromExhaustiveConditionals([depsInIf, depsInElse]);
         }
         break;
       }
-      case "switch": {
+      case 'switch': {
         context.visitOperand(terminal.test);
         const isDefaultOnly =
           terminal.cases.length === 1 && terminal.cases[0].test == null;
@@ -1004,7 +1277,7 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
          * CFG representation for fallthrough. This is safe. It only
          * reduces granularity of dependencies.
          */
-        for (const { test, block } of terminal.cases) {
+        for (const {test, block} of terminal.cases) {
           if (test !== null) {
             context.visitOperand(test);
           } else {
@@ -1012,12 +1285,12 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
           }
           if (block !== undefined) {
             mutExPoisonStates.push(
-              context.poisonState.take(prevPoisonState.clone())
+              context.poisonState.take(prevPoisonState.clone()),
             );
             depsInCases.push(
               context.enterConditional(() => {
                 this.visitBlock(block, context);
-              })
+              }),
             );
           }
         }
@@ -1026,15 +1299,15 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
         }
         context.poisonState.merge(
           mutExPoisonStates,
-          context.currentScope.value
+          context.currentScope.value,
         );
         break;
       }
-      case "label": {
+      case 'label': {
         this.visitBlock(terminal.block, context);
         break;
       }
-      case "try": {
+      case 'try': {
         this.visitBlock(terminal.block, context);
         this.visitBlock(terminal.handler, context);
         break;
@@ -1042,7 +1315,7 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
       default: {
         assertExhaustive(
           terminal,
-          `Unexpected terminal kind \`${(terminal as any).kind}\``
+          `Unexpected terminal kind \`${(terminal as any).kind}\``,
         );
       }
     }

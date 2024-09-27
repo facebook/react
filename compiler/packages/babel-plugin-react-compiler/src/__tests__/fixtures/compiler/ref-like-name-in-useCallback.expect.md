@@ -3,10 +3,10 @@
 
 ```javascript
 // @enableTreatRefLikeIdentifiersAsRefs @validatePreserveExistingMemoizationGuarantees
-import { useRef, useCallback } from "react";
+import {useRef, useCallback} from 'react';
 
 function useCustomRef() {
-  return useRef({ click: () => {} });
+  return useRef({click: () => {}});
 }
 
 function Foo() {
@@ -37,16 +37,17 @@ function useCustomRef() {
   const $ = _c(1);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = { click: () => {} };
+    t0 = { click: _temp };
     $[0] = t0;
   } else {
     t0 = $[0];
   }
   return useRef(t0);
 }
+function _temp() {}
 
 function Foo() {
-  const $ = _c(3);
+  const $ = _c(2);
   const customRef = useCustomRef();
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
@@ -59,12 +60,11 @@ function Foo() {
   }
   const onClick = t0;
   let t1;
-  if ($[1] !== onClick) {
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = <button onClick={onClick} />;
-    $[1] = onClick;
-    $[2] = t1;
+    $[1] = t1;
   } else {
-    t1 = $[2];
+    t1 = $[1];
   }
   return t1;
 }

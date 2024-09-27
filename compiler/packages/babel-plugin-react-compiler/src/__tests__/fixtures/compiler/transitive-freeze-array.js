@@ -1,5 +1,5 @@
 // @enablePreserveExistingMemoizationGuarantees
-const { mutate } = require("shared-runtime");
+const {mutate} = require('shared-runtime');
 
 function Component(props) {
   const x = {};

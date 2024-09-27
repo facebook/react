@@ -28,6 +28,8 @@ export const componentStorage: AsyncLocalStorage<ReactComponentInfo | void> =
 
 export * from '../ReactFlightServerConfigDebugNoop';
 
+export * from '../ReactFlightStackConfigV8';
+
 export type ClientManifest = null;
 export opaque type ClientReference<T> = null; // eslint-disable-line no-unused-vars
 export opaque type ServerReference<T> = null; // eslint-disable-line no-unused-vars
@@ -50,9 +52,9 @@ export function getClientReferenceKey(
   reference: ClientReference<any>,
 ): ClientReferenceKey {
   throw new Error(
-    'Attempted to render a Client Component from renderToMarkup. ' +
+    'Attempted to render a Client Component from renderToHTML. ' +
       'This is not supported since it will never hydrate. ' +
-      'Only render Server Components with renderToMarkup.',
+      'Only render Server Components with renderToHTML.',
   );
 }
 
@@ -61,9 +63,9 @@ export function resolveClientReferenceMetadata<T>(
   clientReference: ClientReference<T>,
 ): ClientReferenceMetadata {
   throw new Error(
-    'Attempted to render a Client Component from renderToMarkup. ' +
+    'Attempted to render a Client Component from renderToHTML. ' +
       'This is not supported since it will never hydrate. ' +
-      'Only render Server Components with renderToMarkup.',
+      'Only render Server Components with renderToHTML.',
   );
 }
 
@@ -72,7 +74,7 @@ export function getServerReferenceId<T>(
   serverReference: ServerReference<T>,
 ): ServerReferenceId {
   throw new Error(
-    'Attempted to render a Server Action from renderToMarkup. ' +
+    'Attempted to render a Server Action from renderToHTML. ' +
       'This is not supported since it varies by version of the app. ' +
       'Use a fixed URL for any forms instead.',
   );
@@ -83,8 +85,15 @@ export function getServerReferenceBoundArguments<T>(
   serverReference: ServerReference<T>,
 ): null | Array<ReactClientValue> {
   throw new Error(
-    'Attempted to render a Server Action from renderToMarkup. ' +
+    'Attempted to render a Server Action from renderToHTML. ' +
       'This is not supported since it varies by version of the app. ' +
       'Use a fixed URL for any forms instead.',
   );
+}
+
+export function getServerReferenceLocation<T>(
+  config: ClientManifest,
+  serverReference: ServerReference<T>,
+): void {
+  return undefined;
 }

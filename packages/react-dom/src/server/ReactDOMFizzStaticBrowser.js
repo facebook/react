@@ -23,6 +23,7 @@ import ReactVersion from 'shared/ReactVersion';
 
 import {
   createPrerenderRequest,
+  resumeAndPrerenderRequest,
   startWork,
   startFlowing,
   stopFlowing,
@@ -33,6 +34,7 @@ import {
 import {
   createResumableState,
   createRenderState,
+  resumeRenderState,
   createRootFormatContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
@@ -141,4 +143,73 @@ function prerender(
   });
 }
 
-export {prerender, ReactVersion as version};
+type ResumeOptions = {
+  nonce?: string,
+  signal?: AbortSignal,
+  onError?: (error: mixed) => ?string,
+  onPostpone?: (reason: string) => void,
+  unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
+};
+
+function resumeAndPrerender(
+  children: ReactNodeList,
+  postponedState: PostponedState,
+  options?: ResumeOptions,
+): Promise<StaticResult> {
+  return new Promise((resolve, reject) => {
+    const onFatalError = reject;
+
+    function onAllReady() {
+      const stream = new ReadableStream(
+        {
+          type: 'bytes',
+          pull: (controller): ?Promise<void> => {
+            startFlowing(request, controller);
+          },
+          cancel: (reason): ?Promise<void> => {
+            stopFlowing(request);
+            abort(request, reason);
+          },
+        },
+        // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
+        {highWaterMark: 0},
+      );
+
+      const result = {
+        postponed: getPostponedState(request),
+        prelude: stream,
+      };
+      resolve(result);
+    }
+
+    const request = resumeAndPrerenderRequest(
+      children,
+      postponedState,
+      resumeRenderState(
+        postponedState.resumableState,
+        options ? options.nonce : undefined,
+      ),
+      options ? options.onError : undefined,
+      onAllReady,
+      undefined,
+      undefined,
+      onFatalError,
+      options ? options.onPostpone : undefined,
+    );
+    if (options && options.signal) {
+      const signal = options.signal;
+      if (signal.aborted) {
+        abort(request, (signal: any).reason);
+      } else {
+        const listener = () => {
+          abort(request, (signal: any).reason);
+          signal.removeEventListener('abort', listener);
+        };
+        signal.addEventListener('abort', listener);
+      }
+    }
+    startWork(request);
+  });
+}
+
+export {prerender, resumeAndPrerender, ReactVersion as version};

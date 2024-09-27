@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { expect, test } from "@playwright/test";
-import { encodeStore, type Store } from "../../lib/stores";
+import {expect, test} from '@playwright/test';
+import {encodeStore, type Store} from '../../lib/stores';
 
 const STORE: Store = {
   source: `export default function TestComponent({ x }) {
@@ -17,33 +17,33 @@ const STORE: Store = {
 const HASH = encodeStore(STORE);
 
 function concat(data: Array<string>): string {
-  return data.join("");
+  return data.join('');
 }
 
-test("editor should compile successfully", async ({ page }) => {
-  await page.goto(`/#${HASH}`, { waitUntil: "networkidle" });
+test('editor should compile successfully', async ({page}) => {
+  await page.goto(`/#${HASH}`, {waitUntil: 'networkidle'});
   await page.screenshot({
     fullPage: true,
-    path: "test-results/00-on-networkidle.png",
+    path: 'test-results/00-on-networkidle.png',
   });
 
   // User input from hash compiles
   await page.screenshot({
     fullPage: true,
-    path: "test-results/01-show-js-before.png",
+    path: 'test-results/01-show-js-before.png',
   });
   const userInput =
-    (await page.locator(".monaco-editor").nth(2).allInnerTexts()) ?? [];
-  expect(concat(userInput)).toMatchSnapshot("user-input.txt");
+    (await page.locator('.monaco-editor').nth(2).allInnerTexts()) ?? [];
+  expect(concat(userInput)).toMatchSnapshot('user-input.txt');
 
   // Reset button works
-  page.on("dialog", (dialog) => dialog.accept());
-  await page.getByRole("button", { name: "Reset" }).click();
+  page.on('dialog', dialog => dialog.accept());
+  await page.getByRole('button', {name: 'Reset'}).click();
   await page.screenshot({
     fullPage: true,
-    path: "test-results/02-show-js-after.png",
+    path: 'test-results/02-show-js-after.png',
   });
   const defaultInput =
-    (await page.locator(".monaco-editor").nth(2).allInnerTexts()) ?? [];
-  expect(concat(defaultInput)).toMatchSnapshot("default-input.txt");
+    (await page.locator('.monaco-editor').nth(2).allInnerTexts()) ?? [];
+  expect(concat(defaultInput)).toMatchSnapshot('default-input.txt');
 });

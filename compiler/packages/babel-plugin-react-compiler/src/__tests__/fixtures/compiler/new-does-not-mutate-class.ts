@@ -1,7 +1,7 @@
-import { identity } from "shared-runtime";
+import {identity} from 'shared-runtime';
 
 class Foo {}
-function Component({ val }) {
+function Component({val}) {
   const MyClass = identity(Foo);
   const x = [val];
   const y = new MyClass();
@@ -11,5 +11,5 @@ function Component({ val }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ val: 0 }],
+  params: [{val: 0}],
 };

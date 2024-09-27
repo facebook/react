@@ -88,8 +88,8 @@ describe('ReactIncrementalSideEffects', () => {
           {props.text === 'World'
             ? [<Bar key="a" text={props.text} />, <div key="b" />]
             : props.text === 'Hi'
-            ? [<div key="b" />, <Bar key="a" text={props.text} />]
-            : null}
+              ? [<div key="b" />, <Bar key="a" text={props.text} />]
+              : null}
           <span prop="test" />
         </div>
       );

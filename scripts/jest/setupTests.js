@@ -205,8 +205,17 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     }
   };
 
+  const coerceGateConditionToFunction = gateFnOrString => {
+    return typeof gateFnOrString === 'string'
+      ? // `gate('foo')` is treated as equivalent to `gate(flags => flags.foo)`
+        flags => flags[gateFnOrString]
+      : // Assume this is already a function
+        gateFnOrString;
+  };
+
   const gatedErrorMessage = 'Gated test was expected to fail, but it passed.';
-  global._test_gate = (gateFn, testName, callback, timeoutMS) => {
+  global._test_gate = (gateFnOrString, testName, callback, timeoutMS) => {
+    const gateFn = coerceGateConditionToFunction(gateFnOrString);
     let shouldPass;
     try {
       const flags = getTestFlags();
@@ -230,7 +239,8 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
         expectTestToFail(callback, error, timeoutMS));
     }
   };
-  global._test_gate_focus = (gateFn, testName, callback, timeoutMS) => {
+  global._test_gate_focus = (gateFnOrString, testName, callback, timeoutMS) => {
+    const gateFn = coerceGateConditionToFunction(gateFnOrString);
     let shouldPass;
     try {
       const flags = getTestFlags();
@@ -259,51 +269,9 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   };
 
   // Dynamic version of @gate pragma
-  global.gate = fn => {
+  global.gate = gateFnOrString => {
+    const gateFn = coerceGateConditionToFunction(gateFnOrString);
     const flags = getTestFlags();
-    return fn(flags);
+    return gateFn(flags);
   };
-}
-
-// Most of our tests call jest.resetModules in a beforeEach and the
-// re-require all the React modules. However, the JSX runtime is injected by
-// the compiler, so those bindings don't get updated. This causes warnings
-// logged by the JSX runtime to not have a component stack, because component
-// stack relies on the the secret internals object that lives on the React
-// module, which because of the resetModules call is longer the same one.
-//
-// To workaround this issue, we use a proxy that re-requires the latest
-// JSX Runtime from the require cache on every function invocation.
-//
-// Longer term we should migrate all our tests away from using require() and
-// resetModules, and use import syntax instead so this kind of thing doesn't
-// happen.
-lazyRequireFunctionExports('react/jsx-dev-runtime');
-
-// TODO: We shouldn't need to do this in the production runtime, but until
-// we remove string refs they also depend on the shared state object. Remove
-// once we remove string refs.
-lazyRequireFunctionExports('react/jsx-runtime');
-
-function lazyRequireFunctionExports(moduleName) {
-  jest.mock(moduleName, () => {
-    return new Proxy(jest.requireActual(moduleName), {
-      get(originalModule, prop) {
-        // If this export is a function, return a wrapper function that lazily
-        // requires the implementation from the current module cache.
-        if (typeof originalModule[prop] === 'function') {
-          const wrapper = function () {
-            return jest.requireActual(moduleName)[prop].apply(this, arguments);
-          };
-          // We use this to trick the filtering of Flight to exclude this frame.
-          Object.defineProperty(wrapper, 'name', {
-            value: '(<anonymous>)',
-          });
-          return wrapper;
-        } else {
-          return originalModule[prop];
-        }
-      },
-    });
-  });
 }

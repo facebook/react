@@ -48,4 +48,7 @@ export const createStringDecoder = $$$config.createStringDecoder;
 export const readPartialStringChunk = $$$config.readPartialStringChunk;
 export const readFinalStringChunk = $$$config.readFinalStringChunk;
 
-export const printToConsole = $$$config.printToConsole;
+export const bindToConsole = $$$config.bindToConsole;
+
+export const rendererVersion = $$$config.rendererVersion;
+export const rendererPackageName = $$$config.rendererPackageName;

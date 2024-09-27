@@ -4,6 +4,15 @@ import ReactDOM from 'react-dom/client';
 import {createFromFetch, encodeReply} from 'react-server-dom-esm/client';
 
 const moduleBaseURL = '/src/';
+
+function findSourceMapURL(fileName) {
+  return (
+    document.location.origin +
+    '/source-maps?name=' +
+    encodeURIComponent(fileName)
+  );
+}
+
 let updateRoot;
 async function callServer(id, args) {
   const response = fetch('/', {
@@ -17,6 +26,7 @@ async function callServer(id, args) {
   const {returnValue, root} = await createFromFetch(response, {
     callServer,
     moduleBaseURL,
+    findSourceMapURL,
   });
   // Refresh the tree with the new RSC payload.
   startTransition(() => {
@@ -34,6 +44,7 @@ let data = createFromFetch(
   {
     callServer,
     moduleBaseURL,
+    findSourceMapURL,
   }
 );
 

@@ -1,4 +1,4 @@
-import { getNull } from "shared-runtime";
+import {getNull} from 'shared-runtime';
 
 function Component(props) {
   const items = (() => {
@@ -10,5 +10,5 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ a: {} }],
+  params: [{a: {}}],
 };

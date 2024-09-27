@@ -42,7 +42,7 @@ export const supportsClientAPIs = true;
 export const supportsRequestStorage = false;
 export const requestStorage: AsyncLocalStorage<Request | void> = (null: any);
 
-export const printToConsole = $$$config.printToConsole;
+export const bindToConsole = $$$config.bindToConsole;
 
 export const resetResumableState = $$$config.resetResumableState;
 export const completeResumableState = $$$config.completeResumableState;

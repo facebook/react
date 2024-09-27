@@ -3,21 +3,21 @@
 
 ```javascript
 // @enableReactiveScopesInHIR:false
-import { useRef } from "react";
-import { addOne } from "shared-runtime";
+import {useRef} from 'react';
+import {addOne} from 'shared-runtime';
 
 function useKeyCommand() {
   const currentPosition = useRef(0);
-  const handleKey = (direction) => () => {
+  const handleKey = direction => () => {
     const position = currentPosition.current;
-    const nextPosition = direction === "left" ? addOne(position) : position;
+    const nextPosition = direction === 'left' ? addOne(position) : position;
     currentPosition.current = nextPosition;
   };
   const moveLeft = {
-    handler: handleKey("left"),
+    handler: handleKey('left'),
   };
   const moveRight = {
-    handler: handleKey("right"),
+    handler: handleKey('right'),
   };
   return [moveLeft, moveRight];
 }
@@ -37,45 +37,26 @@ import { useRef } from "react";
 import { addOne } from "shared-runtime";
 
 function useKeyCommand() {
-  const $ = _c(7);
+  const $ = _c(1);
   const currentPosition = useRef(0);
-  const handleKey = (direction) => () => {
-    const position = currentPosition.current;
-    const nextPosition = direction === "left" ? addOne(position) : position;
-    currentPosition.current = nextPosition;
-  };
+  let t0;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    const handleKey = (direction) => () => {
+      const position = currentPosition.current;
+      const nextPosition = direction === "left" ? addOne(position) : position;
+      currentPosition.current = nextPosition;
+    };
 
-  const t0 = handleKey("left");
-  let t1;
-  if ($[0] !== t0) {
-    t1 = { handler: t0 };
+    const moveLeft = { handler: handleKey("left") };
+
+    const moveRight = { handler: handleKey("right") };
+
+    t0 = [moveLeft, moveRight];
     $[0] = t0;
-    $[1] = t1;
   } else {
-    t1 = $[1];
+    t0 = $[0];
   }
-  const moveLeft = t1;
-
-  const t2 = handleKey("right");
-  let t3;
-  if ($[2] !== t2) {
-    t3 = { handler: t2 };
-    $[2] = t2;
-    $[3] = t3;
-  } else {
-    t3 = $[3];
-  }
-  const moveRight = t3;
-  let t4;
-  if ($[4] !== moveLeft || $[5] !== moveRight) {
-    t4 = [moveLeft, moveRight];
-    $[4] = moveLeft;
-    $[5] = moveRight;
-    $[6] = t4;
-  } else {
-    t4 = $[6];
-  }
-  return t4;
+  return t0;
 }
 
 export const FIXTURE_ENTRYPOINT = {

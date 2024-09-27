@@ -43,7 +43,6 @@ import {
   enableUseEffectEventHook,
   enableUseMemoCacheHook,
   enableAsyncActions,
-  enableUseDeferredValueInitialArg,
 } from 'shared/ReactFeatureFlags';
 import is from 'shared/objectIs';
 import {
@@ -570,11 +569,7 @@ function useSyncExternalStore<T>(
 
 function useDeferredValue<T>(value: T, initialValue?: T): T {
   resolveCurrentlyRenderingComponent();
-  if (enableUseDeferredValueInitialArg) {
-    return initialValue !== undefined ? initialValue : value;
-  } else {
-    return value;
-  }
+  return initialValue !== undefined ? initialValue : value;
 }
 
 function unsupportedStartTransition() {
@@ -809,7 +804,7 @@ function noop(): void {}
 
 function clientHookNotSupported() {
   throw new Error(
-    'Cannot use state or effect Hooks in renderToMarkup because ' +
+    'Cannot use state or effect Hooks in renderToHTML because ' +
       'this component will never be hydrated.',
   );
 }

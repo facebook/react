@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-const FooContext = React.createContext({ current: null });
+const FooContext = React.createContext({current: null});
 
 function Component(props) {
   const foo = React.useContext(FooContext);
@@ -17,7 +17,7 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ children: <div>Hello</div> }],
+  params: [{children: <div>Hello</div>}],
 };
 
 ```
@@ -29,7 +29,7 @@ import { c as _c } from "react/compiler-runtime";
 const FooContext = React.createContext({ current: null });
 
 function Component(props) {
-  const $ = _c(6);
+  const $ = _c(5);
   React.useContext(FooContext);
   const ref = React.useRef();
   const [x, setX] = React.useState(false);
@@ -53,13 +53,12 @@ function Component(props) {
     t1 = $[2];
   }
   let t2;
-  if ($[3] !== onClick || $[4] !== t1) {
+  if ($[3] !== t1) {
     t2 = <div onClick={onClick}>{t1}</div>;
-    $[3] = onClick;
-    $[4] = t1;
-    $[5] = t2;
+    $[3] = t1;
+    $[4] = t2;
   } else {
-    t2 = $[5];
+    t2 = $[4];
   }
   return t2;
 }

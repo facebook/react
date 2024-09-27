@@ -1,7 +1,7 @@
 // Note: Everything below this is sketchy
 /* eslint-disable react-hooks/rules-of-hooks */
 function lowercasecomponent() {
-  "use forget";
+  'use forget';
   const x = [];
   return <div>{x}</div>;
 }

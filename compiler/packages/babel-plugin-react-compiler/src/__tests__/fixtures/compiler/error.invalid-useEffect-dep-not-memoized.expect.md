@@ -3,7 +3,7 @@
 
 ```javascript
 // @validateMemoizedEffectDependencies
-import { useEffect } from "react";
+import {useEffect} from 'react';
 
 function Component(props) {
   const data = {};

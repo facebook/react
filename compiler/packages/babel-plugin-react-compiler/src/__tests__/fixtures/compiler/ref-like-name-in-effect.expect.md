@@ -3,10 +3,10 @@
 
 ```javascript
 // @enableTreatRefLikeIdentifiersAsRefs @validatePreserveExistingMemoizationGuarantees
-import { useRef, useEffect } from "react";
+import {useRef, useEffect} from 'react';
 
 function useCustomRef() {
-  return useRef({ click: () => {} });
+  return useRef({click: () => {}});
 }
 
 function Foo() {
@@ -37,13 +37,14 @@ function useCustomRef() {
   const $ = _c(1);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = { click: () => {} };
+    t0 = { click: _temp };
     $[0] = t0;
   } else {
     t0 = $[0];
   }
   return useRef(t0);
 }
+function _temp() {}
 
 function Foo() {
   const $ = _c(3);

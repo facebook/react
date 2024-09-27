@@ -8,7 +8,7 @@ function Component() {
   const c = ++a;
   const d = a--;
   const e = --a;
-  return { a, b, c, d, e };
+  return {a, b, c, d, e};
 }
 
 export const FIXTURE_ENTRYPOINT = {
