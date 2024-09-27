@@ -18,7 +18,6 @@ import {
   disableSchedulerTimeoutInWorkLoop,
   enableProfilerTimer,
   enableProfilerNestedUpdatePhase,
-  enableSiblingPrerendering,
 } from 'shared/ReactFeatureFlags';
 import {
   NoLane,
@@ -30,7 +29,6 @@ import {
   markStarvedLanesAsExpired,
   claimNextTransitionLane,
   getNextLanesToFlushSync,
-  checkIfRootIsPrerendering,
 } from './ReactFiberLane';
 import {
   CommitContext,
@@ -208,10 +206,7 @@ function flushSyncWorkAcrossRoots_impl(
               ? workInProgressRootRenderLanes
               : NoLanes,
           );
-          if (
-            includesSyncLane(nextLanes) &&
-            !checkIfRootIsPrerendering(root, nextLanes)
-          ) {
+          if (includesSyncLane(nextLanes)) {
             // This root has pending sync work. Flush it now.
             didPerformSomeWork = true;
             performSyncWorkOnRoot(root, nextLanes);
@@ -346,13 +341,7 @@ function scheduleTaskForRootDuringMicrotask(
   }
 
   // Schedule a new callback in the host environment.
-  if (
-    includesSyncLane(nextLanes) &&
-    // If we're prerendering, then we should use the concurrent work loop
-    // even if the lanes are synchronous, so that prerendering never blocks
-    // the main thread.
-    !(enableSiblingPrerendering && checkIfRootIsPrerendering(root, nextLanes))
-  ) {
+  if (includesSyncLane(nextLanes)) {
     // Synchronous work is always flushed at the end of the microtask, so we
     // don't need to schedule an additional task.
     if (existingCallbackNode !== null) {
@@ -386,10 +375,9 @@ function scheduleTaskForRootDuringMicrotask(
 
     let schedulerPriorityLevel;
     switch (lanesToEventPriority(nextLanes)) {
-      // Scheduler does have an "ImmediatePriority", but now that we use
-      // microtasks for sync work we no longer use that. Any sync work that
-      // reaches this path is meant to be time sliced.
       case DiscreteEventPriority:
+        schedulerPriorityLevel = ImmediateSchedulerPriority;
+        break;
       case ContinuousEventPriority:
         schedulerPriorityLevel = UserBlockingSchedulerPriority;
         break;
