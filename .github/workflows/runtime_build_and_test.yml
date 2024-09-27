@@ -172,8 +172,8 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: ucacher yarn install --frozen-lockfile
-      - name: ls
-        run: ls -al /root/actions-runner/_work/react/react
+      - name: Sleep
+        run: sleep 100000
       - run: ucacher yarn build --index=${{ matrix.worker_id }} --total=20 --r=${{ matrix.release_channel }} --ci
         env:
           CI: github
