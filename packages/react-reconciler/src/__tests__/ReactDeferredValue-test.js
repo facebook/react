@@ -420,10 +420,6 @@ describe('ReactDeferredValue', () => {
         // The initial value suspended, so we attempt the final value, which
         // also suspends.
         'Suspend! [Final]',
-
-        ...(gate('enableSiblingPrerendering')
-          ? ['Suspend! [Loading...]', 'Suspend! [Final]']
-          : []),
       ]);
       expect(root).toMatchRenderedOutput(null);
 
@@ -463,10 +459,6 @@ describe('ReactDeferredValue', () => {
         // The initial value suspended, so we attempt the final value, which
         // also suspends.
         'Suspend! [Final]',
-
-        ...(gate('enableSiblingPrerendering')
-          ? ['Suspend! [Loading...]', 'Suspend! [Final]']
-          : []),
       ]);
       expect(root).toMatchRenderedOutput(null);
 
@@ -541,10 +533,6 @@ describe('ReactDeferredValue', () => {
         // The initial value suspended, so we attempt the final value, which
         // also suspends.
         'Suspend! [Final]',
-
-        ...(gate('enableSiblingPrerendering')
-          ? ['Suspend! [Loading...]', 'Suspend! [Final]']
-          : []),
       ]);
       expect(root).toMatchRenderedOutput(null);
 
