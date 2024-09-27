@@ -265,7 +265,7 @@ export function doEval(source: string): EvaluatorResult {
         } else {
           return {
             kind: "exception",
-            value: e.message,
+            value: e.stack,
           };
         }
       }
