@@ -3,6 +3,9 @@
   "workspaces": {
     "packages": [
       "packages/*"
+    ],
+    "nohoist": [
+      "fbt"
     ]
   },
   "repository": {
