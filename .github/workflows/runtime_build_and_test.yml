@@ -172,6 +172,8 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: ucacher yarn install --frozen-lockfile
+      - name: Sleep
+        run: sleep 100000
       - run: ucacher yarn build --index=${{ matrix.worker_id }} --total=20 --r=${{ matrix.release_channel }} --ci
         env:
           CI: github
@@ -179,8 +181,6 @@ jobs:
           NODE_INDEX: ${{ matrix.worker_id }}
       - name: Lint build
         run: ucacher yarn lint-build
-      - name: Sleep
-        run: sleep 100000
       - name: Display structure of build
         run: ls -R build
       - name: Archive build
