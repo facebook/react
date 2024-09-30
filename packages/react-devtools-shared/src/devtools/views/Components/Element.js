@@ -12,7 +12,6 @@ import {Fragment, useContext, useMemo, useState} from 'react';
 import Store from 'react-devtools-shared/src/devtools/store';
 import ButtonIcon from '../ButtonIcon';
 import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
-import {SettingsContext} from '../Settings/SettingsContext';
 import {StoreContext} from '../context';
 import {useSubscription} from '../hooks';
 import {logEvent} from 'react-devtools-shared/src/Logger';
@@ -37,7 +36,6 @@ export default function Element({data, index, style}: Props): React.Node {
   const {ownerFlatTree, ownerID, selectedElementID} =
     useContext(TreeStateContext);
   const dispatch = useContext(TreeDispatcherContext);
-  const {showInlineWarningsAndErrors} = React.useContext(SettingsContext);
 
   const element =
     ownerFlatTree !== null
@@ -181,7 +179,7 @@ export default function Element({data, index, style}: Props): React.Node {
           className={styles.BadgesBlock}
         />
 
-        {showInlineWarningsAndErrors && errorCount > 0 && (
+        {errorCount > 0 && (
           <Icon
             type="error"
             className={
@@ -191,7 +189,7 @@ export default function Element({data, index, style}: Props): React.Node {
             }
           />
         )}
-        {showInlineWarningsAndErrors && warningCount > 0 && (
+        {warningCount > 0 && (
           <Icon
             type="warning"
             className={
