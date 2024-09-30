@@ -7,7 +7,7 @@
 
 // https://github.com/reactjs/reactjs.org/blob/main/beta/src/components/Logo.tsx
 
-export default function Logo(props: JSX.IntrinsicElements['svg']) {
+export default function Logo(props: JSX.IntrinsicElements['svg']): JSX.Element {
   return (
     <svg
       viewBox="0 0 410 369"
