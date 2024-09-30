@@ -1,4 +1,4 @@
-// @enablePropagateDepsInHIR:enabled_with_optimizations
+// @enablePropagateDepsInHIR
 import {identity, Stringify} from 'shared-runtime';
 
 function Foo(props) {

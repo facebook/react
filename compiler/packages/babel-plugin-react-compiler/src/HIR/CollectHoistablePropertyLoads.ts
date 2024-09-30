@@ -229,7 +229,6 @@ function collectNonNullsInBlocks(
    */
   const knownNonNullIdentifiers = new Set<PropertyLoadNode>();
   if (
-    fn.env.config.enablePropagateDepsInHIR === 'enabled_with_optimizations' &&
     fn.fnType === 'Component' &&
     fn.params.length > 0 &&
     fn.params[0].kind === 'Identifier'
@@ -255,10 +254,7 @@ function collectNonNullsInBlocks(
           knownImmutableIdentifiers,
           assumedNonNullObjects,
         );
-      } else if (
-        instr.value.kind === 'Destructure' &&
-        fn.env.config.enablePropagateDepsInHIR === 'enabled_with_optimizations'
-      ) {
+      } else if (instr.value.kind === 'Destructure') {
         const source = instr.value.value.identifier.id;
         const sourceNode = temporaries.get(source);
         if (sourceNode != null) {
@@ -270,10 +266,7 @@ function collectNonNullsInBlocks(
             assumedNonNullObjects,
           );
         }
-      } else if (
-        instr.value.kind === 'ComputedLoad' &&
-        fn.env.config.enablePropagateDepsInHIR === 'enabled_with_optimizations'
-      ) {
+      } else if (instr.value.kind === 'ComputedLoad') {
         const source = instr.value.object.identifier.id;
         const sourceNode = temporaries.get(source);
         if (sourceNode != null) {
