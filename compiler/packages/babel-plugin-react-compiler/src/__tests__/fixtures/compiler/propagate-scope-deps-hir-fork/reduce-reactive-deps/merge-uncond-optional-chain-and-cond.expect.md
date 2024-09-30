@@ -6,16 +6,6 @@
 import {identity} from 'shared-runtime';
 
 /**
- * Evaluator failure:
- * Found differences in evaluator results
- *   Non-forget (expected):
- *   (kind: ok) {}
- *   [[ (exception in render) TypeError: Cannot read properties of null (reading 'title_text') ]]
- *   Forget:
- *   (kind: ok) {}
- *   {}
- */
-/**
  * Very contrived text fixture showing that it's technically incorrect to merge
  * a conditional dependency (e.g. dep.path in `cond ? dep.path : ...`) and an
  * unconditionally evaluated optional chain (`dep?.path`).
@@ -43,16 +33,6 @@ export const FIXTURE_ENTRYPOINT = {
 import { c as _c } from "react/compiler-runtime"; // @enablePropagateDepsInHIR
 import { identity } from "shared-runtime";
 
-/**
- * Evaluator failure:
- * Found differences in evaluator results
- *   Non-forget (expected):
- *   (kind: ok) {}
- *   [[ (exception in render) TypeError: Cannot read properties of null (reading 'title_text') ]]
- *   Forget:
- *   (kind: ok) {}
- *   {}
- */
 /**
  * Very contrived text fixture showing that it's technically incorrect to merge
  * a conditional dependency (e.g. dep.path in `cond ? dep.path : ...`) and an

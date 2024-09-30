@@ -35,7 +35,7 @@ function useFoo({
   // prop3 and prop4?.inner should be hoisted as the dependency of z
   const z = prop3?.fn(prop4?.inner.value).toString();
 
-  // prop5 and prop4?.inner should be hoisted as the dependency of z
+  // prop5 and prop6?.inner should be hoisted as the dependency of zz
   const zz = prop5?.fn(prop6?.inner.value)?.toString();
   return [x, y, z, zz];
 }
