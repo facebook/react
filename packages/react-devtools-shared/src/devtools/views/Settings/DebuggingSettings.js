@@ -38,6 +38,10 @@ export default function DebuggingSettings({
     useState(usedHookSettings.showInlineWarningsAndErrors);
 
   useEffect(() => {
+    store.setShouldShowWarningsAndErrors(showInlineWarningsAndErrors);
+  }, [showInlineWarningsAndErrors]);
+
+  useEffect(() => {
     store.updateHookSettings({
       appendComponentStack,
       breakOnConsoleErrors,

@@ -13,7 +13,10 @@ import {installHook} from 'react-devtools-shared/src/hook';
 import {initBackend} from 'react-devtools-shared/src/backend';
 import {__DEBUG__} from 'react-devtools-shared/src/constants';
 import setupNativeStyleEditor from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
-import {getDefaultComponentFilters} from 'react-devtools-shared/src/utils';
+import {
+  getDefaultComponentFilters,
+  getIsReloadAndProfileSupported,
+} from 'react-devtools-shared/src/utils';
 
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
 import type {
@@ -23,6 +26,8 @@ import type {
 import type {
   DevToolsHook,
   DevToolsHookSettings,
+  ReloadAndProfileConfig,
+  ReloadAndProfileConfigPersistence,
 } from 'react-devtools-shared/src/backend/types';
 import type {ResolveNativeStyle} from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
 
@@ -36,6 +41,8 @@ type ConnectOptions = {
   isAppActive?: () => boolean,
   websocket?: ?WebSocket,
   onSettingsUpdated?: (settings: $ReadOnly<DevToolsHookSettings>) => void,
+  isReloadAndProfileSupported?: boolean,
+  reloadAndProfileConfigPersistence?: ReloadAndProfileConfigPersistence,
 };
 
 let savedComponentFilters: Array<ComponentFilter> =
@@ -56,8 +63,9 @@ export function initialize(
   maybeSettingsOrSettingsPromise?:
     | DevToolsHookSettings
     | Promise<DevToolsHookSettings>,
+  reloadAndProfileConfig?: ReloadAndProfileConfig,
 ) {
-  installHook(window, maybeSettingsOrSettingsPromise);
+  installHook(window, maybeSettingsOrSettingsPromise, reloadAndProfileConfig);
 }
 
 export function connectToDevTools(options: ?ConnectOptions) {
@@ -77,6 +85,8 @@ export function connectToDevTools(options: ?ConnectOptions) {
     retryConnectionDelay = 2000,
     isAppActive = () => true,
     onSettingsUpdated,
+    isReloadAndProfileSupported = getIsReloadAndProfileSupported(),
+    reloadAndProfileConfigPersistence,
   } = options || {};
 
   const protocol = useHttps ? 'wss' : 'ws';
@@ -170,7 +180,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
 
     // TODO (npm-packages) Warn if "isBackendStorageAPISupported"
     // $FlowFixMe[incompatible-call] found when upgrading Flow
-    const agent = new Agent(bridge);
+    const agent = new Agent(bridge, reloadAndProfileConfigPersistence);
     if (onSettingsUpdated != null) {
       agent.addListener('updateHookSettings', onSettingsUpdated);
     }
@@ -184,7 +194,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
       hook.emit('shutdown');
     });
 
-    initBackend(hook, agent, window);
+    initBackend(hook, agent, window, isReloadAndProfileSupported);
 
     // Setup React Native style editor if the environment supports it.
     if (resolveRNStyle != null || hook.resolveRNStyle != null) {
@@ -309,6 +319,8 @@ type ConnectWithCustomMessagingOptions = {
   nativeStyleEditorValidAttributes?: $ReadOnlyArray<string>,
   resolveRNStyle?: ResolveNativeStyle,
   onSettingsUpdated?: (settings: $ReadOnly<DevToolsHookSettings>) => void,
+  isReloadAndProfileSupported?: boolean,
+  reloadAndProfileConfigPersistence?: ReloadAndProfileConfigPersistence,
 };
 
 export function connectWithCustomMessagingProtocol({
@@ -318,6 +330,8 @@ export function connectWithCustomMessagingProtocol({
   nativeStyleEditorValidAttributes,
   resolveRNStyle,
   onSettingsUpdated,
+  isReloadAndProfileSupported = getIsReloadAndProfileSupported(),
+  reloadAndProfileConfigPersistence,
 }: ConnectWithCustomMessagingOptions): Function {
   const hook: ?DevToolsHook = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (hook == null) {
@@ -354,7 +368,7 @@ export function connectWithCustomMessagingProtocol({
     bridge.send('overrideComponentFilters', savedComponentFilters);
   }
 
-  const agent = new Agent(bridge);
+  const agent = new Agent(bridge, reloadAndProfileConfigPersistence);
   if (onSettingsUpdated != null) {
     agent.addListener('updateHookSettings', onSettingsUpdated);
   }
@@ -368,7 +382,12 @@ export function connectWithCustomMessagingProtocol({
     hook.emit('shutdown');
   });
 
-  const unsubscribeBackend = initBackend(hook, agent, window);
+  const unsubscribeBackend = initBackend(
+    hook,
+    agent,
+    window,
+    isReloadAndProfileSupported,
+  );
 
   const nativeStyleResolver: ResolveNativeStyle | void =
     resolveRNStyle || hook.resolveRNStyle;

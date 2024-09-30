@@ -349,6 +349,7 @@ describe('ReactSiblingPrerendering', () => {
             <div>
               <Suspense fallback={<Text text="Loading inner..." />}>
                 <AsyncText text="B" />
+                <AsyncText text="C" />
               </Suspense>
             </div>
           </Suspense>
@@ -370,10 +371,17 @@ describe('ReactSiblingPrerendering', () => {
       // is throttled because it's been less than a Just Noticeable Difference
       // since the outer fallback was committed.
       //
-      // In the meantime, we could choose to start prerendering B, but instead
+      // In the meantime, we could choose to start prerendering C, but instead
       // we wait for a JND to elapse and the commit to finish — it's not
       // worth discarding the work we've already done.
-      await waitForAll(['A', 'Suspend! [B]', 'Loading inner...']);
+      await waitForAll([
+        'A',
+        'Suspend! [B]',
+
+        // C is skipped because we're no longer in prerendering mode; there's
+        // a new fallback we can show.
+        'Loading inner...',
+      ]);
       expect(root).toMatchRenderedOutput(<div>Loading outer...</div>);
 
       // Fire the timer to commit the outer fallback.
@@ -385,8 +393,10 @@ describe('ReactSiblingPrerendering', () => {
         </div>,
       );
     });
-    // Once the outer fallback is committed, we can start prerendering B.
-    assertLog(gate('enableSiblingPrerendering') ? ['Suspend! [B]'] : []);
+    // Once the inner fallback is committed, we can start prerendering C.
+    assertLog(
+      gate('enableSiblingPrerendering') ? ['Suspend! [B]', 'Suspend! [C]'] : [],
+    );
   });
 
   it(
