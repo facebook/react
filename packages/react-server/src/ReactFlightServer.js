@@ -3444,6 +3444,36 @@ function renderConsoleValue(
 
     counter.objectLimit--;
 
+    switch ((value: any).$$typeof) {
+      case REACT_ELEMENT_TYPE: {
+        const element: ReactElement = (value: any);
+
+        if (element._owner != null) {
+          outlineComponentInfo(request, element._owner);
+        }
+
+        return enableOwnerStacks
+          ? [
+              REACT_ELEMENT_TYPE,
+              element.type,
+              element.key,
+              element.props,
+              element._owner,
+              element._debugStack == null
+                ? null
+                : filterStackTrace(request, element._debugStack, 1),
+              element._store.validated,
+            ]
+          : [
+              REACT_ELEMENT_TYPE,
+              element.type,
+              element.key,
+              element.props,
+              element._owner,
+            ];
+      }
+    }
+
     // $FlowFixMe[method-unbinding]
     if (typeof value.then === 'function') {
       const thenable: Thenable<any> = (value: any);
