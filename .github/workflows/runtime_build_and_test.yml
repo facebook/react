@@ -17,11 +17,7 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.result }}
     steps:
-      - run: |
-          echo 'result =json::{
-            "1/5":"1",
-            "2/5":"2"
-          }' >> $GITHUB_OUTPUT
+      - run: echo 'result =json::{"1/5":"1","2/5":"2"}' >> $GITHUB_OUTPUT
 
   # ----- FLOW -----
 #  discover_flow_inline_configs:
