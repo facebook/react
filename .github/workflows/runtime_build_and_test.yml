@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Get workflow run information
         id: workflow_run
-        uses: octokit/request-action@v3
+        uses: octokit/request-action@v2.3.1
         with:
           route: GET /repos/${{ github.repository }}/actions/runs/${{ github.run_id }}
         env:
