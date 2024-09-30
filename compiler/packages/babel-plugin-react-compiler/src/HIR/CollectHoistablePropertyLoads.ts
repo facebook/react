@@ -9,7 +9,6 @@ import {
   Identifier,
   IdentifierId,
   InstructionId,
-  Place,
   ReactiveScopeDependency,
   ScopeId,
 } from './HIR';
@@ -88,61 +87,6 @@ export type BlockInfo = {
   assumedNonNullObjects: ReadonlySet<PropertyLoadNode>;
 };
 
-export function getProperty(
-  object: Place,
-  propertyName: string,
-  temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
-): ReactiveScopeDependency {
-  /*
-   * (1) Get the base object either from the temporary sidemap (e.g. a LoadLocal)
-   * or a deep copy of an existing property dependency.
-   *  Example 1:
-   *    $0 = LoadLocal x
-   *    $1 = PropertyLoad $0.y
-   *  getProperty($0, ...) -> resolvedObject = x, resolvedDependency = null
-   *
-   *  Example 2:
-   *    $0 = LoadLocal x
-   *    $1 = PropertyLoad $0.y
-   *    $2 = PropertyLoad $1.z
-   *  getProperty($1, ...) -> resolvedObject = null, resolvedDependency = x.y
-   *
-   *  Example 3:
-   *    $0 = Call(...)
-   *    $1 = PropertyLoad $0.y
-   *  getProperty($0, ...) -> resolvedObject = null, resolvedDependency = null
-   */
-  const resolvedDependency = temporaries.get(object.identifier.id);
-
-  /**
-   * (2) Push the last PropertyLoad
-   * TODO(mofeiZ): understand optional chaining
-   */
-  let property: ReactiveScopeDependency;
-  if (resolvedDependency == null) {
-    property = {
-      identifier: object.identifier,
-      path: [{property: propertyName, optional: false}],
-    };
-  } else {
-    property = {
-      identifier: resolvedDependency.identifier,
-      path: [
-        ...resolvedDependency.path,
-        {property: propertyName, optional: false},
-      ],
-    };
-  }
-  return property;
-}
-
-export function resolveTemporary(
-  place: Place,
-  temporaries: ReadonlyMap<IdentifierId, Identifier>,
-): Identifier {
-  return temporaries.get(place.identifier.id) ?? place.identifier;
-}
-
 /**
  * Tree data structure to dedupe property loads (e.g. a.b.c)
  * and make computing sets intersections simpler.
@@ -152,7 +96,7 @@ type RootNode = {
   parent: null;
   // Recorded to make later computations simpler
   fullPath: ReactiveScopeDependency;
-  root: Identifier;
+  root: IdentifierId;
 };
 
 type PropertyLoadNode =
@@ -164,18 +108,18 @@ type PropertyLoadNode =
   | RootNode;
 
 class Tree {
-  roots: Map<Identifier, RootNode> = new Map();
+  roots: Map<IdentifierId, RootNode> = new Map();
 
   getOrCreateRoot(identifier: Identifier): PropertyLoadNode {
     /**
      * Reads from a statically scoped variable are always safe in JS,
      * with the exception of TDZ (not addressed by this pass).
      */
-    let rootNode = this.roots.get(identifier);
+    let rootNode = this.roots.get(identifier.id);
 
     if (rootNode === undefined) {
       rootNode = {
-        root: identifier,
+        root: identifier.id,
         properties: new Map(),
         fullPath: {
           identifier,
@@ -183,7 +127,7 @@ class Tree {
         },
         parent: null,
       };
-      this.roots.set(identifier, rootNode);
+      this.roots.set(identifier.id, rootNode);
     }
     return rootNode;
   }
