@@ -20,7 +20,7 @@ jobs:
       - uses: actions/github-script@v7
         id: set-matrix
         with:
-          script: return {"1/5":"1","2/5":"2","r=stable --env=development-1/3","3","r=stable --env=development-1/3","4"};
+          script: return {"1/5":"1","2/5":"2","r=stable --env=development-1/3":"3","r=stable --env=development-1/3":"4"};
 
   # ----- FLOW -----
 #  discover_flow_inline_configs:
