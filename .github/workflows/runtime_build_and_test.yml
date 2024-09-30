@@ -26,7 +26,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: |
-          echo "${{ steps.workflow_run.outputs.data }}";
+          echo '${{ steps.workflow_run.outputs.data }}';
           cat "${{ github.workspace }}/${{ steps.workflow_run.outputs.file_name }}"
       - uses: actions/github-script@v7
         id: set-matrix
