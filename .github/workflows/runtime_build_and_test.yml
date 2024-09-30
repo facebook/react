@@ -162,7 +162,7 @@ jobs:
     strategy:
       matrix:
         # yml is dumb. update the --total arg to yarn build if you change the number of workers
-        worker_id: [1]
+        worker_id: ["1/5","2/5"]
         release_channel: [stable]
     env:
       UCACHER_INSTRUMENTER: strace
