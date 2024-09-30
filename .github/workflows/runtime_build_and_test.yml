@@ -18,6 +18,7 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.result }}
     steps:
       - uses: actions/checkout@v4
+      - run cat ${{ env.workflow_file }}
       - uses: actions/github-script@v7
         id: set-matrix
         with:
