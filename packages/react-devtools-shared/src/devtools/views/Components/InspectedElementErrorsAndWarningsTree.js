@@ -9,7 +9,6 @@
 
 import * as React from 'react';
 import {
-  useContext,
   unstable_useCacheRefresh as useCacheRefresh,
   useTransition,
 } from 'react';
@@ -18,7 +17,6 @@ import ButtonIcon from '../ButtonIcon';
 import Store from '../../store';
 import sharedStyles from './InspectedElementSharedStyles.css';
 import styles from './InspectedElementErrorsAndWarningsTree.css';
-import {SettingsContext} from '../Settings/SettingsContext';
 import {
   clearErrorsForElement as clearErrorsForElementAPI,
   clearWarningsForElement as clearWarningsForElementAPI,
@@ -74,12 +72,14 @@ export default function InspectedElementErrorsAndWarningsTree({
     }
   };
 
-  const {showInlineWarningsAndErrors} = useContext(SettingsContext);
-  if (!showInlineWarningsAndErrors) {
+  if (!store.displayingErrorsAndWarningsEnabled) {
     return null;
   }
 
   const {errors, warnings} = inspectedElement;
+  if (errors.length === 0 && warnings.length === 0) {
+    return null;
+  }
 
   return (
     <React.Fragment>
