@@ -18,6 +18,13 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.result }}
     steps:
       - uses: actions/checkout@v4
+      - name: Get workflow run information
+        id: workflow_run
+        uses: octokit/request-action@v3
+        with:
+          route: GET /repos/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: cat "${{ github.workspace }}/${{ steps.workflow_run.outputs.file_name }}"
       - uses: actions/github-script@v7
         id: set-matrix
