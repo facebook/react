@@ -316,10 +316,11 @@ type Segment = {
   textEmbedded: boolean,
 };
 
-const OPEN = 0;
-const ABORTING = 1;
-const CLOSING = 2;
-const CLOSED = 3;
+const OPENING = 10;
+const OPEN = 11;
+const ABORTING = 12;
+const CLOSING = 13;
+const CLOSED = 14;
 
 export opaque type Request = {
   destination: null | Destination,
@@ -328,7 +329,7 @@ export opaque type Request = {
   +renderState: RenderState,
   +rootFormatContext: FormatContext,
   +progressiveChunkSize: number,
-  status: 0 | 1 | 2 | 3,
+  status: 10 | 11 | 12 | 13 | 14,
   fatalError: mixed,
   nextSegmentId: number,
   allPendingTasks: number, // when it reaches zero, we can close the connection.
@@ -424,7 +425,7 @@ function RequestInstance(
     progressiveChunkSize === undefined
       ? DEFAULT_PROGRESSIVE_CHUNK_SIZE
       : progressiveChunkSize;
-  this.status = OPEN;
+  this.status = OPENING;
   this.fatalError = null;
   this.nextSegmentId = 0;
   this.allPendingTasks = 0;
@@ -688,7 +689,7 @@ function pingTask(request: Request, task: Task): void {
   pingedTasks.push(task);
   if (request.pingedTasks.length === 1) {
     request.flushScheduled = request.destination !== null;
-    if (request.trackedPostpones !== null) {
+    if (request.trackedPostpones !== null || request.status === OPENING) {
       scheduleMicrotask(() => performWork(request));
     } else {
       scheduleWork(() => performWork(request));
@@ -4977,43 +4978,38 @@ function flushCompletedQueues(
 
 export function startWork(request: Request): void {
   request.flushScheduled = request.destination !== null;
-  if (request.trackedPostpones !== null) {
-    // When prerendering we use microtasks for pinging work
-    if (supportsRequestStorage) {
-      scheduleMicrotask(() =>
-        requestStorage.run(request, performWork, request),
-      );
-    } else {
-      scheduleMicrotask(() => performWork(request));
-    }
+  // When prerendering we use microtasks for pinging work
+  if (supportsRequestStorage) {
+    scheduleMicrotask(() => requestStorage.run(request, performWork, request));
   } else {
-    // When rendering/resuming we use regular tasks and we also emit early preloads
-    if (supportsRequestStorage) {
-      scheduleWork(() => requestStorage.run(request, performWork, request));
-    } else {
-      scheduleWork(() => performWork(request));
+    scheduleMicrotask(() => performWork(request));
+  }
+  scheduleWork(() => {
+    if (request.status === OPENING) {
+      request.status = OPEN;
     }
-    // this is either a regular render or a resume. For regular render we want
-    // to call emitEarlyPreloads after the first performWork because we want
-    // are responding to a live request and need to balance sending something early
-    // (i.e. don't want for the shell to finish) but we need something to send.
-    // The only implementation of this is for DOM at the moment and during resumes nothing
-    // actually emits but the code paths here are the same.
-    // During a prerender we don't want to be too aggressive in emitting early preloads
-    // because we aren't responding to a live request and we can wait for the prerender to
-    // postpone before we emit anything.
-    if (supportsRequestStorage) {
-      scheduleWork(() =>
+
+    if (request.trackedPostpones === null) {
+      // this is either a regular render or a resume. For regular render we want
+      // to call emitEarlyPreloads after the first performWork because we want
+      // are responding to a live request and need to balance sending something early
+      // (i.e. don't want for the shell to finish) but we need something to send.
+      // The only implementation of this is for DOM at the moment and during resumes nothing
+      // actually emits but the code paths here are the same.
+      // During a prerender we don't want to be too aggressive in emitting early preloads
+      // because we aren't responding to a live request and we can wait for the prerender to
+      // postpone before we emit anything.
+      if (supportsRequestStorage) {
         requestStorage.run(
           request,
           enqueueEarlyPreloadsAfterInitialWork,
           request,
-        ),
-      );
-    } else {
-      scheduleWork(() => enqueueEarlyPreloadsAfterInitialWork(request));
+        );
+      } else {
+        enqueueEarlyPreloadsAfterInitialWork(request);
+      }
     }
-  }
+  });
 }
 
 function enqueueEarlyPreloadsAfterInitialWork(request: Request) {
@@ -5095,7 +5091,7 @@ export function stopFlowing(request: Request): void {
 
 // This is called to early terminate a request. It puts all pending boundaries in client rendered state.
 export function abort(request: Request, reason: mixed): void {
-  if (request.status === OPEN) {
+  if (request.status === OPEN || request.status === OPENING) {
     request.status = ABORTING;
   }
 

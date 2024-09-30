@@ -29,16 +29,16 @@ async function main() {
     console.log(chalk.bold.green('  ' + pathToPrint));
   });
 
-  const {archivePath, buildID} = readSavedBuildMetadata();
+  const {archivePath, currentCommitHash} = readSavedBuildMetadata();
 
   await checkNPMPermissions();
 
   await publishToNPM();
 
-  await printFinalInstructions(buildID, archivePath);
+  await printFinalInstructions(currentCommitHash, archivePath);
 }
 
-async function printFinalInstructions(buildID, archivePath) {
+async function printFinalInstructions(currentCommitHash, archivePath) {
   console.log('');
   console.log(
     'You are now ready to publish the extension to Chrome, Edge, and Firefox:'
@@ -50,7 +50,7 @@ async function printFinalInstructions(buildID, archivePath) {
   );
   console.log('');
   console.log('When publishing to Firefox, remember the following:');
-  console.log(`  Build id: ${chalk.bold(buildID)}`);
+  console.log(`  Commit Hash: ${chalk.bold(currentCommitHash)}`);
   console.log(`  Git archive: ${chalk.bold(archivePath)}`);
   console.log('');
   console.log('Also consider syncing this release to Facebook:');
