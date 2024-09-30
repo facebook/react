@@ -1,4 +1,4 @@
-// @enablePropagateDepsInHIR:enabled_with_optimizations
+// @enablePropagateDepsInHIR
 import {identity, useIdentity} from 'shared-runtime';
 
 function useFoo({arg, cond}: {arg: number; cond: boolean}) {

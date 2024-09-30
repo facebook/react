@@ -230,9 +230,7 @@ const EnvironmentConfigSchema = z.object({
    */
   enableUseTypeAnnotations: z.boolean().default(false),
 
-  enablePropagateDepsInHIR: z
-    .enum(['disabled', 'enabled_baseline', 'enabled_with_optimizations'])
-    .default('disabled'),
+  enablePropagateDepsInHIR: z.boolean().default(false),
 
   /**
    * Enables inference of optional dependency chains. Without this flag
