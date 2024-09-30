@@ -43,7 +43,7 @@ import {
 import {printFunctionWithOutlined} from 'babel-plugin-react-compiler/src/HIR/PrintHIR';
 import {printReactiveFunctionWithOutlined} from 'babel-plugin-react-compiler/src/ReactiveScopes/PrintReactiveFunction';
 
-function parseInput(input: string, language: 'flow' | 'typescript') {
+function parseInput(input: string, language: 'flow' | 'typescript'): any {
   // Extract the first line to quickly check for custom test directives
   if (language === 'flow') {
     return HermesParser.parse(input, {
@@ -181,9 +181,9 @@ function getFunctionIdentifier(
 }
 
 function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
-  const results = new Map<string, PrintedCompilerPipelineValue[]>();
+  const results = new Map<string, Array<PrintedCompilerPipelineValue>>();
   const error = new CompilerError();
-  const upsert = (result: PrintedCompilerPipelineValue) => {
+  const upsert: (result: PrintedCompilerPipelineValue) => void = result => {
     const entry = results.get(result.name);
     if (Array.isArray(entry)) {
       entry.push(result);
@@ -273,13 +273,17 @@ function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
       }
     }
   } catch (err) {
-    // error might be an invariant violation or other runtime error
-    // (i.e. object shape that is not CompilerError)
+    /**
+     * error might be an invariant violation or other runtime error
+     * (i.e. object shape that is not CompilerError)
+     */
     if (err instanceof CompilerError && err.details.length > 0) {
       error.details.push(...err.details);
     } else {
-      // Handle unexpected failures by logging (to get a stack trace)
-      // and reporting
+      /**
+       * Handle unexpected failures by logging (to get a stack trace)
+       * and reporting
+       */
       console.error(err);
       error.details.push(
         new CompilerErrorDetail({
@@ -297,7 +301,7 @@ function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
   return [{kind: 'ok', results}, language];
 }
 
-export default function Editor() {
+export default function Editor(): JSX.Element {
   const store = useStore();
   const deferredStore = useDeferredValue(store);
   const dispatchStore = useStoreDispatch();

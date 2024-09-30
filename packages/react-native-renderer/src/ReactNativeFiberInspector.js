@@ -209,6 +209,8 @@ function getInspectorDataForViewAtPoint(
 
           closestInstance =
             internalInstanceHandle.stateNode.canonical.internalInstanceHandle;
+          const closestPublicInstance =
+            internalInstanceHandle.stateNode.canonical.publicInstance;
 
           // Note: this is deprecated and we want to remove it ASAP. Keeping it here for React DevTools compatibility for now.
           const nativeViewTag =
@@ -224,6 +226,7 @@ function getInspectorDataForViewAtPoint(
                 pointerY: locationY,
                 frame: {left: pageX, top: pageY, width, height},
                 touchedViewTag: nativeViewTag,
+                closestPublicInstance,
               });
             },
           );
@@ -243,6 +246,7 @@ function getInspectorDataForViewAtPoint(
             pointerY: locationY,
             frame: {left, top, width, height},
             touchedViewTag: nativeViewTag,
+            closestPublicInstance: nativeViewTag,
           });
         },
       );
