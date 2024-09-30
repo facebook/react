@@ -21,9 +21,9 @@ import {
 } from './HIR';
 
 /**
- * Helper function for `PropagateScopeDependencies`.
- * Uses control flow graph analysis to determine which `Identifier`s can
- * be assumed to be non-null objects, on a per-block basis.
+ * Helper function for `PropagateScopeDependencies`. Uses control flow graph
+ * analysis to determine which `Identifier`s can be assumed to be non-null
+ * objects, on a per-block basis.
  *
  * Here is an example:
  * ```js
@@ -48,15 +48,16 @@ import {
  * }
  * ```
  *
- * Note that we currently do NOT account for mutable / declaration range
- * when doing the CFG-based traversal, producing results that are technically
+ * Note that we currently do NOT account for mutable / declaration range when
+ * doing the CFG-based traversal, producing results that are technically
  * incorrect but filtered by PropagateScopeDeps (which only takes dependencies
  * on constructed value -- i.e. a scope's dependencies must have mutable ranges
  * ending earlier than the scope start).
  *
- * Take this example, this function will infer x.foo.bar as non-nullable for bb0,
- * via the intersection of bb1 & bb2 which in turn comes from bb3. This is technically
- * incorrect bb0 is before / during x's mutable range.
+ * Take this example, this function will infer x.foo.bar as non-nullable for
+ * bb0, via the intersection of bb1 & bb2 which in turn comes from bb3. This is
+ * technically incorrect bb0 is before / during x's mutable range.
+ * ```
  *  bb0:
  *    const x = ...;
  *    if cond then bb1 else bb2
@@ -68,15 +69,29 @@ import {
  *    goto bb3:
  *  bb3:
  *    x.foo.bar
+ * ```
+ *
+ * @param fn
+ * @param temporaries sidemap of identifier -> baseObject.a.b paths. Does not
+ * contain optional chains.
+ * @param hoistableFromOptionals sidemap of optionalBlock -> baseObject?.a
+ * optional paths for which it's safe to evaluate non-optional loads (see
+ * CollectOptionalChainDependencies).
+ * @returns
  */
 export function collectHoistablePropertyLoads(
   fn: HIRFunction,
   temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
-  optionals: ReadonlyMap<BlockId, ReactiveScopeDependency>,
+  hoistableFromOptionals: ReadonlyMap<BlockId, ReactiveScopeDependency>,
 ): ReadonlyMap<ScopeId, BlockInfo> {
   const registry = new PropertyPathRegistry();
 
-  const nodes = collectNonNullsInBlocks(fn, temporaries, optionals, registry);
+  const nodes = collectNonNullsInBlocks(
+    fn,
+    temporaries,
+    hoistableFromOptionals,
+    registry,
+  );
   propagateNonNull(fn, nodes, registry);
 
   const nodesKeyedByScopeId = new Map<ScopeId, BlockInfo>();
@@ -216,7 +231,7 @@ function getMaybeNonNullInInstruction(
 function collectNonNullsInBlocks(
   fn: HIRFunction,
   temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
-  optionals: ReadonlyMap<BlockId, ReactiveScopeDependency>,
+  hoistableFromOptionals: ReadonlyMap<BlockId, ReactiveScopeDependency>,
   registry: PropertyPathRegistry,
 ): ReadonlyMap<BlockId, BlockInfo> {
   /**
@@ -258,7 +273,7 @@ function collectNonNullsInBlocks(
       block,
       assumedNonNullObjects,
     });
-    const maybeOptionalChain = optionals.get(block.id);
+    const maybeOptionalChain = hoistableFromOptionals.get(block.id);
     if (maybeOptionalChain != null) {
       assumedNonNullObjects.add(
         registry.getOrCreateProperty(maybeOptionalChain),
@@ -399,8 +414,10 @@ function propagateNonNull(
     assertNonNull(nodes.get(nodeId)).assumedNonNullObjects = mergedObjects;
     traversalState.set(nodeId, 'done');
     /**
-     * Note that it might not sufficient to compare set sizes since reduceMaybeOptionalChains
-     * may replace optional-chain loads with unconditional loads
+     * Note that it's not sufficient to compare set sizes since
+     * reduceMaybeOptionalChains may replace optional-chain loads with
+     * unconditional loads. This could in turn change `assumedNonNullObjects` of
+     * downstream blocks and backedges.
      */
     changed ||= !Set_equal(prevObjects, mergedObjects);
     return changed;
@@ -457,8 +474,8 @@ export function assertNonNull<T extends NonNullable<U>, U>(
  * property strings paths de-duplicates.
  *
  * Intuitively: given <base>?.b, we know <base> to be either hoistable or not.
- * If <base> is hoistable, we can replace all <base>?.PROPERTY_STRING subpaths
- * with <base>.PROPERTY_STRING
+ * If unconditional reads from <base> are hoistable, we can replace all
+ * <base>?.PROPERTY_STRING subpaths with <base>.PROPERTY_STRING
  */
 function reduceMaybeOptionalChains(
   nodes: Set<PropertyPathNode>,
@@ -468,7 +485,6 @@ function reduceMaybeOptionalChains(
   if (optionalChainNodes.size === 0) {
     return;
   }
-  const knownNonNulls = new Set(nodes);
   let changed: boolean;
   do {
     changed = false;
@@ -481,7 +497,7 @@ function reduceMaybeOptionalChains(
         const entry = origPath[i];
         // If the base is known to be non-null, replace with a non-optional load
         const nextEntry: DependencyPathEntry =
-          entry.optional && knownNonNulls.has(currNode)
+          entry.optional && nodes.has(currNode)
             ? {property: entry.property, optional: false}
             : entry;
         currNode = PropertyPathRegistry.getOrCreatePropertyEntry(
@@ -495,7 +511,6 @@ function reduceMaybeOptionalChains(
         optionalChainNodes.add(currNode);
         nodes.delete(original);
         nodes.add(currNode);
-        knownNonNulls.add(currNode);
       }
     }
   } while (changed);
