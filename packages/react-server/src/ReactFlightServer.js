@@ -1148,9 +1148,14 @@ function renderFunctionComponent<Props>(
             ? null
             : filterStackTrace(request, task.debugStack, 1);
         // $FlowFixMe[cannot-write]
+        componentDebugInfo.props = props;
+        // $FlowFixMe[cannot-write]
         componentDebugInfo.debugStack = task.debugStack;
         // $FlowFixMe[cannot-write]
         componentDebugInfo.debugTask = task.debugTask;
+      } else {
+        // $FlowFixMe[cannot-write]
+        componentDebugInfo.props = props;
       }
       // We outline this model eagerly so that we can refer to by reference as an owner.
       // If we had a smarter way to dedupe we might not have to do this if there ends up
@@ -1710,6 +1715,7 @@ function renderElement(
           task.debugStack === null
             ? null
             : filterStackTrace(request, task.debugStack, 1),
+        props: props,
         debugStack: task.debugStack,
         debugTask: task.debugTask,
       };
@@ -3276,13 +3282,19 @@ function outlineComponentInfo(
     parentPropertyName: string,
     value: ReactClientValue,
   ): ReactJSONValue {
-    return renderConsoleValue(
-      request,
-      counter,
-      this,
-      parentPropertyName,
-      value,
-    );
+    try {
+      return renderConsoleValue(
+        request,
+        counter,
+        this,
+        parentPropertyName,
+        value,
+      );
+    } catch (x) {
+      return (
+        'Unknown Value: React could not send it from the server.\n' + x.message
+      );
+    }
   }
 
   request.pendingChunks++;
@@ -3302,6 +3314,9 @@ function outlineComponentInfo(
     // $FlowFixMe[cannot-write]
     componentDebugInfo.stack = componentInfo.stack;
   }
+  // Ensure we serialize props after the stack to favor the stack being complete.
+  // $FlowFixMe[cannot-write]
+  componentDebugInfo.props = componentInfo.props;
 
   // $FlowFixMe[incompatible-type] stringify can return null
   const json: string = stringify(componentDebugInfo, replacer);
@@ -3652,7 +3667,9 @@ function outlineConsoleValue(
         value,
       );
     } catch (x) {
-      return 'unknown value';
+      return (
+        'Unknown Value: React could not send it from the server.\n' + x.message
+      );
     }
   }
 
@@ -3700,7 +3717,9 @@ function emitConsoleChunk(
         value,
       );
     } catch (x) {
-      return 'unknown value';
+      return (
+        'Unknown Value: React could not send it from the server.\n' + x.message
+      );
     }
   }
 

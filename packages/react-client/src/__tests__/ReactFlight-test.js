@@ -308,6 +308,10 @@ describe('ReactFlight', () => {
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in Object.<anonymous> (at **)'
                   : undefined,
+                props: {
+                  firstName: 'Seb',
+                  lastName: 'Smith',
+                },
               },
             ]
           : undefined,
@@ -347,6 +351,10 @@ describe('ReactFlight', () => {
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in Object.<anonymous> (at **)'
                   : undefined,
+                props: {
+                  firstName: 'Seb',
+                  lastName: 'Smith',
+                },
               },
             ]
           : undefined,
@@ -2665,6 +2673,9 @@ describe('ReactFlight', () => {
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in Object.<anonymous> (at **)'
                   : undefined,
+                props: {
+                  transport: expect.arrayContaining([]),
+                },
               },
             ]
           : undefined,
@@ -2683,6 +2694,7 @@ describe('ReactFlight', () => {
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in Object.<anonymous> (at **)'
                   : undefined,
+                props: {},
               },
             ]
           : undefined,
@@ -2698,6 +2710,7 @@ describe('ReactFlight', () => {
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in myLazy (at **)\n    in lazyInitializer (at **)'
                   : undefined,
+                props: {},
               },
             ]
           : undefined,
@@ -2713,6 +2726,7 @@ describe('ReactFlight', () => {
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in Object.<anonymous> (at **)'
                   : undefined,
+                props: {},
               },
             ]
           : undefined,
@@ -2787,6 +2801,9 @@ describe('ReactFlight', () => {
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in Object.<anonymous> (at **)'
                   : undefined,
+                props: {
+                  transport: expect.arrayContaining([]),
+                },
               },
             ]
           : undefined,
@@ -2804,6 +2821,9 @@ describe('ReactFlight', () => {
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in ServerComponent (at **)'
                   : undefined,
+                props: {
+                  children: {},
+                },
               },
             ]
           : undefined,
@@ -2820,6 +2840,7 @@ describe('ReactFlight', () => {
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in Object.<anonymous> (at **)'
                   : undefined,
+                props: {},
               },
             ]
           : undefined,
@@ -2978,6 +2999,7 @@ describe('ReactFlight', () => {
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in Object.<anonymous> (at **)'
                   : undefined,
+                props: {},
               },
               {
                 env: 'B',
@@ -3108,6 +3130,9 @@ describe('ReactFlight', () => {
           stack: gate(flag => flag.enableOwnerStacks)
             ? '    in Object.<anonymous> (at **)'
             : undefined,
+          props: {
+            firstName: 'Seb',
+          },
         };
         expect(getDebugInfo(greeting)).toEqual([
           greetInfo,
@@ -3119,6 +3144,14 @@ describe('ReactFlight', () => {
             stack: gate(flag => flag.enableOwnerStacks)
               ? '    in Greeting (at **)'
               : undefined,
+            props: {
+              children: expect.objectContaining({
+                type: 'span',
+                props: {
+                  children: ['Hello, ', 'Seb'],
+                },
+              }),
+            },
           },
         ]);
         // The owner that created the span was the outer server component.
