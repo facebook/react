@@ -2271,23 +2271,6 @@ function escapeStringValue(value: string): string {
   }
 }
 
-function isReactComponentInfo(value: any): boolean {
-  // TODO: We don't currently have a brand check on ReactComponentInfo. Reconsider.
-  return (
-    ((typeof value.debugTask === 'object' &&
-      value.debugTask !== null &&
-      // $FlowFixMe[method-unbinding]
-      typeof value.debugTask.run === 'function') ||
-      value.debugStack instanceof Error) &&
-    (enableOwnerStacks
-      ? isArray((value: any).stack) || (value: any).stack === null
-      : typeof (value: any).stack === 'undefined') &&
-    typeof value.name === 'string' &&
-    typeof value.env === 'string' &&
-    value.owner !== undefined
-  );
-}
-
 let modelRoot: null | ReactClientValue = false;
 
 function renderModel(
@@ -3271,6 +3254,11 @@ function outlineComponentInfo(
     return;
   }
 
+  if (componentInfo.owner != null) {
+    // Ensure the owner is already outlined.
+    outlineComponentInfo(request, componentInfo.owner);
+  }
+
   // We use the console encoding so that we can dedupe objects but don't necessarily
   // use the full serialization that requires a task.
   const counter = {objectLimit: 500};
@@ -3293,8 +3281,23 @@ function outlineComponentInfo(
   request.pendingChunks++;
   const id = request.nextChunkId++;
 
+  // We can't serialize the ConsoleTask/Error objects so we need to omit them before serializing.
+  const componentDebugInfo: Omit<
+    ReactComponentInfo,
+    'debugTask' | 'debugStack',
+  > = {
+    name: componentInfo.name,
+    env: componentInfo.env,
+    key: componentInfo.key,
+    owner: componentInfo.owner,
+  };
+  if (enableOwnerStacks) {
+    // $FlowFixMe[cannot-write]
+    componentDebugInfo.stack = componentInfo.stack;
+  }
+
   // $FlowFixMe[incompatible-type] stringify can return null
-  const json: string = stringify(componentInfo, replacer);
+  const json: string = stringify(componentDebugInfo, replacer);
   const row = id.toString(16) + ':' + json + '\n';
   const processedChunk = stringToChunk(row);
   request.completedRegularChunks.push(processedChunk);
@@ -3540,25 +3543,6 @@ function renderConsoleValue(
       return Array.from((value: any));
     }
 
-    if (isReactComponentInfo(value)) {
-      // This looks like a ReactComponentInfo. We can't serialize the ConsoleTask object so we
-      // need to omit it before serializing.
-      const componentDebugInfo: Omit<
-        ReactComponentInfo,
-        'debugTask' | 'debugStack',
-      > = {
-        name: (value: any).name,
-        env: (value: any).env,
-        key: (value: any).key,
-        owner: (value: any).owner,
-      };
-      if (enableOwnerStacks) {
-        // $FlowFixMe[cannot-write]
-        componentDebugInfo.stack = (value: any).stack;
-      }
-      return componentDebugInfo;
-    }
-
     // $FlowFixMe[incompatible-return]
     return value;
   }
@@ -3716,6 +3700,11 @@ function emitConsoleChunk(
     } catch (x) {
       return 'unknown value';
     }
+  }
+
+  // Ensure the owner is already outlined.
+  if (owner != null) {
+    outlineComponentInfo(request, owner);
   }
 
   // TODO: Don't double badge if this log came from another Flight Client.
