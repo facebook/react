@@ -1155,6 +1155,7 @@ function renderFunctionComponent<Props>(
       // We outline this model eagerly so that we can refer to by reference as an owner.
       // If we had a smarter way to dedupe we might not have to do this if there ends up
       // being no references to this as an owner.
+
       outlineDebugObject(request, (componentDebugInfo: any));
       emitDebugChunk(request, componentDebugID, componentDebugInfo);
 
@@ -2135,7 +2136,7 @@ function serializeSet(request: Request, set: Set<ReactClientValue>): string {
 
 function serializeConsoleMap(
   request: Request,
-  counter: {objectCount: number},
+  counter: {objectLimit: number},
   map: Map<ReactClientValue, ReactClientValue>,
 ): string {
   // Like serializeMap but for renderConsoleValue.
@@ -2146,7 +2147,7 @@ function serializeConsoleMap(
 
 function serializeConsoleSet(
   request: Request,
-  counter: {objectCount: number},
+  counter: {objectLimit: number},
   set: Set<ReactClientValue>,
 ): string {
   // Like serializeMap but for renderConsoleValue.
@@ -3229,7 +3230,7 @@ function emitDebugChunk(
 
   // We use the console encoding so that we can dedupe objects but don't necessarily
   // use the full serialization that requires a task.
-  const counter = {objectCount: 0};
+  const counter = {objectLimit: 500};
   function replacer(
     this:
       | {+[key: string | number]: ReactClientValue}
@@ -3269,7 +3270,7 @@ function outlineDebugObject(request: Request, value: ReactClientObject): void {
 
   // We use the console encoding so that we can dedupe objects but don't necessarily
   // use the full serialization that requires a task.
-  const counter = {objectCount: 0};
+  const counter = {objectLimit: 500};
   function replacer(
     this:
       | {+[key: string | number]: ReactClientValue}
@@ -3355,7 +3356,7 @@ function serializeEval(source: string): string {
 // in the depth it can encode.
 function renderConsoleValue(
   request: Request,
-  counter: {objectCount: number},
+  counter: {objectLimit: number},
   parent:
     | {+[propertyName: string | number]: ReactClientValue}
     | $ReadOnlyArray<ReactClientValue>,
@@ -3399,13 +3400,13 @@ function renderConsoleValue(
       }
     }
 
-    if (counter.objectCount > 500) {
+    if (counter.objectLimit <= 0) {
       // We've reached our max number of objects to serialize across the wire so we serialize this
       // as a marker so that the client can error when this is accessed by the console.
       return serializeLimitedObject();
     }
 
-    counter.objectCount++;
+    counter.objectLimit--;
 
     const writtenObjects = request.writtenObjects;
     const existingReference = writtenObjects.get(value);
@@ -3635,7 +3636,7 @@ function renderConsoleValue(
 
 function outlineConsoleValue(
   request: Request,
-  counter: {objectCount: number},
+  counter: {objectLimit: number},
   model: ReactClientValue,
 ): number {
   if (!__DEV__) {
@@ -3693,7 +3694,7 @@ function emitConsoleChunk(
     );
   }
 
-  const counter = {objectCount: 0};
+  const counter = {objectLimit: 500};
   function replacer(
     this:
       | {+[key: string | number]: ReactClientValue}
