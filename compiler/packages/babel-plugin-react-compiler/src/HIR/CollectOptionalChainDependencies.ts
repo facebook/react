@@ -16,7 +16,8 @@ import {
   OptionalTerminal,
   HIRFunction,
 } from './HIR';
-import {printIdentifier, printInstruction} from './PrintHIR';
+import {printIdentifier} from './PrintHIR';
+
 export function collectOptionalChainSidemap(
   fn: HIRFunction,
 ): OptionalChainSidemap {
@@ -49,12 +50,14 @@ export function collectOptionalChainSidemap(
 export type OptionalChainSidemap = {
   /**
    * Stores the correct property mapping (e.g. `a?.b` instead of `a.b`) for
-   * dependency calculation. Note that we currently do not store anything on phi nodes (e.g. the outer )
+   * dependency calculation. Note that we currently do not store anything on
+   * outer phi nodes.
    */
   temporariesReadInOptional: ReadonlyMap<IdentifierId, ReactiveScopeDependency>;
   /**
-   * When extracting dependencies in PropagateScopeDependencies, skip instructions already
-   * processed in this pass.
+   * Records instructions (PropertyLoads, StoreLocals, and test terminals)
+   * processed in this pass. When extracting dependencies in
+   * PropagateScopeDependencies, these instructions are skipped.
    *
    * E.g. given a?.b
    * ```
@@ -96,9 +99,9 @@ export type OptionalChainSidemap = {
    */
   processedInstrsInOptional: ReadonlySet<InstructionId>;
   /**
-   * Optional-chains that can be hoisted to the start of optional chains. e.g.
-   * given `a?.b.c`, we can evaluate any PropertyLoad from `a?.b` at the
-   * optional terminal in bb1
+   * Records optional chains for which we can safely evaluate non-optional
+   * PropertyLoads. e.g. given `a?.b.c`, we can evaluate any load from `a?.b` at
+   * the optional terminal in bb1.
    * ```js
    * bb1:
    *   ...
@@ -196,11 +199,12 @@ function assertOptionalAlternateBlock(
 
 /**
  * Traverse into the optional block and all transitively referenced blocks to
- * collect a sidemaps identifier and block ids -> optional chain dependencies.
+ * collect sidemaps of optional chain dependencies.
  *
  * @returns the IdentifierId representing the optional block if the block and
- * all transitively referenced optionals precisely represent a chain of property
- * loads. If any part of the optional chain is not hoistable, returns null.
+ * all transitively referenced optional blocks precisely represent a chain of
+ * property loads. If any part of the optional chain is not hoistable, returns
+ * null.
  */
 function traverseOptionalBlock(
   optional: TBasicBlock<OptionalTerminal>,
@@ -224,20 +228,16 @@ function traverseOptionalBlock(
      * blocks, but this would require changes to HIR.
      */
     CompilerError.invariant(optional.terminal.optional, {
-      reason:
-        '[OptionalChainDeps] Expect base optional case to be always optional',
+      reason: '[OptionalChainDeps] Expect base case to be always optional',
       loc: optional.terminal.loc,
     });
-    CompilerError.invariant(maybeTest.instructions.length >= 1, {
-      reason:
-        '[OptionalChainDeps] Expected direct optional test branch (base case) to have at least one instruction',
-      loc: maybeTest.terminal.loc,
-    });
-
     /**
      * Only match base expressions that are straightforward PropertyLoad chains
      */
-    if (maybeTest.instructions[0].value.kind !== 'LoadLocal') {
+    if (
+      maybeTest.instructions.length === 0 ||
+      maybeTest.instructions[0].value.kind !== 'LoadLocal'
+    ) {
       return null;
     }
     const path = maybeTest.instructions.slice(1).map((entry, i) => {
@@ -271,7 +271,9 @@ function traverseOptionalBlock(
   } else if (maybeTest.terminal.kind === 'optional') {
     /**
      * This is either
-     * - a chained optional i.e. base=<inner_optional>?.b or <inner_optional>.b
+     * - <inner_optional>?.property (optional=true)
+     * - <inner_optional>.property  (optional=false)
+     * - <inner_optional> <other operation>
      * - a optional base block with a separate nested optional-chain (e.g. a(c?.d)?.d)
      */
     const testBlock = context.blocks.get(maybeTest.terminal.fallthrough)!;
@@ -337,19 +339,18 @@ function traverseOptionalBlock(
       context.temporariesReadInOptional.get(innerOptional),
     );
     test = testBlock.terminal;
-    if (test.alternate === outerAlternate) {
-      CompilerError.invariant(optional.instructions.length === 0, {
-        reason:
-          '[OptionalChainDeps] Unexpected instructions an inner optional block. ' +
-          'This indicates that the compiler may be incorrectly concatenating two unrelated optional chains',
-        description: `bb${optional.id}\n ${testBlock.id}\n${optional.instructions.map(printInstruction).join('\n')}`,
-        loc: optional.terminal.loc,
-      });
-    }
   } else {
     return null;
   }
 
+  if (test.alternate === outerAlternate) {
+    CompilerError.invariant(optional.instructions.length === 0, {
+      reason:
+        '[OptionalChainDeps] Unexpected instructions an inner optional block. ' +
+        'This indicates that the compiler may be incorrectly concatenating two unrelated optional chains',
+      loc: optional.terminal.loc,
+    });
+  }
   const matchConsequentResult = matchOptionalTestBlock(test, context.blocks);
   if (!matchConsequentResult) {
     // Optional chain consequent is not hoistable e.g. a?.[computed()]
