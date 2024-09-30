@@ -36,6 +36,8 @@ import {
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
   LOCAL_STORAGE_COMPONENT_FILTER_PREFERENCES_KEY,
   LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
+  SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
+  SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
 } from './constants';
 import {
   ComponentFilterElementType,
@@ -50,7 +52,12 @@ import {
   ElementTypeMemo,
   ElementTypeVirtual,
 } from 'react-devtools-shared/src/frontend/types';
-import {localStorageGetItem, localStorageSetItem} from './storage';
+import {
+  localStorageGetItem,
+  localStorageSetItem,
+  sessionStorageGetItem,
+  sessionStorageSetItem,
+} from './storage';
 import {meta} from './hydration';
 import isArray from './isArray';
 
@@ -61,6 +68,11 @@ import type {
   LRUCache,
 } from 'react-devtools-shared/src/frontend/types';
 import type {SerializedElement as SerializedElementBackend} from 'react-devtools-shared/src/backend/types';
+import {isSynchronousXHRSupported} from './backend/utils';
+import type {
+  ReloadAndProfileConfig,
+  ReloadAndProfileConfigPersistence,
+} from './backend/types';
 
 // $FlowFixMe[method-unbinding]
 const hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -965,3 +977,47 @@ export function backendToFrontendSerializedElementMapper(
 export function normalizeUrl(url: string): string {
   return url.replace('/./', '/');
 }
+
+export function getIsReloadAndProfileSupported(): boolean {
+  // Notify the frontend if the backend supports the Storage API (e.g. localStorage).
+  // If not, features like reload-and-profile will not work correctly and must be disabled.
+  let isBackendStorageAPISupported = false;
+  try {
+    localStorage.getItem('test');
+    isBackendStorageAPISupported = true;
+  } catch (error) {}
+
+  return isBackendStorageAPISupported && isSynchronousXHRSupported();
+}
+
+export const defaultReloadAndProfileConfigPersistence: ReloadAndProfileConfigPersistence =
+  {
+    setReloadAndProfileConfig({
+      shouldReloadAndProfile,
+      recordChangeDescriptions,
+    }): void {
+      if (shouldReloadAndProfile != null) {
+        sessionStorageSetItem(
+          SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
+          shouldReloadAndProfile ? 'true' : 'false',
+        );
+      }
+      if (recordChangeDescriptions != null) {
+        sessionStorageSetItem(
+          SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
+          recordChangeDescriptions ? 'true' : 'false',
+        );
+      }
+    },
+    getReloadAndProfileConfig(): ReloadAndProfileConfig {
+      return {
+        shouldReloadAndProfile:
+          sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) ===
+          'true',
+        recordChangeDescriptions:
+          sessionStorageGetItem(
+            SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
+          ) === 'true',
+      };
+    },
+  };
