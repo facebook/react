@@ -43,20 +43,8 @@ type Context = {
   // Specified as a separate prop so it can trigger a re-render of FixedSizeList.
   lineHeight: number,
 
-  appendComponentStack: boolean,
-  setAppendComponentStack: (value: boolean) => void,
-
-  breakOnConsoleErrors: boolean,
-  setBreakOnConsoleErrors: (value: boolean) => void,
-
   parseHookNames: boolean,
   setParseHookNames: (value: boolean) => void,
-
-  hideConsoleLogsInStrictMode: boolean,
-  setHideConsoleLogsInStrictMode: (value: boolean) => void,
-
-  showInlineWarningsAndErrors: boolean,
-  setShowInlineWarningsAndErrors: (value: boolean) => void,
 
   theme: Theme,
   setTheme(value: Theme): void,
@@ -176,7 +164,7 @@ function SettingsContextController({
     bridge.send('setTraceUpdatesEnabled', traceUpdatesEnabled);
   }, [bridge, traceUpdatesEnabled]);
 
-  const value = useMemo(
+  const value: Context = useMemo(
     () => ({
       displayDensity,
       lineHeight:

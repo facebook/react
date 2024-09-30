@@ -19,9 +19,12 @@ export type Bridge = {
 };
 export type Store = Object;
 export type BrowserTheme = 'dark' | 'light';
+export type Config = {
+  supportsReloadAndProfile?: boolean,
+};
 
 export function createBridge(wall: Wall): Bridge;
-export function createStore(bridge: Bridge): Store;
+export function createStore(bridge: Bridge, config?: Config): Store;
 
 export type Source = {
   sourceURL: string,
