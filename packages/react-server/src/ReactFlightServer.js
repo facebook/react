@@ -1155,7 +1155,7 @@ function renderFunctionComponent<Props>(
       // We outline this model eagerly so that we can refer to by reference as an owner.
       // If we had a smarter way to dedupe we might not have to do this if there ends up
       // being no references to this as an owner.
-      outlineModel(request, componentDebugInfo);
+      outlineDebugObject(request, (componentDebugInfo: any));
       emitDebugChunk(request, componentDebugID, componentDebugInfo);
 
       // We've emitted the latest environment for this task so we track that.
@@ -1581,6 +1581,13 @@ function renderClientElement(
     key = keyPath;
   } else if (keyPath !== null) {
     key = keyPath + ',' + key;
+  }
+  if (__DEV__) {
+    if (task.debugOwner !== null) {
+      // Ensure we outline this owner if it is the first time we see it.
+      // So that we can refer to it directly.
+      outlineDebugObject(request, (task.debugOwner: any));
+    }
   }
   const element = __DEV__
     ? enableOwnerStacks
@@ -2795,25 +2802,6 @@ function renderModelDestructive(
       );
     }
     if (__DEV__) {
-      if (isReactComponentInfo(value)) {
-        // This looks like a ReactComponentInfo. We can't serialize the ConsoleTask object so we
-        // need to omit it before serializing.
-        const componentDebugInfo: Omit<
-          ReactComponentInfo,
-          'debugTask' | 'debugStack',
-        > = {
-          name: (value: any).name,
-          env: (value: any).env,
-          key: (value: any).key,
-          owner: (value: any).owner,
-        };
-        if (enableOwnerStacks) {
-          // $FlowFixMe[cannot-write]
-          componentDebugInfo.stack = (value: any).stack;
-        }
-        return componentDebugInfo;
-      }
-
       if (objectName(value) !== 'Object') {
         callWithDebugContextInDEV(request, task, () => {
           console.error(
@@ -3265,6 +3253,51 @@ function emitDebugChunk(
   request.completedRegularChunks.push(processedChunk);
 }
 
+function outlineDebugObject(request: Request, value: ReactClientObject): void {
+  if (!__DEV__) {
+    // These errors should never make it into a build so we don't need to encode them in codes.json
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'outlineDebugObject should never be called in production mode. This is a bug in React.',
+    );
+  }
+
+  if (request.writtenObjects.has(value)) {
+    // Already written
+    return;
+  }
+
+  // We use the console encoding so that we can dedupe objects but don't necessarily
+  // use the full serialization that requires a task.
+  const counter = {objectCount: 0};
+  function replacer(
+    this:
+      | {+[key: string | number]: ReactClientValue}
+      | $ReadOnlyArray<ReactClientValue>,
+    parentPropertyName: string,
+    value: ReactClientValue,
+  ): ReactJSONValue {
+    return renderConsoleValue(
+      request,
+      counter,
+      this,
+      parentPropertyName,
+      value,
+    );
+  }
+
+  request.pendingChunks++;
+  const id = request.nextChunkId++;
+
+  // $FlowFixMe[incompatible-type] stringify can return null
+  const json: string = stringify(value, replacer);
+  const row = id.toString(16) + ':' + json + '\n';
+  const processedChunk = stringToChunk(row);
+  request.completedRegularChunks.push(processedChunk);
+
+  request.writtenObjects.set(value, serializeByValueID(id));
+}
+
 function emitTypedArrayChunk(
   request: Request,
   id: number,
@@ -3704,7 +3737,7 @@ function forwardDebugInfo(
       // We outline this model eagerly so that we can refer to by reference as an owner.
       // If we had a smarter way to dedupe we might not have to do this if there ends up
       // being no references to this as an owner.
-      outlineModel(request, debugInfo[i]);
+      outlineDebugObject(request, (debugInfo[i]: any));
     }
     emitDebugChunk(request, id, debugInfo[i]);
   }
