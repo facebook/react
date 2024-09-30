@@ -17,7 +17,7 @@ import {type CompilerError} from 'babel-plugin-react-compiler/src';
 import parserBabel from 'prettier/plugins/babel';
 import * as prettierPluginEstree from 'prettier/plugins/estree';
 import * as prettier from 'prettier/standalone';
-import {memo, useEffect, useState} from 'react';
+import {memo, ReactNode, useEffect, useState} from 'react';
 import {type Store} from '../../lib/stores';
 import TabbedWindow from '../TabbedWindow';
 import {monacoOptions} from './monacoOptions';
@@ -42,10 +42,10 @@ export type PrintedCompilerPipelineValue =
   | {kind: 'debug'; name: string; fnName: string | null; value: string};
 
 export type CompilerOutput =
-  | {kind: 'ok'; results: Map<string, PrintedCompilerPipelineValue[]>}
+  | {kind: 'ok'; results: Map<string, Array<PrintedCompilerPipelineValue>>}
   | {
       kind: 'err';
-      results: Map<string, PrintedCompilerPipelineValue[]>;
+      results: Map<string, Array<PrintedCompilerPipelineValue>>;
       error: CompilerError;
     };
 
@@ -54,7 +54,10 @@ type Props = {
   compilerOutput: CompilerOutput;
 };
 
-async function tabify(source: string, compilerOutput: CompilerOutput) {
+async function tabify(
+  source: string,
+  compilerOutput: CompilerOutput,
+): Promise<Map<string, ReactNode>> {
   const tabs = new Map<string, React.ReactNode>();
   const reorderedTabs = new Map<string, React.ReactNode>();
   const concattedResults = new Map<string, string>();
@@ -112,8 +115,10 @@ async function tabify(source: string, compilerOutput: CompilerOutput) {
   }
   // Ensure that JS and the JS source map come first
   if (topLevelFnDecls.length > 0) {
-    // Make a synthetic Program so we can have a single AST with all the top level
-    // FunctionDeclarations
+    /**
+     * Make a synthetic Program so we can have a single AST with all the top level
+     * FunctionDeclarations
+     */
     const ast = t.program(topLevelFnDecls);
     const {code, sourceMapUrl} = await codegen(ast, source);
     reorderedTabs.set(
@@ -175,7 +180,7 @@ function getSourceMapUrl(code: string, map: string): string | null {
   )}`;
 }
 
-function Output({store, compilerOutput}: Props) {
+function Output({store, compilerOutput}: Props): JSX.Element {
   const [tabsOpen, setTabsOpen] = useState<Set<string>>(() => new Set(['JS']));
   const [tabs, setTabs] = useState<Map<string, React.ReactNode>>(
     () => new Map(),
@@ -236,11 +241,13 @@ function TextTabContent({
   output: string;
   diff: string | null;
   showInfoPanel: boolean;
-}) {
+}): JSX.Element {
   const [diffMode, setDiffMode] = useState(false);
   return (
-    // Restrict MonacoEditor's height, since the config autoLayout:true
-    // will grow the editor to fit within parent element
+    /**
+     * Restrict MonacoEditor's height, since the config autoLayout:true
+     * will grow the editor to fit within parent element
+     */
     <div className="w-full h-monaco_small sm:h-monaco">
       {showInfoPanel ? (
         <div className="flex items-center gap-1 bg-amber-50 p-2">
