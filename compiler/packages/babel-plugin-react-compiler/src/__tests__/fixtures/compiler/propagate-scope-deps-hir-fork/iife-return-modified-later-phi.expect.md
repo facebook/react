@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @enablePropagateDepsInHIR
 function Component(props) {
   const items = (() => {
     if (props.cond) {
@@ -24,11 +25,11 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime"; // @enablePropagateDepsInHIR
 function Component(props) {
-  const $ = _c(2);
+  const $ = _c(3);
   let items;
-  if ($[0] !== props) {
+  if ($[0] !== props.cond || $[1] !== props.a) {
     let t0;
     if (props.cond) {
       t0 = [];
@@ -38,10 +39,11 @@ function Component(props) {
     items = t0;
 
     items?.push(props.a);
-    $[0] = props;
-    $[1] = items;
+    $[0] = props.cond;
+    $[1] = props.a;
+    $[2] = items;
   } else {
-    items = $[1];
+    items = $[2];
   }
   return items;
 }

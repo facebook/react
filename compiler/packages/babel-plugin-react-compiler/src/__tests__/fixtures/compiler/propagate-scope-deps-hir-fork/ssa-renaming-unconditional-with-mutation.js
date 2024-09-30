@@ -1,3 +1,4 @@
+// @enablePropagateDepsInHIR
 import {mutate} from 'shared-runtime';
 
 function useFoo(props) {

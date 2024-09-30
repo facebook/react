@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @enablePropagateDepsInHIR
 /**
  * props.b *does* influence `a`
  */
@@ -29,13 +30,19 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; /**
+import { c as _c } from "react/compiler-runtime"; // @enablePropagateDepsInHIR
+/**
  * props.b *does* influence `a`
  */
 function Component(props) {
-  const $ = _c(2);
+  const $ = _c(5);
   let a;
-  if ($[0] !== props) {
+  if (
+    $[0] !== props.a ||
+    $[1] !== props.b ||
+    $[2] !== props.c ||
+    $[3] !== props.d
+  ) {
     a = [];
     a.push(props.a);
     bb0: {
@@ -47,10 +54,13 @@ function Component(props) {
     }
 
     a.push(props.d);
-    $[0] = props;
-    $[1] = a;
+    $[0] = props.a;
+    $[1] = props.b;
+    $[2] = props.c;
+    $[3] = props.d;
+    $[4] = a;
   } else {
-    a = $[1];
+    a = $[4];
   }
   return a;
 }

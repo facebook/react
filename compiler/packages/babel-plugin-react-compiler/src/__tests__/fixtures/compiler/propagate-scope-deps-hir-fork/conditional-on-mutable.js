@@ -1,3 +1,4 @@
+// @enablePropagateDepsInHIR
 function ComponentA(props) {
   const a = [];
   const b = [];

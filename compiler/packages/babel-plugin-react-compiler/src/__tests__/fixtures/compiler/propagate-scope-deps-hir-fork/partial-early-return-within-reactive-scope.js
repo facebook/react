@@ -1,3 +1,4 @@
+// @enablePropagateDepsInHIR
 function Component(props) {
   let x = [];
   let y = null;

@@ -1,3 +1,4 @@
+// @enablePropagateDepsInHIR
 import {makeObject_Primitives} from 'shared-runtime';
 
 function Component(props) {

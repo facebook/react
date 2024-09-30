@@ -1,3 +1,4 @@
+// @enablePropagateDepsInHIR
 function Component(props) {
   const items = (() => {
     if (props.cond) {
