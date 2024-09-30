@@ -20,7 +20,7 @@ jobs:
       - uses: actions/github-script@v7
         id: set-matrix
         with:
-          script: return {"1/5":"1","2/5":"2","r=stable --env=development-1/3":"3","r=stable --env=development-1/3":"4"};
+          script: return {"0":"1","1":"2","r=stable --env=development-1/3":"3","r=stable --env=development-1/3":"4"};
 
   # ----- FLOW -----
 #  discover_flow_inline_configs:
@@ -161,7 +161,7 @@ jobs:
     strategy:
       matrix:
         # yml is dumb. update the --total arg to yarn build if you change the number of workers
-        worker_id: ["1/5","2/5"]
+        worker_id: [0,1]
         release_channel: [stable]
     env:
       UCACHER_INSTRUMENTER: strace
