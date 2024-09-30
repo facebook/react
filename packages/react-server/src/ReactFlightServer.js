@@ -1156,7 +1156,7 @@ function renderFunctionComponent<Props>(
       // If we had a smarter way to dedupe we might not have to do this if there ends up
       // being no references to this as an owner.
 
-      outlineDebugObject(request, (componentDebugInfo: any));
+      outlineComponentInfo(request, componentDebugInfo);
       emitDebugChunk(request, componentDebugID, componentDebugInfo);
 
       // We've emitted the latest environment for this task so we track that.
@@ -1587,7 +1587,7 @@ function renderClientElement(
     if (task.debugOwner !== null) {
       // Ensure we outline this owner if it is the first time we see it.
       // So that we can refer to it directly.
-      outlineDebugObject(request, (task.debugOwner: any));
+      outlineComponentInfo(request, task.debugOwner);
     }
   }
   const element = __DEV__
@@ -3254,16 +3254,19 @@ function emitDebugChunk(
   request.completedRegularChunks.push(processedChunk);
 }
 
-function outlineDebugObject(request: Request, value: ReactClientObject): void {
+function outlineComponentInfo(
+  request: Request,
+  componentInfo: ReactComponentInfo,
+): void {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
     // eslint-disable-next-line react-internal/prod-error-codes
     throw new Error(
-      'outlineDebugObject should never be called in production mode. This is a bug in React.',
+      'outlineComponentInfo should never be called in production mode. This is a bug in React.',
     );
   }
 
-  if (request.writtenObjects.has(value)) {
+  if (request.writtenObjects.has(componentInfo)) {
     // Already written
     return;
   }
@@ -3291,12 +3294,12 @@ function outlineDebugObject(request: Request, value: ReactClientObject): void {
   const id = request.nextChunkId++;
 
   // $FlowFixMe[incompatible-type] stringify can return null
-  const json: string = stringify(value, replacer);
+  const json: string = stringify(componentInfo, replacer);
   const row = id.toString(16) + ':' + json + '\n';
   const processedChunk = stringToChunk(row);
   request.completedRegularChunks.push(processedChunk);
 
-  request.writtenObjects.set(value, serializeByValueID(id));
+  request.writtenObjects.set(componentInfo, serializeByValueID(id));
 }
 
 function emitTypedArrayChunk(
@@ -3738,7 +3741,7 @@ function forwardDebugInfo(
       // We outline this model eagerly so that we can refer to by reference as an owner.
       // If we had a smarter way to dedupe we might not have to do this if there ends up
       // being no references to this as an owner.
-      outlineDebugObject(request, (debugInfo[i]: any));
+      outlineComponentInfo(request, (debugInfo[i]: any));
     }
     emitDebugChunk(request, id, debugInfo[i]);
   }
