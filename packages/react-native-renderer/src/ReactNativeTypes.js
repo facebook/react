@@ -179,6 +179,7 @@ export type TouchedViewDataAtPoint = $ReadOnly<{
     width: number,
     height: number,
   }>,
+  closestPublicInstance?: PublicInstance,
   ...InspectorData,
 }>;
 

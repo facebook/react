@@ -16,6 +16,7 @@ import type {
   RendererInterface,
   DevToolsBackend,
   DevToolsHookSettings,
+  ReloadAndProfileConfig,
 } from './backend/types';
 
 import {
@@ -26,6 +27,7 @@ import {
 import attachRenderer from './attachRenderer';
 import formatConsoleArguments from 'react-devtools-shared/src/backend/utils/formatConsoleArguments';
 import formatWithStyles from 'react-devtools-shared/src/backend/utils/formatWithStyles';
+import {defaultReloadAndProfileConfigPersistence} from './utils';
 
 // React's custom built component stack strings match "\s{4}in"
 // Chrome's prefix matches "\s{4}at"
@@ -54,6 +56,7 @@ export function installHook(
   maybeSettingsOrSettingsPromise?:
     | DevToolsHookSettings
     | Promise<DevToolsHookSettings>,
+  reloadAndProfileConfig?: ReloadAndProfileConfig = defaultReloadAndProfileConfigPersistence.getReloadAndProfileConfig(),
 ): DevToolsHook | null {
   if (target.hasOwnProperty('__REACT_DEVTOOLS_GLOBAL_HOOK__')) {
     return null;
@@ -207,7 +210,13 @@ export function installHook(
       reactBuildType,
     });
 
-    const rendererInterface = attachRenderer(hook, id, renderer, target);
+    const rendererInterface = attachRenderer(
+      hook,
+      id,
+      renderer,
+      target,
+      reloadAndProfileConfig,
+    );
     if (rendererInterface != null) {
       hook.rendererInterfaces.set(id, rendererInterface);
       hook.emit('renderer-attached', {id, rendererInterface});

@@ -4,6 +4,10 @@
 ```javascript
 import {identity} from 'shared-runtime';
 
+/**
+ * Not safe to hoist read of maybeNullObject.value.inner outside of the
+ * try-catch block, as that might throw
+ */
 function useFoo(maybeNullObject: {value: {inner: number}} | null) {
   const y = [];
   try {
@@ -29,6 +33,10 @@ export const FIXTURE_ENTRYPOINT = {
 import { c as _c } from "react/compiler-runtime";
 import { identity } from "shared-runtime";
 
+/**
+ * Not safe to hoist read of maybeNullObject.value.inner outside of the
+ * try-catch block, as that might throw
+ */
 function useFoo(maybeNullObject) {
   const $ = _c(2);
   let y;
