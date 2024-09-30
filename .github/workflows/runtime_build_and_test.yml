@@ -161,8 +161,8 @@ jobs:
     strategy:
       matrix:
         # yml is dumb. update the --total arg to yarn build if you change the number of workers
-        worker_id: [0,1]
-        release_channel: [stable]
+        worker_id: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+        release_channel: [stable, experimental]
     env:
       UCACHER_INSTRUMENTER: strace
       UCACHER_SHOW_IO : true
@@ -184,7 +184,7 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
-      - run: ucacher yarn install --frozen-lockfile
+      - run: yarn install --frozen-lockfile
       - run: ucacher yarn build --index=${{ matrix.worker_id }} --total=20 --r=${{ matrix.release_channel }} --ci
         env:
           CI: github
