@@ -8119,7 +8119,7 @@ describe('ReactDOMFizzServer', () => {
 
     prerendering = false;
 
-    const resumed = await ReactDOMFizzServer.resumeToPipeableStream(
+    const resumed = ReactDOMFizzServer.resumeToPipeableStream(
       <App />,
       JSON.parse(JSON.stringify(prerendered.postponed)),
       {
@@ -8187,7 +8187,7 @@ describe('ReactDOMFizzServer', () => {
     function onPostpone(reason) {
       postpones.push(reason);
     }
-    const result = await renderToPipeableStream(<App />, {
+    const result = renderToPipeableStream(<App />, {
       onError,
       onShellError,
       onPostpone,
