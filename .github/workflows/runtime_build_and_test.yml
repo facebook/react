@@ -25,7 +25,8 @@ jobs:
           route: GET /repos/${{ github.repository }}/actions/runs/${{ github.run_id }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: cat "${{ github.workspace }}/${{ steps.workflow_run.outputs.file_name }}"
+      - run: |
+        echo "Workflow file path: ${{ steps.workflow_run.outputs }}" && at "${{ github.workspace }}/${{ steps.workflow_run.outputs.file_name }}"
       - uses: actions/github-script@v7
         id: set-matrix
         with:
