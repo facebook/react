@@ -16,26 +16,26 @@ import {IconGitHub} from './Icons/IconGitHub';
 import Logo from './Logo';
 import {useStoreDispatch} from './StoreContext';
 
-export default function Header() {
+export default function Header(): JSX.Element {
   const [showCheck, setShowCheck] = useState(false);
   const dispatchStore = useStoreDispatch();
   const {enqueueSnackbar, closeSnackbar} = useSnackbar();
 
-  const handleReset = () => {
+  const handleReset: () => void = () => {
     if (confirm('Are you sure you want to reset the playground?')) {
-      /*
-        Close open snackbars if any. This is necessary because when displaying
-        outputs (Preview or not), we only close previous snackbars if we received
-        new messages, which is needed in order to display "Bad URL" or success
-        messages when loading Playground for the first time. Otherwise, messages
-        such as "Bad URL" will be closed by the outputs calling `closeSnackbar`.
-      */
+      /**
+       * Close open snackbars if any. This is necessary because when displaying
+       * outputs (Preview or not), we only close previous snackbars if we received
+       * new messages, which is needed in order to display "Bad URL" or success
+       * messages when loading Playground for the first time. Otherwise, messages
+       * such as "Bad URL" will be closed by the outputs calling `closeSnackbar`.
+       */
       closeSnackbar();
       dispatchStore({type: 'setStore', payload: {store: defaultStore}});
     }
   };
 
-  const handleShare = () => {
+  const handleShare: () => void = () => {
     navigator.clipboard.writeText(location.href).then(() => {
       enqueueSnackbar('URL copied to clipboard');
       setShowCheck(true);
