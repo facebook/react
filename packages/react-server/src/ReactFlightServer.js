@@ -3259,9 +3259,16 @@ function outlineComponentInfo(
     outlineComponentInfo(request, componentInfo.owner);
   }
 
+  // Limit the number of objects we write to prevent emitting giant props objects.
+  let objectLimit = 10;
+  if (componentInfo.stack != null) {
+    // Ensure we have enough object limit to encode the stack trace.
+    objectLimit += componentInfo.stack.length;
+  }
+
   // We use the console encoding so that we can dedupe objects but don't necessarily
   // use the full serialization that requires a task.
-  const counter = {objectLimit: 500};
+  const counter = {objectLimit};
   function replacer(
     this:
       | {+[key: string | number]: ReactClientValue}
@@ -3406,6 +3413,14 @@ function renderConsoleValue(
       }
     }
 
+    const writtenObjects = request.writtenObjects;
+    const existingReference = writtenObjects.get(value);
+    if (existingReference !== undefined) {
+      // We've already emitted this as a real object, so we can
+      // just refer to that by its existing reference.
+      return existingReference;
+    }
+
     if (counter.objectLimit <= 0) {
       // We've reached our max number of objects to serialize across the wire so we serialize this
       // as a marker so that the client can error when this is accessed by the console.
@@ -3414,15 +3429,8 @@ function renderConsoleValue(
 
     counter.objectLimit--;
 
-    const writtenObjects = request.writtenObjects;
-    const existingReference = writtenObjects.get(value);
     // $FlowFixMe[method-unbinding]
     if (typeof value.then === 'function') {
-      if (existingReference !== undefined) {
-        // We've seen this promise before, so we can just refer to the same result.
-        return existingReference;
-      }
-
       const thenable: Thenable<any> = (value: any);
       switch (thenable.status) {
         case 'fulfilled': {
@@ -3454,12 +3462,6 @@ function renderConsoleValue(
       // If it hasn't already resolved (and been instrumented) we just encode an infinite
       // promise that will never resolve.
       return serializeInfinitePromise();
-    }
-
-    if (existingReference !== undefined) {
-      // We've already emitted this as a real object, so we can
-      // just refer to that by its existing reference.
-      return existingReference;
     }
 
     if (isArray(value)) {
