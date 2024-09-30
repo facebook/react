@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enablePropagateDepsInHIR:enabled_with_optimizations
+// @enablePropagateDepsInHIR
 import {identity, Stringify} from 'shared-runtime';
 
 function Foo(props) {
@@ -28,7 +28,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enablePropagateDepsInHIR:enabled_with_optimizations
+import { c as _c } from "react/compiler-runtime"; // @enablePropagateDepsInHIR
 import { identity, Stringify } from "shared-runtime";
 
 function Foo(props) {
