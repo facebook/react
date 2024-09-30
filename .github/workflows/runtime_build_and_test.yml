@@ -17,7 +17,10 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.result }}
     steps:
-      - run: echo 'result =json::{"1/5":"1","2/5":"2"}' >> $GITHUB_OUTPUT
+      - uses: actions/github-script@v7
+        id: set-matrix
+        with:
+          script: return {"1/5":"1","2/5":"2"};
 
   # ----- FLOW -----
 #  discover_flow_inline_configs:
@@ -182,6 +185,8 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: ucacher yarn install --frozen-lockfile
+      - name: Sleep
+        run: sleep 100000
       - run: ucacher yarn build --index=${{ matrix.worker_id }} --total=20 --r=${{ matrix.release_channel }} --ci
         env:
           CI: github
