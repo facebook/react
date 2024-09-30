@@ -17,6 +17,7 @@ export function initBackend(
   hook: DevToolsHook,
   agent: Agent,
   global: Object,
+  isReloadAndProfileSupported: boolean,
 ): () => void {
   if (hook == null) {
     // DevTools didn't get injected into this page (maybe b'c of the contentType).
@@ -93,6 +94,10 @@ export function initBackend(
       agent.onHookSettings(hook.settings);
     }
   });
+
+  if (isReloadAndProfileSupported) {
+    agent.onReloadAndProfileSupportedByHost();
+  }
 
   return () => {
     subs.forEach(fn => fn());

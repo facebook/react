@@ -15,7 +15,7 @@ env:
 
 defaults:
   run:
-    working-directory: compiler
+    working-directory: compiler/apps/playground
 
 jobs:
   playground:
@@ -27,13 +27,17 @@ jobs:
         with:
           node-version-file: '.nvmrc'
           cache: yarn
-          cache-dependency-path: compiler/yarn.lock
+          cache-dependency-path: compiler/**/yarn.lock
       - name: Restore cached node_modules
         uses: actions/cache@v4
         id: node_modules
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('compiler/**/yarn.lock') }}
-      - run: yarn install --frozen-lockfile
+      - name: yarn install compiler
+        run: yarn install --frozen-lockfile
+        working-directory: compiler
+      - name: yarn install playground
+        run: yarn install --frozen-lockfile
       - run: npx playwright install --with-deps chromium
-      - run: yarn workspace playground test
+      - run: yarn test

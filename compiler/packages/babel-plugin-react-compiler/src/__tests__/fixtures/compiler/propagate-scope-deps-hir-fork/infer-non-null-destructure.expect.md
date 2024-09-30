@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enablePropagateDepsInHIR:enabled_with_optimizations
+// @enablePropagateDepsInHIR
 import {identity, useIdentity} from 'shared-runtime';
 
 function useFoo({arg, cond}: {arg: number; cond: boolean}) {
@@ -31,7 +31,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enablePropagateDepsInHIR:enabled_with_optimizations
+import { c as _c } from "react/compiler-runtime"; // @enablePropagateDepsInHIR
 import { identity, useIdentity } from "shared-runtime";
 
 function useFoo(t0) {
