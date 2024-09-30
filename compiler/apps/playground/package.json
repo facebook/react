@@ -3,24 +3,27 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "NODE_ENV=development next dev",
-    "build": "next build && node ./scripts/downloadFonts.js",
-    "vercel-build": "yarn workspaces run build",
+    "dev": "cd ../.. && concurrently --kill-others -n compiler,runtime,playground \"yarn workspace babel-plugin-react-compiler run build --watch\" \"yarn workspace react-compiler-runtime run build --watch\" \"wait-on packages/babel-plugin-react-compiler/dist/index.js && cd apps/playground && NODE_ENV=development next dev\"",
+    "build:compiler": "cd ../.. && concurrently -n compiler,runtime \"yarn workspace babel-plugin-react-compiler run build\" \"yarn workspace react-compiler-runtime run build\"",
+    "build": "yarn build:compiler && next build",
+    "postbuild": "node ./scripts/downloadFonts.js",
+    "postinstall": "./scripts/link-compiler.sh",
+    "vercel-build": "yarn build",
     "start": "next start",
     "lint": "next lint",
     "test": "playwright test"
   },
   "dependencies": {
-    "@babel/core": "^7.19.1",
-    "@babel/generator": "^7.19.1",
-    "@babel/parser": "^7.19.1",
-    "@babel/plugin-syntax-typescript": "^7.18.6",
+    "@babel/core": "^7.18.9",
+    "@babel/generator": "^7.18.9",
+    "@babel/parser": "^7.18.9",
+    "@babel/plugin-syntax-typescript": "^7.18.9",
     "@babel/plugin-transform-block-scoping": "^7.18.9",
-    "@babel/plugin-transform-modules-commonjs": "^7.18.6",
-    "@babel/preset-react": "^7.18.6",
-    "@babel/preset-typescript": "^7.18.6",
-    "@babel/traverse": "^7.19.1",
-    "@babel/types": "^7.19.0",
+    "@babel/plugin-transform-modules-commonjs": "^7.18.9",
+    "@babel/preset-react": "^7.18.9",
+    "@babel/preset-typescript": "^7.18.9",
+    "@babel/traverse": "^7.18.9",
+    "@babel/types": "7.18.9",
     "@heroicons/react": "^1.0.6",
     "@monaco-editor/react": "^4.4.6",
     "@playwright/test": "^1.42.1",
@@ -36,25 +39,23 @@
     "prettier": "^3.3.3",
     "pretty-format": "^29.3.1",
     "re-resizable": "^6.9.16",
-    "react": "18.2.0",
+    "react": "18.3.1",
     "react-compiler-runtime": "*",
-    "react-dom": "18.2.0"
+    "react-dom": "18.3.1"
   },
   "devDependencies": {
     "@types/node": "18.11.9",
-    "@types/react": "18.0.25",
-    "@types/react-dom": "18.0.9",
+    "@types/react": "18.3.9",
+    "@types/react-dom": "18.3.0",
     "autoprefixer": "^10.4.13",
     "clsx": "^1.2.1",
+    "concurrently": "^7.4.0",
     "eslint": "^8.28.0",
     "eslint-config-next": "^13.5.6",
     "hermes-parser": "^0.22.0",
     "monaco-editor-webpack-plugin": "^7.1.0",
     "postcss": "^8.4.31",
-    "tailwindcss": "^3.2.4"
-  },
-  "resolutions": {
-    "./**/@babel/parser": "7.7.4",
-    "./**/@babel/types": "7.7.4"
+    "tailwindcss": "^3.2.4",
+    "wait-on": "^7.2.0"
   }
 }

@@ -2,6 +2,8 @@
 import {useCallback} from 'react';
 import {identity, useIdentity} from 'shared-runtime';
 
+function mutate(_: unknown) {}
+
 /**
  * Repro showing a manual memo whose declaration (useCallback's 1st argument)
  * is memoized, but not its dependency (x). In this case, `x`'s scope is pruned
