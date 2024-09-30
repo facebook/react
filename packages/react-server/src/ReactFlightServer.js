@@ -2688,6 +2688,9 @@ function renderModelDestructive(
     if (typeof FormData === 'function' && value instanceof FormData) {
       return serializeFormData(request, value);
     }
+    if (value instanceof Error) {
+      return serializeErrorValue(request, value);
+    }
 
     if (enableBinaryFlight) {
       if (value instanceof ArrayBuffer) {
@@ -3114,6 +3117,36 @@ function emitPostponeChunk(
   request.completedErrorChunks.push(processedChunk);
 }
 
+function serializeErrorValue(request: Request, error: Error): string {
+  if (__DEV__) {
+    let message;
+    let stack: ReactStackTrace;
+    let env = (0, request.environmentName)();
+    try {
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      message = String(error.message);
+      stack = filterStackTrace(request, error, 0);
+      const errorEnv = (error: any).environmentName;
+      if (typeof errorEnv === 'string') {
+        // This probably came from another FlightClient as a pass through.
+        // Keep the environment name.
+        env = errorEnv;
+      }
+    } catch (x) {
+      message = 'An error occurred but serializing the error message failed.';
+      stack = [];
+    }
+    const errorInfo = {message, stack, env};
+    const id = outlineModel(request, errorInfo);
+    return '$Z' + id.toString(16);
+  } else {
+    // In prod we don't emit any information about this Error object to avoid
+    // unintentional leaks. Since this doesn't actually throw on the server
+    // we don't go through onError and so don't register any digest neither.
+    return '$Z';
+  }
+}
+
 function emitErrorChunk(
   request: Request,
   id: number,
@@ -3402,6 +3435,9 @@ function renderConsoleValue(
     // TODO: FormData is not available in old Node. Remove the typeof later.
     if (typeof FormData === 'function' && value instanceof FormData) {
       return serializeFormData(request, value);
+    }
+    if (value instanceof Error) {
+      return serializeErrorValue(request, value);
     }
 
     if (enableBinaryFlight) {

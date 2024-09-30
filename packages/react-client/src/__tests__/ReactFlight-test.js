@@ -653,6 +653,46 @@ describe('ReactFlight', () => {
       `);
   });
 
+  it('can transport Error objects as values', async () => {
+    function ComponentClient({prop}) {
+      return `
+        is error: ${prop instanceof Error}
+        message: ${prop.message}
+        stack: ${normalizeCodeLocInfo(prop.stack).split('\n').slice(0, 2).join('\n')}
+        environmentName: ${prop.environmentName}
+      `;
+    }
+    const Component = clientReference(ComponentClient);
+
+    function ServerComponent() {
+      const error = new Error('hello');
+      return <Component prop={error} />;
+    }
+
+    const transport = ReactNoopFlightServer.render(<ServerComponent />);
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+
+    if (__DEV__) {
+      expect(ReactNoop).toMatchRenderedOutput(`
+        is error: true
+        message: hello
+        stack: Error: hello
+    in ServerComponent (at **)
+        environmentName: Server
+      `);
+    } else {
+      expect(ReactNoop).toMatchRenderedOutput(`
+        is error: true
+        message: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.
+        stack: Error: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.
+        environmentName: undefined
+      `);
+    }
+  });
+
   it('can transport cyclic objects', async () => {
     function ComponentClient({prop}) {
       expect(prop.obj.obj.obj).toBe(prop.obj.obj);
