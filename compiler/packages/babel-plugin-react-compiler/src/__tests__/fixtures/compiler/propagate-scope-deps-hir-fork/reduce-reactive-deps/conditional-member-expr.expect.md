@@ -23,7 +23,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enablePropagateDepsInHIR
+import { c as _c } from "react-compiler-runtime"; // @enablePropagateDepsInHIR
 // To preserve the nullthrows behavior and reactive deps of this code,
 // Forget needs to add `props.a` as a dependency (since `props.a.b` is
 // a conditional dependency, i.e. gated behind control flow)

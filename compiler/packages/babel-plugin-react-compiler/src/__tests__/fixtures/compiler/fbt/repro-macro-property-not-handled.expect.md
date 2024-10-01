@@ -31,7 +31,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react-compiler-runtime";
 import fbt from "fbt";
 import { useIdentity } from "shared-runtime";
 

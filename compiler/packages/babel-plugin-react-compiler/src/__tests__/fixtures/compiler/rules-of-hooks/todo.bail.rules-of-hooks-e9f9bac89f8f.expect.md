@@ -17,7 +17,7 @@ const FancyButton = React.forwardRef((props, ref) => {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @skip
+import { c as _c } from "react-compiler-runtime"; // @skip
 // Unsupported input
 
 // Valid because hooks can be used in anonymous arrow-function arguments

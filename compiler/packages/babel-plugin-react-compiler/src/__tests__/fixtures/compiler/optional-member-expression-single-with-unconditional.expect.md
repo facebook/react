@@ -19,7 +19,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees @enableOptionalDependencies
+import { c as _c } from "react-compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees @enableOptionalDependencies
 import { ValidateMemoization } from "shared-runtime";
 function Component(props) {
   const $ = _c(7);

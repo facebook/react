@@ -27,7 +27,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @validateMemoizedEffectDependencies
+import { c as _c } from "react-compiler-runtime"; // @validateMemoizedEffectDependencies
 
 import { useEffect } from "react";
 

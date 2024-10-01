@@ -22,7 +22,7 @@ function component(a, b) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @debug
+import { c as _c } from "react-compiler-runtime"; // @debug
 function component(a, b) {
   const $ = _c(5);
   let t0;

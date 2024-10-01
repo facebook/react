@@ -21,7 +21,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react-compiler-runtime";
 function Component(props) {
   const $ = _c(2);
   const [value, setValue] = useState(null);

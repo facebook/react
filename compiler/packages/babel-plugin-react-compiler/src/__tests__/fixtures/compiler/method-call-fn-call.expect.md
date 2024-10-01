@@ -18,7 +18,7 @@ function foo(a, b, c) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react-compiler-runtime";
 function foo(a, b, c) {
   const $ = _c(6);
   let t0;

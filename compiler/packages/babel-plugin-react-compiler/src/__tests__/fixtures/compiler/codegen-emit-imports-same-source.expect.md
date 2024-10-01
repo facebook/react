@@ -18,7 +18,7 @@ import {
   shouldInstrument,
   makeReadOnly,
 } from "react-compiler-runtime";
-import { c as _c } from "react/compiler-runtime"; // @enableEmitFreeze @instrumentForget
+import { c as _c } from "react-compiler-runtime"; // @enableEmitFreeze @instrumentForget
 
 function useFoo(props) {
   if (__DEV__ && shouldInstrument)

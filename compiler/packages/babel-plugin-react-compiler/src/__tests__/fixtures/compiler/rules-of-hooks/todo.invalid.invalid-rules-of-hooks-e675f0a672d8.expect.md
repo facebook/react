@@ -20,7 +20,7 @@ function List(props) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @skip
+import { c as _c } from "react-compiler-runtime"; // @skip
 // Passed but should have failed
 
 // Invalid because it's dangerous and might not warn otherwise.

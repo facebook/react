@@ -22,7 +22,7 @@ function V0({v1, v2}: V3<{v1: any, v2: V4}>): V12.V11 {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react-compiler-runtime";
 function V0(t0) {
   const $ = _c(4);
   const { v1, v2 } = t0;

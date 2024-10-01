@@ -14,7 +14,7 @@ export default function foo(x, y) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react-compiler-runtime";
 export default function foo(x, y) {
   const $ = _c(4);
   if (x) {

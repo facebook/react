@@ -15,7 +15,7 @@ function Foo({a}) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @validateRefAccessDuringRender:false
+import { c as _c } from "react-compiler-runtime"; // @validateRefAccessDuringRender:false
 function Foo(t0) {
   const $ = _c(4);
   const { a } = t0;
