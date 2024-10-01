@@ -198,6 +198,7 @@ jobs:
           CI: github
           RELEASE_CHANNEL: ${{ matrix.release_channel }}
           NODE_INDEX: ${{ matrix.worker_id }}
+      - run: cat /tmp/ucacher/ucacher.log
       - name: Lint build
         run: yarn lint-build
       - name: Display structure of build
