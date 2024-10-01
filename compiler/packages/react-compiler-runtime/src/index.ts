@@ -41,14 +41,6 @@ export const c =
         }, []);
       };
 
-export function $read(memoCache: MemoCache, index: number) {
-  const value = memoCache[index];
-  if (value === $empty) {
-    throw new Error('useMemoCache: read before write');
-  }
-  return value;
-}
-
 const LazyGuardDispatcher: {[key: string]: (...args: Array<any>) => any} = {};
 [
   'readContext',
