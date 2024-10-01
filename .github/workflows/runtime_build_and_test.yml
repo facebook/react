@@ -173,7 +173,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: |
           chmod +x .github/ucacher;
-          export PATH=$PATH:$(pwd)/.github/;
+          echo "PATH=$PATH:$(pwd)" >> $GITHUB_ENV
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
