@@ -72,3 +72,7 @@ ul, li {
     transform: rotate(360deg);
   }
 }
+
+.spinner--inactive{
+  opacity : 0;
+}
