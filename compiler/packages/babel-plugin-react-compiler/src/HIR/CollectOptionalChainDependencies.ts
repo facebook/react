@@ -125,6 +125,11 @@ type OptionalTraversalContext = {
   hoistableObjects: Map<BlockId, ReactiveScopeDependency>;
 };
 
+/**
+ * Match the consequent and alternate blocks of an optional.
+ * @returns propertyload computed by the consequent block, or null if the
+ * consequent block is not a simple PropertyLoad.
+ */
 function matchOptionalTestBlock(
   terminal: BranchTerminal,
   blocks: ReadonlyMap<BlockId, BasicBlock>,
@@ -168,7 +173,18 @@ function matchOptionalTestBlock(
     ) {
       return null;
     }
-    assertOptionalAlternateBlock(terminal, blocks);
+    const alternate = assertNonNull(blocks.get(terminal.alternate));
+
+    CompilerError.invariant(
+      alternate.instructions.length === 2 &&
+        alternate.instructions[0].value.kind === 'Primitive' &&
+        alternate.instructions[1].value.kind === 'StoreLocal',
+      {
+        reason: 'Unexpected alternate structure',
+        loc: terminal.loc,
+      },
+    );
+
     return {
       consequentId: storeLocal.lvalue.place.identifier.id,
       property: propertyLoad.value.property,
@@ -178,23 +194,6 @@ function matchOptionalTestBlock(
     };
   }
   return null;
-}
-
-function assertOptionalAlternateBlock(
-  terminal: BranchTerminal,
-  blocks: ReadonlyMap<BlockId, BasicBlock>,
-): void {
-  const alternate = assertNonNull(blocks.get(terminal.alternate));
-
-  CompilerError.invariant(
-    alternate.instructions.length === 2 &&
-      alternate.instructions[0].value.kind === 'Primitive' &&
-      alternate.instructions[1].value.kind === 'StoreLocal',
-    {
-      reason: 'Unexpected alternate structure',
-      loc: terminal.loc,
-    },
-  );
 }
 
 /**
@@ -216,9 +215,11 @@ function traverseOptionalBlock(
   let test: BranchTerminal;
   let baseObject: ReactiveScopeDependency;
   if (maybeTest.terminal.kind === 'branch') {
+    CompilerError.invariant(optional.terminal.optional, {
+      reason: '[OptionalChainDeps] Expect base case to be always optional',
+      loc: optional.terminal.loc,
+    });
     /**
-     * Explicitly calculate base of load
-     *
      * Optional base expressions are currently within value blocks which cannot
      * be interrupted by scope boundaries. As such, the only dependencies we can
      * hoist out of optional chains are property load chains with no intervening
@@ -226,13 +227,9 @@ function traverseOptionalBlock(
      *
      * Ideally, we would be able to flatten base instructions out of optional
      * blocks, but this would require changes to HIR.
-     */
-    CompilerError.invariant(optional.terminal.optional, {
-      reason: '[OptionalChainDeps] Expect base case to be always optional',
-      loc: optional.terminal.loc,
-    });
-    /**
-     * Only match base expressions that are straightforward PropertyLoad chains
+     *
+     * For now, only match base expressions that are straightforward
+     * PropertyLoad chains
      */
     if (
       maybeTest.instructions.length === 0 ||
