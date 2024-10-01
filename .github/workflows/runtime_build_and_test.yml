@@ -11,6 +11,11 @@ env:
   SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
   AWS_ACCESS_KEY_ID: "${{ secrets.AWS_ACCESS_KEY_ID }}"
   AWS_SECRET_ACCESS_KEY: "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+  UCACHER_DB_URI: "${{ secrets.UCACHER_DB_URI }}"
+  UCACHER_STORAGE: s3://us-west-2/earthly-ucacher-directory--usw2-az1--x-s3
+  UCACHER_INSTRUMENTER: strace
+  UCACHER_SHOW_IO: true
+  LOG_LEVEL: debug
 
 jobs:
   satellite_assignment:
@@ -166,11 +171,6 @@ jobs:
         # yml is dumb. update the --total arg to yarn build if you change the number of workers
         worker_id: [0]
         release_channel: [stable]
-    env:
-      UCACHER_STORAGE: s3://us-west-2/earthly-ucacher-directory--usw2-az1--x-s3
-      UCACHER_INSTRUMENTER: strace
-      UCACHER_SHOW_IO : true
-      LOG_LEVEL: debug
     steps:
       - uses: actions/checkout@v4
       - run: |
@@ -193,9 +193,7 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
-      - run: |
-          env | grep AWS;
-          ucacher yarn build --index=${{ matrix.worker_id }} --total=20 --r=${{ matrix.release_channel }} --ci
+      - run: ucacher yarn build --index=${{ matrix.worker_id }} --total=20 --r=${{ matrix.release_channel }} --ci
         env:
           CI: github
           RELEASE_CHANNEL: ${{ matrix.release_channel }}
