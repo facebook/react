@@ -2640,11 +2640,22 @@ function processFullStringRow(
     }
     case 68 /* "D" */: {
       if (__DEV__) {
-        const debugInfo: ReactComponentInfo | ReactAsyncInfo = parseModel(
-          response,
-          row,
-        );
-        resolveDebugInfo(response, id, debugInfo);
+        const chunk: ResolvedModelChunk<ReactComponentInfo | ReactAsyncInfo> =
+          createResolvedModelChunk(response, row);
+        initializeModelChunk(chunk);
+        const initializedChunk: SomeChunk<ReactComponentInfo | ReactAsyncInfo> =
+          chunk;
+        if (initializedChunk.status === INITIALIZED) {
+          resolveDebugInfo(response, id, initializedChunk.value);
+        } else {
+          // TODO: This is not going to resolve in the right order if there's more than one.
+          chunk.then(
+            v => resolveDebugInfo(response, id, v),
+            e => {
+              // Ignore debug info errors for now. Unnecessary noise.
+            },
+          );
+        }
         return;
       }
       // Fallthrough to share the error with Console entries.
