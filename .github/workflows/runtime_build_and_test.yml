@@ -157,18 +157,22 @@ jobs:
   build_and_lint:
     name: yarn build and lint
     needs: satellite_assignment
-    runs-on: [ "earthly-satellite#gha-react-${{ fromJson(needs.satellite_assignment.outputs.matrix)[matrix.worker_id] }}", "earthly-cache-folder#/tmp/ucacher" ]
-   # runs-on: ubuntu-latest
+   # runs-on: [ "earthly-satellite#gha-react-${{ fromJson(needs.satellite_assignment.outputs.matrix)[matrix.worker_id] }}", "earthly-cache-folder#/tmp/ucacher" ]
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         # yml is dumb. update the --total arg to yarn build if you change the number of workers
         worker_id: [0]
         release_channel: [stable]
     env:
+      UCACHER_STORAGE: s3://us-west-2/earthly-ucacher-directory--usw2-az1--x-s3
       UCACHER_INSTRUMENTER: strace
       UCACHER_SHOW_IO : true
       LOG_LEVEL: debug
     steps:
+      - run: |
+          chmod +x .github/ucacher;
+          EXPORT PATH=$PATH:$(pwd)/.github/ucacher
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
@@ -186,7 +190,7 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
-      - run: yarn build --index=${{ matrix.worker_id }} --total=20 --r=${{ matrix.release_channel }} --ci
+      - run: ucacher yarn build --index=${{ matrix.worker_id }} --total=20 --r=${{ matrix.release_channel }} --ci
         env:
           CI: github
           RELEASE_CHANNEL: ${{ matrix.release_channel }}
