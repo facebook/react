@@ -157,12 +157,13 @@ jobs:
   build_and_lint:
     name: yarn build and lint
     needs: satellite_assignment
-    runs-on: [ "earthly-satellite#gha-react-${{ fromJson(needs.satellite_assignment.outputs.matrix)[matrix.worker_id] }}", "earthly-cache-folder#/tmp/ucacher" ]
+   # runs-on: [ "earthly-satellite#gha-react-${{ fromJson(needs.satellite_assignment.outputs.matrix)[matrix.worker_id] }}", "earthly-cache-folder#/tmp/ucacher" ]
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         # yml is dumb. update the --total arg to yarn build if you change the number of workers
-        worker_id: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
-        release_channel: [stable, experimental]
+        worker_id: 0
+        release_channel: stable
     env:
       UCACHER_INSTRUMENTER: strace
       UCACHER_SHOW_IO : true
@@ -194,6 +195,8 @@ jobs:
         run: yarn lint-build
       - name: Display structure of build
         run: ls -R build
+      - name: Display env
+        run: env
       - name: Archive build
         uses: actions/upload-artifact@v4
         with:
