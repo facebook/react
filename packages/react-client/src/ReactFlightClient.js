@@ -1287,6 +1287,21 @@ function parseModelString(
           createFormData,
         );
       }
+      case 'Z': {
+        // Error
+        if (__DEV__) {
+          const ref = value.slice(2);
+          return getOutlinedModel(
+            response,
+            ref,
+            parentObject,
+            key,
+            resolveErrorDev,
+          );
+        } else {
+          return resolveErrorProd(response);
+        }
+      }
       case 'i': {
         // Iterator
         const ref = value.slice(2);
@@ -1881,11 +1896,7 @@ function formatV8Stack(
 }
 
 type ErrorWithDigest = Error & {digest?: string};
-function resolveErrorProd(
-  response: Response,
-  id: number,
-  digest: string,
-): void {
+function resolveErrorProd(response: Response): Error {
   if (__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
     // eslint-disable-next-line react-internal/prod-error-codes
@@ -1899,25 +1910,17 @@ function resolveErrorProd(
       ' may provide additional details about the nature of the error.',
   );
   error.stack = 'Error: ' + error.message;
-  (error: any).digest = digest;
-  const errorWithDigest: ErrorWithDigest = (error: any);
-  const chunks = response._chunks;
-  const chunk = chunks.get(id);
-  if (!chunk) {
-    chunks.set(id, createErrorChunk(response, errorWithDigest));
-  } else {
-    triggerErrorOnChunk(chunk, errorWithDigest);
-  }
+  return error;
 }
 
 function resolveErrorDev(
   response: Response,
-  id: number,
-  digest: string,
-  message: string,
-  stack: ReactStackTrace,
-  env: string,
-): void {
+  errorInfo: {message: string, stack: ReactStackTrace, env: string, ...},
+): Error {
+  const message: string = errorInfo.message;
+  const stack: ReactStackTrace = errorInfo.stack;
+  const env: string = errorInfo.env;
+
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
     // eslint-disable-next-line react-internal/prod-error-codes
@@ -1957,16 +1960,8 @@ function resolveErrorDev(
     }
   }
 
-  (error: any).digest = digest;
   (error: any).environmentName = env;
-  const errorWithDigest: ErrorWithDigest = (error: any);
-  const chunks = response._chunks;
-  const chunk = chunks.get(id);
-  if (!chunk) {
-    chunks.set(id, createErrorChunk(response, errorWithDigest));
-  } else {
-    triggerErrorOnChunk(chunk, errorWithDigest);
-  }
+  return error;
 }
 
 function resolvePostponeProd(response: Response, id: number): void {
@@ -2622,17 +2617,20 @@ function processFullStringRow(
     }
     case 69 /* "E" */: {
       const errorInfo = JSON.parse(row);
+      let error;
       if (__DEV__) {
-        resolveErrorDev(
-          response,
-          id,
-          errorInfo.digest,
-          errorInfo.message,
-          errorInfo.stack,
-          errorInfo.env,
-        );
+        error = resolveErrorDev(response, errorInfo);
       } else {
-        resolveErrorProd(response, id, errorInfo.digest);
+        error = resolveErrorProd(response);
+      }
+      (error: any).digest = errorInfo.digest;
+      const errorWithDigest: ErrorWithDigest = (error: any);
+      const chunks = response._chunks;
+      const chunk = chunks.get(id);
+      if (!chunk) {
+        chunks.set(id, createErrorChunk(response, errorWithDigest));
+      } else {
+        triggerErrorOnChunk(chunk, errorWithDigest);
       }
       return;
     }
@@ -2642,11 +2640,22 @@ function processFullStringRow(
     }
     case 68 /* "D" */: {
       if (__DEV__) {
-        const debugInfo: ReactComponentInfo | ReactAsyncInfo = parseModel(
-          response,
-          row,
-        );
-        resolveDebugInfo(response, id, debugInfo);
+        const chunk: ResolvedModelChunk<ReactComponentInfo | ReactAsyncInfo> =
+          createResolvedModelChunk(response, row);
+        initializeModelChunk(chunk);
+        const initializedChunk: SomeChunk<ReactComponentInfo | ReactAsyncInfo> =
+          chunk;
+        if (initializedChunk.status === INITIALIZED) {
+          resolveDebugInfo(response, id, initializedChunk.value);
+        } else {
+          // TODO: This is not going to resolve in the right order if there's more than one.
+          chunk.then(
+            v => resolveDebugInfo(response, id, v),
+            e => {
+              // Ignore debug info errors for now. Unnecessary noise.
+            },
+          );
+        }
         return;
       }
       // Fallthrough to share the error with Console entries.

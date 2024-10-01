@@ -19,16 +19,17 @@ const ENABLE_DEBUG_INVARIANTS = true;
 export class ReactiveScopeDependencyTreeHIR {
   #roots: Map<Identifier, DependencyNode> = new Map();
 
-  #getOrCreateRoot(identifier: Identifier, isNonNull: boolean): DependencyNode {
+  #getOrCreateRoot(
+    identifier: Identifier,
+    accessType: PropertyAccessType,
+  ): DependencyNode {
     // roots can always be accessed unconditionally in JS
     let rootNode = this.#roots.get(identifier);
 
     if (rootNode === undefined) {
       rootNode = {
         properties: new Map(),
-        accessType: isNonNull
-          ? PropertyAccessType.NonNullAccess
-          : PropertyAccessType.Access,
+        accessType,
       };
       this.#roots.set(identifier, rootNode);
     }
@@ -37,7 +38,7 @@ export class ReactiveScopeDependencyTreeHIR {
 
   addDependency(dep: ReactiveScopePropertyDependency): void {
     const {path} = dep;
-    let currNode = this.#getOrCreateRoot(dep.identifier, false);
+    let currNode = this.#getOrCreateRoot(dep.identifier, MIN_ACCESS_TYPE);
 
     const accessType = PropertyAccessType.Access;
 
@@ -45,8 +46,11 @@ export class ReactiveScopeDependencyTreeHIR {
 
     for (const property of path) {
       // all properties read 'on the way' to a dependency are marked as 'access'
-      let currChild = getOrMakeProperty(currNode, property.property);
-      currChild.accessType = merge(currChild.accessType, accessType);
+      let currChild = makeOrMergeProperty(
+        currNode,
+        property.property,
+        accessType,
+      );
       currNode = currChild;
     }
 
@@ -251,17 +255,20 @@ function printSubtree(
   return results;
 }
 
-function getOrMakeProperty(
+function makeOrMergeProperty(
   node: DependencyNode,
   property: string,
+  accessType: PropertyAccessType,
 ): DependencyNode {
   let child = node.properties.get(property);
   if (child == null) {
     child = {
       properties: new Map(),
-      accessType: MIN_ACCESS_TYPE,
+      accessType,
     };
     node.properties.set(property, child);
+  } else {
+    child.accessType = merge(child.accessType, accessType);
   }
   return child;
 }
