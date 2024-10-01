@@ -170,10 +170,10 @@ jobs:
       UCACHER_SHOW_IO : true
       LOG_LEVEL: debug
     steps:
+      - uses: actions/checkout@v4
       - run: |
           chmod +x .github/ucacher;
           EXPORT PATH=$PATH:$(pwd)/.github/ucacher
-      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
