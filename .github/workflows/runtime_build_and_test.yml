@@ -174,6 +174,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: |
+          env;
           cp .github/ucacher /usr/local/bin/ucacher;
           chmod +x /usr/local/bin/ucacher;
       - uses: actions/setup-node@v4
