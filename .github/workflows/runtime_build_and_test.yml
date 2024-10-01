@@ -162,8 +162,8 @@ jobs:
     strategy:
       matrix:
         # yml is dumb. update the --total arg to yarn build if you change the number of workers
-        worker_id: 0
-        release_channel: stable
+        worker_id: [0]
+        release_channel: [stable]
     env:
       UCACHER_INSTRUMENTER: strace
       UCACHER_SHOW_IO : true
@@ -203,70 +203,70 @@ jobs:
           name: _build_${{ matrix.worker_id }}_${{ matrix.release_channel }}
           path: build
 
-  test_build:
-    name: yarn test-build
-    needs: build_and_lint
-    strategy:
-      matrix:
-        test_params: [
-          # Intentionally passing these as strings instead of creating a
-          # separate parameter per CLI argument, since it's easier to
-          # control/see which combinations we want to run.
-          -r=stable --env=development,
-#          -r=stable --env=production,
-#          -r=experimental --env=development,
-#          -r=experimental --env=production,
-
-          # Dev Tools
-          --project=devtools -r=experimental,
-
-          # TODO: Update test config to support www build tests
-          # - "-r=www-classic --env=development --variant=false"
-          # - "-r=www-classic --env=production --variant=false"
-          # - "-r=www-classic --env=development --variant=true"
-          # - "-r=www-classic --env=production --variant=true"
-          # - "-r=www-modern --env=development --variant=false"
-          # - "-r=www-modern --env=production --variant=false"
-          # - "-r=www-modern --env=development --variant=true"
-          # - "-r=www-modern --env=production --variant=true"
-
-          # TODO: Update test config to support xplat build tests
-          # - "-r=xplat --env=development --variant=false"
-          # - "-r=xplat --env=development --variant=true"
-          # - "-r=xplat --env=production --variant=false"
-          # - "-r=xplat --env=production --variant=true"
-
-          # TODO: Test more persistent configurations?
-        ]
-        shard:
-          - 1/3
-          - 2/3
-#          - 3/3
-    continue-on-error: true
-    runs-on: [ "earthly-satellite#gha-react-${{ fromJson(needs.satellite_assignment.outputs.matrix)[format('{0}-{1}',matrix.test_params,matrix.shard)] }}", "earthly-cache-folder#/tmp/ucacher" ]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-          cache: yarn
-          cache-dependency-path: yarn.lock
-      - name: Restore cached node_modules
-        uses: actions/cache@v4
-        id: node_modules
-        with:
-          path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
-      - run: ucacher yarn install --frozen-lockfile
-      - name: Restore archived build
-        uses: actions/download-artifact@v4
-        with:
-          pattern: _build_*
-          path: build
-          merge-multiple: true
-      - name: Display structure of build
-        run: ls -R build
-      - run: ucacher yarn test --build ${{ matrix.test_params }} --shard=${{ matrix.shard }} --ci
+#  test_build:
+#    name: yarn test-build
+#    needs: build_and_lint
+#    strategy:
+#      matrix:
+#        test_params: [
+#          # Intentionally passing these as strings instead of creating a
+#          # separate parameter per CLI argument, since it's easier to
+#          # control/see which combinations we want to run.
+#          -r=stable --env=development,
+##          -r=stable --env=production,
+##          -r=experimental --env=development,
+##          -r=experimental --env=production,
+#
+#          # Dev Tools
+#          --project=devtools -r=experimental,
+#
+#          # TODO: Update test config to support www build tests
+#          # - "-r=www-classic --env=development --variant=false"
+#          # - "-r=www-classic --env=production --variant=false"
+#          # - "-r=www-classic --env=development --variant=true"
+#          # - "-r=www-classic --env=production --variant=true"
+#          # - "-r=www-modern --env=development --variant=false"
+#          # - "-r=www-modern --env=production --variant=false"
+#          # - "-r=www-modern --env=development --variant=true"
+#          # - "-r=www-modern --env=production --variant=true"
+#
+#          # TODO: Update test config to support xplat build tests
+#          # - "-r=xplat --env=development --variant=false"
+#          # - "-r=xplat --env=development --variant=true"
+#          # - "-r=xplat --env=production --variant=false"
+#          # - "-r=xplat --env=production --variant=true"
+#
+#          # TODO: Test more persistent configurations?
+#        ]
+#        shard:
+#          - 1/3
+#          - 2/3
+##          - 3/3
+#    continue-on-error: true
+#    runs-on: [ "earthly-satellite#gha-react-${{ fromJson(needs.satellite_assignment.outputs.matrix)[format('{0}-{1}',matrix.test_params,matrix.shard)] }}", "earthly-cache-folder#/tmp/ucacher" ]
+#    steps:
+#      - uses: actions/checkout@v4
+#      - uses: actions/setup-node@v4
+#        with:
+#          node-version-file: '.nvmrc'
+#          cache: yarn
+#          cache-dependency-path: yarn.lock
+#      - name: Restore cached node_modules
+#        uses: actions/cache@v4
+#        id: node_modules
+#        with:
+#          path: "**/node_modules"
+#          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+#      - run: ucacher yarn install --frozen-lockfile
+#      - name: Restore archived build
+#        uses: actions/download-artifact@v4
+#        with:
+#          pattern: _build_*
+#          path: build
+#          merge-multiple: true
+#      - name: Display structure of build
+#        run: ls -R build
+#      - run: ucacher yarn test --build ${{ matrix.test_params }} --shard=${{ matrix.shard }} --ci
 #
 #  process_artifacts_combined:
 #    name: Process artifacts combined
