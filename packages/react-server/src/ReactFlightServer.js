@@ -3275,30 +3275,6 @@ function outlineComponentInfo(
   // We use the console encoding so that we can dedupe objects but don't necessarily
   // use the full serialization that requires a task.
   const counter = {objectLimit};
-  function replacer(
-    this:
-      | {+[key: string | number]: ReactClientValue}
-      | $ReadOnlyArray<ReactClientValue>,
-    parentPropertyName: string,
-    value: ReactClientValue,
-  ): ReactJSONValue {
-    try {
-      return renderConsoleValue(
-        request,
-        counter,
-        this,
-        parentPropertyName,
-        value,
-      );
-    } catch (x) {
-      return (
-        'Unknown Value: React could not send it from the server.\n' + x.message
-      );
-    }
-  }
-
-  request.pendingChunks++;
-  const id = request.nextChunkId++;
 
   // We can't serialize the ConsoleTask/Error objects so we need to omit them before serializing.
   const componentDebugInfo: Omit<
@@ -3318,12 +3294,7 @@ function outlineComponentInfo(
   // $FlowFixMe[cannot-write]
   componentDebugInfo.props = componentInfo.props;
 
-  // $FlowFixMe[incompatible-type] stringify can return null
-  const json: string = stringify(componentDebugInfo, replacer);
-  const row = id.toString(16) + ':' + json + '\n';
-  const processedChunk = stringToChunk(row);
-  request.completedRegularChunks.push(processedChunk);
-
+  const id = outlineConsoleValue(request, counter, componentDebugInfo);
   request.writtenObjects.set(componentInfo, serializeByValueID(id));
 }
 
@@ -3451,26 +3422,36 @@ function renderConsoleValue(
         if (element._owner != null) {
           outlineComponentInfo(request, element._owner);
         }
+        if (enableOwnerStacks) {
+          let debugStack: null | ReactStackTrace = null;
+          if (element._debugStack != null) {
+            // Outline the debug stack so that it doesn't get cut off.
+            debugStack = filterStackTrace(request, element._debugStack, 1);
+            const stackId = outlineConsoleValue(
+              request,
+              {objectLimit: debugStack.length + 2},
+              debugStack,
+            );
+            request.writtenObjects.set(debugStack, serializeByValueID(stackId));
+          }
+          return [
+            REACT_ELEMENT_TYPE,
+            element.type,
+            element.key,
+            element.props,
+            element._owner,
+            debugStack,
+            element._store.validated,
+          ];
+        }
 
-        return enableOwnerStacks
-          ? [
-              REACT_ELEMENT_TYPE,
-              element.type,
-              element.key,
-              element.props,
-              element._owner,
-              element._debugStack == null
-                ? null
-                : filterStackTrace(request, element._debugStack, 1),
-              element._store.validated,
-            ]
-          : [
-              REACT_ELEMENT_TYPE,
-              element.type,
-              element.key,
-              element.props,
-              element._owner,
-            ];
+        return [
+          REACT_ELEMENT_TYPE,
+          element.type,
+          element.key,
+          element.props,
+          element._owner,
+        ];
       }
     }
 
