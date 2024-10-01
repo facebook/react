@@ -196,7 +196,8 @@ jobs:
       - name: Display structure of build
         run: ls -R build
       - name: Display env
-        run: env
+        run: |
+          env; which node; pwd
       - name: Archive build
         uses: actions/upload-artifact@v4
         with:
