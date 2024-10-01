@@ -367,7 +367,6 @@ export type BasicBlock = {
   preds: Set<BlockId>;
   phis: Set<Phi>;
 };
-export type TBasicBlock<T extends Terminal> = BasicBlock & {terminal: T};
 
 /*
  * Terminal nodes generally represent statements that affect control flow, such as

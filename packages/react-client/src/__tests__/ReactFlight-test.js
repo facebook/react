@@ -308,6 +308,10 @@ describe('ReactFlight', () => {
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in Object.<anonymous> (at **)'
                   : undefined,
+                props: {
+                  firstName: 'Seb',
+                  lastName: 'Smith',
+                },
               },
             ]
           : undefined,
@@ -347,6 +351,10 @@ describe('ReactFlight', () => {
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in Object.<anonymous> (at **)'
                   : undefined,
+                props: {
+                  firstName: 'Seb',
+                  lastName: 'Smith',
+                },
               },
             ]
           : undefined,
@@ -651,6 +659,46 @@ describe('ReactFlight', () => {
         multiple: 1,2
         content: [["hi","world"],["multiple","1"],["multiple","2"]]
       `);
+  });
+
+  it('can transport Error objects as values', async () => {
+    function ComponentClient({prop}) {
+      return `
+        is error: ${prop instanceof Error}
+        message: ${prop.message}
+        stack: ${normalizeCodeLocInfo(prop.stack).split('\n').slice(0, 2).join('\n')}
+        environmentName: ${prop.environmentName}
+      `;
+    }
+    const Component = clientReference(ComponentClient);
+
+    function ServerComponent() {
+      const error = new Error('hello');
+      return <Component prop={error} />;
+    }
+
+    const transport = ReactNoopFlightServer.render(<ServerComponent />);
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+
+    if (__DEV__) {
+      expect(ReactNoop).toMatchRenderedOutput(`
+        is error: true
+        message: hello
+        stack: Error: hello
+    in ServerComponent (at **)
+        environmentName: Server
+      `);
+    } else {
+      expect(ReactNoop).toMatchRenderedOutput(`
+        is error: true
+        message: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.
+        stack: Error: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.
+        environmentName: undefined
+      `);
+    }
   });
 
   it('can transport cyclic objects', async () => {
@@ -2625,6 +2673,9 @@ describe('ReactFlight', () => {
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in Object.<anonymous> (at **)'
                   : undefined,
+                props: {
+                  transport: expect.arrayContaining([]),
+                },
               },
             ]
           : undefined,
@@ -2643,6 +2694,7 @@ describe('ReactFlight', () => {
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in Object.<anonymous> (at **)'
                   : undefined,
+                props: {},
               },
             ]
           : undefined,
@@ -2658,6 +2710,7 @@ describe('ReactFlight', () => {
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in myLazy (at **)\n    in lazyInitializer (at **)'
                   : undefined,
+                props: {},
               },
             ]
           : undefined,
@@ -2673,6 +2726,7 @@ describe('ReactFlight', () => {
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in Object.<anonymous> (at **)'
                   : undefined,
+                props: {},
               },
             ]
           : undefined,
@@ -2747,6 +2801,9 @@ describe('ReactFlight', () => {
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in Object.<anonymous> (at **)'
                   : undefined,
+                props: {
+                  transport: expect.arrayContaining([]),
+                },
               },
             ]
           : undefined,
@@ -2764,6 +2821,9 @@ describe('ReactFlight', () => {
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in ServerComponent (at **)'
                   : undefined,
+                props: {
+                  children: {},
+                },
               },
             ]
           : undefined,
@@ -2780,6 +2840,7 @@ describe('ReactFlight', () => {
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in Object.<anonymous> (at **)'
                   : undefined,
+                props: {},
               },
             ]
           : undefined,
@@ -2938,6 +2999,7 @@ describe('ReactFlight', () => {
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in Object.<anonymous> (at **)'
                   : undefined,
+                props: {},
               },
               {
                 env: 'B',
@@ -3068,6 +3130,9 @@ describe('ReactFlight', () => {
           stack: gate(flag => flag.enableOwnerStacks)
             ? '    in Object.<anonymous> (at **)'
             : undefined,
+          props: {
+            firstName: 'Seb',
+          },
         };
         expect(getDebugInfo(greeting)).toEqual([
           greetInfo,
@@ -3079,6 +3144,14 @@ describe('ReactFlight', () => {
             stack: gate(flag => flag.enableOwnerStacks)
               ? '    in Greeting (at **)'
               : undefined,
+            props: {
+              children: expect.objectContaining({
+                type: 'span',
+                props: {
+                  children: ['Hello, ', 'Seb'],
+                },
+              }),
+            },
           },
         ]);
         // The owner that created the span was the outer server component.
