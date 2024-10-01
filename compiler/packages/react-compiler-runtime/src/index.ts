@@ -24,11 +24,11 @@ const $empty = Symbol.for('react.memo_cache_sentinel');
 // < 19.
 export const c =
   // @ts-expect-error
-  typeof React.c === 'function'
+  typeof React.__COMPILER_RUNTIME?.c === 'function'
     ? // @ts-expect-error
-      React.c
+      React.__COMPILER_RUNTIME.c
     : function c(size: number) {
-        return React.useState<Array<unknown>>(() => {
+        return React.useMemo<Array<unknown>>(() => {
           const $ = new Array(size);
           for (let ii = 0; ii < size; ii++) {
             $[ii] = $empty;
@@ -38,7 +38,7 @@ export const c =
           // @ts-ignore
           $[$empty] = true;
           return $;
-        })[0];
+        }, []);
       };
 
 export function $read(memoCache: MemoCache, index: number) {

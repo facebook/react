@@ -9,6 +9,7 @@
 
 export {
   __CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
+  __COMPILER_RUNTIME,
   Children,
   Component,
   Fragment,
@@ -70,5 +71,3 @@ export function experimental_useOptimistic<S, A>(
   }
   return useOptimistic(passthrough, reducer);
 }
-
-export {useMemoCache as c} from './src/ReactHooks';

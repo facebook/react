@@ -1542,7 +1542,7 @@ describe('ReactUpdates', () => {
       }
     }
 
-    let limit = 105;
+    let limit = 55;
     const root = ReactDOMClient.createRoot(container);
     await expect(async () => {
       await act(() => {
