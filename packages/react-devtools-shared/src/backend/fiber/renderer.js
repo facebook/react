@@ -4348,8 +4348,7 @@ export function attach(
     const componentInfo = virtualInstance.data;
     const key =
       typeof componentInfo.key === 'string' ? componentInfo.key : null;
-    const props = null; // TODO: Track props on ReactComponentInfo;
-
+    const props = componentInfo.props == null ? null : componentInfo.props;
     const owners: null | Array<SerializedElement> =
       getOwnersListFromInstance(virtualInstance);
 

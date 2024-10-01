@@ -17,7 +17,6 @@ import {registerDevToolsEventLogger} from 'react-devtools-shared/src/registerDev
 import {Server} from 'ws';
 import {join} from 'path';
 import {readFileSync} from 'fs';
-import {installHook} from 'react-devtools-shared/src/hook';
 import DevTools from 'react-devtools-shared/src/devtools/views/DevTools';
 import {doesFilePathExist, launchEditor} from './editor';
 import {
@@ -28,8 +27,6 @@ import {localStorageSetItem} from 'react-devtools-shared/src/storage';
 
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {Source} from 'react-devtools-shared/src/shared/types';
-
-installHook(window);
 
 export type StatusTypes = 'server-connected' | 'devtools-connected' | 'error';
 export type StatusListener = (message: string, status: StatusTypes) => void;
@@ -371,9 +368,12 @@ function startServer(
         '\n;' +
         backendFile.toString() +
         '\n;' +
+        'ReactDevToolsBackend.initialize();' +
+        '\n' +
         `ReactDevToolsBackend.connectToDevTools({port: ${port}, host: '${host}', useHttps: ${
           useHttps ? 'true' : 'false'
-        }});`,
+        }});
+        `,
     );
   });
 
