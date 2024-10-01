@@ -150,7 +150,10 @@ function patchConsoleForTestingBeforeHookInstallation() {
         firstArg.startsWith(
           'The current testing environment is not configured to support act',
         ) ||
-        firstArg.startsWith('You seem to have overlapping act() calls'))
+        firstArg.startsWith('You seem to have overlapping act() calls') ||
+        firstArg.startsWith(
+          'ReactDOM.render is no longer supported in React 18.',
+        ))
     ) {
       // DevTools intentionally wraps updates with acts from both DOM and test-renderer,
       // since test updates are expected to impact both renderers.

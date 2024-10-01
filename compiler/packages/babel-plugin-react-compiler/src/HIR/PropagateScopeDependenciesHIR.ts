@@ -20,7 +20,6 @@ import {
 import {
   BlockInfo,
   collectHoistablePropertyLoads,
-  getProperty,
 } from './CollectHoistablePropertyLoads';
 import {
   ScopeBlockTraversal,
@@ -218,6 +217,54 @@ function collectTemporariesSidemap(
     }
   }
   return temporaries;
+}
+
+function getProperty(
+  object: Place,
+  propertyName: string,
+  temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
+): ReactiveScopeDependency {
+  /*
+   * (1) Get the base object either from the temporary sidemap (e.g. a LoadLocal)
+   * or a deep copy of an existing property dependency.
+   *  Example 1:
+   *    $0 = LoadLocal x
+   *    $1 = PropertyLoad $0.y
+   *  getProperty($0, ...) -> resolvedObject = x, resolvedDependency = null
+   *
+   *  Example 2:
+   *    $0 = LoadLocal x
+   *    $1 = PropertyLoad $0.y
+   *    $2 = PropertyLoad $1.z
+   *  getProperty($1, ...) -> resolvedObject = null, resolvedDependency = x.y
+   *
+   *  Example 3:
+   *    $0 = Call(...)
+   *    $1 = PropertyLoad $0.y
+   *  getProperty($0, ...) -> resolvedObject = null, resolvedDependency = null
+   */
+  const resolvedDependency = temporaries.get(object.identifier.id);
+
+  /**
+   * (2) Push the last PropertyLoad
+   * TODO(mofeiZ): understand optional chaining
+   */
+  let property: ReactiveScopeDependency;
+  if (resolvedDependency == null) {
+    property = {
+      identifier: object.identifier,
+      path: [{property: propertyName, optional: false}],
+    };
+  } else {
+    property = {
+      identifier: resolvedDependency.identifier,
+      path: [
+        ...resolvedDependency.path,
+        {property: propertyName, optional: false},
+      ],
+    };
+  }
+  return property;
 }
 
 type Decl = {
