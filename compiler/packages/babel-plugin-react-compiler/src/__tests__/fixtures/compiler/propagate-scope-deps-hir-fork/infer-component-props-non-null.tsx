@@ -8,7 +8,7 @@ function Foo(props) {
    * as it is arg[0] of a component function
    */
   const arr = [];
-  if (cond) {
+  if (props.cond) {
     arr.push(identity(props.value));
   }
   return <Stringify arr={arr} />;
@@ -16,5 +16,5 @@ function Foo(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Foo,
-  params: [{value: 2}],
+  params: [{value: 2, cond: true}],
 };
