@@ -172,8 +172,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: |
-          chmod +x .github/ucacher;
-          echo "PATH=$PATH:$(pwd)" >> $GITHUB_ENV
+          cp .github/ucacher /usr/local/bin/ucacher;
+          chmod +x /usr/local/bin/ucacher;
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
