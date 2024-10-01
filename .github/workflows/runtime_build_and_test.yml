@@ -9,6 +9,8 @@ env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
   # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#cache-segment-restore-timeout
   SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
+  AWS_ACCESS_KEY_ID: "${{ secrets.AWS_ACCESS_KEY_ID }}"
+  AWS_SECRET_ACCESS_KEY: "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
 
 jobs:
   satellite_assignment:
