@@ -75,7 +75,7 @@ export const FIXTURE_ENTRYPOINT = {
       
 ### Eval output
 (kind: ok) [[ (exception in render) Error: throw with error! ]]
-[[ (exception in render) Error: throw with error! ]]
+[2]
 [[ (exception in render) Error: throw with error! ]]
 [[ (exception in render) TypeError: Cannot read properties of undefined (reading 'b') ]]
 [null]
