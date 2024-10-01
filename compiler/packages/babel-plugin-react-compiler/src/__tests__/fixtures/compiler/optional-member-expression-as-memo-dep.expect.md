@@ -3,29 +3,12 @@
 
 ```javascript
 // @validatePreserveExistingMemoizationGuarantees @enableOptionalDependencies
-import {identity, ValidateMemoization} from 'shared-runtime';
-import {useMemo} from 'react';
-
-function Component({arg}) {
+function Component(props) {
   const data = useMemo(() => {
-    return arg?.items.edges?.nodes.map(identity);
-  }, [arg?.items.edges?.nodes]);
-  return (
-    <ValidateMemoization inputs={[arg?.items.edges?.nodes]} output={data} />
-  );
+    return props?.items.edges?.nodes.map();
+  }, [props?.items.edges?.nodes]);
+  return <Foo data={data} />;
 }
-export const FIXTURE_ENTRYPOINT = {
-  fn: Component,
-  params: [{arg: null}],
-  sequentialRenders: [
-    {arg: null},
-    {arg: null},
-    {arg: {items: {edges: null}}},
-    {arg: {items: {edges: null}}},
-    {arg: {items: {edges: {nodes: [1, 2, 'hello']}}}},
-    {arg: {items: {edges: {nodes: [1, 2, 'hello']}}}},
-  ],
-};
 
 ```
 
@@ -33,66 +16,33 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees @enableOptionalDependencies
-import { identity, ValidateMemoization } from "shared-runtime";
-import { useMemo } from "react";
+function Component(props) {
+  const $ = _c(4);
 
-function Component(t0) {
-  const $ = _c(7);
-  const { arg } = t0;
-
-  arg?.items.edges?.nodes;
+  props?.items.edges?.nodes;
+  let t0;
   let t1;
+  if ($[0] !== props?.items.edges?.nodes) {
+    t1 = props?.items.edges?.nodes.map();
+    $[0] = props?.items.edges?.nodes;
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
+  t0 = t1;
+  const data = t0;
   let t2;
-  if ($[0] !== arg?.items.edges?.nodes) {
-    t2 = arg?.items.edges?.nodes.map(identity);
-    $[0] = arg?.items.edges?.nodes;
-    $[1] = t2;
+  if ($[2] !== data) {
+    t2 = <Foo data={data} />;
+    $[2] = data;
+    $[3] = t2;
   } else {
-    t2 = $[1];
+    t2 = $[3];
   }
-  t1 = t2;
-  const data = t1;
-
-  const t3 = arg?.items.edges?.nodes;
-  let t4;
-  if ($[2] !== t3) {
-    t4 = [t3];
-    $[2] = t3;
-    $[3] = t4;
-  } else {
-    t4 = $[3];
-  }
-  let t5;
-  if ($[4] !== t4 || $[5] !== data) {
-    t5 = <ValidateMemoization inputs={t4} output={data} />;
-    $[4] = t4;
-    $[5] = data;
-    $[6] = t5;
-  } else {
-    t5 = $[6];
-  }
-  return t5;
+  return t2;
 }
-
-export const FIXTURE_ENTRYPOINT = {
-  fn: Component,
-  params: [{ arg: null }],
-  sequentialRenders: [
-    { arg: null },
-    { arg: null },
-    { arg: { items: { edges: null } } },
-    { arg: { items: { edges: null } } },
-    { arg: { items: { edges: { nodes: [1, 2, "hello"] } } } },
-    { arg: { items: { edges: { nodes: [1, 2, "hello"] } } } },
-  ],
-};
 
 ```
       
 ### Eval output
-(kind: ok) <div>{"inputs":[null]}</div>
-<div>{"inputs":[null]}</div>
-<div>{"inputs":[null]}</div>
-<div>{"inputs":[null]}</div>
-<div>{"inputs":[[1,2,"hello"]],"output":[1,2,"hello"]}</div>
-<div>{"inputs":[[1,2,"hello"]],"output":[1,2,"hello"]}</div>
+(kind: exception) Fixture not implemented

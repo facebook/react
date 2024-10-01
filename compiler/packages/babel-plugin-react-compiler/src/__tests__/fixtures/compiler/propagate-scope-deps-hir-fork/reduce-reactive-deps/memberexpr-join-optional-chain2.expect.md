@@ -22,25 +22,16 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @enablePropagateDepsInHIR
 function Component(props) {
-  const $ = _c(5);
+  const $ = _c(2);
   let x;
-  if ($[0] !== props.items?.length || $[1] !== props.items?.edges) {
+  if ($[0] !== props.items) {
     x = [];
     x.push(props.items?.length);
-    let t0;
-    if ($[3] !== props.items?.edges) {
-      t0 = props.items?.edges?.map?.(render)?.filter?.(Boolean) ?? [];
-      $[3] = props.items?.edges;
-      $[4] = t0;
-    } else {
-      t0 = $[4];
-    }
-    x.push(t0);
-    $[0] = props.items?.length;
-    $[1] = props.items?.edges;
-    $[2] = x;
+    x.push(props.items?.edges?.map?.(render)?.filter?.(Boolean) ?? []);
+    $[0] = props.items;
+    $[1] = x;
   } else {
-    x = $[2];
+    x = $[1];
   }
   return x;
 }

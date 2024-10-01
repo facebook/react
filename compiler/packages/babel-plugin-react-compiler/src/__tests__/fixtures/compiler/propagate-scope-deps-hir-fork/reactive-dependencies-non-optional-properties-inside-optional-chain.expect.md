@@ -16,9 +16,9 @@ import { c as _c } from "react/compiler-runtime"; // @enablePropagateDepsInHIR
 function Component(props) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== props.post.feedback.comments?.edges) {
+  if ($[0] !== props.post.feedback.comments) {
     t0 = props.post.feedback.comments?.edges?.map(render);
-    $[0] = props.post.feedback.comments?.edges;
+    $[0] = props.post.feedback.comments;
     $[1] = t0;
   } else {
     t0 = $[1];

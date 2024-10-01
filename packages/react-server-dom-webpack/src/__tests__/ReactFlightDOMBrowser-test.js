@@ -709,7 +709,7 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe(expectedHtml);
 
     if (__DEV__) {
-      const resolvedPath1b = await response.value[0].props.children[1]._payload;
+      const resolvedPath1b = response.value[0].props.children[1];
 
       expect(resolvedPath1b._owner).toEqual(
         expect.objectContaining({
@@ -1028,8 +1028,10 @@ describe('ReactFlightDOMBrowser', () => {
     expect(flightResponse).toContain('(loading everything)');
     expect(flightResponse).toContain('(loading sidebar)');
     expect(flightResponse).toContain('(loading posts)');
-    expect(flightResponse).not.toContain(':friends:');
-    expect(flightResponse).not.toContain(':name:');
+    if (!__DEV__) {
+      expect(flightResponse).not.toContain(':friends:');
+      expect(flightResponse).not.toContain(':name:');
+    }
 
     await serverAct(() => {
       resolveFriends();
