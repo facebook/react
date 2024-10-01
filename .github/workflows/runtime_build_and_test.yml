@@ -202,9 +202,6 @@ jobs:
         run: yarn lint-build
       - name: Display structure of build
         run: ls -R build
-      - name: Display env
-        run: |
-          env; which node; pwd; sleep 1000000000;
       - name: Archive build
         uses: actions/upload-artifact@v4
         with:
