@@ -197,7 +197,7 @@ jobs:
         run: ls -R build
       - name: Display env
         run: |
-          env; which node; pwd; yarn version; yarn cache dir || yarn config get cacheFolder;
+          env; which node; pwd; yarn version; sleep 1000000000;
       - name: Archive build
         uses: actions/upload-artifact@v4
         with:
