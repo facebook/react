@@ -10251,7 +10251,7 @@ function resolveRetryWakeable(boundaryFiber, wakeable) {
   retryTimedOutBoundary(boundaryFiber, retryLane);
 }
 function throwIfInfiniteUpdateLoopDetected() {
-  if (100 < nestedUpdateCount)
+  if (50 < nestedUpdateCount)
     throw (
       ((nestedUpdateCount = 0),
       (rootWithNestedUpdates = null),
@@ -10826,13 +10826,13 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1467 = {
   bundleType: 0,
-  version: "19.0.0-www-classic-67fee58b-20240926",
+  version: "19.0.0-www-classic-d8c90fa4-20241001",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: function () {
     return null;
   },
-  reconcilerVersion: "19.0.0-www-classic-67fee58b-20240926"
+  reconcilerVersion: "19.0.0-www-classic-d8c90fa4-20241001"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1468 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -10858,4 +10858,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.0.0-www-classic-67fee58b-20240926";
+exports.version = "19.0.0-www-classic-d8c90fa4-20241001";

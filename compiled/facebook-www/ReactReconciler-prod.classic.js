@@ -11134,7 +11134,7 @@ module.exports = function ($$$config) {
     retryTimedOutBoundary(boundaryFiber, retryLane);
   }
   function throwIfInfiniteUpdateLoopDetected() {
-    if (100 < nestedUpdateCount)
+    if (50 < nestedUpdateCount)
       throw (
         ((nestedUpdateCount = 0),
         (rootWithNestedUpdates = null),
@@ -12854,7 +12854,7 @@ module.exports = function ($$$config) {
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
       findFiberByHostInstance: getInstanceFromNode,
-      reconcilerVersion: "19.0.0-www-classic-67fee58b-20240926"
+      reconcilerVersion: "19.0.0-www-classic-d8c90fa4-20241001"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
