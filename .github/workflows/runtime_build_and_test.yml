@@ -16,7 +16,7 @@ env:
   UCACHER_INSTRUMENTER: strace
   UCACHER_SHOW_IO: true
   FORCE_COLOR: 1
-  LOG_LEVEL: debug
+  LOG_LEVEL: error
 
 jobs:
   satellite_assignment:
