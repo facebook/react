@@ -17,10 +17,7 @@ import {
   areEqualPaths,
   IdentifierId,
 } from './HIR';
-import {
-  BlockInfo,
-  collectHoistablePropertyLoads,
-} from './CollectHoistablePropertyLoads';
+import {collectHoistablePropertyLoads} from './CollectHoistablePropertyLoads';
 import {
   ScopeBlockTraversal,
   eachInstructionOperand,
@@ -32,37 +29,61 @@ import {Stack, empty} from '../Utils/Stack';
 import {CompilerError} from '../CompilerError';
 import {Iterable_some} from '../Utils/utils';
 import {ReactiveScopeDependencyTreeHIR} from './DeriveMinimalDependenciesHIR';
+import {collectOptionalChainSidemap} from './CollectOptionalChainDependencies';
 
 export function propagateScopeDependenciesHIR(fn: HIRFunction): void {
   const usedOutsideDeclaringScope =
     findTemporariesUsedOutsideDeclaringScope(fn);
   const temporaries = collectTemporariesSidemap(fn, usedOutsideDeclaringScope);
+  const {
+    temporariesReadInOptional,
+    processedInstrsInOptional,
+    hoistableObjects,
+  } = collectOptionalChainSidemap(fn);
 
-  const hoistablePropertyLoads = collectHoistablePropertyLoads(fn, temporaries);
+  const hoistablePropertyLoads = collectHoistablePropertyLoads(
+    fn,
+    temporaries,
+    hoistableObjects,
+  );
 
   const scopeDeps = collectDependencies(
     fn,
     usedOutsideDeclaringScope,
-    temporaries,
+    new Map([...temporaries, ...temporariesReadInOptional]),
+    processedInstrsInOptional,
   );
 
   /**
    * Derive the minimal set of hoistable dependencies for each scope.
    */
   for (const [scope, deps] of scopeDeps) {
-    const tree = new ReactiveScopeDependencyTreeHIR();
+    if (deps.length === 0) {
+      continue;
+    }
 
     /**
-     * Step 1: Add every dependency used by this scope (e.g. `a.b.c`)
+     * Step 1: Find hoistable accesses, given the basic block in which the scope
+     * begins.
      */
+    const hoistables = hoistablePropertyLoads.get(scope.id);
+    CompilerError.invariant(hoistables != null, {
+      reason: '[PropagateScopeDependencies] Scope not found in tracked blocks',
+      loc: GeneratedSource,
+    });
+    /**
+     * Step 2: Calculate hoistable dependencies.
+     */
+    const tree = new ReactiveScopeDependencyTreeHIR(
+      [...hoistables.assumedNonNullObjects].map(o => o.fullPath),
+    );
     for (const dep of deps) {
       tree.addDependency({...dep});
     }
+
     /**
-     * Step 2: Mark hoistable dependencies, given the basic block in
-     * which the scope begins.
+     * Step 3: Reduce dependencies to a minimal set.
      */
-    recordHoistablePropertyReads(hoistablePropertyLoads, scope.id, tree);
     const candidates = tree.deriveMinimalDependencies();
     for (const candidateDep of candidates) {
       if (
@@ -201,7 +222,12 @@ function collectTemporariesSidemap(
       );
 
       if (value.kind === 'PropertyLoad' && !usedOutside) {
-        const property = getProperty(value.object, value.property, temporaries);
+        const property = getProperty(
+          value.object,
+          value.property,
+          false,
+          temporaries,
+        );
         temporaries.set(lvalue.identifier.id, property);
       } else if (
         value.kind === 'LoadLocal' &&
@@ -222,6 +248,7 @@ function collectTemporariesSidemap(
 function getProperty(
   object: Place,
   propertyName: string,
+  optional: boolean,
   temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
 ): ReactiveScopeDependency {
   /*
@@ -253,15 +280,12 @@ function getProperty(
   if (resolvedDependency == null) {
     property = {
       identifier: object.identifier,
-      path: [{property: propertyName, optional: false}],
+      path: [{property: propertyName, optional}],
     };
   } else {
     property = {
       identifier: resolvedDependency.identifier,
-      path: [
-        ...resolvedDependency.path,
-        {property: propertyName, optional: false},
-      ],
+      path: [...resolvedDependency.path, {property: propertyName, optional}],
     };
   }
   return property;
@@ -409,8 +433,13 @@ class Context {
     );
   }
 
-  visitProperty(object: Place, property: string): void {
-    const nextDependency = getProperty(object, property, this.#temporaries);
+  visitProperty(object: Place, property: string, optional: boolean): void {
+    const nextDependency = getProperty(
+      object,
+      property,
+      optional,
+      this.#temporaries,
+    );
     this.visitDependency(nextDependency);
   }
 
@@ -489,7 +518,7 @@ function handleInstruction(instr: Instruction, context: Context): void {
     }
   } else if (value.kind === 'PropertyLoad') {
     if (context.isUsedOutsideDeclaringScope(lvalue)) {
-      context.visitProperty(value.object, value.property);
+      context.visitProperty(value.object, value.property, false);
     }
   } else if (value.kind === 'StoreLocal') {
     context.visitOperand(value.value);
@@ -544,6 +573,7 @@ function collectDependencies(
   fn: HIRFunction,
   usedOutsideDeclaringScope: ReadonlySet<DeclarationId>,
   temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
+  processedInstrsInOptional: ReadonlySet<InstructionId>,
 ): Map<ReactiveScope, Array<ReactiveScopeDependency>> {
   const context = new Context(usedOutsideDeclaringScope, temporaries);
 
@@ -572,33 +602,26 @@ function collectDependencies(
       context.exitScope(scopeBlockInfo.scope, scopeBlockInfo?.pruned);
     }
 
-    for (const instr of block.instructions) {
-      handleInstruction(instr, context);
+    // Record referenced optional chains in phis
+    for (const phi of block.phis) {
+      for (const operand of phi.operands) {
+        const maybeOptionalChain = temporaries.get(operand[1].id);
+        if (maybeOptionalChain) {
+          context.visitDependency(maybeOptionalChain);
+        }
+      }
     }
-    for (const place of eachTerminalOperand(block.terminal)) {
-      context.visitOperand(place);
+    for (const instr of block.instructions) {
+      if (!processedInstrsInOptional.has(instr.id)) {
+        handleInstruction(instr, context);
+      }
+    }
+
+    if (!processedInstrsInOptional.has(block.terminal.id)) {
+      for (const place of eachTerminalOperand(block.terminal)) {
+        context.visitOperand(place);
+      }
     }
   }
   return context.deps;
-}
-
-/**
- * Compute the set of hoistable property reads.
- */
-function recordHoistablePropertyReads(
-  nodes: ReadonlyMap<ScopeId, BlockInfo>,
-  scopeId: ScopeId,
-  tree: ReactiveScopeDependencyTreeHIR,
-): void {
-  const node = nodes.get(scopeId);
-  CompilerError.invariant(node != null, {
-    reason: '[PropagateScopeDependencies] Scope not found in tracked blocks',
-    loc: GeneratedSource,
-  });
-
-  for (const item of node.assumedNonNullObjects) {
-    tree.markNodesNonNull({
-      ...item.fullPath,
-    });
-  }
 }
