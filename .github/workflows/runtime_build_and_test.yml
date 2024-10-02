@@ -176,6 +176,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: |
           env;
+          tree /tmp/ucacher || echo "/tmp/ucacher empty"
           cp .github/ucacher /usr/local/bin/ucacher;
           chmod +x /usr/local/bin/ucacher;
       - uses: actions/setup-node@v4
