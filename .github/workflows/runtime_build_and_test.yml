@@ -19,16 +19,16 @@ env:
   LOG_LEVEL: error
 
 jobs:
-  satellite_assignment:
-    name: Satellite assignment
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.result }}
-    steps:
-      - uses: actions/github-script@v7
-        id: set-matrix
-        with:
-          script: return {"0":"1","1":"2","r=stable --env=development-1/3":"3","r=stable --env=development-1/3":"4"};
+#  satellite_assignment:
+#    name: Satellite assignment
+#    runs-on: ubuntu-latest
+#    outputs:
+#      matrix: ${{ steps.set-matrix.outputs.result }}
+#    steps:
+#      - uses: actions/github-script@v7
+#        id: set-matrix
+#        with:
+#          script: return {"0":"1","1":"2","r=stable --env=development-1/3":"3","r=stable --env=development-1/3":"4"};
 
   # ----- FLOW -----
 #  discover_flow_inline_configs:
@@ -164,7 +164,7 @@ jobs:
 
   build_and_lint:
     name: yarn build and lint
-    needs: satellite_assignment
+#    needs: satellite_assignment
    # runs-on: [ "earthly-satellite#gha-react-${{ fromJson(needs.satellite_assignment.outputs.matrix)[matrix.worker_id] }}", "earthly-cache-folder#/tmp/ucacher" ]
     runs-on: ubuntu-latest
     strategy:
@@ -200,7 +200,7 @@ jobs:
           RELEASE_CHANNEL: ${{ matrix.release_channel }}
           NODE_INDEX: ${{ matrix.worker_id }}
       - run: cat /tmp/ucacher/ucacher.log
-      - run: sha256sum /home/runner/work/react/react/build/oss-stable-rc/react-server/cjs/react-server.production.js /home/runner/work/react/react/build/oss-stable-rc/react/cjs/react.development.js /home/runner/work/react/react/build/oss-stable-semver/react-server-dom-turbopack/cjs/react-server-dom-turbopack-server.browser.development.js
+      - run: sha256sum /home/runner/work/react/react/build/oss-stable-semver/eslint-plugin-react-hooks/cjs/eslint-plugin-react-hooks.production.js
       - name: Lint build
         run: yarn lint-build
       - name: Display structure of build
