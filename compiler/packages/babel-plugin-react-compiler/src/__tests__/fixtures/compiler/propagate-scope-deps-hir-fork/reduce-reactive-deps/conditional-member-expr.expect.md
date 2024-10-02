@@ -31,10 +31,10 @@ import { c as _c } from "react/compiler-runtime"; // @enablePropagateDepsInHIR
 function Component(props) {
   const $ = _c(2);
   let x;
-  if ($[0] !== props.a) {
+  if ($[0] !== props.a?.b) {
     x = [];
     x.push(props.a?.b);
-    $[0] = props.a;
+    $[0] = props.a?.b;
     $[1] = x;
   } else {
     x = $[1];
