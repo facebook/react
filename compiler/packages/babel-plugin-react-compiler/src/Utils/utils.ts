@@ -82,6 +82,17 @@ export function getOrInsertDefault<U, V>(
     return defaultValue;
   }
 }
+export function Set_equal<T>(a: ReadonlySet<T>, b: ReadonlySet<T>): boolean {
+  if (a.size !== b.size) {
+    return false;
+  }
+  for (const item of a) {
+    if (!b.has(item)) {
+      return false;
+    }
+  }
+  return true;
+}
 
 export function Set_union<T>(a: ReadonlySet<T>, b: ReadonlySet<T>): Set<T> {
   const union = new Set<T>(a);
@@ -126,6 +137,19 @@ export function nonNull<T extends NonNullable<U>, U>(
   value: T | null | undefined,
 ): value is T {
   return value != null;
+}
+
+export function Set_filter<T>(
+  source: ReadonlySet<T>,
+  fn: (arg: T) => boolean,
+): Set<T> {
+  const result = new Set<T>();
+  for (const entry of source) {
+    if (fn(entry)) {
+      result.add(entry);
+    }
+  }
+  return result;
 }
 
 export function hasNode<T>(
