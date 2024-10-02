@@ -7,6 +7,7 @@ import {
   Set_union,
   getOrInsertDefault,
 } from '../Utils/utils';
+import {collectOptionalChainSidemap} from './CollectOptionalChainDependencies';
 import {
   BasicBlock,
   BlockId,
@@ -15,10 +16,12 @@ import {
   HIRFunction,
   Identifier,
   IdentifierId,
+  InstructionId,
   InstructionValue,
   ReactiveScopeDependency,
   ScopeId,
 } from './HIR';
+import {collectTemporariesSidemap} from './PropagateScopeDependenciesHIR';
 
 /**
  * Helper function for `PropagateScopeDependencies`. Uses control flow graph
@@ -83,28 +86,57 @@ export function collectHoistablePropertyLoads(
   fn: HIRFunction,
   temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
   hoistableFromOptionals: ReadonlyMap<BlockId, ReactiveScopeDependency>,
-): ReadonlyMap<ScopeId, BlockInfo> {
+  nestedFnImmutableContext: ReadonlySet<IdentifierId> | null,
+): ReadonlyMap<BlockId, BlockInfo> {
   const registry = new PropertyPathRegistry();
 
-  const nodes = collectNonNullsInBlocks(
-    fn,
-    temporaries,
+  const functionExpressionLoads = collectFunctionExpressionFakeLoads(fn);
+  const actuallyEvaluatedTemporaries = new Map(
+    [...temporaries].filter(([id]) => !functionExpressionLoads.has(id)),
+  );
+
+  /**
+   * Due to current limitations of mutable range inference, there are edge cases in
+   * which we infer known-immutable values (e.g. props or hook params) to have a
+   * mutable range and scope.
+   * (see `destructure-array-declaration-to-context-var` fixture)
+   * We track known immutable identifiers to reduce regressions (as PropagateScopeDeps
+   * is being rewritten to HIR).
+   */
+  const knownImmutableIdentifiers = new Set<IdentifierId>();
+  if (fn.fnType === 'Component' || fn.fnType === 'Hook') {
+    for (const p of fn.params) {
+      if (p.kind === 'Identifier') {
+        knownImmutableIdentifiers.add(p.identifier.id);
+      }
+    }
+  }
+  const nodes = collectNonNullsInBlocks(fn, {
+    temporaries: actuallyEvaluatedTemporaries,
+    knownImmutableIdentifiers,
     hoistableFromOptionals,
     registry,
-  );
+    nestedFnImmutableContext,
+  });
   propagateNonNull(fn, nodes, registry);
 
-  const nodesKeyedByScopeId = new Map<ScopeId, BlockInfo>();
+  return nodes;
+}
+
+export function keyByScopeId<T>(
+  fn: HIRFunction,
+  source: ReadonlyMap<BlockId, T>,
+): ReadonlyMap<ScopeId, T> {
+  const keyedByScopeId = new Map<ScopeId, T>();
   for (const [_, block] of fn.body.blocks) {
     if (block.terminal.kind === 'scope') {
-      nodesKeyedByScopeId.set(
+      keyedByScopeId.set(
         block.terminal.scope.id,
-        nodes.get(block.terminal.block)!,
+        source.get(block.terminal.block)!,
       );
     }
   }
-
-  return nodesKeyedByScopeId;
+  return keyedByScopeId;
 }
 
 export type BlockInfo = {
@@ -211,45 +243,75 @@ class PropertyPathRegistry {
 
 function getMaybeNonNullInInstruction(
   instr: InstructionValue,
-  temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
-  registry: PropertyPathRegistry,
+  context: CollectNonNullsInBlocksContext,
 ): PropertyPathNode | null {
   let path = null;
   if (instr.kind === 'PropertyLoad') {
-    path = temporaries.get(instr.object.identifier.id) ?? {
+    path = context.temporaries.get(instr.object.identifier.id) ?? {
       identifier: instr.object.identifier,
       path: [],
     };
   } else if (instr.kind === 'Destructure') {
-    path = temporaries.get(instr.value.identifier.id) ?? null;
+    path = context.temporaries.get(instr.value.identifier.id) ?? null;
   } else if (instr.kind === 'ComputedLoad') {
-    path = temporaries.get(instr.object.identifier.id) ?? null;
+    path = context.temporaries.get(instr.object.identifier.id) ?? null;
   }
-  return path != null ? registry.getOrCreateProperty(path) : null;
+  return path != null ? context.registry.getOrCreateProperty(path) : null;
 }
 
+function isImmutableAtInstr(
+  identifier: Identifier,
+  instr: InstructionId,
+  context: CollectNonNullsInBlocksContext,
+): boolean {
+  if (context.nestedFnImmutableContext != null) {
+    /**
+     * Comparing instructions ids across inner-outer function bodies is not valid, as they are numbered
+     */
+    return context.nestedFnImmutableContext.has(identifier.id);
+  } else {
+    /**
+     * Since this runs *after* buildReactiveScopeTerminals, identifier mutable ranges
+     * are not valid with respect to current instruction id numbering.
+     * We use attached reactive scope ranges as a proxy for mutable range, but this
+     * is an overestimate as (1) scope ranges merge and align to form valid program
+     * blocks and (2) passes like MemoizeFbtAndMacroOperands may assign scopes to
+     * non-mutable identifiers.
+     *
+     * See comment in exported function for why we track known immutable identifiers.
+     */
+    const mutableAtInstr =
+      identifier.mutableRange.end > identifier.mutableRange.start + 1 &&
+      identifier.scope != null &&
+      inRange(
+        {
+          id: instr,
+        },
+        identifier.scope.range,
+      );
+    return (
+      !mutableAtInstr || context.knownImmutableIdentifiers.has(identifier.id)
+    );
+  }
+}
+
+type CollectNonNullsInBlocksContext = {
+  temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>;
+  knownImmutableIdentifiers: ReadonlySet<IdentifierId>;
+  hoistableFromOptionals: ReadonlyMap<BlockId, ReactiveScopeDependency>;
+  registry: PropertyPathRegistry;
+  /**
+   * (For nested / inner function declarations)
+   * Context variables (i.e. captured from an outer scope) that are immutable.
+   * Note that this technically could be merged into `knownImmutableIdentifiers`,
+   * but are currently kept separate for readability.
+   */
+  nestedFnImmutableContext: ReadonlySet<IdentifierId> | null;
+};
 function collectNonNullsInBlocks(
   fn: HIRFunction,
-  temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
-  hoistableFromOptionals: ReadonlyMap<BlockId, ReactiveScopeDependency>,
-  registry: PropertyPathRegistry,
+  context: CollectNonNullsInBlocksContext,
 ): ReadonlyMap<BlockId, BlockInfo> {
-  /**
-   * Due to current limitations of mutable range inference, there are edge cases in
-   * which we infer known-immutable values (e.g. props or hook params) to have a
-   * mutable range and scope.
-   * (see `destructure-array-declaration-to-context-var` fixture)
-   * We track known immutable identifiers to reduce regressions (as PropagateScopeDeps
-   * is being rewritten to HIR).
-   */
-  const knownImmutableIdentifiers = new Set<IdentifierId>();
-  if (fn.fnType === 'Component' || fn.fnType === 'Hook') {
-    for (const p of fn.params) {
-      if (p.kind === 'Identifier') {
-        knownImmutableIdentifiers.add(p.identifier.id);
-      }
-    }
-  }
   /**
    * Known non-null objects such as functional component props can be safely
    * read from any block.
@@ -261,7 +323,9 @@ function collectNonNullsInBlocks(
     fn.params[0].kind === 'Identifier'
   ) {
     const identifier = fn.params[0].identifier;
-    knownNonNullIdentifiers.add(registry.getOrCreateIdentifier(identifier));
+    knownNonNullIdentifiers.add(
+      context.registry.getOrCreateIdentifier(identifier),
+    );
   }
   const nodes = new Map<BlockId, BlockInfo>();
   for (const [_, block] of fn.body.blocks) {
@@ -269,45 +333,48 @@ function collectNonNullsInBlocks(
       knownNonNullIdentifiers,
     );
 
-    const maybeOptionalChain = hoistableFromOptionals.get(block.id);
+    const maybeOptionalChain = context.hoistableFromOptionals.get(block.id);
     if (maybeOptionalChain != null) {
       assumedNonNullObjects.add(
-        registry.getOrCreateProperty(maybeOptionalChain),
+        context.registry.getOrCreateProperty(maybeOptionalChain),
       );
     }
     for (const instr of block.instructions) {
-      const maybeNonNull = getMaybeNonNullInInstruction(
-        instr.value,
-        temporaries,
-        registry,
-      );
-      if (maybeNonNull != null) {
-        const baseIdentifier = maybeNonNull.fullPath.identifier;
-        /**
-         * Since this runs *after* buildReactiveScopeTerminals, identifier mutable ranges
-         * are not valid with respect to current instruction id numbering.
-         * We use attached reactive scope ranges as a proxy for mutable range, but this
-         * is an overestimate as (1) scope ranges merge and align to form valid program
-         * blocks and (2) passes like MemoizeFbtAndMacroOperands may assign scopes to
-         * non-mutable identifiers.
-         *
-         * See comment at top of function for why we track known immutable identifiers.
-         */
-        const isMutableAtInstr =
-          baseIdentifier.mutableRange.end >
-            baseIdentifier.mutableRange.start + 1 &&
-          baseIdentifier.scope != null &&
-          inRange(
-            {
-              id: instr.id,
-            },
-            baseIdentifier.scope.range,
-          );
-        if (
-          !isMutableAtInstr ||
-          knownImmutableIdentifiers.has(baseIdentifier.id)
-        ) {
-          assumedNonNullObjects.add(maybeNonNull);
+      const maybeNonNull = getMaybeNonNullInInstruction(instr.value, context);
+      if (
+        maybeNonNull != null &&
+        isImmutableAtInstr(maybeNonNull.fullPath.identifier, instr.id, context)
+      ) {
+        assumedNonNullObjects.add(maybeNonNull);
+      }
+      if (
+        instr.value.kind === 'FunctionExpression' &&
+        !fn.env.config.enableTreatFunctionDepsAsConditional
+      ) {
+        const innerFn = instr.value.loweredFunc;
+        const innerTemporaries = collectTemporariesSidemap(
+          innerFn.func,
+          new Set(),
+        );
+        const innerOptionals = collectOptionalChainSidemap(innerFn.func);
+        const innerHoistableMap = collectHoistablePropertyLoads(
+          innerFn.func,
+          innerTemporaries,
+          innerOptionals.hoistableObjects,
+          context.nestedFnImmutableContext ??
+            new Set(
+              innerFn.func.context
+                .filter(place =>
+                  isImmutableAtInstr(place.identifier, instr.id, context),
+                )
+                .map(place => place.identifier.id),
+            ),
+        );
+        const innerHoistables = assertNonNull(
+          innerHoistableMap.get(innerFn.func.body.entry),
+        );
+        for (const entry of innerHoistables.assumedNonNullObjects) {
+          assumedNonNullObjects.add(entry);
         }
       }
     }
@@ -514,4 +581,28 @@ function reduceMaybeOptionalChains(
       }
     }
   } while (changed);
+}
+
+function collectFunctionExpressionFakeLoads(
+  fn: HIRFunction,
+): Set<IdentifierId> {
+  const sources = new Map<IdentifierId, IdentifierId>();
+  const functionExpressionReferences = new Set<IdentifierId>();
+
+  for (const [_, block] of fn.body.blocks) {
+    for (const {lvalue, value} of block.instructions) {
+      if (value.kind === 'FunctionExpression') {
+        for (const reference of value.loweredFunc.dependencies) {
+          let curr: IdentifierId | undefined = reference.identifier.id;
+          while (curr != null) {
+            functionExpressionReferences.add(curr);
+            curr = sources.get(curr);
+          }
+        }
+      } else if (value.kind === 'PropertyLoad') {
+        sources.set(lvalue.identifier.id, value.object.identifier.id);
+      }
+    }
+  }
+  return functionExpressionReferences;
 }
