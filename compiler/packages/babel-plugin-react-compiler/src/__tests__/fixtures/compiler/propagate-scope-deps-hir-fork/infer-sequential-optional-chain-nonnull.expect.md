@@ -14,7 +14,15 @@ function useFoo({a}) {
 export const FIXTURE_ENTRYPOINT = {
   fn: useFoo,
   params: [{a: null}],
-  sequentialRenders: [{a: null}, {a: null}, {a: {}}],
+  sequentialRenders: [
+    {a: null},
+    {a: null},
+    {a: {}},
+    {a: {b: {c: {d: {e: 42}}}}},
+    {a: {b: {c: {d: {e: 43}}}}},
+    {a: {b: {c: {d: {e: undefined}}}}},
+    {a: {b: undefined}},
+  ],
 };
 
 ```
@@ -43,7 +51,15 @@ function useFoo(t0) {
 export const FIXTURE_ENTRYPOINT = {
   fn: useFoo,
   params: [{ a: null }],
-  sequentialRenders: [{ a: null }, { a: null }, { a: {} }],
+  sequentialRenders: [
+    { a: null },
+    { a: null },
+    { a: {} },
+    { a: { b: { c: { d: { e: 42 } } } } },
+    { a: { b: { c: { d: { e: 43 } } } } },
+    { a: { b: { c: { d: { e: undefined } } } } },
+    { a: { b: undefined } },
+  ],
 };
 
 ```
@@ -51,4 +67,8 @@ export const FIXTURE_ENTRYPOINT = {
 ### Eval output
 (kind: ok) [[ (exception in render) TypeError: Cannot read properties of null (reading 'b') ]]
 [[ (exception in render) TypeError: Cannot read properties of null (reading 'b') ]]
+[[ (exception in render) TypeError: Cannot read properties of undefined (reading 'c') ]]
+[42,42]
+[43,43]
+[null,null]
 [[ (exception in render) TypeError: Cannot read properties of undefined (reading 'c') ]]
