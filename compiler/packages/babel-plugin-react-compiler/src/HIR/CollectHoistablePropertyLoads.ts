@@ -269,16 +269,11 @@ function collectNonNullsInBlocks(
       knownNonNullIdentifiers,
     );
 
-    nodes.set(block.id, {
-      block,
-      assumedNonNullObjects,
-    });
     const maybeOptionalChain = hoistableFromOptionals.get(block.id);
     if (maybeOptionalChain != null) {
       assumedNonNullObjects.add(
         registry.getOrCreateProperty(maybeOptionalChain),
       );
-      continue;
     }
     for (const instr of block.instructions) {
       const maybeNonNull = getMaybeNonNullInInstruction(
@@ -316,6 +311,11 @@ function collectNonNullsInBlocks(
         }
       }
     }
+
+    nodes.set(block.id, {
+      block,
+      assumedNonNullObjects,
+    });
   }
   return nodes;
 }
