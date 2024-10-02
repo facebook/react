@@ -1,5 +1,4 @@
 import {CompilerError} from '..';
-import {arrayNonNulls} from '../Utils/utils';
 import {assertNonNull} from './CollectHoistablePropertyLoads';
 import {
   BlockId,
@@ -15,6 +14,7 @@ import {
   TBasicBlock,
   OptionalTerminal,
   HIRFunction,
+  DependencyPathEntry,
 } from './HIR';
 import {printIdentifier} from './PrintHIR';
 
@@ -237,20 +237,18 @@ function traverseOptionalBlock(
     ) {
       return null;
     }
-    const path = maybeTest.instructions.slice(1).map((entry, i) => {
-      const instrVal = entry.value;
-      const prevEntry = maybeTest.instructions[i];
+    const path: Array<DependencyPathEntry> = [];
+    for (let i = 1; i < maybeTest.instructions.length; i++) {
+      const instrVal = maybeTest.instructions[i].value;
+      const prevInstr = maybeTest.instructions[i - 1];
       if (
         instrVal.kind === 'PropertyLoad' &&
-        instrVal.object.identifier.id === prevEntry.lvalue.identifier.id
+        instrVal.object.identifier.id === prevInstr.lvalue.identifier.id
       ) {
-        return {property: instrVal.property, optional: false};
+        path.push({property: instrVal.property, optional: false});
       } else {
         return null;
       }
-    });
-    if (!arrayNonNulls(path)) {
-      return null;
     }
     CompilerError.invariant(
       maybeTest.terminal.test.identifier.id ===

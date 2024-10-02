@@ -139,12 +139,6 @@ export function nonNull<T extends NonNullable<U>, U>(
   return value != null;
 }
 
-export function arrayNonNulls<T extends NonNullable<U>, U>(
-  arr: Array<T | null | undefined>,
-): arr is Array<T> {
-  return arr.every(e => e != null);
-}
-
 export function Set_filter<T>(
   source: ReadonlySet<T>,
   fn: (arg: T) => boolean,
