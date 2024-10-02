@@ -6,97 +6,173 @@
  */
 
 import {CompilerError} from '../CompilerError';
-import {GeneratedSource, Identifier, ReactiveScopeDependency} from '../HIR';
+import {
+  DependencyPathEntry,
+  GeneratedSource,
+  Identifier,
+  ReactiveScopeDependency,
+} from '../HIR';
 import {printIdentifier} from '../HIR/PrintHIR';
 import {ReactiveScopePropertyDependency} from '../ReactiveScopes/DeriveMinimalDependencies';
-
-const ENABLE_DEBUG_INVARIANTS = true;
 
 /**
  * Simpler fork of DeriveMinimalDependencies, see PropagateScopeDependenciesHIR
  * for detailed explanation.
  */
 export class ReactiveScopeDependencyTreeHIR {
-  #roots: Map<Identifier, DependencyNode> = new Map();
+  /**
+   * Paths from which we can hoist PropertyLoads. If an `identifier`,
+   * `identifier.path`, or `identifier?.path` is in this map, it is safe to
+   * evaluate (non-optional) PropertyLoads from.
+   */
+  #hoistableObjects: Map<Identifier, HoistableNode> = new Map();
+  #deps: Map<Identifier, DependencyNode> = new Map();
 
-  #getOrCreateRoot(
+  /**
+   * @param hoistableObjects a set of paths from which we can safely evaluate
+   * PropertyLoads. Note that we expect these to not contain duplicates (e.g.
+   * both `a?.b` and `a.b`) only because CollectHoistablePropertyLoads merges
+   * duplicates when traversing the CFG.
+   */
+  constructor(hoistableObjects: Iterable<ReactiveScopeDependency>) {
+    for (const {path, identifier} of hoistableObjects) {
+      let currNode = ReactiveScopeDependencyTreeHIR.#getOrCreateRoot(
+        identifier,
+        this.#hoistableObjects,
+        path.length > 0 && path[0].optional ? 'Optional' : 'NonNull',
+      );
+
+      for (let i = 0; i < path.length; i++) {
+        const prevAccessType = currNode.properties.get(
+          path[i].property,
+        )?.accessType;
+        const accessType =
+          i + 1 < path.length && path[i + 1].optional ? 'Optional' : 'NonNull';
+        CompilerError.invariant(
+          prevAccessType == null || prevAccessType === accessType,
+          {
+            reason: 'Conflicting access types',
+            loc: GeneratedSource,
+          },
+        );
+        let nextNode = currNode.properties.get(path[i].property);
+        if (nextNode == null) {
+          nextNode = {
+            properties: new Map(),
+            accessType,
+          };
+          currNode.properties.set(path[i].property, nextNode);
+        }
+        currNode = nextNode;
+      }
+    }
+  }
+
+  static #getOrCreateRoot<T extends string>(
     identifier: Identifier,
-    accessType: PropertyAccessType,
-  ): DependencyNode {
+    roots: Map<Identifier, TreeNode<T>>,
+    defaultAccessType: T,
+  ): TreeNode<T> {
     // roots can always be accessed unconditionally in JS
-    let rootNode = this.#roots.get(identifier);
+    let rootNode = roots.get(identifier);
 
     if (rootNode === undefined) {
       rootNode = {
         properties: new Map(),
-        accessType,
+        accessType: defaultAccessType,
       };
-      this.#roots.set(identifier, rootNode);
+      roots.set(identifier, rootNode);
     }
     return rootNode;
   }
 
+  /**
+   * Join a dependency with `#hoistableObjects` to record the hoistable
+   * dependency. This effectively truncates @param dep to its maximal
+   * safe-to-evaluate subpath
+   */
   addDependency(dep: ReactiveScopePropertyDependency): void {
-    const {path} = dep;
-    let currNode = this.#getOrCreateRoot(dep.identifier, MIN_ACCESS_TYPE);
-
-    const accessType = PropertyAccessType.Access;
-
-    currNode.accessType = merge(currNode.accessType, accessType);
-
-    for (const property of path) {
-      // all properties read 'on the way' to a dependency are marked as 'access'
-      let currChild = makeOrMergeProperty(
-        currNode,
-        property.property,
-        accessType,
-      );
-      currNode = currChild;
-    }
-
-    /*
-     * If this property does not have a conditional path (i.e. a.b.c), the
-     * final property node should be marked as an conditional/unconditional
-     * `dependency` as based on control flow.
+    const {identifier, path} = dep;
+    let depCursor = ReactiveScopeDependencyTreeHIR.#getOrCreateRoot(
+      identifier,
+      this.#deps,
+      PropertyAccessType.UnconditionalAccess,
+    );
+    /**
+     * hoistableCursor is null if depCursor is not an object we can hoist
+     * property reads from otherwise, it represents the same node in the
+     * hoistable / cfg-informed tree
      */
-    currNode.accessType = merge(
-      currNode.accessType,
-      PropertyAccessType.Dependency,
+    let hoistableCursor: HoistableNode | undefined =
+      this.#hoistableObjects.get(identifier);
+
+    // All properties read 'on the way' to a dependency are marked as 'access'
+    for (const entry of path) {
+      let nextHoistableCursor: HoistableNode | undefined;
+      let nextDepCursor: DependencyNode;
+      if (entry.optional) {
+        /**
+         * No need to check the access type since we can match both optional or non-optionals
+         * in the hoistable
+         *  e.g. a?.b<rest> is hoistable if a.b<rest> is hoistable
+         */
+        if (hoistableCursor != null) {
+          nextHoistableCursor = hoistableCursor?.properties.get(entry.property);
+        }
+
+        let accessType;
+        if (
+          hoistableCursor != null &&
+          hoistableCursor.accessType === 'NonNull'
+        ) {
+          /**
+           * For an optional chain dep `a?.b`: if the hoistable tree only
+           * contains `a`, we can keep either `a?.b` or 'a.b' as a dependency.
+           * (note that we currently do the latter for perf)
+           */
+          accessType = PropertyAccessType.UnconditionalAccess;
+        } else {
+          /**
+           * Given that it's safe to evaluate `depCursor` and optional load
+           * never throws, it's also safe to evaluate `depCursor?.entry`
+           */
+          accessType = PropertyAccessType.OptionalAccess;
+        }
+        nextDepCursor = makeOrMergeProperty(
+          depCursor,
+          entry.property,
+          accessType,
+        );
+      } else if (
+        hoistableCursor != null &&
+        hoistableCursor.accessType === 'NonNull'
+      ) {
+        nextHoistableCursor = hoistableCursor.properties.get(entry.property);
+        nextDepCursor = makeOrMergeProperty(
+          depCursor,
+          entry.property,
+          PropertyAccessType.UnconditionalAccess,
+        );
+      } else {
+        /**
+         * Break to truncate the dependency on its first non-optional entry that PropertyLoads are not hoistable from
+         */
+        break;
+      }
+      depCursor = nextDepCursor;
+      hoistableCursor = nextHoistableCursor;
+    }
+    // mark the final node as a dependency
+    depCursor.accessType = merge(
+      depCursor.accessType,
+      PropertyAccessType.OptionalDependency,
     );
   }
 
-  markNodesNonNull(dep: ReactiveScopePropertyDependency): void {
-    const accessType = PropertyAccessType.NonNullAccess;
-    let currNode = this.#roots.get(dep.identifier);
-
-    let cursor = 0;
-    while (currNode != null && cursor < dep.path.length) {
-      currNode.accessType = merge(currNode.accessType, accessType);
-      currNode = currNode.properties.get(dep.path[cursor++].property);
-    }
-    if (currNode != null) {
-      currNode.accessType = merge(currNode.accessType, accessType);
-    }
-  }
-
-  /**
-   * Derive a set of minimal dependencies that are safe to
-   * access unconditionally (with respect to nullthrows behavior)
-   */
   deriveMinimalDependencies(): Set<ReactiveScopeDependency> {
     const results = new Set<ReactiveScopeDependency>();
-    for (const [rootId, rootNode] of this.#roots.entries()) {
-      if (ENABLE_DEBUG_INVARIANTS) {
-        assertWellFormedTree(rootNode);
-      }
-      const deps = deriveMinimalDependenciesInSubtree(rootNode, []);
-
-      for (const dep of deps) {
-        results.add({
-          identifier: rootId,
-          path: dep.path.map(s => ({property: s, optional: false})),
-        });
-      }
+    for (const [rootId, rootNode] of this.#deps.entries()) {
+      collectMinimalDependenciesInSubtree(rootNode, rootId, [], results);
     }
 
     return results;
@@ -110,7 +186,7 @@ export class ReactiveScopeDependencyTreeHIR {
   printDeps(includeAccesses: boolean): string {
     let res: Array<Array<string>> = [];
 
-    for (const [rootId, rootNode] of this.#roots.entries()) {
+    for (const [rootId, rootNode] of this.#deps.entries()) {
       const rootResults = printSubtree(rootNode, includeAccesses).map(
         result => `${printIdentifier(rootId)}.${result}`,
       );
@@ -118,31 +194,64 @@ export class ReactiveScopeDependencyTreeHIR {
     }
     return res.flat().join('\n');
   }
+
+  static debug<T extends string>(roots: Map<Identifier, TreeNode<T>>): string {
+    const buf: Array<string> = [`tree() [`];
+    for (const [rootId, rootNode] of roots) {
+      buf.push(`${printIdentifier(rootId)} (${rootNode.accessType}):`);
+      this.#debugImpl(buf, rootNode, 1);
+    }
+    buf.push(']');
+    return buf.length > 2 ? buf.join('\n') : buf.join('');
+  }
+
+  static #debugImpl<T extends string>(
+    buf: Array<string>,
+    node: TreeNode<T>,
+    depth: number = 0,
+  ): void {
+    for (const [property, childNode] of node.properties) {
+      buf.push(`${'  '.repeat(depth)}.${property} (${childNode.accessType}):`);
+      this.#debugImpl(buf, childNode, depth + 1);
+    }
+  }
 }
 
-enum PropertyAccessType {
-  Access = 'Access',
-  NonNullAccess = 'NonNullAccess',
-  Dependency = 'Dependency',
-  NonNullDependency = 'NonNullDependency',
-}
-
-const MIN_ACCESS_TYPE = PropertyAccessType.Access;
-/**
- * "NonNull" means that PropertyReads from a node are side-effect free,
- * as the node is (1) immutable and (2) has unconditional propertyloads
- * somewhere in the cfg.
+/*
+ * Enum representing the access type of single property on a parent object.
+ * We distinguish on two independent axes:
+ * Optional / Unconditional:
+ *    - whether this property is an optional load (within an optional chain)
+ * Access / Dependency:
+ *    - Access: this property is read on the path of a dependency. We do not
+ *      need to track change variables for accessed properties. Tracking accesses
+ *      helps Forget do more granular dependency tracking.
+ *    - Dependency: this property is read as a dependency and we must track changes
+ *      to it for correctness.
+ *    ```javascript
+ *    // props.a is a dependency here and must be tracked
+ *    deps: {props.a, props.a.b} ---> minimalDeps: {props.a}
+ *    // props.a is just an access here and does not need to be tracked
+ *    deps: {props.a.b} ---> minimalDeps: {props.a.b}
+ *    ```
  */
-function isNonNull(access: PropertyAccessType): boolean {
+enum PropertyAccessType {
+  OptionalAccess = 'OptionalAccess',
+  UnconditionalAccess = 'UnconditionalAccess',
+  OptionalDependency = 'OptionalDependency',
+  UnconditionalDependency = 'UnconditionalDependency',
+}
+
+function isOptional(access: PropertyAccessType): boolean {
   return (
-    access === PropertyAccessType.NonNullAccess ||
-    access === PropertyAccessType.NonNullDependency
+    access === PropertyAccessType.OptionalAccess ||
+    access === PropertyAccessType.OptionalDependency
   );
 }
 function isDependency(access: PropertyAccessType): boolean {
   return (
-    access === PropertyAccessType.Dependency ||
-    access === PropertyAccessType.NonNullDependency
+    access === PropertyAccessType.OptionalDependency ||
+    access === PropertyAccessType.UnconditionalDependency
   );
 }
 
@@ -150,92 +259,70 @@ function merge(
   access1: PropertyAccessType,
   access2: PropertyAccessType,
 ): PropertyAccessType {
-  const resultisNonNull = isNonNull(access1) || isNonNull(access2);
+  const resultIsUnconditional = !(isOptional(access1) && isOptional(access2));
   const resultIsDependency = isDependency(access1) || isDependency(access2);
 
   /*
    * Straightforward merge.
    * This can be represented as bitwise OR, but is written out for readability
    *
-   * Observe that `NonNullAccess | Dependency` produces an
+   * Observe that `UnconditionalAccess | ConditionalDependency` produces an
    * unconditionally accessed conditional dependency. We currently use these
    * as we use unconditional dependencies. (i.e. to codegen change variables)
    */
-  if (resultisNonNull) {
+  if (resultIsUnconditional) {
     if (resultIsDependency) {
-      return PropertyAccessType.NonNullDependency;
+      return PropertyAccessType.UnconditionalDependency;
     } else {
-      return PropertyAccessType.NonNullAccess;
+      return PropertyAccessType.UnconditionalAccess;
     }
   } else {
+    // result is optional
     if (resultIsDependency) {
-      return PropertyAccessType.Dependency;
+      return PropertyAccessType.OptionalDependency;
     } else {
-      return PropertyAccessType.Access;
+      return PropertyAccessType.OptionalAccess;
     }
   }
 }
 
-type DependencyNode = {
-  properties: Map<string, DependencyNode>;
-  accessType: PropertyAccessType;
+type TreeNode<T extends string> = {
+  properties: Map<string, TreeNode<T>>;
+  accessType: T;
 };
+type HoistableNode = TreeNode<'Optional' | 'NonNull'>;
+type DependencyNode = TreeNode<PropertyAccessType>;
 
-type ReduceResultNode = {
-  path: Array<string>;
-};
-
-function assertWellFormedTree(node: DependencyNode): void {
-  let nonNullInChildren = false;
-  for (const childNode of node.properties.values()) {
-    assertWellFormedTree(childNode);
-    nonNullInChildren ||= isNonNull(childNode.accessType);
-  }
-  if (nonNullInChildren) {
-    CompilerError.invariant(isNonNull(node.accessType), {
-      reason:
-        '[DeriveMinimialDependencies] Not well formed tree, unexpected non-null node',
-      description: node.accessType,
-      loc: GeneratedSource,
-    });
-  }
-}
-
-function deriveMinimalDependenciesInSubtree(
+/**
+ * TODO: this is directly pasted from DeriveMinimalDependencies. Since we no
+ * longer have conditionally accessed nodes, we can simplify
+ *
+ * Recursively calculates minimal dependencies in a subtree.
+ * @param node DependencyNode representing a dependency subtree.
+ * @returns a minimal list of dependencies in this subtree.
+ */
+function collectMinimalDependenciesInSubtree(
   node: DependencyNode,
-  path: Array<string>,
-): Array<ReduceResultNode> {
+  rootIdentifier: Identifier,
+  path: Array<DependencyPathEntry>,
+  results: Set<ReactiveScopeDependency>,
+): void {
   if (isDependency(node.accessType)) {
-    /**
-     * If this node is a dependency, we truncate the subtree
-     * and return this node. e.g. deps=[`obj.a`, `obj.a.b`]
-     * reduces to deps=[`obj.a`]
-     */
-    return [{path}];
+    results.add({identifier: rootIdentifier, path});
   } else {
-    if (isNonNull(node.accessType)) {
-      /*
-       * Only recurse into subtree dependencies if this node
-       * is known to be non-null.
-       */
-      const result: Array<ReduceResultNode> = [];
-      for (const [childName, childNode] of node.properties) {
-        result.push(
-          ...deriveMinimalDependenciesInSubtree(childNode, [
-            ...path,
-            childName,
-          ]),
-        );
-      }
-      return result;
-    } else {
-      /*
-       * This only occurs when this subtree contains a dependency,
-       * but this node is potentially nullish. As we currently
-       * don't record optional property paths as scope dependencies,
-       * we truncate and record this node as a dependency.
-       */
-      return [{path}];
+    for (const [childName, childNode] of node.properties) {
+      collectMinimalDependenciesInSubtree(
+        childNode,
+        rootIdentifier,
+        [
+          ...path,
+          {
+            property: childName,
+            optional: isOptional(childNode.accessType),
+          },
+        ],
+        results,
+      );
     }
   }
 }
