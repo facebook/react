@@ -198,6 +198,7 @@ jobs:
           CI: github
           RELEASE_CHANNEL: ${{ matrix.release_channel }}
           NODE_INDEX: ${{ matrix.worker_id }}
+      - run: cat /tmp/ucacher/ucacher.log
       - run: sha256sum /home/runner/work/react/react/build/oss-stable-rc/react-server/cjs/react-server.production.js /home/runner/work/react/react/build/oss-stable-rc/react/cjs/react.development.js /home/runner/work/react/react/build/oss-stable-semver/react-server-dom-turbopack/cjs/react-server-dom-turbopack-server.browser.development.js
       - name: Lint build
         run: yarn lint-build
