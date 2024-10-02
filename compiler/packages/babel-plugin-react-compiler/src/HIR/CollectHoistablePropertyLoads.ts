@@ -1,6 +1,12 @@
 import {CompilerError} from '../CompilerError';
 import {inRange} from '../ReactiveScopes/InferReactiveScopeVariables';
-import {Set_intersect, Set_union, getOrInsertDefault} from '../Utils/utils';
+import {
+  Set_equal,
+  Set_filter,
+  Set_intersect,
+  Set_union,
+  getOrInsertDefault,
+} from '../Utils/utils';
 import {
   BasicBlock,
   BlockId,
@@ -15,9 +21,9 @@ import {
 } from './HIR';
 
 /**
- * Helper function for `PropagateScopeDependencies`.
- * Uses control flow graph analysis to determine which `Identifier`s can
- * be assumed to be non-null objects, on a per-block basis.
+ * Helper function for `PropagateScopeDependencies`. Uses control flow graph
+ * analysis to determine which `Identifier`s can be assumed to be non-null
+ * objects, on a per-block basis.
  *
  * Here is an example:
  * ```js
@@ -42,15 +48,16 @@ import {
  * }
  * ```
  *
- * Note that we currently do NOT account for mutable / declaration range
- * when doing the CFG-based traversal, producing results that are technically
+ * Note that we currently do NOT account for mutable / declaration range when
+ * doing the CFG-based traversal, producing results that are technically
  * incorrect but filtered by PropagateScopeDeps (which only takes dependencies
  * on constructed value -- i.e. a scope's dependencies must have mutable ranges
  * ending earlier than the scope start).
  *
- * Take this example, this function will infer x.foo.bar as non-nullable for bb0,
- * via the intersection of bb1 & bb2 which in turn comes from bb3. This is technically
- * incorrect bb0 is before / during x's mutable range.
+ * Take this example, this function will infer x.foo.bar as non-nullable for
+ * bb0, via the intersection of bb1 & bb2 which in turn comes from bb3. This is
+ * technically incorrect bb0 is before / during x's mutable range.
+ * ```
  *  bb0:
  *    const x = ...;
  *    if cond then bb1 else bb2
@@ -62,15 +69,30 @@ import {
  *    goto bb3:
  *  bb3:
  *    x.foo.bar
+ * ```
+ *
+ * @param fn
+ * @param temporaries sidemap of identifier -> baseObject.a.b paths. Does not
+ * contain optional chains.
+ * @param hoistableFromOptionals sidemap of optionalBlock -> baseObject?.a
+ * optional paths for which it's safe to evaluate non-optional loads (see
+ * CollectOptionalChainDependencies).
+ * @returns
  */
 export function collectHoistablePropertyLoads(
   fn: HIRFunction,
   temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
+  hoistableFromOptionals: ReadonlyMap<BlockId, ReactiveScopeDependency>,
 ): ReadonlyMap<ScopeId, BlockInfo> {
   const registry = new PropertyPathRegistry();
 
-  const nodes = collectNonNullsInBlocks(fn, temporaries, registry);
-  propagateNonNull(fn, nodes);
+  const nodes = collectNonNullsInBlocks(
+    fn,
+    temporaries,
+    hoistableFromOptionals,
+    registry,
+  );
+  propagateNonNull(fn, nodes, registry);
 
   const nodesKeyedByScopeId = new Map<ScopeId, BlockInfo>();
   for (const [_, block] of fn.body.blocks) {
@@ -96,17 +118,21 @@ export type BlockInfo = {
  */
 type RootNode = {
   properties: Map<string, PropertyPathNode>;
+  optionalProperties: Map<string, PropertyPathNode>;
   parent: null;
   // Recorded to make later computations simpler
   fullPath: ReactiveScopeDependency;
+  hasOptional: boolean;
   root: IdentifierId;
 };
 
 type PropertyPathNode =
   | {
       properties: Map<string, PropertyPathNode>;
+      optionalProperties: Map<string, PropertyPathNode>;
       parent: PropertyPathNode;
       fullPath: ReactiveScopeDependency;
+      hasOptional: boolean;
     }
   | RootNode;
 
@@ -124,10 +150,12 @@ class PropertyPathRegistry {
       rootNode = {
         root: identifier.id,
         properties: new Map(),
+        optionalProperties: new Map(),
         fullPath: {
           identifier,
           path: [],
         },
+        hasOptional: false,
         parent: null,
       };
       this.roots.set(identifier.id, rootNode);
@@ -139,23 +167,20 @@ class PropertyPathRegistry {
     parent: PropertyPathNode,
     entry: DependencyPathEntry,
   ): PropertyPathNode {
-    if (entry.optional) {
-      CompilerError.throwTodo({
-        reason: 'handle optional nodes',
-        loc: GeneratedSource,
-      });
-    }
-    let child = parent.properties.get(entry.property);
+    const map = entry.optional ? parent.optionalProperties : parent.properties;
+    let child = map.get(entry.property);
     if (child == null) {
       child = {
         properties: new Map(),
+        optionalProperties: new Map(),
         parent: parent,
         fullPath: {
           identifier: parent.fullPath.identifier,
           path: parent.fullPath.path.concat(entry),
         },
+        hasOptional: parent.hasOptional || entry.optional,
       };
-      parent.properties.set(entry.property, child);
+      map.set(entry.property, child);
     }
     return child;
   }
@@ -216,6 +241,7 @@ function addNonNullPropertyPath(
 function collectNonNullsInBlocks(
   fn: HIRFunction,
   temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
+  hoistableFromOptionals: ReadonlyMap<BlockId, ReactiveScopeDependency>,
   registry: PropertyPathRegistry,
 ): ReadonlyMap<BlockId, BlockInfo> {
   /**
@@ -252,6 +278,13 @@ function collectNonNullsInBlocks(
     const assumedNonNullObjects = new Set<PropertyPathNode>(
       knownNonNullIdentifiers,
     );
+
+    const maybeOptionalChain = hoistableFromOptionals.get(block.id);
+    if (maybeOptionalChain != null) {
+      assumedNonNullObjects.add(
+        registry.getOrCreateProperty(maybeOptionalChain),
+      );
+    }
     for (const instr of block.instructions) {
       if (instr.value.kind === 'PropertyLoad') {
         const source = temporaries.get(instr.value.object.identifier.id) ?? {
@@ -303,6 +336,7 @@ function collectNonNullsInBlocks(
 function propagateNonNull(
   fn: HIRFunction,
   nodes: ReadonlyMap<BlockId, BlockInfo>,
+  registry: PropertyPathRegistry,
 ): void {
   const blockSuccessors = new Map<BlockId, Set<BlockId>>();
   const terminalPreds = new Set<BlockId>();
@@ -388,10 +422,17 @@ function propagateNonNull(
 
     const prevObjects = assertNonNull(nodes.get(nodeId)).assumedNonNullObjects;
     const mergedObjects = Set_union(prevObjects, neighborAccesses);
+    reduceMaybeOptionalChains(mergedObjects, registry);
 
     assertNonNull(nodes.get(nodeId)).assumedNonNullObjects = mergedObjects;
     traversalState.set(nodeId, 'done');
-    changed ||= prevObjects.size !== mergedObjects.size;
+    /**
+     * Note that it's not sufficient to compare set sizes since
+     * reduceMaybeOptionalChains may replace optional-chain loads with
+     * unconditional loads. This could in turn change `assumedNonNullObjects` of
+     * downstream blocks and backedges.
+     */
+    changed ||= !Set_equal(prevObjects, mergedObjects);
     return changed;
   }
   const traversalState = new Map<BlockId, 'done' | 'active'>();
@@ -439,4 +480,51 @@ export function assertNonNull<T extends NonNullable<U>, U>(
     loc: GeneratedSource,
   });
   return value;
+}
+
+/**
+ * Any two optional chains with different operations . vs ?. but the same set of
+ * property strings paths de-duplicates.
+ *
+ * Intuitively: given <base>?.b, we know <base> to be either hoistable or not.
+ * If unconditional reads from <base> are hoistable, we can replace all
+ * <base>?.PROPERTY_STRING subpaths with <base>.PROPERTY_STRING
+ */
+function reduceMaybeOptionalChains(
+  nodes: Set<PropertyPathNode>,
+  registry: PropertyPathRegistry,
+): void {
+  let optionalChainNodes = Set_filter(nodes, n => n.hasOptional);
+  if (optionalChainNodes.size === 0) {
+    return;
+  }
+  let changed: boolean;
+  do {
+    changed = false;
+
+    for (const original of optionalChainNodes) {
+      let {identifier, path: origPath} = original.fullPath;
+      let currNode: PropertyPathNode =
+        registry.getOrCreateIdentifier(identifier);
+      for (let i = 0; i < origPath.length; i++) {
+        const entry = origPath[i];
+        // If the base is known to be non-null, replace with a non-optional load
+        const nextEntry: DependencyPathEntry =
+          entry.optional && nodes.has(currNode)
+            ? {property: entry.property, optional: false}
+            : entry;
+        currNode = PropertyPathRegistry.getOrCreatePropertyEntry(
+          currNode,
+          nextEntry,
+        );
+      }
+      if (currNode !== original) {
+        changed = true;
+        optionalChainNodes.delete(original);
+        optionalChainNodes.add(currNode);
+        nodes.delete(original);
+        nodes.add(currNode);
+      }
+    }
+  } while (changed);
 }
