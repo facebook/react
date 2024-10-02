@@ -618,4 +618,20 @@ describe('ReactFlightDOMReply', () => {
     const root = await ReactServerDOMServer.decodeReply(body, webpackServerMap);
     expect(root.prop.obj).toBe(root.prop);
   });
+
+  it('can abort an unresolved model and get the partial result', async () => {
+    const promise = new Promise(r => {});
+    const controller = new AbortController();
+    const bodyPromise = ReactServerDOMClient.encodeReply(
+      {promise: promise, hello: 'world'},
+      {signal: controller.signal},
+    );
+    controller.abort();
+
+    const result = await ReactServerDOMServer.decodeReply(await bodyPromise);
+    expect(result.hello).toBe('world');
+    // TODO: await result.promise should reject at this point because the stream
+    // has closed but that's a bug in both ReactFlightReplyServer and ReactFlightClient.
+    // It just halts in this case.
+  });
 });
