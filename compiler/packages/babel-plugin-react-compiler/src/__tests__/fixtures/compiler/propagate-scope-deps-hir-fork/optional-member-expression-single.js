@@ -1,4 +1,4 @@
-// @validatePreserveExistingMemoizationGuarantees @enableOptionalDependencies
+// @validatePreserveExistingMemoizationGuarantees @enableOptionalDependencies @enablePropagateDepsInHIR
 import {ValidateMemoization} from 'shared-runtime';
 import {useMemo} from 'react';
 function Component({arg}) {
