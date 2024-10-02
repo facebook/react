@@ -15,7 +15,7 @@ import {
   HIRFunction,
   Identifier,
   IdentifierId,
-  InstructionId,
+  InstructionValue,
   ReactiveScopeDependency,
   ScopeId,
 } from './HIR';
@@ -209,33 +209,23 @@ class PropertyPathRegistry {
   }
 }
 
-function addNonNullPropertyPath(
-  source: Identifier,
-  sourceNode: PropertyPathNode,
-  instrId: InstructionId,
-  knownImmutableIdentifiers: Set<IdentifierId>,
-  result: Set<PropertyPathNode>,
-): void {
-  /**
-   * Since this runs *after* buildReactiveScopeTerminals, identifier mutable ranges
-   * are not valid with respect to current instruction id numbering.
-   * We use attached reactive scope ranges as a proxy for mutable range, but this
-   * is an overestimate as (1) scope ranges merge and align to form valid program
-   * blocks and (2) passes like MemoizeFbtAndMacroOperands may assign scopes to
-   * non-mutable identifiers.
-   *
-   * See comment at top of function for why we track known immutable identifiers.
-   */
-  const isMutableAtInstr =
-    source.mutableRange.end > source.mutableRange.start + 1 &&
-    source.scope != null &&
-    inRange({id: instrId}, source.scope.range);
-  if (
-    !isMutableAtInstr ||
-    knownImmutableIdentifiers.has(sourceNode.fullPath.identifier.id)
-  ) {
-    result.add(sourceNode);
+function getMaybeNonNullInInstruction(
+  instr: InstructionValue,
+  temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
+  registry: PropertyPathRegistry,
+): PropertyPathNode | null {
+  let path = null;
+  if (instr.kind === 'PropertyLoad') {
+    path = temporaries.get(instr.object.identifier.id) ?? {
+      identifier: instr.object.identifier,
+      path: [],
+    };
+  } else if (instr.kind === 'Destructure') {
+    path = temporaries.get(instr.value.identifier.id) ?? null;
+  } else if (instr.kind === 'ComputedLoad') {
+    path = temporaries.get(instr.object.identifier.id) ?? null;
   }
+  return path != null ? registry.getOrCreateProperty(path) : null;
 }
 
 function collectNonNullsInBlocks(
@@ -286,41 +276,38 @@ function collectNonNullsInBlocks(
       );
     }
     for (const instr of block.instructions) {
-      if (instr.value.kind === 'PropertyLoad') {
-        const source = temporaries.get(instr.value.object.identifier.id) ?? {
-          identifier: instr.value.object.identifier,
-          path: [],
-        };
-        addNonNullPropertyPath(
-          instr.value.object.identifier,
-          registry.getOrCreateProperty(source),
-          instr.id,
-          knownImmutableIdentifiers,
-          assumedNonNullObjects,
-        );
-      } else if (instr.value.kind === 'Destructure') {
-        const source = instr.value.value.identifier.id;
-        const sourceNode = temporaries.get(source);
-        if (sourceNode != null) {
-          addNonNullPropertyPath(
-            instr.value.value.identifier,
-            registry.getOrCreateProperty(sourceNode),
-            instr.id,
-            knownImmutableIdentifiers,
-            assumedNonNullObjects,
+      const maybeNonNull = getMaybeNonNullInInstruction(
+        instr.value,
+        temporaries,
+        registry,
+      );
+      if (maybeNonNull != null) {
+        const baseIdentifier = maybeNonNull.fullPath.identifier;
+        /**
+         * Since this runs *after* buildReactiveScopeTerminals, identifier mutable ranges
+         * are not valid with respect to current instruction id numbering.
+         * We use attached reactive scope ranges as a proxy for mutable range, but this
+         * is an overestimate as (1) scope ranges merge and align to form valid program
+         * blocks and (2) passes like MemoizeFbtAndMacroOperands may assign scopes to
+         * non-mutable identifiers.
+         *
+         * See comment at top of function for why we track known immutable identifiers.
+         */
+        const isMutableAtInstr =
+          baseIdentifier.mutableRange.end >
+            baseIdentifier.mutableRange.start + 1 &&
+          baseIdentifier.scope != null &&
+          inRange(
+            {
+              id: instr.id,
+            },
+            baseIdentifier.scope.range,
           );
-        }
-      } else if (instr.value.kind === 'ComputedLoad') {
-        const source = instr.value.object.identifier.id;
-        const sourceNode = temporaries.get(source);
-        if (sourceNode != null) {
-          addNonNullPropertyPath(
-            instr.value.object.identifier,
-            registry.getOrCreateProperty(sourceNode),
-            instr.id,
-            knownImmutableIdentifiers,
-            assumedNonNullObjects,
-          );
+        if (
+          !isMutableAtInstr ||
+          knownImmutableIdentifiers.has(baseIdentifier.id)
+        ) {
+          assumedNonNullObjects.add(maybeNonNull);
         }
       }
     }

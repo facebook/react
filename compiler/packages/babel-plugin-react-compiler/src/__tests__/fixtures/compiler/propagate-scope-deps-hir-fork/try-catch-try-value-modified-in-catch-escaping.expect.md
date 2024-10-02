@@ -32,9 +32,9 @@ import { c as _c } from "react/compiler-runtime"; // @enablePropagateDepsInHIR
 const { throwInput } = require("shared-runtime");
 
 function Component(props) {
-  const $ = _c(2);
+  const $ = _c(3);
   let x;
-  if ($[0] !== props) {
+  if ($[0] !== props.y || $[1] !== props.e) {
     try {
       const y = [];
       y.push(props.y);
@@ -44,10 +44,11 @@ function Component(props) {
       e.push(props.e);
       x = e;
     }
-    $[0] = props;
-    $[1] = x;
+    $[0] = props.y;
+    $[1] = props.e;
+    $[2] = x;
   } else {
-    x = $[1];
+    x = $[2];
   }
   return x;
 }
