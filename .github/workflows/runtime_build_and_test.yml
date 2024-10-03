@@ -16,7 +16,7 @@ env:
   UCACHER_INSTRUMENTER: strace
   UCACHER_SHOW_IO: true
   FORCE_COLOR: 1
-  LOG_LEVEL: error
+  LOG_LEVEL: info
 
 jobs:
 #  satellite_assignment:
@@ -200,6 +200,7 @@ jobs:
           CI: github
           RELEASE_CHANNEL: ${{ matrix.release_channel }}
           NODE_INDEX: ${{ matrix.worker_id }}
+      - run: tree -f build
       - run: cat /tmp/ucacher/ucacher.log
       - run: sha256sum /home/runner/work/react/react/build/oss-stable-semver/eslint-plugin-react-hooks/cjs/eslint-plugin-react-hooks.production.js
       - name: Lint build
