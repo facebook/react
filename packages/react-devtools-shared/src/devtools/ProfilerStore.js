@@ -11,6 +11,7 @@ import EventEmitter from '../events';
 import {prepareProfilingDataFrontendFromBackendAndStore} from './views/Profiler/utils';
 import ProfilingCache from './ProfilingCache';
 import Store from './store';
+import {logEvent} from 'react-devtools-shared/src/Logger';
 
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {ProfilingDataBackend} from 'react-devtools-shared/src/backend/types';
@@ -67,7 +68,12 @@ export default class ProfilerStore extends EventEmitter<{
 
   // The backend is currently profiling.
   // When profiling is in progress, operations are stored so that we can later reconstruct past commit trees.
-  _isProfiling: boolean = false;
+  _isBackendProfiling: boolean = false;
+
+  // Mainly used for optimistic UI.
+  // This could be false, but at the same time _isBackendProfiling could be true
+  // for cases when Backend is busy serializing a chunky payload.
+  _isProfilingBasedOnUserInput: boolean = false;
 
   // Tracks whether a specific renderer logged any profiling data during the most recent session.
   _rendererIDsThatReportedProfilingData: Set<number> = new Set();
@@ -86,7 +92,8 @@ export default class ProfilerStore extends EventEmitter<{
     super();
 
     this._bridge = bridge;
-    this._isProfiling = defaultIsProfiling;
+    this._isBackendProfiling = defaultIsProfiling;
+    this._isProfilingBasedOnUserInput = defaultIsProfiling;
     this._store = store;
 
     bridge.addListener('operations', this.onBridgeOperations);
@@ -139,8 +146,8 @@ export default class ProfilerStore extends EventEmitter<{
     return this._rendererQueue.size > 0 || this._dataBackends.length > 0;
   }
 
-  get isProfiling(): boolean {
-    return this._isProfiling;
+  get isProfilingBasedOnUserInput(): boolean {
+    return this._isProfilingBasedOnUserInput;
   }
 
   get profilingCache(): ProfilingCache {
@@ -151,7 +158,7 @@ export default class ProfilerStore extends EventEmitter<{
     return this._dataFrontend;
   }
   set profilingData(value: ProfilingDataFrontend | null): void {
-    if (this._isProfiling) {
+    if (this._isBackendProfiling) {
       console.warn(
         'Profiling data cannot be updated while profiling is in progress.',
       );
@@ -186,6 +193,9 @@ export default class ProfilerStore extends EventEmitter<{
   startProfiling(): void {
     this._bridge.send('startProfiling', this._store.recordChangeDescriptions);
 
+    this._isProfilingBasedOnUserInput = true;
+    this.emit('isProfiling');
+
     // Don't actually update the local profiling boolean yet!
     // Wait for onProfilingStatus() to confirm the status has changed.
     // This ensures the frontend and backend are in sync wrt which commits were profiled.
@@ -195,8 +205,12 @@ export default class ProfilerStore extends EventEmitter<{
   stopProfiling(): void {
     this._bridge.send('stopProfiling');
 
-    // Don't actually update the local profiling boolean yet!
-    // Wait for onProfilingStatus() to confirm the status has changed.
+    // Backend might be busy serializing the payload, so we are going to display
+    // optimistic UI to the user that profiling is stopping.
+    this._isProfilingBasedOnUserInput = false;
+    this.emit('isProfiling');
+
+    // Wait for onProfilingStatus() to confirm the status has changed, this will update _isBackendProfiling.
     // This ensures the frontend and backend are in sync wrt which commits were profiled.
     // We do this to avoid mismatches on e.g. CommitTreeBuilder that would cause errors.
   }
@@ -229,7 +243,7 @@ export default class ProfilerStore extends EventEmitter<{
     const rendererID = operations[0];
     const rootID = operations[1];
 
-    if (this._isProfiling) {
+    if (this._isBackendProfiling) {
       let profilingOperations = this._inProgressOperationsByRootID.get(rootID);
       if (profilingOperations == null) {
         profilingOperations = [operations];
@@ -252,8 +266,8 @@ export default class ProfilerStore extends EventEmitter<{
 
   onBridgeProfilingData: (dataBackend: ProfilingDataBackend) => void =
     dataBackend => {
-      if (this._isProfiling) {
-        // This should never happen, but if it does- ignore previous profiling data.
+      if (this._isBackendProfiling) {
+        // This should never happen, but if it does, then ignore previous profiling data.
         return;
       }
 
@@ -289,7 +303,7 @@ export default class ProfilerStore extends EventEmitter<{
   };
 
   onProfilingStatus: (isProfiling: boolean) => void = isProfiling => {
-    if (this._isProfiling === isProfiling) {
+    if (this._isBackendProfiling === isProfiling) {
       return;
     }
 
@@ -319,14 +333,24 @@ export default class ProfilerStore extends EventEmitter<{
       });
     }
 
-    this._isProfiling = isProfiling;
+    this._isBackendProfiling = isProfiling;
+    // _isProfilingBasedOnUserInput should already be updated from startProfiling, stopProfiling, or constructor.
+    if (this._isProfilingBasedOnUserInput !== isProfiling) {
+      logEvent({
+        event_name: 'error',
+        error_message: `Unexpected profiling status. Expected ${this._isProfilingBasedOnUserInput.toString()}, but received ${isProfiling.toString()}.`,
+        error_stack: new Error().stack,
+        error_component_stack: null,
+      });
+
+      // If happened, fallback to displaying the value from Backend
+      this._isProfilingBasedOnUserInput = isProfiling;
+    }
 
     // Invalidate suspense cache if profiling data is being (re-)recorded.
     // Note that we clear again, in case any views read from the cache while profiling.
     // (That would have resolved a now-stale value without any profiling data.)
     this._cache.invalidate();
-
-    this.emit('isProfiling');
 
     // If we've just finished a profiling session, we need to fetch data stored in each renderer interface
     // and re-assemble it on the front-end into a format (ProfilingDataFrontend) that can power the Profiler UI.
