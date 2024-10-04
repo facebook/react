@@ -140,6 +140,9 @@ export default {
 
       // Get the current scope.
       const scope = scopeManager.acquire(node);
+      if (!scope) {
+        return;
+      }
 
       // Find all our "pure scopes". On every re-render of a component these
       // pure scopes may have changes to the variables declared within. So all
