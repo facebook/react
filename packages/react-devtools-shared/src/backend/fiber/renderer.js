@@ -44,6 +44,7 @@ import {
 } from 'react-devtools-shared/src/utils';
 import {
   formatConsoleArgumentsToSingleString,
+  formatDurationToMicrosecondsGranularity,
   gt,
   gte,
   parseSourceFromComponentStack,
@@ -5074,8 +5075,14 @@ export function attach(
           const fiberSelfDurations: Array<[number, number]> = [];
           for (let i = 0; i < durations.length; i += 3) {
             const fiberID = durations[i];
-            fiberActualDurations.push([fiberID, durations[i + 1]]);
-            fiberSelfDurations.push([fiberID, durations[i + 2]]);
+            fiberActualDurations.push([
+              fiberID,
+              formatDurationToMicrosecondsGranularity(durations[i + 1]),
+            ]);
+            fiberSelfDurations.push([
+              fiberID,
+              formatDurationToMicrosecondsGranularity(durations[i + 2]),
+            ]);
           }
 
           commitData.push({
@@ -5083,11 +5090,18 @@ export function attach(
               changeDescriptions !== null
                 ? Array.from(changeDescriptions.entries())
                 : null,
-            duration: maxActualDuration,
-            effectDuration,
+            duration:
+              formatDurationToMicrosecondsGranularity(maxActualDuration),
+            effectDuration:
+              effectDuration !== null
+                ? formatDurationToMicrosecondsGranularity(effectDuration)
+                : null,
             fiberActualDurations,
             fiberSelfDurations,
-            passiveEffectDuration,
+            passiveEffectDuration:
+              passiveEffectDuration !== null
+                ? formatDurationToMicrosecondsGranularity(passiveEffectDuration)
+                : null,
             priorityLevel,
             timestamp: commitTime,
             updaters,
