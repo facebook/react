@@ -203,12 +203,10 @@ export function describeObjectForErrorMessage(
           str += ', ';
         }
         const value = array[i];
-        let substr;
-        if (typeof value === 'object' && value !== null) {
-          substr = describeObjectForErrorMessage(value);
-        } else {
-          substr = describeValueForErrorMessage(value);
-        }
+        const substr = typeof value === 'object' && value !== null
+          ? describeObjectForErrorMessage(value)
+          : describeValueForErrorMessage(value);
+
         if ('' + i === expandedName) {
           start = str.length;
           length = substr.length;
@@ -237,16 +235,11 @@ export function describeObjectForErrorMessage(
         const name = names[i];
         str += describeKeyForErrorMessage(name) + '=';
         const value = object[name];
-        let substr;
-        if (
-          name === expandedName &&
-          typeof value === 'object' &&
-          value !== null
-        ) {
-          substr = describeObjectForErrorMessage(value);
-        } else {
-          substr = describeValueForErrorMessage(value);
-        }
+        const substr = name === expandedName && typeof value === 'object'
+          && value !== null
+          ? describeObjectForErrorMessage(value)
+          : describeValueForErrorMessage(value);
+
         if (typeof value !== 'string') {
           substr = '{' + substr + '}';
         }
@@ -273,12 +266,10 @@ export function describeObjectForErrorMessage(
         const name = names[i];
         str += describeKeyForErrorMessage(name) + ': ';
         const value = object[name];
-        let substr;
-        if (typeof value === 'object' && value !== null) {
-          substr = describeObjectForErrorMessage(value);
-        } else {
-          substr = describeValueForErrorMessage(value);
-        }
+        const substr = typeof value === 'object' && value !== null
+          ? describeObjectForErrorMessage(value)
+          : describeValueForErrorMessage(value);
+
         if (name === expandedName) {
           start = str.length;
           length = substr.length;
