@@ -87,17 +87,6 @@ export type PluginOptions = {
    */
   compilationMode: CompilationMode;
 
-  /*
-   * If enabled, Forget will import `useMemoCache` from the given module
-   * instead of `react/compiler-runtime`.
-   *
-   * ```
-   * // If set to "react-compiler-runtime"
-   * import {c as useMemoCache} from 'react-compiler-runtime';
-   * ```
-   */
-  runtimeModule?: string | null | undefined;
-
   /**
    * By default React Compiler will skip compilation of code that suppresses the default
    * React ESLint rules, since this is a strong indication that the code may be breaking React rules
@@ -214,7 +203,6 @@ export const defaultOptions: PluginOptions = {
   logger: null,
   gating: null,
   noEmit: false,
-  runtimeModule: null,
   eslintSuppressionRules: null,
   flowSuppressions: true,
   ignoreUseNoForget: false,
