@@ -8,10 +8,15 @@
 import {render} from '@testing-library/react';
 import {JSDOM} from 'jsdom';
 import React, {MutableRefObject} from 'react';
+// @ts-ignore
+import {c as useMemoCache} from 'react/compiler-runtime';
 import util from 'util';
 import {z} from 'zod';
 import {fromZodError} from 'zod-validation-error';
 import {initFbt, toJSON} from './shared-runtime';
+
+// @ts-ignore
+React.c = useMemoCache;
 
 /**
  * Set up the global environment for JSDOM tests.
