@@ -653,8 +653,9 @@ export function installTypeConfig(
 }
 
 export function installReAnimatedTypes(
-  globals: GlobalRegistry,
+  moduleTypes: Map<string, Global | null>,
   registry: ShapeRegistry,
+  reanimatedImportModule: string,
 ): void {
   // hooks that freeze args and return frozen value
   const frozenHooks = [
@@ -665,8 +666,9 @@ export function installReAnimatedTypes(
     'useAnimatedReaction',
     'useWorkletCallback',
   ];
+  const reanimatedType: Array<[string, BuiltInType]> = [];
   for (const hook of frozenHooks) {
-    globals.set(
+    reanimatedType.push([
       hook,
       addHook(registry, {
         positionalParams: [],
@@ -677,7 +679,7 @@ export function installReAnimatedTypes(
         calleeEffect: Effect.Read,
         hookKind: 'Custom',
       }),
-    );
+    ]);
   }
 
   /**
@@ -686,7 +688,7 @@ export function installReAnimatedTypes(
    */
   const mutableHooks = ['useSharedValue', 'useDerivedValue'];
   for (const hook of mutableHooks) {
-    globals.set(
+    reanimatedType.push([
       hook,
       addHook(registry, {
         positionalParams: [],
@@ -697,7 +699,7 @@ export function installReAnimatedTypes(
         calleeEffect: Effect.Read,
         hookKind: 'Custom',
       }),
-    );
+    ]);
   }
 
   // functions that return mutable value
@@ -711,7 +713,7 @@ export function installReAnimatedTypes(
     'executeOnUIRuntimeSync',
   ];
   for (const fn of funcs) {
-    globals.set(
+    reanimatedType.push([
       fn,
       addFunction(registry, [], {
         positionalParams: [],
@@ -721,6 +723,10 @@ export function installReAnimatedTypes(
         returnValueKind: ValueKind.Mutable,
         noAlias: true,
       }),
-    );
+    ]);
   }
+  moduleTypes.set(
+    reanimatedImportModule,
+    addObject(registry, null, reanimatedType),
+  );
 }
