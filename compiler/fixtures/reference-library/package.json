@@ -1,0 +1,16 @@
+{
+  "name": "reference-library",
+  "version": "0.0.0",
+  "description": "Testing ground for libraries compiled with React Compiler",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo 'no tests'"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "babel-plugin-react-compiler": "file:../../packages/babel-plugin-react-compiler"
+  },
+  "dependencies": {
+    "react-compiler-runtime": "file:../../packages/react-compiler-runtime"
+  }
+}
