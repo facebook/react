@@ -434,6 +434,7 @@ const skipFilter = new Set([
   'todo.useContext-mutate-context-in-callback',
   'loop-unused-let',
   'reanimated-no-memo-arg',
+  'reanimated-shared-value-writes',
 
   'userspace-use-memo-cache',
   'transitive-freeze-function-expressions',
