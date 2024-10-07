@@ -25,7 +25,7 @@ import {
   addHook,
   addObject,
 } from './ObjectShape';
-import {BuiltInType, PolyType} from './Types';
+import {BuiltInType, ObjectType, PolyType} from './Types';
 import {TypeConfig} from './TypeSchema';
 import {assertExhaustive} from '../Utils/utils';
 import {isHookName} from './Environment';
@@ -652,11 +652,7 @@ export function installTypeConfig(
   }
 }
 
-export function installReAnimatedTypes(
-  moduleTypes: Map<string, Global | null>,
-  registry: ShapeRegistry,
-  reanimatedImportModule: string,
-): void {
+export function getReanimatedModuleType(registry: ShapeRegistry): ObjectType {
   // hooks that freeze args and return frozen value
   const frozenHooks = [
     'useFrameCallback',
@@ -725,8 +721,6 @@ export function installReAnimatedTypes(
       }),
     ]);
   }
-  moduleTypes.set(
-    reanimatedImportModule,
-    addObject(registry, null, reanimatedType),
-  );
+
+  return addObject(registry, null, reanimatedType);
 }

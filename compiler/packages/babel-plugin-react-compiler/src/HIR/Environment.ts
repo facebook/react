@@ -16,7 +16,7 @@ import {
   DEFAULT_SHAPES,
   Global,
   GlobalRegistry,
-  installReAnimatedTypes,
+  getReanimatedModuleType,
   installTypeConfig,
 } from './Globals';
 import {
@@ -688,11 +688,8 @@ export class Environment {
     }
 
     if (config.enableCustomTypeDefinitionForReanimated) {
-      installReAnimatedTypes(
-        this.#moduleTypes,
-        this.#shapes,
-        REANIMATED_MODULE_NAME,
-      );
+      const reanimatedModuleType = getReanimatedModuleType(this.#shapes);
+      this.#moduleTypes.set(REANIMATED_MODULE_NAME, reanimatedModuleType);
     }
 
     this.#contextIdentifiers = contextIdentifiers;

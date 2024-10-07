@@ -3,7 +3,7 @@
 
 ```javascript
 // @enableCustomTypeDefinitionForReanimated
-import { useSharedValue } from 'react-native-reanimated';
+import {useSharedValue} from 'react-native-reanimated';
 
 /**
  * https://docs.swmansion.com/react-native-reanimated/docs/2.x/api/hooks/useSharedValue/
