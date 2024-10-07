@@ -1361,7 +1361,8 @@ __DEV__ &&
                 return queueMicrotask(callback);
               });
             }
-          : enqueueTask;
+          : enqueueTask,
+      ReactCompilerRuntime = { c: useMemoCache };
     exports.Children = {
       map: mapChildren,
       forEach: function (children, forEachFunc, forEachContext) {
@@ -1403,6 +1404,7 @@ __DEV__ &&
     exports.Suspense = REACT_SUSPENSE_TYPE;
     exports.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE =
       ReactSharedInternals;
+    exports.__COMPILER_RUNTIME = ReactCompilerRuntime;
     exports.act = function (callback) {
       var prevIsBatchingLegacy = disableLegacyMode
           ? !1
@@ -2000,7 +2002,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.0.0-www-classic-d8c90fa4-20241001";
+    exports.version = "19.0.0-www-classic-b78a7f2f-20241007";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
