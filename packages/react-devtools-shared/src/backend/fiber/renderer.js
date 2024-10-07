@@ -3472,7 +3472,7 @@ export function attach(
   }
 
   function cleanup() {
-    // We don't patch any methods so there is no cleanup.
+    isProfiling = false;
   }
 
   function rootSupportsProfiling(root: any) {
