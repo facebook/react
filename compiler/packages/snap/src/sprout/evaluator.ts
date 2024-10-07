@@ -282,7 +282,7 @@ export function doEval(source: string): EvaluatorResult {
         } else {
           return {
             kind: "exception",
-            value: e.stack,
+            value: e.message,
           };
         }
       }
