@@ -1,4 +1,6 @@
-// @runtimeModule="react-forget-runtime"
+// @runtimeModule="react-compiler-runtime"
+import {useState} from 'react';
+
 function Component(props) {
   const [x, setX] = useState(1);
   let y;
@@ -6,10 +8,12 @@ function Component(props) {
     y = x * 2;
   }
   return (
-    <Button
+    <button
       onClick={() => {
         setX(10 * y);
-      }}></Button>
+      }}>
+      Click me
+    </button>
   );
 }
 
