@@ -56,6 +56,7 @@ function makePluginOptions(
   let enableChangeDetectionForDebugging = null;
   let customMacros: null | Array<Macro> = null;
   let validateBlocklistedImports = null;
+  let target = '19' as const;
 
   if (firstLine.indexOf('@compilationMode(annotation)') !== -1) {
     assert(
@@ -107,6 +108,13 @@ function makePluginOptions(
   if (runtimeModuleMatch) {
     runtimeModule = runtimeModuleMatch[1];
   }
+
+  const targetMatch = /@target="([^"]+)"/.exec(firstLine);
+  if (targetMatch) {
+    // @ts-ignore
+    target = targetMatch[1];
+  }
+
   if (firstLine.includes('@panicThreshold(none)')) {
     panicThreshold = 'none';
   }
@@ -248,6 +256,7 @@ function makePluginOptions(
     flowSuppressions,
     ignoreUseNoForget,
     enableReanimatedCheck: false,
+    target,
   };
   return [options, logs];
 }
