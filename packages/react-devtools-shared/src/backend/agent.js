@@ -714,10 +714,6 @@ export default class Agent extends EventEmitter<{
   ) {
     this._rendererInterfaces[rendererID] = rendererInterface;
 
-    if (this._isProfiling) {
-      rendererInterface.startProfiling(this._recordChangeDescriptions);
-    }
-
     rendererInterface.setTraceUpdatesEnabled(this._traceUpdatesEnabled);
 
     // When the renderer is attached, we need to tell it whether
