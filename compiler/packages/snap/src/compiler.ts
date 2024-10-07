@@ -12,12 +12,12 @@ import * as BabelParser from '@babel/parser';
 import {NodePath} from '@babel/traverse';
 import * as t from '@babel/types';
 import assert from 'assert';
-import type {
-  CompilationMode,
-  Logger,
-  LoggerEvent,
-  PanicThresholdOptions,
-  PluginOptions,
+import {
+  type CompilationMode,
+  type Logger,
+  type LoggerEvent,
+  type PanicThresholdOptions,
+  type PluginOptions,
 } from 'babel-plugin-react-compiler/src/Entrypoint';
 import type {Effect, ValueKind} from 'babel-plugin-react-compiler/src/HIR';
 import type {
