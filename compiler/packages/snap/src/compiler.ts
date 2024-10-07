@@ -12,12 +12,12 @@ import * as BabelParser from '@babel/parser';
 import {NodePath} from '@babel/traverse';
 import * as t from '@babel/types';
 import assert from 'assert';
-import type {
-  CompilationMode,
-  Logger,
-  LoggerEvent,
-  PanicThresholdOptions,
-  PluginOptions,
+import {
+  type CompilationMode,
+  type Logger,
+  type LoggerEvent,
+  type PanicThresholdOptions,
+  type PluginOptions,
 } from 'babel-plugin-react-compiler/src/Entrypoint';
 import type {Effect, ValueKind} from 'babel-plugin-react-compiler/src/HIR';
 import type {
@@ -56,6 +56,7 @@ function makePluginOptions(
   let enableChangeDetectionForDebugging = null;
   let customMacros: null | Array<Macro> = null;
   let validateBlocklistedImports = null;
+  let target = '19' as const;
 
   if (firstLine.indexOf('@compilationMode(annotation)') !== -1) {
     assert(
@@ -107,6 +108,13 @@ function makePluginOptions(
   if (runtimeModuleMatch) {
     runtimeModule = runtimeModuleMatch[1];
   }
+
+  const targetMatch = /@target="([^"]+)"/.exec(firstLine);
+  if (targetMatch) {
+    // @ts-ignore
+    target = targetMatch[1];
+  }
+
   if (firstLine.includes('@panicThreshold(none)')) {
     panicThreshold = 'none';
   }
@@ -248,6 +256,7 @@ function makePluginOptions(
     flowSuppressions,
     ignoreUseNoForget,
     enableReanimatedCheck: false,
+    target,
   };
   return [options, logs];
 }
