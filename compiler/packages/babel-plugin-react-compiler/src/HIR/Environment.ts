@@ -16,7 +16,7 @@ import {
   DEFAULT_SHAPES,
   Global,
   GlobalRegistry,
-  installReAnimatedTypes,
+  getReanimatedModuleType,
   installTypeConfig,
 } from './Globals';
 import {
@@ -688,7 +688,8 @@ export class Environment {
     }
 
     if (config.enableCustomTypeDefinitionForReanimated) {
-      installReAnimatedTypes(this.#globals, this.#shapes);
+      const reanimatedModuleType = getReanimatedModuleType(this.#shapes);
+      this.#moduleTypes.set(REANIMATED_MODULE_NAME, reanimatedModuleType);
     }
 
     this.#contextIdentifiers = contextIdentifiers;
@@ -734,11 +735,11 @@ export class Environment {
   }
 
   #resolveModuleType(moduleName: string, loc: SourceLocation): Global | null {
-    if (this.config.moduleTypeProvider == null) {
-      return null;
-    }
     let moduleType = this.#moduleTypes.get(moduleName);
     if (moduleType === undefined) {
+      if (this.config.moduleTypeProvider == null) {
+        return null;
+      }
       const unparsedModuleConfig = this.config.moduleTypeProvider(moduleName);
       if (unparsedModuleConfig != null) {
         const parsedModuleConfig = TypeSchema.safeParse(unparsedModuleConfig);
@@ -956,6 +957,8 @@ export class Environment {
     }
   }
 }
+
+const REANIMATED_MODULE_NAME = 'react-native-reanimated';
 
 // From https://github.com/facebook/react/blob/main/packages/eslint-plugin-react-hooks/src/RulesOfHooks.js#LL18C1-L23C2
 export function isHookName(name: string): boolean {

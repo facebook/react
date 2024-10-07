@@ -25,7 +25,7 @@ import {
   addHook,
   addObject,
 } from './ObjectShape';
-import {BuiltInType, PolyType} from './Types';
+import {BuiltInType, ObjectType, PolyType} from './Types';
 import {TypeConfig} from './TypeSchema';
 import {assertExhaustive} from '../Utils/utils';
 import {isHookName} from './Environment';
@@ -652,10 +652,7 @@ export function installTypeConfig(
   }
 }
 
-export function installReAnimatedTypes(
-  globals: GlobalRegistry,
-  registry: ShapeRegistry,
-): void {
+export function getReanimatedModuleType(registry: ShapeRegistry): ObjectType {
   // hooks that freeze args and return frozen value
   const frozenHooks = [
     'useFrameCallback',
@@ -665,8 +662,9 @@ export function installReAnimatedTypes(
     'useAnimatedReaction',
     'useWorkletCallback',
   ];
+  const reanimatedType: Array<[string, BuiltInType]> = [];
   for (const hook of frozenHooks) {
-    globals.set(
+    reanimatedType.push([
       hook,
       addHook(registry, {
         positionalParams: [],
@@ -677,7 +675,7 @@ export function installReAnimatedTypes(
         calleeEffect: Effect.Read,
         hookKind: 'Custom',
       }),
-    );
+    ]);
   }
 
   /**
@@ -686,7 +684,7 @@ export function installReAnimatedTypes(
    */
   const mutableHooks = ['useSharedValue', 'useDerivedValue'];
   for (const hook of mutableHooks) {
-    globals.set(
+    reanimatedType.push([
       hook,
       addHook(registry, {
         positionalParams: [],
@@ -697,7 +695,7 @@ export function installReAnimatedTypes(
         calleeEffect: Effect.Read,
         hookKind: 'Custom',
       }),
-    );
+    ]);
   }
 
   // functions that return mutable value
@@ -711,7 +709,7 @@ export function installReAnimatedTypes(
     'executeOnUIRuntimeSync',
   ];
   for (const fn of funcs) {
-    globals.set(
+    reanimatedType.push([
       fn,
       addFunction(registry, [], {
         positionalParams: [],
@@ -721,6 +719,8 @@ export function installReAnimatedTypes(
         returnValueKind: ValueKind.Mutable,
         noAlias: true,
       }),
-    );
+    ]);
   }
+
+  return addObject(registry, null, reanimatedType);
 }
