@@ -298,7 +298,6 @@ export function compileProgram(
     return;
   }
   const useMemoCacheIdentifier = program.scope.generateUidIdentifier('c');
-  const moduleName = pass.opts.runtimeModule ?? 'react/compiler-runtime';
 
   /*
    * Record lint errors and critical errors as depending on Forget's config,
@@ -605,7 +604,7 @@ export function compileProgram(
     if (needsMemoCacheFunctionImport) {
       updateMemoCacheFunctionImport(
         program,
-        moduleName,
+        getReactCompilerRuntimeModule(pass.opts),
         useMemoCacheIdentifier.name,
       );
     }
@@ -638,8 +637,12 @@ function shouldSkipCompilation(
     }
   }
 
-  const moduleName = pass.opts.runtimeModule ?? 'react/compiler-runtime';
-  if (hasMemoCacheFunctionImport(program, moduleName)) {
+  if (
+    hasMemoCacheFunctionImport(
+      program,
+      getReactCompilerRuntimeModule(pass.opts),
+    )
+  ) {
     return true;
   }
   return false;
@@ -1125,4 +1128,32 @@ function checkFunctionReferencedBeforeDeclarationAtTopLevel(
   });
 
   return errors.details.length > 0 ? errors : null;
+}
+
+type ReactCompilerRuntimeModule =
+  | 'react/compiler-runtime' // from react namespace
+  | 'react-compiler-runtime'; // npm package
+function getReactCompilerRuntimeModule(
+  opts: PluginOptions,
+): ReactCompilerRuntimeModule {
+  let moduleName: ReactCompilerRuntimeModule | null = null;
+  switch (opts.target) {
+    case '17':
+    case '18': {
+      moduleName = 'react-compiler-runtime';
+      break;
+    }
+    case '19': {
+      moduleName = 'react/compiler-runtime';
+      break;
+    }
+    default:
+      CompilerError.invariant(moduleName != null, {
+        reason: 'Expected target to already be validated',
+        description: null,
+        loc: null,
+        suggestions: null,
+      });
+  }
+  return moduleName;
 }
