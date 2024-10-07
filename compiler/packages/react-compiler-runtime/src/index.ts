@@ -19,22 +19,27 @@ const ReactSecretInternals =
 type MemoCache = Array<number | typeof $empty>;
 
 const $empty = Symbol.for('react.memo_cache_sentinel');
-/**
- * DANGER: this hook is NEVER meant to be called directly!
- **/
-export function c(size: number) {
-  return React.useState(() => {
-    const $ = new Array(size);
-    for (let ii = 0; ii < size; ii++) {
-      $[ii] = $empty;
-    }
-    // This symbol is added to tell the react devtools that this array is from
-    // useMemoCache.
-    // @ts-ignore
-    $[$empty] = true;
-    return $;
-  })[0];
-}
+
+// Re-export React.c if present, otherwise fallback to the userspace polyfill for versions of React
+// < 19.
+export const c =
+  // @ts-expect-error
+  typeof React.__COMPILER_RUNTIME?.c === 'function'
+    ? // @ts-expect-error
+      React.__COMPILER_RUNTIME.c
+    : function c(size: number) {
+        return React.useMemo<Array<unknown>>(() => {
+          const $ = new Array(size);
+          for (let ii = 0; ii < size; ii++) {
+            $[ii] = $empty;
+          }
+          // This symbol is added to tell the react devtools that this array is from
+          // useMemoCache.
+          // @ts-ignore
+          $[$empty] = true;
+          return $;
+        }, []);
+      };
 
 const LazyGuardDispatcher: {[key: string]: (...args: Array<any>) => any} = {};
 [
