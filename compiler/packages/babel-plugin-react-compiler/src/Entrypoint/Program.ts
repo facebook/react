@@ -298,6 +298,7 @@ export function compileProgram(
     return;
   }
   const useMemoCacheIdentifier = program.scope.generateUidIdentifier('c');
+  const moduleName = pass.opts.runtimeModule ?? 'react/compiler-runtime';
 
   /*
    * Record lint errors and critical errors as depending on Forget's config,
@@ -604,7 +605,7 @@ export function compileProgram(
     if (needsMemoCacheFunctionImport) {
       updateMemoCacheFunctionImport(
         program,
-        'react-compiler-runtime',
+        moduleName,
         useMemoCacheIdentifier.name,
       );
     }
@@ -637,7 +638,8 @@ function shouldSkipCompilation(
     }
   }
 
-  if (hasMemoCacheFunctionImport(program, 'react-compiler-runtime')) {
+  const moduleName = pass.opts.runtimeModule ?? 'react/compiler-runtime';
+  if (hasMemoCacheFunctionImport(program, moduleName)) {
     return true;
   }
   return false;

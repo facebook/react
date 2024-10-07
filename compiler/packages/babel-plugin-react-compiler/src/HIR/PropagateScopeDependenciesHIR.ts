@@ -17,7 +17,10 @@ import {
   areEqualPaths,
   IdentifierId,
 } from './HIR';
-import {collectHoistablePropertyLoads} from './CollectHoistablePropertyLoads';
+import {
+  collectHoistablePropertyLoads,
+  keyByScopeId,
+} from './CollectHoistablePropertyLoads';
 import {
   ScopeBlockTraversal,
   eachInstructionOperand,
@@ -41,10 +44,9 @@ export function propagateScopeDependenciesHIR(fn: HIRFunction): void {
     hoistableObjects,
   } = collectOptionalChainSidemap(fn);
 
-  const hoistablePropertyLoads = collectHoistablePropertyLoads(
+  const hoistablePropertyLoads = keyByScopeId(
     fn,
-    temporaries,
-    hoistableObjects,
+    collectHoistablePropertyLoads(fn, temporaries, hoistableObjects, null),
   );
 
   const scopeDeps = collectDependencies(
@@ -209,7 +211,7 @@ function findTemporariesUsedOutsideDeclaringScope(
  * of $1, as the evaluation of `arr.length` changes between instructions $1 and
  * $3. We do not track $1 -> arr.length in this case.
  */
-function collectTemporariesSidemap(
+export function collectTemporariesSidemap(
   fn: HIRFunction,
   usedOutsideDeclaringScope: ReadonlySet<DeclarationId>,
 ): ReadonlyMap<IdentifierId, ReactiveScopeDependency> {

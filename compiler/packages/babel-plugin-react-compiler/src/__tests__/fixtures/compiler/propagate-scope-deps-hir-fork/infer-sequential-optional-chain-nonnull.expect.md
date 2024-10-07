@@ -30,7 +30,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react-compiler-runtime"; // @enablePropagateDepsInHIR
+import { c as _c } from "react/compiler-runtime"; // @enablePropagateDepsInHIR
 
 function useFoo(t0) {
   const $ = _c(2);

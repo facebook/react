@@ -9,6 +9,13 @@ module.exports = function (api) {
   api.cache(true);
   return {
     presets: ['next/babel'],
-    plugins: [['babel-plugin-react-compiler']],
+    plugins: [
+      [
+        'babel-plugin-react-compiler',
+        {
+          runtimeModule: 'react-compiler-runtime',
+        },
+      ],
+    ],
   };
 };

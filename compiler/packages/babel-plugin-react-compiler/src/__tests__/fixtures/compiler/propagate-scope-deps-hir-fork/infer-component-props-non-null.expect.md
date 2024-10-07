@@ -12,7 +12,7 @@ function Foo(props) {
    * as it is arg[0] of a component function
    */
   const arr = [];
-  if (props.cond) {
+  if (cond) {
     arr.push(identity(props.value));
   }
   return <Stringify arr={arr} />;
@@ -20,7 +20,7 @@ function Foo(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Foo,
-  params: [{value: 2, cond: true}],
+  params: [{value: 2}],
 };
 
 ```
@@ -28,42 +28,33 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react-compiler-runtime"; // @enablePropagateDepsInHIR
+import { c as _c } from "react/compiler-runtime"; // @enablePropagateDepsInHIR
 import { identity, Stringify } from "shared-runtime";
 
 function Foo(props) {
-  const $ = _c(5);
+  const $ = _c(2);
   let t0;
-  if ($[0] !== props.cond || $[1] !== props.value) {
+  if ($[0] !== props.value) {
     const arr = [];
-    if (props.cond) {
-      let t1;
-      if ($[3] !== props.value) {
-        t1 = identity(props.value);
-        $[3] = props.value;
-        $[4] = t1;
-      } else {
-        t1 = $[4];
-      }
-      arr.push(t1);
+    if (cond) {
+      arr.push(identity(props.value));
     }
 
     t0 = <Stringify arr={arr} />;
-    $[0] = props.cond;
-    $[1] = props.value;
-    $[2] = t0;
+    $[0] = props.value;
+    $[1] = t0;
   } else {
-    t0 = $[2];
+    t0 = $[1];
   }
   return t0;
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Foo,
-  params: [{ value: 2, cond: true }],
+  params: [{ value: 2 }],
 };
 
 ```
       
 ### Eval output
-(kind: ok) <div>{"arr":[2]}</div>
+(kind: exception) cond is not defined
