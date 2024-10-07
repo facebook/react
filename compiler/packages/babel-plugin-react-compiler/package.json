@@ -8,9 +8,8 @@
     "dist"
   ],
   "scripts": {
-    "postinstall": "./scripts/link-react-compiler-runtime.sh",
     "build": "rimraf dist && rollup --config --bundleConfigAsCjs",
-    "test": "yarn snap:ci",
+    "test": "./scripts/link-react-compiler-runtime.sh && yarn snap:ci",
     "jest": "yarn build && ts-node node_modules/.bin/jest",
     "snap": "node ../snap/dist/main.js",
     "snap:build": "yarn workspace snap run build",
