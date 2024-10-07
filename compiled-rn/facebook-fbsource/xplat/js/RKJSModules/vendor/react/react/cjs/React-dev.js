@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<39711b23e69f6a08343fce7eeb5355e6>>
+ * @generated SignedSource<<b74b3d8161584b12ef52e873b58a37c1>>
  */
 
 "use strict";
@@ -1173,7 +1173,8 @@ __DEV__ &&
                 return queueMicrotask(callback);
               });
             }
-          : enqueueTask;
+          : enqueueTask,
+      ReactCompilerRuntime = { c: useMemoCache };
     exports.Children = {
       map: mapChildren,
       forEach: function (children, forEachFunc, forEachContext) {
@@ -1215,6 +1216,7 @@ __DEV__ &&
     exports.Suspense = REACT_SUSPENSE_TYPE;
     exports.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE =
       ReactSharedInternals;
+    exports.__COMPILER_RUNTIME = ReactCompilerRuntime;
     exports.act = function (callback) {
       var prevIsBatchingLegacy = ReactSharedInternals.isBatchingLegacy,
         prevActQueue = ReactSharedInternals.actQueue,
@@ -1703,7 +1705,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.0.0-native-fb-459fd418-20241001";
+    exports.version = "19.0.0-native-fb-b78a7f2f-20241007";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
