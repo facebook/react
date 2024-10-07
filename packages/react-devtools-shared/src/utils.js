@@ -56,8 +56,9 @@ import {
   localStorageGetItem,
   localStorageSetItem,
   sessionStorageGetItem,
+  sessionStorageRemoveItem,
   sessionStorageSetItem,
-} from './storage';
+} from 'react-devtools-shared/src/storage';
 import {meta} from './hydration';
 import isArray from './isArray';
 
@@ -67,12 +68,11 @@ import type {
   SerializedElement as SerializedElementFrontend,
   LRUCache,
 } from 'react-devtools-shared/src/frontend/types';
-import type {SerializedElement as SerializedElementBackend} from 'react-devtools-shared/src/backend/types';
-import {isSynchronousXHRSupported} from './backend/utils';
 import type {
-  ReloadAndProfileConfig,
-  ReloadAndProfileConfigPersistence,
-} from './backend/types';
+  ProfilingSettings,
+  SerializedElement as SerializedElementBackend,
+} from 'react-devtools-shared/src/backend/types';
+import {isSynchronousXHRSupported} from './backend/utils';
 
 // $FlowFixMe[method-unbinding]
 const hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -990,34 +990,30 @@ export function getIsReloadAndProfileSupported(): boolean {
   return isBackendStorageAPISupported && isSynchronousXHRSupported();
 }
 
-export const defaultReloadAndProfileConfigPersistence: ReloadAndProfileConfigPersistence =
-  {
-    setReloadAndProfileConfig({
-      shouldReloadAndProfile,
-      recordChangeDescriptions,
-    }): void {
-      if (shouldReloadAndProfile != null) {
-        sessionStorageSetItem(
-          SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
-          shouldReloadAndProfile ? 'true' : 'false',
-        );
-      }
-      if (recordChangeDescriptions != null) {
-        sessionStorageSetItem(
-          SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
-          recordChangeDescriptions ? 'true' : 'false',
-        );
-      }
-    },
-    getReloadAndProfileConfig(): ReloadAndProfileConfig {
-      return {
-        shouldReloadAndProfile:
-          sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) ===
-          'true',
-        recordChangeDescriptions:
-          sessionStorageGetItem(
-            SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
-          ) === 'true',
-      };
-    },
+// Expected to be used only by browser extension and react-devtools-inline
+export function getIfReloadedAndProfiling(): boolean {
+  return (
+    sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true'
+  );
+}
+
+export function getProfilingSettings(): ProfilingSettings {
+  return {
+    recordChangeDescriptions:
+      sessionStorageGetItem(SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY) ===
+      'true',
   };
+}
+
+export function onReloadAndProfile(recordChangeDescriptions: boolean): void {
+  sessionStorageSetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY, 'true');
+  sessionStorageSetItem(
+    SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
+    recordChangeDescriptions ? 'true' : 'false',
+  );
+}
+
+export function onReloadAndProfileFlagsReset(): void {
+  sessionStorageRemoveItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY);
+  sessionStorageRemoveItem(SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY);
+}

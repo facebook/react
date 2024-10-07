@@ -16,7 +16,7 @@ import type {
   RendererInterface,
   DevToolsBackend,
   DevToolsHookSettings,
-  ReloadAndProfileConfig,
+  ProfilingSettings,
 } from './backend/types';
 
 import {
@@ -27,7 +27,6 @@ import {
 import attachRenderer from './attachRenderer';
 import formatConsoleArguments from 'react-devtools-shared/src/backend/utils/formatConsoleArguments';
 import formatWithStyles from 'react-devtools-shared/src/backend/utils/formatWithStyles';
-import {defaultReloadAndProfileConfigPersistence} from './utils';
 
 // React's custom built component stack strings match "\s{4}in"
 // Chrome's prefix matches "\s{4}at"
@@ -51,12 +50,17 @@ function areStackTracesEqual(a: string, b: string): boolean {
 
 const targetConsole: Object = console;
 
+const defaultProfilingSettings: ProfilingSettings = {
+  recordChangeDescriptions: false,
+};
+
 export function installHook(
   target: any,
   maybeSettingsOrSettingsPromise?:
     | DevToolsHookSettings
     | Promise<DevToolsHookSettings>,
-  reloadAndProfileConfig?: ReloadAndProfileConfig = defaultReloadAndProfileConfigPersistence.getReloadAndProfileConfig(),
+  shouldStartProfilingNow: boolean = false,
+  profilingSettings: ProfilingSettings = defaultProfilingSettings,
 ): DevToolsHook | null {
   if (target.hasOwnProperty('__REACT_DEVTOOLS_GLOBAL_HOOK__')) {
     return null;
@@ -195,6 +199,8 @@ export function installHook(
     } catch (err) {}
   }
 
+  // TODO: isProfiling should be stateful, and we should update it once profiling is finished
+  const isProfiling = shouldStartProfilingNow;
   let uidCounter = 0;
   function inject(renderer: ReactRenderer): number {
     const id = ++uidCounter;
@@ -215,7 +221,8 @@ export function installHook(
       id,
       renderer,
       target,
-      reloadAndProfileConfig,
+      isProfiling,
+      profilingSettings,
     );
     if (rendererInterface != null) {
       hook.rendererInterfaces.set(id, rendererInterface);

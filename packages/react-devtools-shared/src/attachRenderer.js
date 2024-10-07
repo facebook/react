@@ -12,8 +12,8 @@ import type {
   RendererInterface,
   DevToolsHook,
   RendererID,
+  ProfilingSettings,
 } from 'react-devtools-shared/src/backend/types';
-import type {ReloadAndProfileConfig} from './backend/types';
 
 import {attach as attachFlight} from 'react-devtools-shared/src/backend/flight/renderer';
 import {attach as attachFiber} from 'react-devtools-shared/src/backend/fiber/renderer';
@@ -30,7 +30,8 @@ export default function attachRenderer(
   id: RendererID,
   renderer: ReactRenderer,
   global: Object,
-  reloadAndProfileConfig: ReloadAndProfileConfig,
+  shouldStartProfilingNow: boolean,
+  profilingSettings: ProfilingSettings,
 ): RendererInterface | void {
   // only attach if the renderer is compatible with the current version of the backend
   if (!isMatchingRender(renderer.reconcilerVersion || renderer.version)) {
@@ -55,7 +56,8 @@ export default function attachRenderer(
         id,
         renderer,
         global,
-        reloadAndProfileConfig,
+        shouldStartProfilingNow,
+        profilingSettings,
       );
     } else if (renderer.ComponentTree) {
       // react-dom v15
