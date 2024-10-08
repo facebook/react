@@ -54,8 +54,11 @@ export default function ReloadAndProfileButton({
     // For now, let's just skip doing it entirely to avoid paying snapshot costs for data we don't need.
     // startProfiling();
 
-    bridge.send('reloadAndProfile', recordChangeDescriptions);
-  }, [bridge, recordChangeDescriptions]);
+    bridge.send('reloadAndProfile', {
+      recordChangeDescriptions,
+      recordTimeline: store.supportsTimeline,
+    });
+  }, [bridge, recordChangeDescriptions, store]);
 
   if (!supportsReloadAndProfile) {
     return null;

@@ -38,6 +38,7 @@ import {
   LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
   SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
   SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
+  SESSION_STORAGE_RECORD_TIMELINE_KEY,
 } from './constants';
 import {
   ComponentFilterElementType,
@@ -1002,18 +1003,28 @@ export function getProfilingSettings(): ProfilingSettings {
     recordChangeDescriptions:
       sessionStorageGetItem(SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY) ===
       'true',
+    recordTimeline:
+      sessionStorageGetItem(SESSION_STORAGE_RECORD_TIMELINE_KEY) === 'true',
   };
 }
 
-export function onReloadAndProfile(recordChangeDescriptions: boolean): void {
+export function onReloadAndProfile(
+  recordChangeDescriptions: boolean,
+  recordTimeline: boolean,
+): void {
   sessionStorageSetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY, 'true');
   sessionStorageSetItem(
     SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
     recordChangeDescriptions ? 'true' : 'false',
+  );
+  sessionStorageSetItem(
+    SESSION_STORAGE_RECORD_TIMELINE_KEY,
+    recordTimeline ? 'true' : 'false',
   );
 }
 
 export function onReloadAndProfileFlagsReset(): void {
   sessionStorageRemoveItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY);
   sessionStorageRemoveItem(SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY);
+  sessionStorageRemoveItem(SESSION_STORAGE_RECORD_TIMELINE_KEY);
 }

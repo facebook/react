@@ -52,6 +52,7 @@ const targetConsole: Object = console;
 
 const defaultProfilingSettings: ProfilingSettings = {
   recordChangeDescriptions: false,
+  recordTimeline: false,
 };
 
 export function installHook(

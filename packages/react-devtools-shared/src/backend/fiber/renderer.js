@@ -5035,6 +5035,7 @@ export function attach(
   let isProfiling: boolean = false;
   let profilingStartTime: number = 0;
   let recordChangeDescriptions: boolean = false;
+  let recordTimeline: boolean = false;
   let rootToCommitProfilingMetadataMap: CommitProfilingMetadataMap | null =
     null;
 
@@ -5176,12 +5177,16 @@ export function attach(
     }
   }
 
-  function startProfiling(shouldRecordChangeDescriptions: boolean) {
+  function startProfiling(
+    shouldRecordChangeDescriptions: boolean,
+    shouldRecordTimeline: boolean,
+  ) {
     if (isProfiling) {
       return;
     }
 
     recordChangeDescriptions = shouldRecordChangeDescriptions;
+    recordTimeline = shouldRecordTimeline;
 
     // Capture initial values as of the time profiling starts.
     // It's important we snapshot both the durations and the id-to-root map,
@@ -5212,7 +5217,7 @@ export function attach(
     rootToCommitProfilingMetadataMap = new Map();
 
     if (toggleProfilingStatus !== null) {
-      toggleProfilingStatus(true);
+      toggleProfilingStatus(true, recordTimeline);
     }
   }
 
@@ -5221,13 +5226,18 @@ export function attach(
     recordChangeDescriptions = false;
 
     if (toggleProfilingStatus !== null) {
-      toggleProfilingStatus(false);
+      toggleProfilingStatus(false, recordTimeline);
     }
+
+    recordTimeline = false;
   }
 
   // Automatically start profiling so that we don't miss timing info from initial "mount".
   if (shouldStartProfilingNow) {
-    startProfiling(profilingSettings.recordChangeDescriptions);
+    startProfiling(
+      profilingSettings.recordChangeDescriptions,
+      profilingSettings.recordTimeline,
+    );
   }
 
   function getNearestFiber(devtoolsInstance: DevToolsInstance): null | Fiber {
