@@ -166,7 +166,7 @@ export default function Element({data, index, style}: Props): React.Node {
               className={styles.KeyValue}
               title={key}
               onDoubleClick={handleKeyDoubleClick}>
-              {key}
+              <pre>{key}</pre>
             </span>
             "
           </Fragment>
