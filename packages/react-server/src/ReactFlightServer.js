@@ -137,6 +137,9 @@ import binaryToComparableString from 'shared/binaryToComparableString';
 
 import {SuspenseException, getSuspendedThenable} from './ReactFlightThenable';
 
+// DEV-only set containing internal objects that should not be limited and turned into getters.
+const doNotLimit: WeakSet<Reference> = __DEV__ ? new WeakSet() : (null: any);
+
 function defaultFilterStackFrame(
   filename: string,
   functionName: string,
@@ -2147,6 +2150,22 @@ function serializeConsoleMap(
 ): string {
   // Like serializeMap but for renderConsoleValue.
   const entries = Array.from(map);
+  // The Map itself doesn't take up any space but the outlined object does.
+  counter.objectLimit++;
+  for (let i = 0; i < entries.length; i++) {
+    // Outline every object entry in case we run out of space to serialize them.
+    // Because we can't mark these values as limited.
+    const entry = entries[i];
+    doNotLimit.add(entry);
+    const key = entry[0];
+    const value = entry[1];
+    if (typeof key === 'object' && key !== null) {
+      doNotLimit.add(key);
+    }
+    if (typeof value === 'object' && value !== null) {
+      doNotLimit.add(value);
+    }
+  }
   const id = outlineConsoleValue(request, counter, entries);
   return '$Q' + id.toString(16);
 }
@@ -2158,6 +2177,16 @@ function serializeConsoleSet(
 ): string {
   // Like serializeMap but for renderConsoleValue.
   const entries = Array.from(set);
+  // The Set itself doesn't take up any space but the outlined object does.
+  counter.objectLimit++;
+  for (let i = 0; i < entries.length; i++) {
+    // Outline every object entry in case we run out of space to serialize them.
+    // Because we can't mark these values as limited.
+    const entry = entries[i];
+    if (typeof entry === 'object' && entry !== null) {
+      doNotLimit.add(entry);
+    }
+  }
   const id = outlineConsoleValue(request, counter, entries);
   return '$W' + id.toString(16);
 }
@@ -3366,6 +3395,11 @@ function renderConsoleValue(
     return null;
   }
 
+  // Special Symbol, that's very common.
+  if (value === REACT_ELEMENT_TYPE) {
+    return '$';
+  }
+
   if (typeof value === 'object') {
     if (isClientReference(value)) {
       // We actually have this value on the client so we could import it.
@@ -3397,7 +3431,7 @@ function renderConsoleValue(
       return existingReference;
     }
 
-    if (counter.objectLimit <= 0) {
+    if (counter.objectLimit <= 0 && !doNotLimit.has(value)) {
       // We've reached our max number of objects to serialize across the wire so we serialize this
       // as a marker so that the client can error when this is accessed by the console.
       return serializeLimitedObject();
@@ -3417,13 +3451,12 @@ function renderConsoleValue(
           if (element._debugStack != null) {
             // Outline the debug stack so that it doesn't get cut off.
             debugStack = filterStackTrace(request, element._debugStack, 1);
-            const stackId = outlineConsoleValue(
-              request,
-              {objectLimit: debugStack.length + 2},
-              debugStack,
-            );
-            request.writtenObjects.set(debugStack, serializeByValueID(stackId));
+            doNotLimit.add(debugStack);
+            for (let i = 0; i < debugStack.length; i++) {
+              doNotLimit.add(debugStack[i]);
+            }
           }
+          doNotLimit.add(element.props);
           return [
             REACT_ELEMENT_TYPE,
             element.type,
@@ -3653,6 +3686,11 @@ function outlineConsoleValue(
     throw new Error(
       'outlineConsoleValue should never be called in production mode. This is a bug in React.',
     );
+  }
+
+  if (typeof model === 'object' && model !== null) {
+    // We can't limit outlined values.
+    doNotLimit.add(model);
   }
 
   function replacer(
