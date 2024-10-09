@@ -661,6 +661,18 @@ describe('ReactFlight', () => {
       `);
   });
 
+  it('can transport Date as a top-level value', async () => {
+    const date = new Date(0);
+    const transport = ReactNoopFlightServer.render(date);
+
+    let readValue;
+    await act(async () => {
+      readValue = await ReactNoopFlightClient.read(transport);
+    });
+
+    expect(readValue).toEqual(date);
+  });
+
   it('can transport Error objects as values', async () => {
     function ComponentClient({prop}) {
       return `
