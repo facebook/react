@@ -3362,16 +3362,6 @@ function renderConsoleValue(
   parentPropertyName: string,
   value: ReactClientValue,
 ): ReactJSONValue {
-  // Make sure that `parent[parentPropertyName]` wasn't JSONified before `value` was passed to us
-  // $FlowFixMe[incompatible-use]
-  const originalValue = parent[parentPropertyName];
-  if (
-    typeof originalValue === 'object' &&
-    originalValue !== value &&
-    !(originalValue instanceof Date)
-  ) {
-  }
-
   if (value === null) {
     return null;
   }
@@ -3578,6 +3568,9 @@ function renderConsoleValue(
   if (typeof value === 'string') {
     if (value[value.length - 1] === 'Z') {
       // Possibly a Date, whose toJSON automatically calls toISOString
+      // Make sure that `parent[parentPropertyName]` wasn't JSONified before `value` was passed to us
+      // $FlowFixMe[incompatible-use]
+      const originalValue = parent[parentPropertyName];
       if (originalValue instanceof Date) {
         return serializeDateFromDateJSON(value);
       }
