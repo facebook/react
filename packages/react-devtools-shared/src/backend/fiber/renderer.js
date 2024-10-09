@@ -104,7 +104,6 @@ import {
   supportsOwnerStacks,
   supportsConsoleTasks,
 } from './DevToolsFiberComponentStack';
-import type {ReloadAndProfileConfig} from '../types';
 
 // $FlowFixMe[method-unbinding]
 const toString = Object.prototype.toString;
@@ -136,6 +135,7 @@ import type {
   WorkTagMap,
   CurrentDispatcherRef,
   LegacyDispatcherRef,
+  ProfilingSettings,
 } from '../types';
 import type {
   ComponentFilter,
@@ -864,7 +864,8 @@ export function attach(
   rendererID: number,
   renderer: ReactRenderer,
   global: Object,
-  reloadAndProfileConfig: ReloadAndProfileConfig,
+  shouldStartProfilingNow: boolean,
+  profilingSettings: ProfilingSettings,
 ): RendererInterface {
   // Newer versions of the reconciler package also specific reconciler version.
   // If that version number is present, use it.
@@ -5225,10 +5226,8 @@ export function attach(
   }
 
   // Automatically start profiling so that we don't miss timing info from initial "mount".
-  if (reloadAndProfileConfig.shouldReloadAndProfile) {
-    const shouldRecordChangeDescriptions =
-      reloadAndProfileConfig.recordChangeDescriptions;
-    startProfiling(shouldRecordChangeDescriptions);
+  if (shouldStartProfilingNow) {
+    startProfiling(profilingSettings.recordChangeDescriptions);
   }
 
   function getNearestFiber(devtoolsInstance: DevToolsInstance): null | Fiber {

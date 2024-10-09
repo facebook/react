@@ -26,11 +26,9 @@ import type {
   RendererID,
   RendererInterface,
   DevToolsHookSettings,
-  ReloadAndProfileConfigPersistence,
 } from './types';
 import type {ComponentFilter} from 'react-devtools-shared/src/frontend/types';
 import {isReactNativeEnvironment} from './utils';
-import {defaultReloadAndProfileConfigPersistence} from '../utils';
 import {
   sessionStorageGetItem,
   sessionStorageRemoveItem,
@@ -151,33 +149,21 @@ export default class Agent extends EventEmitter<{
 }> {
   _bridge: BackendBridge;
   _isProfiling: boolean = false;
-  _recordChangeDescriptions: boolean = false;
   _rendererInterfaces: {[key: RendererID]: RendererInterface, ...} = {};
   _persistedSelection: PersistedSelection | null = null;
   _persistedSelectionMatch: PathMatch | null = null;
   _traceUpdatesEnabled: boolean = false;
-  _reloadAndProfileConfigPersistence: ReloadAndProfileConfigPersistence;
+  _onReloadAndProfile: ((recordChangeDescriptions: boolean) => void) | void;
 
   constructor(
     bridge: BackendBridge,
-    reloadAndProfileConfigPersistence?: ReloadAndProfileConfigPersistence = defaultReloadAndProfileConfigPersistence,
+    isProfiling: boolean = false,
+    onReloadAndProfile?: (recordChangeDescriptions: boolean) => void,
   ) {
     super();
 
-    this._reloadAndProfileConfigPersistence = reloadAndProfileConfigPersistence;
-    const {getReloadAndProfileConfig, setReloadAndProfileConfig} =
-      reloadAndProfileConfigPersistence;
-    const reloadAndProfileConfig = getReloadAndProfileConfig();
-    if (reloadAndProfileConfig.shouldReloadAndProfile) {
-      this._recordChangeDescriptions =
-        reloadAndProfileConfig.recordChangeDescriptions;
-      this._isProfiling = true;
-
-      setReloadAndProfileConfig({
-        shouldReloadAndProfile: false,
-        recordChangeDescriptions: false,
-      });
-    }
+    this._isProfiling = isProfiling;
+    this._onReloadAndProfile = onReloadAndProfile;
 
     const persistedSelectionString = sessionStorageGetItem(
       SESSION_STORAGE_LAST_SELECTION_KEY,
@@ -674,10 +660,9 @@ export default class Agent extends EventEmitter<{
 
   reloadAndProfile: (recordChangeDescriptions: boolean) => void =
     recordChangeDescriptions => {
-      this._reloadAndProfileConfigPersistence.setReloadAndProfileConfig({
-        shouldReloadAndProfile: true,
-        recordChangeDescriptions,
-      });
+      if (typeof this._onReloadAndProfile === 'function') {
+        this._onReloadAndProfile(recordChangeDescriptions);
+      }
 
       // This code path should only be hit if the shell has explicitly told the Store that it supports profiling.
       // In that case, the shell must also listen for this specific message to know when it needs to reload the app.
@@ -757,7 +742,6 @@ export default class Agent extends EventEmitter<{
 
   startProfiling: (recordChangeDescriptions: boolean) => void =
     recordChangeDescriptions => {
-      this._recordChangeDescriptions = recordChangeDescriptions;
       this._isProfiling = true;
       for (const rendererID in this._rendererInterfaces) {
         const renderer = ((this._rendererInterfaces[
@@ -770,7 +754,6 @@ export default class Agent extends EventEmitter<{
 
   stopProfiling: () => void = () => {
     this._isProfiling = false;
-    this._recordChangeDescriptions = false;
     for (const rendererID in this._rendererInterfaces) {
       const renderer = ((this._rendererInterfaces[
         (rendererID: any)

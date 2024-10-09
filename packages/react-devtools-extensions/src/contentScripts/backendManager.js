@@ -14,6 +14,11 @@ import type {
 import {hasAssignedBackend} from 'react-devtools-shared/src/backend/utils';
 import {COMPACT_VERSION_NAME} from 'react-devtools-extensions/src/utils';
 import {getIsReloadAndProfileSupported} from 'react-devtools-shared/src/utils';
+import {
+  getIfReloadedAndProfiling,
+  onReloadAndProfile,
+  onReloadAndProfileFlagsReset,
+} from 'react-devtools-shared/src/utils';
 
 let welcomeHasInitialized = false;
 const requiredBackends = new Set<string>();
@@ -140,7 +145,15 @@ function activateBackend(version: string, hook: DevToolsHook) {
     },
   });
 
-  const agent = new Agent(bridge);
+  const agent = new Agent(
+    bridge,
+    getIfReloadedAndProfiling(),
+    onReloadAndProfile,
+  );
+  // Agent read flags successfully, we can count it as successful launch
+  // Clean up flags, so that next reload won't start profiling
+  onReloadAndProfileFlagsReset();
+
   agent.addListener('shutdown', () => {
     // If we received 'shutdown' from `agent`, we assume the `bridge` is already shutting down,
     // and that caused the 'shutdown' event on the `agent`, so we don't need to call `bridge.shutdown()` here.
