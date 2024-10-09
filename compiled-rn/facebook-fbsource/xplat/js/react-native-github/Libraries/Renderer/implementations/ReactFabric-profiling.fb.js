@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e3aedb4e2c36480398466a64e2d2362f>>
+ * @generated SignedSource<<4a78b6ea09bf2b7f86be9dca417cfa6b>>
  */
 
 "use strict";
@@ -22,7 +22,6 @@ var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/R
   React = require("react"),
   isArrayImpl = Array.isArray,
   alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
-  enableAddPropertiesFastPath = dynamicFlagsUntyped.enableAddPropertiesFastPath,
   enableFabricCompleteRootInCommitPhase =
     dynamicFlagsUntyped.enableFabricCompleteRootInCommitPhase,
   enableHiddenSubtreeInsertionEffectCleanup =
@@ -1559,11 +1558,6 @@ function fastAddProperties(payload, props, validAttributes) {
     }
   }
   return payload;
-}
-function create(props, validAttributes) {
-  return enableAddPropertiesFastPath
-    ? fastAddProperties(null, props, validAttributes)
-    : diffProperties(null, emptyObject$1, props, validAttributes);
 }
 function batchedUpdatesImpl(fn, bookkeeping) {
   return fn(bookkeeping);
@@ -7625,7 +7619,11 @@ function completeWork(current, workInProgress, renderLanes) {
         current = nextReactTag;
         nextReactTag += 2;
         renderLanes = getViewConfigForType(renderLanes);
-        newChildSet = create(newProps, renderLanes.validAttributes);
+        newChildSet = fastAddProperties(
+          null,
+          newProps,
+          renderLanes.validAttributes
+        );
         oldProps = createNode(
           current,
           renderLanes.uiViewClassName,
@@ -11435,13 +11433,14 @@ function resolveUpdatePriority() {
 var scheduleTimeout = setTimeout,
   cancelTimeout = clearTimeout;
 function cloneHiddenInstance(instance) {
-  var node = instance.node,
-    updatePayload = create(
-      { style: { display: "none" } },
-      instance.canonical.viewConfig.validAttributes
-    );
+  var node = instance.node;
+  var JSCompiler_inline_result = fastAddProperties(
+    null,
+    { style: { display: "none" } },
+    instance.canonical.viewConfig.validAttributes
+  );
   return {
-    node: cloneNodeWithNewProps(node, updatePayload),
+    node: cloneNodeWithNewProps(node, JSCompiler_inline_result),
     canonical: instance.canonical
   };
 }
@@ -11530,11 +11529,11 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1258 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-b78a7f2f-20241007",
+    version: "19.0.0-native-fb-de43d560-20241009",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromNode,
-    reconcilerVersion: "19.0.0-native-fb-b78a7f2f-20241007"
+    reconcilerVersion: "19.0.0-native-fb-de43d560-20241009"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1258.rendererConfig = extraDevToolsConfig);
@@ -11554,16 +11553,16 @@ internals$jscomp$inline_1258.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1528 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1532 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1528.isDisabled &&
-    hook$jscomp$inline_1528.supportsFiber
+    !hook$jscomp$inline_1532.isDisabled &&
+    hook$jscomp$inline_1532.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1528.inject(
+      (rendererID = hook$jscomp$inline_1532.inject(
         internals$jscomp$inline_1258
       )),
-        (injectedHook = hook$jscomp$inline_1528);
+        (injectedHook = hook$jscomp$inline_1532);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

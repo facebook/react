@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<5e2acd2f6d2103d57d72bced227b5ea6>>
+ * @generated SignedSource<<0fe6afcc02f97c62359b2f284d84bb0e>>
  */
 
 "use strict";
@@ -1327,11 +1327,6 @@ __DEV__ &&
         }
       }
       return payload;
-    }
-    function create(props, validAttributes) {
-      return enableAddPropertiesFastPath
-        ? fastAddProperties(null, props, validAttributes)
-        : diffProperties(null, emptyObject$1, props, validAttributes);
     }
     function batchedUpdates$1(fn, bookkeeping) {
       if (isInsideEventHandler) return fn(bookkeeping);
@@ -9310,7 +9305,11 @@ __DEV__ &&
                 ReactNativePrivateInterface.deepFreezeAndThrowOnMutationInDev(
                   newProps[keepChildren]
                 );
-            keepChildren = create(newProps, renderLanes.validAttributes);
+            keepChildren = fastAddProperties(
+              null,
+              newProps,
+              renderLanes.validAttributes
+            );
             keepChildren = createNode(
               current,
               renderLanes.uiViewClassName,
@@ -14131,11 +14130,12 @@ __DEV__ &&
       return DefaultEventPriority;
     }
     function cloneHiddenInstance(instance) {
-      var node = instance.node,
-        updatePayload = create(
-          { style: { display: "none" } },
-          instance.canonical.viewConfig.validAttributes
-        );
+      var node = instance.node;
+      var updatePayload = fastAddProperties(
+        null,
+        { style: { display: "none" } },
+        instance.canonical.viewConfig.validAttributes
+      );
       return {
         node: cloneNodeWithNewProps(node, updatePayload),
         canonical: instance.canonical
@@ -14183,8 +14183,6 @@ __DEV__ &&
       suppressWarning = !1,
       isArrayImpl = Array.isArray,
       alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
-      enableAddPropertiesFastPath =
-        dynamicFlagsUntyped.enableAddPropertiesFastPath,
       enableFabricCompleteRootInCommitPhase =
         dynamicFlagsUntyped.enableFabricCompleteRootInCommitPhase,
       enableHiddenSubtreeInsertionEffectCleanup =
@@ -16930,11 +16928,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-b78a7f2f-20241007",
+        version: "19.0.0-native-fb-de43d560-20241009",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-native-fb-b78a7f2f-20241007"
+        reconcilerVersion: "19.0.0-native-fb-de43d560-20241009"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
