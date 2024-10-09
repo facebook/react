@@ -89,7 +89,6 @@ export const enableReactTestRendererWarning = false;
 export const disableLegacyMode = true;
 
 export const disableDefaultPropsExceptForClasses = false;
-export const enableAddPropertiesFastPath = false;
 
 export const renameElementSymbol = false;
 
