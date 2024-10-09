@@ -97,7 +97,10 @@ export function setPerformanceMock_ONLY_FOR_TESTING(
 }
 
 export type GetTimelineData = () => TimelineData | null;
-export type ToggleProfilingStatus = (value: boolean) => void;
+export type ToggleProfilingStatus = (
+  value: boolean,
+  recordTimeline?: boolean,
+) => void;
 
 type Response = {
   getTimelineData: GetTimelineData,
@@ -839,7 +842,10 @@ export function createProfilingHooks({
     }
   }
 
-  function toggleProfilingStatus(value: boolean) {
+  function toggleProfilingStatus(
+    value: boolean,
+    recordTimeline: boolean = false,
+  ) {
     if (isProfiling !== value) {
       isProfiling = value;
 
@@ -875,34 +881,45 @@ export function createProfilingHooks({
         currentReactComponentMeasure = null;
         currentReactMeasuresStack = [];
         currentFiberStacks = new Map();
-        currentTimelineData = {
-          // Session wide metadata; only collected once.
-          internalModuleSourceToRanges,
-          laneToLabelMap: laneToLabelMap || new Map(),
-          reactVersion,
+        if (recordTimeline) {
+          currentTimelineData = {
+            // Session wide metadata; only collected once.
+            internalModuleSourceToRanges,
+            laneToLabelMap: laneToLabelMap || new Map(),
+            reactVersion,
 
-          // Data logged by React during profiling session.
-          componentMeasures: [],
-          schedulingEvents: [],
-          suspenseEvents: [],
-          thrownErrors: [],
+            // Data logged by React during profiling session.
+            componentMeasures: [],
+            schedulingEvents: [],
+            suspenseEvents: [],
+            thrownErrors: [],
 
-          // Data inferred based on what React logs.
-          batchUIDToMeasuresMap: new Map(),
-          duration: 0,
-          laneToReactMeasureMap,
-          startTime: 0,
+            // Data inferred based on what React logs.
+            batchUIDToMeasuresMap: new Map(),
+            duration: 0,
+            laneToReactMeasureMap,
+            startTime: 0,
 
-          // Data only available in Chrome profiles.
-          flamechart: [],
-          nativeEvents: [],
-          networkMeasures: [],
-          otherUserTimingMarks: [],
-          snapshots: [],
-          snapshotHeight: 0,
-        };
+            // Data only available in Chrome profiles.
+            flamechart: [],
+            nativeEvents: [],
+            networkMeasures: [],
+            otherUserTimingMarks: [],
+            snapshots: [],
+            snapshotHeight: 0,
+          };
+        }
         nextRenderShouldStartNewBatch = true;
       } else {
+        // This is __EXPENSIVE__.
+        // We could end up with hundreds of state updated, and for each one of them
+        // would try to create a component stack with possibly hundreds of Fibers.
+        // Creating a cache of component stacks won't help, generating a single stack is already expensive enough.
+        // We should find a way to lazily generate component stacks on demand, when user inspects a specific event.
+        // If we succeed with moving React DevTools Timeline Profiler to Performance panel, then Timeline Profiler would probably be removed.
+        // If not, then once enableOwnerStacks is adopted, revisit this again and cache component stacks per Fiber,
+        // but only return them when needed, sending hundreds of component stacks is beyond the Bridge's bandwidth.
+
         // Postprocess Profile data
         if (currentTimelineData !== null) {
           currentTimelineData.schedulingEvents.forEach(event => {

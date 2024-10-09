@@ -153,12 +153,17 @@ export default class Agent extends EventEmitter<{
   _persistedSelection: PersistedSelection | null = null;
   _persistedSelectionMatch: PathMatch | null = null;
   _traceUpdatesEnabled: boolean = false;
-  _onReloadAndProfile: ((recordChangeDescriptions: boolean) => void) | void;
+  _onReloadAndProfile:
+    | ((recordChangeDescriptions: boolean, recordTimeline: boolean) => void)
+    | void;
 
   constructor(
     bridge: BackendBridge,
     isProfiling: boolean = false,
-    onReloadAndProfile?: (recordChangeDescriptions: boolean) => void,
+    onReloadAndProfile?: (
+      recordChangeDescriptions: boolean,
+      recordTimeline: boolean,
+    ) => void,
   ) {
     super();
 
@@ -658,17 +663,19 @@ export default class Agent extends EventEmitter<{
     this._bridge.send('isReloadAndProfileSupportedByBackend', true);
   };
 
-  reloadAndProfile: (recordChangeDescriptions: boolean) => void =
-    recordChangeDescriptions => {
-      if (typeof this._onReloadAndProfile === 'function') {
-        this._onReloadAndProfile(recordChangeDescriptions);
-      }
+  reloadAndProfile: ({
+    recordChangeDescriptions: boolean,
+    recordTimeline: boolean,
+  }) => void = ({recordChangeDescriptions, recordTimeline}) => {
+    if (typeof this._onReloadAndProfile === 'function') {
+      this._onReloadAndProfile(recordChangeDescriptions, recordTimeline);
+    }
 
-      // This code path should only be hit if the shell has explicitly told the Store that it supports profiling.
-      // In that case, the shell must also listen for this specific message to know when it needs to reload the app.
-      // The agent can't do this in a way that is renderer agnostic.
-      this._bridge.send('reloadAppForProfiling');
-    };
+    // This code path should only be hit if the shell has explicitly told the Store that it supports profiling.
+    // In that case, the shell must also listen for this specific message to know when it needs to reload the app.
+    // The agent can't do this in a way that is renderer agnostic.
+    this._bridge.send('reloadAppForProfiling');
+  };
 
   renamePath: RenamePathParams => void = ({
     hookID,
@@ -740,17 +747,19 @@ export default class Agent extends EventEmitter<{
     this.removeAllListeners();
   };
 
-  startProfiling: (recordChangeDescriptions: boolean) => void =
-    recordChangeDescriptions => {
-      this._isProfiling = true;
-      for (const rendererID in this._rendererInterfaces) {
-        const renderer = ((this._rendererInterfaces[
-          (rendererID: any)
-        ]: any): RendererInterface);
-        renderer.startProfiling(recordChangeDescriptions);
-      }
-      this._bridge.send('profilingStatus', this._isProfiling);
-    };
+  startProfiling: ({
+    recordChangeDescriptions: boolean,
+    recordTimeline: boolean,
+  }) => void = ({recordChangeDescriptions, recordTimeline}) => {
+    this._isProfiling = true;
+    for (const rendererID in this._rendererInterfaces) {
+      const renderer = ((this._rendererInterfaces[
+        (rendererID: any)
+      ]: any): RendererInterface);
+      renderer.startProfiling(recordChangeDescriptions, recordTimeline);
+    }
+    this._bridge.send('profilingStatus', this._isProfiling);
+  };
 
   stopProfiling: () => void = () => {
     this._isProfiling = false;

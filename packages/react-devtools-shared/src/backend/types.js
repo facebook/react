@@ -419,7 +419,10 @@ export type RendererInterface = {
   renderer: ReactRenderer | null,
   setTraceUpdatesEnabled: (enabled: boolean) => void,
   setTrackedPath: (path: Array<PathFrame> | null) => void,
-  startProfiling: (recordChangeDescriptions: boolean) => void,
+  startProfiling: (
+    recordChangeDescriptions: boolean,
+    recordTimeline: boolean,
+  ) => void,
   stopProfiling: () => void,
   storeAsGlobal: (
     id: number,
@@ -487,6 +490,7 @@ export type DevToolsBackend = {
 
 export type ProfilingSettings = {
   recordChangeDescriptions: boolean,
+  recordTimeline: boolean,
 };
 
 export type DevToolsHook = {
