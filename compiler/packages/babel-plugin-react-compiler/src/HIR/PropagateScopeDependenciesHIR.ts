@@ -16,6 +16,8 @@ import {
   DeclarationId,
   areEqualPaths,
   IdentifierId,
+  BasicBlock,
+  BlockId,
 } from './HIR';
 import {
   collectHoistablePropertyLoads,
@@ -37,7 +39,11 @@ import {collectOptionalChainSidemap} from './CollectOptionalChainDependencies';
 export function propagateScopeDependenciesHIR(fn: HIRFunction): void {
   const usedOutsideDeclaringScope =
     findTemporariesUsedOutsideDeclaringScope(fn);
-  const temporaries = collectTemporariesSidemap(fn, usedOutsideDeclaringScope);
+  const temporaries = collectTemporariesSidemap(
+    fn,
+    usedOutsideDeclaringScope,
+    new Map(),
+  );
   const {
     temporariesReadInOptional,
     processedInstrsInOptional,
@@ -214,8 +220,9 @@ function findTemporariesUsedOutsideDeclaringScope(
 export function collectTemporariesSidemap(
   fn: HIRFunction,
   usedOutsideDeclaringScope: ReadonlySet<DeclarationId>,
+  temporaries: Map<IdentifierId, ReactiveScopeDependency>,
+  isInnerFn: boolean = false,
 ): ReadonlyMap<IdentifierId, ReactiveScopeDependency> {
-  const temporaries = new Map<IdentifierId, ReactiveScopeDependency>();
   for (const [_, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
       const {value, lvalue} = instr;
@@ -224,23 +231,54 @@ export function collectTemporariesSidemap(
       );
 
       if (value.kind === 'PropertyLoad' && !usedOutside) {
-        const property = getProperty(
-          value.object,
-          value.property,
-          false,
-          temporaries,
-        );
-        temporaries.set(lvalue.identifier.id, property);
+        if (isInnerFn) {
+          const source = temporaries.get(value.object.identifier.id);
+          if (source) {
+            // only add inner function loads if their source is valid
+            const property = getProperty(
+              value.object,
+              value.property,
+              false,
+              temporaries,
+            );
+            temporaries.set(lvalue.identifier.id, property);
+          }
+        } else {
+          const property = getProperty(
+            value.object,
+            value.property,
+            false,
+            temporaries,
+          );
+          temporaries.set(lvalue.identifier.id, property);
+        }
       } else if (
         value.kind === 'LoadLocal' &&
         lvalue.identifier.name == null &&
         value.place.identifier.name !== null &&
         !usedOutside
       ) {
-        temporaries.set(lvalue.identifier.id, {
-          identifier: value.place.identifier,
-          path: [],
-        });
+        if (
+          !isInnerFn ||
+          fn.context.some(
+            context => context.identifier.id === value.place.identifier.id,
+          )
+        ) {
+          temporaries.set(lvalue.identifier.id, {
+            identifier: value.place.identifier,
+            path: [],
+          });
+        }
+      } else if (
+        value.kind === 'FunctionExpression' ||
+        value.kind === 'ObjectMethod'
+      ) {
+        collectTemporariesSidemap(
+          value.loweredFunc.func,
+          usedOutsideDeclaringScope,
+          temporaries,
+          true,
+        );
       }
     }
   }
@@ -310,6 +348,8 @@ class Context {
   #temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>;
   #temporariesUsedOutsideScope: ReadonlySet<DeclarationId>;
 
+  innerFnContext: HIRFunction | null = null;
+
   constructor(
     temporariesUsedOutsideScope: ReadonlySet<DeclarationId>,
     temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
@@ -374,6 +414,14 @@ class Context {
 
   // Checks if identifier is a valid dependency in the current scope
   #checkValidDependency(maybeDependency: ReactiveScopeDependency): boolean {
+    if (
+      this.innerFnContext != null &&
+      !this.innerFnContext.context.some(
+        context => context.identifier.id === maybeDependency.identifier.id,
+      )
+    ) {
+      return false;
+    }
     // ref.current access is not a valid dep
     if (
       isUseRefType(maybeDependency.identifier) &&
@@ -575,7 +623,10 @@ function collectDependencies(
   fn: HIRFunction,
   usedOutsideDeclaringScope: ReadonlySet<DeclarationId>,
   temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
-  processedInstrsInOptional: ReadonlySet<InstructionId>,
+  processedInstrsInOptional: ReadonlyMap<
+    HIRFunction,
+    ReadonlySet<InstructionId>
+  >,
 ): Map<ReactiveScope, Array<ReactiveScopeDependency>> {
   const context = new Context(usedOutsideDeclaringScope, temporaries);
 
@@ -594,8 +645,13 @@ function collectDependencies(
   }
 
   const scopeTraversal = new ScopeBlockTraversal();
+  // TODO: make this less hacky
+  const st: Array<[HIRFunction, BlockId, BasicBlock]> = [...fn.body.blocks].map(
+    ([id, block]) => [fn, id, block],
+  );
 
-  for (const [blockId, block] of fn.body.blocks) {
+  while (st.length != 0) {
+    const [currFn, blockId, block] = st.shift()!;
     scopeTraversal.recordScopes(block);
     const scopeBlockInfo = scopeTraversal.blockInfos.get(blockId);
     if (scopeBlockInfo?.kind === 'begin') {
@@ -603,6 +659,9 @@ function collectDependencies(
     } else if (scopeBlockInfo?.kind === 'end') {
       context.exitScope(scopeBlockInfo.scope, scopeBlockInfo?.pruned);
     }
+
+    // TODO: make this less hacky
+    context.innerFnContext = currFn === fn ? null : currFn;
 
     // Record referenced optional chains in phis
     for (const phi of block.phis) {
@@ -614,16 +673,37 @@ function collectDependencies(
       }
     }
     for (const instr of block.instructions) {
-      if (!processedInstrsInOptional.has(instr.id)) {
+      if (
+        instr.value.kind === 'FunctionExpression' ||
+        instr.value.kind === 'ObjectMethod'
+      ) {
+        /**
+         * Push the outermost nested fn context, as these are guaranteed to reference
+         * component / hook identifiers (i.e. eligible dependencies)
+         */
+        const innerFn = instr.value.loweredFunc.func;
+        const outermostNestedFnContext = currFn === fn ? innerFn : currFn;
+        const x: Array<[HIRFunction, BlockId, BasicBlock]> = [
+          ...innerFn.body.blocks.entries(),
+        ].map(([id, block]) => [outermostNestedFnContext, id, block]);
+        st.unshift(...x);
+
+        context.declare(instr.lvalue.identifier, {
+          id: instr.id,
+          scope: context.currentScope,
+        });
+      } else if (!processedInstrsInOptional.get(currFn)?.has(instr.id)) {
+        // instruction ids are function-relative
         handleInstruction(instr, context);
       }
     }
 
-    if (!processedInstrsInOptional.has(block.terminal.id)) {
+    if (!processedInstrsInOptional.get(currFn)?.has(block.terminal.id)) {
       for (const place of eachTerminalOperand(block.terminal)) {
         context.visitOperand(place);
       }
     }
   }
+
   return context.deps;
 }
