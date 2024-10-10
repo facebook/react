@@ -10,10 +10,12 @@
 import type {Chunk, BinaryChunk, Destination} from './ReactServerStreamConfig';
 
 import type {Postpone} from 'react/src/ReactPostpone';
+import type {AsyncCache} from 'react-reconciler/src/ReactInternalTypes';
 
 import type {TemporaryReferenceSet} from './ReactFlightServerTemporaryReferences';
 
 import {
+  disableStringRefs,
   enableBinaryFlight,
   enablePostpone,
   enableHalt,
@@ -452,15 +454,24 @@ function RequestInstance(
   onAllReady: () => void,
   onFatalError: (error: mixed) => void,
 ) {
-  if (
-    ReactSharedInternals.A !== null &&
-    ReactSharedInternals.A !== DefaultAsyncDispatcher
-  ) {
-    throw new Error(
-      'Currently React only supports one RSC renderer at a time.',
-    );
+  const previousAsyncDispatcher = ReactSharedInternals.A;
+
+  if (previousAsyncDispatcher !== null) {
+    const previousActiveCache = previousAsyncDispatcher.getActiveCache();
+    if (previousActiveCache !== null) {
+      ReactSharedInternals.A = ({
+        getActiveCache(): AsyncCache | null {
+          return previousActiveCache;
+        },
+      }: any);
+      if (__DEV__ || !disableStringRefs) {
+        ReactSharedInternals.A.getOwner = DefaultAsyncDispatcher.getOwner;
+      }
+    }
+  } else {
+    ReactSharedInternals.A = DefaultAsyncDispatcher;
   }
-  ReactSharedInternals.A = DefaultAsyncDispatcher;
+
   if (__DEV__) {
     // Unlike Fizz or Fiber, we don't reset this and just keep it on permanently.
     // This lets it act more like the AsyncDispatcher so that we can get the

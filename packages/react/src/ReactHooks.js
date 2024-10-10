@@ -53,7 +53,17 @@ export function getCacheForType<T>(resourceType: () => T): T {
     // If there is no dispatcher, then we treat this as not being cached.
     return resourceType();
   }
-  return dispatcher.getCacheForType(resourceType);
+  const activeCache = dispatcher.getActiveCache();
+  let entry: T | void =
+    activeCache !== null ? (activeCache.get(resourceType): any) : undefined;
+  if (entry === undefined) {
+    entry = resourceType();
+    if (activeCache !== null) {
+      // TODO: Warn if undefined?
+      activeCache.set(resourceType, entry);
+    }
+  }
+  return entry;
 }
 
 export function useContext<T>(Context: ReactContext<T>): T {

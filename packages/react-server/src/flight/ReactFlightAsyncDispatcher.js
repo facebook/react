@@ -9,7 +9,10 @@
 
 import type {ReactComponentInfo} from 'shared/ReactTypes';
 
-import type {AsyncDispatcher} from 'react-reconciler/src/ReactInternalTypes';
+import type {
+  AsyncCache,
+  AsyncDispatcher,
+} from 'react-reconciler/src/ReactInternalTypes';
 
 import {resolveRequest, getCache} from '../ReactFlightServer';
 
@@ -17,25 +20,16 @@ import {disableStringRefs} from 'shared/ReactFeatureFlags';
 
 import {resolveOwner} from './ReactFlightCurrentOwner';
 
-function resolveCache(): Map<Function, mixed> {
+function getActiveCache(): AsyncCache | null {
   const request = resolveRequest();
   if (request) {
     return getCache(request);
   }
-  return new Map();
+  return null;
 }
 
 export const DefaultAsyncDispatcher: AsyncDispatcher = ({
-  getCacheForType<T>(resourceType: () => T): T {
-    const cache = resolveCache();
-    let entry: T | void = (cache.get(resourceType): any);
-    if (entry === undefined) {
-      entry = resourceType();
-      // TODO: Warn if undefined?
-      cache.set(resourceType, entry);
-    }
-    return entry;
-  },
+  getActiveCache,
 }: any);
 
 if (__DEV__) {
