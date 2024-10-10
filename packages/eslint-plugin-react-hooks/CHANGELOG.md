@@ -12,7 +12,7 @@
 - Allow `useEffect(fn, undefined)`. ([@kassens](https://github.com/kassens) in [#27525](https://github.com/facebook/react/pull/27525))
 - Disallow hooks in async functions. ([@acdlite](https://github.com/acdlite) in [#27045](https://github.com/facebook/react/pull/27045))
 - Rename experimental `useEvent` to `useEffectEvent`. ([@sebmarkbage](https://github.com/sebmarkbage) in [#25881](https://github.com/facebook/react/pull/25881))
--  Lint for presence of `useEvent` functions in dependency lists. ([@poteto](https://github.com/poteto) in [#25512](https://github.com/facebook/react/pull/25512))
+- Lint for presence of `useEvent` functions in dependency lists. ([@poteto](https://github.com/poteto) in [#25512](https://github.com/facebook/react/pull/25512))
 - Check `useEvent` references instead. ([@poteto](https://github.com/poteto) in [#25319](https://github.com/facebook/react/pull/25319))
 - Update `RulesOfHooks` with `useEvent` rules. ([@poteto](https://github.com/poteto) in [#25285](https://github.com/facebook/react/pull/25285))
 
