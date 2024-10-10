@@ -119,6 +119,13 @@ async function main() {
     );
     const dateString = await getDateStringForCommit(commit);
     const otp = argv.ci === false ? await promptForOTP() : null;
+    const {hash} = await hashElement(path.resolve(__dirname, '../..'), {
+      encoding: 'hex',
+      folders: {exclude: ['node_modules']},
+      files: {exclude: ['.DS_Store']},
+    });
+    const truncatedHash = hash.slice(0, 7);
+    const newVersion = `0.0.0-experimental-${truncatedHash}-${dateString}`;
 
     for (const pkgName of pkgNames) {
       const pkgDir = path.resolve(__dirname, `../../packages/${pkgName}`);
@@ -126,13 +133,6 @@ async function main() {
         __dirname,
         `../../packages/${pkgName}/package.json`
       );
-      const {hash} = await hashElement(pkgDir, {
-        encoding: 'hex',
-        folders: {exclude: ['node_modules']},
-        files: {exclude: ['.DS_Store']},
-      });
-      const truncatedHash = hash.slice(0, 7);
-      const newVersion = `0.0.0-experimental-${truncatedHash}-${dateString}`;
 
       spinner.start(`Writing package.json for ${pkgName}@${newVersion}`);
       await writeJson(
