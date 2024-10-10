@@ -19,6 +19,7 @@ export const {
   disableDefaultPropsExceptForClasses,
   disableLegacyContextForFunctionComponents,
   disableSchedulerTimeoutInWorkLoop,
+  disableStringRefs,
   enableDebugTracing,
   enableDeferRootSchedulingToMicrotask,
   enableDO_NOT_USE_disableStrictPassiveEffect,
@@ -119,10 +120,6 @@ export const enableServerComponentLogs = true;
 
 export const enableReactTestRendererWarning = false;
 export const useModernStrictMode = true;
-
-// TODO: Roll out with GK. Don't keep as dynamic flag for too long, though,
-// because JSX is an extremely hot path.
-export const disableStringRefs = false;
 
 export const disableLegacyMode: boolean =
   __EXPERIMENTAL__ || dynamicFeatureFlags.disableLegacyMode;
