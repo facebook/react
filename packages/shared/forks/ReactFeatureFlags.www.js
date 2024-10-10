@@ -22,20 +22,21 @@ export const {
   enableDebugTracing,
   enableDeferRootSchedulingToMicrotask,
   enableDO_NOT_USE_disableStrictPassiveEffect,
+  enableHiddenSubtreeInsertionEffectCleanup,
   enableInfiniteRenderLoopDetection,
+  enableLogStringRefsProd,
   enableNoCloningMemoCache,
   enableObjectFiber,
   enableRenderableContext,
   enableRetryLaneExpiration,
+  enableSiblingPrerendering,
   enableTransitionTracing,
   enableTrustedTypesIntegration,
-  enableHiddenSubtreeInsertionEffectCleanup,
   favorSafetyOverHydrationPerf,
   renameElementSymbol,
   retryLaneExpirationMs,
   syncLaneExpirationMs,
   transitionLaneExpirationMs,
-  enableSiblingPrerendering,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.

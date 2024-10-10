@@ -56,6 +56,7 @@ export const enableContextProfiling = false;
 export const enableLegacyCache = false;
 export const enableLegacyFBSupport = false;
 export const enableLegacyHidden = false;
+export const enableLogStringRefsProd: null | ((string, string) => void) = null;
 export const enableNoCloningMemoCache = false;
 export const enableObjectFiber = false;
 export const enableOwnerStacks = false;
