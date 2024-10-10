@@ -26,8 +26,7 @@ import type {
 import type {
   DevToolsHook,
   DevToolsHookSettings,
-  ReloadAndProfileConfig,
-  ReloadAndProfileConfigPersistence,
+  ProfilingSettings,
 } from 'react-devtools-shared/src/backend/types';
 import type {ResolveNativeStyle} from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
 
@@ -42,7 +41,9 @@ type ConnectOptions = {
   websocket?: ?WebSocket,
   onSettingsUpdated?: (settings: $ReadOnly<DevToolsHookSettings>) => void,
   isReloadAndProfileSupported?: boolean,
-  reloadAndProfileConfigPersistence?: ReloadAndProfileConfigPersistence,
+  isProfiling?: boolean,
+  onReloadAndProfile?: (recordChangeDescriptions: boolean) => void,
+  onReloadAndProfileFlagsReset?: () => void,
 };
 
 let savedComponentFilters: Array<ComponentFilter> =
@@ -63,9 +64,15 @@ export function initialize(
   maybeSettingsOrSettingsPromise?:
     | DevToolsHookSettings
     | Promise<DevToolsHookSettings>,
-  reloadAndProfileConfig?: ReloadAndProfileConfig,
+  shouldStartProfilingNow: boolean = false,
+  profilingSettings?: ProfilingSettings,
 ) {
-  installHook(window, maybeSettingsOrSettingsPromise, reloadAndProfileConfig);
+  installHook(
+    window,
+    maybeSettingsOrSettingsPromise,
+    shouldStartProfilingNow,
+    profilingSettings,
+  );
 }
 
 export function connectToDevTools(options: ?ConnectOptions) {
@@ -86,7 +93,9 @@ export function connectToDevTools(options: ?ConnectOptions) {
     isAppActive = () => true,
     onSettingsUpdated,
     isReloadAndProfileSupported = getIsReloadAndProfileSupported(),
-    reloadAndProfileConfigPersistence,
+    isProfiling,
+    onReloadAndProfile,
+    onReloadAndProfileFlagsReset,
   } = options || {};
 
   const protocol = useHttps ? 'wss' : 'ws';
@@ -180,7 +189,11 @@ export function connectToDevTools(options: ?ConnectOptions) {
 
     // TODO (npm-packages) Warn if "isBackendStorageAPISupported"
     // $FlowFixMe[incompatible-call] found when upgrading Flow
-    const agent = new Agent(bridge, reloadAndProfileConfigPersistence);
+    const agent = new Agent(bridge, isProfiling, onReloadAndProfile);
+    if (typeof onReloadAndProfileFlagsReset === 'function') {
+      onReloadAndProfileFlagsReset();
+    }
+
     if (onSettingsUpdated != null) {
       agent.addListener('updateHookSettings', onSettingsUpdated);
     }
@@ -320,7 +333,9 @@ type ConnectWithCustomMessagingOptions = {
   resolveRNStyle?: ResolveNativeStyle,
   onSettingsUpdated?: (settings: $ReadOnly<DevToolsHookSettings>) => void,
   isReloadAndProfileSupported?: boolean,
-  reloadAndProfileConfigPersistence?: ReloadAndProfileConfigPersistence,
+  isProfiling?: boolean,
+  onReloadAndProfile?: (recordChangeDescriptions: boolean) => void,
+  onReloadAndProfileFlagsReset?: () => void,
 };
 
 export function connectWithCustomMessagingProtocol({
@@ -331,7 +346,9 @@ export function connectWithCustomMessagingProtocol({
   resolveRNStyle,
   onSettingsUpdated,
   isReloadAndProfileSupported = getIsReloadAndProfileSupported(),
-  reloadAndProfileConfigPersistence,
+  isProfiling,
+  onReloadAndProfile,
+  onReloadAndProfileFlagsReset,
 }: ConnectWithCustomMessagingOptions): Function {
   const hook: ?DevToolsHook = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (hook == null) {
@@ -368,7 +385,11 @@ export function connectWithCustomMessagingProtocol({
     bridge.send('overrideComponentFilters', savedComponentFilters);
   }
 
-  const agent = new Agent(bridge, reloadAndProfileConfigPersistence);
+  const agent = new Agent(bridge, isProfiling, onReloadAndProfile);
+  if (typeof onReloadAndProfileFlagsReset === 'function') {
+    onReloadAndProfileFlagsReset();
+  }
+
   if (onSettingsUpdated != null) {
     agent.addListener('updateHookSettings', onSettingsUpdated);
   }

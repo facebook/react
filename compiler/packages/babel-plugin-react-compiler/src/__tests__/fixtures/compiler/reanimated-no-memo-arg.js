@@ -1,4 +1,5 @@
 // @enableCustomTypeDefinitionForReanimated
+import {useAnimatedProps} from 'react-native-reanimated';
 function Component() {
   const radius = useSharedValue(50);
 
