@@ -1,20 +1,23 @@
 {
-    "name": "@react/forget-napi",
-    "version": "0.0.1",
-    "description": "JavaScript package exposing parts of React Forget compiler APIs via napi",
-    "main": "dist/index.js",
-    "license": "MIT",
-    "files": [
-      "src"
-    ],
-    "private": true,
-    "scripts": {
-      "build": "napi build --platform --release --js-package-name @react/forget-napi --js dist/index.js --dts dist/index.d.ts && mv *.node dist/"
-    },
-    "dependencies": {
-    },
-    "devDependencies": {
-      "@napi-rs/cli": "^2.15.2"
-    }
+  "name": "@react/forget-napi",
+  "version": "0.0.1",
+  "description": "JavaScript package exposing parts of React Forget compiler APIs via napi",
+  "main": "dist/index.js",
+  "license": "MIT",
+  "files": [
+    "src"
+  ],
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
+    "directory": "compiler/crates/react_napi"
+  },
+  "scripts": {
+    "build": "napi build --platform --release --js-package-name @react/forget-napi --js dist/index.js --dts dist/index.d.ts && mv *.node dist/"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@napi-rs/cli": "^2.15.2"
   }
-  
+}
