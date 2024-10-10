@@ -371,7 +371,7 @@ export type Request = {
   fatalError: mixed,
   destination: null | Destination,
   bundlerConfig: ClientManifest,
-  cache: Map<Function, mixed>,
+  cache: WeakMap<Function, mixed>,
   nextChunkId: number,
   pendingChunks: number,
   hints: Hints,
@@ -406,6 +406,8 @@ const {
   TaintRegistryByteLengths,
   TaintRegistryPendingRequests,
 } = ReactSharedInternals;
+
+ReactSharedInternals.A = DefaultAsyncDispatcher;
 
 function throwTaintViolation(message: string) {
   // eslint-disable-next-line react-internal/prod-error-codes
@@ -452,15 +454,6 @@ function RequestInstance(
   onAllReady: () => void,
   onFatalError: (error: mixed) => void,
 ) {
-  if (
-    ReactSharedInternals.A !== null &&
-    ReactSharedInternals.A !== DefaultAsyncDispatcher
-  ) {
-    throw new Error(
-      'Currently React only supports one RSC renderer at a time.',
-    );
-  }
-  ReactSharedInternals.A = DefaultAsyncDispatcher;
   if (__DEV__) {
     // Unlike Fizz or Fiber, we don't reset this and just keep it on permanently.
     // This lets it act more like the AsyncDispatcher so that we can get the
@@ -481,7 +474,7 @@ function RequestInstance(
   this.fatalError = null;
   this.destination = null;
   this.bundlerConfig = bundlerConfig;
-  this.cache = new Map();
+  this.cache = new WeakMap();
   this.nextChunkId = 0;
   this.pendingChunks = 0;
   this.hints = hints;
@@ -1005,7 +998,7 @@ export function getHints(request: Request): Hints {
   return request.hints;
 }
 
-export function getCache(request: Request): Map<Function, mixed> {
+export function getCache(request: Request): WeakMap<Function, mixed> {
   return request.cache;
 }
 
