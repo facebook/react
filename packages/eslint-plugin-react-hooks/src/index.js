@@ -9,18 +9,45 @@
 
 import RulesOfHooks from './RulesOfHooks';
 import ExhaustiveDeps from './ExhaustiveDeps';
+import {name, version} from '../package.json';
 
-export const configs = {
-  recommended: {
-    plugins: ['react-hooks'],
-    rules: {
-      'react-hooks/rules-of-hooks': 'error',
-      'react-hooks/exhaustive-deps': 'warn',
-    },
-  },
-};
-
+// All rules
 export const rules = {
   'rules-of-hooks': RulesOfHooks,
   'exhaustive-deps': ExhaustiveDeps,
+};
+
+// Rule configs
+const configRules = {
+  'react-hooks/rules-of-hooks': 'error',
+  'react-hooks/exhaustive-deps': 'warn',
+};
+
+// Legacy configs
+export const configs = {
+  recommended: {
+    plugins: ['react-hooks'],
+    rules: configRules,
+  },
+};
+
+// Base plugin object
+const reactHooksPlugin = {
+  meta: {name, version},
+  rules,
+};
+
+// Flat configs
+export const flatConfigs = {
+  recommended: {
+    name: 'react-hooks/recommended',
+    plugins: {'react-hooks': reactHooksPlugin},
+    rules: configRules,
+  },
+};
+
+export default {
+  ...reactHooksPlugin,
+  configs,
+  flatConfigs,
 };

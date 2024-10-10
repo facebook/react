@@ -4,6 +4,7 @@ const rollup = require('rollup');
 const babel = require('@rollup/plugin-babel').babel;
 const closure = require('./plugins/closure-plugin');
 const flowRemoveTypes = require('flow-remove-types');
+const json = require('@rollup/plugin-json');
 const prettier = require('rollup-plugin-prettier');
 const replace = require('@rollup/plugin-replace');
 const stripBanner = require('rollup-plugin-strip-banner');
@@ -377,6 +378,7 @@ function getPlugins(
       bundleType !== ESM_PROD && bundleType !== ESM_DEV;
 
     return [
+      json(),
       // Keep dynamic imports as externals
       dynamicImports(),
       {
