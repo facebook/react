@@ -45,24 +45,24 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
     dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
   enableDO_NOT_USE_disableStrictPassiveEffect =
     dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect,
+  enableHiddenSubtreeInsertionEffectCleanup =
+    dynamicFeatureFlags.enableHiddenSubtreeInsertionEffectCleanup,
   enableInfiniteRenderLoopDetection =
     dynamicFeatureFlags.enableInfiniteRenderLoopDetection,
   enableNoCloningMemoCache = dynamicFeatureFlags.enableNoCloningMemoCache,
   enableObjectFiber = dynamicFeatureFlags.enableObjectFiber,
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableRetryLaneExpiration = dynamicFeatureFlags.enableRetryLaneExpiration,
+  enableSiblingPrerendering = dynamicFeatureFlags.enableSiblingPrerendering,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableTrustedTypesIntegration =
     dynamicFeatureFlags.enableTrustedTypesIntegration,
-  enableHiddenSubtreeInsertionEffectCleanup =
-    dynamicFeatureFlags.enableHiddenSubtreeInsertionEffectCleanup,
   favorSafetyOverHydrationPerf =
     dynamicFeatureFlags.favorSafetyOverHydrationPerf,
   renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
   retryLaneExpirationMs = dynamicFeatureFlags.retryLaneExpirationMs,
   syncLaneExpirationMs = dynamicFeatureFlags.syncLaneExpirationMs,
   transitionLaneExpirationMs = dynamicFeatureFlags.transitionLaneExpirationMs,
-  enableSiblingPrerendering = dynamicFeatureFlags.enableSiblingPrerendering,
   disableLegacyMode = dynamicFeatureFlags.disableLegacyMode,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_ELEMENT_TYPE = renameElementSymbol
@@ -17412,14 +17412,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1774 = React.version;
 if (
-  "19.0.0-www-classic-b78a7f2f-20241007" !==
+  "19.0.0-www-classic-5636fad8-20241010" !==
   isomorphicReactPackageVersion$jscomp$inline_1774
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1774,
-      "19.0.0-www-classic-b78a7f2f-20241007"
+      "19.0.0-www-classic-5636fad8-20241010"
     )
   );
 function flushSyncFromReconciler(fn) {
@@ -17464,11 +17464,11 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2287 = {
   bundleType: 0,
-  version: "19.0.0-www-classic-b78a7f2f-20241007",
+  version: "19.0.0-www-classic-5636fad8-20241010",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-www-classic-b78a7f2f-20241007"
+  reconcilerVersion: "19.0.0-www-classic-5636fad8-20241010"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2288 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17924,4 +17924,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-b78a7f2f-20241007";
+exports.version = "19.0.0-www-classic-5636fad8-20241010";
