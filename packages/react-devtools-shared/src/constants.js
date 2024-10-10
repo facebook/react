@@ -41,6 +41,8 @@ export const LOCAL_STORAGE_PARSE_HOOK_NAMES_KEY =
   'React::DevTools::parseHookNames';
 export const SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY =
   'React::DevTools::recordChangeDescriptions';
+export const SESSION_STORAGE_RECORD_TIMELINE_KEY =
+  'React::DevTools::recordTimeline';
 export const SESSION_STORAGE_RELOAD_AND_PROFILE_KEY =
   'React::DevTools::reloadAndProfile';
 export const LOCAL_STORAGE_BROWSER_THEME = 'React::DevTools::theme';

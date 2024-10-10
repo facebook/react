@@ -1,4 +1,8 @@
 import {installHook} from 'react-devtools-shared/src/hook';
+import {
+  getIfReloadedAndProfiling,
+  getProfilingSettings,
+} from 'react-devtools-shared/src/utils';
 
 let resolveHookSettingsInjection;
 
@@ -34,8 +38,15 @@ if (!window.hasOwnProperty('__REACT_DEVTOOLS_GLOBAL_HOOK__')) {
     payload: {handshake: true},
   });
 
+  const shouldStartProfiling = getIfReloadedAndProfiling();
+  const profilingSettings = getProfilingSettings();
   // Can't delay hook installation, inject settings lazily
-  installHook(window, hookSettingsPromise);
+  installHook(
+    window,
+    hookSettingsPromise,
+    shouldStartProfiling,
+    profilingSettings,
+  );
 
   // Detect React
   window.__REACT_DEVTOOLS_GLOBAL_HOOK__.on(
