@@ -696,22 +696,27 @@ function serializeThenable(
       pingTask(request, newTask);
     },
     reason => {
-      if (
-        enablePostpone &&
-        typeof reason === 'object' &&
-        reason !== null &&
-        (reason: any).$$typeof === REACT_POSTPONE_TYPE
-      ) {
-        const postponeInstance: Postpone = (reason: any);
-        logPostpone(request, postponeInstance.message, newTask);
-        emitPostponeChunk(request, newTask.id, postponeInstance);
-      } else {
-        const digest = logRecoverableError(request, reason, newTask);
-        emitErrorChunk(request, newTask.id, digest, reason);
+      if (newTask.status === PENDING) {
+        // We expect that the only status it might be otherwise is ABORTED.
+        // When we abort we emit chunks in each pending task slot and don't need
+        // to do so again here.
+        if (
+          enablePostpone &&
+          typeof reason === 'object' &&
+          reason !== null &&
+          (reason: any).$$typeof === REACT_POSTPONE_TYPE
+        ) {
+          const postponeInstance: Postpone = (reason: any);
+          logPostpone(request, postponeInstance.message, newTask);
+          emitPostponeChunk(request, newTask.id, postponeInstance);
+        } else {
+          const digest = logRecoverableError(request, reason, newTask);
+          emitErrorChunk(request, newTask.id, digest, reason);
+        }
+        newTask.status = ERRORED;
+        request.abortableTasks.delete(newTask);
+        enqueueFlush(request);
       }
-      newTask.status = ERRORED;
-      request.abortableTasks.delete(newTask);
-      enqueueFlush(request);
     },
   );
 
