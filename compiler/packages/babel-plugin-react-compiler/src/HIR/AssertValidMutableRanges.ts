@@ -20,6 +20,7 @@ import {
 export function assertValidMutableRanges(fn: HIRFunction): void {
   for (const [, block] of fn.body.blocks) {
     for (const phi of block.phis) {
+      visitIdentifier(phi.id);
       for (const [, operand] of phi.operands) {
         visitIdentifier(operand);
       }
