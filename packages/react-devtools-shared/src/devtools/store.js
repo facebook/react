@@ -324,7 +324,7 @@ export default class Store extends EventEmitter<{
     return this._componentFilters;
   }
   set componentFilters(value: Array<ComponentFilter>): void {
-    if (this._profilerStore.isProfiling) {
+    if (this._profilerStore.isProfilingBasedOnUserInput) {
       // Re-mounting a tree while profiling is in progress might break a lot of assumptions.
       // If necessary, we could support this- but it doesn't seem like a necessary use case.
       this._throwAndEmitError(

@@ -1,10 +1,22 @@
 // @validatePreserveExistingMemoizationGuarantees @enableOptionalDependencies
 import {ValidateMemoization} from 'shared-runtime';
-function Component(props) {
+import {useMemo} from 'react';
+function Component({arg}) {
   const data = useMemo(() => {
     const x = [];
-    x.push(props?.items);
+    x.push(arg?.items);
     return x;
-  }, [props?.items]);
-  return <ValidateMemoization inputs={[props?.items]} output={data} />;
+  }, [arg?.items]);
+  return <ValidateMemoization inputs={[arg?.items]} output={data} />;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{arg: {items: 2}}],
+  sequentialRenders: [
+    {arg: {items: 2}},
+    {arg: {items: 2}},
+    {arg: null},
+    {arg: null},
+  ],
+};

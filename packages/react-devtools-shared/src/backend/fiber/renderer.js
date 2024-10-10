@@ -44,6 +44,7 @@ import {
 } from 'react-devtools-shared/src/utils';
 import {
   formatConsoleArgumentsToSingleString,
+  formatDurationToMicrosecondsGranularity,
   gt,
   gte,
   parseSourceFromComponentStack,
@@ -103,7 +104,6 @@ import {
   supportsOwnerStacks,
   supportsConsoleTasks,
 } from './DevToolsFiberComponentStack';
-import type {ReloadAndProfileConfig} from '../types';
 
 // $FlowFixMe[method-unbinding]
 const toString = Object.prototype.toString;
@@ -135,6 +135,7 @@ import type {
   WorkTagMap,
   CurrentDispatcherRef,
   LegacyDispatcherRef,
+  ProfilingSettings,
 } from '../types';
 import type {
   ComponentFilter,
@@ -863,7 +864,8 @@ export function attach(
   rendererID: number,
   renderer: ReactRenderer,
   global: Object,
-  reloadAndProfileConfig: ReloadAndProfileConfig,
+  shouldStartProfilingNow: boolean,
+  profilingSettings: ProfilingSettings,
 ): RendererInterface {
   // Newer versions of the reconciler package also specific reconciler version.
   // If that version number is present, use it.
@@ -3472,7 +3474,7 @@ export function attach(
   }
 
   function cleanup() {
-    // We don't patch any methods so there is no cleanup.
+    isProfiling = false;
   }
 
   function rootSupportsProfiling(root: any) {
@@ -5033,6 +5035,7 @@ export function attach(
   let isProfiling: boolean = false;
   let profilingStartTime: number = 0;
   let recordChangeDescriptions: boolean = false;
+  let recordTimeline: boolean = false;
   let rootToCommitProfilingMetadataMap: CommitProfilingMetadataMap | null =
     null;
 
@@ -5074,8 +5077,14 @@ export function attach(
           const fiberSelfDurations: Array<[number, number]> = [];
           for (let i = 0; i < durations.length; i += 3) {
             const fiberID = durations[i];
-            fiberActualDurations.push([fiberID, durations[i + 1]]);
-            fiberSelfDurations.push([fiberID, durations[i + 2]]);
+            fiberActualDurations.push([
+              fiberID,
+              formatDurationToMicrosecondsGranularity(durations[i + 1]),
+            ]);
+            fiberSelfDurations.push([
+              fiberID,
+              formatDurationToMicrosecondsGranularity(durations[i + 2]),
+            ]);
           }
 
           commitData.push({
@@ -5083,11 +5092,18 @@ export function attach(
               changeDescriptions !== null
                 ? Array.from(changeDescriptions.entries())
                 : null,
-            duration: maxActualDuration,
-            effectDuration,
+            duration:
+              formatDurationToMicrosecondsGranularity(maxActualDuration),
+            effectDuration:
+              effectDuration !== null
+                ? formatDurationToMicrosecondsGranularity(effectDuration)
+                : null,
             fiberActualDurations,
             fiberSelfDurations,
-            passiveEffectDuration,
+            passiveEffectDuration:
+              passiveEffectDuration !== null
+                ? formatDurationToMicrosecondsGranularity(passiveEffectDuration)
+                : null,
             priorityLevel,
             timestamp: commitTime,
             updaters,
@@ -5161,12 +5177,16 @@ export function attach(
     }
   }
 
-  function startProfiling(shouldRecordChangeDescriptions: boolean) {
+  function startProfiling(
+    shouldRecordChangeDescriptions: boolean,
+    shouldRecordTimeline: boolean,
+  ) {
     if (isProfiling) {
       return;
     }
 
     recordChangeDescriptions = shouldRecordChangeDescriptions;
+    recordTimeline = shouldRecordTimeline;
 
     // Capture initial values as of the time profiling starts.
     // It's important we snapshot both the durations and the id-to-root map,
@@ -5197,7 +5217,7 @@ export function attach(
     rootToCommitProfilingMetadataMap = new Map();
 
     if (toggleProfilingStatus !== null) {
-      toggleProfilingStatus(true);
+      toggleProfilingStatus(true, recordTimeline);
     }
   }
 
@@ -5206,15 +5226,18 @@ export function attach(
     recordChangeDescriptions = false;
 
     if (toggleProfilingStatus !== null) {
-      toggleProfilingStatus(false);
+      toggleProfilingStatus(false, recordTimeline);
     }
+
+    recordTimeline = false;
   }
 
   // Automatically start profiling so that we don't miss timing info from initial "mount".
-  if (reloadAndProfileConfig.shouldReloadAndProfile) {
-    const shouldRecordChangeDescriptions =
-      reloadAndProfileConfig.recordChangeDescriptions;
-    startProfiling(shouldRecordChangeDescriptions);
+  if (shouldStartProfilingNow) {
+    startProfiling(
+      profilingSettings.recordChangeDescriptions,
+      profilingSettings.recordTimeline,
+    );
   }
 
   function getNearestFiber(devtoolsInstance: DevToolsInstance): null | Fiber {
