@@ -141,8 +141,6 @@ export const enableServerComponentLogs = true;
  */
 export const enablePersistedModeClonedFlag = false;
 
-export const enableAddPropertiesFastPath = false;
-
 export const enableOwnerStacks = __EXPERIMENTAL__;
 
 export const enableShallowPropDiffing = false;
