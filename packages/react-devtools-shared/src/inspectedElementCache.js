@@ -7,10 +7,7 @@
  * @flow
  */
 
-import {
-  unstable_getCacheForType as getCacheForType,
-  startTransition,
-} from 'react';
+import {cache, startTransition} from 'react';
 import Store from 'react-devtools-shared/src/devtools/store';
 import {inspectElement as inspectElementMutableSource} from 'react-devtools-shared/src/inspectedElementMutableSource';
 import ElementPollingCancellationError from 'react-devtools-shared/src//errors/ElementPollingCancellationError';
@@ -61,22 +58,7 @@ function createMap(): InspectedElementMap {
   return new WeakMap();
 }
 
-function getRecordMap(): WeakMap<Element, Record<InspectedElementFrontend>> {
-  return getCacheForType(createMap);
-}
-
-function createCacheSeed(
-  element: Element,
-  inspectedElement: InspectedElementFrontend,
-): [CacheSeedKey, InspectedElementMap] {
-  const newRecord: Record<InspectedElementFrontend> = {
-    status: Resolved,
-    value: inspectedElement,
-  };
-  const map = createMap();
-  map.set(element, newRecord);
-  return [createMap, map];
-}
+const getRecordMap = cache(createMap);
 
 /**
  * Fetches element props and state from the backend for inspection.
@@ -196,8 +178,8 @@ export function checkForUpdate({
     ]) => {
       if (responseType === 'full-data') {
         startTransition(() => {
-          const [key, value] = createCacheSeed(element, inspectedElement);
-          refresh(key, value);
+          // TODO: We should ideally seed with the new data here but we can't do that anymore.
+          refresh();
         });
       }
     },
@@ -285,7 +267,6 @@ export function startElementUpdatesPolling({
 
 export function clearCacheBecauseOfError(refresh: RefreshFunction): void {
   startTransition(() => {
-    const map = createMap();
-    refresh(createMap, map);
+    refresh();
   });
 }
