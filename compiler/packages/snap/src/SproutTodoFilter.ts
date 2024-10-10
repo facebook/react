@@ -481,6 +481,7 @@ const skipFilter = new Set([
   'bug-invalid-hoisting-functionexpr',
   'bug-try-catch-maybe-null-dependency',
   'reduce-reactive-deps/bug-infer-function-cond-access-not-hoisted',
+  'bug-invalid-phi-as-dependency',
   'reduce-reactive-deps/bug-merge-uncond-optional-chain-and-cond',
   'original-reactive-scopes-fork/bug-nonmutating-capture-in-unsplittable-memo-block',
   'original-reactive-scopes-fork/bug-hoisted-declaration-with-scope',
