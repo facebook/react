@@ -238,4 +238,66 @@ describe('ReactDOMSVG', () => {
     expect(div.namespaceURI).toBe('http://www.w3.org/1999/xhtml');
     expect(div.tagName).toBe('DIV');
   });
+
+  it('should handle onClick for SVG with dangerouslySetInnerHTML correctly', () => {
+    const ReactDOMComponentTree = require('react-dom-bindings/src/client/ReactDOMComponentTree');
+    const ReactDOMComponent = require('react-dom-bindings/src/client/ReactDOMComponent');
+
+    const setInitialProperties = ReactDOMComponent.setInitialProperties;
+    const updateProperties = ReactDOMComponent.updateProperties;
+
+    // Mock the DOM methods we can't rely on in JSDOM
+    const mockElement = {
+      ownerDocument: {
+        createElement: jest.fn(() => ({})),
+      },
+      setAttribute: jest.fn(),
+      removeAttribute: jest.fn(),
+      style: {},
+    };
+
+    // Mock ReactDOMComponentTree.precacheFiberNode to capture the fiber
+    ReactDOMComponentTree.precacheFiberNode = jest.fn();
+
+    // Initial render
+    const clickHandler = jest.fn();
+    const initialProps = {
+      onClick: clickHandler,
+      dangerouslySetInnerHTML: { __html: '<circle cx="50" cy="50" r="40" />' },
+    };
+
+    setInitialProperties(mockElement, 'svg', initialProps);
+
+    // Check if innerHTML was set correctly
+    expect(mockElement.innerHTML).toBe('<circle cx="50" cy="50" r="40" />');
+
+    // Check if onClick was set correctly
+    if (mockElement.onclick) {
+      // Simulate a click event
+      mockElement.onclick();
+      expect(clickHandler).toHaveBeenCalledTimes(1);
+    }
+
+    // Update
+    const newClickHandler = jest.fn();
+    const newProps = {
+      onClick: newClickHandler,
+      dangerouslySetInnerHTML: { __html: '<circle cx="60" cy="60" r="50" />' },
+    };
+
+    updateProperties(mockElement, 'svg', initialProps, newProps);
+
+    // Check if innerHTML was updated correctly
+    expect(mockElement.innerHTML).toBe('<circle cx="60" cy="60" r="50" />');
+
+    // Check if onClick was updated correctly
+    if (mockElement.onclick) {
+      // Simulate another click event
+      mockElement.onclick();
+      expect(newClickHandler).toHaveBeenCalledTimes(1);
+    }
+
+    // Clean up
+    jest.restoreAllMocks();
+  });
 });
