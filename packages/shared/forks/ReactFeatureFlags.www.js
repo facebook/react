@@ -19,23 +19,24 @@ export const {
   disableDefaultPropsExceptForClasses,
   disableLegacyContextForFunctionComponents,
   disableSchedulerTimeoutInWorkLoop,
+  disableStringRefs,
   enableDebugTracing,
   enableDeferRootSchedulingToMicrotask,
   enableDO_NOT_USE_disableStrictPassiveEffect,
+  enableHiddenSubtreeInsertionEffectCleanup,
   enableInfiniteRenderLoopDetection,
   enableNoCloningMemoCache,
   enableObjectFiber,
   enableRenderableContext,
   enableRetryLaneExpiration,
+  enableSiblingPrerendering,
   enableTransitionTracing,
   enableTrustedTypesIntegration,
-  enableHiddenSubtreeInsertionEffectCleanup,
   favorSafetyOverHydrationPerf,
   renameElementSymbol,
   retryLaneExpirationMs,
   syncLaneExpirationMs,
   transitionLaneExpirationMs,
-  enableSiblingPrerendering,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -118,10 +119,6 @@ export const enableServerComponentLogs = true;
 
 export const enableReactTestRendererWarning = false;
 export const useModernStrictMode = true;
-
-// TODO: Roll out with GK. Don't keep as dynamic flag for too long, though,
-// because JSX is an extremely hot path.
-export const disableStringRefs = false;
 
 export const disableLegacyMode: boolean =
   __EXPERIMENTAL__ || dynamicFeatureFlags.disableLegacyMode;
