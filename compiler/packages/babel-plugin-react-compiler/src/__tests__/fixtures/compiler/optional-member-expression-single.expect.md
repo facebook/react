@@ -4,14 +4,26 @@
 ```javascript
 // @validatePreserveExistingMemoizationGuarantees @enableOptionalDependencies
 import {ValidateMemoization} from 'shared-runtime';
-function Component(props) {
+import {useMemo} from 'react';
+function Component({arg}) {
   const data = useMemo(() => {
     const x = [];
-    x.push(props?.items);
+    x.push(arg?.items);
     return x;
-  }, [props?.items]);
-  return <ValidateMemoization inputs={[props?.items]} output={data} />;
+  }, [arg?.items]);
+  return <ValidateMemoization inputs={[arg?.items]} output={data} />;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{arg: {items: 2}}],
+  sequentialRenders: [
+    {arg: {items: 2}},
+    {arg: {items: 2}},
+    {arg: null},
+    {arg: null},
+  ],
+};
 
 ```
 
@@ -20,44 +32,60 @@ function Component(props) {
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees @enableOptionalDependencies
 import { ValidateMemoization } from "shared-runtime";
-function Component(props) {
+import { useMemo } from "react";
+function Component(t0) {
   const $ = _c(7);
+  const { arg } = t0;
 
-  props?.items;
-  let t0;
+  arg?.items;
+  let t1;
   let x;
-  if ($[0] !== props?.items) {
+  if ($[0] !== arg?.items) {
     x = [];
-    x.push(props?.items);
-    $[0] = props?.items;
+    x.push(arg?.items);
+    $[0] = arg?.items;
     $[1] = x;
   } else {
     x = $[1];
   }
-  t0 = x;
-  const data = t0;
-  const t1 = props?.items;
-  let t2;
-  if ($[2] !== t1) {
-    t2 = [t1];
-    $[2] = t1;
-    $[3] = t2;
-  } else {
-    t2 = $[3];
-  }
+  t1 = x;
+  const data = t1;
+  const t2 = arg?.items;
   let t3;
-  if ($[4] !== t2 || $[5] !== data) {
-    t3 = <ValidateMemoization inputs={t2} output={data} />;
-    $[4] = t2;
-    $[5] = data;
-    $[6] = t3;
+  if ($[2] !== t2) {
+    t3 = [t2];
+    $[2] = t2;
+    $[3] = t3;
   } else {
-    t3 = $[6];
+    t3 = $[3];
   }
-  return t3;
+  let t4;
+  if ($[4] !== t3 || $[5] !== data) {
+    t4 = <ValidateMemoization inputs={t3} output={data} />;
+    $[4] = t3;
+    $[5] = data;
+    $[6] = t4;
+  } else {
+    t4 = $[6];
+  }
+  return t4;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{ arg: { items: 2 } }],
+  sequentialRenders: [
+    { arg: { items: 2 } },
+    { arg: { items: 2 } },
+    { arg: null },
+    { arg: null },
+  ],
+};
 
 ```
       
 ### Eval output
-(kind: exception) Fixture not implemented
+(kind: ok) <div>{"inputs":[2],"output":[2]}</div>
+<div>{"inputs":[2],"output":[2]}</div>
+<div>{"inputs":[null],"output":[null]}</div>
+<div>{"inputs":[null],"output":[null]}</div>

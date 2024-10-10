@@ -26,11 +26,9 @@ import type {
   RendererID,
   RendererInterface,
   DevToolsHookSettings,
-  ReloadAndProfileConfigPersistence,
 } from './types';
 import type {ComponentFilter} from 'react-devtools-shared/src/frontend/types';
 import {isReactNativeEnvironment} from './utils';
-import {defaultReloadAndProfileConfigPersistence} from '../utils';
 import {
   sessionStorageGetItem,
   sessionStorageRemoveItem,
@@ -151,33 +149,26 @@ export default class Agent extends EventEmitter<{
 }> {
   _bridge: BackendBridge;
   _isProfiling: boolean = false;
-  _recordChangeDescriptions: boolean = false;
   _rendererInterfaces: {[key: RendererID]: RendererInterface, ...} = {};
   _persistedSelection: PersistedSelection | null = null;
   _persistedSelectionMatch: PathMatch | null = null;
   _traceUpdatesEnabled: boolean = false;
-  _reloadAndProfileConfigPersistence: ReloadAndProfileConfigPersistence;
+  _onReloadAndProfile:
+    | ((recordChangeDescriptions: boolean, recordTimeline: boolean) => void)
+    | void;
 
   constructor(
     bridge: BackendBridge,
-    reloadAndProfileConfigPersistence?: ReloadAndProfileConfigPersistence = defaultReloadAndProfileConfigPersistence,
+    isProfiling: boolean = false,
+    onReloadAndProfile?: (
+      recordChangeDescriptions: boolean,
+      recordTimeline: boolean,
+    ) => void,
   ) {
     super();
 
-    this._reloadAndProfileConfigPersistence = reloadAndProfileConfigPersistence;
-    const {getReloadAndProfileConfig, setReloadAndProfileConfig} =
-      reloadAndProfileConfigPersistence;
-    const reloadAndProfileConfig = getReloadAndProfileConfig();
-    if (reloadAndProfileConfig.shouldReloadAndProfile) {
-      this._recordChangeDescriptions =
-        reloadAndProfileConfig.recordChangeDescriptions;
-      this._isProfiling = true;
-
-      setReloadAndProfileConfig({
-        shouldReloadAndProfile: false,
-        recordChangeDescriptions: false,
-      });
-    }
+    this._isProfiling = isProfiling;
+    this._onReloadAndProfile = onReloadAndProfile;
 
     const persistedSelectionString = sessionStorageGetItem(
       SESSION_STORAGE_LAST_SELECTION_KEY,
@@ -672,18 +663,19 @@ export default class Agent extends EventEmitter<{
     this._bridge.send('isReloadAndProfileSupportedByBackend', true);
   };
 
-  reloadAndProfile: (recordChangeDescriptions: boolean) => void =
-    recordChangeDescriptions => {
-      this._reloadAndProfileConfigPersistence.setReloadAndProfileConfig({
-        shouldReloadAndProfile: true,
-        recordChangeDescriptions,
-      });
+  reloadAndProfile: ({
+    recordChangeDescriptions: boolean,
+    recordTimeline: boolean,
+  }) => void = ({recordChangeDescriptions, recordTimeline}) => {
+    if (typeof this._onReloadAndProfile === 'function') {
+      this._onReloadAndProfile(recordChangeDescriptions, recordTimeline);
+    }
 
-      // This code path should only be hit if the shell has explicitly told the Store that it supports profiling.
-      // In that case, the shell must also listen for this specific message to know when it needs to reload the app.
-      // The agent can't do this in a way that is renderer agnostic.
-      this._bridge.send('reloadAppForProfiling');
-    };
+    // This code path should only be hit if the shell has explicitly told the Store that it supports profiling.
+    // In that case, the shell must also listen for this specific message to know when it needs to reload the app.
+    // The agent can't do this in a way that is renderer agnostic.
+    this._bridge.send('reloadAppForProfiling');
+  };
 
   renamePath: RenamePathParams => void = ({
     hookID,
@@ -713,10 +705,6 @@ export default class Agent extends EventEmitter<{
     rendererInterface: RendererInterface,
   ) {
     this._rendererInterfaces[rendererID] = rendererInterface;
-
-    if (this._isProfiling) {
-      rendererInterface.startProfiling(this._recordChangeDescriptions);
-    }
 
     rendererInterface.setTraceUpdatesEnabled(this._traceUpdatesEnabled);
 
@@ -754,24 +742,27 @@ export default class Agent extends EventEmitter<{
   shutdown: () => void = () => {
     // Clean up the overlay if visible, and associated events.
     this.emit('shutdown');
+
+    this._bridge.removeAllListeners();
+    this.removeAllListeners();
   };
 
-  startProfiling: (recordChangeDescriptions: boolean) => void =
-    recordChangeDescriptions => {
-      this._recordChangeDescriptions = recordChangeDescriptions;
-      this._isProfiling = true;
-      for (const rendererID in this._rendererInterfaces) {
-        const renderer = ((this._rendererInterfaces[
-          (rendererID: any)
-        ]: any): RendererInterface);
-        renderer.startProfiling(recordChangeDescriptions);
-      }
-      this._bridge.send('profilingStatus', this._isProfiling);
-    };
+  startProfiling: ({
+    recordChangeDescriptions: boolean,
+    recordTimeline: boolean,
+  }) => void = ({recordChangeDescriptions, recordTimeline}) => {
+    this._isProfiling = true;
+    for (const rendererID in this._rendererInterfaces) {
+      const renderer = ((this._rendererInterfaces[
+        (rendererID: any)
+      ]: any): RendererInterface);
+      renderer.startProfiling(recordChangeDescriptions, recordTimeline);
+    }
+    this._bridge.send('profilingStatus', this._isProfiling);
+  };
 
   stopProfiling: () => void = () => {
     this._isProfiling = false;
-    this._recordChangeDescriptions = false;
     for (const rendererID in this._rendererInterfaces) {
       const renderer = ((this._rendererInterfaces[
         (rendererID: any)

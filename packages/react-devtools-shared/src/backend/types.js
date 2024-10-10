@@ -419,7 +419,10 @@ export type RendererInterface = {
   renderer: ReactRenderer | null,
   setTraceUpdatesEnabled: (enabled: boolean) => void,
   setTrackedPath: (path: Array<PathFrame> | null) => void,
-  startProfiling: (recordChangeDescriptions: boolean) => void,
+  startProfiling: (
+    recordChangeDescriptions: boolean,
+    recordTimeline: boolean,
+  ) => void,
   stopProfiling: () => void,
   storeAsGlobal: (
     id: number,
@@ -485,18 +488,9 @@ export type DevToolsBackend = {
   setupNativeStyleEditor?: SetupNativeStyleEditor,
 };
 
-export type ReloadAndProfileConfig = {
-  shouldReloadAndProfile: boolean,
+export type ProfilingSettings = {
   recordChangeDescriptions: boolean,
-};
-
-// Linter doesn't speak Flow's `Partial` type
-// eslint-disable-next-line no-undef
-type PartialReloadAndProfileConfig = Partial<ReloadAndProfileConfig>;
-
-export type ReloadAndProfileConfigPersistence = {
-  setReloadAndProfileConfig: (config: PartialReloadAndProfileConfig) => void,
-  getReloadAndProfileConfig: () => ReloadAndProfileConfig,
+  recordTimeline: boolean,
 };
 
 export type DevToolsHook = {

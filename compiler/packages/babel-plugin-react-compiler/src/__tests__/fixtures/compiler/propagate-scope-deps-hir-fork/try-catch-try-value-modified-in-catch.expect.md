@@ -31,9 +31,9 @@ import { c as _c } from "react/compiler-runtime"; // @enablePropagateDepsInHIR
 const { throwInput } = require("shared-runtime");
 
 function Component(props) {
-  const $ = _c(2);
+  const $ = _c(3);
   let t0;
-  if ($[0] !== props) {
+  if ($[0] !== props.y || $[1] !== props.e) {
     t0 = Symbol.for("react.early_return_sentinel");
     bb0: {
       try {
@@ -47,10 +47,11 @@ function Component(props) {
         break bb0;
       }
     }
-    $[0] = props;
-    $[1] = t0;
+    $[0] = props.y;
+    $[1] = props.e;
+    $[2] = t0;
   } else {
-    t0 = $[1];
+    t0 = $[2];
   }
   if (t0 !== Symbol.for("react.early_return_sentinel")) {
     return t0;
