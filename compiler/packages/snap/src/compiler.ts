@@ -48,7 +48,6 @@ function makePluginOptions(
   let enableEmitFreeze = null;
   let enableEmitHookGuards = null;
   let compilationMode: CompilationMode = 'all';
-  let runtimeModule = null;
   let panicThreshold: PanicThresholdOptions = 'all_errors';
   let hookPattern: string | null = null;
   // TODO(@mofeiZ) rewrite snap fixtures to @validatePreserveExistingMemo:false
@@ -56,6 +55,7 @@ function makePluginOptions(
   let enableChangeDetectionForDebugging = null;
   let customMacros: null | Array<Macro> = null;
   let validateBlocklistedImports = null;
+  let target = '19' as const;
 
   if (firstLine.indexOf('@compilationMode(annotation)') !== -1) {
     assert(
@@ -103,10 +103,13 @@ function makePluginOptions(
       importSpecifierName: '$dispatcherGuard',
     };
   }
-  const runtimeModuleMatch = /@runtimeModule="([^"]+)"/.exec(firstLine);
-  if (runtimeModuleMatch) {
-    runtimeModule = runtimeModuleMatch[1];
+
+  const targetMatch = /@target="([^"]+)"/.exec(firstLine);
+  if (targetMatch) {
+    // @ts-ignore
+    target = targetMatch[1];
   }
+
   if (firstLine.includes('@panicThreshold(none)')) {
     panicThreshold = 'none';
   }
@@ -243,11 +246,11 @@ function makePluginOptions(
     gating,
     panicThreshold,
     noEmit: false,
-    runtimeModule,
     eslintSuppressionRules,
     flowSuppressions,
     ignoreUseNoForget,
     enableReanimatedCheck: false,
+    target,
   };
   return [options, logs];
 }
