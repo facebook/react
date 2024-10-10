@@ -920,15 +920,7 @@ export type InstructionValue =
       type: Type;
       loc: SourceLocation;
     }
-  | {
-      kind: 'JsxExpression';
-      tag: Place | BuiltinTag;
-      props: Array<JsxAttribute>;
-      children: Array<Place> | null; // null === no children
-      loc: SourceLocation;
-      openingLoc: SourceLocation;
-      closingLoc: SourceLocation;
-    }
+  | JsxExpression
   | {
       kind: 'ObjectExpression';
       properties: Array<ObjectProperty | SpreadPattern>;
@@ -1073,6 +1065,16 @@ export type InstructionValue =
       node: t.Node;
       loc: SourceLocation;
     };
+
+export type JsxExpression = {
+  kind: 'JsxExpression';
+  tag: Place | BuiltinTag;
+  props: Array<JsxAttribute>;
+  children: Array<Place> | null; // null === no children
+  loc: SourceLocation;
+  openingLoc: SourceLocation;
+  closingLoc: SourceLocation;
+};
 
 export type JsxAttribute =
   | {kind: 'JsxSpreadAttribute'; argument: Place}
