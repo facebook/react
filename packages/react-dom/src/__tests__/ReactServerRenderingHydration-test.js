@@ -788,4 +788,20 @@ describe('ReactDOMServerHydration', () => {
 
     expect(ref.current).toBe(button);
   });
+
+  it('ignores text nodes on root when hydrating', async () => {
+    const root = document.createElement('div');
+
+    root.innerHTML = '<button>Click</button>';
+    const button = root.firstChild;
+
+    const emptyText = document.createTextNode('');
+    root.insertBefore(emptyText, button);
+
+    const ref = React.createRef();
+    await act(() => {
+      ReactDOMClient.hydrateRoot(root, <button ref={ref}>Click</button>);
+    });
+    expect(ref.current).toBe(button);
+  });
 });
