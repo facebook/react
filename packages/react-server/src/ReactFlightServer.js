@@ -3465,6 +3465,8 @@ function renderConsoleValue(
         if (element._owner != null) {
           outlineComponentInfo(request, element._owner);
         }
+        doNotLimit.add(element.props);
+
         if (enableOwnerStacks) {
           let debugStack: null | ReactStackTrace = null;
           if (element._debugStack != null) {
@@ -3475,7 +3477,6 @@ function renderConsoleValue(
               doNotLimit.add(debugStack[i]);
             }
           }
-          doNotLimit.add(element.props);
           return [
             REACT_ELEMENT_TYPE,
             element.type,
