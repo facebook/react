@@ -295,7 +295,7 @@ export default {
           if (pathList.has(segment.id)) {
             const pathArray = Array.from(pathList);
             const cyclicSegments = pathArray.slice(
-              pathArray.indexOf(segment.id) + 1,
+              pathArray.indexOf(segment.id) - 1,
             );
             for (const cyclicSegment of cyclicSegments) {
               cyclic.add(cyclicSegment);
@@ -323,7 +323,14 @@ export default {
             }
           }
 
-          cache.set(segment.id, paths);
+          // If our segment is reachable then there should be at least one path
+          // to it to the end of our code path.
+          if (segment.reachable && paths === BigInt('0')) {
+            cache.delete(segment.id);
+          } else {
+            cache.set(segment.id, paths);
+          }
+
           return paths;
         }
 
