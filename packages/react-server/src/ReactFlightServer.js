@@ -1962,6 +1962,12 @@ function serializeUndefined(): string {
   return '$undefined';
 }
 
+function serializeDate(date: Date): string {
+  // JSON.stringify automatically calls Date.prototype.toJSON which calls toISOString.
+  // We need only tack on a $D prefix.
+  return '$D' + date.toJSON();
+}
+
 function serializeDateFromDateJSON(dateJSON: string): string {
   // JSON.stringify automatically calls Date.prototype.toJSON which calls toISOString.
   // We need only tack on a $D prefix.
@@ -2777,6 +2783,14 @@ function renderModelDestructive(
           getAsyncIterator,
         );
       }
+    }
+
+    // We put the Date check low b/c most of the time Date's will already have been serialized
+    // before we process it in this function but when rendering a Date() as a top level it can
+    // end up being a Date instance here. This is rare so we deprioritize it by putting it deep
+    // in this function
+    if (value instanceof Date) {
+      return serializeDate(value);
     }
 
     // Verify that this is a simple plain object.
@@ -3644,6 +3658,10 @@ function renderConsoleValue(
 
   if (typeof value === 'bigint') {
     return serializeBigInt(value);
+  }
+
+  if (value instanceof Date) {
+    return serializeDate(value);
   }
 
   return 'unknown type ' + typeof value;
