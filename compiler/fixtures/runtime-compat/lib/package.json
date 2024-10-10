@@ -1,0 +1,19 @@
+{
+  "name": "runtime-compat-lib",
+  "version": "0.0.0",
+  "description": "Testing ground for libraries compiled with React Compiler",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo 'no tests'"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/cli": "^7.25.7",
+    "@babel/core": "^7.25.7",
+    "@babel/preset-env": "^7.25.7",
+    "babel-plugin-react-compiler": "0.0.0-experimental-58c2b1c-20241009"
+  },
+  "dependencies": {
+    "react-compiler-runtime": "0.0.0-experimental-8d8e73f-20241009"
+  }
+}
