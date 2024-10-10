@@ -79,6 +79,7 @@ export const enableTrustedTypesIntegration = false;
 export const enableUseEffectEventHook = false;
 export const enableUseMemoCacheHook = true;
 export const favorSafetyOverHydrationPerf = true;
+export const logStringRefs: null | ((string, string) => void) = null;
 export const passChildrenWhenCloningPersistedNodes = false;
 export const renameElementSymbol = true;
 export const retryLaneExpirationMs = 5000;

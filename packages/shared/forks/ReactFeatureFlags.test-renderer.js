@@ -48,6 +48,7 @@ export const enableFilterEmptyStringAttributesDOM = true;
 export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableFabricCompleteRootInCommitPhase = false;
 export const enableHiddenSubtreeInsertionEffectCleanup = false;
+export const logStringRefs: null | ((string, string) => void) = null;
 
 export const enableRetryLaneExpiration = false;
 export const retryLaneExpirationMs = 5000;

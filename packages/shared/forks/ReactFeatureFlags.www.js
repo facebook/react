@@ -36,6 +36,7 @@ export const {
   syncLaneExpirationMs,
   transitionLaneExpirationMs,
   enableSiblingPrerendering,
+  logStringRefs,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.

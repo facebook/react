@@ -172,7 +172,7 @@ function getNextMajorFlagValue(flag) {
   const value = ReactFeatureFlagsMajor[flag];
   if (value === true || value === 'next') {
     return '✅';
-  } else if (value === false || value === 'experimental') {
+  } else if (value === false || value === null || value === 'experimental') {
     return '❌';
   } else if (value === 'profile') {
     return '📊';
@@ -189,7 +189,12 @@ function getOSSCanaryFlagValue(flag) {
   const value = ReactFeatureFlags[flag];
   if (value === true) {
     return '✅';
-  } else if (value === false || value === 'experimental' || value === 'next') {
+  } else if (
+    value === false ||
+    value === null ||
+    value === 'experimental' ||
+    value === 'next'
+  ) {
     return '❌';
   } else if (value === 'profile') {
     return '📊';
@@ -206,7 +211,7 @@ function getOSSExperimentalFlagValue(flag) {
   const value = ReactFeatureFlags[flag];
   if (value === true || value === 'experimental') {
     return '✅';
-  } else if (value === false || value === 'next') {
+  } else if (value === false || value === null || value === 'next') {
     return '❌';
   } else if (value === 'profile') {
     return '📊';
@@ -225,7 +230,7 @@ function getWWWModernFlagValue(flag) {
   const value = ReactFeatureFlagsWWW[flag];
   if (value === true || value === 'experimental') {
     return '✅';
-  } else if (value === false || value === 'next') {
+  } else if (value === false || value === null || value === 'next') {
     return '❌';
   } else if (value === 'profile') {
     return '📊';
@@ -244,7 +249,12 @@ function getWWWClassicFlagValue(flag) {
   const value = ReactFeatureFlagsWWW[flag];
   if (value === true) {
     return '✅';
-  } else if (value === false || value === 'experimental' || value === 'next') {
+  } else if (
+    value === false ||
+    value === null ||
+    value === 'experimental' ||
+    value === 'next'
+  ) {
     return '❌';
   } else if (value === 'profile') {
     return '📊';
@@ -265,7 +275,7 @@ function getRNNextMajorFlagValue(flag) {
     return '✅';
   } else if (value === 'next-todo') {
     return '📋';
-  } else if (value === false || value === 'experimental') {
+  } else if (value === false || value === null || value === 'experimental') {
     return '❌';
   } else if (value === 'profile') {
     return '📊';
@@ -286,6 +296,7 @@ function getRNOSSFlagValue(flag) {
     return '✅';
   } else if (
     value === false ||
+    value === null ||
     value === 'experimental' ||
     value === 'next' ||
     value === 'next-todo'
@@ -308,7 +319,12 @@ function getRNFBFlagValue(flag) {
   const value = ReactFeatureFlagsNativeFB[flag];
   if (value === true) {
     return '✅';
-  } else if (value === false || value === 'experimental' || value === 'next') {
+  } else if (
+    value === false ||
+    value === null ||
+    value === 'experimental' ||
+    value === 'next'
+  ) {
     return '❌';
   } else if (value === 'profile') {
     return '📊';

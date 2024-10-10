@@ -215,6 +215,7 @@ export const disableClientCache = true;
 // during element creation.
 export const enableRefAsProp = true;
 export const disableStringRefs = true;
+export const logStringRefs: null | ((string, string) => void) = null;
 
 // Warn on any usage of ReactTestRenderer
 export const enableReactTestRendererWarning = true;
