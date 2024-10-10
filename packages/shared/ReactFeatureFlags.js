@@ -298,3 +298,5 @@ export const enableGetInspectorDataForInstanceInProduction = false;
 export const consoleManagedByDevToolsDuringStrictMode = true;
 
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
+
+export const alwaysResetBaseQueue = false;

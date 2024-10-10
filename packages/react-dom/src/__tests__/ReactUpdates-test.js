@@ -87,6 +87,228 @@ describe('ReactUpdates', () => {
     expect(container.firstChild.textContent).toBe('2');
   });
 
+  it('should keep state from render during layout effect update with isomorphic transition', async () => {
+    let _setTransitionState = null;
+    function Component({prop}) {
+      const [, setLayoutState] = React.useState({});
+      const [state, setState] = React.useState({prop, count: 0});
+
+      Scheduler.log(`Render: ${state.prop} ${state.count}`);
+
+      if (state.prop !== prop) {
+        Scheduler.log(`setState in render: ${state.prop} ${state.count}`);
+        setState(currentState => {
+          const nextState = {
+            prop,
+            count: currentState.count + 1,
+          };
+
+          Scheduler.log(
+            `Render reducer: ${currentState.prop} ${currentState.count} -> ${nextState.prop} ${nextState.count}`,
+          );
+          return nextState;
+        });
+      }
+
+      _setTransitionState = () => {
+        React.startTransition(() => {
+          setState(currentState => {
+            const nextState = {
+              prop,
+              count: currentState.count + 10,
+            };
+            Scheduler.log(
+              `Transition reducer: ${currentState.count} ${currentState.prop} -> ${nextState.prop} ${nextState.count}`,
+            );
+            return nextState;
+          });
+        });
+      };
+
+      React.useLayoutEffect(() => {
+        if (prop === 1) {
+          Scheduler.log(`Layout effect setState`);
+          setLayoutState({});
+        }
+      }, [prop]);
+
+      return (
+        <div>
+          {state.prop} {state.count}
+        </div>
+      );
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<Component prop={0} />);
+    });
+
+    assertLog(['Render: 0 0']);
+    expect(container.firstChild.textContent).toBe('0 0');
+
+    await act(() => {
+      // Schedule a transition to update the state.
+      // This means baseQueue is non-empty.
+      _setTransitionState();
+
+      // Now schedule a blocking update.
+      root.render(<Component prop={1} />);
+    });
+
+    assertLog([
+      // Transition setState
+      // For isomorphic startTransition,
+      // This runs first, not during transition render.
+      'Transition reducer: 0 0 -> 0 10',
+
+      // Prop change from 0 -> 1
+      'Render: 0 0',
+      'setState in render: 0 0',
+      'Render reducer: 0 0 -> 1 1',
+      'Render: 1 1',
+
+      // Layout effect runs with prop 1
+      'Layout effect setState',
+      ...(gate('alwaysResetBaseQueue')
+        ? []
+        : [
+            'Render: 0 0',
+            'setState in render: 0 0',
+            'Render reducer: 0 0 -> 1 1',
+          ]),
+      'Render: 1 1',
+
+      // Transition
+      'Render: 0 10',
+      'setState in render: 0 10',
+      'Render reducer: 0 10 -> 1 11',
+      'Render: 1 11',
+    ]);
+    expect(container.firstChild.textContent).toBe('1 11');
+  });
+
+  it('should keep state from render during layout effect update with useTransition', async () => {
+    let _setTransitionState = null;
+
+    function Component({prop}) {
+      const [, startTransition] = React.useTransition();
+      const [, setLayoutState] = React.useState({});
+      const [state, setState] = React.useState({prop, count: 0});
+
+      Scheduler.log(`Render: ${state.prop} ${state.count}`);
+
+      if (state.prop !== prop) {
+        Scheduler.log(`setState in render: ${state.prop} ${state.count}`);
+        setState(currentState => {
+          const nextState = {
+            prop,
+            count: currentState.count + 1,
+          };
+          Scheduler.log(
+            `Render reducer: ${currentState.prop} ${currentState.count} -> ${nextState.prop} ${nextState.count}`,
+          );
+          return nextState;
+        });
+      }
+      _setTransitionState = () => {
+        startTransition(() => {
+          setState(currentState => {
+            const nextState = {
+              prop,
+              count: currentState.count + 10,
+            };
+            Scheduler.log(
+              `Transition reducer: ${currentState.prop} ${currentState.count} -> ${nextState.prop} ${nextState.count}`,
+            );
+            return nextState;
+          });
+        });
+      };
+
+      React.useLayoutEffect(() => {
+        if (prop === 1) {
+          Scheduler.log(`Layout effect setState`);
+          setLayoutState({});
+        }
+      }, [prop]);
+
+      return (
+        <div>
+          {state.prop} {state.count}
+        </div>
+      );
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<Component prop={0} />);
+    });
+
+    assertLog(['Render: 0 0']);
+    expect(container.firstChild.textContent).toBe('0 0');
+
+    await act(() => {
+      // Schedule a transition to update the state.
+      // This means baseQueue is non-empty.
+      _setTransitionState();
+
+      // Now schedule a blocking update.
+      root.render(<Component prop={1} />);
+    });
+
+    if (gate('alwaysResetBaseQueue')) {
+      assertLog([
+        // Prop change from 0 -> 1
+        'Render: 0 0',
+        'setState in render: 0 0',
+        'Render reducer: 0 0 -> 1 1',
+        'Render: 1 1',
+
+        // Layout effect runs with prop 1
+        'Layout effect setState',
+        // If the base queue is reset, no extra render.
+        'Render: 1 1',
+
+        // Transition
+        // currentProp currentState -> prop currentState + 10.
+        'Transition reducer: 1 1 -> 0 11',
+        'Render: 0 11',
+        'setState in render: 0 11',
+        'Render reducer: 0 11 -> 1 12',
+        'Render: 1 12',
+      ]);
+
+      expect(container.firstChild.textContent).toBe('1 12');
+    } else {
+      assertLog([
+        // Prop change from 0 -> 1
+        'Render: 0 0',
+        'setState in render: 0 0',
+        'Render reducer: 0 0 -> 1 1',
+        'Render: 1 1',
+
+        // Layout effect runs with prop 1
+        'Layout effect setState',
+        // Extra render
+        'Render: 0 0',
+        'setState in render: 0 0',
+        'Render reducer: 0 0 -> 1 1',
+        'Render: 1 1',
+
+        // Transition
+        'Transition reducer: 0 0 -> 0 10',
+        'Render: 0 10',
+        'setState in render: 0 10',
+        'Render reducer: 0 10 -> 1 11',
+        'Render: 1 11',
+      ]);
+      expect(container.firstChild.textContent).toBe('1 11');
+    }
+  });
+
   it('should batch state when updating two different states', async () => {
     let componentStateA;
     let componentStateB;
