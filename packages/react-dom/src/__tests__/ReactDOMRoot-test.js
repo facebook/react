@@ -398,6 +398,33 @@ describe('ReactDOMRoot', () => {
     );
   });
 
+  it('should warn if options object is passed as the second argument', () => {
+    expect(() =>
+      ReactDOMClient.hydrateRoot(container, {key: 'value'}),
+    ).toErrorDev(
+      'Warning: You passed an options object as the second argument to `hydrateRoot(...)`, did you forget to pass a React element?',
+      {withoutStack: true},
+    );
+  });
+
+  it('should warn if element is passed as options to hydrateRoot', async () => {
+    expect(() =>
+      ReactDOMClient.hydrateRoot(
+        container,
+        <div>
+          <span />
+        </div>,
+        <div>
+          <span />
+        </div>,
+      ),
+    ).toErrorDev(
+      'You passed a JSX element as an options to hydrateRoot. You probably meant to ' +
+        'call root.render instead. ',
+      {withoutStack: true},
+    );
+  });
+
   it('warns when given a function', () => {
     function Component() {
       return <div />;
