@@ -15,11 +15,11 @@ export function inferAliasForPhis(
   for (const [_, block] of func.body.blocks) {
     for (const phi of block.phis) {
       const isPhiMutatedAfterCreation: boolean =
-        phi.id.mutableRange.end >
+        phi.place.identifier.mutableRange.end >
         (block.instructions.at(0)?.id ?? block.terminal.id);
       if (isPhiMutatedAfterCreation) {
         for (const [, operand] of phi.operands) {
-          aliases.union([phi.id, operand]);
+          aliases.union([phi.place.identifier, operand.identifier]);
         }
       }
     }

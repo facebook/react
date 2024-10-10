@@ -635,7 +635,7 @@ class InferenceState {
   inferPhi(phi: Phi): void {
     const values: Set<InstructionValue> = new Set();
     for (const [_, operand] of phi.operands) {
-      const operandValues = this.#variables.get(operand.id);
+      const operandValues = this.#variables.get(operand.identifier.id);
       // This is a backedge that will be handled later by State.merge
       if (operandValues === undefined) continue;
       for (const v of operandValues) {
@@ -644,7 +644,7 @@ class InferenceState {
     }
 
     if (values.size > 0) {
-      this.#variables.set(phi.id.id, values);
+      this.#variables.set(phi.place.identifier.id, values);
     }
   }
 }

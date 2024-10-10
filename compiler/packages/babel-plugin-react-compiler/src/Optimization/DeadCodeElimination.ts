@@ -42,7 +42,7 @@ export function deadCodeElimination(fn: HIRFunction): void {
    */
   for (const [, block] of fn.body.blocks) {
     for (const phi of block.phis) {
-      if (!state.isIdOrNameUsed(phi.id)) {
+      if (!state.isIdOrNameUsed(phi.place.identifier)) {
         block.phis.delete(phi);
       }
     }
@@ -159,9 +159,9 @@ function findReferencedIdentifiers(fn: HIRFunction): State {
         }
       }
       for (const phi of block.phis) {
-        if (state.isIdOrNameUsed(phi.id)) {
+        if (state.isIdOrNameUsed(phi.place.identifier)) {
           for (const [_pred, operand] of phi.operands) {
-            state.reference(operand);
+            state.reference(operand.identifier);
           }
         }
       }

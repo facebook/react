@@ -117,7 +117,7 @@ function applyConstantPropagation(
     for (const phi of block.phis) {
       let value = evaluatePhi(phi, constants);
       if (value !== null) {
-        constants.set(phi.id.id, value);
+        constants.set(phi.place.identifier.id, value);
       }
     }
 
@@ -167,7 +167,7 @@ function applyConstantPropagation(
 function evaluatePhi(phi: Phi, constants: Constants): Constant | null {
   let value: Constant | null = null;
   for (const [, operand] of phi.operands) {
-    const operandValue = constants.get(operand.id) ?? null;
+    const operandValue = constants.get(operand.identifier.id) ?? null;
     // did not find a constant, can't constant propogate
     if (operandValue === null) {
       return null;

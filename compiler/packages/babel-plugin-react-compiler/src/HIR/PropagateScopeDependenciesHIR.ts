@@ -607,7 +607,7 @@ function collectDependencies(
     // Record referenced optional chains in phis
     for (const phi of block.phis) {
       for (const operand of phi.operands) {
-        const maybeOptionalChain = temporaries.get(operand[1].id);
+        const maybeOptionalChain = temporaries.get(operand[1].identifier.id);
         if (maybeOptionalChain) {
           context.visitDependency(maybeOptionalChain);
         }

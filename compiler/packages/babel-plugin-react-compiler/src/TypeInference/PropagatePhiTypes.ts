@@ -62,21 +62,24 @@ export function propagatePhiTypes(fn: HIRFunction): void {
        * We also don't propagate scopes for named variables, to preserve compatibility
        * with previous LeaveSSA behavior.
        */
-      if (phi.id.type.kind !== 'Type' || phi.id.name !== null) {
+      if (
+        phi.place.identifier.type.kind !== 'Type' ||
+        phi.place.identifier.name !== null
+      ) {
         continue;
       }
       let type: Type | null = null;
       for (const [, operand] of phi.operands) {
         if (type === null) {
-          type = operand.type;
-        } else if (!typeEquals(type, operand.type)) {
+          type = operand.identifier.type;
+        } else if (!typeEquals(type, operand.identifier.type)) {
           type = null;
           break;
         }
       }
       if (type !== null) {
-        phi.id.type = type;
-        propagated.add(phi.id.id);
+        phi.place.identifier.type = type;
+        propagated.add(phi.place.identifier.id);
       }
     }
     for (const instr of block.instructions) {
