@@ -2,11 +2,12 @@
 
 jest.mock('shared/ReactFeatureFlags', () => {
   jest.mock(
-    'ReactNativeInternalFeatureFlags',
+    'react-native/src/private/renderer/featureflags/ReactFeatureFlags',
     () =>
       jest.requireActual('shared/forks/ReactFeatureFlags.native-fb-dynamic.js'),
     {virtual: true}
   );
+
   const actual = jest.requireActual(
     'shared/forks/ReactFeatureFlags.native-fb.js'
   );
