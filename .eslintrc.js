@@ -306,6 +306,7 @@ module.exports = {
     'react-internal/no-to-warn-dev-within-to-throw': ERROR,
     'react-internal/warning-args': ERROR,
     'react-internal/no-production-logging': ERROR,
+    'react-internal/no-dynamic-import-in-literal': ERROR,
   },
 
   overrides: [
@@ -389,6 +390,7 @@ module.exports = {
         'jest/expect-expect': OFF,
         // Lame rule that fires in itRender helpers or in render methods.
         'jest/no-standalone-expect': OFF,
+        'react-internal/no-dynamic-import-in-literal': OFF,
       },
     },
     {
