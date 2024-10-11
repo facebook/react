@@ -23,7 +23,7 @@ import {
   removeUnnecessaryTryCatch,
   removeUnreachableForUpdates,
 } from '../HIR/HIRBuilder';
-import {printIdentifier} from '../HIR/PrintHIR';
+import {printPlace} from '../HIR/PrintHIR';
 
 /*
  * This pass prunes `maybe-throw` terminals for blocks that can provably *never* throw.
@@ -55,7 +55,7 @@ export function pruneMaybeThrows(fn: HIRFunction): void {
               loc: GeneratedSource,
               description: `Could not find mapping for predecessor bb${predecessor} in block bb${
                 block.id
-              } for phi ${printIdentifier(phi.id)}`,
+              } for phi ${printPlace(phi.place)}`,
               suggestions: null,
             });
             phi.operands.delete(predecessor);

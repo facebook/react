@@ -209,10 +209,11 @@ function validateNoRefAccessInRenderImpl(
     for (const [, block] of fn.body.blocks) {
       for (const phi of block.phis) {
         env.set(
-          phi.id.id,
+          phi.place.identifier.id,
           joinRefAccessTypes(
             ...Array(...phi.operands.values()).map(
-              operand => env.get(operand.id) ?? ({kind: 'None'} as const),
+              operand =>
+                env.get(operand.identifier.id) ?? ({kind: 'None'} as const),
             ),
           ),
         );

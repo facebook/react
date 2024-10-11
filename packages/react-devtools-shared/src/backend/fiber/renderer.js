@@ -599,7 +599,8 @@ export function getInternalReactConstants(version: string): {
       !shouldSkipForgetCheck &&
       // $FlowFixMe[incompatible-type] fiber.updateQueue is mixed
       (fiber.updateQueue?.memoCache != null ||
-        fiber.memoizedState?.memoizedState?.[REACT_MEMO_CACHE_SENTINEL])
+        (Array.isArray(fiber.memoizedState) &&
+          fiber.memoizedState[0]?.[REACT_MEMO_CACHE_SENTINEL]))
     ) {
       const displayNameWithoutForgetWrapper = getDisplayNameForFiber(
         fiber,

@@ -162,23 +162,23 @@ export function inferReactivePlaces(fn: HIRFunction): void {
       let hasReactiveControl = isReactiveControlledBlock(block.id);
 
       for (const phi of block.phis) {
-        if (reactiveIdentifiers.isReactiveIdentifier(phi.id)) {
+        if (reactiveIdentifiers.isReactive(phi.place)) {
           // Already marked reactive on a previous pass
           continue;
         }
         let isPhiReactive = false;
         for (const [, operand] of phi.operands) {
-          if (reactiveIdentifiers.isReactiveIdentifier(operand)) {
+          if (reactiveIdentifiers.isReactive(operand)) {
             isPhiReactive = true;
             break;
           }
         }
         if (isPhiReactive) {
-          reactiveIdentifiers.markReactiveIdentifier(phi.id);
+          reactiveIdentifiers.markReactive(phi.place);
         } else {
           for (const [pred] of phi.operands) {
             if (isReactiveControlledBlock(pred)) {
-              reactiveIdentifiers.markReactiveIdentifier(phi.id);
+              reactiveIdentifiers.markReactive(phi.place);
               break;
             }
           }
