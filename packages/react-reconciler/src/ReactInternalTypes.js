@@ -37,6 +37,7 @@ import type {
 } from './ReactFiberTracingMarkerComponent';
 import type {ConcurrentUpdate} from './ReactFiberConcurrentUpdates';
 import type {ComponentStackNode} from 'react-server/src/ReactFizzComponentStack';
+import type {ThenableState} from './ReactFiberThenable';
 
 // Unwind Circular: moved from ReactFiberHooks.old
 export type HookType =
@@ -81,7 +82,7 @@ export type Dependencies = {
     | ContextDependency<mixed>
     | ContextDependencyWithSelect<mixed>
     | null,
-  ...
+  _debugThenableState?: null | ThenableState, // DEV-only
 };
 
 export type MemoCache = {
