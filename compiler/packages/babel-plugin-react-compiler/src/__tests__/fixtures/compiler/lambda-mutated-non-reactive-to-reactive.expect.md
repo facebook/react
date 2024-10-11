@@ -26,7 +26,6 @@ function f(a) {
   const $ = _c(4);
   let x;
   if ($[0] !== a) {
-    x;
     x = { a };
     $[0] = a;
     $[1] = x;

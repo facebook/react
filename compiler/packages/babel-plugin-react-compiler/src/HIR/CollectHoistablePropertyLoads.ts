@@ -88,11 +88,6 @@ export function collectHoistablePropertyLoads(
 ): ReadonlyMap<BlockId, BlockInfo> {
   const registry = new PropertyPathRegistry();
 
-  const functionExpressionLoads = collectFunctionExpressionFakeLoads(fn);
-  const actuallyEvaluatedTemporaries = new Map(
-    [...temporaries].filter(([id]) => !functionExpressionLoads.has(id)),
-  );
-
   /**
    * Due to current limitations of mutable range inference, there are edge cases in
    * which we infer known-immutable values (e.g. props or hook params) to have a
@@ -110,7 +105,7 @@ export function collectHoistablePropertyLoads(
     }
   }
   const nodes = collectNonNullsInBlocks(fn, {
-    temporaries: actuallyEvaluatedTemporaries,
+    temporaries,
     knownImmutableIdentifiers,
     hoistableFromOptionals,
     registry,
@@ -575,31 +570,4 @@ function reduceMaybeOptionalChains(
       }
     }
   } while (changed);
-}
-
-function collectFunctionExpressionFakeLoads(
-  fn: HIRFunction,
-): Set<IdentifierId> {
-  const sources = new Map<IdentifierId, IdentifierId>();
-  const functionExpressionReferences = new Set<IdentifierId>();
-
-  for (const [_, block] of fn.body.blocks) {
-    for (const {lvalue, value} of block.instructions) {
-      if (
-        value.kind === 'FunctionExpression' ||
-        value.kind === 'ObjectMethod'
-      ) {
-        for (const reference of value.loweredFunc.dependencies) {
-          let curr: IdentifierId | undefined = reference.identifier.id;
-          while (curr != null) {
-            functionExpressionReferences.add(curr);
-            curr = sources.get(curr);
-          }
-        }
-      } else if (value.kind === 'PropertyLoad') {
-        sources.set(lvalue.identifier.id, value.object.identifier.id);
-      }
-    }
-  }
-  return functionExpressionReferences;
 }
