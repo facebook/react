@@ -58,7 +58,8 @@ export default function SettingsModal(_: {}): React.Node {
 }
 
 function SettingsModalImpl(_: {}) {
-  const {setIsModalShowing} = useContext(SettingsModalContext);
+  const {setIsModalShowing, environmentNames} =
+    useContext(SettingsModalContext);
   const dismissModal = useCallback(
     () => setIsModalShowing(false),
     [setIsModalShowing],
@@ -81,7 +82,7 @@ function SettingsModalImpl(_: {}) {
   let view = null;
   switch (selectedTabID) {
     case 'components':
-      view = <ComponentsSettings />;
+      view = <ComponentsSettings environmentNames={environmentNames} />;
       break;
     // $FlowFixMe[incompatible-type] is this missing in TabID?
     case 'debugging':

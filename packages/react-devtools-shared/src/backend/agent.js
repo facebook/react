@@ -220,6 +220,7 @@ export default class Agent extends EventEmitter<{
       this.updateConsolePatchSettings,
     );
     bridge.addListener('updateComponentFilters', this.updateComponentFilters);
+    bridge.addListener('getEnvironmentNames', this.getEnvironmentNames);
 
     // Temporarily support older standalone front-ends sending commands to newer embedded backends.
     // We do this because React Native embeds the React DevTools backend,
@@ -813,6 +814,24 @@ export default class Agent extends EventEmitter<{
         renderer.updateComponentFilters(componentFilters);
       }
     };
+
+  getEnvironmentNames: () => void = () => {
+    let accumulatedNames = null;
+    for (const rendererID in this._rendererInterfaces) {
+      const renderer = this._rendererInterfaces[+rendererID];
+      const names = renderer.getEnvironmentNames();
+      if (accumulatedNames === null) {
+        accumulatedNames = names;
+      } else {
+        for (let i = 0; i < names.length; i++) {
+          if (accumulatedNames.indexOf(names[i]) === -1) {
+            accumulatedNames.push(names[i]);
+          }
+        }
+      }
+    }
+    this._bridge.send('environmentNames', accumulatedNames || []);
+  };
 
   onTraceUpdates: (nodes: Set<HostInstance>) => void = nodes => {
     this.emit('traceUpdates', nodes);

@@ -1078,6 +1078,11 @@ export function attach(
     // Not implemented.
   }
 
+  function getEnvironmentNames(): Array<string> {
+    // No RSC support.
+    return [];
+  }
+
   function setTraceUpdatesEnabled(enabled: boolean) {
     // Not implemented.
   }
@@ -1152,5 +1157,6 @@ export function attach(
     storeAsGlobal,
     unpatchConsoleForStrictMode,
     updateComponentFilters,
+    getEnvironmentNames,
   };
 }
