@@ -43,6 +43,7 @@ import {
   disableLegacyMode,
   disableDefaultPropsExceptForClasses,
   disableStringRefs,
+  enableSiblingPrerendering,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import is from 'shared/objectIs';
@@ -1700,6 +1701,10 @@ function handleThrow(root: FiberRoot, thrownValue: any): void {
     // deprecate the old API in favor of `use`.
     thrownValue = getSuspendedThenable();
     workInProgressSuspendedReason =
+      // TODO: Suspending the work loop during the render phase is
+      // currently not compatible with sibling prerendering. We will add
+      // this optimization back in a later step.
+      !enableSiblingPrerendering &&
       shouldRemainOnPreviousScreen() &&
       // Check if there are other pending updates that might possibly unblock this
       // component from suspending. This mirrors the check in
