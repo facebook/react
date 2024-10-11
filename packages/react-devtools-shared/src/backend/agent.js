@@ -342,84 +342,123 @@ export default class Agent extends EventEmitter<{
   }
 
   getIDForHostInstance(target: HostInstance): number | null {
-    let bestMatch: null | HostInstance = null;
-    let bestRenderer: null | RendererInterface = null;
-    // Find the nearest ancestor which is mounted by a React.
-    for (const rendererID in this._rendererInterfaces) {
-      const renderer = ((this._rendererInterfaces[
-        (rendererID: any)
-      ]: any): RendererInterface);
-      const nearestNode: null = renderer.getNearestMountedHostInstance(target);
-      if (nearestNode !== null) {
-        if (nearestNode === target) {
-          // Exact match we can exit early.
-          bestMatch = nearestNode;
-          bestRenderer = renderer;
-          break;
-        }
-        if (
-          bestMatch === null ||
-          (!isReactNativeEnvironment() && bestMatch.contains(nearestNode))
-        ) {
-          // If this is the first match or the previous match contains the new match,
-          // so the new match is a deeper and therefore better match.
-          bestMatch = nearestNode;
-          bestRenderer = renderer;
+    if (isReactNativeEnvironment() || typeof target.nodeType !== 'number') {
+      // In React Native or non-DOM we simply pick any renderer that has a match.
+      for (const rendererID in this._rendererInterfaces) {
+        const renderer = ((this._rendererInterfaces[
+          (rendererID: any)
+        ]: any): RendererInterface);
+        try {
+          const match = renderer.getElementIDForHostInstance(target);
+          if (match != null) {
+            return match;
+          }
+        } catch (error) {
+          // Some old React versions might throw if they can't find a match.
+          // If so we should ignore it...
         }
       }
-    }
-    if (bestRenderer != null && bestMatch != null) {
-      try {
-        return bestRenderer.getElementIDForHostInstance(bestMatch, true);
-      } catch (error) {
-        // Some old React versions might throw if they can't find a match.
-        // If so we should ignore it...
+      return null;
+    } else {
+      // In the DOM we use a smarter mechanism to find the deepest a DOM node
+      // that is registered if there isn't an exact match.
+      let bestMatch: null | Element = null;
+      let bestRenderer: null | RendererInterface = null;
+      // Find the nearest ancestor which is mounted by a React.
+      for (const rendererID in this._rendererInterfaces) {
+        const renderer = ((this._rendererInterfaces[
+          (rendererID: any)
+        ]: any): RendererInterface);
+        const nearestNode: null | Element = renderer.getNearestMountedDOMNode(
+          (target: any),
+        );
+        if (nearestNode !== null) {
+          if (nearestNode === target) {
+            // Exact match we can exit early.
+            bestMatch = nearestNode;
+            bestRenderer = renderer;
+            break;
+          }
+          if (bestMatch === null || bestMatch.contains(nearestNode)) {
+            // If this is the first match or the previous match contains the new match,
+            // so the new match is a deeper and therefore better match.
+            bestMatch = nearestNode;
+            bestRenderer = renderer;
+          }
+        }
       }
+      if (bestRenderer != null && bestMatch != null) {
+        try {
+          return bestRenderer.getElementIDForHostInstance(bestMatch);
+        } catch (error) {
+          // Some old React versions might throw if they can't find a match.
+          // If so we should ignore it...
+        }
+      }
+      return null;
     }
-    return null;
   }
 
   getComponentNameForHostInstance(target: HostInstance): string | null {
     // We duplicate this code from getIDForHostInstance to avoid an object allocation.
-    let bestMatch: null | HostInstance = null;
-    let bestRenderer: null | RendererInterface = null;
-    // Find the nearest ancestor which is mounted by a React.
-    for (const rendererID in this._rendererInterfaces) {
-      const renderer = ((this._rendererInterfaces[
-        (rendererID: any)
-      ]: any): RendererInterface);
-      const nearestNode = renderer.getNearestMountedHostInstance(target);
-      if (nearestNode !== null) {
-        if (nearestNode === target) {
-          // Exact match we can exit early.
-          bestMatch = nearestNode;
-          bestRenderer = renderer;
-          break;
-        }
-        if (
-          bestMatch === null ||
-          (!isReactNativeEnvironment() && bestMatch.contains(nearestNode))
-        ) {
-          // If this is the first match or the previous match contains the new match,
-          // so the new match is a deeper and therefore better match.
-          bestMatch = nearestNode;
-          bestRenderer = renderer;
+    if (isReactNativeEnvironment() || typeof target.nodeType !== 'number') {
+      // In React Native or non-DOM we simply pick any renderer that has a match.
+      for (const rendererID in this._rendererInterfaces) {
+        const renderer = ((this._rendererInterfaces[
+          (rendererID: any)
+        ]: any): RendererInterface);
+        try {
+          const id = renderer.getElementIDForHostInstance(target);
+          if (id) {
+            return renderer.getDisplayNameForElementID(id);
+          }
+        } catch (error) {
+          // Some old React versions might throw if they can't find a match.
+          // If so we should ignore it...
         }
       }
-    }
-
-    if (bestRenderer != null && bestMatch != null) {
-      try {
-        const id = bestRenderer.getElementIDForHostInstance(bestMatch, true);
-        if (id) {
-          return bestRenderer.getDisplayNameForElementID(id);
+      return null;
+    } else {
+      // In the DOM we use a smarter mechanism to find the deepest a DOM node
+      // that is registered if there isn't an exact match.
+      let bestMatch: null | Element = null;
+      let bestRenderer: null | RendererInterface = null;
+      // Find the nearest ancestor which is mounted by a React.
+      for (const rendererID in this._rendererInterfaces) {
+        const renderer = ((this._rendererInterfaces[
+          (rendererID: any)
+        ]: any): RendererInterface);
+        const nearestNode: null | Element = renderer.getNearestMountedDOMNode(
+          (target: any),
+        );
+        if (nearestNode !== null) {
+          if (nearestNode === target) {
+            // Exact match we can exit early.
+            bestMatch = nearestNode;
+            bestRenderer = renderer;
+            break;
+          }
+          if (bestMatch === null || bestMatch.contains(nearestNode)) {
+            // If this is the first match or the previous match contains the new match,
+            // so the new match is a deeper and therefore better match.
+            bestMatch = nearestNode;
+            bestRenderer = renderer;
+          }
         }
-      } catch (error) {
-        // Some old React versions might throw if they can't find a match.
-        // If so we should ignore it...
       }
+      if (bestRenderer != null && bestMatch != null) {
+        try {
+          const id = bestRenderer.getElementIDForHostInstance(bestMatch);
+          if (id) {
+            return bestRenderer.getDisplayNameForElementID(id);
+          }
+        } catch (error) {
+          // Some old React versions might throw if they can't find a match.
+          // If so we should ignore it...
+        }
+      }
+      return null;
     }
-    return null;
   }
 
   getBackendVersion: () => void = () => {
