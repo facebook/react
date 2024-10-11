@@ -1150,7 +1150,19 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         await resolveText('InnerAsync_1');
       });
-      assertLog(['Text:Outer render', 'Suspend:OuterAsync_1']);
+      assertLog([
+        'Text:Outer render',
+        'Suspend:OuterAsync_1',
+
+        ...(gate('enableSiblingPrerendering')
+          ? [
+              'Text:Outer render',
+              'Suspend:OuterAsync_1',
+              'Text:Inner render',
+              'AsyncText:InnerAsync_1 render',
+            ]
+          : []),
+      ]);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
           <span prop="Outer" hidden={true} />
@@ -1194,6 +1206,17 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Text:Inner render',
         'Suspend:InnerAsync_2',
         'Text:InnerFallback render',
+
+        ...(gate('enableSiblingPrerendering')
+          ? [
+              'Text:Outer render',
+              'AsyncText:OuterAsync_1 render',
+              'Text:Inner render',
+              'Suspend:InnerAsync_2',
+              'Text:InnerFallback render',
+            ]
+          : []),
+
         'Text:OuterFallback destroy layout',
         'Text:Outer create layout',
         'AsyncText:OuterAsync_1 create layout',
@@ -2305,6 +2328,15 @@ describe('ReactSuspenseEffectsSemantics', () => {
         'Text:Function render',
         'AsyncText:Async_1 render',
         'Suspend:Async_2',
+
+        ...(gate('enableSiblingPrerendering')
+          ? [
+              'Text:Function render',
+              'AsyncText:Async_1 render',
+              'Suspend:Async_2',
+              'ClassText:Class render',
+            ]
+          : []),
       ]);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
@@ -2443,7 +2475,20 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await act(async () => {
         await resolveText('A');
       });
-      assertLog(['Text:Function render', 'Suspender "B" render', 'Suspend:B']);
+      assertLog([
+        'Text:Function render',
+        'Suspender "B" render',
+        'Suspend:B',
+
+        ...(gate('enableSiblingPrerendering')
+          ? [
+              'Text:Function render',
+              'Suspender "B" render',
+              'Suspend:B',
+              'ClassText:Class render',
+            ]
+          : []),
+      ]);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
           <span prop="Function" hidden={true} />

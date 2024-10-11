@@ -652,7 +652,14 @@ describe('ReactExpiration', () => {
       React.startTransition(() => {
         root.render(<App step={1} />);
       });
-      await waitForAll(['Suspend! [A1]', 'Loading...']);
+      await waitForAll([
+        'Suspend! [A1]',
+        'Loading...',
+
+        ...(gate('enableSiblingPrerendering')
+          ? ['Suspend! [A1]', 'B', 'C', 'Loading...']
+          : []),
+      ]);
 
       // Lots of time elapses before the promise resolves
       Scheduler.unstable_advanceTime(10000);

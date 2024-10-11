@@ -1066,13 +1066,25 @@ describe('ReactUse', () => {
     await act(() => {
       resolveTextRequests('A');
     });
-    assertLog(['A', '(Loading B...)']);
+    assertLog([
+      'A',
+      '(Loading B...)',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['A', '(Loading C...)', '(Loading B...)']
+        : []),
+    ]);
     expect(root).toMatchRenderedOutput('A(Loading B...)');
 
     await act(() => {
       resolveTextRequests('B');
     });
-    assertLog(['B', '(Loading C...)']);
+    assertLog([
+      'B',
+      '(Loading C...)',
+
+      ...(gate('enableSiblingPrerendering') ? ['B', '(Loading C...)'] : []),
+    ]);
     expect(root).toMatchRenderedOutput('AB(Loading C...)');
 
     await act(() => {
@@ -1868,16 +1880,26 @@ describe('ReactUse', () => {
 
     await expect(async () => {
       await act(() => resolveTextRequests('Hi'));
-    }).toErrorDev(
+    }).toErrorDev([
       // We get this warning because the generator's promise themselves are not cached.
       'A component was suspended by an uncached promise. Creating ' +
         'promises inside a Client Component or hook is not yet ' +
         'supported, except via a Suspense-compatible library or framework.',
-    );
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['A component was suspended by an uncached promise.']
+        : []),
+    ]);
 
     assertLog(['Async text requested [World]']);
 
-    await act(() => resolveTextRequests('World'));
+    if (gate('enableSiblingPrerendering')) {
+      await expect(async () => {
+        await act(() => resolveTextRequests('World'));
+      }).toErrorDev(['A component was suspended by an uncached promise.']);
+    } else {
+      await act(() => resolveTextRequests('World'));
+    }
 
     assertLog(['Hi', 'World']);
     expect(root).toMatchRenderedOutput('Hi World');
@@ -1913,16 +1935,26 @@ describe('ReactUse', () => {
 
     await expect(async () => {
       await act(() => resolveTextRequests('Hi'));
-    }).toErrorDev(
+    }).toErrorDev([
       // We get this warning because the generator's promise themselves are not cached.
       'A component was suspended by an uncached promise. Creating ' +
         'promises inside a Client Component or hook is not yet ' +
         'supported, except via a Suspense-compatible library or framework.',
-    );
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['A component was suspended by an uncached promise.']
+        : []),
+    ]);
 
     assertLog(['Async text requested [World]']);
 
-    await act(() => resolveTextRequests('World'));
+    if (gate('enableSiblingPrerendering')) {
+      await expect(async () => {
+        await act(() => resolveTextRequests('World'));
+      }).toErrorDev(['A component was suspended by an uncached promise.']);
+    } else {
+      await act(() => resolveTextRequests('World'));
+    }
 
     assertLog(['Hi', 'World']);
     expect(root).toMatchRenderedOutput(<div>Hi World</div>);

@@ -229,28 +229,49 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
 
   const suspendedLanes = root.suspendedLanes;
   const pingedLanes = root.pingedLanes;
+  const warmLanes = root.warmLanes;
 
   // Do not work on any idle work until all the non-idle work has finished,
   // even if the work is suspended.
   const nonIdlePendingLanes = pendingLanes & NonIdleLanes;
   if (nonIdlePendingLanes !== NoLanes) {
+    // First check for fresh updates.
     const nonIdleUnblockedLanes = nonIdlePendingLanes & ~suspendedLanes;
     if (nonIdleUnblockedLanes !== NoLanes) {
       nextLanes = getHighestPriorityLanes(nonIdleUnblockedLanes);
     } else {
+      // No fresh updates. Check if suspended work has been pinged.
       const nonIdlePingedLanes = nonIdlePendingLanes & pingedLanes;
       if (nonIdlePingedLanes !== NoLanes) {
         nextLanes = getHighestPriorityLanes(nonIdlePingedLanes);
+      } else {
+        // Nothing has been pinged. Check for lanes that need to be prewarmed.
+        const lanesToPrewarm = nonIdlePendingLanes & ~warmLanes;
+        if (lanesToPrewarm !== NoLanes) {
+          nextLanes = getHighestPriorityLanes(lanesToPrewarm);
+        }
       }
     }
   } else {
     // The only remaining work is Idle.
+    // TODO: Idle isn't really used anywhere, and the thinking around
+    // speculative rendering has evolved since this was implemented. Consider
+    // removing until we've thought about this again.
+
+    // First check for fresh updates.
     const unblockedLanes = pendingLanes & ~suspendedLanes;
     if (unblockedLanes !== NoLanes) {
       nextLanes = getHighestPriorityLanes(unblockedLanes);
     } else {
+      // No fresh updates. Check if suspended work has been pinged.
       if (pingedLanes !== NoLanes) {
         nextLanes = getHighestPriorityLanes(pingedLanes);
+      } else {
+        // Nothing has been pinged. Check for lanes that need to be prewarmed.
+        const lanesToPrewarm = pendingLanes & ~warmLanes;
+        if (lanesToPrewarm !== NoLanes) {
+          nextLanes = getHighestPriorityLanes(lanesToPrewarm);
+        }
       }
     }
   }
@@ -333,6 +354,21 @@ export function getNextLanesToFlushSync(
   }
 
   return NoLanes;
+}
+
+export function checkIfRootIsPrerendering(
+  root: FiberRoot,
+  renderLanes: Lanes,
+): boolean {
+  const pendingLanes = root.pendingLanes;
+  const suspendedLanes = root.suspendedLanes;
+  const pingedLanes = root.pingedLanes;
+  // Remove lanes that are suspended (but not pinged)
+  const unblockedLanes = pendingLanes & ~(suspendedLanes & ~pingedLanes);
+
+  // If there are no unsuspended or pinged lanes, that implies that we're
+  // performing a prerender.
+  return (unblockedLanes & renderLanes) === 0;
 }
 
 export function getEntangledLanes(root: FiberRoot, renderLanes: Lanes): Lanes {
@@ -670,6 +706,7 @@ export function markRootUpdated(root: FiberRoot, updateLane: Lane) {
   if (updateLane !== IdleLane) {
     root.suspendedLanes = NoLanes;
     root.pingedLanes = NoLanes;
+    root.warmLanes = NoLanes;
   }
 }
 
@@ -677,9 +714,18 @@ export function markRootSuspended(
   root: FiberRoot,
   suspendedLanes: Lanes,
   spawnedLane: Lane,
+  didSkipSuspendedSiblings: boolean,
 ) {
   root.suspendedLanes |= suspendedLanes;
   root.pingedLanes &= ~suspendedLanes;
+
+  if (!didSkipSuspendedSiblings) {
+    // Mark these lanes as warm so we know there's nothing else to work on.
+    root.warmLanes |= suspendedLanes;
+  } else {
+    // Render unwound without attempting all the siblings. Do no mark the lanes
+    // as warm. This will cause a prewarm render to be scheduled.
+  }
 
   // The suspended lanes are no longer CPU-bound. Clear their expiration times.
   const expirationTimes = root.expirationTimes;
@@ -700,6 +746,9 @@ export function markRootSuspended(
 
 export function markRootPinged(root: FiberRoot, pingedLanes: Lanes) {
   root.pingedLanes |= root.suspendedLanes & pingedLanes;
+  // The data that just resolved could have unblocked additional children, which
+  // will also need to be prewarmed if something suspends again.
+  root.warmLanes &= ~pingedLanes;
 }
 
 export function markRootFinished(
@@ -714,6 +763,7 @@ export function markRootFinished(
   // Let's try everything again
   root.suspendedLanes = NoLanes;
   root.pingedLanes = NoLanes;
+  root.warmLanes = NoLanes;
 
   root.expiredLanes &= remainingLanes;
 

@@ -136,6 +136,10 @@ describe('ReactSuspense', () => {
       // A suspends
       'Suspend! [A]',
       'Loading...',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['Foo', 'Bar', 'Suspend! [A]', 'B', 'Loading...']
+        : []),
     ]);
     expect(container.textContent).toEqual('');
 
@@ -275,7 +279,15 @@ describe('ReactSuspense', () => {
     expect(container.textContent).toEqual('Loading...');
 
     await resolveText('A');
-    await waitForAll(['A', 'Suspend! [B]', 'Loading more...']);
+    await waitForAll([
+      'A',
+      'Suspend! [B]',
+      'Loading more...',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['A', 'Suspend! [B]', 'Loading more...']
+        : []),
+    ]);
 
     // By this point, we have enough info to show "A" and "Loading more..."
     // However, we've just shown the outer fallback. So we'll delay
@@ -327,7 +339,14 @@ describe('ReactSuspense', () => {
     // B starts loading. Parent boundary is in throttle.
     // Still shows parent loading under throttle
     jest.advanceTimersByTime(10);
-    await waitForAll(['Suspend! [B]', 'Loading more...']);
+    await waitForAll([
+      'Suspend! [B]',
+      'Loading more...',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['A', 'Suspend! [B]', 'Loading more...']
+        : []),
+    ]);
     expect(container.textContent).toEqual('Loading...');
 
     // !! B could have finished before the throttle, but we show a fallback.
@@ -361,7 +380,15 @@ describe('ReactSuspense', () => {
     expect(container.textContent).toEqual('Loading...');
 
     await resolveText('A');
-    await waitForAll(['A', 'Suspend! [B]', 'Loading more...']);
+    await waitForAll([
+      'A',
+      'Suspend! [B]',
+      'Loading more...',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['A', 'Suspend! [B]', 'Loading more...']
+        : []),
+    ]);
 
     // By this point, we have enough info to show "A" and "Loading more..."
     // However, we've just shown the outer fallback. So we'll delay
@@ -655,7 +682,14 @@ describe('ReactSuspense', () => {
 
     assertLog(['Suspend! [Child 1]', 'Loading...']);
     await resolveText('Child 1');
-    await waitForAll(['Child 1', 'Suspend! [Child 2]']);
+    await waitForAll([
+      'Child 1',
+      'Suspend! [Child 2]',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['Child 1', 'Suspend! [Child 2]']
+        : []),
+    ]);
 
     jest.advanceTimersByTime(6000);
 
