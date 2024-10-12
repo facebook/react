@@ -9,6 +9,7 @@
 
 export {
   __CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
+  __COMPILER_RUNTIME,
   act,
   cache,
   Children,

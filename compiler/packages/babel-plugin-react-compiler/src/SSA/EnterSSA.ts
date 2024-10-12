@@ -18,7 +18,7 @@ import {
   Phi,
   Place,
 } from '../HIR/HIR';
-import {printIdentifier} from '../HIR/PrintHIR';
+import {printIdentifier, printPlace} from '../HIR/PrintHIR';
 import {
   eachTerminalSuccessor,
   mapInstructionLValues,
@@ -27,8 +27,8 @@ import {
 } from '../HIR/visitors';
 
 type IncompletePhi = {
-  oldId: Identifier;
-  newId: Identifier;
+  oldPlace: Place;
+  newPlace: Place;
 };
 
 type State = {
@@ -122,33 +122,33 @@ class SSABuilder {
   }
 
   getPlace(oldPlace: Place): Place {
-    const newId = this.getIdAt(oldPlace.identifier, this.#current!.id);
+    const newId = this.getIdAt(oldPlace, this.#current!.id);
     return {
       ...oldPlace,
       identifier: newId,
     };
   }
 
-  getIdAt(oldId: Identifier, blockId: BlockId): Identifier {
+  getIdAt(oldPlace: Place, blockId: BlockId): Identifier {
     // check if Place is defined locally
     const block = this.#blocks.get(blockId)!;
     const state = this.#states.get(block)!;
 
-    if (state.defs.has(oldId)) {
-      return state.defs.get(oldId)!;
+    if (state.defs.has(oldPlace.identifier)) {
+      return state.defs.get(oldPlace.identifier)!;
     }
 
     if (block.preds.size == 0) {
       /*
        * We're at the entry block and haven't found our defintion yet.
        * console.log(
-       *   `Unable to find "${printIdentifier(
-       *     oldId
+       *   `Unable to find "${printPlace(
+       *     oldPlace
        *   )}" in bb${blockId}, assuming it's a global`
        * );
        */
-      this.#unknown.add(oldId);
-      return oldId;
+      this.#unknown.add(oldPlace.identifier);
+      return oldPlace.identifier;
     }
 
     if (this.unsealedPreds.get(block)! > 0) {
@@ -156,52 +156,55 @@ class SSABuilder {
        * We haven't visited all our predecessors, let's place an incomplete phi
        * for now.
        */
-      const newId = this.makeId(oldId);
-      state.incompletePhis.push({oldId, newId});
-      state.defs.set(oldId, newId);
+      const newId = this.makeId(oldPlace.identifier);
+      state.incompletePhis.push({
+        oldPlace,
+        newPlace: {...oldPlace, identifier: newId},
+      });
+      state.defs.set(oldPlace.identifier, newId);
       return newId;
     }
 
     // Only one predecessor, let's check there
     if (block.preds.size == 1) {
       const [pred] = block.preds;
-      const newId = this.getIdAt(oldId, pred);
-      state.defs.set(oldId, newId);
+      const newId = this.getIdAt(oldPlace, pred);
+      state.defs.set(oldPlace.identifier, newId);
       return newId;
     }
 
     // There are multiple predecessors, we may need a phi.
-    const newId = this.makeId(oldId);
+    const newId = this.makeId(oldPlace.identifier);
     /*
      * Adding a phi may loop back to our block if there is a loop in the CFG.  We
      * update our defs before adding the phi to terminate the recursion rather than
      * looping infinitely.
      */
-    state.defs.set(oldId, newId);
-    return this.addPhi(block, oldId, newId);
+    state.defs.set(oldPlace.identifier, newId);
+    return this.addPhi(block, oldPlace, {...oldPlace, identifier: newId});
   }
 
-  addPhi(block: BasicBlock, oldId: Identifier, newId: Identifier): Identifier {
-    const predDefs: Map<BlockId, Identifier> = new Map();
+  addPhi(block: BasicBlock, oldPlace: Place, newPlace: Place): Identifier {
+    const predDefs: Map<BlockId, Place> = new Map();
     for (const predBlockId of block.preds) {
-      const predId = this.getIdAt(oldId, predBlockId);
-      predDefs.set(predBlockId, predId);
+      const predId = this.getIdAt(oldPlace, predBlockId);
+      predDefs.set(predBlockId, {...oldPlace, identifier: predId});
     }
 
     const phi: Phi = {
       kind: 'Phi',
-      id: newId,
+      place: newPlace,
       operands: predDefs,
     };
 
     block.phis.add(phi);
-    return newId;
+    return newPlace.identifier;
   }
 
   fixIncompletePhis(block: BasicBlock): void {
     const state = this.#states.get(block)!;
     for (const phi of state.incompletePhis) {
-      this.addPhi(block, phi.oldId, phi.newId);
+      this.addPhi(block, phi.oldPlace, phi.newPlace);
     }
   }
 
@@ -223,9 +226,9 @@ class SSABuilder {
 
       for (const incompletePhi of state.incompletePhis) {
         text.push(
-          `  iphi \$${printIdentifier(
-            incompletePhi.newId,
-          )} = \$${printIdentifier(incompletePhi.oldId)}`,
+          `  iphi \$${printPlace(
+            incompletePhi.newPlace,
+          )} = \$${printPlace(incompletePhi.oldPlace)}`,
         );
       }
     }

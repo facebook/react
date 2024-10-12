@@ -20,7 +20,6 @@ const dynamicFlags: DynamicExportsType = (dynamicFlagsUntyped: any);
 // the exports object every time a flag is read.
 export const {
   alwaysThrottleRetries,
-  enableAddPropertiesFastPath,
   enableFabricCompleteRootInCommitPhase,
   enableHiddenSubtreeInsertionEffectCleanup,
   enableObjectFiber,
@@ -66,6 +65,7 @@ export const enableLazyContextPropagation = true;
 export const enableLegacyCache = false;
 export const enableLegacyFBSupport = false;
 export const enableLegacyHidden = false;
+export const enableLogStringRefsProd: null | ((string, string) => void) = null;
 export const enableNoCloningMemoCache = false;
 export const enableOwnerStacks = false;
 export const enablePostpone = false;

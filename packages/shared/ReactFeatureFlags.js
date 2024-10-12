@@ -141,8 +141,6 @@ export const enableServerComponentLogs = true;
  */
 export const enablePersistedModeClonedFlag = false;
 
-export const enableAddPropertiesFastPath = false;
-
 export const enableOwnerStacks = __EXPERIMENTAL__;
 
 export const enableShallowPropDiffing = false;
@@ -217,6 +215,13 @@ export const disableClientCache = true;
 // during element creation.
 export const enableRefAsProp = true;
 export const disableStringRefs = true;
+/**
+ * If set to a function, the function will be called with the component name
+ * and ref string.
+ *
+ * NOTE: This happens also in the production build.
+ */
+export const enableLogStringRefsProd: null | ((string, string) => void) = null;
 
 // Warn on any usage of ReactTestRenderer
 export const enableReactTestRendererWarning = true;

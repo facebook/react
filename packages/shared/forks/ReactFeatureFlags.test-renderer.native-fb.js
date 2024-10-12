@@ -24,7 +24,6 @@ export const disableLegacyMode = false;
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const disableStringRefs = true;
 export const disableTextareaChildren = false;
-export const enableAddPropertiesFastPath = false;
 export const enableAsyncActions = true;
 export const enableAsyncDebugInfo = false;
 export const enableAsyncIterableChildren = false;

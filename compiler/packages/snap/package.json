@@ -9,7 +9,8 @@
     "src"
   ],
   "scripts": {
-    "build": "rimraf dist && tsc --build",
+    "postinstall": "./scripts/link-react-compiler-runtime.sh && perl -p -i -e 's/react\\.element/react.transitional.element/' ../../node_modules/fbt/lib/FbtReactUtil.js && perl -p -i -e 's/didWarnAboutUsingAct = false;/didWarnAboutUsingAct = true;/' ../../node_modules/react-dom/cjs/react-dom-test-utils.development.js",
+    "build": "rimraf dist && concurrently -n snap,runtime \"tsc --build\" \"yarn --silent workspace react-compiler-runtime build --silent\"",
     "test": "echo 'no tests'",
     "prettier": "prettier --write 'src/**/*.ts'"
   },

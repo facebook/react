@@ -63,6 +63,7 @@ import ReactSharedInternals from './ReactSharedInternalsClient';
 import {startTransition} from './ReactStartTransition';
 import {act} from './ReactAct';
 import {captureOwnerStack} from './ReactOwnerStack';
+import ReactCompilerRuntime from './ReactCompilerRuntime';
 
 const Children = {
   map,
@@ -109,6 +110,7 @@ export {
   isValidElement,
   ReactVersion as version,
   ReactSharedInternals as __CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
+  ReactCompilerRuntime as __COMPILER_RUNTIME,
   // Concurrent Mode
   useTransition,
   startTransition,

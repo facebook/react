@@ -27,6 +27,9 @@ const run = async () => {
     }
 
     params.packages = await getPublicPackages(isExperimental);
+    params.packages = params.packages.filter(packageName => {
+      return !params.skipPackages.includes(packageName);
+    });
 
     // Map of package name to upcoming stable version.
     // This Map is initially populated with guesses based on local versions.

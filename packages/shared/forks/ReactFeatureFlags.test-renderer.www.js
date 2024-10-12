@@ -46,6 +46,7 @@ export const enableUseEffectEventHook = false;
 export const favorSafetyOverHydrationPerf = true;
 export const enableComponentStackLocations = true;
 export const enableLegacyFBSupport = false;
+export const enableLogStringRefsProd: null | ((string, string) => void) = null;
 export const enableFilterEmptyStringAttributesDOM = true;
 export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableRenderableContext = false;
@@ -89,7 +90,6 @@ export const enableReactTestRendererWarning = false;
 export const disableLegacyMode = true;
 
 export const disableDefaultPropsExceptForClasses = false;
-export const enableAddPropertiesFastPath = false;
 
 export const renameElementSymbol = false;
 
