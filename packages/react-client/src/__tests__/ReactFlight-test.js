@@ -3435,4 +3435,96 @@ describe('ReactFlight', () => {
     );
     expect(caughtError.digest).toBe('digest("my-error")');
   });
+
+  // @gate __DEV__
+  it('can render deep but cut off JSX in debug info', async () => {
+    function createDeepJSX(n) {
+      if (n <= 0) {
+        return null;
+      }
+      return <div>{createDeepJSX(n - 1)}</div>;
+    }
+
+    function ServerComponent(props) {
+      return <div>not using props</div>;
+    }
+
+    const transport = ReactNoopFlightServer.render({
+      root: (
+        <ServerComponent>
+          {createDeepJSX(100) /* deper than objectLimit */}
+        </ServerComponent>
+      ),
+    });
+
+    await act(async () => {
+      const rootModel = await ReactNoopFlightClient.read(transport);
+      const root = rootModel.root;
+      const children = root._debugInfo[0].props.children;
+      expect(children.type).toBe('div');
+      expect(children.props.children.type).toBe('div');
+      ReactNoop.render(root);
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(<div>not using props</div>);
+  });
+
+  // @gate __DEV__
+  it('can render deep but cut off Map/Set in debug info', async () => {
+    function createDeepMap(n) {
+      if (n <= 0) {
+        return null;
+      }
+      const map = new Map();
+      map.set('key', createDeepMap(n - 1));
+      return map;
+    }
+
+    function createDeepSet(n) {
+      if (n <= 0) {
+        return null;
+      }
+      const set = new Set();
+      set.add(createDeepSet(n - 1));
+      return set;
+    }
+
+    function ServerComponent(props) {
+      return <div>not using props</div>;
+    }
+
+    const transport = ReactNoopFlightServer.render({
+      set: (
+        <ServerComponent
+          set={createDeepSet(100) /* deper than objectLimit */}
+        />
+      ),
+      map: (
+        <ServerComponent
+          map={createDeepMap(100) /* deper than objectLimit */}
+        />
+      ),
+    });
+
+    await act(async () => {
+      const rootModel = await ReactNoopFlightClient.read(transport);
+      const set = rootModel.set._debugInfo[0].props.set;
+      const map = rootModel.map._debugInfo[0].props.map;
+      expect(set instanceof Set).toBe(true);
+      expect(set.size).toBe(1);
+      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+      for (const entry of set) {
+        expect(entry instanceof Set).toBe(true);
+        break;
+      }
+
+      expect(map instanceof Map).toBe(true);
+      expect(map.size).toBe(1);
+      expect(map.get('key') instanceof Map).toBe(true);
+
+      ReactNoop.render(rootModel.set);
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(<div>not using props</div>);
+  });
 });
