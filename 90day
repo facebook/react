@@ -1,0 +1,163 @@
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Calendar, Users, TrendingUp, Lightbulb, Building, Vote, Award } from 'lucide-react';
+
+const metrics = [
+  { name: 'Month 1', Membership: 1000, Engagement: 60, PVs: 100 },
+  { name: 'Month 2', Membership: 1050, Engagement: 65, PVs: 120 },
+  { name: 'Month 3', Membership: 1100, Engagement: 70, PVs: 150 },
+];
+
+const Plan = () => (
+  <div className="p-4 max-w-4xl mx-auto">
+    <h1 className="text-3xl font-bold mb-6">Updated 90-Day Plan for ABC Texas Gulf Coast President</h1>
+    
+    <Tabs defaultValue="month1">
+      <TabsList className="grid w-full grid-cols-3">
+        <TabsTrigger value="month1">Month 1</TabsTrigger>
+        <TabsTrigger value="month2">Month 2</TabsTrigger>
+        <TabsTrigger value="month3">Month 3</TabsTrigger>
+      </TabsList>
+      
+      <TabsContent value="month1">
+        <Card>
+          <CardHeader>
+            <CardTitle>Month 1: Assessment and Stakeholder Engagement</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>Meet with each member organization to assess needs and ideas</li>
+              <li>Collaborate with MSTI on craft training initiatives</li>
+              <li>Initiate meetings with local officials and political leaders</li>
+              <li>Begin planning for ABC Brazoria County Summit</li>
+              <li>Launch "Coffee and Construction" membership events</li>
+            </ul>
+          </CardContent>
+        </Card>
+      </TabsContent>
+      
+      <TabsContent value="month2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Month 2: Program Development and Political Engagement</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>Develop new programs based on member feedback</li>
+              <li>Organize PAC events with state and local officials</li>
+              <li>Launch "Get Out to Vote" campaign</li>
+              <li>Implement "Commitment and Accountability" workplace culture program</li>
+              <li>Begin "Construction Estimating Principles & Application" course</li>
+            </ul>
+          </CardContent>
+        </Card>
+      </TabsContent>
+      
+      <TabsContent value="month3">
+        <Card>
+          <CardHeader>
+            <CardTitle>Month 3: Summit Execution and Long-Term Planning</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>Host ABC Brazoria County Summit with panel discussions</li>
+              <li>Implement "Championing Inclusive Supplier Networks" program</li>
+              <li>Launch "STEPping Stones" safety initiative</li>
+              <li>Develop long-term plan for increasing networking events</li>
+              <li>Create strategy for National Excellence in Construction Awards participation</li>
+            </ul>
+          </CardContent>
+        </Card>
+      </TabsContent>
+    </Tabs>
+    
+    <div className="mt-8">
+      <h2 className="text-2xl font-semibold mb-4">Key Metrics</h2>
+      <ResponsiveContainer width="100%" height={300}>
+        <BarChart data={metrics}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="name" />
+          <YAxis yAxisId="left" />
+          <YAxis yAxisId="right" orientation="right" />
+          <Tooltip />
+          <Legend />
+          <Bar yAxisId="left" dataKey="Membership" fill="#8884d8" />
+          <Bar yAxisId="left" dataKey="Engagement" fill="#82ca9d" />
+          <Bar yAxisId="right" dataKey="PVs" fill="#ffc658" />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+    
+    <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Building className="mr-2" /> Collaboration Initiatives
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="list-disc pl-5 space-y-2">
+            <li>Partner with MSTI on craft training initiatives</li>
+            <li>Increase involvement in ABC National Craft Competition</li>
+            <li>Collaborate with local schools for workforce development</li>
+            <li>Establish ABC as a resource for local political arena</li>
+          </ul>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Vote className="mr-2" /> Political Engagement
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="list-disc pl-5 space-y-2">
+            <li>Organize ABC Brazoria County Summit</li>
+            <li>Implement "Get Out to Vote" campaigns</li>
+            <li>Increase PAC events with state and local officials</li>
+            <li>Advocate for members and industry in local politics</li>
+          </ul>
+        </CardContent>
+      </Card>
+    </div>
+
+    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Users className="mr-2" /> Membership Initiatives
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="list-disc pl-5 space-y-2">
+            <li>Launch "Coffee and Construction" events</li>
+            <li>Implement workplace culture and safety programs</li>
+            <li>Develop construction estimating courses</li>
+            <li>Create inclusive supplier network programs</li>
+          </ul>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Award className="mr-2" /> Long-Term Goals
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="list-disc pl-5 space-y-2">
+            <li>Increase networking events</li>
+            <li>Boost participation in National Excellence in Construction Awards</li>
+            <li>Enhance STEP Awards program</li>
+            <li>Strengthen internal organization structure</li>
+          </ul>
+        </CardContent>
+      </Card>
+    </div>
+  </div>
+);
+
+export default Plan;
