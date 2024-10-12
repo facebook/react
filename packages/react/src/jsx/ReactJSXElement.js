@@ -24,6 +24,7 @@ import {
   disableStringRefs,
   disableDefaultPropsExceptForClasses,
   enableOwnerStacks,
+  enableLogStringRefsProd,
 } from 'shared/ReactFeatureFlags';
 import {checkPropStringCoercion} from 'shared/CheckStringCoercion';
 import {ClassComponent} from 'react-reconciler/src/ReactWorkTags';
@@ -76,7 +77,7 @@ let didWarnAboutStringRefs;
 let didWarnAboutElementRef;
 let didWarnAboutOldJSXRuntime;
 
-if (__DEV__) {
+if (__DEV__ || enableLogStringRefsProd) {
   didWarnAboutStringRefs = {};
   didWarnAboutElementRef = {};
 }
@@ -1314,22 +1315,27 @@ function stringRefAsCallbackRef(stringRef, type, owner, value) {
     );
   }
 
-  if (__DEV__) {
+  if (__DEV__ || enableLogStringRefsProd) {
     if (
       // Will already warn with "Function components cannot be given refs"
       !(typeof type === 'function' && !isReactClass(type))
     ) {
       const componentName = getComponentNameFromFiber(owner) || 'Component';
       if (!didWarnAboutStringRefs[componentName]) {
-        console.error(
-          'Component "%s" contains the string ref "%s". Support for string refs ' +
-            'will be removed in a future major release. We recommend using ' +
-            'useRef() or createRef() instead. ' +
-            'Learn more about using refs safely here: ' +
-            'https://react.dev/link/strict-mode-string-ref',
-          componentName,
-          stringRef,
-        );
+        if (enableLogStringRefsProd) {
+          enableLogStringRefsProd(componentName, stringRef);
+        }
+        if (__DEV__) {
+          console.error(
+            'Component "%s" contains the string ref "%s". Support for string refs ' +
+              'will be removed in a future major release. We recommend using ' +
+              'useRef() or createRef() instead. ' +
+              'Learn more about using refs safely here: ' +
+              'https://react.dev/link/strict-mode-string-ref',
+            componentName,
+            stringRef,
+          );
+        }
         didWarnAboutStringRefs[componentName] = true;
       }
     }

@@ -24,6 +24,7 @@ compiler/**/.next
 compiler/packages/babel-plugin-react-compiler/src/__tests__/fixtures/compiler/error.todo-kitchensink.js
 
 compiler/crates
+compiler/target
 compiler/apps/playground/public
 
 compiler/**/LICENSE

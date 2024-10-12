@@ -3084,4 +3084,54 @@ describe('ReactFlightDOM', () => {
       </div>,
     );
   });
+
+  it('rejecting a thenable after an abort before flush should not lead to a frozen readable', async () => {
+    const ClientComponent = clientExports(function (props: {
+      promise: Promise<void>,
+    }) {
+      return 'hello world';
+    });
+
+    let reject;
+    const promise = new Promise((_, re) => {
+      reject = re;
+    });
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="loading...">
+            <ClientComponent promise={promise} />
+          </Suspense>
+        </div>
+      );
+    }
+
+    const errors = [];
+    const {writable, readable} = getTestStream();
+    const {pipe, abort} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(<App />, webpackMap, {
+        onError(x) {
+          errors.push(x);
+        },
+      }),
+    );
+    await serverAct(() => {
+      abort('STOP');
+      reject('STOP');
+    });
+    pipe(writable);
+
+    const reader = readable.getReader();
+    while (true) {
+      const {done} = await reader.read();
+      if (done) {
+        break;
+      }
+    }
+
+    expect(errors).toEqual(['STOP']);
+
+    // We expect it to get to the end here rather than hang on the reader.
+  });
 });
