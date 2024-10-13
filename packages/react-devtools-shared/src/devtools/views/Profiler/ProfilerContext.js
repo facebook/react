@@ -98,7 +98,7 @@ function ProfilerContextController({children}: Props): React.Node {
       getCurrentValue: () => ({
         didRecordCommits: profilerStore.didRecordCommits,
         isProcessingData: profilerStore.isProcessingData,
-        isProfiling: profilerStore.isProfiling,
+        isProfiling: profilerStore.isProfilingBasedOnUserInput,
         profilingData: profilerStore.profilingData,
         supportsProfiling: store.rootSupportsBasicProfiling,
       }),

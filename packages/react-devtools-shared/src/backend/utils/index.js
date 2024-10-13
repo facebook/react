@@ -331,3 +331,12 @@ export function parseSourceFromComponentStack(
 
   return parseSourceFromFirefoxStack(componentStack);
 }
+
+// 0.123456789 => 0.123
+// Expects high-resolution timestamp in milliseconds, like from performance.now()
+// Mainly used for optimizing the size of serialized profiling payload
+export function formatDurationToMicrosecondsGranularity(
+  duration: number,
+): number {
+  return Math.round(duration * 1000) / 1000;
+}

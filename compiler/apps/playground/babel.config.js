@@ -13,7 +13,7 @@ module.exports = function (api) {
       [
         'babel-plugin-react-compiler',
         {
-          runtimeModule: 'react-compiler-runtime',
+          target: '18',
         },
       ],
     ],
