@@ -1364,10 +1364,8 @@ function parseModelString(
           // happened.
           Object.defineProperty(parentObject, key, {
             get: function () {
-              // We intentionally don't throw an error object here because it looks better
-              // without the stack in the console which isn't useful anyway.
-              // eslint-disable-next-line no-throw-literal
-              throw (
+              // TODO: We should ideally throw here to indicate a difference.
+              return (
                 'This object has been omitted by React in the console log ' +
                 'to avoid sending too much data from the server. Try logging smaller ' +
                 'or more specific objects.'
