@@ -40,6 +40,21 @@ function isHook(node) {
   }
 }
 
+const serverComponentHooks = new Set(['useId']);
+function isServerComponentHook(node) {
+  if (node.type === 'Identifier') {
+    return serverComponentHooks.has(node.name);
+  } else if (
+    node.type === 'MemberExpression' &&
+    !node.computed &&
+    node.property.type === 'Identifier'
+  ) {
+    return serverComponentHooks.has(node.property.name);
+  } else {
+    return false;
+  }
+}
+
 /**
  * Checks if the node is a React component name. React component names must
  * always start with an uppercase letter.
@@ -504,7 +519,7 @@ export default {
             if (isDirectlyInsideComponentOrHook) {
               // Report an error if the hook is called inside an async function.
               const isAsyncFunction = codePathNode.async;
-              if (isAsyncFunction) {
+              if (isAsyncFunction && !isServerComponentHook(hook)) {
                 context.report({
                   node: hook,
                   message:
