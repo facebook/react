@@ -33,7 +33,7 @@ jobs:
         id: node_modules
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('compiler/**/yarn.lock') }}
+          key: compiler-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('compiler/**/yarn.lock') }}
       - name: yarn install compiler
         run: yarn install --frozen-lockfile
         working-directory: compiler
