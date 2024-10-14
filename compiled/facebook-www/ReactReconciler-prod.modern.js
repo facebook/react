@@ -4130,6 +4130,7 @@ module.exports = function ($$$config) {
         throw Error(formatProdErrorMessage(284));
       if (null === current || current.ref !== ref) {
         if (
+          !disableStringRefs &&
           null !== current &&
           ((current = current.ref),
           "function" === typeof current &&
@@ -4448,7 +4449,7 @@ module.exports = function ($$$config) {
     nextProps = 0 !== (workInProgress.flags & 128);
     context || nextProps
       ? ((context = workInProgress.stateNode),
-        (current = workInProgress),
+        disableStringRefs || (current = workInProgress),
         (Component =
           nextProps && "function" !== typeof Component.getDerivedStateFromError
             ? null
@@ -9919,7 +9920,7 @@ module.exports = function ($$$config) {
   function handleThrow(root, thrownValue) {
     currentlyRenderingFiber$1 = null;
     ReactSharedInternals.H = ContextOnlyDispatcher;
-    current = null;
+    disableStringRefs || (current = null);
     thrownValue === SuspenseException
       ? ((thrownValue = getSuspendedThenable()),
         (workInProgressSuspendedReason =
@@ -10167,7 +10168,7 @@ module.exports = function ($$$config) {
       unitOfWork,
       entangledRenderLanes
     );
-    current = null;
+    disableStringRefs || (current = null);
     unitOfWork.memoizedProps = unitOfWork.pendingProps;
     null === next ? completeUnitOfWork(unitOfWork) : (workInProgress = next);
   }
@@ -10222,7 +10223,7 @@ module.exports = function ($$$config) {
             resetWorkInProgress(next, entangledRenderLanes)),
           (next = beginWork(current$jscomp$0, next, entangledRenderLanes));
     }
-    current = null;
+    disableStringRefs || (current = null);
     unitOfWork.memoizedProps = unitOfWork.pendingProps;
     null === next ? completeUnitOfWork(unitOfWork) : (workInProgress = next);
   }
@@ -11199,6 +11200,7 @@ module.exports = function ($$$config) {
       dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
     disableSchedulerTimeoutInWorkLoop =
       dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
+    disableStringRefs = dynamicFeatureFlags.disableStringRefs,
     enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
     enableDeferRootSchedulingToMicrotask =
       dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
@@ -11941,12 +11943,13 @@ module.exports = function ($$$config) {
           ((cacheForType = resourceType()),
           cache.data.set(resourceType, cacheForType));
         return cacheForType;
-      },
-      getOwner: function () {
-        return current;
       }
-    },
-    COMPONENT_TYPE = 0,
+    };
+  disableStringRefs ||
+    (DefaultAsyncDispatcher.getOwner = function () {
+      return current;
+    });
+  var COMPONENT_TYPE = 0,
     HAS_PSEUDO_CLASS_TYPE = 1,
     ROLE_TYPE = 2,
     TEST_NAME_TYPE = 3,
@@ -12344,7 +12347,7 @@ module.exports = function ($$$config) {
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
       findFiberByHostInstance: getInstanceFromNode,
-      reconcilerVersion: "19.0.0-www-modern-5636fad8-20241010"
+      reconcilerVersion: "19.0.0-www-modern-75dd053b-20241014"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

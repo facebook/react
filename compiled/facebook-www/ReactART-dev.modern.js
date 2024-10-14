@@ -6152,6 +6152,7 @@ __DEV__ &&
           );
         if (null === current || current.ref !== ref) {
           if (
+            !disableStringRefs &&
             null !== current &&
             ((current = current.ref),
             "function" === typeof current &&
@@ -9640,11 +9641,13 @@ __DEV__ &&
             }
           else finishedWork.refCleanup = ref(instanceToUse);
         else
-          ref.hasOwnProperty("current") ||
-            error$jscomp$0(
-              "Unexpected ref object provided for %s. Use either a ref-setter function or React.createRef().",
-              getComponentNameFromFiber(finishedWork)
-            ),
+          disableStringRefs && "string" === typeof ref
+            ? error$jscomp$0("String refs are no longer supported.")
+            : ref.hasOwnProperty("current") ||
+              error$jscomp$0(
+                "Unexpected ref object provided for %s. Use either a ref-setter function or React.createRef().",
+                getComponentNameFromFiber(finishedWork)
+              ),
             (ref.current = instanceToUse);
       }
     }
@@ -12797,7 +12800,7 @@ __DEV__ &&
             unitOfWork,
             entangledRenderLanes
           ));
-      resetCurrentFiber();
+      disableStringRefs || resetCurrentFiber();
       unitOfWork.memoizedProps = unitOfWork.pendingProps;
       null === current
         ? completeUnitOfWork(unitOfWork)
@@ -12805,7 +12808,7 @@ __DEV__ &&
     }
     function replaySuspendedUnitOfWork(unitOfWork) {
       var next = runWithFiberInDEV(unitOfWork, replayBeginWork, unitOfWork);
-      resetCurrentFiber();
+      disableStringRefs || resetCurrentFiber();
       unitOfWork.memoizedProps = unitOfWork.pendingProps;
       null === next ? completeUnitOfWork(unitOfWork) : (workInProgress = next);
     }
@@ -14240,6 +14243,7 @@ __DEV__ &&
         dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
       disableSchedulerTimeoutInWorkLoop =
         dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
+      disableStringRefs = dynamicFeatureFlags.disableStringRefs,
       enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
       enableDeferRootSchedulingToMicrotask =
         dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
@@ -16457,11 +16461,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-www-modern-5636fad8-20241010",
+        version: "19.0.0-www-modern-75dd053b-20241014",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-www-modern-5636fad8-20241010"
+        reconcilerVersion: "19.0.0-www-modern-75dd053b-20241014"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -16495,7 +16499,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.0.0-www-modern-5636fad8-20241010";
+    exports.version = "19.0.0-www-modern-75dd053b-20241014";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

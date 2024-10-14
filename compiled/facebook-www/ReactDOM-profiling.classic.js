@@ -44,6 +44,7 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
     dynamicFeatureFlags.disableLegacyContextForFunctionComponents,
   disableSchedulerTimeoutInWorkLoop =
     dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
+  disableStringRefs = dynamicFeatureFlags.disableStringRefs,
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
   enableDeferRootSchedulingToMicrotask =
     dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
@@ -5871,6 +5872,7 @@ function markRef(current, workInProgress) {
       throw Error(formatProdErrorMessage(284));
     if (null === current || current.ref !== ref) {
       if (
+        !disableStringRefs &&
         null !== current &&
         ((current = current.ref),
         "function" === typeof current &&
@@ -6185,7 +6187,7 @@ function finishClassComponent(
       )
     );
   shouldUpdate = workInProgress.stateNode;
-  current = workInProgress;
+  disableStringRefs || (current = workInProgress);
   if (
     didCaptureError &&
     "function" !== typeof Component.getDerivedStateFromError
@@ -11434,19 +11436,20 @@ function commitPassiveUnmountEffectsInsideOfDeletedTree_begin(
   }
 }
 var DefaultAsyncDispatcher = {
-    getCacheForType: function (resourceType) {
-      var cache = readContext(CacheContext),
-        cacheForType = cache.data.get(resourceType);
-      void 0 === cacheForType &&
-        ((cacheForType = resourceType()),
-        cache.data.set(resourceType, cacheForType));
-      return cacheForType;
-    },
-    getOwner: function () {
-      return current;
-    }
-  },
-  postPaintCallbackScheduled = !1,
+  getCacheForType: function (resourceType) {
+    var cache = readContext(CacheContext),
+      cacheForType = cache.data.get(resourceType);
+    void 0 === cacheForType &&
+      ((cacheForType = resourceType()),
+      cache.data.set(resourceType, cacheForType));
+    return cacheForType;
+  }
+};
+disableStringRefs ||
+  (DefaultAsyncDispatcher.getOwner = function () {
+    return current;
+  });
+var postPaintCallbackScheduled = !1,
   callbacks = [];
 function schedulePostPaintCallback(callback) {
   callbacks.push(callback);
@@ -12009,7 +12012,7 @@ function prepareFreshStack(root, lanes) {
 function handleThrow(root, thrownValue) {
   currentlyRenderingFiber$1 = null;
   ReactSharedInternals.H = ContextOnlyDispatcher;
-  current = null;
+  disableStringRefs || (current = null);
   thrownValue === SuspenseException
     ? ((thrownValue = getSuspendedThenable()),
       (workInProgressSuspendedReason =
@@ -12319,7 +12322,7 @@ function performUnitOfWork(unitOfWork) {
         unitOfWork,
         entangledRenderLanes
       ));
-  current = null;
+  disableStringRefs || (current = null);
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
   null === current$jscomp$0
     ? completeUnitOfWork(unitOfWork)
@@ -12382,7 +12385,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
   }
   isProfilingMode && stopProfilerTimerIfRunningAndRecordDuration(next);
   next = current$jscomp$0;
-  current = null;
+  disableStringRefs || (current = null);
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
   null === next ? completeUnitOfWork(unitOfWork) : (workInProgress = next);
 }
@@ -18137,14 +18140,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1867 = React.version;
 if (
-  "19.0.0-www-classic-5636fad8-20241010" !==
+  "19.0.0-www-classic-75dd053b-20241014" !==
   isomorphicReactPackageVersion$jscomp$inline_1867
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1867,
-      "19.0.0-www-classic-5636fad8-20241010"
+      "19.0.0-www-classic-75dd053b-20241014"
     )
   );
 function flushSyncFromReconciler(fn) {
@@ -18189,11 +18192,11 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_1874 = {
   bundleType: 0,
-  version: "19.0.0-www-classic-5636fad8-20241010",
+  version: "19.0.0-www-classic-75dd053b-20241014",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-www-classic-5636fad8-20241010"
+  reconcilerVersion: "19.0.0-www-classic-75dd053b-20241014"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_1874.getLaneLabelMap = getLaneLabelMap),
@@ -18652,7 +18655,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-5636fad8-20241010";
+exports.version = "19.0.0-www-classic-75dd053b-20241014";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

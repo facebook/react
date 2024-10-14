@@ -38,6 +38,7 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
     dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
   disableSchedulerTimeoutInWorkLoop =
     dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
+  disableStringRefs = dynamicFeatureFlags.disableStringRefs,
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
   enableDeferRootSchedulingToMicrotask =
     dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
@@ -5470,6 +5471,7 @@ function markRef(current, workInProgress) {
       throw Error(formatProdErrorMessage(284));
     if (null === current || current.ref !== ref) {
       if (
+        !disableStringRefs &&
         null !== current &&
         ((current = current.ref),
         "function" === typeof current &&
@@ -5782,7 +5784,7 @@ function updateClassComponent(
   nextProps = 0 !== (workInProgress.flags & 128);
   context || nextProps
     ? ((context = workInProgress.stateNode),
-      (current = workInProgress),
+      disableStringRefs || (current = workInProgress),
       (Component =
         nextProps && "function" !== typeof Component.getDerivedStateFromError
           ? null
@@ -10514,19 +10516,20 @@ function commitPassiveUnmountEffectsInsideOfDeletedTree_begin(
   }
 }
 var DefaultAsyncDispatcher = {
-    getCacheForType: function (resourceType) {
-      var cache = readContext(CacheContext),
-        cacheForType = cache.data.get(resourceType);
-      void 0 === cacheForType &&
-        ((cacheForType = resourceType()),
-        cache.data.set(resourceType, cacheForType));
-      return cacheForType;
-    },
-    getOwner: function () {
-      return current;
-    }
-  },
-  COMPONENT_TYPE = 0,
+  getCacheForType: function (resourceType) {
+    var cache = readContext(CacheContext),
+      cacheForType = cache.data.get(resourceType);
+    void 0 === cacheForType &&
+      ((cacheForType = resourceType()),
+      cache.data.set(resourceType, cacheForType));
+    return cacheForType;
+  }
+};
+disableStringRefs ||
+  (DefaultAsyncDispatcher.getOwner = function () {
+    return current;
+  });
+var COMPONENT_TYPE = 0,
   HAS_PSEUDO_CLASS_TYPE = 1,
   ROLE_TYPE = 2,
   TEST_NAME_TYPE = 3,
@@ -11249,7 +11252,7 @@ function prepareFreshStack(root, lanes) {
 function handleThrow(root, thrownValue) {
   currentlyRenderingFiber$1 = null;
   ReactSharedInternals.H = ContextOnlyDispatcher;
-  current = null;
+  disableStringRefs || (current = null);
   thrownValue === SuspenseException
     ? ((thrownValue = getSuspendedThenable()),
       (workInProgressSuspendedReason =
@@ -11487,7 +11490,7 @@ function workLoopConcurrent() {
 }
 function performUnitOfWork(unitOfWork) {
   var next = beginWork(unitOfWork.alternate, unitOfWork, entangledRenderLanes);
-  current = null;
+  disableStringRefs || (current = null);
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
   null === next ? completeUnitOfWork(unitOfWork) : (workInProgress = next);
 }
@@ -11536,7 +11539,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
           resetWorkInProgress(next, entangledRenderLanes)),
         (next = beginWork(current$jscomp$0, next, entangledRenderLanes));
   }
-  current = null;
+  disableStringRefs || (current = null);
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
   null === next ? completeUnitOfWork(unitOfWork) : (workInProgress = next);
 }
@@ -17109,14 +17112,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1775 = React.version;
 if (
-  "19.0.0-www-modern-5636fad8-20241010" !==
+  "19.0.0-www-modern-75dd053b-20241014" !==
   isomorphicReactPackageVersion$jscomp$inline_1775
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1775,
-      "19.0.0-www-modern-5636fad8-20241010"
+      "19.0.0-www-modern-75dd053b-20241014"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17132,25 +17135,25 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2313 = {
+var internals$jscomp$inline_2314 = {
   bundleType: 0,
-  version: "19.0.0-www-modern-5636fad8-20241010",
+  version: "19.0.0-www-modern-75dd053b-20241014",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-www-modern-5636fad8-20241010"
+  reconcilerVersion: "19.0.0-www-modern-75dd053b-20241014"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2314 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2315 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2314.isDisabled &&
-    hook$jscomp$inline_2314.supportsFiber
+    !hook$jscomp$inline_2315.isDisabled &&
+    hook$jscomp$inline_2315.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2314.inject(
-        internals$jscomp$inline_2313
+      (rendererID = hook$jscomp$inline_2315.inject(
+        internals$jscomp$inline_2314
       )),
-        (injectedHook = hook$jscomp$inline_2314);
+        (injectedHook = hook$jscomp$inline_2315);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -17652,4 +17655,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-5636fad8-20241010";
+exports.version = "19.0.0-www-modern-75dd053b-20241014";

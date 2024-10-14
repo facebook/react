@@ -57,6 +57,7 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
     dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
   disableLegacyContextForFunctionComponents =
     dynamicFeatureFlags.disableLegacyContextForFunctionComponents,
+  disableStringRefs = dynamicFeatureFlags.disableStringRefs,
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
@@ -3364,13 +3365,13 @@ var currentResumableState = null,
   DefaultAsyncDispatcher = {
     getCacheForType: function () {
       throw Error(formatProdErrorMessage(248));
-    },
-    getOwner: function () {
-      return null;
     }
-  },
-  prefix,
-  suffix;
+  };
+disableStringRefs ||
+  (DefaultAsyncDispatcher.getOwner = function () {
+    return null;
+  });
+var prefix, suffix;
 function describeBuiltInComponentFrame(name) {
   if (void 0 === prefix)
     try {
@@ -5911,4 +5912,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.0.0-www-classic-5636fad8-20241010";
+exports.version = "19.0.0-www-classic-75dd053b-20241014";

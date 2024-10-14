@@ -553,7 +553,8 @@ __DEV__ &&
     }
     function warnIfStringRefCannotBeAutoConverted(config, self) {
       var owner;
-      "string" === typeof config.ref &&
+      !disableStringRefs &&
+        "string" === typeof config.ref &&
         (owner = getOwner()) &&
         self &&
         owner.stateNode !== self &&
@@ -701,18 +702,23 @@ __DEV__ &&
         (checkKeyStringCoercion(maybeKey), (children = "" + maybeKey));
       hasValidKey(config) &&
         (checkKeyStringCoercion(config.key), (children = "" + config.key));
-      hasValidRef(config) && warnIfStringRefCannotBeAutoConverted(config, self);
-      if ("ref" in config || "key" in config) {
+      hasValidRef(config) &&
+        (disableStringRefs ||
+          warnIfStringRefCannotBeAutoConverted(config, self));
+      if (
+        (!enableFastJSXWithoutStringRefs && "ref" in config) ||
+        "key" in config
+      ) {
         maybeKey = {};
         for (var propName in config)
           "key" !== propName &&
-            ("ref" === propName
-              ? (maybeKey.ref = coerceStringRef(
+            (disableStringRefs || "ref" !== propName
+              ? (maybeKey[propName] = config[propName])
+              : (maybeKey.ref = coerceStringRef(
                   config[propName],
                   getOwner(),
                   type
-                ))
-              : (maybeKey[propName] = config[propName]));
+                )));
       } else maybeKey = config;
       if (!disableDefaultPropsExceptForClasses && type && type.defaultProps) {
         config = type.defaultProps;
@@ -826,6 +832,7 @@ __DEV__ &&
       return info;
     }
     function coerceStringRef(mixedRef, owner, type) {
+      if (disableStringRefs) return mixedRef;
       if ("string" !== typeof mixedRef)
         if ("number" === typeof mixedRef || "boolean" === typeof mixedRef)
           willCoercionThrow(mixedRef) &&
@@ -844,39 +851,41 @@ __DEV__ &&
       return callback;
     }
     function stringRefAsCallbackRef(stringRef, type, owner, value) {
-      if (!owner)
-        throw Error(
-          "Element ref was specified as a string (" +
-            stringRef +
-            ") but no owner was set. This could happen for one of the following reasons:\n1. You may be adding a ref to a function component\n2. You may be adding a ref to a component that was not created inside a component's render method\n3. You have multiple copies of React loaded\nSee https://react.dev/link/refs-must-have-owner for more information."
-        );
-      if (1 !== owner.tag)
-        throw Error(
-          "Function components cannot have string refs. We recommend using useRef() instead. Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref"
-        );
-      if (
-        "function" !== typeof type ||
-        (type.prototype && type.prototype.isReactComponent)
-      )
-        (type = getComponentNameFromFiber(owner) || "Component"),
-          didWarnAboutStringRefs[type] ||
-            (enableLogStringRefsProd &&
-              enableLogStringRefsProd(type, stringRef),
-            error$jscomp$0(
-              'Component "%s" contains the string ref "%s". Support for string refs will be removed in a future major release. We recommend using useRef() or createRef() instead. Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref',
-              type,
-              stringRef
-            ),
-            (didWarnAboutStringRefs[type] = !0));
-      owner = owner.stateNode;
-      if (!owner)
-        throw Error(
-          "Missing owner for string ref " +
-            stringRef +
-            ". This error is likely caused by a bug in React. Please file an issue."
-        );
-      owner = owner.refs;
-      null === value ? delete owner[stringRef] : (owner[stringRef] = value);
+      if (!disableStringRefs) {
+        if (!owner)
+          throw Error(
+            "Element ref was specified as a string (" +
+              stringRef +
+              ") but no owner was set. This could happen for one of the following reasons:\n1. You may be adding a ref to a function component\n2. You may be adding a ref to a component that was not created inside a component's render method\n3. You have multiple copies of React loaded\nSee https://react.dev/link/refs-must-have-owner for more information."
+          );
+        if (1 !== owner.tag)
+          throw Error(
+            "Function components cannot have string refs. We recommend using useRef() instead. Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref"
+          );
+        if (
+          "function" !== typeof type ||
+          (type.prototype && type.prototype.isReactComponent)
+        )
+          (type = getComponentNameFromFiber(owner) || "Component"),
+            didWarnAboutStringRefs[type] ||
+              (enableLogStringRefsProd &&
+                enableLogStringRefsProd(type, stringRef),
+              error$jscomp$0(
+                'Component "%s" contains the string ref "%s". Support for string refs will be removed in a future major release. We recommend using useRef() or createRef() instead. Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref',
+                type,
+                stringRef
+              ),
+              (didWarnAboutStringRefs[type] = !0));
+        owner = owner.stateNode;
+        if (!owner)
+          throw Error(
+            "Missing owner for string ref " +
+              stringRef +
+              ". This error is likely caused by a bug in React. Please file an issue."
+          );
+        owner = owner.refs;
+        null === value ? delete owner[stringRef] : (owner[stringRef] = value);
+      }
     }
     function escape(key) {
       var escaperLookup = { "=": "=0", ":": "=2" };
@@ -1201,6 +1210,7 @@ __DEV__ &&
     var dynamicFeatureFlags = require("ReactFeatureFlags"),
       disableDefaultPropsExceptForClasses =
         dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
+      disableStringRefs = dynamicFeatureFlags.disableStringRefs,
       enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
       enableLogStringRefsProd = dynamicFeatureFlags.enableLogStringRefsProd,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
@@ -1319,7 +1329,8 @@ __DEV__ &&
       didWarnAboutOldJSXRuntime;
     var didWarnAboutStringRefs = {};
     var didWarnAboutElementRef = {};
-    var didWarnAboutKeySpread = {},
+    var enableFastJSXWithoutStringRefs = disableStringRefs,
+      didWarnAboutKeySpread = {},
       ownerHasKeyUseWarning = {},
       didWarnAboutMaps = !1,
       userProvidedKeyEscapeRegex = /\/+/g,
@@ -1570,13 +1581,13 @@ __DEV__ &&
             (disableDefaultPropsExceptForClasses ||
             void 0 !== config[propName] ||
             void 0 === defaultProps
-              ? "ref" === propName
-                ? (props.ref = coerceStringRef(
+              ? disableStringRefs || "ref" !== propName
+                ? (props[propName] = config[propName])
+                : (props.ref = coerceStringRef(
                     config[propName],
                     owner,
                     element.type
                   ))
-                : (props[propName] = config[propName])
               : (props[propName] = defaultProps[propName]));
       }
       var propName = arguments.length - 2;
@@ -1712,7 +1723,8 @@ __DEV__ &&
             "Your app (or one of its dependencies) is using an outdated JSX transform. Update to the modern JSX transform for faster performance: https://react.dev/link/new-jsx-transform"
           )),
         hasValidRef(config) &&
-          warnIfStringRefCannotBeAutoConverted(config, config.__self),
+          (disableStringRefs ||
+            warnIfStringRefCannotBeAutoConverted(config, config.__self)),
         hasValidKey(config) &&
           (checkKeyStringCoercion(config.key), (typeString = "" + config.key)),
         config))
@@ -1720,9 +1732,9 @@ __DEV__ &&
             "key" !== propName &&
             "__self" !== propName &&
             "__source" !== propName &&
-            ("ref" === propName
-              ? (i.ref = coerceStringRef(config[propName], getOwner(), type))
-              : (i[propName] = config[propName]));
+            (disableStringRefs || "ref" !== propName
+              ? (i[propName] = config[propName])
+              : (i.ref = coerceStringRef(config[propName], getOwner(), type)));
       var childrenLength = arguments.length - 2;
       if (1 === childrenLength) i.children = children;
       else if (1 < childrenLength) {
@@ -2005,7 +2017,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.0.0-www-classic-5636fad8-20241010";
+    exports.version = "19.0.0-www-classic-75dd053b-20241014";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

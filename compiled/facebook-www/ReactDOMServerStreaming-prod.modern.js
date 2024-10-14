@@ -40,6 +40,7 @@ var React = require("react"),
   dynamicFeatureFlags = require("ReactFeatureFlags"),
   disableDefaultPropsExceptForClasses =
     dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
+  disableStringRefs = dynamicFeatureFlags.disableStringRefs,
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
@@ -3241,13 +3242,13 @@ var currentResumableState = null,
   DefaultAsyncDispatcher = {
     getCacheForType: function () {
       throw Error("Not implemented.");
-    },
-    getOwner: function () {
-      return null;
     }
-  },
-  prefix,
-  suffix;
+  };
+disableStringRefs ||
+  (DefaultAsyncDispatcher.getOwner = function () {
+    return null;
+  });
+var prefix, suffix;
 function describeBuiltInComponentFrame(name) {
   if (void 0 === prefix)
     try {
