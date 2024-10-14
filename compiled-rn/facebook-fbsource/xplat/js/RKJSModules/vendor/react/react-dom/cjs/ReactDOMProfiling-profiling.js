@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c0bb57cc30f7279c8660e4410e4ff499>>
+ * @generated SignedSource<<0f3474ce614b50fb581a49a00f2a7b49>>
  */
 
 /*
@@ -743,7 +743,8 @@ function getNextLanes(root, wipLanes) {
         : ((pingedLanes &= nonIdlePendingLanes),
           0 !== pingedLanes
             ? (nextLanes = getHighestPriorityLanes(pingedLanes))
-            : root ||
+            : enableSiblingPrerendering &&
+              !root &&
               ((warmLanes = nonIdlePendingLanes & ~warmLanes),
               0 !== warmLanes &&
                 (nextLanes = getHighestPriorityLanes(warmLanes)))))
@@ -752,7 +753,8 @@ function getNextLanes(root, wipLanes) {
         ? (nextLanes = getHighestPriorityLanes(nonIdlePendingLanes))
         : 0 !== pingedLanes
           ? (nextLanes = getHighestPriorityLanes(pingedLanes))
-          : root ||
+          : enableSiblingPrerendering &&
+            !root &&
             ((warmLanes = pendingLanes & ~warmLanes),
             0 !== warmLanes &&
               (nextLanes = getHighestPriorityLanes(warmLanes))));
@@ -872,7 +874,8 @@ function markRootFinished(
     remainingLanes &= ~lane;
   }
   0 !== spawnedLane && markSpawnedDeferredLane(root, spawnedLane, 0);
-  0 !== suspendedRetryLanes &&
+  enableSiblingPrerendering &&
+    0 !== suspendedRetryLanes &&
     0 === updatedLanes &&
     (root.suspendedLanes |=
       suspendedRetryLanes & ~(previouslyPendingLanes & ~finishedLanes));
@@ -10556,7 +10559,8 @@ function scheduleRetryEffect(workInProgress, retryQueue) {
     ((retryQueue =
       22 !== workInProgress.tag ? claimNextRetryLane() : 536870912),
     (workInProgress.lanes |= retryQueue),
-    (workInProgressSuspendedRetryLanes |= retryQueue));
+    enableSiblingPrerendering &&
+      (workInProgressSuspendedRetryLanes |= retryQueue));
 }
 function cutOffTailIfNeeded(renderState, hasRenderedATailFallback) {
   if (!isHydrating)
@@ -11593,7 +11597,9 @@ function markRootSuspended(
   suspendedLanes &= ~workInProgressRootInterleavedUpdatedLanes;
   root.suspendedLanes |= suspendedLanes;
   root.pingedLanes &= ~suspendedLanes;
-  didSkipSuspendedSiblings || (root.warmLanes |= suspendedLanes);
+  enableSiblingPrerendering &&
+    !didSkipSuspendedSiblings &&
+    (root.warmLanes |= suspendedLanes);
   didSkipSuspendedSiblings = root.expirationTimes;
   for (var lanes = suspendedLanes; 0 < lanes; ) {
     var index$6 = 31 - clz32(lanes),
@@ -16270,14 +16276,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1782 = React.version;
 if (
-  "19.0.0-native-fb-de43d560-20241009" !==
+  "19.0.0-native-fb-13411e45-20241014" !==
   isomorphicReactPackageVersion$jscomp$inline_1782
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1782,
-      "19.0.0-native-fb-de43d560-20241009"
+      "19.0.0-native-fb-13411e45-20241014"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16299,11 +16305,11 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_1789 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-de43d560-20241009",
+  version: "19.0.0-native-fb-13411e45-20241014",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-native-fb-de43d560-20241009",
+  reconcilerVersion: "19.0.0-native-fb-13411e45-20241014",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$286 = 0;
@@ -16576,7 +16582,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-native-fb-de43d560-20241009";
+exports.version = "19.0.0-native-fb-13411e45-20241014";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

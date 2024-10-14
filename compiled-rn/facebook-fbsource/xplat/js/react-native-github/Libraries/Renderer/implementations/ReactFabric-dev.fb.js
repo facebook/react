@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0fe6afcc02f97c62359b2f284d84bb0e>>
+ * @generated SignedSource<<6742299ee748c467ac536ba0c3472d61>>
  */
 
 "use strict";
@@ -1601,7 +1601,8 @@ __DEV__ &&
             : ((pingedLanes &= nonIdlePendingLanes),
               0 !== pingedLanes
                 ? (nextLanes = getHighestPriorityLanes(pingedLanes))
-                : root ||
+                : enableSiblingPrerendering &&
+                  !root &&
                   ((warmLanes = nonIdlePendingLanes & ~warmLanes),
                   0 !== warmLanes &&
                     (nextLanes = getHighestPriorityLanes(warmLanes)))))
@@ -1610,7 +1611,8 @@ __DEV__ &&
             ? (nextLanes = getHighestPriorityLanes(nonIdlePendingLanes))
             : 0 !== pingedLanes
               ? (nextLanes = getHighestPriorityLanes(pingedLanes))
-              : root ||
+              : enableSiblingPrerendering &&
+                !root &&
                 ((warmLanes = pendingLanes & ~warmLanes),
                 0 !== warmLanes &&
                   (nextLanes = getHighestPriorityLanes(warmLanes))));
@@ -1737,7 +1739,8 @@ __DEV__ &&
         remainingLanes &= ~lane;
       }
       0 !== spawnedLane && markSpawnedDeferredLane(root, spawnedLane, 0);
-      0 !== suspendedRetryLanes &&
+      enableSiblingPrerendering &&
+        0 !== suspendedRetryLanes &&
         0 === updatedLanes &&
         (root.suspendedLanes |=
           suspendedRetryLanes & ~(previouslyPendingLanes & ~finishedLanes));
@@ -9086,7 +9089,8 @@ __DEV__ &&
         ((retryQueue =
           22 !== workInProgress.tag ? claimNextRetryLane() : 536870912),
         (workInProgress.lanes |= retryQueue),
-        (workInProgressSuspendedRetryLanes |= retryQueue));
+        enableSiblingPrerendering &&
+          (workInProgressSuspendedRetryLanes |= retryQueue));
     }
     function cutOffTailIfNeeded(renderState, hasRenderedATailFallback) {
       switch (renderState.tailMode) {
@@ -12024,7 +12028,9 @@ __DEV__ &&
       suspendedLanes &= ~workInProgressRootInterleavedUpdatedLanes;
       root.suspendedLanes |= suspendedLanes;
       root.pingedLanes &= ~suspendedLanes;
-      didSkipSuspendedSiblings || (root.warmLanes |= suspendedLanes);
+      enableSiblingPrerendering &&
+        !didSkipSuspendedSiblings &&
+        (root.warmLanes |= suspendedLanes);
       didSkipSuspendedSiblings = root.expirationTimes;
       for (var lanes = suspendedLanes; 0 < lanes; ) {
         var index = 31 - clz32(lanes),
@@ -16928,11 +16934,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-de43d560-20241009",
+        version: "19.0.0-native-fb-13411e45-20241014",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-native-fb-de43d560-20241009"
+        reconcilerVersion: "19.0.0-native-fb-13411e45-20241014"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

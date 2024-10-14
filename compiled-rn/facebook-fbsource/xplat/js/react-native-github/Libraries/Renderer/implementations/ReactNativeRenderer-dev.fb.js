@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<72710cfc1a334507c73289cd75a075fb>>
+ * @generated SignedSource<<c12e550aa890c4678c927c5bec385b06>>
  */
 
 "use strict";
@@ -1697,7 +1697,8 @@ __DEV__ &&
             : ((pingedLanes &= nonIdlePendingLanes),
               0 !== pingedLanes
                 ? (nextLanes = getHighestPriorityLanes(pingedLanes))
-                : root ||
+                : enableSiblingPrerendering &&
+                  !root &&
                   ((warmLanes = nonIdlePendingLanes & ~warmLanes),
                   0 !== warmLanes &&
                     (nextLanes = getHighestPriorityLanes(warmLanes)))))
@@ -1706,7 +1707,8 @@ __DEV__ &&
             ? (nextLanes = getHighestPriorityLanes(nonIdlePendingLanes))
             : 0 !== pingedLanes
               ? (nextLanes = getHighestPriorityLanes(pingedLanes))
-              : root ||
+              : enableSiblingPrerendering &&
+                !root &&
                 ((warmLanes = pendingLanes & ~warmLanes),
                 0 !== warmLanes &&
                   (nextLanes = getHighestPriorityLanes(warmLanes))));
@@ -1833,7 +1835,8 @@ __DEV__ &&
         remainingLanes &= ~lane;
       }
       0 !== spawnedLane && markSpawnedDeferredLane(root, spawnedLane, 0);
-      0 !== suspendedRetryLanes &&
+      enableSiblingPrerendering &&
+        0 !== suspendedRetryLanes &&
         0 === updatedLanes &&
         (root.suspendedLanes |=
           suspendedRetryLanes & ~(previouslyPendingLanes & ~finishedLanes));
@@ -9196,7 +9199,8 @@ __DEV__ &&
         ((retryQueue =
           22 !== workInProgress.tag ? claimNextRetryLane() : 536870912),
         (workInProgress.lanes |= retryQueue),
-        (workInProgressSuspendedRetryLanes |= retryQueue));
+        enableSiblingPrerendering &&
+          (workInProgressSuspendedRetryLanes |= retryQueue));
     }
     function cutOffTailIfNeeded(renderState, hasRenderedATailFallback) {
       switch (renderState.tailMode) {
@@ -12386,7 +12390,9 @@ __DEV__ &&
       suspendedLanes &= ~workInProgressRootInterleavedUpdatedLanes;
       root.suspendedLanes |= suspendedLanes;
       root.pingedLanes &= ~suspendedLanes;
-      didSkipSuspendedSiblings || (root.warmLanes |= suspendedLanes);
+      enableSiblingPrerendering &&
+        !didSkipSuspendedSiblings &&
+        (root.warmLanes |= suspendedLanes);
       didSkipSuspendedSiblings = root.expirationTimes;
       for (var lanes = suspendedLanes; 0 < lanes; ) {
         var index = 31 - clz32(lanes),
@@ -17149,11 +17155,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.0.0-native-fb-de43d560-20241009" !== isomorphicReactPackageVersion)
+    if ("19.0.0-native-fb-13411e45-20241014" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.0.0-native-fb-de43d560-20241009\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.0.0-native-fb-13411e45-20241014\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17179,11 +17185,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-de43d560-20241009",
+        version: "19.0.0-native-fb-13411e45-20241014",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromTag,
-        reconcilerVersion: "19.0.0-native-fb-de43d560-20241009"
+        reconcilerVersion: "19.0.0-native-fb-13411e45-20241014"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
