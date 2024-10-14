@@ -10,7 +10,7 @@
   "scripts": {
     "build": "rimraf dist && rollup --config --bundleConfigAsCjs",
     "test": "./scripts/link-react-compiler-runtime.sh && yarn snap:ci",
-    "jest": "yarn build && ts-node node_modules/.bin/jest",
+    "jest:ci": "yarn build && yarn jest",
     "snap": "node ../snap/dist/main.js",
     "snap:build": "yarn workspace snap run build",
     "snap:ci": "yarn snap:build && yarn snap",
