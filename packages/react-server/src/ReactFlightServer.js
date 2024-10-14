@@ -3465,7 +3465,18 @@ function renderConsoleValue(
         if (element._owner != null) {
           outlineComponentInfo(request, element._owner);
         }
+        if (typeof element.type === 'object' && element.type !== null) {
+          // If the type is an object it can get cut off which shouldn't happen here.
+          doNotLimit.add(element.type);
+        }
+        if (typeof element.key === 'object' && element.key !== null) {
+          // This should never happen but just in case.
+          doNotLimit.add(element.key);
+        }
         doNotLimit.add(element.props);
+        if (element._owner !== null) {
+          doNotLimit.add(element._owner);
+        }
 
         if (enableOwnerStacks) {
           let debugStack: null | ReactStackTrace = null;
