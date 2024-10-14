@@ -649,7 +649,8 @@ function getNextLanes(root, wipLanes) {
         : ((pingedLanes &= nonIdlePendingLanes),
           0 !== pingedLanes
             ? (nextLanes = getHighestPriorityLanes(pingedLanes))
-            : root ||
+            : enableSiblingPrerendering &&
+              !root &&
               ((warmLanes = nonIdlePendingLanes & ~warmLanes),
               0 !== warmLanes &&
                 (nextLanes = getHighestPriorityLanes(warmLanes)))))
@@ -658,7 +659,8 @@ function getNextLanes(root, wipLanes) {
         ? (nextLanes = getHighestPriorityLanes(nonIdlePendingLanes))
         : 0 !== pingedLanes
           ? (nextLanes = getHighestPriorityLanes(pingedLanes))
-          : root ||
+          : enableSiblingPrerendering &&
+            !root &&
             ((warmLanes = pendingLanes & ~warmLanes),
             0 !== warmLanes &&
               (nextLanes = getHighestPriorityLanes(warmLanes))));
@@ -775,7 +777,8 @@ function markRootFinished(
     remainingLanes &= ~lane;
   }
   0 !== spawnedLane && markSpawnedDeferredLane(root, spawnedLane, 0);
-  0 === suspendedRetryLanes ||
+  !enableSiblingPrerendering ||
+    0 === suspendedRetryLanes ||
     0 !== updatedLanes ||
     (disableLegacyMode && 0 === root.tag) ||
     (root.suspendedLanes |=
@@ -7810,7 +7813,8 @@ function scheduleRetryEffect(workInProgress, retryQueue) {
     ((retryQueue =
       22 !== workInProgress.tag ? claimNextRetryLane() : 536870912),
     (workInProgress.lanes |= retryQueue),
-    (workInProgressSuspendedRetryLanes |= retryQueue));
+    enableSiblingPrerendering &&
+      (workInProgressSuspendedRetryLanes |= retryQueue));
 }
 function cutOffTailIfNeeded(renderState, hasRenderedATailFallback) {
   if (!isHydrating)
@@ -11365,7 +11369,9 @@ function markRootSuspended(
   suspendedLanes &= ~workInProgressRootInterleavedUpdatedLanes;
   root.suspendedLanes |= suspendedLanes;
   root.pingedLanes &= ~suspendedLanes;
-  didSkipSuspendedSiblings || (root.warmLanes |= suspendedLanes);
+  enableSiblingPrerendering &&
+    !didSkipSuspendedSiblings &&
+    (root.warmLanes |= suspendedLanes);
   didSkipSuspendedSiblings = root.expirationTimes;
   for (var lanes = suspendedLanes; 0 < lanes; ) {
     var index$8 = 31 - clz32(lanes),
@@ -17415,14 +17421,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1774 = React.version;
 if (
-  "19.0.0-www-classic-75dd053b-20241014" !==
+  "19.0.0-www-classic-13411e45-20241014" !==
   isomorphicReactPackageVersion$jscomp$inline_1774
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1774,
-      "19.0.0-www-classic-75dd053b-20241014"
+      "19.0.0-www-classic-13411e45-20241014"
     )
   );
 function flushSyncFromReconciler(fn) {
@@ -17467,11 +17473,11 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2287 = {
   bundleType: 0,
-  version: "19.0.0-www-classic-75dd053b-20241014",
+  version: "19.0.0-www-classic-13411e45-20241014",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-www-classic-75dd053b-20241014"
+  reconcilerVersion: "19.0.0-www-classic-13411e45-20241014"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2288 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17927,4 +17933,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-75dd053b-20241014";
+exports.version = "19.0.0-www-classic-13411e45-20241014";

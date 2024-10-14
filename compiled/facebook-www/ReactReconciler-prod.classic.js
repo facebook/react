@@ -640,7 +640,8 @@ module.exports = function ($$$config) {
           : ((pingedLanes &= nonIdlePendingLanes),
             0 !== pingedLanes
               ? (nextLanes = getHighestPriorityLanes(pingedLanes))
-              : root ||
+              : enableSiblingPrerendering &&
+                !root &&
                 ((warmLanes = nonIdlePendingLanes & ~warmLanes),
                 0 !== warmLanes &&
                   (nextLanes = getHighestPriorityLanes(warmLanes)))))
@@ -649,7 +650,8 @@ module.exports = function ($$$config) {
           ? (nextLanes = getHighestPriorityLanes(nonIdlePendingLanes))
           : 0 !== pingedLanes
             ? (nextLanes = getHighestPriorityLanes(pingedLanes))
-            : root ||
+            : enableSiblingPrerendering &&
+              !root &&
               ((warmLanes = pendingLanes & ~warmLanes),
               0 !== warmLanes &&
                 (nextLanes = getHighestPriorityLanes(warmLanes))));
@@ -766,7 +768,8 @@ module.exports = function ($$$config) {
       remainingLanes &= ~lane;
     }
     0 !== spawnedLane && markSpawnedDeferredLane(root, spawnedLane, 0);
-    0 === suspendedRetryLanes ||
+    !enableSiblingPrerendering ||
+      0 === suspendedRetryLanes ||
       0 !== updatedLanes ||
       (disableLegacyMode && 0 === root.tag) ||
       (root.suspendedLanes |=
@@ -6750,7 +6753,8 @@ module.exports = function ($$$config) {
       ((retryQueue =
         22 !== workInProgress.tag ? claimNextRetryLane() : 536870912),
       (workInProgress.lanes |= retryQueue),
-      (workInProgressSuspendedRetryLanes |= retryQueue));
+      enableSiblingPrerendering &&
+        (workInProgressSuspendedRetryLanes |= retryQueue));
   }
   function cutOffTailIfNeeded(renderState, hasRenderedATailFallback) {
     if (!isHydrating)
@@ -10282,7 +10286,9 @@ module.exports = function ($$$config) {
     suspendedLanes &= ~workInProgressRootInterleavedUpdatedLanes;
     root.suspendedLanes |= suspendedLanes;
     root.pingedLanes &= ~suspendedLanes;
-    didSkipSuspendedSiblings || (root.warmLanes |= suspendedLanes);
+    enableSiblingPrerendering &&
+      !didSkipSuspendedSiblings &&
+      (root.warmLanes |= suspendedLanes);
     didSkipSuspendedSiblings = root.expirationTimes;
     for (var lanes = suspendedLanes; 0 < lanes; ) {
       var index$7 = 31 - clz32(lanes),
@@ -12857,7 +12863,7 @@ module.exports = function ($$$config) {
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
       findFiberByHostInstance: getInstanceFromNode,
-      reconcilerVersion: "19.0.0-www-classic-75dd053b-20241014"
+      reconcilerVersion: "19.0.0-www-classic-13411e45-20241014"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
