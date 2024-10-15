@@ -550,21 +550,6 @@ const tests = {
       // TODO: this should error but doesn't.
       // errors: [genericError('useState')],
     },
-    {
-      code: normalizeIndent`
-        async function Page() {
-          useId();
-          React.useId();
-        }
-      `,
-    },
-    {
-      code: normalizeIndent`
-        async function useAsyncHook() {
-          useId();
-        }
-      `,
-    },
   ],
   invalid: [
     {
@@ -1143,6 +1128,26 @@ const tests = {
         }
       `,
       errors: [asyncComponentHookError('useState')],
+    },
+    {
+      code: normalizeIndent`
+        async function Page() {
+          useId();
+          React.useId();
+        }
+      `,
+      errors: [
+        asyncComponentHookError('useId'),
+        asyncComponentHookError('React.useId'),
+      ],
+    },
+    {
+      code: normalizeIndent`
+        async function useAsyncHook() {
+          useId();
+        }
+      `,
+      errors: [asyncComponentHookError('useId')],
     },
     {
       code: normalizeIndent`
