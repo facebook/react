@@ -1131,6 +1131,34 @@ const tests = {
     },
     {
       code: normalizeIndent`
+        async function Page() {
+          useId();
+          React.useId();
+        }
+      `,
+      errors: [
+        asyncComponentHookError('useId'),
+        asyncComponentHookError('React.useId'),
+      ],
+    },
+    {
+      code: normalizeIndent`
+        async function useAsyncHook() {
+          useId();
+        }
+      `,
+      errors: [asyncComponentHookError('useId')],
+    },
+    {
+      code: normalizeIndent`
+        async function notAHook() {
+          useId();
+        }
+      `,
+      errors: [functionError('useId', 'notAHook')],
+    },
+    {
+      code: normalizeIndent`
         Hook.use();
         Hook._use();
         Hook.useState();
