@@ -6,76 +6,79 @@
  */
 'use strict';
 
-// Most of our tests call jest.resetModules in a beforeEach and the
-// re-require all the React modules. However, the JSX runtime is injected by
-// the compiler, so those bindings don't get updated. This causes warnings
-// logged by the JSX runtime to not have a component stack, because component
-// stack relies on the the secret internals object that lives on the React
-// module, which because of the resetModules call is longer the same one.
-//
-// To workaround this issue, use a transform that calls require() again before
-// every JSX invocation.
-//
-// Longer term we should migrate all our tests away from using require() and
-// resetModules, and use import syntax instead so this kind of thing doesn't
-// happen.
-
+/**
+ * Babel plugin to replace JSX imports with lazy loading to prevent issues
+ * with the JSX runtime during testing.
+ */
 module.exports = function replaceJSXImportWithLazy(babel) {
-  const {types: t} = babel;
+  const { types: t } = babel;
 
+  /**
+   * Generates a require call expression for the specified module.
+   * @param {string} moduleName - The name of the module to require.
+   * @returns {Object} - A call expression for requiring the module.
+   */
   function getInlineRequire(moduleName) {
     return t.callExpression(t.identifier('require'), [
       t.stringLiteral(moduleName),
     ]);
   }
 
+  /**
+   * Replaces the callee of the JSX function with the appropriate lazy loaded module.
+   * @param {Object} path - The Babel path for the current node.
+   * @param {string} moduleName - The module name for the JSX function.
+   * @param {string} method - The method name to replace (jsx, jsxs, jsxDEV).
+   */
+  function replaceCallee(path, moduleName, method) {
+    path.node.callee = t.memberExpression(
+      getInlineRequire(moduleName),
+      t.identifier(method)
+    );
+  }
+
   return {
     visitor: {
-      CallExpression: function (path, pass) {
+      CallExpression(path) {
         let callee = path.node.callee;
+
+        // Handle SequenceExpression to get the last expression
         if (callee.type === 'SequenceExpression') {
           callee = callee.expressions[callee.expressions.length - 1];
         }
+
+        // Handle cases for different JSX function names
         if (callee.type === 'Identifier') {
-          // Sometimes we seem to hit this before the imports are transformed
-          // into requires and so we hit this case.
           switch (callee.name) {
             case '_jsxDEV':
-              path.node.callee = t.memberExpression(
-                getInlineRequire('react/jsx-dev-runtime'),
-                t.identifier('jsxDEV')
-              );
+              replaceCallee(path, 'react/jsx-dev-runtime', 'jsxDEV');
               return;
             case '_jsx':
-              path.node.callee = t.memberExpression(
-                getInlineRequire('react/jsx-runtime'),
-                t.identifier('jsx')
-              );
+              replaceCallee(path, 'react/jsx-runtime', 'jsx');
               return;
             case '_jsxs':
-              path.node.callee = t.memberExpression(
-                getInlineRequire('react/jsx-runtime'),
-                t.identifier('jsxs')
-              );
+              replaceCallee(path, 'react/jsx-runtime', 'jsxs');
               return;
           }
-          return;
+          return; // Exit if no match found
         }
+
+        // Check for MemberExpression for more complex JSX calls
         if (callee.type !== 'MemberExpression') {
           return;
         }
+
         if (callee.property.type !== 'Identifier') {
           // Needs to be jsx, jsxs, jsxDEV.
           return;
         }
+
         if (callee.object.type !== 'Identifier') {
           // Needs to be _reactJsxDevRuntime or _reactJsxRuntime.
           return;
         }
-        // Replace the cached identifier with a new require call.
-        // Relying on the identifier name is a little flaky. Should ideally pick
-        // this from the import. For some reason it sometimes has the react prefix
-        // and other times it doesn't.
+
+        // Replace cached identifier with a new require call
         switch (callee.object.name) {
           case '_reactJsxDevRuntime':
           case '_jsxDevRuntime':
@@ -85,6 +88,8 @@ module.exports = function replaceJSXImportWithLazy(babel) {
           case '_jsxRuntime':
             callee.object = getInlineRequire('react/jsx-runtime');
             return;
+          default:
+            console.warn(`Warning: Unrecognized object name ${callee.object.name}`);
         }
       },
     },
