@@ -905,7 +905,7 @@ describe('ReactNewContext', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Child')]);
     });
 
-    it('provider does not bail out if legacy context changed above', () => {
+    it('provider is skipped if only legacy context changed above', () => {
       const Context = React.createContext(0);
 
       function Child() {
@@ -962,7 +962,7 @@ describe('ReactNewContext', () => {
 
       // Update LegacyProvider (should not bail out)
       legacyProviderRef.current.setState({value: 1});
-      expect(Scheduler).toFlushAndYield(['LegacyProvider', 'App', 'Child']);
+      expect(Scheduler).toFlushAndYield(['LegacyProvider']);
       expect(ReactNoop.getChildren()).toEqual([span('Child')]);
 
       // Update App with same value (should bail out)
