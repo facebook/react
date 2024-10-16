@@ -139,13 +139,6 @@ declare const ensureNativeMethodsAreSynced: NativeMethods;
 export type HostInstance = NativeMethods;
 export type HostComponent<Config> = AbstractComponent<Config, HostInstance>;
 
-type SecretInternalsType = {
-  computeComponentStackForErrorReporting(tag: number): string,
-  // TODO (bvaughn) Decide which additional types to expose here?
-  // And how much information to fill in for the above types.
-  ...
-};
-
 type InspectorDataProps = $ReadOnly<{
   [propName: string]: string,
   ...
@@ -233,7 +226,6 @@ export type ReactNativeType = {
   unmountComponentAtNode(containerTag: number): void,
   unmountComponentAtNodeAndRemoveContainer(containerTag: number): void,
   +unstable_batchedUpdates: <T>(fn: (T) => void, bookkeeping: T) => void,
-  +__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: SecretInternalsType,
   ...
 };
 
