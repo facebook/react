@@ -1346,7 +1346,10 @@ describe('ReactFlight', () => {
         errors: [
           {
             message: 'This is an error',
-            stack: gate(flags => flags.enableOwnerStacks)
+            stack: gate(
+              flags =>
+                flags.enableOwnerStacks || flags.enableServerComponentLogs,
+            )
               ? expect.stringContaining(
                   'Error: This is an error\n' +
                     '    at eval (eval at testFunction (eval at createFakeFunction (**), <anonymous>:1:35)\n' +
@@ -1378,7 +1381,17 @@ describe('ReactFlight', () => {
               ['file:///testing.js', 'Server'],
               [__filename, 'Server'],
             ]
-          : [],
+          : gate(flags => flags.enableServerComponentLogs)
+            ? [
+                // TODO: What should we request here? The outer (<anonymous>) or the inner (inspected-page.html)?
+                ['inspected-page.html:29:11), <anonymous>', 'Server'],
+                [
+                  'file://~/(some)(really)(exotic-directory)/ReactFlight-test.js',
+                  'Server',
+                ],
+                ['file:///testing.js', 'Server'],
+              ]
+            : [],
       });
     } else {
       expect(errors.map(getErrorForJestMatcher)).toEqual([
@@ -2940,7 +2953,11 @@ describe('ReactFlight', () => {
       .join('\n')
       .replaceAll(
         ' (/',
-        gate(flags => flags.enableOwnerStacks) ? ' (file:///' : ' (/',
+        gate(
+          flags => flags.enableOwnerStacks || flags.enableServerComponentLogs,
+        )
+          ? ' (file:///'
+          : ' (/',
       ); // The eval will end up normalizing these
 
     let sawReactPrefix = false;
@@ -2970,6 +2987,12 @@ describe('ReactFlight', () => {
     if (__DEV__ && gate(flags => flags.enableOwnerStacks)) {
       expect(environments.slice(0, 4)).toEqual([
         'Server',
+        'third-party',
+        'third-party',
+        'third-party',
+      ]);
+    } else if (__DEV__ && gate(flags => flags.enableServerComponentLogs)) {
+      expect(environments.slice(0, 3)).toEqual([
         'third-party',
         'third-party',
         'third-party',
