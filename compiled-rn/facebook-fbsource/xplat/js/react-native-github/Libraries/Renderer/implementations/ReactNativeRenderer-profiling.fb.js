@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e6511d20dfb6f8ac5ffa1281a485ab03>>
+ * @generated SignedSource<<82e3090a2cb14d8d56659516b907fa2d>>
  */
 
 "use strict";
@@ -11680,11 +11680,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.0.0-native-fb-6c4bbc78-20241015" !== isomorphicReactPackageVersion)
+if ("19.0.0-native-fb-a3d9ea05-20241016" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.0.0-native-fb-6c4bbc78-20241015\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.0.0-native-fb-a3d9ea05-20241016\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11733,11 +11733,11 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1331 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-6c4bbc78-20241015",
+    version: "19.0.0-native-fb-a3d9ea05-20241016",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromTag,
-    reconcilerVersion: "19.0.0-native-fb-6c4bbc78-20241015"
+    reconcilerVersion: "19.0.0-native-fb-a3d9ea05-20241016"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1331.rendererConfig = extraDevToolsConfig);
@@ -11769,13 +11769,6 @@ if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
         (injectedHook = hook$jscomp$inline_1626);
     } catch (err) {}
 }
-exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
-  computeComponentStackForErrorReporting: function (reactTag) {
-    return (reactTag = getInstanceFromTag(reactTag))
-      ? getStackByFiberInDevAndProd(reactTag)
-      : "";
-  }
-};
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(
     children,

@@ -7,7 +7,7 @@
  * @noformat
  * @nolint
  * @flow strict
- * @generated SignedSource<<9e6c8931d3b0c36d35ad5da90b721b85>>
+ * @generated SignedSource<<448b89d0a61a392d9c1eb921f7d51d37>>
  */
 
 import type {
@@ -140,13 +140,6 @@ declare const ensureNativeMethodsAreSynced: NativeMethods;
 export type HostInstance = NativeMethods;
 export type HostComponent<Config> = AbstractComponent<Config, HostInstance>;
 
-type SecretInternalsType = {
-  computeComponentStackForErrorReporting(tag: number): string,
-  // TODO (bvaughn) Decide which additional types to expose here?
-  // And how much information to fill in for the above types.
-  ...
-};
-
 type InspectorDataProps = $ReadOnly<{
   [propName: string]: string,
   ...
@@ -234,7 +227,6 @@ export type ReactNativeType = {
   unmountComponentAtNode(containerTag: number): void,
   unmountComponentAtNodeAndRemoveContainer(containerTag: number): void,
   +unstable_batchedUpdates: <T>(fn: (T) => void, bookkeeping: T) => void,
-  +__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: SecretInternalsType,
   ...
 };
 
