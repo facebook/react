@@ -125,7 +125,7 @@ async function main() {
       files: {exclude: ['.DS_Store']},
     });
     const truncatedHash = hash.slice(0, 7);
-    const newVersion = `0.0.0-experimental-${truncatedHash}-${dateString}`;
+    const newVersion = `0.0.1-experimental-${dateString}-${truncatedHash}`;
 
     for (const pkgName of pkgNames) {
       const pkgDir = path.resolve(__dirname, `../../packages/${pkgName}`);
