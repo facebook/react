@@ -18,6 +18,7 @@ let ReactNoop;
 let Suspense;
 let Scheduler;
 let act;
+let shallowEqual;
 
 describe('memo', () => {
   beforeEach(() => {
@@ -28,6 +29,7 @@ describe('memo', () => {
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
     act = require('jest-react').act;
+    shallowEqual = require('shared/shallowEqual').default;
     ({Suspense} = React);
   });
 
@@ -93,6 +95,17 @@ describe('memo', () => {
   });
   sharedTests('lazy', (...args) => {
     const Memo = React.memo(...args);
+    return React.lazy(() => fakeImport(Memo));
+  });
+  sharedTests('normal, force no simplememo', (component, compare) => {
+    const Memo = React.memo(component, compare ?? shallowEqual);
+    function Indirection(props) {
+      return <Memo {...props} />;
+    }
+    return React.lazy(() => fakeImport(Indirection));
+  });
+  sharedTests('lazy, force no simplememo', (component, compare) => {
+    const Memo = React.memo(component, compare ?? shallowEqual);
     return React.lazy(() => fakeImport(Memo));
   });
 
@@ -754,6 +767,85 @@ describe('memo', () => {
           '`Outer`, but its value is `undefined`.\n' +
           '    in Inner (at **)',
       );
+    });
+
+    it('allows legacy context updates through memo', async () => {
+      class Provider extends React.Component {
+        static childContextTypes = {
+          value: PropTypes.element,
+        };
+        getChildContext() {
+          return {value: this.props.value};
+        }
+        render() {
+          return this.props.children;
+        }
+      }
+
+      class Consumer extends React.Component {
+        static contextTypes = {
+          value: PropTypes.element,
+        };
+        render() {
+          return (
+            <>
+              {this.context.value}
+              <ChildOfConsumer />
+            </>
+          );
+        }
+      }
+
+      let forceUpdateChildOfConsumer;
+      function ChildOfConsumer() {
+        forceUpdateChildOfConsumer = React.useState(0)[1];
+      }
+
+      function Intermediate(props) {
+        Scheduler.unstable_yieldValue('Intermediate');
+        return props.children;
+      }
+      const MemoIntermediate = memo(Intermediate);
+
+      const consumer = <Consumer />;
+      ReactNoop.render(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <Provider value={<Text text="First" />}>
+            <MemoIntermediate>{consumer}</MemoIntermediate>
+          </Provider>
+        </Suspense>,
+      );
+      expect(Scheduler).toFlushAndYield(['Loading...']);
+      await Promise.resolve();
+      expect(Scheduler).toFlushAndYield(['Intermediate', 'First']);
+      expect(ReactNoop.getChildren()).toEqual([span('First')]);
+
+      ReactNoop.render(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <Provider value={<Text text="Second" />}>
+            <MemoIntermediate>{consumer}</MemoIntermediate>
+          </Provider>
+        </Suspense>,
+      );
+      expect(Scheduler).toFlushAndYield(['Second']);
+      await Promise.resolve();
+      expect(Scheduler).toFlushAndYield([]);
+      expect(ReactNoop.getChildren()).toEqual([span('Second')]);
+
+      // Schedule a descendant of Consumer for update while updating the parent;
+      // this should also not cause Intermediate to rerender
+      await act(async () => {
+        ReactNoop.render(
+          <Suspense fallback={<Text text="Loading..." />}>
+            <Provider value={<Text text="Third" />}>
+              <MemoIntermediate>{consumer}</MemoIntermediate>
+            </Provider>
+          </Suspense>,
+        );
+        forceUpdateChildOfConsumer(x => x + 1);
+      });
+      expect(Scheduler).toHaveYielded(['Third']);
+      expect(ReactNoop.getChildren()).toEqual([span('Third')]);
     });
   }
 });

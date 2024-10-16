@@ -2260,10 +2260,6 @@ describe('ReactIncremental', () => {
       // its child context.
       'Intl:read {}',
       'Intl:provide {"locale":"gr"}',
-      // TODO: it's unfortunate that we can't reuse work on
-      // these components even though they don't depend on context.
-      'IndirectionFn {}',
-      'IndirectionClass {}',
       // These components depend on context:
       'ShowLocaleClass:read {"locale":"gr"}',
       'ShowLocaleFn:read {"locale":"gr"}',

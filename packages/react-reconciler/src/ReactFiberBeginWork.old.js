@@ -3380,7 +3380,10 @@ function bailoutOnAlreadyFinishedWork(
   markSkippedUpdateLanes(workInProgress.lanes);
 
   // Check if the children have any pending work.
-  if (!includesSomeLane(renderLanes, workInProgress.childLanes)) {
+  if (
+    !hasLegacyContextChanged() &&
+    !includesSomeLane(renderLanes, workInProgress.childLanes)
+  ) {
     // The children don't have any work either. We can skip them.
     // TODO: Once we add back resuming, we should check if the children are
     // a work-in-progress set. If so, we need to transfer their effects.
@@ -3725,7 +3728,6 @@ function beginWork(
 
     if (
       oldProps !== newProps ||
-      hasLegacyContextChanged() ||
       // Force a re-render if the implementation changed due to hot reload:
       (__DEV__ ? workInProgress.type !== current.type : false)
     ) {
@@ -3741,6 +3743,16 @@ function beginWork(
       );
       if (
         !hasScheduledUpdateOrContext &&
+        !(
+          hasLegacyContextChanged() &&
+          (workInProgress.tag === ClassComponent
+            ? !!workInProgress.type.contextTypes ||
+              !!workInProgress.type.childContextTypes
+            : workInProgress.tag === FunctionComponent ||
+              workInProgress.tag === SimpleMemoComponent
+            ? !!workInProgress.type.contextTypes
+            : false)
+        ) &&
         // If this is the second pass of an error or suspense boundary, there
         // may not be work scheduled on `current`, so we check for this flag.
         (workInProgress.flags & DidCapture) === NoFlags
