@@ -7,7 +7,6 @@ import {
   Set_union,
   getOrInsertDefault,
 } from '../Utils/utils';
-import {collectOptionalChainSidemap} from './CollectOptionalChainDependencies';
 import {
   BasicBlock,
   BlockId,
@@ -21,7 +20,6 @@ import {
   ReactiveScopeDependency,
   ScopeId,
 } from './HIR';
-import {collectTemporariesSidemap} from './PropagateScopeDependenciesHIR';
 
 /**
  * Helper function for `PropagateScopeDependencies`. Uses control flow graph
@@ -348,19 +346,15 @@ function collectNonNullsInBlocks(
         assumedNonNullObjects.add(maybeNonNull);
       }
       if (
-        instr.value.kind === 'FunctionExpression' &&
+        (instr.value.kind === 'FunctionExpression' ||
+          instr.value.kind === 'ObjectMethod') &&
         !fn.env.config.enableTreatFunctionDepsAsConditional
       ) {
         const innerFn = instr.value.loweredFunc;
-        const innerTemporaries = collectTemporariesSidemap(
-          innerFn.func,
-          new Set(),
-        );
-        const innerOptionals = collectOptionalChainSidemap(innerFn.func);
         const innerHoistableMap = collectHoistablePropertyLoads(
           innerFn.func,
-          innerTemporaries,
-          innerOptionals.hoistableObjects,
+          context.temporaries,
+          context.hoistableFromOptionals,
           context.nestedFnImmutableContext ??
             new Set(
               innerFn.func.context
@@ -591,7 +585,10 @@ function collectFunctionExpressionFakeLoads(
 
   for (const [_, block] of fn.body.blocks) {
     for (const {lvalue, value} of block.instructions) {
-      if (value.kind === 'FunctionExpression') {
+      if (
+        value.kind === 'FunctionExpression' ||
+        value.kind === 'ObjectMethod'
+      ) {
         for (const reference of value.loweredFunc.dependencies) {
           let curr: IdentifierId | undefined = reference.identifier.id;
           while (curr != null) {
