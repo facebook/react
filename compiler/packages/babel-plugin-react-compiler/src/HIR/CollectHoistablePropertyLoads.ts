@@ -348,7 +348,8 @@ function collectNonNullsInBlocks(
         assumedNonNullObjects.add(maybeNonNull);
       }
       if (
-        instr.value.kind === 'FunctionExpression' &&
+        (instr.value.kind === 'FunctionExpression' ||
+          instr.value.kind === 'ObjectMethod') &&
         !fn.env.config.enableTreatFunctionDepsAsConditional
       ) {
         const innerFn = instr.value.loweredFunc;
@@ -591,7 +592,10 @@ function collectFunctionExpressionFakeLoads(
 
   for (const [_, block] of fn.body.blocks) {
     for (const {lvalue, value} of block.instructions) {
-      if (value.kind === 'FunctionExpression') {
+      if (
+        value.kind === 'FunctionExpression' ||
+        value.kind === 'ObjectMethod'
+      ) {
         for (const reference of value.loweredFunc.dependencies) {
           let curr: IdentifierId | undefined = reference.identifier.id;
           while (curr != null) {
