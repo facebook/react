@@ -360,7 +360,7 @@
   "371": "Text string must be rendered within a <Text> component.\n\nText: %s",
   "372": "Cannot call unstable_createEventHandle with \"%s\", as it is not an event known to React.",
   "373": "This Hook is not supported in Server Components.",
-  "374": "Event handlers cannot be passed to Client Component props.%s\nIf you need interactivity, consider converting part of this to a Client Component.",
+  "374": "Event handlers cannot be passed to Client Component props from Server Component.%s\nIf you need interactivity, consider converting part of this to a Client Component.",
   "375": "Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with \"use server\". Or maybe you meant to call this function rather than return it.%s",
   "376": "Only global symbols received from Symbol.for(...) can be passed to Client Components. The symbol Symbol.for(%s) cannot be found among global symbols.%s",
   "377": "BigInt (%s) is not yet supported in Client Component props.%s",
