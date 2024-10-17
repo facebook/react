@@ -27,6 +27,7 @@ import type {
 import type {
   OffscreenState,
   OffscreenQueue,
+  OffscreenProps,
 } from './ReactFiberActivityComponent';
 import {isOffscreenManual} from './ReactFiberActivityComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
@@ -1734,8 +1735,16 @@ function completeWork(
         // LegacyHidden doesn't do any hiding — it only pre-renders.
       } else {
         if (current !== null) {
+          const oldProps: OffscreenProps | null = current.memoizedProps;
           const prevState: OffscreenState | null = current.memoizedState;
           const prevIsHidden = prevState !== null;
+
+          // Offscreen's mode changed and it may affect effects.
+          if (oldProps?.mode !== newProps?.mode) {
+            workInProgress.flags |= Visibility;
+          }
+
+          // Offscreen is changing between fully hidden and fully visible.
           if (prevIsHidden !== nextIsHidden) {
             workInProgress.flags |= Visibility;
           }
