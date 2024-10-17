@@ -13,7 +13,7 @@ import typeof * as DynamicExportsType from './ReactFeatureFlags.native-fb-dynami
 
 // Re-export dynamic flags from the internal module.
 // Intentionally using * because this import is compiled to a `require` call.
-import * as dynamicFlagsUntyped from 'ReactNativeInternalFeatureFlags';
+import * as dynamicFlagsUntyped from 'react-native/src/private/renderer/featureflags/ReactFeatureFlags';
 const dynamicFlags: DynamicExportsType = (dynamicFlagsUntyped: any);
 
 // We destructure each value before re-exporting to avoid a dynamic look-up on
