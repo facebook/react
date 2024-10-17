@@ -1196,7 +1196,7 @@ export default {
         // Not a React Hook call that needs deps.
         return;
       }
-      const callback = node.arguments[callbackIndex];
+      let callback = node.arguments[callbackIndex];
       const reactiveHook = node.callee;
       const reactiveHookName = getNodeWithoutReactNamespace(reactiveHook).name;
       const maybeNode = node.arguments[callbackIndex + 1];
@@ -1241,20 +1241,18 @@ export default {
         return;
       }
 
+      while (
+        callback.type === 'TSAsExpression' ||
+        callback.type === 'AsExpression'
+      ) {
+        callback = callback.expression;
+      }
+
       switch (callback.type) {
         case 'FunctionExpression':
         case 'ArrowFunctionExpression':
           visitFunctionWithDependencies(
             callback,
-            declaredDependenciesNode,
-            reactiveHook,
-            reactiveHookName,
-            isEffect,
-          );
-          return; // Handled
-        case 'TSAsExpression':
-          visitFunctionWithDependencies(
-            callback.expression,
             declaredDependenciesNode,
             reactiveHook,
             reactiveHookName,
