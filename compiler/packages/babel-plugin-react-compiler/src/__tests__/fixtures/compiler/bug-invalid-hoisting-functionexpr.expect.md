@@ -58,7 +58,7 @@ function Component(t0) {
   const $ = _c(5);
   const { obj, isObjNull } = t0;
   let t1;
-  if ($[0] !== isObjNull || $[1] !== obj.prop) {
+  if ($[0] !== isObjNull || $[1] !== obj) {
     t1 = () => {
       if (!isObjNull) {
         return obj.prop;
@@ -67,7 +67,7 @@ function Component(t0) {
       }
     };
     $[0] = isObjNull;
-    $[1] = obj.prop;
+    $[1] = obj;
     $[2] = t1;
   } else {
     t1 = $[2];

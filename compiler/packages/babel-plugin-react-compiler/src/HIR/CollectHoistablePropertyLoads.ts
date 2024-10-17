@@ -7,7 +7,6 @@ import {
   Set_union,
   getOrInsertDefault,
 } from '../Utils/utils';
-import {collectOptionalChainSidemap} from './CollectOptionalChainDependencies';
 import {
   BasicBlock,
   BlockId,
@@ -21,7 +20,6 @@ import {
   ReactiveScopeDependency,
   ScopeId,
 } from './HIR';
-import {collectTemporariesSidemap} from './PropagateScopeDependenciesHIR';
 
 /**
  * Helper function for `PropagateScopeDependencies`. Uses control flow graph
@@ -90,11 +88,6 @@ export function collectHoistablePropertyLoads(
 ): ReadonlyMap<BlockId, BlockInfo> {
   const registry = new PropertyPathRegistry();
 
-  const functionExpressionLoads = collectFunctionExpressionFakeLoads(fn);
-  const actuallyEvaluatedTemporaries = new Map(
-    [...temporaries].filter(([id]) => !functionExpressionLoads.has(id)),
-  );
-
   /**
    * Due to current limitations of mutable range inference, there are edge cases in
    * which we infer known-immutable values (e.g. props or hook params) to have a
@@ -112,7 +105,7 @@ export function collectHoistablePropertyLoads(
     }
   }
   const nodes = collectNonNullsInBlocks(fn, {
-    temporaries: actuallyEvaluatedTemporaries,
+    temporaries,
     knownImmutableIdentifiers,
     hoistableFromOptionals,
     registry,
@@ -348,19 +341,15 @@ function collectNonNullsInBlocks(
         assumedNonNullObjects.add(maybeNonNull);
       }
       if (
-        instr.value.kind === 'FunctionExpression' &&
+        (instr.value.kind === 'FunctionExpression' ||
+          instr.value.kind === 'ObjectMethod') &&
         !fn.env.config.enableTreatFunctionDepsAsConditional
       ) {
         const innerFn = instr.value.loweredFunc;
-        const innerTemporaries = collectTemporariesSidemap(
-          innerFn.func,
-          new Set(),
-        );
-        const innerOptionals = collectOptionalChainSidemap(innerFn.func);
         const innerHoistableMap = collectHoistablePropertyLoads(
           innerFn.func,
-          innerTemporaries,
-          innerOptionals.hoistableObjects,
+          context.temporaries,
+          context.hoistableFromOptionals,
           context.nestedFnImmutableContext ??
             new Set(
               innerFn.func.context
@@ -581,28 +570,4 @@ function reduceMaybeOptionalChains(
       }
     }
   } while (changed);
-}
-
-function collectFunctionExpressionFakeLoads(
-  fn: HIRFunction,
-): Set<IdentifierId> {
-  const sources = new Map<IdentifierId, IdentifierId>();
-  const functionExpressionReferences = new Set<IdentifierId>();
-
-  for (const [_, block] of fn.body.blocks) {
-    for (const {lvalue, value} of block.instructions) {
-      if (value.kind === 'FunctionExpression') {
-        for (const reference of value.loweredFunc.dependencies) {
-          let curr: IdentifierId | undefined = reference.identifier.id;
-          while (curr != null) {
-            functionExpressionReferences.add(curr);
-            curr = sources.get(curr);
-          }
-        }
-      } else if (value.kind === 'PropertyLoad') {
-        sources.set(lvalue.identifier.id, value.object.identifier.id);
-      }
-    }
-  }
-  return functionExpressionReferences;
 }

@@ -120,29 +120,29 @@ function useFoo(t0) {
   }
   const x = t1;
   let t2;
-  if ($[2] !== prop2?.inner) {
+  if ($[2] !== prop2?.inner.value) {
     t2 = identity(prop2?.inner.value)?.toString();
-    $[2] = prop2?.inner;
+    $[2] = prop2?.inner.value;
     $[3] = t2;
   } else {
     t2 = $[3];
   }
   const y = t2;
   let t3;
-  if ($[4] !== prop3 || $[5] !== prop4) {
+  if ($[4] !== prop3 || $[5] !== prop4?.inner) {
     t3 = prop3?.fn(prop4?.inner.value).toString();
     $[4] = prop3;
-    $[5] = prop4;
+    $[5] = prop4?.inner;
     $[6] = t3;
   } else {
     t3 = $[6];
   }
   const z = t3;
   let t4;
-  if ($[7] !== prop5 || $[8] !== prop6) {
+  if ($[7] !== prop5 || $[8] !== prop6?.inner) {
     t4 = prop5?.fn(prop6?.inner.value)?.toString();
     $[7] = prop5;
-    $[8] = prop6;
+    $[8] = prop6?.inner;
     $[9] = t4;
   } else {
     t4 = $[9];
