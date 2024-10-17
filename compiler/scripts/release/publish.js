@@ -89,9 +89,7 @@ async function main() {
     pkgNames = [argv.packages];
   }
   const spinner = ora(
-    `Preparing to publish ${
-      argv.forReal === true ? '(for real)' : '(dry run)'
-    } [debug=${argv.debug}]`
+    `Preparing to publish [${Object.entries().map(([k, v] => `${k}=${v}`))}]`
   ).info();
 
   await buildPackages(pkgNames);
