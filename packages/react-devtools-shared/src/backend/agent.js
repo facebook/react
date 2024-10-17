@@ -740,6 +740,72 @@ export default class Agent extends EventEmitter<{
   };
 
   shutdown: () => void = () => {
+    this._bridge.removeListener(
+      'clearErrorsAndWarnings',
+      this.clearErrorsAndWarnings,
+    );
+    this._bridge.removeListener(
+      'clearErrorsForElementID',
+      this.clearErrorsForElementID,
+    );
+    this._bridge.removeListener(
+      'clearWarningsForElementID',
+      this.clearWarningsForElementID,
+    );
+    this._bridge.removeListener('copyElementPath', this.copyElementPath);
+    this._bridge.removeListener('deletePath', this.deletePath);
+    this._bridge.removeListener('getBackendVersion', this.getBackendVersion);
+    this._bridge.removeListener('getBridgeProtocol', this.getBridgeProtocol);
+    this._bridge.removeListener('getProfilingData', this.getProfilingData);
+    this._bridge.removeListener('getProfilingStatus', this.getProfilingStatus);
+    this._bridge.removeListener('getOwnersList', this.getOwnersList);
+    this._bridge.removeListener('inspectElement', this.inspectElement);
+    this._bridge.removeListener(
+      'logElementToConsole',
+      this.logElementToConsole,
+    );
+    this._bridge.removeListener('overrideError', this.overrideError);
+    this._bridge.removeListener('overrideSuspense', this.overrideSuspense);
+    this._bridge.removeListener(
+      'overrideValueAtPath',
+      this.overrideValueAtPath,
+    );
+    this._bridge.removeListener('reloadAndProfile', this.reloadAndProfile);
+    this._bridge.removeListener('renamePath', this.renamePath);
+    this._bridge.removeListener(
+      'setTraceUpdatesEnabled',
+      this.setTraceUpdatesEnabled,
+    );
+    this._bridge.removeListener('startProfiling', this.startProfiling);
+    this._bridge.removeListener('stopProfiling', this.stopProfiling);
+    this._bridge.removeListener('storeAsGlobal', this.storeAsGlobal);
+    this._bridge.removeListener(
+      'syncSelectionFromBuiltinElementsPanel',
+      this.syncSelectionFromBuiltinElementsPanel,
+    );
+    this._bridge.removeListener('shutdown', this.shutdown);
+
+    this._bridge.removeListener('updateHookSettings', this.updateHookSettings);
+    this._bridge.removeListener('getHookSettings', this.getHookSettings);
+
+    this._bridge.removeListener(
+      'updateComponentFilters',
+      this.updateComponentFilters,
+    );
+    this._bridge.removeListener(
+      'getEnvironmentNames',
+      this.getEnvironmentNames,
+    );
+    this._bridge.removeListener(
+      'getIfHasUnsupportedRendererVersion',
+      this.getIfHasUnsupportedRendererVersion,
+    );
+
+    this._bridge.removeListener('overrideContext', this.overrideContext);
+    this._bridge.removeListener('overrideHookState', this.overrideHookState);
+    this._bridge.removeListener('overrideProps', this.overrideProps);
+    this._bridge.removeListener('overrideState', this.overrideState);
+
     // Clean up the overlay if visible, and associated events.
     this.emit('shutdown');
 
