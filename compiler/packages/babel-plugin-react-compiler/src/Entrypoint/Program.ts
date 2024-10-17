@@ -199,7 +199,7 @@ function insertNewOutlinedFunctionNode(
   program: NodePath<t.Program>,
   originalFn: BabelFn,
   compiledFn: CodegenFunction,
-): NodePath<t.Function> {
+): BabelFn {
   switch (originalFn.type) {
     case 'FunctionDeclaration': {
       return originalFn.insertAfter(
@@ -491,18 +491,11 @@ export function compileProgram(
       fn.skip();
       ALREADY_COMPILED.add(fn.node);
       if (outlined.type !== null) {
-        CompilerError.throwTodo({
-          reason: `Implement support for outlining React functions (components/hooks)`,
-          loc: outlined.fn.loc,
+        queue.push({
+          kind: 'outlined',
+          fn,
+          fnType: outlined.type,
         });
-        /*
-         * Above should be as simple as the following, but needs testing:
-         * queue.push({
-         *   kind: "outlined",
-         *   fn,
-         *   fnType: outlined.type,
-         * });
-         */
       }
     }
     compiledFns.push({
