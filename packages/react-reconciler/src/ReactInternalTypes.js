@@ -458,8 +458,13 @@ export type Dispatcher = {
   ) => [Awaited<S>, (P) => void, boolean],
 };
 
+export interface AsyncCache {
+  get(resourceType: Function): mixed;
+  set(resourceType: Function, value: mixed): AsyncCache;
+}
+
 export type AsyncDispatcher = {
-  getCacheForType: <T>(resourceType: () => T) => T,
+  getActiveCache: () => AsyncCache | null,
   // DEV-only (or !disableStringRefs)
   getOwner: () => null | Fiber | ReactComponentInfo | ComponentStackNode,
 };
