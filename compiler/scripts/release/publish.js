@@ -59,12 +59,19 @@ async function main() {
       type: 'boolean',
       default: false,
     })
-    .option('tags', {
-      description: 'Tags to publish to npm',
-      type: 'string',
+    .option('tag', {
+      description: 'Tag to publish to npm',
+      type: 'choices',
+      choices: ['experimental', 'beta'],
       default: 'experimental',
     })
+    .option('version-name', {
+      description: 'Version name',
+      type: 'string',
+      default: '0.0.0',
+    })
     .help('help')
+    .strict()
     .parseSync();
 
   if (argv.debug === false) {
@@ -125,7 +132,7 @@ async function main() {
       files: {exclude: ['.DS_Store']},
     });
     const truncatedHash = hash.slice(0, 7);
-    const newVersion = `0.0.0-experimental-${truncatedHash}-${dateString}`;
+    const newVersion = `${argv.versionName}-${argv.tag}-${truncatedHash}-${dateString}`;
 
     for (const pkgName of pkgNames) {
       const pkgDir = path.resolve(__dirname, `../../packages/${pkgName}`);
@@ -179,29 +186,27 @@ async function main() {
       spinner.succeed(`Successfully published ${pkgName} to npm`);
 
       spinner.start('Pushing tags to npm');
-      if (typeof argv.tags === 'string') {
-        for (const tag of argv.tags.split(',')) {
-          try {
-            let opts = ['dist-tag', 'add', `${pkgName}@${newVersion}`, tag];
-            if (otp != null) {
-              opts.push(`--otp=${otp}`);
-            }
-            if (argv.debug === true) {
-              spinner.info(`dry-run: npm ${opts.join(' ')}`);
-            } else {
-              await spawnHelper('npm', opts, {
-                cwd: pkgDir,
-                stdio: 'inherit',
-              });
-            }
-          } catch (e) {
-            spinner.fail(e.toString());
-            throw e;
+      if (typeof argv.tag === 'string') {
+        try {
+          let opts = ['dist-tag', 'add', `${pkgName}@${newVersion}`, tag];
+          if (otp != null) {
+            opts.push(`--otp=${otp}`);
           }
-          spinner.succeed(
-            `Successfully pushed dist-tag ${tag} for ${pkgName} to npm`
-          );
+          if (argv.debug === true) {
+            spinner.info(`dry-run: npm ${opts.join(' ')}`);
+          } else {
+            await spawnHelper('npm', opts, {
+              cwd: pkgDir,
+              stdio: 'inherit',
+            });
+          }
+        } catch (e) {
+          spinner.fail(e.toString());
+          throw e;
         }
+        spinner.succeed(
+          `Successfully pushed dist-tag ${tag} for ${pkgName} to npm`
+        );
       }
     }
 
