@@ -1243,6 +1243,17 @@ export function makeTemporaryIdentifier(
   };
 }
 
+export function forkTemporaryIdentifier(
+  id: IdentifierId,
+  source: Identifier,
+): Identifier {
+  return {
+    ...source,
+    mutableRange: {start: makeInstructionId(0), end: makeInstructionId(0)},
+    id,
+  };
+}
+
 /**
  * Creates a valid identifier name. This should *not* be used for synthesizing
  * identifier names: only call this method for identifier names that appear in the

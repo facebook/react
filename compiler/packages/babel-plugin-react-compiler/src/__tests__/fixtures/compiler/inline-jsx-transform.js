@@ -42,6 +42,17 @@ function PropsSpread() {
   );
 }
 
+function ConditionalJsx({shouldWrap}) {
+  let content = <div>Hello</div>;
+
+  if (shouldWrap) {
+    content = <Parent>{content}</Parent>;
+  }
+
+  return content;
+}
+
+global.__DEV__ = true;
 export const FIXTURE_ENTRYPOINT = {
   fn: ParentAndChildren,
   params: [{foo: 'abc'}],
