@@ -5,6 +5,15 @@ on:
     inputs:
       prerelease_commit_sha:
         required: false
+      release_channel:
+        required: true
+        type: string
+      dist_tag:
+        required: true
+        type: string
+      version_name:
+        required: true
+        type: string
 
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
@@ -15,7 +24,8 @@ jobs:
     uses: facebook/react/.github/workflows/compiler_prereleases.yml@main
     with:
       commit_sha: ${{ inputs.prerelease_commit_sha || github.sha }}
-      release_channel: experimental
-      dist_tag: experimental
+      release_channel: ${{ inputs.release_channel }}
+      dist_tag: ${{ inputs.dist_tag }}
+      version_name: ${{ inputs.version_name }}
     secrets:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
