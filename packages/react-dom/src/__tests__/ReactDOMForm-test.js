@@ -1608,6 +1608,95 @@ describe('ReactDOMForm', () => {
     expect(divRef.current.textContent).toEqual('Current username: acdlite');
   });
 
+  it('controlled form number inputs are not reset after the action completes', async () => {
+    const formRef = React.createRef();
+    const textInputRef = React.createRef();
+    const numberInputRef = React.createRef();
+
+    function App() {
+      const [value1, setValue1] = useState('');
+      const [value2, setValue2] = useState(0);
+
+      return (
+        <form
+          ref={formRef}
+          action={async () => {
+            Scheduler.log(`Async action started`);
+            await getText('Wait');
+            startTransition(async () => {
+              await getText('Done');
+              Scheduler.log(`Async action ended`);
+            });
+          }}>
+          <input
+            ref={textInputRef}
+            type="text"
+            name="text"
+            value={value1}
+            onChange={e => setValue1(e.target.value)}
+          />
+          <input
+            ref={numberInputRef}
+            type="number"
+            name="number"
+            value={value2}
+            onChange={e => setValue2(+e.target.value)}
+          />
+          <input type="submit" />
+        </form>
+      );
+    }
+
+    // Initial render
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<App />));
+    function dispatchEventOnNode(node, type) {
+      node.dispatchEvent(new Event(type, {bubbles: true, cancelable: true}));
+    }
+    const setUntrackedValue = Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      'value',
+    ).set;
+
+    setUntrackedValue.call(textInputRef.current, 'lorem');
+    await act(() => {
+      dispatchEventOnNode(textInputRef.current, 'change');
+    });
+    setUntrackedValue.call(numberInputRef.current, '2024');
+    await act(() => {
+      numberInputRef.current.focus();
+      dispatchEventOnNode(numberInputRef.current, 'change');
+    });
+    expect(textInputRef.current.value).toBe('lorem');
+    expect(numberInputRef.current.value).toBe('2024');
+
+    await act(() => {
+      numberInputRef.current.focus();
+      // Submit the form without input blur. This will trigger an async action
+      document.querySelector('form').requestSubmit();
+    });
+    assertLog(['Async action started']);
+
+    await act(() => resolveText('Wait'));
+    assertLog([]);
+    // The DOM inputs are still dirty after action start
+    expect(textInputRef.current.value).toBe('lorem');
+    expect(numberInputRef.current.value).toBe('2024');
+
+    await act(() => resolveText('Done'));
+    assertLog(['Async action ended']);
+
+    if (gate(flags => flags.disableInputAttributeSyncing)) {
+      // The DOM resets after action end when "disableInputAttributeSyncing" enabled
+      expect(textInputRef.current.value).toBe('');
+      expect(numberInputRef.current.value).toBe('');
+    } else {
+      // The DOM inputs are still dirty after action end
+      expect(textInputRef.current.value).toBe('lorem');
+      expect(numberInputRef.current.value).toBe('2024');
+    }
+  });
+
   it('requestFormReset schedules a form reset after transition completes', async () => {
     // This is the same as the previous test, except the form is updated with
     // a userspace action instead of a built-in form action.
