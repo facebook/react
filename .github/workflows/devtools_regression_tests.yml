@@ -103,6 +103,7 @@ jobs:
           - "16.8" # hooks
           - "17.0"
           - "18.0"
+          - "18.2" # compiler polyfill
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
