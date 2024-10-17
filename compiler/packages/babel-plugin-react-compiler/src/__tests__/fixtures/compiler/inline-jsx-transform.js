@@ -22,11 +22,15 @@ function ParentAndRefAndKey(props) {
 }
 
 function ParentAndChildren(props) {
+  const render = () => {
+    return <div key="d">{props.foo}</div>;
+  };
   return (
     <Parent>
       <Child key="a" {...props} />
       <Child key="b">
-        <GrandChild className={props.foo} {...props} />
+        <GrandChild key="c" className={props.foo} {...props} />
+        {render()}
       </Child>
     </Parent>
   );
@@ -36,8 +40,8 @@ const propsToSpread = {a: 'a', b: 'b', c: 'c'};
 function PropsSpread() {
   return (
     <>
-      <Test {...propsToSpread} />
-      <Test {...propsToSpread} a="z" />
+      <Test key="a" {...propsToSpread} />
+      <Test key="b" {...propsToSpread} a="z" />
     </>
   );
 }

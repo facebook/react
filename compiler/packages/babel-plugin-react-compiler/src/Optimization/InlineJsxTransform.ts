@@ -405,6 +405,17 @@ export function inlineJsxTransform(
           nextInstructions.push(reactElementInstruction);
           break;
         }
+        case 'FunctionExpression':
+        case 'ObjectMethod': {
+          inlineJsxTransform(
+            instr.value.loweredFunc.func,
+            inlineJsxTransformConfig,
+          );
+          if (nextInstructions !== null) {
+            nextInstructions.push(instr);
+          }
+          break;
+        }
         default: {
           if (nextInstructions !== null) {
             nextInstructions.push(instr);
