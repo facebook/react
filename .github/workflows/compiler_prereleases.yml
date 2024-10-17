@@ -13,6 +13,9 @@ on:
       dist_tag:
         required: true
         type: string
+      version_name:
+        required: true
+        type: string
     secrets:
       NPM_TOKEN:
         required: true
@@ -49,4 +52,4 @@ jobs:
       - name: Publish packages to npm
         run: |
           cp ./scripts/release/ci-npmrc ~/.npmrc
-          scripts/release/publish.js --frfr --ci --versionName=0.0.0 --tag ${{ inputs.dist_tag }}
+          scripts/release/publish.js --frfr --ci --versionName=${{ inputs.version_name }} --tag ${{ inputs.dist_tag }}
