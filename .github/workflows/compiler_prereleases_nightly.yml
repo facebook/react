@@ -16,5 +16,6 @@ jobs:
       commit_sha: ${{ github.sha }}
       release_channel: experimental
       dist_tag: experimental
+      version_name: '0.0.0'
     secrets:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
