@@ -52,4 +52,4 @@ jobs:
       - name: Publish packages to npm
         run: |
           cp ./scripts/release/ci-npmrc ~/.npmrc
-          scripts/release/publish.js --frfr --ci --tags ${{ inputs.dist_tag }}
+          scripts/release/publish.js --frfr --ci --versionName=${{ inputs.version_name }} --tag ${{ inputs.dist_tag }}
