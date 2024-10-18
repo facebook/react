@@ -1260,10 +1260,10 @@ babel-plugin-polyfill-regenerator@^0.6.1:
   dependencies:
     "@babel/helper-define-polyfill-provider" "^0.6.2"
 
-babel-plugin-react-compiler@0.0.0-experimental-58c2b1c-20241009:
-  version "0.0.0-experimental-58c2b1c-20241009"
-  resolved "https://registry.yarnpkg.com/babel-plugin-react-compiler/-/babel-plugin-react-compiler-0.0.0-experimental-58c2b1c-20241009.tgz#a840860c5da30cbc25db0671b9c715602539a175"
-  integrity sha512-/DSwpfz7c1hK5dpxxlLxQJtvXCF3RjN3ZCaJ43NM4BEvzTpaS0C0jasXVBEUIFumBcdaoirFbfZkyk9htY+6Xw==
+babel-plugin-react-compiler@19.0.0-beta-9ee70a1-20241017:
+  version "19.0.0-beta-9ee70a1-20241017"
+  resolved "https://registry.yarnpkg.com/babel-plugin-react-compiler/-/babel-plugin-react-compiler-19.0.0-beta-9ee70a1-20241017.tgz#734036661d70e0d91c5f64414b31220ecc0019d2"
+  integrity sha512-AkSce5YYHcreFtuvzI9xnP2kwoYkub8Go3yrz7cPbbCE6oIhFxESbPWJVgye7yZckXuzEZYO4JSE8tq/U0oVfA==
   dependencies:
     "@babel/generator" "7.2.0"
     "@babel/types" "^7.19.0"
@@ -1829,10 +1829,10 @@ randombytes@^2.1.0:
   dependencies:
     safe-buffer "^5.1.0"
 
-react-compiler-runtime@0.0.0-experimental-8d8e73f-20241009:
-  version "0.0.0-experimental-8d8e73f-20241009"
-  resolved "https://registry.yarnpkg.com/react-compiler-runtime/-/react-compiler-runtime-0.0.0-experimental-8d8e73f-20241009.tgz#c5a1a99c79ac8f8e8cf75b8ea89394b2ab7a77ad"
-  integrity sha512-TEOS8csCfa/xSNt8ft9yRAimOJNetQIOuTgMFU2rv3dhDUOpM3e/Jrv+55uGUKMUYK6kCBV4QYsviLl2c8JfOg==
+react-compiler-runtime@19.0.0-beta-9ee70a1-20241017:
+  version "19.0.0-beta-9ee70a1-20241017"
+  resolved "https://registry.yarnpkg.com/react-compiler-runtime/-/react-compiler-runtime-19.0.0-beta-9ee70a1-20241017.tgz#ca35ba4ec80f2412fcdbfb911831308670acc13a"
+  integrity sha512-hVrlYbVacwEdZi08RUxSwIzZR2/+WxUsWRa7mjViRhqcqUYK+7u8UEVZoJrF5/gsCHMU9PhJRvolygSCaaE0nA==
 
 react-dom@19.0.0-beta-26f2496093-20240514:
   version "19.0.0-beta-26f2496093-20240514"
