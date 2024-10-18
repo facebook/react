@@ -58,6 +58,7 @@ export {
   useSyncExternalStore,
   useTransition,
   version,
+  captureOwnerStack, // DEV-only
 } from './src/ReactClient';
 
 export {jsx, jsxs, jsxDEV} from './src/jsx/ReactJSX';
