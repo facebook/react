@@ -248,7 +248,7 @@ function TextTabContent({
      * Restrict MonacoEditor's height, since the config autoLayout:true
      * will grow the editor to fit within parent element
      */
-    <div className="w-full h-monaco_small sm:h-monaco">
+    (<div className="w-full h-monaco_small sm:h-monaco">
       {showInfoPanel ? (
         <div className="flex items-center gap-1 bg-amber-50 p-2">
           {diff != null && output !== diff ? (
@@ -304,6 +304,6 @@ function TextTabContent({
           }}
         />
       )}
-    </div>
+    </div>)
   );
 }
