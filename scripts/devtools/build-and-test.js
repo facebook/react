@@ -66,12 +66,8 @@ async function archiveGitRevision() {
   const archivePath = join(desktopPath, 'DevTools.tgz');
 
   console.log(`Creating git archive at ${chalk.dim(archivePath)}`);
-  console.log('');
 
-  if (!DRY_RUN) {
-    await exec(`git archive main | gzip > ${archivePath}`, {cwd: ROOT_PATH});
-  }
-
+  if (!DRY_RUN)  await exec(`git archive main | gzip > ${archivePath}`, {cwd: ROOT_PATH});
   return archivePath;
 }
 
@@ -93,18 +89,14 @@ async function buildAndTestExtensions() {
     }
   );
 
-  console.log('');
+
   console.log(`Extensions have been build for Chrome, Edge, and Firefox.`);
-  console.log('');
   console.log('Smoke test each extension before continuing:');
   console.log(`  ${chalk.bold.green('cd ' + extensionsPackagePath)}`);
-  console.log('');
   console.log(`  ${chalk.dim('# Test Chrome extension')}`);
   console.log(`  ${chalk.bold.green('yarn test:chrome')}`);
-  console.log('');
   console.log(`  ${chalk.dim('# Test Edge extension')}`);
   console.log(`  ${chalk.bold.green('yarn test:edge')}`);
-  console.log('');
   console.log(`  ${chalk.dim('# Firefox Chrome extension')}`);
   console.log(`  ${chalk.bold.green('yarn test:firefox')}`);
 
