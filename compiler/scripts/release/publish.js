@@ -166,14 +166,7 @@ async function main() {
       try {
         await spawnHelper(
           'npm',
-          [
-            'publish',
-            ...opts,
-            '--registry=https://registry.npmjs.org',
-            // For now, since the compiler is experimental only, to simplify installation we push
-            // to the `latest` tag
-            '--tag=latest',
-          ],
+          ['publish', ...opts, '--registry=https://registry.npmjs.org'],
           {
             cwd: pkgDir,
             stdio: 'inherit',
