@@ -46,6 +46,7 @@ import {
   enableRefAsProp,
   enableFlightReadableStream,
   enableOwnerStacks,
+  enableServerComponentLogs,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -1928,7 +1929,7 @@ function resolveErrorDev(
   }
 
   let error;
-  if (!enableOwnerStacks) {
+  if (!enableOwnerStacks && !enableServerComponentLogs) {
     // Executing Error within a native stack isn't really limited to owner stacks
     // but we gate it behind the same flag for now while iterating.
     // eslint-disable-next-line react-internal/prod-error-codes
@@ -2463,9 +2464,7 @@ function resolveConsoleEntry(
   const env = payload[3];
   const args = payload.slice(4);
 
-  if (!enableOwnerStacks) {
-    // Printing with stack isn't really limited to owner stacks but
-    // we gate it behind the same flag for now while iterating.
+  if (!enableOwnerStacks && !enableServerComponentLogs) {
     bindToConsole(methodName, args, env)();
     return;
   }

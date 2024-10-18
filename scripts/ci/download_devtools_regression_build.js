@@ -82,11 +82,12 @@ async function downloadRegressionBuild() {
   );
   await exec(`mv ${movePackageString} ${buildPath}`);
 
+  const reactVersion = semver.coerce(version).version;
   // For React versions earlier than 18.0.0, we explicitly scheduler v0.20.1, which
   // is the first version that has unstable_mock, which DevTools tests need, but also
   // has Scheduler.unstable_trace, which, although we don't use in DevTools tests
   // is imported by older React versions and will break if it's not there
-  if (semver.lte(semver.coerce(version).version, '18.0.0')) {
+  if (semver.lte(reactVersion, '18.0.0')) {
     await exec(`npm install --prefix ${REGRESSION_FOLDER} scheduler@0.20.1`);
   }
 
@@ -106,6 +107,22 @@ async function downloadRegressionBuild() {
         'node_modules',
         'scheduler'
       )} ${buildPath}`
+    );
+  }
+
+  if (semver.gte(reactVersion, '18.2.0') && semver.lt(reactVersion, '19')) {
+    console.log(chalk.white(`Downloading react-compiler-runtime\n`));
+    await exec(
+      `npm install --prefix ${REGRESSION_FOLDER} react-compiler-runtime`
+    );
+
+    console.log(
+      chalk.white(
+        `Moving react-compiler-runtime to react/compiler-runtime.js\n`
+      )
+    );
+    await exec(
+      `mv ${REGRESSION_FOLDER}/node_modules/react-compiler-runtime/dist/index.js ${buildPath}/react/compiler-runtime.js`
     );
   }
 }

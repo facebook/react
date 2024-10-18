@@ -5,6 +5,10 @@ on:
     branches: [main]
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref || github.run_id }}
+  cancel-in-progress: true
+
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
   # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#cache-segment-restore-timeout
@@ -25,7 +29,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+          key: shared-lint-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
       - run: yarn prettier-check
 
@@ -43,7 +47,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+          key: shared-lint-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
       - run: node ./scripts/tasks/eslint
 
@@ -61,7 +65,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+          key: shared-lint-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
       - run: ./scripts/ci/check_license.sh
 
@@ -79,6 +83,6 @@ jobs:
         uses: actions/cache@v4
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+          key: shared-lint-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
       - run: ./scripts/ci/test_print_warnings.sh
