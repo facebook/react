@@ -3987,15 +3987,18 @@ function doubleInvokeEffectsOnFiber(
   shouldDoubleInvokePassiveEffects: boolean = true,
 ) {
   setIsStrictModeForDevtools(true);
-  disappearLayoutEffects(fiber);
-  if (shouldDoubleInvokePassiveEffects) {
-    disconnectPassiveEffect(fiber);
+  try {
+    disappearLayoutEffects(fiber);
+    if (shouldDoubleInvokePassiveEffects) {
+      disconnectPassiveEffect(fiber);
+    }
+    reappearLayoutEffects(root, fiber.alternate, fiber, false);
+    if (shouldDoubleInvokePassiveEffects) {
+      reconnectPassiveEffects(root, fiber, NoLanes, null, false);
+    }
+  } finally {
+    setIsStrictModeForDevtools(false);
   }
-  reappearLayoutEffects(root, fiber.alternate, fiber, false);
-  if (shouldDoubleInvokePassiveEffects) {
-    reconnectPassiveEffects(root, fiber, NoLanes, null, false);
-  }
-  setIsStrictModeForDevtools(false);
 }
 
 function doubleInvokeEffectsInDEVIfNecessary(
