@@ -14,7 +14,7 @@
     "@babel/preset-env": "^7.25.7",
     "@rollup/plugin-babel": "^6.0.4",
     "@rollup/plugin-json": "^6.1.0",
-    "babel-plugin-react-compiler": "0.0.0-experimental-58c2b1c-20241009",
+    "babel-plugin-react-compiler": "19.0.0-beta-9ee70a1-20241017",
     "@rollup/plugin-terser": "^0.4.4",
     "react": "19.0.0-beta-26f2496093-20240514",
     "react-dom": "19.0.0-beta-26f2496093-20240514",
@@ -24,7 +24,7 @@
     "rollup-plugin-prettier": "^4.1.1"
   },
   "dependencies": {
-    "react-compiler-runtime": "0.0.0-experimental-8d8e73f-20241009"
+    "react-compiler-runtime": "19.0.0-beta-9ee70a1-20241017"
   },
   "peerDependencies": {
     "react": "^18 || ^19"
