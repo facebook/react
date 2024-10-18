@@ -182,64 +182,64 @@ module.exports = function ($$$config) {
     reentry = !0;
     var previousPrepareStackTrace = Error.prepareStackTrace;
     Error.prepareStackTrace = void 0;
-    var RunInRootFrame = {
-      DetermineComponentFrameRoot: function () {
-        try {
-          if (construct) {
-            var Fake = function () {
-              throw Error();
-            };
-            Object.defineProperty(Fake.prototype, "props", {
-              set: function () {
+    try {
+      var RunInRootFrame = {
+        DetermineComponentFrameRoot: function () {
+          try {
+            if (construct) {
+              var Fake = function () {
                 throw Error();
+              };
+              Object.defineProperty(Fake.prototype, "props", {
+                set: function () {
+                  throw Error();
+                }
+              });
+              if ("object" === typeof Reflect && Reflect.construct) {
+                try {
+                  Reflect.construct(Fake, []);
+                } catch (x) {
+                  var control = x;
+                }
+                Reflect.construct(fn, [], Fake);
+              } else {
+                try {
+                  Fake.call();
+                } catch (x$1) {
+                  control = x$1;
+                }
+                fn.call(Fake.prototype);
               }
-            });
-            if ("object" === typeof Reflect && Reflect.construct) {
-              try {
-                Reflect.construct(Fake, []);
-              } catch (x) {
-                var control = x;
-              }
-              Reflect.construct(fn, [], Fake);
             } else {
               try {
-                Fake.call();
-              } catch (x$1) {
-                control = x$1;
+                throw Error();
+              } catch (x$2) {
+                control = x$2;
               }
-              fn.call(Fake.prototype);
+              (Fake = fn()) &&
+                "function" === typeof Fake.catch &&
+                Fake.catch(function () {});
             }
-          } else {
-            try {
-              throw Error();
-            } catch (x$2) {
-              control = x$2;
-            }
-            (Fake = fn()) &&
-              "function" === typeof Fake.catch &&
-              Fake.catch(function () {});
+          } catch (sample) {
+            if (sample && control && "string" === typeof sample.stack)
+              return [sample.stack, control.stack];
           }
-        } catch (sample) {
-          if (sample && control && "string" === typeof sample.stack)
-            return [sample.stack, control.stack];
+          return [null, null];
         }
-        return [null, null];
-      }
-    };
-    RunInRootFrame.DetermineComponentFrameRoot.displayName =
-      "DetermineComponentFrameRoot";
-    var namePropDescriptor = Object.getOwnPropertyDescriptor(
-      RunInRootFrame.DetermineComponentFrameRoot,
-      "name"
-    );
-    namePropDescriptor &&
-      namePropDescriptor.configurable &&
-      Object.defineProperty(
+      };
+      RunInRootFrame.DetermineComponentFrameRoot.displayName =
+        "DetermineComponentFrameRoot";
+      var namePropDescriptor = Object.getOwnPropertyDescriptor(
         RunInRootFrame.DetermineComponentFrameRoot,
-        "name",
-        { value: "DetermineComponentFrameRoot" }
+        "name"
       );
-    try {
+      namePropDescriptor &&
+        namePropDescriptor.configurable &&
+        Object.defineProperty(
+          RunInRootFrame.DetermineComponentFrameRoot,
+          "name",
+          { value: "DetermineComponentFrameRoot" }
+        );
       var _RunInRootFrame$Deter = RunInRootFrame.DetermineComponentFrameRoot(),
         sampleStack = _RunInRootFrame$Deter[0],
         controlStack = _RunInRootFrame$Deter[1];
@@ -2971,10 +2971,14 @@ module.exports = function ($$$config) {
     if ("function" === typeof initialState) {
       var initialStateInitializer = initialState;
       initialState = initialStateInitializer();
-      shouldDoubleInvokeUserFnsInHooksDEV &&
-        (setIsStrictModeForDevtools(!0),
-        initialStateInitializer(),
-        setIsStrictModeForDevtools(!1));
+      if (shouldDoubleInvokeUserFnsInHooksDEV) {
+        setIsStrictModeForDevtools(!0);
+        try {
+          initialStateInitializer();
+        } finally {
+          setIsStrictModeForDevtools(!1);
+        }
+      }
     }
     hook.memoizedState = hook.baseState = initialState;
     hook.queue = {
@@ -3336,10 +3340,14 @@ module.exports = function ($$$config) {
     if (null !== deps && areHookInputsEqual(deps, prevState[1]))
       return prevState[0];
     prevState = nextCreate();
-    shouldDoubleInvokeUserFnsInHooksDEV &&
-      (setIsStrictModeForDevtools(!0),
-      nextCreate(),
-      setIsStrictModeForDevtools(!1));
+    if (shouldDoubleInvokeUserFnsInHooksDEV) {
+      setIsStrictModeForDevtools(!0);
+      try {
+        nextCreate();
+      } finally {
+        setIsStrictModeForDevtools(!1);
+      }
+    }
     hook.memoizedState = [prevState, deps];
     return prevState;
   }
@@ -12052,10 +12060,14 @@ module.exports = function ($$$config) {
       var hook = mountWorkInProgressHook();
       deps = void 0 === deps ? null : deps;
       var nextValue = nextCreate();
-      shouldDoubleInvokeUserFnsInHooksDEV &&
-        (setIsStrictModeForDevtools(!0),
-        nextCreate(),
-        setIsStrictModeForDevtools(!1));
+      if (shouldDoubleInvokeUserFnsInHooksDEV) {
+        setIsStrictModeForDevtools(!0);
+        try {
+          nextCreate();
+        } finally {
+          setIsStrictModeForDevtools(!1);
+        }
+      }
       hook.memoizedState = [nextValue, deps];
       return nextValue;
     },
@@ -12063,10 +12075,14 @@ module.exports = function ($$$config) {
       var hook = mountWorkInProgressHook();
       if (void 0 !== init) {
         var initialState = init(initialArg);
-        shouldDoubleInvokeUserFnsInHooksDEV &&
-          (setIsStrictModeForDevtools(!0),
-          init(initialArg),
-          setIsStrictModeForDevtools(!1));
+        if (shouldDoubleInvokeUserFnsInHooksDEV) {
+          setIsStrictModeForDevtools(!0);
+          try {
+            init(initialArg);
+          } finally {
+            setIsStrictModeForDevtools(!1);
+          }
+        }
       } else initialState = initialArg;
       hook.memoizedState = hook.baseState = initialState;
       reducer = {
@@ -12887,7 +12903,7 @@ module.exports = function ($$$config) {
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
       findFiberByHostInstance: getInstanceFromNode,
-      reconcilerVersion: "19.0.0-www-classic-6c4bbc78-20241015"
+      reconcilerVersion: "19.0.0-www-classic-b8ae38f8-20241018"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
