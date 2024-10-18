@@ -45,3 +45,8 @@ jobs:
         run: yarn install --frozen-lockfile
       - run: npx playwright install --with-deps chromium
       - run: yarn test
+      - name: Archive test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results
