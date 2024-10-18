@@ -55,3 +55,10 @@ body:
       Please provide your React version in the app where this issue occurred.
   validations:
     required: true
+- type: input
+  attributes:
+    label: What version of React Compiler are you using?
+    description: |
+      Please provide the exact React Compiler version in the app where this issue occurred.
+  validations:
+    required: true
