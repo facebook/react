@@ -2135,38 +2135,26 @@ hasown@^2.0.0, hasown@^2.0.1, hasown@^2.0.2:
   dependencies:
     function-bind "^1.1.2"
 
-hermes-eslint@^0.14.0:
-  version "0.14.0"
-  resolved "https://registry.yarnpkg.com/hermes-eslint/-/hermes-eslint-0.14.0.tgz#d56426b0931a7ced99d08b4b6a06f798064b13ba"
-  integrity sha512-ORk7znDabvALzTbI3QRIQefCkxF1ukDm3dVut3e+cVmwdtsTC71BJetSvdh1jtgK10czwck1QiPZOVOVolhiqQ==
+hermes-eslint@^0.25.0:
+  version "0.25.0"
+  resolved "https://registry.yarnpkg.com/hermes-eslint/-/hermes-eslint-0.25.0.tgz#beec5f0d9e9e9bdef9e4a420a79038ca7fe84143"
+  integrity sha512-D9rdrqt7dudZHI5AJKS+1vXBbxxR6Wj9J1JI7eYowYCbXUIvHclsWFy8gSuRmug2V6HSYpsiyPwP3kQs/Q/Y8w==
   dependencies:
     esrecurse "^4.3.0"
-    hermes-estree "0.14.0"
-    hermes-parser "0.14.0"
+    hermes-estree "0.25.0"
+    hermes-parser "0.25.0"
 
-hermes-estree@0.14.0:
-  version "0.14.0"
-  resolved "https://registry.yarnpkg.com/hermes-estree/-/hermes-estree-0.14.0.tgz#c663eea1400980802283338a09d0087c448729e7"
-  integrity sha512-L6M67+0/eSEbt6Ha2XOBFXL++7MR34EOJMgm+j7YCaI4L/jZqrVAg6zYQKzbs1ZCFDLvEQpOgLlapTX4gpFriA==
+hermes-estree@0.25.0:
+  version "0.25.0"
+  resolved "https://registry.yarnpkg.com/hermes-estree/-/hermes-estree-0.25.0.tgz#fd926ebf3d0d3441a934f19ef3d3d3d4145b1d71"
+  integrity sha512-xjILoUIyOpLoOHqj8UJs/HNYQ279IfLKTTv9nmXKNT2+QKT/TQF9AyQFrRMo+3xwZoO7k4azocYpCzA1cSvBDg==
 
-hermes-estree@0.22.0:
-  version "0.22.0"
-  resolved "https://registry.yarnpkg.com/hermes-estree/-/hermes-estree-0.22.0.tgz#38559502b119f728901d2cfe2ef422f277802a1d"
-  integrity sha512-FLBt5X9OfA8BERUdc6aZS36Xz3rRuB0Y/mfocSADWEJfomc1xfene33GdyAmtTkKTBXTN/EgAy+rjTKkkZJHlw==
-
-hermes-parser@0.14.0:
-  version "0.14.0"
-  resolved "https://registry.yarnpkg.com/hermes-parser/-/hermes-parser-0.14.0.tgz#edb2e7172fce996d2c8bbba250d140b70cc1aaaf"
-  integrity sha512-pt+8uRiJhVlErY3fiXB3gKhZ72RxM6E1xRMpvfZ5n6Z5TQKQQXKorgRCRzoe02mmvLKBJFP5nPDGv75MWAgCTw==
+hermes-parser@0.25.0, hermes-parser@^0.25.0:
+  version "0.25.0"
+  resolved "https://registry.yarnpkg.com/hermes-parser/-/hermes-parser-0.25.0.tgz#634934533a956e392ae0988421e4b0315e30351e"
+  integrity sha512-CeAdhgMfbZcrYh+HHKVKsj7VNhOTr0jiLFlcVVoRORbZ/Nr4J90WjEq2CZoahgH15/DYY/VBhuLqpIzJqfdBEQ==
   dependencies:
-    hermes-estree "0.14.0"
-
-hermes-parser@^0.22.0:
-  version "0.22.0"
-  resolved "https://registry.yarnpkg.com/hermes-parser/-/hermes-parser-0.22.0.tgz#fc8e0e6c7bfa8db85b04c9f9544a102c4fcb4040"
-  integrity sha512-gn5RfZiEXCsIWsFGsKiykekktUoh0PdFWYocXsUdZIyWSckT6UIyPcyyUIPSR3kpnELWeK3n3ztAse7Mat6PSA==
-  dependencies:
-    hermes-estree "0.22.0"
+    hermes-estree "0.25.0"
 
 ignore@^5.2.0, ignore@^5.3.1:
   version "5.3.2"
@@ -2665,10 +2653,10 @@ monaco-editor-webpack-plugin@^7.1.0:
   dependencies:
     loader-utils "^2.0.2"
 
-monaco-editor@^0.34.1:
-  version "0.34.1"
-  resolved "https://registry.yarnpkg.com/monaco-editor/-/monaco-editor-0.34.1.tgz#1b75c4ad6bc4c1f9da656d740d98e0b850a22f87"
-  integrity sha512-FKc80TyiMaruhJKKPz5SpJPIjL+dflGvz4CpuThaPMc94AyN7SeC9HQ8hrvaxX7EyHdJcUY5i4D0gNyJj1vSZQ==
+monaco-editor@^0.52.0:
+  version "0.52.0"
+  resolved "https://registry.yarnpkg.com/monaco-editor/-/monaco-editor-0.52.0.tgz#d47c02b191eae208d68878d679b3ee7456031be7"
+  integrity sha512-OeWhNpABLCeTqubfqLMXGsqf6OmPU6pHM85kF3dhy6kq5hnhuVS1p3VrEW/XhWHc71P2tHyS5JFySD8mgs1crw==
 
 ms@^2.1.1, ms@^2.1.3:
   version "2.1.3"
