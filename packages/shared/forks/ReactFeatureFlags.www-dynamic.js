@@ -27,6 +27,7 @@ export const enableRetryLaneExpiration = __VARIANT__;
 export const enableTransitionTracing = __VARIANT__;
 export const favorSafetyOverHydrationPerf = __VARIANT__;
 export const renameElementSymbol = __VARIANT__;
+export const enableOwnerStacks = __VARIANT__;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
