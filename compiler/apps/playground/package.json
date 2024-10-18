@@ -34,28 +34,31 @@
     "invariant": "^2.2.4",
     "lz-string": "^1.5.0",
     "monaco-editor": "^0.34.1",
-    "next": "^13.5.6",
+    "next": "15.0.0-canary.197",
     "notistack": "^3.0.0-alpha.7",
     "prettier": "^3.3.3",
     "pretty-format": "^29.3.1",
     "re-resizable": "^6.9.16",
-    "react": "18.3.1",
-    "react-compiler-runtime": "*",
-    "react-dom": "18.3.1"
+    "react": "19.0.0-rc-77b637d6-20241016",
+    "react-dom": "19.0.0-rc-77b637d6-20241016"
   },
   "devDependencies": {
     "@types/node": "18.11.9",
-    "@types/react": "18.3.9",
-    "@types/react-dom": "18.3.0",
+    "@types/react": "npm:types-react@19.0.0-rc.1",
+    "@types/react-dom": "npm:types-react-dom@19.0.0-rc.1",
     "autoprefixer": "^10.4.13",
     "clsx": "^1.2.1",
     "concurrently": "^7.4.0",
     "eslint": "^8.28.0",
-    "eslint-config-next": "^13.5.6",
+    "eslint-config-next": "15.0.0-canary.197",
     "hermes-parser": "^0.22.0",
     "monaco-editor-webpack-plugin": "^7.1.0",
     "postcss": "^8.4.31",
     "tailwindcss": "^3.2.4",
     "wait-on": "^7.2.0"
+  },
+  "resolutions": {
+    "@types/react": "npm:types-react@19.0.0-rc.1",
+    "@types/react-dom": "npm:types-react-dom@19.0.0-rc.1"
   }
 }
