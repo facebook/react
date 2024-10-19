@@ -19,11 +19,13 @@ import type {ReactServerValue} from 'react-client/src/ReactFlightReplyClient';
 import type {
   ServerConsumerModuleMap,
   ModuleLoading,
+  ServerManifest,
 } from 'react-client/src/ReactFlightClientConfig';
 
 type ServerConsumerManifest = {
   moduleMap: ServerConsumerModuleMap,
   moduleLoading: ModuleLoading,
+  serverModuleMap: null | ServerManifest,
 };
 
 import {
@@ -78,6 +80,7 @@ export type Options = {
 function createResponseFromOptions(options: Options) {
   return createResponse(
     options.serverManifest.moduleMap,
+    options.serverManifest.serverModuleMap,
     options.serverManifest.moduleLoading,
     noServerCall,
     options.encodeFormAction,

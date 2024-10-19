@@ -175,6 +175,7 @@ export function experimental_renderToHTML(
     const flightResponse = createFlightResponse(
       null,
       null,
+      null,
       noServerCallOrFormAction,
       noServerCallOrFormAction,
       undefined,

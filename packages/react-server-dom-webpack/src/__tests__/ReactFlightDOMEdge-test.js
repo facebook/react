@@ -26,6 +26,7 @@ global.AsyncLocalStorage = require('async_hooks').AsyncLocalStorage;
 let serverExports;
 let clientExports;
 let webpackMap;
+let webpackServerMap;
 let webpackModules;
 let webpackModuleLoading;
 let React;
@@ -63,6 +64,7 @@ describe('ReactFlightDOMEdge', () => {
     serverExports = WebpackMock.serverExports;
     clientExports = WebpackMock.clientExports;
     webpackMap = WebpackMock.webpackMap;
+    webpackServerMap = WebpackMock.webpackServerMap;
     webpackModules = WebpackMock.webpackModules;
     webpackModuleLoading = WebpackMock.moduleLoading;
 
@@ -210,6 +212,72 @@ describe('ReactFlightDOMEdge', () => {
     );
     const result = await readResult(ssrStream);
     expect(result).toEqual('<span>Client Component</span>');
+  });
+
+  it('should be able to load a server reference on a consuming server if a mapping exists', async () => {
+    function greet() {
+      return 'hi';
+    }
+    const ServerModule = serverExports({
+      greet,
+    });
+
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        {
+          method: ServerModule.greet,
+        },
+        webpackMap,
+      ),
+    );
+    const response = ReactServerDOMClient.createFromReadableStream(stream, {
+      serverConsumerManifest: {
+        moduleMap: webpackMap,
+        serverModuleMap: webpackServerMap,
+        moduleLoading: webpackModuleLoading,
+      },
+    });
+
+    const result = await response;
+
+    expect(result.method).toBe(greet);
+  });
+
+  it('should be able to load a server reference on a consuming server if a mapping exists (async)', async () => {
+    let resolve;
+    const chunkPromise = new Promise(r => (resolve = r));
+
+    function greet() {
+      return 'hi';
+    }
+    const ServerModule = serverExports(
+      {
+        greet,
+      },
+      chunkPromise,
+    );
+
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        {
+          method: ServerModule.greet,
+        },
+        webpackMap,
+      ),
+    );
+    const response = ReactServerDOMClient.createFromReadableStream(stream, {
+      serverConsumerManifest: {
+        moduleMap: webpackMap,
+        serverModuleMap: webpackServerMap,
+        moduleLoading: webpackModuleLoading,
+      },
+    });
+
+    await resolve();
+
+    const result = await response;
+
+    expect(result.method).toBe(greet);
   });
 
   it('should encode long string in a compact format', async () => {
