@@ -30,7 +30,7 @@ import {prepareDestinationWithChunks} from 'react-client/src/ReactFlightClientCo
 
 import {loadChunk} from 'react-client/src/ReactFlightClientConfig';
 
-export type SSRModuleMap = null | {
+export type ServerConsumerModuleMap = null | {
   [clientId: string]: {
     [clientExportName: string]: ClientReferenceManifestEntry,
   },
@@ -63,7 +63,7 @@ export function prepareDestinationForModule(
 }
 
 export function resolveClientReference<T>(
-  bundlerConfig: SSRModuleMap,
+  bundlerConfig: ServerConsumerModuleMap,
   metadata: ClientReferenceMetadata,
 ): ClientReference<T> {
   if (bundlerConfig) {

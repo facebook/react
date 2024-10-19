@@ -24,7 +24,7 @@ import {
 } from '../shared/ReactFlightImportMetadata';
 import {prepareDestinationWithChunks} from 'react-client/src/ReactFlightClientConfig';
 
-export type SSRModuleMap = {
+export type ServerConsumerModuleMap = {
   [clientId: string]: {
     [clientExportName: string]: ClientReference<any>,
   },
@@ -58,7 +58,7 @@ export function prepareDestinationForModule(
 }
 
 export function resolveClientReference<T>(
-  bundlerConfig: SSRModuleMap,
+  bundlerConfig: ServerConsumerModuleMap,
   metadata: ClientReferenceMetadata,
 ): ClientReference<T> {
   const moduleExports = bundlerConfig[metadata[ID]];

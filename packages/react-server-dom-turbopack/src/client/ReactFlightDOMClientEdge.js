@@ -17,12 +17,12 @@ import type {
 import type {ReactServerValue} from 'react-client/src/ReactFlightReplyClient';
 
 import type {
-  SSRModuleMap,
+  ServerConsumerModuleMap,
   ModuleLoading,
 } from 'react-client/src/ReactFlightClientConfig';
 
-type SSRManifest = {
-  moduleMap: SSRModuleMap,
+type ServerConsumerManifest = {
+  moduleMap: ServerConsumerModuleMap,
   moduleLoading: ModuleLoading,
 };
 
@@ -66,7 +66,7 @@ type EncodeFormActionCallback = <A>(
 ) => ReactCustomFormAction;
 
 export type Options = {
-  ssrManifest: SSRManifest,
+  serverManifest: ServerConsumerManifest,
   nonce?: string,
   encodeFormAction?: EncodeFormActionCallback,
   temporaryReferences?: TemporaryReferenceSet,
@@ -77,8 +77,8 @@ export type Options = {
 
 function createResponseFromOptions(options: Options) {
   return createResponse(
-    options.ssrManifest.moduleMap,
-    options.ssrManifest.moduleLoading,
+    options.serverManifest.moduleMap,
+    options.serverManifest.moduleLoading,
     noServerCall,
     options.encodeFormAction,
     typeof options.nonce === 'string' ? options.nonce : undefined,
