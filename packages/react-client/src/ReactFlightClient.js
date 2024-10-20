@@ -1073,10 +1073,11 @@ function loadServerReference<A: Iterable<any>, T>(
       metaData.id,
     );
 
-  const promise = preloadModule(serverReference);
-  if (!promise) {
+  let promise = preloadModule(serverReference);
+  if (!promise && !metaData.bound) {
     return (requireModule(serverReference): any);
   }
+  promise = Promise.all([promise, metaData.bound]);
 
   let handler: InitializationHandler;
   if (initializingHandler) {
@@ -1093,7 +1094,15 @@ function loadServerReference<A: Iterable<any>, T>(
   }
 
   function fulfill(): void {
-    const resolvedValue = (requireModule(serverReference): any);
+    let resolvedValue = (requireModule(serverReference): any);
+
+    if (metaData.bound) {
+      // This promise is coming from us and should have initilialized by now.
+      const boundArgs: Array<any> = (metaData.bound: any).value.slice(0);
+      boundArgs.unshift(null); // this
+      resolvedValue = resolvedValue.bind.apply(resolvedValue, boundArgs);
+    }
+
     parentObject[key] = resolvedValue;
 
     // If this is the root object for a model reference, where `handler.value`
