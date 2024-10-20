@@ -68,7 +68,7 @@ type EncodeFormActionCallback = <A>(
 ) => ReactCustomFormAction;
 
 export type Options = {
-  serverManifest: ServerConsumerManifest,
+  serverConsumerManifest: ServerConsumerManifest,
   nonce?: string,
   encodeFormAction?: EncodeFormActionCallback,
   temporaryReferences?: TemporaryReferenceSet,
@@ -79,9 +79,9 @@ export type Options = {
 
 function createResponseFromOptions(options: Options) {
   return createResponse(
-    options.serverManifest.moduleMap,
-    options.serverManifest.serverModuleMap,
-    options.serverManifest.moduleLoading,
+    options.serverConsumerManifest.moduleMap,
+    options.serverConsumerManifest.serverModuleMap,
+    options.serverConsumerManifest.moduleLoading,
     noServerCall,
     options.encodeFormAction,
     typeof options.nonce === 'string' ? options.nonce : undefined,
