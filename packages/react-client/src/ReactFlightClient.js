@@ -1073,11 +1073,16 @@ function loadServerReference<A: Iterable<any>, T>(
       metaData.id,
     );
 
-  let promise = preloadModule(serverReference);
-  if (!promise && !metaData.bound) {
-    return (requireModule(serverReference): any);
+  let promise: null | Thenable<any> = preloadModule(serverReference);
+  if (!promise) {
+    if (!metaData.bound) {
+      return (requireModule(serverReference): any);
+    } else {
+      promise = metaData.bound;
+    }
+  } else if (metaData.bound) {
+    promise = Promise.all([promise, metaData.bound]);
   }
-  promise = Promise.all([promise, metaData.bound]);
 
   let handler: InitializationHandler;
   if (initializingHandler) {
