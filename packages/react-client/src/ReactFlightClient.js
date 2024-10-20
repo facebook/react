@@ -20,7 +20,7 @@ import type {LazyComponent} from 'react/src/ReactLazy';
 import type {
   ClientReference,
   ClientReferenceMetadata,
-  SSRModuleMap,
+  ServerConsumerModuleMap,
   StringDecoder,
   ModuleLoading,
 } from './ReactFlightClientConfig';
@@ -269,7 +269,7 @@ export type FindSourceMapURLCallback = (
 ) => null | string;
 
 export type Response = {
-  _bundlerConfig: SSRModuleMap,
+  _bundlerConfig: ServerConsumerModuleMap,
   _moduleLoading: ModuleLoading,
   _callServer: CallServerCallback,
   _encodeFormAction: void | EncodeFormActionCallback,
@@ -1420,7 +1420,7 @@ function missingCall() {
 
 function ResponseInstance(
   this: $FlowFixMe,
-  bundlerConfig: SSRModuleMap,
+  bundlerConfig: ServerConsumerModuleMap,
   moduleLoading: ModuleLoading,
   callServer: void | CallServerCallback,
   encodeFormAction: void | EncodeFormActionCallback,
@@ -1485,7 +1485,7 @@ function ResponseInstance(
 }
 
 export function createResponse(
-  bundlerConfig: SSRModuleMap,
+  bundlerConfig: ServerConsumerModuleMap,
   moduleLoading: ModuleLoading,
   callServer: void | CallServerCallback,
   encodeFormAction: void | EncodeFormActionCallback,

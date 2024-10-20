@@ -195,7 +195,7 @@ describe('ReactFlightDOMEdge', () => {
       ReactServerDOMServer.renderToReadableStream(<App />, webpackMap),
     );
     const response = ReactServerDOMClient.createFromReadableStream(stream, {
-      ssrManifest: {
+      serverConsumerManifest: {
         moduleMap: translationMap,
         moduleLoading: webpackModuleLoading,
       },
@@ -235,7 +235,7 @@ describe('ReactFlightDOMEdge', () => {
     const result = await ReactServerDOMClient.createFromReadableStream(
       stream2,
       {
-        ssrManifest: {
+        serverConsumerManifest: {
           moduleMap: null,
           moduleLoading: null,
         },
@@ -263,7 +263,7 @@ describe('ReactFlightDOMEdge', () => {
     const result = await ReactServerDOMClient.createFromReadableStream(
       stream2,
       {
-        ssrManifest: {
+        serverConsumerManifest: {
           moduleMap: null,
           moduleLoading: null,
         },
@@ -333,7 +333,7 @@ describe('ReactFlightDOMEdge', () => {
     expect(timesRendered).toBeLessThan(5);
 
     const model = await ReactServerDOMClient.createFromReadableStream(stream2, {
-      ssrManifest: {
+      serverConsumerManifest: {
         moduleMap: null,
         moduleLoading: null,
       },
@@ -405,7 +405,7 @@ describe('ReactFlightDOMEdge', () => {
 
     const model = await serverAct(() =>
       ReactServerDOMClient.createFromReadableStream(stream2, {
-        ssrManifest: {
+        serverConsumerManifest: {
           moduleMap: null,
           moduleLoading: null,
         },
@@ -462,7 +462,7 @@ describe('ReactFlightDOMEdge', () => {
       passThrough(ReactServerDOMServer.renderToReadableStream(buffers)),
     );
     const result = await ReactServerDOMClient.createFromReadableStream(stream, {
-      ssrManifest: {
+      serverConsumerManifest: {
         moduleMap: null,
         moduleLoading: null,
       },
@@ -482,7 +482,7 @@ describe('ReactFlightDOMEdge', () => {
       passThrough(ReactServerDOMServer.renderToReadableStream(blob)),
     );
     const result = await ReactServerDOMClient.createFromReadableStream(stream, {
-      ssrManifest: {
+      serverConsumerManifest: {
         moduleMap: null,
         moduleLoading: null,
       },
@@ -512,7 +512,7 @@ describe('ReactFlightDOMEdge', () => {
       passThrough(ReactServerDOMServer.renderToReadableStream(formData)),
     );
     const result = await ReactServerDOMClient.createFromReadableStream(stream, {
-      ssrManifest: {
+      serverConsumerManifest: {
         moduleMap: null,
         moduleLoading: null,
       },
@@ -547,7 +547,7 @@ describe('ReactFlightDOMEdge', () => {
     const resultPromise = ReactServerDOMClient.createFromReadableStream(
       stream,
       {
-        ssrManifest: {
+        serverConsumerManifest: {
           moduleMap: null,
           moduleLoading: null,
         },
@@ -587,7 +587,7 @@ describe('ReactFlightDOMEdge', () => {
 
     const result = await serverAct(() =>
       ReactServerDOMClient.createFromReadableStream(stream, {
-        ssrManifest: {
+        serverConsumerManifest: {
           moduleMap: null,
           moduleLoading: null,
         },
@@ -635,7 +635,7 @@ describe('ReactFlightDOMEdge', () => {
     // Parsing the root blocks because the module hasn't loaded yet
     const result = await serverAct(() =>
       ReactServerDOMClient.createFromReadableStream(stream, {
-        ssrManifest: {
+        serverConsumerManifest: {
           moduleMap: null,
           moduleLoading: null,
         },
@@ -689,7 +689,7 @@ describe('ReactFlightDOMEdge', () => {
     const result = await ReactServerDOMClient.createFromReadableStream(
       stream2,
       {
-        ssrManifest: {
+        serverConsumerManifest: {
           moduleMap: null,
           moduleLoading: null,
         },
@@ -777,7 +777,7 @@ describe('ReactFlightDOMEdge', () => {
     const result = await ReactServerDOMClient.createFromReadableStream(
       stream1,
       {
-        ssrManifest: {
+        serverConsumerManifest: {
           moduleMap: null,
           moduleLoading: null,
         },
@@ -836,7 +836,7 @@ describe('ReactFlightDOMEdge', () => {
     const result = await ReactServerDOMClient.createFromReadableStream(
       stream1,
       {
-        ssrManifest: {
+        serverConsumerManifest: {
           moduleMap: null,
           moduleLoading: null,
         },
@@ -891,7 +891,7 @@ describe('ReactFlightDOMEdge', () => {
 
     const rootModel = await serverAct(() =>
       ReactServerDOMClient.createFromReadableStream(stream, {
-        ssrManifest: {
+        serverConsumerManifest: {
           moduleMap: null,
           moduleLoading: null,
         },
@@ -995,7 +995,7 @@ describe('ReactFlightDOMEdge', () => {
 
     const rootModel = await serverAct(() =>
       ReactServerDOMClient.createFromReadableStream(stream, {
-        ssrManifest: {
+        serverConsumerManifest: {
           moduleMap: null,
           moduleLoading: null,
         },
@@ -1079,7 +1079,7 @@ describe('ReactFlightDOMEdge', () => {
     }
 
     const response = ReactServerDOMClient.createFromReadableStream(prelude, {
-      ssrManifest: {
+      serverConsumerManifest: {
         moduleMap: null,
         moduleLoading: null,
       },
@@ -1146,7 +1146,7 @@ describe('ReactFlightDOMEdge', () => {
     }
 
     const response = ReactServerDOMClient.createFromReadableStream(prelude, {
-      ssrManifest: {
+      serverConsumerManifest: {
         moduleMap: null,
         moduleLoading: null,
       },
