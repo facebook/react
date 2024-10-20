@@ -1078,7 +1078,7 @@ function loadServerReference<A: Iterable<any>, T>(
     if (!metaData.bound) {
       return (requireModule(serverReference): any);
     } else {
-      promise = metaData.bound;
+      promise = Promise.resolve(metaData.bound);
     }
   } else if (metaData.bound) {
     promise = Promise.all([promise, metaData.bound]);
