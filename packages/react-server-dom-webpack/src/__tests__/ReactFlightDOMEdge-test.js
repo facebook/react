@@ -215,8 +215,8 @@ describe('ReactFlightDOMEdge', () => {
   });
 
   it('should be able to load a server reference on a consuming server if a mapping exists', async () => {
-    function greet() {
-      return 'hi';
+    function greet(name) {
+      return 'hi, ' + name;
     }
     const ServerModule = serverExports({
       greet,
@@ -226,6 +226,7 @@ describe('ReactFlightDOMEdge', () => {
       ReactServerDOMServer.renderToReadableStream(
         {
           method: ServerModule.greet,
+          boundMethod: ServerModule.greet.bind(null, 'there'),
         },
         webpackMap,
       ),
@@ -241,14 +242,15 @@ describe('ReactFlightDOMEdge', () => {
     const result = await response;
 
     expect(result.method).toBe(greet);
+    expect(result.boundMethod()).toBe('hi, there');
   });
 
   it('should be able to load a server reference on a consuming server if a mapping exists (async)', async () => {
     let resolve;
     const chunkPromise = new Promise(r => (resolve = r));
 
-    function greet() {
-      return 'hi';
+    function greet(name) {
+      return 'hi, ' + name;
     }
     const ServerModule = serverExports(
       {
@@ -261,6 +263,7 @@ describe('ReactFlightDOMEdge', () => {
       ReactServerDOMServer.renderToReadableStream(
         {
           method: ServerModule.greet,
+          boundMethod: ServerModule.greet.bind(null, 'there'),
         },
         webpackMap,
       ),
@@ -278,6 +281,7 @@ describe('ReactFlightDOMEdge', () => {
     const result = await response;
 
     expect(result.method).toBe(greet);
+    expect(result.boundMethod()).toBe('hi, there');
   });
 
   it('should encode long string in a compact format', async () => {
