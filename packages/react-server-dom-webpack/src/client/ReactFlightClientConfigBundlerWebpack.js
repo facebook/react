@@ -86,6 +86,13 @@ export function resolveClientReference<T>(
       }
       name = metadata[NAME];
     }
+    // Note that resolvedModuleData.async may be set if this is an Async Module.
+    // For Client References we don't actually care because what matters is whether
+    // the consumer expects an unwrapped async module or just a raw Promise so it
+    // has to already know which one it wants.
+    // We could error if this is an Async Import but it's not an Async Module.
+    // However, we also support plain CJS exporting a top level Promise which is not
+    // an Async Module according to the bundle graph but is effectively the same.
     if (isAsyncImport(metadata)) {
       return [
         resolvedModuleData.id,
@@ -128,7 +135,19 @@ export function resolveServerReference<T>(
       );
     }
   }
-  // TODO: This needs to return async: true if it's an async module.
+  if (resolvedModuleData.async) {
+    // If the module is marked as async in a Client Reference, we don't actually care.
+    // What matters is whether the consumer wants to unwrap it or not.
+    // For Server References, it is different because the consumer is completely internal
+    // to the bundler. So instead of passing it to each reference we can mark it in the
+    // manifest.
+    return [
+      resolvedModuleData.id,
+      resolvedModuleData.chunks,
+      name,
+      1 /* async */,
+    ];
+  }
   return [resolvedModuleData.id, resolvedModuleData.chunks, name];
 }
 
