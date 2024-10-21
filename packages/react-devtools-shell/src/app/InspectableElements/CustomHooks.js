@@ -72,7 +72,7 @@ function useDeepHookF() {
 const ContextA = createContext('A');
 const ContextB = createContext('B');
 
-function FunctionWithHooks(props: any, ref: React$Ref<any>) {
+function FunctionWithHooks(props: any, ref: React$RefSetter<any>) {
   const [count, updateCount] = useState(0);
   // eslint-disable-next-line no-unused-vars
   const contextValueA = useContext(ContextA);
@@ -108,7 +108,9 @@ function FunctionWithHooks(props: any, ref: React$Ref<any>) {
 const MemoWithHooks = memo(FunctionWithHooks);
 const ForwardRefWithHooks = forwardRef(FunctionWithHooks);
 
-function wrapWithHoc(Component: (props: any, ref: React$Ref<any>) => any) {
+function wrapWithHoc(
+  Component: (props: any, ref: React$RefSetter<any>) => any,
+) {
   function Hoc() {
     return <Component />;
   }
