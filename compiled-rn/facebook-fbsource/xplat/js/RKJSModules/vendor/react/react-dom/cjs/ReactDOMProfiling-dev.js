@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<679d304c50640f2e226490c12b32c107>>
+ * @generated SignedSource<<97ee9e798ac0e46aa25a0c5bc764ca27>>
  */
 
 /*
@@ -25413,11 +25413,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.0.0-native-fb-b8ae38f8-20241018" !== isomorphicReactPackageVersion)
+      if ("19.0.0-native-fb-45804af1-20241021" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.0.0-native-fb-b8ae38f8-20241018\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.0.0-native-fb-45804af1-20241021\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -25454,11 +25454,11 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.0.0-native-fb-b8ae38f8-20241018",
+          version: "19.0.0-native-fb-45804af1-20241021",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
           findFiberByHostInstance: getClosestInstanceFromNode,
-          reconcilerVersion: "19.0.0-native-fb-b8ae38f8-20241018"
+          reconcilerVersion: "19.0.0-native-fb-45804af1-20241021"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -25918,7 +25918,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.0.0-native-fb-b8ae38f8-20241018";
+    exports.version = "19.0.0-native-fb-45804af1-20241021";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
