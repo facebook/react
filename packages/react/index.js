@@ -9,15 +9,11 @@
 
 // Keep in sync with https://github.com/facebook/flow/blob/main/lib/react.js
 export type ComponentType<-P> = React$ComponentType<P>;
-export type AbstractComponent<
-  -Config,
-  +Instance = mixed,
-> = React$AbstractComponent<Config, Instance>;
+export type AbstractComponent<-Config> = React$AbstractComponent<Config>;
 export type ElementType = React$ElementType;
 export type Element<+C> = React$Element<C>;
 export type MixedElement = React$Element<ElementType>;
 export type Key = React$Key;
-export type Ref<C> = React$Ref<C>;
 export type Node = React$Node;
 export type Context<T> = React$Context<T>;
 export type Portal = React$Portal;
