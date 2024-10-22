@@ -693,7 +693,7 @@
                 pathHistory = new Set(pathHistory);
                 if (pathHistory.has(segment.id)) {
                   cache = Array.from(pathHistory);
-                  segment = cache.slice(cache.indexOf(segment.id) + 1);
+                  segment = cache.slice(cache.indexOf(segment.id) - 1);
                   segment = _createForOfIteratorHelper(segment);
                   var _step5;
                   try {
