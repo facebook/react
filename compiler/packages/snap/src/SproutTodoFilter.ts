@@ -478,6 +478,7 @@ const skipFilter = new Set([
   // bugs
   'fbt/bug-fbt-plural-multiple-function-calls',
   'fbt/bug-fbt-plural-multiple-mixed-call-tag',
+  'bug-object-expression-computed-key-modified-during-after-construction-hoisted-sequence-expr',
   'bug-invalid-hoisting-functionexpr',
   'bug-try-catch-maybe-null-dependency',
   'reduce-reactive-deps/bug-infer-function-cond-access-not-hoisted',
