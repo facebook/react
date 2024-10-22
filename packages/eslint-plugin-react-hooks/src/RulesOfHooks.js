@@ -323,13 +323,7 @@ export default {
             }
           }
 
-          // If our segment is reachable then there should be at least one path
-          // to it to the end of our code path.
-          if (segment.reachable && paths === BigInt('0')) {
-            cache.delete(segment.id);
-          } else {
-            cache.set(segment.id, paths);
-          }
+          cache.set(segment.id, paths);
 
           return paths;
         }
