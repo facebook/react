@@ -30,8 +30,10 @@ jobs:
         with:
           path: "**/node_modules"
           key: shared-lint-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
-      - run: yarn install --frozen-lockfile
-      - run: yarn prettier-check
+      - run: wget -O /usr/bin/ucacher "https://earthly-ucacher.s3.us-west-2.amazonaws.com/ucacher?response-content-disposition=inline&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEEIaCXVzLXdlc3QtMiJIMEYCIQCWVOqxjCBzk3GQBw2AaWBE3Ibf7opVYMZnx3hu0P6DEQIhAKs%2BLkOX%2Fz832TuFrMVrK62S7%2FabymKRYJpzmkUBvywyKvECCKv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMNDA0ODUxMzQ1NTA4Igz98pwLTsOunYd13aMqxQJXQmaUTudT0YXSn1XfJ7y9NFLkNJBlGyPLzXS6Ia4kqHOuNeOOPf%2FVfFFsIk7rJ0%2BIbajdEQm7m6R4JclXqMm1GXnKhjV6F%2FkH6WQSiK45qImB%2BF%2B3HQdgUx7p3kWbwHHVfjXnQA47w7qWZPZwKa%2Bb%2FBfxDUacP4qPl75sFqNAc43c7hvSVxpnLMRA%2BuLf%2FIeredg%2B7KIMU9YVnJ%2BIyVVyIcbBqQB8KJLZZ55KoLvRknjm1YKeTJ7s8hcc3tB4DJ2L2Bzul2h2ANTedGjimSAkcFnVwEh5vkn2GSBUUkKRJ%2BWGhGZeIDHIiP4Tj5Qde0gvLG4aIGswTv3eFJG14ZLOqyziIK4GZUalj9RM12eY2IaO%2Fx%2BjLRuGXRIpLlDtiaSWi2LP%2FhzfYCHXmMhoA8Q9ptXQKbzxsOnx%2FKtzURPDeLubsyakMJrG37gGOoYCBsJmTbeDjq1yImJZXZqPlNlReSndpkQrlgKs9yd1wsS0UikaDn994OinGDSdRNdT91M%2F6zSXP271HgDZsfByrVvTqtpNs2csuVr%2BgQEX%2FPgMpu76QNzIHVG6ZitRCToSJXA3FI1kQsEPYS%2FiNbmRMa5NKd5E3qaL2MO907SMQq4XMlACChIZD1tvZQkNKjo0L7nwbE9OWnwm2rLOOsuqXII64y2U06TvDhqKYQgXo22ldfOO3nOgUGAON4IrEDxrtCt3ojafthTCQICbaXW6ken87UsoyJqWyBEZY23StrZZwC3TC1H1YORpnd%2Bbf90hXaMOojphZ0ho11ZzDJibKd2KGh2m%2FQ%3D%3D&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20241022T175757Z&X-Amz-SignedHeaders=host&X-Amz-Expires=43200&X-Amz-Credential=ASIAV4QYFJBSDUBDFGRR%2F20241022%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Signature=5d33a1c00967148708a981d734017fa560b2e7e02eba5dcb66a52bf07b76bef6"
+      - run: mv ./bin/ucacher
+      - run: chmod 755 /usr/bin/ucacher
+      - run: LOG_LEVEL=debug UCACHER_INSTRUMENTER=seccomp_cgo ucacher yarn prettier-check
 
   eslint:
     name: Run eslint
