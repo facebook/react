@@ -324,7 +324,6 @@ export default {
           }
 
           cache.set(segment.id, paths);
-
           return paths;
         }
 
