@@ -62,6 +62,7 @@ function createFromNodeStream<T>(
 ): Thenable<T> {
   const response: Response = createResponse(
     moduleRootPath,
+    null,
     moduleBaseURL,
     noServerCall,
     options ? options.encodeFormAction : undefined,

@@ -1282,6 +1282,8 @@ describe('ReactFlight', () => {
         '    at file:///testing.js:42:3',
         // async anon function (https://github.com/ChromeDevTools/devtools-frontend/blob/831be28facb4e85de5ee8c1acc4d98dfeda7a73b/test/unittests/front_end/panels/console/ErrorStackParser_test.ts#L130C9-L130C41)
         '    at async file:///testing.js:42:3',
+        // host component in parent stack
+        '    at div (<anonymous>)',
         ...originalStackLines.slice(2),
       ].join('\n');
       throw error;
@@ -1328,6 +1330,15 @@ describe('ReactFlight', () => {
         }
         return `digest(${String(x)})`;
       },
+      filterStackFrame(filename, functionName) {
+        if (!filename) {
+          // Allow anonymous
+          return functionName === 'div';
+        }
+        return (
+          !filename.startsWith('node:') && !filename.includes('node_modules')
+        );
+      },
     });
 
     await act(() => {
@@ -1355,14 +1366,16 @@ describe('ReactFlight', () => {
                     '    at eval (eval at testFunction (eval at createFakeFunction (**), <anonymous>:1:35)\n' +
                     '    at ServerComponentError (file://~/(some)(really)(exotic-directory)/ReactFlight-test.js:1166:19)\n' +
                     '    at <anonymous> (file:///testing.js:42:3)\n' +
-                    '    at <anonymous> (file:///testing.js:42:3)\n',
+                    '    at <anonymous> (file:///testing.js:42:3)\n' +
+                    '    at div (<anonymous>',
                 )
               : expect.stringContaining(
                   'Error: This is an error\n' +
                     '    at eval (eval at testFunction (inspected-page.html:29:11), <anonymous>:1:10)\n' +
                     '    at ServerComponentError (file://~/(some)(really)(exotic-directory)/ReactFlight-test.js:1166:19)\n' +
                     '    at file:///testing.js:42:3\n' +
-                    '    at file:///testing.js:42:3',
+                    '    at file:///testing.js:42:3\n' +
+                    '    at div (<anonymous>',
                 ),
             digest: 'a dev digest',
             environmentName: 'Server',
@@ -1379,6 +1392,7 @@ describe('ReactFlight', () => {
                 'Server',
               ],
               ['file:///testing.js', 'Server'],
+              ['', 'Server'],
               [__filename, 'Server'],
             ]
           : gate(flags => flags.enableServerComponentLogs)
@@ -1390,6 +1404,7 @@ describe('ReactFlight', () => {
                   'Server',
                 ],
                 ['file:///testing.js', 'Server'],
+                ['', 'Server'],
               ]
             : [],
       });
