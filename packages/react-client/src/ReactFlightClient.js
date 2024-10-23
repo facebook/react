@@ -2275,12 +2275,12 @@ function createFakeFunction<T>(
       '\n//# sourceURL=rsc://React/' +
       encodeURIComponent(environmentName) +
       '/' +
-      filename +
+      encodeURI(filename) +
       '?' +
       fakeFunctionIdx++;
     code += '\n//# sourceMappingURL=' + sourceMap;
   } else if (filename) {
-    code += '\n//# sourceURL=' + filename;
+    code += '\n//# sourceURL=' + encodeURI(filename);
   } else {
     code += '\n//# sourceURL=<anonymous>';
   }
