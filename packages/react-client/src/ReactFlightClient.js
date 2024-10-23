@@ -2281,6 +2281,8 @@ function createFakeFunction<T>(
     code += '\n//# sourceMappingURL=' + sourceMap;
   } else if (filename) {
     code += '\n//# sourceURL=' + filename;
+  } else {
+    code += '\n//# sourceURL=<anonymous>';
   }
 
   let fn: FakeFunction<T>;
