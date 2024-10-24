@@ -31,7 +31,7 @@ import { throwInput } from "shared-runtime";
 function Component(props) {
   const $ = _c(4);
   let t0;
-  if ($[0] !== props.value) {
+  if ($[0] !== props) {
     t0 = () => {
       try {
         throwInput([props.value]);
@@ -40,7 +40,7 @@ function Component(props) {
         return e;
       }
     };
-    $[0] = props.value;
+    $[0] = props;
     $[1] = t0;
   } else {
     t0 = $[1];
