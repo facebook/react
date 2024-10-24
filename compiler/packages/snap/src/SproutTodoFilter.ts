@@ -475,6 +475,9 @@ const skipFilter = new Set([
   'rules-of-hooks/rules-of-hooks-93dc5d5e538a',
   'rules-of-hooks/rules-of-hooks-69521d94fa03',
 
+  // false positives
+  'invalid-jsx-lowercase-localvar',
+
   // bugs
   'fbt/bug-fbt-plural-multiple-function-calls',
   'fbt/bug-fbt-plural-multiple-mixed-call-tag',
