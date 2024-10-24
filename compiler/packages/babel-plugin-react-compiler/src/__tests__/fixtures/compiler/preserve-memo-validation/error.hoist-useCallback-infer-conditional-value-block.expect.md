@@ -4,19 +4,24 @@
 ```javascript
 // @validatePreserveExistingMemoizationGuarantees
 import {useCallback} from 'react';
-import {mutate} from 'shared-runtime';
+import {identity, mutate} from 'shared-runtime';
 
-function Component({propA, propB}) {
+function useHook(propA, propB) {
   return useCallback(() => {
     const x = {};
-    if (propA?.a) {
+    if (identity(null) ?? propA.a) {
       mutate(x);
       return {
         value: propB.x.y,
       };
     }
-  }, [propA?.a, propB.x.y]);
+  }, [propA.a, propB.x.y]);
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: useHook,
+  params: [{a: 1}, {x: {y: 3}}],
+};
 
 ```
 
@@ -25,12 +30,12 @@ function Component({propA, propB}) {
 
 ```
    4 |
-   5 | function Component({propA, propB}) {
+   5 | function useHook(propA, propB) {
 >  6 |   return useCallback(() => {
      |                      ^^^^^^^
 >  7 |     const x = {};
      | ^^^^^^^^^^^^^^^^^
->  8 |     if (propA?.a) {
+>  8 |     if (identity(null) ?? propA.a) {
      | ^^^^^^^^^^^^^^^^^
 >  9 |       mutate(x);
      | ^^^^^^^^^^^^^^^^^
@@ -42,12 +47,13 @@ function Component({propA, propB}) {
      | ^^^^^^^^^^^^^^^^^
 > 13 |     }
      | ^^^^^^^^^^^^^^^^^
-> 14 |   }, [propA?.a, propB.x.y]);
+> 14 |   }, [propA.a, propB.x.y]);
      | ^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected (6:14)
 
 CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected (6:14)
   15 | }
   16 |
+  17 | export const FIXTURE_ENTRYPOINT = {
 ```
           
       

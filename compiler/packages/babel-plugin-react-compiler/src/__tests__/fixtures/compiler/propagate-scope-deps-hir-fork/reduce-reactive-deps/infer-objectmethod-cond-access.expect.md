@@ -2,14 +2,17 @@
 ## Input
 
 ```javascript
+// @enablePropagateDepsInHIR
 import {Stringify} from 'shared-runtime';
 
 function Foo({a, shouldReadA}) {
   return (
     <Stringify
-      fn={() => {
-        if (shouldReadA) return a.b.c;
-        return null;
+      objectMethod={{
+        method() {
+          if (shouldReadA) return a.b.c;
+          return null;
+        },
       }}
       shouldInvokeFns={true}
     />
@@ -31,7 +34,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime"; // @enablePropagateDepsInHIR
 import { Stringify } from "shared-runtime";
 
 function Foo(t0) {
@@ -41,11 +44,13 @@ function Foo(t0) {
   if ($[0] !== shouldReadA || $[1] !== a) {
     t1 = (
       <Stringify
-        fn={() => {
-          if (shouldReadA) {
-            return a.b.c;
-          }
-          return null;
+        objectMethod={{
+          method() {
+            if (shouldReadA) {
+              return a.b.c;
+            }
+            return null;
+          },
         }}
         shouldInvokeFns={true}
       />
@@ -71,3 +76,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
       
+### Eval output
+(kind: ok) [[ (exception in render) TypeError: Cannot read properties of null (reading 'b') ]]
+<div>{"objectMethod":{"method":{"kind":"Function","result":null}},"shouldInvokeFns":true}</div>
+<div>{"objectMethod":{"method":{"kind":"Function","result":4}},"shouldInvokeFns":true}</div>
