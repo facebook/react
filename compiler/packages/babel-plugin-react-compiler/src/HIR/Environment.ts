@@ -565,6 +565,12 @@ const EnvironmentConfigSchema = z.object({
    * ```
    */
   lowerContextAccess: ExternalFunctionSchema.nullish(),
+
+  /*
+   * Allows additional modules to be considered as known ones.
+   * Useful for packages that are wrappers around the default ones.
+   */
+  knownReactModules: z.array().nullable().default( [ 'react', 'react-dom' ] ),
 });
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;
@@ -938,10 +944,7 @@ export class Environment {
   }
 
   #isKnownReactModule(moduleName: string): boolean {
-    return (
-      moduleName.toLowerCase() === 'react' ||
-      moduleName.toLowerCase() === 'react-dom'
-    );
+    return this.config.knownReactModules.includes(moduleName.toLowerCase());
   }
 
   getPropertyType(
