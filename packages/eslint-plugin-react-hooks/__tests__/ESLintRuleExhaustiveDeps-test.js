@@ -1468,6 +1468,16 @@ const tests = {
         }
       `,
     },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => {
+            console.log(props.foo);
+          }, [props.foo]);
+        }
+      `,
+      options: [{requireUseEffectDependencyArray: true}],
+    },
   ],
   invalid: [
     {
@@ -7666,6 +7676,58 @@ const tests = {
           message:
             "The 'foo' object makes the dependencies of useEffect Hook (at line 9) change on every render. " +
             "To fix this, wrap the initialization of 'foo' in its own useMemo() Hook.",
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => {
+            console.log('banana banana banana');
+          });
+        }
+      `,
+      options: [{requireUseEffectDependencyArray: true}],
+      errors: [
+        {
+          message:
+            'React Hook useEffect will re-run on every render. Did you forget to pass an array of dependencies? ',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => {
+            console.log(props.foo);
+          }, undefined);
+        }
+      `,
+      options: [{requireUseEffectDependencyArray: true}],
+      errors: [
+        {
+          message:
+            'React Hook useEffect will re-run on every render. Did you forget to pass an array of dependencies? ',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => {
+            console.log('banana banana banana');
+          }, testIdentifier);
+        }
+      `,
+      options: [{requireUseEffectDependencyArray: true}],
+      errors: [
+        {
+          message:
+            'React Hook useEffect was passed a dependency list that is not an array literal. ' +
+            "This means we can't statically verify whether you've passed the correct dependencies.",
           suggestions: undefined,
         },
       ],
