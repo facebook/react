@@ -35,7 +35,6 @@ function useFoo(arr1, arr2) {
   if ($[0] !== arr1 || $[1] !== arr2) {
     const x = [arr1];
 
-    y;
     (y = x.concat(arr2)), y;
     $[0] = arr1;
     $[1] = arr2;
