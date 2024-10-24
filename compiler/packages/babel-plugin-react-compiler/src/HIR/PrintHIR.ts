@@ -538,9 +538,6 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
         .split('\n')
         .map(line => `      ${line}`)
         .join('\n');
-      const deps = instrValue.loweredFunc.dependencies
-        .map(dep => printPlace(dep))
-        .join(',');
       const context = instrValue.loweredFunc.func.context
         .map(dep => printPlace(dep))
         .join(',');
@@ -557,7 +554,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
           })
           .join(', ') ?? '';
       const type = printType(instrValue.loweredFunc.func.returnType).trim();
-      value = `${kind} ${name} @deps[${deps}] @context[${context}] @effects[${effects}]${type !== '' ? ` return${type}` : ''}:\n${fn}`;
+      value = `${kind} ${name} @context[${context}] @effects[${effects}]${type !== '' ? ` return${type}` : ''}:\n${fn}`;
       break;
     }
     case 'TaggedTemplateExpression': {

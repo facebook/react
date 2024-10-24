@@ -10,7 +10,6 @@ import {
   Effect,
   HIRFunction,
   Identifier,
-  IdentifierName,
   LoweredFunction,
   Place,
   isRefOrRefValue,
@@ -41,20 +40,6 @@ export class IdentifierState {
     return identifier;
   }
 
-  declareProperty(lvalue: Place, object: Place, property: string): void {
-    const objectDependency = this.properties.get(object.identifier);
-    let nextDependency: Dependency;
-    if (objectDependency === undefined) {
-      nextDependency = {identifier: object.identifier, path: [property]};
-    } else {
-      nextDependency = {
-        identifier: objectDependency.identifier,
-        path: [...objectDependency.path, property],
-      };
-    }
-    this.properties.set(lvalue.identifier, nextDependency);
-  }
-
   declareTemporary(lvalue: Place, value: Place): void {
     const resolved: Dependency = this.properties.get(value.identifier) ?? {
       identifier: value.identifier,
@@ -73,25 +58,10 @@ export default function analyseFunctions(func: HIRFunction): void {
         case 'ObjectMethod':
         case 'FunctionExpression': {
           lower(instr.value.loweredFunc.func);
-          infer(instr.value.loweredFunc, state, func.context);
+          infer(instr.value.loweredFunc, func.context);
           break;
         }
-        case 'PropertyLoad': {
-          state.declareProperty(
-            instr.lvalue,
-            instr.value.object,
-            instr.value.property,
-          );
-          break;
-        }
-        case 'ComputedLoad': {
-          /*
-           * The path is set to an empty string as the path doesn't really
-           * matter for a computed load.
-           */
-          state.declareProperty(instr.lvalue, instr.value.object, '');
-          break;
-        }
+
         case 'LoadLocal':
         case 'LoadContext': {
           if (instr.lvalue.identifier.name === null) {
@@ -115,11 +85,8 @@ function lower(func: HIRFunction): void {
   logHIRFunction('AnalyseFunction (inner)', func);
 }
 
-function infer(
-  loweredFunc: LoweredFunction,
-  state: IdentifierState,
-  context: Array<Place>,
-): void {
+// infer loweredFunc (inner) with outer function context
+function infer(loweredFunc: LoweredFunction, context: Array<Place>): void {
   const mutations = new Map<string, Effect>();
   for (const operand of loweredFunc.func.context) {
     if (
@@ -130,15 +97,13 @@ function infer(
     }
   }
 
-  for (const dep of loweredFunc.dependencies) {
-    let name: IdentifierName | null = null;
-
-    if (state.properties.has(dep.identifier)) {
-      const receiver = state.properties.get(dep.identifier)!;
-      name = receiver.identifier.name;
-    } else {
-      name = dep.identifier.name;
-    }
+  for (const dep of loweredFunc.func.context) {
+    CompilerError.invariant(dep.identifier.name !== null, {
+      reason: 'context refs should always have a name',
+      description: null,
+      loc: dep.loc,
+      suggestions: null,
+    });
 
     if (isRefOrRefValue(dep.identifier)) {
       /*
@@ -149,8 +114,8 @@ function infer(
        * render
        */
       dep.effect = Effect.Capture;
-    } else if (name !== null) {
-      const effect = mutations.get(name.value);
+    } else {
+      const effect = mutations.get(dep.identifier.name.value);
       if (effect !== undefined) {
         dep.effect = effect === Effect.Unknown ? Effect.Capture : effect;
       }
@@ -176,7 +141,6 @@ function infer(
     const effect = mutations.get(place.identifier.name.value);
     if (effect !== undefined) {
       place.effect = effect === Effect.Unknown ? Effect.Capture : effect;
-      loweredFunc.dependencies.push(place);
     }
   }
 
