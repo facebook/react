@@ -37,7 +37,7 @@ function component(a, b) {
   }
   const y = t0;
   let z;
-  if ($[2] !== a || $[3] !== y.b) {
+  if ($[2] !== a || $[3] !== y) {
     z = { a };
     const x = function () {
       z.a = 2;
@@ -45,7 +45,7 @@ function component(a, b) {
 
     x();
     $[2] = a;
-    $[3] = y.b;
+    $[3] = y;
     $[4] = z;
   } else {
     z = $[4];
