@@ -53,7 +53,7 @@ function Component(arr) {
   const $ = _c(3);
   const x = useX();
   let t0;
-  if ($[0] !== arr || $[1] !== x) {
+  if ($[0] !== x || $[1] !== arr) {
     t0 = arr.map((i) => {
       arr.map((i_0, id) => {
         const T0 = _temp;
@@ -63,8 +63,8 @@ function Component(arr) {
         return jsx;
       });
     });
-    $[0] = arr;
-    $[1] = x;
+    $[0] = x;
+    $[1] = arr;
     $[2] = t0;
   } else {
     t0 = $[2];

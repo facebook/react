@@ -193,7 +193,7 @@ export function* eachInstructionValueOperand(
     }
     case 'ObjectMethod':
     case 'FunctionExpression': {
-      yield* instrValue.loweredFunc.dependencies;
+      yield* instrValue.loweredFunc.func.context;
       break;
     }
     case 'TaggedTemplateExpression': {
@@ -517,8 +517,9 @@ export function mapInstructionValueOperands(
     }
     case 'ObjectMethod':
     case 'FunctionExpression': {
-      instrValue.loweredFunc.dependencies =
-        instrValue.loweredFunc.dependencies.map(d => fn(d));
+      instrValue.loweredFunc.func.context =
+        instrValue.loweredFunc.func.context.map(d => fn(d));
+
       break;
     }
     case 'TaggedTemplateExpression': {
@@ -1215,9 +1216,17 @@ export class ScopeBlockTraversal {
     }
   }
 
+  /**
+   * @returns if the given scope is currently 'active', i.e. if the scope start
+   * block but not the scope fallthrough has been recorded.
+   */
   isScopeActive(scopeId: ScopeId): boolean {
     return this.#activeScopes.indexOf(scopeId) !== -1;
   }
+
+  /**
+   * The current, innermost active scope.
+   */
   get currentScope(): ScopeId | null {
     return this.#activeScopes.at(-1) ?? null;
   }
