@@ -1,5 +1,6 @@
 import {CompilerError} from '../CompilerError';
 import {inRange} from '../ReactiveScopes/InferReactiveScopeVariables';
+import {printDependency} from '../ReactiveScopes/PrintReactiveFunction';
 import {
   Set_equal,
   Set_filter,
@@ -7,7 +8,6 @@ import {
   Set_union,
   getOrInsertDefault,
 } from '../Utils/utils';
-import {collectOptionalChainSidemap} from './CollectOptionalChainDependencies';
 import {
   BasicBlock,
   BlockId,
@@ -21,7 +21,8 @@ import {
   ReactiveScopeDependency,
   ScopeId,
 } from './HIR';
-import {collectTemporariesSidemap} from './PropagateScopeDependenciesHIR';
+
+const DEBUG_PRINT = false;
 
 /**
  * Helper function for `PropagateScopeDependencies`. Uses control flow graph
@@ -86,15 +87,8 @@ export function collectHoistablePropertyLoads(
   fn: HIRFunction,
   temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
   hoistableFromOptionals: ReadonlyMap<BlockId, ReactiveScopeDependency>,
-  nestedFnImmutableContext: ReadonlySet<IdentifierId> | null,
 ): ReadonlyMap<BlockId, BlockInfo> {
   const registry = new PropertyPathRegistry();
-
-  const functionExpressionLoads = collectFunctionExpressionFakeLoads(fn);
-  const actuallyEvaluatedTemporaries = new Map(
-    [...temporaries].filter(([id]) => !functionExpressionLoads.has(id)),
-  );
-
   /**
    * Due to current limitations of mutable range inference, there are edge cases in
    * which we infer known-immutable values (e.g. props or hook params) to have a
@@ -111,14 +105,51 @@ export function collectHoistablePropertyLoads(
       }
     }
   }
-  const nodes = collectNonNullsInBlocks(fn, {
-    temporaries: actuallyEvaluatedTemporaries,
+  return collectHoistablePropertyLoadsImpl(fn, {
+    temporaries,
     knownImmutableIdentifiers,
     hoistableFromOptionals,
     registry,
-    nestedFnImmutableContext,
+    nestedFnImmutableContext: null,
   });
-  propagateNonNull(fn, nodes, registry);
+}
+
+type CollectHoistablePropertyLoadsContext = {
+  temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>;
+  knownImmutableIdentifiers: ReadonlySet<IdentifierId>;
+  hoistableFromOptionals: ReadonlyMap<BlockId, ReactiveScopeDependency>;
+  registry: PropertyPathRegistry;
+  /**
+   * (For nested / inner function declarations)
+   * Context variables (i.e. captured from an outer scope) that are immutable.
+   * Note that this technically could be merged into `knownImmutableIdentifiers`,
+   * but are currently kept separate for readability.
+   */
+  nestedFnImmutableContext: ReadonlySet<IdentifierId> | null;
+};
+function collectHoistablePropertyLoadsImpl(
+  fn: HIRFunction,
+  context: CollectHoistablePropertyLoadsContext,
+): ReadonlyMap<BlockId, BlockInfo> {
+  const functionExpressionLoads = collectFunctionExpressionFakeLoads(fn);
+  const actuallyEvaluatedTemporaries = new Map(
+    [...context.temporaries].filter(([id]) => !functionExpressionLoads.has(id)),
+  );
+
+  const nodes = collectNonNullsInBlocks(fn, {
+    ...context,
+    temporaries: actuallyEvaluatedTemporaries,
+  });
+  propagateNonNull(fn, nodes, context.registry);
+
+  if (DEBUG_PRINT) {
+    console.log('(printing hoistable nodes in blocks)');
+    for (const [blockId, node] of nodes) {
+      console.log(
+        `bb${blockId}: ${[...node.assumedNonNullObjects].map(n => printDependency(n.fullPath)).join(' ')}`,
+      );
+    }
+  }
 
   return nodes;
 }
@@ -243,7 +274,7 @@ class PropertyPathRegistry {
 
 function getMaybeNonNullInInstruction(
   instr: InstructionValue,
-  context: CollectNonNullsInBlocksContext,
+  context: CollectHoistablePropertyLoadsContext,
 ): PropertyPathNode | null {
   let path = null;
   if (instr.kind === 'PropertyLoad') {
@@ -262,7 +293,7 @@ function getMaybeNonNullInInstruction(
 function isImmutableAtInstr(
   identifier: Identifier,
   instr: InstructionId,
-  context: CollectNonNullsInBlocksContext,
+  context: CollectHoistablePropertyLoadsContext,
 ): boolean {
   if (context.nestedFnImmutableContext != null) {
     /**
@@ -295,22 +326,9 @@ function isImmutableAtInstr(
   }
 }
 
-type CollectNonNullsInBlocksContext = {
-  temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>;
-  knownImmutableIdentifiers: ReadonlySet<IdentifierId>;
-  hoistableFromOptionals: ReadonlyMap<BlockId, ReactiveScopeDependency>;
-  registry: PropertyPathRegistry;
-  /**
-   * (For nested / inner function declarations)
-   * Context variables (i.e. captured from an outer scope) that are immutable.
-   * Note that this technically could be merged into `knownImmutableIdentifiers`,
-   * but are currently kept separate for readability.
-   */
-  nestedFnImmutableContext: ReadonlySet<IdentifierId> | null;
-};
 function collectNonNullsInBlocks(
   fn: HIRFunction,
-  context: CollectNonNullsInBlocksContext,
+  context: CollectHoistablePropertyLoadsContext,
 ): ReadonlyMap<BlockId, BlockInfo> {
   /**
    * Known non-null objects such as functional component props can be safely
@@ -348,27 +366,25 @@ function collectNonNullsInBlocks(
         assumedNonNullObjects.add(maybeNonNull);
       }
       if (
-        instr.value.kind === 'FunctionExpression' &&
+        (instr.value.kind === 'FunctionExpression' ||
+          instr.value.kind === 'ObjectMethod') &&
         !fn.env.config.enableTreatFunctionDepsAsConditional
       ) {
         const innerFn = instr.value.loweredFunc;
-        const innerTemporaries = collectTemporariesSidemap(
+        const innerHoistableMap = collectHoistablePropertyLoadsImpl(
           innerFn.func,
-          new Set(),
-        );
-        const innerOptionals = collectOptionalChainSidemap(innerFn.func);
-        const innerHoistableMap = collectHoistablePropertyLoads(
-          innerFn.func,
-          innerTemporaries,
-          innerOptionals.hoistableObjects,
-          context.nestedFnImmutableContext ??
-            new Set(
-              innerFn.func.context
-                .filter(place =>
-                  isImmutableAtInstr(place.identifier, instr.id, context),
-                )
-                .map(place => place.identifier.id),
-            ),
+          {
+            ...context,
+            nestedFnImmutableContext:
+              context.nestedFnImmutableContext ??
+              new Set(
+                innerFn.func.context
+                  .filter(place =>
+                    isImmutableAtInstr(place.identifier, instr.id, context),
+                  )
+                  .map(place => place.identifier.id),
+              ),
+          },
         );
         const innerHoistables = assertNonNull(
           innerHoistableMap.get(innerFn.func.body.entry),
@@ -591,7 +607,10 @@ function collectFunctionExpressionFakeLoads(
 
   for (const [_, block] of fn.body.blocks) {
     for (const {lvalue, value} of block.instructions) {
-      if (value.kind === 'FunctionExpression') {
+      if (
+        value.kind === 'FunctionExpression' ||
+        value.kind === 'ObjectMethod'
+      ) {
         for (const reference of value.loweredFunc.dependencies) {
           let curr: IdentifierId | undefined = reference.identifier.id;
           while (curr != null) {
