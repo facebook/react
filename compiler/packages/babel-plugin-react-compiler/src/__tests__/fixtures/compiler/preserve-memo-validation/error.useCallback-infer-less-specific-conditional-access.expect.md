@@ -44,8 +44,6 @@ function Component({propA, propB}) {
      | ^^^^^^^^^^^^^^^^^
 > 14 |   }, [propA?.a, propB.x.y]);
      | ^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected (6:14)
-
-CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected (6:14)
   15 | }
   16 |
 ```
