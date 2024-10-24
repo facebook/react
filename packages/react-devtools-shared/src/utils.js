@@ -911,7 +911,7 @@ export function formatDataForPreview(
     case 'date':
       return data.toString();
     case 'class_instance':
-      return data.constructor.name;
+      return Object.getPrototypeOf(data).constructor.name;
     case 'object':
       if (showFormattedValue) {
         const keys = Array.from(getAllEnumerableKeys(data)).sort(alphaSortKeys);
