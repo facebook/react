@@ -29,36 +29,38 @@ import { c as _c } from "react/compiler-runtime";
 const FooContext = React.createContext({ current: null });
 
 function Component(props) {
-  const $ = _c(5);
+  const $ = _c(7);
   React.useContext(FooContext);
   const ref = React.useRef();
   const [x, setX] = React.useState(false);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] !== ref) {
     t0 = () => {
       setX(true);
       ref.current = true;
     };
-    $[0] = t0;
+    $[0] = ref;
+    $[1] = t0;
   } else {
-    t0 = $[0];
+    t0 = $[1];
   }
   const onClick = t0;
   let t1;
-  if ($[1] !== props.children) {
+  if ($[2] !== props.children) {
     t1 = React.cloneElement(props.children);
-    $[1] = props.children;
-    $[2] = t1;
+    $[2] = props.children;
+    $[3] = t1;
   } else {
-    t1 = $[2];
+    t1 = $[3];
   }
   let t2;
-  if ($[3] !== t1) {
+  if ($[4] !== onClick || $[5] !== t1) {
     t2 = <div onClick={onClick}>{t1}</div>;
-    $[3] = t1;
-    $[4] = t2;
+    $[4] = onClick;
+    $[5] = t1;
+    $[6] = t2;
   } else {
-    t2 = $[4];
+    t2 = $[6];
   }
   return t2;
 }
