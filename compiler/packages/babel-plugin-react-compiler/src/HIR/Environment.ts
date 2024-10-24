@@ -68,8 +68,8 @@ export const ExternalFunctionSchema = z.object({
 export const InstrumentationSchema = z
   .object({
     fn: ExternalFunctionSchema,
-    gating: ExternalFunctionSchema.nullish(),
-    globalGating: z.string().nullish(),
+    gating: ExternalFunctionSchema.nullable(),
+    globalGating: z.string().nullable(),
   })
   .refine(
     opts => opts.gating != null || opts.globalGating != null,
@@ -146,7 +146,7 @@ export type Hook = z.infer<typeof HookSchema>;
  */
 
 const EnvironmentConfigSchema = z.object({
-  customHooks: z.map(z.string(), HookSchema).optional().default(new Map()),
+  customHooks: z.map(z.string(), HookSchema).default(new Map()),
 
   /**
    * A function that, given the name of a module, can optionally return a description
@@ -238,7 +238,7 @@ const EnvironmentConfigSchema = z.object({
    *
    * The symbol configuration is set for backwards compatability with pre-React 19 transforms
    */
-  inlineJsxTransform: ReactElementSymbolSchema.nullish(),
+  inlineJsxTransform: ReactElementSymbolSchema.nullable().default(null),
 
   /*
    * Enable validation of hooks to partially check that the component honors the rules of hooks.
@@ -329,9 +329,9 @@ const EnvironmentConfigSchema = z.object({
    *     }
    *   }
    */
-  enableEmitFreeze: ExternalFunctionSchema.nullish(),
+  enableEmitFreeze: ExternalFunctionSchema.nullable().default(null),
 
-  enableEmitHookGuards: ExternalFunctionSchema.nullish(),
+  enableEmitHookGuards: ExternalFunctionSchema.nullable().default(null),
 
   /**
    * Enable instruction reordering. See InstructionReordering.ts for the details
@@ -415,7 +415,7 @@ const EnvironmentConfigSchema = z.object({
    *   }
    *
    */
-  enableEmitInstrumentForget: InstrumentationSchema.nullish(),
+  enableEmitInstrumentForget: InstrumentationSchema.nullable().default(null),
 
   // Enable validation of mutable ranges
   assertValidMutableRanges: z.boolean().default(false),
@@ -454,8 +454,6 @@ const EnvironmentConfigSchema = z.object({
    */
   throwUnknownException__testonly: z.boolean().default(false),
 
-  enableSharedRuntime__testonly: z.boolean().default(false),
-
   /**
    * Enables deps of a function epxression to be treated as conditional. This
    * makes sure we don't load a dep when it's a property (to check if it has
@@ -493,7 +491,8 @@ const EnvironmentConfigSchema = z.object({
    * computed one. This detects cases where rules of react violations may cause the
    * compiled code to behave differently than the original.
    */
-  enableChangeDetectionForDebugging: ExternalFunctionSchema.nullish(),
+  enableChangeDetectionForDebugging:
+    ExternalFunctionSchema.nullable().default(null),
 
   /**
    * The react native re-animated library uses custom Babel transforms that
@@ -533,7 +532,7 @@ const EnvironmentConfigSchema = z.object({
    *
    * Here the variables `ref` and `myRef` will be typed as Refs.
    */
-  enableTreatRefLikeIdentifiersAsRefs: z.boolean().nullable().default(false),
+  enableTreatRefLikeIdentifiersAsRefs: z.boolean().default(false),
 
   /*
    * If specified a value, the compiler lowers any calls to `useContext` to use
@@ -555,11 +554,55 @@ const EnvironmentConfigSchema = z.object({
    * const {foo, bar} = useCompiledContext(MyContext, (c) => [c.foo, c.bar]);
    * ```
    */
-  lowerContextAccess: ExternalFunctionSchema.nullish(),
+  lowerContextAccess: ExternalFunctionSchema.nullable().default(null),
 });
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;
 
+/**
+ * For test fixtures and playground only.
+ *
+ * Pragmas are straightforward to parse for boolean options (`:true` and
+ * `:false`). These are 'enabled' config values for non-boolean configs (i.e.
+ * what is used when parsing `:true`).
+ */
+const testConfigValues: PartialEnvironmentConfig = {
+  validateNoCapitalizedCalls: [],
+  enableChangeDetectionForDebugging: {
+    source: 'react-compiler-runtime',
+    importSpecifierName: '$structuralCheck',
+  },
+  enableEmitFreeze: {
+    source: 'react-compiler-runtime',
+    importSpecifierName: 'makeReadOnly',
+  },
+  enableEmitInstrumentForget: {
+    fn: {
+      source: 'react-compiler-runtime',
+      importSpecifierName: 'useRenderCounter',
+    },
+    gating: {
+      source: 'react-compiler-runtime',
+      importSpecifierName: 'shouldInstrument',
+    },
+    globalGating: '__DEV__',
+  },
+  enableEmitHookGuards: {
+    source: 'react-compiler-runtime',
+    importSpecifierName: '$dispatcherGuard',
+  },
+  inlineJsxTransform: {
+    elementSymbol: 'react.transitional.element',
+  },
+  lowerContextAccess: {
+    source: 'react-compiler-runtime',
+    importSpecifierName: 'useContext_withSelector',
+  },
+};
+
+/**
+ * For snap test fixtures and playground only.
+ */
 export function parseConfigPragma(pragma: string): EnvironmentConfig {
   const maybeConfig: any = {};
   // Get the defaults to programmatically check for boolean properties
@@ -570,21 +613,12 @@ export function parseConfigPragma(pragma: string): EnvironmentConfig {
       continue;
     }
     const keyVal = token.slice(1);
-    let [key, val]: any = keyVal.split(':');
+    let [key, val = undefined] = keyVal.split(':');
+    const isSet = val === undefined || val === 'true';
 
-    if (key === 'validateNoCapitalizedCalls') {
-      maybeConfig[key] = [];
-      continue;
-    }
-
-    if (
-      key === 'enableChangeDetectionForDebugging' &&
-      (val === undefined || val === 'true')
-    ) {
-      maybeConfig[key] = {
-        source: 'react-compiler-runtime',
-        importSpecifierName: '$structuralCheck',
-      };
+    if (isSet && key in testConfigValues) {
+      maybeConfig[key] =
+        testConfigValues[key as keyof PartialEnvironmentConfig];
       continue;
     }
 
@@ -599,7 +633,6 @@ export function parseConfigPragma(pragma: string): EnvironmentConfig {
             props.push({type: 'name', name: elt});
           }
         }
-        console.log([valSplit[0], props.map(x => x.name ?? '*').join('.')]);
         maybeConfig[key] = [[valSplit[0], props]];
       }
       continue;
@@ -610,11 +643,10 @@ export function parseConfigPragma(pragma: string): EnvironmentConfig {
       continue;
     }
     if (val === undefined || val === 'true') {
-      val = true;
+      maybeConfig[key] = true;
     } else {
-      val = false;
+      maybeConfig[key] = false;
     }
-    maybeConfig[key] = val;
   }
 
   const config = EnvironmentConfigSchema.safeParse(maybeConfig);
