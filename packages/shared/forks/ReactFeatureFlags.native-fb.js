@@ -27,6 +27,7 @@ export const {
   enableShallowPropDiffing,
   passChildrenWhenCloningPersistedNodes,
   enableSiblingPrerendering,
+  enableOwnerStacks,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
@@ -67,7 +68,6 @@ export const enableLegacyFBSupport = false;
 export const enableLegacyHidden = false;
 export const enableLogStringRefsProd: null | ((string, string) => void) = null;
 export const enableNoCloningMemoCache = false;
-export const enableOwnerStacks = false;
 export const enablePostpone = false;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
