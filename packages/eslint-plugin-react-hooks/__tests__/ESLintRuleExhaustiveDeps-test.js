@@ -8193,6 +8193,29 @@ const testsTypescript = {
         },
       ],
     },
+    {
+      code: normalizeIndent`
+        function useCustomCallback(callback, deps) {
+          return useCallback(callback as any, deps)
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useCallback has a missing dependency: 'callback'. Either include it or remove the dependency array.",
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [callback]',
+              output: normalizeIndent`
+                function useCustomCallback(callback, deps) {
+                  return useCallback(callback as any, [callback])
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
   ],
 };
 
