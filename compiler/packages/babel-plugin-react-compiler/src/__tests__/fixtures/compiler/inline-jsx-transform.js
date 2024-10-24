@@ -1,4 +1,4 @@
-// @enableInlineJsxTransform
+// @inlineJsxTransform
 
 function Parent({children, a: _a, b: _b, c: _c, ref}) {
   return <div ref={ref}>{children}</div>;
