@@ -421,7 +421,7 @@ export default function Tree(props: Props): React.Node {
             onMouseLeave={handleMouseLeave}
             ref={focusTargetRef}
             tabIndex={0}>
-            <AutoSizer>
+            <AutoSizer key={selectedElementIndex?.toString()}>
               {({height, width}) => (
                 <FixedSizeList
                   className={styles.List}
