@@ -569,6 +569,7 @@ module.exports = {
     React$Node: 'readonly',
     React$Portal: 'readonly',
     React$Ref: 'readonly',
+    React$RefSetter: 'readonly',
     ReadableStreamController: 'readonly',
     ReadableStreamReader: 'readonly',
     RequestInfo: 'readonly',

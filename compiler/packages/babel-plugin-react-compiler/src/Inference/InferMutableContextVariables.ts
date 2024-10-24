@@ -61,22 +61,6 @@ export function inferMutableContextVariables(fn: HIRFunction): void {
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
       switch (instr.value.kind) {
-        case 'PropertyLoad': {
-          state.declareProperty(
-            instr.lvalue,
-            instr.value.object,
-            instr.value.property,
-          );
-          break;
-        }
-        case 'ComputedLoad': {
-          /*
-           * The path is set to an empty string as the path doesn't really
-           * matter for a computed load.
-           */
-          state.declareProperty(instr.lvalue, instr.value.object, '');
-          break;
-        }
         case 'LoadLocal':
         case 'LoadContext': {
           if (instr.lvalue.identifier.name === null) {

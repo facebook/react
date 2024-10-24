@@ -46,7 +46,7 @@ import {
 type ReactMarkupNodeList =
   // This is the intersection of ReactNodeList and ReactClientValue minus
   // Client/ServerReferences.
-  | React$Element<React$AbstractComponent<any, any>>
+  | React$Element<React$ComponentType<any>>
   | LazyComponent<ReactMarkupNodeList, any>
   | React$Element<string>
   | string
