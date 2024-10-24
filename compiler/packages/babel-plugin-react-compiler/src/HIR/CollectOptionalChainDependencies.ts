@@ -1,4 +1,5 @@
 import {CompilerError} from '..';
+import {getOrInsertDefault} from '../Utils/utils';
 import {assertNonNull} from './CollectHoistablePropertyLoads';
 import {
   BlockId,
@@ -22,25 +23,14 @@ export function collectOptionalChainSidemap(
   fn: HIRFunction,
 ): OptionalChainSidemap {
   const context: OptionalTraversalContext = {
+    currFn: fn,
     blocks: fn.body.blocks,
     seenOptionals: new Set(),
-    processedInstrsInOptional: new Set(),
+    processedInstrsInOptional: new Map(),
     temporariesReadInOptional: new Map(),
     hoistableObjects: new Map(),
   };
-  for (const [_, block] of fn.body.blocks) {
-    if (
-      block.terminal.kind === 'optional' &&
-      !context.seenOptionals.has(block.id)
-    ) {
-      traverseOptionalBlock(
-        block as TBasicBlock<OptionalTerminal>,
-        context,
-        null,
-      );
-    }
-  }
-
+  traverseFunction(fn, context);
   return {
     temporariesReadInOptional: context.temporariesReadInOptional,
     processedInstrsInOptional: context.processedInstrsInOptional,
@@ -96,8 +86,13 @@ export type OptionalChainSidemap = {
    * bb5:
    *   $5 = MethodCall $2.$4() <--- here, we want to take a dep on $2 and $4!
    * ```
+   *
+   * Also note that InstructionIds are not unique across inner functions.
    */
-  processedInstrsInOptional: ReadonlySet<InstructionId>;
+  processedInstrsInOptional: ReadonlyMap<
+    HIRFunction,
+    ReadonlySet<InstructionId>
+  >;
   /**
    * Records optional chains for which we can safely evaluate non-optional
    * PropertyLoads. e.g. given `a?.b.c`, we can evaluate any load from `a?.b` at
@@ -115,16 +110,46 @@ export type OptionalChainSidemap = {
 };
 
 type OptionalTraversalContext = {
+  currFn: HIRFunction;
   blocks: ReadonlyMap<BlockId, BasicBlock>;
 
   // Track optional blocks to avoid outer calls into nested optionals
   seenOptionals: Set<BlockId>;
 
-  processedInstrsInOptional: Set<InstructionId>;
+  processedInstrsInOptional: Map<HIRFunction, Set<InstructionId>>;
   temporariesReadInOptional: Map<IdentifierId, ReactiveScopeDependency>;
   hoistableObjects: Map<BlockId, ReactiveScopeDependency>;
 };
 
+function traverseFunction(
+  fn: HIRFunction,
+  context: OptionalTraversalContext,
+): void {
+  for (const [_, block] of fn.body.blocks) {
+    for (const instr of block.instructions) {
+      if (
+        instr.value.kind === 'FunctionExpression' ||
+        instr.value.kind === 'ObjectMethod'
+      ) {
+        traverseFunction(instr.value.loweredFunc.func, {
+          ...context,
+          currFn: instr.value.loweredFunc.func,
+          blocks: instr.value.loweredFunc.func.body.blocks,
+        });
+      }
+    }
+    if (
+      block.terminal.kind === 'optional' &&
+      !context.seenOptionals.has(block.id)
+    ) {
+      traverseOptionalBlock(
+        block as TBasicBlock<OptionalTerminal>,
+        context,
+        null,
+      );
+    }
+  }
+}
 /**
  * Match the consequent and alternate blocks of an optional.
  * @returns propertyload computed by the consequent block, or null if the
@@ -369,10 +394,13 @@ function traverseOptionalBlock(
       },
     ],
   };
-  context.processedInstrsInOptional.add(
-    matchConsequentResult.storeLocalInstrId,
+  const processedInstrsInOptionalByFn = getOrInsertDefault(
+    context.processedInstrsInOptional,
+    context.currFn,
+    new Set(),
   );
-  context.processedInstrsInOptional.add(test.id);
+  processedInstrsInOptionalByFn.add(matchConsequentResult.storeLocalInstrId);
+  processedInstrsInOptionalByFn.add(test.id);
   context.temporariesReadInOptional.set(
     matchConsequentResult.consequentId,
     load,

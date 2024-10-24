@@ -25,10 +25,9 @@ import { c as _c } from "react/compiler-runtime";
 import * as SharedRuntime from "shared-runtime";
 function useFoo() {
   const $ = _c(1);
-  const MyLocal = SharedRuntime;
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    const callback = () => <MyLocal.Text value={4} />;
+    const callback = () => <SharedRuntime.Text value={4} />;
 
     t0 = callback();
     $[0] = t0;

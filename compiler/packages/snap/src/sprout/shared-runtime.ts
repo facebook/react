@@ -252,6 +252,9 @@ export function Stringify(props: any): React.ReactElement {
     toJSON(props, props?.shouldInvokeFns),
   );
 }
+export function Throw() {
+  throw new Error();
+}
 
 export function ValidateMemoization({
   inputs,
