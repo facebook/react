@@ -25,7 +25,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/facebook/react.git",
-    "directory": "packages/react"
+    "directory": "packages/react-refresh"
   },
   "engines": {
     "node": ">=0.10.0"
