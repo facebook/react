@@ -37,8 +37,6 @@ function bar(a, b) {
     let t;
     t = {};
 
-    y;
-    t;
     y = x[0][1];
     t = x[1][0];
     $[0] = a;
