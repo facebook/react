@@ -866,14 +866,6 @@ __DEV__ &&
           ? wipLanes
           : nextLanes;
     }
-    function checkIfRootIsPrerendering(root, renderLanes) {
-      return (
-        0 ===
-        (root.pendingLanes &
-          ~(root.suspendedLanes & ~root.pingedLanes) &
-          renderLanes)
-      );
-    }
     function computeExpirationTime(lane, currentTime) {
       switch (lane) {
         case 1:
@@ -2190,8 +2182,7 @@ __DEV__ &&
                     root,
                     root === workInProgressRoot ? nextLanes : 0
                   )),
-                  0 === (nextLanes & 3) ||
-                    checkIfRootIsPrerendering(root, nextLanes) ||
+                  0 !== (nextLanes & 3) &&
                     ((didPerformSomeWork = !0),
                     performSyncWorkOnRoot(root, nextLanes));
             root = root.next;
@@ -2268,46 +2259,45 @@ __DEV__ &&
           (root.callbackNode = null),
           (root.callbackPriority = 0)
         );
+      if (0 !== (suspendedLanes & 3))
+        return (
+          null !== pingedLanes && cancelCallback(pingedLanes),
+          (root.callbackPriority = 2),
+          (root.callbackNode = null),
+          2
+        );
+      currentTime = suspendedLanes & -suspendedLanes;
       if (
-        0 === (suspendedLanes & 3) ||
-        (enableSiblingPrerendering &&
-          checkIfRootIsPrerendering(root, suspendedLanes))
-      ) {
-        currentTime = suspendedLanes & -suspendedLanes;
-        if (
-          currentTime !== root.callbackPriority ||
-          (null !== ReactSharedInternals.actQueue &&
-            pingedLanes !== fakeActCallbackNode$1)
-        )
-          cancelCallback(pingedLanes);
-        else return currentTime;
-        switch (lanesToEventPriority(suspendedLanes)) {
-          case 2:
-          case 8:
-            suspendedLanes = UserBlockingPriority;
-            break;
-          case 32:
-            suspendedLanes = NormalPriority$1;
-            break;
-          case 268435456:
-            suspendedLanes = IdlePriority;
-            break;
-          default:
-            suspendedLanes = NormalPriority$1;
-        }
-        pingedLanes = performWorkOnRootViaSchedulerTask.bind(null, root);
-        null !== ReactSharedInternals.actQueue
-          ? (ReactSharedInternals.actQueue.push(pingedLanes),
-            (suspendedLanes = fakeActCallbackNode$1))
-          : (suspendedLanes = scheduleCallback$3(suspendedLanes, pingedLanes));
-        root.callbackPriority = currentTime;
-        root.callbackNode = suspendedLanes;
-        return currentTime;
+        currentTime !== root.callbackPriority ||
+        (null !== ReactSharedInternals.actQueue &&
+          pingedLanes !== fakeActCallbackNode$1)
+      )
+        cancelCallback(pingedLanes);
+      else return currentTime;
+      switch (lanesToEventPriority(suspendedLanes)) {
+        case 2:
+          suspendedLanes = ImmediatePriority;
+          break;
+        case 8:
+          suspendedLanes = UserBlockingPriority;
+          break;
+        case 32:
+          suspendedLanes = NormalPriority$1;
+          break;
+        case 268435456:
+          suspendedLanes = IdlePriority;
+          break;
+        default:
+          suspendedLanes = NormalPriority$1;
       }
-      null !== pingedLanes && cancelCallback(pingedLanes);
-      root.callbackPriority = 2;
-      root.callbackNode = null;
-      return 2;
+      pingedLanes = performWorkOnRootViaSchedulerTask.bind(null, root);
+      null !== ReactSharedInternals.actQueue
+        ? (ReactSharedInternals.actQueue.push(pingedLanes),
+          (suspendedLanes = fakeActCallbackNode$1))
+        : (suspendedLanes = scheduleCallback$3(suspendedLanes, pingedLanes));
+      root.callbackPriority = currentTime;
+      root.callbackNode = suspendedLanes;
+      return currentTime;
     }
     function performWorkOnRootViaSchedulerTask(root, didTimeout) {
       nestedUpdateScheduled = currentUpdateIsNested = !1;
@@ -13502,7 +13492,7 @@ __DEV__ &&
             root,
             workInProgressRootRenderLanes,
             workInProgressDeferredLane,
-            !1
+            workInProgressRootDidSkipSuspendedSiblings
           );
       markRootUpdated(root, lane);
       if (
@@ -13560,7 +13550,7 @@ __DEV__ &&
               root,
               workInProgressRootRenderLanes,
               workInProgressDeferredLane,
-              !1
+              workInProgressRootDidSkipSuspendedSiblings
             ));
         ensureRootIsScheduled(root);
       }
@@ -13568,194 +13558,192 @@ __DEV__ &&
     function performWorkOnRoot(root, lanes, forceSync) {
       if ((executionContext & (RenderContext | CommitContext)) !== NoContext)
         throw Error("Should not already be working.");
-      var shouldTimeSlice =
-          (!forceSync &&
-            0 === (lanes & 60) &&
-            0 === (lanes & root.expiredLanes)) ||
-          (enableSiblingPrerendering && checkIfRootIsPrerendering(root, lanes)),
-        exitStatus = shouldTimeSlice
-          ? renderRootConcurrent(root, lanes)
-          : renderRootSync(root, lanes, !0);
-      do {
-        var renderWasConcurrent = shouldTimeSlice;
-        if (exitStatus === RootInProgress) {
-          enableSiblingPrerendering &&
-            workInProgressRootIsPrerendering &&
-            !shouldTimeSlice &&
-            markRootSuspended(root, lanes, 0, !1);
-          break;
-        } else if (exitStatus === RootDidNotComplete)
-          markRootSuspended(
-            root,
-            lanes,
-            0,
-            !workInProgressRootDidSkipSuspendedSiblings
-          );
-        else {
-          forceSync = root.current.alternate;
-          if (
-            renderWasConcurrent &&
-            !isRenderConsistentWithExternalStores(forceSync)
-          ) {
-            exitStatus = renderRootSync(root, lanes, !1);
-            continue;
-          }
-          if (exitStatus === RootErrored) {
-            renderWasConcurrent = lanes;
-            if (root.errorRecoveryDisabledLanes & renderWasConcurrent)
-              var errorRetryLanes = 0;
-            else
-              (errorRetryLanes = root.pendingLanes & -536870913),
-                (errorRetryLanes =
-                  0 !== errorRetryLanes
-                    ? errorRetryLanes
-                    : errorRetryLanes & 536870912
-                      ? 536870912
-                      : 0);
-            if (0 !== errorRetryLanes) {
-              lanes = errorRetryLanes;
-              a: {
-                exitStatus = root;
-                var errorRetryLanes$jscomp$0 = errorRetryLanes;
-                errorRetryLanes = workInProgressRootConcurrentErrors;
-                var wasRootDehydrated =
-                  supportsHydration &&
-                  exitStatus.current.memoizedState.isDehydrated;
-                wasRootDehydrated &&
-                  (prepareFreshStack(
+      var exitStatus = (forceSync =
+        !forceSync && 0 === (lanes & 60) && 0 === (lanes & root.expiredLanes))
+        ? renderRootConcurrent(root, lanes)
+        : renderRootSync(root, lanes);
+      if (exitStatus !== RootInProgress) {
+        var renderWasConcurrent = forceSync;
+        do {
+          if (exitStatus === RootDidNotComplete)
+            markRootSuspended(
+              root,
+              lanes,
+              0,
+              workInProgressRootDidSkipSuspendedSiblings
+            );
+          else {
+            forceSync = root.current.alternate;
+            if (
+              renderWasConcurrent &&
+              !isRenderConsistentWithExternalStores(forceSync)
+            ) {
+              exitStatus = renderRootSync(root, lanes);
+              renderWasConcurrent = !1;
+              continue;
+            }
+            if (exitStatus === RootErrored) {
+              renderWasConcurrent = lanes;
+              if (root.errorRecoveryDisabledLanes & renderWasConcurrent)
+                var errorRetryLanes = 0;
+              else
+                (errorRetryLanes = root.pendingLanes & -536870913),
+                  (errorRetryLanes =
+                    0 !== errorRetryLanes
+                      ? errorRetryLanes
+                      : errorRetryLanes & 536870912
+                        ? 536870912
+                        : 0);
+              if (0 !== errorRetryLanes) {
+                lanes = errorRetryLanes;
+                a: {
+                  exitStatus = root;
+                  var errorRetryLanes$jscomp$0 = errorRetryLanes;
+                  errorRetryLanes = workInProgressRootConcurrentErrors;
+                  var wasRootDehydrated =
+                    supportsHydration &&
+                    exitStatus.current.memoizedState.isDehydrated;
+                  wasRootDehydrated &&
+                    (prepareFreshStack(
+                      exitStatus,
+                      errorRetryLanes$jscomp$0
+                    ).flags |= 256);
+                  errorRetryLanes$jscomp$0 = renderRootSync(
                     exitStatus,
                     errorRetryLanes$jscomp$0
-                  ).flags |= 256);
-                errorRetryLanes$jscomp$0 = renderRootSync(
-                  exitStatus,
-                  errorRetryLanes$jscomp$0,
-                  !1
-                );
-                if (errorRetryLanes$jscomp$0 !== RootErrored) {
-                  if (
-                    workInProgressRootDidAttachPingListener &&
-                    !wasRootDehydrated
-                  ) {
-                    exitStatus.errorRecoveryDisabledLanes |=
-                      renderWasConcurrent;
-                    workInProgressRootInterleavedUpdatedLanes |=
-                      renderWasConcurrent;
-                    exitStatus = RootSuspendedWithDelay;
+                  );
+                  if (errorRetryLanes$jscomp$0 !== RootErrored) {
+                    if (
+                      workInProgressRootDidAttachPingListener &&
+                      !wasRootDehydrated
+                    ) {
+                      exitStatus.errorRecoveryDisabledLanes |=
+                        renderWasConcurrent;
+                      workInProgressRootInterleavedUpdatedLanes |=
+                        renderWasConcurrent;
+                      exitStatus = RootSuspendedWithDelay;
+                      break a;
+                    }
+                    exitStatus = workInProgressRootRecoverableErrors;
+                    workInProgressRootRecoverableErrors = errorRetryLanes;
+                    null !== exitStatus && queueRecoverableErrors(exitStatus);
+                  }
+                  exitStatus = errorRetryLanes$jscomp$0;
+                }
+                renderWasConcurrent = !1;
+                if (exitStatus !== RootErrored) continue;
+              }
+            }
+            if (exitStatus === RootFatalErrored) {
+              prepareFreshStack(root, 0);
+              markRootSuspended(
+                root,
+                lanes,
+                0,
+                workInProgressRootDidSkipSuspendedSiblings
+              );
+              break;
+            }
+            a: {
+              renderWasConcurrent = root;
+              switch (exitStatus) {
+                case RootInProgress:
+                case RootFatalErrored:
+                  throw Error("Root did not complete. This is a bug in React.");
+                case RootSuspendedWithDelay:
+                  if ((lanes & 4194176) === lanes) {
+                    markRootSuspended(
+                      renderWasConcurrent,
+                      lanes,
+                      workInProgressDeferredLane,
+                      workInProgressRootDidSkipSuspendedSiblings
+                    );
                     break a;
                   }
-                  exitStatus = workInProgressRootRecoverableErrors;
-                  workInProgressRootRecoverableErrors = errorRetryLanes;
-                  null !== exitStatus && queueRecoverableErrors(exitStatus);
-                }
-                exitStatus = errorRetryLanes$jscomp$0;
+                  break;
+                case RootErrored:
+                  workInProgressRootRecoverableErrors = null;
+                  break;
+                case RootSuspended:
+                case RootCompleted:
+                  break;
+                default:
+                  throw Error("Unknown root exit status.");
               }
-              if (exitStatus !== RootErrored) continue;
-            }
-          }
-          if (exitStatus === RootFatalErrored) {
-            prepareFreshStack(root, 0);
-            markRootSuspended(root, lanes, 0, !0);
-            break;
-          }
-          a: {
-            shouldTimeSlice = root;
-            switch (exitStatus) {
-              case RootInProgress:
-              case RootFatalErrored:
-                throw Error("Root did not complete. This is a bug in React.");
-              case RootSuspendedWithDelay:
-                if ((lanes & 4194176) === lanes) {
+              renderWasConcurrent.finishedWork = forceSync;
+              renderWasConcurrent.finishedLanes = lanes;
+              if (null !== ReactSharedInternals.actQueue)
+                commitRoot(
+                  renderWasConcurrent,
+                  workInProgressRootRecoverableErrors,
+                  workInProgressTransitions,
+                  workInProgressRootDidIncludeRecursiveRenderUpdate,
+                  workInProgressDeferredLane,
+                  workInProgressRootInterleavedUpdatedLanes,
+                  workInProgressSuspendedRetryLanes,
+                  IMMEDIATE_COMMIT,
+                  -0,
+                  0
+                );
+              else {
+                if (
+                  (lanes & 62914560) === lanes &&
+                  (alwaysThrottleRetries || exitStatus === RootSuspended) &&
+                  ((exitStatus =
+                    globalMostRecentFallbackTime +
+                    FALLBACK_THROTTLE_MS -
+                    now$1()),
+                  10 < exitStatus)
+                ) {
                   markRootSuspended(
-                    shouldTimeSlice,
+                    renderWasConcurrent,
                     lanes,
                     workInProgressDeferredLane,
-                    !workInProgressRootDidSkipSuspendedSiblings
+                    workInProgressRootDidSkipSuspendedSiblings
+                  );
+                  if (0 !== getNextLanes(renderWasConcurrent, 0)) break a;
+                  renderWasConcurrent.timeoutHandle = scheduleTimeout(
+                    commitRootWhenReady.bind(
+                      null,
+                      renderWasConcurrent,
+                      forceSync,
+                      workInProgressRootRecoverableErrors,
+                      workInProgressTransitions,
+                      workInProgressRootDidIncludeRecursiveRenderUpdate,
+                      lanes,
+                      workInProgressDeferredLane,
+                      workInProgressRootInterleavedUpdatedLanes,
+                      workInProgressSuspendedRetryLanes,
+                      workInProgressRootDidSkipSuspendedSiblings,
+                      THROTTLED_COMMIT,
+                      -0,
+                      0
+                    ),
+                    exitStatus
                   );
                   break a;
                 }
-                break;
-              case RootErrored:
-                workInProgressRootRecoverableErrors = null;
-                break;
-              case RootSuspended:
-              case RootCompleted:
-                break;
-              default:
-                throw Error("Unknown root exit status.");
-            }
-            shouldTimeSlice.finishedWork = forceSync;
-            shouldTimeSlice.finishedLanes = lanes;
-            if (null !== ReactSharedInternals.actQueue)
-              commitRoot(
-                shouldTimeSlice,
-                workInProgressRootRecoverableErrors,
-                workInProgressTransitions,
-                workInProgressRootDidIncludeRecursiveRenderUpdate,
-                workInProgressDeferredLane,
-                workInProgressRootInterleavedUpdatedLanes,
-                workInProgressSuspendedRetryLanes,
-                IMMEDIATE_COMMIT,
-                -0,
-                0
-              );
-            else {
-              if (
-                (lanes & 62914560) === lanes &&
-                (alwaysThrottleRetries || exitStatus === RootSuspended) &&
-                ((exitStatus =
-                  globalMostRecentFallbackTime +
-                  FALLBACK_THROTTLE_MS -
-                  now$1()),
-                10 < exitStatus)
-              ) {
-                markRootSuspended(
-                  shouldTimeSlice,
+                commitRootWhenReady(
+                  renderWasConcurrent,
+                  forceSync,
+                  workInProgressRootRecoverableErrors,
+                  workInProgressTransitions,
+                  workInProgressRootDidIncludeRecursiveRenderUpdate,
                   lanes,
                   workInProgressDeferredLane,
-                  !workInProgressRootDidSkipSuspendedSiblings
+                  workInProgressRootInterleavedUpdatedLanes,
+                  workInProgressSuspendedRetryLanes,
+                  workInProgressRootDidSkipSuspendedSiblings,
+                  IMMEDIATE_COMMIT,
+                  -0,
+                  0
                 );
-                if (0 !== getNextLanes(shouldTimeSlice, 0)) break a;
-                shouldTimeSlice.timeoutHandle = scheduleTimeout(
-                  commitRootWhenReady.bind(
-                    null,
-                    shouldTimeSlice,
-                    forceSync,
-                    workInProgressRootRecoverableErrors,
-                    workInProgressTransitions,
-                    workInProgressRootDidIncludeRecursiveRenderUpdate,
-                    lanes,
-                    workInProgressDeferredLane,
-                    workInProgressRootInterleavedUpdatedLanes,
-                    workInProgressSuspendedRetryLanes,
-                    workInProgressRootDidSkipSuspendedSiblings,
-                    THROTTLED_COMMIT,
-                    -0,
-                    0
-                  ),
-                  exitStatus
-                );
-                break a;
               }
-              commitRootWhenReady(
-                shouldTimeSlice,
-                forceSync,
-                workInProgressRootRecoverableErrors,
-                workInProgressTransitions,
-                workInProgressRootDidIncludeRecursiveRenderUpdate,
-                lanes,
-                workInProgressDeferredLane,
-                workInProgressRootInterleavedUpdatedLanes,
-                workInProgressSuspendedRetryLanes,
-                workInProgressRootDidSkipSuspendedSiblings,
-                IMMEDIATE_COMMIT,
-                -0,
-                0
-              );
             }
           }
-        }
-        break;
-      } while (1);
+          break;
+        } while (1);
+      }
       ensureRootIsScheduled(root);
     }
     function queueRecoverableErrors(errors) {
@@ -13804,12 +13792,7 @@ __DEV__ &&
               completedRenderEndTime
             )
           );
-          markRootSuspended(
-            root,
-            lanes,
-            spawnedLane,
-            !didSkipSuspendedSiblings
-          );
+          markRootSuspended(root, lanes, spawnedLane, didSkipSuspendedSiblings);
           return;
         }
       commitRoot(
@@ -13876,20 +13859,20 @@ __DEV__ &&
       root,
       suspendedLanes,
       spawnedLane,
-      didAttemptEntireTree
+      didSkipSuspendedSiblings
     ) {
       suspendedLanes &= ~workInProgressRootPingedLanes;
       suspendedLanes &= ~workInProgressRootInterleavedUpdatedLanes;
       root.suspendedLanes |= suspendedLanes;
       root.pingedLanes &= ~suspendedLanes;
       enableSiblingPrerendering &&
-        didAttemptEntireTree &&
+        !didSkipSuspendedSiblings &&
         (root.warmLanes |= suspendedLanes);
-      didAttemptEntireTree = root.expirationTimes;
+      didSkipSuspendedSiblings = root.expirationTimes;
       for (var lanes = suspendedLanes; 0 < lanes; ) {
         var index = 31 - clz32(lanes),
           lane = 1 << index;
-        didAttemptEntireTree[index] = -1;
+        didSkipSuspendedSiblings[index] = -1;
         lanes &= ~lane;
       }
       0 !== spawnedLane &&
@@ -13933,7 +13916,11 @@ __DEV__ &&
       workInProgressSuspendedReason = NotSuspended;
       workInProgressThrownValue = null;
       workInProgressRootDidSkipSuspendedSiblings = !1;
-      workInProgressRootIsPrerendering = checkIfRootIsPrerendering(root, lanes);
+      workInProgressRootIsPrerendering =
+        0 ===
+        (root.pendingLanes &
+          ~(root.suspendedLanes & ~root.pingedLanes) &
+          lanes);
       workInProgressRootDidAttachPingListener = !1;
       workInProgressRootExitStatus = RootInProgress;
       workInProgressSuspendedRetryLanes =
@@ -14055,9 +14042,7 @@ __DEV__ &&
     function renderDidSuspendDelayIfPossible() {
       workInProgressRootExitStatus = RootSuspendedWithDelay;
       workInProgressRootDidSkipSuspendedSiblings ||
-        ((workInProgressRootRenderLanes & 4194176) !==
-          workInProgressRootRenderLanes &&
-          null !== suspenseHandlerStackCursor.current) ||
+        0 !== (workInProgressRootRenderLanes & 60) ||
         (workInProgressRootIsPrerendering = !0);
       (0 === (workInProgressRootSkippedLanes & 134217727) &&
         0 === (workInProgressRootInterleavedUpdatedLanes & 134217727)) ||
@@ -14066,10 +14051,10 @@ __DEV__ &&
           workInProgressRoot,
           workInProgressRootRenderLanes,
           workInProgressDeferredLane,
-          !1
+          workInProgressRootDidSkipSuspendedSiblings
         );
     }
-    function renderRootSync(root, lanes, shouldYieldForPrerendering) {
+    function renderRootSync(root, lanes) {
       var prevExecutionContext = executionContext;
       executionContext |= RenderContext;
       var prevDispatcher = pushDispatcher(),
@@ -14091,46 +14076,37 @@ __DEV__ &&
       enableDebugTracing && logRenderStarted(lanes);
       enableSchedulingProfiler && markRenderStarted(lanes);
       lanes = !1;
-      memoizedUpdaters = workInProgressRootExitStatus;
       a: do
         try {
           if (
             workInProgressSuspendedReason !== NotSuspended &&
             null !== workInProgress
           ) {
-            var unitOfWork = workInProgress,
-              thrownValue = workInProgressThrownValue;
+            memoizedUpdaters = workInProgress;
+            var thrownValue = workInProgressThrownValue;
             switch (workInProgressSuspendedReason) {
               case SuspendedOnHydration:
                 resetWorkInProgressStack();
-                memoizedUpdaters = RootDidNotComplete;
+                workInProgressRootExitStatus = RootDidNotComplete;
                 break a;
               case SuspendedOnImmediate:
               case SuspendedOnData:
-              case SuspendedOnDeprecatedThrowPromise:
-                null === suspenseHandlerStackCursor.current && (lanes = !0);
+                lanes ||
+                  null !== suspenseHandlerStackCursor.current ||
+                  (lanes = !0);
+              default:
                 var reason = workInProgressSuspendedReason;
                 workInProgressSuspendedReason = NotSuspended;
                 workInProgressThrownValue = null;
-                throwAndUnwindWorkLoop(root, unitOfWork, thrownValue, reason);
-                if (
-                  enableSiblingPrerendering &&
-                  shouldYieldForPrerendering &&
-                  workInProgressRootIsPrerendering
-                ) {
-                  memoizedUpdaters = RootInProgress;
-                  break a;
-                }
-                break;
-              default:
-                (reason = workInProgressSuspendedReason),
-                  (workInProgressSuspendedReason = NotSuspended),
-                  (workInProgressThrownValue = null),
-                  throwAndUnwindWorkLoop(root, unitOfWork, thrownValue, reason);
+                throwAndUnwindWorkLoop(
+                  root,
+                  memoizedUpdaters,
+                  thrownValue,
+                  reason
+                );
             }
           }
           workLoopSync();
-          memoizedUpdaters = workInProgressRootExitStatus;
           break;
         } catch (thrownValue$40) {
           handleThrow(root, thrownValue$40);
@@ -14141,13 +14117,16 @@ __DEV__ &&
       executionContext = prevExecutionContext;
       ReactSharedInternals.H = prevDispatcher;
       ReactSharedInternals.A = prevAsyncDispatcher;
+      if (null !== workInProgress)
+        throw Error(
+          "Cannot commit an incomplete root. This error is likely caused by a bug in React. Please file an issue."
+        );
       enableDebugTracing && enableDebugTracing && groupEnd();
       enableSchedulingProfiler && markRenderStopped();
-      null === workInProgress &&
-        ((workInProgressRoot = null),
-        (workInProgressRootRenderLanes = 0),
-        finishQueueingConcurrentUpdates());
-      return memoizedUpdaters;
+      workInProgressRoot = null;
+      workInProgressRootRenderLanes = 0;
+      finishQueueingConcurrentUpdates();
+      return workInProgressRootExitStatus;
     }
     function workLoopSync() {
       for (; null !== workInProgress; ) performUnitOfWork(workInProgress);
@@ -14172,10 +14151,12 @@ __DEV__ &&
         workInProgressRootRenderTargetTime = now$1() + RENDER_TIMEOUT_MS;
         prepareFreshStack(root, lanes);
       } else
-        workInProgressRootIsPrerendering = checkIfRootIsPrerendering(
-          root,
-          lanes
-        );
+        workInProgressRootIsPrerendering &&
+          (workInProgressRootIsPrerendering =
+            0 ===
+            (root.pendingLanes &
+              ~(root.suspendedLanes & ~root.pingedLanes) &
+              lanes));
       enableDebugTracing && logRenderStarted(lanes);
       enableSchedulingProfiler && markRenderStarted(lanes);
       a: do
@@ -18661,7 +18642,7 @@ __DEV__ &&
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-www-modern-9daabc0b-20241022"
+        reconcilerVersion: "19.0.0-www-modern-cae764ce-20241025"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
