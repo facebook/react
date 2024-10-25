@@ -217,7 +217,7 @@ function joinRefAccessTypes(...types: Array<RefAccessType>): RefAccessType {
       } else if (a.kind === 'Guard') {
         if (b.kind === 'Guard' && a.refId === b.refId) {
           return a;
-        } else if (b.kind === 'Nullable') {
+        } else if (b.kind === 'Nullable' || b.kind === 'Guard') {
           return {kind: 'None'};
         } else {
           return b;
