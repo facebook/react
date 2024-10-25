@@ -25,7 +25,6 @@ function component(a) {
     const x = { a };
     y = 1;
 
-    y;
     y = x;
 
     mutate(y);
