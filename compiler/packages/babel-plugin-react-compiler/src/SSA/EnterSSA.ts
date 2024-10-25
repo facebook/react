@@ -301,9 +301,6 @@ function enterSSAImpl(
         entry.preds.add(blockId);
         builder.defineFunction(loweredFunc);
         builder.enter(() => {
-          loweredFunc.context = loweredFunc.context.map(p =>
-            builder.getPlace(p),
-          );
           loweredFunc.params = loweredFunc.params.map(param => {
             if (param.kind === 'Identifier') {
               return builder.definePlace(param);

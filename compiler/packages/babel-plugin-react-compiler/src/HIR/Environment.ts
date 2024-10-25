@@ -230,8 +230,6 @@ const EnvironmentConfigSchema = z.object({
    */
   enableUseTypeAnnotations: z.boolean().default(false),
 
-  enableFunctionDependencyRewrite: z.boolean().default(true),
-
   /**
    * Enables inlining ReactElement object literals in place of JSX
    * An alternative to the standard JSX transform which replaces JSX with React's jsxProd() runtime
