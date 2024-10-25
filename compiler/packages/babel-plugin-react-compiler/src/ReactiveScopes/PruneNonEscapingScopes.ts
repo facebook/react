@@ -5,10 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "../CompilerError";
+import {CompilerError} from '../CompilerError';
 import {
+  DeclarationId,
   Environment,
-  IdentifierId,
+  Identifier,
   InstructionId,
   Pattern,
   Place,
@@ -22,17 +23,17 @@ import {
   ScopeId,
   getHookKind,
   isMutableEffect,
-} from "../HIR";
-import { getFunctionCallSignature } from "../Inference/InferReferenceEffects";
-import { assertExhaustive } from "../Utils/utils";
-import { getPlaceScope } from "./BuildReactiveBlocks";
+} from '../HIR';
+import {getFunctionCallSignature} from '../Inference/InferReferenceEffects';
+import {assertExhaustive, getOrInsertDefault} from '../Utils/utils';
+import {getPlaceScope} from '../HIR/HIR';
 import {
   ReactiveFunctionTransform,
   ReactiveFunctionVisitor,
   Transformed,
   eachReactiveValueOperand,
   visitReactiveFunction,
-} from "./visitors";
+} from './visitors';
 
 /*
  * This pass prunes reactive scopes that are not necessary to bound downstream computation.
@@ -114,10 +115,10 @@ export function pruneNonEscapingScopes(fn: ReactiveFunction): void {
    */
   const state = new State(fn.env);
   for (const param of fn.params) {
-    if (param.kind === "Identifier") {
-      state.declare(param.identifier.id);
+    if (param.kind === 'Identifier') {
+      state.declare(param.identifier.declarationId);
     } else {
-      state.declare(param.place.identifier.id);
+      state.declare(param.place.identifier.declarationId);
     }
   }
   visitReactiveFunction(fn, new CollectDependenciesVisitor(fn.env), state);
@@ -146,19 +147,19 @@ export type MemoizationOptions = {
 // Describes how to determine whether a value should be memoized, relative to dependees and dependencies
 enum MemoizationLevel {
   // The value should be memoized if it escapes
-  Memoized = "Memoized",
+  Memoized = 'Memoized',
   /*
    * Values that are memoized if their dependencies are memoized (used for logical/ternary and
    * other expressions that propagate dependencies wo changing them)
    */
-  Conditional = "Conditional",
+  Conditional = 'Conditional',
   /*
    * Values that cannot be compared with Object.is, but which by default don't need to be memoized
    * unless forced
    */
-  Unmemoized = "Unmemoized",
+  Unmemoized = 'Unmemoized',
   // The value will never be memoized: used for values that can be cheaply compared w Object.is
-  Never = "Never",
+  Never = 'Never',
 }
 
 /*
@@ -167,7 +168,7 @@ enum MemoizationLevel {
  */
 function joinAliases(
   kind1: MemoizationLevel,
-  kind2: MemoizationLevel
+  kind2: MemoizationLevel,
 ): MemoizationLevel {
   if (
     kind1 === MemoizationLevel.Memoized ||
@@ -193,14 +194,14 @@ function joinAliases(
 type IdentifierNode = {
   level: MemoizationLevel;
   memoized: boolean;
-  dependencies: Set<IdentifierId>;
+  dependencies: Set<DeclarationId>;
   scopes: Set<ScopeId>;
   seen: boolean;
 };
 
 // A scope node describing its dependencies
 type ScopeNode = {
-  dependencies: Array<IdentifierId>;
+  dependencies: Array<DeclarationId>;
   seen: boolean;
 };
 
@@ -209,20 +210,30 @@ class State {
   env: Environment;
   /*
    * Maps lvalues for LoadLocal to the identifier being loaded, to resolve indirections
-   * in subsequent lvalues/rvalues
+   * in subsequent lvalues/rvalues.
+   *
+   * NOTE: this pass uses DeclarationId rather than IdentifierId because the pass is not
+   * aware of control-flow, only data flow via mutation. Instead of precisely modeling
+   * control flow, we analyze all values that may flow into a particular program variable,
+   * and then whether that program variable may escape (if so, the values flowing in may
+   * escape too). Thus we use DeclarationId to captures all values that may flow into
+   * a particular program variable, regardless of control flow paths.
+   *
+   * In the future when we convert to HIR everywhere this pass can account for control
+   * flow and use SSA ids.
    */
-  definitions: Map<IdentifierId, IdentifierId> = new Map();
+  definitions: Map<DeclarationId, DeclarationId> = new Map();
 
-  identifiers: Map<IdentifierId, IdentifierNode> = new Map();
+  identifiers: Map<DeclarationId, IdentifierNode> = new Map();
   scopes: Map<ScopeId, ScopeNode> = new Map();
-  escapingValues: Set<IdentifierId> = new Set();
+  escapingValues: Set<DeclarationId> = new Set();
 
   constructor(env: Environment) {
     this.env = env;
   }
 
   // Declare a new identifier, used for function id and params
-  declare(id: IdentifierId): void {
+  declare(id: DeclarationId): void {
     this.identifiers.set(id, {
       level: MemoizationLevel.Never,
       memoized: false,
@@ -240,21 +251,23 @@ class State {
   visitOperand(
     id: InstructionId,
     place: Place,
-    identifier: IdentifierId
+    identifier: DeclarationId,
   ): void {
     const scope = getPlaceScope(id, place);
     if (scope !== null) {
       let node = this.scopes.get(scope.id);
       if (node === undefined) {
         node = {
-          dependencies: [...scope.dependencies].map((dep) => dep.identifier.id),
+          dependencies: [...scope.dependencies].map(
+            dep => dep.identifier.declarationId,
+          ),
           seen: false,
         };
         this.scopes.set(scope.id, node);
       }
       const identifierNode = this.identifiers.get(identifier);
       CompilerError.invariant(identifierNode !== undefined, {
-        reason: "Expected identifier to be initialized",
+        reason: 'Expected identifier to be initialized',
         description: null,
         loc: place.loc,
         suggestions: null,
@@ -269,11 +282,11 @@ class State {
  * to determine which other values should be memoized. Returns a set of all identifiers
  * that should be memoized.
  */
-function computeMemoizedIdentifiers(state: State): Set<IdentifierId> {
-  const memoized = new Set<IdentifierId>();
+function computeMemoizedIdentifiers(state: State): Set<DeclarationId> {
+  const memoized = new Set<DeclarationId>();
 
   // Visit an identifier, optionally forcing it to be memoized
-  function visit(id: IdentifierId, forceMemoize: boolean = false): boolean {
+  function visit(id: DeclarationId, forceMemoize: boolean = false): boolean {
     const node = state.identifiers.get(id);
     CompilerError.invariant(node !== undefined, {
       reason: `Expected a node for all identifiers, none found for \`${id}\``,
@@ -318,7 +331,7 @@ function computeMemoizedIdentifiers(state: State): Set<IdentifierId> {
   function forceMemoizeScopeDependencies(id: ScopeId): void {
     const node = state.scopes.get(id);
     CompilerError.invariant(node !== undefined, {
-      reason: "Expected a node for all scopes",
+      reason: 'Expected a node for all scopes',
       description: null,
       loc: null,
       suggestions: null,
@@ -358,19 +371,19 @@ function computeMemoizationInputs(
   env: Environment,
   value: ReactiveValue,
   lvalue: Place | null,
-  options: MemoizationOptions
+  options: MemoizationOptions,
 ): {
   // can optionally return a custom set of lvalues per instruction
   lvalues: Array<LValueMemoization>;
   rvalues: Array<Place>;
 } {
   switch (value.kind) {
-    case "ConditionalExpression": {
+    case 'ConditionalExpression': {
       return {
         // Only need to memoize if the rvalues are memoized
         lvalues:
           lvalue !== null
-            ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
+            ? [{place: lvalue, level: MemoizationLevel.Conditional}]
             : [],
         rvalues: [
           // Conditionals do not alias their test value.
@@ -381,12 +394,12 @@ function computeMemoizationInputs(
         ],
       };
     }
-    case "LogicalExpression": {
+    case 'LogicalExpression': {
       return {
         // Only need to memoize if the rvalues are memoized
         lvalues:
           lvalue !== null
-            ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
+            ? [{place: lvalue, level: MemoizationLevel.Conditional}]
             : [],
         rvalues: [
           ...computeMemoizationInputs(env, value.left, null, options).rvalues,
@@ -394,12 +407,12 @@ function computeMemoizationInputs(
         ],
       };
     }
-    case "SequenceExpression": {
+    case 'SequenceExpression': {
       return {
         // Only need to memoize if the rvalues are memoized
         lvalues:
           lvalue !== null
-            ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
+            ? [{place: lvalue, level: MemoizationLevel.Conditional}]
             : [],
         /*
          * Only the final value of the sequence is a true rvalue:
@@ -410,13 +423,13 @@ function computeMemoizationInputs(
           .rvalues,
       };
     }
-    case "JsxExpression": {
+    case 'JsxExpression': {
       const operands: Array<Place> = [];
-      if (value.tag.kind === "Identifier") {
+      if (value.tag.kind === 'Identifier') {
         operands.push(value.tag);
       }
       for (const prop of value.props) {
-        if (prop.kind === "JsxAttribute") {
+        if (prop.kind === 'JsxAttribute') {
           operands.push(prop.place);
         } else {
           operands.push(prop.argument);
@@ -435,11 +448,11 @@ function computeMemoizationInputs(
          * JSX elements themselves are not memoized unless forced to
          * avoid breaking downstream memoization
          */
-        lvalues: lvalue !== null ? [{ place: lvalue, level }] : [],
+        lvalues: lvalue !== null ? [{place: lvalue, level}] : [],
         rvalues: operands,
       };
     }
-    case "JsxFragment": {
+    case 'JsxFragment': {
       const level = options.memoizeJsxElements
         ? MemoizationLevel.Memoized
         : MemoizationLevel.Unmemoized;
@@ -448,89 +461,89 @@ function computeMemoizationInputs(
          * JSX elements themselves are not memoized unless forced to
          * avoid breaking downstream memoization
          */
-        lvalues: lvalue !== null ? [{ place: lvalue, level }] : [],
+        lvalues: lvalue !== null ? [{place: lvalue, level}] : [],
         rvalues: value.children,
       };
     }
-    case "NextPropertyOf":
-    case "StartMemoize":
-    case "FinishMemoize":
-    case "Debugger":
-    case "ComputedDelete":
-    case "PropertyDelete":
-    case "LoadGlobal":
-    case "MetaProperty":
-    case "TemplateLiteral":
-    case "Primitive":
-    case "JSXText":
-    case "BinaryExpression":
-    case "UnaryExpression": {
+    case 'NextPropertyOf':
+    case 'StartMemoize':
+    case 'FinishMemoize':
+    case 'Debugger':
+    case 'ComputedDelete':
+    case 'PropertyDelete':
+    case 'LoadGlobal':
+    case 'MetaProperty':
+    case 'TemplateLiteral':
+    case 'Primitive':
+    case 'JSXText':
+    case 'BinaryExpression':
+    case 'UnaryExpression': {
       const level = options.forceMemoizePrimitives
         ? MemoizationLevel.Memoized
         : MemoizationLevel.Never;
       return {
         // All of these instructions return a primitive value and never need to be memoized
-        lvalues: lvalue !== null ? [{ place: lvalue, level }] : [],
+        lvalues: lvalue !== null ? [{place: lvalue, level}] : [],
         rvalues: [],
       };
     }
-    case "Await":
-    case "TypeCastExpression": {
+    case 'Await':
+    case 'TypeCastExpression': {
       return {
         // Indirection for the inner value, memoized if the value is
         lvalues:
           lvalue !== null
-            ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
+            ? [{place: lvalue, level: MemoizationLevel.Conditional}]
             : [],
         rvalues: [value.value],
       };
     }
-    case "IteratorNext": {
+    case 'IteratorNext': {
       return {
         // Indirection for the inner value, memoized if the value is
         lvalues:
           lvalue !== null
-            ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
+            ? [{place: lvalue, level: MemoizationLevel.Conditional}]
             : [],
         rvalues: [value.iterator, value.collection],
       };
     }
-    case "GetIterator": {
+    case 'GetIterator': {
       return {
         // Indirection for the inner value, memoized if the value is
         lvalues:
           lvalue !== null
-            ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
+            ? [{place: lvalue, level: MemoizationLevel.Conditional}]
             : [],
         rvalues: [value.collection],
       };
     }
-    case "LoadLocal": {
+    case 'LoadLocal': {
       return {
         // Indirection for the inner value, memoized if the value is
         lvalues:
           lvalue !== null
-            ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
+            ? [{place: lvalue, level: MemoizationLevel.Conditional}]
             : [],
         rvalues: [value.place],
       };
     }
-    case "LoadContext": {
+    case 'LoadContext': {
       return {
         // Should never be pruned
         lvalues:
           lvalue !== null
-            ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
+            ? [{place: lvalue, level: MemoizationLevel.Conditional}]
             : [],
         rvalues: [value.place],
       };
     }
-    case "DeclareContext": {
+    case 'DeclareContext': {
       const lvalues = [
-        { place: value.lvalue.place, level: MemoizationLevel.Memoized },
+        {place: value.lvalue.place, level: MemoizationLevel.Memoized},
       ];
       if (lvalue !== null) {
-        lvalues.push({ place: lvalue, level: MemoizationLevel.Unmemoized });
+        lvalues.push({place: lvalue, level: MemoizationLevel.Unmemoized});
       }
       return {
         lvalues,
@@ -538,25 +551,25 @@ function computeMemoizationInputs(
       };
     }
 
-    case "DeclareLocal": {
+    case 'DeclareLocal': {
       const lvalues = [
-        { place: value.lvalue.place, level: MemoizationLevel.Unmemoized },
+        {place: value.lvalue.place, level: MemoizationLevel.Unmemoized},
       ];
       if (lvalue !== null) {
-        lvalues.push({ place: lvalue, level: MemoizationLevel.Unmemoized });
+        lvalues.push({place: lvalue, level: MemoizationLevel.Unmemoized});
       }
       return {
         lvalues,
         rvalues: [],
       };
     }
-    case "PrefixUpdate":
-    case "PostfixUpdate": {
+    case 'PrefixUpdate':
+    case 'PostfixUpdate': {
       const lvalues = [
-        { place: value.lvalue, level: MemoizationLevel.Conditional },
+        {place: value.lvalue, level: MemoizationLevel.Conditional},
       ];
       if (lvalue !== null) {
-        lvalues.push({ place: lvalue, level: MemoizationLevel.Conditional });
+        lvalues.push({place: lvalue, level: MemoizationLevel.Conditional});
       }
       return {
         // Indirection for the inner value, memoized if the value is
@@ -564,12 +577,12 @@ function computeMemoizationInputs(
         rvalues: [value.value],
       };
     }
-    case "StoreLocal": {
+    case 'StoreLocal': {
       const lvalues = [
-        { place: value.lvalue.place, level: MemoizationLevel.Conditional },
+        {place: value.lvalue.place, level: MemoizationLevel.Conditional},
       ];
       if (lvalue !== null) {
-        lvalues.push({ place: lvalue, level: MemoizationLevel.Conditional });
+        lvalues.push({place: lvalue, level: MemoizationLevel.Conditional});
       }
       return {
         // Indirection for the inner value, memoized if the value is
@@ -577,13 +590,13 @@ function computeMemoizationInputs(
         rvalues: [value.value],
       };
     }
-    case "StoreContext": {
+    case 'StoreContext': {
       // Should never be pruned
       const lvalues = [
-        { place: value.lvalue.place, level: MemoizationLevel.Memoized },
+        {place: value.lvalue.place, level: MemoizationLevel.Memoized},
       ];
       if (lvalue !== null) {
-        lvalues.push({ place: lvalue, level: MemoizationLevel.Conditional });
+        lvalues.push({place: lvalue, level: MemoizationLevel.Conditional});
       }
 
       return {
@@ -591,10 +604,10 @@ function computeMemoizationInputs(
         rvalues: [value.value],
       };
     }
-    case "StoreGlobal": {
+    case 'StoreGlobal': {
       const lvalues = [];
       if (lvalue !== null) {
-        lvalues.push({ place: lvalue, level: MemoizationLevel.Unmemoized });
+        lvalues.push({place: lvalue, level: MemoizationLevel.Unmemoized});
       }
 
       return {
@@ -602,11 +615,11 @@ function computeMemoizationInputs(
         rvalues: [value.value],
       };
     }
-    case "Destructure": {
+    case 'Destructure': {
       // Indirection for the inner value, memoized if the value is
       const lvalues = [];
       if (lvalue !== null) {
-        lvalues.push({ place: lvalue, level: MemoizationLevel.Conditional });
+        lvalues.push({place: lvalue, level: MemoizationLevel.Conditional});
       }
       lvalues.push(...computePatternLValues(value.lvalue.pattern));
       return {
@@ -614,14 +627,14 @@ function computeMemoizationInputs(
         rvalues: [value.value],
       };
     }
-    case "ComputedLoad":
-    case "PropertyLoad": {
+    case 'ComputedLoad':
+    case 'PropertyLoad': {
       const level = options.forceMemoizePrimitives
         ? MemoizationLevel.Memoized
         : MemoizationLevel.Conditional;
       return {
         // Indirection for the inner value, memoized if the value is
-        lvalues: lvalue !== null ? [{ place: lvalue, level }] : [],
+        lvalues: lvalue !== null ? [{place: lvalue, level}] : [],
         /*
          * Only the object is aliased to the result, and the result only needs to be
          * memoized if the object is
@@ -629,27 +642,27 @@ function computeMemoizationInputs(
         rvalues: [value.object],
       };
     }
-    case "ComputedStore": {
+    case 'ComputedStore': {
       /*
        * The object being stored to acts as an lvalue (it aliases the value), but
        * the computed key is not aliased
        */
       const lvalues = [
-        { place: value.object, level: MemoizationLevel.Conditional },
+        {place: value.object, level: MemoizationLevel.Conditional},
       ];
       if (lvalue !== null) {
-        lvalues.push({ place: lvalue, level: MemoizationLevel.Conditional });
+        lvalues.push({place: lvalue, level: MemoizationLevel.Conditional});
       }
       return {
         lvalues,
         rvalues: [value.value],
       };
     }
-    case "OptionalExpression": {
+    case 'OptionalExpression': {
       // Indirection for the inner value, memoized if the value is
       const lvalues = [];
       if (lvalue !== null) {
-        lvalues.push({ place: lvalue, level: MemoizationLevel.Conditional });
+        lvalues.push({place: lvalue, level: MemoizationLevel.Conditional});
       }
       return {
         lvalues: lvalues,
@@ -658,15 +671,14 @@ function computeMemoizationInputs(
         ],
       };
     }
-    case "CallExpression": {
+    case 'TaggedTemplateExpression': {
       const signature = getFunctionCallSignature(
         env,
-        value.callee.identifier.type
+        value.tag.identifier.type,
       );
-      const operands = [...eachReactiveValueOperand(value)];
       let lvalues = [];
       if (lvalue !== null) {
-        lvalues.push({ place: lvalue, level: MemoizationLevel.Memoized });
+        lvalues.push({place: lvalue, level: MemoizationLevel.Memoized});
       }
       if (signature?.noAlias === true) {
         return {
@@ -674,25 +686,25 @@ function computeMemoizationInputs(
           rvalues: [],
         };
       }
+      const operands = [...eachReactiveValueOperand(value)];
       lvalues.push(
         ...operands
-          .filter((operand) => isMutableEffect(operand.effect, operand.loc))
-          .map((place) => ({ place, level: MemoizationLevel.Memoized }))
+          .filter(operand => isMutableEffect(operand.effect, operand.loc))
+          .map(place => ({place, level: MemoizationLevel.Memoized})),
       );
       return {
         lvalues,
         rvalues: operands,
       };
     }
-    case "MethodCall": {
+    case 'CallExpression': {
       const signature = getFunctionCallSignature(
         env,
-        value.property.identifier.type
+        value.callee.identifier.type,
       );
-      const operands = [...eachReactiveValueOperand(value)];
       let lvalues = [];
       if (lvalue !== null) {
-        lvalues.push({ place: lvalue, level: MemoizationLevel.Memoized });
+        lvalues.push({place: lvalue, level: MemoizationLevel.Memoized});
       }
       if (signature?.noAlias === true) {
         return {
@@ -700,41 +712,67 @@ function computeMemoizationInputs(
           rvalues: [],
         };
       }
+      const operands = [...eachReactiveValueOperand(value)];
       lvalues.push(
         ...operands
-          .filter((operand) => isMutableEffect(operand.effect, operand.loc))
-          .map((place) => ({ place, level: MemoizationLevel.Memoized }))
+          .filter(operand => isMutableEffect(operand.effect, operand.loc))
+          .map(place => ({place, level: MemoizationLevel.Memoized})),
       );
       return {
         lvalues,
         rvalues: operands,
       };
     }
-    case "RegExpLiteral":
-    case "ObjectMethod":
-    case "FunctionExpression":
-    case "TaggedTemplateExpression":
-    case "ArrayExpression":
-    case "NewExpression":
-    case "ObjectExpression":
-    case "PropertyStore": {
+    case 'MethodCall': {
+      const signature = getFunctionCallSignature(
+        env,
+        value.property.identifier.type,
+      );
+      let lvalues = [];
+      if (lvalue !== null) {
+        lvalues.push({place: lvalue, level: MemoizationLevel.Memoized});
+      }
+      if (signature?.noAlias === true) {
+        return {
+          lvalues,
+          rvalues: [],
+        };
+      }
+      const operands = [...eachReactiveValueOperand(value)];
+      lvalues.push(
+        ...operands
+          .filter(operand => isMutableEffect(operand.effect, operand.loc))
+          .map(place => ({place, level: MemoizationLevel.Memoized})),
+      );
+      return {
+        lvalues,
+        rvalues: operands,
+      };
+    }
+    case 'RegExpLiteral':
+    case 'ObjectMethod':
+    case 'FunctionExpression':
+    case 'ArrayExpression':
+    case 'NewExpression':
+    case 'ObjectExpression':
+    case 'PropertyStore': {
       /*
        * All of these instructions may produce new values which must be memoized if
        * reachable from a return value. Any mutable rvalue may alias any other rvalue
        */
       const operands = [...eachReactiveValueOperand(value)];
       const lvalues = operands
-        .filter((operand) => isMutableEffect(operand.effect, operand.loc))
-        .map((place) => ({ place, level: MemoizationLevel.Memoized }));
+        .filter(operand => isMutableEffect(operand.effect, operand.loc))
+        .map(place => ({place, level: MemoizationLevel.Memoized}));
       if (lvalue !== null) {
-        lvalues.push({ place: lvalue, level: MemoizationLevel.Memoized });
+        lvalues.push({place: lvalue, level: MemoizationLevel.Memoized});
       }
       return {
         lvalues,
         rvalues: operands,
       };
     }
-    case "ReactiveFunctionValue": {
+    case 'ReactiveFunctionValue': {
       CompilerError.invariant(false, {
         reason: `Unexpected ReactiveFunctionValue node`,
         description: null,
@@ -742,7 +780,7 @@ function computeMemoizationInputs(
         suggestions: null,
       });
     }
-    case "UnsupportedNode": {
+    case 'UnsupportedNode': {
       CompilerError.invariant(false, {
         reason: `Unexpected unsupported node`,
         description: null,
@@ -753,7 +791,7 @@ function computeMemoizationInputs(
     default: {
       assertExhaustive(
         value,
-        `Unexpected value kind \`${(value as any).kind}\``
+        `Unexpected value kind \`${(value as any).kind}\``,
       );
     }
   }
@@ -762,19 +800,19 @@ function computeMemoizationInputs(
 function computePatternLValues(pattern: Pattern): Array<LValueMemoization> {
   const lvalues: Array<LValueMemoization> = [];
   switch (pattern.kind) {
-    case "ArrayPattern": {
+    case 'ArrayPattern': {
       for (const item of pattern.items) {
-        if (item.kind === "Identifier") {
-          lvalues.push({ place: item, level: MemoizationLevel.Conditional });
-        } else if (item.kind === "Spread") {
-          lvalues.push({ place: item.place, level: MemoizationLevel.Memoized });
+        if (item.kind === 'Identifier') {
+          lvalues.push({place: item, level: MemoizationLevel.Conditional});
+        } else if (item.kind === 'Spread') {
+          lvalues.push({place: item.place, level: MemoizationLevel.Memoized});
         }
       }
       break;
     }
-    case "ObjectPattern": {
+    case 'ObjectPattern': {
       for (const property of pattern.properties) {
-        if (property.kind === "ObjectProperty") {
+        if (property.kind === 'ObjectProperty') {
           lvalues.push({
             place: property.place,
             level: MemoizationLevel.Conditional,
@@ -791,7 +829,7 @@ function computePatternLValues(pattern: Pattern): Array<LValueMemoization> {
     default: {
       assertExhaustive(
         pattern,
-        `Unexpected pattern kind \`${(pattern as any).kind}\``
+        `Unexpected pattern kind \`${(pattern as any).kind}\``,
       );
     }
   }
@@ -817,7 +855,7 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
 
   override visitInstruction(
     instruction: ReactiveInstruction,
-    state: State
+    state: State,
   ): void {
     this.traverseInstruction(instruction, state);
 
@@ -826,20 +864,22 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
       this.env,
       instruction.value,
       instruction.lvalue,
-      this.options
+      this.options,
     );
 
     // Associate all the rvalues with the instruction's scope if it has one
     for (const operand of aliasing.rvalues) {
       const operandId =
-        state.definitions.get(operand.identifier.id) ?? operand.identifier.id;
+        state.definitions.get(operand.identifier.declarationId) ??
+        operand.identifier.declarationId;
       state.visitOperand(instruction.id, operand, operandId);
     }
 
     // Add the operands as dependencies of all lvalues.
-    for (const { place: lvalue, level } of aliasing.lvalues) {
+    for (const {place: lvalue, level} of aliasing.lvalues) {
       const lvalueId =
-        state.definitions.get(lvalue.identifier.id) ?? lvalue.identifier.id;
+        state.definitions.get(lvalue.identifier.declarationId) ??
+        lvalue.identifier.declarationId;
       let node = state.identifiers.get(lvalueId);
       if (node === undefined) {
         node = {
@@ -858,7 +898,8 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
        */
       for (const operand of aliasing.rvalues) {
         const operandId =
-          state.definitions.get(operand.identifier.id) ?? operand.identifier.id;
+          state.definitions.get(operand.identifier.declarationId) ??
+          operand.identifier.declarationId;
         if (operandId === lvalueId) {
           continue;
         }
@@ -868,23 +909,23 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
       state.visitOperand(instruction.id, lvalue, lvalueId);
     }
 
-    if (instruction.value.kind === "LoadLocal" && instruction.lvalue !== null) {
+    if (instruction.value.kind === 'LoadLocal' && instruction.lvalue !== null) {
       state.definitions.set(
-        instruction.lvalue.identifier.id,
-        instruction.value.place.identifier.id
+        instruction.lvalue.identifier.declarationId,
+        instruction.value.place.identifier.declarationId,
       );
     } else if (
-      instruction.value.kind === "CallExpression" ||
-      instruction.value.kind === "MethodCall"
+      instruction.value.kind === 'CallExpression' ||
+      instruction.value.kind === 'MethodCall'
     ) {
       let callee =
-        instruction.value.kind === "CallExpression"
+        instruction.value.kind === 'CallExpression'
           ? instruction.value.callee
           : instruction.value.property;
       if (getHookKind(state.env, callee.identifier) != null) {
         const signature = getFunctionCallSignature(
           this.env,
-          callee.identifier.type
+          callee.identifier.type,
         );
         /*
          * Hook values are assumed to escape by default since they can be inputs
@@ -896,8 +937,8 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
           return;
         }
         for (const operand of instruction.value.args) {
-          const place = operand.kind === "Spread" ? operand.place : operand;
-          state.escapingValues.add(place.identifier.id);
+          const place = operand.kind === 'Spread' ? operand.place : operand;
+          state.escapingValues.add(place.identifier.declarationId);
         }
       }
     }
@@ -905,25 +946,30 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
 
   override visitTerminal(
     stmt: ReactiveTerminalStatement<ReactiveTerminal>,
-    state: State
+    state: State,
   ): void {
     this.traverseTerminal(stmt, state);
 
-    if (stmt.terminal.kind === "return") {
-      state.escapingValues.add(stmt.terminal.value.identifier.id);
+    if (stmt.terminal.kind === 'return') {
+      state.escapingValues.add(stmt.terminal.value.identifier.declarationId);
     }
   }
 }
 
 // Prune reactive scopes that do not have any memoized outputs
 class PruneScopesTransform extends ReactiveFunctionTransform<
-  Set<IdentifierId>
+  Set<DeclarationId>
 > {
   prunedScopes: Set<ScopeId> = new Set();
+  /**
+   * Track reassignments so we can correctly set `pruned` flags for
+   * inlined useMemos.
+   */
+  reassignments: Map<DeclarationId, Set<Identifier>> = new Map();
 
   override transformScope(
     scopeBlock: ReactiveScopeBlock,
-    state: Set<IdentifierId>
+    state: Set<DeclarationId>,
   ): Transformed<ReactiveStatement> {
     this.visitScope(scopeBlock, state);
 
@@ -932,53 +978,78 @@ class PruneScopesTransform extends ReactiveFunctionTransform<
      * is early-returned from within the scope. For now we intentionaly keep
      * these scopes, and let them get pruned later by PruneUnusedScopes
      * _after_ handling the early-return case in PropagateEarlyReturns.
+     *
+     * Also keep the scope if an early return was created by some earlier pass,
+     * which may happen in alternate compiler configurations.
      */
     if (
-      scopeBlock.scope.declarations.size === 0 &&
-      scopeBlock.scope.reassignments.size === 0
+      (scopeBlock.scope.declarations.size === 0 &&
+        scopeBlock.scope.reassignments.size === 0) ||
+      scopeBlock.scope.earlyReturnValue !== null
     ) {
-      return { kind: "keep" };
+      return {kind: 'keep'};
     }
 
     const hasMemoizedOutput =
-      Array.from(scopeBlock.scope.declarations.keys()).some((id) =>
-        state.has(id)
+      Array.from(scopeBlock.scope.declarations.values()).some(decl =>
+        state.has(decl.identifier.declarationId),
       ) ||
-      Array.from(scopeBlock.scope.reassignments).some((identifier) =>
-        state.has(identifier.id)
+      Array.from(scopeBlock.scope.reassignments).some(identifier =>
+        state.has(identifier.declarationId),
       );
     if (hasMemoizedOutput) {
-      return { kind: "keep" };
+      return {kind: 'keep'};
     } else {
       this.prunedScopes.add(scopeBlock.scope.id);
       return {
-        kind: "replace-many",
+        kind: 'replace-many',
         value: scopeBlock.instructions,
       };
     }
   }
 
+  /**
+   * If we pruned the scope for a non-escaping value, we know it doesn't
+   * need to be memoized. Remove associated `Memoize` instructions so that
+   * we don't report false positives on "missing" memoization of these values.
+   */
   override transformInstruction(
     instruction: ReactiveInstruction,
-    state: Set<IdentifierId>
+    state: Set<DeclarationId>,
   ): Transformed<ReactiveStatement> {
     this.traverseInstruction(instruction, state);
 
-    /**
-     * If we pruned the scope for a non-escaping value, we know it doesn't
-     * need to be memoized. Remove associated `Memoize` instructions so that
-     * we don't report false positives on "missing" memoization of these values.
-     */
-    if (instruction.value.kind === "FinishMemoize") {
-      const identifier = instruction.value.decl.identifier;
+    const value = instruction.value;
+    if (value.kind === 'StoreLocal' && value.lvalue.kind === 'Reassign') {
+      const ids = getOrInsertDefault(
+        this.reassignments,
+        value.lvalue.place.identifier.declarationId,
+        new Set(),
+      );
+      ids.add(value.value.identifier);
+    } else if (value.kind === 'FinishMemoize') {
+      let decls;
+      if (value.decl.identifier.scope == null) {
+        /**
+         * If the manual memo was a useMemo that got inlined, iterate through
+         * all reassignments to the iife temporary to ensure they're memoized.
+         */
+        decls = this.reassignments.get(value.decl.identifier.declarationId) ?? [
+          value.decl.identifier,
+        ];
+      } else {
+        decls = [value.decl.identifier];
+      }
+
       if (
-        identifier.scope !== null &&
-        this.prunedScopes.has(identifier.scope.id)
+        [...decls].every(
+          decl => decl.scope == null || this.prunedScopes.has(decl.scope.id),
+        )
       ) {
-        instruction.value.pruned = true;
+        value.pruned = true;
       }
     }
 
-    return { kind: "keep" };
+    return {kind: 'keep'};
   }
 }

@@ -36,7 +36,7 @@ function hoisting(cond) {
         items.push(bar());
       };
 
-      const bar = () => true;
+      const bar = _temp;
       foo();
     }
     $[0] = cond;
@@ -45,6 +45,9 @@ function hoisting(cond) {
     items = $[1];
   }
   return items;
+}
+function _temp() {
+  return true;
 }
 
 export const FIXTURE_ENTRYPOINT = {

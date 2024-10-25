@@ -2,9 +2,9 @@
 ## Input
 
 ```javascript
-function useFoo(props: { value: { x: string; y: string } | null }) {
+function useFoo(props: {value: {x: string; y: string} | null}) {
   const value = props.value;
-  return createArray(value?.x, value?.y)?.join(", ");
+  return createArray(value?.x, value?.y)?.join(', ');
 }
 
 function createArray<T>(...args: Array<T>): Array<T> {
@@ -13,7 +13,7 @@ function createArray<T>(...args: Array<T>): Array<T> {
 
 export const FIXTURE_ENTRYPONT = {
   fn: useFoo,
-  props: [{ value: null }],
+  props: [{value: null}],
 };
 
 ```
@@ -22,9 +22,9 @@ export const FIXTURE_ENTRYPONT = {
 ## Error
 
 ```
-  1 | function useFoo(props: { value: { x: string; y: string } | null }) {
+  1 | function useFoo(props: {value: {x: string; y: string} | null}) {
   2 |   const value = props.value;
-> 3 |   return createArray(value?.x, value?.y)?.join(", ");
+> 3 |   return createArray(value?.x, value?.y)?.join(', ');
     |                                ^^^^^^^^ Todo: Unexpected terminal kind `optional` for optional test block (3:3)
   4 | }
   5 |

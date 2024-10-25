@@ -38,6 +38,7 @@ import {postpone} from './ReactPostpone';
 import {
   getCacheForType,
   useCallback,
+  unstable_useContextWithBailout,
   useContext,
   useEffect,
   useEffectEvent,
@@ -62,6 +63,7 @@ import ReactSharedInternals from './ReactSharedInternalsClient';
 import {startTransition} from './ReactStartTransition';
 import {act} from './ReactAct';
 import {captureOwnerStack} from './ReactOwnerStack';
+import ReactCompilerRuntime from './ReactCompilerRuntime';
 
 const Children = {
   map,
@@ -83,6 +85,7 @@ export {
   cache,
   postpone as unstable_postpone,
   useCallback,
+  unstable_useContextWithBailout,
   useContext,
   useEffect,
   useEffectEvent as experimental_useEffectEvent,
@@ -107,6 +110,7 @@ export {
   isValidElement,
   ReactVersion as version,
   ReactSharedInternals as __CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
+  ReactCompilerRuntime as __COMPILER_RUNTIME,
   // Concurrent Mode
   useTransition,
   startTransition,

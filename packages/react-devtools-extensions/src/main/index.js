@@ -21,11 +21,12 @@ import {
   setBrowserSelectionFromReact,
   setReactSelectionFromBrowser,
 } from './elementSelection';
+import {viewAttributeSource} from './sourceSelection';
+
 import {startReactPolling} from './reactPolling';
 import cloneStyleTags from './cloneStyleTags';
 import fetchFileWithCaching from './fetchFileWithCaching';
 import injectBackendManager from './injectBackendManager';
-import syncSavedPreferences from './syncSavedPreferences';
 import registerEventsLogger from './registerEventsLogger';
 import getProfilingFlags from './getProfilingFlags';
 import debounce from './debounce';
@@ -58,7 +59,7 @@ function createBridge() {
   });
 
   bridge.addListener(
-    'syncSelectionToNativeElementsPanel',
+    'syncSelectionToBuiltinElementsPanel',
     setBrowserSelectionFromReact,
   );
 
@@ -101,6 +102,10 @@ function createBridgeAndStore() {
     supportsClickToInspect: true,
   });
 
+  store.addListener('settingsUpdated', settings => {
+    chrome.storage.local.set(settings);
+  });
+
   if (!isProfiling) {
     // We previously stored this in performCleanup function
     store.profilerStore.profilingData = profilingData;
@@ -113,19 +118,7 @@ function createBridgeAndStore() {
   const viewAttributeSourceFunction = (id, path) => {
     const rendererID = store.getRendererIDForElement(id);
     if (rendererID != null) {
-      // Ask the renderer interface to find the specified attribute,
-      // and store it as a global variable on the window.
-      bridge.send('viewAttributeSource', {id, path, rendererID});
-
-      setTimeout(() => {
-        // Ask Chrome to display the location of the attribute,
-        // assuming the renderer found a match.
-        chrome.devtools.inspectedWindow.eval(`
-                if (window.$attribute != null) {
-                  inspect(window.$attribute);
-                }
-              `);
-      }, 100);
+      viewAttributeSource(rendererID, id, path);
     }
   };
 
@@ -195,7 +188,7 @@ function createComponentsPanel() {
   }
 
   chrome.devtools.panels.create(
-    __IS_CHROME__ || __IS_EDGE__ ? '⚛️ Components' : 'Components',
+    __IS_CHROME__ || __IS_EDGE__ ? 'Components ⚛' : 'Components',
     __IS_EDGE__ ? 'icons/production.svg' : '',
     'panel.html',
     createdPanel => {
@@ -234,7 +227,7 @@ function createProfilerPanel() {
   }
 
   chrome.devtools.panels.create(
-    __IS_CHROME__ || __IS_EDGE__ ? '⚛️ Profiler' : 'Profiler',
+    __IS_CHROME__ || __IS_EDGE__ ? 'Profiler ⚛' : 'Profiler',
     __IS_EDGE__ ? 'icons/production.svg' : '',
     'panel.html',
     createdPanel => {
@@ -403,10 +396,6 @@ let root = null;
 
 let port = null;
 
-// Re-initialize saved filters on navigation,
-// since global values stored on window get reset in this case.
-chrome.devtools.network.onNavigated.addListener(syncSavedPreferences);
-
 // In case when multiple navigation events emitted in a short period of time
 // This debounced callback primarily used to avoid mounting React DevTools multiple times, which results
 // into subscribing to the same events from Bridge and window multiple times
@@ -436,5 +425,4 @@ if (__IS_FIREFOX__) {
 
 connectExtensionPort();
 
-syncSavedPreferences();
 mountReactDevToolsWhenReactHasLoaded();

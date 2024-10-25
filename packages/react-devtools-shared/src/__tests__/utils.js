@@ -284,6 +284,19 @@ export function createHOCFilter(isEnabled: boolean = true) {
   };
 }
 
+export function createEnvironmentNameFilter(
+  env: string,
+  isEnabled: boolean = true,
+) {
+  const Types = require('react-devtools-shared/src/frontend/types');
+  return {
+    type: Types.ComponentFilterEnvironmentName,
+    isEnabled,
+    isValid: true,
+    value: env,
+  };
+}
+
 export function createElementTypeFilter(
   elementType: ElementType,
   isEnabled: boolean = true,
@@ -463,6 +476,9 @@ export function overrideFeatureFlags(overrideFlags) {
 }
 
 export function normalizeCodeLocInfo(str) {
+  if (typeof str === 'object' && str !== null) {
+    str = str.stack;
+  }
   if (typeof str !== 'string') {
     return str;
   }

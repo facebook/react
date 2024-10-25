@@ -9,7 +9,7 @@ function Component(props) {
   if (props.cond) {
     y = {};
   } else {
-    y = { a: props.a };
+    y = {a: props.a};
   }
   // This should be inferred as `<store> y` s.t. `x` can still
   // be independently memoized. *But* this also must properly
@@ -22,7 +22,7 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ cond: false, a: "a!" }],
+  params: [{cond: false, a: 'a!'}],
 };
 
 ```
@@ -32,7 +32,7 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @debug
 function Component(props) {
-  const $ = _c(5);
+  const $ = _c(3);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = {};
@@ -41,8 +41,9 @@ function Component(props) {
     t0 = $[0];
   }
   const x = t0;
-  let y;
+  let t1;
   if ($[1] !== props) {
+    let y;
     if (props.cond) {
       y = {};
     } else {
@@ -50,18 +51,12 @@ function Component(props) {
     }
 
     y.x = x;
-    $[1] = props;
-    $[2] = y;
-  } else {
-    y = $[2];
-  }
-  let t1;
-  if ($[3] !== y) {
+
     t1 = [x, y];
-    $[3] = y;
-    $[4] = t1;
+    $[1] = props;
+    $[2] = t1;
   } else {
-    t1 = $[4];
+    t1 = $[2];
   }
   return t1;
 }

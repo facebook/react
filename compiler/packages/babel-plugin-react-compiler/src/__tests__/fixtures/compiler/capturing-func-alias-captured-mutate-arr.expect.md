@@ -3,8 +3,8 @@
 
 ```javascript
 function component(foo, bar) {
-  let x = { foo };
-  let y = { bar };
+  let x = {foo};
+  let y = {bar};
   const f0 = function () {
     let a = [y];
     let b = x;

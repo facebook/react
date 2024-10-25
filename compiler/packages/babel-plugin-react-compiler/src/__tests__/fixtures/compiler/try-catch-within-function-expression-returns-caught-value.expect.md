@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { throwInput } from "shared-runtime";
+import {throwInput} from 'shared-runtime';
 
 function Component(props) {
   const callback = () => {
@@ -17,7 +17,7 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: 42 }],
+  params: [{value: 42}],
 };
 
 ```

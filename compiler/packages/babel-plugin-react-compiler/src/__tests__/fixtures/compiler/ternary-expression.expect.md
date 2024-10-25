@@ -10,8 +10,8 @@ function ternary(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: ternary,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: ['TodoAdd'],
+  isComponent: 'TodoAdd',
 };
 
 ```
@@ -20,7 +20,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 function ternary(props) {
-  const a = props.a && props.b ? props.c || props.d : props.e ?? props.f;
+  const a = props.a && props.b ? props.c || props.d : (props.e ?? props.f);
   const b = props.a ? (props.b && props.c ? props.d : props.e) : props.f;
   return a ? b : null;
 }

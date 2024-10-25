@@ -7,7 +7,7 @@
 // semantics (with respect to nullthrows).
 // deps: {`props.a`, `props.a.b`} can further reduce to just `props.a`
 
-import { identity } from "shared-runtime";
+import {identity} from 'shared-runtime';
 
 // ordering of accesses should not matter
 function useConditionalSubpath1(props, cond) {
@@ -21,7 +21,7 @@ function useConditionalSubpath1(props, cond) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useConditionalSubpath1,
-  params: [{ a: { b: 3 } }, false],
+  params: [{a: {b: 3}}, false],
 };
 
 ```

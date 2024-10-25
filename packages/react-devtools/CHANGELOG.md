@@ -4,6 +4,61 @@
 
 ---
 
+### 6.0.1
+October 15, 2024
+
+* Fix React Compiler badging ([poteto](https://github.com/poteto) in [#31196](https://github.com/facebook/react/pull/31196))
+* fix[react-devtools]: record timeline data only when supported ([hoxyq](https://github.com/hoxyq) in [#31154](https://github.com/facebook/react/pull/31154))
+* fix[react-devtools]: remove all listeners when Agent is shutdown ([hoxyq](https://github.com/hoxyq) in [#31151](https://github.com/facebook/react/pull/31151))
+* fix[react-devtools]: wrap key string in preformatted text html element ([hoxyq](https://github.com/hoxyq) in [#31153](https://github.com/facebook/react/pull/31153))
+* fix[react-devtools]: request hook initialization inside http server response ([hoxyq](https://github.com/hoxyq) in [#31102](https://github.com/facebook/react/pull/31102))
+* refactor: allow custom impl of backend reload-to-profile support check ([EdmondChuiHW](https://github.com/EdmondChuiHW) in [#31048](https://github.com/facebook/react/pull/31048))
+
+---
+
+### 6.0.0
+September 25, 2024
+
+#### Features
+* Support Server Components in Tree ([sebmarkbage](https://github.com/sebmarkbage) in [#30684](https://github.com/facebook/react/pull/30684))
+* feat: expose installHook with settings argument from react-devtools-core/backend ([hoxyq](https://github.com/hoxyq) in [#30987](https://github.com/facebook/react/pull/30987))
+* Add Filtering of Environment Names ([sebmarkbage](https://github.com/sebmarkbage) in [#30850](https://github.com/facebook/react/pull/30850))
+* Support secondary environment name when it changes ([sebmarkbage](https://github.com/sebmarkbage) in [#30842](https://github.com/facebook/react/pull/30842))
+* Filter Server Components ([sebmarkbage](https://github.com/sebmarkbage) in [#30839](https://github.com/facebook/react/pull/30839))
+* Make function inspection instant ([sebmarkbage](https://github.com/sebmarkbage) in [#30786](https://github.com/facebook/react/pull/30786))
+* Make Functions Clickable to Jump to Definition ([sebmarkbage](https://github.com/sebmarkbage) in [#30769](https://github.com/facebook/react/pull/30769))
+* [Flight/DevTools] Pass the Server Component's "key" as Part of the ReactComponentInfo ([sebmarkbage](https://github.com/sebmarkbage) in [#30703](https://github.com/facebook/react/pull/30703))
+* Make Element Inspection Feel Snappy ([sebmarkbage](https://github.com/sebmarkbage) in [#30555](https://github.com/facebook/react/pull/30555))
+* Print component stacks as error objects to get source mapping ([sebmarkbage](https://github.com/sebmarkbage) in [#30289](https://github.com/facebook/react/pull/30289))
+
+#### Bugfixes
+* Fix: profiling crashes #30661 #28838 ([EdmondChuiHW](https://github.com/EdmondChuiHW) in [#31024](https://github.com/facebook/react/pull/31024))
+* chore: remove settings manager from react-devtools-core ([hoxyq](https://github.com/hoxyq) in [#30986](https://github.com/facebook/react/pull/30986))
+* fix[react-devtools/extensions]: fixed tabs API calls and displaying restricted access popup ([hoxyq](https://github.com/hoxyq) in [#30825](https://github.com/facebook/react/pull/30825))
+* fix[react-devtools/InspectedElement]: fixed border stylings when some of the panels are not rendered ([hoxyq](https://github.com/hoxyq) in [#30676](https://github.com/facebook/react/pull/30676))
+* fix: path handling in react devtools ([Jack-Works](https://github.com/Jack-Works) in [#29199](https://github.com/facebook/react/pull/29199))
+
+#### Other
+* feat: display message if user ended up opening hook script ([hoxyq](https://github.com/hoxyq) in [#31000](https://github.com/facebook/react/pull/31000))
+* refactor[react-devtools]: move console patching to global hook ([hoxyq](https://github.com/hoxyq) in [#30596](https://github.com/facebook/react/pull/30596))
+* refactor[react-devtools]: initialize renderer interface early ([hoxyq](https://github.com/hoxyq) in [#30946](https://github.com/facebook/react/pull/30946))
+* Use Unicode Atom Symbol instead of Atom Emoji ([sebmarkbage](https://github.com/sebmarkbage) in [#30832](https://github.com/facebook/react/pull/30832))
+* feat[react-devtools]: support Manifest v3 for Firefox extension ([hoxyq](https://github.com/hoxyq) in [#30824](https://github.com/facebook/react/pull/30824))
+* Enable pointEvents while scrolling ([sebmarkbage](https://github.com/sebmarkbage) in [#30560](https://github.com/facebook/react/pull/30560))
+
+---
+
+### 5.3.1
+July 3, 2024
+
+* chore[react-devtools/renderer]: dont show strict mode warning for prod renderer builds ([hoxyq](https://github.com/hoxyq) in [#30158](https://github.com/facebook/react/pull/30158))
+* chore[react-devtools/ui]: fix strict mode badge styles ([hoxyq](https://github.com/hoxyq) in [#30159](https://github.com/facebook/react/pull/30159))
+* fix[react-devtools]: restore original args when recording errors ([hoxyq](https://github.com/hoxyq) in [#30091](https://github.com/facebook/react/pull/30091))
+* Read constructor name more carefully ([LoganDark](https://github.com/LoganDark) in [#29954](https://github.com/facebook/react/pull/29954))
+* refactor[react-devtools/extensions]: dont debounce cleanup logic on navigation ([hoxyq](https://github.com/hoxyq) in [#30027](https://github.com/facebook/react/pull/30027))
+
+---
+
 ### 5.3.0
 June 17, 2024
 

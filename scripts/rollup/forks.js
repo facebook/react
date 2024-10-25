@@ -65,6 +65,12 @@ const forks = Object.freeze({
     if (entry === 'react/src/ReactServer.js') {
       return './packages/react/src/ReactSharedInternalsServer.js';
     }
+    if (entry === 'react-markup/src/ReactMarkupServer.js') {
+      // Inside the ReactMarkupServer render we don't refer to any shared internals
+      // but instead use our own internal copy of the state because you cannot use
+      // any of this state from a component anyway. E.g. you can't use a client hook.
+      return './packages/react/src/ReactSharedInternalsClient.js';
+    }
     if (bundle.condition === 'react-server') {
       return './packages/react-server/src/ReactSharedInternalsServer.js';
     }
@@ -93,7 +99,9 @@ const forks = Object.freeze({
       entry === 'react-dom' ||
       entry === 'react-dom/src/ReactDOMFB.js' ||
       entry === 'react-dom/src/ReactDOMTestingFB.js' ||
-      entry === 'react-dom/src/ReactDOMServer.js'
+      entry === 'react-dom/src/ReactDOMServer.js' ||
+      entry === 'react-markup/src/ReactMarkupClient.js' ||
+      entry === 'react-markup/src/ReactMarkupServer.js'
     ) {
       if (
         bundleType === FB_WWW_DEV ||
@@ -201,6 +209,9 @@ const forks = Object.freeze({
     switch (bundleType) {
       case FB_WWW_DEV:
         return './packages/shared/forks/consoleWithStackDev.www.js';
+      case RN_OSS_DEV:
+      case RN_FB_DEV:
+        return './packages/shared/forks/consoleWithStackDev.rn.js';
       default:
         return null;
     }

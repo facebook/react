@@ -26,7 +26,7 @@
 declare const $$$config: any;
 
 export opaque type ModuleLoading = mixed;
-export opaque type SSRModuleMap = mixed;
+export opaque type ServerConsumerModuleMap = mixed;
 export opaque type ServerManifest = mixed;
 export opaque type ServerReferenceId = string;
 export opaque type ClientReferenceMetadata = mixed;
@@ -48,4 +48,7 @@ export const createStringDecoder = $$$config.createStringDecoder;
 export const readPartialStringChunk = $$$config.readPartialStringChunk;
 export const readFinalStringChunk = $$$config.readFinalStringChunk;
 
-export const printToConsole = $$$config.printToConsole;
+export const bindToConsole = $$$config.bindToConsole;
+
+export const rendererVersion = $$$config.rendererVersion;
+export const rendererPackageName = $$$config.rendererPackageName;

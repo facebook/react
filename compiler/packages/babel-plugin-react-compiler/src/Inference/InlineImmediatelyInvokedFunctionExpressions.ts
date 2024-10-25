@@ -8,7 +8,6 @@
 import {
   BasicBlock,
   BlockId,
-  Effect,
   Environment,
   FunctionExpression,
   GeneratedSource,
@@ -19,13 +18,16 @@ import {
   LabelTerminal,
   Place,
   makeInstructionId,
-  makeType,
   promoteTemporary,
   reversePostorderBlocks,
-} from "../HIR";
-import { markInstructionIds, markPredecessors } from "../HIR/HIRBuilder";
-import { eachInstructionValueOperand } from "../HIR/visitors";
-import { retainWhere } from "../Utils/utils";
+} from '../HIR';
+import {
+  createTemporaryPlace,
+  markInstructionIds,
+  markPredecessors,
+} from '../HIR/HIRBuilder';
+import {eachInstructionValueOperand} from '../HIR/visitors';
+import {retainWhere} from '../Utils/utils';
 
 /*
  * Inlines immediately invoked function expressions (IIFEs) to allow more fine-grained memoization
@@ -72,7 +74,7 @@ import { retainWhere } from "../Utils/utils";
  *    block (code following the CallExpression).
  */
 export function inlineImmediatelyInvokedFunctionExpressions(
-  fn: HIRFunction
+  fn: HIRFunction,
 ): void {
   // Track all function expressions that are assigned to a temporary
   const functions = new Map<IdentifierId, FunctionExpression>();
@@ -91,13 +93,13 @@ export function inlineImmediatelyInvokedFunctionExpressions(
     for (let ii = 0; ii < block.instructions.length; ii++) {
       const instr = block.instructions[ii]!;
       switch (instr.value.kind) {
-        case "FunctionExpression": {
+        case 'FunctionExpression': {
           if (instr.lvalue.identifier.name === null) {
             functions.set(instr.lvalue.identifier.id, instr.value);
           }
           break;
         }
-        case "CallExpression": {
+        case 'CallExpression': {
           if (instr.value.args.length !== 0) {
             // We don't support inlining when there are arguments
             continue;
@@ -146,7 +148,7 @@ export function inlineImmediatelyInvokedFunctionExpressions(
           const newTerminal: LabelTerminal = {
             block: body.loweredFunc.func.body.entry,
             id: makeInstructionId(0),
-            kind: "label",
+            kind: 'label',
             fallthrough: continuationBlockId,
             loc: block.terminal.loc,
           };
@@ -193,7 +195,7 @@ export function inlineImmediatelyInvokedFunctionExpressions(
     for (const [, block] of fn.body.blocks) {
       retainWhere(
         block.instructions,
-        (instr) => !inlinedFunctions.has(instr.lvalue.identifier.id)
+        instr => !inlinedFunctions.has(instr.lvalue.identifier.id),
       );
     }
 
@@ -216,42 +218,26 @@ function rewriteBlock(
   env: Environment,
   block: BasicBlock,
   returnTarget: BlockId,
-  returnValue: Place
+  returnValue: Place,
 ): void {
-  const { terminal } = block;
-  if (terminal.kind !== "return") {
+  const {terminal} = block;
+  if (terminal.kind !== 'return') {
     return;
   }
   block.instructions.push({
     id: makeInstructionId(0),
     loc: terminal.loc,
-    lvalue: {
-      effect: Effect.Unknown,
-      identifier: {
-        id: env.nextIdentifierId,
-        mutableRange: {
-          start: makeInstructionId(0),
-          end: makeInstructionId(0),
-        },
-        name: null,
-        scope: null,
-        type: makeType(),
-        loc: terminal.loc,
-      },
-      kind: "Identifier",
-      reactive: false,
-      loc: terminal.loc,
-    },
+    lvalue: createTemporaryPlace(env, terminal.loc),
     value: {
-      kind: "StoreLocal",
-      lvalue: { kind: InstructionKind.Reassign, place: { ...returnValue } },
+      kind: 'StoreLocal',
+      lvalue: {kind: InstructionKind.Reassign, place: {...returnValue}},
       value: terminal.value,
       type: null,
       loc: terminal.loc,
     },
   });
   block.terminal = {
-    kind: "goto",
+    kind: 'goto',
     block: returnTarget,
     id: makeInstructionId(0),
     variant: GotoVariant.Break,
@@ -262,30 +248,14 @@ function rewriteBlock(
 function declareTemporary(
   env: Environment,
   block: BasicBlock,
-  result: Place
+  result: Place,
 ): void {
   block.instructions.push({
     id: makeInstructionId(0),
     loc: GeneratedSource,
-    lvalue: {
-      effect: Effect.Unknown,
-      identifier: {
-        id: env.nextIdentifierId,
-        mutableRange: {
-          start: makeInstructionId(0),
-          end: makeInstructionId(0),
-        },
-        name: null,
-        scope: null,
-        type: makeType(),
-        loc: result.loc,
-      },
-      kind: "Identifier",
-      reactive: false,
-      loc: GeneratedSource,
-    },
+    lvalue: createTemporaryPlace(env, result.loc),
     value: {
-      kind: "DeclareLocal",
+      kind: 'DeclareLocal',
       lvalue: {
         place: result,
         kind: InstructionKind.Let,

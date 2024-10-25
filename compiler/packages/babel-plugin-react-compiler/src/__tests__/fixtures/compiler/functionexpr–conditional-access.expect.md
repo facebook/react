@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enableTreatFunctionDepsAsConditional
+// @enableTreatFunctionDepsAsConditional @enablePropagateDepsInHIR:false
 function Component(props) {
   function getLength() {
     return props.bar.length;
@@ -13,7 +13,7 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ bar: null }],
+  params: [{bar: null}],
 };
 
 ```
@@ -21,7 +21,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enableTreatFunctionDepsAsConditional
+import { c as _c } from "react/compiler-runtime"; // @enableTreatFunctionDepsAsConditional @enablePropagateDepsInHIR:false
 function Component(props) {
   const $ = _c(5);
   let t0;

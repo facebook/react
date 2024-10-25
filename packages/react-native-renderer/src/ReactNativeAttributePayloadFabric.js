@@ -14,10 +14,7 @@ import {
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 import isArray from 'shared/isArray';
 
-import {
-  enableAddPropertiesFastPath,
-  enableShallowPropDiffing,
-} from 'shared/ReactFeatureFlags';
+import {enableShallowPropDiffing} from 'shared/ReactFeatureFlags';
 
 import type {AttributeConfiguration} from './ReactNativeTypes';
 
@@ -464,10 +461,6 @@ function fastAddProperties(
   for (const propKey in props) {
     const prop = props[propKey];
 
-    if (prop === undefined) {
-      continue;
-    }
-
     const attributeConfig = ((validAttributes[
       propKey
     ]: any): AttributeConfiguration);
@@ -478,7 +471,14 @@ function fastAddProperties(
 
     let newValue;
 
-    if (typeof prop === 'function') {
+    if (prop === undefined) {
+      // Discard the prop if it was previously defined.
+      if (payload && payload[propKey] !== undefined) {
+        newValue = null;
+      } else {
+        continue;
+      }
+    } else if (typeof prop === 'function') {
       // A function prop. It represents an event handler. Pass it to native as 'true'.
       newValue = true;
     } else if (typeof attributeConfig !== 'object') {
@@ -534,11 +534,7 @@ export function create(
   props: Object,
   validAttributes: AttributeConfiguration,
 ): null | Object {
-  if (enableAddPropertiesFastPath) {
-    return fastAddProperties(null, props, validAttributes);
-  } else {
-    return addProperties(null, props, validAttributes);
-  }
+  return fastAddProperties(null, props, validAttributes);
 }
 
 export function diff(

@@ -30,7 +30,7 @@ import {
   describeClassComponentFrame,
   describeDebugInfoFrame,
 } from 'shared/ReactComponentStackFrame';
-import {formatOwnerStack} from './ReactFiberOwnerStack';
+import {formatOwnerStack} from 'shared/ReactOwnerStackFrames';
 
 function describeFiber(fiber: Fiber): string {
   switch (fiber.tag) {
@@ -39,6 +39,7 @@ function describeFiber(fiber: Fiber): string {
     case HostComponent:
       return describeBuiltInComponentFrame(fiber.type);
     case LazyComponent:
+      // TODO: When we support Thenables as component types we should rename this.
       return describeBuiltInComponentFrame('Lazy');
     case SuspenseComponent:
       return describeBuiltInComponentFrame('Suspense');
@@ -90,26 +91,12 @@ function describeFunctionComponentFrameWithoutLineNumber(fn: Function): string {
   return name ? describeBuiltInComponentFrame(name) : '';
 }
 
-export function getOwnerStackByFiberInDev(
-  workInProgress: Fiber,
-  topStack: null | Error,
-): string {
+export function getOwnerStackByFiberInDev(workInProgress: Fiber): string {
   if (!enableOwnerStacks || !__DEV__) {
     return '';
   }
   try {
     let info = '';
-
-    if (topStack) {
-      // Prefix with a filtered version of the currently executing
-      // stack. This information will be available in the native
-      // stack regardless but it's hidden since we're reprinting
-      // the stack on top of it.
-      const formattedTopStack = formatOwnerStack(topStack);
-      if (formattedTopStack !== '') {
-        info += '\n' + formattedTopStack;
-      }
-    }
 
     if (workInProgress.tag === HostText) {
       // Text nodes never have an owner/stack because they're not created through JSX.
@@ -178,18 +165,14 @@ export function getOwnerStackByFiberInDev(
             info += '\n' + debugStack;
           }
         }
-      } else if (typeof owner.stack === 'string') {
+      } else if (owner.debugStack != null) {
         // Server Component
-        // The Server Component stack can come from a different VM that formats it different.
-        // Likely V8. Since Chrome based browsers support createTask which is going to use
-        // another code path anyway. I.e. this is likely NOT a V8 based browser.
-        // This will cause some of the stack to have different formatting.
-        // TODO: Normalize server component stacks to the client formatting.
-        if (owner.stack !== '') {
-          info += '\n' + owner.stack;
+        const ownerStack: Error = owner.debugStack;
+        owner = owner.owner;
+        if (owner && ownerStack) {
+          // TODO: Should we stash this somewhere for caching purposes?
+          info += '\n' + formatOwnerStack(ownerStack);
         }
-        const componentInfo: ReactComponentInfo = (owner: any);
-        owner = componentInfo.owner;
       } else {
         break;
       }

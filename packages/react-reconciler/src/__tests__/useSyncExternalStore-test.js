@@ -91,13 +91,9 @@ describe('useSyncExternalStore', () => {
 
       const Child = forwardRef(({store, label}, ref) => {
         const value = useSyncExternalStore(store.subscribe, store.getState);
-        useImperativeHandle(
-          ref,
-          () => {
-            return value;
-          },
-          [],
-        );
+        useImperativeHandle(ref, () => {
+          return value;
+        }, []);
         return <Text text={label + value} />;
       });
 
@@ -278,6 +274,8 @@ describe('useSyncExternalStore', () => {
         // This should a synchronous re-render of A using the updated value. In
         // this test, this causes A to suspend.
         'Suspend A',
+
+        ...(gate('enableSiblingPrerendering') ? ['B: Updated'] : []),
       ]);
       // Nothing has committed, because A suspended and no fallback
       // was provided.

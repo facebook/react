@@ -1,8 +1,8 @@
-import { identity } from "shared-runtime";
+import {identity} from 'shared-runtime';
 
 function Component(statusName) {
-  const { status, text } = foo(statusName);
-  const { bg, color } = getStyles(status);
+  const {status, text} = foo(statusName);
+  const {bg, color} = getStyles(status);
   return (
     <div className={identity(bg)}>
       <span className={identity(color)}>{[text]}</span>
@@ -19,12 +19,12 @@ function foo(name) {
 
 function getStyles(status) {
   return {
-    bg: "#eee8d5",
-    color: "#657b83",
+    bg: '#eee8d5',
+    color: '#657b83',
   };
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: ["Mofei"],
+  params: ['Mofei'],
 };

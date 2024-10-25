@@ -860,6 +860,9 @@ describe('ReactTransition', () => {
     assertLog([
       // Suspend.
       'Suspend! [Async]',
+
+      ...(gate('enableSiblingPrerendering') ? ['Normal pri: 0'] : []),
+
       'Loading...',
     ]);
     expect(root).toMatchRenderedOutput('(empty), Normal pri: 0');

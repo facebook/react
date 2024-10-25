@@ -5,12 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import * as React from "react";
-import { render } from "@testing-library/react";
-import { expectLogsAndClear, log } from "./expectLogs";
+import * as React from 'react';
+import {render} from '@testing-library/react';
+import {expectLogsAndClear, log} from './expectLogs';
 
-function Hello({ name }) {
-  const items = [1, 2, 3].map((item) => {
+function Hello({name}) {
+  const items = [1, 2, 3].map(item => {
     log(`recomputing ${item}`);
     return <div key={item}>Item {item}</div>;
   });
@@ -22,8 +22,8 @@ function Hello({ name }) {
   );
 }
 
-test("hello", () => {
-  const { asFragment, rerender } = render(<Hello name="World" />);
+test('hello', () => {
+  const {asFragment, rerender} = render(<Hello name="World" />);
 
   expect(asFragment()).toMatchInlineSnapshot(`
     <DocumentFragment>
@@ -45,7 +45,7 @@ test("hello", () => {
     </DocumentFragment>
   `);
 
-  expectLogsAndClear(["recomputing 1", "recomputing 2", "recomputing 3"]);
+  expectLogsAndClear(['recomputing 1', 'recomputing 2', 'recomputing 3']);
 
   rerender(<Hello name="Universe" />);
 
@@ -70,6 +70,6 @@ test("hello", () => {
   `);
 
   expectLogsAndClear(
-    __FORGET__ ? [] : ["recomputing 1", "recomputing 2", "recomputing 3"]
+    __FORGET__ ? [] : ['recomputing 1', 'recomputing 2', 'recomputing 3']
   );
 });

@@ -2,14 +2,14 @@
 ## Input
 
 ```javascript
-// @validateRefAccessDuringRender
-import { useCallback, useEffect, useRef, useState } from "react";
+// @validateRefAccessDuringRender @validateNoSetStateInRender:false
+import {useCallback, useEffect, useRef, useState} from 'react';
 
 function Component() {
   const ref = useRef(null);
   const [state, setState] = useState(false);
   const setRef = useCallback(() => {
-    ref.current = "Ok";
+    ref.current = 'Ok';
   }, []);
 
   useEffect(() => {
@@ -26,7 +26,7 @@ function Component() {
   return <Child key={String(state)} ref={ref} />;
 }
 
-function Child({ ref }) {
+function Child({ref}) {
   // This violates the rules of React, so we access the ref in a child
   // component
   return ref.current;
@@ -42,11 +42,11 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @validateRefAccessDuringRender
+import { c as _c } from "react/compiler-runtime"; // @validateRefAccessDuringRender @validateNoSetStateInRender:false
 import { useCallback, useEffect, useRef, useState } from "react";
 
 function Component() {
-  const $ = _c(9);
+  const $ = _c(7);
   const ref = useRef(null);
   const [state, setState] = useState(false);
   let t0;
@@ -60,47 +60,42 @@ function Component() {
   }
   const setRef = t0;
   let t1;
-  if ($[1] !== setRef) {
+  let t2;
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = () => {
       setRef();
     };
-    $[1] = setRef;
-    $[2] = t1;
-  } else {
-    t1 = $[2];
-  }
-  let t2;
-  if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
     t2 = [];
-    $[3] = t2;
+    $[1] = t1;
+    $[2] = t2;
   } else {
-    t2 = $[3];
+    t1 = $[1];
+    t2 = $[2];
   }
   useEffect(t1, t2);
   let t3;
   let t4;
-  if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
     t3 = () => {
       setState(true);
     };
     t4 = [];
-    $[4] = t3;
-    $[5] = t4;
+    $[3] = t3;
+    $[4] = t4;
   } else {
-    t3 = $[4];
-    t4 = $[5];
+    t3 = $[3];
+    t4 = $[4];
   }
   useEffect(t3, t4);
 
   const t5 = String(state);
   let t6;
-  if ($[6] !== t5 || $[7] !== ref) {
+  if ($[5] !== t5) {
     t6 = <Child key={t5} ref={ref} />;
-    $[6] = t5;
-    $[7] = ref;
-    $[8] = t6;
+    $[5] = t5;
+    $[6] = t6;
   } else {
-    t6 = $[8];
+    t6 = $[6];
   }
   return t6;
 }

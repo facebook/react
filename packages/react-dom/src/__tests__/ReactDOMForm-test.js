@@ -385,12 +385,16 @@ describe('ReactDOMForm', () => {
           </form>,
         );
       });
-    }).toErrorDev([
+    }).toErrorDev(
       'In HTML, <form> cannot be a descendant of <form>.\n' +
-        'This will cause a hydration error.' +
+        'This will cause a hydration error.\n' +
+        '\n' +
+        '> <form action={function outerAction}>\n' +
+        '    <input>\n' +
+        '>   <form action={function innerAction} ref={{current:null}}>\n' +
         '\n    in form (at **)' +
-        '\n    in form (at **)',
-    ]);
+        (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in form (at **)'),
+    );
 
     await submit(ref.current);
 
@@ -1455,13 +1459,23 @@ describe('ReactDOMForm', () => {
         </Suspense>,
       ),
     );
-    assertLog(['Suspend! [Count: 0]', 'Loading...']);
+    assertLog([
+      'Suspend! [Count: 0]',
+      'Loading...',
+
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Count: 0]'] : []),
+    ]);
     await act(() => resolveText('Count: 0'));
     assertLog(['Count: 0']);
 
     // Dispatch outside of a transition. This will trigger a loading state.
     await act(() => dispatch());
-    assertLog(['Suspend! [Count: 1]', 'Loading...']);
+    assertLog([
+      'Suspend! [Count: 1]',
+      'Loading...',
+
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Count: 1]'] : []),
+    ]);
     expect(container.textContent).toBe('Loading...');
 
     await act(() => resolveText('Count: 1'));
@@ -1491,7 +1505,11 @@ describe('ReactDOMForm', () => {
 
     const root = ReactDOMClient.createRoot(container);
     await act(() => root.render(<App />));
-    assertLog(['Suspend! [Count: 0]']);
+    assertLog([
+      'Suspend! [Count: 0]',
+
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Count: 0]'] : []),
+    ]);
     await act(() => resolveText('Count: 0'));
     assertLog(['Count: 0']);
 
@@ -1504,7 +1522,11 @@ describe('ReactDOMForm', () => {
         {withoutStack: true},
       ],
     ]);
-    assertLog(['Suspend! [Count: 1]']);
+    assertLog([
+      'Suspend! [Count: 1]',
+
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Count: 1]'] : []),
+    ]);
     expect(container.textContent).toBe('Count: 0');
   });
 

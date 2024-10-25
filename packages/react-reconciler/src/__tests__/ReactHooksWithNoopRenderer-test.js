@@ -19,6 +19,7 @@ let resolveText;
 let ReactNoop;
 let Scheduler;
 let Suspense;
+let Activity;
 let useState;
 let useReducer;
 let useEffect;
@@ -64,6 +65,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     useTransition = React.useTransition;
     useDeferredValue = React.useDeferredValue;
     Suspense = React.Suspense;
+    Activity = React.unstable_Activity;
     ContinuousEventPriority =
       require('react-reconciler/constants').ContinuousEventPriority;
     if (gate(flags => flags.enableSuspenseList)) {
@@ -1540,39 +1542,21 @@ describe('ReactHooksWithNoopRenderer', () => {
         expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: (empty)" />);
 
         // Rendering again should flush the previous commit's effects
-        if (gate(flags => flags.forceConcurrentByDefaultForTesting)) {
+        React.startTransition(() => {
           ReactNoop.render(<Counter count={1} />, () =>
             Scheduler.log('Sync effect'),
           );
-        } else {
-          React.startTransition(() => {
-            ReactNoop.render(<Counter count={1} />, () =>
-              Scheduler.log('Sync effect'),
-            );
-          });
-        }
+        });
 
         await waitFor(['Schedule update [0]', 'Count: 0']);
 
-        if (gate(flags => flags.forceConcurrentByDefaultForTesting)) {
-          expect(ReactNoop).toMatchRenderedOutput(
-            <span prop="Count: (empty)" />,
-          );
-          await waitFor(['Sync effect']);
-          expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 0" />);
-
-          ReactNoop.flushPassiveEffects();
-          assertLog(['Schedule update [1]']);
-          await waitForAll(['Count: 1']);
-        } else {
-          expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 0" />);
-          await waitFor([
-            'Count: 0',
-            'Sync effect',
-            'Schedule update [1]',
-            'Count: 1',
-          ]);
-        }
+        expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 0" />);
+        await waitFor([
+          'Count: 0',
+          'Sync effect',
+          'Schedule update [1]',
+          'Count: 1',
+        ]);
 
         expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 1" />);
       });
@@ -3015,6 +2999,57 @@ describe('ReactHooksWithNoopRenderer', () => {
         root.render(<NotInsertion />);
       });
     });
+
+    // @gate enableActivity
+    it('warns when setState is called from offscreen deleted insertion effect cleanup', async () => {
+      function App(props) {
+        const [, setX] = useState(0);
+        useInsertionEffect(() => {
+          if (props.throw) {
+            throw Error('No');
+          }
+          return () => {
+            setX(1);
+          };
+        }, [props.throw, props.foo]);
+        return null;
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(() => {
+        root.render(
+          <Activity mode="hidden">
+            <App foo="hello" />
+          </Activity>,
+        );
+      });
+
+      if (gate(flags => flags.enableHiddenSubtreeInsertionEffectCleanup)) {
+        await expect(async () => {
+          await act(() => {
+            root.render(<Activity mode="hidden" />);
+          });
+        }).toErrorDev(['useInsertionEffect must not schedule updates.']);
+      } else {
+        await expect(async () => {
+          await act(() => {
+            root.render(<Activity mode="hidden" />);
+          });
+        }).toErrorDev([]);
+      }
+
+      // Should not warn for regular effects after throw.
+      function NotInsertion() {
+        const [, setX] = useState(0);
+        useEffect(() => {
+          setX(1);
+        }, []);
+        return null;
+      }
+      await act(() => {
+        root.render(<NotInsertion />);
+      });
+    });
   });
 
   describe('useLayoutEffect', () => {
@@ -3446,14 +3481,10 @@ describe('ReactHooksWithNoopRenderer', () => {
       let totalRefUpdates = 0;
       function Counter(props, ref) {
         const [count, dispatch] = useReducer(reducer, 0);
-        useImperativeHandle(
-          ref,
-          () => {
-            totalRefUpdates++;
-            return {count, dispatch};
-          },
-          [count],
-        );
+        useImperativeHandle(ref, () => {
+          totalRefUpdates++;
+          return {count, dispatch};
+        }, [count]);
         return <Text text={'Count: ' + count} />;
       }
 
@@ -3566,7 +3597,13 @@ describe('ReactHooksWithNoopRenderer', () => {
         ReactNoop.render(<App />);
       });
 
-      assertLog(['A', 'Suspend! [A]', 'Loading']);
+      assertLog([
+        'A',
+        'Suspend! [A]',
+        'Loading',
+
+        ...(gate('enableSiblingPrerendering') ? ['Suspend! [A]'] : []),
+      ]);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
           <span prop="A" />

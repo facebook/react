@@ -2,10 +2,10 @@
 ## Input
 
 ```javascript
-import { StaticText1, Stringify, Text } from "shared-runtime";
+import {StaticText1, Stringify, Text} from 'shared-runtime';
 
 function Component(props) {
-  const { buttons } = props;
+  const {buttons} = props;
   const [primaryButton, ...nonPrimaryButtons] = buttons;
 
   const renderedNonPrimaryButtons = nonPrimaryButtons.map((buttonProps, i) => (
@@ -22,8 +22,8 @@ function Component(props) {
 }
 
 const styles = {
-  leftSecondaryButton: { left: true },
-  rightSecondaryButton: { right: true },
+  leftSecondaryButton: {left: true},
+  rightSecondaryButton: {right: true},
 };
 
 export const FIXTURE_ENTRYPOINT = {
@@ -32,8 +32,8 @@ export const FIXTURE_ENTRYPOINT = {
     {
       buttons: [
         {},
-        { type: "submit", children: ["Submit!"] },
-        { type: "button", children: ["Reset"] },
+        {type: 'submit', children: ['Submit!']},
+        {type: 'button', children: ['Reset']},
       ],
     },
   ],
@@ -48,7 +48,7 @@ import { c as _c } from "react/compiler-runtime";
 import { StaticText1, Stringify, Text } from "shared-runtime";
 
 function Component(props) {
-  const $ = _c(7);
+  const $ = _c(6);
   const { buttons } = props;
   let nonPrimaryButtons;
   if ($[0] !== buttons) {
@@ -61,24 +61,7 @@ function Component(props) {
   }
   let t0;
   if ($[2] !== nonPrimaryButtons) {
-    let t1;
-    if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
-      t1 = (buttonProps, i) => (
-        <Stringify
-          {...buttonProps}
-          key={`button-${i}`}
-          style={
-            i % 2 === 0
-              ? styles.leftSecondaryButton
-              : styles.rightSecondaryButton
-          }
-        />
-      );
-      $[4] = t1;
-    } else {
-      t1 = $[4];
-    }
-    t0 = nonPrimaryButtons.map(t1);
+    t0 = nonPrimaryButtons.map(_temp);
     $[2] = nonPrimaryButtons;
     $[3] = t0;
   } else {
@@ -86,14 +69,25 @@ function Component(props) {
   }
   const renderedNonPrimaryButtons = t0;
   let t1;
-  if ($[5] !== renderedNonPrimaryButtons) {
+  if ($[4] !== renderedNonPrimaryButtons) {
     t1 = <StaticText1>{renderedNonPrimaryButtons}</StaticText1>;
-    $[5] = renderedNonPrimaryButtons;
-    $[6] = t1;
+    $[4] = renderedNonPrimaryButtons;
+    $[5] = t1;
   } else {
-    t1 = $[6];
+    t1 = $[5];
   }
   return t1;
+}
+function _temp(buttonProps, i) {
+  return (
+    <Stringify
+      {...buttonProps}
+      key={`button-${i}`}
+      style={
+        i % 2 === 0 ? styles.leftSecondaryButton : styles.rightSecondaryButton
+      }
+    />
+  );
 }
 
 const styles = {

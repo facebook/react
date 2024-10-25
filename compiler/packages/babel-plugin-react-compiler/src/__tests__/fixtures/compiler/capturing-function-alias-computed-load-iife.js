@@ -10,5 +10,5 @@ function bar(a) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: bar,
-  params: ["TodoAdd"],
+  params: ['TodoAdd'],
 };

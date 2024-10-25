@@ -5,13 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "../CompilerError";
-import { BlockId, HIRFunction, Identifier, Place } from "../HIR/HIR";
+import {CompilerError} from '../CompilerError';
+import {BlockId, HIRFunction, Identifier, Place} from '../HIR/HIR';
 import {
   eachInstructionLValue,
   eachInstructionOperand,
   eachTerminalOperand,
-} from "../HIR/visitors";
+} from '../HIR/visitors';
 
 /*
  * Pass to eliminate redundant phi nodes:
@@ -29,7 +29,7 @@ import {
  */
 export function eliminateRedundantPhi(
   fn: HIRFunction,
-  sharedRewrites?: Map<Identifier, Identifier>
+  sharedRewrites?: Map<Identifier, Identifier>,
 ): void {
   const ir = fn.body;
   const rewrites: Map<Identifier, Identifier> =
@@ -68,18 +68,13 @@ export function eliminateRedundantPhi(
       // Find any redundant phis
       phis: for (const phi of block.phis) {
         // Remap phis in case operands are from eliminated phis
-        phi.operands = new Map(
-          Array.from(phi.operands).map(([block, id]) => [
-            block,
-            rewrites.get(id) ?? id,
-          ])
-        );
+        phi.operands.forEach((place, _) => rewritePlace(place, rewrites));
         // Find if the phi can be eliminated
         let same: Identifier | null = null;
         for (const [_, operand] of phi.operands) {
           if (
-            (same !== null && operand.id === same.id) ||
-            operand.id === phi.id.id
+            (same !== null && operand.identifier.id === same.id) ||
+            operand.identifier.id === phi.place.identifier.id
           ) {
             /*
              * This operand is the same as the phi or is the same as the
@@ -94,16 +89,16 @@ export function eliminateRedundantPhi(
             continue phis;
           } else {
             // First non-phi operand
-            same = operand;
+            same = operand.identifier;
           }
         }
         CompilerError.invariant(same !== null, {
-          reason: "Expected phis to be non-empty",
+          reason: 'Expected phis to be non-empty',
           description: null,
           loc: null,
           suggestions: null,
         });
-        rewrites.set(phi.id, same);
+        rewrites.set(phi.place.identifier, same);
         block.phis.delete(phi);
       }
 
@@ -117,10 +112,10 @@ export function eliminateRedundantPhi(
         }
 
         if (
-          instr.value.kind === "FunctionExpression" ||
-          instr.value.kind === "ObjectMethod"
+          instr.value.kind === 'FunctionExpression' ||
+          instr.value.kind === 'ObjectMethod'
         ) {
-          const { context } = instr.value.loweredFunc.func;
+          const {context} = instr.value.loweredFunc.func;
           for (const place of context) {
             rewritePlace(place, rewrites);
           }
@@ -135,7 +130,7 @@ export function eliminateRedundantPhi(
       }
 
       // Rewrite all terminal operands
-      const { terminal } = block;
+      const {terminal} = block;
       for (const place of eachTerminalOperand(terminal)) {
         rewritePlace(place, rewrites);
       }
@@ -150,7 +145,7 @@ export function eliminateRedundantPhi(
 
 function rewritePlace(
   place: Place,
-  rewrites: Map<Identifier, Identifier>
+  rewrites: Map<Identifier, Identifier>,
 ): void {
   const rewrite = rewrites.get(place.identifier);
   if (rewrite != null) {

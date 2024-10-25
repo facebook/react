@@ -1,6 +1,6 @@
 {
   "name": "react-devtools",
-  "version": "5.3.0",
+  "version": "6.0.1",
   "description": "Use react-devtools outside of the browser",
   "license": "MIT",
   "repository": {
@@ -15,7 +15,6 @@
     "bin.js",
     "app.html",
     "app.js",
-    "index.js",
     "icons",
     "preload.js"
   ],
@@ -27,7 +26,7 @@
     "electron": "^23.1.2",
     "internal-ip": "^6.2.0",
     "minimist": "^1.2.3",
-    "react-devtools-core": "5.3.0",
+    "react-devtools-core": "6.0.1",
     "update-notifier": "^2.1.0"
   }
 }

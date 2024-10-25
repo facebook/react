@@ -297,7 +297,15 @@ describe('ReactAsyncActions', () => {
     // This will schedule an update on C, and also the async action scope
     // will end. This will allow React to attempt to render the updates.
     await act(() => resolveText('Wait before updating C'));
-    assertLog(['Async action ended', 'Pending: false', 'Suspend! [A1]']);
+    assertLog([
+      'Async action ended',
+      'Pending: false',
+      'Suspend! [A1]',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['Suspend! [B1]', 'Suspend! [C1]']
+        : []),
+    ]);
     expect(root).toMatchRenderedOutput(
       <>
         <span>Pending: true</span>
@@ -309,7 +317,13 @@ describe('ReactAsyncActions', () => {
     // together, only when the all of A, B, and C updates are unblocked is the
     // render allowed to proceed.
     await act(() => resolveText('A1'));
-    assertLog(['Pending: false', 'A1', 'Suspend! [B1]']);
+    assertLog([
+      'Pending: false',
+      'A1',
+      'Suspend! [B1]',
+
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [C1]'] : []),
+    ]);
     expect(root).toMatchRenderedOutput(
       <>
         <span>Pending: true</span>

@@ -3,10 +3,10 @@
 
 ```javascript
 function component(a) {
-  let x = { a };
+  let x = {a};
   let y = {};
 
-  y.x = x["a"];
+  y.x = x['a'];
   mutate(y);
   return x;
 }
