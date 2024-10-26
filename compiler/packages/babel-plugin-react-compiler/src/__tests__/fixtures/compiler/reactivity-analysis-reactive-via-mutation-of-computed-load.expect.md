@@ -41,10 +41,10 @@ function Component(props) {
   }
   const count = t1;
   let t2;
-  if ($[5] !== items || $[6] !== count) {
+  if ($[5] !== count || $[6] !== items) {
     t2 = { items, count };
-    $[5] = items;
-    $[6] = count;
+    $[5] = count;
+    $[6] = items;
     $[7] = t2;
   } else {
     t2 = $[7];

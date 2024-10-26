@@ -70,10 +70,10 @@ function Component() {
     throw new Error("invariant broken");
   }
   let t1;
-  if ($[1] !== obj || $[2] !== boxedInner) {
+  if ($[1] !== boxedInner || $[2] !== obj) {
     t1 = <Stringify obj={obj} inner={boxedInner} />;
-    $[1] = obj;
-    $[2] = boxedInner;
+    $[1] = boxedInner;
+    $[2] = obj;
     $[3] = t1;
   } else {
     t1 = $[3];

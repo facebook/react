@@ -76,10 +76,10 @@ export function Component(t0) {
     t5 = $[5];
   }
   let t6;
-  if ($[6] !== t5 || $[7] !== item1) {
+  if ($[6] !== item1 || $[7] !== t5) {
     t6 = <ValidateMemoization inputs={t5} output={item1} />;
-    $[6] = t5;
-    $[7] = item1;
+    $[6] = item1;
+    $[7] = t5;
     $[8] = t6;
   } else {
     t6 = $[8];
@@ -93,10 +93,10 @@ export function Component(t0) {
     t7 = $[10];
   }
   let t8;
-  if ($[11] !== t7 || $[12] !== item2) {
+  if ($[11] !== item2 || $[12] !== t7) {
     t8 = <ValidateMemoization inputs={t7} output={item2} />;
-    $[11] = t7;
-    $[12] = item2;
+    $[11] = item2;
+    $[12] = t7;
     $[13] = t8;
   } else {
     t8 = $[13];

@@ -572,7 +572,22 @@ function codegenReactiveScope(
   const changeExpressions: Array<t.Expression> = [];
   const changeExpressionComments: Array<string> = [];
   const outputComments: Array<string> = [];
-  for (const dep of scope.dependencies) {
+  const sortedDeps = [...scope.dependencies].sort((a, b) => {
+    CompilerError.invariant(
+      a.identifier.name?.kind === 'named' &&
+        b.identifier.name?.kind === 'named',
+      {
+        reason: '[Codegen] Expected dependency to be named',
+        loc: a.identifier.loc,
+      },
+    );
+    const aName = a.identifier.name.value;
+    const bName = b.identifier.name.value;
+    if (aName < bName) return -1;
+    else if (aName > bName) return 1;
+    else return 0;
+  });
+  for (const dep of sortedDeps) {
     const index = cx.nextCacheIndex;
     changeExpressionComments.push(printDependencyComment(dep));
     const comparison = t.binaryExpression(
@@ -615,7 +630,24 @@ function codegenReactiveScope(
     );
   }
   let firstOutputIndex: number | null = null;
-  for (const [, {identifier}] of scope.declarations) {
+  // TODO Map<IdentifierId, ReactiveScopeDeclaration>
+
+  const sortedDecls = [...scope.declarations].sort(([, a], [, b]) => {
+    CompilerError.invariant(
+      a.identifier.name?.kind === 'named' &&
+        b.identifier.name?.kind === 'named',
+      {
+        reason: '[Codegen] Expected dependency to be named',
+        loc: a.identifier.loc,
+      },
+    );
+    const aName = a.identifier.name.value;
+    const bName = b.identifier.name.value;
+    if (aName < bName) return -1;
+    else if (aName > bName) return 1;
+    else return 0;
+  });
+  for (const [, {identifier}] of sortedDecls) {
     const index = cx.nextCacheIndex;
     if (firstOutputIndex === null) {
       firstOutputIndex = index;

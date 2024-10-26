@@ -36,10 +36,10 @@ function Component(t0) {
   }
   const f = t1;
   let t2;
-  if ($[2] !== props || $[3] !== f) {
+  if ($[2] !== f || $[3] !== props) {
     t2 = props == null ? _temp : f;
-    $[2] = props;
-    $[3] = f;
+    $[2] = f;
+    $[3] = props;
     $[4] = t2;
   } else {
     t2 = $[4];

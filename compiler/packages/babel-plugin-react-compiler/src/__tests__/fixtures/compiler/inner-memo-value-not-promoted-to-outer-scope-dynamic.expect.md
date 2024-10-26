@@ -27,10 +27,10 @@ function Component(props) {
   const $ = _c(15);
   const item = useFragment(FRAGMENT, props.item);
   useFreeze(item);
-  let t0;
   let T0;
-  let t1;
   let T1;
+  let t0;
+  let t1;
   if ($[0] !== item) {
     const count = new MaybeMutable(item);
 
@@ -44,15 +44,15 @@ function Component(props) {
     }
     t0 = maybeMutate(count);
     $[0] = item;
-    $[1] = t0;
-    $[2] = T0;
-    $[3] = t1;
-    $[4] = T1;
+    $[1] = T0;
+    $[2] = T1;
+    $[3] = t0;
+    $[4] = t1;
   } else {
-    t0 = $[1];
-    T0 = $[2];
-    t1 = $[3];
-    T1 = $[4];
+    T0 = $[1];
+    T1 = $[2];
+    t0 = $[3];
+    t1 = $[4];
   }
   let t2;
   if ($[6] !== t0) {

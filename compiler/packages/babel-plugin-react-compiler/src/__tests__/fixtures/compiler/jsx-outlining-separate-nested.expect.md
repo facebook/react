@@ -60,7 +60,7 @@ function Component(t0) {
   const { arr } = t0;
   const x = useX();
   let t1;
-  if ($[0] !== x || $[1] !== arr) {
+  if ($[0] !== arr || $[1] !== x) {
     let t2;
     if ($[3] !== x) {
       t2 = (i, id) => {
@@ -73,8 +73,8 @@ function Component(t0) {
       t2 = $[4];
     }
     t1 = arr.map(t2);
-    $[0] = x;
-    $[1] = arr;
+    $[0] = arr;
+    $[1] = x;
     $[2] = t1;
   } else {
     t1 = $[2];
@@ -117,7 +117,7 @@ function _temp(t0) {
     t3 = $[5];
   }
   let t4;
-  if ($[6] !== x || $[7] !== t1 || $[8] !== t2 || $[9] !== t3) {
+  if ($[6] !== t1 || $[7] !== t2 || $[8] !== t3 || $[9] !== x) {
     t4 = (
       <Bar x={x}>
         {t1}
@@ -125,10 +125,10 @@ function _temp(t0) {
         {t3}
       </Bar>
     );
-    $[6] = x;
-    $[7] = t1;
-    $[8] = t2;
-    $[9] = t3;
+    $[6] = t1;
+    $[7] = t2;
+    $[8] = t3;
+    $[9] = x;
     $[10] = t4;
   } else {
     t4 = $[10];
@@ -140,15 +140,15 @@ function Bar(t0) {
   const $ = _c(3);
   const { x, children } = t0;
   let t1;
-  if ($[0] !== x || $[1] !== children) {
+  if ($[0] !== children || $[1] !== x) {
     t1 = (
       <>
         {x}
         {children}
       </>
     );
-    $[0] = x;
-    $[1] = children;
+    $[0] = children;
+    $[1] = x;
     $[2] = t1;
   } else {
     t1 = $[2];

@@ -58,7 +58,7 @@ function useFoo(t0) {
     local = $[1];
   }
   let t1;
-  if ($[2] !== shouldReadA || $[3] !== local) {
+  if ($[2] !== local || $[3] !== shouldReadA) {
     t1 = (
       <Stringify
         fn={() => {
@@ -70,8 +70,8 @@ function useFoo(t0) {
         shouldInvokeFns={true}
       />
     );
-    $[2] = shouldReadA;
-    $[3] = local;
+    $[2] = local;
+    $[3] = shouldReadA;
     $[4] = t1;
   } else {
     t1 = $[4];
