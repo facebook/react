@@ -8,7 +8,7 @@
 import type {NodePath} from '@babel/traverse';
 import type * as t from '@babel/types';
 import {CompilerError} from '../CompilerError';
-import {getOrInsertDefault} from '../Utils/utils';
+import {getOrInsertDefault, nonNull} from '../Utils/utils';
 import {GeneratedSource} from './HIR';
 
 type IdentifierInfo = {
@@ -158,7 +158,7 @@ function handleAssignment(
     case 'ArrayPattern': {
       const path = lvalPath as NodePath<t.ArrayPattern>;
       for (const element of path.get('elements')) {
-        if (nonNull(element)) {
+        if (nonNull(element.node)) {
           handleAssignment(currentFn, identifiers, element);
         }
       }
@@ -212,10 +212,4 @@ function handleAssignment(
       });
     }
   }
-}
-
-function nonNull<T extends NonNullable<t.Node>>(
-  t: NodePath<T | null>,
-): t is NodePath<T> {
-  return t.node != null;
 }
