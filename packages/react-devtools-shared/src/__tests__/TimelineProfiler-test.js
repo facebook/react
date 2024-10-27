@@ -18,6 +18,11 @@ import {
 import {ReactVersion} from '../../../../ReactVersions';
 import semver from 'semver';
 
+let React = require('react');
+let Scheduler;
+let store;
+let utils;
+
 // TODO: This is how other DevTools tests access the version but we should find
 // a better solution for this
 const ReactVersionTestingAgainst = process.env.REACT_VERSION || ReactVersion;
@@ -26,11 +31,16 @@ const ReactVersionTestingAgainst = process.env.REACT_VERSION || ReactVersion;
 const enableSiblingPrerendering =
   false && semver.gte(ReactVersionTestingAgainst, '19.0.0');
 
+// This flag is on experimental which disables timeline profiler.
+const enableComponentPerformanceTrack =
+  React.version.startsWith('19') && React.version.includes('experimental');
+
 describe('Timeline profiler', () => {
-  let React;
-  let Scheduler;
-  let store;
-  let utils;
+  if (enableComponentPerformanceTrack) {
+    test('no tests', () => {});
+    // Ignore all tests.
+    return;
+  }
 
   beforeEach(() => {
     utils = require('./utils');
@@ -1270,12 +1280,12 @@ describe('Timeline profiler', () => {
     });
 
     describe('when profiling', () => {
-      beforeEach(() => {
-        utils.act(() => store.profilerStore.startProfiling());
-      });
-
       describe('with legacy render', () => {
         const {render: legacyRender} = getLegacyRenderImplementation();
+
+        beforeEach(() => {
+          utils.act(() => store.profilerStore.startProfiling());
+        });
 
         // @reactVersion <= 18.2
         // @reactVersion >= 18.0
@@ -1526,6 +1536,10 @@ describe('Timeline profiler', () => {
         });
 
         const {render: modernRender} = getModernRenderImplementation();
+
+        beforeEach(() => {
+          utils.act(() => store.profilerStore.startProfiling());
+        });
 
         it('should mark concurrent render without suspends or state updates', () => {
           utils.act(() => modernRender(<div />));

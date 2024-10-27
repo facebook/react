@@ -14,35 +14,46 @@ If you are building a non-browser-based React renderer, you can use the backend 
 
 ```js
 if (process.env.NODE_ENV !== 'production') {
-  const { connectToDevTools } = require("react-devtools-core");
+  const { initialize, connectToDevTools } = require("react-devtools-core");
 
+  initialize(settings);
   // Must be called before packages like react or react-native are imported
-  connectToDevTools({
-    ...config
-  });
+  connectToDevTools({...config});
 }
 ```
 
 > **NOTE** that this API (`connectToDevTools`) must be (1) run in the same context as React and (2) must be called before React packages are imported (e.g. `react`, `react-dom`, `react-native`).
 
+### `initialize` arguments
+| Argument   | Description                                                                                                                                                                                                                                                                                   |
+|------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `settings` | Optional. If not specified, or received as null, then default settings are used. Can be plain object or a Promise that resolves with the [plain settings object](#Settings). If Promise rejects, the console will not be patched and some console features from React DevTools will not work. |
+
+#### `Settings`
+| Spec                                                                                                                                                                           | Default value                                                                                                                                                        |
+|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| <pre>{<br>  appendComponentStack: boolean,<br>  breakOnConsoleErrors: boolean,<br>  showInlineWarningsAndErrors: boolean,<br>  hideConsoleLogsInStrictMode: boolean<br>}</pre> | <pre>{<br>  appendComponentStack: true,<br>  breakOnConsoleErrors: false,<br>  showInlineWarningsAndErrors: true,<br>  hideConsoleLogsInStrictMode: false<br>}</pre> |
+
 ### `connectToDevTools` options
-| Prop | Default | Description |
-|---|---|---|
-| `host` | `"localhost"` | Socket connection to frontend should use this host. |
-| `isAppActive` |  | (Optional) function that returns true/false, telling DevTools when it's ready to connect to React. |
-| `port` | `8097` | Socket connection to frontend should use this port. |
-| `resolveRNStyle` |  | (Optional) function that accepts a key (number) and returns a style (object); used by React Native. |
-| `retryConnectionDelay` | `200` | Delay (ms) to wait between retrying a failed Websocket connection |
-| `useHttps` | `false` | Socket connection to frontend should use secure protocol (wss). |
-| `websocket` |  | Custom `WebSocket` connection to frontend; overrides `host` and `port` settings. |
+| Prop                   | Default       | Description                                                                                                               |
+|------------------------|---------------|---------------------------------------------------------------------------------------------------------------------------|
+| `host`                 | `"localhost"` | Socket connection to frontend should use this host.                                                                       |
+| `isAppActive`          |               | (Optional) function that returns true/false, telling DevTools when it's ready to connect to React.                        |
+| `port`                 | `8097`        | Socket connection to frontend should use this port.                                                                       |
+| `resolveRNStyle`       |               | (Optional) function that accepts a key (number) and returns a style (object); used by React Native.                       |
+| `retryConnectionDelay` | `200`         | Delay (ms) to wait between retrying a failed Websocket connection                                                         |
+| `useHttps`             | `false`       | Socket connection to frontend should use secure protocol (wss).                                                           |
+| `websocket`            |               | Custom `WebSocket` connection to frontend; overrides `host` and `port` settings.                                          |
+| `onSettingsUpdated`    |               | A callback that will be called when the user updates the settings in the UI. You can use it for persisting user settings. |                                                                                         |
 
 
 ### `connectWithCustomMessagingProtocol` options
-| Prop            | Description                                                                                                                                                    |
-|-----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `onSubscribe`   | Function, which receives listener (function, with a single argument) as an argument. Called when backend subscribes to messages from the other end (frontend). |
-| `onUnsubscribe` | Function, which receives listener (function) as an argument. Called when backend unsubscribes to messages from the other end (frontend).                       |
-| `onMessage`     | Function, which receives 2 arguments: event (string) and payload (any). Called when backend emits a message, which should be sent to the frontend.             |
+| Prop                | Description                                                                                                                                                    |
+|---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `onSubscribe`       | Function, which receives listener (function, with a single argument) as an argument. Called when backend subscribes to messages from the other end (frontend). |
+| `onUnsubscribe`     | Function, which receives listener (function) as an argument. Called when backend unsubscribes to messages from the other end (frontend).                       |
+| `onMessage`         | Function, which receives 2 arguments: event (string) and payload (any). Called when backend emits a message, which should be sent to the frontend.             |
+| `onSettingsUpdated` | A callback that will be called when the user updates the settings in the UI. You can use it for persisting user settings.                                      |       
 
 Unlike `connectToDevTools`, `connectWithCustomMessagingProtocol` returns a callback, which can be used for unsubscribing the backend from the global DevTools hook.
 

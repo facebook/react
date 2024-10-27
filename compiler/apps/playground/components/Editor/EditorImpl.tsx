@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {parse as babelParse, ParserPlugin} from '@babel/parser';
+import {parse as babelParse} from '@babel/parser';
 import * as HermesParser from 'hermes-parser';
 import traverse, {NodePath} from '@babel/traverse';
 import * as t from '@babel/types';
@@ -15,10 +15,8 @@ import {
   Effect,
   ErrorSeverity,
   parseConfigPragma,
-  printHIR,
-  printReactiveFunction,
-  run,
   ValueKind,
+  runPlayground,
   type Hook,
 } from 'babel-plugin-react-compiler/src';
 import {type ReactFunctionType} from 'babel-plugin-react-compiler/src/HIR/Environment';
@@ -45,7 +43,7 @@ import {
 import {printFunctionWithOutlined} from 'babel-plugin-react-compiler/src/HIR/PrintHIR';
 import {printReactiveFunctionWithOutlined} from 'babel-plugin-react-compiler/src/ReactiveScopes/PrintReactiveFunction';
 
-function parseInput(input: string, language: 'flow' | 'typescript') {
+function parseInput(input: string, language: 'flow' | 'typescript'): any {
   // Extract the first line to quickly check for custom test directives
   if (language === 'flow') {
     return HermesParser.parse(input, {
@@ -183,9 +181,9 @@ function getFunctionIdentifier(
 }
 
 function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
-  const results = new Map<string, PrintedCompilerPipelineValue[]>();
+  const results = new Map<string, Array<PrintedCompilerPipelineValue>>();
   const error = new CompilerError();
-  const upsert = (result: PrintedCompilerPipelineValue) => {
+  const upsert: (result: PrintedCompilerPipelineValue) => void = result => {
     const entry = results.get(result.name);
     if (Array.isArray(entry)) {
       entry.push(result);
@@ -214,17 +212,13 @@ function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
 
     for (const fn of parseFunctions(source, language)) {
       const id = withIdentifier(getFunctionIdentifier(fn));
-      for (const result of run(
+      for (const result of runPlayground(
         fn,
         {
           ...config,
           customHooks: new Map([...COMMON_HOOKS]),
         },
         getReactFunctionType(id),
-        '_c',
-        null,
-        null,
-        null,
       )) {
         const fnName = id.name;
         switch (result.kind) {
@@ -279,13 +273,17 @@ function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
       }
     }
   } catch (err) {
-    // error might be an invariant violation or other runtime error
-    // (i.e. object shape that is not CompilerError)
+    /**
+     * error might be an invariant violation or other runtime error
+     * (i.e. object shape that is not CompilerError)
+     */
     if (err instanceof CompilerError && err.details.length > 0) {
       error.details.push(...err.details);
     } else {
-      // Handle unexpected failures by logging (to get a stack trace)
-      // and reporting
+      /**
+       * Handle unexpected failures by logging (to get a stack trace)
+       * and reporting
+       */
       console.error(err);
       error.details.push(
         new CompilerErrorDetail({
@@ -303,7 +301,7 @@ function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
   return [{kind: 'ok', results}, language];
 }
 
-export default function Editor() {
+export default function Editor(): JSX.Element {
   const store = useStore();
   const deferredStore = useDeferredValue(store);
   const dispatchStore = useStoreDispatch();

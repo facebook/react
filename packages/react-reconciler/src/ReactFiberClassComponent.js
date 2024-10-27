@@ -72,6 +72,7 @@ import {
   markStateUpdateScheduled,
   setIsStrictModeForDevtools,
 } from './ReactFiberDevToolsHook';
+import {startUpdateTimerByLane} from './ReactProfilerTimer';
 
 const fakeInternalInstance = {};
 
@@ -194,6 +195,7 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
+      startUpdateTimerByLane(lane);
       scheduleUpdateOnFiber(root, fiber, lane);
       entangleTransitions(root, fiber, lane);
     }
@@ -228,6 +230,7 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
+      startUpdateTimerByLane(lane);
       scheduleUpdateOnFiber(root, fiber, lane);
       entangleTransitions(root, fiber, lane);
     }
@@ -262,6 +265,7 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
+      startUpdateTimerByLane(lane);
       scheduleUpdateOnFiber(root, fiber, lane);
       entangleTransitions(root, fiber, lane);
     }

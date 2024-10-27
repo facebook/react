@@ -7,6 +7,10 @@ on:
     paths-ignore:
       - compiler/**
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
   # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#cache-segment-restore-timeout
@@ -49,7 +53,7 @@ jobs:
         id: node_modules
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+          key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - run: yarn
       - run: node ./scripts/tasks/flow-ci ${{ matrix.flow_inline_config_shortname }}
 
@@ -70,7 +74,7 @@ jobs:
         id: node_modules
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+          key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - run: yarn
       - run: |
           yarn generate-inline-fizz-runtime
@@ -93,7 +97,7 @@ jobs:
         id: node_modules
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+          key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - run: yarn
       - run: yarn flags
 
@@ -143,9 +147,9 @@ jobs:
         id: node_modules
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+          key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - run: yarn
-      - run: yarn test -- ${{ matrix.params }} --ci --shard=${{ matrix.shard }}
+      - run: yarn test ${{ matrix.params }} --ci --shard=${{ matrix.shard }}
 
   # ----- BUILD -----
   build_and_lint:
@@ -173,9 +177,9 @@ jobs:
         id: node_modules
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+          key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - run: yarn
-      - run: yarn build -- --index=${{ matrix.worker_id }} --total=20 --r=${{ matrix.release_channel }} --ci
+      - run: yarn build --index=${{ matrix.worker_id }} --total=20 --r=${{ matrix.release_channel }} --ci
         env:
           CI: github
           RELEASE_CHANNEL: ${{ matrix.release_channel }}
@@ -244,7 +248,7 @@ jobs:
         id: node_modules
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+          key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - run: yarn
       - name: Restore archived build
         uses: actions/download-artifact@v4
@@ -273,7 +277,7 @@ jobs:
         id: node_modules
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+          key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - run: yarn
       - name: Restore archived build
         uses: actions/download-artifact@v4
@@ -317,7 +321,7 @@ jobs:
         id: node_modules
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+          key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - run: yarn
       - name: Restore archived build
         uses: actions/download-artifact@v4
@@ -349,7 +353,7 @@ jobs:
         id: node_modules
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+          key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - run: yarn
       - name: Restore archived build
         uses: actions/download-artifact@v4
@@ -378,8 +382,7 @@ jobs:
         id: node_modules
         with:
           path: "**/node_modules"
-          key: v2-yarn_cache_fixtures_dom-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-      - run: yarn
+          key: fixtures_dom-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - run: yarn
         working-directory: fixtures/dom
       - name: Restore archived build
@@ -419,7 +422,7 @@ jobs:
         id: node_modules
         with:
           path: "**/node_modules"
-          key: v2-yarn_cache_fixtures_flight-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          key: fixtures_flight-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - run: yarn
       - name: Restore archived build
         uses: actions/download-artifact@v4
@@ -476,7 +479,7 @@ jobs:
         id: node_modules
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+          key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - run: yarn
       - name: Restore archived build
         uses: actions/download-artifact@v4
@@ -523,7 +526,7 @@ jobs:
         id: node_modules
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+          key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - run: yarn
       - name: Restore archived build
         uses: actions/download-artifact@v4
@@ -596,7 +599,7 @@ jobs:
         id: node_modules
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+          key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - run: yarn
       - name: Restore archived build for PR
         uses: actions/download-artifact@v4

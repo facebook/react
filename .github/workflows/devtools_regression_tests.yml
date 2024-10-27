@@ -31,7 +31,7 @@ jobs:
         id: node_modules
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock', 'scripts/release/yarn.lock') }}
+          key: runtime-release-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'scripts/release/yarn.lock') }}
       - run: yarn
         working-directory: scripts/release
       - name: Download react-devtools artifacts for base revision
@@ -63,7 +63,7 @@ jobs:
         id: node_modules
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+          key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - run: yarn
       - name: Restore archived build
         uses: actions/download-artifact@v4
@@ -104,6 +104,7 @@ jobs:
           - "16.8" # hooks
           - "17.0"
           - "18.0"
+          - "18.2" # compiler polyfill
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
@@ -118,7 +119,7 @@ jobs:
         id: node_modules
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+          key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - run: yarn
       - name: Restore all archived build artifacts
         uses: actions/download-artifact@v4
@@ -153,7 +154,7 @@ jobs:
         id: node_modules
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+          key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - run: yarn
       - name: Restore all archived build artifacts
         uses: actions/download-artifact@v4

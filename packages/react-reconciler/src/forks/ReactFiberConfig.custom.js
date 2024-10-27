@@ -73,6 +73,8 @@ export const getInstanceFromScope = $$$config.getInstanceFromScope;
 export const setCurrentUpdatePriority = $$$config.setCurrentUpdatePriority;
 export const getCurrentUpdatePriority = $$$config.getCurrentUpdatePriority;
 export const resolveUpdatePriority = $$$config.resolveUpdatePriority;
+export const resolveEventType = $$$config.resolveEventType;
+export const resolveEventTimeStamp = $$$config.resolveEventTimeStamp;
 export const shouldAttemptEagerTransition =
   $$$config.shouldAttemptEagerTransition;
 export const detachDeletedInstance = $$$config.detachDeletedInstance;

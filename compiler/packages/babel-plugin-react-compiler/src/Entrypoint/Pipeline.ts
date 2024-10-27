@@ -41,6 +41,7 @@ import {
   constantPropagation,
   deadCodeElimination,
   pruneMaybeThrows,
+  inlineJsxTransform,
 } from '../Optimization';
 import {instructionReordering} from '../Optimization/InstructionReordering';
 import {
@@ -102,6 +103,7 @@ import {lowerContextAccess} from '../Optimization/LowerContextAccess';
 import {validateNoSetStateInPassiveEffects} from '../Validation/ValidateNoSetStateInPassiveEffects';
 import {validateNoJSXInTryStatement} from '../Validation/ValidateNoJSXInTryStatement';
 import {propagateScopeDependenciesHIR} from '../HIR/PropagateScopeDependenciesHIR';
+import {outlineJSX} from '../Optimization/OutlineJsx';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -277,6 +279,10 @@ function* runWithEnvironment(
     value: hir,
   });
 
+  if (env.config.enableJsxOutlining) {
+    outlineJSX(hir);
+  }
+
   if (env.config.enableFunctionOutlining) {
     outlineFunctions(hir, fbtOperands);
     yield log({kind: 'hir', name: 'OutlineFunctions', value: hir});
@@ -347,6 +353,15 @@ function* runWithEnvironment(
     yield log({
       kind: 'hir',
       name: 'PropagateScopeDependenciesHIR',
+      value: hir,
+    });
+  }
+
+  if (env.config.inlineJsxTransform) {
+    inlineJsxTransform(hir, env.config.inlineJsxTransform);
+    yield log({
+      kind: 'hir',
+      name: 'inlineJsxTransform',
       value: hir,
     });
   }
@@ -553,4 +568,15 @@ export function log(value: CompilerPipelineValue): CompilerPipelineValue {
     }
   }
   return value;
+}
+
+export function* runPlayground(
+  func: NodePath<
+    t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
+  >,
+  config: EnvironmentConfig,
+  fnType: ReactFunctionType,
+): Generator<CompilerPipelineValue, CodegenFunction> {
+  const ast = yield* run(func, config, fnType, '_c', null, null, null);
+  return ast;
 }

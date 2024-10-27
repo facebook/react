@@ -420,7 +420,19 @@ function lowerStatement(
             // Already hoisted
             continue;
           }
-          if (!binding.path.isVariableDeclarator()) {
+
+          let kind:
+            | InstructionKind.Let
+            | InstructionKind.HoistedConst
+            | InstructionKind.HoistedLet
+            | InstructionKind.HoistedFunction;
+          if (binding.kind === 'const' || binding.kind === 'var') {
+            kind = InstructionKind.HoistedConst;
+          } else if (binding.kind === 'let') {
+            kind = InstructionKind.HoistedLet;
+          } else if (binding.path.isFunctionDeclaration()) {
+            kind = InstructionKind.HoistedFunction;
+          } else if (!binding.path.isVariableDeclarator()) {
             builder.errors.push({
               severity: ErrorSeverity.Todo,
               reason: 'Unsupported declaration type for hoisting',
@@ -429,11 +441,7 @@ function lowerStatement(
               loc: id.parentPath.node.loc ?? GeneratedSource,
             });
             continue;
-          } else if (
-            binding.kind !== 'const' &&
-            binding.kind !== 'var' &&
-            binding.kind !== 'let'
-          ) {
+          } else {
             builder.errors.push({
               severity: ErrorSeverity.Todo,
               reason: 'Handle non-const declarations for hoisting',
@@ -443,6 +451,7 @@ function lowerStatement(
             });
             continue;
           }
+
           const identifier = builder.resolveIdentifier(id);
           CompilerError.invariant(identifier.kind === 'Identifier', {
             reason:
@@ -456,13 +465,6 @@ function lowerStatement(
             reactive: false,
             loc: id.node.loc ?? GeneratedSource,
           };
-          const kind =
-            // Avoid double errors on var declarations, which we do not plan to support anyways
-            binding.kind === 'const' || binding.kind === 'var'
-              ? InstructionKind.HoistedConst
-              : binding.kind === 'let'
-                ? InstructionKind.HoistedLet
-                : assertExhaustive(binding.kind, 'Unexpected binding kind');
           lowerValueToTemporary(builder, {
             kind: 'DeclareContext',
             lvalue: {
@@ -999,7 +1001,7 @@ function lowerStatement(
       lowerAssignment(
         builder,
         stmt.node.loc ?? GeneratedSource,
-        InstructionKind.Let,
+        InstructionKind.Function,
         id,
         fn,
         'Assignment',

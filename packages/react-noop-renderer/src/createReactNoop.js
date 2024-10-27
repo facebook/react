@@ -533,6 +533,14 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return currentEventPriority;
     },
 
+    resolveEventType(): null | string {
+      return null;
+    },
+
+    resolveEventTimeStamp(): number {
+      return -1.1;
+    },
+
     shouldAttemptEagerTransition(): boolean {
       return false;
     },

@@ -9,7 +9,8 @@
     "src"
   ],
   "scripts": {
-    "build": "rimraf dist && tsc --build",
+    "postinstall": "./scripts/link-react-compiler-runtime.sh && perl -p -i -e 's/react\\.element/react.transitional.element/' ../../node_modules/fbt/lib/FbtReactUtil.js && perl -p -i -e 's/didWarnAboutUsingAct = false;/didWarnAboutUsingAct = true;/' ../../node_modules/react-dom/cjs/react-dom-test-utils.development.js",
+    "build": "rimraf dist && concurrently -n snap,runtime \"tsc --build\" \"yarn --silent workspace react-compiler-runtime build --silent\"",
     "test": "echo 'no tests'",
     "prettier": "prettier --write 'src/**/*.ts'"
   },
@@ -28,7 +29,7 @@
     "babel-plugin-idx": "^3.0.3",
     "babel-plugin-syntax-hermes-parser": "^0.15.1",
     "chalk": "4",
-    "fbt": "^1.0.0",
+    "fbt": "^1.0.2",
     "glob": "^10.3.10",
     "hermes-parser": "^0.19.1",
     "jsdom": "^22.1.0",
@@ -50,6 +51,7 @@
     "@types/node": "^18.7.18",
     "@typescript-eslint/eslint-plugin": "^7.4.0",
     "@typescript-eslint/parser": "^7.4.0",
+    "object-assign": "^4.1.1",
     "rimraf": "^3.0.2"
   },
   "resolutions": {

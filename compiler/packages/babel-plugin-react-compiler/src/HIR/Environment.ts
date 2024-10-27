@@ -16,7 +16,7 @@ import {
   DEFAULT_SHAPES,
   Global,
   GlobalRegistry,
-  installReAnimatedTypes,
+  getReanimatedModuleType,
   installTypeConfig,
 } from './Globals';
 import {
@@ -49,6 +49,13 @@ import {
 } from './ObjectShape';
 import {Scope as BabelScope} from '@babel/traverse';
 import {TypeSchema} from './TypeSchema';
+
+export const ReactElementSymbolSchema = z.object({
+  elementSymbol: z.union([
+    z.literal('react.element'),
+    z.literal('react.transitional.element'),
+  ]),
+});
 
 export const ExternalFunctionSchema = z.object({
   // Source for the imported module that exports the `importSpecifierName` functions
@@ -233,6 +240,15 @@ const EnvironmentConfigSchema = z.object({
    */
   enableOptionalDependencies: z.boolean().default(true),
 
+  /**
+   * Enables inlining ReactElement object literals in place of JSX
+   * An alternative to the standard JSX transform which replaces JSX with React's jsxProd() runtime
+   * Currently a prod-only optimization, requiring Fast JSX dependencies
+   *
+   * The symbol configuration is set for backwards compatability with pre-React 19 transforms
+   */
+  inlineJsxTransform: ReactElementSymbolSchema.nullish(),
+
   /*
    * Enable validation of hooks to partially check that the component honors the rules of hooks.
    * When disabled, the component is assumed to follow the rules (though the Babel plugin looks
@@ -337,6 +353,54 @@ const EnvironmentConfigSchema = z.object({
    * local variables can be extracted into top-level helper functions.
    */
   enableFunctionOutlining: z.boolean().default(true),
+
+  /**
+   * If enabled, this will outline nested JSX into a separate component.
+   *
+   * This will enable the compiler to memoize the separate component, giving us
+   * the same behavior as compiling _within_ the callback.
+   *
+   * ```
+   * function Component(countries, onDelete) {
+   *   const name = useFoo();
+   *   return countries.map(() => {
+   *     return (
+   *       <Foo>
+   *         <Bar>{name}</Bar>
+   *         <Button onclick={onDelete}>delete</Button>
+   *       </Foo>
+   *     );
+   *   });
+   * }
+   * ```
+   *
+   * will be transpiled to:
+   *
+   * ```
+   * function Component(countries, onDelete) {
+   *   const name = useFoo();
+   *   return countries.map(() => {
+   *     return (
+   *       <Temp name={name} onDelete={onDelete} />
+   *     );
+   *   });
+   * }
+   *
+   * function Temp({name, onDelete}) {
+   *   return (
+   *     <Foo>
+   *       <Bar>{name}</Bar>
+   *       <Button onclick={onDelete}>delete</Button>
+   *     </Foo>
+   *   );
+   * }
+   *
+   * Both, `Component` and `Temp` will then be memoized by the compiler.
+   *
+   * With this change, when `countries` is updated by adding one single value,
+   * only the newly added value is re-rendered and not the entire list.
+   */
+  enableJsxOutlining: z.boolean().default(false),
 
   /*
    * Enables instrumentation codegen. This emits a dev-mode only call to an
@@ -672,7 +736,8 @@ export class Environment {
     }
 
     if (config.enableCustomTypeDefinitionForReanimated) {
-      installReAnimatedTypes(this.#globals, this.#shapes);
+      const reanimatedModuleType = getReanimatedModuleType(this.#shapes);
+      this.#moduleTypes.set(REANIMATED_MODULE_NAME, reanimatedModuleType);
     }
 
     this.#contextIdentifiers = contextIdentifiers;
@@ -718,11 +783,11 @@ export class Environment {
   }
 
   #resolveModuleType(moduleName: string, loc: SourceLocation): Global | null {
-    if (this.config.moduleTypeProvider == null) {
-      return null;
-    }
     let moduleType = this.#moduleTypes.get(moduleName);
     if (moduleType === undefined) {
+      if (this.config.moduleTypeProvider == null) {
+        return null;
+      }
       const unparsedModuleConfig = this.config.moduleTypeProvider(moduleName);
       if (unparsedModuleConfig != null) {
         const parsedModuleConfig = TypeSchema.safeParse(unparsedModuleConfig);
@@ -940,6 +1005,8 @@ export class Environment {
     }
   }
 }
+
+const REANIMATED_MODULE_NAME = 'react-native-reanimated';
 
 // From https://github.com/facebook/react/blob/main/packages/eslint-plugin-react-hooks/src/RulesOfHooks.js#LL18C1-L23C2
 export function isHookName(name: string): boolean {

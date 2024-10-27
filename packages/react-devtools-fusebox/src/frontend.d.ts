@@ -15,13 +15,18 @@ export type Wall = {
 };
 
 export type Bridge = {
-  shutdown: () => void,
+  addListener(event: string, listener: (params: unknown) => any): void;
+  removeListener(event: string, listener: Function): void;
+  shutdown: () => void;
 };
 export type Store = Object;
 export type BrowserTheme = 'dark' | 'light';
+export type Config = {
+  supportsReloadAndProfile?: boolean,
+};
 
 export function createBridge(wall: Wall): Bridge;
-export function createStore(bridge: Bridge): Store;
+export function createStore(bridge: Bridge, config?: Config): Store;
 
 export type Source = {
   sourceURL: string,

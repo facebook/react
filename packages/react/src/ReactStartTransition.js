@@ -23,20 +23,17 @@ export function startTransition(
   options?: StartTransitionOptions,
 ) {
   const prevTransition = ReactSharedInternals.T;
-  const transition: BatchConfigTransition = {};
-  ReactSharedInternals.T = transition;
-  const currentTransition = ReactSharedInternals.T;
+  const currentTransition: BatchConfigTransition = {};
+  ReactSharedInternals.T = currentTransition;
 
   if (__DEV__) {
-    ReactSharedInternals.T._updatedFibers = new Set();
+    currentTransition._updatedFibers = new Set();
   }
 
   if (enableTransitionTracing) {
     if (options !== undefined && options.name !== undefined) {
-      // $FlowFixMe[incompatible-use] found when upgrading Flow
-      ReactSharedInternals.T.name = options.name;
-      // $FlowFixMe[incompatible-use] found when upgrading Flow
-      ReactSharedInternals.T.startTime = -1;
+      currentTransition.name = options.name;
+      currentTransition.startTime = -1;
     }
   }
 
@@ -45,7 +42,7 @@ export function startTransition(
       const returnValue = scope();
       const onStartTransitionFinish = ReactSharedInternals.S;
       if (onStartTransitionFinish !== null) {
-        onStartTransitionFinish(transition, returnValue);
+        onStartTransitionFinish(currentTransition, returnValue);
       }
       if (
         typeof returnValue === 'object' &&

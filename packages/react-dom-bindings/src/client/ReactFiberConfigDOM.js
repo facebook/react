@@ -606,6 +606,16 @@ export function shouldAttemptEagerTransition(): boolean {
   return false;
 }
 
+export function resolveEventType(): null | string {
+  const event = window.event;
+  return event ? event.type : null;
+}
+
+export function resolveEventTimeStamp(): number {
+  const event = window.event;
+  return event ? event.timeStamp : -1.1;
+}
+
 export const isPrimaryRenderer = true;
 export const warnsIfNotActing = true;
 // This initialization code may run even on server environments
@@ -3391,7 +3401,7 @@ export function suspendResource(
   }
 }
 
-export function waitForCommitToBeReady(): null | (Function => Function) {
+export function waitForCommitToBeReady(): null | ((() => void) => () => void) {
   if (suspendedState === null) {
     throw new Error(
       'Internal React Error: suspendedState null when it was expected to exists. Please report this as a React bug.',

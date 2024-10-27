@@ -130,7 +130,7 @@ describe('ReactFlightDOMNode', () => {
         '*': ssrMetadata,
       },
     };
-    const ssrManifest = {
+    const serverConsumerManifest = {
       moduleMap: translationMap,
       moduleLoading: webpackModuleLoading,
     };
@@ -151,7 +151,7 @@ describe('ReactFlightDOMNode', () => {
       if (response) return use(response);
       response = ReactServerDOMClient.createFromNodeStream(
         readable,
-        ssrManifest,
+        serverConsumerManifest,
       );
       return use(response);
     }
@@ -255,7 +255,7 @@ describe('ReactFlightDOMNode', () => {
         '*': ssrMetadata,
       },
     };
-    const ssrManifest = {
+    const serverConsumerManifest = {
       moduleMap: translationMap,
       moduleLoading: webpackModuleLoading,
     };
@@ -276,7 +276,7 @@ describe('ReactFlightDOMNode', () => {
       if (response) return use(response);
       response = ReactServerDOMClient.createFromNodeStream(
         readable,
-        ssrManifest,
+        serverConsumerManifest,
         {
           nonce: 'r4nd0m',
         },
@@ -426,7 +426,7 @@ describe('ReactFlightDOMNode', () => {
     }
 
     const response = ReactServerDOMClient.createFromNodeStream(prelude, {
-      ssrManifest: {
+      serverConsumerManifest: {
         moduleMap: null,
         moduleLoading: null,
       },
@@ -492,7 +492,7 @@ describe('ReactFlightDOMNode', () => {
     }
 
     const response = ReactServerDOMClient.createFromNodeStream(prelude, {
-      ssrManifest: {
+      serverConsumerManifest: {
         moduleMap: null,
         moduleLoading: null,
       },

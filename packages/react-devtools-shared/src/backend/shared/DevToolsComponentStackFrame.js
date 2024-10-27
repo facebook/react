@@ -82,105 +82,104 @@ export function describeNativeComponentFrame(
   const previousDispatcher = currentDispatcherRef.H;
   currentDispatcherRef.H = null;
   disableLogs();
+  try {
+    // NOTE: keep in sync with the implementation in ReactComponentStackFrame
 
-  // NOTE: keep in sync with the implementation in ReactComponentStackFrame
-
-  /**
-   * Finding a common stack frame between sample and control errors can be
-   * tricky given the different types and levels of stack trace truncation from
-   * different JS VMs. So instead we'll attempt to control what that common
-   * frame should be through this object method:
-   * Having both the sample and control errors be in the function under the
-   * `DescribeNativeComponentFrameRoot` property, + setting the `name` and
-   * `displayName` properties of the function ensures that a stack
-   * frame exists that has the method name `DescribeNativeComponentFrameRoot` in
-   * it for both control and sample stacks.
-   */
-  const RunInRootFrame = {
-    DetermineComponentFrameRoot(): [?string, ?string] {
-      let control;
-      try {
-        // This should throw.
-        if (construct) {
-          // Something should be setting the props in the constructor.
-          const Fake = function () {
-            throw Error();
-          };
-          // $FlowFixMe[prop-missing]
-          Object.defineProperty(Fake.prototype, 'props', {
-            set: function () {
-              // We use a throwing setter instead of frozen or non-writable props
-              // because that won't throw in a non-strict mode function.
+    /**
+     * Finding a common stack frame between sample and control errors can be
+     * tricky given the different types and levels of stack trace truncation from
+     * different JS VMs. So instead we'll attempt to control what that common
+     * frame should be through this object method:
+     * Having both the sample and control errors be in the function under the
+     * `DescribeNativeComponentFrameRoot` property, + setting the `name` and
+     * `displayName` properties of the function ensures that a stack
+     * frame exists that has the method name `DescribeNativeComponentFrameRoot` in
+     * it for both control and sample stacks.
+     */
+    const RunInRootFrame = {
+      DetermineComponentFrameRoot(): [?string, ?string] {
+        let control;
+        try {
+          // This should throw.
+          if (construct) {
+            // Something should be setting the props in the constructor.
+            const Fake = function () {
               throw Error();
-            },
-          });
-          if (typeof Reflect === 'object' && Reflect.construct) {
-            // We construct a different control for this case to include any extra
-            // frames added by the construct call.
-            try {
-              Reflect.construct(Fake, []);
-            } catch (x) {
-              control = x;
+            };
+            // $FlowFixMe[prop-missing]
+            Object.defineProperty(Fake.prototype, 'props', {
+              set: function () {
+                // We use a throwing setter instead of frozen or non-writable props
+                // because that won't throw in a non-strict mode function.
+                throw Error();
+              },
+            });
+            if (typeof Reflect === 'object' && Reflect.construct) {
+              // We construct a different control for this case to include any extra
+              // frames added by the construct call.
+              try {
+                Reflect.construct(Fake, []);
+              } catch (x) {
+                control = x;
+              }
+              Reflect.construct(fn, [], Fake);
+            } else {
+              try {
+                Fake.call();
+              } catch (x) {
+                control = x;
+              }
+              // $FlowFixMe[prop-missing] found when upgrading Flow
+              fn.call(Fake.prototype);
             }
-            Reflect.construct(fn, [], Fake);
           } else {
             try {
-              Fake.call();
+              throw Error();
             } catch (x) {
               control = x;
             }
-            // $FlowFixMe[prop-missing] found when upgrading Flow
-            fn.call(Fake.prototype);
-          }
-        } else {
-          try {
-            throw Error();
-          } catch (x) {
-            control = x;
-          }
-          // TODO(luna): This will currently only throw if the function component
-          // tries to access React/ReactDOM/props. We should probably make this throw
-          // in simple components too
-          const maybePromise = fn();
+            // TODO(luna): This will currently only throw if the function component
+            // tries to access React/ReactDOM/props. We should probably make this throw
+            // in simple components too
+            const maybePromise = fn();
 
-          // If the function component returns a promise, it's likely an async
-          // component, which we don't yet support. Attach a noop catch handler to
-          // silence the error.
-          // TODO: Implement component stacks for async client components?
-          if (maybePromise && typeof maybePromise.catch === 'function') {
-            maybePromise.catch(() => {});
+            // If the function component returns a promise, it's likely an async
+            // component, which we don't yet support. Attach a noop catch handler to
+            // silence the error.
+            // TODO: Implement component stacks for async client components?
+            if (maybePromise && typeof maybePromise.catch === 'function') {
+              maybePromise.catch(() => {});
+            }
+          }
+        } catch (sample) {
+          // This is inlined manually because closure doesn't do it for us.
+          if (sample && control && typeof sample.stack === 'string') {
+            return [sample.stack, control.stack];
           }
         }
-      } catch (sample) {
-        // This is inlined manually because closure doesn't do it for us.
-        if (sample && control && typeof sample.stack === 'string') {
-          return [sample.stack, control.stack];
-        }
-      }
-      return [null, null];
-    },
-  };
-  // $FlowFixMe[prop-missing]
-  RunInRootFrame.DetermineComponentFrameRoot.displayName =
-    'DetermineComponentFrameRoot';
-  const namePropDescriptor = Object.getOwnPropertyDescriptor(
-    RunInRootFrame.DetermineComponentFrameRoot,
-    'name',
-  );
-  // Before ES6, the `name` property was not configurable.
-  if (namePropDescriptor && namePropDescriptor.configurable) {
-    // V8 utilizes a function's `name` property when generating a stack trace.
-    Object.defineProperty(
+        return [null, null];
+      },
+    };
+    // $FlowFixMe[prop-missing]
+    RunInRootFrame.DetermineComponentFrameRoot.displayName =
+      'DetermineComponentFrameRoot';
+    const namePropDescriptor = Object.getOwnPropertyDescriptor(
       RunInRootFrame.DetermineComponentFrameRoot,
-      // Configurable properties can be updated even if its writable descriptor
-      // is set to `false`.
-      // $FlowFixMe[cannot-write]
       'name',
-      {value: 'DetermineComponentFrameRoot'},
     );
-  }
+    // Before ES6, the `name` property was not configurable.
+    if (namePropDescriptor && namePropDescriptor.configurable) {
+      // V8 utilizes a function's `name` property when generating a stack trace.
+      Object.defineProperty(
+        RunInRootFrame.DetermineComponentFrameRoot,
+        // Configurable properties can be updated even if its writable descriptor
+        // is set to `false`.
+        // $FlowFixMe[cannot-write]
+        'name',
+        {value: 'DetermineComponentFrameRoot'},
+      );
+    }
 
-  try {
     const [sampleStack, controlStack] =
       RunInRootFrame.DetermineComponentFrameRoot();
     if (sampleStack && controlStack) {

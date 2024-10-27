@@ -61,6 +61,7 @@ import {
   onScheduleRoot,
   injectProfilingHooks,
 } from './ReactFiberDevToolsHook';
+import {startUpdateTimerByLane} from './ReactProfilerTimer';
 import {
   requestUpdateLane,
   scheduleUpdateOnFiber,
@@ -433,6 +434,7 @@ function updateContainerImpl(
 
   const root = enqueueUpdate(rootFiber, update, lane);
   if (root !== null) {
+    startUpdateTimerByLane(lane);
     scheduleUpdateOnFiber(root, rootFiber, lane);
     entangleTransitions(root, rootFiber, lane);
   }
