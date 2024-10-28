@@ -222,6 +222,8 @@ function collectProps(
   const attributes: Array<OutlinedJsxAttribute> = [];
   const jsxIds = new Set(instructions.map(i => i.lvalue.identifier.id));
   const seen: Set<string> = new Set();
+  let id = 1;
+
   for (const instr of instructions) {
     const {value} = instr;
 
@@ -230,21 +232,13 @@ function collectProps(
         return null;
       }
 
-      /*
-       * TODO(gsn): Handle attributes that have same value across
-       * the outlined jsx instructions.
-       */
-      if (seen.has(at.name)) {
-        return null;
-      }
-
       if (at.kind === 'JsxAttribute') {
-        seen.add(at.name);
         attributes.push({
           originalName: at.name,
-          newName: at.name,
+          newName: seen.has(at.name) ? `${at.name}${id++}` : at.name,
           place: at.place,
         });
+        seen.add(at.name);
       }
     }
 

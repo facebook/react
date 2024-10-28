@@ -58,12 +58,10 @@ function Component(t0) {
   if ($[0] !== x || $[1] !== arr) {
     let t2;
     if ($[3] !== x) {
-      t2 = (i, id) => (
-        <Bar key={id} x={x}>
-          <Baz i={i} />
-          <Foo i={i} />
-        </Bar>
-      );
+      t2 = (i, id) => {
+        const T0 = _temp;
+        return <T0 i={i} i1={i} key={id} x={x} />;
+      };
       $[3] = x;
       $[4] = t2;
     } else {
@@ -85,6 +83,42 @@ function Component(t0) {
     t2 = $[6];
   }
   return t2;
+}
+function _temp(t0) {
+  const $ = _c(8);
+  const { i: i, i1: i1, x: x } = t0;
+  let t1;
+  if ($[0] !== i) {
+    t1 = <Baz i={i} />;
+    $[0] = i;
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
+  let t2;
+  if ($[2] !== i1) {
+    t2 = <Foo i={i1} />;
+    $[2] = i1;
+    $[3] = t2;
+  } else {
+    t2 = $[3];
+  }
+  let t3;
+  if ($[4] !== x || $[5] !== t1 || $[6] !== t2) {
+    t3 = (
+      <Bar x={x}>
+        {t1}
+        {t2}
+      </Bar>
+    );
+    $[4] = x;
+    $[5] = t1;
+    $[6] = t2;
+    $[7] = t3;
+  } else {
+    t3 = $[7];
+  }
+  return t3;
 }
 
 function Bar(t0) {
