@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<365898359603229f1643cfe6c0ac9e3c>>
+ * @generated SignedSource<<f9db042bf4f73ba2e86bf064de118498>>
  */
 
 "use strict";
@@ -2301,12 +2301,21 @@ __DEV__ &&
     }
     function createCapturedValueAtFiber(value, source) {
       if ("object" === typeof value && null !== value) {
-        var stack = CapturedStacks.get(value);
-        "string" !== typeof stack &&
-          ((stack = getStackByFiberInDevAndProd(source)),
-          CapturedStacks.set(value, stack));
-      } else stack = getStackByFiberInDevAndProd(source);
-      return { value: value, source: source, stack: stack };
+        var existing = CapturedStacks.get(value);
+        if (void 0 !== existing) return existing;
+        source = {
+          value: value,
+          source: source,
+          stack: getStackByFiberInDevAndProd(source)
+        };
+        CapturedStacks.set(value, source);
+        return source;
+      }
+      return {
+        value: value,
+        source: source,
+        stack: getStackByFiberInDevAndProd(source)
+      };
     }
     function requiredContext(c) {
       null === c &&
@@ -7860,16 +7869,16 @@ __DEV__ &&
             (nextPrimaryChildren.stack = nextProps || ""),
             (nextPrimaryChildren.digest = JSCompiler_temp),
             (JSCompiler_temp = void 0 === showFallback ? null : showFallback),
-            "string" === typeof JSCompiler_temp &&
-              CapturedStacks.set(nextPrimaryChildren, JSCompiler_temp),
-            (JSCompiler_temp = {
+            (nextProps = {
               value: nextPrimaryChildren,
               source: null,
               stack: JSCompiler_temp
             }),
+            "string" === typeof JSCompiler_temp &&
+              CapturedStacks.set(nextPrimaryChildren, nextProps),
             null === hydrationErrors
-              ? (hydrationErrors = [JSCompiler_temp])
-              : hydrationErrors.push(JSCompiler_temp),
+              ? (hydrationErrors = [nextProps])
+              : hydrationErrors.push(nextProps),
             (workInProgress = retrySuspenseComponentWithoutHydrating(
               current,
               workInProgress,
@@ -17178,11 +17187,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.0.0-native-fb-cae764ce-20241025" !== isomorphicReactPackageVersion)
+    if ("19.0.0-native-fb-0bc30748-20241028" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.0.0-native-fb-cae764ce-20241025\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.0.0-native-fb-0bc30748-20241028\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17208,11 +17217,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-cae764ce-20241025",
+        version: "19.0.0-native-fb-0bc30748-20241028",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromTag,
-        reconcilerVersion: "19.0.0-native-fb-cae764ce-20241025"
+        reconcilerVersion: "19.0.0-native-fb-0bc30748-20241028"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

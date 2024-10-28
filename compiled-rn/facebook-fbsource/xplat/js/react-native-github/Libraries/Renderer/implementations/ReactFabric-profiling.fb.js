@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d517e2c5c39fc8610458d49964bfea0c>>
+ * @generated SignedSource<<55c6de6687a266fe919dac9d62e265f1>>
  */
 
 "use strict";
@@ -2220,12 +2220,21 @@ var objectIs = "function" === typeof Object.is ? Object.is : is,
   CapturedStacks = new WeakMap();
 function createCapturedValueAtFiber(value, source) {
   if ("object" === typeof value && null !== value) {
-    var stack = CapturedStacks.get(value);
-    "string" !== typeof stack &&
-      ((stack = getStackByFiberInDevAndProd(source)),
-      CapturedStacks.set(value, stack));
-  } else stack = getStackByFiberInDevAndProd(source);
-  return { value: value, source: source, stack: stack };
+    var existing = CapturedStacks.get(value);
+    if (void 0 !== existing) return existing;
+    source = {
+      value: value,
+      source: source,
+      stack: getStackByFiberInDevAndProd(source)
+    };
+    CapturedStacks.set(value, source);
+    return source;
+  }
+  return {
+    value: value,
+    source: source,
+    stack: getStackByFiberInDevAndProd(source)
+  };
 }
 var contextStackCursor = createCursor(null),
   contextFiberStackCursor = createCursor(null),
@@ -11553,11 +11562,11 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1258 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-cae764ce-20241025",
+    version: "19.0.0-native-fb-0bc30748-20241028",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromNode,
-    reconcilerVersion: "19.0.0-native-fb-cae764ce-20241025"
+    reconcilerVersion: "19.0.0-native-fb-0bc30748-20241028"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1258.rendererConfig = extraDevToolsConfig);
@@ -11577,16 +11586,16 @@ internals$jscomp$inline_1258.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1532 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1533 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1532.isDisabled &&
-    hook$jscomp$inline_1532.supportsFiber
+    !hook$jscomp$inline_1533.isDisabled &&
+    hook$jscomp$inline_1533.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1532.inject(
+      (rendererID = hook$jscomp$inline_1533.inject(
         internals$jscomp$inline_1258
       )),
-        (injectedHook = hook$jscomp$inline_1532);
+        (injectedHook = hook$jscomp$inline_1533);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

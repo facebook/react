@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<91c3792b907a6ff762f616eec585c25d>>
+ * @generated SignedSource<<08145d27a62e0c9597421986d94f8367>>
  */
 
 "use strict";
@@ -1217,12 +1217,21 @@ __DEV__ &&
     }
     function createCapturedValueAtFiber(value, source) {
       if ("object" === typeof value && null !== value) {
-        var stack = CapturedStacks.get(value);
-        "string" !== typeof stack &&
-          ((stack = getStackByFiberInDevAndProd(source)),
-          CapturedStacks.set(value, stack));
-      } else stack = getStackByFiberInDevAndProd(source);
-      return { value: value, source: source, stack: stack };
+        var existing = CapturedStacks.get(value);
+        if (void 0 !== existing) return existing;
+        source = {
+          value: value,
+          source: source,
+          stack: getStackByFiberInDevAndProd(source)
+        };
+        CapturedStacks.set(value, source);
+        return source;
+      }
+      return {
+        value: value,
+        source: source,
+        stack: getStackByFiberInDevAndProd(source)
+      };
     }
     function requiredContext(c) {
       null === c &&
@@ -6696,16 +6705,16 @@ __DEV__ &&
             (nextPrimaryChildren.stack = nextProps || ""),
             (nextPrimaryChildren.digest = JSCompiler_temp),
             (JSCompiler_temp = void 0 === showFallback ? null : showFallback),
-            "string" === typeof JSCompiler_temp &&
-              CapturedStacks.set(nextPrimaryChildren, JSCompiler_temp),
-            (JSCompiler_temp = {
+            (nextProps = {
               value: nextPrimaryChildren,
               source: null,
               stack: JSCompiler_temp
             }),
+            "string" === typeof JSCompiler_temp &&
+              CapturedStacks.set(nextPrimaryChildren, nextProps),
             null === hydrationErrors
-              ? (hydrationErrors = [JSCompiler_temp])
-              : hydrationErrors.push(JSCompiler_temp),
+              ? (hydrationErrors = [nextProps])
+              : hydrationErrors.push(nextProps),
             (workInProgress = retrySuspenseComponentWithoutHydrating(
               current,
               workInProgress,
@@ -15118,11 +15127,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-cae764ce-20241025",
+        version: "19.0.0-native-fb-0bc30748-20241028",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-native-fb-cae764ce-20241025"
+        reconcilerVersion: "19.0.0-native-fb-0bc30748-20241028"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15267,5 +15276,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.0.0-native-fb-cae764ce-20241025";
+    exports.version = "19.0.0-native-fb-0bc30748-20241028";
   })();

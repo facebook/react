@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0d9e593da6ce3bdbc68fb9c50d3c9986>>
+ * @generated SignedSource<<1185f4cbd4a5fa61a779db533b01f6b3>>
  */
 
 "use strict";
@@ -2513,12 +2513,21 @@ var objectIs = "function" === typeof Object.is ? Object.is : is,
   CapturedStacks = new WeakMap();
 function createCapturedValueAtFiber(value, source) {
   if ("object" === typeof value && null !== value) {
-    var stack = CapturedStacks.get(value);
-    "string" !== typeof stack &&
-      ((stack = getStackByFiberInDevAndProd(source)),
-      CapturedStacks.set(value, stack));
-  } else stack = getStackByFiberInDevAndProd(source);
-  return { value: value, source: source, stack: stack };
+    var existing = CapturedStacks.get(value);
+    if (void 0 !== existing) return existing;
+    source = {
+      value: value,
+      source: source,
+      stack: getStackByFiberInDevAndProd(source)
+    };
+    CapturedStacks.set(value, source);
+    return source;
+  }
+  return {
+    value: value,
+    source: source,
+    stack: getStackByFiberInDevAndProd(source)
+  };
 }
 var contextStackCursor = createCursor(null),
   contextFiberStackCursor = createCursor(null),
@@ -11683,11 +11692,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.0.0-native-fb-cae764ce-20241025" !== isomorphicReactPackageVersion)
+if ("19.0.0-native-fb-0bc30748-20241028" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.0.0-native-fb-cae764ce-20241025\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.0.0-native-fb-0bc30748-20241028\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11736,11 +11745,11 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1324 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-cae764ce-20241025",
+    version: "19.0.0-native-fb-0bc30748-20241028",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromTag,
-    reconcilerVersion: "19.0.0-native-fb-cae764ce-20241025"
+    reconcilerVersion: "19.0.0-native-fb-0bc30748-20241028"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1324.rendererConfig = extraDevToolsConfig);
@@ -11760,16 +11769,16 @@ internals$jscomp$inline_1324.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1619 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1620 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1619.isDisabled &&
-    hook$jscomp$inline_1619.supportsFiber
+    !hook$jscomp$inline_1620.isDisabled &&
+    hook$jscomp$inline_1620.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1619.inject(
+      (rendererID = hook$jscomp$inline_1620.inject(
         internals$jscomp$inline_1324
       )),
-        (injectedHook = hook$jscomp$inline_1619);
+        (injectedHook = hook$jscomp$inline_1620);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

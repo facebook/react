@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<4e2ff930ce3b86124aa39f168e4d6b9f>>
+ * @generated SignedSource<<5e5146d6bcd48109a990c272366ec551>>
  */
 
 /*
@@ -2577,12 +2577,21 @@ function invalidateContextProvider(workInProgress, type, didChange) {
 var CapturedStacks = new WeakMap();
 function createCapturedValueAtFiber(value, source) {
   if ("object" === typeof value && null !== value) {
-    var stack = CapturedStacks.get(value);
-    "string" !== typeof stack &&
-      ((stack = getStackByFiberInDevAndProd(source)),
-      CapturedStacks.set(value, stack));
-  } else stack = getStackByFiberInDevAndProd(source);
-  return { value: value, source: source, stack: stack };
+    var existing = CapturedStacks.get(value);
+    if (void 0 !== existing) return existing;
+    source = {
+      value: value,
+      source: source,
+      stack: getStackByFiberInDevAndProd(source)
+    };
+    CapturedStacks.set(value, source);
+    return source;
+  }
+  return {
+    value: value,
+    source: source,
+    stack: getStackByFiberInDevAndProd(source)
+  };
 }
 var forkStack = [],
   forkStackIndex = 0,
@@ -15622,14 +15631,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1691 = React.version;
 if (
-  "19.0.0-native-fb-cae764ce-20241025" !==
+  "19.0.0-native-fb-0bc30748-20241028" !==
   isomorphicReactPackageVersion$jscomp$inline_1691
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1691,
-      "19.0.0-native-fb-cae764ce-20241025"
+      "19.0.0-native-fb-0bc30748-20241028"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -15649,25 +15658,25 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_2144 = {
+var internals$jscomp$inline_2145 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-cae764ce-20241025",
+  version: "19.0.0-native-fb-0bc30748-20241028",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-native-fb-cae764ce-20241025"
+  reconcilerVersion: "19.0.0-native-fb-0bc30748-20241028"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2145 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2146 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2145.isDisabled &&
-    hook$jscomp$inline_2145.supportsFiber
+    !hook$jscomp$inline_2146.isDisabled &&
+    hook$jscomp$inline_2146.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2145.inject(
-        internals$jscomp$inline_2144
+      (rendererID = hook$jscomp$inline_2146.inject(
+        internals$jscomp$inline_2145
       )),
-        (injectedHook = hook$jscomp$inline_2145);
+        (injectedHook = hook$jscomp$inline_2146);
     } catch (err) {}
 }
 exports.createRoot = function (container, options) {
@@ -15759,4 +15768,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.0.0-native-fb-cae764ce-20241025";
+exports.version = "19.0.0-native-fb-0bc30748-20241028";
