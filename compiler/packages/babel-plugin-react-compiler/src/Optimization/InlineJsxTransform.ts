@@ -114,8 +114,8 @@ export function inlineJsxTransform(
             id: fallthroughBlockId,
             instructions: fallthroughBlockInstructions,
             terminal: currentBlock.terminal,
-            preds:new Set(),
-            phis: new Set()
+            preds: new Set(),
+            phis: new Set(),
           };
 
           /**
@@ -351,13 +351,13 @@ export function inlineJsxTransform(
           break;
         }
         case 'FunctionExpression':
-          case 'ObjectMethod': {
-            inlineJsxTransform(
-              instr.value.loweredFunc.func,
-              inlineJsxTransformConfig,
-            );
-            break;
-          }
+        case 'ObjectMethod': {
+          inlineJsxTransform(
+            instr.value.loweredFunc.func,
+            inlineJsxTransformConfig,
+          );
+          break;
+        }
       }
     }
   }
