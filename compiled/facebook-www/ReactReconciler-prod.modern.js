@@ -711,12 +711,21 @@ module.exports = function ($$$config) {
   }
   function createCapturedValueAtFiber(value, source) {
     if ("object" === typeof value && null !== value) {
-      var stack = CapturedStacks.get(value);
-      "string" !== typeof stack &&
-        ((stack = getStackByFiberInDevAndProd(source)),
-        CapturedStacks.set(value, stack));
-    } else stack = getStackByFiberInDevAndProd(source);
-    return { value: value, source: source, stack: stack };
+      var existing = CapturedStacks.get(value);
+      if (void 0 !== existing) return existing;
+      source = {
+        value: value,
+        source: source,
+        stack: getStackByFiberInDevAndProd(source)
+      };
+      CapturedStacks.set(value, source);
+      return source;
+    }
+    return {
+      value: value,
+      source: source,
+      stack: getStackByFiberInDevAndProd(source)
+    };
   }
   function pushTreeFork(workInProgress, totalChildren) {
     forkStack[forkStackIndex++] = treeForkCount;
@@ -12369,7 +12378,7 @@ module.exports = function ($$$config) {
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
       findFiberByHostInstance: getInstanceFromNode,
-      reconcilerVersion: "19.0.0-www-modern-cae764ce-20241025"
+      reconcilerVersion: "19.0.0-www-modern-0bc30748-20241028"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

@@ -1272,12 +1272,21 @@ __DEV__ &&
     }
     function createCapturedValueAtFiber(value, source) {
       if ("object" === typeof value && null !== value) {
-        var stack = CapturedStacks.get(value);
-        "string" !== typeof stack &&
-          ((stack = getStackByFiberInDevAndProd(source)),
-          CapturedStacks.set(value, stack));
-      } else stack = getStackByFiberInDevAndProd(source);
-      return { value: value, source: source, stack: stack };
+        var existing = CapturedStacks.get(value);
+        if (void 0 !== existing) return existing;
+        source = {
+          value: value,
+          source: source,
+          stack: getStackByFiberInDevAndProd(source)
+        };
+        CapturedStacks.set(value, source);
+        return source;
+      }
+      return {
+        value: value,
+        source: source,
+        stack: getStackByFiberInDevAndProd(source)
+      };
     }
     function pushTreeFork(workInProgress, totalChildren) {
       warnIfNotHydrating();
@@ -7417,13 +7426,14 @@ __DEV__ &&
             (showFallback.stack = nextProps || ""),
             (showFallback.digest = JSCompiler_temp),
             (JSCompiler_temp = void 0 === nextInstance ? null : nextInstance),
-            "string" === typeof JSCompiler_temp &&
-              CapturedStacks.set(showFallback, JSCompiler_temp),
-            queueHydrationError({
+            (nextProps = {
               value: showFallback,
               source: null,
               stack: JSCompiler_temp
             }),
+            "string" === typeof JSCompiler_temp &&
+              CapturedStacks.set(showFallback, nextProps),
+            queueHydrationError(nextProps),
             (workInProgress = retrySuspenseComponentWithoutHydrating(
               current,
               workInProgress,
@@ -18642,7 +18652,7 @@ __DEV__ &&
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-www-modern-cae764ce-20241025"
+        reconcilerVersion: "19.0.0-www-modern-0bc30748-20241028"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

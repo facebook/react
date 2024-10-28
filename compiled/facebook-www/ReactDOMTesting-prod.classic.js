@@ -1719,12 +1719,21 @@ var objectIs = "function" === typeof Object.is ? Object.is : is,
   CapturedStacks = new WeakMap();
 function createCapturedValueAtFiber(value, source) {
   if ("object" === typeof value && null !== value) {
-    var stack = CapturedStacks.get(value);
-    "string" !== typeof stack &&
-      ((stack = getStackByFiberInDevAndProd(source)),
-      CapturedStacks.set(value, stack));
-  } else stack = getStackByFiberInDevAndProd(source);
-  return { value: value, source: source, stack: stack };
+    var existing = CapturedStacks.get(value);
+    if (void 0 !== existing) return existing;
+    source = {
+      value: value,
+      source: source,
+      stack: getStackByFiberInDevAndProd(source)
+    };
+    CapturedStacks.set(value, source);
+    return source;
+  }
+  return {
+    value: value,
+    source: source,
+    stack: getStackByFiberInDevAndProd(source)
+  };
 }
 var forkStack = [],
   forkStackIndex = 0,
@@ -17768,14 +17777,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1804 = React.version;
 if (
-  "19.0.0-www-classic-cae764ce-20241025" !==
+  "19.0.0-www-classic-0bc30748-20241028" !==
   isomorphicReactPackageVersion$jscomp$inline_1804
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1804,
-      "19.0.0-www-classic-cae764ce-20241025"
+      "19.0.0-www-classic-0bc30748-20241028"
     )
   );
 function flushSyncFromReconciler(fn) {
@@ -17818,25 +17827,25 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2322 = {
+var internals$jscomp$inline_2323 = {
   bundleType: 0,
-  version: "19.0.0-www-classic-cae764ce-20241025",
+  version: "19.0.0-www-classic-0bc30748-20241028",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-www-classic-cae764ce-20241025"
+  reconcilerVersion: "19.0.0-www-classic-0bc30748-20241028"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2323 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2324 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2323.isDisabled &&
-    hook$jscomp$inline_2323.supportsFiber
+    !hook$jscomp$inline_2324.isDisabled &&
+    hook$jscomp$inline_2324.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2323.inject(
-        internals$jscomp$inline_2322
+      (rendererID = hook$jscomp$inline_2324.inject(
+        internals$jscomp$inline_2323
       )),
-        (injectedHook = hook$jscomp$inline_2323);
+        (injectedHook = hook$jscomp$inline_2324);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -18431,4 +18440,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-cae764ce-20241025";
+exports.version = "19.0.0-www-classic-0bc30748-20241028";

@@ -1562,12 +1562,21 @@ var objectIs = "function" === typeof Object.is ? Object.is : is,
   CapturedStacks = new WeakMap();
 function createCapturedValueAtFiber(value, source) {
   if ("object" === typeof value && null !== value) {
-    var stack = CapturedStacks.get(value);
-    "string" !== typeof stack &&
-      ((stack = getStackByFiberInDevAndProd(source)),
-      CapturedStacks.set(value, stack));
-  } else stack = getStackByFiberInDevAndProd(source);
-  return { value: value, source: source, stack: stack };
+    var existing = CapturedStacks.get(value);
+    if (void 0 !== existing) return existing;
+    source = {
+      value: value,
+      source: source,
+      stack: getStackByFiberInDevAndProd(source)
+    };
+    CapturedStacks.set(value, source);
+    return source;
+  }
+  return {
+    value: value,
+    source: source,
+    stack: getStackByFiberInDevAndProd(source)
+  };
 }
 var forkStack = [],
   forkStackIndex = 0,
@@ -17136,14 +17145,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1775 = React.version;
 if (
-  "19.0.0-www-modern-cae764ce-20241025" !==
+  "19.0.0-www-modern-0bc30748-20241028" !==
   isomorphicReactPackageVersion$jscomp$inline_1775
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1775,
-      "19.0.0-www-modern-cae764ce-20241025"
+      "19.0.0-www-modern-0bc30748-20241028"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17159,25 +17168,25 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2314 = {
+var internals$jscomp$inline_2315 = {
   bundleType: 0,
-  version: "19.0.0-www-modern-cae764ce-20241025",
+  version: "19.0.0-www-modern-0bc30748-20241028",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-www-modern-cae764ce-20241025"
+  reconcilerVersion: "19.0.0-www-modern-0bc30748-20241028"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2315 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2316 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2315.isDisabled &&
-    hook$jscomp$inline_2315.supportsFiber
+    !hook$jscomp$inline_2316.isDisabled &&
+    hook$jscomp$inline_2316.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2315.inject(
-        internals$jscomp$inline_2314
+      (rendererID = hook$jscomp$inline_2316.inject(
+        internals$jscomp$inline_2315
       )),
-        (injectedHook = hook$jscomp$inline_2315);
+        (injectedHook = hook$jscomp$inline_2316);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -17679,4 +17688,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-cae764ce-20241025";
+exports.version = "19.0.0-www-modern-0bc30748-20241028";

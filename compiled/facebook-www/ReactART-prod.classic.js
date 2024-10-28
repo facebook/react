@@ -1068,12 +1068,21 @@ var objectIs = "function" === typeof Object.is ? Object.is : is,
   CapturedStacks = new WeakMap();
 function createCapturedValueAtFiber(value, source) {
   if ("object" === typeof value && null !== value) {
-    var stack = CapturedStacks.get(value);
-    "string" !== typeof stack &&
-      ((stack = getStackByFiberInDevAndProd(source)),
-      CapturedStacks.set(value, stack));
-  } else stack = getStackByFiberInDevAndProd(source);
-  return { value: value, source: source, stack: stack };
+    var existing = CapturedStacks.get(value);
+    if (void 0 !== existing) return existing;
+    source = {
+      value: value,
+      source: source,
+      stack: getStackByFiberInDevAndProd(source)
+    };
+    CapturedStacks.set(value, source);
+    return source;
+  }
+  return {
+    value: value,
+    source: source,
+    stack: getStackByFiberInDevAndProd(source)
+  };
 }
 var contextStackCursor = createCursor(null),
   contextFiberStackCursor = createCursor(null),
@@ -10851,27 +10860,27 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component);
-var internals$jscomp$inline_1467 = {
+var internals$jscomp$inline_1468 = {
   bundleType: 0,
-  version: "19.0.0-www-classic-cae764ce-20241025",
+  version: "19.0.0-www-classic-0bc30748-20241028",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: function () {
     return null;
   },
-  reconcilerVersion: "19.0.0-www-classic-cae764ce-20241025"
+  reconcilerVersion: "19.0.0-www-classic-0bc30748-20241028"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1468 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1469 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1468.isDisabled &&
-    hook$jscomp$inline_1468.supportsFiber
+    !hook$jscomp$inline_1469.isDisabled &&
+    hook$jscomp$inline_1469.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1468.inject(
-        internals$jscomp$inline_1467
+      (rendererID = hook$jscomp$inline_1469.inject(
+        internals$jscomp$inline_1468
       )),
-        (injectedHook = hook$jscomp$inline_1468);
+        (injectedHook = hook$jscomp$inline_1469);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
@@ -10885,4 +10894,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.0.0-www-classic-cae764ce-20241025";
+exports.version = "19.0.0-www-classic-0bc30748-20241028";

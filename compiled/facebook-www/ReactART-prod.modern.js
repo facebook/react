@@ -907,12 +907,21 @@ var objectIs = "function" === typeof Object.is ? Object.is : is,
   CapturedStacks = new WeakMap();
 function createCapturedValueAtFiber(value, source) {
   if ("object" === typeof value && null !== value) {
-    var stack = CapturedStacks.get(value);
-    "string" !== typeof stack &&
-      ((stack = getStackByFiberInDevAndProd(source)),
-      CapturedStacks.set(value, stack));
-  } else stack = getStackByFiberInDevAndProd(source);
-  return { value: value, source: source, stack: stack };
+    var existing = CapturedStacks.get(value);
+    if (void 0 !== existing) return existing;
+    source = {
+      value: value,
+      source: source,
+      stack: getStackByFiberInDevAndProd(source)
+    };
+    CapturedStacks.set(value, source);
+    return source;
+  }
+  return {
+    value: value,
+    source: source,
+    stack: getStackByFiberInDevAndProd(source)
+  };
 }
 var contextStackCursor = createCursor(null),
   contextFiberStackCursor = createCursor(null),
@@ -10362,27 +10371,27 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component);
-var internals$jscomp$inline_1460 = {
+var internals$jscomp$inline_1461 = {
   bundleType: 0,
-  version: "19.0.0-www-modern-cae764ce-20241025",
+  version: "19.0.0-www-modern-0bc30748-20241028",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: function () {
     return null;
   },
-  reconcilerVersion: "19.0.0-www-modern-cae764ce-20241025"
+  reconcilerVersion: "19.0.0-www-modern-0bc30748-20241028"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1461 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1462 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1461.isDisabled &&
-    hook$jscomp$inline_1461.supportsFiber
+    !hook$jscomp$inline_1462.isDisabled &&
+    hook$jscomp$inline_1462.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1461.inject(
-        internals$jscomp$inline_1460
+      (rendererID = hook$jscomp$inline_1462.inject(
+        internals$jscomp$inline_1461
       )),
-        (injectedHook = hook$jscomp$inline_1461);
+        (injectedHook = hook$jscomp$inline_1462);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
@@ -10396,4 +10405,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.0.0-www-modern-cae764ce-20241025";
+exports.version = "19.0.0-www-modern-0bc30748-20241028";

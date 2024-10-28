@@ -1744,12 +1744,21 @@ var objectIs = "function" === typeof Object.is ? Object.is : is,
   CapturedStacks = new WeakMap();
 function createCapturedValueAtFiber(value, source) {
   if ("object" === typeof value && null !== value) {
-    var stack = CapturedStacks.get(value);
-    "string" !== typeof stack &&
-      ((stack = getStackByFiberInDevAndProd(source)),
-      CapturedStacks.set(value, stack));
-  } else stack = getStackByFiberInDevAndProd(source);
-  return { value: value, source: source, stack: stack };
+    var existing = CapturedStacks.get(value);
+    if (void 0 !== existing) return existing;
+    source = {
+      value: value,
+      source: source,
+      stack: getStackByFiberInDevAndProd(source)
+    };
+    CapturedStacks.set(value, source);
+    return source;
+  }
+  return {
+    value: value,
+    source: source,
+    stack: getStackByFiberInDevAndProd(source)
+  };
 }
 var forkStack = [],
   forkStackIndex = 0,
@@ -18164,14 +18173,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1867 = React.version;
 if (
-  "19.0.0-www-classic-cae764ce-20241025" !==
+  "19.0.0-www-classic-0bc30748-20241028" !==
   isomorphicReactPackageVersion$jscomp$inline_1867
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1867,
-      "19.0.0-www-classic-cae764ce-20241025"
+      "19.0.0-www-classic-0bc30748-20241028"
     )
   );
 function flushSyncFromReconciler(fn) {
@@ -18216,26 +18225,26 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_1874 = {
   bundleType: 0,
-  version: "19.0.0-www-classic-cae764ce-20241025",
+  version: "19.0.0-www-classic-0bc30748-20241028",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-www-classic-cae764ce-20241025"
+  reconcilerVersion: "19.0.0-www-classic-0bc30748-20241028"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_1874.getLaneLabelMap = getLaneLabelMap),
   (internals$jscomp$inline_1874.injectProfilingHooks = injectProfilingHooks));
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2338 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2339 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2338.isDisabled &&
-    hook$jscomp$inline_2338.supportsFiber
+    !hook$jscomp$inline_2339.isDisabled &&
+    hook$jscomp$inline_2339.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2338.inject(
+      (rendererID = hook$jscomp$inline_2339.inject(
         internals$jscomp$inline_1874
       )),
-        (injectedHook = hook$jscomp$inline_2338);
+        (injectedHook = hook$jscomp$inline_2339);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -18679,7 +18688,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-cae764ce-20241025";
+exports.version = "19.0.0-www-classic-0bc30748-20241028";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
