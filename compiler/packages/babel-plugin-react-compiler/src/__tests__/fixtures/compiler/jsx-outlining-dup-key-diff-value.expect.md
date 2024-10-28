@@ -10,8 +10,8 @@ function Component({arr}) {
       {arr.map((i, id) => {
         return (
           <Bar key={id} x={x}>
-            <Baz i={i}></Baz>
-            <Foo k={i}></Foo>
+            <Baz i={i + 'i'}></Baz>
+            <Foo k={i + 'j'}></Foo>
           </Bar>
         );
       })}
@@ -60,7 +60,7 @@ function Component(t0) {
     if ($[3] !== x) {
       t2 = (i, id) => {
         const T0 = _temp;
-        return <T0 i={i} k={i} key={id} x={x} />;
+        return <T0 i={i + "i"} k={i + "j"} key={id} x={x} />;
       };
       $[3] = x;
       $[4] = t2;
@@ -163,4 +163,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: ok) xfoofooxbarbar
+(kind: ok) xfooifoojxbaribarj

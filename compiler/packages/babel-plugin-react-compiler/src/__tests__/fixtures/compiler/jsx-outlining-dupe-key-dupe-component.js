@@ -6,8 +6,8 @@ function Component({arr}) {
       {arr.map((i, id) => {
         return (
           <Bar key={id} x={x}>
-            <Baz i={i}></Baz>
-            <Foo k={i}></Foo>
+            <Foo k={i + 'i'}></Foo>
+            <Foo k={i + 'j'}></Foo>
           </Bar>
         );
       })}
@@ -21,10 +21,6 @@ function Bar({x, children}) {
       {children}
     </>
   );
-}
-
-function Baz({i}) {
-  return i;
 }
 
 function Foo({k}) {

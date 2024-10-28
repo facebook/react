@@ -6,8 +6,8 @@ function Component({arr}) {
       {arr.map((i, id) => {
         return (
           <Bar key={id} x={x}>
-            <Baz i={i}></Baz>
-            <Foo k={i}></Foo>
+            <Baz i={i + 'i'}></Baz>
+            <Foo k={i + 'j'}></Foo>
           </Bar>
         );
       })}
