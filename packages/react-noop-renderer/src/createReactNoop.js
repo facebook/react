@@ -81,6 +81,8 @@ type TextInstance = {
 type HostContext = Object;
 type CreateRootOptions = {
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
+  onUncaughtError?: (error: mixed, errorInfo: {componentStack: string}) => void,
+  onCaughtError?: (error: mixed, errorInfo: {componentStack: string}) => void,
   ...
 };
 
@@ -1069,8 +1071,12 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         null,
         false,
         '',
-        NoopRenderer.defaultOnUncaughtError,
-        NoopRenderer.defaultOnCaughtError,
+        options && options.onUncaughtError
+          ? options.onUncaughtError
+          : NoopRenderer.defaultOnUncaughtError,
+        options && options.onCaughtError
+          ? options.onCaughtError
+          : NoopRenderer.defaultOnCaughtError,
         onRecoverableError,
         options && options.unstable_transitionCallbacks
           ? options.unstable_transitionCallbacks
