@@ -305,6 +305,52 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
+    // @gate enableActivity
+    it('does not re-create refs for Activity hidden', async () => {
+      if (__DEV__) {
+        await render(`
+          import {unstable_Activity as Activity} from 'react';
+
+          export default function App() {
+            return (
+              <Activity mode="hidden">
+                <div ref={(node) => {
+                  if (node === null) {
+                    throw new Error('callback ref should never be null')
+                  }
+                  return () => {
+                    // ignore
+                  }
+                }}>A</div>
+              </Activity>
+            );
+          };
+        `);
+        const el = container.firstChild;
+        expect(el.textContent).toBe('A');
+        await patch(`
+          import {unstable_Activity as Activity} from 'react';
+
+          export default function App() {
+            return (
+              <Activity mode="hidden">
+                <div ref={(node) => {
+                  if (node === null) {
+                    throw new Error('callback ref should never be null.')
+                  }
+                  return () => {
+                    // ignore
+                  }
+                }}>A</div>
+              </Activity>
+            );
+          };
+        `);
+        expect(container.firstChild).toBe(el);
+        expect(el.textContent).toBe('A');
+      }
+    });
+
     it('reloads HOCs if they return functions', async () => {
       if (__DEV__) {
         await render(`
