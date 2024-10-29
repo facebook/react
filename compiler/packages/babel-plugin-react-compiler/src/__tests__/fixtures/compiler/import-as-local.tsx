@@ -2,7 +2,7 @@ import {
   useEffect,
   useRef,
   // @ts-expect-error
-  experimental_useEventEvent as useEffectEvent,
+  experimental_useEffectEvent as useEffectEvent,
 } from 'react';
 
 let id = 0;
