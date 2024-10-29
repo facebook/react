@@ -1640,8 +1640,8 @@ function commitMutationEffectsOnFiber(
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
 
-      if (flags & Ref && !offscreenSubtreeWasHidden) {
-        if (current !== null) {
+      if (flags & Ref) {
+        if (!offscreenSubtreeWasHidden && current !== null) {
           safelyDetachRef(current, current.return);
         }
       }
@@ -1663,8 +1663,8 @@ function commitMutationEffectsOnFiber(
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
         commitReconciliationEffects(finishedWork);
 
-        if (flags & Ref && !offscreenSubtreeWasHidden) {
-          if (current !== null) {
+        if (flags & Ref) {
+          if (!offscreenSubtreeWasHidden && current !== null) {
             safelyDetachRef(current, current.return);
           }
         }
@@ -1748,8 +1748,8 @@ function commitMutationEffectsOnFiber(
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
 
-      if (flags & Ref && !offscreenSubtreeWasHidden) {
-        if (current !== null) {
+      if (flags & Ref) {
+        if (!offscreenSubtreeWasHidden && current !== null) {
           safelyDetachRef(current, current.return);
         }
       }
@@ -1964,8 +1964,8 @@ function commitMutationEffectsOnFiber(
       break;
     }
     case OffscreenComponent: {
-      if (flags & Ref && !offscreenSubtreeWasHidden) {
-        if (current !== null) {
+      if (flags & Ref) {
+        if (!offscreenSubtreeWasHidden && current !== null) {
           safelyDetachRef(current, current.return);
         }
       }
@@ -2077,8 +2077,8 @@ function commitMutationEffectsOnFiber(
 
         // TODO: This is a temporary solution that allowed us to transition away
         // from React Flare on www.
-        if (flags & Ref && !offscreenSubtreeWasHidden) {
-          if (current !== null) {
+        if (flags & Ref) {
+          if (!offscreenSubtreeWasHidden && current !== null) {
             safelyDetachRef(finishedWork, finishedWork.return);
           }
           safelyAttachRef(finishedWork, finishedWork.return);
