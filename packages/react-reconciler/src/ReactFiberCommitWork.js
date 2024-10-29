@@ -2081,7 +2081,9 @@ function commitMutationEffectsOnFiber(
           if (!offscreenSubtreeWasHidden && current !== null) {
             safelyDetachRef(finishedWork, finishedWork.return);
           }
-          safelyAttachRef(finishedWork, finishedWork.return);
+          if (!offscreenSubtreeIsHidden) {
+            safelyAttachRef(finishedWork, finishedWork.return);
+          }
         }
         if (flags & Update) {
           const scopeInstance = finishedWork.stateNode;
