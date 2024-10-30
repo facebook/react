@@ -406,7 +406,10 @@ describe('ReactFreshIntegration', () => {
     // @gate __DEV__ && enableActivity && enableScopeAPI
     it('ignores ref for Scope in hidden subtree', async () => {
       const code = `
-        import {unstable_Scope as Scope} from 'react';
+        import {
+          unstable_Activity as Activity,
+          unstable_Scope as Scope,
+        } from 'react';
 
         function hiddenRef(value) {
           throw new Error('Unexpected hiddenRef() invocation: ' + value);
