@@ -1,12 +1,14 @@
 import {ValidateMemoization} from 'shared-runtime';
 
 function Component() {
-  const x = {
+  const x = {};
+  const y = {
+    x,
     valueOf() {
-      return this;
+      return x;
     },
   };
-  x.valueOf().y = true;
+  y.valueOf().z = true;
 
   return <ValidateMemoization inputs={[x]} output={x} />;
 }
