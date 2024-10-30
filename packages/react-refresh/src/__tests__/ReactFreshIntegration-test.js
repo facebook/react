@@ -306,47 +306,25 @@ describe('ReactFreshIntegration', () => {
     });
 
     // @gate __DEV__ && enableActivity
-    it('does not re-create refs for Activity hidden', async () => {
-      await render(`
+    it('ignores ref for host component in hidden subtree', async () => {
+      const code = `
         import {unstable_Activity as Activity} from 'react';
+
+        function hiddenRef() {
+          throw new Error('Unexpected hiddenRef() invocation.');
+        }
 
         export default function App() {
           return (
             <Activity mode="hidden">
-              <div ref={(node) => {
-                if (node === null) {
-                  throw new Error('callback ref should never be null')
-                }
-                return () => {
-                  // ignore
-                }
-              }}>A</div>
+              <div ref={hiddenRef} />
             </Activity>
           );
         };
-      `);
-      const el = container.firstChild;
-      expect(el.textContent).toBe('A');
-      await patch(`
-        import {unstable_Activity as Activity} from 'react';
+      `;
 
-        export default function App() {
-          return (
-            <Activity mode="hidden">
-              <div ref={(node) => {
-                if (node === null) {
-                  throw new Error('callback ref should never be null.')
-                }
-                return () => {
-                  // ignore
-                }
-              }}>A</div>
-            </Activity>
-          );
-        };
-      `);
-      expect(container.firstChild).toBe(el);
-      expect(el.textContent).toBe('A');
+      await render(code);
+      await patch(code);
     });
 
     it('reloads HOCs if they return functions', async () => {
