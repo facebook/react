@@ -2078,12 +2078,10 @@ function commitMutationEffectsOnFiber(
         // TODO: This is a temporary solution that allowed us to transition away
         // from React Flare on www.
         if (flags & Ref) {
-          if (!offscreenSubtreeWasHidden && current !== null) {
+          if (current !== null) {
             safelyDetachRef(finishedWork, finishedWork.return);
           }
-          if (!offscreenSubtreeIsHidden) {
-            safelyAttachRef(finishedWork, finishedWork.return);
-          }
+          safelyAttachRef(finishedWork, finishedWork.return);
         }
         if (flags & Update) {
           const scopeInstance = finishedWork.stateNode;
