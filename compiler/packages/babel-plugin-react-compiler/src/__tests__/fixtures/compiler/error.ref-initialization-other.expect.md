@@ -5,7 +5,7 @@
 //@flow
 import {useRef} from 'react';
 
-component C() {
+function C() {
   const r = useRef(null);
   const r2 = useRef(null);
   if (r.current == null) {

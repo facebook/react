@@ -7,7 +7,7 @@ import {useRef} from 'react';
 
 const DEFAULT_VALUE = 1;
 
-component C() {
+function C() {
   const r = useRef(DEFAULT_VALUE);
   if (r.current == DEFAULT_VALUE) {
     r.current = 1;
@@ -25,7 +25,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
-   6 | component C() {
+   6 | function C() {
    7 |   const r = useRef(DEFAULT_VALUE);
 >  8 |   if (r.current == DEFAULT_VALUE) {
      |       ^^^^^^^^^ InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef) (8:8)

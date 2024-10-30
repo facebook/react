@@ -1,7 +1,7 @@
 //@flow
 import {useRef} from 'react';
 
-component C() {
+function C() {
   const r = useRef(null);
   const guard = r.current == null;
   if (guard) {

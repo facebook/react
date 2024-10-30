@@ -3,7 +3,7 @@ import {useRef} from 'react';
 
 const DEFAULT_VALUE = 1;
 
-component C() {
+function C() {
   const r = useRef(DEFAULT_VALUE);
   if (r.current == DEFAULT_VALUE) {
     r.current = 1;
