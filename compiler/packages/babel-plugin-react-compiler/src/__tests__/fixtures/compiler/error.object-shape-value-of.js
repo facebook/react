@@ -4,7 +4,7 @@ function Component() {
   const x = {
     valueOf() {
       return this;
-    }
+    },
   };
   x.valueOf().y = true;
 

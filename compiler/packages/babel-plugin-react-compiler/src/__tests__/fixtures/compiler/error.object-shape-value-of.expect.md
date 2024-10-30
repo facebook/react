@@ -8,7 +8,7 @@ function Component() {
   const x = {
     valueOf() {
       return this;
-    }
+    },
   };
   x.valueOf().y = true;
 
@@ -31,7 +31,7 @@ export const FIXTURE_ENTRYPOINT = {
   5 |     valueOf() {
 > 6 |       return this;
     |              ^^^^ Todo: (BuildHIR::lowerExpression) Handle ThisExpression expressions (6:6)
-  7 |     }
+  7 |     },
   8 |   };
   9 |   x.valueOf().y = true;
 ```
