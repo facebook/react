@@ -441,7 +441,7 @@ addObject(BUILTIN_SHAPES, BuiltInObjectId, [
     }),
   ],
   [
-    "toLocaleString",
+    'toLocaleString',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: null,
@@ -451,7 +451,7 @@ addObject(BUILTIN_SHAPES, BuiltInObjectId, [
     }),
   ],
   [
-    "hasOwnProperty",
+    'hasOwnProperty',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [Effect.Read],
       restParam: null,
@@ -461,7 +461,7 @@ addObject(BUILTIN_SHAPES, BuiltInObjectId, [
     }),
   ],
   [
-    "isPrototypeOf",
+    'isPrototypeOf',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [Effect.Read],
       restParam: null,
@@ -471,7 +471,7 @@ addObject(BUILTIN_SHAPES, BuiltInObjectId, [
     }),
   ],
   [
-    "propertyIsEnumerable",
+    'propertyIsEnumerable',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [Effect.Read],
       restParam: null,
@@ -481,11 +481,11 @@ addObject(BUILTIN_SHAPES, BuiltInObjectId, [
     }),
   ],
   [
-    "valueOf",
+    'valueOf',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: null,
-      returnType: { kind: "Poly" },
+      returnType: {kind: 'Poly'},
       calleeEffect: Effect.Capture,
       returnValueKind: ValueKind.Mutable,
     }),
