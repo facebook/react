@@ -385,7 +385,7 @@ describe('ReactFreshIntegration', () => {
         import {unstable_Activity as Activity} from 'react';
 
         function hiddenRef(value) {
-          throw new Error('Unexpected hiddenRef() invocation: ' + value);
+          throw new Error('Unexpected hiddenRef() invocation.');
         }
 
         export default function App() {
@@ -412,7 +412,7 @@ describe('ReactFreshIntegration', () => {
         } from 'react';
 
         function hiddenRef(value) {
-          throw new Error('Unexpected hiddenRef() invocation: ' + value);
+          throw new Error('Unexpected hiddenRef() invocation.');
         }
 
         export default function App() {
