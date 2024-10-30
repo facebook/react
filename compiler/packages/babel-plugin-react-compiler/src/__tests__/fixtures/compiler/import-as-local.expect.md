@@ -137,4 +137,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: exception) (0 , _react.experimental_useEffectEvent) is not a function
+(kind: ok) <div>Hello</div>
