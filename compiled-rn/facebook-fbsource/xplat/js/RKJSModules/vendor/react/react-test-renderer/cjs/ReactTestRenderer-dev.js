@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<08145d27a62e0c9597421986d94f8367>>
+ * @generated SignedSource<<5e71d1f2bbfb19b6c18fd9d99d16e057>>
  */
 
 "use strict";
@@ -9589,7 +9589,8 @@ __DEV__ &&
           );
           break;
         case 22:
-          safelyDetachRef(deletedFiber, nearestMountedAncestor);
+          offscreenSubtreeWasHidden ||
+            safelyDetachRef(deletedFiber, nearestMountedAncestor);
           deletedFiber.mode & 1
             ? ((offscreenSubtreeWasHidden =
                 (_prevHostParent = offscreenSubtreeWasHidden) ||
@@ -9716,8 +9717,9 @@ __DEV__ &&
           recursivelyTraverseMutationEffects(root, finishedWork);
           commitReconciliationEffects(finishedWork);
           flags & 512 &&
-            null !== current &&
-            safelyDetachRef(current, current.return);
+            (offscreenSubtreeWasHidden ||
+              null === current ||
+              safelyDetachRef(current, current.return));
           if (
             flags & 64 &&
             offscreenSubtreeIsHidden &&
@@ -9738,8 +9740,9 @@ __DEV__ &&
           recursivelyTraverseMutationEffects(root, finishedWork);
           commitReconciliationEffects(finishedWork);
           flags & 512 &&
-            null !== current &&
-            safelyDetachRef(current, current.return);
+            (offscreenSubtreeWasHidden ||
+              null === current ||
+              safelyDetachRef(current, current.return));
           if (finishedWork.flags & 32) {
             existingHiddenCallbacks = finishedWork.stateNode;
             try {
@@ -9849,8 +9852,9 @@ __DEV__ &&
           break;
         case 22:
           flags & 512 &&
-            null !== current &&
-            safelyDetachRef(current, current.return);
+            (offscreenSubtreeWasHidden ||
+              null === current ||
+              safelyDetachRef(current, current.return));
           existingHiddenCallbacks = null !== finishedWork.memoizedState;
           var wasHidden = null !== current && null !== current.memoizedState;
           if (finishedWork.mode & 1) {
@@ -15127,11 +15131,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-0bc30748-20241028",
+        version: "19.0.0-native-fb-ea3ac586-20241031",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-native-fb-0bc30748-20241028"
+        reconcilerVersion: "19.0.0-native-fb-ea3ac586-20241031"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15276,5 +15280,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.0.0-native-fb-0bc30748-20241028";
+    exports.version = "19.0.0-native-fb-ea3ac586-20241031";
   })();

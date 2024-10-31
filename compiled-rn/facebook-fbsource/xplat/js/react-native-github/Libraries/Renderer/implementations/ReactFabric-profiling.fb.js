@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<55c6de6687a266fe919dac9d62e265f1>>
+ * @generated SignedSource<<0349aa1c839e761dd4f278f6af1ff2ab>>
  */
 
 "use strict";
@@ -8709,7 +8709,8 @@ function commitDeletionEffectsOnFiber(
       );
       break;
     case 22:
-      safelyDetachRef(deletedFiber, nearestMountedAncestor);
+      offscreenSubtreeWasHidden ||
+        safelyDetachRef(deletedFiber, nearestMountedAncestor);
       deletedFiber.mode & 1
         ? ((offscreenSubtreeWasHidden =
             (onDeleted = offscreenSubtreeWasHidden) ||
@@ -8817,8 +8818,9 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       recursivelyTraverseMutationEffects(root, finishedWork);
       commitReconciliationEffects(finishedWork);
       flags & 512 &&
-        null !== current &&
-        safelyDetachRef(current, current.return);
+        (offscreenSubtreeWasHidden ||
+          null === current ||
+          safelyDetachRef(current, current.return));
       flags & 64 &&
         offscreenSubtreeIsHidden &&
         ((finishedWork = finishedWork.updateQueue),
@@ -8835,8 +8837,9 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       recursivelyTraverseMutationEffects(root, finishedWork);
       commitReconciliationEffects(finishedWork);
       flags & 512 &&
-        null !== current &&
-        safelyDetachRef(current, current.return);
+        (offscreenSubtreeWasHidden ||
+          null === current ||
+          safelyDetachRef(current, current.return));
       break;
     case 6:
       recursivelyTraverseMutationEffects(root, finishedWork);
@@ -8905,8 +8908,9 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       break;
     case 22:
       flags & 512 &&
-        null !== current &&
-        safelyDetachRef(current, current.return);
+        (offscreenSubtreeWasHidden ||
+          null === current ||
+          safelyDetachRef(current, current.return));
       retryQueue = null !== finishedWork.memoizedState;
       pendingChildren = null !== current && null !== current.memoizedState;
       if (finishedWork.mode & 1) {
@@ -11562,11 +11566,11 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1258 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-0bc30748-20241028",
+    version: "19.0.0-native-fb-ea3ac586-20241031",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromNode,
-    reconcilerVersion: "19.0.0-native-fb-0bc30748-20241028"
+    reconcilerVersion: "19.0.0-native-fb-ea3ac586-20241031"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1258.rendererConfig = extraDevToolsConfig);

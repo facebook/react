@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<4fcb0871e5dc83067df0f5a2635789cd>>
+ * @generated SignedSource<<2cf405094e1aec5351e268ab5d366e5e>>
  */
 
 "use strict";
@@ -6787,7 +6787,8 @@ function commitDeletionEffectsOnFiber(
       );
       break;
     case 22:
-      safelyDetachRef(deletedFiber, nearestMountedAncestor);
+      offscreenSubtreeWasHidden ||
+        safelyDetachRef(deletedFiber, nearestMountedAncestor);
       deletedFiber.mode & 1
         ? ((offscreenSubtreeWasHidden =
             (index = offscreenSubtreeWasHidden) ||
@@ -6905,8 +6906,9 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       recursivelyTraverseMutationEffects(root, finishedWork);
       commitReconciliationEffects(finishedWork);
       flags & 512 &&
-        null !== current &&
-        safelyDetachRef(current, current.return);
+        (offscreenSubtreeWasHidden ||
+          null === current ||
+          safelyDetachRef(current, current.return));
       if (
         flags & 64 &&
         offscreenSubtreeIsHidden &&
@@ -6927,8 +6929,9 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       recursivelyTraverseMutationEffects(root, finishedWork);
       commitReconciliationEffects(finishedWork);
       flags & 512 &&
-        null !== current &&
-        safelyDetachRef(current, current.return);
+        (offscreenSubtreeWasHidden ||
+          null === current ||
+          safelyDetachRef(current, current.return));
       if (flags & 4 && null != finishedWork.stateNode) {
         flags = finishedWork.memoizedProps;
         try {
@@ -6986,8 +6989,9 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       break;
     case 22:
       flags & 512 &&
-        null !== current &&
-        safelyDetachRef(current, current.return);
+        (offscreenSubtreeWasHidden ||
+          null === current ||
+          safelyDetachRef(current, current.return));
       instance = null !== finishedWork.memoizedState;
       var wasHidden = null !== current && null !== current.memoizedState;
       if (finishedWork.mode & 1) {
@@ -9484,14 +9488,14 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1344 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-0bc30748-20241028",
+  version: "19.0.0-native-fb-ea3ac586-20241031",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: function (mockNode) {
     mockNode = nodeToInstanceMap.get(mockNode);
     return void 0 !== mockNode ? mockNode.internalInstanceHandle : null;
   },
-  reconcilerVersion: "19.0.0-native-fb-0bc30748-20241028"
+  reconcilerVersion: "19.0.0-native-fb-ea3ac586-20241031"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1345 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -9627,4 +9631,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.0.0-native-fb-0bc30748-20241028";
+exports.version = "19.0.0-native-fb-ea3ac586-20241031";

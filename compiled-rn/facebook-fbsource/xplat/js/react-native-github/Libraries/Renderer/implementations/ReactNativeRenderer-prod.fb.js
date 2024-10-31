@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<24c6e93c37be2400929e41f59db9a128>>
+ * @generated SignedSource<<8e4ff253c95306fccab2f1e1a3f6f8ee>>
  */
 
 "use strict";
@@ -8491,7 +8491,8 @@ function commitDeletionEffectsOnFiber(
       );
       break;
     case 22:
-      safelyDetachRef(deletedFiber, nearestMountedAncestor);
+      offscreenSubtreeWasHidden ||
+        safelyDetachRef(deletedFiber, nearestMountedAncestor);
       deletedFiber.mode & 1
         ? ((offscreenSubtreeWasHidden =
             (child = offscreenSubtreeWasHidden) ||
@@ -8611,8 +8612,9 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       recursivelyTraverseMutationEffects(root, finishedWork);
       commitReconciliationEffects(finishedWork);
       flags & 512 &&
-        null !== current &&
-        safelyDetachRef(current, current.return);
+        (offscreenSubtreeWasHidden ||
+          null === current ||
+          safelyDetachRef(current, current.return));
       if (
         flags & 64 &&
         offscreenSubtreeIsHidden &&
@@ -8633,8 +8635,9 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       recursivelyTraverseMutationEffects(root, finishedWork);
       commitReconciliationEffects(finishedWork);
       flags & 512 &&
-        null !== current &&
-        safelyDetachRef(current, current.return);
+        (offscreenSubtreeWasHidden ||
+          null === current ||
+          safelyDetachRef(current, current.return));
       if (flags & 4 && null != finishedWork.stateNode) {
         flags = finishedWork.memoizedProps;
         existingHiddenCallbacks =
@@ -8727,8 +8730,9 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       break;
     case 22:
       flags & 512 &&
-        null !== current &&
-        safelyDetachRef(current, current.return);
+        (offscreenSubtreeWasHidden ||
+          null === current ||
+          safelyDetachRef(current, current.return));
       instance = null !== finishedWork.memoizedState;
       viewConfig = null !== current && null !== current.memoizedState;
       finishedWork.mode & 1
@@ -11032,11 +11036,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.0.0-native-fb-0bc30748-20241028" !== isomorphicReactPackageVersion)
+if ("19.0.0-native-fb-ea3ac586-20241031" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.0.0-native-fb-0bc30748-20241028\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.0.0-native-fb-ea3ac586-20241031\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11085,11 +11089,11 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1236 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-0bc30748-20241028",
+    version: "19.0.0-native-fb-ea3ac586-20241031",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromTag,
-    reconcilerVersion: "19.0.0-native-fb-0bc30748-20241028"
+    reconcilerVersion: "19.0.0-native-fb-ea3ac586-20241031"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1236.rendererConfig = extraDevToolsConfig);

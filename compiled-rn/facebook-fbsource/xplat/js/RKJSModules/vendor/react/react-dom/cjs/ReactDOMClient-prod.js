@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<5e5146d6bcd48109a990c272366ec551>>
+ * @generated SignedSource<<9227b55c2ff9afd498253f61ab8ef951>>
  */
 
 /*
@@ -8576,7 +8576,8 @@ function commitDeletionEffectsOnFiber(
       );
       break;
     case 22:
-      safelyDetachRef(deletedFiber, nearestMountedAncestor);
+      offscreenSubtreeWasHidden ||
+        safelyDetachRef(deletedFiber, nearestMountedAncestor);
       deletedFiber.mode & 1
         ? ((offscreenSubtreeWasHidden =
             (prevHostParent = offscreenSubtreeWasHidden) ||
@@ -8715,8 +8716,9 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       recursivelyTraverseMutationEffects(root, finishedWork);
       commitReconciliationEffects(finishedWork);
       flags & 512 &&
-        null !== current &&
-        safelyDetachRef(current, current.return);
+        (offscreenSubtreeWasHidden ||
+          null === current ||
+          safelyDetachRef(current, current.return));
       flags & 64 &&
         offscreenSubtreeIsHidden &&
         ((finishedWork = finishedWork.updateQueue),
@@ -8732,8 +8734,9 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       recursivelyTraverseMutationEffects(root, finishedWork);
       commitReconciliationEffects(finishedWork);
       flags & 512 &&
-        null !== current &&
-        safelyDetachRef(current, current.return);
+        (offscreenSubtreeWasHidden ||
+          null === current ||
+          safelyDetachRef(current, current.return));
       if (flags & 4) {
         var currentResource = null !== current ? current.memoizedState : null;
         flags = finishedWork.memoizedState;
@@ -8913,8 +8916,9 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       recursivelyTraverseMutationEffects(root, finishedWork);
       commitReconciliationEffects(finishedWork);
       flags & 512 &&
-        null !== current &&
-        safelyDetachRef(current, current.return);
+        (offscreenSubtreeWasHidden ||
+          null === current ||
+          safelyDetachRef(current, current.return));
       if (finishedWork.flags & 32) {
         hoistableRoot = finishedWork.stateNode;
         try {
@@ -9008,8 +9012,9 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       break;
     case 22:
       flags & 512 &&
-        null !== current &&
-        safelyDetachRef(current, current.return);
+        (offscreenSubtreeWasHidden ||
+          null === current ||
+          safelyDetachRef(current, current.return));
       node = null !== finishedWork.memoizedState;
       nextNode = null !== current && null !== current.memoizedState;
       finishedWork.mode & 1
@@ -15631,14 +15636,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1691 = React.version;
 if (
-  "19.0.0-native-fb-0bc30748-20241028" !==
+  "19.0.0-native-fb-ea3ac586-20241031" !==
   isomorphicReactPackageVersion$jscomp$inline_1691
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1691,
-      "19.0.0-native-fb-0bc30748-20241028"
+      "19.0.0-native-fb-ea3ac586-20241031"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -15660,11 +15665,11 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2145 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-0bc30748-20241028",
+  version: "19.0.0-native-fb-ea3ac586-20241031",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-native-fb-0bc30748-20241028"
+  reconcilerVersion: "19.0.0-native-fb-ea3ac586-20241031"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2146 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -15768,4 +15773,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.0.0-native-fb-0bc30748-20241028";
+exports.version = "19.0.0-native-fb-ea3ac586-20241031";

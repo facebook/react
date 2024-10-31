@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ece21c06f9a8eccefc200618535d8615>>
+ * @generated SignedSource<<d19e42c2c9cd017ab42265c21969aee2>>
  */
 
 "use strict";
@@ -10621,7 +10621,8 @@ __DEV__ &&
           );
           break;
         case 22:
-          safelyDetachRef(deletedFiber, nearestMountedAncestor);
+          offscreenSubtreeWasHidden ||
+            safelyDetachRef(deletedFiber, nearestMountedAncestor);
           deletedFiber.mode & 1
             ? ((offscreenSubtreeWasHidden =
                 (onDeleted = offscreenSubtreeWasHidden) ||
@@ -10738,8 +10739,9 @@ __DEV__ &&
           recursivelyTraverseMutationEffects(root, finishedWork);
           commitReconciliationEffects(finishedWork);
           flags & 512 &&
-            null !== current &&
-            safelyDetachRef(current, current.return);
+            (offscreenSubtreeWasHidden ||
+              null === current ||
+              safelyDetachRef(current, current.return));
           flags & 64 &&
             offscreenSubtreeIsHidden &&
             ((finishedWork = finishedWork.updateQueue),
@@ -10756,8 +10758,9 @@ __DEV__ &&
           recursivelyTraverseMutationEffects(root, finishedWork);
           commitReconciliationEffects(finishedWork);
           flags & 512 &&
-            null !== current &&
-            safelyDetachRef(current, current.return);
+            (offscreenSubtreeWasHidden ||
+              null === current ||
+              safelyDetachRef(current, current.return));
           break;
         case 6:
           recursivelyTraverseMutationEffects(root, finishedWork);
@@ -10841,8 +10844,9 @@ __DEV__ &&
           break;
         case 22:
           flags & 512 &&
-            null !== current &&
-            safelyDetachRef(current, current.return);
+            (offscreenSubtreeWasHidden ||
+              null === current ||
+              safelyDetachRef(current, current.return));
           retryQueue = null !== finishedWork.memoizedState;
           pendingChildren = null !== current && null !== current.memoizedState;
           if (finishedWork.mode & 1) {
@@ -16966,11 +16970,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-0bc30748-20241028",
+        version: "19.0.0-native-fb-ea3ac586-20241031",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-native-fb-0bc30748-20241028"
+        reconcilerVersion: "19.0.0-native-fb-ea3ac586-20241031"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
