@@ -8,4 +8,3 @@
  */
 
 export {renderToReadableStream, version} from './ReactDOMFizzServerEdge.js';
-export {prerender} from './ReactDOMFizzStaticEdge.js';
