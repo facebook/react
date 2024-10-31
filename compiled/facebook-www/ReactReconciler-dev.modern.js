@@ -11661,7 +11661,8 @@ __DEV__ &&
           );
           break;
         case 21:
-          safelyDetachRef(deletedFiber, nearestMountedAncestor);
+          offscreenSubtreeWasHidden ||
+            safelyDetachRef(deletedFiber, nearestMountedAncestor);
           recursivelyTraverseDeletionEffects(
             finishedRoot,
             nearestMountedAncestor,
@@ -11669,7 +11670,8 @@ __DEV__ &&
           );
           break;
         case 22:
-          safelyDetachRef(deletedFiber, nearestMountedAncestor);
+          offscreenSubtreeWasHidden ||
+            safelyDetachRef(deletedFiber, nearestMountedAncestor);
           offscreenSubtreeWasHidden =
             (prevHostParent = offscreenSubtreeWasHidden) ||
             null !== deletedFiber.memoizedState;
@@ -11871,8 +11873,9 @@ __DEV__ &&
           recursivelyTraverseMutationEffects(root, finishedWork);
           commitReconciliationEffects(finishedWork);
           flags & 512 &&
-            null !== current &&
-            safelyDetachRef(current, current.return);
+            (offscreenSubtreeWasHidden ||
+              null === current ||
+              safelyDetachRef(current, current.return));
           flags & 64 &&
             offscreenSubtreeIsHidden &&
             ((finishedWork = finishedWork.updateQueue),
@@ -11889,8 +11892,9 @@ __DEV__ &&
             recursivelyTraverseMutationEffects(root, finishedWork);
             commitReconciliationEffects(finishedWork);
             flags & 512 &&
-              null !== current &&
-              safelyDetachRef(current, current.return);
+              (offscreenSubtreeWasHidden ||
+                null === current ||
+                safelyDetachRef(current, current.return));
             flags & 4 &&
               ((flags = null !== current ? current.memoizedState : null),
               (root = finishedWork.memoizedState),
@@ -11968,8 +11972,9 @@ __DEV__ &&
           recursivelyTraverseMutationEffects(root, finishedWork);
           commitReconciliationEffects(finishedWork);
           flags & 512 &&
-            null !== current &&
-            safelyDetachRef(current, current.return);
+            (offscreenSubtreeWasHidden ||
+              null === current ||
+              safelyDetachRef(current, current.return));
           if (supportsMutation) {
             if (finishedWork.flags & 32) {
               root = finishedWork.stateNode;
@@ -12142,8 +12147,9 @@ __DEV__ &&
           break;
         case 22:
           flags & 512 &&
-            null !== current &&
-            safelyDetachRef(current, current.return);
+            (offscreenSubtreeWasHidden ||
+              null === current ||
+              safelyDetachRef(current, current.return));
           suspenseCallback = null !== finishedWork.memoizedState;
           retryQueue = null !== current && null !== current.memoizedState;
           var prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden,
@@ -12273,9 +12279,11 @@ __DEV__ &&
           recursivelyTraverseMutationEffects(root, finishedWork);
           commitReconciliationEffects(finishedWork);
           flags & 512 &&
-            (null !== current &&
+            (offscreenSubtreeWasHidden ||
+              null === current ||
               safelyDetachRef(finishedWork, finishedWork.return),
-            safelyAttachRef(finishedWork, finishedWork.return));
+            offscreenSubtreeIsHidden ||
+              safelyAttachRef(finishedWork, finishedWork.return));
           flags & 4 && prepareScopeUpdate(finishedWork.stateNode, finishedWork);
           break;
         default:
@@ -18652,7 +18660,7 @@ __DEV__ &&
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-www-modern-0bc30748-20241028"
+        reconcilerVersion: "19.0.0-www-modern-ea3ac586-20241031"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

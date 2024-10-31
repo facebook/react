@@ -9454,7 +9454,8 @@ function commitDeletionEffectsOnFiber(
       );
       break;
     case 21:
-      safelyDetachRef(deletedFiber, nearestMountedAncestor);
+      offscreenSubtreeWasHidden ||
+        safelyDetachRef(deletedFiber, nearestMountedAncestor);
       recursivelyTraverseDeletionEffects(
         finishedRoot,
         nearestMountedAncestor,
@@ -9462,7 +9463,8 @@ function commitDeletionEffectsOnFiber(
       );
       break;
     case 22:
-      safelyDetachRef(deletedFiber, nearestMountedAncestor);
+      offscreenSubtreeWasHidden ||
+        safelyDetachRef(deletedFiber, nearestMountedAncestor);
       disableLegacyMode || deletedFiber.mode & 1
         ? ((offscreenSubtreeWasHidden =
             (prevHostParent = offscreenSubtreeWasHidden) ||
@@ -9620,8 +9622,9 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       recursivelyTraverseMutationEffects(root, finishedWork);
       commitReconciliationEffects(finishedWork);
       flags & 512 &&
-        null !== current &&
-        safelyDetachRef(current, current.return);
+        (offscreenSubtreeWasHidden ||
+          null === current ||
+          safelyDetachRef(current, current.return));
       flags & 64 &&
         offscreenSubtreeIsHidden &&
         ((finishedWork = finishedWork.updateQueue),
@@ -9637,8 +9640,9 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       recursivelyTraverseMutationEffects(root, finishedWork);
       commitReconciliationEffects(finishedWork);
       flags & 512 &&
-        null !== current &&
-        safelyDetachRef(current, current.return);
+        (offscreenSubtreeWasHidden ||
+          null === current ||
+          safelyDetachRef(current, current.return));
       if (flags & 4) {
         var currentResource = null !== current ? current.memoizedState : null;
         flags = finishedWork.memoizedState;
@@ -9818,8 +9822,9 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       recursivelyTraverseMutationEffects(root, finishedWork);
       commitReconciliationEffects(finishedWork);
       flags & 512 &&
-        null !== current &&
-        safelyDetachRef(current, current.return);
+        (offscreenSubtreeWasHidden ||
+          null === current ||
+          safelyDetachRef(current, current.return));
       if (finishedWork.flags & 32) {
         hoistableRoot = finishedWork.stateNode;
         try {
@@ -9913,8 +9918,9 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       break;
     case 22:
       flags & 512 &&
-        null !== current &&
-        safelyDetachRef(current, current.return);
+        (offscreenSubtreeWasHidden ||
+          null === current ||
+          safelyDetachRef(current, current.return));
       node = null !== finishedWork.memoizedState;
       nextNode = null !== current && null !== current.memoizedState;
       disableLegacyMode || finishedWork.mode & 1
@@ -10028,8 +10034,11 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       recursivelyTraverseMutationEffects(root, finishedWork);
       commitReconciliationEffects(finishedWork);
       flags & 512 &&
-        (null !== current && safelyDetachRef(finishedWork, finishedWork.return),
-        safelyAttachRef(finishedWork, finishedWork.return));
+        (offscreenSubtreeWasHidden ||
+          null === current ||
+          safelyDetachRef(finishedWork, finishedWork.return),
+        offscreenSubtreeIsHidden ||
+          safelyAttachRef(finishedWork, finishedWork.return));
       flags & 4 && (finishedWork.stateNode[internalInstanceKey] = finishedWork);
       break;
     default:
@@ -17448,14 +17457,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1774 = React.version;
 if (
-  "19.0.0-www-classic-0bc30748-20241028" !==
+  "19.0.0-www-classic-ea3ac586-20241031" !==
   isomorphicReactPackageVersion$jscomp$inline_1774
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1774,
-      "19.0.0-www-classic-0bc30748-20241028"
+      "19.0.0-www-classic-ea3ac586-20241031"
     )
   );
 function flushSyncFromReconciler(fn) {
@@ -17500,11 +17509,11 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2288 = {
   bundleType: 0,
-  version: "19.0.0-www-classic-0bc30748-20241028",
+  version: "19.0.0-www-classic-ea3ac586-20241031",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-www-classic-0bc30748-20241028"
+  reconcilerVersion: "19.0.0-www-classic-ea3ac586-20241031"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2289 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17960,4 +17969,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-0bc30748-20241028";
+exports.version = "19.0.0-www-classic-ea3ac586-20241031";

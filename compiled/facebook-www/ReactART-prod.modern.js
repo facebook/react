@@ -7483,7 +7483,8 @@ function commitDeletionEffectsOnFiber(
       );
       break;
     case 21:
-      safelyDetachRef(deletedFiber, nearestMountedAncestor);
+      offscreenSubtreeWasHidden ||
+        safelyDetachRef(deletedFiber, nearestMountedAncestor);
       recursivelyTraverseDeletionEffects(
         finishedRoot,
         nearestMountedAncestor,
@@ -7491,7 +7492,8 @@ function commitDeletionEffectsOnFiber(
       );
       break;
     case 22:
-      safelyDetachRef(deletedFiber, nearestMountedAncestor);
+      offscreenSubtreeWasHidden ||
+        safelyDetachRef(deletedFiber, nearestMountedAncestor);
       offscreenSubtreeWasHidden =
         (child = offscreenSubtreeWasHidden) ||
         null !== deletedFiber.memoizedState;
@@ -7616,8 +7618,9 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       recursivelyTraverseMutationEffects(root, finishedWork);
       commitReconciliationEffects(finishedWork);
       flags & 512 &&
-        null !== current &&
-        safelyDetachRef(current, current.return);
+        (offscreenSubtreeWasHidden ||
+          null === current ||
+          safelyDetachRef(current, current.return));
       if (
         flags & 64 &&
         offscreenSubtreeIsHidden &&
@@ -7638,8 +7641,9 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       recursivelyTraverseMutationEffects(root, finishedWork);
       commitReconciliationEffects(finishedWork);
       flags & 512 &&
-        null !== current &&
-        safelyDetachRef(current, current.return);
+        (offscreenSubtreeWasHidden ||
+          null === current ||
+          safelyDetachRef(current, current.return));
       if (flags & 4 && null != finishedWork.stateNode) {
         flags = finishedWork.memoizedProps;
         existingHiddenCallbacks =
@@ -7704,8 +7708,9 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       break;
     case 22:
       flags & 512 &&
-        null !== current &&
-        safelyDetachRef(current, current.return);
+        (offscreenSubtreeWasHidden ||
+          null === current ||
+          safelyDetachRef(current, current.return));
       instance = null !== finishedWork.memoizedState;
       suspenseCallback = null !== current && null !== current.memoizedState;
       retryQueue = offscreenSubtreeIsHidden;
@@ -7800,8 +7805,11 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       recursivelyTraverseMutationEffects(root, finishedWork);
       commitReconciliationEffects(finishedWork);
       flags & 512 &&
-        (null !== current && safelyDetachRef(finishedWork, finishedWork.return),
-        safelyAttachRef(finishedWork, finishedWork.return));
+        (offscreenSubtreeWasHidden ||
+          null === current ||
+          safelyDetachRef(finishedWork, finishedWork.return),
+        offscreenSubtreeIsHidden ||
+          safelyAttachRef(finishedWork, finishedWork.return));
       flags & 4 && shim$1();
       break;
     default:
@@ -10373,13 +10381,13 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1461 = {
   bundleType: 0,
-  version: "19.0.0-www-modern-0bc30748-20241028",
+  version: "19.0.0-www-modern-ea3ac586-20241031",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: function () {
     return null;
   },
-  reconcilerVersion: "19.0.0-www-modern-0bc30748-20241028"
+  reconcilerVersion: "19.0.0-www-modern-ea3ac586-20241031"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1462 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -10405,4 +10413,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.0.0-www-modern-0bc30748-20241028";
+exports.version = "19.0.0-www-modern-ea3ac586-20241031";
