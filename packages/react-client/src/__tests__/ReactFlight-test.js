@@ -3146,6 +3146,65 @@ describe('ReactFlight', () => {
     expect(ownerStacks).toEqual(['\n    in App (at **)']);
   });
 
+  // @gate enableServerComponentLogs && __DEV__
+  it('replays logs with cyclic objects', async () => {
+    const cyclic = {cycle: null};
+    cyclic.cycle = cyclic;
+
+    function ServerComponent() {
+      console.log('hi', {cyclic});
+      return null;
+    }
+
+    function App() {
+      return ReactServer.createElement(ServerComponent);
+    }
+
+    // These tests are specifically testing console.log.
+    // Assign to `mockConsoleLog` so we can still inspect it when `console.log`
+    // is overridden by the test modules. The original function will be restored
+    // after this test finishes by `jest.restoreAllMocks()`.
+    const mockConsoleLog = spyOnDevAndProd(console, 'log').mockImplementation(
+      () => {},
+    );
+
+    // Reset the modules so that we get a new overridden console on top of the
+    // one installed by expect. This ensures that we still emit console.error
+    // calls.
+    jest.resetModules();
+    jest.mock('react', () => require('react/react.react-server'));
+    ReactServer = require('react');
+    ReactNoopFlightServer = require('react-noop-renderer/flight-server');
+    const transport = ReactNoopFlightServer.render({
+      root: ReactServer.createElement(App),
+    });
+
+    expect(mockConsoleLog).toHaveBeenCalledTimes(1);
+    expect(mockConsoleLog.mock.calls[0][0]).toBe('hi');
+    expect(mockConsoleLog.mock.calls[0][1].cyclic).toBe(cyclic);
+    mockConsoleLog.mockClear();
+    mockConsoleLog.mockImplementation(() => {});
+
+    // The error should not actually get logged because we're not awaiting the root
+    // so it's not thrown but the server log also shouldn't be replayed.
+    await ReactNoopFlightClient.read(transport);
+
+    expect(mockConsoleLog).toHaveBeenCalledTimes(1);
+    // TODO: Support cyclic objects in console encoding.
+    // expect(mockConsoleLog.mock.calls[0][0]).toBe('hi');
+    // const cyclic2 = mockConsoleLog.mock.calls[0][1].cyclic;
+    // expect(cyclic2).not.toBe(cyclic); // Was serialized and therefore cloned
+    // expect(cyclic2.cycle).toBe(cyclic2);
+    expect(mockConsoleLog.mock.calls[0][0]).toBe(
+      'Unknown Value: React could not send it from the server.',
+    );
+    expect(mockConsoleLog.mock.calls[0][1].message).toBe(
+      'Converting circular structure to JSON\n' +
+        "    --> starting at object with constructor 'Object'\n" +
+        "    --- property 'cycle' closes the circle",
+    );
+  });
+
   it('uses the server component debug info as the element owner in DEV', async () => {
     function Container({children}) {
       return children;

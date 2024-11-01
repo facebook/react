@@ -3750,8 +3750,16 @@ function outlineConsoleValue(
     }
   }
 
-  // $FlowFixMe[incompatible-type] stringify can return null
-  const json: string = stringify(model, replacer);
+  let json: string;
+  try {
+    // $FlowFixMe[incompatible-cast] stringify can return null
+    json = (stringify(model, replacer): string);
+  } catch (x) {
+    // $FlowFixMe[incompatible-cast] stringify can return null
+    json = (stringify(
+      'Unknown Value: React could not send it from the server.\n' + x.message,
+    ): string);
+  }
 
   request.pendingChunks++;
   const id = request.nextChunkId++;
@@ -3810,8 +3818,23 @@ function emitConsoleChunk(
   const payload = [methodName, stackTrace, owner, env];
   // $FlowFixMe[method-unbinding]
   payload.push.apply(payload, args);
-  // $FlowFixMe[incompatible-type] stringify can return null
-  const json: string = stringify(payload, replacer);
+  let json: string;
+  try {
+    // $FlowFixMe[incompatible-type] stringify can return null
+    json = stringify(payload, replacer);
+  } catch (x) {
+    json = stringify(
+      [
+        methodName,
+        stackTrace,
+        owner,
+        env,
+        'Unknown Value: React could not send it from the server.',
+        x,
+      ],
+      replacer,
+    );
+  }
   const row = serializeRowHeader('W', id) + json + '\n';
   const processedChunk = stringToChunk(row);
   request.completedRegularChunks.push(processedChunk);
