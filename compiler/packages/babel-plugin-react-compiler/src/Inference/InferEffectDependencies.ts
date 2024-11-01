@@ -43,11 +43,7 @@ export function inferEffectDependencies(
         if (fnExpr != null) {
           const deps: ArrayExpression = {
             kind: 'ArrayExpression',
-            elements: [
-              ...fnExpr.loweredFunc.dependencies.filter(
-                place => place.reactive,
-              ),
-            ],
+            elements: fnExpr.loweredFunc.dependencies.filter(place => place.reactive),
             loc: GeneratedSource,
           };
 

@@ -14,7 +14,6 @@ function Component({foo, bar}) {
     console.log(localNonreactive);
     console.log(globalValue);
   });
-  
 
   // Optional chains and property accesses
   // TODO: we may be able to save bytes by omitting property accesses if the
@@ -22,7 +21,6 @@ function Component({foo, bar}) {
   useEffect(() => {
     console.log(bar?.baz);
     console.log(bar.qux);
-
   });
 
   function f() {
