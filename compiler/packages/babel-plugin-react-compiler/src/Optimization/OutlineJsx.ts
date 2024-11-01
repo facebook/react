@@ -233,12 +233,16 @@ function collectProps(
       }
 
       if (at.kind === 'JsxAttribute') {
+        let newName = at.name;
+        while (seen.has(newName)) {
+          newName = `${at.name}${id++}`;
+        }
         attributes.push({
           originalName: at.name,
-          newName: seen.has(at.name) ? `${at.name}${id++}` : at.name,
+          newName,
           place: at.place,
         });
-        seen.add(at.name);
+        seen.add(newName);
       }
     }
 
