@@ -18,9 +18,13 @@ import HookChangeSummary from './HookChangeSummary';
 
 type Props = {
   fiberID: number,
+  displayMode?: 'detailed' | 'compact',
 };
 
-export default function WhatChanged({fiberID}: Props): React.Node {
+export default function WhatChanged({
+  fiberID,
+  displayMode = 'detailed',
+}: Props): React.Node {
   const {profilerStore} = useContext(StoreContext);
   const {rootID, selectedCommitIndex} = useContext(ProfilerContext);
 
@@ -93,6 +97,7 @@ export default function WhatChanged({fiberID}: Props): React.Node {
             hooks={hooks}
             fiberID={fiberID}
             state={state}
+            displayMode={displayMode}
           />
         </div>,
       );
