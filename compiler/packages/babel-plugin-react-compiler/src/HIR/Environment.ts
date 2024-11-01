@@ -852,7 +852,9 @@ export class Environment {
            */
           return (
             this.#globals.get(binding.imported) ??
-            (isHookName(binding.imported) ? this.#getCustomHookType() : null)
+            (isHookName(binding.imported) || isHookName(binding.name)
+              ? this.#getCustomHookType()
+              : null)
           );
         } else {
           const moduleType = this.#resolveModuleType(binding.module, loc);
