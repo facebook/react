@@ -101,7 +101,7 @@ export const enableObjectFiber = false;
 
 export const enableTransitionTracing = false;
 
-export const enableLazyContextPropagation = false;
+export const enableLazyContextPropagation = true;
 
 // Expose unstable useContext for performance testing
 export const enableContextProfiling = false;
