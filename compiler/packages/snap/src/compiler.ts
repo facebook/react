@@ -173,7 +173,7 @@ function makePluginOptions(
       .map(s => s.trim())
       .filter(s => s.length > 0);
   }
-  
+
   let inferEffectDependencies = false;
   if (firstLine.includes('@inferEffectDependencies')) {
     inferEffectDependencies = true;
@@ -202,7 +202,7 @@ function makePluginOptions(
       hookPattern,
       validatePreserveExistingMemoizationGuarantees,
       validateBlocklistedImports,
-      EXPERIMENTAL_inferEffectDependencies: inferEffectDependencies,
+      inferEffectDependencies,
     },
     compilationMode,
     logger,

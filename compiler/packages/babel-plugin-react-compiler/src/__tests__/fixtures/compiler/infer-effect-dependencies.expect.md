@@ -3,27 +3,34 @@
 
 ```javascript
 // @inferEffectDependencies
-const nonreactive = 0;
+const moduleNonReactive = 0;
 
 function Component({foo, bar}) {
+  const localNonreactive = 0;
   useEffect(() => {
     console.log(foo);
     console.log(bar);
-    console.log(nonreactive);
+    console.log(moduleNonReactive);
+    console.log(localNonreactive);
+    console.log(globalValue);
   });
   
+
+  // Optional chains and property accesses
+  // TODO: we may be able to save bytes by omitting property accesses if the
+  // object of the member expression is already included in the inferred deps
   useEffect(() => {
-    console.log(foo);
     console.log(bar?.baz);
     console.log(bar.qux);
+
   });
-  
+
   function f() {
     console.log(foo);
   }
-  
+
+  // No inferred dep array, the argument is not a lambda
   useEffect(f);
-  
 }
 
 ```
@@ -32,17 +39,19 @@ function Component({foo, bar}) {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @inferEffectDependencies
-const nonreactive = 0;
+const moduleNonReactive = 0;
 
 function Component(t0) {
-  const $ = _c(8);
+  const $ = _c(7);
   const { foo, bar } = t0;
   let t1;
   if ($[0] !== foo || $[1] !== bar) {
     t1 = () => {
       console.log(foo);
       console.log(bar);
-      console.log(nonreactive);
+      console.log(moduleNonReactive);
+      console.log(0);
+      console.log(globalValue);
     };
     $[0] = foo;
     $[1] = bar;
@@ -52,28 +61,26 @@ function Component(t0) {
   }
   useEffect(t1, [foo, bar]);
   let t2;
-  if ($[3] !== foo || $[4] !== bar) {
+  if ($[3] !== bar) {
     t2 = () => {
-      console.log(foo);
       console.log(bar?.baz);
       console.log(bar.qux);
     };
-    $[3] = foo;
-    $[4] = bar;
-    $[5] = t2;
+    $[3] = bar;
+    $[4] = t2;
   } else {
-    t2 = $[5];
+    t2 = $[4];
   }
-  useEffect(t2, [foo, bar, bar.qux]);
+  useEffect(t2, [bar, bar.qux]);
   let t3;
-  if ($[6] !== foo) {
+  if ($[5] !== foo) {
     t3 = function f() {
       console.log(foo);
     };
-    $[6] = foo;
-    $[7] = t3;
+    $[5] = foo;
+    $[6] = t3;
   } else {
-    t3 = $[7];
+    t3 = $[6];
   }
   const f = t3;
 
