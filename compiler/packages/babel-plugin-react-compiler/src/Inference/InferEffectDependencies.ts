@@ -29,11 +29,11 @@ export function inferEffectDependencies(
       if (value.kind === 'FunctionExpression') {
         fnExpressions.set(lvalue.identifier.id, value);
       } else if (
-      /*
-       * This check is not final. Right now we only look for useEffects without a dependency array.
-       * This is likely not how we will ship this feature, but it is good enough for us to make progress
-       * on the implementation and test it.
-       */
+        /*
+         * This check is not final. Right now we only look for useEffects without a dependency array.
+         * This is likely not how we will ship this feature, but it is good enough for us to make progress
+         * on the implementation and test it.
+         */
         value.kind === 'CallExpression' &&
         isUseEffectHookType(value.callee.identifier) &&
         value.args.length === 1 &&
@@ -43,7 +43,9 @@ export function inferEffectDependencies(
         if (fnExpr != null) {
           const deps: ArrayExpression = {
             kind: 'ArrayExpression',
-            elements: fnExpr.loweredFunc.dependencies.filter(place => place.reactive),
+            elements: fnExpr.loweredFunc.dependencies.filter(
+              place => place.reactive,
+            ),
             loc: GeneratedSource,
           };
 
