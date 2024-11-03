@@ -5,7 +5,7 @@ const {
   esNextPaths,
 } = require('./scripts/shared/pathsByLanguageVersion');
 
-const restrictedGlobals = require('confusing-browser-globals');
+const restrictedGlobals = require('confusing-browser-globals'); // Prevents usage of potentially confusing global variables
 
 const OFF = 0;
 const WARNING = 1;
