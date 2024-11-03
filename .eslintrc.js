@@ -1,4 +1,6 @@
-'use strict';
+'use strict'; // Enforces strict mode to catch common coding errors
+
+// Import required paths and globals
 
 const {
   es5Paths,
