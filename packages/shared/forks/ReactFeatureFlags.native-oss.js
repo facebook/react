@@ -63,7 +63,6 @@ export const enableOwnerStacks = false;
 export const enablePersistedModeClonedFlag = false;
 export const enablePostpone = false;
 export const enableReactTestRendererWarning = false;
-export const enableRefAsProp = true;
 export const enableRenderableContext = true;
 export const enableRetryLaneExpiration = false;
 export const enableSchedulingProfiler = __PROFILE__;

@@ -85,7 +85,6 @@ describe('ReactFiberRefs', () => {
     expect(ref2.current).not.toBe(null);
   });
 
-  // @gate enableRefAsProp
   // @gate !disableStringRefs
   it('string ref props are converted to function refs', async () => {
     let refProp;
@@ -105,7 +104,7 @@ describe('ReactFiberRefs', () => {
     const root = ReactNoop.createRoot();
     await act(() => root.render(<Owner />));
 
-    // When string refs aren't disabled, and enableRefAsProp is on, string refs
+    // When string refs aren't disabled, string refs
     // the receiving component receives a callback ref, not the original string.
     // This behavior should never be shipped to open source; it's only here to
     // allow Meta to keep using string refs temporarily while they finish
