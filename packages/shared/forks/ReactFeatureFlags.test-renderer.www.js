@@ -83,7 +83,6 @@ export const disableClientCache = true;
 export const enableServerComponentLogs = true;
 export const enableInfiniteRenderLoopDetection = false;
 
-export const enableRefAsProp = true;
 export const disableStringRefs = false;
 
 export const enableReactTestRendererWarning = false;
@@ -97,6 +96,8 @@ export const enableObjectFiber = false;
 export const enableOwnerStacks = false;
 export const enableShallowPropDiffing = false;
 export const enableSiblingPrerendering = false;
+
+export const enableUseResourceEffectHook = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

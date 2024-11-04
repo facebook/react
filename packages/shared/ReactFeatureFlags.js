@@ -161,6 +161,11 @@ export const transitionLaneExpirationMs = 5000;
  */
 export const enableInfiniteRenderLoopDetection = false;
 
+/**
+ * Experimental new hook for better managing resources in effects.
+ */
+export const enableUseResourceEffectHook = __EXPERIMENTAL__;
+
 // -----------------------------------------------------------------------------
 // Ready for next major.
 //
@@ -208,13 +213,8 @@ export const enableFilterEmptyStringAttributesDOM = true;
 // Disabled caching behavior of `react/cache` in client runtimes.
 export const disableClientCache = true;
 
-// Subtle breaking changes to JSX runtime to make it faster, like passing `ref`
-// as a normal prop instead of stripping it from the props object.
-
-// Passes `ref` as a normal prop instead of stripping it from the props object
-// during element creation.
-export const enableRefAsProp = true;
 export const disableStringRefs = true;
+
 /**
  * If set to a function, the function will be called with the component name
  * and ref string.

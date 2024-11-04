@@ -73,7 +73,6 @@ export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableProfilerTimer = __PROFILE__;
 export const enableReactTestRendererWarning = false;
-export const enableRefAsProp = true;
 export const enableRenderableContext = true;
 export const enableRetryLaneExpiration = false;
 export const enableSchedulingProfiler = __PROFILE__;
@@ -95,6 +94,7 @@ export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
 export const useModernStrictMode = true;
+export const enableUseResourceEffectHook = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

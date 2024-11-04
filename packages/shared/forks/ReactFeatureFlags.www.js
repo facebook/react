@@ -101,8 +101,6 @@ export const enableLegacyHidden = true;
 
 export const enableComponentStackLocations = true;
 
-export const enableRefAsProp = true;
-
 export const disableTextareaChildren = __EXPERIMENTAL__;
 
 export const consoleManagedByDevToolsDuringStrictMode = true;
@@ -126,6 +124,8 @@ export const disableLegacyMode: boolean =
 
 export const enableOwnerStacks = false;
 export const enableShallowPropDiffing = false;
+
+export const enableUseResourceEffectHook = true;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

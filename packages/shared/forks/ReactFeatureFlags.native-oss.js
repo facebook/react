@@ -63,7 +63,6 @@ export const enableOwnerStacks = false;
 export const enablePersistedModeClonedFlag = false;
 export const enablePostpone = false;
 export const enableReactTestRendererWarning = false;
-export const enableRefAsProp = true;
 export const enableRenderableContext = true;
 export const enableRetryLaneExpiration = false;
 export const enableSchedulingProfiler = __PROFILE__;
@@ -87,6 +86,7 @@ export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
 export const useModernStrictMode = true;
 export const enableSiblingPrerendering = false;
+export const enableUseResourceEffectHook = false;
 
 // Profiling Only
 export const enableProfilerTimer = __PROFILE__;

@@ -55,6 +55,7 @@ export const ReactElementSymbolSchema = z.object({
     z.literal('react.element'),
     z.literal('react.transitional.element'),
   ]),
+  globalDevVar: z.string(),
 });
 
 export const ExternalFunctionSchema = z.object({
