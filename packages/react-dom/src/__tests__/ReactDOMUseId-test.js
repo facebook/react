@@ -7,8 +7,6 @@
  * @emails react-core
  * @jest-environment ./scripts/jest/ReactDOMServerIntegrationEnvironment
  */
-import {favorSafetyOverHydrationPerf} from 'shared/forks/ReactFeatureFlags.www-dynamic';
-
 let JSDOM;
 let React;
 let ReactDOMClient;
