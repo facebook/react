@@ -226,22 +226,22 @@ function getOwner() {
 }
 var didWarnAboutStringRefs;
 enableLogStringRefsProd && (didWarnAboutStringRefs = {});
-function ReactElement(type, key, _ref, self, source, owner, props) {
-  _ref = props.ref;
-  _ref = void 0 !== _ref ? _ref : null;
+function ReactElement(type, key, self, source, owner, props) {
+  self = props.ref;
+  self = void 0 !== self ? self : null;
   return disableStringRefs
     ? {
         $$typeof: REACT_ELEMENT_TYPE,
         type: type,
         key: key,
-        ref: _ref,
+        ref: self,
         props: props
       }
     : {
         $$typeof: REACT_ELEMENT_TYPE,
         type: type,
         key: key,
-        ref: _ref,
+        ref: self,
         props: props,
         _owner: owner
       };
@@ -268,13 +268,12 @@ function jsxProd(type, config, maybeKey) {
       void 0 === maybeKey[propName$1] &&
         (maybeKey[propName$1] = config[propName$1]);
   }
-  return ReactElement(type, key, null, void 0, void 0, getOwner(), maybeKey);
+  return ReactElement(type, key, void 0, void 0, getOwner(), maybeKey);
 }
 function cloneAndReplaceKey(oldElement, newKey) {
   return ReactElement(
     oldElement.type,
     newKey,
-    null,
     void 0,
     void 0,
     disableStringRefs ? void 0 : oldElement._owner,
@@ -642,7 +641,7 @@ exports.cloneElement = function (element, config, children) {
     for (var i = 0; i < propName; i++) defaultProps[i] = arguments[i + 2];
     props.children = defaultProps;
   }
-  return ReactElement(element.type, key, null, void 0, void 0, owner, props);
+  return ReactElement(element.type, key, void 0, void 0, owner, props);
 };
 exports.createContext = function (defaultValue) {
   defaultValue = {
@@ -690,7 +689,7 @@ exports.createElement = function (type, config, children) {
     for (propName in ((childrenLength = type.defaultProps), childrenLength))
       void 0 === props[propName] &&
         (props[propName] = childrenLength[propName]);
-  return ReactElement(type, key, null, void 0, void 0, getOwner(), props);
+  return ReactElement(type, key, void 0, void 0, getOwner(), props);
 };
 exports.createRef = function () {
   return { current: null };
@@ -820,4 +819,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.0.0-www-modern-ea3ac586-20241031";
+exports.version = "19.0.0-www-modern-07aa4944-20241104";

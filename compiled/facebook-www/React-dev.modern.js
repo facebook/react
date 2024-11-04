@@ -593,8 +593,8 @@ __DEV__ &&
       componentName = this.props.ref;
       return void 0 !== componentName ? componentName : null;
     }
-    function ReactElement(type, key, _ref, self, source, owner, props) {
-      _ref = props.ref;
+    function ReactElement(type, key, self, source, owner, props) {
+      self = props.ref;
       type = {
         $$typeof: REACT_ELEMENT_TYPE,
         type: type,
@@ -602,7 +602,7 @@ __DEV__ &&
         props: props,
         _owner: owner
       };
-      null !== (void 0 !== _ref ? _ref : null)
+      null !== (void 0 !== self ? self : null)
         ? Object.defineProperty(type, "ref", {
             enumerable: !1,
             get: elementRefGetterWithDeprecationWarning
@@ -703,8 +703,8 @@ __DEV__ &&
         (checkKeyStringCoercion(maybeKey), (children = "" + maybeKey));
       hasValidKey(config) &&
         (checkKeyStringCoercion(config.key), (children = "" + config.key));
-      hasValidRef(config) &&
-        (disableStringRefs ||
+      disableStringRefs ||
+        (hasValidRef(config) &&
           warnIfStringRefCannotBeAutoConverted(config, self));
       if (
         (!enableFastJSXWithoutStringRefs && "ref" in config) ||
@@ -728,26 +728,18 @@ __DEV__ &&
             (maybeKey[_propName2] = config[_propName2]);
       }
       children &&
-        ((_propName2 =
+        defineKeyPropWarningGetter(
+          maybeKey,
           "function" === typeof type
             ? type.displayName || type.name || "Unknown"
-            : type),
-        children && defineKeyPropWarningGetter(maybeKey, _propName2));
-      return ReactElement(
-        type,
-        children,
-        null,
-        self,
-        source,
-        getOwner(),
-        maybeKey
-      );
+            : type
+        );
+      return ReactElement(type, children, self, source, getOwner(), maybeKey);
     }
     function cloneAndReplaceKey(oldElement, newKey) {
       newKey = ReactElement(
         oldElement.type,
         newKey,
-        null,
         void 0,
         void 0,
         oldElement._owner,
@@ -1581,15 +1573,7 @@ __DEV__ &&
         for (var i = 0; i < propName; i++) defaultProps[i] = arguments[i + 2];
         props.children = defaultProps;
       }
-      props = ReactElement(
-        element.type,
-        key,
-        null,
-        void 0,
-        void 0,
-        owner,
-        props
-      );
+      props = ReactElement(element.type, key, void 0, void 0, owner, props);
       for (key = 2; key < arguments.length; key++)
         validateChildKeys(arguments[key], props.type);
       return props;
@@ -1696,6 +1680,7 @@ __DEV__ &&
           i
         );
       }
+      var propName;
       i = {};
       typeString = null;
       if (null != config)
@@ -1706,8 +1691,8 @@ __DEV__ &&
           warn(
             "Your app (or one of its dependencies) is using an outdated JSX transform. Update to the modern JSX transform for faster performance: https://react.dev/link/new-jsx-transform"
           )),
-        hasValidRef(config) &&
-          (disableStringRefs ||
+        disableStringRefs ||
+          (hasValidRef(config) &&
             warnIfStringRefCannotBeAutoConverted(config, config.__self)),
         hasValidKey(config) &&
           (checkKeyStringCoercion(config.key), (typeString = "" + config.key)),
@@ -1734,22 +1719,14 @@ __DEV__ &&
       if (type && type.defaultProps)
         for (propName in ((childrenLength = type.defaultProps), childrenLength))
           void 0 === i[propName] && (i[propName] = childrenLength[propName]);
-      if (typeString) {
-        var propName =
+      typeString &&
+        defineKeyPropWarningGetter(
+          i,
           "function" === typeof type
             ? type.displayName || type.name || "Unknown"
-            : type;
-        typeString && defineKeyPropWarningGetter(i, propName);
-      }
-      return ReactElement(
-        type,
-        typeString,
-        null,
-        void 0,
-        void 0,
-        getOwner(),
-        i
-      );
+            : type
+        );
+      return ReactElement(type, typeString, void 0, void 0, getOwner(), i);
     };
     exports.createRef = function () {
       var refObject = { current: null };
@@ -2001,7 +1978,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.0.0-www-modern-ea3ac586-20241031";
+    exports.version = "19.0.0-www-modern-07aa4944-20241104";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
