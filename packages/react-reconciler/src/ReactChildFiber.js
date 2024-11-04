@@ -45,7 +45,6 @@ import {
 } from './ReactWorkTags';
 import isArray from 'shared/isArray';
 import {
-  enableRefAsProp,
   enableAsyncIterableChildren,
   disableLegacyMode,
   enableOwnerStacks,
@@ -239,21 +238,6 @@ function validateFragmentProps(
         break;
       }
     }
-
-    if (!enableRefAsProp && element.ref !== null) {
-      if (fiber === null) {
-        // For unkeyed root fragments there's no Fiber. We create a fake one just for
-        // error stack handling.
-        fiber = createFiberFromElement(element, returnFiber.mode, 0);
-        if (__DEV__) {
-          fiber._debugInfo = currentDebugInfo;
-        }
-        fiber.return = returnFiber;
-      }
-      runWithFiberInDEV(fiber, () => {
-        console.error('Invalid attribute `ref` supplied to `React.Fragment`.');
-      });
-    }
   }
 }
 
@@ -266,27 +250,14 @@ function unwrapThenable<T>(thenable: Thenable<T>): T {
   return trackUsedThenable(thenableState, thenable, index);
 }
 
-function coerceRef(
-  returnFiber: Fiber,
-  current: Fiber | null,
-  workInProgress: Fiber,
-  element: ReactElement,
-): void {
-  let ref;
-  if (enableRefAsProp) {
-    // TODO: This is a temporary, intermediate step. When enableRefAsProp is on,
-    // we should resolve the `ref` prop during the begin phase of the component
-    // it's attached to (HostComponent, ClassComponent, etc).
-    const refProp = element.props.ref;
-    ref = refProp !== undefined ? refProp : null;
-  } else {
-    // Old behavior.
-    ref = element.ref;
-  }
-
-  // TODO: If enableRefAsProp is on, we shouldn't use the `ref` field. We
+function coerceRef(workInProgress: Fiber, element: ReactElement): void {
+  // TODO: This is a temporary, intermediate step. Now that enableRefAsProp is on,
+  // we should resolve the `ref` prop during the begin phase of the component
+  // it's attached to (HostComponent, ClassComponent, etc).
+  const refProp = element.props.ref;
+  // TODO: With enableRefAsProp now rolled out, we shouldn't use the `ref` field. We
   // should always read the ref from the prop.
-  workInProgress.ref = ref;
+  workInProgress.ref = refProp !== undefined ? refProp : null;
 }
 
 function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
@@ -569,7 +540,7 @@ function createChildReconciler(
       ) {
         // Move based on index
         const existing = useFiber(current, element.props);
-        coerceRef(returnFiber, current, existing, element);
+        coerceRef(existing, element);
         existing.return = returnFiber;
         if (__DEV__) {
           existing._debugOwner = element._owner;
@@ -580,7 +551,7 @@ function createChildReconciler(
     }
     // Insert
     const created = createFiberFromElement(element, returnFiber.mode, lanes);
-    coerceRef(returnFiber, current, created, element);
+    coerceRef(created, element);
     created.return = returnFiber;
     if (__DEV__) {
       created._debugInfo = currentDebugInfo;
@@ -693,7 +664,7 @@ function createChildReconciler(
             returnFiber.mode,
             lanes,
           );
-          coerceRef(returnFiber, null, created, newChild);
+          coerceRef(created, newChild);
           created.return = returnFiber;
           if (__DEV__) {
             const prevDebugInfo = pushDebugInfo(newChild._debugInfo);
@@ -1684,7 +1655,7 @@ function createChildReconciler(
           ) {
             deleteRemainingChildren(returnFiber, child.sibling);
             const existing = useFiber(child, element.props);
-            coerceRef(returnFiber, child, existing, element);
+            coerceRef(existing, element);
             existing.return = returnFiber;
             if (__DEV__) {
               existing._debugOwner = element._owner;
@@ -1722,7 +1693,7 @@ function createChildReconciler(
       return created;
     } else {
       const created = createFiberFromElement(element, returnFiber.mode, lanes);
-      coerceRef(returnFiber, currentFirstChild, created, element);
+      coerceRef(created, element);
       created.return = returnFiber;
       if (__DEV__) {
         created._debugInfo = currentDebugInfo;

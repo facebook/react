@@ -108,7 +108,6 @@ import {
   enableAsyncActions,
   enablePostpone,
   enableRenderableContext,
-  enableRefAsProp,
   disableLegacyMode,
   disableDefaultPropsExceptForClasses,
   disableStringRefs,
@@ -125,10 +124,7 @@ import {
   REACT_MEMO_TYPE,
   getIteratorFn,
 } from 'shared/ReactSymbols';
-import {
-  getCurrentFiberOwnerNameInDevOrNull,
-  setCurrentFiber,
-} from './ReactCurrentFiber';
+import {setCurrentFiber} from './ReactCurrentFiber';
 import {
   resolveFunctionForHotReloading,
   resolveForwardRefForHotReloading,
@@ -319,7 +315,6 @@ let didWarnAboutBadClass;
 let didWarnAboutContextTypeOnFunctionComponent;
 let didWarnAboutContextTypes;
 let didWarnAboutGetDerivedStateOnFunctionComponent;
-let didWarnAboutFunctionRefs;
 export let didWarnAboutReassigningProps: boolean;
 let didWarnAboutRevealOrder;
 let didWarnAboutTailOptions;
@@ -330,7 +325,6 @@ if (__DEV__) {
   didWarnAboutContextTypeOnFunctionComponent = ({}: {[string]: boolean});
   didWarnAboutContextTypes = ({}: {[string]: boolean});
   didWarnAboutGetDerivedStateOnFunctionComponent = ({}: {[string]: boolean});
-  didWarnAboutFunctionRefs = ({}: {[string]: boolean});
   didWarnAboutReassigningProps = false;
   didWarnAboutRevealOrder = ({}: {[empty]: boolean});
   didWarnAboutTailOptions = ({}: {[string]: boolean});
@@ -416,7 +410,7 @@ function updateForwardRef(
   const ref = workInProgress.ref;
 
   let propsWithoutRef;
-  if (enableRefAsProp && 'ref' in nextProps) {
+  if ('ref' in nextProps) {
     // `ref` is just a prop now, but `forwardRef` expects it to not appear in
     // the props object. This used to happen in the JSX runtime, but now we do
     // it here.
@@ -1953,25 +1947,6 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
           '  %s.childContextTypes = ...',
         Component.displayName || Component.name || 'Component',
       );
-    }
-    if (!enableRefAsProp && workInProgress.ref !== null) {
-      let info = '';
-      const componentName = getComponentNameFromType(Component) || 'Unknown';
-      const ownerName = getCurrentFiberOwnerNameInDevOrNull();
-      if (ownerName) {
-        info += '\n\nCheck the render method of `' + ownerName + '`.';
-      }
-
-      const warningKey = componentName + '|' + (ownerName || '');
-      if (!didWarnAboutFunctionRefs[warningKey]) {
-        didWarnAboutFunctionRefs[warningKey] = true;
-        console.error(
-          'Function components cannot be given refs. ' +
-            'Attempts to access this ref will fail. ' +
-            'Did you mean to use React.forwardRef()?%s',
-          info,
-        );
-      }
     }
 
     if (
