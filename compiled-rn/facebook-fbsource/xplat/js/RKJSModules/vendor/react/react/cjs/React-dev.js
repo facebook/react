@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<24c680138aed3e092cb00c464e242b2c>>
+ * @generated SignedSource<<a48fca1f72875dc89a100c34f6bc90c9>>
  */
 
 "use strict";
@@ -445,13 +445,6 @@ __DEV__ &&
       var dispatcher = ReactSharedInternals.A;
       return null === dispatcher ? null : dispatcher.getOwner();
     }
-    function hasValidRef(config) {
-      if (hasOwnProperty.call(config, "ref")) {
-        var getter = Object.getOwnPropertyDescriptor(config, "ref").get;
-        if (getter && getter.isReactWarning) return !1;
-      }
-      return void 0 !== config.ref;
-    }
     function hasValidKey(config) {
       if (hasOwnProperty.call(config, "key")) {
         var getter = Object.getOwnPropertyDescriptor(config, "key").get;
@@ -484,8 +477,8 @@ __DEV__ &&
       componentName = this.props.ref;
       return void 0 !== componentName ? componentName : null;
     }
-    function ReactElement(type, key, _ref, self, source, owner, props) {
-      _ref = props.ref;
+    function ReactElement(type, key, self, source, owner, props) {
+      self = props.ref;
       type = {
         $$typeof: REACT_ELEMENT_TYPE,
         type: type,
@@ -493,7 +486,7 @@ __DEV__ &&
         props: props,
         _owner: owner
       };
-      null !== (void 0 !== _ref ? _ref : null)
+      null !== (void 0 !== self ? self : null)
         ? Object.defineProperty(type, "ref", {
             enumerable: !1,
             get: elementRefGetterWithDeprecationWarning
@@ -594,33 +587,24 @@ __DEV__ &&
         (checkKeyStringCoercion(maybeKey), (children = "" + maybeKey));
       hasValidKey(config) &&
         (checkKeyStringCoercion(config.key), (children = "" + config.key));
-      hasValidRef(config);
       if ("key" in config) {
         maybeKey = {};
         for (var propName in config)
           "key" !== propName && (maybeKey[propName] = config[propName]);
       } else maybeKey = config;
       children &&
-        ((config =
+        defineKeyPropWarningGetter(
+          maybeKey,
           "function" === typeof type
             ? type.displayName || type.name || "Unknown"
-            : type),
-        children && defineKeyPropWarningGetter(maybeKey, config));
-      return ReactElement(
-        type,
-        children,
-        null,
-        self,
-        source,
-        getOwner(),
-        maybeKey
-      );
+            : type
+        );
+      return ReactElement(type, children, self, source, getOwner(), maybeKey);
     }
     function cloneAndReplaceKey(oldElement, newKey) {
       newKey = ReactElement(
         oldElement.type,
         newKey,
-        null,
         void 0,
         void 0,
         oldElement._owner,
@@ -1358,33 +1342,42 @@ __DEV__ &&
       var props = assign({}, element.props),
         key = element.key,
         owner = element._owner;
-      if (null != config)
-        for (propName in (hasValidRef(config) && (owner = getOwner()),
+      if (null != config) {
+        var JSCompiler_inline_result;
+        a: {
+          if (
+            hasOwnProperty.call(config, "ref") &&
+            (JSCompiler_inline_result = Object.getOwnPropertyDescriptor(
+              config,
+              "ref"
+            ).get) &&
+            JSCompiler_inline_result.isReactWarning
+          ) {
+            JSCompiler_inline_result = !1;
+            break a;
+          }
+          JSCompiler_inline_result = void 0 !== config.ref;
+        }
+        JSCompiler_inline_result && (owner = getOwner());
         hasValidKey(config) &&
-          (checkKeyStringCoercion(config.key), (key = "" + config.key)),
-        config))
+          (checkKeyStringCoercion(config.key), (key = "" + config.key));
+        for (propName in config)
           !hasOwnProperty.call(config, propName) ||
             "key" === propName ||
             "__self" === propName ||
             "__source" === propName ||
             ("ref" === propName && void 0 === config.ref) ||
             (props[propName] = config[propName]);
+      }
       var propName = arguments.length - 2;
       if (1 === propName) props.children = children;
       else if (1 < propName) {
-        for (var childArray = Array(propName), i = 0; i < propName; i++)
-          childArray[i] = arguments[i + 2];
-        props.children = childArray;
+        JSCompiler_inline_result = Array(propName);
+        for (var i = 0; i < propName; i++)
+          JSCompiler_inline_result[i] = arguments[i + 2];
+        props.children = JSCompiler_inline_result;
       }
-      props = ReactElement(
-        element.type,
-        key,
-        null,
-        void 0,
-        void 0,
-        owner,
-        props
-      );
+      props = ReactElement(element.type, key, void 0, void 0, owner, props);
       for (key = 2; key < arguments.length; key++)
         validateChildKeys(arguments[key], props.type);
       return props;
@@ -1439,6 +1432,7 @@ __DEV__ &&
           i
         );
       }
+      var propName;
       i = {};
       typeString = null;
       if (null != config)
@@ -1449,7 +1443,6 @@ __DEV__ &&
           warn(
             "Your app (or one of its dependencies) is using an outdated JSX transform. Update to the modern JSX transform for faster performance: https://react.dev/link/new-jsx-transform"
           )),
-        hasValidRef(config),
         hasValidKey(config) &&
           (checkKeyStringCoercion(config.key), (typeString = "" + config.key)),
         config))
@@ -1473,22 +1466,14 @@ __DEV__ &&
       if (type && type.defaultProps)
         for (propName in ((childrenLength = type.defaultProps), childrenLength))
           void 0 === i[propName] && (i[propName] = childrenLength[propName]);
-      if (typeString) {
-        var propName =
+      typeString &&
+        defineKeyPropWarningGetter(
+          i,
           "function" === typeof type
             ? type.displayName || type.name || "Unknown"
-            : type;
-        typeString && defineKeyPropWarningGetter(i, propName);
-      }
-      return ReactElement(
-        type,
-        typeString,
-        null,
-        void 0,
-        void 0,
-        getOwner(),
-        i
-      );
+            : type
+        );
+      return ReactElement(type, typeString, void 0, void 0, getOwner(), i);
     };
     exports.createRef = function () {
       var refObject = { current: null };
@@ -1709,7 +1694,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.0.0-native-fb-ea3ac586-20241031";
+    exports.version = "19.0.0-native-fb-07aa4944-20241104";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
