@@ -7,6 +7,7 @@
  * @emails react-core
  * @jest-environment ./scripts/jest/ReactDOMServerIntegrationEnvironment
  */
+import {favorSafetyOverHydrationPerf} from 'shared/forks/ReactFeatureFlags.www-dynamic';
 
 let JSDOM;
 let React;
@@ -648,7 +649,7 @@ https://react.dev/link/hydration-mismatch
       </div>
     `);
 
-    if (__DEV__) {
+    if (gate(flags => flags.favorSafetyOverHydrationPerf)) {
       // TODO: this is a bug with useID and SuspenseList revealOrder "backwards"
       await expect(async () => {
         await clientAct(async () => {
@@ -678,6 +679,34 @@ https://react.dev/link/hydration-mismatch
       await clientAct(async () => {
         ReactDOMClient.hydrateRoot(container, <Foo />);
       });
+
+      // TODO: this seems like a bug when `favorSafetyOverHydrationPerf` is false?
+      assertConsoleErrorDev(
+        [
+          `A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch \`if (typeof window !== 'undefined')\`.
+- Variable input such as \`Date.now()\` or \`Math.random()\` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  <Foo>
+    <SuspenseList revealOrder="backwards">
+      <Bar>
+      <Bar>
+        <Baz id=":R1:">
+          <span id=":R1:">
++           B
+-           A
+`,
+        ],
+        {withoutStack: true},
+      );
 
       expect(container).toMatchInlineSnapshot(`
       <div
