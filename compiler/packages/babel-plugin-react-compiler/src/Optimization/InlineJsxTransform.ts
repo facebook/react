@@ -6,14 +6,25 @@
  */
 
 import {
+  BasicBlock,
+  BlockId,
   BuiltinTag,
+  DeclarationId,
   Effect,
+  forkTemporaryIdentifier,
+  GotoTerminal,
+  GotoVariant,
   HIRFunction,
+  Identifier,
+  IfTerminal,
   Instruction,
+  InstructionKind,
   JsxAttribute,
   makeInstructionId,
   ObjectProperty,
+  Phi,
   Place,
+  promoteTemporary,
   SpreadPattern,
 } from '../HIR';
 import {
@@ -24,6 +35,365 @@ import {
   reversePostorderBlocks,
 } from '../HIR/HIRBuilder';
 import {CompilerError, EnvironmentConfig} from '..';
+import {
+  mapInstructionLValues,
+  mapInstructionOperands,
+  mapInstructionValueOperands,
+  mapTerminalOperands,
+} from '../HIR/visitors';
+
+type InlinedJsxDeclarationMap = Map<
+  DeclarationId,
+  {identifier: Identifier; blockIdsToIgnore: Set<BlockId>}
+>;
+
+/**
+ * A prod-only, RN optimization to replace JSX with inlined ReactElement object literals
+ *
+ * Example:
+ * <>foo</>
+ * _______________
+ * let t1;
+ * if (__DEV__) {
+ *   t1 = <>foo</>
+ * } else {
+ *   t1 = {...}
+ * }
+ *
+ */
+export function inlineJsxTransform(
+  fn: HIRFunction,
+  inlineJsxTransformConfig: NonNullable<
+    EnvironmentConfig['inlineJsxTransform']
+  >,
+): void {
+  const inlinedJsxDeclarations: InlinedJsxDeclarationMap = new Map();
+  /**
+   * Step 1: Codegen the conditional and ReactElement object literal
+   */
+  for (const [_, currentBlock] of [...fn.body.blocks]) {
+    let fallthroughBlockInstructions: Array<Instruction> | null = null;
+    const instructionCount = currentBlock.instructions.length;
+    for (let i = 0; i < instructionCount; i++) {
+      const instr = currentBlock.instructions[i]!;
+      // TODO: Support value blocks
+      if (currentBlock.kind === 'value') {
+        fn.env.logger?.logEvent(fn.env.filename, {
+          kind: 'CompileDiagnostic',
+          fnLoc: null,
+          detail: {
+            reason: 'JSX Inlining is not supported on value blocks',
+            loc: instr.loc,
+          },
+        });
+        continue;
+      }
+      switch (instr.value.kind) {
+        case 'JsxExpression':
+        case 'JsxFragment': {
+          /**
+           * Split into blocks for new IfTerminal:
+           *   current, then, else, fallthrough
+           */
+          const currentBlockInstructions = currentBlock.instructions.slice(
+            0,
+            i,
+          );
+          const thenBlockInstructions = currentBlock.instructions.slice(
+            i,
+            i + 1,
+          );
+          const elseBlockInstructions: Array<Instruction> = [];
+          fallthroughBlockInstructions ??= currentBlock.instructions.slice(
+            i + 1,
+          );
+
+          const fallthroughBlockId = fn.env.nextBlockId;
+          const fallthroughBlock: BasicBlock = {
+            kind: currentBlock.kind,
+            id: fallthroughBlockId,
+            instructions: fallthroughBlockInstructions,
+            terminal: currentBlock.terminal,
+            preds: new Set(),
+            phis: new Set(),
+          };
+
+          /**
+           * Complete current block
+           * - Add instruction for variable declaration
+           * - Add instruction for LoadGlobal used by conditional
+           * - End block with a new IfTerminal
+           */
+          const varPlace = createTemporaryPlace(fn.env, instr.value.loc);
+          promoteTemporary(varPlace.identifier);
+          const varLValuePlace = createTemporaryPlace(fn.env, instr.value.loc);
+          const thenVarPlace = {
+            ...varPlace,
+            identifier: forkTemporaryIdentifier(
+              fn.env.nextIdentifierId,
+              varPlace.identifier,
+            ),
+          };
+          const elseVarPlace = {
+            ...varPlace,
+            identifier: forkTemporaryIdentifier(
+              fn.env.nextIdentifierId,
+              varPlace.identifier,
+            ),
+          };
+          const varInstruction: Instruction = {
+            id: makeInstructionId(0),
+            lvalue: {...varLValuePlace},
+            value: {
+              kind: 'DeclareLocal',
+              lvalue: {place: {...varPlace}, kind: InstructionKind.Let},
+              type: null,
+              loc: instr.value.loc,
+            },
+            loc: instr.loc,
+          };
+          currentBlockInstructions.push(varInstruction);
+
+          const devGlobalPlace = createTemporaryPlace(fn.env, instr.value.loc);
+          const devGlobalInstruction: Instruction = {
+            id: makeInstructionId(0),
+            lvalue: {...devGlobalPlace, effect: Effect.Mutate},
+            value: {
+              kind: 'LoadGlobal',
+              binding: {
+                kind: 'Global',
+                name: inlineJsxTransformConfig.globalDevVar,
+              },
+              loc: instr.value.loc,
+            },
+            loc: instr.loc,
+          };
+          currentBlockInstructions.push(devGlobalInstruction);
+          const thenBlockId = fn.env.nextBlockId;
+          const elseBlockId = fn.env.nextBlockId;
+          const ifTerminal: IfTerminal = {
+            kind: 'if',
+            test: {...devGlobalPlace, effect: Effect.Read},
+            consequent: thenBlockId,
+            alternate: elseBlockId,
+            fallthrough: fallthroughBlockId,
+            loc: instr.loc,
+            id: makeInstructionId(0),
+          };
+          currentBlock.instructions = currentBlockInstructions;
+          currentBlock.terminal = ifTerminal;
+
+          /**
+           * Set up then block where we put the original JSX return
+           */
+          const thenBlock: BasicBlock = {
+            id: thenBlockId,
+            instructions: thenBlockInstructions,
+            kind: 'block',
+            phis: new Set(),
+            preds: new Set(),
+            terminal: {
+              kind: 'goto',
+              block: fallthroughBlockId,
+              variant: GotoVariant.Break,
+              id: makeInstructionId(0),
+              loc: instr.loc,
+            },
+          };
+          fn.body.blocks.set(thenBlockId, thenBlock);
+
+          const resassignElsePlace = createTemporaryPlace(
+            fn.env,
+            instr.value.loc,
+          );
+          const reassignElseInstruction: Instruction = {
+            id: makeInstructionId(0),
+            lvalue: {...resassignElsePlace},
+            value: {
+              kind: 'StoreLocal',
+              lvalue: {
+                place: elseVarPlace,
+                kind: InstructionKind.Reassign,
+              },
+              value: {...instr.lvalue},
+              type: null,
+              loc: instr.value.loc,
+            },
+            loc: instr.loc,
+          };
+          thenBlockInstructions.push(reassignElseInstruction);
+
+          /**
+           * Set up else block where we add new codegen
+           */
+          const elseBlockTerminal: GotoTerminal = {
+            kind: 'goto',
+            block: fallthroughBlockId,
+            variant: GotoVariant.Break,
+            id: makeInstructionId(0),
+            loc: instr.loc,
+          };
+          const elseBlock: BasicBlock = {
+            id: elseBlockId,
+            instructions: elseBlockInstructions,
+            kind: 'block',
+            phis: new Set(),
+            preds: new Set(),
+            terminal: elseBlockTerminal,
+          };
+          fn.body.blocks.set(elseBlockId, elseBlock);
+
+          /**
+           * ReactElement object literal codegen
+           */
+          const {refProperty, keyProperty, propsProperty} =
+            createPropsProperties(
+              fn,
+              instr,
+              elseBlockInstructions,
+              instr.value.kind === 'JsxExpression' ? instr.value.props : [],
+              instr.value.children,
+            );
+          const reactElementInstructionPlace = createTemporaryPlace(
+            fn.env,
+            instr.value.loc,
+          );
+          const reactElementInstruction: Instruction = {
+            id: makeInstructionId(0),
+            lvalue: {...reactElementInstructionPlace, effect: Effect.Store},
+            value: {
+              kind: 'ObjectExpression',
+              properties: [
+                createSymbolProperty(
+                  fn,
+                  instr,
+                  elseBlockInstructions,
+                  '$$typeof',
+                  inlineJsxTransformConfig.elementSymbol,
+                ),
+                instr.value.kind === 'JsxExpression'
+                  ? createTagProperty(
+                      fn,
+                      instr,
+                      elseBlockInstructions,
+                      instr.value.tag,
+                    )
+                  : createSymbolProperty(
+                      fn,
+                      instr,
+                      elseBlockInstructions,
+                      'type',
+                      'react.fragment',
+                    ),
+                refProperty,
+                keyProperty,
+                propsProperty,
+              ],
+              loc: instr.value.loc,
+            },
+            loc: instr.loc,
+          };
+          elseBlockInstructions.push(reactElementInstruction);
+
+          const reassignConditionalInstruction: Instruction = {
+            id: makeInstructionId(0),
+            lvalue: {...createTemporaryPlace(fn.env, instr.value.loc)},
+            value: {
+              kind: 'StoreLocal',
+              lvalue: {
+                place: {...elseVarPlace},
+                kind: InstructionKind.Reassign,
+              },
+              value: {...reactElementInstruction.lvalue},
+              type: null,
+              loc: instr.value.loc,
+            },
+            loc: instr.loc,
+          };
+          elseBlockInstructions.push(reassignConditionalInstruction);
+
+          /**
+           * Create phis to reassign the var
+           */
+          const operands: Map<BlockId, Place> = new Map();
+          operands.set(thenBlockId, {
+            ...elseVarPlace,
+          });
+          operands.set(elseBlockId, {
+            ...thenVarPlace,
+          });
+
+          const phiIdentifier = forkTemporaryIdentifier(
+            fn.env.nextIdentifierId,
+            varPlace.identifier,
+          );
+          const phiPlace = {
+            ...createTemporaryPlace(fn.env, instr.value.loc),
+            identifier: phiIdentifier,
+          };
+          const phis: Set<Phi> = new Set([
+            {
+              kind: 'Phi',
+              operands,
+              place: phiPlace,
+            },
+          ]);
+          fallthroughBlock.phis = phis;
+          fn.body.blocks.set(fallthroughBlockId, fallthroughBlock);
+
+          /**
+           * Track this JSX instruction so we can replace references in step 2
+           */
+          inlinedJsxDeclarations.set(instr.lvalue.identifier.declarationId, {
+            identifier: phiIdentifier,
+            blockIdsToIgnore: new Set([thenBlockId, elseBlockId]),
+          });
+          break;
+        }
+        case 'FunctionExpression':
+        case 'ObjectMethod': {
+          inlineJsxTransform(
+            instr.value.loweredFunc.func,
+            inlineJsxTransformConfig,
+          );
+          break;
+        }
+      }
+    }
+  }
+
+  /**
+   * Step 2: Replace declarations with new phi values
+   */
+  for (const [blockId, block] of fn.body.blocks) {
+    for (const instr of block.instructions) {
+      mapInstructionOperands(instr, place =>
+        handlePlace(place, blockId, inlinedJsxDeclarations),
+      );
+
+      mapInstructionLValues(instr, lvalue =>
+        handlelValue(lvalue, blockId, inlinedJsxDeclarations),
+      );
+
+      mapInstructionValueOperands(instr.value, place =>
+        handlePlace(place, blockId, inlinedJsxDeclarations),
+      );
+    }
+
+    mapTerminalOperands(block.terminal, place =>
+      handlePlace(place, blockId, inlinedJsxDeclarations),
+    );
+  }
+
+  /**
+   * Step 3: Fixup the HIR
+   * Restore RPO, ensure correct predecessors, renumber instructions, fix scope and ranges.
+   */
+  reversePostorderBlocks(fn.body);
+  markPredecessors(fn.body);
+  markInstructionIds(fn.body);
+  fixScopeAndIdentifierRanges(fn.body);
+}
 
 function createSymbolProperty(
   fn: HIRFunction,
@@ -315,123 +685,38 @@ function createPropsProperties(
   return {refProperty, keyProperty, propsProperty};
 }
 
-// TODO: Make PROD only with conditional statements
-export function inlineJsxTransform(
-  fn: HIRFunction,
-  inlineJsxTransformConfig: NonNullable<
-    EnvironmentConfig['inlineJsxTransform']
-  >,
-): void {
-  for (const [, block] of fn.body.blocks) {
-    let nextInstructions: Array<Instruction> | null = null;
-    for (let i = 0; i < block.instructions.length; i++) {
-      const instr = block.instructions[i]!;
-      switch (instr.value.kind) {
-        case 'JsxExpression': {
-          nextInstructions ??= block.instructions.slice(0, i);
-
-          const {refProperty, keyProperty, propsProperty} =
-            createPropsProperties(
-              fn,
-              instr,
-              nextInstructions,
-              instr.value.props,
-              instr.value.children,
-            );
-          const reactElementInstruction: Instruction = {
-            id: makeInstructionId(0),
-            lvalue: {...instr.lvalue, effect: Effect.Store},
-            value: {
-              kind: 'ObjectExpression',
-              properties: [
-                createSymbolProperty(
-                  fn,
-                  instr,
-                  nextInstructions,
-                  '$$typeof',
-                  inlineJsxTransformConfig.elementSymbol,
-                ),
-                createTagProperty(fn, instr, nextInstructions, instr.value.tag),
-                refProperty,
-                keyProperty,
-                propsProperty,
-              ],
-              loc: instr.value.loc,
-            },
-            loc: instr.loc,
-          };
-          nextInstructions.push(reactElementInstruction);
-
-          break;
-        }
-        case 'JsxFragment': {
-          nextInstructions ??= block.instructions.slice(0, i);
-          const {refProperty, keyProperty, propsProperty} =
-            createPropsProperties(
-              fn,
-              instr,
-              nextInstructions,
-              [],
-              instr.value.children,
-            );
-          const reactElementInstruction: Instruction = {
-            id: makeInstructionId(0),
-            lvalue: {...instr.lvalue, effect: Effect.Store},
-            value: {
-              kind: 'ObjectExpression',
-              properties: [
-                createSymbolProperty(
-                  fn,
-                  instr,
-                  nextInstructions,
-                  '$$typeof',
-                  inlineJsxTransformConfig.elementSymbol,
-                ),
-                createSymbolProperty(
-                  fn,
-                  instr,
-                  nextInstructions,
-                  'type',
-                  'react.fragment',
-                ),
-                refProperty,
-                keyProperty,
-                propsProperty,
-              ],
-              loc: instr.value.loc,
-            },
-            loc: instr.loc,
-          };
-          nextInstructions.push(reactElementInstruction);
-          break;
-        }
-        case 'FunctionExpression':
-        case 'ObjectMethod': {
-          inlineJsxTransform(
-            instr.value.loweredFunc.func,
-            inlineJsxTransformConfig,
-          );
-          if (nextInstructions !== null) {
-            nextInstructions.push(instr);
-          }
-          break;
-        }
-        default: {
-          if (nextInstructions !== null) {
-            nextInstructions.push(instr);
-          }
-        }
-      }
-    }
-    if (nextInstructions !== null) {
-      block.instructions = nextInstructions;
-    }
+function handlePlace(
+  place: Place,
+  blockId: BlockId,
+  inlinedJsxDeclarations: InlinedJsxDeclarationMap,
+): Place {
+  const inlinedJsxDeclaration = inlinedJsxDeclarations.get(
+    place.identifier.declarationId,
+  );
+  if (
+    inlinedJsxDeclaration == null ||
+    inlinedJsxDeclaration.blockIdsToIgnore.has(blockId)
+  ) {
+    return {...place};
   }
 
-  // Fixup the HIR to restore RPO, ensure correct predecessors, and renumber instructions.
-  reversePostorderBlocks(fn.body);
-  markPredecessors(fn.body);
-  markInstructionIds(fn.body);
-  // The renumbering instructions invalidates scope and identifier ranges
-  fixScopeAndIdentifierRanges(fn.body);
+  return {...place, identifier: {...inlinedJsxDeclaration.identifier}};
+}
+
+function handlelValue(
+  lvalue: Place,
+  blockId: BlockId,
+  inlinedJsxDeclarations: InlinedJsxDeclarationMap,
+): Place {
+  const inlinedJsxDeclaration = inlinedJsxDeclarations.get(
+    lvalue.identifier.declarationId,
+  );
+  if (
+    inlinedJsxDeclaration == null ||
+    inlinedJsxDeclaration.blockIdsToIgnore.has(blockId)
+  ) {
+    return {...lvalue};
+  }
+
+  return {...lvalue, identifier: {...inlinedJsxDeclaration.identifier}};
 }
