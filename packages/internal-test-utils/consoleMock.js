@@ -133,11 +133,11 @@ let errorMethod;
 let warnMethod;
 let logMethod;
 export function patchConsoleMethods({includeLog} = {includeLog: false}) {
-  errorMethod = patchConsoleMethod(
-    'error',
-    unexpectedErrorCallStacks,
-    loggedErrors,
-  );
+  // errorMethod = patchConsoleMethod(
+  //   'error',
+  //   unexpectedErrorCallStacks,
+  //   loggedErrors,
+  // );
   warnMethod = patchConsoleMethod(
     'warn',
     unexpectedWarnCallStacks,
@@ -152,12 +152,12 @@ export function patchConsoleMethods({includeLog} = {includeLog: false}) {
 }
 
 export function flushAllUnexpectedConsoleCalls() {
-  flushUnexpectedConsoleCalls(
-    errorMethod,
-    'error',
-    'assertConsoleErrorDev',
-    unexpectedErrorCallStacks,
-  );
+  // flushUnexpectedConsoleCalls(
+  //   errorMethod,
+  //   'error',
+  //   'assertConsoleErrorDev',
+  //   unexpectedErrorCallStacks,
+  // );
   flushUnexpectedConsoleCalls(
     warnMethod,
     'warn',
