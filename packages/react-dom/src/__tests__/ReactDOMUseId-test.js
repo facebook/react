@@ -648,16 +648,17 @@ https://react.dev/link/hydration-mismatch
       </div>
     `);
 
-    await expect(async () => {
-      await clientAct(async () => {
-        ReactDOMClient.hydrateRoot(container, <Foo />);
-      });
+    if (__DEV__) {
       // TODO: this is a bug with useID and SuspenseList revealOrder "backwards"
-    }).rejects.toThrowError(
-      `Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client.`,
-    );
+      await expect(async () => {
+        await clientAct(async () => {
+          ReactDOMClient.hydrateRoot(container, <Foo />);
+        });
+      }).rejects.toThrowError(
+        `Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client.`,
+      );
 
-    expect(container).toMatchInlineSnapshot(`
+      expect(container).toMatchInlineSnapshot(`
       <div
         id="container"
       >
@@ -673,6 +674,28 @@ https://react.dev/link/hydration-mismatch
         </span>
       </div>
     `);
+    } else {
+      await clientAct(async () => {
+        ReactDOMClient.hydrateRoot(container, <Foo />);
+      });
+
+      expect(container).toMatchInlineSnapshot(`
+      <div
+        id="container"
+      >
+        <span
+          id=":R1:"
+        >
+          A
+        </span>
+        <span
+          id=":R2:"
+        >
+          B
+        </span>
+      </div>
+    `);
+    }
   });
 
   it('basic incremental hydration', async () => {
