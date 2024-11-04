@@ -382,6 +382,7 @@ describe('useId', () => {
     `);
   });
 
+  // @gate enableSuspenseList
   it('Supports SuspenseList (reveal order default)', async () => {
     function Baz({id, children}) {
       return <span id={id}>{children}</span>;
@@ -444,6 +445,7 @@ describe('useId', () => {
     `);
   });
 
+  // @gate enableSuspenseList
   it('Supports SuspenseList (reveal order "together")', async () => {
     function Baz({id, children}) {
       return <span id={id}>{children}</span>;
@@ -506,6 +508,7 @@ describe('useId', () => {
     `);
   });
 
+  // @gate enableSuspenseList
   it('Supports SuspenseList (reveal order "forwards")', async () => {
     function Baz({id, children}) {
       return <span id={id}>{children}</span>;
@@ -604,6 +607,7 @@ https://react.dev/link/hydration-mismatch
     `);
   });
 
+  // @gate enableSuspenseList
   it('Supports SuspenseList (reveal order "backwards")', async () => {
     function Baz({id, children}) {
       return <span id={id}>{children}</span>;
