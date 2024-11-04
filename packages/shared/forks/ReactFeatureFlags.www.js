@@ -38,6 +38,7 @@ export const {
   retryLaneExpirationMs,
   syncLaneExpirationMs,
   transitionLaneExpirationMs,
+  enableFire,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.

@@ -8,3 +8,4 @@
  */
 
 export {useMemoCache as c} from './src/ReactHooks';
+export {useFire as f} from './src/ReactHooks';

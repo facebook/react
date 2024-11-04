@@ -48,6 +48,7 @@ import {
   disableLegacyMode,
   enableNoCloningMemoCache,
   enableContextProfiling,
+  enableFire,
 } from 'shared/ReactFeatureFlags';
 import {
   REACT_CONTEXT_TYPE,
@@ -2693,6 +2694,60 @@ function updateEvent<Args, Return, F: (...Array<Args>) => Return>(
   };
 }
 
+function useFireImpl<Args, Return, F: (...Array<Args>) => Return>(
+  payload: EventFunctionPayload<Args, Return, F>,
+) {
+  currentlyRenderingFiber.flags |= UpdateEffect;
+  let componentUpdateQueue: null | FunctionComponentUpdateQueue =
+    (currentlyRenderingFiber.updateQueue: any);
+  if (componentUpdateQueue === null) {
+    componentUpdateQueue = createFunctionComponentUpdateQueue();
+    currentlyRenderingFiber.updateQueue = (componentUpdateQueue: any);
+    componentUpdateQueue.events = [payload];
+  } else {
+    const events = componentUpdateQueue.events;
+    if (events === null) {
+      componentUpdateQueue.events = [payload];
+    } else {
+      events.push(payload);
+    }
+  }
+}
+
+function mountFire<Args, Return, F: (...Array<Args>) => Return>(
+  callback: F,
+): F {
+  const hook = mountWorkInProgressHook();
+  const ref = {impl: callback};
+  hook.memoizedState = ref;
+  // $FlowIgnore[incompatible-return]
+  return function eventFn() {
+    if (isInvalidExecutionContextForEventFunction()) {
+      throw new Error(
+        "A function wrapped in useFire can't be called during rendering.",
+      );
+    }
+    return ref.impl.apply(undefined, arguments);
+  };
+}
+
+function updateFire<Args, Return, F: (...Array<Args>) => Return>(
+  callback: F,
+): F {
+  const hook = updateWorkInProgressHook();
+  const ref = hook.memoizedState;
+  useFireImpl({ref, nextImpl: callback});
+  // $FlowIgnore[incompatible-return]
+  return function eventFn() {
+    if (isInvalidExecutionContextForEventFunction()) {
+      throw new Error(
+        "A function wrapped in useFire can't be called during rendering.",
+      );
+    }
+    return ref.impl.apply(undefined, arguments);
+  };
+}
+
 function mountInsertionEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
@@ -3789,6 +3844,9 @@ if (enableUseMemoCacheHook) {
 if (enableUseEffectEventHook) {
   (ContextOnlyDispatcher: Dispatcher).useEffectEvent = throwInvalidHookError;
 }
+if (enableFire) {
+  (ContextOnlyDispatcher: Dispatcher).useFire = throwInvalidHookError;
+}
 if (enableAsyncActions) {
   (ContextOnlyDispatcher: Dispatcher).useHostTransitionStatus =
     throwInvalidHookError;
@@ -3831,6 +3889,9 @@ if (enableUseMemoCacheHook) {
 }
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnMount: Dispatcher).useEffectEvent = mountEvent;
+}
+if (enableFire) {
+  (HooksDispatcherOnMount: Dispatcher).useFire = mountFire;
 }
 if (enableAsyncActions) {
   (HooksDispatcherOnMount: Dispatcher).useHostTransitionStatus =
@@ -3875,6 +3936,9 @@ if (enableUseMemoCacheHook) {
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnUpdate: Dispatcher).useEffectEvent = updateEvent;
 }
+if (enableFire) {
+  (HooksDispatcherOnUpdate: Dispatcher).useFire = updateFire;
+}
 if (enableAsyncActions) {
   (HooksDispatcherOnUpdate: Dispatcher).useHostTransitionStatus =
     useHostTransitionStatus;
@@ -3917,6 +3981,9 @@ if (enableUseMemoCacheHook) {
 }
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnRerender: Dispatcher).useEffectEvent = updateEvent;
+}
+if (enableFire) {
+  (HooksDispatcherOnRerender: Dispatcher).useFire = updateFire;
 }
 if (enableAsyncActions) {
   (HooksDispatcherOnRerender: Dispatcher).useHostTransitionStatus =
@@ -4107,6 +4174,17 @@ if (__DEV__) {
         mountHookTypesDev();
         return mountEvent(callback);
       };
+  }
+  if (enableFire) {
+    (HooksDispatcherOnMountInDEV: Dispatcher).useFire = function useFire<
+      Args,
+      Return,
+      F: (...Array<Args>) => Return,
+    >(callback: F): F {
+      currentHookNameInDev = 'useFire';
+      mountHookTypesDev();
+      return mountFire(callback);
+    };
   }
   if (enableAsyncActions) {
     (HooksDispatcherOnMountInDEV: Dispatcher).useHostTransitionStatus =
@@ -4300,6 +4378,16 @@ if (__DEV__) {
         return mountEvent(callback);
       };
   }
+  if (enableFire) {
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useFire =
+      function useFire<Args, Return, F: (...Array<Args>) => Return>(
+        callback: F,
+      ): F {
+        currentHookNameInDev = 'useFire';
+        updateHookTypesDev();
+        return mountFire(callback);
+      };
+  }
   if (enableAsyncActions) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
@@ -4491,6 +4579,17 @@ if (__DEV__) {
         return updateEvent(callback);
       };
   }
+  if (enableFire) {
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).useFire = function useFire<
+      Args,
+      Return,
+      F: (...Array<Args>) => Return,
+    >(callback: F): F {
+      currentHookNameInDev = 'useFire';
+      updateHookTypesDev();
+      return updateFire(callback);
+    };
+  }
   if (enableAsyncActions) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
@@ -4681,6 +4780,17 @@ if (__DEV__) {
         updateHookTypesDev();
         return updateEvent(callback);
       };
+  }
+  if (enableFire) {
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).useFire = function useFire<
+      Args,
+      Return,
+      F: (...Array<Args>) => Return,
+    >(callback: F): F {
+      currentHookNameInDev = 'useFire';
+      updateHookTypesDev();
+      return updateFire(callback);
+    };
   }
   if (enableAsyncActions) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useHostTransitionStatus =
@@ -4895,6 +5005,17 @@ if (__DEV__) {
         warnInvalidHookAccess();
         mountHookTypesDev();
         return mountEvent(callback);
+      };
+  }
+  if (enableFire) {
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useFire =
+      function useFire<Args, Return, F: (...Array<Args>) => Return>(
+        callback: F,
+      ): F {
+        currentHookNameInDev = 'useFire';
+        warnInvalidHookAccess();
+        mountHookTypesDev();
+        return mountFire(callback);
       };
   }
   if (enableAsyncActions) {
@@ -5115,6 +5236,17 @@ if (__DEV__) {
         return updateEvent(callback);
       };
   }
+  if (enableFire) {
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useFire =
+      function useFire<Args, Return, F: (...Array<Args>) => Return>(
+        callback: F,
+      ): F {
+        currentHookNameInDev = 'useFire';
+        warnInvalidHookAccess();
+        updateHookTypesDev();
+        return updateFire(callback);
+      };
+  }
   if (enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
@@ -5331,6 +5463,17 @@ if (__DEV__) {
         warnInvalidHookAccess();
         updateHookTypesDev();
         return updateEvent(callback);
+      };
+  }
+  if (enableFire) {
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useFire =
+      function useFire<Args, Return, F: (...Array<Args>) => Return>(
+        callback: F,
+      ): F {
+        currentHookNameInDev = 'useFire';
+        warnInvalidHookAccess();
+        updateHookTypesDev();
+        return updateFire(callback);
       };
   }
   if (enableAsyncActions) {

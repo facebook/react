@@ -67,3 +67,5 @@ export {useMemoCache as unstable_useMemoCache} from './src/ReactHooks';
 // export to match the name of the OSS function typically exported from
 // react/compiler-runtime
 export {useMemoCache as c} from './src/ReactHooks';
+
+export const fire: () => void = () => {};

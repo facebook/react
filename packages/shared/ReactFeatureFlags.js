@@ -123,6 +123,7 @@ export const enableUseMemoCacheHook = true;
 export const enableNoCloningMemoCache = false;
 
 export const enableUseEffectEventHook = __EXPERIMENTAL__;
+export const enableFire = false;
 
 // Test in www before enabling in open source.
 // Enables DOM-server to stream its instruction set as data-attributes

@@ -81,6 +81,7 @@ export const transitionLaneExpirationMs = 5000;
 export const useModernStrictMode = true;
 export const enableFabricCompleteRootInCommitPhase = false;
 export const enableSiblingPrerendering = false;
+export const enableFire = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

@@ -226,6 +226,12 @@ export function useEffectEvent<Args, F: (...Array<Args>) => mixed>(
   return dispatcher.useEffectEvent(callback);
 }
 
+export function useFire<Args, F: (...Array<Args>) => mixed>(callback: F): F {
+  const dispatcher = resolveDispatcher();
+  // $FlowFixMe[not-a-function] This is unstable, thus optional
+  return dispatcher.useFire(callback);
+}
+
 export function useOptimistic<S, A>(
   passthrough: S,
   reducer: ?(S, A) => S,
