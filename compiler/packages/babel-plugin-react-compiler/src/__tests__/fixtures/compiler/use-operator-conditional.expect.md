@@ -86,7 +86,6 @@ function Inner(props) {
   }
 
   input;
-  input;
   let t0;
   const t1 = input;
   let t2;
