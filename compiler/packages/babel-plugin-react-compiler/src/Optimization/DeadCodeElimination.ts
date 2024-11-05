@@ -58,6 +58,14 @@ export function deadCodeElimination(fn: HIRFunction): void {
       }
     }
   }
+
+  /**
+   * Constant propagation and DCE may have deleted or rewritten instructions
+   * that reference context variables.
+   */
+  retainWhere(fn.context, contextVar =>
+    state.isIdOrNameUsed(contextVar.identifier),
+  );
 }
 
 class State {
