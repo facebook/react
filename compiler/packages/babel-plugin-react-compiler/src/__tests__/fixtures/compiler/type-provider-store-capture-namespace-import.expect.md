@@ -114,10 +114,10 @@ export function Component(t0) {
   }
   const t10 = items_0[1];
   let t11;
-  if ($[14] !== t9 || $[15] !== t10) {
+  if ($[14] !== t10 || $[15] !== t9) {
     t11 = <SharedRuntime.ValidateMemoization inputs={t9} output={t10} />;
-    $[14] = t9;
-    $[15] = t10;
+    $[14] = t10;
+    $[15] = t9;
     $[16] = t11;
   } else {
     t11 = $[16];
@@ -132,16 +132,16 @@ export function Component(t0) {
     t12 = $[19];
   }
   let t13;
-  if ($[20] !== t12 || $[21] !== items_0) {
+  if ($[20] !== items_0 || $[21] !== t12) {
     t13 = <SharedRuntime.ValidateMemoization inputs={t12} output={items_0} />;
-    $[20] = t12;
-    $[21] = items_0;
+    $[20] = items_0;
+    $[21] = t12;
     $[22] = t13;
   } else {
     t13 = $[22];
   }
   let t14;
-  if ($[23] !== t8 || $[24] !== t11 || $[25] !== t13) {
+  if ($[23] !== t11 || $[24] !== t13 || $[25] !== t8) {
     t14 = (
       <>
         {t8}
@@ -149,9 +149,9 @@ export function Component(t0) {
         {t13}
       </>
     );
-    $[23] = t8;
-    $[24] = t11;
-    $[25] = t13;
+    $[23] = t11;
+    $[24] = t13;
+    $[25] = t8;
     $[26] = t14;
   } else {
     t14 = $[26];
