@@ -71,6 +71,7 @@ import {
 } from './ReactFiberCallUserSpace';
 
 import {runWithFiberInDEV} from './ReactCurrentFiber';
+import {ResourceEffectKind, SimpleEffectKind} from './ReactFiberHooks';
 
 function shouldProfile(current: Fiber): boolean {
   return (
@@ -147,19 +148,35 @@ export function commitHookEffectListMount(
 
           // Mount
           let destroy;
+          if (effect.kind === ResourceEffectKind) {
+            if (typeof effect.create === 'function') {
+              effect.resource = effect.create();
+            } else if (typeof effect.update === 'function') {
+              // TODO: what about multiple updates?
+              effect.update(effect.resource);
+            }
+          }
           if (__DEV__) {
             if ((flags & HookInsertion) !== NoHookEffect) {
               setIsRunningInsertionEffect(true);
             }
-            destroy = runWithFiberInDEV(finishedWork, callCreateInDEV, effect);
+            if (effect.kind === SimpleEffectKind) {
+              destroy = runWithFiberInDEV(
+                finishedWork,
+                callCreateInDEV,
+                effect,
+              );
+            }
             if ((flags & HookInsertion) !== NoHookEffect) {
               setIsRunningInsertionEffect(false);
             }
           } else {
-            const create = effect.create;
-            const inst = effect.inst;
-            destroy = create();
-            inst.destroy = destroy;
+            if (effect.kind === SimpleEffectKind) {
+              const create = effect.create;
+              const inst = effect.inst;
+              destroy = create();
+              inst.destroy = destroy;
+            }
           }
 
           if (enableSchedulingProfiler) {
@@ -243,6 +260,19 @@ export function commitHookEffectListUnmount(
       let effect = firstEffect;
       do {
         if ((effect.tag & flags) === flags) {
+          if (effect.kind === ResourceEffectKind) {
+            if (
+              effect.resource != null &&
+              typeof effect.destroy === 'function'
+            ) {
+              effect.inst.destroy = function () {
+                // $FlowFixMe trust me bro
+                effect.destroy(effect.resource);
+                effect.resource = null;
+              };
+            }
+          }
+
           // Unmount
           const inst = effect.inst;
           const destroy = inst.destroy;
