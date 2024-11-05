@@ -383,6 +383,30 @@ export function inlineJsxTransform(
     mapTerminalOperands(block.terminal, place =>
       handlePlace(place, blockId, inlinedJsxDeclarations),
     );
+
+    if (block.terminal.kind === 'scope') {
+      const scope = block.terminal.scope;
+      for (const dep of scope.dependencies) {
+        dep.identifier = handleIdentifier(
+          dep.identifier,
+          inlinedJsxDeclarations,
+        );
+      }
+
+      for (const [origId, decl] of [...scope.declarations]) {
+        const newDecl = handleIdentifier(
+          decl.identifier,
+          inlinedJsxDeclarations,
+        );
+        if (newDecl.id !== origId) {
+          scope.declarations.delete(origId);
+          scope.declarations.set(decl.identifier.id, {
+            identifier: newDecl,
+            scope: decl.scope,
+          });
+        }
+      }
+    }
   }
 
   /**
@@ -697,10 +721,10 @@ function handlePlace(
     inlinedJsxDeclaration == null ||
     inlinedJsxDeclaration.blockIdsToIgnore.has(blockId)
   ) {
-    return {...place};
+    return place;
   }
 
-  return {...place, identifier: {...inlinedJsxDeclaration.identifier}};
+  return {...place, identifier: inlinedJsxDeclaration.identifier};
 }
 
 function handlelValue(
@@ -715,8 +739,20 @@ function handlelValue(
     inlinedJsxDeclaration == null ||
     inlinedJsxDeclaration.blockIdsToIgnore.has(blockId)
   ) {
-    return {...lvalue};
+    return lvalue;
   }
 
-  return {...lvalue, identifier: {...inlinedJsxDeclaration.identifier}};
+  return {...lvalue, identifier: inlinedJsxDeclaration.identifier};
+}
+
+function handleIdentifier(
+  identifier: Identifier,
+  inlinedJsxDeclarations: InlinedJsxDeclarationMap,
+): Identifier {
+  const inlinedJsxDeclaration = inlinedJsxDeclarations.get(
+    identifier.declarationId,
+  );
+  return inlinedJsxDeclaration == null
+    ? identifier
+    : inlinedJsxDeclaration.identifier;
 }
