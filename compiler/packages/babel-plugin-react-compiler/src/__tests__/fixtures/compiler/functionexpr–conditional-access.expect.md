@@ -36,10 +36,10 @@ function Component(props) {
   }
   const getLength = t0;
   let t1;
-  if ($[2] !== props.bar || $[3] !== getLength) {
+  if ($[2] !== getLength || $[3] !== props.bar) {
     t1 = props.bar && getLength();
-    $[2] = props.bar;
-    $[3] = getLength;
+    $[2] = getLength;
+    $[3] = props.bar;
     $[4] = t1;
   } else {
     t1 = $[4];

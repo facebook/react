@@ -30,8 +30,8 @@ function Component(props) {
 import { c as _c } from "react/compiler-runtime"; // @enablePropagateDepsInHIR
 function Component(props) {
   const $ = _c(8);
-  let y;
   let t0;
+  let y;
   if ($[0] !== props.p0 || $[1] !== props.p2 || $[2] !== props.p3) {
     const x = [];
     switch (props.p0) {
@@ -48,19 +48,19 @@ function Component(props) {
     $[0] = props.p0;
     $[1] = props.p2;
     $[2] = props.p3;
-    $[3] = y;
-    $[4] = t0;
+    $[3] = t0;
+    $[4] = y;
   } else {
-    y = $[3];
-    t0 = $[4];
+    t0 = $[3];
+    y = $[4];
   }
   const child = t0;
   y.push(props.p4);
   let t1;
-  if ($[5] !== y || $[6] !== child) {
+  if ($[5] !== child || $[6] !== y) {
     t1 = <Component data={y}>{child}</Component>;
-    $[5] = y;
-    $[6] = child;
+    $[5] = child;
+    $[6] = y;
     $[7] = t1;
   } else {
     t1 = $[7];
