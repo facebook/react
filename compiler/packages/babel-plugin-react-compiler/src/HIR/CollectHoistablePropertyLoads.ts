@@ -8,7 +8,6 @@ import {
   Set_union,
   getOrInsertDefault,
 } from '../Utils/utils';
-import {collectOptionalChainSidemap} from './CollectOptionalChainDependencies';
 import {
   BasicBlock,
   BlockId,
@@ -22,7 +21,6 @@ import {
   ReactiveScopeDependency,
   ScopeId,
 } from './HIR';
-import {collectTemporariesSidemap} from './PropagateScopeDependenciesHIR';
 
 const DEBUG_PRINT = false;
 
@@ -373,17 +371,10 @@ function collectNonNullsInBlocks(
         !fn.env.config.enableTreatFunctionDepsAsConditional
       ) {
         const innerFn = instr.value.loweredFunc;
-        const innerTemporaries = collectTemporariesSidemap(
-          innerFn.func,
-          new Set(),
-        );
-        const innerOptionals = collectOptionalChainSidemap(innerFn.func);
         const innerHoistableMap = collectHoistablePropertyLoadsImpl(
           innerFn.func,
           {
             ...context,
-            temporaries: innerTemporaries, // TODO: remove in later PR
-            hoistableFromOptionals: innerOptionals.hoistableObjects, // TODO: remove in later PR
             nestedFnImmutableContext:
               context.nestedFnImmutableContext ??
               new Set(
