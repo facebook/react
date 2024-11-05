@@ -7,4 +7,4 @@
  * @flow
  */
 
-export { default } from '../DefaultPrepareStackTraceV8';
+export {default} from '../DefaultPrepareStackTraceV8';
