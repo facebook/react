@@ -14,7 +14,7 @@ import {
   CompilerErrorDetail,
   Effect,
   ErrorSeverity,
-  parseConfigPragma,
+  parseConfigPragmaForTests,
   ValueKind,
   runPlayground,
   type Hook,
@@ -208,7 +208,7 @@ function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
   try {
     // Extract the first line to quickly check for custom test directives
     const pragma = source.substring(0, source.indexOf('\n'));
-    const config = parseConfigPragma(pragma);
+    const config = parseConfigPragmaForTests(pragma);
 
     for (const fn of parseFunctions(source, language)) {
       const id = withIdentifier(getFunctionIdentifier(fn));

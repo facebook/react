@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enableInlineJsxTransform
+// @inlineJsxTransform
 
 function Parent({children, a: _a, b: _b, c: _c, ref}) {
   return <div ref={ref}>{children}</div>;
@@ -76,7 +76,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c2 } from "react/compiler-runtime"; // @enableInlineJsxTransform
+import { c as _c2 } from "react/compiler-runtime"; // @inlineJsxTransform
 
 function Parent(t0) {
   const $ = _c2(2);
