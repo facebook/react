@@ -18,6 +18,7 @@ import {
 import {checkKeyStringCoercion} from 'shared/CheckStringCoercion';
 import isValidElementType from 'shared/isValidElementType';
 import isArray from 'shared/isArray';
+import isReactClass from 'shared/isReactClass'
 import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
 import {
   disableStringRefs,
@@ -1268,8 +1269,4 @@ function stringRefAsCallbackRef(stringRef, type, owner, value) {
   } else {
     refs[stringRef] = value;
   }
-}
-
-function isReactClass(type) {
-  return type.prototype && type.prototype.isReactComponent;
 }

@@ -18,6 +18,7 @@ import type {
 import type {ReactNodeList} from 'shared/ReactTypes';
 
 import {REACT_MEMO_TYPE, REACT_FORWARD_REF_TYPE} from 'shared/ReactSymbols';
+import isReactClass from 'shared/isReactClass'
 
 type Signature = {
   ownKey: string,
@@ -136,10 +137,6 @@ function haveEqualSignatures(prevType: any, nextType: any) {
   }
 
   return true;
-}
-
-function isReactClass(type: any) {
-  return type.prototype && type.prototype.isReactComponent;
 }
 
 function canPreserveStateBetween(prevType: any, nextType: any) {
