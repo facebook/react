@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enableTreatFunctionDepsAsConditional @enablePropagateDepsInHIR:false
+// @enableTreatFunctionDepsAsConditional
 import {Stringify} from 'shared-runtime';
 
 function Component({props}) {
@@ -20,7 +20,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enableTreatFunctionDepsAsConditional @enablePropagateDepsInHIR:false
+import { c as _c } from "react/compiler-runtime"; // @enableTreatFunctionDepsAsConditional
 import { Stringify } from "shared-runtime";
 
 function Component(t0) {
