@@ -690,9 +690,8 @@ function collectDependencies(
       }
       for (const instr of block.instructions) {
         if (
-          fn.env.config.enableFunctionDependencyRewrite &&
-          (instr.value.kind === 'FunctionExpression' ||
-            instr.value.kind === 'ObjectMethod')
+          instr.value.kind === 'FunctionExpression' ||
+          instr.value.kind === 'ObjectMethod'
         ) {
           context.declare(instr.lvalue.identifier, {
             id: instr.id,
