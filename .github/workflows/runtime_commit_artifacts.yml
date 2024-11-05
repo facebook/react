@@ -137,7 +137,6 @@ jobs:
           # Delete OSS renderer. OSS renderer is synced through internal script.
           RENDERER_FOLDER=$BASE_FOLDER/react-native-github/Libraries/Renderer/implementations/
           rm $RENDERER_FOLDER/ReactFabric-{dev,prod,profiling}.js
-          rm $RENDERER_FOLDER/ReactNativeRenderer-{dev,prod,profiling}.js
 
           # Move React Native version file
           mv build/facebook-react-native/VERSION_NATIVE_FB ./compiled-rn/VERSION_NATIVE_FB
