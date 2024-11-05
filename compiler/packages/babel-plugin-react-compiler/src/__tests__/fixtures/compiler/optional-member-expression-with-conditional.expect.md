@@ -48,19 +48,19 @@ function Component(props) {
 
   const t1 = props?.items;
   let t2;
-  if ($[3] !== t1 || $[4] !== props.cond) {
+  if ($[3] !== props.cond || $[4] !== t1) {
     t2 = [t1, props.cond];
-    $[3] = t1;
-    $[4] = props.cond;
+    $[3] = props.cond;
+    $[4] = t1;
     $[5] = t2;
   } else {
     t2 = $[5];
   }
   let t3;
-  if ($[6] !== t2 || $[7] !== data) {
+  if ($[6] !== data || $[7] !== t2) {
     t3 = <ValidateMemoization inputs={t2} output={data} />;
-    $[6] = t2;
-    $[7] = data;
+    $[6] = data;
+    $[7] = t2;
     $[8] = t3;
   } else {
     t3 = $[8];

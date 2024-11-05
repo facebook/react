@@ -34,8 +34,8 @@ function Component(props) {
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(7);
-  let y;
   let t0;
+  let y;
   if ($[0] !== props) {
     const x = [];
     bb0: switch (props.p0) {
@@ -63,19 +63,19 @@ function Component(props) {
 
     t0 = <Component data={x} />;
     $[0] = props;
-    $[1] = y;
-    $[2] = t0;
+    $[1] = t0;
+    $[2] = y;
   } else {
-    y = $[1];
-    t0 = $[2];
+    t0 = $[1];
+    y = $[2];
   }
   const child = t0;
   y.push(props.p4);
   let t1;
-  if ($[4] !== y || $[5] !== child) {
+  if ($[4] !== child || $[5] !== y) {
     t1 = <Component data={y}>{child}</Component>;
-    $[4] = y;
-    $[5] = child;
+    $[4] = child;
+    $[5] = y;
     $[6] = t1;
   } else {
     t1 = $[6];

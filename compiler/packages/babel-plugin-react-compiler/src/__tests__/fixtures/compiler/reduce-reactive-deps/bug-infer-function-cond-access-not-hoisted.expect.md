@@ -38,7 +38,7 @@ function Foo(t0) {
   const $ = _c(3);
   const { a, shouldReadA } = t0;
   let t1;
-  if ($[0] !== shouldReadA || $[1] !== a.b.c) {
+  if ($[0] !== a.b.c || $[1] !== shouldReadA) {
     t1 = (
       <Stringify
         fn={() => {
@@ -50,8 +50,8 @@ function Foo(t0) {
         shouldInvokeFns={true}
       />
     );
-    $[0] = shouldReadA;
-    $[1] = a.b.c;
+    $[0] = a.b.c;
+    $[1] = shouldReadA;
     $[2] = t1;
   } else {
     t1 = $[2];
