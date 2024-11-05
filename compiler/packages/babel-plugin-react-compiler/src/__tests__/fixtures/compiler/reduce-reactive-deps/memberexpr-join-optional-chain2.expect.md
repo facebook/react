@@ -23,7 +23,7 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(5);
   let x;
-  if ($[0] !== props.items?.length || $[1] !== props.items?.edges) {
+  if ($[0] !== props.items?.edges || $[1] !== props.items?.length) {
     x = [];
     x.push(props.items?.length);
     let t0;
@@ -35,8 +35,8 @@ function Component(props) {
       t0 = $[4];
     }
     x.push(t0);
-    $[0] = props.items?.length;
-    $[1] = props.items?.edges;
+    $[0] = props.items?.edges;
+    $[1] = props.items?.length;
     $[2] = x;
   } else {
     x = $[2];

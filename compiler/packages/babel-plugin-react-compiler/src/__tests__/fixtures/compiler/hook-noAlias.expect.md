@@ -41,10 +41,10 @@ function Component(props) {
     console.log(props);
   }, [props.a]);
   let t1;
-  if ($[2] !== x || $[3] !== item) {
+  if ($[2] !== item || $[3] !== x) {
     t1 = [x, item];
-    $[2] = x;
-    $[3] = item;
+    $[2] = item;
+    $[3] = x;
     $[4] = t1;
   } else {
     t1 = $[4];
