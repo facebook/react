@@ -57,16 +57,16 @@ import { identity, mutate } from "shared-runtime";
  */
 function Component(props) {
   const $ = _c(8);
-  let t0;
   let key;
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     key = {};
     t0 = (mutate(key), key);
-    $[0] = t0;
-    $[1] = key;
+    $[0] = key;
+    $[1] = t0;
   } else {
-    t0 = $[0];
-    key = $[1];
+    key = $[0];
+    t0 = $[1];
   }
   const tmp = t0;
   let t1;

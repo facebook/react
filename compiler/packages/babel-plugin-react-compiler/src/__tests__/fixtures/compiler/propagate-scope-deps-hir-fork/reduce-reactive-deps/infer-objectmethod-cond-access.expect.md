@@ -41,7 +41,7 @@ function Foo(t0) {
   const $ = _c(3);
   const { a, shouldReadA } = t0;
   let t1;
-  if ($[0] !== shouldReadA || $[1] !== a) {
+  if ($[0] !== a || $[1] !== shouldReadA) {
     t1 = (
       <Stringify
         objectMethod={{
@@ -55,8 +55,8 @@ function Foo(t0) {
         shouldInvokeFns={true}
       />
     );
-    $[0] = shouldReadA;
-    $[1] = a;
+    $[0] = a;
+    $[1] = shouldReadA;
     $[2] = t1;
   } else {
     t1 = $[2];
