@@ -130,9 +130,10 @@ export function commitHookEffectListMount(
   finishedWork: Fiber,
 ) {
   try {
-    const updateQueue: FunctionComponentUpdateQueue | null =
+    const updateQueueMount: FunctionComponentUpdateQueue | null =
       (finishedWork.updateQueue: any);
-    const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
+    const lastEffect =
+      updateQueueMount !== null ? updateQueueMount.lastEffect : null;
     if (lastEffect !== null) {
       const firstEffect = lastEffect.next;
       let effect = firstEffect;
@@ -252,9 +253,10 @@ export function commitHookEffectListUnmount(
   nearestMountedAncestor: Fiber | null,
 ) {
   try {
-    const updateQueue: FunctionComponentUpdateQueue | null =
+    const updateQueueUnmount: FunctionComponentUpdateQueue | null =
       (finishedWork.updateQueue: any);
-    const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
+    const lastEffect =
+      updateQueueUnmount !== null ? updateQueueUnmount.lastEffect : null;
     if (lastEffect !== null) {
       const firstEffect = lastEffect.next;
       let effect = firstEffect;
