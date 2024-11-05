@@ -18,7 +18,7 @@ import {
 import {checkKeyStringCoercion} from 'shared/CheckStringCoercion';
 import isValidElementType from 'shared/isValidElementType';
 import isArray from 'shared/isArray';
-import isReactClass from 'shared/isReactClass'
+import isReactClass from 'shared/isReactClass';
 import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
 import {
   disableStringRefs,

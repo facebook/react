@@ -18,7 +18,7 @@ import type {
 import type {ReactNodeList} from 'shared/ReactTypes';
 
 import {REACT_MEMO_TYPE, REACT_FORWARD_REF_TYPE} from 'shared/ReactSymbols';
-import isReactClass from 'shared/isReactClass'
+import isReactClass from 'shared/isReactClass';
 
 type Signature = {
   ownKey: string,

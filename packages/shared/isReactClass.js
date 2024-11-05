@@ -11,8 +11,8 @@ function isReactClass(type: any): boolean | undefined {
   try {
     return !!(type.prototype && type.prototype.isReactComponent);
   } catch (error) {
-    console.error("Error in isReactClass:", error);
+    console.error('Error in isReactClass:', error);
   }
 }
 
-export default isReactClass
+export default isReactClass;
