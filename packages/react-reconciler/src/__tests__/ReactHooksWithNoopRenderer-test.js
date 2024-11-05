@@ -41,6 +41,7 @@ let waitFor;
 let waitForThrow;
 let waitForPaint;
 let assertLog;
+let useResourceEffect;
 
 describe('ReactHooksWithNoopRenderer', () => {
   beforeEach(() => {
@@ -66,6 +67,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     useDeferredValue = React.useDeferredValue;
     Suspense = React.Suspense;
     Activity = React.unstable_Activity;
+    useResourceEffect = React.experimental_useResourceEffect;
     ContinuousEventPriority =
       require('react-reconciler/constants').ContinuousEventPriority;
     if (gate(flags => flags.enableSuspenseList)) {
@@ -3249,6 +3251,171 @@ describe('ReactHooksWithNoopRenderer', () => {
         root3.render(null);
         await waitForThrow('is not a function');
       });
+    });
+  });
+
+  // @gate enableUseResourceEffectHook
+  describe('useResourceEffect', () => {
+    class Resource {
+      id: string;
+      opts: mixed;
+      constructor(id, opts) {
+        this.id = id;
+        this.opts = opts;
+        Scheduler.log(`create(${this.id}, ${this.opts.username})`);
+      }
+      update(opts) {
+        this.opts = opts;
+        Scheduler.log(`update(${this.id}, ${this.opts.username})`);
+      }
+      destroy() {
+        Scheduler.log(`destroy(${this.id}, ${this.opts.username})`);
+      }
+    }
+
+    // @gate enableUseResourceEffectHook
+    it('simple mount and update', async () => {
+      const root = ReactNoop.createRoot();
+
+      function App({id, username}) {
+        const opts = useMemo(() => {
+          return {username};
+        }, [username]);
+        useResourceEffect(
+          () => new Resource(id, opts),
+          [id],
+          resource => resource.update(opts),
+          [opts],
+          resource => resource.destroy(),
+        );
+        return null;
+      }
+
+      await act(() => {
+        root.render(<App id={1} username="Jack" />);
+      });
+      assertLog(['create(1, Jack)']);
+
+      await act(() => {
+        root.render(<App id={1} username="Lauren" />);
+      });
+      assertLog(['update(1, Lauren)']);
+
+      await act(() => {
+        root.render(<App id={1} username="Jordan" />);
+      });
+      assertLog(['update(1, Jordan)']);
+
+      await act(() => {
+        root.render(<App id={2} username="Jack" />);
+      });
+      assertLog(['destroy(1, Jordan)', 'create(2, Jack)']);
+
+      await act(() => {
+        root.render(null);
+      });
+      assertLog(['destroy(2, Jack)']);
+    });
+
+    // @gate enableUseResourceEffectHook
+    it('simple mount with no update', async () => {
+      const root = ReactNoop.createRoot();
+
+      function App({id, username}) {
+        const opts = useMemo(() => {
+          return {username};
+        }, [username]);
+        useResourceEffect(
+          () => new Resource(id, opts),
+          [id],
+          resource => resource.update(opts),
+          [opts],
+          resource => resource.destroy(),
+        );
+        return null;
+      }
+
+      await act(() => {
+        root.render(<App id={1} username="Jack" />);
+      });
+      assertLog(['create(1, Jack)']);
+
+      await act(() => {
+        root.render(null);
+      });
+      assertLog(['destroy(1, Jack)']);
+    });
+
+    // @gate enableUseResourceEffectHook
+    it('calls update on every render if no deps are specified', async () => {
+      const root = ReactNoop.createRoot();
+
+      function App({id, username}) {
+        const opts = useMemo(() => {
+          return {username};
+        }, [username]);
+        useResourceEffect(
+          () => new Resource(id, opts),
+          [id],
+          resource => resource.update(opts),
+        );
+        return null;
+      }
+
+      await act(() => {
+        root.render(<App id={1} username="Jack" />);
+      });
+      assertLog(['create(1, Jack)']);
+
+      await act(() => {
+        root.render(<App id={1} username="Jack" />);
+      });
+      assertLog(['update(1, Jack)']);
+
+      await act(() => {
+        root.render(<App id={2} username="Jack" />);
+      });
+      assertLog(['create(2, Jack)']);
+
+      await act(() => {
+        root.render(<App id={2} username="Lauren" />);
+      });
+
+      assertLog(['update(2, Lauren)']);
+    });
+
+    // @gate enableUseResourceEffectHook
+    it('calls useResourceEffect methods only on mount/unmount', async () => {
+      const root = ReactNoop.createRoot();
+
+      function App({id, username}) {
+        const opts = useMemo(() => {
+          return {username};
+        }, [username]);
+        useResourceEffect(
+          () => new Resource(id, opts),
+          [],
+          resource => resource.update(opts),
+          [],
+          resource => resource.destroy(),
+        );
+        return null;
+      }
+
+      await act(() => {
+        root.render(<App id={1} username="Jack" />);
+      });
+      assertLog(['create(1, Jack)']);
+
+      await act(() => {
+        root.render(<App id={2} username="Joe" />);
+      });
+      assertLog([]);
+
+      await act(() => {
+        root.render(null);
+      });
+      assertLog(['destroy(1, Jack)']);
     });
   });
 
