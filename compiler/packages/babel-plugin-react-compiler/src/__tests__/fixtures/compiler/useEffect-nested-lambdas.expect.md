@@ -51,7 +51,7 @@ function Component(props) {
   }
   const exit = t0;
   let t1;
-  if ($[2] !== item.value || $[3] !== exit) {
+  if ($[2] !== exit || $[3] !== item.value) {
     t1 = () => {
       const cleanup = GlobalEventEmitter.addListener("onInput", () => {
         if (item.value) {
@@ -60,8 +60,8 @@ function Component(props) {
       });
       return () => cleanup.remove();
     };
-    $[2] = item.value;
-    $[3] = exit;
+    $[2] = exit;
+    $[3] = item.value;
     $[4] = t1;
   } else {
     t1 = $[4];

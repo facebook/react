@@ -29,8 +29,8 @@ function Component(props) {
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(6);
-  let y;
   let t0;
+  let y;
   if ($[0] !== props) {
     const x = [];
     switch (props.p0) {
@@ -45,19 +45,19 @@ function Component(props) {
 
     t0 = <Component data={x} />;
     $[0] = props;
-    $[1] = y;
-    $[2] = t0;
+    $[1] = t0;
+    $[2] = y;
   } else {
-    y = $[1];
-    t0 = $[2];
+    t0 = $[1];
+    y = $[2];
   }
   const child = t0;
   y.push(props.p4);
   let t1;
-  if ($[3] !== y || $[4] !== child) {
+  if ($[3] !== child || $[4] !== y) {
     t1 = <Component data={y}>{child}</Component>;
-    $[3] = y;
-    $[4] = child;
+    $[3] = child;
+    $[4] = y;
     $[5] = t1;
   } else {
     t1 = $[5];

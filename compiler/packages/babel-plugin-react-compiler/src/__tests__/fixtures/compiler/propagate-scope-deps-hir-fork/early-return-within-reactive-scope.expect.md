@@ -48,7 +48,7 @@ import { makeArray } from "shared-runtime";
 function Component(props) {
   const $ = _c(6);
   let t0;
-  if ($[0] !== props.cond || $[1] !== props.a || $[2] !== props.b) {
+  if ($[0] !== props.a || $[1] !== props.b || $[2] !== props.cond) {
     t0 = Symbol.for("react.early_return_sentinel");
     bb0: {
       const x = [];
@@ -69,9 +69,9 @@ function Component(props) {
         break bb0;
       }
     }
-    $[0] = props.cond;
-    $[1] = props.a;
-    $[2] = props.b;
+    $[0] = props.a;
+    $[1] = props.b;
+    $[2] = props.cond;
     $[3] = t0;
   } else {
     t0 = $[3];
