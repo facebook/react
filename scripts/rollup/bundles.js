@@ -696,40 +696,6 @@ const bundles = [
       }),
   },
 
-  /******* React Native *******/
-  {
-    bundleTypes: __EXPERIMENTAL__
-      ? []
-      : [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING],
-    moduleType: RENDERER,
-    entry: 'react-native-renderer',
-    global: 'ReactNativeRenderer',
-    externals: ['react-native', 'ReactNativeInternalFeatureFlags'],
-    minifyWithProdErrorCodes: false,
-    wrapWithModuleBoundaries: true,
-    babel: opts =>
-      Object.assign({}, opts, {
-        plugins: opts.plugins.concat([
-          [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
-        ]),
-      }),
-  },
-  {
-    bundleTypes: [RN_OSS_DEV, RN_OSS_PROD, RN_OSS_PROFILING],
-    moduleType: RENDERER,
-    entry: 'react-native-renderer',
-    global: 'ReactNativeRenderer',
-    externals: ['react-native'],
-    minifyWithProdErrorCodes: false,
-    wrapWithModuleBoundaries: true,
-    babel: opts =>
-      Object.assign({}, opts, {
-        plugins: opts.plugins.concat([
-          [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
-        ]),
-      }),
-  },
-
   /******* React Native Fabric *******/
   {
     bundleTypes: __EXPERIMENTAL__
