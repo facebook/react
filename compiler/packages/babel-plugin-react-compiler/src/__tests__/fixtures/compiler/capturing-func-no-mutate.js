@@ -1,14 +1,12 @@
-import {mutate} from 'shared-runtime';
-
 function Component({a, b}) {
   let z = {a};
-  let y = {b: {b}};
+  let y = {b};
   let x = function () {
     z.a = 2;
-    mutate(y.b);
+    return Math.max(y.b, 0);
   };
   x();
-  return [y, z];
+  return z;
 }
 
 export const FIXTURE_ENTRYPOINT = {
