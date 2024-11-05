@@ -17,9 +17,6 @@ module.exports = {
   get Platform() {
     return require('./Platform');
   },
-  get RCTEventEmitter() {
-    return require('./RCTEventEmitter');
-  },
   get ReactFiberErrorDialog() {
     return require('./ReactFiberErrorDialog');
   },

@@ -47,10 +47,6 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
   ): boolean;
   declare export function deepFreezeAndThrowOnMutationInDev<T>(obj: T): T;
   declare export function flattenStyle(style: any): any;
-  declare export const RCTEventEmitter: {
-    register: (eventEmitter: mixed) => void,
-    ...
-  };
   declare export const TextInputState: {
     blurTextInput: (object: any) => void,
     focusTextInput: (object: any) => void,
