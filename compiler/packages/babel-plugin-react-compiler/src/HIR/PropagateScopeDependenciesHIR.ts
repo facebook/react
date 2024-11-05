@@ -16,6 +16,7 @@ import {
   DeclarationId,
   areEqualPaths,
   IdentifierId,
+  Terminal,
 } from './HIR';
 import {
   collectHoistablePropertyLoads,
@@ -176,8 +177,10 @@ function findTemporariesUsedOutsideDeclaringScope(
  * $2 = LoadLocal 'foo'
  * $3 = CallExpression $2($1)
  * ```
- * Only map LoadLocal and PropertyLoad lvalues to their source if we know that
- * reordering the read (from the time-of-load to time-of-use) is valid.
+ * @param usedOutsideDeclaringScope is used to check the correctness of
+ * reordering LoadLocal / PropertyLoad calls. We only track a LoadLocal /
+ * PropertyLoad in the returned temporaries map if reordering the read (from the
+ * time-of-load to time-of-use) is valid.
  *
  * If a LoadLocal or PropertyLoad instruction is within the reactive scope range
  * (a proxy for mutable range) of the load source, later instructions may
@@ -215,7 +218,29 @@ export function collectTemporariesSidemap(
   fn: HIRFunction,
   usedOutsideDeclaringScope: ReadonlySet<DeclarationId>,
 ): ReadonlyMap<IdentifierId, ReactiveScopeDependency> {
-  const temporaries = new Map<IdentifierId, ReactiveScopeDependency>();
+  const temporaries = new Map();
+  collectTemporariesSidemapImpl(
+    fn,
+    usedOutsideDeclaringScope,
+    temporaries,
+    false,
+  );
+  return temporaries;
+}
+
+/**
+ * Recursive collect a sidemap of all `LoadLocal` and `PropertyLoads` with a
+ * function and all nested functions.
+ *
+ * Note that IdentifierIds are currently unique, so we can use a single
+ * Map<IdentifierId, ...> across all nested functions.
+ */
+function collectTemporariesSidemapImpl(
+  fn: HIRFunction,
+  usedOutsideDeclaringScope: ReadonlySet<DeclarationId>,
+  temporaries: Map<IdentifierId, ReactiveScopeDependency>,
+  isInnerFn: boolean,
+): void {
   for (const [_, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
       const {value, lvalue} = instr;
@@ -224,27 +249,51 @@ export function collectTemporariesSidemap(
       );
 
       if (value.kind === 'PropertyLoad' && !usedOutside) {
-        const property = getProperty(
-          value.object,
-          value.property,
-          false,
-          temporaries,
-        );
-        temporaries.set(lvalue.identifier.id, property);
+        if (!isInnerFn || temporaries.has(value.object.identifier.id)) {
+          /**
+           * All dependencies of a inner / nested function must have a base
+           * identifier from the outermost component / hook. This is because the
+           * compiler cannot break an inner function into multiple granular
+           * scopes.
+           */
+          const property = getProperty(
+            value.object,
+            value.property,
+            false,
+            temporaries,
+          );
+          temporaries.set(lvalue.identifier.id, property);
+        }
       } else if (
         value.kind === 'LoadLocal' &&
         lvalue.identifier.name == null &&
         value.place.identifier.name !== null &&
         !usedOutside
       ) {
-        temporaries.set(lvalue.identifier.id, {
-          identifier: value.place.identifier,
-          path: [],
-        });
+        if (
+          !isInnerFn ||
+          fn.context.some(
+            context => context.identifier.id === value.place.identifier.id,
+          )
+        ) {
+          temporaries.set(lvalue.identifier.id, {
+            identifier: value.place.identifier,
+            path: [],
+          });
+        }
+      } else if (
+        value.kind === 'FunctionExpression' ||
+        value.kind === 'ObjectMethod'
+      ) {
+        collectTemporariesSidemapImpl(
+          value.loweredFunc.func,
+          usedOutsideDeclaringScope,
+          temporaries,
+          true,
+        );
       }
     }
   }
-  return temporaries;
 }
 
 function getProperty(
@@ -310,6 +359,12 @@ class Context {
   #temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>;
   #temporariesUsedOutsideScope: ReadonlySet<DeclarationId>;
 
+  /**
+   * Tracks the traversal state. See Context.declare for explanation of why this
+   * is needed.
+   */
+  inInnerFn: boolean = false;
+
   constructor(
     temporariesUsedOutsideScope: ReadonlySet<DeclarationId>,
     temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
@@ -360,12 +415,23 @@ class Context {
   }
 
   /*
-   * Records where a value was declared, and optionally, the scope where the value originated from.
-   * This is later used to determine if a dependency should be added to a scope; if the current
-   * scope we are visiting is the same scope where the value originates, it can't be a dependency
-   * on itself.
+   * Records where a value was declared, and optionally, the scope where the
+   * value originated from. This is later used to determine if a dependency
+   * should be added to a scope; if the current scope we are visiting is the
+   * same scope where the value originates, it can't be a dependency on itself.
+   *
+   * Note that we do not track declarations or reassignments within inner
+   * functions for the following reasons:
+   *   - inner functions cannot be split by scope boundaries and are guaranteed
+   *     to consume their own declarations
+   *   - reassignments within inner functions are tracked as context variables,
+   *     which already have extended mutable ranges to account for reassignments
+   *   - *most importantly* it's currently simply incorrect to compare inner
+   *     function instruction ids (tracked by `decl`) with outer ones (as stored
+   *     by root identifier mutable ranges).
    */
   declare(identifier: Identifier, decl: Decl): void {
+    if (this.inInnerFn) return;
     if (!this.#declarations.has(identifier.declarationId)) {
       this.#declarations.set(identifier.declarationId, decl);
     }
@@ -575,7 +641,7 @@ function collectDependencies(
   fn: HIRFunction,
   usedOutsideDeclaringScope: ReadonlySet<DeclarationId>,
   temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
-  processedInstrsInOptional: ReadonlySet<InstructionId>,
+  processedInstrsInOptional: ReadonlySet<Instruction | Terminal>,
 ): Map<ReactiveScope, Array<ReactiveScopeDependency>> {
   const context = new Context(usedOutsideDeclaringScope, temporaries);
 
@@ -614,12 +680,12 @@ function collectDependencies(
       }
     }
     for (const instr of block.instructions) {
-      if (!processedInstrsInOptional.has(instr.id)) {
+      if (!processedInstrsInOptional.has(instr)) {
         handleInstruction(instr, context);
       }
     }
 
-    if (!processedInstrsInOptional.has(block.terminal.id)) {
+    if (!processedInstrsInOptional.has(block.terminal)) {
       for (const place of eachTerminalOperand(block.terminal)) {
         context.visitOperand(place);
       }
