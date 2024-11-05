@@ -277,6 +277,17 @@ export function commitHookEffectListUnmount(
 
           // Unmount
           const inst = effect.inst;
+          if (
+            effect.kind === ResourceEffectKind &&
+            effect.resource != null &&
+            typeof effect.destroy === 'function'
+          ) {
+            inst.destroy = function () {
+              // $FlowFixMe trust me bro
+              effect.destroy(effect.resource);
+              effect.resource = null;
+            };
+          }
           const destroy = inst.destroy;
           if (destroy !== undefined) {
             inst.destroy = undefined;
