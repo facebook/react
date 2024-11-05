@@ -70,28 +70,26 @@ function useBar(t0, cond) {
   if (cond) {
     x = b;
   }
-
-  const t2 = x;
-  let t3;
-  if ($[1] !== a || $[2] !== t2) {
-    t3 = () => [a, x];
+  let t2;
+  if ($[1] !== a || $[2] !== x) {
+    t2 = () => [a, x];
     $[1] = a;
-    $[2] = t2;
-    $[3] = t3;
+    $[2] = x;
+    $[3] = t2;
   } else {
-    t3 = $[3];
+    t2 = $[3];
   }
   x;
-  const cb = t3;
-  let t4;
+  const cb = t2;
+  let t3;
   if ($[4] !== cb) {
-    t4 = <Stringify cb={cb} shouldInvoke={true} />;
+    t3 = <Stringify cb={cb} shouldInvoke={true} />;
     $[4] = cb;
-    $[5] = t4;
+    $[5] = t3;
   } else {
-    t4 = $[5];
+    t3 = $[5];
   }
-  return t4;
+  return t3;
 }
 
 export const FIXTURE_ENTRYPOINT = {
