@@ -7,12 +7,8 @@
  * @flow
  */
 
-function isReactClass(type: any): boolean | undefined {
-  try {
-    return !!(type.prototype && type.prototype.isReactComponent);
-  } catch (error) {
-    console.error('Error in isReactClass:', error);
-  }
+function isReactClass(type: any): boolean {
+  return !!(type.prototype && type.prototype.isReactComponent);
 }
 
 export default isReactClass;
