@@ -21,10 +21,9 @@ import type {
 } from 'babel-plugin-react-compiler/src/Entrypoint';
 import type {Effect, ValueKind} from 'babel-plugin-react-compiler/src/HIR';
 import type {
-  EnvironmentConfig,
   Macro,
   MacroMethod,
-  parseConfigPragma as ParseConfigPragma,
+  parseConfigPragmaForTests as ParseConfigPragma,
 } from 'babel-plugin-react-compiler/src/HIR/Environment';
 import * as HermesParser from 'hermes-parser';
 import invariant from 'invariant';
@@ -37,6 +36,11 @@ export function parseLanguage(source: string): 'flow' | 'typescript' {
   return source.indexOf('@flow') !== -1 ? 'flow' : 'typescript';
 }
 
+/**
+ * Parse react compiler plugin + environment options from test fixture. Note
+ * that although this primarily uses `Environment:parseConfigPragma`, it also
+ * has test fixture specific (i.e. not applicable to playground) parsing logic.
+ */
 function makePluginOptions(
   firstLine: string,
   parseConfigPragmaFn: typeof ParseConfigPragma,
@@ -44,15 +48,11 @@ function makePluginOptions(
   ValueKindEnum: typeof ValueKind,
 ): [PluginOptions, Array<{filename: string | null; event: LoggerEvent}>] {
   let gating = null;
-  let enableEmitInstrumentForget = null;
-  let enableEmitFreeze = null;
-  let enableEmitHookGuards = null;
   let compilationMode: CompilationMode = 'all';
   let panicThreshold: PanicThresholdOptions = 'all_errors';
   let hookPattern: string | null = null;
   // TODO(@mofeiZ) rewrite snap fixtures to @validatePreserveExistingMemo:false
   let validatePreserveExistingMemoizationGuarantees = false;
-  let enableChangeDetectionForDebugging = null;
   let customMacros: null | Array<Macro> = null;
   let validateBlocklistedImports = null;
   let target = '19' as const;
@@ -76,31 +76,6 @@ function makePluginOptions(
     gating = {
       source: 'ReactForgetFeatureFlag',
       importSpecifierName: 'isForgetEnabled_Fixtures',
-    };
-  }
-  if (firstLine.includes('@instrumentForget')) {
-    enableEmitInstrumentForget = {
-      fn: {
-        source: 'react-compiler-runtime',
-        importSpecifierName: 'useRenderCounter',
-      },
-      gating: {
-        source: 'react-compiler-runtime',
-        importSpecifierName: 'shouldInstrument',
-      },
-      globalGating: '__DEV__',
-    };
-  }
-  if (firstLine.includes('@enableEmitFreeze')) {
-    enableEmitFreeze = {
-      source: 'react-compiler-runtime',
-      importSpecifierName: 'makeReadOnly',
-    };
-  }
-  if (firstLine.includes('@enableEmitHookGuards')) {
-    enableEmitHookGuards = {
-      source: 'react-compiler-runtime',
-      importSpecifierName: '$dispatcherGuard',
     };
   }
 
@@ -132,16 +107,18 @@ function makePluginOptions(
     ignoreUseNoForget = true;
   }
 
+  /**
+   * Snap currently runs all fixtures without `validatePreserveExistingMemo` as
+   * most fixtures are interested in compilation output, not whether the
+   * compiler was able to preserve existing memo.
+   *
+   * TODO: flip the default. `useMemo` is rare in test fixtures -- fixtures that
+   * use useMemo should be explicit about whether this flag is enabled
+   */
   if (firstLine.includes('@validatePreserveExistingMemoizationGuarantees')) {
     validatePreserveExistingMemoizationGuarantees = true;
   }
 
-  if (firstLine.includes('@enableChangeDetectionForDebugging')) {
-    enableChangeDetectionForDebugging = {
-      source: 'react-compiler-runtime',
-      importSpecifierName: '$structuralCheck',
-    };
-  }
   const hookPatternMatch = /@hookPattern:"([^"]+)"/.exec(firstLine);
   if (
     hookPatternMatch &&
@@ -197,22 +174,6 @@ function makePluginOptions(
       .filter(s => s.length > 0);
   }
 
-  let lowerContextAccess = null;
-  if (firstLine.includes('@lowerContextAccess')) {
-    lowerContextAccess = {
-      source: 'react-compiler-runtime',
-      importSpecifierName: 'useContext_withSelector',
-    };
-  }
-
-  let inlineJsxTransform: EnvironmentConfig['inlineJsxTransform'] = null;
-  if (firstLine.includes('@enableInlineJsxTransform')) {
-    inlineJsxTransform = {
-      elementSymbol: 'react.transitional.element',
-      globalDevVar: 'DEV',
-    };
-  }
-
   let logs: Array<{filename: string | null; event: LoggerEvent}> = [];
   let logger: Logger | null = null;
   if (firstLine.includes('@logger')) {
@@ -232,17 +193,10 @@ function makePluginOptions(
         ValueKindEnum,
       }),
       customMacros,
-      enableEmitFreeze,
-      enableEmitInstrumentForget,
-      enableEmitHookGuards,
       assertValidMutableRanges: true,
-      enableSharedRuntime__testonly: true,
       hookPattern,
       validatePreserveExistingMemoizationGuarantees,
-      enableChangeDetectionForDebugging,
-      lowerContextAccess,
       validateBlocklistedImports,
-      inlineJsxTransform,
     },
     compilationMode,
     logger,
