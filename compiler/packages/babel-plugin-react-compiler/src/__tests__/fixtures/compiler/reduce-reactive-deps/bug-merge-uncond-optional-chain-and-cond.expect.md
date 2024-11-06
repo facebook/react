@@ -65,12 +65,12 @@ function useFoo(t0) {
   const $ = _c(2);
   const { screen } = t0;
   let t1;
-  if ($[0] !== screen?.title_text) {
+  if ($[0] !== screen) {
     t1 =
       screen?.title_text != null
         ? "(not null)"
         : identity({ title: screen.title_text });
-    $[0] = screen?.title_text;
+    $[0] = screen;
     $[1] = t1;
   } else {
     t1 = $[1];
