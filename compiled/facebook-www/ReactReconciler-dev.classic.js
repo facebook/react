@@ -581,11 +581,6 @@ __DEV__ &&
         "runWithFiberInDEV should never be called in production. This is a bug in React."
       );
     }
-    function resetCurrentFiber() {
-      ReactSharedInternals.getCurrentStack = null;
-      isRendering = !1;
-      current = null;
-    }
     function getNearestMountedFiber(fiber) {
       var node = fiber,
         nearestMounted = fiber;
@@ -6973,23 +6968,8 @@ __DEV__ &&
           throw Error(
             "Expected ref to be a function, an object returned by React.createRef(), or undefined/null."
           );
-        if (null === current || current.ref !== ref) {
-          if (
-            !disableStringRefs &&
-            null !== current &&
-            ((current = current.ref),
-            "function" === typeof current &&
-              "function" === typeof ref &&
-              "string" === typeof current.__stringRef &&
-              current.__stringRef === ref.__stringRef &&
-              current.__stringRefType === ref.__stringRefType &&
-              current.__stringRefOwner === ref.__stringRefOwner)
-          ) {
-            workInProgress.ref = current;
-            return;
-          }
+        if (null === current || current.ref !== ref)
           workInProgress.flags |= 2097664;
-        }
       }
     }
     function updateFunctionComponent(
@@ -11047,7 +11027,7 @@ __DEV__ &&
             }
           else finishedWork.refCleanup = ref(instanceToUse);
         else
-          disableStringRefs && "string" === typeof ref
+          "string" === typeof ref
             ? error$jscomp$0("String refs are no longer supported.")
             : ref.hasOwnProperty("current") ||
               error$jscomp$0(
@@ -14440,7 +14420,9 @@ __DEV__ &&
     function handleThrow(root, thrownValue) {
       currentlyRenderingFiber$1 = null;
       ReactSharedInternals.H = ContextOnlyDispatcher;
-      resetCurrentFiber();
+      ReactSharedInternals.getCurrentStack = null;
+      isRendering = !1;
+      current = null;
       thrownValue === SuspenseException
         ? ((thrownValue = getSuspendedThenable()),
           (workInProgressSuspendedReason =
@@ -14817,7 +14799,6 @@ __DEV__ &&
             unitOfWork,
             entangledRenderLanes
           ));
-      disableStringRefs || resetCurrentFiber();
       unitOfWork.memoizedProps = unitOfWork.pendingProps;
       null === current
         ? completeUnitOfWork(unitOfWork)
@@ -14825,7 +14806,6 @@ __DEV__ &&
     }
     function replaySuspendedUnitOfWork(unitOfWork) {
       var next = runWithFiberInDEV(unitOfWork, replayBeginWork, unitOfWork);
-      disableStringRefs || resetCurrentFiber();
       unitOfWork.memoizedProps = unitOfWork.pendingProps;
       null === next ? completeUnitOfWork(unitOfWork) : (workInProgress = next);
     }
@@ -16513,7 +16493,6 @@ __DEV__ &&
         dynamicFeatureFlags.disableLegacyContextForFunctionComponents,
       disableSchedulerTimeoutInWorkLoop =
         dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
-      disableStringRefs = dynamicFeatureFlags.disableStringRefs,
       enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
       enableDeferRootSchedulingToMicrotask =
         dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
@@ -19249,7 +19228,7 @@ __DEV__ &&
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-www-classic-66855b96-20241106"
+        reconcilerVersion: "19.0.0-www-classic-a7b83e7c-20241106"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
