@@ -14,7 +14,7 @@ import type {
 } from 'shared/ReactTypes';
 import type {ModuleLoading} from 'react-client/src/ReactFlightClientConfig';
 
-export type SSRModuleMap = string; // Module root path
+export type ServerConsumerModuleMap = string; // Module root path
 
 export type ServerManifest = string; // Module root path
 
@@ -48,7 +48,7 @@ export function prepareDestinationForModule(
 }
 
 export function resolveClientReference<T>(
-  bundlerConfig: SSRModuleMap,
+  bundlerConfig: ServerConsumerModuleMap,
   metadata: ClientReferenceMetadata,
 ): ClientReference<T> {
   const baseURL = bundlerConfig;

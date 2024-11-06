@@ -42,9 +42,9 @@ import { mutate, setProperty, throwErrorWithMessageIf } from "shared-runtime";
 function useFoo(t0) {
   const $ = _c(6);
   const { value, cond } = t0;
-  let y;
   let t1;
-  if ($[0] !== value || $[1] !== cond) {
+  let y;
+  if ($[0] !== cond || $[1] !== value) {
     t1 = Symbol.for("react.early_return_sentinel");
     bb0: {
       y = [value];
@@ -68,13 +68,13 @@ function useFoo(t0) {
       }
       y.push(x);
     }
-    $[0] = value;
-    $[1] = cond;
-    $[2] = y;
-    $[3] = t1;
+    $[0] = cond;
+    $[1] = value;
+    $[2] = t1;
+    $[3] = y;
   } else {
-    y = $[2];
-    t1 = $[3];
+    t1 = $[2];
+    y = $[3];
   }
   if (t1 !== Symbol.for("react.early_return_sentinel")) {
     return t1;

@@ -23,7 +23,7 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== props.str) {
+  if ($[0] !== props) {
     t0 = () => {
       let str;
       if (arguments.length) {
@@ -34,7 +34,7 @@ function Component(props) {
 
       global.log(str);
     };
-    $[0] = props.str;
+    $[0] = props;
     $[1] = t0;
   } else {
     t0 = $[1];

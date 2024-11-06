@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enableInlineJsxTransform
+// @inlineJsxTransform
 
 function Parent({children, a: _a, b: _b, c: _c, ref}) {
   return <div ref={ref}>{children}</div>;
@@ -26,11 +26,15 @@ function ParentAndRefAndKey(props) {
 }
 
 function ParentAndChildren(props) {
+  const render = () => {
+    return <div key="d">{props.foo}</div>;
+  };
   return (
     <Parent>
       <Child key="a" {...props} />
       <Child key="b">
-        <GrandChild className={props.foo} {...props} />
+        <GrandChild key="c" className={props.foo} {...props} />
+        {render()}
       </Child>
     </Parent>
   );
@@ -40,12 +44,28 @@ const propsToSpread = {a: 'a', b: 'b', c: 'c'};
 function PropsSpread() {
   return (
     <>
-      <Test {...propsToSpread} />
-      <Test {...propsToSpread} a="z" />
+      <Test key="a" {...propsToSpread} />
+      <Test key="b" {...propsToSpread} a="z" />
     </>
   );
 }
 
+function ConditionalJsx({shouldWrap}) {
+  let content = <div>Hello</div>;
+
+  if (shouldWrap) {
+    content = <Parent>{content}</Parent>;
+  }
+
+  return content;
+}
+
+// TODO: Support value blocks
+function TernaryJsx({cond}) {
+  return cond ? <div /> : null;
+}
+
+global.DEV = true;
 export const FIXTURE_ENTRYPOINT = {
   fn: ParentAndChildren,
   params: [{foo: 'abc'}],
@@ -56,20 +76,24 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c2 } from "react/compiler-runtime"; // @enableInlineJsxTransform
+import { c as _c2 } from "react/compiler-runtime"; // @inlineJsxTransform
 
 function Parent(t0) {
   const $ = _c2(2);
   const { children, ref } = t0;
   let t1;
   if ($[0] !== children) {
-    t1 = {
-      $$typeof: Symbol.for("react.transitional.element"),
-      type: "div",
-      ref: ref,
-      key: null,
-      props: { children: children },
-    };
+    if (DEV) {
+      t1 = <div ref={ref}>{children}</div>;
+    } else {
+      t1 = {
+        $$typeof: Symbol.for("react.transitional.element"),
+        type: "div",
+        ref: ref,
+        key: null,
+        props: { children: children },
+      };
+    }
     $[0] = children;
     $[1] = t1;
   } else {
@@ -83,13 +107,17 @@ function Child(t0) {
   const { children } = t0;
   let t1;
   if ($[0] !== children) {
-    t1 = {
-      $$typeof: Symbol.for("react.transitional.element"),
-      type: Symbol.for("react.fragment"),
-      ref: null,
-      key: null,
-      props: { children: children },
-    };
+    if (DEV) {
+      t1 = <>{children}</>;
+    } else {
+      t1 = {
+        $$typeof: Symbol.for("react.transitional.element"),
+        type: Symbol.for("react.fragment"),
+        ref: null,
+        key: null,
+        props: { children: children },
+      };
+    }
     $[0] = children;
     $[1] = t1;
   } else {
@@ -103,26 +131,34 @@ function GrandChild(t0) {
   const { className } = t0;
   let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = {
-      $$typeof: Symbol.for("react.transitional.element"),
-      type: React.Fragment,
-      ref: null,
-      key: "fragmentKey",
-      props: { children: "Hello world" },
-    };
+    if (DEV) {
+      t1 = <React.Fragment key="fragmentKey">Hello world</React.Fragment>;
+    } else {
+      t1 = {
+        $$typeof: Symbol.for("react.transitional.element"),
+        type: React.Fragment,
+        ref: null,
+        key: "fragmentKey",
+        props: { children: "Hello world" },
+      };
+    }
     $[0] = t1;
   } else {
     t1 = $[0];
   }
   let t2;
   if ($[1] !== className) {
-    t2 = {
-      $$typeof: Symbol.for("react.transitional.element"),
-      type: "span",
-      ref: null,
-      key: null,
-      props: { className: className, children: t1 },
-    };
+    if (DEV) {
+      t2 = <span className={className}>{t1}</span>;
+    } else {
+      t2 = {
+        $$typeof: Symbol.for("react.transitional.element"),
+        type: "span",
+        ref: null,
+        key: null,
+        props: { className: className, children: t1 },
+      };
+    }
     $[1] = className;
     $[2] = t2;
   } else {
@@ -136,13 +172,17 @@ function ParentAndRefAndKey(props) {
   const testRef = useRef();
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = {
-      $$typeof: Symbol.for("react.transitional.element"),
-      type: Parent,
-      ref: testRef,
-      key: "testKey",
-      props: { a: "a", b: { b: "b" }, c: C },
-    };
+    if (DEV) {
+      t0 = <Parent a="a" b={{ b: "b" }} c={C} key="testKey" ref={testRef} />;
+    } else {
+      t0 = {
+        $$typeof: Symbol.for("react.transitional.element"),
+        type: Parent,
+        ref: testRef,
+        key: "testKey",
+        props: { a: "a", b: { b: "b" }, c: C },
+      };
+    }
     $[0] = t0;
   } else {
     t0 = $[0];
@@ -151,59 +191,125 @@ function ParentAndRefAndKey(props) {
 }
 
 function ParentAndChildren(props) {
-  const $ = _c2(7);
+  const $ = _c2(14);
   let t0;
-  if ($[0] !== props) {
-    t0 = {
-      $$typeof: Symbol.for("react.transitional.element"),
-      type: Child,
-      ref: null,
-      key: "a",
-      props: props,
+  if ($[0] !== props.foo) {
+    t0 = () => {
+      let t1;
+      if (DEV) {
+        t1 = <div key="d">{props.foo}</div>;
+      } else {
+        t1 = {
+          $$typeof: Symbol.for("react.transitional.element"),
+          type: "div",
+          ref: null,
+          key: "d",
+          props: { children: props.foo },
+        };
+      }
+      return t1;
     };
-    $[0] = props;
+    $[0] = props.foo;
     $[1] = t0;
   } else {
     t0 = $[1];
   }
+  const render = t0;
   let t1;
   if ($[2] !== props) {
-    t1 = {
-      $$typeof: Symbol.for("react.transitional.element"),
-      type: Child,
-      ref: null,
-      key: "b",
-      props: {
-        children: {
-          $$typeof: Symbol.for("react.transitional.element"),
-          type: GrandChild,
-          ref: null,
-          key: null,
-          props: { className: props.foo, ...props },
-        },
-      },
-    };
+    if (DEV) {
+      t1 = <Child key="a" {...props} />;
+    } else {
+      t1 = {
+        $$typeof: Symbol.for("react.transitional.element"),
+        type: Child,
+        ref: null,
+        key: "a",
+        props: props,
+      };
+    }
     $[2] = props;
     $[3] = t1;
   } else {
     t1 = $[3];
   }
-  let t2;
-  if ($[4] !== t0 || $[5] !== t1) {
-    t2 = {
-      $$typeof: Symbol.for("react.transitional.element"),
-      type: Parent,
-      ref: null,
-      key: null,
-      props: { children: [t0, t1] },
-    };
-    $[4] = t0;
-    $[5] = t1;
-    $[6] = t2;
+
+  const t2 = props.foo;
+  let t3;
+  if ($[4] !== props) {
+    if (DEV) {
+      t3 = <GrandChild key="c" className={t2} {...props} />;
+    } else {
+      t3 = {
+        $$typeof: Symbol.for("react.transitional.element"),
+        type: GrandChild,
+        ref: null,
+        key: "c",
+        props: { className: t2, ...props },
+      };
+    }
+    $[4] = props;
+    $[5] = t3;
   } else {
-    t2 = $[6];
+    t3 = $[5];
   }
-  return t2;
+  let t4;
+  if ($[6] !== render) {
+    t4 = render();
+    $[6] = render;
+    $[7] = t4;
+  } else {
+    t4 = $[7];
+  }
+  let t5;
+  if ($[8] !== t3 || $[9] !== t4) {
+    if (DEV) {
+      t5 = (
+        <Child key="b">
+          {t3}
+          {t4}
+        </Child>
+      );
+    } else {
+      t5 = {
+        $$typeof: Symbol.for("react.transitional.element"),
+        type: Child,
+        ref: null,
+        key: "b",
+        props: { children: [t3, t4] },
+      };
+    }
+    $[8] = t3;
+    $[9] = t4;
+    $[10] = t5;
+  } else {
+    t5 = $[10];
+  }
+  let t6;
+  if ($[11] !== t1 || $[12] !== t5) {
+    if (DEV) {
+      t6 = (
+        <Parent>
+          {t1}
+          {t5}
+        </Parent>
+      );
+    } else {
+      t6 = {
+        $$typeof: Symbol.for("react.transitional.element"),
+        type: Parent,
+        ref: null,
+        key: null,
+        props: { children: [t1, t5] },
+      };
+    }
+    $[11] = t1;
+    $[12] = t5;
+    $[13] = t6;
+  } else {
+    t6 = $[13];
+  }
+  return t6;
 }
 
 const propsToSpread = { a: "a", b: "b", c: "c" };
@@ -211,30 +317,46 @@ function PropsSpread() {
   const $ = _c2(1);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = {
-      $$typeof: Symbol.for("react.transitional.element"),
-      type: Symbol.for("react.fragment"),
-      ref: null,
-      key: null,
-      props: {
-        children: [
-          {
-            $$typeof: Symbol.for("react.transitional.element"),
-            type: Test,
-            ref: null,
-            key: null,
-            props: propsToSpread,
-          },
-          {
-            $$typeof: Symbol.for("react.transitional.element"),
-            type: Test,
-            ref: null,
-            key: null,
-            props: { ...propsToSpread, a: "z" },
-          },
-        ],
-      },
-    };
+    let t1;
+    if (DEV) {
+      t1 = <Test key="a" {...propsToSpread} />;
+    } else {
+      t1 = {
+        $$typeof: Symbol.for("react.transitional.element"),
+        type: Test,
+        ref: null,
+        key: "a",
+        props: propsToSpread,
+      };
+    }
+    let t2;
+    if (DEV) {
+      t2 = <Test key="b" {...propsToSpread} a="z" />;
+    } else {
+      t2 = {
+        $$typeof: Symbol.for("react.transitional.element"),
+        type: Test,
+        ref: null,
+        key: "b",
+        props: { ...propsToSpread, a: "z" },
+      };
+    }
+    if (DEV) {
+      t0 = (
+        <>
+          {t1}
+          {t2}
+        </>
+      );
+    } else {
+      t0 = {
+        $$typeof: Symbol.for("react.transitional.element"),
+        type: Symbol.for("react.fragment"),
+        ref: null,
+        key: null,
+        props: { children: [t1, t2] },
+      };
+    }
     $[0] = t0;
   } else {
     t0 = $[0];
@@ -242,6 +364,67 @@ function PropsSpread() {
   return t0;
 }
 
+function ConditionalJsx(t0) {
+  const $ = _c2(2);
+  const { shouldWrap } = t0;
+  let t1;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    if (DEV) {
+      t1 = <div>Hello</div>;
+    } else {
+      t1 = {
+        $$typeof: Symbol.for("react.transitional.element"),
+        type: "div",
+        ref: null,
+        key: null,
+        props: { children: "Hello" },
+      };
+    }
+    $[0] = t1;
+  } else {
+    t1 = $[0];
+  }
+  let content = t1;
+  if (shouldWrap) {
+    const t2 = content;
+    let t3;
+    if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+      if (DEV) {
+        t3 = <Parent>{t2}</Parent>;
+      } else {
+        t3 = {
+          $$typeof: Symbol.for("react.transitional.element"),
+          type: Parent,
+          ref: null,
+          key: null,
+          props: { children: t2 },
+        };
+      }
+      $[1] = t3;
+    } else {
+      t3 = $[1];
+    }
+    content = t3;
+  }
+  return content;
+}
+
+// TODO: Support value blocks
+function TernaryJsx(t0) {
+  const $ = _c2(2);
+  const { cond } = t0;
+  let t1;
+  if ($[0] !== cond) {
+    t1 = cond ? <div /> : null;
+    $[0] = cond;
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
+  return t1;
+}
+
+global.DEV = true;
 export const FIXTURE_ENTRYPOINT = {
   fn: ParentAndChildren,
   params: [{ foo: "abc" }],
@@ -250,4 +433,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: ok) <div><span class="abc">Hello world</span></div>
+(kind: ok) <div><span class="abc">Hello world</span><div>abc</div></div>

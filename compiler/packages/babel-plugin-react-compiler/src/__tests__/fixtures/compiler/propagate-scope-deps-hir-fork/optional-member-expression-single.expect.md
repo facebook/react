@@ -60,10 +60,10 @@ function Component(t0) {
     t3 = $[3];
   }
   let t4;
-  if ($[4] !== t3 || $[5] !== data) {
+  if ($[4] !== data || $[5] !== t3) {
     t4 = <ValidateMemoization inputs={t3} output={data} />;
-    $[4] = t3;
-    $[5] = data;
+    $[4] = data;
+    $[5] = t3;
     $[6] = t4;
   } else {
     t4 = $[6];

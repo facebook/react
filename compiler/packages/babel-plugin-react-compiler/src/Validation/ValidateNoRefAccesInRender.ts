@@ -214,16 +214,24 @@ function joinRefAccessTypes(...types: Array<RefAccessType>): RefAccessType {
         return b;
       } else if (b.kind === 'None') {
         return a;
-      } else if (a.kind === 'Guard' || b.kind === 'Guard') {
-        if (a.kind === 'Guard' && b.kind === 'Guard' && a.refId === b.refId) {
+      } else if (a.kind === 'Guard') {
+        if (b.kind === 'Guard' && a.refId === b.refId) {
           return a;
+        } else if (b.kind === 'Nullable' || b.kind === 'Guard') {
+          return {kind: 'None'};
+        } else {
+          return b;
         }
-        return {kind: 'None'};
-      } else if (a.kind === 'Nullable' || b.kind === 'Nullable') {
-        if (a.kind === 'Nullable' && b.kind === 'Nullable') {
-          return a;
+      } else if (b.kind === 'Guard') {
+        if (a.kind === 'Nullable') {
+          return {kind: 'None'};
+        } else {
+          return b;
         }
-        return {kind: 'None'};
+      } else if (a.kind === 'Nullable') {
+        return b;
+      } else if (b.kind === 'Nullable') {
+        return a;
       } else {
         return joinRefAccessRefTypes(a, b);
       }

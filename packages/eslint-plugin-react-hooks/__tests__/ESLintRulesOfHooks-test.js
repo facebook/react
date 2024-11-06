@@ -759,6 +759,30 @@ const tests = {
       code: normalizeIndent`
         // Invalid because it's dangerous and might not warn otherwise.
         // This *must* be invalid.
+        function ComponentWithHookInsideLoop() {
+          do {
+            useHookInsideLoop();
+          } while (cond);
+        }
+      `,
+      errors: [loopError('useHookInsideLoop')],
+    },
+    {
+      code: normalizeIndent`
+        // Invalid because it's dangerous and might not warn otherwise.
+        // This *must* be invalid.
+        function ComponentWithHookInsideLoop() {
+          do {
+            foo();
+          } while (useHookInsideLoop());
+        }
+      `,
+      errors: [loopError('useHookInsideLoop')],
+    },
+    {
+      code: normalizeIndent`
+        // Invalid because it's dangerous and might not warn otherwise.
+        // This *must* be invalid.
         function renderItem() {
           useState();
         }
@@ -849,6 +873,45 @@ const tests = {
             if (b) continue;
             useHook2();
           }
+        }
+      `,
+      errors: [loopError('useHook1'), loopError('useHook2', true)],
+    },
+    {
+      code: normalizeIndent`
+        // Invalid because it's dangerous and might not warn otherwise.
+        // This *must* be invalid.
+        function useHookInLoops() {
+          do {
+            useHook1();
+            if (a) return;
+            useHook2();
+          } while (b);
+
+          do {
+            useHook3();
+            if (c) return;
+            useHook4();
+          } while (d)
+        }
+      `,
+      errors: [
+        loopError('useHook1'),
+        loopError('useHook2'),
+        loopError('useHook3'),
+        loopError('useHook4'),
+      ],
+    },
+    {
+      code: normalizeIndent`
+        // Invalid because it's dangerous and might not warn otherwise.
+        // This *must* be invalid.
+        function useHookInLoops() {
+          do {
+            useHook1();
+            if (a) continue;
+            useHook2();
+          } while (b);
         }
       `,
       errors: [loopError('useHook1'), loopError('useHook2', true)],

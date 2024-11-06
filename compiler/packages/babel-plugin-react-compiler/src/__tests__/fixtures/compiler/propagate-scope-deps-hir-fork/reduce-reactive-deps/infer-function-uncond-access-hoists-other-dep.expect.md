@@ -51,13 +51,13 @@ function Foo(t0) {
   const fn = t1;
   useIdentity(null);
   let x;
-  if ($[2] !== cond || $[3] !== a.b.c) {
+  if ($[2] !== a.b.c || $[3] !== cond) {
     x = makeArray();
     if (cond) {
       x.push(identity(a.b.c));
     }
-    $[2] = cond;
-    $[3] = a.b.c;
+    $[2] = a.b.c;
+    $[3] = cond;
     $[4] = x;
   } else {
     x = $[4];

@@ -101,8 +101,6 @@ export const enableLegacyHidden = true;
 
 export const enableComponentStackLocations = true;
 
-export const enableRefAsProp = true;
-
 export const disableTextareaChildren = __EXPERIMENTAL__;
 
 export const consoleManagedByDevToolsDuringStrictMode = true;

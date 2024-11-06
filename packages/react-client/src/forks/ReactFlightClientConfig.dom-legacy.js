@@ -15,7 +15,7 @@ export * from 'react-client/src/ReactClientConsoleConfigBrowser';
 
 export type Response = any;
 export opaque type ModuleLoading = mixed;
-export opaque type SSRModuleMap = mixed;
+export opaque type ServerConsumerModuleMap = mixed;
 export opaque type ServerManifest = mixed;
 export opaque type ServerReferenceId = string;
 export opaque type ClientReferenceMetadata = mixed;

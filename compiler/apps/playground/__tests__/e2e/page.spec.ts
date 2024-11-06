@@ -33,7 +33,7 @@ test('editor should compile successfully', async ({page}) => {
     path: 'test-results/01-show-js-before.png',
   });
   const userInput =
-    (await page.locator('.monaco-editor').nth(2).allInnerTexts()) ?? [];
+    (await page.locator('.monaco-editor').nth(1).allInnerTexts()) ?? [];
   expect(concat(userInput)).toMatchSnapshot('user-input.txt');
 
   // Reset button works
@@ -44,6 +44,6 @@ test('editor should compile successfully', async ({page}) => {
     path: 'test-results/02-show-js-after.png',
   });
   const defaultInput =
-    (await page.locator('.monaco-editor').nth(2).allInnerTexts()) ?? [];
+    (await page.locator('.monaco-editor').nth(1).allInnerTexts()) ?? [];
   expect(concat(defaultInput)).toMatchSnapshot('default-input.txt');
 });

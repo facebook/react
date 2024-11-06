@@ -42,9 +42,9 @@ import { Stringify } from "shared-runtime";
 function Foo(t0) {
   const $ = _c(8);
   const { arr1, arr2, foo } = t0;
-  let t1;
   let getVal1;
-  if ($[0] !== arr1 || $[1] !== foo || $[2] !== arr2) {
+  let t1;
+  if ($[0] !== arr1 || $[1] !== arr2 || $[2] !== foo) {
     const x = [arr1];
 
     let y;
@@ -55,13 +55,13 @@ function Foo(t0) {
     t1 = () => [y];
     foo ? (y = x.concat(arr2)) : y;
     $[0] = arr1;
-    $[1] = foo;
-    $[2] = arr2;
-    $[3] = t1;
-    $[4] = getVal1;
+    $[1] = arr2;
+    $[2] = foo;
+    $[3] = getVal1;
+    $[4] = t1;
   } else {
-    t1 = $[3];
-    getVal1 = $[4];
+    getVal1 = $[3];
+    t1 = $[4];
   }
   const getVal2 = t1;
   let t2;
