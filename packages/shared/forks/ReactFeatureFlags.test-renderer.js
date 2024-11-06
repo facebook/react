@@ -90,7 +90,6 @@ export const enableSiblingPrerendering = false;
 // We really need to get rid of this whole module. Any test renderer specific
 // flags should be handled by the Fiber config.
 // const __NEXT_MAJOR__ = __EXPERIMENTAL__;
-export const disableStringRefs = true;
 export const disableLegacyMode = true;
 export const disableLegacyContext = true;
 export const disableLegacyContextForFunctionComponents = true;

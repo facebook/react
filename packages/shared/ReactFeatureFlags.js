@@ -208,8 +208,6 @@ export const enableFilterEmptyStringAttributesDOM = true;
 // Disabled caching behavior of `react/cache` in client runtimes.
 export const disableClientCache = true;
 
-export const disableStringRefs = true;
-
 // Warn on any usage of ReactTestRenderer
 export const enableReactTestRendererWarning = true;
 

@@ -1001,9 +1001,7 @@ describe('ReactFlightDOMEdge', () => {
       expect(greeting._owner).toBe(lazyWrapper._debugInfo[0]);
     } else {
       expect(lazyWrapper._debugInfo).toBe(undefined);
-      expect(greeting._owner).toBe(
-        gate(flags => flags.disableStringRefs) ? undefined : null,
-      );
+      expect(greeting._owner).toBe(undefined);
     }
   });
 

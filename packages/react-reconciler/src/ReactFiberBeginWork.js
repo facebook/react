@@ -110,7 +110,6 @@ import {
   enableRenderableContext,
   disableLegacyMode,
   disableDefaultPropsExceptForClasses,
-  disableStringRefs,
   enableOwnerStacks,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
@@ -1052,25 +1051,6 @@ function markRef(current: Fiber | null, workInProgress: Fiber) {
       );
     }
     if (current === null || current.ref !== ref) {
-      if (!disableStringRefs && current !== null) {
-        const oldRef = current.ref;
-        const newRef = ref;
-        if (
-          typeof oldRef === 'function' &&
-          typeof newRef === 'function' &&
-          typeof oldRef.__stringRef === 'string' &&
-          oldRef.__stringRef === newRef.__stringRef &&
-          oldRef.__stringRefType === newRef.__stringRefType &&
-          oldRef.__stringRefOwner === newRef.__stringRefOwner
-        ) {
-          // Although this is a different callback, it represents the same
-          // string ref. To avoid breaking old Meta code that relies on string
-          // refs only being attached once, reuse the old ref. This will
-          // prevent us from detaching and reattaching the ref on each update.
-          workInProgress.ref = oldRef;
-          return;
-        }
-      }
       // Schedule a Ref effect
       workInProgress.flags |= Ref | RefStatic;
     }
@@ -1388,7 +1368,7 @@ function finishClassComponent(
   const instance = workInProgress.stateNode;
 
   // Rerender
-  if (__DEV__ || !disableStringRefs) {
+  if (__DEV__) {
     setCurrentFiber(workInProgress);
   }
   let nextChildren;

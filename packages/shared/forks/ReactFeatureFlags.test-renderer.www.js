@@ -82,8 +82,6 @@ export const disableClientCache = true;
 export const enableServerComponentLogs = true;
 export const enableInfiniteRenderLoopDetection = false;
 
-export const disableStringRefs = true;
-
 export const enableReactTestRendererWarning = false;
 export const disableLegacyMode = true;
 

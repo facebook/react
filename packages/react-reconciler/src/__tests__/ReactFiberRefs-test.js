@@ -85,35 +85,6 @@ describe('ReactFiberRefs', () => {
     expect(ref2.current).not.toBe(null);
   });
 
-  // @gate !disableStringRefs
-  it('string ref props are converted to function refs', async () => {
-    let refProp;
-    function Child({ref}) {
-      refProp = ref;
-      return <div ref={ref} />;
-    }
-
-    let owner;
-    class Owner extends React.Component {
-      render() {
-        owner = this;
-        return <Child ref="child" />;
-      }
-    }
-
-    const root = ReactNoop.createRoot();
-    await act(() => root.render(<Owner />));
-
-    // When string refs aren't disabled, string refs
-    // the receiving component receives a callback ref, not the original string.
-    // This behavior should never be shipped to open source; it's only here to
-    // allow Meta to keep using string refs temporarily while they finish
-    // migrating their codebase.
-    expect(typeof refProp === 'function').toBe(true);
-    expect(owner.refs.child.type).toBe('div');
-  });
-
-  // @gate disableStringRefs
   it('throw if a string ref is passed to a ref-receiving component', async () => {
     let refProp;
     function Child({ref}) {

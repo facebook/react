@@ -10,8 +10,6 @@
 import type {AsyncDispatcher} from 'react-reconciler/src/ReactInternalTypes';
 import type {ComponentStackNode} from './ReactFizzComponentStack';
 
-import {disableStringRefs} from 'shared/ReactFeatureFlags';
-
 import {currentTaskInDEV} from './ReactFizzCurrentTask';
 
 function getCacheForType<T>(resourceType: () => T): T {
@@ -28,9 +26,5 @@ if (__DEV__) {
       return null;
     }
     return currentTaskInDEV.componentStack;
-  };
-} else if (!disableStringRefs) {
-  DefaultAsyncDispatcher.getOwner = (): null => {
-    return null;
   };
 }

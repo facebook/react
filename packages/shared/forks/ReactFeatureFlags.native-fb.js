@@ -41,7 +41,6 @@ export const disableLegacyContext = false;
 export const disableLegacyContextForFunctionComponents = false;
 export const disableLegacyMode = false;
 export const disableSchedulerTimeoutInWorkLoop = false;
-export const disableStringRefs = true;
 export const disableTextareaChildren = false;
 export const enableAsyncActions = true;
 export const enableAsyncDebugInfo = false;
