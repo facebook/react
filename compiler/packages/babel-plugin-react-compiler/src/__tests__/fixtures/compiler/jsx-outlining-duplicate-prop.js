@@ -27,8 +27,8 @@ function Baz({i}) {
   return i;
 }
 
-function Foo({k}) {
-  return k;
+function Foo({i}) {
+  return i;
 }
 
 function useX() {
