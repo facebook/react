@@ -7,12 +7,14 @@ function Component({arr}) {
         return (
           <Bar key={id} x={x}>
             <Baz i={i}>Test</Baz>
+            <Foo k={i} />
           </Bar>
         );
       })}
     </>
   );
 }
+
 function Bar({x, children}) {
   return (
     <>
@@ -22,8 +24,17 @@ function Bar({x, children}) {
   );
 }
 
-function Baz({i}) {
-  return i;
+function Baz({i, children}) {
+  return (
+    <>
+      {i}
+      {children}
+    </>
+  );
+}
+
+function Foo({k}) {
+  return k;
 }
 
 function useX() {
