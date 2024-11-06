@@ -60,9 +60,18 @@ export function cache<A: Iterable<mixed>, T>(fn: (...A) => T): (...A) => T {
       // $FlowFixMe[incompatible-call]: We don't want to use rest arguments since we transpile the code.
       return fn.apply(null, arguments);
     }
-    const fnMap: WeakMap<any, CacheNode<T>> = dispatcher.getCacheForType(
-      createCacheRoot,
-    );
+    const activeCache = dispatcher.getActiveCache();
+    let fnMap: WeakMap<any, CacheNode<T>> | void =
+      activeCache !== null
+        ? (activeCache.get(createCacheRoot): any)
+        : undefined;
+    if (fnMap === undefined) {
+      fnMap = createCacheRoot();
+      if (activeCache !== null) {
+        // TODO: Warn if undefined?
+        activeCache.set(createCacheRoot, fnMap);
+      }
+    }
     const fnNode = fnMap.get(fn);
     let cacheNode: CacheNode<T>;
     if (fnNode === undefined) {

@@ -7,19 +7,22 @@
  * @flow
  */
 
-import type {AsyncDispatcher} from 'react-reconciler/src/ReactInternalTypes';
+import type {
+  AsyncCache,
+  AsyncDispatcher,
+} from 'react-reconciler/src/ReactInternalTypes';
 import type {ComponentStackNode} from './ReactFizzComponentStack';
 
 import {disableStringRefs} from 'shared/ReactFeatureFlags';
 
 import {currentTaskInDEV} from './ReactFizzCurrentTask';
 
-function getCacheForType<T>(resourceType: () => T): T {
+function getActiveCache(): AsyncCache | null {
   throw new Error('Not implemented.');
 }
 
 export const DefaultAsyncDispatcher: AsyncDispatcher = ({
-  getCacheForType,
+  getActiveCache,
 }: any);
 
 if (__DEV__) {
