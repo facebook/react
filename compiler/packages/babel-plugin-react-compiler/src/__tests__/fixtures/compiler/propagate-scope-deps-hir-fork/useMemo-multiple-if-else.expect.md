@@ -39,10 +39,10 @@ function Component(props) {
   bb0: {
     let y;
     if (
-      $[0] !== props.cond ||
-      $[1] !== props.a ||
-      $[2] !== props.cond2 ||
-      $[3] !== props.b
+      $[0] !== props.a ||
+      $[1] !== props.b ||
+      $[2] !== props.cond ||
+      $[3] !== props.cond2
     ) {
       y = [];
       if (props.cond) {
@@ -54,10 +54,10 @@ function Component(props) {
       }
 
       y.push(props.b);
-      $[0] = props.cond;
-      $[1] = props.a;
-      $[2] = props.cond2;
-      $[3] = props.b;
+      $[0] = props.a;
+      $[1] = props.b;
+      $[2] = props.cond;
+      $[3] = props.cond2;
       $[4] = y;
       $[5] = t0;
     } else {

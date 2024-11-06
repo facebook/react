@@ -1280,12 +1280,12 @@ describe('Timeline profiler', () => {
     });
 
     describe('when profiling', () => {
-      beforeEach(() => {
-        utils.act(() => store.profilerStore.startProfiling());
-      });
-
       describe('with legacy render', () => {
         const {render: legacyRender} = getLegacyRenderImplementation();
+
+        beforeEach(() => {
+          utils.act(() => store.profilerStore.startProfiling());
+        });
 
         // @reactVersion <= 18.2
         // @reactVersion >= 18.0
@@ -1536,6 +1536,10 @@ describe('Timeline profiler', () => {
         });
 
         const {render: modernRender} = getModernRenderImplementation();
+
+        beforeEach(() => {
+          utils.act(() => store.profilerStore.startProfiling());
+        });
 
         it('should mark concurrent render without suspends or state updates', () => {
           utils.act(() => modernRender(<div />));

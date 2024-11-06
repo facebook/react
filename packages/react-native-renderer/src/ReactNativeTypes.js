@@ -9,12 +9,7 @@
  * @flow strict
  */
 
-import type {
-  ElementRef,
-  ElementType,
-  MixedElement,
-  AbstractComponent,
-} from 'react';
+import type {ElementRef, ElementType, MixedElement} from 'react';
 
 export type MeasureOnSuccessCallback = (
   x: number,
@@ -137,14 +132,9 @@ declare const ensureNativeMethodsAreSynced: NativeMethods;
 (ensureNativeMethodsAreSynced: INativeMethods);
 
 export type HostInstance = NativeMethods;
-export type HostComponent<Config> = AbstractComponent<Config, HostInstance>;
-
-type SecretInternalsType = {
-  computeComponentStackForErrorReporting(tag: number): string,
-  // TODO (bvaughn) Decide which additional types to expose here?
-  // And how much information to fill in for the above types.
-  ...
-};
+/*::
+export type HostComponent<Config: {...}> = component(ref: React$RefSetter<HostInstance>, ...Config);
+*/
 
 type InspectorDataProps = $ReadOnly<{
   [propName: string]: string,
@@ -215,8 +205,10 @@ export type ReactNativeType = {
     componentOrHandle: ?(ElementRef<TElementType> | number),
   ): ?number,
   isChildPublicInstance(
-    parent: PublicInstance | HostComponent<mixed>,
-    child: PublicInstance | HostComponent<mixed>,
+    // eslint-disable-next-line no-undef
+    parent: PublicInstance | HostComponent<empty>,
+    // eslint-disable-next-line no-undef
+    child: PublicInstance | HostComponent<empty>,
   ): boolean,
   dispatchCommand(
     handle: HostInstance,
@@ -233,7 +225,6 @@ export type ReactNativeType = {
   unmountComponentAtNode(containerTag: number): void,
   unmountComponentAtNodeAndRemoveContainer(containerTag: number): void,
   +unstable_batchedUpdates: <T>(fn: (T) => void, bookkeeping: T) => void,
-  +__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: SecretInternalsType,
   ...
 };
 

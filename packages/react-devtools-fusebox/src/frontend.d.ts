@@ -15,7 +15,9 @@ export type Wall = {
 };
 
 export type Bridge = {
-  shutdown: () => void,
+  addListener(event: string, listener: (params: unknown) => any): void;
+  removeListener(event: string, listener: Function): void;
+  shutdown: () => void;
 };
 export type Store = Object;
 export type BrowserTheme = 'dark' | 'light';

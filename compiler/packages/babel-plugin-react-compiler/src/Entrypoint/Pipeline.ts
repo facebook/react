@@ -57,7 +57,6 @@ import {
   mergeReactiveScopesThatInvalidateTogether,
   promoteUsedTemporaries,
   propagateEarlyReturns,
-  propagateScopeDependencies,
   pruneHoistedContexts,
   pruneNonEscapingScopes,
   pruneNonReactiveDependencies,
@@ -103,6 +102,7 @@ import {lowerContextAccess} from '../Optimization/LowerContextAccess';
 import {validateNoSetStateInPassiveEffects} from '../Validation/ValidateNoSetStateInPassiveEffects';
 import {validateNoJSXInTryStatement} from '../Validation/ValidateNoJSXInTryStatement';
 import {propagateScopeDependenciesHIR} from '../HIR/PropagateScopeDependenciesHIR';
+import {outlineJSX} from '../Optimization/OutlineJsx';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -278,6 +278,10 @@ function* runWithEnvironment(
     value: hir,
   });
 
+  if (env.config.enableJsxOutlining) {
+    outlineJSX(hir);
+  }
+
   if (env.config.enableFunctionOutlining) {
     outlineFunctions(hir, fbtOperands);
     yield log({kind: 'hir', name: 'OutlineFunctions', value: hir});
@@ -343,14 +347,12 @@ function* runWithEnvironment(
   });
   assertTerminalSuccessorsExist(hir);
   assertTerminalPredsExist(hir);
-  if (env.config.enablePropagateDepsInHIR) {
-    propagateScopeDependenciesHIR(hir);
-    yield log({
-      kind: 'hir',
-      name: 'PropagateScopeDependenciesHIR',
-      value: hir,
-    });
-  }
+  propagateScopeDependenciesHIR(hir);
+  yield log({
+    kind: 'hir',
+    name: 'PropagateScopeDependenciesHIR',
+    value: hir,
+  });
 
   if (env.config.inlineJsxTransform) {
     inlineJsxTransform(hir, env.config.inlineJsxTransform);
@@ -377,15 +379,6 @@ function* runWithEnvironment(
     value: reactiveFunction,
   });
   assertScopeInstructionsWithinScopes(reactiveFunction);
-
-  if (!env.config.enablePropagateDepsInHIR) {
-    propagateScopeDependencies(reactiveFunction);
-    yield log({
-      kind: 'reactive',
-      name: 'PropagateScopeDependencies',
-      value: reactiveFunction,
-    });
-  }
 
   pruneNonEscapingScopes(reactiveFunction);
   yield log({

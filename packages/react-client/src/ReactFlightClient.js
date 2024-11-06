@@ -20,7 +20,8 @@ import type {LazyComponent} from 'react/src/ReactLazy';
 import type {
   ClientReference,
   ClientReferenceMetadata,
-  SSRModuleMap,
+  ServerConsumerModuleMap,
+  ServerManifest,
   StringDecoder,
   ModuleLoading,
 } from './ReactFlightClientConfig';
@@ -43,13 +44,14 @@ import {
   disableStringRefs,
   enableBinaryFlight,
   enablePostpone,
-  enableRefAsProp,
   enableFlightReadableStream,
   enableOwnerStacks,
+  enableServerComponentLogs,
 } from 'shared/ReactFeatureFlags';
 
 import {
   resolveClientReference,
+  resolveServerReference,
   preloadModule,
   requireModule,
   dispatchHint,
@@ -268,7 +270,8 @@ export type FindSourceMapURLCallback = (
 ) => null | string;
 
 export type Response = {
-  _bundlerConfig: SSRModuleMap,
+  _bundlerConfig: ServerConsumerModuleMap,
+  _serverReferenceConfig: null | ServerManifest,
   _moduleLoading: ModuleLoading,
   _callServer: CallServerCallback,
   _encodeFormAction: void | EncodeFormActionCallback,
@@ -672,7 +675,7 @@ function createElement(
   | React$Element<any>
   | LazyComponent<React$Element<any>, SomeChunk<React$Element<any>>> {
   let element: any;
-  if (__DEV__ && enableRefAsProp) {
+  if (__DEV__) {
     // `ref` is non-enumerable in dev
     element = ({
       $$typeof: REACT_ELEMENT_TYPE,
@@ -895,7 +898,7 @@ function waitForReference<T>(
   parentObject: Object,
   key: string,
   response: Response,
-  map: (response: Response, model: any) => T,
+  map: (response: Response, model: any, parentObject: Object, key: string) => T,
   path: Array<string>,
 ): T {
   let handler: InitializationHandler;
@@ -937,7 +940,7 @@ function waitForReference<T>(
       }
       value = value[path[i]];
     }
-    const mappedValue = map(response, value);
+    const mappedValue = map(response, value, parentObject, key);
     parentObject[key] = mappedValue;
 
     // If this is the root object for a model reference, where `handler.value`
@@ -1040,7 +1043,7 @@ function waitForReference<T>(
   return (null: any);
 }
 
-function createServerReferenceProxy<A: Iterable<any>, T>(
+function loadServerReference<A: Iterable<any>, T>(
   response: Response,
   metaData: {
     id: any,
@@ -1049,13 +1052,161 @@ function createServerReferenceProxy<A: Iterable<any>, T>(
     env?: string, // DEV-only
     location?: ReactCallSite, // DEV-only
   },
+  parentObject: Object,
+  key: string,
 ): (...A) => Promise<T> {
-  return createBoundServerReference(
-    metaData,
-    response._callServer,
-    response._encodeFormAction,
-    __DEV__ ? response._debugFindSourceMapURL : undefined,
-  );
+  if (!response._serverReferenceConfig) {
+    // In the normal case, we can't load this Server Reference in the current environment and
+    // we just return a proxy to it.
+    return createBoundServerReference(
+      metaData,
+      response._callServer,
+      response._encodeFormAction,
+      __DEV__ ? response._debugFindSourceMapURL : undefined,
+    );
+  }
+  // If we have a module mapping we can load the real version of this Server Reference.
+  const serverReference: ClientReference<T> =
+    resolveServerReference<$FlowFixMe>(
+      response._serverReferenceConfig,
+      metaData.id,
+    );
+
+  let promise: null | Thenable<any> = preloadModule(serverReference);
+  if (!promise) {
+    if (!metaData.bound) {
+      return (requireModule(serverReference): any);
+    } else {
+      promise = Promise.resolve(metaData.bound);
+    }
+  } else if (metaData.bound) {
+    promise = Promise.all([promise, metaData.bound]);
+  }
+
+  let handler: InitializationHandler;
+  if (initializingHandler) {
+    handler = initializingHandler;
+    handler.deps++;
+  } else {
+    handler = initializingHandler = {
+      parent: null,
+      chunk: null,
+      value: null,
+      deps: 1,
+      errored: false,
+    };
+  }
+
+  function fulfill(): void {
+    let resolvedValue = (requireModule(serverReference): any);
+
+    if (metaData.bound) {
+      // This promise is coming from us and should have initilialized by now.
+      const boundArgs: Array<any> = (metaData.bound: any).value.slice(0);
+      boundArgs.unshift(null); // this
+      resolvedValue = resolvedValue.bind.apply(resolvedValue, boundArgs);
+    }
+
+    parentObject[key] = resolvedValue;
+
+    // If this is the root object for a model reference, where `handler.value`
+    // is a stale `null`, the resolved value can be used directly.
+    if (key === '' && handler.value === null) {
+      handler.value = resolvedValue;
+    }
+
+    // If the parent object is an unparsed React element tuple, we also need to
+    // update the props and owner of the parsed element object (i.e.
+    // handler.value).
+    if (
+      parentObject[0] === REACT_ELEMENT_TYPE &&
+      typeof handler.value === 'object' &&
+      handler.value !== null &&
+      handler.value.$$typeof === REACT_ELEMENT_TYPE
+    ) {
+      const element: any = handler.value;
+      switch (key) {
+        case '3':
+          element.props = resolvedValue;
+          break;
+        case '4':
+          if (__DEV__) {
+            element._owner = resolvedValue;
+          }
+          break;
+      }
+    }
+
+    handler.deps--;
+
+    if (handler.deps === 0) {
+      const chunk = handler.chunk;
+      if (chunk === null || chunk.status !== BLOCKED) {
+        return;
+      }
+      const resolveListeners = chunk.value;
+      const initializedChunk: InitializedChunk<T> = (chunk: any);
+      initializedChunk.status = INITIALIZED;
+      initializedChunk.value = handler.value;
+      if (resolveListeners !== null) {
+        wakeChunk(resolveListeners, handler.value);
+      }
+    }
+  }
+
+  function reject(error: mixed): void {
+    if (handler.errored) {
+      // We've already errored. We could instead build up an AggregateError
+      // but if there are multiple errors we just take the first one like
+      // Promise.all.
+      return;
+    }
+    const blockedValue = handler.value;
+    handler.errored = true;
+    handler.value = error;
+    const chunk = handler.chunk;
+    if (chunk === null || chunk.status !== BLOCKED) {
+      return;
+    }
+
+    if (__DEV__) {
+      if (
+        typeof blockedValue === 'object' &&
+        blockedValue !== null &&
+        blockedValue.$$typeof === REACT_ELEMENT_TYPE
+      ) {
+        const element = blockedValue;
+        // Conceptually the error happened inside this Element but right before
+        // it was rendered. We don't have a client side component to render but
+        // we can add some DebugInfo to explain that this was conceptually a
+        // Server side error that errored inside this element. That way any stack
+        // traces will point to the nearest JSX that errored - e.g. during
+        // serialization.
+        const erroredComponent: ReactComponentInfo = {
+          name: getComponentNameFromType(element.type) || '',
+          owner: element._owner,
+        };
+        if (enableOwnerStacks) {
+          // $FlowFixMe[cannot-write]
+          erroredComponent.debugStack = element._debugStack;
+          if (supportsCreateTask) {
+            // $FlowFixMe[cannot-write]
+            erroredComponent.debugTask = element._debugTask;
+          }
+        }
+        const chunkDebugInfo: ReactDebugInfo =
+          chunk._debugInfo || (chunk._debugInfo = []);
+        chunkDebugInfo.push(erroredComponent);
+      }
+    }
+
+    triggerErrorOnChunk(chunk, error);
+  }
+
+  promise.then(fulfill, reject);
+
+  // Return a place holder value for now.
+  return (null: any);
 }
 
 function getOutlinedModel<T>(
@@ -1063,7 +1214,7 @@ function getOutlinedModel<T>(
   reference: string,
   parentObject: Object,
   key: string,
-  map: (response: Response, model: any) => T,
+  map: (response: Response, model: any, parentObject: Object, key: string) => T,
 ): T {
   const path = reference.split(':');
   const id = parseInt(path[0], 16);
@@ -1098,7 +1249,7 @@ function getOutlinedModel<T>(
         }
         value = value[path[i]];
       }
-      const chunkValue = map(response, value);
+      const chunkValue = map(response, value, parentObject, key);
       if (__DEV__ && chunk._debugInfo) {
         // If we have a direct reference to an object that was rendered by a synchronous
         // server component, it might have some debug info about how it was rendered.
@@ -1243,7 +1394,7 @@ function parseModelString(
           ref,
           parentObject,
           key,
-          createServerReferenceProxy,
+          loadServerReference,
         );
       }
       case 'T': {
@@ -1419,7 +1570,8 @@ function missingCall() {
 
 function ResponseInstance(
   this: $FlowFixMe,
-  bundlerConfig: SSRModuleMap,
+  bundlerConfig: ServerConsumerModuleMap,
+  serverReferenceConfig: null | ServerManifest,
   moduleLoading: ModuleLoading,
   callServer: void | CallServerCallback,
   encodeFormAction: void | EncodeFormActionCallback,
@@ -1431,6 +1583,7 @@ function ResponseInstance(
 ) {
   const chunks: Map<number, SomeChunk<any>> = new Map();
   this._bundlerConfig = bundlerConfig;
+  this._serverReferenceConfig = serverReferenceConfig;
   this._moduleLoading = moduleLoading;
   this._callServer = callServer !== undefined ? callServer : missingCall;
   this._encodeFormAction = encodeFormAction;
@@ -1484,7 +1637,8 @@ function ResponseInstance(
 }
 
 export function createResponse(
-  bundlerConfig: SSRModuleMap,
+  bundlerConfig: ServerConsumerModuleMap,
+  serverReferenceConfig: null | ServerManifest,
   moduleLoading: ModuleLoading,
   callServer: void | CallServerCallback,
   encodeFormAction: void | EncodeFormActionCallback,
@@ -1497,6 +1651,7 @@ export function createResponse(
   // $FlowFixMe[invalid-constructor]: the shapes are exact here but Flow doesn't like constructors
   return new ResponseInstance(
     bundlerConfig,
+    serverReferenceConfig,
     moduleLoading,
     callServer,
     encodeFormAction,
@@ -1928,7 +2083,7 @@ function resolveErrorDev(
   }
 
   let error;
-  if (!enableOwnerStacks) {
+  if (!enableOwnerStacks && !enableServerComponentLogs) {
     // Executing Error within a native stack isn't really limited to owner stacks
     // but we gate it behind the same flag for now while iterating.
     // eslint-disable-next-line react-internal/prod-error-codes
@@ -2119,12 +2274,14 @@ function createFakeFunction<T>(
       '\n//# sourceURL=rsc://React/' +
       encodeURIComponent(environmentName) +
       '/' +
-      filename +
+      encodeURI(filename) +
       '?' +
       fakeFunctionIdx++;
     code += '\n//# sourceMappingURL=' + sourceMap;
   } else if (filename) {
-    code += '\n//# sourceURL=' + filename;
+    code += '\n//# sourceURL=' + encodeURI(filename);
+  } else {
+    code += '\n//# sourceURL=<anonymous>';
   }
 
   let fn: FakeFunction<T>;
@@ -2463,9 +2620,7 @@ function resolveConsoleEntry(
   const env = payload[3];
   const args = payload.slice(4);
 
-  if (!enableOwnerStacks) {
-    // Printing with stack isn't really limited to owner stacks but
-    // we gate it behind the same flag for now while iterating.
+  if (!enableOwnerStacks && !enableServerComponentLogs) {
     bindToConsole(methodName, args, env)();
     return;
   }

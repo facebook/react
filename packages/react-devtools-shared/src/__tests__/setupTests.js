@@ -256,7 +256,9 @@ beforeEach(() => {
     },
   });
 
-  const store = new Store(((bridge: any): FrontendBridge));
+  const store = new Store(((bridge: any): FrontendBridge), {
+    supportsTimeline: true,
+  });
 
   const agent = new Agent(((bridge: any): BackendBridge));
   const hook = global.__REACT_DEVTOOLS_GLOBAL_HOOK__;

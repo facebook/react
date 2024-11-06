@@ -21,10 +21,10 @@ function App() {
   const { foo } = useContext_withSelector(MyContext, _temp);
   const { bar } = useContext_withSelector(MyContext, _temp2);
   let t0;
-  if ($[0] !== foo || $[1] !== bar) {
+  if ($[0] !== bar || $[1] !== foo) {
     t0 = <Bar foo={foo} bar={bar} />;
-    $[0] = foo;
-    $[1] = bar;
+    $[0] = bar;
+    $[1] = foo;
     $[2] = t0;
   } else {
     t0 = $[2];

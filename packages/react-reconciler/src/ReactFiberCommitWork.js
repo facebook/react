@@ -1325,7 +1325,9 @@ function commitDeletionEffectsOnFiber(
     }
     case ScopeComponent: {
       if (enableScopeAPI) {
-        safelyDetachRef(deletedFiber, nearestMountedAncestor);
+        if (!offscreenSubtreeWasHidden) {
+          safelyDetachRef(deletedFiber, nearestMountedAncestor);
+        }
       }
       recursivelyTraverseDeletionEffects(
         finishedRoot,
@@ -1335,7 +1337,9 @@ function commitDeletionEffectsOnFiber(
       return;
     }
     case OffscreenComponent: {
-      safelyDetachRef(deletedFiber, nearestMountedAncestor);
+      if (!offscreenSubtreeWasHidden) {
+        safelyDetachRef(deletedFiber, nearestMountedAncestor);
+      }
       if (disableLegacyMode || deletedFiber.mode & ConcurrentMode) {
         // If this offscreen component is hidden, we already unmounted it. Before
         // deleting the children, track that it's already unmounted so that we
@@ -1572,7 +1576,7 @@ function recursivelyTraverseMutationEffects(
   lanes: Lanes,
 ) {
   // Deletions effects can be scheduled on any fiber type. They need to happen
-  // before the children effects hae fired.
+  // before the children effects have fired.
   const deletions = parentFiber.deletions;
   if (deletions !== null) {
     for (let i = 0; i < deletions.length; i++) {
@@ -1637,7 +1641,7 @@ function commitMutationEffectsOnFiber(
       commitReconciliationEffects(finishedWork);
 
       if (flags & Ref) {
-        if (current !== null) {
+        if (!offscreenSubtreeWasHidden && current !== null) {
           safelyDetachRef(current, current.return);
         }
       }
@@ -1660,7 +1664,7 @@ function commitMutationEffectsOnFiber(
         commitReconciliationEffects(finishedWork);
 
         if (flags & Ref) {
-          if (current !== null) {
+          if (!offscreenSubtreeWasHidden && current !== null) {
             safelyDetachRef(current, current.return);
           }
         }
@@ -1745,7 +1749,7 @@ function commitMutationEffectsOnFiber(
       commitReconciliationEffects(finishedWork);
 
       if (flags & Ref) {
-        if (current !== null) {
+        if (!offscreenSubtreeWasHidden && current !== null) {
           safelyDetachRef(current, current.return);
         }
       }
@@ -1961,7 +1965,7 @@ function commitMutationEffectsOnFiber(
     }
     case OffscreenComponent: {
       if (flags & Ref) {
-        if (current !== null) {
+        if (!offscreenSubtreeWasHidden && current !== null) {
           safelyDetachRef(current, current.return);
         }
       }
@@ -2074,10 +2078,12 @@ function commitMutationEffectsOnFiber(
         // TODO: This is a temporary solution that allowed us to transition away
         // from React Flare on www.
         if (flags & Ref) {
-          if (current !== null) {
+          if (!offscreenSubtreeWasHidden && current !== null) {
             safelyDetachRef(finishedWork, finishedWork.return);
           }
-          safelyAttachRef(finishedWork, finishedWork.return);
+          if (!offscreenSubtreeIsHidden) {
+            safelyAttachRef(finishedWork, finishedWork.return);
+          }
         }
         if (flags & Update) {
           const scopeInstance = finishedWork.stateNode;
