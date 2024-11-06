@@ -23,7 +23,6 @@ import {
   enableDebugTracing,
   enableSchedulingProfiler,
   enableLazyContextPropagation,
-  enableRefAsProp,
   disableDefaultPropsExceptForClasses,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
@@ -1252,14 +1251,12 @@ export function resolveClassComponentProps(
 ): Object {
   let newProps = baseProps;
 
-  if (enableRefAsProp) {
-    // Remove ref from the props object, if it exists.
-    if ('ref' in baseProps) {
-      newProps = ({}: any);
-      for (const propName in baseProps) {
-        if (propName !== 'ref') {
-          newProps[propName] = baseProps[propName];
-        }
+  // Remove ref from the props object, if it exists.
+  if ('ref' in baseProps) {
+    newProps = ({}: any);
+    for (const propName in baseProps) {
+      if (propName !== 'ref') {
+        newProps[propName] = baseProps[propName];
       }
     }
   }

@@ -25,7 +25,6 @@ export const {
   enableDO_NOT_USE_disableStrictPassiveEffect,
   enableHiddenSubtreeInsertionEffectCleanup,
   enableInfiniteRenderLoopDetection,
-  enableLogStringRefsProd,
   enableNoCloningMemoCache,
   enableObjectFiber,
   enableRenderableContext,
@@ -100,8 +99,6 @@ export const enableSuspenseCallback = true;
 export const enableLegacyHidden = true;
 
 export const enableComponentStackLocations = true;
-
-export const enableRefAsProp = true;
 
 export const disableTextareaChildren = __EXPERIMENTAL__;
 

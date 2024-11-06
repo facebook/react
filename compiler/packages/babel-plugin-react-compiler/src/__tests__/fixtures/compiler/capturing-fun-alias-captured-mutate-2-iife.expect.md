@@ -32,7 +32,7 @@ import { mutate } from "shared-runtime";
 function component(foo, bar) {
   const $ = _c(3);
   let x;
-  if ($[0] !== foo || $[1] !== bar) {
+  if ($[0] !== bar || $[1] !== foo) {
     x = { foo };
     const y = { bar };
 
@@ -41,8 +41,8 @@ function component(foo, bar) {
     a.x = b;
 
     mutate(y);
-    $[0] = foo;
-    $[1] = bar;
+    $[0] = bar;
+    $[1] = foo;
     $[2] = x;
   } else {
     x = $[2];
