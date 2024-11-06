@@ -34,9 +34,9 @@ import { identity } from "shared-runtime";
 function useFoo(t0) {
   const $ = _c(11);
   const { input, inputHasAB, inputHasABC } = t0;
-  let x;
   let t1;
-  if ($[0] !== inputHasABC || $[1] !== input.a || $[2] !== inputHasAB) {
+  let x;
+  if ($[0] !== input.a || $[1] !== inputHasAB || $[2] !== inputHasABC) {
     t1 = Symbol.for("react.early_return_sentinel");
     bb0: {
       x = [];
@@ -75,14 +75,14 @@ function useFoo(t0) {
         x.push(t2);
       }
     }
-    $[0] = inputHasABC;
-    $[1] = input.a;
-    $[2] = inputHasAB;
-    $[3] = x;
-    $[4] = t1;
+    $[0] = input.a;
+    $[1] = inputHasAB;
+    $[2] = inputHasABC;
+    $[3] = t1;
+    $[4] = x;
   } else {
-    x = $[3];
-    t1 = $[4];
+    t1 = $[3];
+    x = $[4];
   }
   if (t1 !== Symbol.for("react.early_return_sentinel")) {
     return t1;

@@ -160,7 +160,6 @@ import {
   enablePostpone,
   enableHalt,
   enableRenderableContext,
-  enableRefAsProp,
   disableDefaultPropsExceptForClasses,
   enableAsyncIterableChildren,
   disableStringRefs,
@@ -1671,14 +1670,12 @@ export function resolveClassComponentProps(
 ): Object {
   let newProps = baseProps;
 
-  if (enableRefAsProp) {
-    // Remove ref from the props object, if it exists.
-    if ('ref' in baseProps) {
-      newProps = ({}: any);
-      for (const propName in baseProps) {
-        if (propName !== 'ref') {
-          newProps[propName] = baseProps[propName];
-        }
+  // Remove ref from the props object, if it exists.
+  if ('ref' in baseProps) {
+    newProps = ({}: any);
+    for (const propName in baseProps) {
+      if (propName !== 'ref') {
+        newProps[propName] = baseProps[propName];
       }
     }
   }
@@ -1973,7 +1970,7 @@ function renderForwardRef(
   ref: any,
 ): void {
   let propsWithoutRef;
-  if (enableRefAsProp && 'ref' in props) {
+  if ('ref' in props) {
     // `ref` is just a prop now, but `forwardRef` expects it to not appear in
     // the props object. This used to happen in the JSX runtime, but now we do
     // it here.
@@ -2595,16 +2592,10 @@ function retryNode(request: Request, task: Task): void {
         const key = element.key;
         const props = element.props;
 
-        let ref;
-        if (enableRefAsProp) {
-          // TODO: This is a temporary, intermediate step. Once the feature
-          // flag is removed, we should get the ref off the props object right
-          // before using it.
-          const refProp = props.ref;
-          ref = refProp !== undefined ? refProp : null;
-        } else {
-          ref = element.ref;
-        }
+        // TODO: We should get the ref off the props object right before using
+        // it.
+        const refProp = props.ref;
+        const ref = refProp !== undefined ? refProp : null;
 
         const debugTask: null | ConsoleTask =
           __DEV__ && enableOwnerStacks ? task.debugTask : null;

@@ -61,11 +61,11 @@ function useFoo(props) {
     z = $[4];
   }
   let t0;
-  if ($[5] !== x || $[6] !== y || $[7] !== myList) {
+  if ($[5] !== myList || $[6] !== x || $[7] !== y) {
     t0 = { x, y, myList };
-    $[5] = x;
-    $[6] = y;
-    $[7] = myList;
+    $[5] = myList;
+    $[6] = x;
+    $[7] = y;
     $[8] = t0;
   } else {
     t0 = $[8];

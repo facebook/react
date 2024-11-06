@@ -23,6 +23,8 @@ import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
+import DefaultPrepareStackTrace from 'shared/DefaultPrepareStackTrace';
+
 let prefix;
 let suffix;
 export function describeBuiltInComponentFrame(name: string): string {
@@ -92,8 +94,7 @@ export function describeNativeComponentFrame(
 
   reentry = true;
   const previousPrepareStackTrace = Error.prepareStackTrace;
-  // $FlowFixMe[incompatible-type] It does accept undefined.
-  Error.prepareStackTrace = undefined;
+  Error.prepareStackTrace = DefaultPrepareStackTrace;
   let previousDispatcher = null;
 
   if (__DEV__) {
