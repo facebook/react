@@ -273,9 +273,6 @@ describe('ReactElementClone', () => {
     if (gate(flags => flags.disableStringRefs)) {
       expect(component.childRef).toEqual({current: null});
       expect(component.parentRef.current.xyzRef.current.tagName).toBe('SPAN');
-    } else if (gate(flags => false)) {
-      expect(component.childRef).toEqual({current: null});
-      expect(component.parentRef.current.xyzRef.current.tagName).toBe('SPAN');
     } else if (gate(flags => !flags.disableStringRefs)) {
       expect(component.childRef).toEqual({current: null});
       expect(component.parentRef.current.xyzRef.current.tagName).toBe('SPAN');
@@ -413,9 +410,6 @@ describe('ReactElementClone', () => {
         {withoutStack: true},
       );
       expect(clone.props).toEqual({foo: 'ef', ref: '34'});
-    } else if (gate(flags => false)) {
-      expect(clone.ref).toBe(element.ref);
-      expect(clone.props).toEqual({foo: 'ef'});
     } else if (gate(flags => !flags.disableStringRefs)) {
       expect(() => {
         expect(clone.ref).toBe(element.ref);
