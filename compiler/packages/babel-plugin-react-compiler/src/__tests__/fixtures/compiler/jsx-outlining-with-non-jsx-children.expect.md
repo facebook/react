@@ -112,16 +112,16 @@ function _temp(t0) {
     t2 = $[4];
   }
   let t3;
-  if ($[5] !== x || $[6] !== t1 || $[7] !== t2) {
+  if ($[5] !== t1 || $[6] !== t2 || $[7] !== x) {
     t3 = (
       <Bar x={x}>
         {t1}
         {t2}
       </Bar>
     );
-    $[5] = x;
-    $[6] = t1;
-    $[7] = t2;
+    $[5] = t1;
+    $[6] = t2;
+    $[7] = x;
     $[8] = t3;
   } else {
     t3 = $[8];
@@ -153,15 +153,15 @@ function Baz(t0) {
   const $ = _c(3);
   const { i, children } = t0;
   let t1;
-  if ($[0] !== i || $[1] !== children) {
+  if ($[0] !== children || $[1] !== i) {
     t1 = (
       <>
         {i}
         {children}
       </>
     );
-    $[0] = i;
-    $[1] = children;
+    $[0] = children;
+    $[1] = i;
     $[2] = t1;
   } else {
     t1 = $[2];
