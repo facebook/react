@@ -33,7 +33,7 @@ const { throwInput } = require("shared-runtime");
 function Component(props) {
   const $ = _c(3);
   let t0;
-  if ($[0] !== props.y || $[1] !== props.e) {
+  if ($[0] !== props.e || $[1] !== props.y) {
     t0 = Symbol.for("react.early_return_sentinel");
     bb0: {
       try {
@@ -47,8 +47,8 @@ function Component(props) {
         break bb0;
       }
     }
-    $[0] = props.y;
-    $[1] = props.e;
+    $[0] = props.e;
+    $[1] = props.y;
     $[2] = t0;
   } else {
     t0 = $[2];

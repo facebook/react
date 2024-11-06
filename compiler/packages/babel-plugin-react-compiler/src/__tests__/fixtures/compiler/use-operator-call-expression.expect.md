@@ -89,10 +89,10 @@ function Inner(props) {
     t2 = $[3];
   }
   let t3;
-  if ($[4] !== t2 || $[5] !== output) {
+  if ($[4] !== output || $[5] !== t2) {
     t3 = <ValidateMemoization inputs={t2} output={output} />;
-    $[4] = t2;
-    $[5] = output;
+    $[4] = output;
+    $[5] = t2;
     $[6] = t3;
   } else {
     t3 = $[6];

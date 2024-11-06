@@ -19,7 +19,9 @@
     },
     "verbatimModuleSyntax": true,
     "module": "ESNext",
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "moduleDetection": "force"
+
   },
   "include": [
     "./compiler/**/*.js",

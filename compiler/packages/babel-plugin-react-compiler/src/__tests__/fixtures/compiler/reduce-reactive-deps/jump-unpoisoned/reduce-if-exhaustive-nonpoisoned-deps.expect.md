@@ -33,8 +33,8 @@ import { identity } from "shared-runtime";
 function useFoo(t0) {
   const $ = _c(9);
   const { input, hasAB, returnNull } = t0;
-  let x;
   let t1;
+  let x;
   if ($[0] !== hasAB || $[1] !== input.a || $[2] !== returnNull) {
     t1 = Symbol.for("react.early_return_sentinel");
     bb0: {
@@ -68,11 +68,11 @@ function useFoo(t0) {
     $[0] = hasAB;
     $[1] = input.a;
     $[2] = returnNull;
-    $[3] = x;
-    $[4] = t1;
+    $[3] = t1;
+    $[4] = x;
   } else {
-    x = $[3];
-    t1 = $[4];
+    t1 = $[3];
+    x = $[4];
   }
   if (t1 !== Symbol.for("react.early_return_sentinel")) {
     return t1;

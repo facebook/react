@@ -430,6 +430,131 @@ describe('ReactFreshIntegration', () => {
       await patch(code);
     });
 
+    // @gate __DEV__ && enableActivity
+    it('ignores ref for functional component in hidden subtree', async () => {
+      const code = `
+        import {unstable_Activity as Activity} from 'react';
+
+        // Avoid creating a new component on Fast Refresh.
+        global.A = global.A ?? function A() {
+          return <div />;
+        }
+        const A = global.A;
+
+        function hiddenRef() {
+          throw new Error('Unexpected hiddenRef() invocation.');
+        }
+
+        export default function App() {
+          return (
+            <Activity mode="hidden">
+              <A ref={hiddenRef} />
+            </Activity>
+          );
+        };
+      `;
+
+      await render(code);
+      await patch(code);
+    });
+
+    // @gate __DEV__ && enableActivity
+    it('ignores ref for ref forwarding component in hidden subtree', async () => {
+      const code = `
+        import {
+          forwardRef,
+          unstable_Activity as Activity,
+        } from 'react';
+
+        // Avoid creating a new component on Fast Refresh.
+        global.A = global.A ?? forwardRef(function A(props, ref) {
+          return <div ref={ref} />;
+        });
+        const A = global.A;
+
+        function hiddenRef() {
+          throw new Error('Unexpected hiddenRef() invocation.');
+        }
+
+        export default function App() {
+          return (
+            <Activity mode="hidden">
+              <A ref={hiddenRef} />
+            </Activity>
+          );
+        };
+      `;
+
+      await render(code);
+      await patch(code);
+    });
+
+    // @gate __DEV__ && enableActivity
+    it('ignores ref for simple memo component in hidden subtree', async () => {
+      const code = `
+        import {
+          memo,
+          unstable_Activity as Activity,
+        } from 'react';
+
+        // Avoid creating a new component on Fast Refresh.
+        global.A = global.A ?? memo(function A() {
+          return <div />;
+        });
+        const A = global.A;
+
+        function hiddenRef() {
+          throw new Error('Unexpected hiddenRef() invocation.');
+        }
+
+        export default function App() {
+          return (
+            <Activity mode="hidden">
+              <A ref={hiddenRef} />
+            </Activity>
+          );
+        };
+      `;
+
+      await render(code);
+      await patch(code);
+    });
+
+    // @gate __DEV__ && enableActivity
+    it('ignores ref for memo component in hidden subtree', async () => {
+      // A custom compare function means this won't use SimpleMemoComponent.
+      const code = `
+        import {
+          memo,
+          unstable_Activity as Activity,
+        } from 'react';
+
+        // Avoid creating a new component on Fast Refresh.
+        global.A = global.A ?? memo(
+          function A() {
+            return <div />;
+          },
+          () => false,
+        );
+        const A = global.A;
+
+        function hiddenRef() {
+          throw new Error('Unexpected hiddenRef() invocation.');
+        }
+
+        export default function App() {
+          return (
+            <Activity mode="hidden">
+              <A ref={hiddenRef} />
+            </Activity>
+          );
+        };
+      `;
+
+      await render(code);
+      await patch(code);
+    });
+
     it('reloads HOCs if they return functions', async () => {
       if (__DEV__) {
         await render(`

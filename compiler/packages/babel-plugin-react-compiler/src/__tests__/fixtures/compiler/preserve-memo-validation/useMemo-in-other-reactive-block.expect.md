@@ -40,7 +40,7 @@ function useFoo(minWidth, otherProp) {
   const $ = _c(6);
   const [width] = useState(1);
   let t0;
-  if ($[0] !== width || $[1] !== minWidth || $[2] !== otherProp) {
+  if ($[0] !== minWidth || $[1] !== otherProp || $[2] !== width) {
     const x = [];
     let t1;
 
@@ -58,9 +58,9 @@ function useFoo(minWidth, otherProp) {
 
     arrayPush(x, otherProp);
     t0 = [style, x];
-    $[0] = width;
-    $[1] = minWidth;
-    $[2] = otherProp;
+    $[0] = minWidth;
+    $[1] = otherProp;
+    $[2] = width;
     $[3] = t0;
   } else {
     t0 = $[3];

@@ -44,10 +44,10 @@ function Component(t0) {
     t3 = $[1];
   }
   let t4;
-  if ($[2] !== t3 || $[3] !== propA) {
+  if ($[2] !== propA || $[3] !== t3) {
     t4 = { value: t3, other: propA };
-    $[2] = t3;
-    $[3] = propA;
+    $[2] = propA;
+    $[3] = t3;
     $[4] = t4;
   } else {
     t4 = $[4];

@@ -38,16 +38,24 @@ import { identity } from "shared-runtime";
  * try-catch block, as that might throw
  */
 function useFoo(maybeNullObject) {
-  const $ = _c(2);
+  const $ = _c(4);
   let y;
-  if ($[0] !== maybeNullObject.value.inner) {
+  if ($[0] !== maybeNullObject) {
     y = [];
     try {
-      y.push(identity(maybeNullObject.value.inner));
+      let t0;
+      if ($[2] !== maybeNullObject.value.inner) {
+        t0 = identity(maybeNullObject.value.inner);
+        $[2] = maybeNullObject.value.inner;
+        $[3] = t0;
+      } else {
+        t0 = $[3];
+      }
+      y.push(t0);
     } catch {
       y.push("null");
     }
-    $[0] = maybeNullObject.value.inner;
+    $[0] = maybeNullObject;
     $[1] = y;
   } else {
     y = $[1];

@@ -50,22 +50,22 @@ function Foo(t0) {
   const fn = t1;
   useIdentity(null);
   let arr;
-  if ($[2] !== cond || $[3] !== a.b?.c.e) {
+  if ($[2] !== a.b?.c.e || $[3] !== cond) {
     arr = makeArray();
     if (cond) {
       arr.push(identity(a.b?.c.e));
     }
-    $[2] = cond;
-    $[3] = a.b?.c.e;
+    $[2] = a.b?.c.e;
+    $[3] = cond;
     $[4] = arr;
   } else {
     arr = $[4];
   }
   let t2;
-  if ($[5] !== fn || $[6] !== arr) {
+  if ($[5] !== arr || $[6] !== fn) {
     t2 = <Stringify fn={fn} arr={arr} shouldInvokeFns={true} />;
-    $[5] = fn;
-    $[6] = arr;
+    $[5] = arr;
+    $[6] = fn;
     $[7] = t2;
   } else {
     t2 = $[7];

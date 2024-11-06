@@ -216,19 +216,20 @@ type OutlinedJsxAttribute = {
   place: Place;
 };
 
-let id = 1;
-function generateName(seen: Set<string>, oldName: string): string {
-  let newName = oldName;
-  while (seen.has(newName)) {
-    newName = `${oldName}${id++}`;
-  }
-  seen.add(newName);
-  return newName;
-}
-
 function collectProps(
   instructions: Array<JsxInstruction>,
 ): Array<OutlinedJsxAttribute> | null {
+  let id = 1;
+
+  function generateName(oldName: string): string {
+    let newName = oldName;
+    while (seen.has(newName)) {
+      newName = `${oldName}${id++}`;
+    }
+    seen.add(newName);
+    return newName;
+  }
+
   const attributes: Array<OutlinedJsxAttribute> = [];
   const jsxIds = new Set(instructions.map(i => i.lvalue.identifier.id));
   const seen: Set<string> = new Set();
@@ -242,7 +243,7 @@ function collectProps(
       }
 
       if (at.kind === 'JsxAttribute') {
-        const newName = generateName(seen, at.name);
+        const newName = generateName(at.name);
         attributes.push({
           originalName: at.name,
           newName,
@@ -258,7 +259,7 @@ function collectProps(
         }
 
         promoteTemporary(child.identifier);
-        const newName = generateName(seen, 't');
+        const newName = generateName('t');
         attributes.push({
           originalName: child.identifier.name!.value,
           newName: newName,
