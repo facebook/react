@@ -26,7 +26,7 @@ export {
 export {
   Effect,
   ValueKind,
-  parseConfigPragma,
+  parseConfigPragmaForTests,
   printHIR,
   validateEnvironmentConfig,
   type EnvironmentConfig,

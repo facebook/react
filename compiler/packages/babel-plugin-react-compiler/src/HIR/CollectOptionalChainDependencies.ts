@@ -3,7 +3,6 @@ import {assertNonNull} from './CollectHoistablePropertyLoads';
 import {
   BlockId,
   BasicBlock,
-  InstructionId,
   IdentifierId,
   ReactiveScopeDependency,
   BranchTerminal,
@@ -15,6 +14,8 @@ import {
   OptionalTerminal,
   HIRFunction,
   DependencyPathEntry,
+  Instruction,
+  Terminal,
 } from './HIR';
 import {printIdentifier} from './PrintHIR';
 
@@ -22,25 +23,14 @@ export function collectOptionalChainSidemap(
   fn: HIRFunction,
 ): OptionalChainSidemap {
   const context: OptionalTraversalContext = {
+    currFn: fn,
     blocks: fn.body.blocks,
     seenOptionals: new Set(),
     processedInstrsInOptional: new Set(),
     temporariesReadInOptional: new Map(),
     hoistableObjects: new Map(),
   };
-  for (const [_, block] of fn.body.blocks) {
-    if (
-      block.terminal.kind === 'optional' &&
-      !context.seenOptionals.has(block.id)
-    ) {
-      traverseOptionalBlock(
-        block as TBasicBlock<OptionalTerminal>,
-        context,
-        null,
-      );
-    }
-  }
-
+  traverseFunction(fn, context);
   return {
     temporariesReadInOptional: context.temporariesReadInOptional,
     processedInstrsInOptional: context.processedInstrsInOptional,
@@ -96,8 +86,10 @@ export type OptionalChainSidemap = {
    * bb5:
    *   $5 = MethodCall $2.$4() <--- here, we want to take a dep on $2 and $4!
    * ```
+   *
+   * Also note that InstructionIds are not unique across inner functions.
    */
-  processedInstrsInOptional: ReadonlySet<InstructionId>;
+  processedInstrsInOptional: ReadonlySet<Instruction | Terminal>;
   /**
    * Records optional chains for which we can safely evaluate non-optional
    * PropertyLoads. e.g. given `a?.b.c`, we can evaluate any load from `a?.b` at
@@ -115,16 +107,46 @@ export type OptionalChainSidemap = {
 };
 
 type OptionalTraversalContext = {
+  currFn: HIRFunction;
   blocks: ReadonlyMap<BlockId, BasicBlock>;
 
   // Track optional blocks to avoid outer calls into nested optionals
   seenOptionals: Set<BlockId>;
 
-  processedInstrsInOptional: Set<InstructionId>;
+  processedInstrsInOptional: Set<Instruction | Terminal>;
   temporariesReadInOptional: Map<IdentifierId, ReactiveScopeDependency>;
   hoistableObjects: Map<BlockId, ReactiveScopeDependency>;
 };
 
+function traverseFunction(
+  fn: HIRFunction,
+  context: OptionalTraversalContext,
+): void {
+  for (const [_, block] of fn.body.blocks) {
+    for (const instr of block.instructions) {
+      if (
+        instr.value.kind === 'FunctionExpression' ||
+        instr.value.kind === 'ObjectMethod'
+      ) {
+        traverseFunction(instr.value.loweredFunc.func, {
+          ...context,
+          currFn: instr.value.loweredFunc.func,
+          blocks: instr.value.loweredFunc.func.body.blocks,
+        });
+      }
+    }
+    if (
+      block.terminal.kind === 'optional' &&
+      !context.seenOptionals.has(block.id)
+    ) {
+      traverseOptionalBlock(
+        block as TBasicBlock<OptionalTerminal>,
+        context,
+        null,
+      );
+    }
+  }
+}
 /**
  * Match the consequent and alternate blocks of an optional.
  * @returns propertyload computed by the consequent block, or null if the
@@ -137,7 +159,7 @@ function matchOptionalTestBlock(
   consequentId: IdentifierId;
   property: string;
   propertyId: IdentifierId;
-  storeLocalInstrId: InstructionId;
+  storeLocalInstr: Instruction;
   consequentGoto: BlockId;
 } | null {
   const consequentBlock = assertNonNull(blocks.get(terminal.consequent));
@@ -149,7 +171,7 @@ function matchOptionalTestBlock(
     const propertyLoad: TInstruction<PropertyLoad> = consequentBlock
       .instructions[0] as TInstruction<PropertyLoad>;
     const storeLocal: StoreLocal = consequentBlock.instructions[1].value;
-    const storeLocalInstrId = consequentBlock.instructions[1].id;
+    const storeLocalInstr = consequentBlock.instructions[1];
     CompilerError.invariant(
       propertyLoad.value.object.identifier.id === terminal.test.identifier.id,
       {
@@ -189,7 +211,7 @@ function matchOptionalTestBlock(
       consequentId: storeLocal.lvalue.place.identifier.id,
       property: propertyLoad.value.property,
       propertyId: propertyLoad.lvalue.identifier.id,
-      storeLocalInstrId,
+      storeLocalInstr,
       consequentGoto: consequentBlock.terminal.block,
     };
   }
@@ -369,10 +391,8 @@ function traverseOptionalBlock(
       },
     ],
   };
-  context.processedInstrsInOptional.add(
-    matchConsequentResult.storeLocalInstrId,
-  );
-  context.processedInstrsInOptional.add(test.id);
+  context.processedInstrsInOptional.add(matchConsequentResult.storeLocalInstr);
+  context.processedInstrsInOptional.add(test);
   context.temporariesReadInOptional.set(
     matchConsequentResult.consequentId,
     load,

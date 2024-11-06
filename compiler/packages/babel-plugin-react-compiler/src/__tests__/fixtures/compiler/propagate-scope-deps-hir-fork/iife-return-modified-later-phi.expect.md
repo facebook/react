@@ -29,7 +29,7 @@ import { c as _c } from "react/compiler-runtime"; // @enablePropagateDepsInHIR
 function Component(props) {
   const $ = _c(3);
   let items;
-  if ($[0] !== props.cond || $[1] !== props.a) {
+  if ($[0] !== props.a || $[1] !== props.cond) {
     let t0;
     if (props.cond) {
       t0 = [];
@@ -39,8 +39,8 @@ function Component(props) {
     items = t0;
 
     items?.push(props.a);
-    $[0] = props.cond;
-    $[1] = props.a;
+    $[0] = props.a;
+    $[1] = props.cond;
     $[2] = items;
   } else {
     items = $[2];

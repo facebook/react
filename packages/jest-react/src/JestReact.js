@@ -6,7 +6,7 @@
  */
 
 import {REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE} from 'shared/ReactSymbols';
-import {disableStringRefs, enableRefAsProp} from 'shared/ReactFeatureFlags';
+import {disableStringRefs} from 'shared/ReactFeatureFlags';
 const {assertConsoleLogsCleared} = require('internal-test-utils/consoleMock');
 
 import isArray from 'shared/isArray';
@@ -42,7 +42,7 @@ function assertYieldsWereCleared(root) {
 }
 
 function createJSXElementForTestComparison(type, props) {
-  if (__DEV__ && enableRefAsProp) {
+  if (__DEV__) {
     const element = {
       $$typeof: REACT_ELEMENT_TYPE,
       type: type,
