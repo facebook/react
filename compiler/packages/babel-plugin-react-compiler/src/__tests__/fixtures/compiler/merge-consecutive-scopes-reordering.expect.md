@@ -60,7 +60,7 @@ function Component() {
     t2 = $[3];
   }
   let t3;
-  if ($[4] !== t1 || $[5] !== t0) {
+  if ($[4] !== t0 || $[5] !== t1) {
     t3 = (
       <div>
         {t2}
@@ -68,8 +68,8 @@ function Component() {
         {t0}
       </div>
     );
-    $[4] = t1;
-    $[5] = t0;
+    $[4] = t0;
+    $[5] = t1;
     $[6] = t3;
   } else {
     t3 = $[6];

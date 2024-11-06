@@ -1299,20 +1299,7 @@ describe('ReactIncrementalSideEffects', () => {
 
     ReactNoop.render(<Foo show={true} />);
 
-    if (gate(flags => flags.enableRefAsProp)) {
-      await waitForAll([]);
-    } else {
-      await expect(async () => await waitForAll([])).toErrorDev(
-        'Function components cannot be given refs. ' +
-          'Attempts to access this ref will fail. ' +
-          'Did you mean to use React.forwardRef()?\n\n' +
-          'Check the render method ' +
-          'of `Foo`.\n' +
-          '    in FunctionComponent (at **)\n' +
-          '    in div (at **)\n' +
-          '    in Foo (at **)',
-      );
-    }
+    await waitForAll([]);
 
     expect(ops).toEqual([
       classInstance,

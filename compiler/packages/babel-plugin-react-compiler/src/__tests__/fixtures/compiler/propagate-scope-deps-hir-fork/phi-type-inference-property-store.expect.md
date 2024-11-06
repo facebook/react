@@ -42,7 +42,7 @@ function Component(props) {
   }
   const x = t0;
   let t1;
-  if ($[1] !== props.cond || $[2] !== props.a) {
+  if ($[1] !== props.a || $[2] !== props.cond) {
     let y;
     if (props.cond) {
       y = {};
@@ -53,8 +53,8 @@ function Component(props) {
     y.x = x;
 
     t1 = [x, y];
-    $[1] = props.cond;
-    $[2] = props.a;
+    $[1] = props.a;
+    $[2] = props.cond;
     $[3] = t1;
   } else {
     t1 = $[3];
