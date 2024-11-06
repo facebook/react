@@ -2566,22 +2566,19 @@ function unstable_useContextWithBailout(context, select) {
   else {
     JSCompiler_temp = currentlyRenderingFiber;
     var value = context._currentValue2;
-    if (lastFullyObservedContext !== context)
-      if (
-        ((context = {
-          context: context,
-          memoizedValue: value,
-          next: null,
-          select: select,
-          lastSelectedValue: select(value)
-        }),
-        null === lastContextDependency)
-      ) {
-        if (null === JSCompiler_temp) throw Error(formatProdErrorMessage(308));
-        lastContextDependency = context;
-        JSCompiler_temp.dependencies = { lanes: 0, firstContext: context };
-        JSCompiler_temp.flags |= 524288;
-      } else lastContextDependency = lastContextDependency.next = context;
+    context = {
+      context: context,
+      memoizedValue: value,
+      next: null,
+      select: select,
+      lastSelectedValue: select(value)
+    };
+    if (null === lastContextDependency) {
+      if (null === JSCompiler_temp) throw Error(formatProdErrorMessage(308));
+      lastContextDependency = context;
+      JSCompiler_temp.dependencies = { lanes: 0, firstContext: context };
+      JSCompiler_temp.flags |= 524288;
+    } else lastContextDependency = lastContextDependency.next = context;
     JSCompiler_temp = value;
   }
   return JSCompiler_temp;
@@ -5800,14 +5797,7 @@ function beginWork(current, workInProgress, renderLanes) {
 }
 var valueCursor = createCursor(null),
   currentlyRenderingFiber = null,
-  lastContextDependency = null,
-  lastFullyObservedContext = null;
-function resetContextDependencies() {
-  lastFullyObservedContext =
-    lastContextDependency =
-    currentlyRenderingFiber =
-      null;
-}
+  lastContextDependency = null;
 function pushProvider(providerFiber, context, nextValue) {
   push(valueCursor, context._currentValue2);
   context._currentValue2 = nextValue;
@@ -5981,7 +5971,7 @@ function checkIfContextChanged(currentDependencies) {
 }
 function prepareToReadContext(workInProgress) {
   currentlyRenderingFiber = workInProgress;
-  lastFullyObservedContext = lastContextDependency = null;
+  lastContextDependency = null;
   workInProgress = workInProgress.dependencies;
   null !== workInProgress && (workInProgress.firstContext = null);
 }
@@ -5994,16 +5984,13 @@ function readContextDuringReconciliation(consumer, context) {
 }
 function readContextForConsumer(consumer, context) {
   var value = context._currentValue2;
-  if (lastFullyObservedContext !== context)
-    if (
-      ((context = { context: context, memoizedValue: value, next: null }),
-      null === lastContextDependency)
-    ) {
-      if (null === consumer) throw Error(formatProdErrorMessage(308));
-      lastContextDependency = context;
-      consumer.dependencies = { lanes: 0, firstContext: context };
-      consumer.flags |= 524288;
-    } else lastContextDependency = lastContextDependency.next = context;
+  context = { context: context, memoizedValue: value, next: null };
+  if (null === lastContextDependency) {
+    if (null === consumer) throw Error(formatProdErrorMessage(308));
+    lastContextDependency = context;
+    consumer.dependencies = { lanes: 0, firstContext: context };
+    consumer.flags |= 524288;
+  } else lastContextDependency = lastContextDependency.next = context;
   return value;
 }
 var AbortControllerLocal =
@@ -9093,7 +9080,7 @@ function resetWorkInProgressStack() {
       var interruptedWork = workInProgress.return;
     else
       (interruptedWork = workInProgress),
-        resetContextDependencies(),
+        (lastContextDependency = currentlyRenderingFiber = null),
         resetHooksOnUnwind(interruptedWork),
         (thenableState$1 = null),
         (thenableIndexCounter$1 = 0),
@@ -9262,7 +9249,7 @@ function renderRootSync(root, lanes) {
     }
   while (1);
   lanes && root.shellSuspendCounter++;
-  resetContextDependencies();
+  lastContextDependency = currentlyRenderingFiber = null;
   executionContext = prevExecutionContext;
   ReactSharedInternals.H = prevDispatcher;
   ReactSharedInternals.A = prevAsyncDispatcher;
@@ -9377,7 +9364,7 @@ function renderRootConcurrent(root, lanes) {
       handleThrow(root, thrownValue$144);
     }
   while (1);
-  resetContextDependencies();
+  lastContextDependency = currentlyRenderingFiber = null;
   ReactSharedInternals.H = prevDispatcher;
   ReactSharedInternals.A = prevAsyncDispatcher;
   executionContext = prevExecutionContext;
@@ -9452,7 +9439,7 @@ function throwAndUnwindWorkLoop(
   thrownValue,
   suspendedReason
 ) {
-  resetContextDependencies();
+  lastContextDependency = currentlyRenderingFiber = null;
   resetHooksOnUnwind(unitOfWork);
   thenableState$1 = null;
   thenableIndexCounter$1 = 0;
@@ -10369,27 +10356,27 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component);
-var internals$jscomp$inline_1461 = {
+var internals$jscomp$inline_1465 = {
   bundleType: 0,
-  version: "19.0.0-www-modern-d1f04722-20241106",
+  version: "19.0.0-www-modern-66855b96-20241106",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: function () {
     return null;
   },
-  reconcilerVersion: "19.0.0-www-modern-d1f04722-20241106"
+  reconcilerVersion: "19.0.0-www-modern-66855b96-20241106"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1462 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1466 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1462.isDisabled &&
-    hook$jscomp$inline_1462.supportsFiber
+    !hook$jscomp$inline_1466.isDisabled &&
+    hook$jscomp$inline_1466.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1462.inject(
-        internals$jscomp$inline_1461
+      (rendererID = hook$jscomp$inline_1466.inject(
+        internals$jscomp$inline_1465
       )),
-        (injectedHook = hook$jscomp$inline_1462);
+        (injectedHook = hook$jscomp$inline_1466);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
@@ -10403,4 +10390,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.0.0-www-modern-d1f04722-20241106";
+exports.version = "19.0.0-www-modern-66855b96-20241106";

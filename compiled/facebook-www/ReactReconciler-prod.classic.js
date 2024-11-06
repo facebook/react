@@ -2664,23 +2664,19 @@ module.exports = function ($$$config) {
       var value = isPrimaryRenderer
         ? context._currentValue
         : context._currentValue2;
-      if (lastFullyObservedContext !== context)
-        if (
-          ((context = {
-            context: context,
-            memoizedValue: value,
-            next: null,
-            select: select,
-            lastSelectedValue: select(value)
-          }),
-          null === lastContextDependency)
-        ) {
-          if (null === JSCompiler_temp)
-            throw Error(formatProdErrorMessage(308));
-          lastContextDependency = context;
-          JSCompiler_temp.dependencies = { lanes: 0, firstContext: context };
-          JSCompiler_temp.flags |= 524288;
-        } else lastContextDependency = lastContextDependency.next = context;
+      context = {
+        context: context,
+        memoizedValue: value,
+        next: null,
+        select: select,
+        lastSelectedValue: select(value)
+      };
+      if (null === lastContextDependency) {
+        if (null === JSCompiler_temp) throw Error(formatProdErrorMessage(308));
+        lastContextDependency = context;
+        JSCompiler_temp.dependencies = { lanes: 0, firstContext: context };
+        JSCompiler_temp.flags |= 524288;
+      } else lastContextDependency = lastContextDependency.next = context;
       JSCompiler_temp = value;
     }
     return JSCompiler_temp;
@@ -6162,12 +6158,6 @@ module.exports = function ($$$config) {
     }
     throw Error(formatProdErrorMessage(156, workInProgress.tag));
   }
-  function resetContextDependencies() {
-    lastFullyObservedContext =
-      lastContextDependency =
-      currentlyRenderingFiber =
-        null;
-  }
   function pushProvider(providerFiber, context, nextValue) {
     isPrimaryRenderer
       ? (push(valueCursor, context._currentValue),
@@ -6358,7 +6348,7 @@ module.exports = function ($$$config) {
   }
   function prepareToReadContext(workInProgress) {
     currentlyRenderingFiber = workInProgress;
-    lastFullyObservedContext = lastContextDependency = null;
+    lastContextDependency = null;
     workInProgress = workInProgress.dependencies;
     null !== workInProgress && (workInProgress.firstContext = null);
   }
@@ -6373,16 +6363,13 @@ module.exports = function ($$$config) {
     var value = isPrimaryRenderer
       ? context._currentValue
       : context._currentValue2;
-    if (lastFullyObservedContext !== context)
-      if (
-        ((context = { context: context, memoizedValue: value, next: null }),
-        null === lastContextDependency)
-      ) {
-        if (null === consumer) throw Error(formatProdErrorMessage(308));
-        lastContextDependency = context;
-        consumer.dependencies = { lanes: 0, firstContext: context };
-        consumer.flags |= 524288;
-      } else lastContextDependency = lastContextDependency.next = context;
+    context = { context: context, memoizedValue: value, next: null };
+    if (null === lastContextDependency) {
+      if (null === consumer) throw Error(formatProdErrorMessage(308));
+      lastContextDependency = context;
+      consumer.dependencies = { lanes: 0, firstContext: context };
+      consumer.flags |= 524288;
+    } else lastContextDependency = lastContextDependency.next = context;
     return value;
   }
   function createCache() {
@@ -10329,7 +10316,7 @@ module.exports = function ($$$config) {
         var interruptedWork = workInProgress.return;
       else
         (interruptedWork = workInProgress),
-          resetContextDependencies(),
+          (lastContextDependency = currentlyRenderingFiber = null),
           resetHooksOnUnwind(interruptedWork),
           (thenableState$1 = null),
           (thenableIndexCounter$1 = 0),
@@ -10497,7 +10484,7 @@ module.exports = function ($$$config) {
       }
     while (1);
     lanes && root.shellSuspendCounter++;
-    resetContextDependencies();
+    lastContextDependency = currentlyRenderingFiber = null;
     executionContext = prevExecutionContext;
     ReactSharedInternals.H = prevDispatcher;
     ReactSharedInternals.A = prevAsyncDispatcher;
@@ -10618,7 +10605,7 @@ module.exports = function ($$$config) {
         handleThrow(root, thrownValue$191);
       }
     while (1);
-    resetContextDependencies();
+    lastContextDependency = currentlyRenderingFiber = null;
     ReactSharedInternals.H = prevDispatcher;
     ReactSharedInternals.A = prevAsyncDispatcher;
     executionContext = prevExecutionContext;
@@ -10707,7 +10694,7 @@ module.exports = function ($$$config) {
     thrownValue,
     suspendedReason
   ) {
-    resetContextDependencies();
+    lastContextDependency = currentlyRenderingFiber = null;
     resetHooksOnUnwind(unitOfWork);
     thenableState$1 = null;
     thenableIndexCounter$1 = 0;
@@ -12413,7 +12400,6 @@ module.exports = function ($$$config) {
     valueCursor = createCursor(null),
     currentlyRenderingFiber = null,
     lastContextDependency = null,
-    lastFullyObservedContext = null,
     AbortControllerLocal =
       "undefined" !== typeof AbortController
         ? AbortController
@@ -12890,7 +12876,7 @@ module.exports = function ($$$config) {
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
       findFiberByHostInstance: getInstanceFromNode,
-      reconcilerVersion: "19.0.0-www-classic-d1f04722-20241106"
+      reconcilerVersion: "19.0.0-www-classic-66855b96-20241106"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

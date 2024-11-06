@@ -6052,29 +6052,26 @@ __DEV__ &&
       else {
         JSCompiler_temp = currentlyRenderingFiber;
         var value = context._currentValue;
-        if (lastFullyObservedContext !== context)
-          if (
-            ((context = {
-              context: context,
-              memoizedValue: value,
-              next: null,
-              select: select,
-              lastSelectedValue: select(value)
-            }),
-            null === lastContextDependency)
-          ) {
-            if (null === JSCompiler_temp)
-              throw Error(
-                "Context can only be read while React is rendering. In classes, you can read it in the render method or getDerivedStateFromProps. In function components, you can read it directly in the function body, but not inside Hooks like useReducer() or useMemo()."
-              );
-            lastContextDependency = context;
-            JSCompiler_temp.dependencies = {
-              lanes: 0,
-              firstContext: context,
-              _debugThenableState: null
-            };
-            JSCompiler_temp.flags |= 524288;
-          } else lastContextDependency = lastContextDependency.next = context;
+        context = {
+          context: context,
+          memoizedValue: value,
+          next: null,
+          select: select,
+          lastSelectedValue: select(value)
+        };
+        if (null === lastContextDependency) {
+          if (null === JSCompiler_temp)
+            throw Error(
+              "Context can only be read while React is rendering. In classes, you can read it in the render method or getDerivedStateFromProps. In function components, you can read it directly in the function body, but not inside Hooks like useReducer() or useMemo()."
+            );
+          lastContextDependency = context;
+          JSCompiler_temp.dependencies = {
+            lanes: 0,
+            firstContext: context,
+            _debugThenableState: null
+          };
+          JSCompiler_temp.flags |= 524288;
+        } else lastContextDependency = lastContextDependency.next = context;
         JSCompiler_temp = value;
       }
       return JSCompiler_temp;
@@ -11074,10 +11071,7 @@ __DEV__ &&
       );
     }
     function resetContextDependencies() {
-      lastFullyObservedContext =
-        lastContextDependency =
-        currentlyRenderingFiber =
-          null;
+      lastContextDependency = currentlyRenderingFiber = null;
       isDisallowedContextReadInDEV = !1;
     }
     function pushProvider(providerFiber, context, nextValue) {
@@ -11283,7 +11277,7 @@ __DEV__ &&
     }
     function prepareToReadContext(workInProgress) {
       currentlyRenderingFiber = workInProgress;
-      lastFullyObservedContext = lastContextDependency = null;
+      lastContextDependency = null;
       workInProgress = workInProgress.dependencies;
       null !== workInProgress && (workInProgress.firstContext = null);
     }
@@ -11300,23 +11294,20 @@ __DEV__ &&
     }
     function readContextForConsumer(consumer, context) {
       var value = context._currentValue;
-      if (lastFullyObservedContext !== context)
-        if (
-          ((context = { context: context, memoizedValue: value, next: null }),
-          null === lastContextDependency)
-        ) {
-          if (null === consumer)
-            throw Error(
-              "Context can only be read while React is rendering. In classes, you can read it in the render method or getDerivedStateFromProps. In function components, you can read it directly in the function body, but not inside Hooks like useReducer() or useMemo()."
-            );
-          lastContextDependency = context;
-          consumer.dependencies = {
-            lanes: 0,
-            firstContext: context,
-            _debugThenableState: null
-          };
-          consumer.flags |= 524288;
-        } else lastContextDependency = lastContextDependency.next = context;
+      context = { context: context, memoizedValue: value, next: null };
+      if (null === lastContextDependency) {
+        if (null === consumer)
+          throw Error(
+            "Context can only be read while React is rendering. In classes, you can read it in the render method or getDerivedStateFromProps. In function components, you can read it directly in the function body, but not inside Hooks like useReducer() or useMemo()."
+          );
+        lastContextDependency = context;
+        consumer.dependencies = {
+          lanes: 0,
+          firstContext: context,
+          _debugThenableState: null
+        };
+        consumer.flags |= 524288;
+      } else lastContextDependency = lastContextDependency.next = context;
       return value;
     }
     function createCache() {
@@ -26846,7 +26837,6 @@ __DEV__ &&
     var rendererSigil = {};
     var currentlyRenderingFiber = null,
       lastContextDependency = null,
-      lastFullyObservedContext = null,
       isDisallowedContextReadInDEV = !1,
       AbortControllerLocal =
         "undefined" !== typeof AbortController
@@ -27811,11 +27801,11 @@ __DEV__ &&
         : flushSyncErrorInBuildsThatSupportLegacyMode;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.0.0-www-classic-d1f04722-20241106" !== isomorphicReactPackageVersion)
+      if ("19.0.0-www-classic-66855b96-20241106" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.0.0-www-classic-d1f04722-20241106\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.0.0-www-classic-66855b96-20241106\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -27859,11 +27849,11 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.0.0-www-classic-d1f04722-20241106",
+          version: "19.0.0-www-classic-66855b96-20241106",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
           findFiberByHostInstance: getClosestInstanceFromNode,
-          reconcilerVersion: "19.0.0-www-classic-d1f04722-20241106"
+          reconcilerVersion: "19.0.0-www-classic-66855b96-20241106"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -28516,7 +28506,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.0.0-www-classic-d1f04722-20241106";
+    exports.version = "19.0.0-www-classic-66855b96-20241106";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
