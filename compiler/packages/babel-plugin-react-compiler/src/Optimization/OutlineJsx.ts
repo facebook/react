@@ -219,10 +219,20 @@ type OutlinedJsxAttribute = {
 function collectProps(
   instructions: Array<JsxInstruction>,
 ): Array<OutlinedJsxAttribute> | null {
+  let id = 1;
+
+  function generateName(oldName: string): string {
+    let newName = oldName;
+    while (seen.has(newName)) {
+      newName = `${oldName}${id++}`;
+    }
+    seen.add(newName);
+    return newName;
+  }
+
   const attributes: Array<OutlinedJsxAttribute> = [];
   const jsxIds = new Set(instructions.map(i => i.lvalue.identifier.id));
   const seen: Set<string> = new Set();
-  let id = 1;
 
   for (const instr of instructions) {
     const {value} = instr;
@@ -233,25 +243,29 @@ function collectProps(
       }
 
       if (at.kind === 'JsxAttribute') {
-        let newName = at.name;
-        while (seen.has(newName)) {
-          newName = `${at.name}${id++}`;
-        }
+        const newName = generateName(at.name);
         attributes.push({
           originalName: at.name,
           newName,
           place: at.place,
         });
-        seen.add(newName);
       }
     }
 
-    // TODO(gsn): Add support for children that are not jsx expressions
-    if (
-      value.children &&
-      value.children.some(child => !jsxIds.has(child.identifier.id))
-    ) {
-      return null;
+    if (value.children) {
+      for (const child of value.children) {
+        if (jsxIds.has(child.identifier.id)) {
+          continue;
+        }
+
+        promoteTemporary(child.identifier);
+        const newName = generateName('t');
+        attributes.push({
+          originalName: child.identifier.name!.value,
+          newName: newName,
+          place: child,
+        });
+      }
     }
   }
   return attributes;
@@ -387,6 +401,7 @@ function emitUpdatedJsx(
   oldToNewProps: Map<IdentifierId, OutlinedJsxAttribute>,
 ): Array<JsxInstruction> {
   const newInstrs: Array<JsxInstruction> = [];
+  const jsxIds = new Set(jsx.map(i => i.lvalue.identifier.id));
 
   for (const instr of jsx) {
     const {value} = instr;
@@ -412,11 +427,30 @@ function emitUpdatedJsx(
       });
     }
 
+    let newChildren: Array<Place> | null = null;
+    if (value.children) {
+      newChildren = [];
+      for (const child of value.children) {
+        if (jsxIds.has(child.identifier.id)) {
+          newChildren.push({...child});
+          continue;
+        }
+
+        const newChild = oldToNewProps.get(child.identifier.id);
+        invariant(
+          newChild !== undefined,
+          `Expected a new prop for ${printIdentifier(child.identifier)}`,
+        );
+        newChildren.push({...newChild.place});
+      }
+    }
+
     newInstrs.push({
       ...instr,
       value: {
         ...value,
         props: newProps,
+        children: newChildren,
       },
     });
   }
