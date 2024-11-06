@@ -123,8 +123,6 @@ export default [
   "Cannot update during an existing state transition (such as within `render`). Render methods should be a pure function of props and state.",
   "Cannot update the \"is\" prop after it has been initialized.",
   "Changing the name of a tracing marker after mount is not supported. To remount the tracing marker, pass it a new key.",
-  "Component \"%s\" contains the string ref \"%s\". Support for string refs will be removed in a future major release. This case cannot be automatically converted to an arrow function. We ask you to manually fix this case by using useRef() or createRef() instead. Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref",
-  "Component \"%s\" contains the string ref \"%s\". Support for string refs will be removed in a future major release. We recommend using useRef() or createRef() instead. Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref",
   "Context can only be read while React is rendering. In classes, you can read it in the render method or getDerivedStateFromProps. In function components, you can read it directly in the function body, but not inside Hooks like useReducer() or useMemo().",
   "Detected a large number of updates inside startTransition. If this is due to a subscription please re-write it to use React provided hooks. Otherwise concurrent mode guarantees are off the table.",
   "Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.",
