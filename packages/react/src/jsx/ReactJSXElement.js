@@ -23,7 +23,6 @@ import {
   disableStringRefs,
   disableDefaultPropsExceptForClasses,
   enableOwnerStacks,
-  enableLogStringRefsProd,
 } from 'shared/ReactFeatureFlags';
 import {checkPropStringCoercion} from 'shared/CheckStringCoercion';
 import {ClassComponent} from 'react-reconciler/src/ReactWorkTags';
@@ -75,7 +74,7 @@ let didWarnAboutStringRefs;
 let didWarnAboutElementRef;
 let didWarnAboutOldJSXRuntime;
 
-if (__DEV__ || enableLogStringRefsProd) {
+if (__DEV__) {
   didWarnAboutStringRefs = {};
   didWarnAboutElementRef = {};
 }
@@ -1228,16 +1227,13 @@ function stringRefAsCallbackRef(stringRef, type, owner, value) {
     );
   }
 
-  if (__DEV__ || enableLogStringRefsProd) {
+  if (__DEV__) {
     if (
       // Will already warn with "Function components cannot be given refs"
       !(typeof type === 'function' && !isReactClass(type))
     ) {
       const componentName = getComponentNameFromFiber(owner) || 'Component';
       if (!didWarnAboutStringRefs[componentName]) {
-        if (enableLogStringRefsProd) {
-          enableLogStringRefsProd(componentName, stringRef);
-        }
         if (__DEV__) {
           console.error(
             'Component "%s" contains the string ref "%s". Support for string refs ' +
