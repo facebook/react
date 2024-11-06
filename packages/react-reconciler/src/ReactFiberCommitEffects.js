@@ -71,6 +71,7 @@ import {
 } from './ReactFiberCallUserSpace';
 
 import {runWithFiberInDEV} from './ReactCurrentFiber';
+import {ResourceEffectKind, SimpleEffectKind} from './ReactFiberHooks';
 
 function shouldProfile(current: Fiber): boolean {
   return (
@@ -147,19 +148,45 @@ export function commitHookEffectListMount(
 
           // Mount
           let destroy;
+          if (effect.kind === ResourceEffectKind) {
+            if (typeof effect.create === 'function') {
+              effect.resource = effect.create();
+              if (__DEV__) {
+                if (effect.resource == null) {
+                  console.error(
+                    'useResourceEffect must provide a callback which returns a resource. ' +
+                      'If a managed resource is not needed here, use useEffect. Received %s',
+                    effect.resource,
+                  );
+                }
+              }
+            } else if (typeof effect.update === 'function') {
+              // TODO: what about multiple updates?
+              effect.update(effect.resource);
+            }
+            destroy = effect.destroy;
+          }
           if (__DEV__) {
             if ((flags & HookInsertion) !== NoHookEffect) {
               setIsRunningInsertionEffect(true);
             }
-            destroy = runWithFiberInDEV(finishedWork, callCreateInDEV, effect);
+            if (effect.kind === SimpleEffectKind) {
+              destroy = runWithFiberInDEV(
+                finishedWork,
+                callCreateInDEV,
+                effect,
+              );
+            }
             if ((flags & HookInsertion) !== NoHookEffect) {
               setIsRunningInsertionEffect(false);
             }
           } else {
-            const create = effect.create;
-            const inst = effect.inst;
-            destroy = create();
-            inst.destroy = destroy;
+            if (effect.kind === SimpleEffectKind) {
+              const create = effect.create;
+              const inst = effect.inst;
+              destroy = create();
+              inst.destroy = destroy;
+            }
           }
 
           if (enableSchedulingProfiler) {
@@ -177,6 +204,8 @@ export function commitHookEffectListMount(
                 hookName = 'useLayoutEffect';
               } else if ((effect.tag & HookInsertion) !== NoFlags) {
                 hookName = 'useInsertionEffect';
+              } else if (effect.kind === ResourceEffectKind) {
+                hookName = 'useResourceEffect';
               } else {
                 hookName = 'useEffect';
               }
@@ -245,6 +274,9 @@ export function commitHookEffectListUnmount(
         if ((effect.tag & flags) === flags) {
           // Unmount
           const inst = effect.inst;
+          if (effect.kind === ResourceEffectKind && effect.resource != null) {
+            inst.destroy = effect.destroy;
+          }
           const destroy = inst.destroy;
           if (destroy !== undefined) {
             inst.destroy = undefined;
@@ -261,7 +293,13 @@ export function commitHookEffectListUnmount(
                 setIsRunningInsertionEffect(true);
               }
             }
-            safelyCallDestroy(finishedWork, nearestMountedAncestor, destroy);
+            safelyCallDestroy(
+              finishedWork,
+              nearestMountedAncestor,
+              destroy,
+              effect.resource,
+            );
+            effect.resource = null;
             if (__DEV__) {
               if ((flags & HookInsertion) !== NoHookEffect) {
                 setIsRunningInsertionEffect(false);
@@ -877,19 +915,21 @@ export function safelyDetachRef(
 function safelyCallDestroy(
   current: Fiber,
   nearestMountedAncestor: Fiber | null,
-  destroy: () => void,
+  destroy: mixed => void,
+  resource: mixed,
 ) {
+  const destroy_ = resource == null ? destroy : destroy.bind(null, resource);
   if (__DEV__) {
     runWithFiberInDEV(
       current,
       callDestroyInDEV,
       current,
       nearestMountedAncestor,
-      destroy,
+      destroy_,
     );
   } else {
     try {
-      destroy();
+      destroy_();
     } catch (error) {
       captureCommitPhaseError(current, nearestMountedAncestor, error);
     }
