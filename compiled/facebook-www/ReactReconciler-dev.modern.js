@@ -18650,7 +18650,7 @@ __DEV__ &&
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-www-modern-07aa4944-20241104"
+        reconcilerVersion: "19.0.0-www-modern-d1f04722-20241106"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

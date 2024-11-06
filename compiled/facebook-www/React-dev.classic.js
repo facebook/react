@@ -864,9 +864,7 @@ __DEV__ &&
         )
           (type = getComponentNameFromFiber(owner) || "Component"),
             didWarnAboutStringRefs[type] ||
-              (enableLogStringRefsProd &&
-                enableLogStringRefsProd(type, stringRef),
-              error$jscomp$0(
+              (error$jscomp$0(
                 'Component "%s" contains the string ref "%s". Support for string refs will be removed in a future major release. We recommend using useRef() or createRef() instead. Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref',
                 type,
                 stringRef
@@ -1208,7 +1206,6 @@ __DEV__ &&
         dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
       disableStringRefs = dynamicFeatureFlags.disableStringRefs,
       enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
-      enableLogStringRefsProd = dynamicFeatureFlags.enableLogStringRefsProd,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
@@ -1998,7 +1995,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.0.0-www-classic-07aa4944-20241104";
+    exports.version = "19.0.0-www-classic-d1f04722-20241106";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

@@ -792,9 +792,7 @@ __DEV__ &&
         )
           (type = getComponentNameFromFiber(owner) || "Component"),
             didWarnAboutStringRefs[type] ||
-              (enableLogStringRefsProd &&
-                enableLogStringRefsProd(type, stringRef),
-              error(
+              (error(
                 'Component "%s" contains the string ref "%s". Support for string refs will be removed in a future major release. We recommend using useRef() or createRef() instead. Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref',
                 type,
                 stringRef
@@ -817,7 +815,6 @@ __DEV__ &&
         dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
       disableStringRefs = dynamicFeatureFlags.disableStringRefs,
       enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
-      enableLogStringRefsProd = dynamicFeatureFlags.enableLogStringRefsProd,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing;
     dynamicFeatureFlags = dynamicFeatureFlags.renameElementSymbol;

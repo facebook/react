@@ -28145,11 +28145,11 @@ __DEV__ &&
         : flushSyncErrorInBuildsThatSupportLegacyMode;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.0.0-www-classic-07aa4944-20241104" !== isomorphicReactPackageVersion)
+      if ("19.0.0-www-classic-d1f04722-20241106" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.0.0-www-classic-07aa4944-20241104\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.0.0-www-classic-d1f04722-20241106\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -28193,11 +28193,11 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.0.0-www-classic-07aa4944-20241104",
+          version: "19.0.0-www-classic-d1f04722-20241106",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
           findFiberByHostInstance: getClosestInstanceFromNode,
-          reconcilerVersion: "19.0.0-www-classic-07aa4944-20241104"
+          reconcilerVersion: "19.0.0-www-classic-d1f04722-20241106"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -29016,5 +29016,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.0.0-www-classic-07aa4944-20241104";
+    exports.version = "19.0.0-www-classic-d1f04722-20241106";
   })();
