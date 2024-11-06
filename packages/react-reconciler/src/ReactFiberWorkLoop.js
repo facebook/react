@@ -40,7 +40,6 @@ import {
   enableInfiniteRenderLoopDetection,
   disableLegacyMode,
   disableDefaultPropsExceptForClasses,
-  disableStringRefs,
   enableSiblingPrerendering,
   enableComponentPerformanceTrack,
 } from 'shared/ReactFeatureFlags';
@@ -1732,7 +1731,7 @@ function handleThrow(root: FiberRoot, thrownValue: any): void {
   // These should be reset immediately because they're only supposed to be set
   // when React is executing user code.
   resetHooksAfterThrow();
-  if (__DEV__ || !disableStringRefs) {
+  if (__DEV__) {
     resetCurrentFiber();
   }
 
@@ -1928,7 +1927,7 @@ function popDispatcher(prevDispatcher: any) {
 }
 
 function pushAsyncDispatcher() {
-  if (enableCache || __DEV__ || !disableStringRefs) {
+  if (enableCache || __DEV__) {
     const prevAsyncDispatcher = ReactSharedInternals.A;
     ReactSharedInternals.A = DefaultAsyncDispatcher;
     return prevAsyncDispatcher;
@@ -1938,7 +1937,7 @@ function pushAsyncDispatcher() {
 }
 
 function popAsyncDispatcher(prevAsyncDispatcher: any) {
-  if (enableCache || __DEV__ || !disableStringRefs) {
+  if (enableCache || __DEV__) {
     ReactSharedInternals.A = prevAsyncDispatcher;
   }
 }
@@ -2497,9 +2496,6 @@ function performUnitOfWork(unitOfWork: Fiber): void {
     }
   }
 
-  if (!disableStringRefs) {
-    resetCurrentFiber();
-  }
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
   if (next === null) {
     // If this doesn't spawn new work, complete the current work.
@@ -2519,11 +2515,6 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
     next = replayBeginWork(unitOfWork);
   }
 
-  // The begin phase finished successfully without suspending. Return to the
-  // normal work loop.
-  if (!disableStringRefs) {
-    resetCurrentFiber();
-  }
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
   if (next === null) {
     // If this doesn't spawn new work, complete the current work.

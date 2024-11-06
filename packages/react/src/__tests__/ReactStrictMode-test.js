@@ -956,55 +956,6 @@ describe('symbol checks', () => {
   });
 });
 
-describe('string refs', () => {
-  beforeEach(() => {
-    jest.resetModules();
-    React = require('react');
-    ReactDOM = require('react-dom');
-    ReactDOMClient = require('react-dom/client');
-    act = require('internal-test-utils').act;
-  });
-
-  // @gate !disableStringRefs
-  it('should warn within a strict tree', async () => {
-    const {StrictMode} = React;
-
-    class OuterComponent extends React.Component {
-      render() {
-        return (
-          <StrictMode>
-            <InnerComponent ref="somestring" />
-          </StrictMode>
-        );
-      }
-    }
-
-    class InnerComponent extends React.Component {
-      render() {
-        return null;
-      }
-    }
-
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    await expect(async () => {
-      await act(() => {
-        root.render(<OuterComponent />);
-      });
-    }).toErrorDev(
-      'Component "OuterComponent" contains the string ref "somestring". ' +
-        'Support for string refs will be removed in a future major release. ' +
-        'We recommend using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
-        '    in InnerComponent (at **)',
-    );
-
-    await act(() => {
-      root.render(<OuterComponent />);
-    });
-  });
-});
-
 describe('context legacy', () => {
   beforeEach(() => {
     jest.resetModules();

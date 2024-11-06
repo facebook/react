@@ -460,6 +460,6 @@ export type Dispatcher = {
 
 export type AsyncDispatcher = {
   getCacheForType: <T>(resourceType: () => T) => T,
-  // DEV-only (or !disableStringRefs)
+  // DEV-only
   getOwner: () => null | Fiber | ReactComponentInfo | ComponentStackNode,
 };

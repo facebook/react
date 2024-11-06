@@ -179,24 +179,6 @@ describe('ReactFunctionComponent', () => {
     ).resolves.not.toThrowError();
   });
 
-  // @gate !disableStringRefs
-  it('should throw on string refs in pure functions', async () => {
-    function Child() {
-      return <div ref="me" />;
-    }
-
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    await expect(
-      act(() => {
-        root.render(<Child test="test" />);
-      }),
-    )
-      // TODO: This throws an AggregateError. Need to update test infra to
-      // support matching against AggregateError.
-      .rejects.toThrowError();
-  });
-
   it('should use correct name in key warning', async () => {
     function Child() {
       return <div>{[<span />]}</div>;
