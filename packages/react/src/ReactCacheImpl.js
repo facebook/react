@@ -39,10 +39,6 @@ type CacheNode<T> =
   | UnterminatedCacheNode<T>
   | ErroredCacheNode<T>;
 
-function createCacheRoot<T>(): WeakMap<Function | Object, CacheNode<T>> {
-  return new WeakMap();
-}
-
 function createCacheNode<T>(): CacheNode<T> {
   return {
     s: UNTERMINATED, // status, represents whether the cached computation returned a value or threw an error
@@ -60,14 +56,12 @@ export function cache<A: Iterable<mixed>, T>(fn: (...A) => T): (...A) => T {
       // $FlowFixMe[incompatible-call]: We don't want to use rest arguments since we transpile the code.
       return fn.apply(null, arguments);
     }
-    const fnMap: WeakMap<any, CacheNode<T>> = dispatcher.getCacheForType(
-      createCacheRoot,
-    );
-    const fnNode = fnMap.get(fn);
+    const activeCache = dispatcher.getActiveCache();
+    const fnNode: CacheNode<T> | void = (activeCache.get(fn): any);
     let cacheNode: CacheNode<T>;
     if (fnNode === undefined) {
       cacheNode = createCacheNode();
-      fnMap.set(fn, cacheNode);
+      activeCache.set(fn, cacheNode);
     } else {
       cacheNode = fnNode;
     }
