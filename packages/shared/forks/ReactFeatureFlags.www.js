@@ -117,8 +117,7 @@ export const enableServerComponentLogs = true;
 export const enableReactTestRendererWarning = false;
 export const useModernStrictMode = true;
 
-export const disableLegacyMode: boolean =
-  __EXPERIMENTAL__ || dynamicFeatureFlags.disableLegacyMode;
+export const disableLegacyMode = true;
 
 export const enableOwnerStacks = false;
 export const enableShallowPropDiffing = false;
