@@ -3268,9 +3268,7 @@ describe('ReactFlight', () => {
         expect(greeting._owner).toBe(greeting._debugInfo[0]);
       } else {
         expect(greeting._debugInfo).toBe(undefined);
-        expect(greeting._owner).toBe(
-          gate(flags => flags.disableStringRefs) ? undefined : null,
-        );
+        expect(greeting._owner).toBe(undefined);
       }
       ReactNoop.render(greeting);
     });

@@ -18,7 +18,6 @@ import {
   enableProfilerNestedUpdatePhase,
   enableSchedulingProfiler,
   enableScopeAPI,
-  disableStringRefs,
 } from 'shared/ReactFeatureFlags';
 import {
   ClassComponent,
@@ -773,7 +772,7 @@ function commitAttachRef(finishedWork: Fiber) {
       if (__DEV__) {
         // TODO: We should move these warnings to happen during the render
         // phase (markRef).
-        if (disableStringRefs && typeof ref === 'string') {
+        if (typeof ref === 'string') {
           console.error('String refs are no longer supported.');
         } else if (!ref.hasOwnProperty('current')) {
           console.error(

@@ -162,7 +162,6 @@ import {
   enableRenderableContext,
   disableDefaultPropsExceptForClasses,
   enableAsyncIterableChildren,
-  disableStringRefs,
   enableOwnerStacks,
 } from 'shared/ReactFeatureFlags';
 
@@ -4452,7 +4451,7 @@ export function performWork(request: Request): void {
   const prevDispatcher = ReactSharedInternals.H;
   ReactSharedInternals.H = HooksDispatcher;
   let prevAsyncDispatcher = null;
-  if (enableCache || __DEV__ || !disableStringRefs) {
+  if (enableCache || __DEV__) {
     prevAsyncDispatcher = ReactSharedInternals.A;
     ReactSharedInternals.A = DefaultAsyncDispatcher;
   }

@@ -218,7 +218,7 @@ describe('ReactCreateElement', () => {
     }
     const root = ReactDOMClient.createRoot(document.createElement('div'));
     await act(() => root.render(React.createElement(Wrapper)));
-    if (__DEV__ || !gate(flags => flags.disableStringRefs)) {
+    if (__DEV__) {
       expect(element._owner.stateNode).toBe(instance);
     } else {
       expect('_owner' in element).toBe(false);

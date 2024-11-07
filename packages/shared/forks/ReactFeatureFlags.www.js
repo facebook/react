@@ -19,13 +19,11 @@ export const {
   disableDefaultPropsExceptForClasses,
   disableLegacyContextForFunctionComponents,
   disableSchedulerTimeoutInWorkLoop,
-  disableStringRefs,
   enableDebugTracing,
   enableDeferRootSchedulingToMicrotask,
   enableDO_NOT_USE_disableStrictPassiveEffect,
   enableHiddenSubtreeInsertionEffectCleanup,
   enableInfiniteRenderLoopDetection,
-  enableLogStringRefsProd,
   enableNoCloningMemoCache,
   enableObjectFiber,
   enableRenderableContext,
@@ -119,8 +117,7 @@ export const enableServerComponentLogs = true;
 export const enableReactTestRendererWarning = false;
 export const useModernStrictMode = true;
 
-export const disableLegacyMode: boolean =
-  __EXPERIMENTAL__ || dynamicFeatureFlags.disableLegacyMode;
+export const disableLegacyMode = true;
 
 export const enableOwnerStacks = false;
 export const enableShallowPropDiffing = false;
