@@ -913,8 +913,9 @@ export function performWorkOnRoot(
     ? renderRootConcurrent(root, lanes)
     : renderRootSync(root, lanes, true);
 
+  let renderWasConcurrent = shouldTimeSlice;
+
   do {
-    let renderWasConcurrent = shouldTimeSlice;
     if (exitStatus === RootInProgress) {
       // Render phase is still in progress.
       if (
