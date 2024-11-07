@@ -24,6 +24,10 @@ let startTransition;
 let waitFor;
 let waitForAll;
 let assertLog;
+let Suspense;
+let useCallback;
+let useMemo;
+let textCache;
 
 // This tests the native useSyncExternalStore implementation, not the shim.
 // Tests that apply to both the native implementation and the shim should go
@@ -45,7 +49,10 @@ describe('useSyncExternalStore', () => {
     use = React.use;
     useSyncExternalStore = React.useSyncExternalStore;
     startTransition = React.startTransition;
-
+    Suspense = React.Suspense;
+    useCallback = React.useCallback;
+    useMemo = React.useMemo;
+    textCache = new Map();
     const InternalTestUtils = require('internal-test-utils');
     waitFor = InternalTestUtils.waitFor;
     waitForAll = InternalTestUtils.waitForAll;
@@ -53,6 +60,60 @@ describe('useSyncExternalStore', () => {
 
     act = require('internal-test-utils').act;
   });
+
+  function resolveText(text) {
+    const record = textCache.get(text);
+    if (record === undefined) {
+      const newRecord = {
+        status: 'resolved',
+        value: text,
+      };
+      textCache.set(text, newRecord);
+    } else if (record.status === 'pending') {
+      const thenable = record.value;
+      record.status = 'resolved';
+      record.value = text;
+      thenable.pings.forEach(t => t());
+    }
+  }
+  function readText(text) {
+    const record = textCache.get(text);
+    if (record !== undefined) {
+      switch (record.status) {
+        case 'pending':
+          throw record.value;
+        case 'rejected':
+          throw record.value;
+        case 'resolved':
+          return record.value;
+      }
+    } else {
+      const thenable = {
+        pings: [],
+        then(resolve) {
+          if (newRecord.status === 'pending') {
+            thenable.pings.push(resolve);
+          } else {
+            Promise.resolve().then(() => resolve(newRecord.value));
+          }
+        },
+      };
+
+      const newRecord = {
+        status: 'pending',
+        value: thenable,
+      };
+      textCache.set(text, newRecord);
+
+      throw thenable;
+    }
+  }
+
+  function AsyncText({text}) {
+    const result = readText(text);
+    Scheduler.log(text);
+    return result;
+  }
 
   function Text({text}) {
     Scheduler.log(text);
@@ -292,4 +353,88 @@ describe('useSyncExternalStore', () => {
       );
     },
   );
+
+  it('regression: doesnt loop for only changing store reference', async () => {
+    let store = {validationResults: new Map(), version: 0};
+    let listeners = [];
+
+    const ExternalStore = {
+      set(value) {
+        // Change the store ref, but not the value.
+        store = {...store};
+        emitChange();
+      },
+      subscribe(listener) {
+        listeners = [...listeners, listener];
+        return () => {
+          listeners = listeners.filter(l => l !== listener);
+        };
+      },
+      getSnapshot() {
+        return store;
+      },
+    };
+
+    function emitChange() {
+      for (const listener of listeners) {
+        listener();
+      }
+    }
+
+    function useBug<TValue>(path: string): SRConfigPathState<TValue> {
+      const {value} = useSyncExternalStore(
+        ExternalStore.subscribe,
+        ExternalStore.getSnapshot,
+      );
+
+      const setStoreValue = useCallback(value => {
+        ExternalStore.set(value);
+      }, []);
+
+      const update = useCallback(
+        newValue => {
+          if (value == null && newValue != null) {
+            setStoreValue(newValue);
+          }
+        },
+        [setStoreValue, value],
+      );
+
+      useMemo(() => {
+        update({foo: 'bar'});
+      }, []);
+
+      return {};
+    }
+
+    function Bug() {
+      useBug();
+      return <Text text={'B'} />;
+    }
+
+    function App() {
+      return (
+        <>
+          <Suspense fallback={'Loading...'}>
+            <AsyncText text={'A'} />
+            <Bug />
+          </Suspense>
+        </>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<App />);
+    });
+    assertLog([...(gate('enableSiblingPrerendering') ? ['B'] : [])]);
+
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    // Resolve the data and finish rendering.
+    await act(() => resolveText('A'));
+    assertLog(['A', 'B', 'A', 'B', 'B']);
+
+    expect(root).toMatchRenderedOutput('AB');
+  });
 });
