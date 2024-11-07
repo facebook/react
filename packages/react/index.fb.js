@@ -19,6 +19,7 @@ export {
   createElement,
   createRef,
   experimental_useEffectEvent,
+  experimental_useResourceEffect,
   forwardRef,
   Fragment,
   isValidElement,
