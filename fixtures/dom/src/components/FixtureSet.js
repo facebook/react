@@ -6,20 +6,15 @@ const propTypes = {
   description: PropTypes.node,
 };
 
-class FixtureSet extends React.Component {
-  render() {
-    const {title, description, children} = this.props;
-
-    return (
-      <div className="container">
-        <h1>{title}</h1>
-        {description && <p>{description}</p>}
-
-        {children}
-      </div>
-    );
-  }
-}
+const FixtureSet = ({ title, description, children }) => {
+  return (
+    <div className="container">
+      <h1>{title}</h1>
+      {description && <p>{description}</p>}
+      {children}
+    </div>
+  );
+};
 
 FixtureSet.propTypes = propTypes;
 
