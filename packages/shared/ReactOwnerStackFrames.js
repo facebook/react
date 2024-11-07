@@ -7,10 +7,11 @@
  * @flow
  */
 
+import DefaultPrepareStackTrace from 'shared/DefaultPrepareStackTrace';
+
 export function formatOwnerStack(error: Error): string {
   const prevPrepareStackTrace = Error.prepareStackTrace;
-  // $FlowFixMe[incompatible-type] It does accept undefined.
-  Error.prepareStackTrace = undefined;
+  Error.prepareStackTrace = DefaultPrepareStackTrace;
   let stack = error.stack;
   Error.prepareStackTrace = prevPrepareStackTrace;
   if (stack.startsWith('Error: react-stack-top-frame\n')) {

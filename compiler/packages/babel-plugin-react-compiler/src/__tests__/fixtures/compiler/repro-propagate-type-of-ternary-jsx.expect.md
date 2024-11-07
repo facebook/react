@@ -28,7 +28,7 @@ function V0(t0) {
   const { v1, v2 } = t0;
   const v5 = v1.v6?.v7;
   let t1;
-  if ($[0] !== v5 || $[1] !== v1 || $[2] !== v2) {
+  if ($[0] !== v1 || $[1] !== v2 || $[2] !== v5) {
     t1 = (
       <Component8 c9={va} cb="apqjx">
         {v5 != null ? (
@@ -40,9 +40,9 @@ function V0(t0) {
         )}
       </Component8>
     );
-    $[0] = v5;
-    $[1] = v1;
-    $[2] = v2;
+    $[0] = v1;
+    $[1] = v2;
+    $[2] = v5;
     $[3] = t1;
   } else {
     t1 = $[3];

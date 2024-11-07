@@ -35,11 +35,7 @@ import {
   ConcurrentRoot,
   LegacyRoot,
 } from 'react-reconciler/constants';
-import {
-  enableRefAsProp,
-  disableLegacyMode,
-  disableStringRefs,
-} from 'shared/ReactFeatureFlags';
+import {disableLegacyMode} from 'shared/ReactFeatureFlags';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import ReactVersion from 'shared/ReactVersion';
@@ -833,7 +829,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   let currentEventPriority = DefaultEventPriority;
 
   function createJSXElementForTestComparison(type, props) {
-    if (__DEV__ && enableRefAsProp) {
+    if (__DEV__) {
       const element = {
         type: type,
         $$typeof: REACT_ELEMENT_TYPE,
@@ -847,14 +843,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         value: null,
       });
       return element;
-    } else if (!__DEV__ && disableStringRefs) {
-      return {
-        $$typeof: REACT_ELEMENT_TYPE,
-        type: type,
-        key: null,
-        ref: null,
-        props: props,
-      };
     } else {
       return {
         $$typeof: REACT_ELEMENT_TYPE,
@@ -862,8 +850,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         key: null,
         ref: null,
         props: props,
-        _owner: null,
-        _store: __DEV__ ? {} : undefined,
       };
     }
   }

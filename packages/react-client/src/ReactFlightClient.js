@@ -41,10 +41,8 @@ import type {Postpone} from 'react/src/ReactPostpone';
 import type {TemporaryReferenceSet} from './ReactFlightTemporaryReferences';
 
 import {
-  disableStringRefs,
   enableBinaryFlight,
   enablePostpone,
-  enableRefAsProp,
   enableFlightReadableStream,
   enableOwnerStacks,
   enableServerComponentLogs,
@@ -676,7 +674,7 @@ function createElement(
   | React$Element<any>
   | LazyComponent<React$Element<any>, SomeChunk<React$Element<any>>> {
   let element: any;
-  if (__DEV__ && enableRefAsProp) {
+  if (__DEV__) {
     // `ref` is non-enumerable in dev
     element = ({
       $$typeof: REACT_ELEMENT_TYPE,
@@ -689,16 +687,6 @@ function createElement(
       enumerable: false,
       get: nullRefGetter,
     });
-  } else if (!__DEV__ && disableStringRefs) {
-    element = ({
-      // This tag allows us to uniquely identify this as a React Element
-      $$typeof: REACT_ELEMENT_TYPE,
-
-      type,
-      key,
-      ref: null,
-      props,
-    }: any);
   } else {
     element = ({
       // This tag allows us to uniquely identify this as a React Element
@@ -708,9 +696,6 @@ function createElement(
       key,
       ref: null,
       props,
-
-      // Record the component responsible for creating this element.
-      _owner: __DEV__ && owner === null ? response._debugRootOwner : owner,
     }: any);
   }
 

@@ -41,7 +41,7 @@ function foo(a, b) {
     x = $[1];
   }
   let y;
-  if ($[2] !== x || $[3] !== b) {
+  if ($[2] !== b || $[3] !== x) {
     y = [];
     if (x.length) {
       y.push(x);
@@ -49,8 +49,8 @@ function foo(a, b) {
     if (b) {
       y.push(b);
     }
-    $[2] = x;
-    $[3] = b;
+    $[2] = b;
+    $[3] = x;
     $[4] = y;
   } else {
     y = $[4];
