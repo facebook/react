@@ -103,6 +103,12 @@ export const HydrationLanes =
   SelectiveHydrationLane |
   IdleHydrationLane;
 
+// If a prerender is interrupted, either by an update or a resolved promise,
+// we increment a counter. Once the counter reaches a limit, we disable
+// subsequent prerender attempts. This is to prevent an accidental infinite
+// render loop caused by a prerender that spawns render phase updates.
+const PRERENDER_INTERRUPT_LIMIT = 5;
+
 // This function is used for the experimental timeline (react-devtools-timeline)
 // It should be kept in sync with the Lanes values above.
 export function getLabelForLane(lane: Lane): string | void {
@@ -225,6 +231,10 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
   // Early bailout if there's no pending work left.
   const pendingLanes = root.pendingLanes;
   if (pendingLanes === NoLanes) {
+    // Once we've exhausted the work queue, we can be certain that we're no
+    // longer in a render loop caused by prerendering. Setting this back to
+    // zero allows subsequent updates to prerender its siblings when necessary.
+    root.prerenderInterruptCounter = 0;
     return NoLanes;
   }
 
@@ -273,7 +283,10 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
       } else {
         if (enableSiblingPrerendering) {
           // Nothing has been pinged. Check for lanes that need to be prewarmed.
-          if (!rootHasPendingCommit) {
+          if (
+            root.prerenderInterruptCounter < PRERENDER_INTERRUPT_LIMIT &&
+            !rootHasPendingCommit
+          ) {
             const lanesToPrewarm = nonIdlePendingLanes & ~warmLanes;
             if (lanesToPrewarm !== NoLanes) {
               nextLanes = getHighestPriorityLanes(lanesToPrewarm);
@@ -299,7 +312,10 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
       } else {
         if (enableSiblingPrerendering) {
           // Nothing has been pinged. Check for lanes that need to be prewarmed.
-          if (!rootHasPendingCommit) {
+          if (
+            root.prerenderInterruptCounter < PRERENDER_INTERRUPT_LIMIT &&
+            !rootHasPendingCommit
+          ) {
             const lanesToPrewarm = pendingLanes & ~warmLanes;
             if (lanesToPrewarm !== NoLanes) {
               nextLanes = getHighestPriorityLanes(lanesToPrewarm);

@@ -80,6 +80,7 @@ function FiberRootNode(
   this.finishedLanes = NoLanes;
   this.errorRecoveryDisabledLanes = NoLanes;
   this.shellSuspendCounter = 0;
+  this.prerenderInterruptCounter = 0;
 
   this.entangledLanes = NoLanes;
   this.entanglements = createLaneMap(NoLanes);

@@ -776,6 +776,19 @@ export function scheduleUpdateOnFiber(
   markRootUpdated(root, lane);
 
   if (
+    enableSiblingPrerendering &&
+    workInProgressRootIsPrerendering &&
+    workInProgressRoot !== null
+  ) {
+    // This update happened while we were in the middle of a prerender.
+    // Increment a counter. If this happens too often before we finish the
+    // update, we will disable prerenders until the queue is empty. This is to
+    // prevent a potential scenario where an update is spawned by a prerender,
+    // which then interrupts itself, leading to an infinite loop.
+    workInProgressRoot.prerenderInterruptCounter++;
+  }
+
+  if (
     (executionContext & RenderContext) !== NoLanes &&
     root === workInProgressRoot
   ) {
