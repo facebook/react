@@ -260,6 +260,7 @@ type BaseFiberRootProperties = {
   expiredLanes: Lanes,
   errorRecoveryDisabledLanes: Lanes,
   shellSuspendCounter: number,
+  prerenderInterruptCounter: number,
 
   finishedLanes: Lanes,
 

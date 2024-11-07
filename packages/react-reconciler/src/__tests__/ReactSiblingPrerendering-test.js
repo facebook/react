@@ -3,11 +3,13 @@ let ReactNoop;
 let Scheduler;
 let act;
 let assertLog;
+let assertConsoleErrorDev;
 let waitFor;
 let waitForPaint;
 let waitForAll;
 let textCache;
 let startTransition;
+let useState;
 let Suspense;
 let Activity;
 
@@ -20,9 +22,12 @@ describe('ReactSiblingPrerendering', () => {
     Scheduler = require('scheduler');
     act = require('internal-test-utils').act;
     assertLog = require('internal-test-utils').assertLog;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
     waitFor = require('internal-test-utils').waitFor;
     waitForPaint = require('internal-test-utils').waitForPaint;
     waitForAll = require('internal-test-utils').waitForAll;
+    useState = React.useState;
     startTransition = React.startTransition;
     Suspense = React.Suspense;
     Activity = React.unstable_Activity;
@@ -479,4 +484,57 @@ describe('ReactSiblingPrerendering', () => {
       assertLog([]);
     },
   );
+
+  it('prevents infinite prerender loop caused by render phase update', async () => {
+    let resolve;
+    let resolvedValue = null;
+    const promise = new Promise(r => {
+      resolve = value => {
+        resolvedValue = value;
+        r();
+      };
+    });
+
+    function Async() {
+      if (resolvedValue === null) {
+        throw promise;
+      }
+      return resolvedValue;
+    }
+
+    function UnsafeUpdateDuringRender({setState}) {
+      if (resolvedValue === null) {
+        setState(n => n + 1);
+      }
+      return null;
+    }
+
+    function App() {
+      const [, setState] = useState(0);
+      return (
+        <Suspense fallback="Loading...">
+          <Async />
+          <UnsafeUpdateDuringRender setState={setState} />
+        </Suspense>
+      );
+    }
+
+    // This just tests that this update eventually terminates without falling
+    // into an infinte prerender loop, which it used to before we added a
+    // counter that disables prerendering after a certain number of attempts.
+    const root = ReactNoop.createRoot();
+    await act(() => root.render(<App />));
+    if (gate('enableSiblingPrerendering')) {
+      // This only runs if sibling prerendering is enabled, because otherwise
+      // it's blocked by the earlier component that suspends.
+      assertConsoleErrorDev([
+        'Cannot update a component (`App`) while rendering',
+      ]);
+    }
+    assertLog([]);
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    await act(() => resolve('Done'));
+    expect(root).toMatchRenderedOutput('Done');
+  });
 });
