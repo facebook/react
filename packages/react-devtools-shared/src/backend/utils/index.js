@@ -167,6 +167,19 @@ export function serializeToString(data: any): string {
   );
 }
 
+function safeToString(val: any): string {
+  try {
+    return String(val);
+  } catch (err) {
+    if (typeof val === 'object') {
+      // An object with no prototype and no `[Symbol.toPrimitive]()`, `toString()`, and `valueOf()` methods would throw.
+      // See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String#string_coercion
+      return '[object Object]';
+    }
+    throw err;
+  }
+}
+
 // based on https://github.com/tmpfs/format-util/blob/0e62d430efb0a1c51448709abd3e2406c14d8401/format.js#L1
 // based on https://developer.mozilla.org/en-US/docs/Web/API/console#Using_string_substitutions
 // Implements s, d, i and f placeholders
@@ -176,7 +189,7 @@ export function formatConsoleArgumentsToSingleString(
 ): string {
   const args = inputArgs.slice();
 
-  let formatted: string = String(maybeMessage);
+  let formatted: string = safeToString(maybeMessage);
 
   // If the first argument is a string, check for substitutions.
   if (typeof maybeMessage === 'string') {
@@ -211,7 +224,7 @@ export function formatConsoleArgumentsToSingleString(
   // Arguments that remain after formatting.
   if (args.length) {
     for (let i = 0; i < args.length; i++) {
-      formatted += ' ' + String(args[i]);
+      formatted += ' ' + safeToString(args[i]);
     }
   }
 

@@ -155,6 +155,12 @@ describe('utils', () => {
         'Symbol(abc) 123',
       );
     });
+
+    it('should gracefully handle objects with no prototype', () => {
+      expect(
+        formatConsoleArgumentsToSingleString('%o', Object.create(null)),
+      ).toEqual('%o [object Object]');
+    });
   });
 
   describe('formatWithStyles', () => {
