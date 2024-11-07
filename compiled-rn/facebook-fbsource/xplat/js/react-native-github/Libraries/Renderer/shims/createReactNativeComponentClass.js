@@ -7,7 +7,7 @@
  * @noformat
  * @nolint
  * @flow strict-local
- * @generated SignedSource<<62e766b69d440dab0a2d249f0cea38e0>>
+ * @generated SignedSource<<52163887de05f1cff05388145cf85b3b>>
  */
 
 'use strict';
@@ -32,4 +32,4 @@ const createReactNativeComponentClass = function (
   return register(name, callback);
 };
 
-module.exports = createReactNativeComponentClass;
+export default createReactNativeComponentClass;

@@ -7,7 +7,7 @@
  * @noformat
  * @nolint
  * @flow strict-local
- * @generated SignedSource<<b1b5e34e426103a69612278fd5c9f77c>>
+ * @generated SignedSource<<908f5fb85384725318e261f40e49d9a6>>
  */
 
 'use strict';
@@ -16,4 +16,4 @@ const ReactFeatureFlags = {
   debugRenderPhaseSideEffects: false,
 };
 
-module.exports = ReactFeatureFlags;
+export default ReactFeatureFlags;

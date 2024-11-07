@@ -7,7 +7,7 @@
  * @noformat
  * @nolint
  * @flow
- * @generated SignedSource<<bb39e39880fecbf572b5f8e7c2a95c5d>>
+ * @generated SignedSource<<cf323fc5ca893bab5669c7d321660412>>
  */
 
 'use strict';
@@ -16,7 +16,7 @@ import {BatchedBridge} from 'react-native/Libraries/ReactPrivate/ReactNativePriv
 
 import type {ReactFabricType} from './ReactNativeTypes';
 
-let ReactFabric;
+let ReactFabric: ReactFabricType;
 
 if (__DEV__) {
   ReactFabric = require('../implementations/ReactFabric-dev');
@@ -30,4 +30,4 @@ if (global.RN$Bridgeless !== true) {
   BatchedBridge.registerCallableModule('ReactFabric', ReactFabric);
 }
 
-module.exports = (ReactFabric: ReactFabricType);
+export default ReactFabric;
