@@ -139,7 +139,14 @@
   }
 
   function injectFixture(src) {
-    Fixture = new Function(src + '\nreturn Fixture;')();
+    try {
+      // Assuming src is a JSON string representing the Fixture object
+      Fixture = JSON.parse(src);
+    } catch (e) {
+      setStatus('Failed');
+      output.innerHTML = 'Invalid Fixture format';
+      return;
+    }
 
     if (typeof Fixture === 'undefined') {
       setStatus('Failed');
