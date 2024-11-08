@@ -431,7 +431,9 @@ describe('useSyncExternalStore', () => {
     assertLog([
       ...(gate('enableSiblingPrerendering')
         ? ['A', 'B', 'A', 'B', 'B']
-        : ['A', '(not set)', 'A', '(not set)', 'B']),
+        : gate(flags => flags.alwaysThrottleRetries)
+          ? ['A', '(not set)', 'A', '(not set)', 'B']
+          : ['A', '(not set)', 'A', '(not set)', '(not set)', 'B']),
     ]);
 
     expect(root).toMatchRenderedOutput('AB');
