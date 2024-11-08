@@ -46,7 +46,10 @@ function isHook(node) {
  */
 
 function isComponentName(node) {
-  return node.type === 'Identifier' && /^[A-Z]/.test(node.name);
+  return node.type === 'Identifier' &&
+    node.name[0] === node.name[0].toUpperCase() &&
+    node.name[0] !== '_' &&
+    node.name[0] !== '$';
 }
 
 function isReactFunction(node, functionName) {
