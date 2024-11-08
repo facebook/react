@@ -65,7 +65,11 @@ function loadModules(SymbolSrcPairs) {
 
 function getVersion() {
   let query = parseQuery(window.location.search);
-  return query.version || 'local';
+  let version = query.version || 'local';
+  if (version !== 'local' && !semver.valid(version)) {
+    throw new Error('Invalid version parameter');
+  }
+  return version;
 }
 
 export function reactPaths(version = getVersion()) {
