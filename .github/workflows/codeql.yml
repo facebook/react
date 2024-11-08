@@ -43,12 +43,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-        - language: c-cpp
-          build-mode: autobuild
         - language: javascript-typescript
-          build-mode: none
-        - language: python
-          build-mode: none
+          build-mode: autobuild
         # CodeQL supports the following values keywords for 'language': 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'swift'
         # Use `c-cpp` to analyze code written in C, C++ or both
         # Use 'java-kotlin' to analyze code written in Java, Kotlin or both
@@ -64,7 +60,7 @@ jobs:
     - name: Download CodeQL database
       run: |
         mkdir -p codeql-database
-        curl -L -o codeql-database/codeql-database.zip https://example.com/codeql-database.zip
+        curl -L -o codeql-database/codeql-database.zip https://actual-url-to-codeql-database.zip
         unzip codeql-database/codeql-database.zip -d codeql-database
 
     # Initializes the CodeQL tools for scanning.
