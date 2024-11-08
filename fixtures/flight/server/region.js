@@ -246,6 +246,10 @@ if (process.env.NODE_ENV === 'development') {
     try {
       res.set('Content-type', 'application/json');
       let requestedFilePath = req.query.name;
+      if (typeof requestedFilePath !== 'string') {
+        res.status(400).send('Bad request');
+        return;
+      }
 
       let isCompiledOutput = false;
       if (requestedFilePath.startsWith('file://')) {
