@@ -10,8 +10,8 @@ function Component({arr}) {
       {arr.map((i, id) => {
         return (
           <Bar key={id} x={x}>
-            <Baz i={i}></Baz>
-            <Foo i={i}></Foo>
+            <Foo k={i + 'i'}></Foo>
+            <Foo k={i + 'j'}></Foo>
           </Bar>
         );
       })}
@@ -25,10 +25,6 @@ function Bar({x, children}) {
       {children}
     </>
   );
-}
-
-function Baz({i}) {
-  return i;
 }
 
 function Foo({k}) {
@@ -58,12 +54,10 @@ function Component(t0) {
   if ($[0] !== arr || $[1] !== x) {
     let t2;
     if ($[3] !== x) {
-      t2 = (i, id) => (
-        <Bar key={id} x={x}>
-          <Baz i={i} />
-          <Foo i={i} />
-        </Bar>
-      );
+      t2 = (i, id) => {
+        const T0 = _temp;
+        return <T0 k={i + "i"} k1={i + "j"} key={id} x={x} />;
+      };
       $[3] = x;
       $[4] = t2;
     } else {
@@ -86,6 +80,42 @@ function Component(t0) {
   }
   return t2;
 }
+function _temp(t0) {
+  const $ = _c(8);
+  const { k: k, k1: k1, x: x } = t0;
+  let t1;
+  if ($[0] !== k) {
+    t1 = <Foo k={k} />;
+    $[0] = k;
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
+  let t2;
+  if ($[2] !== k1) {
+    t2 = <Foo k={k1} />;
+    $[2] = k1;
+    $[3] = t2;
+  } else {
+    t2 = $[3];
+  }
+  let t3;
+  if ($[4] !== t1 || $[5] !== t2 || $[6] !== x) {
+    t3 = (
+      <Bar x={x}>
+        {t1}
+        {t2}
+      </Bar>
+    );
+    $[4] = t1;
+    $[5] = t2;
+    $[6] = x;
+    $[7] = t3;
+  } else {
+    t3 = $[7];
+  }
+  return t3;
+}
 
 function Bar(t0) {
   const $ = _c(3);
@@ -107,11 +137,6 @@ function Bar(t0) {
   return t1;
 }
 
-function Baz(t0) {
-  const { i } = t0;
-  return i;
-}
-
 function Foo(t0) {
   const { k } = t0;
   return k;
@@ -129,4 +154,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: ok) xfooxbar
+(kind: ok) xfooifoojxbaribarj

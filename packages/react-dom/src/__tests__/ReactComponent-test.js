@@ -42,19 +42,6 @@ describe('ReactComponent', () => {
     }).toThrowError(/Target container is not a DOM element./);
   });
 
-  // @gate !disableStringRefs
-  it('should throw when supplying a string ref outside of render method', async () => {
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    await expect(
-      act(() => {
-        root.render(<div ref="badDiv" />);
-      }),
-      // TODO: This throws an AggregateError. Need to update test infra to
-      // support matching against AggregateError.
-    ).rejects.toThrow();
-  });
-
   it('should throw (in dev) when children are mutated during render', async () => {
     function Wrapper(props) {
       props.children[1] = <p key={1} />; // Mutation is illegal
@@ -130,105 +117,6 @@ describe('ReactComponent', () => {
         );
       });
     }
-  });
-
-  // @gate !disableStringRefs
-  it('string refs do not detach and reattach on every render', async () => {
-    let refVal;
-    class Child extends React.Component {
-      componentDidUpdate() {
-        // The parent ref should still be attached because it hasn't changed
-        // since the last render. If the ref had changed, then this would be
-        // undefined because refs are attached during the same phase (layout)
-        // as componentDidUpdate, in child -> parent order. So the new parent
-        // ref wouldn't have attached yet.
-        refVal = this.props.contextRef();
-      }
-
-      render() {
-        if (this.props.show) {
-          return <div>child</div>;
-        }
-      }
-    }
-
-    class Parent extends React.Component {
-      render() {
-        return (
-          <div id="test-root" ref="root">
-            <Child
-              contextRef={() => this.refs.root}
-              show={this.props.showChild}
-            />
-          </div>
-        );
-      }
-    }
-
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-
-    await act(() => {
-      root.render(<Parent />);
-    });
-
-    assertConsoleErrorDev(['contains the string ref']);
-
-    expect(refVal).toBe(undefined);
-    await act(() => {
-      root.render(<Parent showChild={true} />);
-    });
-    expect(refVal).toBe(container.querySelector('#test-root'));
-  });
-
-  // @gate !disableStringRefs
-  it('should support string refs on owned components', async () => {
-    const innerObj = {};
-    const outerObj = {};
-
-    class Wrapper extends React.Component {
-      getObject = () => {
-        return this.props.object;
-      };
-
-      render() {
-        return <div>{this.props.children}</div>;
-      }
-    }
-
-    class Component extends React.Component {
-      render() {
-        const inner = <Wrapper object={innerObj} ref="inner" />;
-        const outer = (
-          <Wrapper object={outerObj} ref="outer">
-            {inner}
-          </Wrapper>
-        );
-        return outer;
-      }
-
-      componentDidMount() {
-        expect(this.refs.inner.getObject()).toEqual(innerObj);
-        expect(this.refs.outer.getObject()).toEqual(outerObj);
-      }
-    }
-
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    await expect(async () => {
-      await act(() => {
-        root.render(<Component />);
-      });
-    }).toErrorDev([
-      'Component "Component" contains the string ref "inner". ' +
-        'Support for string refs will be removed in a future major release. ' +
-        'We recommend using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
-        '    in Wrapper (at **)\n' +
-        '    in div (at **)\n' +
-        '    in Wrapper (at **)\n' +
-        '    in Component (at **)',
-    ]);
   });
 
   it('should not have string refs on unmounted components', async () => {

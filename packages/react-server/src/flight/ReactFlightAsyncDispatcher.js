@@ -7,14 +7,9 @@
  * @flow
  */
 
-import type {ReactComponentInfo} from 'shared/ReactTypes';
-
 import type {AsyncDispatcher} from 'react-reconciler/src/ReactInternalTypes';
 
 import {resolveRequest, getCache} from '../ReactFlightServer';
-
-import {disableStringRefs} from 'shared/ReactFeatureFlags';
-
 import {resolveOwner} from './ReactFlightCurrentOwner';
 
 function resolveCache(): Map<Function, mixed> {
@@ -40,9 +35,4 @@ export const DefaultAsyncDispatcher: AsyncDispatcher = ({
 
 if (__DEV__) {
   DefaultAsyncDispatcher.getOwner = resolveOwner;
-} else if (!disableStringRefs) {
-  // Server Components never use string refs but the JSX runtime looks for it.
-  DefaultAsyncDispatcher.getOwner = (): null | ReactComponentInfo => {
-    return null;
-  };
 }

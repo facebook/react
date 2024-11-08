@@ -16,7 +16,7 @@
     "css-loader": "^6.9.1",
     "mini-css-extract-plugin": "^2.7.7",
     "process": "^0.11.10",
-    "webpack": "^5.82.1",
+    "webpack": "^5.94.0",
     "webpack-cli": "^5.1.1",
     "workerize-loader": "^2.0.2"
   }
