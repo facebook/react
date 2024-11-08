@@ -25,7 +25,6 @@ let waitFor;
 let waitForAll;
 let assertLog;
 let Suspense;
-let useCallback;
 let useMemo;
 let textCache;
 
@@ -50,7 +49,6 @@ describe('useSyncExternalStore', () => {
     useSyncExternalStore = React.useSyncExternalStore;
     startTransition = React.startTransition;
     Suspense = React.Suspense;
-    useCallback = React.useCallback;
     useMemo = React.useMemo;
     textCache = new Map();
     const InternalTestUtils = require('internal-test-utils');
@@ -383,9 +381,7 @@ describe('useSyncExternalStore', () => {
     };
 
     function emitChange() {
-      for (const listener of listeners) {
-        listener();
-      }
+      listeners.forEach(l => l());
     }
 
     function StoreText() {
