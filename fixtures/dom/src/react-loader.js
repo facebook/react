@@ -57,7 +57,7 @@ function loadModules(SymbolSrcPairs) {
 
     const moduleScript = document.createElement('script');
     moduleScript.type = 'module';
-    moduleScript.textContent = imports + 'window.__loaded();';
+    moduleScript.textContent = imports + 'window.__loaded();'.replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
 
     firstScript.parentNode.insertBefore(moduleScript, firstScript);
   });
