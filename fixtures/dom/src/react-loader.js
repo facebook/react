@@ -39,12 +39,6 @@ function loadScript(src) {
 function loadModules(SymbolSrcPairs) {
   let firstScript = document.getElementsByTagName('script')[0];
 
-  let imports = '';
-  SymbolSrcPairs.map(([symbol, src]) => {
-    imports += `import ${symbol} from "${src}";\n`;
-    imports += `window.${symbol} = ${symbol};\n`;
-  });
-
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(
       () => reject(new Error('Timed out loading react modules over esm')),
@@ -55,11 +49,19 @@ function loadModules(SymbolSrcPairs) {
       resolve();
     };
 
-    const moduleScript = document.createElement('script');
-    moduleScript.type = 'module';
-    moduleScript.textContent = imports + 'window.__loaded();'.replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
-
-    firstScript.parentNode.insertBefore(moduleScript, firstScript);
+    SymbolSrcPairs.forEach(([symbol, src]) => {
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = src;
+      script.onload = () => {
+        window[symbol] = window[symbol] || {};
+        if (SymbolSrcPairs.every(([s]) => window[s])) {
+          window.__loaded();
+        }
+      };
+      script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+      firstScript.parentNode.insertBefore(script, firstScript);
+    });
   });
 }
 
