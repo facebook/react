@@ -354,14 +354,21 @@ describe('useSyncExternalStore', () => {
     },
   );
 
-  it('regression: doesnt loop for only changing store reference', async () => {
-    let store = {validationResults: new Map(), version: 0};
+  it('regression: does not infinite loop for only changing store reference in render', async () => {
+    let store = {value: {}};
     let listeners = [];
 
     const ExternalStore = {
       set(value) {
         // Change the store ref, but not the value.
+        // This will cause a new snapshot to be returned if set is called in render,
+        // but the value is the same. Stores should not do this, but if they do
+        // we shouldn't infinitely render.
         store = {...store};
+        setTimeout(() => {
+          store = {value};
+          emitChange();
+        }, 100);
         emitChange();
       },
       subscribe(listener) {
@@ -381,35 +388,22 @@ describe('useSyncExternalStore', () => {
       }
     }
 
-    function useBug<TValue>(path: string): SRConfigPathState<TValue> {
+    function StoreText() {
       const {value} = useSyncExternalStore(
         ExternalStore.subscribe,
         ExternalStore.getSnapshot,
       );
 
-      const setStoreValue = useCallback(value => {
-        ExternalStore.set(value);
-      }, []);
-
-      const update = useCallback(
-        newValue => {
-          if (value == null && newValue != null) {
-            setStoreValue(newValue);
-          }
-        },
-        [setStoreValue, value],
-      );
-
       useMemo(() => {
-        update({foo: 'bar'});
+        // Set the store value on mount.
+        // This breaks the rules of React, but should be handled gracefully.
+        const newValue = {text: 'B'};
+        if (value == null || newValue !== value) {
+          ExternalStore.set(newValue);
+        }
       }, []);
 
-      return {};
-    }
-
-    function Bug() {
-      useBug();
-      return <Text text={'B'} />;
+      return <Text text={value.text || '(not set)'} />;
     }
 
     function App() {
@@ -417,23 +411,32 @@ describe('useSyncExternalStore', () => {
         <>
           <Suspense fallback={'Loading...'}>
             <AsyncText text={'A'} />
-            <Bug />
+            <StoreText />
           </Suspense>
         </>
       );
     }
 
     const root = ReactNoop.createRoot();
+
+    // The initial render suspends.
     await act(async () => {
       root.render(<App />);
     });
-    assertLog([...(gate('enableSiblingPrerendering') ? ['B'] : [])]);
+    assertLog([...(gate('enableSiblingPrerendering') ? ['(not set)'] : [])]);
 
     expect(root).toMatchRenderedOutput('Loading...');
 
     // Resolve the data and finish rendering.
-    await act(() => resolveText('A'));
-    assertLog(['A', 'B', 'A', 'B', 'B']);
+    // When resolving, the store should not get stuck in an infinite loop.
+    await act(() => {
+      resolveText('A');
+    });
+    assertLog([
+      ...(gate('enableSiblingPrerendering')
+        ? ['A', 'B', 'A', 'B', 'B']
+        : ['A', '(not set)', 'A', '(not set)', 'B']),
+    ]);
 
     expect(root).toMatchRenderedOutput('AB');
   });
