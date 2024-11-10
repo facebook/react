@@ -1657,7 +1657,7 @@ function createChildReconciler(
               existing._debugOwner = element._owner;
               existing._debugInfo = currentDebugInfo;
             }
-            return existing;clear
+            return existing;
           }
         }
         // Didn't match.
