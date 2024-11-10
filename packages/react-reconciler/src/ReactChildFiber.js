@@ -526,9 +526,7 @@ function createChildReconciler(
       if (
         current.elementType === elementType ||
         // Keep this check inline so it only runs on the false path:
-        (__DEV__
-          ? isCompatibleFamilyForHotReloading(current, element)
-          : false) ||
+        (__DEV__ && isCompatibleFamilyForHotReloading(current, element)) ||
         // Lazy types should reconcile their resolved type.
         // We need to do this after the Hot Reloading check above,
         // because hot reloading has different semantics than prod because
@@ -1641,9 +1639,7 @@ function createChildReconciler(
           if (
             child.elementType === elementType ||
             // Keep this check inline so it only runs on the false path:
-            (__DEV__
-              ? isCompatibleFamilyForHotReloading(child, element)
-              : false) ||
+            (__DEV__ && isCompatibleFamilyForHotReloading(child, element)) ||
             // Lazy types should reconcile their resolved type.
             // We need to do this after the Hot Reloading check above,
             // because hot reloading has different semantics than prod because
@@ -1661,7 +1657,7 @@ function createChildReconciler(
               existing._debugOwner = element._owner;
               existing._debugInfo = currentDebugInfo;
             }
-            return existing;
+            return existing;clear
           }
         }
         // Didn't match.
