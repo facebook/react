@@ -220,30 +220,40 @@ type EffectInstance = {
 };
 
 export const SimpleEffectKind: 0 = 0;
-export const ResourceEffectKind: 1 = 1;
-export type EffectKind = typeof SimpleEffectKind | typeof ResourceEffectKind;
-export type Effect = SimpleEffect | ResourceEffect;
+export const ResourceEffectIdentityKind: 1 = 1;
+export const ResourceEffectUpdateKind: 2 = 2;
+export type EffectKind =
+  | typeof SimpleEffectKind
+  | typeof ResourceEffectIdentityKind
+  | typeof ResourceEffectUpdateKind;
+export type Effect =
+  | SimpleEffect
+  | ResourceEffectIdentity
+  | ResourceEffectUpdate;
 export type SimpleEffect = {
   kind: typeof SimpleEffectKind,
   tag: HookFlags,
   inst: EffectInstance,
   create: () => (() => void) | void,
-  createDeps: Array<mixed> | null,
-  update: void | null,
-  updateDeps: void | null,
-  destroy: void | null,
+  createDeps: Array<mixed> | void | null,
+  next: Effect,
+};
+export type ResourceEffectIdentity = {
+  kind: typeof ResourceEffectIdentityKind,
+  tag: HookFlags,
+  inst: EffectInstance,
+  create: () => mixed,
+  createDeps: Array<mixed> | void | null,
+  destroy: ((resource: mixed) => void) | void,
   next: Effect,
   resource: mixed,
 };
-export type ResourceEffect = {
-  kind: typeof ResourceEffectKind,
+export type ResourceEffectUpdate = {
+  kind: typeof ResourceEffectUpdateKind,
   tag: HookFlags,
-  create: () => mixed,
   inst: EffectInstance,
-  createDeps: Array<mixed> | void | null,
   update: ((resource: mixed) => void) | void,
   updateDeps: Array<mixed> | void | null,
-  destroy: ((resource: mixed) => void) | void,
   next: Effect,
   resource: mixed,
 };
@@ -1757,7 +1767,7 @@ function mountSyncExternalStore<T>(
   // directly, without storing any additional state. For the same reason, we
   // don't need to set a static flag, either.
   fiber.flags |= PassiveEffect;
-  pushEffect(
+  pushSimpleEffect(
     HookHasEffect | HookPassive,
     SimpleEffectKind,
     createEffectInstance(),
@@ -1828,12 +1838,11 @@ function updateSyncExternalStore<T>(
       workInProgressHook.memoizedState.tag & HookHasEffect)
   ) {
     fiber.flags |= PassiveEffect;
-    pushEffect(
+    pushSimpleEffect(
       HookHasEffect | HookPassive,
       SimpleEffectKind,
       createEffectInstance(),
       updateStoreInstance.bind(null, fiber, inst, nextSnapshot, getSnapshot),
-      undefined,
     );
 
     // Unless we're rendering a blocking lane, schedule a consistency check.
@@ -2489,7 +2498,7 @@ function updateActionStateImpl<S, P>(
   const prevAction = actionQueueHook.memoizedState;
   if (action !== prevAction) {
     currentlyRenderingFiber.flags |= PassiveEffect;
-    pushEffect(
+    pushSimpleEffect(
       HookHasEffect | HookPassive,
       SimpleEffectKind,
       createEffectInstance(),
@@ -2550,31 +2559,73 @@ function rerenderActionState<S, P>(
   return [state, dispatch, false];
 }
 
-function pushEffect(
+function pushSimpleEffect(
   tag: HookFlags,
-  kind: EffectKind,
+  kind: typeof SimpleEffectKind,
   inst: EffectInstance,
-  create: (() => (() => void) | void) | (() => mixed),
+  create: () => (() => void) | void,
   createDeps: Array<mixed> | void | null,
-  update: ((resource: mixed) => void) | void,
-  updateDeps: Array<mixed> | void | null,
-  destroy: ((resource: mixed) => void) | void,
-  resource: mixed,
 ): Effect {
   // $FlowFixMe[incompatible-type] (@poteto) could not figure out how to appease Flow
-  const effect: Effect = {
+  const effect: SimpleEffect = {
     kind,
     tag,
     create,
     createDeps,
+    inst,
+    // Circular
+    next: (null: any),
+  };
+  return pushEffectImpl(effect);
+}
+
+function pushResourceEffectIdentity(
+  tag: HookFlags,
+  kind: typeof ResourceEffectIdentityKind,
+  inst: EffectInstance,
+  create: () => mixed,
+  createDeps: Array<mixed> | void | null,
+  destroy: ((resource: mixed) => void) | void,
+  resource: mixed,
+): Effect {
+  // $FlowFixMe[incompatible-type] (@poteto) could not figure out how to appease Flow
+  const effect: ResourceEffectIdentity = {
+    kind,
+    tag,
+    create,
+    createDeps,
+    inst,
+    destroy,
+    resource,
+    // Circular
+    next: (null: any),
+  };
+  return pushEffectImpl(effect);
+}
+
+function pushResourceEffectUpdate(
+  tag: HookFlags,
+  kind: typeof ResourceEffectUpdateKind,
+  inst: EffectInstance,
+  update: ((resource: mixed) => void) | void,
+  updateDeps: Array<mixed> | void | null,
+  resource: mixed,
+): Effect {
+  // $FlowFixMe[incompatible-type] (@poteto) could not figure out how to appease Flow
+  const effect: ResourceEffectUpdate = {
+    kind,
+    tag,
     update,
     updateDeps,
-    destroy,
     inst,
     resource,
     // Circular
     next: (null: any),
   };
+  return pushEffectImpl(effect);
+}
+
+function pushEffectImpl(effect: Effect): Effect {
   let componentUpdateQueue: null | FunctionComponentUpdateQueue =
     (currentlyRenderingFiber.updateQueue: any);
   if (componentUpdateQueue === null) {
@@ -2618,7 +2669,7 @@ function mountEffectImpl(
   const hook = mountWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
   currentlyRenderingFiber.flags |= fiberFlags;
-  hook.memoizedState = pushEffect(
+  hook.memoizedState = pushSimpleEffect(
     HookHasEffect | hookFlags,
     SimpleEffectKind,
     createEffectInstance(),
@@ -2646,7 +2697,7 @@ function updateEffectImpl(
       const prevDeps = prevEffect.createDeps;
       // $FlowFixMe[incompatible-call] (@poteto)
       if (areHookInputsEqual(nextDeps, prevDeps)) {
-        hook.memoizedState = pushEffect(
+        hook.memoizedState = pushSimpleEffect(
           hookFlags,
           SimpleEffectKind,
           inst,
@@ -2660,7 +2711,7 @@ function updateEffectImpl(
 
   currentlyRenderingFiber.flags |= fiberFlags;
 
-  hook.memoizedState = pushEffect(
+  hook.memoizedState = pushSimpleEffect(
     HookHasEffect | hookFlags,
     SimpleEffectKind,
     inst,
@@ -2746,15 +2797,20 @@ function mountResourceEffectImpl(
 ) {
   const hook = mountWorkInProgressHook();
   currentlyRenderingFiber.flags |= fiberFlags;
-  hook.memoizedState = pushEffect(
+  hook.memoizedState = pushResourceEffectIdentity(
     HookHasEffect | hookFlags,
-    ResourceEffectKind,
+    ResourceEffectIdentityKind,
     createEffectInstance(),
     create,
     createDeps,
+    destroy,
+  );
+  hook.memoizedState = pushResourceEffectUpdate(
+    hookFlags,
+    ResourceEffectUpdateKind,
+    createEffectInstance(),
     update,
     updateDeps,
-    destroy,
   );
 }
 
@@ -2786,60 +2842,60 @@ function updateResourceEffectImpl(
   destroy: ((resource: mixed) => void) | void,
 ) {
   const hook = updateWorkInProgressHook();
-  const effect: ResourceEffect = hook.memoizedState;
+  const effect: Effect = hook.memoizedState;
   const inst = effect.inst;
 
-  const nextCreateDepsArray = createDeps != null ? createDeps : [];
-  const nextUpdateDeps = updateDeps !== undefined ? updateDeps : null;
+  const nextCreateDeps = createDeps === undefined ? null : createDeps;
+  const nextUpdateDeps = updateDeps === undefined ? null : updateDeps;
   let isCreateDepsSame: boolean;
-  if (currentHook !== null) {
-    const prevEffect: ResourceEffect = currentHook.memoizedState;
-    const prevCreateDepsArray =
-      prevEffect.createDeps != null ? prevEffect.createDeps : [];
-    isCreateDepsSame = areHookInputsEqual(
-      nextCreateDepsArray,
-      prevCreateDepsArray,
-    );
+  let isUpdateDepsSame: boolean;
 
+  if (currentHook !== null) {
+    const prevEffect: Effect = currentHook.memoizedState;
+    if (nextCreateDeps !== null) {
+      let prevCreateDeps;
+      // TODO(@poteto) seems sketchy
+      if (prevEffect.kind === ResourceEffectIdentityKind) {
+        prevCreateDeps =
+          prevEffect.createDeps != null ? prevEffect.createDeps : null;
+      } else {
+        prevCreateDeps =
+          prevEffect.next.createDeps != null
+            ? prevEffect.next.createDeps
+            : null;
+      }
+      isCreateDepsSame = areHookInputsEqual(nextCreateDeps, prevCreateDeps);
+    }
     if (nextUpdateDeps !== null) {
       const prevUpdateDeps =
         prevEffect.updateDeps != null ? prevEffect.updateDeps : null;
-      if (
-        isCreateDepsSame &&
-        areHookInputsEqual(nextUpdateDeps, prevUpdateDeps)
-      ) {
-        hook.memoizedState = pushEffect(
-          hookFlags,
-          ResourceEffectKind,
-          inst,
-          create,
-          createDeps,
-          update,
-          updateDeps,
-          destroy,
-          prevEffect.resource,
-        );
-        return;
-      }
+      isUpdateDepsSame = areHookInputsEqual(nextUpdateDeps, prevUpdateDeps);
     }
   }
 
-  currentlyRenderingFiber.flags |= fiberFlags;
+  if (!(isCreateDepsSame && isUpdateDepsSame)) {
+    currentlyRenderingFiber.flags |= fiberFlags;
+  }
 
   const resource =
     currentHook !== null
-      ? (currentHook.memoizedState as ResourceEffect).resource
+      ? (currentHook.memoizedState as Effect).resource
       : undefined;
-  hook.memoizedState = pushEffect(
-    HookHasEffect | hookFlags,
-    ResourceEffectKind,
+  hook.memoizedState = pushResourceEffectIdentity(
+    isCreateDepsSame ? hookFlags : HookHasEffect | hookFlags,
+    ResourceEffectIdentityKind,
     inst,
-    // $FlowFixMe[incompatible-call] (@poteto)
-    isCreateDepsSame ? undefined : create,
-    nextCreateDepsArray,
+    create,
+    nextCreateDeps,
+    destroy,
+    resource,
+  );
+  hook.memoizedState = pushResourceEffectUpdate(
+    isUpdateDepsSame ? hookFlags : HookHasEffect | hookFlags,
+    ResourceEffectUpdateKind,
+    inst,
     update,
     nextUpdateDeps,
-    destroy,
     resource,
   );
 }

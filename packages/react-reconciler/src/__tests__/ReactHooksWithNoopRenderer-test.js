@@ -3451,7 +3451,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       await act(() => {
         ReactNoop.render(<App id={2} username="Jack" />);
       });
-      assertLog(['create(2, Jack)']);
+      assertLog(['create(2, Jack)', 'update(2, Jack)']);
 
       await act(() => {
         ReactNoop.render(<App id={2} username="Lauren" />);
@@ -3469,7 +3469,7 @@ describe('ReactHooksWithNoopRenderer', () => {
             Scheduler.log(`create(${resource.id})`);
             return resource;
           },
-          undefined,
+          [],
           resource => {
             Scheduler.log(`update(${resource.id})`);
           },
