@@ -174,7 +174,7 @@ describe('Activity Suspense', () => {
     );
   });
 
-  // @gate enableActivity
+  // @gate __DEV__ && enableActivity
   test('Regression: Suspending on hide should not infinite loop.', async () => {
     // This regression only repros in public act.
     global.IS_REACT_ACT_ENVIRONMENT = true;
