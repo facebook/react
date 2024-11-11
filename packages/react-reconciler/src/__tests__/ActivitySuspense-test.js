@@ -1,5 +1,3 @@
-import {enableSiblingPrerendering} from 'shared/ReactFeatureFlags';
-
 let React;
 let ReactNoop;
 let Scheduler;
@@ -14,6 +12,7 @@ let textCache;
 let waitFor;
 let waitForPaint;
 let assertLog;
+let use;
 
 describe('Activity Suspense', () => {
   beforeEach(() => {
@@ -29,6 +28,7 @@ describe('Activity Suspense', () => {
     useState = React.useState;
     useEffect = React.useEffect;
     startTransition = React.startTransition;
+    use = React.use;
 
     const InternalTestUtils = require('internal-test-utils');
     waitFor = InternalTestUtils.waitFor;
@@ -47,10 +47,10 @@ describe('Activity Suspense', () => {
       };
       textCache.set(text, newRecord);
     } else if (record.status === 'pending') {
-      const thenable = record.value;
+      const resolve = record.resolve;
       record.status = 'resolved';
       record.value = text;
-      thenable.pings.forEach(t => t());
+      resolve();
     }
   }
 
@@ -60,7 +60,7 @@ describe('Activity Suspense', () => {
       switch (record.status) {
         case 'pending':
           Scheduler.log(`Suspend! [${text}]`);
-          throw record.value;
+          return use(record.value);
         case 'rejected':
           throw record.value;
         case 'resolved':
@@ -68,24 +68,19 @@ describe('Activity Suspense', () => {
       }
     } else {
       Scheduler.log(`Suspend! [${text}]`);
-      const thenable = {
-        pings: [],
-        then(resolve) {
-          if (newRecord.status === 'pending') {
-            thenable.pings.push(resolve);
-          } else {
-            Promise.resolve().then(() => resolve(newRecord.value));
-          }
-        },
-      };
+      let resolve;
+      const promise = new Promise(_resolve => {
+        resolve = _resolve;
+      });
 
       const newRecord = {
         status: 'pending',
-        value: thenable,
+        value: promise,
+        resolve,
       };
       textCache.set(text, newRecord);
 
-      throw thenable;
+      return use(promise);
     }
   }
 
@@ -177,7 +172,9 @@ describe('Activity Suspense', () => {
   });
 
   // @gate enableActivity
-  test('suspend, resolve, hide (forces refresh), suspend, reveal', async () => {
+  test('Regression: Suspending on hide should not infinte loop.', async () => {
+    // This regression only repros in public act.
+    global.IS_REACT_ACT_ENVIRONMENT = true;
     const root = ReactNoop.createRoot();
 
     let setMode;
@@ -200,7 +197,7 @@ describe('Activity Suspense', () => {
       );
     }
 
-    await act(() => {
+    await React.act(() => {
       root.render(<Container text="hello" />);
     });
     assertLog([
@@ -211,13 +208,13 @@ describe('Activity Suspense', () => {
     ]);
     expect(root).toMatchRenderedOutput('Loading');
 
-    await act(async () => {
+    await React.act(async () => {
       await resolveText('hello');
     });
     assertLog(['hello']);
     expect(root).toMatchRenderedOutput('hello');
 
-    await act(async () => {
+    await React.act(() => {
       setMode('hidden');
     });
     assertLog(['Clear [hello]', 'Suspend! [hello]']);
@@ -265,7 +262,11 @@ describe('Activity Suspense', () => {
         );
       });
     });
-    assertLog(['Open', 'Suspend! [Async]', 'Loading...']);
+    assertLog([
+      'Open',
+      'Suspend! [Async]',
+      ...(gate(flags => flags.enableSiblingPrerendering) ? ['Loading...'] : []),
+    ]);
     // It should suspend with delay to prevent the already-visible Suspense
     // boundary from switching to a fallback
     expect(root).toMatchRenderedOutput(<span>Closed</span>);
@@ -274,7 +275,10 @@ describe('Activity Suspense', () => {
     await act(async () => {
       await resolveText('Async');
     });
-    assertLog(['Open', 'Async']);
+    assertLog([
+      ...(gate(flags => flags.enableSiblingPrerendering) ? ['Open'] : []),
+      'Async',
+    ]);
     expect(root).toMatchRenderedOutput(
       <>
         <span>Open</span>
@@ -326,7 +330,11 @@ describe('Activity Suspense', () => {
         );
       });
     });
-    assertLog(['Open', 'Suspend! [Async]', 'Loading...']);
+    assertLog([
+      'Open',
+      'Suspend! [Async]',
+      ...(gate(flags => flags.enableSiblingPrerendering) ? ['Loading...'] : []),
+    ]);
     // It should suspend with delay to prevent the already-visible Suspense
     // boundary from switching to a fallback
     expect(root).toMatchRenderedOutput(
