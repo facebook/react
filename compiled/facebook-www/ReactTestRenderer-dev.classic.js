@@ -1998,7 +1998,8 @@ __DEV__ &&
         didTimeout
       );
       scheduleTaskForRootDuringMicrotask(root, now$1());
-      return root.callbackNode === originalCallbackNode
+      return null != root.callbackNode &&
+        root.callbackNode === originalCallbackNode
         ? performWorkOnRootViaSchedulerTask.bind(null, root)
         : null;
     }
@@ -14933,11 +14934,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-www-classic-989af12f-20241108",
+        version: "19.0.0-www-classic-b836de61-20241111",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-www-classic-989af12f-20241108"
+        reconcilerVersion: "19.0.0-www-classic-b836de61-20241111"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15072,5 +15073,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.0.0-www-classic-989af12f-20241108";
+    exports.version = "19.0.0-www-classic-b836de61-20241111";
   })();

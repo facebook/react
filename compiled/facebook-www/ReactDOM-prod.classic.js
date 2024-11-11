@@ -2116,7 +2116,7 @@ function performWorkOnRootViaSchedulerTask(root, didTimeout) {
     !disableSchedulerTimeoutInWorkLoop && didTimeout
   );
   scheduleTaskForRootDuringMicrotask(root, now());
-  return root.callbackNode === originalCallbackNode
+  return null != root.callbackNode && root.callbackNode === originalCallbackNode
     ? performWorkOnRootViaSchedulerTask.bind(null, root)
     : null;
 }
@@ -17061,14 +17061,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1741 = React.version;
 if (
-  "19.0.0-www-classic-989af12f-20241108" !==
+  "19.0.0-www-classic-b836de61-20241111" !==
   isomorphicReactPackageVersion$jscomp$inline_1741
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1741,
-      "19.0.0-www-classic-989af12f-20241108"
+      "19.0.0-www-classic-b836de61-20241111"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17086,11 +17086,11 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2285 = {
   bundleType: 0,
-  version: "19.0.0-www-classic-989af12f-20241108",
+  version: "19.0.0-www-classic-b836de61-20241111",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-www-classic-989af12f-20241108"
+  reconcilerVersion: "19.0.0-www-classic-b836de61-20241111"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2286 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17453,4 +17453,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-989af12f-20241108";
+exports.version = "19.0.0-www-classic-b836de61-20241111";

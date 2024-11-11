@@ -1140,7 +1140,8 @@ module.exports = function ($$$config) {
       !disableSchedulerTimeoutInWorkLoop && didTimeout
     );
     scheduleTaskForRootDuringMicrotask(root, now());
-    return root.callbackNode === originalCallbackNode
+    return null != root.callbackNode &&
+      root.callbackNode === originalCallbackNode
       ? performWorkOnRootViaSchedulerTask.bind(null, root)
       : null;
   }
@@ -12361,7 +12362,7 @@ module.exports = function ($$$config) {
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
       findFiberByHostInstance: getInstanceFromNode,
-      reconcilerVersion: "19.0.0-www-modern-989af12f-20241108"
+      reconcilerVersion: "19.0.0-www-modern-b836de61-20241111"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

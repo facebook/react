@@ -2425,7 +2425,8 @@ __DEV__ &&
         !disableSchedulerTimeoutInWorkLoop && didTimeout
       );
       scheduleTaskForRootDuringMicrotask(root, now$1());
-      return root.callbackNode === originalCallbackNode
+      return null != root.callbackNode &&
+        root.callbackNode === originalCallbackNode
         ? performWorkOnRootViaSchedulerTask.bind(null, root)
         : null;
     }
@@ -18866,7 +18867,7 @@ __DEV__ &&
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-www-classic-989af12f-20241108"
+        reconcilerVersion: "19.0.0-www-classic-b836de61-20241111"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

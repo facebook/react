@@ -1208,7 +1208,7 @@ function performWorkOnRootViaSchedulerTask(root, didTimeout) {
     !disableSchedulerTimeoutInWorkLoop && didTimeout
   );
   scheduleTaskForRootDuringMicrotask(root, now());
-  return root.callbackNode === originalCallbackNode
+  return null != root.callbackNode && root.callbackNode === originalCallbackNode
     ? performWorkOnRootViaSchedulerTask.bind(null, root)
     : null;
 }
@@ -10350,13 +10350,13 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1450 = {
   bundleType: 0,
-  version: "19.0.0-www-modern-989af12f-20241108",
+  version: "19.0.0-www-modern-b836de61-20241111",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: function () {
     return null;
   },
-  reconcilerVersion: "19.0.0-www-modern-989af12f-20241108"
+  reconcilerVersion: "19.0.0-www-modern-b836de61-20241111"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1451 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -10382,4 +10382,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.0.0-www-modern-989af12f-20241108";
+exports.version = "19.0.0-www-modern-b836de61-20241111";
