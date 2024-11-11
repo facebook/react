@@ -18,6 +18,7 @@ import {
   enableProfilerNestedUpdatePhase,
   enableSchedulingProfiler,
   enableScopeAPI,
+  enableUseResourceEffectHook,
 } from 'shared/ReactFeatureFlags';
 import {
   ClassComponent,
@@ -70,6 +71,7 @@ import {
 } from './ReactFiberCallUserSpace';
 
 import {runWithFiberInDEV} from './ReactCurrentFiber';
+import {ResourceEffectKind, SimpleEffectKind} from './ReactFiberHooks';
 
 function shouldProfile(current: Fiber): boolean {
   return (
@@ -146,15 +148,45 @@ export function commitHookEffectListMount(
 
           // Mount
           let destroy;
+          if (
+            enableUseResourceEffectHook &&
+            effect.kind === ResourceEffectKind
+          ) {
+            if (typeof effect.create === 'function') {
+              effect.resource = effect.create();
+              if (__DEV__) {
+                if (effect.resource == null) {
+                  console.error(
+                    'useResourceEffect must provide a callback which returns a resource. ' +
+                      'If a managed resource is not needed here, use useEffect. Received %s',
+                    effect.resource,
+                  );
+                }
+              }
+            } else if (
+              typeof effect.update === 'function' &&
+              effect.resource != null
+            ) {
+              // TODO(@poteto) what about multiple updates?
+              effect.update(effect.resource);
+            }
+            destroy = effect.destroy;
+          }
           if (__DEV__) {
             if ((flags & HookInsertion) !== NoHookEffect) {
               setIsRunningInsertionEffect(true);
             }
-            destroy = runWithFiberInDEV(finishedWork, callCreateInDEV, effect);
+            if (effect.kind === SimpleEffectKind) {
+              destroy = runWithFiberInDEV(
+                finishedWork,
+                callCreateInDEV,
+                effect,
+              );
+            }
             if ((flags & HookInsertion) !== NoHookEffect) {
               setIsRunningInsertionEffect(false);
             }
-          } else {
+          } else if (effect.kind === SimpleEffectKind) {
             const create = effect.create;
             const inst = effect.inst;
             destroy = create();
@@ -176,6 +208,11 @@ export function commitHookEffectListMount(
                 hookName = 'useLayoutEffect';
               } else if ((effect.tag & HookInsertion) !== NoFlags) {
                 hookName = 'useInsertionEffect';
+              } else if (
+                enableUseResourceEffectHook &&
+                effect.kind === ResourceEffectKind
+              ) {
+                hookName = 'useResourceEffect';
               } else {
                 hookName = 'useEffect';
               }
@@ -244,9 +281,24 @@ export function commitHookEffectListUnmount(
         if ((effect.tag & flags) === flags) {
           // Unmount
           const inst = effect.inst;
+          if (
+            enableUseResourceEffectHook &&
+            effect.kind === ResourceEffectKind &&
+            effect.resource != null &&
+            (effect.create != null ||
+              // TODO(@poteto) this feels gross
+              finishedWork.return == null)
+          ) {
+            inst.destroy = effect.destroy;
+          }
           const destroy = inst.destroy;
           if (destroy !== undefined) {
             inst.destroy = undefined;
+            let resource;
+            if (enableUseResourceEffectHook) {
+              resource = effect.resource;
+              effect.resource = null;
+            }
             if (enableSchedulingProfiler) {
               if ((flags & HookPassive) !== NoHookEffect) {
                 markComponentPassiveEffectUnmountStarted(finishedWork);
@@ -260,7 +312,16 @@ export function commitHookEffectListUnmount(
                 setIsRunningInsertionEffect(true);
               }
             }
-            safelyCallDestroy(finishedWork, nearestMountedAncestor, destroy);
+            if (enableUseResourceEffectHook) {
+              safelyCallDestroyWithResource(
+                finishedWork,
+                nearestMountedAncestor,
+                destroy,
+                resource,
+              );
+            } else {
+              safelyCallDestroy(finishedWork, nearestMountedAncestor, destroy);
+            }
             if (__DEV__) {
               if ((flags & HookInsertion) !== NoHookEffect) {
                 setIsRunningInsertionEffect(false);
@@ -889,6 +950,30 @@ function safelyCallDestroy(
   } else {
     try {
       destroy();
+    } catch (error) {
+      captureCommitPhaseError(current, nearestMountedAncestor, error);
+    }
+  }
+}
+
+function safelyCallDestroyWithResource(
+  current: Fiber,
+  nearestMountedAncestor: Fiber | null,
+  destroy: mixed => void,
+  resource: mixed,
+) {
+  const destroy_ = resource == null ? destroy : destroy.bind(null, resource);
+  if (__DEV__) {
+    runWithFiberInDEV(
+      current,
+      callDestroyInDEV,
+      current,
+      nearestMountedAncestor,
+      destroy_,
+    );
+  } else {
+    try {
+      destroy_();
     } catch (error) {
       captureCommitPhaseError(current, nearestMountedAncestor, error);
     }
