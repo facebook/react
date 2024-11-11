@@ -145,15 +145,13 @@ export function attach(
   let getElementIDForHostInstance: GetElementIDForHostInstance =
     ((null: any): GetElementIDForHostInstance);
   let findHostInstanceForInternalID: (id: number) => ?HostInstance;
-  let getNearestMountedHostInstance = (
-    node: HostInstance,
-  ): null | HostInstance => {
+  let getNearestMountedDOMNode = (node: Element): null | Element => {
     // Not implemented.
     return null;
   };
 
   if (renderer.ComponentTree) {
-    getElementIDForHostInstance = (node, findNearestUnfilteredAncestor) => {
+    getElementIDForHostInstance = node => {
       const internalInstance =
         renderer.ComponentTree.getClosestInstanceFromNode(node);
       return internalInstanceToIDMap.get(internalInstance) || null;
@@ -162,9 +160,7 @@ export function attach(
       const internalInstance = idToInternalInstanceMap.get(id);
       return renderer.ComponentTree.getNodeFromInstance(internalInstance);
     };
-    getNearestMountedHostInstance = (
-      node: HostInstance,
-    ): null | HostInstance => {
+    getNearestMountedDOMNode = (node: Element): null | Element => {
       const internalInstance =
         renderer.ComponentTree.getClosestInstanceFromNode(node);
       if (internalInstance != null) {
@@ -173,7 +169,7 @@ export function attach(
       return null;
     };
   } else if (renderer.Mount.getID && renderer.Mount.getNode) {
-    getElementIDForHostInstance = (node, findNearestUnfilteredAncestor) => {
+    getElementIDForHostInstance = node => {
       // Not implemented.
       return null;
     };
@@ -775,7 +771,7 @@ export function attach(
       return null;
     }
 
-    const {displayName, key} = getData(internalInstance);
+    const {key} = getData(internalInstance);
     const type = getElementType(internalInstance);
 
     let context = null;
@@ -830,7 +826,6 @@ export function attach(
       // Toggle error boundary did not exist in legacy versions
       canToggleError: false,
       isErrored: false,
-      targetErrorBoundaryID: null,
 
       // Suspense did not exist in legacy versions
       canToggleSuspense: false,
@@ -841,8 +836,6 @@ export function attach(
 
       // Only legacy context exists in legacy versions.
       hasLegacyContext: true,
-
-      displayName: displayName,
 
       type: type,
 
@@ -876,10 +869,12 @@ export function attach(
       return;
     }
 
+    const displayName = getDisplayNameForElementID(id);
+
     const supportsGroup = typeof console.groupCollapsed === 'function';
     if (supportsGroup) {
       console.groupCollapsed(
-        `[Click to expand] %c<${result.displayName || 'Component'} />`,
+        `[Click to expand] %c<${displayName || 'Component'} />`,
         // --dom-tag-name-color is the CSS variable Chrome styles HTML elements with in the console.
         'color: var(--dom-tag-name-color); font-weight: normal;',
       );
@@ -907,30 +902,31 @@ export function attach(
     }
   }
 
-  function prepareViewAttributeSource(
+  function getElementAttributeByPath(
     id: number,
     path: Array<string | number>,
-  ): void {
+  ): mixed {
     const inspectedElement = inspectElementRaw(id);
     if (inspectedElement !== null) {
-      window.$attribute = getInObject(inspectedElement, path);
+      return getInObject(inspectedElement, path);
     }
+    return undefined;
   }
 
-  function prepareViewElementSource(id: number): void {
+  function getElementSourceFunctionById(id: number): null | Function {
     const internalInstance = idToInternalInstanceMap.get(id);
     if (internalInstance == null) {
       console.warn(`Could not find instance with id "${id}"`);
-      return;
+      return null;
     }
 
     const element = internalInstance._currentElement;
     if (element == null) {
       console.warn(`Could not find element with id "${id}"`);
-      return;
+      return null;
     }
 
-    global.$type = element.type;
+    return element.type;
   }
 
   function deletePath(
@@ -1077,6 +1073,11 @@ export function attach(
     // Not implemented.
   }
 
+  function getEnvironmentNames(): Array<string> {
+    // No RSC support.
+    return [];
+  }
+
   function setTraceUpdatesEnabled(enabled: boolean) {
     // Not implemented.
   }
@@ -1102,10 +1103,6 @@ export function attach(
     // Not implemented
   }
 
-  function patchConsoleForStrictMode() {}
-
-  function unpatchConsoleForStrictMode() {}
-
   function hasElementWithId(id: number): boolean {
     return idToInternalInstanceMap.has(id);
   }
@@ -1120,7 +1117,7 @@ export function attach(
     flushInitialOperations,
     getBestMatchForTrackedPath,
     getDisplayNameForElementID,
-    getNearestMountedHostInstance,
+    getNearestMountedDOMNode,
     getElementIDForHostInstance,
     getInstanceAndStyle,
     findHostInstancesForElementID: (id: number) => {
@@ -1140,16 +1137,15 @@ export function attach(
     overrideSuspense,
     overrideValueAtPath,
     renamePath,
-    patchConsoleForStrictMode,
-    prepareViewAttributeSource,
-    prepareViewElementSource,
+    getElementAttributeByPath,
+    getElementSourceFunctionById,
     renderer,
     setTraceUpdatesEnabled,
     setTrackedPath,
     startProfiling,
     stopProfiling,
     storeAsGlobal,
-    unpatchConsoleForStrictMode,
     updateComponentFilters,
+    getEnvironmentNames,
   };
 }

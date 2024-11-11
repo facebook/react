@@ -23,7 +23,7 @@ let ReactServerDOMServer;
 let ReactServerDOMClient;
 let ReactServerScheduler;
 
-describe('ReactFlightDOMReply', () => {
+describe('ReactFlightTurbopackDOMReply', () => {
   beforeEach(() => {
     jest.resetModules();
 

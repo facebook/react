@@ -24,13 +24,13 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
-  3 |     return x;
-  4 |   }
-> 5 |   return baz(); // OK: FuncDecls are HoistableDeclarations that have both declaration and value hoisting
-    |          ^^^^^ Todo: Unsupported declaration type for hoisting. variable "baz" declared with FunctionDeclaration (5:5)
-  6 |   function baz() {
-  7 |     return bar();
-  8 |   }
+   5 |   return baz(); // OK: FuncDecls are HoistableDeclarations that have both declaration and value hoisting
+   6 |   function baz() {
+>  7 |     return bar();
+     |            ^^^ Todo: Support functions with unreachable code that may contain hoisted declarations (7:7)
+   8 |   }
+   9 | }
+  10 |
 ```
           
       

@@ -24,7 +24,7 @@ let use;
 let ReactServerScheduler;
 let reactServerAct;
 
-describe('ReactFlightDOMNode', () => {
+describe('ReactFlightTurbopackDOMNode', () => {
   beforeEach(() => {
     jest.resetModules();
 

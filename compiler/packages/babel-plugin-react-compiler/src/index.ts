@@ -18,6 +18,7 @@ export {
   compileProgram,
   parsePluginOptions,
   run,
+  runPlayground,
   OPT_OUT_DIRECTIVES,
   type CompilerPipelineValue,
   type PluginOptions,
@@ -25,7 +26,7 @@ export {
 export {
   Effect,
   ValueKind,
-  parseConfigPragma,
+  parseConfigPragmaForTests,
   printHIR,
   validateEnvironmentConfig,
   type EnvironmentConfig,

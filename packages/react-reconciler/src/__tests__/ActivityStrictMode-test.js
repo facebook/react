@@ -240,6 +240,11 @@ describe('Activity StrictMode', () => {
       'Parent mount',
       'Parent unmount',
       'Parent mount',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['Child rendered', 'Child suspended']
+        : []),
+
       '------------------------------',
       'Child rendered',
       'Child rendered',

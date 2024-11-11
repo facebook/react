@@ -29,12 +29,8 @@ function initModules() {
   };
 }
 
-const {
-  resetModules,
-  asyncReactDOMRender,
-  clientRenderOnServerString,
-  expectMarkupMatch,
-} = ReactDOMServerIntegrationUtils(initModules);
+const {resetModules, clientRenderOnServerString, expectMarkupMatch} =
+  ReactDOMServerIntegrationUtils(initModules);
 
 describe('ReactDOMServerIntegration', () => {
   beforeEach(() => {
@@ -74,36 +70,6 @@ describe('ReactDOMServerIntegration', () => {
       const e = await clientRenderOnServerString(<RefsComponent />);
       expect(refElement).not.toBe(null);
       expect(refElement).toBe(e);
-    });
-
-    // @gate !disableStringRefs
-    it('should have string refs on client when rendered over server markup', async () => {
-      class RefsComponent extends React.Component {
-        render() {
-          return <div ref="myDiv" />;
-        }
-      }
-
-      const markup = ReactDOMServer.renderToString(<RefsComponent />);
-      const root = document.createElement('div');
-      root.innerHTML = markup;
-      let component = null;
-      resetModules();
-      await expect(async () => {
-        await asyncReactDOMRender(
-          <RefsComponent ref={e => (component = e)} />,
-          root,
-          true,
-        );
-      }).toErrorDev([
-        'Component "RefsComponent" contains the string ref "myDiv". ' +
-          'Support for string refs will be removed in a future major release. ' +
-          'We recommend using useRef() or createRef() instead. ' +
-          'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
-          '    in div (at **)\n' +
-          '    in RefsComponent (at **)',
-      ]);
-      expect(component.refs.myDiv).toBe(root.firstChild);
     });
   });
 

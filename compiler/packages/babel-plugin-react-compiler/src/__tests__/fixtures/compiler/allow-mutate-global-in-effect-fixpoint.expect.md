@@ -46,54 +46,57 @@ import { useEffect, useState } from "react";
 let someGlobal = { value: null };
 
 function Component() {
-  const $ = _c(6);
+  const $ = _c(7);
   const [state, setState] = useState(someGlobal);
-
-  let x = someGlobal;
-  while (x == null) {
-    x = someGlobal;
-  }
-
-  const y = x;
   let t0;
   let t1;
+  let t2;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = () => {
+    let x = someGlobal;
+    while (x == null) {
+      x = someGlobal;
+    }
+
+    const y = x;
+    t0 = useEffect;
+    t1 = () => {
       y.value = "hello";
     };
-    t1 = [];
+    t2 = [];
     $[0] = t0;
     $[1] = t1;
+    $[2] = t2;
   } else {
     t0 = $[0];
     t1 = $[1];
+    t2 = $[2];
   }
-  useEffect(t0, t1);
-  let t2;
+  t0(t1, t2);
   let t3;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-    t2 = () => {
+  let t4;
+  if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+    t3 = () => {
       setState(someGlobal.value);
     };
-    t3 = [someGlobal];
-    $[2] = t2;
+    t4 = [someGlobal];
     $[3] = t3;
-  } else {
-    t2 = $[2];
-    t3 = $[3];
-  }
-  useEffect(t2, t3);
-
-  const t4 = String(state);
-  let t5;
-  if ($[4] !== t4) {
-    t5 = <div>{t4}</div>;
     $[4] = t4;
-    $[5] = t5;
   } else {
-    t5 = $[5];
+    t3 = $[3];
+    t4 = $[4];
   }
-  return t5;
+  useEffect(t3, t4);
+
+  const t5 = String(state);
+  let t6;
+  if ($[5] !== t5) {
+    t6 = <div>{t5}</div>;
+    $[5] = t5;
+    $[6] = t6;
+  } else {
+    t6 = $[6];
+  }
+  return t6;
 }
 
 export const FIXTURE_ENTRYPOINT = {

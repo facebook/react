@@ -42,6 +42,7 @@ type IdentifierSidemap = {
   react: Set<IdentifierId>;
   maybeDepsLists: Map<IdentifierId, Array<Place>>;
   maybeDeps: Map<IdentifierId, ManualMemoDependency>;
+  optionals: Set<IdentifierId>;
 };
 
 /**
@@ -52,6 +53,7 @@ type IdentifierSidemap = {
 export function collectMaybeMemoDependencies(
   value: InstructionValue,
   maybeDeps: Map<IdentifierId, ManualMemoDependency>,
+  optional: boolean,
 ): ManualMemoDependency | null {
   switch (value.kind) {
     case 'LoadGlobal': {
@@ -68,7 +70,8 @@ export function collectMaybeMemoDependencies(
       if (object != null) {
         return {
           root: object.root,
-          path: [...object.path, value.property],
+          // TODO: determine if the access is optional
+          path: [...object.path, {property: value.property, optional}],
         };
       }
       break;
@@ -127,7 +130,7 @@ function collectTemporaries(
       break;
     }
     case 'LoadGlobal': {
-      const global = env.getGlobalDeclaration(value.binding);
+      const global = env.getGlobalDeclaration(value.binding, value.loc);
       const hookKind = global !== null ? getHookKindForType(env, global) : null;
       const lvalId = instr.lvalue.identifier.id;
       if (hookKind === 'useMemo' || hookKind === 'useCallback') {
@@ -161,7 +164,11 @@ function collectTemporaries(
       break;
     }
   }
-  const maybeDep = collectMaybeMemoDependencies(value, sidemap.maybeDeps);
+  const maybeDep = collectMaybeMemoDependencies(
+    value,
+    sidemap.maybeDeps,
+    sidemap.optionals.has(lvalue.identifier.id),
+  );
   // We don't expect named lvalues during this pass (unlike ValidatePreservingManualMemo)
   if (maybeDep != null) {
     sidemap.maybeDeps.set(lvalue.identifier.id, maybeDep);
@@ -337,12 +344,14 @@ export function dropManualMemoization(func: HIRFunction): void {
     func.env.config.validatePreserveExistingMemoizationGuarantees ||
     func.env.config.validateNoSetStateInRender ||
     func.env.config.enablePreserveExistingMemoizationGuarantees;
+  const optionals = findOptionalPlaces(func);
   const sidemap: IdentifierSidemap = {
     functions: new Map(),
     manualMemos: new Map(),
     react: new Set(),
     maybeDeps: new Map(),
     maybeDepsLists: new Map(),
+    optionals,
   };
   let nextManualMemoId = 0;
 
@@ -474,4 +483,47 @@ export function dropManualMemoization(func: HIRFunction): void {
       markInstructionIds(func.body);
     }
   }
+}
+
+function findOptionalPlaces(fn: HIRFunction): Set<IdentifierId> {
+  const optionals = new Set<IdentifierId>();
+  for (const [, block] of fn.body.blocks) {
+    if (block.terminal.kind === 'optional' && block.terminal.optional) {
+      const optionalTerminal = block.terminal;
+      let testBlock = fn.body.blocks.get(block.terminal.test)!;
+      loop: while (true) {
+        const terminal = testBlock.terminal;
+        switch (terminal.kind) {
+          case 'branch': {
+            if (terminal.fallthrough === optionalTerminal.fallthrough) {
+              // found it
+              const consequent = fn.body.blocks.get(terminal.consequent)!;
+              const last = consequent.instructions.at(-1);
+              if (last !== undefined && last.value.kind === 'StoreLocal') {
+                optionals.add(last.value.value.identifier.id);
+              }
+              break loop;
+            } else {
+              testBlock = fn.body.blocks.get(terminal.fallthrough)!;
+            }
+            break;
+          }
+          case 'optional':
+          case 'logical':
+          case 'sequence':
+          case 'ternary': {
+            testBlock = fn.body.blocks.get(terminal.fallthrough)!;
+            break;
+          }
+          default: {
+            CompilerError.invariant(false, {
+              reason: `Unexpected terminal in optional`,
+              loc: terminal.loc,
+            });
+          }
+        }
+      }
+    }
+  }
+  return optionals;
 }

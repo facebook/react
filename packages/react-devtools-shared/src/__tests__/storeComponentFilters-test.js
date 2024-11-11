@@ -420,8 +420,8 @@ describe('Store component filters', () => {
       });
 
       expect(store).toMatchInlineSnapshot(``);
-      expect(store.errorCount).toBe(0);
-      expect(store.warningCount).toBe(0);
+      expect(store.componentWithErrorCount).toBe(0);
+      expect(store.componentWithWarningCount).toBe(0);
 
       await actAsync(async () => (store.componentFilters = []));
       expect(store).toMatchInlineSnapshot(`
@@ -460,8 +460,8 @@ describe('Store component filters', () => {
           ]),
       );
       expect(store).toMatchInlineSnapshot(`[root]`);
-      expect(store.errorCount).toBe(0);
-      expect(store.warningCount).toBe(0);
+      expect(store.componentWithErrorCount).toBe(0);
+      expect(store.componentWithWarningCount).toBe(0);
 
       await actAsync(async () => (store.componentFilters = []));
       expect(store).toMatchInlineSnapshot(`
@@ -510,8 +510,8 @@ describe('Store component filters', () => {
       });
 
       expect(store).toMatchInlineSnapshot(``);
-      expect(store.errorCount).toBe(0);
-      expect(store.warningCount).toBe(0);
+      expect(store.componentWithErrorCount).toBe(0);
+      expect(store.componentWithWarningCount).toBe(0);
 
       await actAsync(async () => (store.componentFilters = []));
       expect(store).toMatchInlineSnapshot(`
@@ -550,8 +550,8 @@ describe('Store component filters', () => {
           ]),
       );
       expect(store).toMatchInlineSnapshot(`[root]`);
-      expect(store.errorCount).toBe(0);
-      expect(store.warningCount).toBe(0);
+      expect(store.componentWithErrorCount).toBe(0);
+      expect(store.componentWithWarningCount).toBe(0);
 
       await actAsync(async () => (store.componentFilters = []));
       expect(store).toMatchInlineSnapshot(`

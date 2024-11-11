@@ -199,7 +199,7 @@ function insertNewOutlinedFunctionNode(
   program: NodePath<t.Program>,
   originalFn: BabelFn,
   compiledFn: CodegenFunction,
-): NodePath<t.Function> {
+): BabelFn {
   switch (originalFn.type) {
     case 'FunctionDeclaration': {
       return originalFn.insertAfter(
@@ -298,7 +298,6 @@ export function compileProgram(
     return;
   }
   const useMemoCacheIdentifier = program.scope.generateUidIdentifier('c');
-  const moduleName = pass.opts.runtimeModule ?? 'react/compiler-runtime';
 
   /*
    * Record lint errors and critical errors as depending on Forget's config,
@@ -310,8 +309,6 @@ export function compileProgram(
     pass.opts.eslintSuppressionRules ?? DEFAULT_ESLINT_SUPPRESSIONS,
     pass.opts.flowSuppressions,
   );
-  const lintError = suppressionsToCompilerError(suppressions);
-  let hasCriticalError = lintError != null;
   const queue: Array<{
     kind: 'original' | 'outlined';
     fn: BabelFn;
@@ -385,7 +382,8 @@ export function compileProgram(
       );
     }
 
-    if (lintError != null) {
+    let compiledFn: CodegenFunction;
+    try {
       /**
        * Note that Babel does not attach comment nodes to nodes; they are dangling off of the
        * Program node itself. We need to figure out whether an eslint suppression range
@@ -396,16 +394,15 @@ export function compileProgram(
         fn,
       );
       if (suppressionsInFunction.length > 0) {
+        const lintError = suppressionsToCompilerError(suppressionsInFunction);
         if (optOutDirectives.length > 0) {
           logError(lintError, pass, fn.node.loc ?? null);
         } else {
           handleError(lintError, pass, fn.node.loc ?? null);
         }
+        return null;
       }
-    }
 
-    let compiledFn: CodegenFunction;
-    try {
       compiledFn = compileFn(
         fn,
         environment,
@@ -436,7 +433,6 @@ export function compileProgram(
           return null;
         }
       }
-      hasCriticalError ||= isCriticalError(err);
       handleError(err, pass, fn.node.loc ?? null);
       return null;
     }
@@ -470,7 +466,7 @@ export function compileProgram(
       return null;
     }
 
-    if (!pass.opts.noEmit && !hasCriticalError) {
+    if (!pass.opts.noEmit) {
       return compiledFn;
     }
     return null;
@@ -495,18 +491,11 @@ export function compileProgram(
       fn.skip();
       ALREADY_COMPILED.add(fn.node);
       if (outlined.type !== null) {
-        CompilerError.throwTodo({
-          reason: `Implement support for outlining React functions (components/hooks)`,
-          loc: outlined.fn.loc,
+        queue.push({
+          kind: 'outlined',
+          fn,
+          fnType: outlined.type,
         });
-        /*
-         * Above should be as simple as the following, but needs testing:
-         * queue.push({
-         *   kind: "outlined",
-         *   fn,
-         *   fnType: outlined.type,
-         * });
-         */
       }
     }
     compiledFns.push({
@@ -608,7 +597,7 @@ export function compileProgram(
     if (needsMemoCacheFunctionImport) {
       updateMemoCacheFunctionImport(
         program,
-        moduleName,
+        getReactCompilerRuntimeModule(pass.opts),
         useMemoCacheIdentifier.name,
       );
     }
@@ -641,8 +630,12 @@ function shouldSkipCompilation(
     }
   }
 
-  const moduleName = pass.opts.runtimeModule ?? 'react/compiler-runtime';
-  if (hasMemoCacheFunctionImport(program, moduleName)) {
+  if (
+    hasMemoCacheFunctionImport(
+      program,
+      getReactCompilerRuntimeModule(pass.opts),
+    )
+  ) {
     return true;
   }
   return false;
@@ -1128,4 +1121,32 @@ function checkFunctionReferencedBeforeDeclarationAtTopLevel(
   });
 
   return errors.details.length > 0 ? errors : null;
+}
+
+type ReactCompilerRuntimeModule =
+  | 'react/compiler-runtime' // from react namespace
+  | 'react-compiler-runtime'; // npm package
+function getReactCompilerRuntimeModule(
+  opts: PluginOptions,
+): ReactCompilerRuntimeModule {
+  let moduleName: ReactCompilerRuntimeModule | null = null;
+  switch (opts.target) {
+    case '17':
+    case '18': {
+      moduleName = 'react-compiler-runtime';
+      break;
+    }
+    case '19': {
+      moduleName = 'react/compiler-runtime';
+      break;
+    }
+    default:
+      CompilerError.invariant(moduleName != null, {
+        reason: 'Expected target to already be validated',
+        description: null,
+        loc: null,
+        suggestions: null,
+      });
+  }
+  return moduleName;
 }

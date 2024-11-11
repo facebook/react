@@ -23,7 +23,7 @@ let ReactServerDOMClient;
 let ReactServerScheduler;
 let reactServerAct;
 
-describe('ReactFlightDOMBrowser', () => {
+describe('ReactFlightTurbopackDOMBrowser', () => {
   beforeEach(() => {
     jest.resetModules();
 

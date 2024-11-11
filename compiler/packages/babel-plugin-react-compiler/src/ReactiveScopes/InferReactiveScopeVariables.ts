@@ -13,6 +13,8 @@ import {
   HIRFunction,
   Identifier,
   Instruction,
+  InstructionId,
+  MutableRange,
   Place,
   ReactiveScope,
   makeInstructionId,
@@ -186,8 +188,14 @@ function mergeLocation(l: SourceLocation, r: SourceLocation): SourceLocation {
 }
 
 // Is the operand mutable at this given instruction
-export function isMutable({id}: Instruction, place: Place): boolean {
-  const range = place.identifier.mutableRange;
+export function isMutable(instr: {id: InstructionId}, place: Place): boolean {
+  return inRange(instr, place.identifier.mutableRange);
+}
+
+export function inRange(
+  {id}: {id: InstructionId},
+  range: MutableRange,
+): boolean {
   return id >= range.start && id < range.end;
 }
 
@@ -227,6 +235,7 @@ function mayAllocate(env: Environment, instruction: Instruction): boolean {
     case 'StoreGlobal': {
       return false;
     }
+    case 'TaggedTemplateExpression':
     case 'CallExpression':
     case 'MethodCall': {
       return instruction.lvalue.identifier.type.kind !== 'Primitive';
@@ -241,8 +250,7 @@ function mayAllocate(env: Environment, instruction: Instruction): boolean {
     case 'ObjectExpression':
     case 'UnsupportedNode':
     case 'ObjectMethod':
-    case 'FunctionExpression':
-    case 'TaggedTemplateExpression': {
+    case 'FunctionExpression': {
       return true;
     }
     default: {
@@ -273,22 +281,25 @@ export function findDisjointMutableValues(
      */
     for (const phi of block.phis) {
       if (
-        phi.id.mutableRange.start + 1 !== phi.id.mutableRange.end &&
-        phi.id.mutableRange.end >
+        phi.place.identifier.mutableRange.start + 1 !==
+          phi.place.identifier.mutableRange.end &&
+        phi.place.identifier.mutableRange.end >
           (block.instructions.at(0)?.id ?? block.terminal.id)
       ) {
-        const operands = [phi.id];
-        const declaration = declarations.get(phi.id.declarationId);
+        const operands = [phi.place.identifier];
+        const declaration = declarations.get(
+          phi.place.identifier.declarationId,
+        );
         if (declaration !== undefined) {
           operands.push(declaration);
         }
         for (const [_, phiId] of phi.operands) {
-          operands.push(phiId);
+          operands.push(phiId.identifier);
         }
         scopeIdentifiers.union(operands);
       } else if (fn.env.config.enableForest) {
         for (const [, phiId] of phi.operands) {
-          scopeIdentifiers.union([phi.id, phiId]);
+          scopeIdentifiers.union([phi.place.identifier, phiId.identifier]);
         }
       }
     }

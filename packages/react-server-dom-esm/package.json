@@ -58,6 +58,7 @@
     "react-dom": "^19.0.0"
   },
   "dependencies": {
-    "acorn-loose": "^8.3.0"
+    "acorn-loose": "^8.3.0",
+    "webpack-sources": "^3.2.0"
   }
 }

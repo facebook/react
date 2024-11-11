@@ -14,7 +14,11 @@
  * Be mindful of backwards compatibility when making changes.
  */
 
-import type {ReactContext, Wakeable} from 'shared/ReactTypes';
+import type {
+  ReactContext,
+  Wakeable,
+  ReactComponentInfo,
+} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   ComponentFilter,
@@ -27,7 +31,6 @@ import type {
 } from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
 import type {InitBackend} from 'react-devtools-shared/src/backend';
 import type {TimelineDataExport} from 'react-devtools-timeline/src/types';
-import type {BrowserTheme} from 'react-devtools-shared/src/frontend/types';
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
 import type {Source} from 'react-devtools-shared/src/shared/types';
 import type Agent from './agent';
@@ -90,7 +93,6 @@ export type GetDisplayNameForElementID = (id: number) => string | null;
 
 export type GetElementIDForHostInstance = (
   component: HostInstance,
-  findNearestUnfilteredAncestor?: boolean,
 ) => number | null;
 export type FindHostInstancesForElementID = (
   id: number,
@@ -106,10 +108,11 @@ export type Lane = number;
 export type Lanes = number;
 
 export type ReactRenderer = {
-  findFiberByHostInstance: (hostInstance: HostInstance) => Fiber | null,
   version: string,
   rendererPackageName: string,
   bundleType: BundleType,
+  // 16.0+ - To be removed in future versions.
+  findFiberByHostInstance?: (hostInstance: HostInstance) => Fiber | null,
   // 16.9+
   overrideHookState?: ?(
     fiber: Object,
@@ -154,7 +157,10 @@ export type ReactRenderer = {
   currentDispatcherRef?: LegacyDispatcherRef | CurrentDispatcherRef,
   // Only injected by React v16.9+ in DEV mode.
   // Enables DevTools to append owners-only component stack to error messages.
-  getCurrentFiber?: () => Fiber | null,
+  getCurrentFiber?: (() => Fiber | null) | null,
+  // Only injected by React Flight Clients in DEV mode.
+  // Enables DevTools to append owners-only component stack to error messages from Server Components.
+  getCurrentComponentInfo?: () => ReactComponentInfo | null,
   // 17.0.2+
   reconcilerVersion?: string,
   // Uniquely identifies React DOM v15.
@@ -239,8 +245,6 @@ export type OwnersList = {
 export type InspectedElement = {
   id: number,
 
-  displayName: string | null,
-
   // Does the current renderer support editable hooks and function props?
   canEditHooks: boolean,
   canEditFunctionProps: boolean,
@@ -254,7 +258,6 @@ export type InspectedElement = {
   // Is this Error, and can its value be overridden now?
   canToggleError: boolean,
   isErrored: boolean,
-  targetErrorBoundaryID: ?number,
 
   // Is this Suspense, and can its value be overridden now?
   canToggleSuspense: boolean,
@@ -346,6 +349,14 @@ export type InstanceAndStyle = {
 
 type Type = 'props' | 'hooks' | 'state' | 'context';
 
+export type OnErrorOrWarning = (
+  type: 'error' | 'warn',
+  args: Array<any>,
+) => void;
+export type GetComponentStack = (
+  topFrame: Error,
+) => null | {enableOwnerStacks: boolean, componentStack: string};
+
 export type RendererInterface = {
   cleanup: () => void,
   clearErrorsAndWarnings: () => void,
@@ -360,9 +371,8 @@ export type RendererInterface = {
   findHostInstancesForElementID: FindHostInstancesForElementID,
   flushInitialOperations: () => void,
   getBestMatchForTrackedPath: () => PathMatch | null,
-  getNearestMountedHostInstance: (
-    component: HostInstance,
-  ) => HostInstance | null,
+  getComponentStack?: GetComponentStack,
+  getNearestMountedDOMNode: (component: Element) => Element | null,
   getElementIDForHostInstance: GetElementIDForHostInstance,
   getDisplayNameForElementID: GetDisplayNameForElementID,
   getInstanceAndStyle(id: number): InstanceAndStyle,
@@ -384,6 +394,7 @@ export type RendererInterface = {
     forceFullData: boolean,
   ) => InspectedElementPayload,
   logElementToConsole: (id: number) => void,
+  onErrorOrWarning?: OnErrorOrWarning,
   overrideError: (id: number, forceError: boolean) => void,
   overrideSuspense: (id: number, forceFallback: boolean) => void,
   overrideValueAtPath: (
@@ -393,12 +404,11 @@ export type RendererInterface = {
     path: Array<string | number>,
     value: any,
   ) => void,
-  patchConsoleForStrictMode: () => void,
-  prepareViewAttributeSource: (
+  getElementAttributeByPath: (
     id: number,
     path: Array<string | number>,
-  ) => void,
-  prepareViewElementSource: (id: number) => void,
+  ) => mixed,
+  getElementSourceFunctionById: (id: number) => null | Function,
   renamePath: (
     type: Type,
     id: number,
@@ -409,15 +419,18 @@ export type RendererInterface = {
   renderer: ReactRenderer | null,
   setTraceUpdatesEnabled: (enabled: boolean) => void,
   setTrackedPath: (path: Array<PathFrame> | null) => void,
-  startProfiling: (recordChangeDescriptions: boolean) => void,
+  startProfiling: (
+    recordChangeDescriptions: boolean,
+    recordTimeline: boolean,
+  ) => void,
   stopProfiling: () => void,
   storeAsGlobal: (
     id: number,
     path: Array<string | number>,
     count: number,
   ) => void,
-  unpatchConsoleForStrictMode: () => void,
   updateComponentFilters: (componentFilters: Array<ComponentFilter>) => void,
+  getEnvironmentNames: () => Array<string>,
 
   // Timeline profiler interface
 
@@ -475,10 +488,16 @@ export type DevToolsBackend = {
   setupNativeStyleEditor?: SetupNativeStyleEditor,
 };
 
+export type ProfilingSettings = {
+  recordChangeDescriptions: boolean,
+  recordTimeline: boolean,
+};
+
 export type DevToolsHook = {
   listeners: {[key: string]: Array<Handler>, ...},
   rendererInterfaces: Map<RendererID, RendererInterface>,
   renderers: Map<RendererID, ReactRenderer>,
+  hasUnsupportedRendererAttached: boolean,
   backends: Map<string, DevToolsBackend>,
 
   emit: (event: string, data: any) => void,
@@ -513,13 +532,13 @@ export type DevToolsHook = {
   // Testing
   dangerous_setTargetConsoleForTesting?: (fakeConsole: Object) => void,
 
+  settings?: $ReadOnly<DevToolsHookSettings>,
   ...
 };
 
-export type ConsolePatchSettings = {
+export type DevToolsHookSettings = {
   appendComponentStack: boolean,
   breakOnConsoleErrors: boolean,
   showInlineWarningsAndErrors: boolean,
   hideConsoleLogsInStrictMode: boolean,
-  browserTheme: BrowserTheme,
 };

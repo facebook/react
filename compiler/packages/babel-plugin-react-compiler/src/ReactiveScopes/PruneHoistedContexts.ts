@@ -58,6 +58,17 @@ class Visitor extends ReactiveFunctionTransform<HoistedIdentifiers> {
     }
 
     if (
+      instruction.value.kind === 'DeclareContext' &&
+      instruction.value.lvalue.kind === 'HoistedFunction'
+    ) {
+      state.set(
+        instruction.value.lvalue.place.identifier.declarationId,
+        InstructionKind.Function,
+      );
+      return {kind: 'remove'};
+    }
+
+    if (
       instruction.value.kind === 'StoreContext' &&
       state.has(instruction.value.lvalue.place.identifier.declarationId)
     ) {

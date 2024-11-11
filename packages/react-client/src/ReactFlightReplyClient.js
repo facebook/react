@@ -185,7 +185,7 @@ export function processReply(
   temporaryReferences: void | TemporaryReferenceSet,
   resolve: (string | FormData) => void,
   reject: (error: mixed) => void,
-): void {
+): (reason: mixed) => void {
   let nextPartId = 1;
   let pendingParts = 0;
   let formData: null | FormData = null;
@@ -554,6 +554,7 @@ export function processReply(
         const prefix = formFieldPrefix + refId + '_';
         // $FlowFixMe[prop-missing]: FormData has forEach.
         value.forEach((originalValue: string | File, originalKey: string) => {
+          // $FlowFixMe[incompatible-call]
           data.append(prefix + originalKey, originalValue);
         });
         return serializeFormDataReference(refId);
@@ -840,6 +841,19 @@ export function processReply(
     return JSON.stringify(model, resolveToJSON);
   }
 
+  function abort(reason: mixed): void {
+    if (pendingParts > 0) {
+      pendingParts = 0; // Don't resolve again later.
+      // Resolve with what we have so far, which may have holes at this point.
+      // They'll error when the stream completes on the server.
+      if (formData === null) {
+        resolve(json);
+      } else {
+        resolve(formData);
+      }
+    }
+  }
+
   const json = serializeModel(root, 0);
 
   if (formData === null) {
@@ -853,6 +867,8 @@ export function processReply(
       resolve(formData);
     }
   }
+
+  return abort;
 }
 
 const boundCache: WeakMap<
@@ -925,6 +941,7 @@ function defaultEncodeFormAction(
     const prefixedData = new FormData();
     // $FlowFixMe[prop-missing]
     encodedFormData.forEach((value: string | File, key: string) => {
+      // $FlowFixMe[incompatible-call]
       prefixedData.append('$ACTION_' + identifierPrefix + ':' + key, value);
     });
     data = prefixedData;
@@ -1153,6 +1170,7 @@ const FunctionBind = Function.prototype.bind;
 const ArraySlice = Array.prototype.slice;
 function bind(this: Function): Function {
   // $FlowFixMe[unsupported-syntax]
+  // $FlowFixMe[prop-missing]
   const newFn = FunctionBind.apply(this, arguments);
   const reference = knownServerReferences.get(this);
   if (reference) {

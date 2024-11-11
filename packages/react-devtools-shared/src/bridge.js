@@ -15,7 +15,8 @@ import type {
   OwnersList,
   ProfilingDataBackend,
   RendererID,
-  ConsolePatchSettings,
+  DevToolsHookSettings,
+  ProfilingSettings,
 } from 'react-devtools-shared/src/backend/types';
 import type {StyleAndLayout as StyleAndLayoutPayload} from 'react-devtools-shared/src/backend/NativeStyleEditor/types';
 
@@ -170,25 +171,22 @@ type NativeStyleEditor_SetValueParams = {
 };
 
 type SavedPreferencesParams = {
-  appendComponentStack: boolean,
-  breakOnConsoleErrors: boolean,
   componentFilters: Array<ComponentFilter>,
-  showInlineWarningsAndErrors: boolean,
-  hideConsoleLogsInStrictMode: boolean,
 };
 
 export type BackendEvents = {
+  backendInitialized: [],
   backendVersion: [string],
   bridgeProtocol: [BridgeProtocol],
   extensionBackendInitialized: [],
   fastRefreshScheduled: [],
   getSavedPreferences: [],
   inspectedElement: [InspectedElementPayload],
-  isBackendStorageAPISupported: [boolean],
-  isSynchronousXHRSupported: [boolean],
+  isReloadAndProfileSupportedByBackend: [boolean],
   operations: [Array<number>],
   ownersList: [OwnersList],
   overrideComponentFilters: [Array<ComponentFilter>],
+  environmentNames: [Array<string>],
   profilingData: [ProfilingDataBackend],
   profilingStatus: [boolean],
   reloadAppForProfiling: [],
@@ -198,14 +196,19 @@ export type BackendEvents = {
   stopInspectingHost: [boolean],
   syncSelectionFromBuiltinElementsPanel: [],
   syncSelectionToBuiltinElementsPanel: [],
-  unsupportedRendererVersion: [RendererID],
+  unsupportedRendererVersion: [],
 
   // React Native style editor plug-in.
   isNativeStyleEditorSupported: [
     {isSupported: boolean, validAttributes: ?$ReadOnlyArray<string>},
   ],
   NativeStyleEditor_styleAndLayout: [StyleAndLayoutPayload],
+
+  hookSettings: [$ReadOnly<DevToolsHookSettings>],
 };
+
+type StartProfilingParams = ProfilingSettings;
+type ReloadAndProfilingParams = ProfilingSettings;
 
 type FrontendEvents = {
   clearErrorsAndWarnings: [{rendererID: RendererID}],
@@ -216,6 +219,7 @@ type FrontendEvents = {
   deletePath: [DeletePath],
   getBackendVersion: [],
   getBridgeProtocol: [],
+  getIfHasUnsupportedRendererVersion: [],
   getOwnersList: [ElementAndRendererID],
   getProfilingData: [{rendererID: RendererID}],
   getProfilingStatus: [],
@@ -226,18 +230,19 @@ type FrontendEvents = {
   overrideSuspense: [OverrideSuspense],
   overrideValueAtPath: [OverrideValueAtPath],
   profilingData: [ProfilingDataBackend],
-  reloadAndProfile: [boolean],
+  reloadAndProfile: [ReloadAndProfilingParams],
   renamePath: [RenamePath],
   savedPreferences: [SavedPreferencesParams],
   setTraceUpdatesEnabled: [boolean],
   shutdown: [],
   startInspectingHost: [],
-  startProfiling: [boolean],
+  startProfiling: [StartProfilingParams],
   stopInspectingHost: [boolean],
   stopProfiling: [],
   storeAsGlobal: [StoreAsGlobalParams],
   updateComponentFilters: [Array<ComponentFilter>],
-  updateConsolePatchSettings: [ConsolePatchSettings],
+  getEnvironmentNames: [],
+  updateHookSettings: [$ReadOnly<DevToolsHookSettings>],
   viewAttributeSource: [ViewAttributeSourceParams],
   viewElementSource: [ElementAndRendererID],
 
@@ -263,6 +268,8 @@ type FrontendEvents = {
 
   resumeElementPolling: [],
   pauseElementPolling: [],
+
+  getHookSettings: [],
 };
 
 class Bridge<

@@ -1,6 +1,20 @@
-## 5.0.0 (next release)
+## 5.0.0
 
 * **New Violations:** Component names now need to start with an uppercase letter instead of a non-lowercase letter. This means `_Button` or `_component` are no longer valid. ([@kassens](https://github.com/kassens)) in [#25162](https://github.com/facebook/react/pull/25162)
+
+- Consider dispatch from `useActionState` stable. ([@eps1lon](https://github.com/eps1lon) in [#29665](https://github.com/facebook/react/pull/29665))
+- Add support for ESLint v9. ([@eps1lon](https://github.com/eps1lon) in [#28773](https://github.com/facebook/react/pull/28773))
+- Accept `as` expression in callback. ([@StyleShit](https://github.com/StyleShit) in [#28202](https://github.com/facebook/react/pull/28202))
+- Accept `as` expressions in deps array. ([@StyleShit](https://github.com/StyleShit) in [#28189](https://github.com/facebook/react/pull/28189))
+- Treat `React.use()` the same as `use()`. ([@kassens](https://github.com/kassens) in [#27769](https://github.com/facebook/react/pull/27769))
+- Move `use()` lint to non-experimental. ([@kassens](https://github.com/kassens) in [#27768](https://github.com/facebook/react/pull/27768))
+- Support Flow `as` expressions. ([@cpojer](https://github.com/cpojer) in [#27590](https://github.com/facebook/react/pull/27590))
+- Allow `useEffect(fn, undefined)`. ([@kassens](https://github.com/kassens) in [#27525](https://github.com/facebook/react/pull/27525))
+- Disallow hooks in async functions. ([@acdlite](https://github.com/acdlite) in [#27045](https://github.com/facebook/react/pull/27045))
+- Rename experimental `useEvent` to `useEffectEvent`. ([@sebmarkbage](https://github.com/sebmarkbage) in [#25881](https://github.com/facebook/react/pull/25881))
+- Lint for presence of `useEvent` functions in dependency lists. ([@poteto](https://github.com/poteto) in [#25512](https://github.com/facebook/react/pull/25512))
+- Check `useEvent` references instead. ([@poteto](https://github.com/poteto) in [#25319](https://github.com/facebook/react/pull/25319))
+- Update `RulesOfHooks` with `useEvent` rules. ([@poteto](https://github.com/poteto) in [#25285](https://github.com/facebook/react/pull/25285))
 
 ## 4.6.0
 

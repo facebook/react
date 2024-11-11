@@ -7,10 +7,11 @@
 
 import {codeFrameColumns} from '@babel/code-frame';
 import type {PluginObj} from '@babel/core';
-import type {parseConfigPragma as ParseConfigPragma} from 'babel-plugin-react-compiler/src/HIR/Environment';
+import type {parseConfigPragmaForTests as ParseConfigPragma} from 'babel-plugin-react-compiler/src/HIR/Environment';
 import {TransformResult, transformFixtureInput} from './compiler';
 import {
   COMPILER_PATH,
+  COMPILER_INDEX_PATH,
   LOGGER_PATH,
   PARSE_CONFIG_PRAGMA_PATH,
 } from './constants';
@@ -60,9 +61,12 @@ async function compile(
     const {default: BabelPluginReactCompiler} = require(COMPILER_PATH) as {
       default: PluginObj;
     };
+    const {Effect: EffectEnum, ValueKind: ValueKindEnum} = require(
+      COMPILER_INDEX_PATH,
+    );
     const {toggleLogging} = require(LOGGER_PATH);
-    const {parseConfigPragma} = require(PARSE_CONFIG_PRAGMA_PATH) as {
-      parseConfigPragma: typeof ParseConfigPragma;
+    const {parseConfigPragmaForTests} = require(PARSE_CONFIG_PRAGMA_PATH) as {
+      parseConfigPragmaForTests: typeof ParseConfigPragma;
     };
 
     // only try logging if we filtered out all but one fixture,
@@ -71,9 +75,11 @@ async function compile(
     const result = await transformFixtureInput(
       input,
       fixturePath,
-      parseConfigPragma,
+      parseConfigPragmaForTests,
       BabelPluginReactCompiler,
       includeEvaluator,
+      EffectEnum,
+      ValueKindEnum,
     );
 
     if (result.kind === 'err') {

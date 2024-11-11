@@ -82,15 +82,43 @@ export function getOrInsertDefault<U, V>(
     return defaultValue;
   }
 }
-
-export function Set_union<T>(a: Set<T>, b: Set<T>): Set<T> {
-  const union = new Set<T>();
+export function Set_equal<T>(a: ReadonlySet<T>, b: ReadonlySet<T>): boolean {
+  if (a.size !== b.size) {
+    return false;
+  }
   for (const item of a) {
-    if (b.has(item)) {
-      union.add(item);
+    if (!b.has(item)) {
+      return false;
     }
   }
+  return true;
+}
+
+export function Set_union<T>(a: ReadonlySet<T>, b: ReadonlySet<T>): Set<T> {
+  const union = new Set<T>(a);
+  for (const item of b) {
+    union.add(item);
+  }
   return union;
+}
+
+export function Set_intersect<T>(sets: Array<ReadonlySet<T>>): Set<T> {
+  if (sets.length === 0 || sets.some(s => s.size === 0)) {
+    return new Set();
+  } else if (sets.length === 1) {
+    return new Set(sets[0]);
+  }
+  const result: Set<T> = new Set();
+  const first = sets[0];
+  outer: for (const e of first) {
+    for (let i = 1; i < sets.length; i++) {
+      if (!sets[i].has(e)) {
+        continue outer;
+      }
+    }
+    result.add(e);
+  }
+  return result;
 }
 
 export function Iterable_some<T>(
@@ -109,6 +137,19 @@ export function nonNull<T extends NonNullable<U>, U>(
   value: T | null | undefined,
 ): value is T {
   return value != null;
+}
+
+export function Set_filter<T>(
+  source: ReadonlySet<T>,
+  fn: (arg: T) => boolean,
+): Set<T> {
+  const result = new Set<T>();
+  for (const entry of source) {
+    if (fn(entry)) {
+      result.add(entry);
+    }
+  }
+  return result;
 }
 
 export function hasNode<T>(

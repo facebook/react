@@ -127,6 +127,7 @@ export type HookKind =
   | 'useMemo'
   | 'useCallback'
   | 'useTransition'
+  | 'useImperativeHandle'
   | 'Custom';
 
 /*
@@ -302,6 +303,23 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
   ],
   [
     'map',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.ConditionallyMutate,
+      returnType: {kind: 'Object', shapeId: BuiltInArrayId},
+      /*
+       * callee is ConditionallyMutate because items of the array
+       * flow into the lambda and may be mutated there, even though
+       * the array object itself is not modified
+       */
+      calleeEffect: Effect.ConditionallyMutate,
+      returnValueKind: ValueKind.Mutable,
+      noAlias: true,
+      mutableOnlyIfOperandsAreMutable: true,
+    }),
+  ],
+  [
+    'flatMap',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.ConditionallyMutate,
@@ -525,6 +543,17 @@ addObject(BUILTIN_SHAPES, BuiltInMixedReadonlyId, [
   ],
   [
     'map',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: {kind: 'Object', shapeId: BuiltInArrayId},
+      calleeEffect: Effect.ConditionallyMutate,
+      returnValueKind: ValueKind.Mutable,
+      noAlias: true,
+    }),
+  ],
+  [
+    'flatMap',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.Read,

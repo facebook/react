@@ -75,6 +75,7 @@ function FiberRootNode(
   this.pendingLanes = NoLanes;
   this.suspendedLanes = NoLanes;
   this.pingedLanes = NoLanes;
+  this.warmLanes = NoLanes;
   this.expiredLanes = NoLanes;
   this.finishedLanes = NoLanes;
   this.errorRecoveryDisabledLanes = NoLanes;
@@ -111,8 +112,8 @@ function FiberRootNode(
   }
 
   if (enableProfilerTimer && enableProfilerCommitHooks) {
-    this.effectDuration = 0;
-    this.passiveEffectDuration = 0;
+    this.effectDuration = -0;
+    this.passiveEffectDuration = -0;
   }
 
   if (enableUpdaterTracking) {

@@ -5,7 +5,7 @@ import {
   ReactiveScope,
   makeInstructionId,
 } from '.';
-import {getPlaceScope} from '../ReactiveScopes/BuildReactiveBlocks';
+import {getPlaceScope} from '../HIR/HIR';
 import {isMutable} from '../ReactiveScopes/InferReactiveScopeVariables';
 import DisjointSet from '../Utils/DisjointSet';
 import {getOrInsertDefault} from '../Utils/utils';

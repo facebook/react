@@ -14,10 +14,7 @@ import {
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 import isArray from 'shared/isArray';
 
-import {
-  enableAddPropertiesFastPath,
-  enableShallowPropDiffing,
-} from 'shared/ReactFeatureFlags';
+import {enableShallowPropDiffing} from 'shared/ReactFeatureFlags';
 
 import type {AttributeConfiguration} from './ReactNativeTypes';
 
@@ -537,11 +534,7 @@ export function create(
   props: Object,
   validAttributes: AttributeConfiguration,
 ): null | Object {
-  if (enableAddPropertiesFastPath) {
-    return fastAddProperties(null, props, validAttributes);
-  } else {
-    return addProperties(null, props, validAttributes);
-  }
+  return fastAddProperties(null, props, validAttributes);
 }
 
 export function diff(

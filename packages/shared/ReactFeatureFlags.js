@@ -101,8 +101,7 @@ export const enableObjectFiber = false;
 
 export const enableTransitionTracing = false;
 
-// Shipped on FB, waiting for next stable release to roll out to OSS
-export const enableLazyContextPropagation = __EXPERIMENTAL__;
+export const enableLazyContextPropagation = true;
 
 // Expose unstable useContext for performance testing
 export const enableContextProfiling = false;
@@ -134,7 +133,7 @@ export const alwaysThrottleRetries = true;
 
 export const passChildrenWhenCloningPersistedNodes = false;
 
-export const enableServerComponentLogs = __EXPERIMENTAL__;
+export const enableServerComponentLogs = true;
 
 /**
  * Enables a new Fiber flag used in persisted mode to reduce the number
@@ -142,11 +141,11 @@ export const enableServerComponentLogs = __EXPERIMENTAL__;
  */
 export const enablePersistedModeClonedFlag = false;
 
-export const enableAddPropertiesFastPath = false;
-
 export const enableOwnerStacks = __EXPERIMENTAL__;
 
 export const enableShallowPropDiffing = false;
+
+export const enableSiblingPrerendering = false;
 
 /**
  * Enables an expiration time for retry lanes to avoid starvation.
@@ -155,6 +154,12 @@ export const enableRetryLaneExpiration = false;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
+
+/**
+ * Enables a new error detection for infinite render loops from updates caused
+ * by setState or similar outside of the component owning the state.
+ */
+export const enableInfiniteRenderLoopDetection = false;
 
 // -----------------------------------------------------------------------------
 // Ready for next major.
@@ -170,6 +175,11 @@ export const transitionLaneExpirationMs = 5000;
 
 // Renames the internal symbol for elements since they have changed signature/constructor
 export const renameElementSymbol = true;
+
+/**
+ * Enables a fix to run insertion effect cleanup on hidden subtrees.
+ */
+export const enableHiddenSubtreeInsertionEffectCleanup = false;
 
 /**
  * Removes legacy style context defined using static `contextTypes` and consumed with static `childContextTypes`.
@@ -197,20 +207,6 @@ export const enableFilterEmptyStringAttributesDOM = true;
 
 // Disabled caching behavior of `react/cache` in client runtimes.
 export const disableClientCache = true;
-
-/**
- * Enables a new error detection for infinite render loops from updates caused
- * by setState or similar outside of the component owning the state.
- */
-export const enableInfiniteRenderLoopDetection = true;
-
-// Subtle breaking changes to JSX runtime to make it faster, like passing `ref`
-// as a normal prop instead of stripping it from the props object.
-
-// Passes `ref` as a normal prop instead of stripping it from the props object
-// during element creation.
-export const enableRefAsProp = true;
-export const disableStringRefs = true;
 
 // Warn on any usage of ReactTestRenderer
 export const enableReactTestRendererWarning = true;
@@ -254,16 +250,23 @@ export const disableTextareaChildren = false;
 // Debugging and DevTools
 // -----------------------------------------------------------------------------
 
-// Adds user timing marks for e.g. state updates, suspense, and work loop stuff,
-// for an experimental timeline tool.
-export const enableSchedulingProfiler = __PROFILE__;
-
 // Helps identify side effects in render-phase lifecycle hooks and setState
 // reducers by double invoking them in StrictLegacyMode.
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 
 // Gather advanced timing metrics for Profiler subtrees.
 export const enableProfilerTimer = __PROFILE__;
+
+// Adds performance.measure() marks using Chrome extensions to allow formatted
+// Component rendering tracks to show up in the Performance tab.
+// This flag will be used for both Server Component and Client Component tracks.
+// All calls should also be gated on enableProfilerTimer.
+export const enableComponentPerformanceTrack = __EXPERIMENTAL__;
+
+// Adds user timing marks for e.g. state updates, suspense, and work loop stuff,
+// for an experimental timeline tool.
+export const enableSchedulingProfiler: boolean =
+  !enableComponentPerformanceTrack && __PROFILE__;
 
 // Record durations for commit and passive effects phases.
 export const enableProfilerCommitHooks = __PROFILE__;

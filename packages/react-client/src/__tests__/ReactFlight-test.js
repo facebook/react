@@ -24,6 +24,10 @@ function normalizeCodeLocInfo(str) {
   return (
     str &&
     str.replace(/^ +(?:at|in) ([\S]+)[^\n]*/gm, function (m, name) {
+      const dot = name.lastIndexOf('.');
+      if (dot !== -1) {
+        name = name.slice(dot + 1);
+      }
       return '    in ' + name + (/\d/.test(m) ? ' (at **)' : '');
     })
   );
@@ -304,6 +308,10 @@ describe('ReactFlight', () => {
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in Object.<anonymous> (at **)'
                   : undefined,
+                props: {
+                  firstName: 'Seb',
+                  lastName: 'Smith',
+                },
               },
             ]
           : undefined,
@@ -343,6 +351,10 @@ describe('ReactFlight', () => {
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in Object.<anonymous> (at **)'
                   : undefined,
+                props: {
+                  firstName: 'Seb',
+                  lastName: 'Smith',
+                },
               },
             ]
           : undefined,
@@ -647,6 +659,58 @@ describe('ReactFlight', () => {
         multiple: 1,2
         content: [["hi","world"],["multiple","1"],["multiple","2"]]
       `);
+  });
+
+  it('can transport Date as a top-level value', async () => {
+    const date = new Date(0);
+    const transport = ReactNoopFlightServer.render(date);
+
+    let readValue;
+    await act(async () => {
+      readValue = await ReactNoopFlightClient.read(transport);
+    });
+
+    expect(readValue).toEqual(date);
+  });
+
+  it('can transport Error objects as values', async () => {
+    function ComponentClient({prop}) {
+      return `
+        is error: ${prop instanceof Error}
+        message: ${prop.message}
+        stack: ${normalizeCodeLocInfo(prop.stack).split('\n').slice(0, 2).join('\n')}
+        environmentName: ${prop.environmentName}
+      `;
+    }
+    const Component = clientReference(ComponentClient);
+
+    function ServerComponent() {
+      const error = new Error('hello');
+      return <Component prop={error} />;
+    }
+
+    const transport = ReactNoopFlightServer.render(<ServerComponent />);
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+
+    if (__DEV__) {
+      expect(ReactNoop).toMatchRenderedOutput(`
+        is error: true
+        message: hello
+        stack: Error: hello
+    in ServerComponent (at **)
+        environmentName: Server
+      `);
+    } else {
+      expect(ReactNoop).toMatchRenderedOutput(`
+        is error: true
+        message: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.
+        stack: Error: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.
+        environmentName: undefined
+      `);
+    }
   });
 
   it('can transport cyclic objects', async () => {
@@ -1218,6 +1282,8 @@ describe('ReactFlight', () => {
         '    at file:///testing.js:42:3',
         // async anon function (https://github.com/ChromeDevTools/devtools-frontend/blob/831be28facb4e85de5ee8c1acc4d98dfeda7a73b/test/unittests/front_end/panels/console/ErrorStackParser_test.ts#L130C9-L130C41)
         '    at async file:///testing.js:42:3',
+        // host component in parent stack
+        '    at div (<anonymous>)',
         ...originalStackLines.slice(2),
       ].join('\n');
       throw error;
@@ -1264,6 +1330,15 @@ describe('ReactFlight', () => {
         }
         return `digest(${String(x)})`;
       },
+      filterStackFrame(filename, functionName) {
+        if (!filename) {
+          // Allow anonymous
+          return functionName === 'div';
+        }
+        return (
+          !filename.startsWith('node:') && !filename.includes('node_modules')
+        );
+      },
     });
 
     await act(() => {
@@ -1282,20 +1357,25 @@ describe('ReactFlight', () => {
         errors: [
           {
             message: 'This is an error',
-            stack: gate(flags => flags.enableOwnerStacks)
+            stack: gate(
+              flags =>
+                flags.enableOwnerStacks || flags.enableServerComponentLogs,
+            )
               ? expect.stringContaining(
                   'Error: This is an error\n' +
-                    '    at eval (eval at testFunction (eval at createFakeFunction (**), <anonymous>:1:35)\n' +
+                    '    at eval (eval at testFunction (inspected-page.html:29:11),%20%3Canonymous%3E:1:35)\n' +
                     '    at ServerComponentError (file://~/(some)(really)(exotic-directory)/ReactFlight-test.js:1166:19)\n' +
                     '    at <anonymous> (file:///testing.js:42:3)\n' +
-                    '    at <anonymous> (file:///testing.js:42:3)\n',
+                    '    at <anonymous> (file:///testing.js:42:3)\n' +
+                    '    at div (<anonymous>',
                 )
               : expect.stringContaining(
                   'Error: This is an error\n' +
-                    '    at eval (eval at testFunction (inspected-page.html:29:11), <anonymous>:1:10)\n' +
+                    '    at eval (eval at testFunction (inspected-page.html:29:11),%20%3Canonymous%3E:1:10)\n' +
                     '    at ServerComponentError (file://~/(some)(really)(exotic-directory)/ReactFlight-test.js:1166:19)\n' +
                     '    at file:///testing.js:42:3\n' +
-                    '    at file:///testing.js:42:3',
+                    '    at file:///testing.js:42:3\n' +
+                    '    at div (<anonymous>',
                 ),
             digest: 'a dev digest',
             environmentName: 'Server',
@@ -1312,9 +1392,21 @@ describe('ReactFlight', () => {
                 'Server',
               ],
               ['file:///testing.js', 'Server'],
+              ['', 'Server'],
               [__filename, 'Server'],
             ]
-          : [],
+          : gate(flags => flags.enableServerComponentLogs)
+            ? [
+                // TODO: What should we request here? The outer (<anonymous>) or the inner (inspected-page.html)?
+                ['inspected-page.html:29:11), <anonymous>', 'Server'],
+                [
+                  'file://~/(some)(really)(exotic-directory)/ReactFlight-test.js',
+                  'Server',
+                ],
+                ['file:///testing.js', 'Server'],
+                ['', 'Server'],
+              ]
+            : [],
       });
     } else {
       expect(errors.map(getErrorForJestMatcher)).toEqual([
@@ -2621,6 +2713,9 @@ describe('ReactFlight', () => {
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in Object.<anonymous> (at **)'
                   : undefined,
+                props: {
+                  transport: expect.arrayContaining([]),
+                },
               },
             ]
           : undefined,
@@ -2639,6 +2734,7 @@ describe('ReactFlight', () => {
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in Object.<anonymous> (at **)'
                   : undefined,
+                props: {},
               },
             ]
           : undefined,
@@ -2654,6 +2750,7 @@ describe('ReactFlight', () => {
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in myLazy (at **)\n    in lazyInitializer (at **)'
                   : undefined,
+                props: {},
               },
             ]
           : undefined,
@@ -2669,6 +2766,7 @@ describe('ReactFlight', () => {
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in Object.<anonymous> (at **)'
                   : undefined,
+                props: {},
               },
             ]
           : undefined,
@@ -2743,6 +2841,9 @@ describe('ReactFlight', () => {
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in Object.<anonymous> (at **)'
                   : undefined,
+                props: {
+                  transport: expect.arrayContaining([]),
+                },
               },
             ]
           : undefined,
@@ -2760,6 +2861,9 @@ describe('ReactFlight', () => {
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in ServerComponent (at **)'
                   : undefined,
+                props: {
+                  children: {},
+                },
               },
             ]
           : undefined,
@@ -2776,6 +2880,7 @@ describe('ReactFlight', () => {
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in Object.<anonymous> (at **)'
                   : undefined,
+                props: {},
               },
             ]
           : undefined,
@@ -2863,7 +2968,11 @@ describe('ReactFlight', () => {
       .join('\n')
       .replaceAll(
         ' (/',
-        gate(flags => flags.enableOwnerStacks) ? ' (file:///' : ' (/',
+        gate(
+          flags => flags.enableOwnerStacks || flags.enableServerComponentLogs,
+        )
+          ? ' (file:///'
+          : ' (/',
       ); // The eval will end up normalizing these
 
     let sawReactPrefix = false;
@@ -2893,6 +3002,12 @@ describe('ReactFlight', () => {
     if (__DEV__ && gate(flags => flags.enableOwnerStacks)) {
       expect(environments.slice(0, 4)).toEqual([
         'Server',
+        'third-party',
+        'third-party',
+        'third-party',
+      ]);
+    } else if (__DEV__ && gate(flags => flags.enableServerComponentLogs)) {
+      expect(environments.slice(0, 3)).toEqual([
         'third-party',
         'third-party',
         'third-party',
@@ -2934,6 +3049,7 @@ describe('ReactFlight', () => {
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in Object.<anonymous> (at **)'
                   : undefined,
+                props: {},
               },
               {
                 env: 'B',
@@ -3030,6 +3146,65 @@ describe('ReactFlight', () => {
     expect(ownerStacks).toEqual(['\n    in App (at **)']);
   });
 
+  // @gate enableServerComponentLogs && __DEV__
+  it('replays logs with cyclic objects', async () => {
+    const cyclic = {cycle: null};
+    cyclic.cycle = cyclic;
+
+    function ServerComponent() {
+      console.log('hi', {cyclic});
+      return null;
+    }
+
+    function App() {
+      return ReactServer.createElement(ServerComponent);
+    }
+
+    // These tests are specifically testing console.log.
+    // Assign to `mockConsoleLog` so we can still inspect it when `console.log`
+    // is overridden by the test modules. The original function will be restored
+    // after this test finishes by `jest.restoreAllMocks()`.
+    const mockConsoleLog = spyOnDevAndProd(console, 'log').mockImplementation(
+      () => {},
+    );
+
+    // Reset the modules so that we get a new overridden console on top of the
+    // one installed by expect. This ensures that we still emit console.error
+    // calls.
+    jest.resetModules();
+    jest.mock('react', () => require('react/react.react-server'));
+    ReactServer = require('react');
+    ReactNoopFlightServer = require('react-noop-renderer/flight-server');
+    const transport = ReactNoopFlightServer.render({
+      root: ReactServer.createElement(App),
+    });
+
+    expect(mockConsoleLog).toHaveBeenCalledTimes(1);
+    expect(mockConsoleLog.mock.calls[0][0]).toBe('hi');
+    expect(mockConsoleLog.mock.calls[0][1].cyclic).toBe(cyclic);
+    mockConsoleLog.mockClear();
+    mockConsoleLog.mockImplementation(() => {});
+
+    // The error should not actually get logged because we're not awaiting the root
+    // so it's not thrown but the server log also shouldn't be replayed.
+    await ReactNoopFlightClient.read(transport);
+
+    expect(mockConsoleLog).toHaveBeenCalledTimes(1);
+    // TODO: Support cyclic objects in console encoding.
+    // expect(mockConsoleLog.mock.calls[0][0]).toBe('hi');
+    // const cyclic2 = mockConsoleLog.mock.calls[0][1].cyclic;
+    // expect(cyclic2).not.toBe(cyclic); // Was serialized and therefore cloned
+    // expect(cyclic2.cycle).toBe(cyclic2);
+    expect(mockConsoleLog.mock.calls[0][0]).toBe(
+      'Unknown Value: React could not send it from the server.',
+    );
+    expect(mockConsoleLog.mock.calls[0][1].message).toBe(
+      'Converting circular structure to JSON\n' +
+        "    --> starting at object with constructor 'Object'\n" +
+        "    --- property 'cycle' closes the circle",
+    );
+  });
+
   it('uses the server component debug info as the element owner in DEV', async () => {
     function Container({children}) {
       return children;
@@ -3064,6 +3239,9 @@ describe('ReactFlight', () => {
           stack: gate(flag => flag.enableOwnerStacks)
             ? '    in Object.<anonymous> (at **)'
             : undefined,
+          props: {
+            firstName: 'Seb',
+          },
         };
         expect(getDebugInfo(greeting)).toEqual([
           greetInfo,
@@ -3075,6 +3253,14 @@ describe('ReactFlight', () => {
             stack: gate(flag => flag.enableOwnerStacks)
               ? '    in Greeting (at **)'
               : undefined,
+            props: {
+              children: expect.objectContaining({
+                type: 'span',
+                props: {
+                  children: ['Hello, ', 'Seb'],
+                },
+              }),
+            },
           },
         ]);
         // The owner that created the span was the outer server component.
@@ -3082,9 +3268,7 @@ describe('ReactFlight', () => {
         expect(greeting._owner).toBe(greeting._debugInfo[0]);
       } else {
         expect(greeting._debugInfo).toBe(undefined);
-        expect(greeting._owner).toBe(
-          gate(flags => flags.disableStringRefs) ? undefined : null,
-        );
+        expect(greeting._owner).toBe(undefined);
       }
       ReactNoop.render(greeting);
     });
@@ -3121,6 +3305,69 @@ describe('ReactFlight', () => {
 
     expect(normalizeCodeLocInfo(stack)).toBe(
       '\n    in Bar (at **)' + '\n    in Foo (at **)',
+    );
+  });
+
+  // @gate __DEV__ && enableOwnerStacks
+  it('can track owner for a flight response created in another render', async () => {
+    jest.resetModules();
+    jest.mock('react', () => ReactServer);
+    // For this to work the Flight Client needs to be the react-server version.
+    const ReactNoopFlightClienOnTheServer = require('react-noop-renderer/flight-client');
+    jest.resetModules();
+    jest.mock('react', () => React);
+
+    let stack;
+
+    function Component() {
+      stack = ReactServer.captureOwnerStack();
+      return ReactServer.createElement('span', null, 'hi');
+    }
+
+    const ClientComponent = clientReference(Component);
+
+    function ThirdPartyComponent() {
+      return ReactServer.createElement(ClientComponent);
+    }
+
+    // This is rendered outside the render to ensure we don't inherit anything accidental
+    // by being in the same environment which would make it seem like it works when it doesn't.
+    const thirdPartyTransport = ReactNoopFlightServer.render(
+      {children: ReactServer.createElement(ThirdPartyComponent)},
+      {
+        environmentName: 'third-party',
+      },
+    );
+
+    async function fetchThirdParty() {
+      return ReactNoopFlightClienOnTheServer.read(thirdPartyTransport);
+    }
+
+    async function FirstPartyComponent() {
+      // This component fetches from a third party
+      const thirdParty = await fetchThirdParty();
+      return thirdParty.children;
+    }
+    function App() {
+      return ReactServer.createElement(FirstPartyComponent);
+    }
+
+    const transport = ReactNoopFlightServer.render(
+      ReactServer.createElement(App),
+    );
+
+    await act(async () => {
+      const root = await ReactNoopFlightClient.read(transport);
+      ReactNoop.render(root);
+    });
+
+    expect(normalizeCodeLocInfo(stack)).toBe(
+      '\n    in ThirdPartyComponent (at **)' +
+        '\n    in createResponse (at **)' + // These two internal frames should
+        '\n    in read (at **)' + // ideally not be included.
+        '\n    in fetchThirdParty (at **)' +
+        '\n    in FirstPartyComponent (at **)' +
+        '\n    in App (at **)',
     );
   });
 
@@ -3282,5 +3529,97 @@ describe('ReactFlight', () => {
         '\n    in foo (at **)',
     );
     expect(caughtError.digest).toBe('digest("my-error")');
+  });
+
+  // @gate __DEV__
+  it('can render deep but cut off JSX in debug info', async () => {
+    function createDeepJSX(n) {
+      if (n <= 0) {
+        return null;
+      }
+      return <div>{createDeepJSX(n - 1)}</div>;
+    }
+
+    function ServerComponent(props) {
+      return <div>not using props</div>;
+    }
+
+    const transport = ReactNoopFlightServer.render({
+      root: (
+        <ServerComponent>
+          {createDeepJSX(100) /* deper than objectLimit */}
+        </ServerComponent>
+      ),
+    });
+
+    await act(async () => {
+      const rootModel = await ReactNoopFlightClient.read(transport);
+      const root = rootModel.root;
+      const children = root._debugInfo[0].props.children;
+      expect(children.type).toBe('div');
+      expect(children.props.children.type).toBe('div');
+      ReactNoop.render(root);
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(<div>not using props</div>);
+  });
+
+  // @gate __DEV__
+  it('can render deep but cut off Map/Set in debug info', async () => {
+    function createDeepMap(n) {
+      if (n <= 0) {
+        return null;
+      }
+      const map = new Map();
+      map.set('key', createDeepMap(n - 1));
+      return map;
+    }
+
+    function createDeepSet(n) {
+      if (n <= 0) {
+        return null;
+      }
+      const set = new Set();
+      set.add(createDeepSet(n - 1));
+      return set;
+    }
+
+    function ServerComponent(props) {
+      return <div>not using props</div>;
+    }
+
+    const transport = ReactNoopFlightServer.render({
+      set: (
+        <ServerComponent
+          set={createDeepSet(100) /* deper than objectLimit */}
+        />
+      ),
+      map: (
+        <ServerComponent
+          map={createDeepMap(100) /* deper than objectLimit */}
+        />
+      ),
+    });
+
+    await act(async () => {
+      const rootModel = await ReactNoopFlightClient.read(transport);
+      const set = rootModel.set._debugInfo[0].props.set;
+      const map = rootModel.map._debugInfo[0].props.map;
+      expect(set instanceof Set).toBe(true);
+      expect(set.size).toBe(1);
+      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+      for (const entry of set) {
+        expect(entry instanceof Set).toBe(true);
+        break;
+      }
+
+      expect(map instanceof Map).toBe(true);
+      expect(map.size).toBe(1);
+      expect(map.get('key') instanceof Map).toBe(true);
+
+      ReactNoop.render(rootModel.set);
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(<div>not using props</div>);
   });
 });

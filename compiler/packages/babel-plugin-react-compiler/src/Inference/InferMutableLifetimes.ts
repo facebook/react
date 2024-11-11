@@ -116,19 +116,23 @@ export function inferMutableLifetimes(
   for (const [_, block] of func.body.blocks) {
     for (const phi of block.phis) {
       const isPhiMutatedAfterCreation: boolean =
-        phi.id.mutableRange.end >
+        phi.place.identifier.mutableRange.end >
         (block.instructions.at(0)?.id ?? block.terminal.id);
       if (
         inferMutableRangeForStores &&
         isPhiMutatedAfterCreation &&
-        phi.id.mutableRange.start === 0
+        phi.place.identifier.mutableRange.start === 0
       ) {
         for (const [, operand] of phi.operands) {
-          if (phi.id.mutableRange.start === 0) {
-            phi.id.mutableRange.start = operand.mutableRange.start;
+          if (phi.place.identifier.mutableRange.start === 0) {
+            phi.place.identifier.mutableRange.start =
+              operand.identifier.mutableRange.start;
           } else {
-            phi.id.mutableRange.start = makeInstructionId(
-              Math.min(phi.id.mutableRange.start, operand.mutableRange.start),
+            phi.place.identifier.mutableRange.start = makeInstructionId(
+              Math.min(
+                phi.place.identifier.mutableRange.start,
+                operand.identifier.mutableRange.start,
+              ),
             );
           }
         }

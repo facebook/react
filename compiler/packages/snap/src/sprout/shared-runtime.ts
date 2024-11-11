@@ -54,6 +54,8 @@ export function mutate(arg: any): void {
   // don't mutate primitive
   if (arg == null || typeof arg !== 'object') {
     return;
+  } else if (Array.isArray(arg)) {
+    arg.push('joe');
   }
 
   let count: number = 0;
@@ -96,6 +98,15 @@ export function setProperty(arg: any, property: any): void {
   }
 }
 
+export function setPropertyByKey<
+  T,
+  TKey extends keyof T,
+  TProperty extends T[TKey],
+>(arg: T, key: TKey, property: TProperty): T {
+  arg[key] = property;
+  return arg;
+}
+
 export function arrayPush<T>(arr: Array<T>, ...values: Array<T>): void {
   arr.push(...values);
 }
@@ -123,7 +134,7 @@ export function calculateExpensiveNumber(x: number): number {
 /**
  * Functions that do not mutate their parameters
  */
-export function shallowCopy(obj: object): object {
+export function shallowCopy<T extends object>(obj: T): T {
   return Object.assign({}, obj);
 }
 
@@ -347,3 +358,12 @@ export function useFragment(..._args: Array<any>): object {
     b: {c: {d: 4}},
   };
 }
+
+export function typedArrayPush<T>(array: Array<T>, item: T): void {
+  array.push(item);
+}
+
+export function typedLog(...values: Array<any>): void {
+  console.log(...values);
+}
+export default typedLog;

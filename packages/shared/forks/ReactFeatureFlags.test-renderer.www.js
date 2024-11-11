@@ -17,6 +17,7 @@ export const enableSchedulingProfiler = false;
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
+export const enableComponentPerformanceTrack = false;
 export const enableUpdaterTracking = false;
 export const enableCache = true;
 export const enableLegacyCache = true;
@@ -49,6 +50,7 @@ export const enableFilterEmptyStringAttributesDOM = true;
 export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableRenderableContext = false;
 export const enableFabricCompleteRootInCommitPhase = false;
+export const enableHiddenSubtreeInsertionEffectCleanup = true;
 
 export const enableRetryLaneExpiration = false;
 export const retryLaneExpirationMs = 5000;
@@ -80,20 +82,17 @@ export const disableClientCache = true;
 export const enableServerComponentLogs = true;
 export const enableInfiniteRenderLoopDetection = false;
 
-export const enableRefAsProp = true;
-export const disableStringRefs = false;
-
 export const enableReactTestRendererWarning = false;
 export const disableLegacyMode = true;
 
 export const disableDefaultPropsExceptForClasses = false;
-export const enableAddPropertiesFastPath = false;
 
 export const renameElementSymbol = false;
 
 export const enableObjectFiber = false;
 export const enableOwnerStacks = false;
 export const enableShallowPropDiffing = false;
+export const enableSiblingPrerendering = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

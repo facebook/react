@@ -313,13 +313,23 @@ describe('act warnings', () => {
       act(() => {
         root.render(<App />);
       });
-      assertLog(['Suspend! [Async]', 'Loading...']);
+      assertLog([
+        'Suspend! [Async]',
+        'Loading...',
+
+        ...(gate('enableSiblingPrerendering') ? ['Suspend! [Async]'] : []),
+      ]);
       expect(root).toMatchRenderedOutput('Loading...');
 
       // This is a retry, not a ping, because we already showed a fallback.
       expect(() => resolveText('Async')).toErrorDev(
-        'A suspended resource finished loading inside a test, but the event ' +
-          'was not wrapped in act(...)',
+        [
+          'A suspended resource finished loading inside a test, but the event ' +
+            'was not wrapped in act(...)',
+
+          ...(gate('enableSiblingPrerendering') ? ['not wrapped in act'] : []),
+        ],
+
         {withoutStack: true},
       );
     });

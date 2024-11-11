@@ -22,6 +22,7 @@ import {
   reportGlobalError,
   processBinaryChunk,
   close,
+  injectIntoDevTools,
 } from 'react-client/src/ReactFlightClient';
 
 import {
@@ -49,6 +50,7 @@ export type Options = {
 function createResponseFromOptions(options: void | Options) {
   return createResponse(
     options && options.moduleBaseURL ? options.moduleBaseURL : '',
+    null,
     null,
     options && options.callServer ? options.callServer : undefined,
     undefined, // encodeFormAction
@@ -120,12 +122,12 @@ function createFromFetch<T>(
 
 function encodeReply(
   value: ReactServerValue,
-  options?: {temporaryReferences?: TemporaryReferenceSet},
+  options?: {temporaryReferences?: TemporaryReferenceSet, signal?: AbortSignal},
 ): Promise<
   string | URLSearchParams | FormData,
 > /* We don't use URLSearchParams yet but maybe */ {
   return new Promise((resolve, reject) => {
-    processReply(
+    const abort = processReply(
       value,
       '',
       options && options.temporaryReferences
@@ -134,6 +136,18 @@ function encodeReply(
       resolve,
       reject,
     );
+    if (options && options.signal) {
+      const signal = options.signal;
+      if (signal.aborted) {
+        abort((signal: any).reason);
+      } else {
+        const listener = () => {
+          abort((signal: any).reason);
+          signal.removeEventListener('abort', listener);
+        };
+        signal.addEventListener('abort', listener);
+      }
+    }
   });
 }
 
@@ -143,3 +157,7 @@ export {
   encodeReply,
   createServerReference,
 };
+
+if (__DEV__) {
+  injectIntoDevTools();
+}
