@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<951a89a341aca42bf2a5c4ce5459ed2d>>
+ * @generated SignedSource<<13b0787cc253d95c1bdef4f79b9d5a9e>>
  */
 
 "use strict";
@@ -2576,7 +2576,7 @@ function performWorkOnRootViaSchedulerTask(root, didTimeout) {
   if (0 === workInProgressRootRenderLanes$jscomp$0) return null;
   performWorkOnRoot(root, workInProgressRootRenderLanes$jscomp$0, didTimeout);
   scheduleTaskForRootDuringMicrotask(root, now$1());
-  return root.callbackNode === originalCallbackNode
+  return null != root.callbackNode && root.callbackNode === originalCallbackNode
     ? performWorkOnRootViaSchedulerTask.bind(null, root)
     : null;
 }
@@ -11564,11 +11564,11 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1265 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-989af12f-20241108",
+    version: "19.0.0-native-fb-b836de61-20241111",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromNode,
-    reconcilerVersion: "19.0.0-native-fb-989af12f-20241108"
+    reconcilerVersion: "19.0.0-native-fb-b836de61-20241111"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1265.rendererConfig = extraDevToolsConfig);

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b03b1270d38bb928d9268db92924f6f8>>
+ * @generated SignedSource<<6d35c8bd5f2bdc708e167df54ae58339>>
  */
 
 "use strict";
@@ -2726,7 +2726,7 @@ function performWorkOnRootViaSchedulerTask(root, didTimeout) {
   if (0 === workInProgressRootRenderLanes$jscomp$0) return null;
   performWorkOnRoot(root, workInProgressRootRenderLanes$jscomp$0, didTimeout);
   scheduleTaskForRootDuringMicrotask(root, now());
-  return root.callbackNode === originalCallbackNode
+  return null != root.callbackNode && root.callbackNode === originalCallbackNode
     ? performWorkOnRootViaSchedulerTask.bind(null, root)
     : null;
 }
@@ -11037,11 +11037,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.0.0-native-fb-989af12f-20241108" !== isomorphicReactPackageVersion)
+if ("19.0.0-native-fb-b836de61-20241111" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.0.0-native-fb-989af12f-20241108\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.0.0-native-fb-b836de61-20241111\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11090,11 +11090,11 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1243 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-989af12f-20241108",
+    version: "19.0.0-native-fb-b836de61-20241111",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromTag,
-    reconcilerVersion: "19.0.0-native-fb-989af12f-20241108"
+    reconcilerVersion: "19.0.0-native-fb-b836de61-20241111"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1243.rendererConfig = extraDevToolsConfig);

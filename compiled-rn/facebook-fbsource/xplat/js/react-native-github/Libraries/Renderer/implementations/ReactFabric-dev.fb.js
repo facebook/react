@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<cc38c41fb5f184cfc010ee8edecba07c>>
+ * @generated SignedSource<<3907a32365128a3ed8f866316f631564>>
  */
 
 "use strict";
@@ -2904,7 +2904,8 @@ __DEV__ &&
         didTimeout
       );
       scheduleTaskForRootDuringMicrotask(root, now$1());
-      return root.callbackNode === originalCallbackNode
+      return null != root.callbackNode &&
+        root.callbackNode === originalCallbackNode
         ? performWorkOnRootViaSchedulerTask.bind(null, root)
         : null;
     }
@@ -16970,11 +16971,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-989af12f-20241108",
+        version: "19.0.0-native-fb-b836de61-20241111",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-native-fb-989af12f-20241108"
+        reconcilerVersion: "19.0.0-native-fb-b836de61-20241111"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
