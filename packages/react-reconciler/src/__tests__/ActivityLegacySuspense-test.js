@@ -12,7 +12,6 @@ let textCache;
 let waitFor;
 let waitForPaint;
 let assertLog;
-let use;
 
 describe('Activity Suspense', () => {
   beforeEach(() => {
@@ -28,7 +27,6 @@ describe('Activity Suspense', () => {
     useState = React.useState;
     useEffect = React.useEffect;
     startTransition = React.startTransition;
-    use = React.use;
 
     const InternalTestUtils = require('internal-test-utils');
     waitFor = InternalTestUtils.waitFor;
@@ -47,10 +45,10 @@ describe('Activity Suspense', () => {
       };
       textCache.set(text, newRecord);
     } else if (record.status === 'pending') {
-      const resolve = record.resolve;
+      const thenable = record.value;
       record.status = 'resolved';
       record.value = text;
-      resolve();
+      thenable.pings.forEach(t => t());
     }
   }
 
@@ -60,7 +58,7 @@ describe('Activity Suspense', () => {
       switch (record.status) {
         case 'pending':
           Scheduler.log(`Suspend! [${text}]`);
-          return use(record.value);
+          throw record.value;
         case 'rejected':
           throw record.value;
         case 'resolved':
@@ -68,19 +66,24 @@ describe('Activity Suspense', () => {
       }
     } else {
       Scheduler.log(`Suspend! [${text}]`);
-      let resolve;
-      const promise = new Promise(_resolve => {
-        resolve = _resolve;
-      });
+      const thenable = {
+        pings: [],
+        then(resolve) {
+          if (newRecord.status === 'pending') {
+            thenable.pings.push(resolve);
+          } else {
+            Promise.resolve().then(() => resolve(newRecord.value));
+          }
+        },
+      };
 
       const newRecord = {
         status: 'pending',
-        value: promise,
-        resolve,
+        value: thenable,
       };
       textCache.set(text, newRecord);
 
-      return use(promise);
+      throw thenable;
     }
   }
 
@@ -214,7 +217,7 @@ describe('Activity Suspense', () => {
     assertLog(['hello']);
     expect(root).toMatchRenderedOutput('hello');
 
-    await React.act(() => {
+    await React.act(async () => {
       setMode('hidden');
     });
     assertLog(['Clear [hello]', 'Suspend! [hello]']);
@@ -262,11 +265,7 @@ describe('Activity Suspense', () => {
         );
       });
     });
-    assertLog([
-      'Open',
-      'Suspend! [Async]',
-      ...(gate(flags => flags.enableSiblingPrerendering) ? ['Loading...'] : []),
-    ]);
+    assertLog(['Open', 'Suspend! [Async]', 'Loading...']);
     // It should suspend with delay to prevent the already-visible Suspense
     // boundary from switching to a fallback
     expect(root).toMatchRenderedOutput(<span>Closed</span>);
@@ -275,10 +274,7 @@ describe('Activity Suspense', () => {
     await act(async () => {
       await resolveText('Async');
     });
-    assertLog([
-      ...(gate(flags => flags.enableSiblingPrerendering) ? ['Open'] : []),
-      'Async',
-    ]);
+    assertLog(['Open', 'Async']);
     expect(root).toMatchRenderedOutput(
       <>
         <span>Open</span>
@@ -330,11 +326,7 @@ describe('Activity Suspense', () => {
         );
       });
     });
-    assertLog([
-      'Open',
-      'Suspend! [Async]',
-      ...(gate(flags => flags.enableSiblingPrerendering) ? ['Loading...'] : []),
-    ]);
+    assertLog(['Open', 'Suspend! [Async]', 'Loading...']);
     // It should suspend with delay to prevent the already-visible Suspense
     // boundary from switching to a fallback
     expect(root).toMatchRenderedOutput(
