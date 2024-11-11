@@ -1,5 +1,3 @@
-import {enableSiblingPrerendering} from 'shared/ReactFeatureFlags';
-
 let React;
 let ReactNoop;
 let Scheduler;
