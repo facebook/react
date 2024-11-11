@@ -175,7 +175,9 @@ describe('Activity Suspense', () => {
   });
 
   // @gate enableActivity
-  test('suspend, resolve, hide (forces refresh), suspend, reveal', async () => {
+  test('Regression: Suspending on hide should not infinite loop.', async () => {
+    // This regression only repros in public act.
+    global.IS_REACT_ACT_ENVIRONMENT = true;
     const root = ReactNoop.createRoot();
 
     let setMode;
@@ -198,7 +200,7 @@ describe('Activity Suspense', () => {
       );
     }
 
-    await act(() => {
+    await React.act(() => {
       root.render(<Container text="hello" />);
     });
     assertLog([
@@ -209,13 +211,13 @@ describe('Activity Suspense', () => {
     ]);
     expect(root).toMatchRenderedOutput('Loading');
 
-    await act(async () => {
+    await React.act(async () => {
       await resolveText('hello');
     });
     assertLog(['hello']);
     expect(root).toMatchRenderedOutput('hello');
 
-    await act(async () => {
+    await React.act(async () => {
       setMode('hidden');
     });
     assertLog(['Clear [hello]', 'Suspend! [hello]']);

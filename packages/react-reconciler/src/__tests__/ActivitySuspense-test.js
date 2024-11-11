@@ -172,7 +172,7 @@ describe('Activity Suspense', () => {
   });
 
   // @gate enableActivity
-  test('Regression: Suspending on hide should not infinte loop.', async () => {
+  test('Regression: Suspending on hide should not infinite loop.', async () => {
     // This regression only repros in public act.
     global.IS_REACT_ACT_ENVIRONMENT = true;
     const root = ReactNoop.createRoot();
