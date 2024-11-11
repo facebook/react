@@ -71,7 +71,11 @@ import {
 } from './ReactFiberCallUserSpace';
 
 import {runWithFiberInDEV} from './ReactCurrentFiber';
-import {ResourceEffectKind, SimpleEffectKind} from './ReactFiberHooks';
+import {
+  ResourceEffectIdentityKind,
+  ResourceEffectUpdateKind,
+  SimpleEffectKind,
+} from './ReactFiberHooks';
 
 function shouldProfile(current: Fiber): boolean {
   return (
@@ -148,11 +152,8 @@ export function commitHookEffectListMount(
 
           // Mount
           let destroy;
-          if (
-            enableUseResourceEffectHook &&
-            effect.kind === ResourceEffectKind
-          ) {
-            if (typeof effect.create === 'function') {
+          if (enableUseResourceEffectHook) {
+            if (effect.kind === ResourceEffectIdentityKind) {
               effect.resource = effect.create();
               if (__DEV__) {
                 if (effect.resource == null) {
@@ -163,14 +164,19 @@ export function commitHookEffectListMount(
                   );
                 }
               }
-            } else if (
-              typeof effect.update === 'function' &&
-              effect.resource != null
-            ) {
-              // TODO(@poteto) what about multiple updates?
-              effect.update(effect.resource);
+              if (effect.next.kind === ResourceEffectUpdateKind) {
+                effect.next.resource = effect.resource;
+              }
+              destroy = effect.destroy;
+            } else if (effect.kind === ResourceEffectUpdateKind) {
+              if (
+                typeof effect.update === 'function' &&
+                effect.resource != null
+              ) {
+                // TODO(@poteto) what about multiple updates?
+                effect.update(effect.resource);
+              }
             }
-            destroy = effect.destroy;
           }
           if (__DEV__) {
             if ((flags & HookInsertion) !== NoHookEffect) {
@@ -186,11 +192,13 @@ export function commitHookEffectListMount(
             if ((flags & HookInsertion) !== NoHookEffect) {
               setIsRunningInsertionEffect(false);
             }
-          } else if (effect.kind === SimpleEffectKind) {
-            const create = effect.create;
-            const inst = effect.inst;
-            destroy = create();
-            inst.destroy = destroy;
+          } else {
+            if (effect.kind === SimpleEffectKind) {
+              const create = effect.create;
+              const inst = effect.inst;
+              destroy = create();
+              inst.destroy = destroy;
+            }
           }
 
           if (enableSchedulingProfiler) {
@@ -210,7 +218,7 @@ export function commitHookEffectListMount(
                 hookName = 'useInsertionEffect';
               } else if (
                 enableUseResourceEffectHook &&
-                effect.kind === ResourceEffectKind
+                effect.kind === ResourceEffectIdentityKind
               ) {
                 hookName = 'useResourceEffect';
               } else {
@@ -283,11 +291,8 @@ export function commitHookEffectListUnmount(
           const inst = effect.inst;
           if (
             enableUseResourceEffectHook &&
-            effect.kind === ResourceEffectKind &&
-            effect.resource != null &&
-            (effect.create != null ||
-              // TODO(@poteto) this feels gross
-              finishedWork.return == null)
+            effect.kind === ResourceEffectIdentityKind &&
+            effect.resource != null
           ) {
             inst.destroy = effect.destroy;
           }
@@ -296,8 +301,15 @@ export function commitHookEffectListUnmount(
             inst.destroy = undefined;
             let resource;
             if (enableUseResourceEffectHook) {
-              resource = effect.resource;
-              effect.resource = null;
+              if (effect.kind === ResourceEffectIdentityKind) {
+                resource = effect.resource;
+                effect.resource = null;
+                // TODO(@poteto) very sketchy
+                if (effect.next.kind === ResourceEffectUpdateKind) {
+                  effect.next.resource = null;
+                  effect.next.update = undefined;
+                }
+              }
             }
             if (enableSchedulingProfiler) {
               if ((flags & HookPassive) !== NoHookEffect) {
