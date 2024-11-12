@@ -440,14 +440,6 @@ class Context {
 
   // Checks if identifier is a valid dependency in the current scope
   #checkValidDependency(maybeDependency: ReactiveScopeDependency): boolean {
-    // ref.current access is not a valid dep
-    if (
-      isUseRefType(maybeDependency.identifier) &&
-      maybeDependency.path.at(0)?.property === 'current'
-    ) {
-      return false;
-    }
-
     // ref value is not a valid dep
     if (isRefValueType(maybeDependency.identifier)) {
       return false;
@@ -549,6 +541,16 @@ class Context {
       });
     }
 
+    // ref.current access is not a valid dep
+    if (
+      isUseRefType(maybeDependency.identifier) &&
+      maybeDependency.path.at(0)?.property === 'current'
+    ) {
+      maybeDependency = {
+        identifier: maybeDependency.identifier,
+        path: [],
+      };
+    }
     if (this.#checkValidDependency(maybeDependency)) {
       this.#dependencies.value!.push(maybeDependency);
     }
