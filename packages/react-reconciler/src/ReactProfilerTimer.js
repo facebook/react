@@ -193,13 +193,8 @@ export function popComponentEffectStart(prevEffectStart: number): void {
   if (!enableProfilerTimer || !enableProfilerCommitHooks) {
     return;
   }
-  if (prevEffectStart < 0) {
-    // If the parent component didn't have a start time, we use the start
-    // of the child as the parent's start time. We subtrack a minimal amount of
-    // time to ensure that the parent's start time is before the child to ensure
-    // that the performance tracks line up in the right order.
-    componentEffectStartTime -= 0.001;
-  } else {
+  // If the parent component didn't have a start time, we let this current time persist.
+  if (prevEffectStart >= 0) {
     // Otherwise, we restore the previous parent's start time.
     componentEffectStartTime = prevEffectStart;
   }
