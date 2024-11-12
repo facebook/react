@@ -663,35 +663,54 @@ function collectDependencies(
 
   const scopeTraversal = new ScopeBlockTraversal();
 
-  for (const [blockId, block] of fn.body.blocks) {
-    scopeTraversal.recordScopes(block);
-    const scopeBlockInfo = scopeTraversal.blockInfos.get(blockId);
-    if (scopeBlockInfo?.kind === 'begin') {
-      context.enterScope(scopeBlockInfo.scope);
-    } else if (scopeBlockInfo?.kind === 'end') {
-      context.exitScope(scopeBlockInfo.scope, scopeBlockInfo?.pruned);
-    }
+  const handleFunction = (fn: HIRFunction): void => {
+    for (const [blockId, block] of fn.body.blocks) {
+      scopeTraversal.recordScopes(block);
+      const scopeBlockInfo = scopeTraversal.blockInfos.get(blockId);
+      if (scopeBlockInfo?.kind === 'begin') {
+        context.enterScope(scopeBlockInfo.scope);
+      } else if (scopeBlockInfo?.kind === 'end') {
+        context.exitScope(scopeBlockInfo.scope, scopeBlockInfo.pruned);
+      }
+      // Record referenced optional chains in phis
+      for (const phi of block.phis) {
+        for (const operand of phi.operands) {
+          const maybeOptionalChain = temporaries.get(operand[1].identifier.id);
+          if (maybeOptionalChain) {
+            context.visitDependency(maybeOptionalChain);
+          }
+        }
+      }
+      for (const instr of block.instructions) {
+        if (
+          fn.env.config.enableFunctionDependencyRewrite &&
+          (instr.value.kind === 'FunctionExpression' ||
+            instr.value.kind === 'ObjectMethod')
+        ) {
+          context.declare(instr.lvalue.identifier, {
+            id: instr.id,
+            scope: context.currentScope,
+          });
+          /**
+           * Recursively visit the inner function to extract dependencies there
+           */
+          const wasInInnerFn = context.inInnerFn;
+          context.inInnerFn = true;
+          handleFunction(instr.value.loweredFunc.func);
+          context.inInnerFn = wasInInnerFn;
+        } else if (!processedInstrsInOptional.has(instr)) {
+          handleInstruction(instr, context);
+        }
+      }
 
-    // Record referenced optional chains in phis
-    for (const phi of block.phis) {
-      for (const operand of phi.operands) {
-        const maybeOptionalChain = temporaries.get(operand[1].identifier.id);
-        if (maybeOptionalChain) {
-          context.visitDependency(maybeOptionalChain);
+      if (!processedInstrsInOptional.has(block.terminal)) {
+        for (const place of eachTerminalOperand(block.terminal)) {
+          context.visitOperand(place);
         }
       }
     }
-    for (const instr of block.instructions) {
-      if (!processedInstrsInOptional.has(instr)) {
-        handleInstruction(instr, context);
-      }
-    }
+  };
 
-    if (!processedInstrsInOptional.has(block.terminal)) {
-      for (const place of eachTerminalOperand(block.terminal)) {
-        context.visitOperand(place);
-      }
-    }
-  }
+  handleFunction(fn);
   return context.deps;
 }
