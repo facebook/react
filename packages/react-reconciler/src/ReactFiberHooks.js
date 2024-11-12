@@ -48,6 +48,7 @@ import {
   disableLegacyMode,
   enableNoCloningMemoCache,
   enableContextProfiling,
+  enableUseResourceEffectHook,
 } from 'shared/ReactFeatureFlags';
 import {
   REACT_CONTEXT_TYPE,
@@ -218,12 +219,43 @@ type EffectInstance = {
   destroy: void | (() => void),
 };
 
-export type Effect = {
+export const SimpleEffectKind: 0 = 0;
+export const ResourceEffectIdentityKind: 1 = 1;
+export const ResourceEffectUpdateKind: 2 = 2;
+export type EffectKind =
+  | typeof SimpleEffectKind
+  | typeof ResourceEffectIdentityKind
+  | typeof ResourceEffectUpdateKind;
+export type Effect =
+  | SimpleEffect
+  | ResourceEffectIdentity
+  | ResourceEffectUpdate;
+export type SimpleEffect = {
+  kind: typeof SimpleEffectKind,
   tag: HookFlags,
-  create: () => (() => void) | void,
   inst: EffectInstance,
-  deps: Array<mixed> | null,
+  create: () => (() => void) | void,
+  createDeps: Array<mixed> | void | null,
   next: Effect,
+};
+export type ResourceEffectIdentity = {
+  kind: typeof ResourceEffectIdentityKind,
+  tag: HookFlags,
+  inst: EffectInstance,
+  create: () => mixed,
+  createDeps: Array<mixed> | void | null,
+  destroy: ((resource: mixed) => void) | void,
+  next: Effect,
+  resource: mixed,
+};
+export type ResourceEffectUpdate = {
+  kind: typeof ResourceEffectUpdateKind,
+  tag: HookFlags,
+  inst: EffectInstance,
+  update: ((resource: mixed) => void) | void,
+  updateDeps: Array<mixed> | void | null,
+  next: Effect,
+  resource: mixed,
 };
 
 type StoreInstance<T> = {
@@ -342,6 +374,23 @@ function checkDepsAreArrayDev(deps: mixed): void {
           'specified, the final argument must be an array.',
         currentHookNameInDev,
         typeof deps,
+      );
+    }
+  }
+}
+
+function checkDepsAreNonEmptyArrayDev(deps: mixed): void {
+  if (__DEV__) {
+    if (
+      deps !== undefined &&
+      deps !== null &&
+      isArray(deps) &&
+      deps.length === 0
+    ) {
+      console.error(
+        '%s received a dependency array with no dependencies. When ' +
+          'specified, the dependency array must have at least one dependency.',
+        currentHookNameInDev,
       );
     }
   }
@@ -1718,10 +1767,11 @@ function mountSyncExternalStore<T>(
   // directly, without storing any additional state. For the same reason, we
   // don't need to set a static flag, either.
   fiber.flags |= PassiveEffect;
-  pushEffect(
+  pushSimpleEffect(
     HookHasEffect | HookPassive,
-    updateStoreInstance.bind(null, fiber, inst, nextSnapshot, getSnapshot),
+    SimpleEffectKind,
     createEffectInstance(),
+    updateStoreInstance.bind(null, fiber, inst, nextSnapshot, getSnapshot),
     null,
   );
 
@@ -1788,11 +1838,11 @@ function updateSyncExternalStore<T>(
       workInProgressHook.memoizedState.tag & HookHasEffect)
   ) {
     fiber.flags |= PassiveEffect;
-    pushEffect(
+    pushSimpleEffect(
       HookHasEffect | HookPassive,
-      updateStoreInstance.bind(null, fiber, inst, nextSnapshot, getSnapshot),
+      SimpleEffectKind,
       createEffectInstance(),
-      null,
+      updateStoreInstance.bind(null, fiber, inst, nextSnapshot, getSnapshot),
     );
 
     // Unless we're rendering a blocking lane, schedule a consistency check.
@@ -2448,10 +2498,11 @@ function updateActionStateImpl<S, P>(
   const prevAction = actionQueueHook.memoizedState;
   if (action !== prevAction) {
     currentlyRenderingFiber.flags |= PassiveEffect;
-    pushEffect(
+    pushSimpleEffect(
       HookHasEffect | HookPassive,
-      actionStateActionEffect.bind(null, actionQueue, action),
+      SimpleEffectKind,
       createEffectInstance(),
+      actionStateActionEffect.bind(null, actionQueue, action),
       null,
     );
   }
@@ -2508,20 +2559,73 @@ function rerenderActionState<S, P>(
   return [state, dispatch, false];
 }
 
-function pushEffect(
+function pushSimpleEffect(
   tag: HookFlags,
-  create: () => (() => void) | void,
+  kind: typeof SimpleEffectKind,
   inst: EffectInstance,
-  deps: Array<mixed> | null,
+  create: () => (() => void) | void,
+  createDeps: Array<mixed> | void | null,
 ): Effect {
-  const effect: Effect = {
+  // $FlowFixMe[incompatible-type] (@poteto) could not figure out how to appease Flow
+  const effect: SimpleEffect = {
+    kind,
     tag,
     create,
+    createDeps,
     inst,
-    deps,
     // Circular
     next: (null: any),
   };
+  return pushEffectImpl(effect);
+}
+
+function pushResourceEffectIdentity(
+  tag: HookFlags,
+  kind: typeof ResourceEffectIdentityKind,
+  inst: EffectInstance,
+  create: () => mixed,
+  createDeps: Array<mixed> | void | null,
+  destroy: ((resource: mixed) => void) | void,
+  resource: mixed,
+): Effect {
+  // $FlowFixMe[incompatible-type] (@poteto) could not figure out how to appease Flow
+  const effect: ResourceEffectIdentity = {
+    kind,
+    tag,
+    create,
+    createDeps,
+    inst,
+    destroy,
+    resource,
+    // Circular
+    next: (null: any),
+  };
+  return pushEffectImpl(effect);
+}
+
+function pushResourceEffectUpdate(
+  tag: HookFlags,
+  kind: typeof ResourceEffectUpdateKind,
+  inst: EffectInstance,
+  update: ((resource: mixed) => void) | void,
+  updateDeps: Array<mixed> | void | null,
+  resource: mixed,
+): Effect {
+  // $FlowFixMe[incompatible-type] (@poteto) could not figure out how to appease Flow
+  const effect: ResourceEffectUpdate = {
+    kind,
+    tag,
+    update,
+    updateDeps,
+    inst,
+    resource,
+    // Circular
+    next: (null: any),
+  };
+  return pushEffectImpl(effect);
+}
+
+function pushEffectImpl(effect: Effect): Effect {
   let componentUpdateQueue: null | FunctionComponentUpdateQueue =
     (currentlyRenderingFiber.updateQueue: any);
   if (componentUpdateQueue === null) {
@@ -2565,10 +2669,11 @@ function mountEffectImpl(
   const hook = mountWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
   currentlyRenderingFiber.flags |= fiberFlags;
-  hook.memoizedState = pushEffect(
+  hook.memoizedState = pushSimpleEffect(
     HookHasEffect | hookFlags,
-    create,
+    SimpleEffectKind,
     createEffectInstance(),
+    create,
     nextDeps,
   );
 }
@@ -2589,9 +2694,16 @@ function updateEffectImpl(
   if (currentHook !== null) {
     if (nextDeps !== null) {
       const prevEffect: Effect = currentHook.memoizedState;
-      const prevDeps = prevEffect.deps;
+      const prevDeps = prevEffect.createDeps;
+      // $FlowFixMe[incompatible-call] (@poteto)
       if (areHookInputsEqual(nextDeps, prevDeps)) {
-        hook.memoizedState = pushEffect(hookFlags, create, inst, nextDeps);
+        hook.memoizedState = pushSimpleEffect(
+          hookFlags,
+          SimpleEffectKind,
+          inst,
+          create,
+          nextDeps,
+        );
         return;
       }
     }
@@ -2599,10 +2711,11 @@ function updateEffectImpl(
 
   currentlyRenderingFiber.flags |= fiberFlags;
 
-  hook.memoizedState = pushEffect(
+  hook.memoizedState = pushSimpleEffect(
     HookHasEffect | hookFlags,
-    create,
+    SimpleEffectKind,
     inst,
+    create,
     nextDeps,
   );
 }
@@ -2637,6 +2750,154 @@ function updateEffect(
   deps: Array<mixed> | void | null,
 ): void {
   updateEffectImpl(PassiveEffect, HookPassive, create, deps);
+}
+
+function mountResourceEffect(
+  create: () => mixed,
+  createDeps: Array<mixed> | void | null,
+  update: ((resource: mixed) => void) | void,
+  updateDeps: Array<mixed> | void | null,
+  destroy: ((resource: mixed) => void) | void,
+) {
+  if (
+    __DEV__ &&
+    (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode &&
+    (currentlyRenderingFiber.mode & NoStrictPassiveEffectsMode) === NoMode
+  ) {
+    mountResourceEffectImpl(
+      MountPassiveDevEffect | PassiveEffect | PassiveStaticEffect,
+      HookPassive,
+      create,
+      createDeps,
+      update,
+      updateDeps,
+      destroy,
+    );
+  } else {
+    mountResourceEffectImpl(
+      PassiveEffect | PassiveStaticEffect,
+      HookPassive,
+      create,
+      createDeps,
+      update,
+      updateDeps,
+      destroy,
+    );
+  }
+}
+
+function mountResourceEffectImpl(
+  fiberFlags: Flags,
+  hookFlags: HookFlags,
+  create: () => mixed,
+  createDeps: Array<mixed> | void | null,
+  update: ((resource: mixed) => void) | void,
+  updateDeps: Array<mixed> | void | null,
+  destroy: ((resource: mixed) => void) | void,
+) {
+  const hook = mountWorkInProgressHook();
+  currentlyRenderingFiber.flags |= fiberFlags;
+  hook.memoizedState = pushResourceEffectIdentity(
+    HookHasEffect | hookFlags,
+    ResourceEffectIdentityKind,
+    createEffectInstance(),
+    create,
+    createDeps,
+    destroy,
+  );
+  hook.memoizedState = pushResourceEffectUpdate(
+    hookFlags,
+    ResourceEffectUpdateKind,
+    createEffectInstance(),
+    update,
+    updateDeps,
+  );
+}
+
+function updateResourceEffect(
+  create: () => mixed,
+  createDeps: Array<mixed> | void | null,
+  update: ((resource: mixed) => void) | void,
+  updateDeps: Array<mixed> | void | null,
+  destroy: ((resource: mixed) => void) | void,
+) {
+  updateResourceEffectImpl(
+    PassiveEffect,
+    HookPassive,
+    create,
+    createDeps,
+    update,
+    updateDeps,
+    destroy,
+  );
+}
+
+function updateResourceEffectImpl(
+  fiberFlags: Flags,
+  hookFlags: HookFlags,
+  create: () => mixed,
+  createDeps: Array<mixed> | void | null,
+  update: ((resource: mixed) => void) | void,
+  updateDeps: Array<mixed> | void | null,
+  destroy: ((resource: mixed) => void) | void,
+) {
+  const hook = updateWorkInProgressHook();
+  const effect: Effect = hook.memoizedState;
+  const inst = effect.inst;
+
+  const nextCreateDeps = createDeps === undefined ? null : createDeps;
+  const nextUpdateDeps = updateDeps === undefined ? null : updateDeps;
+  let isCreateDepsSame: boolean;
+  let isUpdateDepsSame: boolean;
+
+  if (currentHook !== null) {
+    const prevEffect: Effect = currentHook.memoizedState;
+    if (nextCreateDeps !== null) {
+      let prevCreateDeps;
+      // TODO(@poteto) seems sketchy
+      if (prevEffect.kind === ResourceEffectIdentityKind) {
+        prevCreateDeps =
+          prevEffect.createDeps != null ? prevEffect.createDeps : null;
+      } else {
+        prevCreateDeps =
+          prevEffect.next.createDeps != null
+            ? prevEffect.next.createDeps
+            : null;
+      }
+      isCreateDepsSame = areHookInputsEqual(nextCreateDeps, prevCreateDeps);
+    }
+    if (nextUpdateDeps !== null) {
+      const prevUpdateDeps =
+        prevEffect.updateDeps != null ? prevEffect.updateDeps : null;
+      isUpdateDepsSame = areHookInputsEqual(nextUpdateDeps, prevUpdateDeps);
+    }
+  }
+
+  if (!(isCreateDepsSame && isUpdateDepsSame)) {
+    currentlyRenderingFiber.flags |= fiberFlags;
+  }
+
+  const resource =
+    currentHook !== null
+      ? (currentHook.memoizedState as Effect).resource
+      : undefined;
+  hook.memoizedState = pushResourceEffectIdentity(
+    isCreateDepsSame ? hookFlags : HookHasEffect | hookFlags,
+    ResourceEffectIdentityKind,
+    inst,
+    create,
+    nextCreateDeps,
+    destroy,
+    resource,
+  );
+  hook.memoizedState = pushResourceEffectUpdate(
+    isUpdateDepsSame ? hookFlags : HookHasEffect | hookFlags,
+    ResourceEffectUpdateKind,
+    inst,
+    update,
+    nextUpdateDeps,
+    resource,
+  );
 }
 
 function useEffectEventImpl<Args, Return, F: (...Array<Args>) => Return>(
@@ -3789,6 +4050,9 @@ if (enableUseMemoCacheHook) {
 if (enableUseEffectEventHook) {
   (ContextOnlyDispatcher: Dispatcher).useEffectEvent = throwInvalidHookError;
 }
+if (enableUseResourceEffectHook) {
+  (ContextOnlyDispatcher: Dispatcher).useResourceEffect = throwInvalidHookError;
+}
 if (enableAsyncActions) {
   (ContextOnlyDispatcher: Dispatcher).useHostTransitionStatus =
     throwInvalidHookError;
@@ -3831,6 +4095,9 @@ if (enableUseMemoCacheHook) {
 }
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnMount: Dispatcher).useEffectEvent = mountEvent;
+}
+if (enableUseResourceEffectHook) {
+  (HooksDispatcherOnMount: Dispatcher).useResourceEffect = mountResourceEffect;
 }
 if (enableAsyncActions) {
   (HooksDispatcherOnMount: Dispatcher).useHostTransitionStatus =
@@ -3875,6 +4142,10 @@ if (enableUseMemoCacheHook) {
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnUpdate: Dispatcher).useEffectEvent = updateEvent;
 }
+if (enableUseResourceEffectHook) {
+  (HooksDispatcherOnUpdate: Dispatcher).useResourceEffect =
+    updateResourceEffect;
+}
 if (enableAsyncActions) {
   (HooksDispatcherOnUpdate: Dispatcher).useHostTransitionStatus =
     useHostTransitionStatus;
@@ -3917,6 +4188,10 @@ if (enableUseMemoCacheHook) {
 }
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnRerender: Dispatcher).useEffectEvent = updateEvent;
+}
+if (enableUseResourceEffectHook) {
+  (HooksDispatcherOnRerender: Dispatcher).useResourceEffect =
+    updateResourceEffect;
 }
 if (enableAsyncActions) {
   (HooksDispatcherOnRerender: Dispatcher).useHostTransitionStatus =
@@ -4106,6 +4381,27 @@ if (__DEV__) {
         currentHookNameInDev = 'useEffectEvent';
         mountHookTypesDev();
         return mountEvent(callback);
+      };
+  }
+  if (enableUseResourceEffectHook) {
+    (HooksDispatcherOnMountInDEV: Dispatcher).useResourceEffect =
+      function useResourceEffect(
+        create: () => mixed,
+        createDeps: Array<mixed> | void | null,
+        update: ((resource: mixed) => void) | void,
+        updateDeps: Array<mixed> | void | null,
+        destroy: ((resource: mixed) => void) | void,
+      ): void {
+        currentHookNameInDev = 'useResourceEffect';
+        mountHookTypesDev();
+        checkDepsAreNonEmptyArrayDev(updateDeps);
+        return mountResourceEffect(
+          create,
+          createDeps,
+          update,
+          updateDeps,
+          destroy,
+        );
       };
   }
   if (enableAsyncActions) {
@@ -4300,6 +4596,26 @@ if (__DEV__) {
         return mountEvent(callback);
       };
   }
+  if (enableUseResourceEffectHook) {
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useResourceEffect =
+      function useResourceEffect(
+        create: () => mixed,
+        createDeps: Array<mixed> | void | null,
+        update: ((resource: mixed) => void) | void,
+        updateDeps: Array<mixed> | void | null,
+        destroy: ((resource: mixed) => void) | void,
+      ): void {
+        currentHookNameInDev = 'useResourceEffect';
+        updateHookTypesDev();
+        return mountResourceEffect(
+          create,
+          createDeps,
+          update,
+          updateDeps,
+          destroy,
+        );
+      };
+  }
   if (enableAsyncActions) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
@@ -4491,6 +4807,26 @@ if (__DEV__) {
         return updateEvent(callback);
       };
   }
+  if (enableUseResourceEffectHook) {
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).useResourceEffect =
+      function useResourceEffect(
+        create: () => mixed,
+        createDeps: Array<mixed> | void | null,
+        update: ((resource: mixed) => void) | void,
+        updateDeps: Array<mixed> | void | null,
+        destroy: ((resource: mixed) => void) | void,
+      ) {
+        currentHookNameInDev = 'useResourceEffect';
+        updateHookTypesDev();
+        return updateResourceEffect(
+          create,
+          createDeps,
+          update,
+          updateDeps,
+          destroy,
+        );
+      };
+  }
   if (enableAsyncActions) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
@@ -4680,6 +5016,26 @@ if (__DEV__) {
         currentHookNameInDev = 'useEffectEvent';
         updateHookTypesDev();
         return updateEvent(callback);
+      };
+  }
+  if (enableUseResourceEffectHook) {
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).useResourceEffect =
+      function useResourceEffect(
+        create: () => mixed,
+        createDeps: Array<mixed> | void | null,
+        update: ((resource: mixed) => void) | void,
+        updateDeps: Array<mixed> | void | null,
+        destroy: ((resource: mixed) => void) | void,
+      ) {
+        currentHookNameInDev = 'useResourceEffect';
+        updateHookTypesDev();
+        return updateResourceEffect(
+          create,
+          createDeps,
+          update,
+          updateDeps,
+          destroy,
+        );
       };
   }
   if (enableAsyncActions) {
@@ -4895,6 +5251,27 @@ if (__DEV__) {
         warnInvalidHookAccess();
         mountHookTypesDev();
         return mountEvent(callback);
+      };
+  }
+  if (InvalidNestedHooksDispatcherOnMountInDEV) {
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).useResourceEffect =
+      function useResourceEffect(
+        create: () => mixed,
+        createDeps: Array<mixed> | void | null,
+        update: ((resource: mixed) => void) | void,
+        updateDeps: Array<mixed> | void | null,
+        destroy: ((resource: mixed) => void) | void,
+      ): void {
+        currentHookNameInDev = 'useResourceEffect';
+        warnInvalidHookAccess();
+        mountHookTypesDev();
+        return mountResourceEffect(
+          create,
+          createDeps,
+          update,
+          updateDeps,
+          destroy,
+        );
       };
   }
   if (enableAsyncActions) {
@@ -5115,6 +5492,27 @@ if (__DEV__) {
         return updateEvent(callback);
       };
   }
+  if (enableUseResourceEffectHook) {
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useResourceEffect =
+      function useResourceEffect(
+        create: () => mixed,
+        createDeps: Array<mixed> | void | null,
+        update: ((resource: mixed) => void) | void,
+        updateDeps: Array<mixed> | void | null,
+        destroy: ((resource: mixed) => void) | void,
+      ) {
+        currentHookNameInDev = 'useResourceEffect';
+        warnInvalidHookAccess();
+        updateHookTypesDev();
+        return updateResourceEffect(
+          create,
+          createDeps,
+          update,
+          updateDeps,
+          destroy,
+        );
+      };
+  }
   if (enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
@@ -5331,6 +5729,27 @@ if (__DEV__) {
         warnInvalidHookAccess();
         updateHookTypesDev();
         return updateEvent(callback);
+      };
+  }
+  if (enableUseResourceEffectHook) {
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useResourceEffect =
+      function useResourceEffect(
+        create: () => mixed,
+        createDeps: Array<mixed> | void | null,
+        update: ((resource: mixed) => void) | void,
+        updateDeps: Array<mixed> | void | null,
+        destroy: ((resource: mixed) => void) | void,
+      ) {
+        currentHookNameInDev = 'useResourceEffect';
+        warnInvalidHookAccess();
+        updateHookTypesDev();
+        return updateResourceEffect(
+          create,
+          createDeps,
+          update,
+          updateDeps,
+          destroy,
+        );
       };
   }
   if (enableAsyncActions) {
