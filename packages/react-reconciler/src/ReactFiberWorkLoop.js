@@ -938,6 +938,9 @@ export function performWorkOnRoot(
       }
       break;
     } else if (exitStatus === RootDidNotComplete) {
+      if (enableProfilerTimer && enableComponentPerformanceTrack) {
+        finalizeRender(lanes, now());
+      }
       // The render unwound without completing the tree. This happens in special
       // cases where need to exit the current render without producing a
       // consistent tree or committing.
@@ -1130,6 +1133,9 @@ function finishConcurrentRender(
         // This is a transition, so we should exit without committing a
         // placeholder and without scheduling a timeout. Delay indefinitely
         // until we receive more data.
+        if (enableProfilerTimer && enableComponentPerformanceTrack) {
+          finalizeRender(lanes, now());
+        }
         const didAttemptEntireTree =
           !workInProgressRootDidSkipSuspendedSiblings;
         markRootSuspended(
