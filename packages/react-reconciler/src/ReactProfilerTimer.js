@@ -36,10 +36,12 @@ export let componentEffectDuration: number = -0;
 export let componentEffectStartTime: number = -1.1;
 export let componentEffectEndTime: number = -1.1;
 
+let blockingClampTime: number = -0;
 export let blockingUpdateTime: number = -1.1; // First sync setState scheduled.
 export let blockingEventTime: number = -1.1; // Event timeStamp of the first setState.
 export let blockingEventType: null | string = null; // Event type of the first setState.
 // TODO: This should really be one per Transition lane.
+let transitionClampTime: number = -0;
 export let transitionStartTime: number = -1.1; // First startTransition call before setState.
 export let transitionUpdateTime: number = -1.1; // First transition setState scheduled.
 export let transitionEventTime: number = -1.1; // Event timeStamp of the first transition.
@@ -54,6 +56,11 @@ export function startUpdateTimerByLane(lane: Lane): void {
       blockingUpdateTime = now();
       blockingEventTime = resolveEventTimeStamp();
       blockingEventType = resolveEventType();
+      if (blockingEventTime < blockingClampTime) {
+        // We've already rendered within this event and we need to clamp the new update
+        // to the end of that render.
+        blockingEventTime = blockingClampTime;
+      }
     }
   } else if (isTransitionLane(lane)) {
     if (transitionUpdateTime < 0) {
@@ -61,6 +68,11 @@ export function startUpdateTimerByLane(lane: Lane): void {
       if (transitionStartTime < 0) {
         transitionEventTime = resolveEventTimeStamp();
         transitionEventType = resolveEventType();
+        if (transitionEventTime < transitionClampTime) {
+          // We've already rendered within this event and we need to clamp the new update
+          // to the end of that render.
+          transitionEventTime = transitionClampTime;
+        }
       }
     }
   }
@@ -78,6 +90,11 @@ export function startAsyncTransitionTimer(): void {
     transitionStartTime = now();
     transitionEventTime = resolveEventTimeStamp();
     transitionEventType = resolveEventType();
+    if (transitionEventTime < transitionClampTime) {
+      // We've already rendered within this event and we need to clamp the new update
+      // to the end of that render.
+      transitionEventTime = transitionClampTime;
+    }
   }
 }
 
@@ -121,6 +138,8 @@ export function clampBlockingTimers(finalTime: number): void {
   if (blockingEventTime >= 0 && blockingEventTime < finalTime) {
     blockingEventTime = finalTime;
   }
+  // Save this for later in case another update comes in later with an early event time.
+  blockingClampTime = finalTime;
 }
 
 export function clampTransitionTimers(finalTime: number): void {
@@ -139,6 +158,8 @@ export function clampTransitionTimers(finalTime: number): void {
   if (transitionEventTime >= 0 && transitionEventTime < finalTime) {
     transitionEventTime = finalTime;
   }
+  // Save this for later in case another update comes in later with an early event time.
+  transitionClampTime = finalTime;
 }
 
 export function pushNestedEffectDurations(): number {
