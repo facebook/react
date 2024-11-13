@@ -3550,7 +3550,9 @@ function flushPassiveEffectsImpl(wasDelayedCommit: void | boolean) {
   let passiveEffectStartTime = 0;
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     passiveEffectStartTime = now();
-    logPaintYieldPhase(commitEndTime, passiveEffectStartTime);
+    if (wasDelayedCommit) {
+      logPaintYieldPhase(commitEndTime, passiveEffectStartTime);
+    }
   }
 
   if (enableSchedulingProfiler) {
@@ -3587,9 +3589,7 @@ function flushPassiveEffectsImpl(wasDelayedCommit: void | boolean) {
 
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     const passiveEffectsEndTime = now();
-    if (wasDelayedCommit) {
-      logPassiveCommitPhase(passiveEffectStartTime, passiveEffectsEndTime);
-    }
+    logPassiveCommitPhase(passiveEffectStartTime, passiveEffectsEndTime);
     finalizeRender(lanes, passiveEffectsEndTime);
   }
 
