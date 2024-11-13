@@ -15,13 +15,15 @@ import type {
 } from 'react-client/src/ReactFlightClient';
 
 import type {
-  SSRModuleMap,
+  ServerConsumerModuleMap,
   ModuleLoading,
+  ServerManifest,
 } from 'react-client/src/ReactFlightClientConfig';
 
-type SSRManifest = {
-  moduleMap: SSRModuleMap,
+type ServerConsumerManifest = {
+  moduleMap: ServerConsumerModuleMap,
   moduleLoading: ModuleLoading,
+  serverModuleMap: null | ServerManifest,
 };
 
 import type {Readable} from 'stream';
@@ -67,12 +69,13 @@ export type Options = {
 
 function createFromNodeStream<T>(
   stream: Readable,
-  ssrManifest: SSRManifest,
+  serverConsumerManifest: ServerConsumerManifest,
   options?: Options,
 ): Thenable<T> {
   const response: Response = createResponse(
-    ssrManifest.moduleMap,
-    ssrManifest.moduleLoading,
+    serverConsumerManifest.moduleMap,
+    serverConsumerManifest.serverModuleMap,
+    serverConsumerManifest.moduleLoading,
     noServerCall,
     options ? options.encodeFormAction : undefined,
     options && typeof options.nonce === 'string' ? options.nonce : undefined,

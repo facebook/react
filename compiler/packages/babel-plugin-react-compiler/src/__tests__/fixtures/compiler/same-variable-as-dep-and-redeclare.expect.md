@@ -53,30 +53,30 @@ import { c as _c } from "react/compiler-runtime"; // note: comments are for the 
 // emitted
 function foo(props) {
   const $ = _c(14);
-  let x;
   let t0;
+  let x;
   if ($[0] !== props.a) {
     x = [];
     x.push(props.a);
 
     t0 = <div>{x}</div>;
     $[0] = props.a;
-    $[1] = x;
-    $[2] = t0;
+    $[1] = t0;
+    $[2] = x;
   } else {
-    x = $[1];
-    t0 = $[2];
+    t0 = $[1];
+    x = $[2];
   }
   const header = t0;
   let y;
-  if ($[3] !== x || $[4] !== props.b || $[5] !== props.c) {
+  if ($[3] !== props.b || $[4] !== props.c || $[5] !== x) {
     y = [x];
     x = [];
     y.push(props.b);
     x.push(props.c);
-    $[3] = x;
-    $[4] = props.b;
-    $[5] = props.c;
+    $[3] = props.b;
+    $[4] = props.c;
+    $[5] = x;
     $[6] = y;
     $[7] = x;
   } else {
@@ -99,15 +99,15 @@ function foo(props) {
   }
   const content = t1;
   let t2;
-  if ($[11] !== header || $[12] !== content) {
+  if ($[11] !== content || $[12] !== header) {
     t2 = (
       <>
         {header}
         {content}
       </>
     );
-    $[11] = header;
-    $[12] = content;
+    $[11] = content;
+    $[12] = header;
     $[13] = t2;
   } else {
     t2 = $[13];

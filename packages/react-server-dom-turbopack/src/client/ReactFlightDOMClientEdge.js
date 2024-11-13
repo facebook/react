@@ -17,13 +17,15 @@ import type {
 import type {ReactServerValue} from 'react-client/src/ReactFlightReplyClient';
 
 import type {
-  SSRModuleMap,
+  ServerConsumerModuleMap,
   ModuleLoading,
+  ServerManifest,
 } from 'react-client/src/ReactFlightClientConfig';
 
-type SSRManifest = {
-  moduleMap: SSRModuleMap,
+type ServerConsumerManifest = {
+  moduleMap: ServerConsumerModuleMap,
   moduleLoading: ModuleLoading,
+  serverModuleMap: null | ServerManifest,
 };
 
 import {
@@ -66,7 +68,7 @@ type EncodeFormActionCallback = <A>(
 ) => ReactCustomFormAction;
 
 export type Options = {
-  ssrManifest: SSRManifest,
+  serverConsumerManifest: ServerConsumerManifest,
   nonce?: string,
   encodeFormAction?: EncodeFormActionCallback,
   temporaryReferences?: TemporaryReferenceSet,
@@ -77,8 +79,9 @@ export type Options = {
 
 function createResponseFromOptions(options: Options) {
   return createResponse(
-    options.ssrManifest.moduleMap,
-    options.ssrManifest.moduleLoading,
+    options.serverConsumerManifest.moduleMap,
+    options.serverConsumerManifest.serverModuleMap,
+    options.serverConsumerManifest.moduleLoading,
     noServerCall,
     options.encodeFormAction,
     typeof options.nonce === 'string' ? options.nonce : undefined,
@@ -149,12 +152,12 @@ function createFromFetch<T>(
 
 function encodeReply(
   value: ReactServerValue,
-  options?: {temporaryReferences?: TemporaryReferenceSet},
+  options?: {temporaryReferences?: TemporaryReferenceSet, signal?: AbortSignal},
 ): Promise<
   string | URLSearchParams | FormData,
 > /* We don't use URLSearchParams yet but maybe */ {
   return new Promise((resolve, reject) => {
-    processReply(
+    const abort = processReply(
       value,
       '',
       options && options.temporaryReferences
@@ -163,6 +166,18 @@ function encodeReply(
       resolve,
       reject,
     );
+    if (options && options.signal) {
+      const signal = options.signal;
+      if (signal.aborted) {
+        abort((signal: any).reason);
+      } else {
+        const listener = () => {
+          abort((signal: any).reason);
+          signal.removeEventListener('abort', listener);
+        };
+        signal.addEventListener('abort', listener);
+      }
+    }
   });
 }
 

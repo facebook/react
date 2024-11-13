@@ -1,4 +1,4 @@
-// @enableInlineJsxTransform
+// @inlineJsxTransform
 
 function Parent({children, a: _a, b: _b, c: _c, ref}) {
   return <div ref={ref}>{children}</div>;
@@ -22,11 +22,15 @@ function ParentAndRefAndKey(props) {
 }
 
 function ParentAndChildren(props) {
+  const render = () => {
+    return <div key="d">{props.foo}</div>;
+  };
   return (
     <Parent>
       <Child key="a" {...props} />
       <Child key="b">
-        <GrandChild className={props.foo} {...props} />
+        <GrandChild key="c" className={props.foo} {...props} />
+        {render()}
       </Child>
     </Parent>
   );
@@ -36,12 +40,28 @@ const propsToSpread = {a: 'a', b: 'b', c: 'c'};
 function PropsSpread() {
   return (
     <>
-      <Test {...propsToSpread} />
-      <Test {...propsToSpread} a="z" />
+      <Test key="a" {...propsToSpread} />
+      <Test key="b" {...propsToSpread} a="z" />
     </>
   );
 }
 
+function ConditionalJsx({shouldWrap}) {
+  let content = <div>Hello</div>;
+
+  if (shouldWrap) {
+    content = <Parent>{content}</Parent>;
+  }
+
+  return content;
+}
+
+// TODO: Support value blocks
+function TernaryJsx({cond}) {
+  return cond ? <div /> : null;
+}
+
+global.DEV = true;
 export const FIXTURE_ENTRYPOINT = {
   fn: ParentAndChildren,
   params: [{foo: 'abc'}],

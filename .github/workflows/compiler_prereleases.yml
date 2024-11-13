@@ -13,6 +13,9 @@ on:
       dist_tag:
         required: true
         type: string
+      version_name:
+        required: true
+        type: string
     secrets:
       NPM_TOKEN:
         required: true
@@ -44,9 +47,9 @@ jobs:
         id: node_modules
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('compiler/**/yarn.lock') }}
+          key: compiler-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('compiler/**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
       - name: Publish packages to npm
         run: |
           cp ./scripts/release/ci-npmrc ~/.npmrc
-          scripts/release/publish.js --frfr --ci --tags ${{ inputs.dist_tag }}
+          scripts/release/publish.js --frfr --ci --versionName=${{ inputs.version_name }} --tag ${{ inputs.dist_tag }}

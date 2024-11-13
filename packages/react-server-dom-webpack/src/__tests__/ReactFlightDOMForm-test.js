@@ -166,7 +166,7 @@ describe('ReactFlightDOMForm', () => {
     }
     const rscStream = ReactServerDOMServer.renderToReadableStream(<App />);
     const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
-      ssrManifest: {
+      serverConsumerManifest: {
         moduleMap: null,
         moduleLoading: null,
       },
@@ -232,7 +232,7 @@ describe('ReactFlightDOMForm', () => {
     }
     const rscStream = ReactServerDOMServer.renderToReadableStream(<App />);
     const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
-      ssrManifest: {
+      serverConsumerManifest: {
         moduleMap: null,
         moduleLoading: null,
       },
@@ -272,7 +272,7 @@ describe('ReactFlightDOMForm', () => {
     }
     const rscStream = ReactServerDOMServer.renderToReadableStream(<App />);
     const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
-      ssrManifest: {
+      serverConsumerManifest: {
         moduleMap: null,
         moduleLoading: null,
       },
@@ -343,7 +343,7 @@ describe('ReactFlightDOMForm', () => {
       webpackMap,
     );
     const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
-      ssrManifest: {
+      serverConsumerManifest: {
         moduleMap: null,
         moduleLoading: null,
       },
@@ -391,7 +391,7 @@ describe('ReactFlightDOMForm', () => {
       webpackMap,
     );
     const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
-      ssrManifest: {
+      serverConsumerManifest: {
         moduleMap: null,
         moduleLoading: null,
       },
@@ -444,7 +444,7 @@ describe('ReactFlightDOMForm', () => {
       webpackMap,
     );
     const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
-      ssrManifest: {
+      serverConsumerManifest: {
         moduleMap: null,
         moduleLoading: null,
       },
@@ -469,7 +469,7 @@ describe('ReactFlightDOMForm', () => {
     const postbackResponse = ReactServerDOMClient.createFromReadableStream(
       postbackRscStream,
       {
-        ssrManifest: {
+        serverConsumerManifest: {
           moduleMap: null,
           moduleLoading: null,
         },
@@ -539,7 +539,7 @@ describe('ReactFlightDOMForm', () => {
       const response = ReactServerDOMClient.createFromReadableStream(
         rscStream,
         {
-          ssrManifest: {
+          serverConsumerManifest: {
             moduleMap: null,
             moduleLoading: null,
           },
@@ -569,7 +569,7 @@ describe('ReactFlightDOMForm', () => {
       const postbackResponse = ReactServerDOMClient.createFromReadableStream(
         postbackRscStream,
         {
-          ssrManifest: {
+          serverConsumerManifest: {
             moduleMap: null,
             moduleLoading: null,
           },
@@ -601,7 +601,7 @@ describe('ReactFlightDOMForm', () => {
       const postbackResponse2 = ReactServerDOMClient.createFromReadableStream(
         postbackRscStream2,
         {
-          ssrManifest: {
+          serverConsumerManifest: {
             moduleMap: null,
             moduleLoading: null,
           },
@@ -660,7 +660,7 @@ describe('ReactFlightDOMForm', () => {
       webpackMap,
     );
     const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
-      ssrManifest: {
+      serverConsumerManifest: {
         moduleMap: null,
         moduleLoading: null,
       },
@@ -687,7 +687,7 @@ describe('ReactFlightDOMForm', () => {
     const postbackResponse = ReactServerDOMClient.createFromReadableStream(
       postbackRscStream,
       {
-        ssrManifest: {
+        serverConsumerManifest: {
           moduleMap: null,
           moduleLoading: null,
         },
@@ -738,7 +738,7 @@ describe('ReactFlightDOMForm', () => {
       webpackMap,
     );
     const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
-      ssrManifest: {
+      serverConsumerManifest: {
         moduleMap: null,
         moduleLoading: null,
       },
@@ -766,7 +766,7 @@ describe('ReactFlightDOMForm', () => {
     const postbackResponse = ReactServerDOMClient.createFromReadableStream(
       postbackRscStream,
       {
-        ssrManifest: {
+        serverConsumerManifest: {
           moduleMap: null,
           moduleLoading: null,
         },
@@ -794,7 +794,7 @@ describe('ReactFlightDOMForm', () => {
     const postbackResponse2 = ReactServerDOMClient.createFromReadableStream(
       postbackRscStream2,
       {
-        ssrManifest: {
+        serverConsumerManifest: {
           moduleMap: null,
           moduleLoading: null,
         },
@@ -838,7 +838,7 @@ describe('ReactFlightDOMForm', () => {
       webpackMap,
     );
     const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
-      ssrManifest: {
+      serverConsumerManifest: {
         moduleMap: null,
         moduleLoading: null,
       },
@@ -891,7 +891,7 @@ describe('ReactFlightDOMForm', () => {
       webpackMap,
     );
     const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
-      ssrManifest: {
+      serverConsumerManifest: {
         moduleMap: null,
         moduleLoading: null,
       },
@@ -928,7 +928,7 @@ describe('ReactFlightDOMForm', () => {
       webpackMap,
     );
     const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
-      ssrManifest: {
+      serverConsumerManifest: {
         moduleMap: null,
         moduleLoading: null,
       },
@@ -954,7 +954,7 @@ describe('ReactFlightDOMForm', () => {
       const postbackResponse = ReactServerDOMClient.createFromReadableStream(
         postbackRscStream,
         {
-          ssrManifest: {
+          serverConsumerManifest: {
             moduleMap: null,
             moduleLoading: null,
           },
@@ -1007,7 +1007,7 @@ describe('ReactFlightDOMForm', () => {
       webpackMap,
     );
     const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
-      ssrManifest: {
+      serverConsumerManifest: {
         moduleMap: null,
         moduleLoading: null,
       },
@@ -1032,7 +1032,7 @@ describe('ReactFlightDOMForm', () => {
       );
       const postbackResponse =
         await ReactServerDOMClient.createFromReadableStream(postbackRscStream, {
-          ssrManifest: {
+          serverConsumerManifest: {
             moduleMap: null,
             moduleLoading: null,
           },

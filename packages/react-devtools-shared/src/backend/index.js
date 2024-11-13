@@ -17,6 +17,7 @@ export function initBackend(
   hook: DevToolsHook,
   agent: Agent,
   global: Object,
+  isReloadAndProfileSupported: boolean,
 ): () => void {
   if (hook == null) {
     // DevTools didn't get injected into this page (maybe b'c of the contentType).
@@ -79,20 +80,21 @@ export function initBackend(
     });
     hook.reactDevtoolsAgent = null;
   };
-  agent.addListener('shutdown', onAgentShutdown);
-  subs.push(() => {
-    agent.removeListener('shutdown', onAgentShutdown);
-  });
 
+  // Agent's event listeners are cleaned up by Agent in `shutdown` implementation.
+  agent.addListener('shutdown', onAgentShutdown);
   agent.addListener('updateHookSettings', settings => {
     hook.settings = settings;
   });
-
   agent.addListener('getHookSettings', () => {
     if (hook.settings != null) {
       agent.onHookSettings(hook.settings);
     }
   });
+
+  if (isReloadAndProfileSupported) {
+    agent.onReloadAndProfileSupportedByHost();
+  }
 
   return () => {
     subs.forEach(fn => fn());

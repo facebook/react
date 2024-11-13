@@ -39,7 +39,7 @@ export default function SettingsModal(): React.Node {
   // Explicitly disallow it for now.
   const isProfilingSubscription = useMemo(
     () => ({
-      getCurrentValue: () => profilerStore.isProfiling,
+      getCurrentValue: () => profilerStore.isProfilingBasedOnUserInput,
       subscribe: (callback: Function) => {
         profilerStore.addListener('isProfiling', callback);
         return () => profilerStore.removeListener('isProfiling', callback);

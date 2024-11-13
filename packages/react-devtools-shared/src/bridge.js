@@ -16,6 +16,7 @@ import type {
   ProfilingDataBackend,
   RendererID,
   DevToolsHookSettings,
+  ProfilingSettings,
 } from 'react-devtools-shared/src/backend/types';
 import type {StyleAndLayout as StyleAndLayoutPayload} from 'react-devtools-shared/src/backend/NativeStyleEditor/types';
 
@@ -181,8 +182,7 @@ export type BackendEvents = {
   fastRefreshScheduled: [],
   getSavedPreferences: [],
   inspectedElement: [InspectedElementPayload],
-  isBackendStorageAPISupported: [boolean],
-  isSynchronousXHRSupported: [boolean],
+  isReloadAndProfileSupportedByBackend: [boolean],
   operations: [Array<number>],
   ownersList: [OwnersList],
   overrideComponentFilters: [Array<ComponentFilter>],
@@ -207,6 +207,9 @@ export type BackendEvents = {
   hookSettings: [$ReadOnly<DevToolsHookSettings>],
 };
 
+type StartProfilingParams = ProfilingSettings;
+type ReloadAndProfilingParams = ProfilingSettings;
+
 type FrontendEvents = {
   clearErrorsAndWarnings: [{rendererID: RendererID}],
   clearErrorsForElementID: [ElementAndRendererID],
@@ -227,13 +230,13 @@ type FrontendEvents = {
   overrideSuspense: [OverrideSuspense],
   overrideValueAtPath: [OverrideValueAtPath],
   profilingData: [ProfilingDataBackend],
-  reloadAndProfile: [boolean],
+  reloadAndProfile: [ReloadAndProfilingParams],
   renamePath: [RenamePath],
   savedPreferences: [SavedPreferencesParams],
   setTraceUpdatesEnabled: [boolean],
   shutdown: [],
   startInspectingHost: [],
-  startProfiling: [boolean],
+  startProfiling: [StartProfilingParams],
   stopInspectingHost: [boolean],
   stopProfiling: [],
   storeAsGlobal: [StoreAsGlobalParams],

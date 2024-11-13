@@ -8,6 +8,12 @@ import setupNativeStyleEditor from 'react-devtools-shared/src/backend/NativeStyl
 
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
 import type {Wall} from 'react-devtools-shared/src/frontend/types';
+import {
+  getIfReloadedAndProfiling,
+  getIsReloadAndProfileSupported,
+  onReloadAndProfile,
+  onReloadAndProfileFlagsReset,
+} from 'react-devtools-shared/src/utils';
 
 function startActivation(contentWindow: any, bridge: BackendBridge) {
   const onSavedPreferences = (data: $FlowFixMe) => {
@@ -62,11 +68,16 @@ function startActivation(contentWindow: any, bridge: BackendBridge) {
 }
 
 function finishActivation(contentWindow: any, bridge: BackendBridge) {
-  const agent = new Agent(bridge);
+  const agent = new Agent(
+    bridge,
+    getIfReloadedAndProfiling(),
+    onReloadAndProfile,
+  );
+  onReloadAndProfileFlagsReset();
 
   const hook = contentWindow.__REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (hook) {
-    initBackend(hook, agent, contentWindow);
+    initBackend(hook, agent, contentWindow, getIsReloadAndProfileSupported());
 
     // Setup React Native style editor if a renderer like react-native-web has injected it.
     if (hook.resolveRNStyle) {

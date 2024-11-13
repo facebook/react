@@ -36,9 +36,9 @@ function mayMutate() {}
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function ComponentA(props) {
-  const $ = _c(2);
+  const $ = _c(4);
   let t0;
-  if ($[0] !== props) {
+  if ($[0] !== props.p0 || $[1] !== props.p1 || $[2] !== props.p2) {
     const a = [];
     const b = [];
     if (b) {
@@ -49,18 +49,20 @@ function ComponentA(props) {
     }
 
     t0 = <Foo a={a} b={b} />;
-    $[0] = props;
-    $[1] = t0;
+    $[0] = props.p0;
+    $[1] = props.p1;
+    $[2] = props.p2;
+    $[3] = t0;
   } else {
-    t0 = $[1];
+    t0 = $[3];
   }
   return t0;
 }
 
 function ComponentB(props) {
-  const $ = _c(2);
+  const $ = _c(4);
   let t0;
-  if ($[0] !== props) {
+  if ($[0] !== props.p0 || $[1] !== props.p1 || $[2] !== props.p2) {
     const a = [];
     const b = [];
     if (mayMutate(b)) {
@@ -71,10 +73,12 @@ function ComponentB(props) {
     }
 
     t0 = <Foo a={a} b={b} />;
-    $[0] = props;
-    $[1] = t0;
+    $[0] = props.p0;
+    $[1] = props.p1;
+    $[2] = props.p2;
+    $[3] = t0;
   } else {
-    t0 = $[1];
+    t0 = $[3];
   }
   return t0;
 }

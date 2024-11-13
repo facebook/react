@@ -44,43 +44,6 @@ describe('memo', () => {
     return {default: result};
   }
 
-  // @gate !enableRefAsProp || !__DEV__
-  it('warns when giving a ref (simple)', async () => {
-    // This test lives outside sharedTests because the wrappers don't forward
-    // refs properly, and they end up affecting the current owner which is used
-    // by the warning (making the messages not line up).
-    function App() {
-      return null;
-    }
-    App = React.memo(App);
-    function Outer() {
-      return <App ref={() => {}} />;
-    }
-    ReactNoop.render(<Outer />);
-    await expect(async () => await waitForAll([])).toErrorDev([
-      'Function components cannot be given refs. Attempts to access ' +
-        'this ref will fail.',
-    ]);
-  });
-
-  // @gate !enableRefAsProp || !__DEV__
-  it('warns when giving a ref (complex)', async () => {
-    function App() {
-      return null;
-    }
-    // A custom compare function means this won't use SimpleMemoComponent (as of this writing)
-    // SimpleMemoComponent is unobservable tho, so we can't check :)
-    App = React.memo(App, () => false);
-    function Outer() {
-      return <App ref={() => {}} />;
-    }
-    ReactNoop.render(<Outer />);
-    await expect(async () => await waitForAll([])).toErrorDev([
-      'Function components cannot be given refs. Attempts to access ' +
-        'this ref will fail.',
-    ]);
-  });
-
   // Tests should run against both the lazy and non-lazy versions of `memo`.
   // To make the tests work for both versions, we wrap the non-lazy version in
   // a lazy function component.

@@ -36,6 +36,9 @@ import {
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
   LOCAL_STORAGE_COMPONENT_FILTER_PREFERENCES_KEY,
   LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
+  SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
+  SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
+  SESSION_STORAGE_RECORD_TIMELINE_KEY,
 } from './constants';
 import {
   ComponentFilterElementType,
@@ -50,7 +53,13 @@ import {
   ElementTypeMemo,
   ElementTypeVirtual,
 } from 'react-devtools-shared/src/frontend/types';
-import {localStorageGetItem, localStorageSetItem} from './storage';
+import {
+  localStorageGetItem,
+  localStorageSetItem,
+  sessionStorageGetItem,
+  sessionStorageRemoveItem,
+  sessionStorageSetItem,
+} from 'react-devtools-shared/src/storage';
 import {meta} from './hydration';
 import isArray from './isArray';
 
@@ -60,7 +69,11 @@ import type {
   SerializedElement as SerializedElementFrontend,
   LRUCache,
 } from 'react-devtools-shared/src/frontend/types';
-import type {SerializedElement as SerializedElementBackend} from 'react-devtools-shared/src/backend/types';
+import type {
+  ProfilingSettings,
+  SerializedElement as SerializedElementBackend,
+} from 'react-devtools-shared/src/backend/types';
+import {isSynchronousXHRSupported} from './backend/utils';
 
 // $FlowFixMe[method-unbinding]
 const hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -964,4 +977,54 @@ export function backendToFrontendSerializedElementMapper(
 // Chrome normalizes urls like webpack-internals:// but new URL don't, so cannot use new URL here.
 export function normalizeUrl(url: string): string {
   return url.replace('/./', '/');
+}
+
+export function getIsReloadAndProfileSupported(): boolean {
+  // Notify the frontend if the backend supports the Storage API (e.g. localStorage).
+  // If not, features like reload-and-profile will not work correctly and must be disabled.
+  let isBackendStorageAPISupported = false;
+  try {
+    localStorage.getItem('test');
+    isBackendStorageAPISupported = true;
+  } catch (error) {}
+
+  return isBackendStorageAPISupported && isSynchronousXHRSupported();
+}
+
+// Expected to be used only by browser extension and react-devtools-inline
+export function getIfReloadedAndProfiling(): boolean {
+  return (
+    sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true'
+  );
+}
+
+export function getProfilingSettings(): ProfilingSettings {
+  return {
+    recordChangeDescriptions:
+      sessionStorageGetItem(SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY) ===
+      'true',
+    recordTimeline:
+      sessionStorageGetItem(SESSION_STORAGE_RECORD_TIMELINE_KEY) === 'true',
+  };
+}
+
+export function onReloadAndProfile(
+  recordChangeDescriptions: boolean,
+  recordTimeline: boolean,
+): void {
+  sessionStorageSetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY, 'true');
+  sessionStorageSetItem(
+    SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
+    recordChangeDescriptions ? 'true' : 'false',
+  );
+  sessionStorageSetItem(
+    SESSION_STORAGE_RECORD_TIMELINE_KEY,
+    recordTimeline ? 'true' : 'false',
+  );
+}
+
+export function onReloadAndProfileFlagsReset(): void {
+  sessionStorageRemoveItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY);
+  sessionStorageRemoveItem(SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY);
+  sessionStorageRemoveItem(SESSION_STORAGE_RECORD_TIMELINE_KEY);
 }

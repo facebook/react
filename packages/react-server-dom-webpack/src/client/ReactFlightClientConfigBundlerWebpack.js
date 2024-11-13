@@ -30,7 +30,7 @@ import {prepareDestinationWithChunks} from 'react-client/src/ReactFlightClientCo
 
 import {loadChunk} from 'react-client/src/ReactFlightClientConfig';
 
-export type SSRModuleMap = null | {
+export type ServerConsumerModuleMap = null | {
   [clientId: string]: {
     [clientExportName: string]: ClientReferenceManifestEntry,
   },
@@ -63,29 +63,36 @@ export function prepareDestinationForModule(
 }
 
 export function resolveClientReference<T>(
-  bundlerConfig: SSRModuleMap,
+  bundlerConfig: ServerConsumerModuleMap,
   metadata: ClientReferenceMetadata,
 ): ClientReference<T> {
   if (bundlerConfig) {
     const moduleExports = bundlerConfig[metadata[ID]];
-    let resolvedModuleData = moduleExports[metadata[NAME]];
+    let resolvedModuleData = moduleExports && moduleExports[metadata[NAME]];
     let name;
     if (resolvedModuleData) {
       // The potentially aliased name.
       name = resolvedModuleData.name;
     } else {
       // If we don't have this specific name, we might have the full module.
-      resolvedModuleData = moduleExports['*'];
+      resolvedModuleData = moduleExports && moduleExports['*'];
       if (!resolvedModuleData) {
         throw new Error(
           'Could not find the module "' +
             metadata[ID] +
-            '" in the React SSR Manifest. ' +
+            '" in the React Server Consumer Manifest. ' +
             'This is probably a bug in the React Server Components bundler.',
         );
       }
       name = metadata[NAME];
     }
+    // Note that resolvedModuleData.async may be set if this is an Async Module.
+    // For Client References we don't actually care because what matters is whether
+    // the consumer expects an unwrapped async module or just a raw Promise so it
+    // has to already know which one it wants.
+    // We could error if this is an Async Import but it's not an Async Module.
+    // However, we also support plain CJS exporting a top level Promise which is not
+    // an Async Module according to the bundle graph but is effectively the same.
     if (isAsyncImport(metadata)) {
       return [
         resolvedModuleData.id,
@@ -128,7 +135,19 @@ export function resolveServerReference<T>(
       );
     }
   }
-  // TODO: This needs to return async: true if it's an async module.
+  if (resolvedModuleData.async) {
+    // If the module is marked as async in a Client Reference, we don't actually care.
+    // What matters is whether the consumer wants to unwrap it or not.
+    // For Server References, it is different because the consumer is completely internal
+    // to the bundler. So instead of passing it to each reference we can mark it in the
+    // manifest.
+    return [
+      resolvedModuleData.id,
+      resolvedModuleData.chunks,
+      name,
+      1 /* async */,
+    ];
+  }
   return [resolvedModuleData.id, resolvedModuleData.chunks, name];
 }
 

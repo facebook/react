@@ -141,8 +141,6 @@ export const enableServerComponentLogs = true;
  */
 export const enablePersistedModeClonedFlag = false;
 
-export const enableAddPropertiesFastPath = false;
-
 export const enableOwnerStacks = __EXPERIMENTAL__;
 
 export const enableShallowPropDiffing = false;
@@ -156,6 +154,12 @@ export const enableRetryLaneExpiration = false;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
+
+/**
+ * Enables a new error detection for infinite render loops from updates caused
+ * by setState or similar outside of the component owning the state.
+ */
+export const enableInfiniteRenderLoopDetection = false;
 
 // -----------------------------------------------------------------------------
 // Ready for next major.
@@ -203,20 +207,6 @@ export const enableFilterEmptyStringAttributesDOM = true;
 
 // Disabled caching behavior of `react/cache` in client runtimes.
 export const disableClientCache = true;
-
-/**
- * Enables a new error detection for infinite render loops from updates caused
- * by setState or similar outside of the component owning the state.
- */
-export const enableInfiniteRenderLoopDetection = true;
-
-// Subtle breaking changes to JSX runtime to make it faster, like passing `ref`
-// as a normal prop instead of stripping it from the props object.
-
-// Passes `ref` as a normal prop instead of stripping it from the props object
-// during element creation.
-export const enableRefAsProp = true;
-export const disableStringRefs = true;
 
 // Warn on any usage of ReactTestRenderer
 export const enableReactTestRendererWarning = true;

@@ -16,6 +16,7 @@ import type {
   RendererInterface,
   DevToolsBackend,
   DevToolsHookSettings,
+  ProfilingSettings,
 } from './backend/types';
 
 import {
@@ -49,11 +50,18 @@ function areStackTracesEqual(a: string, b: string): boolean {
 
 const targetConsole: Object = console;
 
+const defaultProfilingSettings: ProfilingSettings = {
+  recordChangeDescriptions: false,
+  recordTimeline: false,
+};
+
 export function installHook(
   target: any,
   maybeSettingsOrSettingsPromise?:
     | DevToolsHookSettings
     | Promise<DevToolsHookSettings>,
+  shouldStartProfilingNow: boolean = false,
+  profilingSettings: ProfilingSettings = defaultProfilingSettings,
 ): DevToolsHook | null {
   if (target.hasOwnProperty('__REACT_DEVTOOLS_GLOBAL_HOOK__')) {
     return null;
@@ -192,6 +200,8 @@ export function installHook(
     } catch (err) {}
   }
 
+  // TODO: isProfiling should be stateful, and we should update it once profiling is finished
+  const isProfiling = shouldStartProfilingNow;
   let uidCounter = 0;
   function inject(renderer: ReactRenderer): number {
     const id = ++uidCounter;
@@ -207,7 +217,14 @@ export function installHook(
       reactBuildType,
     });
 
-    const rendererInterface = attachRenderer(hook, id, renderer, target);
+    const rendererInterface = attachRenderer(
+      hook,
+      id,
+      renderer,
+      target,
+      isProfiling,
+      profilingSettings,
+    );
     if (rendererInterface != null) {
       hook.rendererInterfaces.set(id, rendererInterface);
       hook.emit('renderer-attached', {id, rendererInterface});

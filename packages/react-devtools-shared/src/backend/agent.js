@@ -8,17 +8,7 @@
  */
 
 import EventEmitter from '../events';
-import {
-  SESSION_STORAGE_LAST_SELECTION_KEY,
-  SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
-  SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
-  __DEBUG__,
-} from '../constants';
-import {
-  sessionStorageGetItem,
-  sessionStorageRemoveItem,
-  sessionStorageSetItem,
-} from 'react-devtools-shared/src/storage';
+import {SESSION_STORAGE_LAST_SELECTION_KEY, __DEBUG__} from '../constants';
 import setupHighlighter from './views/Highlighter';
 import {
   initialize as setupTraceUpdates,
@@ -38,7 +28,12 @@ import type {
   DevToolsHookSettings,
 } from './types';
 import type {ComponentFilter} from 'react-devtools-shared/src/frontend/types';
-import {isSynchronousXHRSupported, isReactNativeEnvironment} from './utils';
+import {isReactNativeEnvironment} from './utils';
+import {
+  sessionStorageGetItem,
+  sessionStorageRemoveItem,
+  sessionStorageSetItem,
+} from '../storage';
 
 const debug = (methodName: string, ...args: Array<string>) => {
   if (__DEBUG__) {
@@ -154,27 +149,26 @@ export default class Agent extends EventEmitter<{
 }> {
   _bridge: BackendBridge;
   _isProfiling: boolean = false;
-  _recordChangeDescriptions: boolean = false;
   _rendererInterfaces: {[key: RendererID]: RendererInterface, ...} = {};
   _persistedSelection: PersistedSelection | null = null;
   _persistedSelectionMatch: PathMatch | null = null;
   _traceUpdatesEnabled: boolean = false;
+  _onReloadAndProfile:
+    | ((recordChangeDescriptions: boolean, recordTimeline: boolean) => void)
+    | void;
 
-  constructor(bridge: BackendBridge) {
+  constructor(
+    bridge: BackendBridge,
+    isProfiling: boolean = false,
+    onReloadAndProfile?: (
+      recordChangeDescriptions: boolean,
+      recordTimeline: boolean,
+    ) => void,
+  ) {
     super();
 
-    if (
-      sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true'
-    ) {
-      this._recordChangeDescriptions =
-        sessionStorageGetItem(
-          SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
-        ) === 'true';
-      this._isProfiling = true;
-
-      sessionStorageRemoveItem(SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY);
-      sessionStorageRemoveItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY);
-    }
+    this._isProfiling = isProfiling;
+    this._onReloadAndProfile = onReloadAndProfile;
 
     const persistedSelectionString = sessionStorageGetItem(
       SESSION_STORAGE_LAST_SELECTION_KEY,
@@ -242,16 +236,6 @@ export default class Agent extends EventEmitter<{
     if (this._isProfiling) {
       bridge.send('profilingStatus', true);
     }
-
-    // Notify the frontend if the backend supports the Storage API (e.g. localStorage).
-    // If not, features like reload-and-profile will not work correctly and must be disabled.
-    let isBackendStorageAPISupported = false;
-    try {
-      localStorage.getItem('test');
-      isBackendStorageAPISupported = true;
-    } catch (error) {}
-    bridge.send('isBackendStorageAPISupported', isBackendStorageAPISupported);
-    bridge.send('isSynchronousXHRSupported', isSynchronousXHRSupported());
   }
 
   get rendererInterfaces(): {[key: RendererID]: RendererInterface, ...} {
@@ -675,19 +659,23 @@ export default class Agent extends EventEmitter<{
     }
   };
 
-  reloadAndProfile: (recordChangeDescriptions: boolean) => void =
-    recordChangeDescriptions => {
-      sessionStorageSetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY, 'true');
-      sessionStorageSetItem(
-        SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
-        recordChangeDescriptions ? 'true' : 'false',
-      );
+  onReloadAndProfileSupportedByHost: () => void = () => {
+    this._bridge.send('isReloadAndProfileSupportedByBackend', true);
+  };
 
-      // This code path should only be hit if the shell has explicitly told the Store that it supports profiling.
-      // In that case, the shell must also listen for this specific message to know when it needs to reload the app.
-      // The agent can't do this in a way that is renderer agnostic.
-      this._bridge.send('reloadAppForProfiling');
-    };
+  reloadAndProfile: ({
+    recordChangeDescriptions: boolean,
+    recordTimeline: boolean,
+  }) => void = ({recordChangeDescriptions, recordTimeline}) => {
+    if (typeof this._onReloadAndProfile === 'function') {
+      this._onReloadAndProfile(recordChangeDescriptions, recordTimeline);
+    }
+
+    // This code path should only be hit if the shell has explicitly told the Store that it supports profiling.
+    // In that case, the shell must also listen for this specific message to know when it needs to reload the app.
+    // The agent can't do this in a way that is renderer agnostic.
+    this._bridge.send('reloadAppForProfiling');
+  };
 
   renamePath: RenamePathParams => void = ({
     hookID,
@@ -717,10 +705,6 @@ export default class Agent extends EventEmitter<{
     rendererInterface: RendererInterface,
   ) {
     this._rendererInterfaces[rendererID] = rendererInterface;
-
-    if (this._isProfiling) {
-      rendererInterface.startProfiling(this._recordChangeDescriptions);
-    }
 
     rendererInterface.setTraceUpdatesEnabled(this._traceUpdatesEnabled);
 
@@ -758,24 +742,27 @@ export default class Agent extends EventEmitter<{
   shutdown: () => void = () => {
     // Clean up the overlay if visible, and associated events.
     this.emit('shutdown');
+
+    this._bridge.removeAllListeners();
+    this.removeAllListeners();
   };
 
-  startProfiling: (recordChangeDescriptions: boolean) => void =
-    recordChangeDescriptions => {
-      this._recordChangeDescriptions = recordChangeDescriptions;
-      this._isProfiling = true;
-      for (const rendererID in this._rendererInterfaces) {
-        const renderer = ((this._rendererInterfaces[
-          (rendererID: any)
-        ]: any): RendererInterface);
-        renderer.startProfiling(recordChangeDescriptions);
-      }
-      this._bridge.send('profilingStatus', this._isProfiling);
-    };
+  startProfiling: ({
+    recordChangeDescriptions: boolean,
+    recordTimeline: boolean,
+  }) => void = ({recordChangeDescriptions, recordTimeline}) => {
+    this._isProfiling = true;
+    for (const rendererID in this._rendererInterfaces) {
+      const renderer = ((this._rendererInterfaces[
+        (rendererID: any)
+      ]: any): RendererInterface);
+      renderer.startProfiling(recordChangeDescriptions, recordTimeline);
+    }
+    this._bridge.send('profilingStatus', this._isProfiling);
+  };
 
   stopProfiling: () => void = () => {
     this._isProfiling = false;
-    this._recordChangeDescriptions = false;
     for (const rendererID in this._rendererInterfaces) {
       const renderer = ((this._rendererInterfaces[
         (rendererID: any)
