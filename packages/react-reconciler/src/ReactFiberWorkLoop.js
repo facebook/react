@@ -3550,9 +3550,11 @@ function flushPassiveEffectsImpl(wasDelayedCommit: void | boolean) {
   let passiveEffectStartTime = 0;
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     passiveEffectStartTime = now();
-    if (wasDelayedCommit) {
-      logPaintYieldPhase(commitEndTime, passiveEffectStartTime);
-    }
+    logPaintYieldPhase(
+      commitEndTime,
+      passiveEffectStartTime,
+      !!wasDelayedCommit,
+    );
   }
 
   if (enableSchedulingProfiler) {
