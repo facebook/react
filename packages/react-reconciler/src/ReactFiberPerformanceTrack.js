@@ -21,14 +21,13 @@ const supportsUserTiming =
   // $FlowFixMe[method-unbinding]
   typeof performance.measure === 'function';
 
-const TRACK_GROUP = 'Components ⚛';
+const COMPONENTS_TRACK = 'Components ⚛';
 
 // Reused to avoid thrashing the GC.
 const reusableComponentDevToolDetails = {
   dataType: 'track-entry',
   color: 'primary',
-  track: 'Blocking', // Lane
-  trackGroup: TRACK_GROUP,
+  track: COMPONENTS_TRACK,
 };
 const reusableComponentOptions = {
   start: -0,
@@ -38,9 +37,24 @@ const reusableComponentOptions = {
   },
 };
 
+const LANES_TRACK_GROUP = 'Scheduler ⚛';
+
+const reusableLaneDevToolDetails = {
+  dataType: 'track-entry',
+  color: 'primary',
+  track: 'Blocking', // Lane
+  trackGroup: LANES_TRACK_GROUP,
+};
+const reusableLaneOptions = {
+  start: -0,
+  end: -0,
+  detail: {
+    devtools: reusableLaneDevToolDetails,
+  },
+};
+
 export function setCurrentTrackFromLanes(lanes: number): void {
-  reusableComponentDevToolDetails.track =
-    getGroupNameOfHighestPriorityLane(lanes);
+  reusableLaneDevToolDetails.track = getGroupNameOfHighestPriorityLane(lanes);
 }
 
 export function logComponentRender(
@@ -107,21 +121,20 @@ export function logBlockingStart(
   renderStartTime: number,
 ): void {
   if (supportsUserTiming) {
-    reusableComponentDevToolDetails.track = 'Blocking';
+    reusableLaneDevToolDetails.track = 'Blocking';
     if (eventTime > 0 && eventType !== null) {
       // Log the time from the event timeStamp until we called setState.
-      reusableComponentDevToolDetails.color = 'secondary-dark';
-      reusableComponentOptions.start = eventTime;
-      reusableComponentOptions.end =
-        updateTime > 0 ? updateTime : renderStartTime;
-      performance.measure(eventType, reusableComponentOptions);
+      reusableLaneDevToolDetails.color = 'secondary-dark';
+      reusableLaneOptions.start = eventTime;
+      reusableLaneOptions.end = updateTime > 0 ? updateTime : renderStartTime;
+      performance.measure(eventType, reusableLaneOptions);
     }
     if (updateTime > 0) {
       // Log the time from when we called setState until we started rendering.
-      reusableComponentDevToolDetails.color = 'primary-light';
-      reusableComponentOptions.start = updateTime;
-      reusableComponentOptions.end = renderStartTime;
-      performance.measure('Blocked', reusableComponentOptions);
+      reusableLaneDevToolDetails.color = 'primary-light';
+      reusableLaneOptions.start = updateTime;
+      reusableLaneOptions.end = renderStartTime;
+      performance.measure('Blocked', reusableLaneOptions);
     }
   }
 }
@@ -134,43 +147,42 @@ export function logTransitionStart(
   renderStartTime: number,
 ): void {
   if (supportsUserTiming) {
-    reusableComponentDevToolDetails.track = 'Transition';
+    reusableLaneDevToolDetails.track = 'Transition';
     if (eventTime > 0 && eventType !== null) {
       // Log the time from the event timeStamp until we started a transition.
-      reusableComponentDevToolDetails.color = 'secondary-dark';
-      reusableComponentOptions.start = eventTime;
-      reusableComponentOptions.end =
+      reusableLaneDevToolDetails.color = 'secondary-dark';
+      reusableLaneOptions.start = eventTime;
+      reusableLaneOptions.end =
         startTime > 0
           ? startTime
           : updateTime > 0
             ? updateTime
             : renderStartTime;
-      performance.measure(eventType, reusableComponentOptions);
+      performance.measure(eventType, reusableLaneOptions);
     }
     if (startTime > 0) {
       // Log the time from when we started an async transition until we called setState or started rendering.
-      reusableComponentDevToolDetails.color = 'primary-dark';
-      reusableComponentOptions.start = startTime;
-      reusableComponentOptions.end =
-        updateTime > 0 ? updateTime : renderStartTime;
-      performance.measure('Action', reusableComponentOptions);
+      reusableLaneDevToolDetails.color = 'primary-dark';
+      reusableLaneOptions.start = startTime;
+      reusableLaneOptions.end = updateTime > 0 ? updateTime : renderStartTime;
+      performance.measure('Action', reusableLaneOptions);
     }
     if (updateTime > 0) {
       // Log the time from when we called setState until we started rendering.
-      reusableComponentDevToolDetails.color = 'primary-light';
-      reusableComponentOptions.start = updateTime;
-      reusableComponentOptions.end = renderStartTime;
-      performance.measure('Blocked', reusableComponentOptions);
+      reusableLaneDevToolDetails.color = 'primary-light';
+      reusableLaneOptions.start = updateTime;
+      reusableLaneOptions.end = renderStartTime;
+      performance.measure('Blocked', reusableLaneOptions);
     }
   }
 }
 
 export function logRenderPhase(startTime: number, endTime: number): void {
   if (supportsUserTiming) {
-    reusableComponentDevToolDetails.color = 'primary-dark';
-    reusableComponentOptions.start = startTime;
-    reusableComponentOptions.end = endTime;
-    performance.measure('Render', reusableComponentOptions);
+    reusableLaneDevToolDetails.color = 'primary-dark';
+    reusableLaneOptions.start = startTime;
+    reusableLaneOptions.end = endTime;
+    performance.measure('Render', reusableLaneOptions);
   }
 }
 
@@ -180,10 +192,10 @@ export function logSuspenseThrottlePhase(
 ): void {
   // This was inside a throttled Suspense boundary commit.
   if (supportsUserTiming) {
-    reusableComponentDevToolDetails.color = 'secondary-light';
-    reusableComponentOptions.start = startTime;
-    reusableComponentOptions.end = endTime;
-    performance.measure('Throttled', reusableComponentOptions);
+    reusableLaneDevToolDetails.color = 'secondary-light';
+    reusableLaneOptions.start = startTime;
+    reusableLaneOptions.end = endTime;
+    performance.measure('Throttled', reusableLaneOptions);
   }
 }
 
@@ -193,28 +205,28 @@ export function logSuspendedCommitPhase(
 ): void {
   // This means the commit was suspended on CSS or images.
   if (supportsUserTiming) {
-    reusableComponentDevToolDetails.color = 'secondary-light';
-    reusableComponentOptions.start = startTime;
-    reusableComponentOptions.end = endTime;
-    performance.measure('Suspended', reusableComponentOptions);
+    reusableLaneDevToolDetails.color = 'secondary-light';
+    reusableLaneOptions.start = startTime;
+    reusableLaneOptions.end = endTime;
+    performance.measure('Suspended', reusableLaneOptions);
   }
 }
 
 export function logCommitPhase(startTime: number, endTime: number): void {
   if (supportsUserTiming) {
-    reusableComponentDevToolDetails.color = 'secondary-dark';
-    reusableComponentOptions.start = startTime;
-    reusableComponentOptions.end = endTime;
-    performance.measure('Commit', reusableComponentOptions);
+    reusableLaneDevToolDetails.color = 'secondary-dark';
+    reusableLaneOptions.start = startTime;
+    reusableLaneOptions.end = endTime;
+    performance.measure('Commit', reusableLaneOptions);
   }
 }
 
 export function logPaintYieldPhase(startTime: number, endTime: number): void {
   if (supportsUserTiming) {
-    reusableComponentDevToolDetails.color = 'secondary-light';
-    reusableComponentOptions.start = startTime;
-    reusableComponentOptions.end = endTime;
-    performance.measure('Waiting for Paint', reusableComponentOptions);
+    reusableLaneDevToolDetails.color = 'secondary-light';
+    reusableLaneOptions.start = startTime;
+    reusableLaneOptions.end = endTime;
+    performance.measure('Waiting for Paint', reusableLaneOptions);
   }
 }
 
@@ -223,9 +235,9 @@ export function logPassiveCommitPhase(
   endTime: number,
 ): void {
   if (supportsUserTiming) {
-    reusableComponentDevToolDetails.color = 'secondary-dark';
-    reusableComponentOptions.start = startTime;
-    reusableComponentOptions.end = endTime;
-    performance.measure('Remaining Effects', reusableComponentOptions);
+    reusableLaneDevToolDetails.color = 'secondary-dark';
+    reusableLaneOptions.start = startTime;
+    reusableLaneOptions.end = endTime;
+    performance.measure('Remaining Effects', reusableLaneOptions);
   }
 }
