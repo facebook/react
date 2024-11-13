@@ -118,6 +118,7 @@ export function logBlockingStart(
   updateTime: number,
   eventTime: number,
   eventType: null | string,
+  eventIsRepeat: boolean,
   renderStartTime: number,
 ): void {
   if (supportsUserTiming) {
@@ -127,7 +128,7 @@ export function logBlockingStart(
       reusableLaneDevToolDetails.color = 'secondary-dark';
       reusableLaneOptions.start = eventTime;
       reusableLaneOptions.end = updateTime > 0 ? updateTime : renderStartTime;
-      performance.measure(eventType, reusableLaneOptions);
+      performance.measure(eventIsRepeat ? '' : eventType, reusableLaneOptions);
     }
     if (updateTime > 0) {
       // Log the time from when we called setState until we started rendering.
@@ -144,6 +145,7 @@ export function logTransitionStart(
   updateTime: number,
   eventTime: number,
   eventType: null | string,
+  eventIsRepeat: boolean,
   renderStartTime: number,
 ): void {
   if (supportsUserTiming) {
@@ -158,7 +160,7 @@ export function logTransitionStart(
           : updateTime > 0
             ? updateTime
             : renderStartTime;
-      performance.measure(eventType, reusableLaneOptions);
+      performance.measure(eventIsRepeat ? '' : eventType, reusableLaneOptions);
     }
     if (startTime > 0) {
       // Log the time from when we started an async transition until we called setState or started rendering.

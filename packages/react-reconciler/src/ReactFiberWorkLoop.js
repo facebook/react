@@ -229,13 +229,17 @@ import {
 } from './ReactFiberConcurrentUpdates';
 
 import {
+  blockingClampTime,
   blockingUpdateTime,
   blockingEventTime,
   blockingEventType,
+  blockingEventIsRepeat,
+  transitionClampTime,
   transitionStartTime,
   transitionUpdateTime,
   transitionEventTime,
   transitionEventType,
+  transitionEventIsRepeat,
   clearBlockingTimers,
   clearTransitionTimers,
   clampBlockingTimers,
@@ -1661,19 +1665,31 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
 
     if (includesSyncLane(lanes) || includesBlockingLane(lanes)) {
       logBlockingStart(
-        blockingUpdateTime,
-        blockingEventTime,
+        blockingUpdateTime >= 0 && blockingUpdateTime < blockingClampTime
+          ? blockingClampTime
+          : blockingUpdateTime,
+        blockingEventTime >= 0 && blockingEventTime < blockingClampTime
+          ? blockingClampTime
+          : blockingEventTime,
         blockingEventType,
+        blockingEventIsRepeat,
         renderStartTime,
       );
       clearBlockingTimers();
     }
     if (includesTransitionLane(lanes)) {
       logTransitionStart(
-        transitionStartTime,
-        transitionUpdateTime,
-        transitionEventTime,
+        transitionStartTime >= 0 && transitionStartTime < transitionClampTime
+          ? transitionClampTime
+          : transitionStartTime,
+        transitionUpdateTime >= 0 && transitionUpdateTime < transitionClampTime
+          ? transitionClampTime
+          : transitionUpdateTime,
+        transitionEventTime >= 0 && transitionEventTime < transitionClampTime
+          ? transitionClampTime
+          : transitionEventTime,
         transitionEventType,
+        transitionEventIsRepeat,
         renderStartTime,
       );
       clearTransitionTimers();
