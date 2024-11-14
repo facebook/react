@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2cb29e86220de3d9176fd0ec16af5f3c>>
+ * @generated SignedSource<<08e49b0792b28ef6e4feb745da65fee9>>
  */
 
 "use strict";
@@ -1694,7 +1694,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.0.0-native-fb-b836de61-20241111";
+    exports.version = "19.0.0-native-fb-988e2176-20241114";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
