@@ -4041,7 +4041,7 @@ function retryTask(request: Request, task: Task): void {
       return;
     }
 
-    const x =
+    const suspenseOrError =
       thrownValue === SuspenseException
         ? // This is a special type of exception used for Suspense. For historical
           // reasons, the rest of the Suspense implementation expects the thrown
@@ -4050,19 +4050,22 @@ function retryTask(request: Request, task: Task): void {
           // later, once we deprecate the old API in favor of `use`.
           getSuspendedThenable()
         : thrownValue;
-    if (typeof x === 'object' && x !== null) {
+    if (typeof suspenseOrError === 'object' && suspenseOrError !== null) {
       // $FlowFixMe[method-unbinding]
-      if (typeof x.then === 'function') {
+      if (typeof suspenseOrError.then === 'function') {
         // Something suspended again, let's pick it back up later.
         task.status = PENDING;
         task.thenableState = getThenableStateAfterSuspending();
         const ping = task.ping;
-        x.then(ping, ping);
+        suspenseOrError.then(ping, ping);
         return;
-      } else if (enablePostpone && x.$$typeof === REACT_POSTPONE_TYPE) {
+      } else if (
+        enablePostpone &&
+        suspenseOrError.$$typeof === REACT_POSTPONE_TYPE
+      ) {
         request.abortableTasks.delete(task);
         task.status = ERRORED;
-        const postponeInstance: Postpone = (x: any);
+        const postponeInstance: Postpone = (suspenseOrError: any);
         logPostpone(request, postponeInstance.message, task);
         emitPostponeChunk(request, task.id, postponeInstance);
         return;
@@ -4071,8 +4074,8 @@ function retryTask(request: Request, task: Task): void {
 
     request.abortableTasks.delete(task);
     task.status = ERRORED;
-    const digest = logRecoverableError(request, x, task);
-    emitErrorChunk(request, task.id, digest, x);
+    const digest = logRecoverableError(request, suspenseOrError, task);
+    emitErrorChunk(request, task.id, digest, suspenseOrError);
   } finally {
     if (__DEV__) {
       debugID = prevDebugID;
