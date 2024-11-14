@@ -3250,7 +3250,12 @@ function commitRootImpl(
 
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     recordCommitEndTime();
-    logCommitPhase(commitStartTime, commitEndTime);
+    logCommitPhase(
+      suspendedCommitReason === IMMEDIATE_COMMIT
+        ? completedRenderEndTime
+        : commitStartTime,
+      commitEndTime,
+    );
   }
 
   const rootDidHavePassiveEffects = rootDoesHavePassiveEffects;
