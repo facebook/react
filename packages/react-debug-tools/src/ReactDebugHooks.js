@@ -560,7 +560,7 @@ function useId(): string {
 
 // useMemoCache is an implementation detail of Forget's memoization
 // it should not be called directly in user-generated code
-function useMemoCache(size: number): Array<any> {
+function useMemoCache(size: number): Array<mixed> {
   const fiber = currentFiber;
   // Don't throw, in case this is called from getPrimitiveStackCache
   if (fiber == null) {
