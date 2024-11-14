@@ -531,6 +531,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return currentEventPriority;
     },
 
+    trackSchedulerEvent(): void {},
+
     resolveEventType(): null | string {
       return null;
     },

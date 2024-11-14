@@ -90,6 +90,7 @@ import {
   setCurrentUpdatePriority,
   getCurrentUpdatePriority,
   resolveUpdatePriority,
+  trackSchedulerEvent,
 } from './ReactFiberConfig';
 
 import {createWorkInProgress, resetWorkInProgress} from './ReactFiber';
@@ -229,13 +230,17 @@ import {
 } from './ReactFiberConcurrentUpdates';
 
 import {
+  blockingClampTime,
   blockingUpdateTime,
   blockingEventTime,
   blockingEventType,
+  blockingEventIsRepeat,
+  transitionClampTime,
   transitionStartTime,
   transitionUpdateTime,
   transitionEventTime,
   transitionEventType,
+  transitionEventIsRepeat,
   clearBlockingTimers,
   clearTransitionTimers,
   clampBlockingTimers,
@@ -938,6 +943,9 @@ export function performWorkOnRoot(
       }
       break;
     } else if (exitStatus === RootDidNotComplete) {
+      if (enableProfilerTimer && enableComponentPerformanceTrack) {
+        finalizeRender(lanes, now());
+      }
       // The render unwound without completing the tree. This happens in special
       // cases where need to exit the current render without producing a
       // consistent tree or committing.
@@ -1130,6 +1138,9 @@ function finishConcurrentRender(
         // This is a transition, so we should exit without committing a
         // placeholder and without scheduling a timeout. Delay indefinitely
         // until we receive more data.
+        if (enableProfilerTimer && enableComponentPerformanceTrack) {
+          finalizeRender(lanes, now());
+        }
         const didAttemptEntireTree =
           !workInProgressRootDidSkipSuspendedSiblings;
         markRootSuspended(
@@ -1655,19 +1666,31 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
 
     if (includesSyncLane(lanes) || includesBlockingLane(lanes)) {
       logBlockingStart(
-        blockingUpdateTime,
-        blockingEventTime,
+        blockingUpdateTime >= 0 && blockingUpdateTime < blockingClampTime
+          ? blockingClampTime
+          : blockingUpdateTime,
+        blockingEventTime >= 0 && blockingEventTime < blockingClampTime
+          ? blockingClampTime
+          : blockingEventTime,
         blockingEventType,
+        blockingEventIsRepeat,
         renderStartTime,
       );
       clearBlockingTimers();
     }
     if (includesTransitionLane(lanes)) {
       logTransitionStart(
-        transitionStartTime,
-        transitionUpdateTime,
-        transitionEventTime,
+        transitionStartTime >= 0 && transitionStartTime < transitionClampTime
+          ? transitionClampTime
+          : transitionStartTime,
+        transitionUpdateTime >= 0 && transitionUpdateTime < transitionClampTime
+          ? transitionClampTime
+          : transitionUpdateTime,
+        transitionEventTime >= 0 && transitionEventTime < transitionClampTime
+          ? transitionClampTime
+          : transitionEventTime,
         transitionEventType,
+        transitionEventIsRepeat,
         renderStartTime,
       );
       clearTransitionTimers();
@@ -3139,6 +3162,11 @@ function commitRootImpl(
       // with setTimeout
       pendingPassiveTransitions = transitions;
       scheduleCallback(NormalSchedulerPriority, () => {
+        if (enableProfilerTimer && enableComponentPerformanceTrack) {
+          // Track the currently executing event if there is one so we can ignore this
+          // event when logging events.
+          trackSchedulerEvent();
+        }
         flushPassiveEffects(true);
         // This render triggered passive effects: release the root cache pool
         // *after* passive effects fire to avoid freeing a cache pool that may

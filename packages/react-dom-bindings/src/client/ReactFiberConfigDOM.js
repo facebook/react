@@ -606,14 +606,19 @@ export function shouldAttemptEagerTransition(): boolean {
   return false;
 }
 
+let schedulerEvent: void | Event = undefined;
+export function trackSchedulerEvent(): void {
+  schedulerEvent = window.event;
+}
+
 export function resolveEventType(): null | string {
   const event = window.event;
-  return event ? event.type : null;
+  return event && event !== schedulerEvent ? event.type : null;
 }
 
 export function resolveEventTimeStamp(): number {
   const event = window.event;
-  return event ? event.timeStamp : -1.1;
+  return event && event !== schedulerEvent ? event.timeStamp : -1.1;
 }
 
 export const isPrimaryRenderer = true;
