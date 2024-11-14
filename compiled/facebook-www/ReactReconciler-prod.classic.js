@@ -11573,6 +11573,7 @@ module.exports = function ($$$config) {
     setCurrentUpdatePriority = $$$config.setCurrentUpdatePriority,
     getCurrentUpdatePriority = $$$config.getCurrentUpdatePriority,
     resolveUpdatePriority = $$$config.resolveUpdatePriority;
+  $$$config.trackSchedulerEvent;
   $$$config.resolveEventType;
   $$$config.resolveEventTimeStamp;
   var shouldAttemptEagerTransition = $$$config.shouldAttemptEagerTransition,
@@ -12643,7 +12644,7 @@ module.exports = function ($$$config) {
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
       findFiberByHostInstance: getInstanceFromNode,
-      reconcilerVersion: "19.0.0-www-classic-988e2176-20241114"
+      reconcilerVersion: "19.0.0-www-classic-c13986da-20241114"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
