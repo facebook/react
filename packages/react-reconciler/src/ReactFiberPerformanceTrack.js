@@ -221,12 +221,19 @@ export function logCommitPhase(startTime: number, endTime: number): void {
   }
 }
 
-export function logPaintYieldPhase(startTime: number, endTime: number): void {
+export function logPaintYieldPhase(
+  startTime: number,
+  endTime: number,
+  delayedUntilPaint: boolean,
+): void {
   if (supportsUserTiming) {
     reusableLaneDevToolDetails.color = 'secondary-light';
     reusableLaneOptions.start = startTime;
     reusableLaneOptions.end = endTime;
-    performance.measure('Waiting for Paint', reusableLaneOptions);
+    performance.measure(
+      delayedUntilPaint ? 'Waiting for Paint' : '',
+      reusableLaneOptions,
+    );
   }
 }
 
