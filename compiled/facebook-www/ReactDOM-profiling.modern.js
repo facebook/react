@@ -13484,19 +13484,19 @@ function getTargetInstForChangeEvent(domEventName, targetInst) {
 }
 var isInputEventSupported = !1;
 if (canUseDOM) {
-  var JSCompiler_inline_result$jscomp$372;
+  var JSCompiler_inline_result$jscomp$373;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1609 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1609) {
-      var element$jscomp$inline_1610 = document.createElement("div");
-      element$jscomp$inline_1610.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1609 =
-        "function" === typeof element$jscomp$inline_1610.oninput;
+    var isSupported$jscomp$inline_1615 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1615) {
+      var element$jscomp$inline_1616 = document.createElement("div");
+      element$jscomp$inline_1616.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1615 =
+        "function" === typeof element$jscomp$inline_1616.oninput;
     }
-    JSCompiler_inline_result$jscomp$372 = isSupported$jscomp$inline_1609;
-  } else JSCompiler_inline_result$jscomp$372 = !1;
+    JSCompiler_inline_result$jscomp$373 = isSupported$jscomp$inline_1615;
+  } else JSCompiler_inline_result$jscomp$373 = !1;
   isInputEventSupported =
-    JSCompiler_inline_result$jscomp$372 &&
+    JSCompiler_inline_result$jscomp$373 &&
     (!document.documentMode || 9 < document.documentMode);
 }
 function stopWatchingForValueChange() {
@@ -13907,20 +13907,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1650 = 0;
-  i$jscomp$inline_1650 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1650++
+  var i$jscomp$inline_1656 = 0;
+  i$jscomp$inline_1656 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1656++
 ) {
-  var eventName$jscomp$inline_1651 =
-      simpleEventPluginEvents[i$jscomp$inline_1650],
-    domEventName$jscomp$inline_1652 =
-      eventName$jscomp$inline_1651.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1653 =
-      eventName$jscomp$inline_1651[0].toUpperCase() +
-      eventName$jscomp$inline_1651.slice(1);
+  var eventName$jscomp$inline_1657 =
+      simpleEventPluginEvents[i$jscomp$inline_1656],
+    domEventName$jscomp$inline_1658 =
+      eventName$jscomp$inline_1657.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1659 =
+      eventName$jscomp$inline_1657[0].toUpperCase() +
+      eventName$jscomp$inline_1657.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1652,
-    "on" + capitalizedEvent$jscomp$inline_1653
+    domEventName$jscomp$inline_1658,
+    "on" + capitalizedEvent$jscomp$inline_1659
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17478,16 +17478,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_1823 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1829 = React.version;
 if (
-  "19.0.0-www-modern-3720870a-20241115" !==
-  isomorphicReactPackageVersion$jscomp$inline_1823
+  "19.0.0-www-modern-053b3cb0-20241115" !==
+  isomorphicReactPackageVersion$jscomp$inline_1829
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1823,
-      "19.0.0-www-modern-3720870a-20241115"
+      isomorphicReactPackageVersion$jscomp$inline_1829,
+      "19.0.0-www-modern-053b3cb0-20241115"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17503,28 +17503,28 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_1825 = {
+var internals$jscomp$inline_1831 = {
   bundleType: 0,
-  version: "19.0.0-www-modern-3720870a-20241115",
+  version: "19.0.0-www-modern-053b3cb0-20241115",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-www-modern-3720870a-20241115"
+  reconcilerVersion: "19.0.0-www-modern-053b3cb0-20241115"
 };
 enableSchedulingProfiler &&
-  ((internals$jscomp$inline_1825.getLaneLabelMap = getLaneLabelMap),
-  (internals$jscomp$inline_1825.injectProfilingHooks = injectProfilingHooks));
+  ((internals$jscomp$inline_1831.getLaneLabelMap = getLaneLabelMap),
+  (internals$jscomp$inline_1831.injectProfilingHooks = injectProfilingHooks));
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2318 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2324 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2318.isDisabled &&
-    hook$jscomp$inline_2318.supportsFiber
+    !hook$jscomp$inline_2324.isDisabled &&
+    hook$jscomp$inline_2324.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2318.inject(
-        internals$jscomp$inline_1825
+      (rendererID = hook$jscomp$inline_2324.inject(
+        internals$jscomp$inline_1831
       )),
-        (injectedHook = hook$jscomp$inline_2318);
+        (injectedHook = hook$jscomp$inline_2324);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -17875,7 +17875,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-3720870a-20241115";
+exports.version = "19.0.0-www-modern-053b3cb0-20241115";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
