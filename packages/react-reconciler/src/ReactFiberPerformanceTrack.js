@@ -222,6 +222,30 @@ export function logSuspendedRenderPhase(
   }
 }
 
+export function logErroredRenderPhase(
+  startTime: number,
+  endTime: number,
+): void {
+  if (supportsUserTiming) {
+    reusableLaneDevToolDetails.color = 'error';
+    reusableLaneOptions.start = startTime;
+    reusableLaneOptions.end = endTime;
+    performance.measure('Errored Render', reusableLaneOptions);
+  }
+}
+
+export function logInconsistentRender(
+  startTime: number,
+  endTime: number,
+): void {
+  if (supportsUserTiming) {
+    reusableLaneDevToolDetails.color = 'error';
+    reusableLaneOptions.start = startTime;
+    reusableLaneOptions.end = endTime;
+    performance.measure('Teared Render', reusableLaneOptions);
+  }
+}
+
 export function logSuspenseThrottlePhase(
   startTime: number,
   endTime: number,
