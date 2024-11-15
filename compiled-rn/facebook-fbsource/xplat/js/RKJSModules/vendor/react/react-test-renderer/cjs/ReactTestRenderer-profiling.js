@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<dd0bf9314842603a03ba769c80c06a71>>
+ * @generated SignedSource<<16c93db0f13c5f2a2f1ac904f2605e40>>
  */
 
 "use strict";
@@ -8349,14 +8349,7 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
         !shouldTimeSlice &&
         markRootSuspended(root$jscomp$0, lanes, 0, !1);
       break;
-    } else if (6 === exitStatus)
-      markRootSuspended(
-        root$jscomp$0,
-        lanes,
-        0,
-        !workInProgressRootDidSkipSuspendedSiblings
-      );
-    else {
+    } else {
       forceSync = root$jscomp$0.current.alternate;
       if (
         renderWasConcurrent &&
@@ -8420,16 +8413,15 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
           case 1:
             throw Error("Root did not complete. This is a bug in React.");
           case 4:
-            if ((lanes & 4194176) === lanes) {
-              markRootSuspended(
-                shouldTimeSlice,
-                lanes,
-                workInProgressDeferredLane,
-                !workInProgressRootDidSkipSuspendedSiblings
-              );
-              break a;
-            }
-            break;
+            if ((lanes & 4194176) !== lanes) break;
+          case 6:
+            markRootSuspended(
+              shouldTimeSlice,
+              lanes,
+              workInProgressDeferredLane,
+              !workInProgressRootDidSkipSuspendedSiblings
+            );
+            break a;
           case 2:
             workInProgressRootRecoverableErrors = null;
             break;
@@ -8807,8 +8799,8 @@ function renderRootSync(root, lanes, shouldYieldForPrerendering) {
       workLoopSync();
       exitStatus = workInProgressRootExitStatus;
       break;
-    } catch (thrownValue$141) {
-      handleThrow(root, thrownValue$141);
+    } catch (thrownValue$140) {
+      handleThrow(root, thrownValue$140);
     }
   while (1);
   lanes && root.shellSuspendCounter++;
@@ -8923,8 +8915,8 @@ function renderRootConcurrent(root, lanes) {
       }
       workLoopConcurrent();
       break;
-    } catch (thrownValue$143) {
-      handleThrow(root, thrownValue$143);
+    } catch (thrownValue$142) {
+      handleThrow(root, thrownValue$142);
     }
   while (1);
   lastContextDependency = currentlyRenderingFiber = null;
@@ -10117,21 +10109,21 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var internals$jscomp$inline_1168 = {
+var internals$jscomp$inline_1167 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-63cde684-20241114",
+  version: "19.0.0-native-fb-8a41d6ce-20241114",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: function (mockNode) {
     mockNode = nodeToInstanceMap.get(mockNode);
     return void 0 !== mockNode ? mockNode.internalInstanceHandle : null;
   },
-  reconcilerVersion: "19.0.0-native-fb-63cde684-20241114",
+  reconcilerVersion: "19.0.0-native-fb-8a41d6ce-20241114",
   getLaneLabelMap: function () {
     for (
-      var map = new Map(), lane = 1, index$147 = 0;
-      31 > index$147;
-      index$147++
+      var map = new Map(), lane = 1, index$146 = 0;
+      31 > index$146;
+      index$146++
     ) {
       var label = getLabelForLane(lane);
       map.set(lane, label);
@@ -10144,16 +10136,16 @@ var internals$jscomp$inline_1168 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1412 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1411 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1412.isDisabled &&
-    hook$jscomp$inline_1412.supportsFiber
+    !hook$jscomp$inline_1411.isDisabled &&
+    hook$jscomp$inline_1411.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1412.inject(
-        internals$jscomp$inline_1168
+      (rendererID = hook$jscomp$inline_1411.inject(
+        internals$jscomp$inline_1167
       )),
-        (injectedHook = hook$jscomp$inline_1412);
+        (injectedHook = hook$jscomp$inline_1411);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
@@ -10277,4 +10269,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.0.0-native-fb-63cde684-20241114";
+exports.version = "19.0.0-native-fb-8a41d6ce-20241114";

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<19c6166d5045a6265a4a36ef9dd7ced1>>
+ * @generated SignedSource<<df9bbd309c874ba70440dca6c13a57a7>>
  */
 
 "use strict";
@@ -1231,7 +1231,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_310 = {
+var injectedNamesToPlugins$jscomp$inline_309 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -1277,32 +1277,32 @@ var injectedNamesToPlugins$jscomp$inline_310 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_311 = !1,
-  pluginName$jscomp$inline_312;
-for (pluginName$jscomp$inline_312 in injectedNamesToPlugins$jscomp$inline_310)
+  isOrderingDirty$jscomp$inline_310 = !1,
+  pluginName$jscomp$inline_311;
+for (pluginName$jscomp$inline_311 in injectedNamesToPlugins$jscomp$inline_309)
   if (
-    injectedNamesToPlugins$jscomp$inline_310.hasOwnProperty(
-      pluginName$jscomp$inline_312
+    injectedNamesToPlugins$jscomp$inline_309.hasOwnProperty(
+      pluginName$jscomp$inline_311
     )
   ) {
-    var pluginModule$jscomp$inline_313 =
-      injectedNamesToPlugins$jscomp$inline_310[pluginName$jscomp$inline_312];
+    var pluginModule$jscomp$inline_312 =
+      injectedNamesToPlugins$jscomp$inline_309[pluginName$jscomp$inline_311];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_312) ||
-      namesToPlugins[pluginName$jscomp$inline_312] !==
-        pluginModule$jscomp$inline_313
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_311) ||
+      namesToPlugins[pluginName$jscomp$inline_311] !==
+        pluginModule$jscomp$inline_312
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_312])
+      if (namesToPlugins[pluginName$jscomp$inline_311])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_312 + "`.")
+            (pluginName$jscomp$inline_311 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_312] =
-        pluginModule$jscomp$inline_313;
-      isOrderingDirty$jscomp$inline_311 = !0;
+      namesToPlugins[pluginName$jscomp$inline_311] =
+        pluginModule$jscomp$inline_312;
+      isOrderingDirty$jscomp$inline_310 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_311 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_310 && recomputePluginOrdering();
 var instanceCache = new Map(),
   instanceProps = new Map();
 function getInstanceFromTag(tag) {
@@ -10158,14 +10158,7 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
         !shouldTimeSlice &&
         markRootSuspended(root$jscomp$0, lanes, 0, !1);
       break;
-    } else if (6 === exitStatus)
-      markRootSuspended(
-        root$jscomp$0,
-        lanes,
-        0,
-        !workInProgressRootDidSkipSuspendedSiblings
-      );
-    else {
+    } else {
       forceSync = root$jscomp$0.current.alternate;
       if (
         renderWasConcurrent &&
@@ -10229,16 +10222,15 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
           case 1:
             throw Error("Root did not complete. This is a bug in React.");
           case 4:
-            if ((lanes & 4194176) === lanes) {
-              markRootSuspended(
-                shouldTimeSlice,
-                lanes,
-                workInProgressDeferredLane,
-                !workInProgressRootDidSkipSuspendedSiblings
-              );
-              break a;
-            }
-            break;
+            if ((lanes & 4194176) !== lanes) break;
+          case 6:
+            markRootSuspended(
+              shouldTimeSlice,
+              lanes,
+              workInProgressDeferredLane,
+              !workInProgressRootDidSkipSuspendedSiblings
+            );
+            break a;
           case 2:
             workInProgressRootRecoverableErrors = null;
             break;
@@ -10631,8 +10623,8 @@ function renderRootSync(root, lanes, shouldYieldForPrerendering) {
       workLoopSync();
       memoizedUpdaters = workInProgressRootExitStatus;
       break;
-    } catch (thrownValue$151) {
-      handleThrow(root, thrownValue$151);
+    } catch (thrownValue$150) {
+      handleThrow(root, thrownValue$150);
     }
   while (1);
   lanes && root.shellSuspendCounter++;
@@ -10753,8 +10745,8 @@ function renderRootConcurrent(root, lanes) {
         }
       workLoopConcurrent();
       break;
-    } catch (thrownValue$153) {
-      handleThrow(root, thrownValue$153);
+    } catch (thrownValue$152) {
+      handleThrow(root, thrownValue$152);
     }
   while (1);
   lastContextDependency = currentlyRenderingFiber = null;
@@ -11694,11 +11686,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.0.0-native-fb-63cde684-20241114" !== isomorphicReactPackageVersion)
+if ("19.0.0-native-fb-8a41d6ce-20241114" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.0.0-native-fb-63cde684-20241114\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.0.0-native-fb-8a41d6ce-20241114\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11745,21 +11737,21 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1331 = {
+  internals$jscomp$inline_1330 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-63cde684-20241114",
+    version: "19.0.0-native-fb-8a41d6ce-20241114",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromTag,
-    reconcilerVersion: "19.0.0-native-fb-63cde684-20241114"
+    reconcilerVersion: "19.0.0-native-fb-8a41d6ce-20241114"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1331.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1331.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1330.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1330.getLaneLabelMap = function () {
   for (
-    var map = new Map(), lane = 1, index$157 = 0;
-    31 > index$157;
-    index$157++
+    var map = new Map(), lane = 1, index$156 = 0;
+    31 > index$156;
+    index$156++
   ) {
     var label = getLabelForLane(lane);
     map.set(lane, label);
@@ -11767,20 +11759,20 @@ internals$jscomp$inline_1331.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1331.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1330.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1631 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1630 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1631.isDisabled &&
-    hook$jscomp$inline_1631.supportsFiber
+    !hook$jscomp$inline_1630.isDisabled &&
+    hook$jscomp$inline_1630.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1631.inject(
-        internals$jscomp$inline_1331
+      (rendererID = hook$jscomp$inline_1630.inject(
+        internals$jscomp$inline_1330
       )),
-        (injectedHook = hook$jscomp$inline_1631);
+        (injectedHook = hook$jscomp$inline_1630);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

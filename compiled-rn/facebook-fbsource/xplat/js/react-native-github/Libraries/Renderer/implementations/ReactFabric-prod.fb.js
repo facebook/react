@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2fdfc875c3cad264006df12c65016ad0>>
+ * @generated SignedSource<<4897493e77847ca655e0f798df4fc4b0>>
  */
 
 "use strict";
@@ -1232,7 +1232,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_287 = {
+var injectedNamesToPlugins$jscomp$inline_286 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -1278,32 +1278,32 @@ var injectedNamesToPlugins$jscomp$inline_287 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_288 = !1,
-  pluginName$jscomp$inline_289;
-for (pluginName$jscomp$inline_289 in injectedNamesToPlugins$jscomp$inline_287)
+  isOrderingDirty$jscomp$inline_287 = !1,
+  pluginName$jscomp$inline_288;
+for (pluginName$jscomp$inline_288 in injectedNamesToPlugins$jscomp$inline_286)
   if (
-    injectedNamesToPlugins$jscomp$inline_287.hasOwnProperty(
-      pluginName$jscomp$inline_289
+    injectedNamesToPlugins$jscomp$inline_286.hasOwnProperty(
+      pluginName$jscomp$inline_288
     )
   ) {
-    var pluginModule$jscomp$inline_290 =
-      injectedNamesToPlugins$jscomp$inline_287[pluginName$jscomp$inline_289];
+    var pluginModule$jscomp$inline_289 =
+      injectedNamesToPlugins$jscomp$inline_286[pluginName$jscomp$inline_288];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_289) ||
-      namesToPlugins[pluginName$jscomp$inline_289] !==
-        pluginModule$jscomp$inline_290
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_288) ||
+      namesToPlugins[pluginName$jscomp$inline_288] !==
+        pluginModule$jscomp$inline_289
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_289])
+      if (namesToPlugins[pluginName$jscomp$inline_288])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_289 + "`.")
+            (pluginName$jscomp$inline_288 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_289] =
-        pluginModule$jscomp$inline_290;
-      isOrderingDirty$jscomp$inline_288 = !0;
+      namesToPlugins[pluginName$jscomp$inline_288] =
+        pluginModule$jscomp$inline_289;
+      isOrderingDirty$jscomp$inline_287 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_288 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_287 && recomputePluginOrdering();
 var emptyObject$1 = {},
   removedKeys = null,
   removedKeyCount = 0,
@@ -9195,14 +9195,7 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
         !shouldTimeSlice &&
         markRootSuspended(root$jscomp$0, lanes, 0, !1);
       break;
-    } else if (6 === exitStatus)
-      markRootSuspended(
-        root$jscomp$0,
-        lanes,
-        0,
-        !workInProgressRootDidSkipSuspendedSiblings
-      );
-    else {
+    } else {
       forceSync = root$jscomp$0.current.alternate;
       if (
         renderWasConcurrent &&
@@ -9266,16 +9259,15 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
           case 1:
             throw Error("Root did not complete. This is a bug in React.");
           case 4:
-            if ((lanes & 4194176) === lanes) {
-              markRootSuspended(
-                shouldTimeSlice,
-                lanes,
-                workInProgressDeferredLane,
-                !workInProgressRootDidSkipSuspendedSiblings
-              );
-              break a;
-            }
-            break;
+            if ((lanes & 4194176) !== lanes) break;
+          case 6:
+            markRootSuspended(
+              shouldTimeSlice,
+              lanes,
+              workInProgressDeferredLane,
+              !workInProgressRootDidSkipSuspendedSiblings
+            );
+            break a;
           case 2:
             workInProgressRootRecoverableErrors = null;
             break;
@@ -9629,8 +9621,8 @@ function renderRootSync(root, lanes, shouldYieldForPrerendering) {
       workLoopSync();
       exitStatus = workInProgressRootExitStatus;
       break;
-    } catch (thrownValue$132) {
-      handleThrow(root, thrownValue$132);
+    } catch (thrownValue$131) {
+      handleThrow(root, thrownValue$131);
     }
   while (1);
   lanes && root.shellSuspendCounter++;
@@ -9743,8 +9735,8 @@ function renderRootConcurrent(root, lanes) {
       }
       workLoopConcurrent();
       break;
-    } catch (thrownValue$134) {
-      handleThrow(root, thrownValue$134);
+    } catch (thrownValue$133) {
+      handleThrow(root, thrownValue$133);
     }
   while (1);
   lastContextDependency = currentlyRenderingFiber = null;
@@ -10904,27 +10896,27 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1177 = {
+  internals$jscomp$inline_1176 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-63cde684-20241114",
+    version: "19.0.0-native-fb-8a41d6ce-20241114",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromNode,
-    reconcilerVersion: "19.0.0-native-fb-63cde684-20241114"
+    reconcilerVersion: "19.0.0-native-fb-8a41d6ce-20241114"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1177.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1176.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1493 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1492 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1493.isDisabled &&
-    hook$jscomp$inline_1493.supportsFiber
+    !hook$jscomp$inline_1492.isDisabled &&
+    hook$jscomp$inline_1492.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1493.inject(
-        internals$jscomp$inline_1177
+      (rendererID = hook$jscomp$inline_1492.inject(
+        internals$jscomp$inline_1176
       )),
-        (injectedHook = hook$jscomp$inline_1493);
+        (injectedHook = hook$jscomp$inline_1492);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

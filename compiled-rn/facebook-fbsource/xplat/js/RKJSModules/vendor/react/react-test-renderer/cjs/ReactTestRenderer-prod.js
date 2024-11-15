@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c06deaa0a427766cbdbba4cb992526c3>>
+ * @generated SignedSource<<8b074877652f39a42f0b994b22aa264e>>
  */
 
 "use strict";
@@ -7879,14 +7879,7 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
         !shouldTimeSlice &&
         markRootSuspended(root$jscomp$0, lanes, 0, !1);
       break;
-    } else if (6 === exitStatus)
-      markRootSuspended(
-        root$jscomp$0,
-        lanes,
-        0,
-        !workInProgressRootDidSkipSuspendedSiblings
-      );
-    else {
+    } else {
       forceSync = root$jscomp$0.current.alternate;
       if (
         renderWasConcurrent &&
@@ -7950,16 +7943,15 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
           case 1:
             throw Error("Root did not complete. This is a bug in React.");
           case 4:
-            if ((lanes & 4194176) === lanes) {
-              markRootSuspended(
-                shouldTimeSlice,
-                lanes,
-                workInProgressDeferredLane,
-                !workInProgressRootDidSkipSuspendedSiblings
-              );
-              break a;
-            }
-            break;
+            if ((lanes & 4194176) !== lanes) break;
+          case 6:
+            markRootSuspended(
+              shouldTimeSlice,
+              lanes,
+              workInProgressDeferredLane,
+              !workInProgressRootDidSkipSuspendedSiblings
+            );
+            break a;
           case 2:
             workInProgressRootRecoverableErrors = null;
             break;
@@ -8307,8 +8299,8 @@ function renderRootSync(root, lanes, shouldYieldForPrerendering) {
       workLoopSync();
       exitStatus = workInProgressRootExitStatus;
       break;
-    } catch (thrownValue$128) {
-      handleThrow(root, thrownValue$128);
+    } catch (thrownValue$127) {
+      handleThrow(root, thrownValue$127);
     }
   while (1);
   lanes && root.shellSuspendCounter++;
@@ -8421,8 +8413,8 @@ function renderRootConcurrent(root, lanes) {
       }
       workLoopConcurrent();
       break;
-    } catch (thrownValue$130) {
-      handleThrow(root, thrownValue$130);
+    } catch (thrownValue$129) {
+      handleThrow(root, thrownValue$129);
     }
   while (1);
   lastContextDependency = currentlyRenderingFiber = null;
@@ -9548,28 +9540,28 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var internals$jscomp$inline_1355 = {
+var internals$jscomp$inline_1354 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-63cde684-20241114",
+  version: "19.0.0-native-fb-8a41d6ce-20241114",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: function (mockNode) {
     mockNode = nodeToInstanceMap.get(mockNode);
     return void 0 !== mockNode ? mockNode.internalInstanceHandle : null;
   },
-  reconcilerVersion: "19.0.0-native-fb-63cde684-20241114"
+  reconcilerVersion: "19.0.0-native-fb-8a41d6ce-20241114"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1356 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1355 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1356.isDisabled &&
-    hook$jscomp$inline_1356.supportsFiber
+    !hook$jscomp$inline_1355.isDisabled &&
+    hook$jscomp$inline_1355.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1356.inject(
-        internals$jscomp$inline_1355
+      (rendererID = hook$jscomp$inline_1355.inject(
+        internals$jscomp$inline_1354
       )),
-        (injectedHook = hook$jscomp$inline_1356);
+        (injectedHook = hook$jscomp$inline_1355);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
@@ -9693,4 +9685,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.0.0-native-fb-63cde684-20241114";
+exports.version = "19.0.0-native-fb-8a41d6ce-20241114";
