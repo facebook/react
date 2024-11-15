@@ -1149,7 +1149,9 @@ function scheduleTaskForRootDuringMicrotask(root, currentTime) {
   pingedLanes = root.callbackNode;
   if (
     0 === suspendedLanes ||
-    (root === currentTime && 2 === workInProgressSuspendedReason) ||
+    (root === currentTime &&
+      (2 === workInProgressSuspendedReason ||
+        9 === workInProgressSuspendedReason)) ||
     null !== root.cancelPendingCommit
   )
     return (
@@ -1550,6 +1552,7 @@ function shallowEqual(objA, objB) {
 }
 var SuspenseException = Error(formatProdErrorMessage(460)),
   SuspenseyCommitException = Error(formatProdErrorMessage(474)),
+  SuspenseActionException = Error(formatProdErrorMessage(542)),
   noopSuspenseyCommitThenable = { then: function () {} };
 function isThenableResolved(thenable) {
   thenable = thenable.status;
@@ -1565,10 +1568,11 @@ function trackUsedThenable(thenableState, thenable, index) {
     case "fulfilled":
       return thenable.value;
     case "rejected":
-      thenableState = thenable.reason;
-      if (thenableState === SuspenseException)
-        throw Error(formatProdErrorMessage(483));
-      throw thenableState;
+      throw (
+        ((thenableState = thenable.reason),
+        checkIfUseWrappedInAsyncCatch(thenableState),
+        thenableState)
+      );
     default:
       if ("string" === typeof thenable.status) thenable.then(noop, noop);
       else {
@@ -1598,10 +1602,11 @@ function trackUsedThenable(thenableState, thenable, index) {
         case "fulfilled":
           return thenable.value;
         case "rejected":
-          thenableState = thenable.reason;
-          if (thenableState === SuspenseException)
-            throw Error(formatProdErrorMessage(483));
-          throw thenableState;
+          throw (
+            ((thenableState = thenable.reason),
+            checkIfUseWrappedInAsyncCatch(thenableState),
+            thenableState)
+          );
       }
       suspendedThenable = thenable;
       throw SuspenseException;
@@ -1613,6 +1618,13 @@ function getSuspendedThenable() {
   var thenable = suspendedThenable;
   suspendedThenable = null;
   return thenable;
+}
+function checkIfUseWrappedInAsyncCatch(rejectedReason) {
+  if (
+    rejectedReason === SuspenseException ||
+    rejectedReason === SuspenseActionException
+  )
+    throw Error(formatProdErrorMessage(483));
 }
 var thenableState$1 = null,
   thenableIndexCounter$1 = 0;
@@ -2305,7 +2317,7 @@ function createChildReconciler(shouldTrackSideEffects) {
       thenableState$1 = null;
       return firstChildFiber;
     } catch (x) {
-      if (x === SuspenseException) throw x;
+      if (x === SuspenseException || x === SuspenseActionException) throw x;
       var fiber = createFiber(29, x, null, returnFiber.mode);
       fiber.lanes = lanes;
       fiber.return = returnFiber;
@@ -3051,16 +3063,22 @@ function updateActionStateImpl(stateHook, currentStateHook, action) {
     actionStateReducer
   )[0];
   stateHook = updateReducer(basicStateReducer)[0];
-  currentStateHook =
+  if (
     "object" === typeof currentStateHook &&
     null !== currentStateHook &&
     "function" === typeof currentStateHook.then
-      ? useThenable(currentStateHook)
-      : currentStateHook;
-  var actionQueueHook = updateWorkInProgressHook(),
-    actionQueue = actionQueueHook.queue,
+  )
+    try {
+      var state = useThenable(currentStateHook);
+    } catch (x) {
+      if (x === SuspenseException) throw SuspenseActionException;
+      throw x;
+    }
+  else state = currentStateHook;
+  currentStateHook = updateWorkInProgressHook();
+  var actionQueue = currentStateHook.queue,
     dispatch = actionQueue.dispatch;
-  action !== actionQueueHook.memoizedState &&
+  action !== currentStateHook.memoizedState &&
     ((currentlyRenderingFiber$1.flags |= 2048),
     pushEffect(
       9,
@@ -3068,7 +3086,7 @@ function updateActionStateImpl(stateHook, currentStateHook, action) {
       { destroy: void 0 },
       null
     ));
-  return [currentStateHook, dispatch, stateHook];
+  return [state, dispatch, stateHook];
 }
 function actionStateActionEffect(actionQueue, action) {
   actionQueue.action = action;
@@ -8731,7 +8749,9 @@ function requestDeferredLane() {
 }
 function scheduleUpdateOnFiber(root, fiber, lane) {
   if (
-    (root === workInProgressRoot && 2 === workInProgressSuspendedReason) ||
+    (root === workInProgressRoot &&
+      (2 === workInProgressSuspendedReason ||
+        9 === workInProgressSuspendedReason)) ||
     null !== root.cancelPendingCommit
   )
     prepareFreshStack(root, 0),
@@ -9118,7 +9138,10 @@ function prepareFreshStack(root, lanes) {
 function handleThrow(root, thrownValue) {
   currentlyRenderingFiber$1 = null;
   ReactSharedInternals.H = ContextOnlyDispatcher;
-  if (thrownValue === SuspenseException) {
+  if (
+    thrownValue === SuspenseException ||
+    thrownValue === SuspenseActionException
+  ) {
     thrownValue = getSuspendedThenable();
     var JSCompiler_temp;
     if ((JSCompiler_temp = !enableSiblingPrerendering))
@@ -9140,7 +9163,9 @@ function handleThrow(root, thrownValue) {
       JSCompiler_temp &&
       0 === (workInProgressRootSkippedLanes & 134217727) &&
       0 === (workInProgressRootInterleavedUpdatedLanes & 134217727)
-        ? 2
+        ? thrownValue === SuspenseActionException
+          ? 9
+          : 2
         : 3;
   } else
     thrownValue === SuspenseyCommitException
@@ -9211,6 +9236,7 @@ function renderRootSync(root, lanes, shouldYieldForPrerendering) {
             break a;
           case 3:
           case 2:
+          case 9:
           case 6:
             null === suspenseHandlerStackCursor.current && (lanes = !0);
             var reason = workInProgressSuspendedReason;
@@ -9279,6 +9305,7 @@ function renderRootConcurrent(root, lanes) {
             throwAndUnwindWorkLoop(root, lanes, thrownValue, 1);
             break;
           case 2:
+          case 9:
             var thenable = thrownValue;
             if (isThenableResolved(thenable)) {
               workInProgressSuspendedReason = 0;
@@ -9287,8 +9314,9 @@ function renderRootConcurrent(root, lanes) {
               break;
             }
             lanes = function () {
-              2 === workInProgressSuspendedReason &&
-                workInProgressRoot === root &&
+              (2 !== workInProgressSuspendedReason &&
+                9 !== workInProgressSuspendedReason) ||
+                workInProgressRoot !== root ||
                 (workInProgressSuspendedReason = 7);
               ensureRootIsScheduled(root);
             };
@@ -9472,6 +9500,7 @@ function throwAndUnwindWorkLoop(
         if (
           ((workInProgressRootDidSkipSuspendedSiblings = root = !0),
           2 === suspendedReason ||
+            9 === suspendedReason ||
             3 === suspendedReason ||
             6 === suspendedReason)
         )
@@ -10344,27 +10373,27 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component);
-var internals$jscomp$inline_1456 = {
+var internals$jscomp$inline_1452 = {
   bundleType: 0,
-  version: "19.0.0-www-modern-053b3cb0-20241115",
+  version: "19.0.0-www-modern-92c0f5f8-20241115",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: function () {
     return null;
   },
-  reconcilerVersion: "19.0.0-www-modern-053b3cb0-20241115"
+  reconcilerVersion: "19.0.0-www-modern-92c0f5f8-20241115"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1457 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1453 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1457.isDisabled &&
-    hook$jscomp$inline_1457.supportsFiber
+    !hook$jscomp$inline_1453.isDisabled &&
+    hook$jscomp$inline_1453.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1457.inject(
-        internals$jscomp$inline_1456
+      (rendererID = hook$jscomp$inline_1453.inject(
+        internals$jscomp$inline_1452
       )),
-        (injectedHook = hook$jscomp$inline_1457);
+        (injectedHook = hook$jscomp$inline_1453);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
@@ -10378,4 +10407,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.0.0-www-modern-053b3cb0-20241115";
+exports.version = "19.0.0-www-modern-92c0f5f8-20241115";

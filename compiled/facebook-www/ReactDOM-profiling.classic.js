@@ -2222,7 +2222,9 @@ function scheduleTaskForRootDuringMicrotask(root, currentTime) {
   pingedLanes = root.callbackNode;
   if (
     0 === suspendedLanes ||
-    (root === currentTime && 2 === workInProgressSuspendedReason) ||
+    (root === currentTime &&
+      (2 === workInProgressSuspendedReason ||
+        9 === workInProgressSuspendedReason)) ||
     null !== root.cancelPendingCommit
   )
     return (
@@ -2632,6 +2634,7 @@ function shallowEqual(objA, objB) {
 }
 var SuspenseException = Error(formatProdErrorMessage(460)),
   SuspenseyCommitException = Error(formatProdErrorMessage(474)),
+  SuspenseActionException = Error(formatProdErrorMessage(542)),
   noopSuspenseyCommitThenable = { then: function () {} };
 function isThenableResolved(thenable) {
   thenable = thenable.status;
@@ -2647,10 +2650,11 @@ function trackUsedThenable(thenableState, thenable, index) {
     case "fulfilled":
       return thenable.value;
     case "rejected":
-      thenableState = thenable.reason;
-      if (thenableState === SuspenseException)
-        throw Error(formatProdErrorMessage(483));
-      throw thenableState;
+      throw (
+        ((thenableState = thenable.reason),
+        checkIfUseWrappedInAsyncCatch(thenableState),
+        thenableState)
+      );
     default:
       if ("string" === typeof thenable.status) thenable.then(noop$3, noop$3);
       else {
@@ -2680,10 +2684,11 @@ function trackUsedThenable(thenableState, thenable, index) {
         case "fulfilled":
           return thenable.value;
         case "rejected":
-          thenableState = thenable.reason;
-          if (thenableState === SuspenseException)
-            throw Error(formatProdErrorMessage(483));
-          throw thenableState;
+          throw (
+            ((thenableState = thenable.reason),
+            checkIfUseWrappedInAsyncCatch(thenableState),
+            thenableState)
+          );
       }
       suspendedThenable = thenable;
       throw SuspenseException;
@@ -2695,6 +2700,13 @@ function getSuspendedThenable() {
   var thenable = suspendedThenable;
   suspendedThenable = null;
   return thenable;
+}
+function checkIfUseWrappedInAsyncCatch(rejectedReason) {
+  if (
+    rejectedReason === SuspenseException ||
+    rejectedReason === SuspenseActionException
+  )
+    throw Error(formatProdErrorMessage(483));
 }
 var thenableState$1 = null,
   thenableIndexCounter$1 = 0;
@@ -3395,7 +3407,7 @@ function createChildReconciler(shouldTrackSideEffects) {
       thenableState$1 = null;
       return firstChildFiber;
     } catch (x) {
-      if (x === SuspenseException) throw x;
+      if (x === SuspenseException || x === SuspenseActionException) throw x;
       var fiber = createFiber(29, x, null, returnFiber.mode);
       fiber.lanes = lanes;
       fiber.return = returnFiber;
@@ -4210,16 +4222,22 @@ function updateActionStateImpl(stateHook, currentStateHook, action) {
     actionStateReducer
   )[0];
   stateHook = updateReducer(basicStateReducer)[0];
-  currentStateHook =
+  if (
     "object" === typeof currentStateHook &&
     null !== currentStateHook &&
     "function" === typeof currentStateHook.then
-      ? useThenable(currentStateHook)
-      : currentStateHook;
-  var actionQueueHook = updateWorkInProgressHook(),
-    actionQueue = actionQueueHook.queue,
+  )
+    try {
+      var state = useThenable(currentStateHook);
+    } catch (x) {
+      if (x === SuspenseException) throw SuspenseActionException;
+      throw x;
+    }
+  else state = currentStateHook;
+  currentStateHook = updateWorkInProgressHook();
+  var actionQueue = currentStateHook.queue,
     dispatch = actionQueue.dispatch;
-  action !== actionQueueHook.memoizedState &&
+  action !== currentStateHook.memoizedState &&
     ((currentlyRenderingFiber$1.flags |= 2048),
     pushEffect(
       9,
@@ -4227,7 +4245,7 @@ function updateActionStateImpl(stateHook, currentStateHook, action) {
       { destroy: void 0 },
       null
     ));
-  return [currentStateHook, dispatch, stateHook];
+  return [state, dispatch, stateHook];
 }
 function actionStateActionEffect(actionQueue, action) {
   actionQueue.action = action;
@@ -11350,7 +11368,9 @@ function requestDeferredLane() {
 }
 function scheduleUpdateOnFiber(root, fiber, lane) {
   if (
-    (root === workInProgressRoot && 2 === workInProgressSuspendedReason) ||
+    (root === workInProgressRoot &&
+      (2 === workInProgressSuspendedReason ||
+        9 === workInProgressSuspendedReason)) ||
     null !== root.cancelPendingCommit
   )
     prepareFreshStack(root, 0),
@@ -11759,14 +11779,16 @@ function prepareFreshStack(root, lanes) {
 function handleThrow(root, thrownValue) {
   currentlyRenderingFiber$1 = null;
   ReactSharedInternals.H = ContextOnlyDispatcher;
-  thrownValue === SuspenseException
+  thrownValue === SuspenseException || thrownValue === SuspenseActionException
     ? ((thrownValue = getSuspendedThenable()),
       (workInProgressSuspendedReason =
         !enableSiblingPrerendering &&
         shouldRemainOnPreviousScreen() &&
         0 === (workInProgressRootSkippedLanes & 134217727) &&
         0 === (workInProgressRootInterleavedUpdatedLanes & 134217727)
-          ? 2
+          ? thrownValue === SuspenseActionException
+            ? 9
+            : 2
           : 3))
     : thrownValue === SuspenseyCommitException
       ? ((thrownValue = getSuspendedThenable()),
@@ -11804,6 +11826,7 @@ function handleThrow(root, thrownValue) {
           );
         break;
       case 2:
+      case 9:
       case 3:
       case 6:
       case 7:
@@ -11890,6 +11913,7 @@ function renderRootSync(root, lanes, shouldYieldForPrerendering) {
             break a;
           case 3:
           case 2:
+          case 9:
           case 6:
             null === suspenseHandlerStackCursor.current && (lanes = !0);
             var reason = workInProgressSuspendedReason;
@@ -11967,6 +11991,7 @@ function renderRootConcurrent(root, lanes) {
             throwAndUnwindWorkLoop(root, lanes, memoizedUpdaters, 1);
             break;
           case 2:
+          case 9:
             if (isThenableResolved(memoizedUpdaters)) {
               workInProgressSuspendedReason = 0;
               workInProgressThrownValue = null;
@@ -11974,8 +11999,9 @@ function renderRootConcurrent(root, lanes) {
               break;
             }
             lanes = function () {
-              2 === workInProgressSuspendedReason &&
-                workInProgressRoot === root &&
+              (2 !== workInProgressSuspendedReason &&
+                9 !== workInProgressSuspendedReason) ||
+                workInProgressRoot !== root ||
                 (workInProgressSuspendedReason = 7);
               ensureRootIsScheduled(root);
             };
@@ -12183,6 +12209,7 @@ function throwAndUnwindWorkLoop(
         if (
           ((workInProgressRootDidSkipSuspendedSiblings = root = !0),
           2 === suspendedReason ||
+            9 === suspendedReason ||
             3 === suspendedReason ||
             6 === suspendedReason)
         )
@@ -13751,14 +13778,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$370;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1625 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1625) {
-      var element$jscomp$inline_1626 = document.createElement("div");
-      element$jscomp$inline_1626.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1625 =
-        "function" === typeof element$jscomp$inline_1626.oninput;
+    var isSupported$jscomp$inline_1621 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1621) {
+      var element$jscomp$inline_1622 = document.createElement("div");
+      element$jscomp$inline_1622.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1621 =
+        "function" === typeof element$jscomp$inline_1622.oninput;
     }
-    JSCompiler_inline_result$jscomp$370 = isSupported$jscomp$inline_1625;
+    JSCompiler_inline_result$jscomp$370 = isSupported$jscomp$inline_1621;
   } else JSCompiler_inline_result$jscomp$370 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$370 &&
@@ -14172,20 +14199,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1666 = 0;
-  i$jscomp$inline_1666 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1666++
+  var i$jscomp$inline_1662 = 0;
+  i$jscomp$inline_1662 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1662++
 ) {
-  var eventName$jscomp$inline_1667 =
-      simpleEventPluginEvents[i$jscomp$inline_1666],
-    domEventName$jscomp$inline_1668 =
-      eventName$jscomp$inline_1667.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1669 =
-      eventName$jscomp$inline_1667[0].toUpperCase() +
-      eventName$jscomp$inline_1667.slice(1);
+  var eventName$jscomp$inline_1663 =
+      simpleEventPluginEvents[i$jscomp$inline_1662],
+    domEventName$jscomp$inline_1664 =
+      eventName$jscomp$inline_1663.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1665 =
+      eventName$jscomp$inline_1663[0].toUpperCase() +
+      eventName$jscomp$inline_1663.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1668,
-    "on" + capitalizedEvent$jscomp$inline_1669
+    domEventName$jscomp$inline_1664,
+    "on" + capitalizedEvent$jscomp$inline_1665
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17748,16 +17775,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_1839 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1835 = React.version;
 if (
-  "19.0.0-www-classic-053b3cb0-20241115" !==
-  isomorphicReactPackageVersion$jscomp$inline_1839
+  "19.0.0-www-classic-92c0f5f8-20241115" !==
+  isomorphicReactPackageVersion$jscomp$inline_1835
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1839,
-      "19.0.0-www-classic-053b3cb0-20241115"
+      isomorphicReactPackageVersion$jscomp$inline_1835,
+      "19.0.0-www-classic-92c0f5f8-20241115"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17773,28 +17800,28 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_1841 = {
+var internals$jscomp$inline_1837 = {
   bundleType: 0,
-  version: "19.0.0-www-classic-053b3cb0-20241115",
+  version: "19.0.0-www-classic-92c0f5f8-20241115",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-www-classic-053b3cb0-20241115"
+  reconcilerVersion: "19.0.0-www-classic-92c0f5f8-20241115"
 };
 enableSchedulingProfiler &&
-  ((internals$jscomp$inline_1841.getLaneLabelMap = getLaneLabelMap),
-  (internals$jscomp$inline_1841.injectProfilingHooks = injectProfilingHooks));
+  ((internals$jscomp$inline_1837.getLaneLabelMap = getLaneLabelMap),
+  (internals$jscomp$inline_1837.injectProfilingHooks = injectProfilingHooks));
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2342 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2338 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2342.isDisabled &&
-    hook$jscomp$inline_2342.supportsFiber
+    !hook$jscomp$inline_2338.isDisabled &&
+    hook$jscomp$inline_2338.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2342.inject(
-        internals$jscomp$inline_1841
+      (rendererID = hook$jscomp$inline_2338.inject(
+        internals$jscomp$inline_1837
       )),
-        (injectedHook = hook$jscomp$inline_2342);
+        (injectedHook = hook$jscomp$inline_2338);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -18145,7 +18172,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-053b3cb0-20241115";
+exports.version = "19.0.0-www-classic-92c0f5f8-20241115";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

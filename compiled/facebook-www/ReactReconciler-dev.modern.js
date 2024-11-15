@@ -2264,7 +2264,8 @@ __DEV__ &&
       if (
         0 === suspendedLanes ||
         (root === currentTime &&
-          workInProgressSuspendedReason === SuspendedOnData) ||
+          (workInProgressSuspendedReason === SuspendedOnData ||
+            workInProgressSuspendedReason === SuspendedOnAction)) ||
         null !== root.cancelPendingCommit
       )
         return (
@@ -2837,7 +2838,10 @@ __DEV__ &&
       return thenable;
     }
     function checkIfUseWrappedInAsyncCatch(rejectedReason) {
-      if (rejectedReason === SuspenseException)
+      if (
+        rejectedReason === SuspenseException ||
+        rejectedReason === SuspenseActionException
+      )
         throw Error(
           "Hooks are not supported inside an async component. This error is often caused by accidentally adding `'use client'` to a module that was originally written for the server."
         );
@@ -3867,7 +3871,7 @@ __DEV__ &&
           thenableState$1 = null;
           return firstChildFiber;
         } catch (x) {
-          if (x === SuspenseException) throw x;
+          if (x === SuspenseException || x === SuspenseActionException) throw x;
           var fiber = createFiber(29, x, null, returnFiber.mode);
           fiber.lanes = lanes;
           fiber.return = returnFiber;
@@ -5017,16 +5021,22 @@ __DEV__ &&
         actionStateReducer
       )[0];
       stateHook = updateReducer(basicStateReducer)[0];
-      currentStateHook =
+      if (
         "object" === typeof currentStateHook &&
         null !== currentStateHook &&
         "function" === typeof currentStateHook.then
-          ? useThenable(currentStateHook)
-          : currentStateHook;
-      var actionQueueHook = updateWorkInProgressHook(),
-        actionQueue = actionQueueHook.queue,
+      )
+        try {
+          var state = useThenable(currentStateHook);
+        } catch (x) {
+          if (x === SuspenseException) throw SuspenseActionException;
+          throw x;
+        }
+      else state = currentStateHook;
+      currentStateHook = updateWorkInProgressHook();
+      var actionQueue = currentStateHook.queue,
         dispatch = actionQueue.dispatch;
-      action !== actionQueueHook.memoizedState &&
+      action !== currentStateHook.memoizedState &&
         ((currentlyRenderingFiber$1.flags |= 2048),
         pushEffect(
           HasEffect | Passive,
@@ -5034,7 +5044,7 @@ __DEV__ &&
           { destroy: void 0 },
           null
         ));
-      return [currentStateHook, dispatch, stateHook];
+      return [state, dispatch, stateHook];
     }
     function actionStateActionEffect(actionQueue, action) {
       actionQueue.action = action;
@@ -13474,7 +13484,8 @@ __DEV__ &&
       isFlushingPassiveEffects && (didScheduleUpdateDuringPassiveEffects = !0);
       if (
         (root === workInProgressRoot &&
-          workInProgressSuspendedReason === SuspendedOnData) ||
+          (workInProgressSuspendedReason === SuspendedOnData ||
+            workInProgressSuspendedReason === SuspendedOnAction)) ||
         null !== root.cancelPendingCommit
       )
         prepareFreshStack(root, 0),
@@ -13949,14 +13960,17 @@ __DEV__ &&
       ReactSharedInternals.getCurrentStack = null;
       isRendering = !1;
       current = null;
-      thrownValue === SuspenseException
+      thrownValue === SuspenseException ||
+      thrownValue === SuspenseActionException
         ? ((thrownValue = getSuspendedThenable()),
           (workInProgressSuspendedReason =
             !enableSiblingPrerendering &&
             shouldRemainOnPreviousScreen() &&
             0 === (workInProgressRootSkippedLanes & 134217727) &&
             0 === (workInProgressRootInterleavedUpdatedLanes & 134217727)
-              ? SuspendedOnData
+              ? thrownValue === SuspenseActionException
+                ? SuspendedOnAction
+                : SuspendedOnData
               : SuspendedOnImmediate))
         : thrownValue === SuspenseyCommitException
           ? ((thrownValue = getSuspendedThenable()),
@@ -13995,6 +14009,7 @@ __DEV__ &&
               );
             break;
           case SuspendedOnData:
+          case SuspendedOnAction:
           case SuspendedOnImmediate:
           case SuspendedOnDeprecatedThrowPromise:
           case SuspendedAndReadyToContinue:
@@ -14089,6 +14104,7 @@ __DEV__ &&
                 break a;
               case SuspendedOnImmediate:
               case SuspendedOnData:
+              case SuspendedOnAction:
               case SuspendedOnDeprecatedThrowPromise:
                 null === suspenseHandlerStackCursor.current && (lanes = !0);
                 var reason = workInProgressSuspendedReason;
@@ -14182,6 +14198,7 @@ __DEV__ &&
                 );
                 break;
               case SuspendedOnData:
+              case SuspendedOnAction:
                 if (isThenableResolved(memoizedUpdaters)) {
                   workInProgressSuspendedReason = NotSuspended;
                   workInProgressThrownValue = null;
@@ -14189,8 +14206,9 @@ __DEV__ &&
                   break;
                 }
                 lanes = function () {
-                  workInProgressSuspendedReason === SuspendedOnData &&
-                    workInProgressRoot === root &&
+                  (workInProgressSuspendedReason !== SuspendedOnData &&
+                    workInProgressSuspendedReason !== SuspendedOnAction) ||
+                    workInProgressRoot !== root ||
                     (workInProgressSuspendedReason =
                       SuspendedAndReadyToContinue);
                   ensureRootIsScheduled(root);
@@ -14451,6 +14469,7 @@ __DEV__ &&
             if (
               ((workInProgressRootDidSkipSuspendedSiblings = root = !0),
               suspendedReason === SuspendedOnData ||
+                suspendedReason === SuspendedOnAction ||
                 suspendedReason === SuspendedOnImmediate ||
                 suspendedReason === SuspendedOnDeprecatedThrowPromise)
             )
@@ -16407,10 +16426,13 @@ __DEV__ &&
       pendingLegacyContextWarning = new Map();
     };
     var SuspenseException = Error(
-        "Suspense Exception: This is not a real error! It's an implementation detail of `use` to interrupt the current render. You must either rethrow it immediately, or move the `use` call outside of the `try/catch` block. Capturing without rethrowing will lead to unexpected behavior.\n\nTo handle async errors, wrap your component in an error boundary, or call the promise's `.catch` method and pass the result to `use`"
+        "Suspense Exception: This is not a real error! It's an implementation detail of `use` to interrupt the current render. You must either rethrow it immediately, or move the `use` call outside of the `try/catch` block. Capturing without rethrowing will lead to unexpected behavior.\n\nTo handle async errors, wrap your component in an error boundary, or call the promise's `.catch` method and pass the result to `use`."
       ),
       SuspenseyCommitException = Error(
         "Suspense Exception: This is not a real error, and should not leak into userspace. If you're seeing this, it's likely a bug in React."
+      ),
+      SuspenseActionException = Error(
+        "Suspense Exception: This is not a real error! It's an implementation detail of `useActionState` to interrupt the current render. You must either rethrow it immediately, or move the `useActionState` call outside of the `try/catch` block. Capturing without rethrowing will lead to unexpected behavior.\n\nTo handle async errors, wrap your component in an error boundary."
       ),
       noopSuspenseyCommitThenable = {
         then: function () {
@@ -18048,6 +18070,7 @@ __DEV__ &&
       SuspendedOnDeprecatedThrowPromise = 6,
       SuspendedAndReadyToContinue = 7,
       SuspendedOnHydration = 8,
+      SuspendedOnAction = 9,
       workInProgressSuspendedReason = NotSuspended,
       workInProgressThrownValue = null,
       workInProgressRootDidSkipSuspendedSiblings = !1,
@@ -18642,7 +18665,7 @@ __DEV__ &&
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-www-modern-053b3cb0-20241115"
+        reconcilerVersion: "19.0.0-www-modern-92c0f5f8-20241115"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
