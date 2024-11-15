@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6edcc91bb0b5dbdda3f1bffeb60ff44f>>
+ * @generated SignedSource<<77e98215ebb8036e232b05008ebe691f>>
  */
 
 "use strict";
@@ -2367,7 +2367,9 @@ function scheduleTaskForRootDuringMicrotask(root, currentTime) {
   pingedLanes = root.callbackNode;
   if (
     0 === suspendedLanes ||
-    (root === currentTime && 2 === workInProgressSuspendedReason) ||
+    (root === currentTime &&
+      (2 === workInProgressSuspendedReason ||
+        9 === workInProgressSuspendedReason)) ||
     null !== root.cancelPendingCommit
   )
     return (
@@ -2775,10 +2777,13 @@ function shallowEqual(objA, objB) {
   return !0;
 }
 var SuspenseException = Error(
-    "Suspense Exception: This is not a real error! It's an implementation detail of `use` to interrupt the current render. You must either rethrow it immediately, or move the `use` call outside of the `try/catch` block. Capturing without rethrowing will lead to unexpected behavior.\n\nTo handle async errors, wrap your component in an error boundary, or call the promise's `.catch` method and pass the result to `use`"
+    "Suspense Exception: This is not a real error! It's an implementation detail of `use` to interrupt the current render. You must either rethrow it immediately, or move the `use` call outside of the `try/catch` block. Capturing without rethrowing will lead to unexpected behavior.\n\nTo handle async errors, wrap your component in an error boundary, or call the promise's `.catch` method and pass the result to `use`."
   ),
   SuspenseyCommitException = Error(
     "Suspense Exception: This is not a real error, and should not leak into userspace. If you're seeing this, it's likely a bug in React."
+  ),
+  SuspenseActionException = Error(
+    "Suspense Exception: This is not a real error! It's an implementation detail of `useActionState` to interrupt the current render. You must either rethrow it immediately, or move the `useActionState` call outside of the `try/catch` block. Capturing without rethrowing will lead to unexpected behavior.\n\nTo handle async errors, wrap your component in an error boundary."
   ),
   noopSuspenseyCommitThenable = { then: function () {} };
 function isThenableResolved(thenable) {
@@ -2852,7 +2857,10 @@ function getSuspendedThenable() {
   return thenable;
 }
 function checkIfUseWrappedInAsyncCatch(rejectedReason) {
-  if (rejectedReason === SuspenseException)
+  if (
+    rejectedReason === SuspenseException ||
+    rejectedReason === SuspenseActionException
+  )
     throw Error(
       "Hooks are not supported inside an async component. This error is often caused by accidentally adding `'use client'` to a module that was originally written for the server."
     );
@@ -3555,6 +3563,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     } catch (x) {
       if (
         x === SuspenseException ||
+        x === SuspenseActionException ||
         (0 === (returnFiber.mode & 1) &&
           "object" === typeof x &&
           null !== x &&
@@ -4296,16 +4305,22 @@ function updateActionStateImpl(stateHook, currentStateHook, action) {
     actionStateReducer
   )[0];
   stateHook = updateReducer(basicStateReducer)[0];
-  currentStateHook =
+  if (
     "object" === typeof currentStateHook &&
     null !== currentStateHook &&
     "function" === typeof currentStateHook.then
-      ? useThenable(currentStateHook)
-      : currentStateHook;
-  var actionQueueHook = updateWorkInProgressHook(),
-    actionQueue = actionQueueHook.queue,
+  )
+    try {
+      var state = useThenable(currentStateHook);
+    } catch (x) {
+      if (x === SuspenseException) throw SuspenseActionException;
+      throw x;
+    }
+  else state = currentStateHook;
+  currentStateHook = updateWorkInProgressHook();
+  var actionQueue = currentStateHook.queue,
     dispatch = actionQueue.dispatch;
-  action !== actionQueueHook.memoizedState &&
+  action !== currentStateHook.memoizedState &&
     ((currentlyRenderingFiber$1.flags |= 2048),
     pushEffect(
       9,
@@ -4313,7 +4328,7 @@ function updateActionStateImpl(stateHook, currentStateHook, action) {
       { destroy: void 0 },
       null
     ));
-  return [currentStateHook, dispatch, stateHook];
+  return [state, dispatch, stateHook];
 }
 function actionStateActionEffect(actionQueue, action) {
   actionQueue.action = action;
@@ -9146,7 +9161,9 @@ function requestDeferredLane() {
 }
 function scheduleUpdateOnFiber(root, fiber, lane) {
   if (
-    (root === workInProgressRoot && 2 === workInProgressSuspendedReason) ||
+    (root === workInProgressRoot &&
+      (2 === workInProgressSuspendedReason ||
+        9 === workInProgressSuspendedReason)) ||
     null !== root.cancelPendingCommit
   )
     prepareFreshStack(root, 0),
@@ -9508,7 +9525,10 @@ function prepareFreshStack(root, lanes) {
 function handleThrow(root, thrownValue) {
   currentlyRenderingFiber$1 = null;
   ReactSharedInternals.H = ContextOnlyDispatcher;
-  if (thrownValue === SuspenseException) {
+  if (
+    thrownValue === SuspenseException ||
+    thrownValue === SuspenseActionException
+  ) {
     thrownValue = getSuspendedThenable();
     var JSCompiler_temp;
     if ((JSCompiler_temp = !enableSiblingPrerendering))
@@ -9530,7 +9550,9 @@ function handleThrow(root, thrownValue) {
       JSCompiler_temp &&
       0 === (workInProgressRootSkippedLanes & 134217727) &&
       0 === (workInProgressRootInterleavedUpdatedLanes & 134217727)
-        ? 2
+        ? thrownValue === SuspenseActionException
+          ? 9
+          : 2
         : 3;
   } else
     thrownValue === SuspenseyCommitException
@@ -9600,6 +9622,7 @@ function renderRootSync(root, lanes, shouldYieldForPrerendering) {
             break a;
           case 3:
           case 2:
+          case 9:
           case 6:
             null === suspenseHandlerStackCursor.current && (lanes = !0);
             var reason = workInProgressSuspendedReason;
@@ -9668,6 +9691,7 @@ function renderRootConcurrent(root, lanes) {
             throwAndUnwindWorkLoop(root, lanes, thrownValue, 1);
             break;
           case 2:
+          case 9:
             if (isThenableResolved(thrownValue)) {
               workInProgressSuspendedReason = 0;
               workInProgressThrownValue = null;
@@ -9675,8 +9699,9 @@ function renderRootConcurrent(root, lanes) {
               break;
             }
             lanes = function () {
-              2 === workInProgressSuspendedReason &&
-                workInProgressRoot === root &&
+              (2 !== workInProgressSuspendedReason &&
+                9 !== workInProgressSuspendedReason) ||
+                workInProgressRoot !== root ||
                 (workInProgressSuspendedReason = 7);
               ensureRootIsScheduled(root);
             };
@@ -9855,6 +9880,7 @@ function throwAndUnwindWorkLoop(
         if (
           ((workInProgressRootDidSkipSuspendedSiblings = root = !0),
           2 === suspendedReason ||
+            9 === suspendedReason ||
             3 === suspendedReason ||
             6 === suspendedReason)
         )
@@ -10902,11 +10928,11 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1183 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-053b3cb0-20241115",
+    version: "19.0.0-native-fb-92c0f5f8-20241115",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromNode,
-    reconcilerVersion: "19.0.0-native-fb-053b3cb0-20241115"
+    reconcilerVersion: "19.0.0-native-fb-92c0f5f8-20241115"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1183.rendererConfig = extraDevToolsConfig);

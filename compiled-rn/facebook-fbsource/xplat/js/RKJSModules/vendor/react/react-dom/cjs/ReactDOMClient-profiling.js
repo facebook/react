@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bb3f33a0ece25a762fc63357c217d308>>
+ * @generated SignedSource<<d61ad2b95c11b9b26e96320792fc5a29>>
  */
 
 /*
@@ -2967,6 +2967,7 @@ function queueHydrationError(error) {
 }
 var SuspenseException = Error(formatProdErrorMessage(460)),
   SuspenseyCommitException = Error(formatProdErrorMessage(474)),
+  SuspenseActionException = Error(formatProdErrorMessage(542)),
   noopSuspenseyCommitThenable = { then: function () {} };
 function isThenableResolved(thenable) {
   thenable = thenable.status;
@@ -2982,10 +2983,11 @@ function trackUsedThenable(thenableState, thenable, index) {
     case "fulfilled":
       return thenable.value;
     case "rejected":
-      thenableState = thenable.reason;
-      if (thenableState === SuspenseException)
-        throw Error(formatProdErrorMessage(483));
-      throw thenableState;
+      throw (
+        ((thenableState = thenable.reason),
+        checkIfUseWrappedInAsyncCatch(thenableState),
+        thenableState)
+      );
     default:
       if ("string" === typeof thenable.status) thenable.then(noop$3, noop$3);
       else {
@@ -3015,10 +3017,11 @@ function trackUsedThenable(thenableState, thenable, index) {
         case "fulfilled":
           return thenable.value;
         case "rejected":
-          thenableState = thenable.reason;
-          if (thenableState === SuspenseException)
-            throw Error(formatProdErrorMessage(483));
-          throw thenableState;
+          throw (
+            ((thenableState = thenable.reason),
+            checkIfUseWrappedInAsyncCatch(thenableState),
+            thenableState)
+          );
       }
       suspendedThenable = thenable;
       throw SuspenseException;
@@ -3030,6 +3033,13 @@ function getSuspendedThenable() {
   var thenable = suspendedThenable;
   suspendedThenable = null;
   return thenable;
+}
+function checkIfUseWrappedInAsyncCatch(rejectedReason) {
+  if (
+    rejectedReason === SuspenseException ||
+    rejectedReason === SuspenseActionException
+  )
+    throw Error(formatProdErrorMessage(483));
 }
 var thenableState$1 = null,
   thenableIndexCounter$1 = 0;
@@ -3732,6 +3742,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     } catch (x) {
       if (
         x === SuspenseException ||
+        x === SuspenseActionException ||
         (0 === (returnFiber.mode & 1) &&
           "object" === typeof x &&
           null !== x &&
@@ -4651,16 +4662,22 @@ function updateActionStateImpl(stateHook, currentStateHook, action) {
     actionStateReducer
   )[0];
   stateHook = updateReducer(basicStateReducer)[0];
-  currentStateHook =
+  if (
     "object" === typeof currentStateHook &&
     null !== currentStateHook &&
     "function" === typeof currentStateHook.then
-      ? useThenable(currentStateHook)
-      : currentStateHook;
-  var actionQueueHook = updateWorkInProgressHook(),
-    actionQueue = actionQueueHook.queue,
+  )
+    try {
+      var state = useThenable(currentStateHook);
+    } catch (x) {
+      if (x === SuspenseException) throw SuspenseActionException;
+      throw x;
+    }
+  else state = currentStateHook;
+  currentStateHook = updateWorkInProgressHook();
+  var actionQueue = currentStateHook.queue,
     dispatch = actionQueue.dispatch;
-  action !== actionQueueHook.memoizedState &&
+  action !== currentStateHook.memoizedState &&
     ((currentlyRenderingFiber$1.flags |= 2048),
     pushEffect(
       9,
@@ -4668,7 +4685,7 @@ function updateActionStateImpl(stateHook, currentStateHook, action) {
       { destroy: void 0 },
       null
     ));
-  return [currentStateHook, dispatch, stateHook];
+  return [state, dispatch, stateHook];
 }
 function actionStateActionEffect(actionQueue, action) {
   actionQueue.action = action;
@@ -11307,7 +11324,9 @@ function requestDeferredLane() {
 }
 function scheduleUpdateOnFiber(root, fiber, lane) {
   if (
-    (root === workInProgressRoot && 2 === workInProgressSuspendedReason) ||
+    (root === workInProgressRoot &&
+      (2 === workInProgressSuspendedReason ||
+        9 === workInProgressSuspendedReason)) ||
     null !== root.cancelPendingCommit
   )
     prepareFreshStack(root, 0),
@@ -11695,14 +11714,16 @@ function prepareFreshStack(root, lanes) {
 function handleThrow(root, thrownValue) {
   currentlyRenderingFiber$1 = null;
   ReactSharedInternals.H = ContextOnlyDispatcher;
-  thrownValue === SuspenseException
+  thrownValue === SuspenseException || thrownValue === SuspenseActionException
     ? ((thrownValue = getSuspendedThenable()),
       (workInProgressSuspendedReason =
         !enableSiblingPrerendering &&
         shouldRemainOnPreviousScreen() &&
         0 === (workInProgressRootSkippedLanes & 134217727) &&
         0 === (workInProgressRootInterleavedUpdatedLanes & 134217727)
-          ? 2
+          ? thrownValue === SuspenseActionException
+            ? 9
+            : 2
           : 3))
     : thrownValue === SuspenseyCommitException
       ? ((thrownValue = getSuspendedThenable()),
@@ -11740,6 +11761,7 @@ function handleThrow(root, thrownValue) {
           );
         break;
       case 2:
+      case 9:
       case 3:
       case 6:
       case 7:
@@ -11825,6 +11847,7 @@ function renderRootSync(root, lanes, shouldYieldForPrerendering) {
             break a;
           case 3:
           case 2:
+          case 9:
           case 6:
             null === suspenseHandlerStackCursor.current && (lanes = !0);
             var reason = workInProgressSuspendedReason;
@@ -11902,6 +11925,7 @@ function renderRootConcurrent(root, lanes) {
             throwAndUnwindWorkLoop(root, lanes, memoizedUpdaters, 1);
             break;
           case 2:
+          case 9:
             if (isThenableResolved(memoizedUpdaters)) {
               workInProgressSuspendedReason = 0;
               workInProgressThrownValue = null;
@@ -11909,8 +11933,9 @@ function renderRootConcurrent(root, lanes) {
               break;
             }
             lanes = function () {
-              2 === workInProgressSuspendedReason &&
-                workInProgressRoot === root &&
+              (2 !== workInProgressSuspendedReason &&
+                9 !== workInProgressSuspendedReason) ||
+                workInProgressRoot !== root ||
                 (workInProgressSuspendedReason = 7);
               ensureRootIsScheduled(root);
             };
@@ -12106,6 +12131,7 @@ function throwAndUnwindWorkLoop(
         if (
           ((workInProgressRootDidSkipSuspendedSiblings = root = !0),
           2 === suspendedReason ||
+            9 === suspendedReason ||
             3 === suspendedReason ||
             6 === suspendedReason)
         )
@@ -12625,7 +12651,9 @@ function scheduleTaskForRootDuringMicrotask(root, currentTime) {
   pingedLanes = root.callbackNode;
   if (
     0 === suspendedLanes ||
-    (root === currentTime && 2 === workInProgressSuspendedReason) ||
+    (root === currentTime &&
+      (2 === workInProgressSuspendedReason ||
+        9 === workInProgressSuspendedReason)) ||
     null !== root.cancelPendingCommit
   )
     return (
@@ -12798,20 +12826,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1548 = 0;
-  i$jscomp$inline_1548 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1548++
+  var i$jscomp$inline_1544 = 0;
+  i$jscomp$inline_1544 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1544++
 ) {
-  var eventName$jscomp$inline_1549 =
-      simpleEventPluginEvents[i$jscomp$inline_1548],
-    domEventName$jscomp$inline_1550 =
-      eventName$jscomp$inline_1549.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1551 =
-      eventName$jscomp$inline_1549[0].toUpperCase() +
-      eventName$jscomp$inline_1549.slice(1);
+  var eventName$jscomp$inline_1545 =
+      simpleEventPluginEvents[i$jscomp$inline_1544],
+    domEventName$jscomp$inline_1546 =
+      eventName$jscomp$inline_1545.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1547 =
+      eventName$jscomp$inline_1545[0].toUpperCase() +
+      eventName$jscomp$inline_1545.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1550,
-    "on" + capitalizedEvent$jscomp$inline_1551
+    domEventName$jscomp$inline_1546,
+    "on" + capitalizedEvent$jscomp$inline_1547
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -16289,16 +16317,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_1793 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1789 = React.version;
 if (
-  "19.0.0-native-fb-053b3cb0-20241115" !==
-  isomorphicReactPackageVersion$jscomp$inline_1793
+  "19.0.0-native-fb-92c0f5f8-20241115" !==
+  isomorphicReactPackageVersion$jscomp$inline_1789
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1793,
-      "19.0.0-native-fb-053b3cb0-20241115"
+      isomorphicReactPackageVersion$jscomp$inline_1789,
+      "19.0.0-native-fb-92c0f5f8-20241115"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16318,13 +16346,13 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_1800 = {
+var internals$jscomp$inline_1796 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-053b3cb0-20241115",
+  version: "19.0.0-native-fb-92c0f5f8-20241115",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-native-fb-053b3cb0-20241115",
+  reconcilerVersion: "19.0.0-native-fb-92c0f5f8-20241115",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$290 = 0;
@@ -16342,16 +16370,16 @@ var internals$jscomp$inline_1800 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2213 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2209 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2213.isDisabled &&
-    hook$jscomp$inline_2213.supportsFiber
+    !hook$jscomp$inline_2209.isDisabled &&
+    hook$jscomp$inline_2209.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2213.inject(
-        internals$jscomp$inline_1800
+      (rendererID = hook$jscomp$inline_2209.inject(
+        internals$jscomp$inline_1796
       )),
-        (injectedHook = hook$jscomp$inline_2213);
+        (injectedHook = hook$jscomp$inline_2209);
     } catch (err) {}
 }
 exports.createRoot = function (container, options) {
@@ -16443,4 +16471,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.0.0-native-fb-053b3cb0-20241115";
+exports.version = "19.0.0-native-fb-92c0f5f8-20241115";
