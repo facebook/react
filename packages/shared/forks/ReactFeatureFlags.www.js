@@ -31,6 +31,7 @@ export const {
   enableSiblingPrerendering,
   enableTransitionTracing,
   enableTrustedTypesIntegration,
+  enableUseResourceEffectHook,
   favorSafetyOverHydrationPerf,
   renameElementSymbol,
   retryLaneExpirationMs,

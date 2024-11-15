@@ -14,6 +14,11 @@ import type {CapturedValue} from './ReactCapturedValue';
 
 import {isRendering, setIsRendering} from './ReactCurrentFiber';
 import {captureCommitPhaseError} from './ReactFiberWorkLoop';
+import {
+  ResourceEffectIdentityKind,
+  ResourceEffectUpdateKind,
+  SimpleEffectKind,
+} from './ReactFiberHooks';
 
 // These indirections exists so we can exclude its stack frame in DEV (and anything below it).
 // TODO: Consider marking the whole bundle instead of these boundaries.
@@ -176,12 +181,29 @@ export const callComponentWillUnmountInDEV: (
   : (null: any);
 
 const callCreate = {
-  'react-stack-bottom-frame': function (effect: Effect): (() => void) | void {
-    const create = effect.create;
-    const inst = effect.inst;
-    const destroy = create();
-    inst.destroy = destroy;
-    return destroy;
+  'react-stack-bottom-frame': function (
+    effect: Effect,
+  ): (() => void) | mixed | void {
+    switch (effect.kind) {
+      case SimpleEffectKind: {
+        const create = effect.create;
+        const inst = effect.inst;
+        const destroy = create();
+        inst.destroy = destroy;
+        return destroy;
+      }
+      case ResourceEffectIdentityKind: {
+        return effect.create();
+      }
+      case ResourceEffectUpdateKind:
+      default: {
+        if (__DEV__) {
+          console.error(
+            'Could not call create on an update to a ResourceEffect. This is a bug in React.',
+          );
+        }
+      }
+    }
   },
 };
 
