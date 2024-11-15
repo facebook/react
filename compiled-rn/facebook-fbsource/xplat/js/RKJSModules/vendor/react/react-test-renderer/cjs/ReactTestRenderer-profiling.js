@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<502abfbe194a74564a2d7b0f645ff4af>>
+ * @generated SignedSource<<c0c63b3b0e1626bf13878a292e8b6c82>>
  */
 
 "use strict";
@@ -10113,16 +10113,16 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var internals$jscomp$inline_1168 = {
+var internals$jscomp$inline_1174 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-3720870a-20241115",
+  version: "19.0.0-native-fb-053b3cb0-20241115",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: function (mockNode) {
     mockNode = nodeToInstanceMap.get(mockNode);
     return void 0 !== mockNode ? mockNode.internalInstanceHandle : null;
   },
-  reconcilerVersion: "19.0.0-native-fb-3720870a-20241115",
+  reconcilerVersion: "19.0.0-native-fb-053b3cb0-20241115",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$146 = 0;
@@ -10140,16 +10140,16 @@ var internals$jscomp$inline_1168 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1412 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1418 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1412.isDisabled &&
-    hook$jscomp$inline_1412.supportsFiber
+    !hook$jscomp$inline_1418.isDisabled &&
+    hook$jscomp$inline_1418.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1412.inject(
-        internals$jscomp$inline_1168
+      (rendererID = hook$jscomp$inline_1418.inject(
+        internals$jscomp$inline_1174
       )),
-        (injectedHook = hook$jscomp$inline_1412);
+        (injectedHook = hook$jscomp$inline_1418);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
@@ -10273,4 +10273,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.0.0-native-fb-3720870a-20241115";
+exports.version = "19.0.0-native-fb-053b3cb0-20241115";

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9f91ab1932171685b20f9562582b6c38>>
+ * @generated SignedSource<<a643abec1e2c8fa0dd61dbbe1061a728>>
  */
 
 /*
@@ -2073,14 +2073,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$293;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_427 = "oninput" in document;
-    if (!isSupported$jscomp$inline_427) {
-      var element$jscomp$inline_428 = document.createElement("div");
-      element$jscomp$inline_428.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_427 =
-        "function" === typeof element$jscomp$inline_428.oninput;
+    var isSupported$jscomp$inline_428 = "oninput" in document;
+    if (!isSupported$jscomp$inline_428) {
+      var element$jscomp$inline_429 = document.createElement("div");
+      element$jscomp$inline_429.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_428 =
+        "function" === typeof element$jscomp$inline_429.oninput;
     }
-    JSCompiler_inline_result$jscomp$293 = isSupported$jscomp$inline_427;
+    JSCompiler_inline_result$jscomp$293 = isSupported$jscomp$inline_428;
   } else JSCompiler_inline_result$jscomp$293 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$293 &&
@@ -12152,20 +12152,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1455 = 0;
-  i$jscomp$inline_1455 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1455++
+  var i$jscomp$inline_1461 = 0;
+  i$jscomp$inline_1461 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1461++
 ) {
-  var eventName$jscomp$inline_1456 =
-      simpleEventPluginEvents[i$jscomp$inline_1455],
-    domEventName$jscomp$inline_1457 =
-      eventName$jscomp$inline_1456.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1458 =
-      eventName$jscomp$inline_1456[0].toUpperCase() +
-      eventName$jscomp$inline_1456.slice(1);
+  var eventName$jscomp$inline_1462 =
+      simpleEventPluginEvents[i$jscomp$inline_1461],
+    domEventName$jscomp$inline_1463 =
+      eventName$jscomp$inline_1462.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1464 =
+      eventName$jscomp$inline_1462[0].toUpperCase() +
+      eventName$jscomp$inline_1462.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1457,
-    "on" + capitalizedEvent$jscomp$inline_1458
+    domEventName$jscomp$inline_1463,
+    "on" + capitalizedEvent$jscomp$inline_1464
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -15646,16 +15646,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_1698 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1704 = React.version;
 if (
-  "19.0.0-native-fb-3720870a-20241115" !==
-  isomorphicReactPackageVersion$jscomp$inline_1698
+  "19.0.0-native-fb-053b3cb0-20241115" !==
+  isomorphicReactPackageVersion$jscomp$inline_1704
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1698,
-      "19.0.0-native-fb-3720870a-20241115"
+      isomorphicReactPackageVersion$jscomp$inline_1704,
+      "19.0.0-native-fb-053b3cb0-20241115"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -15675,25 +15675,25 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_2158 = {
+var internals$jscomp$inline_2164 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-3720870a-20241115",
+  version: "19.0.0-native-fb-053b3cb0-20241115",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-native-fb-3720870a-20241115"
+  reconcilerVersion: "19.0.0-native-fb-053b3cb0-20241115"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2159 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2165 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2159.isDisabled &&
-    hook$jscomp$inline_2159.supportsFiber
+    !hook$jscomp$inline_2165.isDisabled &&
+    hook$jscomp$inline_2165.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2159.inject(
-        internals$jscomp$inline_2158
+      (rendererID = hook$jscomp$inline_2165.inject(
+        internals$jscomp$inline_2164
       )),
-        (injectedHook = hook$jscomp$inline_2159);
+        (injectedHook = hook$jscomp$inline_2165);
     } catch (err) {}
 }
 function noop() {}
@@ -15939,4 +15939,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-native-fb-3720870a-20241115";
+exports.version = "19.0.0-native-fb-053b3cb0-20241115";

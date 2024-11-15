@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<25ee53a5ec2df5d7432ccb7bf0f32de7>>
+ * @generated SignedSource<<0fffe902ae6984ed37ac756e1341d046>>
  */
 
 "use strict";
@@ -1236,7 +1236,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_302 = {
+var injectedNamesToPlugins$jscomp$inline_303 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -1282,32 +1282,32 @@ var injectedNamesToPlugins$jscomp$inline_302 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_303 = !1,
-  pluginName$jscomp$inline_304;
-for (pluginName$jscomp$inline_304 in injectedNamesToPlugins$jscomp$inline_302)
+  isOrderingDirty$jscomp$inline_304 = !1,
+  pluginName$jscomp$inline_305;
+for (pluginName$jscomp$inline_305 in injectedNamesToPlugins$jscomp$inline_303)
   if (
-    injectedNamesToPlugins$jscomp$inline_302.hasOwnProperty(
-      pluginName$jscomp$inline_304
+    injectedNamesToPlugins$jscomp$inline_303.hasOwnProperty(
+      pluginName$jscomp$inline_305
     )
   ) {
-    var pluginModule$jscomp$inline_305 =
-      injectedNamesToPlugins$jscomp$inline_302[pluginName$jscomp$inline_304];
+    var pluginModule$jscomp$inline_306 =
+      injectedNamesToPlugins$jscomp$inline_303[pluginName$jscomp$inline_305];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_304) ||
-      namesToPlugins[pluginName$jscomp$inline_304] !==
-        pluginModule$jscomp$inline_305
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_305) ||
+      namesToPlugins[pluginName$jscomp$inline_305] !==
+        pluginModule$jscomp$inline_306
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_304])
+      if (namesToPlugins[pluginName$jscomp$inline_305])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_304 + "`.")
+            (pluginName$jscomp$inline_305 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_304] =
-        pluginModule$jscomp$inline_305;
-      isOrderingDirty$jscomp$inline_303 = !0;
+      namesToPlugins[pluginName$jscomp$inline_305] =
+        pluginModule$jscomp$inline_306;
+      isOrderingDirty$jscomp$inline_304 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_303 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_304 && recomputePluginOrdering();
 var emptyObject$1 = {},
   removedKeys = null,
   removedKeyCount = 0,
@@ -11558,17 +11558,17 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1265 = {
+  internals$jscomp$inline_1271 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-3720870a-20241115",
+    version: "19.0.0-native-fb-053b3cb0-20241115",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromNode,
-    reconcilerVersion: "19.0.0-native-fb-3720870a-20241115"
+    reconcilerVersion: "19.0.0-native-fb-053b3cb0-20241115"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1265.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1265.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1271.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1271.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$152 = 0;
     31 > index$152;
@@ -11580,20 +11580,20 @@ internals$jscomp$inline_1265.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1265.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1271.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1544 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1550 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1544.isDisabled &&
-    hook$jscomp$inline_1544.supportsFiber
+    !hook$jscomp$inline_1550.isDisabled &&
+    hook$jscomp$inline_1550.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1544.inject(
-        internals$jscomp$inline_1265
+      (rendererID = hook$jscomp$inline_1550.inject(
+        internals$jscomp$inline_1271
       )),
-        (injectedHook = hook$jscomp$inline_1544);
+        (injectedHook = hook$jscomp$inline_1550);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

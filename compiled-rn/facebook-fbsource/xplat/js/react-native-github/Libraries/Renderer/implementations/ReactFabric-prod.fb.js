@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b2d6c4248b141f96490882aa7c119a61>>
+ * @generated SignedSource<<6edcc91bb0b5dbdda3f1bffeb60ff44f>>
  */
 
 "use strict";
@@ -1232,7 +1232,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_286 = {
+var injectedNamesToPlugins$jscomp$inline_287 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -1278,32 +1278,32 @@ var injectedNamesToPlugins$jscomp$inline_286 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_287 = !1,
-  pluginName$jscomp$inline_288;
-for (pluginName$jscomp$inline_288 in injectedNamesToPlugins$jscomp$inline_286)
+  isOrderingDirty$jscomp$inline_288 = !1,
+  pluginName$jscomp$inline_289;
+for (pluginName$jscomp$inline_289 in injectedNamesToPlugins$jscomp$inline_287)
   if (
-    injectedNamesToPlugins$jscomp$inline_286.hasOwnProperty(
-      pluginName$jscomp$inline_288
+    injectedNamesToPlugins$jscomp$inline_287.hasOwnProperty(
+      pluginName$jscomp$inline_289
     )
   ) {
-    var pluginModule$jscomp$inline_289 =
-      injectedNamesToPlugins$jscomp$inline_286[pluginName$jscomp$inline_288];
+    var pluginModule$jscomp$inline_290 =
+      injectedNamesToPlugins$jscomp$inline_287[pluginName$jscomp$inline_289];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_288) ||
-      namesToPlugins[pluginName$jscomp$inline_288] !==
-        pluginModule$jscomp$inline_289
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_289) ||
+      namesToPlugins[pluginName$jscomp$inline_289] !==
+        pluginModule$jscomp$inline_290
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_288])
+      if (namesToPlugins[pluginName$jscomp$inline_289])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_288 + "`.")
+            (pluginName$jscomp$inline_289 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_288] =
-        pluginModule$jscomp$inline_289;
-      isOrderingDirty$jscomp$inline_287 = !0;
+      namesToPlugins[pluginName$jscomp$inline_289] =
+        pluginModule$jscomp$inline_290;
+      isOrderingDirty$jscomp$inline_288 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_287 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_288 && recomputePluginOrdering();
 var emptyObject$1 = {},
   removedKeys = null,
   removedKeyCount = 0,
@@ -10900,27 +10900,27 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1177 = {
+  internals$jscomp$inline_1183 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-3720870a-20241115",
+    version: "19.0.0-native-fb-053b3cb0-20241115",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromNode,
-    reconcilerVersion: "19.0.0-native-fb-3720870a-20241115"
+    reconcilerVersion: "19.0.0-native-fb-053b3cb0-20241115"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1177.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1183.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1493 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1499 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1493.isDisabled &&
-    hook$jscomp$inline_1493.supportsFiber
+    !hook$jscomp$inline_1499.isDisabled &&
+    hook$jscomp$inline_1499.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1493.inject(
-        internals$jscomp$inline_1177
+      (rendererID = hook$jscomp$inline_1499.inject(
+        internals$jscomp$inline_1183
       )),
-        (injectedHook = hook$jscomp$inline_1493);
+        (injectedHook = hook$jscomp$inline_1499);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
