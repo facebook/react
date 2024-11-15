@@ -226,6 +226,24 @@ export function useEffectEvent<Args, F: (...Array<Args>) => mixed>(
   return dispatcher.useEffectEvent(callback);
 }
 
+export function useResourceEffect(
+  create: () => mixed,
+  createDeps: Array<mixed> | void | null,
+  update: ((resource: mixed) => void) | void,
+  updateDeps: Array<mixed> | void | null,
+  destroy: ((resource: mixed) => void) | void,
+): void {
+  const dispatcher = resolveDispatcher();
+  // $FlowFixMe[not-a-function] This is unstable, thus optional
+  return dispatcher.useResourceEffect(
+    create,
+    createDeps,
+    update,
+    updateDeps,
+    destroy,
+  );
+}
+
 export function useOptimistic<S, A>(
   passthrough: S,
   reducer: ?(S, A) => S,

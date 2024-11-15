@@ -25,6 +25,7 @@ export const {
   enableObjectFiber,
   enablePersistedModeClonedFlag,
   enableShallowPropDiffing,
+  enableUseResourceEffectHook,
   passChildrenWhenCloningPersistedNodes,
   enableSiblingPrerendering,
 } = dynamicFlags;
