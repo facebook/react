@@ -73,6 +73,7 @@ import {
   logSuspendedRenderPhase,
   logErroredRenderPhase,
   logInconsistentRender,
+  logSuspendedWithDelayPhase,
   logSuspenseThrottlePhase,
   logSuspendedCommitPhase,
   logCommitPhase,
@@ -239,12 +240,14 @@ import {
   blockingEventTime,
   blockingEventType,
   blockingEventIsRepeat,
+  blockingSuspendedTime,
   transitionClampTime,
   transitionStartTime,
   transitionUpdateTime,
   transitionEventTime,
   transitionEventType,
   transitionEventIsRepeat,
+  transitionSuspendedTime,
   clearBlockingTimers,
   clearTransitionTimers,
   clampBlockingTimers,
@@ -260,6 +263,7 @@ import {
   stopProfilerTimerIfRunningAndRecordDuration,
   stopProfilerTimerIfRunningAndRecordIncompleteDuration,
   markUpdateAsRepeat,
+  trackSuspendedTime,
 } from './ReactProfilerTimer';
 import {setCurrentTrackFromLanes} from './ReactFiberPerformanceTrack';
 
@@ -1144,7 +1148,7 @@ function finishConcurrentRender(
   exitStatus: RootExitStatus,
   finishedWork: Fiber,
   lanes: Lanes,
-  renderEndTime: number // Profiling-only
+  renderEndTime: number, // Profiling-only
 ) {
   // TODO: The fact that most of these branches are identical suggests that some
   // of the exit statuses are not best modeled as exit statuses and should be
@@ -1169,6 +1173,7 @@ function finishConcurrentRender(
         setCurrentTrackFromLanes(lanes);
         logSuspendedRenderPhase(renderStartTime, renderEndTime);
         finalizeRender(lanes, renderEndTime);
+        trackSuspendedTime(lanes, renderEndTime);
       }
       const didAttemptEntireTree = !workInProgressRootDidSkipSuspendedSiblings;
       markRootSuspended(
@@ -1704,13 +1709,29 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
     }
 
     if (includesSyncLane(lanes) || includesBlockingLane(lanes)) {
-      logBlockingStart(
+      const clampedUpdateTime =
         blockingUpdateTime >= 0 && blockingUpdateTime < blockingClampTime
           ? blockingClampTime
-          : blockingUpdateTime,
+          : blockingUpdateTime;
+      const clampedEventTime =
         blockingEventTime >= 0 && blockingEventTime < blockingClampTime
           ? blockingClampTime
-          : blockingEventTime,
+          : blockingEventTime;
+      if (blockingSuspendedTime >= 0) {
+        setCurrentTrackFromLanes(lanes);
+        logSuspendedWithDelayPhase(
+          blockingSuspendedTime,
+          // Clamp the suspended time to the first event/update.
+          clampedEventTime >= 0
+            ? clampedEventTime
+            : clampedUpdateTime >= 0
+              ? clampedUpdateTime
+              : renderStartTime,
+        );
+      }
+      logBlockingStart(
+        clampedUpdateTime,
+        clampedEventTime,
         blockingEventType,
         blockingEventIsRepeat,
         renderStartTime,
@@ -1718,16 +1739,34 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
       clearBlockingTimers();
     }
     if (includesTransitionLane(lanes)) {
-      logTransitionStart(
+      const clampedStartTime =
         transitionStartTime >= 0 && transitionStartTime < transitionClampTime
           ? transitionClampTime
-          : transitionStartTime,
+          : transitionStartTime;
+      const clampedUpdateTime =
         transitionUpdateTime >= 0 && transitionUpdateTime < transitionClampTime
           ? transitionClampTime
-          : transitionUpdateTime,
+          : transitionUpdateTime;
+      const clampedEventTime =
         transitionEventTime >= 0 && transitionEventTime < transitionClampTime
           ? transitionClampTime
-          : transitionEventTime,
+          : transitionEventTime;
+      if (transitionSuspendedTime >= 0) {
+        setCurrentTrackFromLanes(lanes);
+        logSuspendedWithDelayPhase(
+          transitionSuspendedTime,
+          // Clamp the suspended time to the first event/update.
+          clampedEventTime >= 0
+            ? clampedEventTime
+            : clampedUpdateTime >= 0
+              ? clampedUpdateTime
+              : renderStartTime,
+        );
+      }
+      logTransitionStart(
+        clampedStartTime,
+        clampedUpdateTime,
+        clampedEventTime,
         transitionEventType,
         transitionEventIsRepeat,
         renderStartTime,

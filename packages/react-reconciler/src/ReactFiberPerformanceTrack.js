@@ -222,6 +222,19 @@ export function logSuspendedRenderPhase(
   }
 }
 
+export function logSuspendedWithDelayPhase(
+  startTime: number,
+  endTime: number,
+): void {
+  // This means the render was suspended and cannot commit until it gets unblocked.
+  if (supportsUserTiming) {
+    reusableLaneDevToolDetails.color = 'primary-dark';
+    reusableLaneOptions.start = startTime;
+    reusableLaneOptions.end = endTime;
+    performance.measure('Suspended', reusableLaneOptions);
+  }
+}
+
 export function logErroredRenderPhase(
   startTime: number,
   endTime: number,
