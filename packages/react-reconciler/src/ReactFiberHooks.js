@@ -218,7 +218,8 @@ type EffectInstance = {
   destroy: void | (() => void),
 };
 
-export type Effect = {
+export type Effect = SimpleEffect;
+export type SimpleEffect = {
   tag: HookFlags,
   create: () => (() => void) | void,
   inst: EffectInstance,
@@ -2522,6 +2523,10 @@ function pushEffect(
     // Circular
     next: (null: any),
   };
+  return pushEffectImpl(effect);
+}
+
+function pushEffectImpl(effect: Effect): Effect {
   let componentUpdateQueue: null | FunctionComponentUpdateQueue =
     (currentlyRenderingFiber.updateQueue: any);
   if (componentUpdateQueue === null) {
