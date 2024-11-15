@@ -15462,6 +15462,7 @@ __DEV__ &&
                 workInProgressDeferredLane,
                 workInProgressRootInterleavedUpdatedLanes,
                 workInProgressSuspendedRetryLanes,
+                exitStatus,
                 IMMEDIATE_COMMIT,
                 renderStartTime,
                 0
@@ -15470,11 +15471,11 @@ __DEV__ &&
               if (
                 (lanes & 62914560) === lanes &&
                 (alwaysThrottleRetries || exitStatus === RootSuspended) &&
-                ((exitStatus =
+                ((renderWasConcurrent =
                   globalMostRecentFallbackTime +
                   FALLBACK_THROTTLE_MS -
                   now$1()),
-                10 < exitStatus)
+                10 < renderWasConcurrent)
               ) {
                 markRootSuspended(
                   shouldTimeSlice,
@@ -15496,11 +15497,12 @@ __DEV__ &&
                     workInProgressRootInterleavedUpdatedLanes,
                     workInProgressSuspendedRetryLanes,
                     workInProgressRootDidSkipSuspendedSiblings,
+                    exitStatus,
                     THROTTLED_COMMIT,
                     renderStartTime,
                     0
                   ),
-                  exitStatus
+                  renderWasConcurrent
                 );
                 break a;
               }
@@ -15515,6 +15517,7 @@ __DEV__ &&
                 workInProgressRootInterleavedUpdatedLanes,
                 workInProgressSuspendedRetryLanes,
                 workInProgressRootDidSkipSuspendedSiblings,
+                exitStatus,
                 IMMEDIATE_COMMIT,
                 renderStartTime,
                 0
@@ -15545,6 +15548,7 @@ __DEV__ &&
       updatedLanes,
       suspendedRetryLanes,
       didSkipSuspendedSiblings,
+      exitStatus,
       suspendedCommitReason,
       completedRenderStartTime,
       completedRenderEndTime
@@ -15567,6 +15571,7 @@ __DEV__ &&
               spawnedLane,
               updatedLanes,
               suspendedRetryLanes,
+              exitStatus,
               SUSPENDED_COMMIT,
               completedRenderStartTime,
               completedRenderEndTime
@@ -15588,6 +15593,7 @@ __DEV__ &&
         spawnedLane,
         updatedLanes,
         suspendedRetryLanes,
+        exitStatus,
         suspendedCommitReason,
         completedRenderStartTime,
         completedRenderEndTime
@@ -16325,6 +16331,7 @@ __DEV__ &&
       spawnedLane,
       updatedLanes,
       suspendedRetryLanes,
+      exitStatus,
       suspendedCommitReason,
       completedRenderStartTime,
       completedRenderEndTime
@@ -16343,6 +16350,7 @@ __DEV__ &&
             spawnedLane,
             updatedLanes,
             suspendedRetryLanes,
+            exitStatus,
             suspendedCommitReason,
             completedRenderStartTime,
             completedRenderEndTime
@@ -27129,11 +27137,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.0.0-www-classic-8a41d6ce-20241114" !== isomorphicReactPackageVersion)
+      if ("19.0.0-www-classic-3720870a-20241115" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.0.0-www-classic-8a41d6ce-20241114\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.0.0-www-classic-3720870a-20241115\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -27176,11 +27184,11 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.0.0-www-classic-8a41d6ce-20241114",
+          version: "19.0.0-www-classic-3720870a-20241115",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
           findFiberByHostInstance: getClosestInstanceFromNode,
-          reconcilerVersion: "19.0.0-www-classic-8a41d6ce-20241114"
+          reconcilerVersion: "19.0.0-www-classic-3720870a-20241115"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -27785,7 +27793,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.0.0-www-classic-8a41d6ce-20241114";
+    exports.version = "19.0.0-www-classic-3720870a-20241115";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

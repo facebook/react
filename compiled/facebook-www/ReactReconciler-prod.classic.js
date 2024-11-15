@@ -9902,8 +9902,8 @@ module.exports = function ($$$config) {
           if (
             (lanes & 62914560) === lanes &&
             (alwaysThrottleRetries || 3 === renderWasConcurrent) &&
-            ((renderWasConcurrent = globalMostRecentFallbackTime + 300 - now()),
-            10 < renderWasConcurrent)
+            ((exitStatus = globalMostRecentFallbackTime + 300 - now()),
+            10 < exitStatus)
           ) {
             markRootSuspended(
               shouldTimeSlice,
@@ -9925,11 +9925,12 @@ module.exports = function ($$$config) {
                 workInProgressRootInterleavedUpdatedLanes,
                 workInProgressSuspendedRetryLanes,
                 workInProgressRootDidSkipSuspendedSiblings,
+                renderWasConcurrent,
                 2,
                 -0,
                 0
               ),
-              renderWasConcurrent
+              exitStatus
             );
             break a;
           }
@@ -9944,6 +9945,7 @@ module.exports = function ($$$config) {
             workInProgressRootInterleavedUpdatedLanes,
             workInProgressSuspendedRetryLanes,
             workInProgressRootDidSkipSuspendedSiblings,
+            renderWasConcurrent,
             0,
             -0,
             0
@@ -9973,6 +9975,7 @@ module.exports = function ($$$config) {
     updatedLanes,
     suspendedRetryLanes,
     didSkipSuspendedSiblings,
+    exitStatus,
     suspendedCommitReason,
     completedRenderStartTime,
     completedRenderEndTime
@@ -9995,6 +9998,7 @@ module.exports = function ($$$config) {
             spawnedLane,
             updatedLanes,
             suspendedRetryLanes,
+            exitStatus,
             1,
             completedRenderStartTime,
             completedRenderEndTime
@@ -10011,6 +10015,7 @@ module.exports = function ($$$config) {
       spawnedLane,
       updatedLanes,
       suspendedRetryLanes,
+      exitStatus,
       suspendedCommitReason,
       completedRenderStartTime,
       completedRenderEndTime
@@ -10600,6 +10605,7 @@ module.exports = function ($$$config) {
     spawnedLane,
     updatedLanes,
     suspendedRetryLanes,
+    exitStatus,
     suspendedCommitReason,
     completedRenderStartTime,
     completedRenderEndTime
@@ -10618,6 +10624,7 @@ module.exports = function ($$$config) {
           spawnedLane,
           updatedLanes,
           suspendedRetryLanes,
+          exitStatus,
           suspendedCommitReason,
           completedRenderStartTime,
           completedRenderEndTime
@@ -12636,7 +12643,7 @@ module.exports = function ($$$config) {
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
       findFiberByHostInstance: getInstanceFromNode,
-      reconcilerVersion: "19.0.0-www-classic-8a41d6ce-20241114"
+      reconcilerVersion: "19.0.0-www-classic-3720870a-20241115"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
