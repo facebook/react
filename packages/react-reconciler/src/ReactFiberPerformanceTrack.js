@@ -114,6 +114,54 @@ export function logComponentEffect(
   }
 }
 
+export function logYieldTime(startTime: number, endTime: number): void {
+  if (supportsUserTiming) {
+    const yieldDuration = endTime - startTime;
+    if (yieldDuration < 1) {
+      // Skip sub-millisecond yields. This happens all the time and is not interesting.
+      return;
+    }
+    // Being blocked on CPU is potentially bad so we color it by how long it took.
+    reusableComponentDevToolDetails.color =
+      yieldDuration < 5
+        ? 'primary-light'
+        : yieldDuration < 10
+          ? 'primary'
+          : yieldDuration < 100
+            ? 'primary-dark'
+            : 'error';
+    reusableComponentOptions.start = startTime;
+    reusableComponentOptions.end = endTime;
+    performance.measure('Blocked', reusableComponentOptions);
+  }
+}
+
+export function logSuspendedYieldTime(
+  startTime: number,
+  endTime: number,
+  suspendedFiber: Fiber,
+): void {
+  if (supportsUserTiming) {
+    reusableComponentDevToolDetails.color = 'primary-light';
+    reusableComponentOptions.start = startTime;
+    reusableComponentOptions.end = endTime;
+    performance.measure('Suspended', reusableComponentOptions);
+  }
+}
+
+export function logActionYieldTime(
+  startTime: number,
+  endTime: number,
+  suspendedFiber: Fiber,
+): void {
+  if (supportsUserTiming) {
+    reusableComponentDevToolDetails.color = 'primary-light';
+    reusableComponentOptions.start = startTime;
+    reusableComponentOptions.end = endTime;
+    performance.measure('Action', reusableComponentOptions);
+  }
+}
+
 export function logBlockingStart(
   updateTime: number,
   eventTime: number,
