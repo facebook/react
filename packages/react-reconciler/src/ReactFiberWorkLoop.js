@@ -942,15 +942,6 @@ export function performWorkOnRoot(
         markRootSuspended(root, lanes, NoLane, didAttemptEntireTree);
       }
       break;
-    } else if (exitStatus === RootDidNotComplete) {
-      if (enableProfilerTimer && enableComponentPerformanceTrack) {
-        finalizeRender(lanes, now());
-      }
-      // The render unwound without completing the tree. This happens in special
-      // cases where need to exit the current render without producing a
-      // consistent tree or committing.
-      const didAttemptEntireTree = !workInProgressRootDidSkipSuspendedSiblings;
-      markRootSuspended(root, lanes, NoLane, didAttemptEntireTree);
     } else {
       // The render completed.
 
@@ -1134,25 +1125,27 @@ function finishConcurrentRender(
       throw new Error('Root did not complete. This is a bug in React.');
     }
     case RootSuspendedWithDelay: {
-      if (includesOnlyTransitions(lanes)) {
-        // This is a transition, so we should exit without committing a
-        // placeholder and without scheduling a timeout. Delay indefinitely
-        // until we receive more data.
-        if (enableProfilerTimer && enableComponentPerformanceTrack) {
-          finalizeRender(lanes, now());
-        }
-        const didAttemptEntireTree =
-          !workInProgressRootDidSkipSuspendedSiblings;
-        markRootSuspended(
-          root,
-          lanes,
-          workInProgressDeferredLane,
-          didAttemptEntireTree,
-        );
-        return;
+      if (!includesOnlyTransitions(lanes)) {
+        // Commit the placeholder.
+        break;
       }
-      // Commit the placeholder.
-      break;
+    }
+    // Fallthrough
+    case RootDidNotComplete: {
+      // This is a transition, so we should exit without committing a
+      // placeholder and without scheduling a timeout. Delay indefinitely
+      // until we receive more data.
+      if (enableProfilerTimer && enableComponentPerformanceTrack) {
+        finalizeRender(lanes, now());
+      }
+      const didAttemptEntireTree = !workInProgressRootDidSkipSuspendedSiblings;
+      markRootSuspended(
+        root,
+        lanes,
+        workInProgressDeferredLane,
+        didAttemptEntireTree,
+      );
+      return;
     }
     case RootErrored: {
       // This render errored. Ignore any recoverable errors because we weren't actually
