@@ -69,6 +69,8 @@ import {
   logBlockingStart,
   logTransitionStart,
   logRenderPhase,
+  logInterruptedRenderPhase,
+  logSuspendedRenderPhase,
   logSuspenseThrottlePhase,
   logSuspendedCommitPhase,
   logCommitPhase,
@@ -1136,6 +1138,8 @@ function finishConcurrentRender(
       // placeholder and without scheduling a timeout. Delay indefinitely
       // until we receive more data.
       if (enableProfilerTimer && enableComponentPerformanceTrack) {
+        setCurrentTrackFromLanes(lanes);
+        logSuspendedRenderPhase(renderStartTime, renderEndTime);
         finalizeRender(lanes, renderEndTime);
       }
       const didAttemptEntireTree = !workInProgressRootDidSkipSuspendedSiblings;
@@ -1649,13 +1653,21 @@ function finalizeRender(lanes: Lanes, finalizationTime: number): void {
 
 function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    const previousRenderStartTime = renderStartTime;
     // Starting a new render. Log the end of any previous renders and the
     // blocked time before the render started.
     recordRenderTime();
     // If this was a restart, e.g. due to an interrupting update, then there's no space
     // in the track to log the cause since we'll have rendered all the way up until the
     // restart so we need to clamp that.
-    finalizeRender(workInProgressRootRenderLanes, renderStartTime);
+    if (
+      workInProgressRootRenderLanes !== NoLanes &&
+      previousRenderStartTime > 0
+    ) {
+      setCurrentTrackFromLanes(workInProgressRootRenderLanes);
+      logInterruptedRenderPhase(previousRenderStartTime, renderStartTime);
+      finalizeRender(workInProgressRootRenderLanes, renderStartTime);
+    }
 
     if (includesSyncLane(lanes) || includesBlockingLane(lanes)) {
       logBlockingStart(
