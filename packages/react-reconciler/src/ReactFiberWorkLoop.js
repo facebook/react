@@ -329,8 +329,8 @@ const RootFatalErrored = 1;
 const RootErrored = 2;
 const RootSuspended = 3;
 const RootSuspendedWithDelay = 4;
+const RootSuspendedAtTheShell = 6;
 const RootCompleted = 5;
-const RootDidNotComplete = 6;
 
 // Describes where we are in the React execution stack
 let executionContext: ExecutionContext = NoContext;
@@ -989,7 +989,7 @@ export function performWorkOnRoot(
             // from the beginning.
             // TODO: Refactor the exit algorithm to be less confusing. Maybe
             // more branches + recursion instead of a loop. I think the only
-            // thing that causes it to be a loop is the RootDidNotComplete
+            // thing that causes it to be a loop is the RootSuspendedAtTheShell
             // check. If that's true, then we don't need a loop/recursion
             // at all.
             continue;
@@ -1131,7 +1131,7 @@ function finishConcurrentRender(
       }
     }
     // Fallthrough
-    case RootDidNotComplete: {
+    case RootSuspendedAtTheShell: {
       // This is a transition, so we should exit without committing a
       // placeholder and without scheduling a timeout. Delay indefinitely
       // until we receive more data.
@@ -2139,7 +2139,7 @@ function renderRootSync(
             // just yield and reset the stack when we re-enter the work loop,
             // like normal.
             resetWorkInProgressStack();
-            exitStatus = RootDidNotComplete;
+            exitStatus = RootSuspendedAtTheShell;
             break outer;
           }
           case SuspendedOnImmediate:
@@ -2458,7 +2458,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             // Interrupt the current render so the work loop can switch to the
             // hydration lane.
             resetWorkInProgressStack();
-            workInProgressRootExitStatus = RootDidNotComplete;
+            workInProgressRootExitStatus = RootSuspendedAtTheShell;
             break outer;
           }
           default: {
@@ -2966,7 +2966,7 @@ function unwindUnitOfWork(unitOfWork: Fiber, skipSiblings: boolean): void {
   } while (incompleteWork !== null);
 
   // We've unwound all the way to the root.
-  workInProgressRootExitStatus = RootDidNotComplete;
+  workInProgressRootExitStatus = RootSuspendedAtTheShell;
   workInProgress = null;
 }
 
