@@ -792,7 +792,7 @@ function useCacheRefresh(): <T>(?() => T, ?T) => void {
   return unsupportedRefresh;
 }
 
-function useMemoCache(size: number): Array<any> {
+function useMemoCache(size: number): Array<mixed> {
   const data = new Array<any>(size);
   for (let i = 0; i < size; i++) {
     data[i] = REACT_MEMO_CACHE_SENTINEL;
