@@ -1136,7 +1136,7 @@ function finishConcurrentRender(
       // placeholder and without scheduling a timeout. Delay indefinitely
       // until we receive more data.
       if (enableProfilerTimer && enableComponentPerformanceTrack) {
-        finalizeRender(lanes, now());
+        finalizeRender(lanes, renderEndTime);
       }
       const didAttemptEntireTree = !workInProgressRootDidSkipSuspendedSiblings;
       markRootSuspended(
