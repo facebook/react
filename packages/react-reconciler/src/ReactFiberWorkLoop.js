@@ -259,6 +259,7 @@ import {
   startProfilerTimer,
   stopProfilerTimerIfRunningAndRecordDuration,
   stopProfilerTimerIfRunningAndRecordIncompleteDuration,
+  markUpdateAsRepeat,
 } from './ReactProfilerTimer';
 import {setCurrentTrackFromLanes} from './ReactFiberPerformanceTrack';
 
@@ -964,6 +965,7 @@ export function performWorkOnRoot(
           const renderEndTime = now();
           logInconsistentRender(renderStartTime, renderEndTime);
           finalizeRender(lanes, renderEndTime);
+          markUpdateAsRepeat(lanes);
         }
         // A store was mutated in an interleaved event. Render again,
         // synchronously, to block further mutations.
@@ -991,6 +993,7 @@ export function performWorkOnRoot(
             const renderEndTime = now();
             logErroredRenderPhase(renderStartTime, renderEndTime);
             finalizeRender(lanes, renderEndTime);
+            markUpdateAsRepeat(lanes);
           }
           lanes = errorRetryLanes;
           exitStatus = recoverFromConcurrentError(
