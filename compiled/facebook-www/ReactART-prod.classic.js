@@ -9030,14 +9030,7 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
         !shouldTimeSlice &&
         markRootSuspended(root$jscomp$0, lanes, 0, !1);
       break;
-    } else if (6 === exitStatus)
-      markRootSuspended(
-        root$jscomp$0,
-        lanes,
-        0,
-        !workInProgressRootDidSkipSuspendedSiblings
-      );
-    else {
+    } else {
       forceSync = root$jscomp$0.current.alternate;
       if (
         renderWasConcurrent &&
@@ -9101,16 +9094,15 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
           case 1:
             throw Error(formatProdErrorMessage(345));
           case 4:
-            if ((lanes & 4194176) === lanes) {
-              markRootSuspended(
-                shouldTimeSlice,
-                lanes,
-                workInProgressDeferredLane,
-                !workInProgressRootDidSkipSuspendedSiblings
-              );
-              break a;
-            }
-            break;
+            if ((lanes & 4194176) !== lanes) break;
+          case 6:
+            markRootSuspended(
+              shouldTimeSlice,
+              lanes,
+              workInProgressDeferredLane,
+              !workInProgressRootDidSkipSuspendedSiblings
+            );
+            break a;
           case 2:
             workInProgressRootRecoverableErrors = null;
             break;
@@ -9480,8 +9472,8 @@ function renderRootSync(root, lanes, shouldYieldForPrerendering) {
       workLoopSync();
       exitStatus = workInProgressRootExitStatus;
       break;
-    } catch (thrownValue$135) {
-      handleThrow(root, thrownValue$135);
+    } catch (thrownValue$134) {
+      handleThrow(root, thrownValue$134);
     }
   while (1);
   lanes && root.shellSuspendCounter++;
@@ -9594,8 +9586,8 @@ function renderRootConcurrent(root, lanes) {
       }
       workLoopConcurrent();
       break;
-    } catch (thrownValue$137) {
-      handleThrow(root, thrownValue$137);
+    } catch (thrownValue$136) {
+      handleThrow(root, thrownValue$136);
     }
   while (1);
   lastContextDependency = currentlyRenderingFiber = null;
@@ -10632,27 +10624,27 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component);
-var internals$jscomp$inline_1471 = {
+var internals$jscomp$inline_1470 = {
   bundleType: 0,
-  version: "19.0.0-www-classic-63cde684-20241114",
+  version: "19.0.0-www-classic-8a41d6ce-20241114",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: function () {
     return null;
   },
-  reconcilerVersion: "19.0.0-www-classic-63cde684-20241114"
+  reconcilerVersion: "19.0.0-www-classic-8a41d6ce-20241114"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1472 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1471 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1472.isDisabled &&
-    hook$jscomp$inline_1472.supportsFiber
+    !hook$jscomp$inline_1471.isDisabled &&
+    hook$jscomp$inline_1471.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1472.inject(
-        internals$jscomp$inline_1471
+      (rendererID = hook$jscomp$inline_1471.inject(
+        internals$jscomp$inline_1470
       )),
-        (injectedHook = hook$jscomp$inline_1472);
+        (injectedHook = hook$jscomp$inline_1471);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
@@ -10666,4 +10658,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.0.0-www-classic-63cde684-20241114";
+exports.version = "19.0.0-www-classic-8a41d6ce-20241114";

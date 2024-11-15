@@ -9806,14 +9806,7 @@ module.exports = function ($$$config) {
           !shouldTimeSlice &&
           markRootSuspended(root$jscomp$0, lanes, 0, !1);
         break;
-      } else if (6 === exitStatus)
-        markRootSuspended(
-          root$jscomp$0,
-          lanes,
-          0,
-          !workInProgressRootDidSkipSuspendedSiblings
-        );
-      else {
+      } else {
         forceSync = root$jscomp$0.current.alternate;
         if (
           renderWasConcurrent &&
@@ -9886,16 +9879,15 @@ module.exports = function ($$$config) {
             case 1:
               throw Error(formatProdErrorMessage(345));
             case 4:
-              if ((lanes & 4194176) === lanes) {
-                markRootSuspended(
-                  shouldTimeSlice,
-                  lanes,
-                  workInProgressDeferredLane,
-                  !workInProgressRootDidSkipSuspendedSiblings
-                );
-                break a;
-              }
-              break;
+              if ((lanes & 4194176) !== lanes) break;
+            case 6:
+              markRootSuspended(
+                shouldTimeSlice,
+                lanes,
+                workInProgressDeferredLane,
+                !workInProgressRootDidSkipSuspendedSiblings
+              );
+              break a;
             case 2:
               workInProgressRootRecoverableErrors = null;
               break;
@@ -10278,8 +10270,8 @@ module.exports = function ($$$config) {
         workLoopSync();
         exitStatus = workInProgressRootExitStatus;
         break;
-      } catch (thrownValue$172) {
-        handleThrow(root, thrownValue$172);
+      } catch (thrownValue$171) {
+        handleThrow(root, thrownValue$171);
       }
     while (1);
     lanes && root.shellSuspendCounter++;
@@ -10398,8 +10390,8 @@ module.exports = function ($$$config) {
         }
         workLoopConcurrent();
         break;
-      } catch (thrownValue$174) {
-        handleThrow(root, thrownValue$174);
+      } catch (thrownValue$173) {
+        handleThrow(root, thrownValue$173);
       }
     while (1);
     lastContextDependency = currentlyRenderingFiber = null;
@@ -12644,7 +12636,7 @@ module.exports = function ($$$config) {
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
       findFiberByHostInstance: getInstanceFromNode,
-      reconcilerVersion: "19.0.0-www-classic-63cde684-20241114"
+      reconcilerVersion: "19.0.0-www-classic-8a41d6ce-20241114"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

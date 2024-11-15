@@ -12264,14 +12264,7 @@ __DEV__ &&
             !shouldTimeSlice &&
             markRootSuspended(root, lanes, 0, !1);
           break;
-        } else if (exitStatus === RootDidNotComplete)
-          markRootSuspended(
-            root,
-            lanes,
-            0,
-            !workInProgressRootDidSkipSuspendedSiblings
-          );
-        else {
+        } else {
           forceSync = root.current.alternate;
           if (
             renderWasConcurrent &&
@@ -12334,16 +12327,15 @@ __DEV__ &&
               case RootFatalErrored:
                 throw Error("Root did not complete. This is a bug in React.");
               case RootSuspendedWithDelay:
-                if ((lanes & 4194176) === lanes) {
-                  markRootSuspended(
-                    shouldTimeSlice,
-                    lanes,
-                    workInProgressDeferredLane,
-                    !workInProgressRootDidSkipSuspendedSiblings
-                  );
-                  break a;
-                }
-                break;
+                if ((lanes & 4194176) !== lanes) break;
+              case RootSuspendedAtTheShell:
+                markRootSuspended(
+                  shouldTimeSlice,
+                  lanes,
+                  workInProgressDeferredLane,
+                  !workInProgressRootDidSkipSuspendedSiblings
+                );
+                break a;
               case RootErrored:
                 workInProgressRootRecoverableErrors = null;
                 break;
@@ -12776,7 +12768,7 @@ __DEV__ &&
             switch (workInProgressSuspendedReason) {
               case SuspendedOnHydration:
                 resetWorkInProgressStack();
-                memoizedUpdaters = RootDidNotComplete;
+                memoizedUpdaters = RootSuspendedAtTheShell;
                 break a;
               case SuspendedOnImmediate:
               case SuspendedOnData:
@@ -12958,7 +12950,7 @@ __DEV__ &&
                 break;
               case SuspendedOnHydration:
                 resetWorkInProgressStack();
-                workInProgressRootExitStatus = RootDidNotComplete;
+                workInProgressRootExitStatus = RootSuspendedAtTheShell;
                 break a;
               default:
                 throw Error(
@@ -13217,7 +13209,7 @@ __DEV__ &&
         }
         workInProgress = unitOfWork = next;
       } while (null !== unitOfWork);
-      workInProgressRootExitStatus = RootDidNotComplete;
+      workInProgressRootExitStatus = RootSuspendedAtTheShell;
       workInProgress = null;
     }
     function commitRootImpl(
@@ -16439,8 +16431,8 @@ __DEV__ &&
       RootErrored = 2,
       RootSuspended = 3,
       RootSuspendedWithDelay = 4,
+      RootSuspendedAtTheShell = 6,
       RootCompleted = 5,
-      RootDidNotComplete = 6,
       executionContext = NoContext,
       workInProgressRoot = null,
       workInProgress = null,
@@ -16717,11 +16709,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-www-classic-63cde684-20241114",
+        version: "19.0.0-www-classic-8a41d6ce-20241114",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-www-classic-63cde684-20241114"
+        reconcilerVersion: "19.0.0-www-classic-8a41d6ce-20241114"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -16755,7 +16747,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.0.0-www-classic-63cde684-20241114";
+    exports.version = "19.0.0-www-classic-8a41d6ce-20241114";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
