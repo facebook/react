@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<cfa031ced6a3cc5ccba764dd0d28211e>>
+ * @generated SignedSource<<45d28e26ed1c9ec6e129b9165841583f>>
  */
 
 "use strict";
@@ -12202,8 +12202,9 @@ __DEV__ &&
             break;
           }
           a: {
-            shouldTimeSlice = root;
-            switch (exitStatus) {
+            renderWasConcurrent = root;
+            shouldTimeSlice = exitStatus;
+            switch (shouldTimeSlice) {
               case RootInProgress:
               case RootFatalErrored:
                 throw Error("Root did not complete. This is a bug in React.");
@@ -12211,7 +12212,7 @@ __DEV__ &&
                 if ((lanes & 4194176) !== lanes) break;
               case RootSuspendedAtTheShell:
                 markRootSuspended(
-                  shouldTimeSlice,
+                  renderWasConcurrent,
                   lanes,
                   workInProgressDeferredLane,
                   !workInProgressRootDidSkipSuspendedSiblings
@@ -12226,17 +12227,19 @@ __DEV__ &&
               default:
                 throw Error("Unknown root exit status.");
             }
-            shouldTimeSlice.finishedWork = forceSync;
-            shouldTimeSlice.finishedLanes = lanes;
+            renderWasConcurrent.finishedWork = forceSync;
+            renderWasConcurrent.finishedLanes = lanes;
             if (null !== ReactSharedInternals.actQueue) {
-              lanes = shouldTimeSlice;
+              lanes = renderWasConcurrent;
               forceSync = workInProgressRootRecoverableErrors;
-              shouldTimeSlice = workInProgressTransitions;
-              exitStatus = workInProgressRootDidIncludeRecursiveRenderUpdate;
-              renderWasConcurrent = workInProgressDeferredLane;
-              lanesThatJustErrored = workInProgressRootInterleavedUpdatedLanes;
-              originallyAttemptedLanes = workInProgressSuspendedRetryLanes;
-              var suspendedCommitReason = IMMEDIATE_COMMIT,
+              exitStatus = workInProgressTransitions;
+              renderWasConcurrent =
+                workInProgressRootDidIncludeRecursiveRenderUpdate;
+              lanesThatJustErrored = workInProgressDeferredLane;
+              originallyAttemptedLanes =
+                workInProgressRootInterleavedUpdatedLanes;
+              var suspendedRetryLanes = workInProgressSuspendedRetryLanes,
+                suspendedCommitReason = IMMEDIATE_COMMIT,
                 prevTransition = ReactSharedInternals.T,
                 previousUpdateLanePriority = currentUpdatePriority;
               try {
@@ -12245,12 +12248,13 @@ __DEV__ &&
                   commitRootImpl(
                     lanes,
                     forceSync,
-                    shouldTimeSlice,
                     exitStatus,
-                    previousUpdateLanePriority,
                     renderWasConcurrent,
+                    previousUpdateLanePriority,
                     lanesThatJustErrored,
                     originallyAttemptedLanes,
+                    suspendedRetryLanes,
+                    shouldTimeSlice,
                     suspendedCommitReason,
                     -0,
                     0
@@ -12262,7 +12266,7 @@ __DEV__ &&
             } else {
               if (
                 (lanes & 62914560) === lanes &&
-                (alwaysThrottleRetries || exitStatus === RootSuspended) &&
+                (alwaysThrottleRetries || shouldTimeSlice === RootSuspended) &&
                 ((exitStatus =
                   globalMostRecentFallbackTime +
                   FALLBACK_THROTTLE_MS -
@@ -12270,16 +12274,16 @@ __DEV__ &&
                 10 < exitStatus)
               ) {
                 markRootSuspended(
-                  shouldTimeSlice,
+                  renderWasConcurrent,
                   lanes,
                   workInProgressDeferredLane,
                   !workInProgressRootDidSkipSuspendedSiblings
                 );
-                if (0 !== getNextLanes(shouldTimeSlice, 0)) break a;
-                shouldTimeSlice.timeoutHandle = scheduleTimeout(
+                if (0 !== getNextLanes(renderWasConcurrent, 0)) break a;
+                renderWasConcurrent.timeoutHandle = scheduleTimeout(
                   commitRootWhenReady.bind(
                     null,
-                    shouldTimeSlice,
+                    renderWasConcurrent,
                     forceSync,
                     workInProgressRootRecoverableErrors,
                     workInProgressTransitions,
@@ -12289,6 +12293,7 @@ __DEV__ &&
                     workInProgressRootInterleavedUpdatedLanes,
                     workInProgressSuspendedRetryLanes,
                     workInProgressRootDidSkipSuspendedSiblings,
+                    shouldTimeSlice,
                     THROTTLED_COMMIT,
                     -0,
                     0
@@ -12298,7 +12303,7 @@ __DEV__ &&
                 break a;
               }
               commitRootWhenReady(
-                shouldTimeSlice,
+                renderWasConcurrent,
                 forceSync,
                 workInProgressRootRecoverableErrors,
                 workInProgressTransitions,
@@ -12308,6 +12313,7 @@ __DEV__ &&
                 workInProgressRootInterleavedUpdatedLanes,
                 workInProgressSuspendedRetryLanes,
                 workInProgressRootDidSkipSuspendedSiblings,
+                shouldTimeSlice,
                 IMMEDIATE_COMMIT,
                 -0,
                 0
@@ -12338,6 +12344,7 @@ __DEV__ &&
       updatedLanes,
       suspendedRetryLanes,
       didSkipSuspendedSiblings,
+      exitStatus,
       suspendedCommitReason,
       completedRenderStartTime,
       completedRenderEndTime
@@ -12359,6 +12366,7 @@ __DEV__ &&
             spawnedLane,
             updatedLanes,
             suspendedRetryLanes,
+            exitStatus,
             suspendedCommitReason,
             completedRenderStartTime,
             completedRenderEndTime
@@ -17181,11 +17189,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.0.0-native-fb-8a41d6ce-20241114" !== isomorphicReactPackageVersion)
+    if ("19.0.0-native-fb-3720870a-20241115" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.0.0-native-fb-8a41d6ce-20241114\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.0.0-native-fb-3720870a-20241115\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17211,11 +17219,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-8a41d6ce-20241114",
+        version: "19.0.0-native-fb-3720870a-20241115",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromTag,
-        reconcilerVersion: "19.0.0-native-fb-8a41d6ce-20241114"
+        reconcilerVersion: "19.0.0-native-fb-3720870a-20241115"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

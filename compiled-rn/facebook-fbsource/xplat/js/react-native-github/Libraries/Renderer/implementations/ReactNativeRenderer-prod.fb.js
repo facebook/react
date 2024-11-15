@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<4f7033c244c90fc3f144723fff15fe21>>
+ * @generated SignedSource<<9afc0e9569697037d9d901b5d1fe76d2>>
  */
 
 "use strict";
@@ -9716,8 +9716,8 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
         if (
           (lanes & 62914560) === lanes &&
           (alwaysThrottleRetries || 3 === renderWasConcurrent) &&
-          ((renderWasConcurrent = globalMostRecentFallbackTime + 300 - now()),
-          10 < renderWasConcurrent)
+          ((exitStatus = globalMostRecentFallbackTime + 300 - now()),
+          10 < exitStatus)
         ) {
           markRootSuspended(
             shouldTimeSlice,
@@ -9739,11 +9739,12 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
               workInProgressRootInterleavedUpdatedLanes,
               workInProgressSuspendedRetryLanes,
               workInProgressRootDidSkipSuspendedSiblings,
+              renderWasConcurrent,
               2,
               -0,
               0
             ),
-            renderWasConcurrent
+            exitStatus
           );
           break a;
         }
@@ -9758,6 +9759,7 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
           workInProgressRootInterleavedUpdatedLanes,
           workInProgressSuspendedRetryLanes,
           workInProgressRootDidSkipSuspendedSiblings,
+          renderWasConcurrent,
           0,
           -0,
           0
@@ -9787,6 +9789,7 @@ function commitRootWhenReady(
   updatedLanes,
   suspendedRetryLanes,
   didSkipSuspendedSiblings,
+  exitStatus,
   suspendedCommitReason,
   completedRenderStartTime,
   completedRenderEndTime
@@ -9808,6 +9811,7 @@ function commitRootWhenReady(
         spawnedLane,
         updatedLanes,
         suspendedRetryLanes,
+        exitStatus,
         suspendedCommitReason,
         completedRenderStartTime,
         completedRenderEndTime
@@ -11029,11 +11033,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.0.0-native-fb-8a41d6ce-20241114" !== isomorphicReactPackageVersion)
+if ("19.0.0-native-fb-3720870a-20241115" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.0.0-native-fb-8a41d6ce-20241114\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.0.0-native-fb-3720870a-20241115\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11080,27 +11084,27 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1242 = {
+  internals$jscomp$inline_1243 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-8a41d6ce-20241114",
+    version: "19.0.0-native-fb-3720870a-20241115",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromTag,
-    reconcilerVersion: "19.0.0-native-fb-8a41d6ce-20241114"
+    reconcilerVersion: "19.0.0-native-fb-3720870a-20241115"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1242.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1243.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1579 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1580 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1579.isDisabled &&
-    hook$jscomp$inline_1579.supportsFiber
+    !hook$jscomp$inline_1580.isDisabled &&
+    hook$jscomp$inline_1580.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1579.inject(
-        internals$jscomp$inline_1242
+      (rendererID = hook$jscomp$inline_1580.inject(
+        internals$jscomp$inline_1243
       )),
-        (injectedHook = hook$jscomp$inline_1579);
+        (injectedHook = hook$jscomp$inline_1580);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

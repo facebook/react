@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6c57ef0bd9baabe73d7f79998b6318bc>>
+ * @generated SignedSource<<25ee53a5ec2df5d7432ccb7bf0f32de7>>
  */
 
 "use strict";
@@ -9812,8 +9812,8 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
         if (
           (lanes & 62914560) === lanes &&
           (alwaysThrottleRetries || 3 === renderWasConcurrent) &&
-          ((renderWasConcurrent = globalMostRecentFallbackTime + 300 - now$1()),
-          10 < renderWasConcurrent)
+          ((exitStatus = globalMostRecentFallbackTime + 300 - now$1()),
+          10 < exitStatus)
         ) {
           markRootSuspended(
             shouldTimeSlice,
@@ -9835,11 +9835,12 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
               workInProgressRootInterleavedUpdatedLanes,
               workInProgressSuspendedRetryLanes,
               workInProgressRootDidSkipSuspendedSiblings,
+              renderWasConcurrent,
               2,
               -0,
               0
             ),
-            renderWasConcurrent
+            exitStatus
           );
           break a;
         }
@@ -9854,6 +9855,7 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
           workInProgressRootInterleavedUpdatedLanes,
           workInProgressSuspendedRetryLanes,
           workInProgressRootDidSkipSuspendedSiblings,
+          renderWasConcurrent,
           0,
           -0,
           0
@@ -9883,6 +9885,7 @@ function commitRootWhenReady(
   updatedLanes,
   suspendedRetryLanes,
   didSkipSuspendedSiblings,
+  exitStatus,
   suspendedCommitReason,
   completedRenderStartTime,
   completedRenderEndTime
@@ -9904,6 +9907,7 @@ function commitRootWhenReady(
         spawnedLane,
         updatedLanes,
         suspendedRetryLanes,
+        exitStatus,
         suspendedCommitReason,
         completedRenderStartTime,
         completedRenderEndTime
@@ -11554,17 +11558,17 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1264 = {
+  internals$jscomp$inline_1265 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-8a41d6ce-20241114",
+    version: "19.0.0-native-fb-3720870a-20241115",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromNode,
-    reconcilerVersion: "19.0.0-native-fb-8a41d6ce-20241114"
+    reconcilerVersion: "19.0.0-native-fb-3720870a-20241115"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1264.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1264.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1265.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1265.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$152 = 0;
     31 > index$152;
@@ -11576,20 +11580,20 @@ internals$jscomp$inline_1264.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1264.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1265.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1543 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1544 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1543.isDisabled &&
-    hook$jscomp$inline_1543.supportsFiber
+    !hook$jscomp$inline_1544.isDisabled &&
+    hook$jscomp$inline_1544.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1543.inject(
-        internals$jscomp$inline_1264
+      (rendererID = hook$jscomp$inline_1544.inject(
+        internals$jscomp$inline_1265
       )),
-        (injectedHook = hook$jscomp$inline_1543);
+        (injectedHook = hook$jscomp$inline_1544);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d08636572d2a0e15dabed9c456dfb85e>>
+ * @generated SignedSource<<aed3c5844e5883b854dbc5609f1b1436>>
  */
 
 /*
@@ -15133,6 +15133,7 @@ __DEV__ &&
                 workInProgressDeferredLane,
                 workInProgressRootInterleavedUpdatedLanes,
                 workInProgressSuspendedRetryLanes,
+                exitStatus,
                 IMMEDIATE_COMMIT,
                 renderStartTime,
                 0
@@ -15141,11 +15142,11 @@ __DEV__ &&
               if (
                 (lanes & 62914560) === lanes &&
                 (alwaysThrottleRetries || exitStatus === RootSuspended) &&
-                ((exitStatus =
+                ((renderWasConcurrent =
                   globalMostRecentFallbackTime +
                   FALLBACK_THROTTLE_MS -
                   now$1()),
-                10 < exitStatus)
+                10 < renderWasConcurrent)
               ) {
                 markRootSuspended(
                   shouldTimeSlice,
@@ -15167,11 +15168,12 @@ __DEV__ &&
                     workInProgressRootInterleavedUpdatedLanes,
                     workInProgressSuspendedRetryLanes,
                     workInProgressRootDidSkipSuspendedSiblings,
+                    exitStatus,
                     THROTTLED_COMMIT,
                     renderStartTime,
                     0
                   ),
-                  exitStatus
+                  renderWasConcurrent
                 );
                 break a;
               }
@@ -15186,6 +15188,7 @@ __DEV__ &&
                 workInProgressRootInterleavedUpdatedLanes,
                 workInProgressSuspendedRetryLanes,
                 workInProgressRootDidSkipSuspendedSiblings,
+                exitStatus,
                 IMMEDIATE_COMMIT,
                 renderStartTime,
                 0
@@ -15216,6 +15219,7 @@ __DEV__ &&
       updatedLanes,
       suspendedRetryLanes,
       didSkipSuspendedSiblings,
+      exitStatus,
       suspendedCommitReason,
       completedRenderStartTime,
       completedRenderEndTime
@@ -15238,6 +15242,7 @@ __DEV__ &&
               spawnedLane,
               updatedLanes,
               suspendedRetryLanes,
+              exitStatus,
               SUSPENDED_COMMIT,
               completedRenderStartTime,
               completedRenderEndTime
@@ -15259,6 +15264,7 @@ __DEV__ &&
         spawnedLane,
         updatedLanes,
         suspendedRetryLanes,
+        exitStatus,
         suspendedCommitReason,
         completedRenderStartTime,
         completedRenderEndTime
@@ -15958,6 +15964,7 @@ __DEV__ &&
       spawnedLane,
       updatedLanes,
       suspendedRetryLanes,
+      exitStatus,
       suspendedCommitReason,
       completedRenderStartTime,
       completedRenderEndTime
@@ -15976,6 +15983,7 @@ __DEV__ &&
             spawnedLane,
             updatedLanes,
             suspendedRetryLanes,
+            exitStatus,
             suspendedCommitReason,
             completedRenderStartTime,
             completedRenderEndTime
@@ -25344,11 +25352,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.0.0-native-fb-8a41d6ce-20241114" !== isomorphicReactPackageVersion)
+      if ("19.0.0-native-fb-3720870a-20241115" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.0.0-native-fb-8a41d6ce-20241114\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.0.0-native-fb-3720870a-20241115\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -25385,11 +25393,11 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.0.0-native-fb-8a41d6ce-20241114",
+          version: "19.0.0-native-fb-3720870a-20241115",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
           findFiberByHostInstance: getClosestInstanceFromNode,
-          reconcilerVersion: "19.0.0-native-fb-8a41d6ce-20241114"
+          reconcilerVersion: "19.0.0-native-fb-3720870a-20241115"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -25533,5 +25541,5 @@ __DEV__ &&
       listenToAllSupportedEvents(container);
       return new ReactDOMHydrationRoot(initialChildren);
     };
-    exports.version = "19.0.0-native-fb-8a41d6ce-20241114";
+    exports.version = "19.0.0-native-fb-3720870a-20241115";
   })();

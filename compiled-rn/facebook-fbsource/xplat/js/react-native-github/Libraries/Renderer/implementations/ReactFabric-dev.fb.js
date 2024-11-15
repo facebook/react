@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ccc0604a67d6fd3c24fd97c705dd5126>>
+ * @generated SignedSource<<7c721a352f657b7e56a6054c391ba15d>>
  */
 
 "use strict";
@@ -11840,9 +11840,9 @@ __DEV__ &&
             break;
           }
           a: {
-            shouldTimeSlice = root;
-            renderWasConcurrent = exitStatus;
-            switch (renderWasConcurrent) {
+            renderWasConcurrent = root;
+            shouldTimeSlice = exitStatus;
+            switch (shouldTimeSlice) {
               case RootInProgress:
               case RootFatalErrored:
                 throw Error("Root did not complete. This is a bug in React.");
@@ -11850,7 +11850,7 @@ __DEV__ &&
                 if ((lanes & 4194176) !== lanes) break;
               case RootSuspendedAtTheShell:
                 markRootSuspended(
-                  shouldTimeSlice,
+                  renderWasConcurrent,
                   lanes,
                   workInProgressDeferredLane,
                   !workInProgressRootDidSkipSuspendedSiblings
@@ -11865,19 +11865,19 @@ __DEV__ &&
               default:
                 throw Error("Unknown root exit status.");
             }
-            shouldTimeSlice.finishedWork = forceSync;
-            shouldTimeSlice.finishedLanes = lanes;
+            renderWasConcurrent.finishedWork = forceSync;
+            renderWasConcurrent.finishedLanes = lanes;
             if (null !== ReactSharedInternals.actQueue) {
-              lanes = shouldTimeSlice;
+              lanes = renderWasConcurrent;
               forceSync = workInProgressRootRecoverableErrors;
-              shouldTimeSlice = workInProgressTransitions;
-              renderWasConcurrent =
-                workInProgressRootDidIncludeRecursiveRenderUpdate;
-              exitStatus = workInProgressDeferredLane;
-              lanesThatJustErrored = workInProgressRootInterleavedUpdatedLanes;
-              originallyAttemptedLanes = workInProgressSuspendedRetryLanes;
-              wasRootDehydrated = IMMEDIATE_COMMIT;
-              var prevTransition = ReactSharedInternals.T,
+              renderWasConcurrent = workInProgressTransitions;
+              exitStatus = workInProgressRootDidIncludeRecursiveRenderUpdate;
+              lanesThatJustErrored = workInProgressDeferredLane;
+              originallyAttemptedLanes =
+                workInProgressRootInterleavedUpdatedLanes;
+              wasRootDehydrated = workInProgressSuspendedRetryLanes;
+              var suspendedCommitReason = IMMEDIATE_COMMIT,
+                prevTransition = ReactSharedInternals.T,
                 previousUpdateLanePriority = currentUpdatePriority;
               try {
                 (currentUpdatePriority = DiscreteEventPriority),
@@ -11885,13 +11885,14 @@ __DEV__ &&
                   commitRootImpl(
                     lanes,
                     forceSync,
-                    shouldTimeSlice,
                     renderWasConcurrent,
-                    previousUpdateLanePriority,
                     exitStatus,
+                    previousUpdateLanePriority,
                     lanesThatJustErrored,
                     originallyAttemptedLanes,
                     wasRootDehydrated,
+                    shouldTimeSlice,
+                    suspendedCommitReason,
                     -0,
                     0
                   );
@@ -11902,25 +11903,24 @@ __DEV__ &&
             } else {
               if (
                 (lanes & 62914560) === lanes &&
-                (alwaysThrottleRetries ||
-                  renderWasConcurrent === RootSuspended) &&
-                ((renderWasConcurrent =
+                (alwaysThrottleRetries || shouldTimeSlice === RootSuspended) &&
+                ((exitStatus =
                   globalMostRecentFallbackTime +
                   FALLBACK_THROTTLE_MS -
                   now$1()),
-                10 < renderWasConcurrent)
+                10 < exitStatus)
               ) {
                 markRootSuspended(
-                  shouldTimeSlice,
+                  renderWasConcurrent,
                   lanes,
                   workInProgressDeferredLane,
                   !workInProgressRootDidSkipSuspendedSiblings
                 );
-                if (0 !== getNextLanes(shouldTimeSlice, 0)) break a;
-                shouldTimeSlice.timeoutHandle = scheduleTimeout(
+                if (0 !== getNextLanes(renderWasConcurrent, 0)) break a;
+                renderWasConcurrent.timeoutHandle = scheduleTimeout(
                   commitRootWhenReady.bind(
                     null,
-                    shouldTimeSlice,
+                    renderWasConcurrent,
                     forceSync,
                     workInProgressRootRecoverableErrors,
                     workInProgressTransitions,
@@ -11930,16 +11930,17 @@ __DEV__ &&
                     workInProgressRootInterleavedUpdatedLanes,
                     workInProgressSuspendedRetryLanes,
                     workInProgressRootDidSkipSuspendedSiblings,
+                    shouldTimeSlice,
                     THROTTLED_COMMIT,
                     -0,
                     0
                   ),
-                  renderWasConcurrent
+                  exitStatus
                 );
                 break a;
               }
               commitRootWhenReady(
-                shouldTimeSlice,
+                renderWasConcurrent,
                 forceSync,
                 workInProgressRootRecoverableErrors,
                 workInProgressTransitions,
@@ -11949,6 +11950,7 @@ __DEV__ &&
                 workInProgressRootInterleavedUpdatedLanes,
                 workInProgressSuspendedRetryLanes,
                 workInProgressRootDidSkipSuspendedSiblings,
+                shouldTimeSlice,
                 IMMEDIATE_COMMIT,
                 -0,
                 0
@@ -11979,6 +11981,7 @@ __DEV__ &&
       updatedLanes,
       suspendedRetryLanes,
       didSkipSuspendedSiblings,
+      exitStatus,
       suspendedCommitReason,
       completedRenderStartTime,
       completedRenderEndTime
@@ -12000,6 +12003,7 @@ __DEV__ &&
             spawnedLane,
             updatedLanes,
             suspendedRetryLanes,
+            exitStatus,
             suspendedCommitReason,
             completedRenderStartTime,
             completedRenderEndTime
@@ -16963,11 +16967,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-8a41d6ce-20241114",
+        version: "19.0.0-native-fb-3720870a-20241115",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-native-fb-8a41d6ce-20241114"
+        reconcilerVersion: "19.0.0-native-fb-3720870a-20241115"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

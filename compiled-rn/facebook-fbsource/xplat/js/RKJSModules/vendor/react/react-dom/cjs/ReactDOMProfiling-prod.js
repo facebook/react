@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a1dd955b7b1732dfb2e30d39236f7642>>
+ * @generated SignedSource<<9f91ab1932171685b20f9562582b6c38>>
  */
 
 /*
@@ -10911,8 +10911,8 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
         if (
           (lanes & 62914560) === lanes &&
           (alwaysThrottleRetries || 3 === renderWasConcurrent) &&
-          ((renderWasConcurrent = globalMostRecentFallbackTime + 300 - now()),
-          10 < renderWasConcurrent)
+          ((exitStatus = globalMostRecentFallbackTime + 300 - now()),
+          10 < exitStatus)
         ) {
           markRootSuspended(
             shouldTimeSlice,
@@ -10934,11 +10934,12 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
               workInProgressRootInterleavedUpdatedLanes,
               workInProgressSuspendedRetryLanes,
               workInProgressRootDidSkipSuspendedSiblings,
+              renderWasConcurrent,
               2,
               -0,
               0
             ),
-            renderWasConcurrent
+            exitStatus
           );
           break a;
         }
@@ -10953,6 +10954,7 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
           workInProgressRootInterleavedUpdatedLanes,
           workInProgressSuspendedRetryLanes,
           workInProgressRootDidSkipSuspendedSiblings,
+          renderWasConcurrent,
           0,
           -0,
           0
@@ -10982,6 +10984,7 @@ function commitRootWhenReady(
   updatedLanes,
   suspendedRetryLanes,
   didSkipSuspendedSiblings,
+  exitStatus,
   suspendedCommitReason,
   completedRenderStartTime,
   completedRenderEndTime
@@ -11004,6 +11007,7 @@ function commitRootWhenReady(
           spawnedLane,
           updatedLanes,
           suspendedRetryLanes,
+          exitStatus,
           1,
           completedRenderStartTime,
           completedRenderEndTime
@@ -11020,6 +11024,7 @@ function commitRootWhenReady(
     spawnedLane,
     updatedLanes,
     suspendedRetryLanes,
+    exitStatus,
     suspendedCommitReason,
     completedRenderStartTime,
     completedRenderEndTime
@@ -11570,6 +11575,7 @@ function commitRoot(
   spawnedLane,
   updatedLanes,
   suspendedRetryLanes,
+  exitStatus,
   suspendedCommitReason,
   completedRenderStartTime,
   completedRenderEndTime
@@ -11588,6 +11594,7 @@ function commitRoot(
         spawnedLane,
         updatedLanes,
         suspendedRetryLanes,
+        exitStatus,
         suspendedCommitReason,
         completedRenderStartTime,
         completedRenderEndTime
@@ -15641,14 +15648,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1698 = React.version;
 if (
-  "19.0.0-native-fb-8a41d6ce-20241114" !==
+  "19.0.0-native-fb-3720870a-20241115" !==
   isomorphicReactPackageVersion$jscomp$inline_1698
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1698,
-      "19.0.0-native-fb-8a41d6ce-20241114"
+      "19.0.0-native-fb-3720870a-20241115"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -15670,11 +15677,11 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2158 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-8a41d6ce-20241114",
+  version: "19.0.0-native-fb-3720870a-20241115",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-native-fb-8a41d6ce-20241114"
+  reconcilerVersion: "19.0.0-native-fb-3720870a-20241115"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2159 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -15932,4 +15939,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-native-fb-8a41d6ce-20241114";
+exports.version = "19.0.0-native-fb-3720870a-20241115";

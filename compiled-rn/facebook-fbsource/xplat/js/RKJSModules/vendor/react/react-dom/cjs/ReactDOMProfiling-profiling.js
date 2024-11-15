@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c047e93e4839f5fe0997e830888b9121>>
+ * @generated SignedSource<<1be026d391b5e2071428d002fe264338>>
  */
 
 /*
@@ -11453,8 +11453,8 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
         if (
           (lanes & 62914560) === lanes &&
           (alwaysThrottleRetries || 3 === renderWasConcurrent) &&
-          ((renderWasConcurrent = globalMostRecentFallbackTime + 300 - now$1()),
-          10 < renderWasConcurrent)
+          ((exitStatus = globalMostRecentFallbackTime + 300 - now$1()),
+          10 < exitStatus)
         ) {
           markRootSuspended(
             shouldTimeSlice,
@@ -11476,11 +11476,12 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
               workInProgressRootInterleavedUpdatedLanes,
               workInProgressSuspendedRetryLanes,
               workInProgressRootDidSkipSuspendedSiblings,
+              renderWasConcurrent,
               2,
               -0,
               0
             ),
-            renderWasConcurrent
+            exitStatus
           );
           break a;
         }
@@ -11495,6 +11496,7 @@ function performWorkOnRoot(root$jscomp$0, lanes, forceSync) {
           workInProgressRootInterleavedUpdatedLanes,
           workInProgressSuspendedRetryLanes,
           workInProgressRootDidSkipSuspendedSiblings,
+          renderWasConcurrent,
           0,
           -0,
           0
@@ -11524,6 +11526,7 @@ function commitRootWhenReady(
   updatedLanes,
   suspendedRetryLanes,
   didSkipSuspendedSiblings,
+  exitStatus,
   suspendedCommitReason,
   completedRenderStartTime,
   completedRenderEndTime
@@ -11546,6 +11549,7 @@ function commitRootWhenReady(
           spawnedLane,
           updatedLanes,
           suspendedRetryLanes,
+          exitStatus,
           1,
           completedRenderStartTime,
           completedRenderEndTime
@@ -11562,6 +11566,7 @@ function commitRootWhenReady(
     spawnedLane,
     updatedLanes,
     suspendedRetryLanes,
+    exitStatus,
     suspendedCommitReason,
     completedRenderStartTime,
     completedRenderEndTime
@@ -12184,6 +12189,7 @@ function commitRoot(
   spawnedLane,
   updatedLanes,
   suspendedRetryLanes,
+  exitStatus,
   suspendedCommitReason,
   completedRenderStartTime,
   completedRenderEndTime
@@ -12202,6 +12208,7 @@ function commitRoot(
         spawnedLane,
         updatedLanes,
         suspendedRetryLanes,
+        exitStatus,
         suspendedCommitReason,
         completedRenderStartTime,
         completedRenderEndTime
@@ -16299,14 +16306,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1788 = React.version;
 if (
-  "19.0.0-native-fb-8a41d6ce-20241114" !==
+  "19.0.0-native-fb-3720870a-20241115" !==
   isomorphicReactPackageVersion$jscomp$inline_1788
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1788,
-      "19.0.0-native-fb-8a41d6ce-20241114"
+      "19.0.0-native-fb-3720870a-20241115"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16328,11 +16335,11 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_1795 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-8a41d6ce-20241114",
+  version: "19.0.0-native-fb-3720870a-20241115",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-native-fb-8a41d6ce-20241114",
+  reconcilerVersion: "19.0.0-native-fb-3720870a-20241115",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$290 = 0;
@@ -16605,7 +16612,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-native-fb-8a41d6ce-20241114";
+exports.version = "19.0.0-native-fb-3720870a-20241115";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
