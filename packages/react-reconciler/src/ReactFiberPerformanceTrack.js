@@ -198,6 +198,54 @@ export function logRenderPhase(startTime: number, endTime: number): void {
   }
 }
 
+export function logInterruptedRenderPhase(
+  startTime: number,
+  endTime: number,
+): void {
+  if (supportsUserTiming) {
+    reusableLaneDevToolDetails.color = 'primary-dark';
+    reusableLaneOptions.start = startTime;
+    reusableLaneOptions.end = endTime;
+    performance.measure('Interrupted Render', reusableLaneOptions);
+  }
+}
+
+export function logSuspendedRenderPhase(
+  startTime: number,
+  endTime: number,
+): void {
+  if (supportsUserTiming) {
+    reusableLaneDevToolDetails.color = 'primary-dark';
+    reusableLaneOptions.start = startTime;
+    reusableLaneOptions.end = endTime;
+    performance.measure('Prewarm', reusableLaneOptions);
+  }
+}
+
+export function logErroredRenderPhase(
+  startTime: number,
+  endTime: number,
+): void {
+  if (supportsUserTiming) {
+    reusableLaneDevToolDetails.color = 'error';
+    reusableLaneOptions.start = startTime;
+    reusableLaneOptions.end = endTime;
+    performance.measure('Errored Render', reusableLaneOptions);
+  }
+}
+
+export function logInconsistentRender(
+  startTime: number,
+  endTime: number,
+): void {
+  if (supportsUserTiming) {
+    reusableLaneDevToolDetails.color = 'error';
+    reusableLaneOptions.start = startTime;
+    reusableLaneOptions.end = endTime;
+    performance.measure('Teared Render', reusableLaneOptions);
+  }
+}
+
 export function logSuspenseThrottlePhase(
   startTime: number,
   endTime: number,

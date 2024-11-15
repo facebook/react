@@ -9,8 +9,15 @@
 
 import type {Fiber} from './ReactInternalTypes';
 
-import type {Lane} from './ReactFiberLane';
-import {isTransitionLane, isBlockingLane, isSyncLane} from './ReactFiberLane';
+import type {Lane, Lanes} from './ReactFiberLane';
+import {
+  isTransitionLane,
+  isBlockingLane,
+  isSyncLane,
+  includesTransitionLane,
+  includesBlockingLane,
+  includesSyncLane,
+} from './ReactFiberLane';
 
 import {resolveEventType, resolveEventTimeStamp} from './ReactFiberConfig';
 
@@ -77,6 +84,19 @@ export function startUpdateTimerByLane(lane: Lane): void {
         transitionEventType = newEventType;
       }
     }
+  }
+}
+
+export function markUpdateAsRepeat(lanes: Lanes): void {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  // We're about to do a retry of this render. It is not a new update, so treat this
+  // as a repeat within the same event.
+  if (includesSyncLane(lanes) || includesBlockingLane(lanes)) {
+    blockingEventIsRepeat = true;
+  } else if (includesTransitionLane(lanes)) {
+    transitionEventIsRepeat = true;
   }
 }
 
