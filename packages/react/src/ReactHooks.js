@@ -18,7 +18,10 @@ import {REACT_CONSUMER_TYPE} from 'shared/ReactSymbols';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
-import {enableAsyncActions} from 'shared/ReactFeatureFlags';
+import {
+  enableAsyncActions,
+  enableUseResourceEffectHook,
+} from 'shared/ReactFeatureFlags';
 import {
   enableContextProfiling,
   enableLazyContextPropagation,
@@ -233,7 +236,18 @@ export function useResourceEffect(
   updateDeps: Array<mixed> | void | null,
   destroy: ((resource: mixed) => void) | void,
 ): void {
-  throw new Error('Not implemented.');
+  if (!enableUseResourceEffectHook) {
+    throw new Error('Not implemented.');
+  }
+  const dispatcher = resolveDispatcher();
+  // $FlowFixMe[not-a-function] This is unstable, thus optional
+  return dispatcher.useResourceEffect(
+    create,
+    createDeps,
+    update,
+    updateDeps,
+    destroy,
+  );
 }
 
 export function useOptimistic<S, A>(
