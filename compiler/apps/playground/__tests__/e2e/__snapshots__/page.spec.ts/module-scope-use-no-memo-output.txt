@@ -1,0 +1,7 @@
+function anonymous_1() {
+  const handleMouseOver = () => {
+    console.log("Footer hovered");
+  };
+  return <footer onMouseOver={handleMouseOver}>Footer 
+      Information</footer>;
+}

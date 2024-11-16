@@ -1,0 +1,3 @@
+function anonymous_1() {
+  return <aside>Sidebar Information</aside>;
+}

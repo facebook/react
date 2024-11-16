@@ -287,7 +287,11 @@ function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
           name: 'CodeGen',
           value: {
             type: 'FunctionDeclaration',
-            id: func.fn.isArrowFunctionExpression() ? null : func.fn.node.id,
+            id:
+              func.fn.isArrowFunctionExpression() ||
+              func.fn.isFunctionExpression()
+                ? withIdentifier(null)
+                : func.fn.node.id,
             async: func.fn.node.async,
             generator: !!func.fn.node.generator,
             body: func.fn.node.body as t.BlockStatement,
