@@ -20,14 +20,14 @@ test('editor should open successfully', async ({page}) => {
   });
 });
 test('editor should compile from hash successfully', async ({page}) => {
-  const STORE: Store = {
+  const store: Store = {
     source: `export default function TestComponent({ x }) {
       return <Button>{x}</Button>;
     }
     `,
   };
-  const HASH = encodeStore(STORE);
-  await page.goto(`/#${HASH}`, {waitUntil: 'networkidle'});
+  const hash = encodeStore(store);
+  await page.goto(`/#${hash}`, {waitUntil: 'networkidle'});
 
   // User input from hash compiles
   await page.screenshot({
@@ -39,14 +39,14 @@ test('editor should compile from hash successfully', async ({page}) => {
   expect(concat(userInput)).toMatchSnapshot('user-output.txt');
 });
 test('reset button works', async ({page}) => {
-  const STORE: Store = {
+  const store: Store = {
     source: `export default function TestComponent({ x }) {
       return <Button>{x}</Button>;
     }
     `,
   };
-  const HASH = encodeStore(STORE);
-  await page.goto(`/#${HASH}`, {waitUntil: 'networkidle'});
+  const hash = encodeStore(store);
+  await page.goto(`/#${hash}`, {waitUntil: 'networkidle'});
 
   // Reset button works
   page.on('dialog', dialog => dialog.accept());
@@ -60,7 +60,7 @@ test('reset button works', async ({page}) => {
   expect(concat(defaultInput)).toMatchSnapshot('default-output.txt');
 });
 test('directives work', async ({page}) => {
-  const STORE: Store = {
+  const store: Store = {
     source: `function useFoo(props) {
               'use no memo';
               const x = () => { };
@@ -73,8 +73,8 @@ test('directives work', async ({page}) => {
             }
     `,
   };
-  const HASH = encodeStore(STORE);
-  await page.goto(`/#${HASH}`, {waitUntil: 'networkidle'});
+  const hash = encodeStore(store);
+  await page.goto(`/#${hash}`, {waitUntil: 'networkidle'});
   await page.screenshot({
     fullPage: true,
     path: 'test-results/03-simple-use-memo.png',

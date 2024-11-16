@@ -49,11 +49,7 @@ type FunctionLike =
   | NodePath<t.FunctionDeclaration>
   | NodePath<t.ArrowFunctionExpression>
   | NodePath<t.FunctionExpression>;
-enum MemoizeDirectiveState {
-  Enabled,
-  Disabled,
-  Undefined,
-}
+
 function parseInput(input: string, language: 'flow' | 'typescript'): any {
   // Extract the first line to quickly check for custom test directives
   if (language === 'flow') {
@@ -70,38 +66,55 @@ function parseInput(input: string, language: 'flow' | 'typescript'): any {
     });
   }
 }
-function checkExplicitMemoizeDirectives(
-  directives: Array<t.Directive>,
-): MemoizeDirectiveState {
-  if (findDirectiveEnablingMemoization(directives).length) {
-    return MemoizeDirectiveState.Enabled;
-  }
-  if (findDirectiveDisablingMemoization(directives).length) {
-    return MemoizeDirectiveState.Disabled;
-  }
-  return MemoizeDirectiveState.Undefined;
+enum MemoizeDirectiveState {
+  Enabled = 'Enabled',
+  Disabled = 'Disabled',
+  Undefined = 'Undefined',
 }
+
+const ENABLED_OR_UNDEFINED_STATES = new Set([
+  MemoizeDirectiveState.Enabled,
+  MemoizeDirectiveState.Undefined,
+]);
+
+const ENABLED_OR_DISABLED_STATES = new Set([
+  MemoizeDirectiveState.Enabled,
+  MemoizeDirectiveState.Disabled,
+]);
+
 function parseFunctions(
   source: string,
   language: 'flow' | 'typescript',
 ): Array<{
-  compile: boolean;
+  compilationEnabled: boolean;
   fn: FunctionLike;
 }> {
-  const items: Array<FunctionLike> = [];
+  const items: Array<{
+    compilationEnabled: boolean;
+    fn: FunctionLike;
+  }> = [];
   try {
     const ast = parseInput(source, language);
     traverse(ast, {
       FunctionDeclaration(nodePath) {
-        items.push(nodePath);
+        items.push({
+          compilationEnabled: shouldCompile(nodePath),
+          fn: nodePath,
+        });
         nodePath.skip();
       },
       ArrowFunctionExpression(nodePath) {
-        items.push(nodePath);
+        items.push({
+          compilationEnabled: shouldCompile(nodePath),
+          fn: nodePath,
+        });
         nodePath.skip();
       },
       FunctionExpression(nodePath) {
-        items.push(nodePath);
+        items.push({
+          compilationEnabled: shouldCompile(nodePath),
+          fn: nodePath,
+        });
         nodePath.skip();
       },
     });
@@ -115,45 +128,45 @@ function parseFunctions(
     });
   }
 
-  return items.map<{
-    compile: boolean;
-    fn: FunctionLike;
-  }>(fn => {
-    const {body} = fn.node;
-    if (t.isBlockStatement(body)) {
-      const selfCheck = checkExplicitMemoizeDirectives(body.directives);
-      if (selfCheck === MemoizeDirectiveState.Enabled)
-        return {compile: true, fn};
-      if (selfCheck === MemoizeDirectiveState.Disabled)
-        return {compile: false, fn};
+  return items;
+}
 
-      const parentWithDirective = fn.findParent(parentPath => {
-        if (parentPath.isBlockStatement() || parentPath.isProgram()) {
-          const directiveCheck = checkExplicitMemoizeDirectives(
-            parentPath.node.directives,
-          );
-          return [
-            MemoizeDirectiveState.Enabled,
-            MemoizeDirectiveState.Disabled,
-          ].includes(directiveCheck);
-        }
-        return false;
-      });
+function shouldCompile(fn: FunctionLike): boolean {
+  const {body} = fn.node;
+  if (t.isBlockStatement(body)) {
+    const selfCheck = checkExplicitMemoizeDirectives(body.directives);
+    if (selfCheck === MemoizeDirectiveState.Enabled) return true;
+    if (selfCheck === MemoizeDirectiveState.Disabled) return false;
 
-      if (!parentWithDirective) return {compile: true, fn};
-      const parentDirectiveCheck = checkExplicitMemoizeDirectives(
-        (parentWithDirective.node as t.Program | t.BlockStatement).directives,
-      );
-      return {
-        compile: [
-          MemoizeDirectiveState.Enabled,
-          MemoizeDirectiveState.Undefined,
-        ].includes(parentDirectiveCheck),
-        fn,
-      };
-    }
-    return {compile: false, fn};
-  });
+    const parentWithDirective = fn.findParent(parentPath => {
+      if (parentPath.isBlockStatement() || parentPath.isProgram()) {
+        const directiveCheck = checkExplicitMemoizeDirectives(
+          parentPath.node.directives,
+        );
+        return ENABLED_OR_DISABLED_STATES.has(directiveCheck);
+      }
+      return false;
+    });
+
+    if (!parentWithDirective) return true;
+    const parentDirectiveCheck = checkExplicitMemoizeDirectives(
+      (parentWithDirective.node as t.Program | t.BlockStatement).directives,
+    );
+    return ENABLED_OR_UNDEFINED_STATES.has(parentDirectiveCheck);
+  }
+  return false;
+}
+
+function checkExplicitMemoizeDirectives(
+  directives: Array<t.Directive>,
+): MemoizeDirectiveState {
+  if (findDirectiveEnablingMemoization(directives).length) {
+    return MemoizeDirectiveState.Enabled;
+  }
+  if (findDirectiveDisablingMemoization(directives).length) {
+    return MemoizeDirectiveState.Disabled;
+  }
+  return MemoizeDirectiveState.Undefined;
 }
 
 const COMMON_HOOKS: Array<[string, Hook]> = [
@@ -268,7 +281,7 @@ function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
     for (const func of parsedFunctions) {
       const id = withIdentifier(getFunctionIdentifier(func.fn));
       const fnName = id.name;
-      if (!func.compile) {
+      if (!func.compilationEnabled) {
         upsert({
           kind: 'ast',
           fnName,
