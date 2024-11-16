@@ -34,7 +34,7 @@ function Component() {
     t0 = function update() {
       "worklet";
 
-      setCount((count_0) => count_0 + 1);
+      setCount(_temp);
     };
     $[0] = t0;
   } else {
@@ -50,6 +50,9 @@ function Component() {
     t1 = $[2];
   }
   return t1;
+}
+function _temp(count_0) {
+  return count_0 + 1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

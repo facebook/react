@@ -97,6 +97,7 @@ import {
   MaySuspendCommit,
   FormReset,
   Cloned,
+  PerformedWork,
 } from './ReactFiberFlags';
 import {
   commitStartTime,
@@ -602,7 +603,8 @@ function commitLayoutEffectOnFiber(
     enableComponentPerformanceTrack &&
     (finishedWork.mode & ProfileMode) !== NoMode &&
     componentEffectStartTime >= 0 &&
-    componentEffectEndTime >= 0
+    componentEffectEndTime >= 0 &&
+    componentEffectDuration > 0.05
   ) {
     logComponentEffect(
       finishedWork,
@@ -2106,7 +2108,8 @@ function commitMutationEffectsOnFiber(
     enableComponentPerformanceTrack &&
     (finishedWork.mode & ProfileMode) !== NoMode &&
     componentEffectStartTime >= 0 &&
-    componentEffectEndTime >= 0
+    componentEffectEndTime >= 0 &&
+    componentEffectDuration > 0.05
   ) {
     logComponentEffect(
       finishedWork,
@@ -2647,7 +2650,8 @@ function commitPassiveMountOnFiber(
     enableProfilerTimer &&
     enableComponentPerformanceTrack &&
     (finishedWork.mode & ProfileMode) !== NoMode &&
-    ((finishedWork.actualStartTime: any): number) > 0
+    ((finishedWork.actualStartTime: any): number) > 0 &&
+    (finishedWork.flags & PerformedWork) !== NoFlags
   ) {
     logComponentRender(
       finishedWork,
@@ -2929,7 +2933,8 @@ function commitPassiveMountOnFiber(
     enableComponentPerformanceTrack &&
     (finishedWork.mode & ProfileMode) !== NoMode &&
     componentEffectStartTime >= 0 &&
-    componentEffectEndTime >= 0
+    componentEffectEndTime >= 0 &&
+    componentEffectDuration > 0.05
   ) {
     logComponentEffect(
       finishedWork,
@@ -3448,7 +3453,8 @@ function commitPassiveUnmountOnFiber(finishedWork: Fiber): void {
     enableComponentPerformanceTrack &&
     (finishedWork.mode & ProfileMode) !== NoMode &&
     componentEffectStartTime >= 0 &&
-    componentEffectEndTime >= 0
+    componentEffectEndTime >= 0 &&
+    componentEffectDuration > 0.05
   ) {
     logComponentEffect(
       finishedWork,
