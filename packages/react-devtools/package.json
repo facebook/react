@@ -22,7 +22,7 @@
     "start": "node bin.js"
   },
   "dependencies": {
-    "cross-spawn": "^5.0.1",
+    "cross-spawn": "^7.0.5",
     "electron": "^24.8.5",
     "internal-ip": "^6.2.0",
     "minimist": "^1.2.6",
