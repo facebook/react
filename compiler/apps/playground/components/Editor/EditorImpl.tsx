@@ -49,7 +49,21 @@ type FunctionLike =
   | NodePath<t.FunctionDeclaration>
   | NodePath<t.ArrowFunctionExpression>
   | NodePath<t.FunctionExpression>;
+enum MemoizeDirectiveState {
+  Enabled = 'Enabled',
+  Disabled = 'Disabled',
+  Undefined = 'Undefined',
+}
 
+const MEMOIZE_ENABLED_OR_UNDEFINED_STATES = new Set([
+  MemoizeDirectiveState.Enabled,
+  MemoizeDirectiveState.Undefined,
+]);
+
+const MEMOIZE_ENABLED_OR_DISABLED_STATES = new Set([
+  MemoizeDirectiveState.Enabled,
+  MemoizeDirectiveState.Disabled,
+]);
 function parseInput(input: string, language: 'flow' | 'typescript'): any {
   // Extract the first line to quickly check for custom test directives
   if (language === 'flow') {
@@ -66,21 +80,6 @@ function parseInput(input: string, language: 'flow' | 'typescript'): any {
     });
   }
 }
-enum MemoizeDirectiveState {
-  Enabled = 'Enabled',
-  Disabled = 'Disabled',
-  Undefined = 'Undefined',
-}
-
-const ENABLED_OR_UNDEFINED_STATES = new Set([
-  MemoizeDirectiveState.Enabled,
-  MemoizeDirectiveState.Undefined,
-]);
-
-const ENABLED_OR_DISABLED_STATES = new Set([
-  MemoizeDirectiveState.Enabled,
-  MemoizeDirectiveState.Disabled,
-]);
 
 function parseFunctions(
   source: string,
@@ -143,7 +142,7 @@ function shouldCompile(fn: FunctionLike): boolean {
         const directiveCheck = checkExplicitMemoizeDirectives(
           parentPath.node.directives,
         );
-        return ENABLED_OR_DISABLED_STATES.has(directiveCheck);
+        return MEMOIZE_ENABLED_OR_DISABLED_STATES.has(directiveCheck);
       }
       return false;
     });
@@ -152,7 +151,7 @@ function shouldCompile(fn: FunctionLike): boolean {
     const parentDirectiveCheck = checkExplicitMemoizeDirectives(
       (parentWithDirective.node as t.Program | t.BlockStatement).directives,
     );
-    return ENABLED_OR_UNDEFINED_STATES.has(parentDirectiveCheck);
+    return MEMOIZE_ENABLED_OR_UNDEFINED_STATES.has(parentDirectiveCheck);
   }
   return false;
 }
