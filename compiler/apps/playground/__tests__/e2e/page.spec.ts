@@ -8,42 +8,68 @@
 import {expect, test} from '@playwright/test';
 import {encodeStore, type Store} from '../../lib/stores';
 
-const STORE: Store = {
-  source: `export default function TestComponent({ x }) {
-  return <Button>{x}</Button>;
-}
-`,
-};
-const HASH = encodeStore(STORE);
-
 function concat(data: Array<string>): string {
   return data.join('');
 }
 
-test('editor should compile successfully', async ({page}) => {
-  await page.goto(`/#${HASH}`, {waitUntil: 'networkidle'});
+test('editor should open successfully', async ({page}) => {
+  await page.goto(`/`, {waitUntil: 'networkidle'});
   await page.screenshot({
     fullPage: true,
-    path: 'test-results/00-on-networkidle.png',
+    path: 'test-results/00-fresh-page.png',
   });
+});
+test('editor should compile from hash successfully', async ({page}) => {
+  const STORE: Store = {
+    source: `export default function TestComponent({ x }) {
+      return <Button>{x}</Button>;
+    }
+    `,
+  };
+  const HASH = encodeStore(STORE);
+  await page.goto(`/#${HASH}`, {waitUntil: 'networkidle'});
 
   // User input from hash compiles
   await page.screenshot({
     fullPage: true,
-    path: 'test-results/01-show-js-before.png',
+    path: 'test-results/01-compiles-from-hash.png',
   });
   const userInput =
     (await page.locator('.monaco-editor').nth(1).allInnerTexts()) ?? [];
-  expect(concat(userInput)).toMatchSnapshot('user-input.txt');
+  expect(concat(userInput)).toMatchSnapshot('user-output.txt');
+});
+test('reset button works', async ({page}) => {
+  const STORE: Store = {
+    source: `export default function TestComponent({ x }) {
+      return <Button>{x}</Button>;
+    }
+    `,
+  };
+  const HASH = encodeStore(STORE);
+  await page.goto(`/#${HASH}`, {waitUntil: 'networkidle'});
 
   // Reset button works
   page.on('dialog', dialog => dialog.accept());
   await page.getByRole('button', {name: 'Reset'}).click();
   await page.screenshot({
     fullPage: true,
-    path: 'test-results/02-show-js-after.png',
+    path: 'test-results/02-reset-button-works.png',
   });
   const defaultInput =
     (await page.locator('.monaco-editor').nth(1).allInnerTexts()) ?? [];
-  expect(concat(defaultInput)).toMatchSnapshot('default-input.txt');
+  expect(concat(defaultInput)).toMatchSnapshot('default-output.txt');
+});
+test('directives work', async ({page}) => {
+  await page.goto(`/`, {waitUntil: 'networkidle'});
+
+  const monacoEditor = page.locator(".monaco-editor").nth(0);
+  await monacoEditor.click();
+  await page.keyboard.press("Meta+A");
+    await page.keyboard.press('Backspace');
+  await page.keyboard.type(`function useFoo(props) {"use no memo";const x = () => { };const y = function (a) { };return foo(props.x, x);};`);
+  await page.keyboard.type(`function Component() {const x = useFoo();return <div>{x}</div>;}`);
+  await page.screenshot({ fullPage: true, path: 'test-results/03-simple-use-memo.png' });
+
+  const useMemoOutput = (await page.locator('.monaco-editor').nth(1).allInnerTexts()) ?? [];
+  expect(concat(useMemoOutput)).toMatchSnapshot('simple-use-memo-output.txt');
 });
