@@ -60,14 +60,21 @@ test('reset button works', async ({page}) => {
   expect(concat(defaultInput)).toMatchSnapshot('default-output.txt');
 });
 test('directives work', async ({page}) => {
-  await page.goto(`/`, {waitUntil: 'networkidle'});
-
-  const monacoEditor = page.locator(".monaco-editor").nth(0);
-  await monacoEditor.click();
-  await page.keyboard.press("Meta+A");
-    await page.keyboard.press('Backspace');
-  await page.keyboard.type(`function useFoo(props) {"use no memo";const x = () => { };const y = function (a) { };return foo(props.x, x);};`);
-  await page.keyboard.type(`function Component() {const x = useFoo();return <div>{x}</div>;}`);
+  const STORE: Store = {
+    source: `function useFoo(props) {
+              'use no memo';
+              const x = () => { };
+              const y = function (a) { };
+              return foo(props.x, x);
+            }
+            function Component() {
+              const x = useFoo();
+              return <div>{x}</div>;
+            }
+    `,
+  };
+  const HASH = encodeStore(STORE);
+  await page.goto(`/#${HASH}`, {waitUntil: 'networkidle'});  
   await page.screenshot({ fullPage: true, path: 'test-results/03-simple-use-memo.png' });
 
   const useMemoOutput = (await page.locator('.monaco-editor').nth(1).allInnerTexts()) ?? [];
