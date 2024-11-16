@@ -74,9 +74,13 @@ test('directives work', async ({page}) => {
     `,
   };
   const HASH = encodeStore(STORE);
-  await page.goto(`/#${HASH}`, {waitUntil: 'networkidle'});  
-  await page.screenshot({ fullPage: true, path: 'test-results/03-simple-use-memo.png' });
+  await page.goto(`/#${HASH}`, {waitUntil: 'networkidle'});
+  await page.screenshot({
+    fullPage: true,
+    path: 'test-results/03-simple-use-memo.png',
+  });
 
-  const useMemoOutput = (await page.locator('.monaco-editor').nth(1).allInnerTexts()) ?? [];
+  const useMemoOutput =
+    (await page.locator('.monaco-editor').nth(1).allInnerTexts()) ?? [];
   expect(concat(useMemoOutput)).toMatchSnapshot('simple-use-memo-output.txt');
 });

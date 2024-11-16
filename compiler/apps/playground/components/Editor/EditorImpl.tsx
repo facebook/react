@@ -45,7 +45,10 @@ import {
 import {printFunctionWithOutlined} from 'babel-plugin-react-compiler/src/HIR/PrintHIR';
 import {printReactiveFunctionWithOutlined} from 'babel-plugin-react-compiler/src/ReactiveScopes/PrintReactiveFunction';
 
-type FunctionLike = NodePath<t.FunctionDeclaration> | NodePath<t.ArrowFunctionExpression> | NodePath<t.FunctionExpression>;
+type FunctionLike =
+  | NodePath<t.FunctionDeclaration>
+  | NodePath<t.ArrowFunctionExpression>
+  | NodePath<t.FunctionExpression>;
 enum MemoizeDirectiveState {
   Enabled,
   Disabled,
@@ -67,11 +70,13 @@ function parseInput(input: string, language: 'flow' | 'typescript'): any {
     });
   }
 }
-function checkExplicitMemoizeDirectives(directives: Array<t.Directive>): MemoizeDirectiveState {
-  if(findDirectiveEnablingMemoization(directives).length) {
+function checkExplicitMemoizeDirectives(
+  directives: Array<t.Directive>,
+): MemoizeDirectiveState {
+  if (findDirectiveEnablingMemoization(directives).length) {
     return MemoizeDirectiveState.Enabled;
   }
-  if(findDirectiveDisablingMemoization(directives).length) {
+  if (findDirectiveDisablingMemoization(directives).length) {
     return MemoizeDirectiveState.Disabled;
   }
   return MemoizeDirectiveState.Undefined;
@@ -113,28 +118,41 @@ function parseFunctions(
   return items.map<{
     compile: boolean;
     fn: FunctionLike;
-  }>((fn) => {
-    const { body } = fn.node;
+  }>(fn => {
+    const {body} = fn.node;
     if (t.isBlockStatement(body)) {
       const selfCheck = checkExplicitMemoizeDirectives(body.directives);
-      if (selfCheck === MemoizeDirectiveState.Enabled) return { compile: true, fn };
-      if (selfCheck === MemoizeDirectiveState.Disabled) return { compile: false, fn };
+      if (selfCheck === MemoizeDirectiveState.Enabled)
+        return {compile: true, fn};
+      if (selfCheck === MemoizeDirectiveState.Disabled)
+        return {compile: false, fn};
 
-      const parentWithDirective = fn.findParent((parentPath) => {
+      const parentWithDirective = fn.findParent(parentPath => {
         if (parentPath.isBlockStatement() || parentPath.isProgram()) {
-          const directiveCheck = checkExplicitMemoizeDirectives(parentPath.node.directives);
-          return [MemoizeDirectiveState.Enabled, MemoizeDirectiveState.Disabled].includes(directiveCheck);
+          const directiveCheck = checkExplicitMemoizeDirectives(
+            parentPath.node.directives,
+          );
+          return [
+            MemoizeDirectiveState.Enabled,
+            MemoizeDirectiveState.Disabled,
+          ].includes(directiveCheck);
         }
         return false;
       });
 
-      if (!parentWithDirective) return { compile: true, fn };
+      if (!parentWithDirective) return {compile: true, fn};
       const parentDirectiveCheck = checkExplicitMemoizeDirectives(
         (parentWithDirective.node as t.Program | t.BlockStatement).directives,
       );
-      return { compile: [MemoizeDirectiveState.Enabled, MemoizeDirectiveState.Undefined].includes(parentDirectiveCheck), fn };
+      return {
+        compile: [
+          MemoizeDirectiveState.Enabled,
+          MemoizeDirectiveState.Undefined,
+        ].includes(parentDirectiveCheck),
+        fn,
+      };
     }
-    return { compile: false, fn };
+    return {compile: false, fn};
   });
 }
 
@@ -250,14 +268,14 @@ function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
     for (const func of parsedFunctions) {
       const id = withIdentifier(getFunctionIdentifier(func.fn));
       const fnName = id.name;
-      if(!func.compile) {
+      if (!func.compile) {
         upsert({
           kind: 'ast',
           fnName,
           name: 'CodeGen',
           value: {
             type: 'FunctionDeclaration',
-            id: func.fn.isArrowFunctionExpression() ? null :  func.fn.node.id,
+            id: func.fn.isArrowFunctionExpression() ? null : func.fn.node.id,
             async: func.fn.node.async,
             generator: !!func.fn.node.generator,
             body: func.fn.node.body as t.BlockStatement,
