@@ -102,5 +102,17 @@
     "undici": "^5.28.4",
     "web-streams-polyfill": "^3.1.1",
     "yargs": "^15.3.1"
+  },
+  "dependabot": {
+    "version": 2,
+    "updates": [
+      {
+        "package-ecosystem": "npm",
+        "directory": "/",
+        "schedule": {
+          "interval": "weekly"
+        }
+      }
+    ]
   }
 }
