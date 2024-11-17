@@ -244,10 +244,10 @@ chrome-launcher@^0.10.5:
     mkdirp "0.5.1"
     rimraf "^2.6.1"
 
-chrome-launcher@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/chrome-launcher/-/chrome-launcher-1.0.0.tgz#c8bc62a89bebfdcb71976a9bd7e3d66e2106ee8b"
-  integrity sha512-74IMFVfgni/bQ4GotUNJpH2vDR+Sh9cXNPVhPXiedeiB0+5j7/8i8LAqS7WlyNSKqtxJ/CgbOpBDPLkzqDVhlw==
+chrome-launcher@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/chrome-launcher/-/chrome-launcher-1.1.0.tgz#b5fd371839618bfc38e36cab569ef07c93fc50bf"
+  integrity sha512-rJYWeEAERwWIr3c3mEVXwNiODPEdMRlRxHc47B1qHPOolHZnkj7rMv1QSUfPoG6MgatWj5AxSpnKKR4QEwEQIQ==
   dependencies:
     "@types/node" "*"
     escape-string-regexp "^4.0.0"
