@@ -18,6 +18,7 @@ import {
   disableSchedulerTimeoutInWorkLoop,
   enableProfilerTimer,
   enableProfilerNestedUpdatePhase,
+  enableComponentPerformanceTrack,
   enableSiblingPrerendering,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -64,6 +65,7 @@ import {
   supportsMicrotasks,
   scheduleMicrotask,
   shouldAttemptEagerTransition,
+  trackSchedulerEvent,
 } from './ReactFiberConfig';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -225,6 +227,12 @@ function flushSyncWorkAcrossRoots_impl(
 }
 
 function processRootScheduleInMicrotask() {
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // Track the currently executing event if there is one so we can ignore this
+    // event when logging events.
+    trackSchedulerEvent();
+  }
+
   // This function is always called inside a microtask. It should never be
   // called synchronously.
   didScheduleMicrotask = false;
@@ -428,6 +436,12 @@ function performWorkOnRootViaSchedulerTask(
     resetNestedUpdateFlag();
   }
 
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // Track the currently executing event if there is one so we can ignore this
+    // event when logging events.
+    trackSchedulerEvent();
+  }
+
   // Flush any pending passive effects before deciding which lanes to work on,
   // in case they schedule additional work.
   const originalCallbackNode = root.callbackNode;
@@ -482,7 +496,7 @@ function performWorkOnRootViaSchedulerTask(
   // only safe to do because we know we're at the end of the browser task.
   // So although it's not an actual microtask, it might as well be.
   scheduleTaskForRootDuringMicrotask(root, now());
-  if (root.callbackNode === originalCallbackNode) {
+  if (root.callbackNode != null && root.callbackNode === originalCallbackNode) {
     // The task node scheduled for this root is the same one that's
     // currently executed. Need to return a continuation.
     return performWorkOnRootViaSchedulerTask.bind(null, root);

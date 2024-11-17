@@ -92,7 +92,9 @@ export const renameElementSymbol = false;
 export const enableObjectFiber = false;
 export const enableOwnerStacks = false;
 export const enableShallowPropDiffing = false;
-export const enableSiblingPrerendering = false;
+export const enableSiblingPrerendering = true;
+
+export const enableUseResourceEffectHook = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

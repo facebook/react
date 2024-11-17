@@ -9,8 +9,15 @@
 
 import type {Fiber} from './ReactInternalTypes';
 
-import type {Lane} from './ReactFiberLane';
-import {isTransitionLane, isBlockingLane, isSyncLane} from './ReactFiberLane';
+import type {Lane, Lanes} from './ReactFiberLane';
+import {
+  isTransitionLane,
+  isBlockingLane,
+  isSyncLane,
+  includesTransitionLane,
+  includesBlockingLane,
+  includesSyncLane,
+} from './ReactFiberLane';
 
 import {resolveEventType, resolveEventTimeStamp} from './ReactFiberConfig';
 
@@ -36,14 +43,18 @@ export let componentEffectDuration: number = -0;
 export let componentEffectStartTime: number = -1.1;
 export let componentEffectEndTime: number = -1.1;
 
+export let blockingClampTime: number = -0;
 export let blockingUpdateTime: number = -1.1; // First sync setState scheduled.
 export let blockingEventTime: number = -1.1; // Event timeStamp of the first setState.
 export let blockingEventType: null | string = null; // Event type of the first setState.
+export let blockingEventIsRepeat: boolean = false;
 // TODO: This should really be one per Transition lane.
+export let transitionClampTime: number = -0;
 export let transitionStartTime: number = -1.1; // First startTransition call before setState.
 export let transitionUpdateTime: number = -1.1; // First transition setState scheduled.
 export let transitionEventTime: number = -1.1; // Event timeStamp of the first transition.
 export let transitionEventType: null | string = null; // Event type of the first transition.
+export let transitionEventIsRepeat: boolean = false;
 
 export function startUpdateTimerByLane(lane: Lane): void {
   if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
@@ -52,17 +63,40 @@ export function startUpdateTimerByLane(lane: Lane): void {
   if (isSyncLane(lane) || isBlockingLane(lane)) {
     if (blockingUpdateTime < 0) {
       blockingUpdateTime = now();
-      blockingEventTime = resolveEventTimeStamp();
-      blockingEventType = resolveEventType();
+      const newEventTime = resolveEventTimeStamp();
+      const newEventType = resolveEventType();
+      blockingEventIsRepeat =
+        newEventTime === blockingEventTime &&
+        newEventType === blockingEventType;
+      blockingEventTime = newEventTime;
+      blockingEventType = newEventType;
     }
   } else if (isTransitionLane(lane)) {
     if (transitionUpdateTime < 0) {
       transitionUpdateTime = now();
       if (transitionStartTime < 0) {
-        transitionEventTime = resolveEventTimeStamp();
-        transitionEventType = resolveEventType();
+        const newEventTime = resolveEventTimeStamp();
+        const newEventType = resolveEventType();
+        transitionEventIsRepeat =
+          newEventTime === transitionEventTime &&
+          newEventType === transitionEventType;
+        transitionEventTime = newEventTime;
+        transitionEventType = newEventType;
       }
     }
+  }
+}
+
+export function markUpdateAsRepeat(lanes: Lanes): void {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  // We're about to do a retry of this render. It is not a new update, so treat this
+  // as a repeat within the same event.
+  if (includesSyncLane(lanes) || includesBlockingLane(lanes)) {
+    blockingEventIsRepeat = true;
+  } else if (includesTransitionLane(lanes)) {
+    transitionEventIsRepeat = true;
   }
 }
 
@@ -76,8 +110,13 @@ export function startAsyncTransitionTimer(): void {
   }
   if (transitionStartTime < 0 && transitionUpdateTime < 0) {
     transitionStartTime = now();
-    transitionEventTime = resolveEventTimeStamp();
-    transitionEventType = resolveEventType();
+    const newEventTime = resolveEventTimeStamp();
+    const newEventType = resolveEventType();
+    transitionEventIsRepeat =
+      newEventTime === transitionEventTime &&
+      newEventType === transitionEventType;
+    transitionEventTime = newEventTime;
+    transitionEventType = newEventType;
   }
 }
 
@@ -115,12 +154,7 @@ export function clampBlockingTimers(finalTime: number): void {
   // If we had new updates come in while we were still rendering or committing, we don't want
   // those update times to create overlapping tracks in the performance timeline so we clamp
   // them to the end of the commit phase.
-  if (blockingUpdateTime >= 0 && blockingUpdateTime < finalTime) {
-    blockingUpdateTime = finalTime;
-  }
-  if (blockingEventTime >= 0 && blockingEventTime < finalTime) {
-    blockingEventTime = finalTime;
-  }
+  blockingClampTime = finalTime;
 }
 
 export function clampTransitionTimers(finalTime: number): void {
@@ -130,15 +164,7 @@ export function clampTransitionTimers(finalTime: number): void {
   // If we had new updates come in while we were still rendering or committing, we don't want
   // those update times to create overlapping tracks in the performance timeline so we clamp
   // them to the end of the commit phase.
-  if (transitionStartTime >= 0 && transitionStartTime < finalTime) {
-    transitionStartTime = finalTime;
-  }
-  if (transitionUpdateTime >= 0 && transitionUpdateTime < finalTime) {
-    transitionUpdateTime = finalTime;
-  }
-  if (transitionEventTime >= 0 && transitionEventTime < finalTime) {
-    transitionEventTime = finalTime;
-  }
+  transitionClampTime = finalTime;
 }
 
 export function pushNestedEffectDurations(): number {
@@ -193,13 +219,8 @@ export function popComponentEffectStart(prevEffectStart: number): void {
   if (!enableProfilerTimer || !enableProfilerCommitHooks) {
     return;
   }
-  if (prevEffectStart < 0) {
-    // If the parent component didn't have a start time, we use the start
-    // of the child as the parent's start time. We subtrack a minimal amount of
-    // time to ensure that the parent's start time is before the child to ensure
-    // that the performance tracks line up in the right order.
-    componentEffectStartTime -= 0.001;
-  } else {
+  // If the parent component didn't have a start time, we let this current time persist.
+  if (prevEffectStart >= 0) {
     // Otherwise, we restore the previous parent's start time.
     componentEffectStartTime = prevEffectStart;
   }

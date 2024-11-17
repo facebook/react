@@ -212,7 +212,7 @@ export function use<T>(usable: Usable<T>): T {
   return dispatcher.use(usable);
 }
 
-export function useMemoCache(size: number): Array<any> {
+export function useMemoCache(size: number): Array<mixed> {
   const dispatcher = resolveDispatcher();
   // $FlowFixMe[not-a-function] This is unstable, thus optional
   return dispatcher.useMemoCache(size);
@@ -224,6 +224,16 @@ export function useEffectEvent<Args, F: (...Array<Args>) => mixed>(
   const dispatcher = resolveDispatcher();
   // $FlowFixMe[not-a-function] This is unstable, thus optional
   return dispatcher.useEffectEvent(callback);
+}
+
+export function useResourceEffect(
+  create: () => mixed,
+  createDeps: Array<mixed> | void | null,
+  update: ((resource: mixed) => void) | void,
+  updateDeps: Array<mixed> | void | null,
+  destroy: ((resource: mixed) => void) | void,
+): void {
+  throw new Error('Not implemented.');
 }
 
 export function useOptimistic<S, A>(

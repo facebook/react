@@ -145,7 +145,7 @@ export const enableOwnerStacks = __EXPERIMENTAL__;
 
 export const enableShallowPropDiffing = false;
 
-export const enableSiblingPrerendering = false;
+export const enableSiblingPrerendering = true;
 
 /**
  * Enables an expiration time for retry lanes to avoid starvation.
@@ -160,6 +160,11 @@ export const transitionLaneExpirationMs = 5000;
  * by setState or similar outside of the component owning the state.
  */
 export const enableInfiniteRenderLoopDetection = false;
+
+/**
+ * Experimental new hook for better managing resources in effects.
+ */
+export const enableUseResourceEffectHook = false;
 
 // -----------------------------------------------------------------------------
 // Ready for next major.

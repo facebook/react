@@ -83,7 +83,8 @@ export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
 export const useModernStrictMode = true;
-export const enableSiblingPrerendering = false;
+export const enableSiblingPrerendering = true;
+export const enableUseResourceEffectHook = false;
 
 // Profiling Only
 export const enableProfilerTimer = __PROFILE__;
