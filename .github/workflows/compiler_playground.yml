@@ -52,4 +52,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: test-results
+          path: compiler/apps/playground/test-results
