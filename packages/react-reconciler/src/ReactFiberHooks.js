@@ -150,6 +150,8 @@ import {
   trackUsedThenable,
   checkIfUseWrappedInTryCatch,
   createThenableState,
+  SuspenseException,
+  SuspenseActionException,
 } from './ReactFiberThenable';
 import type {ThenableState} from './ReactFiberThenable';
 import type {BatchConfigTransition} from './ReactFiberTracingMarkerComponent';
@@ -2476,13 +2478,27 @@ function updateActionStateImpl<S, P>(
   const [isPending] = updateState(false);
 
   // This will suspend until the action finishes.
-  const state: Awaited<S> =
+  let state: Awaited<S>;
+  if (
     typeof actionResult === 'object' &&
     actionResult !== null &&
     // $FlowFixMe[method-unbinding]
     typeof actionResult.then === 'function'
-      ? useThenable(((actionResult: any): Thenable<Awaited<S>>))
-      : (actionResult: any);
+  ) {
+    try {
+      state = useThenable(((actionResult: any): Thenable<Awaited<S>>));
+    } catch (x) {
+      if (x === SuspenseException) {
+        // If we Suspend here, mark this separately so that we can track this
+        // as an Action in Profiling tools.
+        throw SuspenseActionException;
+      } else {
+        throw x;
+      }
+    }
+  } else {
+    state = (actionResult: any);
+  }
 
   const actionQueueHook = updateWorkInProgressHook();
   const actionQueue = actionQueueHook.queue;

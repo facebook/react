@@ -298,6 +298,7 @@ import {
 import {processTransitionCallbacks} from './ReactFiberTracingMarkerComponent';
 import {
   SuspenseException,
+  SuspenseActionException,
   SuspenseyCommitException,
   getSuspendedThenable,
   isThenableResolved,
@@ -346,7 +347,7 @@ let workInProgress: Fiber | null = null;
 // The lanes we're rendering
 let workInProgressRootRenderLanes: Lanes = NoLanes;
 
-opaque type SuspendedReason = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+opaque type SuspendedReason = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 const NotSuspended: SuspendedReason = 0;
 const SuspendedOnError: SuspendedReason = 1;
 const SuspendedOnData: SuspendedReason = 2;
@@ -356,6 +357,7 @@ const SuspendedOnInstanceAndReadyToContinue: SuspendedReason = 5;
 const SuspendedOnDeprecatedThrowPromise: SuspendedReason = 6;
 const SuspendedAndReadyToContinue: SuspendedReason = 7;
 const SuspendedOnHydration: SuspendedReason = 8;
+const SuspendedOnAction: SuspendedReason = 9;
 
 // When this is true, the work-in-progress fiber just suspended (or errored) and
 // we've yet to unwind the stack. In some cases, we may yield to the main thread
@@ -638,7 +640,10 @@ export function getWorkInProgressRootRenderLanes(): Lanes {
 }
 
 export function isWorkLoopSuspendedOnData(): boolean {
-  return workInProgressSuspendedReason === SuspendedOnData;
+  return (
+    workInProgressSuspendedReason === SuspendedOnData ||
+    workInProgressSuspendedReason === SuspendedOnAction
+  );
 }
 
 export function getCurrentTime(): number {
@@ -767,7 +772,8 @@ export function scheduleUpdateOnFiber(
   if (
     // Suspended render phase
     (root === workInProgressRoot &&
-      workInProgressSuspendedReason === SuspendedOnData) ||
+      (workInProgressSuspendedReason === SuspendedOnData ||
+        workInProgressSuspendedReason === SuspendedOnAction)) ||
     // Suspended commit phase
     root.cancelPendingCommit !== null
   ) {
@@ -1815,7 +1821,10 @@ function handleThrow(root: FiberRoot, thrownValue: any): void {
     resetCurrentFiber();
   }
 
-  if (thrownValue === SuspenseException) {
+  if (
+    thrownValue === SuspenseException ||
+    thrownValue === SuspenseActionException
+  ) {
     // This is a special type of exception used for Suspense. For historical
     // reasons, the rest of the Suspense implementation expects the thrown value
     // to be a thenable, because before `use` existed that was the (unstable)
@@ -1836,7 +1845,9 @@ function handleThrow(root: FiberRoot, thrownValue: any): void {
       !includesNonIdleWork(workInProgressRootSkippedLanes) &&
       !includesNonIdleWork(workInProgressRootInterleavedUpdatedLanes)
         ? // Suspend work loop until data resolves
-          SuspendedOnData
+          thrownValue === SuspenseActionException
+          ? SuspendedOnAction
+          : SuspendedOnData
         : // Don't suspend work loop, except to check if the data has
           // immediately resolved (i.e. in a microtask). Otherwise, trigger the
           // nearest Suspense fallback.
@@ -1903,6 +1914,7 @@ function handleThrow(root: FiberRoot, thrownValue: any): void {
         break;
       }
       case SuspendedOnData:
+      case SuspendedOnAction:
       case SuspendedOnImmediate:
       case SuspendedOnDeprecatedThrowPromise:
       case SuspendedAndReadyToContinue: {
@@ -2185,6 +2197,7 @@ function renderRootSync(
           }
           case SuspendedOnImmediate:
           case SuspendedOnData:
+          case SuspendedOnAction:
           case SuspendedOnDeprecatedThrowPromise: {
             if (getSuspenseHandler() === null) {
               didSuspendInShell = true;
@@ -2348,7 +2361,8 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             );
             break;
           }
-          case SuspendedOnData: {
+          case SuspendedOnData:
+          case SuspendedOnAction: {
             const thenable: Thenable<mixed> = (thrownValue: any);
             if (isThenableResolved(thenable)) {
               // The data resolved. Try rendering the component again.
@@ -2366,7 +2380,8 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             const onResolution = () => {
               // Check if the root is still suspended on this promise.
               if (
-                workInProgressSuspendedReason === SuspendedOnData &&
+                (workInProgressSuspendedReason === SuspendedOnData ||
+                  workInProgressSuspendedReason === SuspendedOnAction) &&
                 workInProgressRoot === root
               ) {
                 // Mark the root as ready to continue rendering.
@@ -2814,6 +2829,7 @@ function throwAndUnwindWorkLoop(
         // can prerender the siblings.
         if (
           suspendedReason === SuspendedOnData ||
+          suspendedReason === SuspendedOnAction ||
           suspendedReason === SuspendedOnImmediate ||
           suspendedReason === SuspendedOnDeprecatedThrowPromise
         ) {
