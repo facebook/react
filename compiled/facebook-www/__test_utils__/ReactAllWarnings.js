@@ -36,6 +36,7 @@ export default [
   "%s is not a supported value for revealOrder on <SuspenseList />. Did you mean \"together\", \"forwards\" or \"backwards\"?",
   "%s must not return anything besides a function, which is used for clean-up.%s",
   "%s objects cannot be rendered as text children. Try formatting it using toString().%s",
+  "%s received a dependency array with no dependencies. When specified, the dependency array must have at least one dependency.",
   "%s received a final argument during this render, but not during the previous render. Even though the final argument is optional, its type cannot change between renders.",
   "%s received a final argument that is not an array (instead, received `%s`). When specified, the final argument must be an array.",
   "%s uses the legacy childContextTypes API which was removed in React 19. Use React.createContext() instead. (https://react.dev/link/legacy-context)",
@@ -148,11 +149,14 @@ export default [
   "Expected %s state to match memoized state before processing the update queue. This might either be because of a bug in React, or because a component reassigns its own `this.state`. Please file an issue.",
   "Expected `%s` listener to be a function, instead got `false`.\n\nIf you used to conditionally omit it with %s={condition && value}, pass %s={condition ? value : undefined} instead.",
   "Expected `%s` listener to be a function, instead got a value of `%s` type.",
+  "Expected a ResourceEffectUpdateKind to be pushed together with ResourceEffectIdentityKind, got %s. This is a bug in React.",
+  "Expected a ResourceEffectUpdateKind to follow ResourceEffectIdentityKind, got %s. This is a bug in React.",
   "Expected a constant size argument for each invocation of useMemoCache. The previous cache was allocated with size %s but size %s was requested.",
   "Expected an empty stack. Something was not reset properly.",
   "Expected currently replaying event to be null. This error is likely caused by a bug in React. Please file an issue.",
   "Expected currently replaying event to not be null. This error is likely caused by a bug in React. Please file an issue.",
   "Expected host context to exist. This error is likely caused by a bug in React. Please file an issue.",
+  "Expected only SimpleEffects when enableUseResourceEffectHook is disabled, got %s",
   "Expected the last optional `callback` argument to be a function. Instead received: %s.",
   "Expected to be hydrating. This is a bug in React. Please file an issue.",
   "Expected to find a StrictMode component in a strict mode tree. This error is likely caused by a bug in React. Please file an issue.",
@@ -305,6 +309,7 @@ export default [
   "Unexpected ref object provided for %s. Use either a ref-setter function or React.createRef().",
   "Unexpected type for suspenseCallback.",
   "Unexpected type of fiber triggered a suspensey commit. This is a bug in React.",
+  "Unhandled Effect kind %s. This is a bug in React.",
   "Unknown ARIA attribute `%s`. Did you mean `%s`?",
   "Unknown event handler property `%s`. It will be ignored.",
   "Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n%s uses %s but also contains the following legacy lifecycles:%s%s%s\n\nThe above lifecycles should be removed. Learn more about this warning here:\nhttps://react.dev/link/unsafe-component-lifecycles",
@@ -388,5 +393,6 @@ export default [
   "unmountComponentAtNode(): The node you're attempting to unmount was rendered by React and is not a top-level container. %s",
   "unmountComponentAtNode(): The node you're attempting to unmount was rendered by another copy of React.",
   "useInsertionEffect must not schedule updates.",
-  "useOptimistic is now in canary. Remove the experimental_ prefix. The prefixed alias will be removed in an upcoming release."
+  "useOptimistic is now in canary. Remove the experimental_ prefix. The prefixed alias will be removed in an upcoming release.",
+  "useResourceEffect must provide a callback which returns a resource. If a managed resource is not needed here, use useEffect. Received %s"
 ];

@@ -1040,6 +1040,8 @@ __DEV__ &&
       enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+      enableUseResourceEffectHook =
+        dynamicFeatureFlags.enableUseResourceEffectHook,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
       REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_ELEMENT_TYPE = renameElementSymbol
@@ -1577,6 +1579,22 @@ __DEV__ &&
     exports.experimental_useEffectEvent = function (callback) {
       return resolveDispatcher().useEffectEvent(callback);
     };
+    exports.experimental_useResourceEffect = function (
+      create,
+      createDeps,
+      update,
+      updateDeps,
+      destroy
+    ) {
+      if (!enableUseResourceEffectHook) throw Error("Not implemented.");
+      return resolveDispatcher().useResourceEffect(
+        create,
+        createDeps,
+        update,
+        updateDeps,
+        destroy
+      );
+    };
     exports.forwardRef = function (render) {
       null != render && render.$$typeof === REACT_MEMO_TYPE
         ? error$jscomp$0(
@@ -1819,7 +1837,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.0.0-www-classic-92c0f5f8-20241115";
+    exports.version = "19.0.0-www-classic-047d95e8-20241118";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
