@@ -569,17 +569,23 @@ function createPropsProperties(
             };
             break;
           }
-          // In the current JSX implementation, ref is both
-          // a property on the element and a property on props.
-          // Intentional fallthrough to push into props.
-          // @ts-expect-error
           case 'ref': {
+            // In the current JSX implementation, ref is both
+            // a property on the element and a property on props.
             refProperty = {
               kind: 'ObjectProperty',
               key: {name: 'ref', kind: 'string'},
               type: 'property',
               place: {...prop.place},
             };
+            const refPropProperty: ObjectProperty = {
+              kind: 'ObjectProperty',
+              key: {name: 'ref', kind: 'string'},
+              type: 'property',
+              place: {...prop.place},
+            };
+            props.push(refPropProperty);
+            break;
           }
           default: {
             const attributeProperty: ObjectProperty = {
