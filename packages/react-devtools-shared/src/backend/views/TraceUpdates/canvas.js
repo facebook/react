@@ -78,26 +78,32 @@ function drawWeb(nodeToData: Map<HostInstance, Data>) {
     }
   });
 
-  positionGroups.forEach(group => {
-    const {rect} = group[0];
+  Array.from(positionGroups.entries())
+    .sort(([, groupA], [, groupB]) => {
+      const maxCountA = Math.max(...groupA.map(item => item.count));
+      const maxCountB = Math.max(...groupB.map(item => item.count));
+      return maxCountA - maxCountB;
+    })
+    .forEach(([_, group]) => {
+      const {rect} = group[0];
 
-    group.forEach(({color}) => {
-      drawBorder(context, rect, color);
-    });
+      group.forEach(({color}) => {
+        drawBorder(context, rect, color);
+      });
 
-    const mergedName = group
-      .map(({displayName, count}) => {
-      if (displayName !== null) {
-        return `${displayName}${count > 1 ? ` x${count}` : ''}`;
+      const mergedName = group
+        .map(({displayName, count}) => {
+          if (displayName !== null) {
+            return `${displayName}${count > 1 ? ` x${count}` : ''}`;
+          }
+        })
+        .filter(Boolean)
+        .join(', ');
+
+      if (mergedName) {
+        drawLabel(context, rect, mergedName, group[0].color);
       }
-      })
-      .filter(Boolean)
-      .join(', ');
-
-    if (mergedName) {
-      drawLabel(context, rect, mergedName, group[0].color);
-    }
-  });
+    });
 }
 
 export function draw(nodeToData: Map<HostInstance, Data>, agent: Agent): void {
