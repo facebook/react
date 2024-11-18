@@ -14,8 +14,6 @@ import type Agent from '../../agent';
 
 import {isReactNativeEnvironment} from 'react-devtools-shared/src/backend/utils';
 
-const OUTLINE_COLOR = '#f0f0f0';
-
 // Note these colors are in sync with DevTools Profiler chart colors.
 const COLORS = [
   '#37afa9',
@@ -52,9 +50,12 @@ function drawWeb(nodeToData: Map<HostInstance, Data>) {
 
   const context = canvasFlow.getContext('2d');
   context.clearRect(0, 0, canvasFlow.width, canvasFlow.height);
-  iterateNodes(nodeToData, (rect, color) => {
+  iterateNodes(nodeToData, (rect, color, displayName) => {
     if (rect !== null) {
       drawBorder(context, rect, color);
+      if (displayName !== null) {
+        drawComponentName(context, rect, displayName, color);
+      }
     }
   });
 }
@@ -67,12 +68,12 @@ export function draw(nodeToData: Map<HostInstance, Data>, agent: Agent): void {
 
 function iterateNodes(
   nodeToData: Map<HostInstance, Data>,
-  execute: (rect: Rect | null, color: string, node: HostInstance) => void,
+  execute: (rect: Rect | null, color: string, displayName: string | null) => void,
 ) {
-  nodeToData.forEach(({count, rect}, node) => {
+  nodeToData.forEach(({count, rect, displayName}, node) => {
     const colorIndex = Math.min(COLORS.length - 1, count - 1);
     const color = COLORS[colorIndex];
-    execute(rect, color, node);
+    execute(rect, color, displayName);
   });
 }
 
@@ -83,25 +84,38 @@ function drawBorder(
 ): void {
   const {height, left, top, width} = rect;
 
-  // outline
-  context.lineWidth = 1;
-  context.strokeStyle = OUTLINE_COLOR;
-
-  context.strokeRect(left - 1, top - 1, width + 2, height + 2);
-
-  // inset
-  context.lineWidth = 1;
-  context.strokeStyle = OUTLINE_COLOR;
-  context.strokeRect(left + 1, top + 1, width - 1, height - 1);
-  context.strokeStyle = color;
-
-  context.setLineDash([0]);
-
   // border
+  context.strokeStyle = color;
   context.lineWidth = 1;
   context.strokeRect(left, top, width - 1, height - 1);
+}
 
-  context.setLineDash([0]);
+function drawComponentName(
+  context: CanvasRenderingContext2D,
+  rect: Rect,
+  displayName: string,
+  color: string,
+): void {
+  const {left, top} = rect;
+
+  context.font = '10px monospace';
+  context.textBaseline = 'middle';
+  context.textAlign = 'center';
+
+  const metrics = context.measureText(displayName);
+  const padding = 2;
+  const textHeight = 14;
+  const backgroundWidth = metrics.width + padding * 2;
+  const backgroundHeight = textHeight;
+
+  const labelX = left;
+  const labelY = top - backgroundHeight;
+
+  context.fillStyle = color;
+  context.fillRect(labelX, labelY, backgroundWidth, backgroundHeight);
+
+  context.fillStyle = '#000000';
+  context.fillText(displayName, labelX + (backgroundWidth / 2), labelY + (backgroundHeight / 2));
 }
 
 function destroyNative(agent: Agent) {
