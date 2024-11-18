@@ -32,7 +32,7 @@ let canvas: HTMLCanvasElement | null = null;
 
 function drawNative(nodeToData: Map<HostInstance, Data>, agent: Agent) {
   const nodesToDraw = [];
-  iterateNodes(nodeToData, (_, color, node) => {
+  iterateNodes(nodeToData, ({ color, node }) => {
     nodesToDraw.push({node, color});
   });
 
@@ -57,7 +57,7 @@ function drawWeb(nodeToData: Map<HostInstance, Data>) {
   context.scale(dpr, dpr);
 
   context.clearRect(0, 0, window.innerWidth, window.innerHeight);
-  iterateNodes(nodeToData, (rect, color, displayName) => {
+  iterateNodes(nodeToData, ({ rect, color, displayName }) => {
     if (rect !== null) {
       drawBorder(context, rect, color);
       if (displayName !== null) {
@@ -73,14 +73,20 @@ export function draw(nodeToData: Map<HostInstance, Data>, agent: Agent): void {
     : drawWeb(nodeToData);
 }
 
+type DataWithColorAndNode = {
+  ...Data,
+  color: string;
+  node: HostInstance;
+};
+
 function iterateNodes(
   nodeToData: Map<HostInstance, Data>,
-  execute: (rect: Rect | null, color: string, displayName: string | null) => void,
+  execute: (data: DataWithColorAndNode) => void,
 ) {
-  nodeToData.forEach(({count, rect, displayName}, node) => {
-    const colorIndex = Math.min(COLORS.length - 1, count - 1);
+  nodeToData.forEach((data, node) => {
+    const colorIndex = Math.min(COLORS.length - 1, data.count - 1);
     const color = COLORS[colorIndex];
-    execute(rect, color, displayName);
+    execute({...data, color, node});
   });
 }
 
