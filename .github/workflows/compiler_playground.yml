@@ -46,6 +46,7 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: yarn test
       - name: Archive test results
+        if: '!cancelled()'
         uses: actions/upload-artifact@v4
         with:
           name: test-results
