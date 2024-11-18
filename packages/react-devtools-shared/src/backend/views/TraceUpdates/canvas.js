@@ -44,66 +44,78 @@ function drawWeb(nodeToData: Map<HostInstance, Data>) {
     initialize();
   }
 
-  const canvasFlow: HTMLCanvasElement = ((canvas: any): HTMLCanvasElement);
   const dpr = window.devicePixelRatio || 1;
-
+  const canvasFlow: HTMLCanvasElement = ((canvas: any): HTMLCanvasElement);
   canvasFlow.width = window.innerWidth * dpr;
   canvasFlow.height = window.innerHeight * dpr;
-
   canvasFlow.style.width = `${window.innerWidth}px`;
   canvasFlow.style.height = `${window.innerHeight}px`;
 
   const context = canvasFlow.getContext('2d');
   context.scale(dpr, dpr);
 
-  context.clearRect(0, 0, window.innerWidth, window.innerHeight);
+  context.clearRect(0, 0, canvasFlow.width / dpr, canvasFlow.height / dpr);
 
-  type GroupItem = {
-    rect: Rect,
-    color: string,
-    displayName: string | null,
-    count: number,
-  };
+  const mergedNodes = groupAndSortNodes(nodeToData);
 
+  mergedNodes.forEach(group => {
+    drawGroupBorders(context, group);
+    drawGroupLabel(context, group);
+  });
+}
+
+type GroupItem = {
+  rect: Rect,
+  color: string,
+  displayName: string | null,
+  count: number,
+};
+
+export function groupAndSortNodes(
+  nodeToData: Map<HostInstance, Data>,
+): Array<Array<GroupItem>> {
   const positionGroups: Map<string, Array<GroupItem>> = new Map();
 
-  iterateNodes(nodeToData, ({rect, color, displayName, count, node}) => {
-    if (rect !== null) {
-      const key = `${rect.left},${rect.top}`;
-      const group = positionGroups.get(key) || [];
-      if (!positionGroups.has(key)) {
-        positionGroups.set(key, group);
-      }
-      group.push({rect, color, displayName, count});
-    }
+  iterateNodes(nodeToData, ({rect, color, displayName, count}) => {
+    if (!rect) return;
+    const key = `${rect.left},${rect.top}`;
+    if (!positionGroups.has(key)) positionGroups.set(key, []);
+    positionGroups.get(key)?.push({rect, color, displayName, count});
   });
 
-  Array.from(positionGroups.entries())
-    .sort(([, groupA], [, groupB]) => {
-      const maxCountA = Math.max(...groupA.map(item => item.count));
-      const maxCountB = Math.max(...groupB.map(item => item.count));
-      return maxCountA - maxCountB;
-    })
-    .forEach(([_, group]) => {
-      const {rect} = group[0];
+  return Array.from(positionGroups.values()).sort((groupA, groupB) => {
+    const maxCountA = Math.max(...groupA.map(item => item.count));
+    const maxCountB = Math.max(...groupB.map(item => item.count));
+    return maxCountA - maxCountB;
+  });
+}
 
-      group.forEach(({color}) => {
-        drawBorder(context, rect, color);
-      });
+function drawGroupBorders(
+  context: CanvasRenderingContext2D,
+  group: Array<GroupItem>,
+) {
+  group.forEach(({color, rect}) => {
+    context.beginPath();
+    context.strokeStyle = color;
+    context.rect(rect.left, rect.top, rect.width - 1, rect.height - 1);
+    context.stroke();
+  });
+}
 
-      const mergedName = group
-        .map(({displayName, count}) => {
-          if (displayName !== null) {
-            return `${displayName}${count > 1 ? ` x${count}` : ''}`;
-          }
-        })
-        .filter(Boolean)
-        .join(', ');
+function drawGroupLabel(
+  context: CanvasRenderingContext2D,
+  group: Array<GroupItem>,
+) {
+  const mergedName = group
+    .map(({displayName, count}) =>
+      displayName ? `${displayName}${count > 1 ? ` x${count}` : ''}` : '',
+    )
+    .filter(Boolean)
+    .join(', ');
 
-      if (mergedName) {
-        drawLabel(context, rect, mergedName, group[0].color);
-      }
-    });
+  if (mergedName) {
+    drawLabel(context, group[0].rect, mergedName, group[0].color);
+  }
 }
 
 export function draw(nodeToData: Map<HostInstance, Data>, agent: Agent): void {
@@ -129,19 +141,6 @@ function iterateNodes(
   });
 }
 
-function drawBorder(
-  context: CanvasRenderingContext2D,
-  rect: Rect,
-  color: string,
-): void {
-  const {height, left, top, width} = rect;
-
-  // border
-  context.strokeStyle = color;
-  context.lineWidth = 1;
-  context.strokeRect(left, top, width - 1, height - 1);
-}
-
 function drawLabel(
   context: CanvasRenderingContext2D,
   rect: Rect,
@@ -149,17 +148,16 @@ function drawLabel(
   color: string,
 ): void {
   const {left, top} = rect;
-
   context.font = '10px monospace';
   context.textBaseline = 'middle';
   context.textAlign = 'center';
 
-  const metrics = context.measureText(text);
   const padding = 2;
   const textHeight = 14;
+
+  const metrics = context.measureText(text);
   const backgroundWidth = metrics.width + padding * 2;
   const backgroundHeight = textHeight;
-
   const labelX = left;
   const labelY = top - backgroundHeight;
 

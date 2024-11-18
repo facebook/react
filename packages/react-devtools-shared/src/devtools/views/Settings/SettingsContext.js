@@ -115,10 +115,11 @@ function SettingsContextController({
       LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY,
       false,
     );
-  const [showNamesWhenTracing, setShowNamesWhenTracing] = useLocalStorageWithLog<boolean>(
-    LOCAL_STORAGE_SHOW_NAMES_WHEN_TRACING_KEY,
-    true,
-  );
+  const [showNamesWhenTracing, setShowNamesWhenTracing] =
+    useLocalStorageWithLog<boolean>(
+      LOCAL_STORAGE_SHOW_NAMES_WHEN_TRACING_KEY,
+      true,
+    );
 
   const documentElements = useMemo<DocumentElements>(() => {
     const array: Array<HTMLElement> = [
@@ -173,7 +174,10 @@ function SettingsContextController({
   }, [bridge, traceUpdatesEnabled]);
 
   useEffect(() => {
-    console.log('sent to bridge: setShowNamesWhenTracing', showNamesWhenTracing);
+    console.log(
+      'sent to bridge: setShowNamesWhenTracing',
+      showNamesWhenTracing,
+    );
     bridge.send('setShowNamesWhenTracing', showNamesWhenTracing);
   }, [bridge, showNamesWhenTracing]);
 
