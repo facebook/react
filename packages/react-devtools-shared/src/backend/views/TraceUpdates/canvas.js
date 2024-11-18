@@ -32,7 +32,7 @@ let canvas: HTMLCanvasElement | null = null;
 
 function drawNative(nodeToData: Map<HostInstance, Data>, agent: Agent) {
   const nodesToDraw = [];
-  iterateNodes(nodeToData, ({ color, node }) => {
+  iterateNodes(nodeToData, ({color, node}) => {
     nodesToDraw.push({node, color});
   });
 
@@ -57,11 +57,11 @@ function drawWeb(nodeToData: Map<HostInstance, Data>) {
   context.scale(dpr, dpr);
 
   context.clearRect(0, 0, window.innerWidth, window.innerHeight);
-  iterateNodes(nodeToData, ({ rect, color, displayName }) => {
+  iterateNodes(nodeToData, ({rect, color, displayName, count}) => {
     if (rect !== null) {
       drawBorder(context, rect, color);
       if (displayName !== null) {
-        drawComponentName(context, rect, displayName, color);
+        drawComponentName(context, rect, displayName, color, count);
       }
     }
   });
@@ -75,8 +75,8 @@ export function draw(nodeToData: Map<HostInstance, Data>, agent: Agent): void {
 
 type DataWithColorAndNode = {
   ...Data,
-  color: string;
-  node: HostInstance;
+  color: string,
+  node: HostInstance,
 };
 
 function iterateNodes(
@@ -108,14 +108,18 @@ function drawComponentName(
   rect: Rect,
   displayName: string,
   color: string,
+  count: number,
 ): void {
   const {left, top} = rect;
+
+  const countText = count > 1 ? ` x${count}` : '';
+  const text = `${displayName}${countText}`;
 
   context.font = '10px monospace';
   context.textBaseline = 'middle';
   context.textAlign = 'center';
 
-  const metrics = context.measureText(displayName);
+  const metrics = context.measureText(text);
   const padding = 2;
   const textHeight = 14;
   const backgroundWidth = metrics.width + padding * 2;
@@ -128,7 +132,11 @@ function drawComponentName(
   context.fillRect(labelX, labelY, backgroundWidth, backgroundHeight);
 
   context.fillStyle = '#000000';
-  context.fillText(displayName, labelX + (backgroundWidth / 2), labelY + (backgroundHeight / 2));
+  context.fillText(
+    text,
+    labelX + backgroundWidth / 2,
+    labelY + backgroundHeight / 2,
+  );
 }
 
 function destroyNative(agent: Agent) {
