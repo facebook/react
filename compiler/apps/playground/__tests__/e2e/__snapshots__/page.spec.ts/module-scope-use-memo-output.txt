@@ -1,0 +1,15 @@
+function anonymous_1() {
+  const $ = _c(1);
+  const handleClick = _temp;
+  let t0;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    t0 = <h1 onClick={handleClick}>Welcome to the App!</h1>;
+    $[0] = t0;
+  } else {
+    t0 = $[0];
+  }
+  return t0;
+}
+function _temp() {
+  console.log("Header clicked");
+}
