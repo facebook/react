@@ -570,8 +570,10 @@ function createPropsProperties(
             break;
           }
           case 'ref': {
-            // In the current JSX implementation, ref is both
-            // a property on the element and a property on props.
+            /**
+             * In the current JSX implementation, ref is both
+             * a property on the element and a property on props.
+             */
             refProperty = {
               kind: 'ObjectProperty',
               key: {name: 'ref', kind: 'string'},
