@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2b070446d20ccf3177ac522d281da2b1>>
+ * @generated SignedSource<<b9243ec313e48dbbb7543a5f86661685>>
  */
 
 "use strict";
@@ -15,7 +15,9 @@
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart &&
   __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
-var REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
+var enableUseResourceEffectHook =
+    require("ReactNativeInternalFeatureFlags").enableUseResourceEffectHook,
+  REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -467,6 +469,22 @@ exports.createRef = function () {
 exports.experimental_useEffectEvent = function (callback) {
   return ReactSharedInternals.H.useEffectEvent(callback);
 };
+exports.experimental_useResourceEffect = function (
+  create,
+  createDeps,
+  update,
+  updateDeps,
+  destroy
+) {
+  if (!enableUseResourceEffectHook) throw Error("Not implemented.");
+  return ReactSharedInternals.H.useResourceEffect(
+    create,
+    createDeps,
+    update,
+    updateDeps,
+    destroy
+  );
+};
 exports.forwardRef = function (render) {
   return { $$typeof: REACT_FORWARD_REF_TYPE, render: render };
 };
@@ -584,7 +602,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.0.0-native-fb-92c0f5f8-20241115";
+exports.version = "19.0.0-native-fb-047d95e8-20241118";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

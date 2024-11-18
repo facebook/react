@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<64a2c7d2686743701e014c0b9f0c9c62>>
+ * @generated SignedSource<<9e9472a5c49fcfec4203bd6edd4ea9cd>>
  */
 
 "use strict";
@@ -1009,7 +1009,9 @@ __DEV__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart &&
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
-    var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
+    var enableUseResourceEffectHook =
+        require("ReactNativeInternalFeatureFlags").enableUseResourceEffectHook,
+      REACT_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
       REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -1483,6 +1485,22 @@ __DEV__ &&
     exports.experimental_useEffectEvent = function (callback) {
       return resolveDispatcher().useEffectEvent(callback);
     };
+    exports.experimental_useResourceEffect = function (
+      create,
+      createDeps,
+      update,
+      updateDeps,
+      destroy
+    ) {
+      if (!enableUseResourceEffectHook) throw Error("Not implemented.");
+      return resolveDispatcher().useResourceEffect(
+        create,
+        createDeps,
+        update,
+        updateDeps,
+        destroy
+      );
+    };
     exports.forwardRef = function (render) {
       null != render && render.$$typeof === REACT_MEMO_TYPE
         ? error$jscomp$0(
@@ -1694,7 +1712,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.0.0-native-fb-92c0f5f8-20241115";
+    exports.version = "19.0.0-native-fb-047d95e8-20241118";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
