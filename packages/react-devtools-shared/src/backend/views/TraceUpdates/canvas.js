@@ -57,12 +57,45 @@ function drawWeb(nodeToData: Map<HostInstance, Data>) {
   context.scale(dpr, dpr);
 
   context.clearRect(0, 0, window.innerWidth, window.innerHeight);
-  iterateNodes(nodeToData, ({rect, color, displayName, count}) => {
+
+  type GroupItem = {
+    rect: Rect,
+    color: string,
+    displayName: string | null,
+    count: number,
+  };
+
+  const positionGroups: Map<string, Array<GroupItem>> = new Map();
+
+  iterateNodes(nodeToData, ({rect, color, displayName, count, node}) => {
     if (rect !== null) {
-      drawBorder(context, rect, color);
-      if (displayName !== null) {
-        drawComponentName(context, rect, displayName, color, count);
+      const key = `${rect.left},${rect.top}`;
+      const group = positionGroups.get(key) || [];
+      if (!positionGroups.has(key)) {
+        positionGroups.set(key, group);
       }
+      group.push({rect, color, displayName, count});
+    }
+  });
+
+  positionGroups.forEach(group => {
+    const {rect} = group[0];
+
+    group.forEach(({color}) => {
+      drawBorder(context, rect, color);
+    });
+
+    const mergedName = group
+      .map(({displayName, count}) => {
+      if (displayName !== null) {
+        return `${displayName}${count > 1 ? ` x${count}` : ''}`;
+      }
+      })
+      .filter(Boolean)
+      .join(', ');
+
+    if (mergedName) {
+      drawLabel(context, rect, mergedName, group[0].color);
     }
   });
 }
@@ -103,17 +136,13 @@ function drawBorder(
   context.strokeRect(left, top, width - 1, height - 1);
 }
 
-function drawComponentName(
+function drawLabel(
   context: CanvasRenderingContext2D,
   rect: Rect,
-  displayName: string,
+  text: string,
   color: string,
-  count: number,
 ): void {
   const {left, top} = rect;
-
-  const countText = count > 1 ? ` x${count}` : '';
-  const text = `${displayName}${countText}`;
 
   context.font = '10px monospace';
   context.textBaseline = 'middle';
