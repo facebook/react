@@ -44,11 +44,20 @@ const nodeToData: Map<HostInstance, Data> = new Map();
 let agent: Agent = ((null: any): Agent);
 let drawAnimationFrameID: AnimationFrameID | null = null;
 let isEnabled: boolean = false;
+let showNames: boolean = false;
 let redrawTimeoutID: TimeoutID | null = null;
 
 export function initialize(injectedAgent: Agent): void {
   agent = injectedAgent;
   agent.addListener('traceUpdates', traceUpdates);
+  agent.addListener('showNamesWhenTracing', (shouldShowNames: boolean) => {
+    showNames = shouldShowNames;
+    if (isEnabled) {
+      if (drawAnimationFrameID === null) {
+        drawAnimationFrameID = requestAnimationFrame(prepareToDraw);
+      }
+    }
+  });
 }
 
 export function toggleEnabled(value: boolean): void {
@@ -103,7 +112,7 @@ function traceUpdates(nodes: Set<HostInstance>): void {
           : now + DISPLAY_DURATION,
       lastMeasuredAt,
       rect,
-      displayName,
+      displayName: showNames ? displayName : null,
     });
   });
 
