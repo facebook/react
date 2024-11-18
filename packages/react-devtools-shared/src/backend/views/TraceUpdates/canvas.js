@@ -45,11 +45,18 @@ function drawWeb(nodeToData: Map<HostInstance, Data>) {
   }
 
   const canvasFlow: HTMLCanvasElement = ((canvas: any): HTMLCanvasElement);
-  canvasFlow.width = window.innerWidth;
-  canvasFlow.height = window.innerHeight;
+  const dpr = window.devicePixelRatio || 1;
+
+  canvasFlow.width = window.innerWidth * dpr;
+  canvasFlow.height = window.innerHeight * dpr;
+
+  canvasFlow.style.width = `${window.innerWidth}px`;
+  canvasFlow.style.height = `${window.innerHeight}px`;
 
   const context = canvasFlow.getContext('2d');
-  context.clearRect(0, 0, canvasFlow.width, canvasFlow.height);
+  context.scale(dpr, dpr);
+
+  context.clearRect(0, 0, window.innerWidth, window.innerHeight);
   iterateNodes(nodeToData, (rect, color, displayName) => {
     if (rect !== null) {
       drawBorder(context, rect, color);
