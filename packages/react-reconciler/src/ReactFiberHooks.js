@@ -5241,6 +5241,27 @@ if (__DEV__) {
         return mountEvent(callback);
       };
   }
+  if (enableUseResourceEffectHook) {
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useResourceEffect =
+      function useResourceEffect(
+        create: () => mixed,
+        createDeps: Array<mixed> | void | null,
+        update: ((resource: mixed) => void) | void,
+        updateDeps: Array<mixed> | void | null,
+        destroy: ((resource: mixed) => void) | void,
+      ) {
+        currentHookNameInDev = 'useResourceEffect';
+        warnInvalidHookAccess();
+        mountHookTypesDev();
+        return mountResourceEffect(
+          create,
+          createDeps,
+          update,
+          updateDeps,
+          destroy,
+        );
+      };
+  }
   if (InvalidNestedHooksDispatcherOnMountInDEV) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useResourceEffect =
       function useResourceEffect(
