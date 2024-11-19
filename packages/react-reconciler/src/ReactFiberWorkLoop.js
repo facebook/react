@@ -79,6 +79,9 @@ import {
   logCommitPhase,
   logPaintYieldPhase,
   logPassiveCommitPhase,
+  logYieldTime,
+  logActionYieldTime,
+  logSuspendedYieldTime,
 } from './ReactFiberPerformanceTrack';
 
 import {
@@ -264,6 +267,9 @@ import {
   stopProfilerTimerIfRunningAndRecordIncompleteDuration,
   markUpdateAsRepeat,
   trackSuspendedTime,
+  startYieldTimer,
+  yieldStartTime,
+  yieldReason,
 } from './ReactProfilerTimer';
 import {setCurrentTrackFromLanes} from './ReactFiberPerformanceTrack';
 
@@ -351,7 +357,7 @@ let workInProgress: Fiber | null = null;
 // The lanes we're rendering
 let workInProgressRootRenderLanes: Lanes = NoLanes;
 
-opaque type SuspendedReason = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+export opaque type SuspendedReason = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 const NotSuspended: SuspendedReason = 0;
 const SuspendedOnError: SuspendedReason = 1;
 const SuspendedOnData: SuspendedReason = 2;
@@ -915,6 +921,24 @@ export function performWorkOnRoot(
     throw new Error('Should not already be working.');
   }
 
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    if (workInProgressRootRenderLanes !== NoLanes && workInProgress !== null) {
+      const yieldedFiber = workInProgress;
+      // We've returned from yielding to the event loop. Let's log the time it took.
+      const yieldEndTime = now();
+      switch (yieldReason) {
+        case SuspendedOnData:
+          logSuspendedYieldTime(yieldStartTime, yieldEndTime, yieldedFiber);
+          break;
+        case SuspendedOnAction:
+          logActionYieldTime(yieldStartTime, yieldEndTime, yieldedFiber);
+          break;
+        default:
+          logYieldTime(yieldStartTime, yieldEndTime);
+      }
+    }
+  }
+
   // We disable time-slicing in some cases: if the work has been CPU-bound
   // for too long ("expired" work, to prevent starvation), or we're in
   // sync-updates-by-default mode.
@@ -955,6 +979,12 @@ export function performWorkOnRoot(
         // Needs to be *after* we attach a ping listener, though.
         const didAttemptEntireTree = false;
         markRootSuspended(root, lanes, NoLane, didAttemptEntireTree);
+      }
+      if (enableProfilerTimer && enableComponentPerformanceTrack) {
+        // We're about to yield. Let's keep track of how long we yield to the event loop.
+        // We also stash the suspended reason at the time we yielded since it might have
+        // changed when we resume such as when it gets pinged.
+        startYieldTimer(workInProgressSuspendedReason);
       }
       break;
     } else {

@@ -9,6 +9,8 @@
 
 import type {Fiber} from './ReactInternalTypes';
 
+import type {SuspendedReason} from './ReactFiberWorkLoop';
+
 import type {Lane, Lanes} from './ReactFiberLane';
 import {
   isTransitionLane,
@@ -57,6 +59,17 @@ export let transitionEventTime: number = -1.1; // Event timeStamp of the first t
 export let transitionEventType: null | string = null; // Event type of the first transition.
 export let transitionEventIsRepeat: boolean = false;
 export let transitionSuspendedTime: number = -1.1;
+
+export let yieldReason: SuspendedReason = (0: any);
+export let yieldStartTime: number = -1.1; // The time when we yielded to the event loop
+
+export function startYieldTimer(reason: SuspendedReason) {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  yieldStartTime = now();
+  yieldReason = reason;
+}
 
 export function startUpdateTimerByLane(lane: Lane): void {
   if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
