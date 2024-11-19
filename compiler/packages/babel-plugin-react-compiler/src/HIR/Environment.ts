@@ -240,7 +240,7 @@ const EnvironmentConfigSchema = z.object({
    * the dependency.
    */
   enableOptionalDependencies: z.boolean().default(true),
-  
+
   /**
    * Enables inference and auto-insertion of effect dependencies. Still experimental.
    */

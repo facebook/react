@@ -354,7 +354,7 @@ function* runWithEnvironment(
     name: 'PropagateScopeDependenciesHIR',
     value: hir,
   });
-  
+
   if (env.config.inferEffectDependencies) {
     inferEffectDependencies(env, hir);
   }

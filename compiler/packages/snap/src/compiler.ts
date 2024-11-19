@@ -178,7 +178,7 @@ function makePluginOptions(
   if (firstLine.includes('@inferEffectDependencies')) {
     inferEffectDependencies = true;
   }
-  
+
   let logs: Array<{filename: string | null; event: LoggerEvent}> = [];
   let logger: Logger | null = null;
   if (firstLine.includes('@logger')) {
