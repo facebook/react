@@ -48,6 +48,7 @@ export let blockingUpdateTime: number = -1.1; // First sync setState scheduled.
 export let blockingEventTime: number = -1.1; // Event timeStamp of the first setState.
 export let blockingEventType: null | string = null; // Event type of the first setState.
 export let blockingEventIsRepeat: boolean = false;
+export let blockingSuspendedTime: number = -1.1;
 // TODO: This should really be one per Transition lane.
 export let transitionClampTime: number = -0;
 export let transitionStartTime: number = -1.1; // First startTransition call before setState.
@@ -55,6 +56,7 @@ export let transitionUpdateTime: number = -1.1; // First transition setState sch
 export let transitionEventTime: number = -1.1; // Event timeStamp of the first transition.
 export let transitionEventType: null | string = null; // Event type of the first transition.
 export let transitionEventIsRepeat: boolean = false;
+export let transitionSuspendedTime: number = -1.1;
 
 export function startUpdateTimerByLane(lane: Lane): void {
   if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
@@ -100,8 +102,20 @@ export function markUpdateAsRepeat(lanes: Lanes): void {
   }
 }
 
+export function trackSuspendedTime(lanes: Lanes, renderEndTime: number) {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  if (includesSyncLane(lanes) || includesBlockingLane(lanes)) {
+    blockingSuspendedTime = renderEndTime;
+  } else if (includesTransitionLane(lanes)) {
+    transitionSuspendedTime = renderEndTime;
+  }
+}
+
 export function clearBlockingTimers(): void {
   blockingUpdateTime = -1.1;
+  blockingSuspendedTime = -1.1;
 }
 
 export function startAsyncTransitionTimer(): void {
@@ -145,6 +159,7 @@ export function clearAsyncTransitionTimer(): void {
 export function clearTransitionTimers(): void {
   transitionStartTime = -1.1;
   transitionUpdateTime = -1.1;
+  transitionSuspendedTime = -1.1;
 }
 
 export function clampBlockingTimers(finalTime: number): void {

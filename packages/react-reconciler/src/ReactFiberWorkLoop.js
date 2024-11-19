@@ -73,6 +73,7 @@ import {
   logSuspendedRenderPhase,
   logErroredRenderPhase,
   logInconsistentRender,
+  logSuspendedWithDelayPhase,
   logSuspenseThrottlePhase,
   logSuspendedCommitPhase,
   logCommitPhase,
@@ -239,12 +240,14 @@ import {
   blockingEventTime,
   blockingEventType,
   blockingEventIsRepeat,
+  blockingSuspendedTime,
   transitionClampTime,
   transitionStartTime,
   transitionUpdateTime,
   transitionEventTime,
   transitionEventType,
   transitionEventIsRepeat,
+  transitionSuspendedTime,
   clearBlockingTimers,
   clearTransitionTimers,
   clampBlockingTimers,
@@ -260,6 +263,7 @@ import {
   stopProfilerTimerIfRunningAndRecordDuration,
   stopProfilerTimerIfRunningAndRecordIncompleteDuration,
   markUpdateAsRepeat,
+  trackSuspendedTime,
 } from './ReactProfilerTimer';
 import {setCurrentTrackFromLanes} from './ReactFiberPerformanceTrack';
 
@@ -954,6 +958,11 @@ export function performWorkOnRoot(
       }
       break;
     } else {
+      let renderEndTime = 0;
+      if (enableProfilerTimer && enableComponentPerformanceTrack) {
+        renderEndTime = now();
+      }
+
       // The render completed.
 
       // Check if this render may have yielded to a concurrent event, and if so,
@@ -968,7 +977,6 @@ export function performWorkOnRoot(
       ) {
         if (enableProfilerTimer && enableComponentPerformanceTrack) {
           setCurrentTrackFromLanes(lanes);
-          const renderEndTime = now();
           logInconsistentRender(renderStartTime, renderEndTime);
           finalizeRender(lanes, renderEndTime);
           markUpdateAsRepeat(lanes);
@@ -996,7 +1004,6 @@ export function performWorkOnRoot(
         if (errorRetryLanes !== NoLanes) {
           if (enableProfilerTimer && enableComponentPerformanceTrack) {
             setCurrentTrackFromLanes(lanes);
-            const renderEndTime = now();
             logErroredRenderPhase(renderStartTime, renderEndTime);
             finalizeRender(lanes, renderEndTime);
             markUpdateAsRepeat(lanes);
@@ -1020,13 +1027,15 @@ export function performWorkOnRoot(
             continue;
           } else {
             // The root errored yet again. Proceed to commit the tree.
+            if (enableProfilerTimer && enableComponentPerformanceTrack) {
+              renderEndTime = now();
+            }
           }
         }
       }
       if (exitStatus === RootFatalErrored) {
         if (enableProfilerTimer && enableComponentPerformanceTrack) {
           setCurrentTrackFromLanes(lanes);
-          const renderEndTime = now();
           logErroredRenderPhase(renderStartTime, renderEndTime);
           finalizeRender(lanes, renderEndTime);
         }
@@ -1040,7 +1049,13 @@ export function performWorkOnRoot(
 
       // We now have a consistent tree. The next step is either to commit it,
       // or, if something suspended, wait to commit it after a timeout.
-      finishConcurrentRender(root, exitStatus, finishedWork, lanes);
+      finishConcurrentRender(
+        root,
+        exitStatus,
+        finishedWork,
+        lanes,
+        renderEndTime,
+      );
     }
     break;
   } while (true);
@@ -1139,14 +1154,8 @@ function finishConcurrentRender(
   exitStatus: RootExitStatus,
   finishedWork: Fiber,
   lanes: Lanes,
+  renderEndTime: number, // Profiling-only
 ) {
-  let renderEndTime = 0;
-  if (enableProfilerTimer && enableComponentPerformanceTrack) {
-    // Track when we finished the last unit of work, before we actually commit it.
-    // The commit can be suspended/blocked until we commit it.
-    renderEndTime = now();
-  }
-
   // TODO: The fact that most of these branches are identical suggests that some
   // of the exit statuses are not best modeled as exit statuses and should be
   // tracked orthogonally.
@@ -1170,6 +1179,7 @@ function finishConcurrentRender(
         setCurrentTrackFromLanes(lanes);
         logSuspendedRenderPhase(renderStartTime, renderEndTime);
         finalizeRender(lanes, renderEndTime);
+        trackSuspendedTime(lanes, renderEndTime);
       }
       const didAttemptEntireTree = !workInProgressRootDidSkipSuspendedSiblings;
       markRootSuspended(
@@ -1705,13 +1715,29 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
     }
 
     if (includesSyncLane(lanes) || includesBlockingLane(lanes)) {
-      logBlockingStart(
+      const clampedUpdateTime =
         blockingUpdateTime >= 0 && blockingUpdateTime < blockingClampTime
           ? blockingClampTime
-          : blockingUpdateTime,
+          : blockingUpdateTime;
+      const clampedEventTime =
         blockingEventTime >= 0 && blockingEventTime < blockingClampTime
           ? blockingClampTime
-          : blockingEventTime,
+          : blockingEventTime;
+      if (blockingSuspendedTime >= 0) {
+        setCurrentTrackFromLanes(lanes);
+        logSuspendedWithDelayPhase(
+          blockingSuspendedTime,
+          // Clamp the suspended time to the first event/update.
+          clampedEventTime >= 0
+            ? clampedEventTime
+            : clampedUpdateTime >= 0
+              ? clampedUpdateTime
+              : renderStartTime,
+        );
+      }
+      logBlockingStart(
+        clampedUpdateTime,
+        clampedEventTime,
         blockingEventType,
         blockingEventIsRepeat,
         renderStartTime,
@@ -1719,16 +1745,34 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
       clearBlockingTimers();
     }
     if (includesTransitionLane(lanes)) {
-      logTransitionStart(
+      const clampedStartTime =
         transitionStartTime >= 0 && transitionStartTime < transitionClampTime
           ? transitionClampTime
-          : transitionStartTime,
+          : transitionStartTime;
+      const clampedUpdateTime =
         transitionUpdateTime >= 0 && transitionUpdateTime < transitionClampTime
           ? transitionClampTime
-          : transitionUpdateTime,
+          : transitionUpdateTime;
+      const clampedEventTime =
         transitionEventTime >= 0 && transitionEventTime < transitionClampTime
           ? transitionClampTime
-          : transitionEventTime,
+          : transitionEventTime;
+      if (transitionSuspendedTime >= 0) {
+        setCurrentTrackFromLanes(lanes);
+        logSuspendedWithDelayPhase(
+          transitionSuspendedTime,
+          // Clamp the suspended time to the first event/update.
+          clampedEventTime >= 0
+            ? clampedEventTime
+            : clampedUpdateTime >= 0
+              ? clampedUpdateTime
+              : renderStartTime,
+        );
+      }
+      logTransitionStart(
+        clampedStartTime,
+        clampedUpdateTime,
+        clampedEventTime,
         transitionEventType,
         transitionEventIsRepeat,
         renderStartTime,
