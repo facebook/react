@@ -6,7 +6,7 @@ on:
   pull_request:
     paths:
       - compiler/**
-      - .github/workflows/compiler-playground.yml
+      - .github/workflows/compiler_playground.yml
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
@@ -44,10 +44,12 @@ jobs:
       - name: yarn install playground
         run: yarn install --frozen-lockfile
       - run: npx playwright install --with-deps chromium
-      - run: yarn test
+      - run: CI=true yarn test
+      - run: ls -R test-results
+        if: '!cancelled()'
       - name: Archive test results
         if: '!cancelled()'
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: test-results
+          path: compiler/apps/playground/test-results
