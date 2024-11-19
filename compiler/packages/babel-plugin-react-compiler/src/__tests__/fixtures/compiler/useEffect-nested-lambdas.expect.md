@@ -35,7 +35,7 @@ function Component(props) {
 import { c as _c } from "react/compiler-runtime"; // @enableTransitivelyFreezeFunctionExpressions:false
 
 function Component(props) {
-  const $ = _c(9);
+  const $ = _c(7);
   const item = useMutable(props.itemId);
   const dispatch = useDispatch();
   useFreeze(dispatch);
@@ -51,7 +51,8 @@ function Component(props) {
   }
   const exit = t0;
   let t1;
-  if ($[2] !== exit || $[3] !== item.value) {
+  let t2;
+  if ($[2] !== exit || $[3] !== item) {
     t1 = () => {
       const cleanup = GlobalEventEmitter.addListener("onInput", () => {
         if (item.value) {
@@ -60,30 +61,24 @@ function Component(props) {
       });
       return () => cleanup.remove();
     };
+    t2 = [exit, item];
     $[2] = exit;
-    $[3] = item.value;
+    $[3] = item;
     $[4] = t1;
+    $[5] = t2;
   } else {
     t1 = $[4];
-  }
-  let t2;
-  if ($[5] !== exit || $[6] !== item) {
-    t2 = [exit, item];
-    $[5] = exit;
-    $[6] = item;
-    $[7] = t2;
-  } else {
-    t2 = $[7];
+    t2 = $[5];
   }
   useEffect(t1, t2);
 
   maybeMutate(item);
   let t3;
-  if ($[8] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[6] === Symbol.for("react.memo_cache_sentinel")) {
     t3 = <div />;
-    $[8] = t3;
+    $[6] = t3;
   } else {
-    t3 = $[8];
+    t3 = $[6];
   }
   return t3;
 }

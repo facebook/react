@@ -9,13 +9,13 @@ import {sum} from 'shared-runtime';
 function Component({propA, propB}) {
   const x = propB.x.y;
   return useCallback(() => {
-    return sum(propA.x, x);
-  }, [propA.x, x]);
+    return sum(propA, x);
+  }, [propA, x]);
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{propA: {x: 2}, propB: {x: {y: 3}}}],
+  params: [{propA: 2, propB: {x: {y: 3}}}],
 };
 
 ```
@@ -32,9 +32,9 @@ function Component(t0) {
   const { propA, propB } = t0;
   const x = propB.x.y;
   let t1;
-  if ($[0] !== propA.x || $[1] !== x) {
-    t1 = () => sum(propA.x, x);
-    $[0] = propA.x;
+  if ($[0] !== propA || $[1] !== x) {
+    t1 = () => sum(propA, x);
+    $[0] = propA;
     $[1] = x;
     $[2] = t1;
   } else {
@@ -45,7 +45,7 @@ function Component(t0) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ propA: { x: 2 }, propB: { x: { y: 3 } } }],
+  params: [{ propA: 2, propB: { x: { y: 3 } } }],
 };
 
 ```

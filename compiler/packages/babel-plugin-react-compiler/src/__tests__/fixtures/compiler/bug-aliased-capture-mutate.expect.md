@@ -56,9 +56,9 @@ function useFoo(t0) {
     setPropertyByKey(obj, "arr", arr);
     const obj_alias = obj;
     let t2;
-    if ($[2] !== obj_alias.arr.length) {
+    if ($[2] !== obj_alias) {
       t2 = () => obj_alias.arr.length;
-      $[2] = obj_alias.arr.length;
+      $[2] = obj_alias;
       $[3] = t2;
     } else {
       t2 = $[3];
