@@ -1,0 +1,3 @@
+function TestComponent({ x }) {
+  return <Button>{x}</Button>;
+}

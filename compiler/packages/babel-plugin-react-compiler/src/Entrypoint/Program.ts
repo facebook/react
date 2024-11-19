@@ -42,10 +42,10 @@ export type CompilerPass = {
   comments: Array<t.CommentBlock | t.CommentLine>;
   code: string | null;
 };
-const OPT_IN_DIRECTIVES = new Set(['use forget', 'use memo']);
+export const OPT_IN_DIRECTIVES = new Set(['use forget', 'use memo']);
 export const OPT_OUT_DIRECTIVES = new Set(['use no forget', 'use no memo']);
 
-function findDirectiveEnablingMemoization(
+export function findDirectiveEnablingMemoization(
   directives: Array<t.Directive>,
 ): Array<t.Directive> {
   return directives.filter(directive =>
@@ -53,7 +53,7 @@ function findDirectiveEnablingMemoization(
   );
 }
 
-function findDirectiveDisablingMemoization(
+export function findDirectiveDisablingMemoization(
   directives: Array<t.Directive>,
 ): Array<t.Directive> {
   return directives.filter(directive =>
