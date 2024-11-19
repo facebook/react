@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<718e923f650b9edef784f06dfe701d6e>>
+ * @generated SignedSource<<781d0617a165648d66ccfd25ac1b342c>>
  */
 
 "use strict";
@@ -16205,24 +16205,25 @@ __DEV__ &&
         return useMemoCache(size);
       }
     };
-    HooksDispatcherOnRerenderInDEV.useResourceEffect = function (
-      create,
-      createDeps,
-      update,
-      updateDeps,
-      destroy
-    ) {
-      currentHookNameInDev = "useResourceEffect";
-      warnInvalidHookAccess();
-      mountHookTypesDev();
-      return mountResourceEffect(
+    enableUseResourceEffectHook &&
+      (InvalidNestedHooksDispatcherOnMountInDEV.useResourceEffect = function (
         create,
         createDeps,
         update,
         updateDeps,
         destroy
-      );
-    };
+      ) {
+        currentHookNameInDev = "useResourceEffect";
+        warnInvalidHookAccess();
+        mountHookTypesDev();
+        return mountResourceEffect(
+          create,
+          createDeps,
+          update,
+          updateDeps,
+          destroy
+        );
+      });
     InvalidNestedHooksDispatcherOnMountInDEV.useHostTransitionStatus =
       useHostTransitionStatus;
     InvalidNestedHooksDispatcherOnMountInDEV.useFormState = function (
@@ -17364,11 +17365,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-047d95e8-20241118",
+        version: "19.0.0-native-fb-7558ffe8-20241119",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-native-fb-047d95e8-20241118"
+        reconcilerVersion: "19.0.0-native-fb-7558ffe8-20241119"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
