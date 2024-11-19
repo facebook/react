@@ -3,12 +3,20 @@ const moduleNonReactive = 0;
 
 function Component({foo, bar}) {
   const localNonreactive = 0;
+  const ref = useRef(0);
+  const localNonPrimitiveReactive = {
+    foo,
+  };
+  const localNonPrimitiveNonreactive = {};
   useEffect(() => {
     console.log(foo);
     console.log(bar);
     console.log(moduleNonReactive);
     console.log(localNonreactive);
     console.log(globalValue);
+    console.log(ref.current);
+    console.log(localNonPrimitiveReactive);
+    console.log(localNonPrimitiveNonreactive);
   });
 
   // Optional chains and property accesses
