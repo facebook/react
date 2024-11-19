@@ -557,6 +557,13 @@
     function isAncestorNodeOf(a, b) {
       return a.range[0] <= b.range[0] && a.range[1] >= b.range[1];
     }
+    function getUnknownDependenciesMessage(reactiveHookName) {
+      return (
+        "React Hook " +
+        reactiveHookName +
+        " received a function whose dependencies are unknown. Pass an inline function instead."
+      );
+    }
     exports.configs = {
       recommended: {
         plugins: ["react-hooks"],
@@ -1961,20 +1968,18 @@
                 node = /Effect($|[^a-z])/g.test(reactiveHookName);
                 if (callback)
                   if (declaredDependenciesNode || node) {
+                    for (
+                      ;
+                      "TSAsExpression" === callback.type ||
+                      "AsExpression" === callback.type;
+
+                    )
+                      callback = callback.expression;
                     switch (callback.type) {
                       case "FunctionExpression":
                       case "ArrowFunctionExpression":
                         visitFunctionWithDependencies(
                           callback,
-                          declaredDependenciesNode,
-                          reactiveHook,
-                          reactiveHookName,
-                          node
-                        );
-                        return;
-                      case "TSAsExpression":
-                        visitFunctionWithDependencies(
-                          callback.expression,
                           declaredDependenciesNode,
                           reactiveHook,
                           reactiveHookName,
@@ -2003,6 +2008,14 @@
                           return;
                         callbackIndex = callbackIndex.defs[0];
                         if (!callbackIndex || !callbackIndex.node) break;
+                        if ("Parameter" === callbackIndex.type) {
+                          reportProblem({
+                            node: reactiveHook,
+                            message:
+                              getUnknownDependenciesMessage(reactiveHookName)
+                          });
+                          return;
+                        }
                         if (
                           "Variable" !== callbackIndex.type &&
                           "FunctionName" !== callbackIndex.type
@@ -2038,9 +2051,7 @@
                         reportProblem({
                           node: reactiveHook,
                           message:
-                            "React Hook " +
-                            reactiveHookName +
-                            " received a function whose dependencies are unknown. Pass an inline function instead."
+                            getUnknownDependenciesMessage(reactiveHookName)
                         });
                         return;
                     }
