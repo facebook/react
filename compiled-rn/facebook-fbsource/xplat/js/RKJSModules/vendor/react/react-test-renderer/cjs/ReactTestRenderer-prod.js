@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<cb275352673565674475671cd0c84e7d>>
+ * @generated SignedSource<<68c9e18b417d194506cb091676f28691>>
  */
 
 "use strict";
@@ -2300,19 +2300,29 @@ function rerenderActionState(action) {
   return [stateHook, dispatch, !1];
 }
 function pushSimpleEffect(tag, inst, create, deps) {
-  tag = { tag: tag, create: create, deps: deps, inst: inst, next: null };
-  inst = currentlyRenderingFiber$1.updateQueue;
-  null === inst &&
-    ((inst = createFunctionComponentUpdateQueue()),
-    (currentlyRenderingFiber$1.updateQueue = inst));
-  create = inst.lastEffect;
-  null === create
-    ? (inst.lastEffect = tag.next = tag)
-    : ((deps = create.next),
-      (create.next = tag),
-      (tag.next = deps),
-      (inst.lastEffect = tag));
-  return tag;
+  return pushEffectImpl({
+    tag: tag,
+    create: create,
+    deps: deps,
+    inst: inst,
+    next: null
+  });
+}
+function pushEffectImpl(effect) {
+  var componentUpdateQueue = currentlyRenderingFiber$1.updateQueue;
+  null === componentUpdateQueue &&
+    ((componentUpdateQueue = createFunctionComponentUpdateQueue()),
+    (currentlyRenderingFiber$1.updateQueue = componentUpdateQueue));
+  var lastEffect = componentUpdateQueue.lastEffect;
+  if (null === lastEffect)
+    componentUpdateQueue.lastEffect = effect.next = effect;
+  else {
+    var firstEffect = lastEffect.next;
+    lastEffect.next = effect;
+    effect.next = firstEffect;
+    componentUpdateQueue.lastEffect = effect;
+  }
+  return effect;
 }
 function createEffectInstance() {
   return { destroy: void 0, resource: void 0 };
@@ -2352,6 +2362,50 @@ function mountEffect(create, deps) {
 }
 function updateEffect(create, deps) {
   updateEffectImpl(2048, 8, create, deps);
+}
+function updateResourceEffect(create, createDeps, update, updateDeps, destroy) {
+  var hook = updateWorkInProgressHook(),
+    inst = hook.memoizedState.inst;
+  inst.destroy = destroy;
+  createDeps = void 0 === createDeps ? null : createDeps;
+  updateDeps = void 0 === updateDeps ? null : updateDeps;
+  var isCreateDepsSame, isUpdateDepsSame;
+  null !== currentHook &&
+    ((destroy = currentHook.memoizedState),
+    null !== createDeps &&
+      (isCreateDepsSame = areHookInputsEqual(
+        createDeps,
+        1 === destroy.resourceKind
+          ? null != destroy.next.deps
+            ? destroy.next.deps
+            : null
+          : null != destroy.deps
+            ? destroy.deps
+            : null
+      )),
+    null !== updateDeps &&
+      (isUpdateDepsSame = areHookInputsEqual(
+        updateDeps,
+        null != destroy.deps ? destroy.deps : null
+      )));
+  (isCreateDepsSame && isUpdateDepsSame) ||
+    (currentlyRenderingFiber$1.flags |= 2048);
+  hook.memoizedState = pushEffectImpl({
+    resourceKind: 0,
+    tag: isCreateDepsSame ? 8 : 9,
+    create: create,
+    deps: createDeps,
+    inst: inst,
+    next: null
+  });
+  hook.memoizedState = pushEffectImpl({
+    resourceKind: 1,
+    tag: isUpdateDepsSame ? 8 : 9,
+    update: update,
+    deps: updateDeps,
+    inst: inst,
+    next: null
+  });
 }
 function updateInsertionEffect(create, deps) {
   return updateEffectImpl(4, 2, create, deps);
@@ -2629,6 +2683,7 @@ var ContextOnlyDispatcher = {
 };
 ContextOnlyDispatcher.useCacheRefresh = throwInvalidHookError;
 ContextOnlyDispatcher.useMemoCache = throwInvalidHookError;
+ContextOnlyDispatcher.useResourceEffect = throwInvalidHookError;
 ContextOnlyDispatcher.useHostTransitionStatus = throwInvalidHookError;
 ContextOnlyDispatcher.useFormState = throwInvalidHookError;
 ContextOnlyDispatcher.useActionState = throwInvalidHookError;
@@ -2760,6 +2815,34 @@ var HooksDispatcherOnMount = {
   }
 };
 HooksDispatcherOnMount.useMemoCache = useMemoCache;
+HooksDispatcherOnMount.useResourceEffect = function (
+  create,
+  createDeps,
+  update,
+  updateDeps,
+  destroy
+) {
+  var hook = mountWorkInProgressHook();
+  currentlyRenderingFiber$1.flags |= 8390656;
+  var inst = createEffectInstance();
+  inst.destroy = destroy;
+  hook.memoizedState = pushEffectImpl({
+    resourceKind: 0,
+    tag: 9,
+    create: create,
+    deps: createDeps,
+    inst: inst,
+    next: null
+  });
+  hook.memoizedState = pushEffectImpl({
+    resourceKind: 1,
+    tag: 8,
+    update: update,
+    deps: updateDeps,
+    inst: inst,
+    next: null
+  });
+};
 HooksDispatcherOnMount.useHostTransitionStatus = useHostTransitionStatus;
 HooksDispatcherOnMount.useFormState = mountActionState;
 HooksDispatcherOnMount.useActionState = mountActionState;
@@ -2823,6 +2906,7 @@ var HooksDispatcherOnUpdate = {
 };
 HooksDispatcherOnUpdate.useCacheRefresh = updateRefresh;
 HooksDispatcherOnUpdate.useMemoCache = useMemoCache;
+HooksDispatcherOnUpdate.useResourceEffect = updateResourceEffect;
 HooksDispatcherOnUpdate.useHostTransitionStatus = useHostTransitionStatus;
 HooksDispatcherOnUpdate.useFormState = updateActionState;
 HooksDispatcherOnUpdate.useActionState = updateActionState;
@@ -2872,6 +2956,7 @@ var HooksDispatcherOnRerender = {
 };
 HooksDispatcherOnRerender.useCacheRefresh = updateRefresh;
 HooksDispatcherOnRerender.useMemoCache = useMemoCache;
+HooksDispatcherOnRerender.useResourceEffect = updateResourceEffect;
 HooksDispatcherOnRerender.useHostTransitionStatus = useHostTransitionStatus;
 HooksDispatcherOnRerender.useFormState = rerenderActionState;
 HooksDispatcherOnRerender.useActionState = rerenderActionState;
@@ -6330,8 +6415,19 @@ function commitHookEffectListMount(flags, finishedWork) {
       var firstEffect = lastEffect.next;
       updateQueue = firstEffect;
       do {
-        if ((updateQueue.tag & flags) === flags) {
-          lastEffect = void 0;
+        if (
+          (updateQueue.tag & flags) === flags &&
+          ((lastEffect = void 0),
+          0 === updateQueue.resourceKind &&
+            ((updateQueue.inst.resource = updateQueue.create()),
+            (lastEffect = updateQueue.inst.destroy)),
+          1 === updateQueue.resourceKind &&
+            0 < (flags & 1) &&
+            "function" === typeof updateQueue.update &&
+            null != updateQueue.inst.resource &&
+            updateQueue.update(updateQueue.inst.resource),
+          null == updateQueue.resourceKind)
+        ) {
           var create$109 = updateQueue.create,
             inst = updateQueue.inst;
           lastEffect = create$109();
@@ -6360,17 +6456,41 @@ function commitHookEffectListUnmount(
           var inst = updateQueue.inst,
             destroy = inst.destroy;
           if (void 0 !== destroy) {
-            inst.destroy = void 0;
-            lastEffect = finishedWork;
-            var nearestMountedAncestor = nearestMountedAncestor$jscomp$0;
-            try {
-              destroy();
-            } catch (error) {
-              captureCommitPhaseError(
-                lastEffect,
-                nearestMountedAncestor,
-                error
-              );
+            null == updateQueue.resourceKind && (inst.destroy = void 0);
+            if (
+              0 === updateQueue.resourceKind &&
+              null != updateQueue.inst.resource
+            ) {
+              lastEffect = finishedWork;
+              var nearestMountedAncestor = nearestMountedAncestor$jscomp$0,
+                resource = updateQueue.inst.resource,
+                destroy_ =
+                  null == resource ? destroy : destroy.bind(null, resource);
+              try {
+                destroy_();
+              } catch (error) {
+                captureCommitPhaseError(
+                  lastEffect,
+                  nearestMountedAncestor,
+                  error
+                );
+              }
+              1 === updateQueue.next.resourceKind &&
+                (updateQueue.next.update = void 0);
+              updateQueue.inst.resource = null;
+            }
+            if (null == updateQueue.resourceKind) {
+              lastEffect = finishedWork;
+              nearestMountedAncestor = nearestMountedAncestor$jscomp$0;
+              try {
+                destroy();
+              } catch (error) {
+                captureCommitPhaseError(
+                  lastEffect,
+                  nearestMountedAncestor,
+                  error
+                );
+              }
             }
           }
         }
@@ -9576,28 +9696,28 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var internals$jscomp$inline_1361 = {
+var internals$jscomp$inline_1390 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-7558ffe8-20241119",
+  version: "19.0.0-native-fb-64f89510-20241119",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: function (mockNode) {
     mockNode = nodeToInstanceMap.get(mockNode);
     return void 0 !== mockNode ? mockNode.internalInstanceHandle : null;
   },
-  reconcilerVersion: "19.0.0-native-fb-7558ffe8-20241119"
+  reconcilerVersion: "19.0.0-native-fb-64f89510-20241119"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1362 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1391 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1362.isDisabled &&
-    hook$jscomp$inline_1362.supportsFiber
+    !hook$jscomp$inline_1391.isDisabled &&
+    hook$jscomp$inline_1391.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1362.inject(
-        internals$jscomp$inline_1361
+      (rendererID = hook$jscomp$inline_1391.inject(
+        internals$jscomp$inline_1390
       )),
-        (injectedHook = hook$jscomp$inline_1362);
+        (injectedHook = hook$jscomp$inline_1391);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
@@ -9721,4 +9841,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.0.0-native-fb-7558ffe8-20241119";
+exports.version = "19.0.0-native-fb-64f89510-20241119";
