@@ -41,9 +41,9 @@ function useFoo(t0) {
     local = $[1];
   }
   let t1;
-  if ($[2] !== local.b.c) {
+  if ($[2] !== local) {
     t1 = () => [() => local.b.c];
-    $[2] = local.b.c;
+    $[2] = local;
     $[3] = t1;
   } else {
     t1 = $[3];
