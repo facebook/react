@@ -22,7 +22,8 @@
     "npm:publish": "node scripts/release/publish"
   },
   "dependencies": {
-    "fs-extra": "^4.0.2"
+    "fs-extra": "^4.0.2",
+    "react-is": "0.0.0-experimental-4beb1fd8-20241118"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.7",
@@ -44,9 +45,6 @@
     "typescript": "^5.4.3",
     "wait-on": "^7.2.0",
     "yargs": "^17.7.2"
-  },
-  "resolutions": {
-    "react-is": "19.0.0-beta-b498834eab-20240506"
   },
   "packageManager": "yarn@1.22.22"
 }
