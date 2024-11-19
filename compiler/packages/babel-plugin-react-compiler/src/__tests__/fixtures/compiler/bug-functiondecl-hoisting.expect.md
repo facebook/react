@@ -58,18 +58,16 @@ function Foo(t0) {
     bar = $[1];
     result = $[2];
   }
-
-  const t1 = bar;
-  let t2;
-  if ($[3] !== result || $[4] !== t1) {
-    t2 = <Stringify result={result} fn={t1} shouldInvokeFns={true} />;
-    $[3] = result;
-    $[4] = t1;
-    $[5] = t2;
+  let t1;
+  if ($[3] !== bar || $[4] !== result) {
+    t1 = <Stringify result={result} fn={bar} shouldInvokeFns={true} />;
+    $[3] = bar;
+    $[4] = result;
+    $[5] = t1;
   } else {
-    t2 = $[5];
+    t1 = $[5];
   }
-  return t2;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {
