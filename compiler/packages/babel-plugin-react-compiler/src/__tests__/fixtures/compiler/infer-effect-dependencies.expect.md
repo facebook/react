@@ -48,7 +48,7 @@ import { c as _c } from "react/compiler-runtime"; // @inferEffectDependencies
 const moduleNonReactive = 0;
 
 function Component(t0) {
-  const $ = _c(11);
+  const $ = _c(12);
   const { foo, bar } = t0;
 
   const ref = useRef(0);
@@ -70,7 +70,7 @@ function Component(t0) {
   }
   const localNonPrimitiveNonreactive = t2;
   let t3;
-  if ($[3] !== foo || $[4] !== bar || $[5] !== localNonPrimitiveReactive) {
+  if ($[3] !== bar || $[4] !== foo || $[5] !== localNonPrimitiveReactive) {
     t3 = () => {
       console.log(foo);
       console.log(bar);
@@ -81,8 +81,8 @@ function Component(t0) {
       console.log(localNonPrimitiveReactive);
       console.log(localNonPrimitiveNonreactive);
     };
-    $[3] = foo;
-    $[4] = bar;
+    $[3] = bar;
+    $[4] = foo;
     $[5] = localNonPrimitiveReactive;
     $[6] = t3;
   } else {
@@ -90,26 +90,27 @@ function Component(t0) {
   }
   useEffect(t3, [foo, bar, localNonPrimitiveReactive]);
   let t4;
-  if ($[7] !== bar) {
+  if ($[7] !== bar.baz || $[8] !== bar.qux) {
     t4 = () => {
       console.log(bar?.baz);
       console.log(bar.qux);
     };
-    $[7] = bar;
-    $[8] = t4;
+    $[7] = bar.baz;
+    $[8] = bar.qux;
+    $[9] = t4;
   } else {
-    t4 = $[8];
+    t4 = $[9];
   }
   useEffect(t4, [bar, bar.qux]);
   let t5;
-  if ($[9] !== foo) {
+  if ($[10] !== foo) {
     t5 = function f() {
       console.log(foo);
     };
-    $[9] = foo;
-    $[10] = t5;
+    $[10] = foo;
+    $[11] = t5;
   } else {
-    t5 = $[10];
+    t5 = $[11];
   }
   const f = t5;
 
