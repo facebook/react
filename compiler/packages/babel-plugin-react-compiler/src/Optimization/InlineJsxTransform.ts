@@ -402,6 +402,7 @@ export function inlineJsxTransform(
           scope.declarations.delete(origId);
           scope.declarations.set(decl.identifier.id, {
             identifier: newDecl,
+            type: decl.type,
             scope: decl.scope,
           });
         }

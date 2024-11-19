@@ -17,6 +17,7 @@ import {
   ReactiveStatement,
   ReactiveTerminalStatement,
   makeInstructionId,
+  makeType,
   promoteTemporary,
 } from '../HIR';
 import {createTemporaryPlace} from '../HIR/HIRBuilder';
@@ -154,6 +155,7 @@ class Transform extends ReactiveFunctionTransform<State> {
         scopeBlock.scope.earlyReturnValue = earlyReturnValue;
         scopeBlock.scope.declarations.set(earlyReturnValue.value.id, {
           identifier: earlyReturnValue.value,
+          type: makeType(),
           scope: scopeBlock.scope,
         });
 
@@ -239,6 +241,7 @@ class Transform extends ReactiveFunctionTransform<State> {
                     effect: Effect.ConditionallyMutate,
                     loc,
                     reactive: true,
+                    type: makeType(),
                     identifier: earlyReturnValue.value,
                   },
                 },
@@ -310,6 +313,7 @@ class Transform extends ReactiveFunctionTransform<State> {
                     effect: Effect.Capture,
                     loc,
                     reactive: true,
+                    type: makeType(),
                   },
                 },
                 value: stmt.terminal.value,

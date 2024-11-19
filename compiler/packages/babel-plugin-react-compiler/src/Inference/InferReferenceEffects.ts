@@ -478,7 +478,7 @@ class InferenceState {
          *   `expected valueKind to be 'Mutable' but found to be \`${valueKind}\``
          * );
          */
-        effect = isObjectType(place.identifier) ? Effect.Store : Effect.Mutate;
+        effect = isObjectType(place.type) ? Effect.Store : Effect.Mutate;
         break;
       }
       case Effect.Capture: {
@@ -1175,10 +1175,7 @@ function inferBlock(
             loc: instrValue.loc,
           });
         }
-        const signature = getFunctionCallSignature(
-          env,
-          instrValue.tag.identifier.type,
-        );
+        const signature = getFunctionCallSignature(env, instrValue.tag.type);
         let calleeEffect =
           signature?.calleeEffect ?? Effect.ConditionallyMutate;
         const returnValueKind: AbstractValue =
@@ -1209,10 +1206,7 @@ function inferBlock(
         break;
       }
       case 'CallExpression': {
-        const signature = getFunctionCallSignature(
-          env,
-          instrValue.callee.identifier.type,
-        );
+        const signature = getFunctionCallSignature(env, instrValue.callee.type);
 
         const effects =
           signature !== null ? getFunctionEffects(instrValue, signature) : null;
@@ -1294,7 +1288,7 @@ function inferBlock(
 
         const signature = getFunctionCallSignature(
           env,
-          instrValue.property.identifier.type,
+          instrValue.property.type,
         );
 
         const returnValueKind: AbstractValue =
@@ -1797,7 +1791,7 @@ function inferBlock(
           kind === ValueKind.Mutable || kind === ValueKind.Context;
         let effect;
         let valueKind: AbstractValue;
-        if (!isMutable || isArrayType(instrValue.collection.identifier)) {
+        if (!isMutable || isArrayType(instrValue.collection.type)) {
           // Case 1, assume iterator is a separate mutable object
           effect = {
             kind: Effect.Read,

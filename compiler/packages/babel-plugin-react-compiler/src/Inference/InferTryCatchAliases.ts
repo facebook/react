@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {BlockId, HIRFunction, Identifier} from '../HIR';
+import {BlockId, HIRFunction, Place} from '../HIR';
 import DisjointSet from '../Utils/DisjointSet';
 
 /*
@@ -16,18 +16,15 @@ import DisjointSet from '../Utils/DisjointSet';
  */
 export function inferTryCatchAliases(
   fn: HIRFunction,
-  aliases: DisjointSet<Identifier>,
+  aliases: DisjointSet<Place>,
 ): void {
-  const handlerParams: Map<BlockId, Identifier> = new Map();
+  const handlerParams: Map<BlockId, Place> = new Map();
   for (const [_, block] of fn.body.blocks) {
     if (
       block.terminal.kind === 'try' &&
       block.terminal.handlerBinding !== null
     ) {
-      handlerParams.set(
-        block.terminal.handler,
-        block.terminal.handlerBinding.identifier,
-      );
+      handlerParams.set(block.terminal.handler, block.terminal.handlerBinding);
     } else if (block.terminal.kind === 'maybe-throw') {
       const handlerParam = handlerParams.get(block.terminal.handler);
       if (handlerParam === undefined) {
@@ -42,7 +39,7 @@ export function inferTryCatchAliases(
        * catch clause param
        */
       for (const instr of block.instructions) {
-        aliases.union([handlerParam, instr.lvalue.identifier]);
+        aliases.union([handlerParam, instr.lvalue]);
       }
     }
   }

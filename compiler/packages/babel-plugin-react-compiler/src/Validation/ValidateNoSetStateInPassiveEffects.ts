@@ -56,7 +56,7 @@ export function validateNoSetStateInPassiveEffects(fn: HIRFunction): void {
             // faster-path to check if the function expression references a setState
             [...eachInstructionValueOperand(instr.value)].some(
               operand =>
-                isSetStateType(operand.identifier) ||
+                isSetStateType(operand.type) ||
                 setStateFunctions.has(operand.identifier.id),
             )
           ) {
@@ -76,7 +76,7 @@ export function validateNoSetStateInPassiveEffects(fn: HIRFunction): void {
             instr.value.kind === 'MethodCall'
               ? instr.value.receiver
               : instr.value.callee;
-          if (isUseEffectHookType(callee.identifier)) {
+          if (isUseEffectHookType(callee.type)) {
             const arg = instr.value.args[0];
             if (arg !== undefined && arg.kind === 'Identifier') {
               const setState = setStateFunctions.get(arg.identifier.id);
@@ -135,7 +135,7 @@ function getSetStateCall(
         case 'CallExpression': {
           const callee = instr.value.callee;
           if (
-            isSetStateType(callee.identifier) ||
+            isSetStateType(callee.type) ||
             setStateFunctions.has(callee.identifier.id)
           ) {
             /*

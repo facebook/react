@@ -251,6 +251,7 @@ function validateInferredDep(
           loc: GeneratedSource,
           effect: Effect.Read,
           reactive: false,
+          type: dep.type,
         },
       },
       path: [...dep.path],

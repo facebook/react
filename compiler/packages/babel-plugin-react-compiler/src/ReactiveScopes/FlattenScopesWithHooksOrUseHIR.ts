@@ -11,7 +11,7 @@ import {
   HIRFunction,
   LabelTerminal,
   PrunedScopeTerminal,
-  getHookKind,
+  getHookKindForType,
   isUseOperator,
 } from '../HIR';
 import {retainWhere} from '../Utils/utils';
@@ -52,8 +52,8 @@ export function flattenScopesWithHooksOrUseHIR(fn: HIRFunction): void {
           const callee =
             value.kind === 'MethodCall' ? value.property : value.callee;
           if (
-            getHookKind(fn.env, callee.identifier) != null ||
-            isUseOperator(callee.identifier)
+            getHookKindForType(fn.env, callee.type) != null ||
+            isUseOperator(callee.type)
           ) {
             prune.push(...activeScopes.map(entry => entry.block));
             activeScopes.length = 0;

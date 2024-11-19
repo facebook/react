@@ -17,6 +17,7 @@ import {
   areEqualPaths,
   IdentifierId,
   Terminal,
+  makeType,
 } from './HIR';
 import {
   collectHoistablePropertyLoads,
@@ -278,6 +279,7 @@ function collectTemporariesSidemapImpl(
         ) {
           temporaries.set(lvalue.identifier.id, {
             identifier: value.place.identifier,
+            type: value.place.type,
             path: [],
           });
         }
@@ -331,11 +333,13 @@ function getProperty(
   if (resolvedDependency == null) {
     property = {
       identifier: object.identifier,
+      type: makeType(),
       path: [{property: propertyName, optional}],
     };
   } else {
     property = {
       identifier: resolvedDependency.identifier,
+      type: makeType(),
       path: [...resolvedDependency.path, {property: propertyName, optional}],
     };
   }
@@ -441,7 +445,7 @@ class Context {
   // Checks if identifier is a valid dependency in the current scope
   #checkValidDependency(maybeDependency: ReactiveScopeDependency): boolean {
     // ref value is not a valid dep
-    if (isRefValueType(maybeDependency.identifier)) {
+    if (isRefValueType(maybeDependency.type)) {
       return false;
     }
 
@@ -449,7 +453,7 @@ class Context {
      * object methods are not deps because they will be codegen'ed back in to
      * the object literal.
      */
-    if (isObjectMethodType(maybeDependency.identifier)) {
+    if (isObjectMethodType(maybeDependency.type)) {
       return false;
     }
 
@@ -488,6 +492,7 @@ class Context {
     this.visitDependency(
       this.#temporaries.get(place.identifier.id) ?? {
         identifier: place.identifier,
+        type: place.type,
         path: [],
       },
     );
@@ -535,6 +540,7 @@ class Context {
         ) {
           scope.declarations.set(maybeDependency.identifier.id, {
             identifier: maybeDependency.identifier,
+            type: maybeDependency.type,
             scope: originalDeclaration.scope.value!,
           });
         }
@@ -543,11 +549,12 @@ class Context {
 
     // ref.current access is not a valid dep
     if (
-      isUseRefType(maybeDependency.identifier) &&
+      isUseRefType(maybeDependency.type) &&
       maybeDependency.path.at(0)?.property === 'current'
     ) {
       maybeDependency = {
         identifier: maybeDependency.identifier,
+        type: maybeDependency.type,
         path: [],
       };
     }
@@ -569,7 +576,11 @@ class Context {
         identifier =>
           identifier.declarationId === place.identifier.declarationId,
       ) &&
-      this.#checkValidDependency({identifier: place.identifier, path: []})
+      this.#checkValidDependency({
+        identifier: place.identifier,
+        type: place.type,
+        path: [],
+      })
     ) {
       currentScope.reassignments.add(place.identifier);
     }

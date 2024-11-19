@@ -16,7 +16,7 @@ import {
   InstructionValue,
   Place,
   ValueReason,
-  getHookKind,
+  getHookKindForType,
   isRefOrRefValue,
 } from '../HIR';
 import {eachInstructionOperand, eachTerminalOperand} from '../HIR/visitors';
@@ -38,7 +38,7 @@ function inferOperandEffect(state: State, place: Place): null | FunctionEffect {
   switch (place.effect) {
     case Effect.Store:
     case Effect.Mutate: {
-      if (isRefOrRefValue(place.identifier)) {
+      if (isRefOrRefValue(place.type)) {
         break;
       } else if (value.kind === ValueKind.Context) {
         return {
@@ -235,7 +235,7 @@ export function inferInstructionFunctionEffects(
         callee = instr.value.callee;
       }
       functionEffects.push(...operandEffects(state, callee, false));
-      let isHook = getHookKind(env, callee.identifier) != null;
+      let isHook = getHookKindForType(env, callee.type) != null;
       for (const arg of instr.value.args) {
         const place = arg.kind === 'Identifier' ? arg : arg.place;
         /*

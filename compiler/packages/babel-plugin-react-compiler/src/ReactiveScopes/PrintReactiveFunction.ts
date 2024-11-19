@@ -111,8 +111,7 @@ export function writePrunedScope(
 
 export function printDependency(dependency: ReactiveScopeDependency): string {
   const identifier =
-    printIdentifier(dependency.identifier) +
-    printType(dependency.identifier.type);
+    printIdentifier(dependency.identifier) + printType(dependency.type);
   return `${identifier}${dependency.path.map(token => `${token.optional ? '?.' : '.'}${token.property}`).join('')}`;
 }
 

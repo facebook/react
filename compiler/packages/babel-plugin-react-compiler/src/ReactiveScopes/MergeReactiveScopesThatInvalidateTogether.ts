@@ -456,6 +456,7 @@ function canMergeScopes(
       new Set(
         [...current.scope.declarations.values()].map(declaration => ({
           identifier: declaration.identifier,
+          type: declaration.type,
           path: [],
         })),
       ),
@@ -464,7 +465,7 @@ function canMergeScopes(
     (next.scope.dependencies.size !== 0 &&
       [...next.scope.dependencies].every(
         dep =>
-          isAlwaysInvalidatingType(dep.identifier.type) &&
+          isAlwaysInvalidatingType(dep.type) &&
           Iterable_some(
             current.scope.declarations.values(),
             decl =>
@@ -545,6 +546,6 @@ function scopeIsEligibleForMerging(scopeBlock: ReactiveScopeBlock): boolean {
     return true;
   }
   return [...scopeBlock.scope.declarations].some(([, decl]) =>
-    isAlwaysInvalidatingType(decl.identifier.type),
+    isAlwaysInvalidatingType(decl.type),
   );
 }

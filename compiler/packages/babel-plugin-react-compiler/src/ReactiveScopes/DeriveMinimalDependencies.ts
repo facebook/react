@@ -6,7 +6,12 @@
  */
 
 import {CompilerError} from '../CompilerError';
-import {DependencyPath, Identifier, ReactiveScopeDependency} from '../HIR';
+import {
+  DependencyPath,
+  Identifier,
+  makeType,
+  ReactiveScopeDependency,
+} from '../HIR';
 import {printIdentifier} from '../HIR/PrintHIR';
 import {assertExhaustive} from '../Utils/utils';
 
@@ -107,6 +112,7 @@ export class ReactiveScopeDependencyTree {
       for (const dep of deps) {
         results.add({
           identifier: rootId,
+          type: makeType(),
           path: dep.relativePath,
         });
       }
@@ -121,7 +127,7 @@ export class ReactiveScopeDependencyTree {
     checkValidDepIdFn: (dep: ReactiveScopeDependency) => boolean,
   ): void {
     for (const [id, otherRoot] of depsFromInnerScope.#roots) {
-      if (!checkValidDepIdFn({identifier: id, path: []})) {
+      if (!checkValidDepIdFn({identifier: id, type: makeType(), path: []})) {
         continue;
       }
       let currRoot = this.#getOrCreateRoot(id);

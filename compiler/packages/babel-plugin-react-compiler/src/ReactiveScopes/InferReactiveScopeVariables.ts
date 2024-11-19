@@ -238,7 +238,7 @@ function mayAllocate(env: Environment, instruction: Instruction): boolean {
     case 'TaggedTemplateExpression':
     case 'CallExpression':
     case 'MethodCall': {
-      return instruction.lvalue.identifier.type.kind !== 'Primitive';
+      return instruction.lvalue.type.kind !== 'Primitive';
     }
     case 'RegExpLiteral':
     case 'PropertyStore':

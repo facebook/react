@@ -79,7 +79,7 @@ function validateNoSetStateInRenderImpl(
             // faster-path to check if the function expression references a setState
             [...eachInstructionValueOperand(instr.value)].some(
               operand =>
-                isSetStateType(operand.identifier) ||
+                isSetStateType(operand.type) ||
                 unconditionalSetStateFunctions.has(operand.identifier.id),
             ) &&
             // if yes, does it unconditonally call it?
@@ -116,7 +116,7 @@ function validateNoSetStateInRenderImpl(
         case 'CallExpression': {
           const callee = instr.value.callee;
           if (
-            isSetStateType(callee.identifier) ||
+            isSetStateType(callee.type) ||
             unconditionalSetStateFunctions.has(callee.identifier.id)
           ) {
             if (activeManualMemoId !== null) {

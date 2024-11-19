@@ -87,6 +87,7 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
           identifier: phi.place.identifier,
           effect: Effect.ConditionallyMutate,
           reactive: false,
+          type: phi.place.type,
           loc: GeneratedSource,
         },
         value: {

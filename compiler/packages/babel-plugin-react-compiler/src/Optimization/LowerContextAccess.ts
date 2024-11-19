@@ -46,7 +46,7 @@ export function lowerContextAccess(
 
       if (
         value.kind === 'CallExpression' &&
-        isUseContextHookType(value.callee.identifier)
+        isUseContextHookType(value.callee.type)
       ) {
         contextAccess.set(lvalue.identifier.id, value);
         continue;
@@ -87,7 +87,7 @@ export function lowerContextAccess(
         const {lvalue, value} = instr;
         if (
           value.kind === 'CallExpression' &&
-          isUseContextHookType(value.callee.identifier) &&
+          isUseContextHookType(value.callee.type) &&
           contextKeys.has(lvalue.identifier.id)
         ) {
           const loweredContextCalleeInstr = emitLoadLoweredContextCallee(

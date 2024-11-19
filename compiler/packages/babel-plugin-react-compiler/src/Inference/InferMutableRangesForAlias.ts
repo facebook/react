@@ -5,17 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {
-  HIRFunction,
-  Identifier,
-  InstructionId,
-  isRefOrRefValue,
-} from '../HIR/HIR';
+import {HIRFunction, InstructionId, isRefOrRefValue, Place} from '../HIR/HIR';
 import DisjointSet from '../Utils/DisjointSet';
 
 export function inferMutableRangesForAlias(
   _fn: HIRFunction,
-  aliases: DisjointSet<Identifier>,
+  aliases: DisjointSet<Place>,
 ): void {
   const aliasSets = aliases.buildSets();
   for (const aliasSet of aliasSets) {
@@ -24,16 +19,18 @@ export function inferMutableRangesForAlias(
      * mutated.
      */
     const mutatingIdentifiers = [...aliasSet].filter(
-      id =>
-        id.mutableRange.end - id.mutableRange.start > 1 && !isRefOrRefValue(id),
+      place =>
+        place.identifier.mutableRange.end -
+          place.identifier.mutableRange.start >
+          1 && !isRefOrRefValue(place.type),
     );
 
     if (mutatingIdentifiers.length > 0) {
       // Find final instruction which mutates this alias set.
       let lastMutatingInstructionId = 0;
-      for (const id of mutatingIdentifiers) {
-        if (id.mutableRange.end > lastMutatingInstructionId) {
-          lastMutatingInstructionId = id.mutableRange.end;
+      for (const place of mutatingIdentifiers) {
+        if (place.identifier.mutableRange.end > lastMutatingInstructionId) {
+          lastMutatingInstructionId = place.identifier.mutableRange.end;
         }
       }
 
@@ -43,10 +40,11 @@ export function inferMutableRangesForAlias(
        */
       for (const alias of aliasSet) {
         if (
-          alias.mutableRange.end < lastMutatingInstructionId &&
-          !isRefOrRefValue(alias)
+          alias.identifier.mutableRange.end < lastMutatingInstructionId &&
+          !isRefOrRefValue(alias.type)
         ) {
-          alias.mutableRange.end = lastMutatingInstructionId as InstructionId;
+          alias.identifier.mutableRange.end =
+            lastMutatingInstructionId as InstructionId;
         }
       }
     }

@@ -11,7 +11,7 @@ import {CompilerError, CompilerErrorDetailOptions} from '../CompilerError';
 import {assertExhaustive} from '../Utils/utils';
 import {Environment, ReactFunctionType} from './Environment';
 import {HookKind} from './ObjectShape';
-import {Type, makeType} from './Types';
+import {Type} from './Types';
 import {z} from 'zod';
 
 /*
@@ -1108,6 +1108,7 @@ export type Place = {
   identifier: Identifier;
   effect: Effect;
   reactive: boolean;
+  type: Type;
   loc: SourceLocation;
 };
 
@@ -1211,7 +1212,6 @@ export type Identifier = {
    * variables may have the same scope id.
    */
   scope: ReactiveScope | null;
-  type: Type;
   loc: SourceLocation;
 };
 
@@ -1238,7 +1238,6 @@ export function makeTemporaryIdentifier(
     declarationId: makeDeclarationId(id),
     mutableRange: {start: makeInstructionId(0), end: makeInstructionId(0)},
     scope: null,
-    type: makeType(),
     loc,
   };
 }
@@ -1508,6 +1507,7 @@ export type ReactiveScopeDependencies = Set<ReactiveScopeDependency>;
 
 export type ReactiveScopeDeclaration = {
   identifier: Identifier;
+  type: Type;
   scope: ReactiveScope; // the scope in which the variable was originally declared
 };
 
@@ -1515,6 +1515,7 @@ export type DependencyPathEntry = {property: string; optional: boolean};
 export type DependencyPath = Array<DependencyPathEntry>;
 export type ReactiveScopeDependency = {
   identifier: Identifier;
+  type: Type;
   path: DependencyPath;
 };
 
@@ -1628,110 +1629,92 @@ export function makeInstructionId(id: number): InstructionId {
   return id as InstructionId;
 }
 
-export function isObjectMethodType(id: Identifier): boolean {
-  return id.type.kind == 'ObjectMethod';
+export function isObjectMethodType(type: Type): boolean {
+  return type.kind == 'ObjectMethod';
 }
 
-export function isObjectType(id: Identifier): boolean {
-  return id.type.kind === 'Object';
+export function isObjectType(type: Type): boolean {
+  return type.kind === 'Object';
 }
 
-export function isPrimitiveType(id: Identifier): boolean {
-  return id.type.kind === 'Primitive';
+export function isPrimitiveType(type: Type): boolean {
+  return type.kind === 'Primitive';
 }
 
-export function isArrayType(id: Identifier): boolean {
-  return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInArray';
+export function isArrayType(type: Type): boolean {
+  return type.kind === 'Object' && type.shapeId === 'BuiltInArray';
 }
 
-export function isRefValueType(id: Identifier): boolean {
-  return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInRefValue';
+export function isRefValueType(type: Type): boolean {
+  return type.kind === 'Object' && type.shapeId === 'BuiltInRefValue';
 }
 
-export function isUseRefType(id: Identifier): boolean {
-  return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInUseRefId';
+export function isUseRefType(type: Type): boolean {
+  return type.kind === 'Object' && type.shapeId === 'BuiltInUseRefId';
 }
 
-export function isUseStateType(id: Identifier): boolean {
-  return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInUseState';
+export function isUseStateType(type: Type): boolean {
+  return type.kind === 'Object' && type.shapeId === 'BuiltInUseState';
 }
 
-export function isRefOrRefValue(id: Identifier): boolean {
-  return isUseRefType(id) || isRefValueType(id);
+export function isRefOrRefValue(type: Type): boolean {
+  return isUseRefType(type) || isRefValueType(type);
 }
 
-export function isSetStateType(id: Identifier): boolean {
-  return id.type.kind === 'Function' && id.type.shapeId === 'BuiltInSetState';
+export function isSetStateType(type: Type): boolean {
+  return type.kind === 'Function' && type.shapeId === 'BuiltInSetState';
 }
 
-export function isUseActionStateType(id: Identifier): boolean {
+export function isUseActionStateType(type: Type): boolean {
+  return type.kind === 'Object' && type.shapeId === 'BuiltInUseActionState';
+}
+
+export function isStartTransitionType(type: Type): boolean {
+  return type.kind === 'Function' && type.shapeId === 'BuiltInStartTransition';
+}
+
+export function isSetActionStateType(type: Type): boolean {
+  return type.kind === 'Function' && type.shapeId === 'BuiltInSetActionState';
+}
+
+export function isUseReducerType(type: Type): boolean {
+  return type.kind === 'Function' && type.shapeId === 'BuiltInUseReducer';
+}
+
+export function isDispatcherType(type: Type): boolean {
+  return type.kind === 'Function' && type.shapeId === 'BuiltInDispatch';
+}
+
+export function isStableType(type: Type): boolean {
   return (
-    id.type.kind === 'Object' && id.type.shapeId === 'BuiltInUseActionState'
+    isSetStateType(type) ||
+    isSetActionStateType(type) ||
+    isDispatcherType(type) ||
+    isUseRefType(type) ||
+    isStartTransitionType(type)
   );
 }
 
-export function isStartTransitionType(id: Identifier): boolean {
+export function isUseEffectHookType(type: Type): boolean {
+  return type.kind === 'Function' && type.shapeId === 'BuiltInUseEffectHook';
+}
+export function isUseLayoutEffectHookType(type: Type): boolean {
   return (
-    id.type.kind === 'Function' && id.type.shapeId === 'BuiltInStartTransition'
+    type.kind === 'Function' && type.shapeId === 'BuiltInUseLayoutEffectHook'
+  );
+}
+export function isUseInsertionEffectHookType(type: Type): boolean {
+  return (
+    type.kind === 'Function' && type.shapeId === 'BuiltInUseInsertionEffectHook'
   );
 }
 
-export function isSetActionStateType(id: Identifier): boolean {
-  return (
-    id.type.kind === 'Function' && id.type.shapeId === 'BuiltInSetActionState'
-  );
+export function isUseContextHookType(type: Type): boolean {
+  return type.kind === 'Function' && type.shapeId === 'BuiltInUseContextHook';
 }
 
-export function isUseReducerType(id: Identifier): boolean {
-  return id.type.kind === 'Function' && id.type.shapeId === 'BuiltInUseReducer';
-}
-
-export function isDispatcherType(id: Identifier): boolean {
-  return id.type.kind === 'Function' && id.type.shapeId === 'BuiltInDispatch';
-}
-
-export function isStableType(id: Identifier): boolean {
-  return (
-    isSetStateType(id) ||
-    isSetActionStateType(id) ||
-    isDispatcherType(id) ||
-    isUseRefType(id) ||
-    isStartTransitionType(id)
-  );
-}
-
-export function isUseEffectHookType(id: Identifier): boolean {
-  return (
-    id.type.kind === 'Function' && id.type.shapeId === 'BuiltInUseEffectHook'
-  );
-}
-export function isUseLayoutEffectHookType(id: Identifier): boolean {
-  return (
-    id.type.kind === 'Function' &&
-    id.type.shapeId === 'BuiltInUseLayoutEffectHook'
-  );
-}
-export function isUseInsertionEffectHookType(id: Identifier): boolean {
-  return (
-    id.type.kind === 'Function' &&
-    id.type.shapeId === 'BuiltInUseInsertionEffectHook'
-  );
-}
-
-export function isUseContextHookType(id: Identifier): boolean {
-  return (
-    id.type.kind === 'Function' && id.type.shapeId === 'BuiltInUseContextHook'
-  );
-}
-
-export function getHookKind(env: Environment, id: Identifier): HookKind | null {
-  return getHookKindForType(env, id.type);
-}
-
-export function isUseOperator(id: Identifier): boolean {
-  return (
-    id.type.kind === 'Function' && id.type.shapeId === 'BuiltInUseOperator'
-  );
+export function isUseOperator(type: Type): boolean {
+  return type.kind === 'Function' && type.shapeId === 'BuiltInUseOperator';
 }
 
 export function getHookKindForType(
@@ -1743,6 +1726,14 @@ export function getHookKindForType(
     return signature?.hookKind ?? null;
   }
   return null;
+}
+
+export function isEffectHook(type: Type): boolean {
+  return (
+    isUseEffectHookType(type) ||
+    isUseLayoutEffectHookType(type) ||
+    isUseInsertionEffectHookType(type)
+  );
 }
 
 export * from './Types';

@@ -28,6 +28,7 @@ import {
   TInstruction,
   getHookKindForType,
   makeInstructionId,
+  makeType,
 } from '../HIR';
 import {createTemporaryPlace, markInstructionIds} from '../HIR/HIRBuilder';
 
@@ -269,6 +270,7 @@ function getManualMemoizationReplacement(
         identifier: fn.identifier,
         effect: Effect.Unknown,
         reactive: false,
+        type: makeType(),
         loc,
       },
       loc,
@@ -421,6 +423,7 @@ export function dropManualMemoization(func: HIRFunction): void {
                     identifier: fnPlace.identifier,
                     effect: Effect.Unknown,
                     reactive: false,
+                    type: makeType(),
                     loc: fnPlace.loc,
                   };
 

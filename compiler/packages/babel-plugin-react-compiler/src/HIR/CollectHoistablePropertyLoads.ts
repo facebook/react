@@ -18,6 +18,7 @@ import {
   IdentifierId,
   InstructionId,
   InstructionValue,
+  makeType,
   ReactiveScopeDependency,
   ScopeId,
 } from './HIR';
@@ -216,6 +217,7 @@ class PropertyPathRegistry {
         optionalProperties: new Map(),
         fullPath: {
           identifier,
+          type: makeType(),
           path: [],
         },
         hasOptional: false,
@@ -239,6 +241,7 @@ class PropertyPathRegistry {
         parent: parent,
         fullPath: {
           identifier: parent.fullPath.identifier,
+          type: makeType(),
           path: parent.fullPath.path.concat(entry),
         },
         hasOptional: parent.hasOptional || entry.optional,
@@ -280,6 +283,7 @@ function getMaybeNonNullInInstruction(
   if (instr.kind === 'PropertyLoad') {
     path = context.temporaries.get(instr.object.identifier.id) ?? {
       identifier: instr.object.identifier,
+      type: makeType(),
       path: [],
     };
   } else if (instr.kind === 'Destructure') {

@@ -14,7 +14,7 @@ import {
   IdentifierId,
   Place,
   computePostDominatorTree,
-  getHookKind,
+  getHookKindForType,
   isStableType,
   isUseOperator,
 } from '../HIR';
@@ -204,21 +204,21 @@ export function inferReactivePlaces(fn: HIRFunction): void {
          */
         if (
           value.kind === 'CallExpression' &&
-          (getHookKind(fn.env, value.callee.identifier) != null ||
-            isUseOperator(value.callee.identifier))
+          (getHookKindForType(fn.env, value.callee.type) != null ||
+            isUseOperator(value.callee.type))
         ) {
           hasReactiveInput = true;
         } else if (
           value.kind === 'MethodCall' &&
-          (getHookKind(fn.env, value.property.identifier) != null ||
-            isUseOperator(value.property.identifier))
+          (getHookKindForType(fn.env, value.property.type) != null ||
+            isUseOperator(value.property.type))
         ) {
           hasReactiveInput = true;
         }
 
         if (hasReactiveInput) {
           for (const lvalue of eachInstructionLValue(instruction)) {
-            if (isStableType(lvalue.identifier)) {
+            if (isStableType(lvalue.type)) {
               continue;
             }
             reactiveIdentifiers.markReactive(lvalue);

@@ -140,7 +140,7 @@ function infer(
       name = dep.identifier.name;
     }
 
-    if (isRefOrRefValue(dep.identifier)) {
+    if (isRefOrRefValue(dep.type)) {
       /*
        * TODO: this is a hack to ensure we treat functions which reference refs
        * as having a capture and therefore being considered mutable. this ensures
