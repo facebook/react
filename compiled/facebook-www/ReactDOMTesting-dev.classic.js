@@ -26097,24 +26097,25 @@ __DEV__ &&
         return mountEvent(callback);
       }
     };
-    HooksDispatcherOnRerenderInDEV.useResourceEffect = function (
-      create,
-      createDeps,
-      update,
-      updateDeps,
-      destroy
-    ) {
-      currentHookNameInDev = "useResourceEffect";
-      warnInvalidHookAccess();
-      mountHookTypesDev();
-      return mountResourceEffect(
+    enableUseResourceEffectHook &&
+      (InvalidNestedHooksDispatcherOnMountInDEV.useResourceEffect = function (
         create,
         createDeps,
         update,
         updateDeps,
         destroy
-      );
-    };
+      ) {
+        currentHookNameInDev = "useResourceEffect";
+        warnInvalidHookAccess();
+        mountHookTypesDev();
+        return mountResourceEffect(
+          create,
+          createDeps,
+          update,
+          updateDeps,
+          destroy
+        );
+      });
     InvalidNestedHooksDispatcherOnMountInDEV.useHostTransitionStatus =
       useHostTransitionStatus;
     InvalidNestedHooksDispatcherOnMountInDEV.useFormState = function (
@@ -27865,11 +27866,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.0.0-www-classic-eaf2d5c6-20241119" !== isomorphicReactPackageVersion)
+      if ("19.0.0-www-classic-7558ffe8-20241119" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.0.0-www-classic-eaf2d5c6-20241119\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.0.0-www-classic-7558ffe8-20241119\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -27912,11 +27913,11 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.0.0-www-classic-eaf2d5c6-20241119",
+          version: "19.0.0-www-classic-7558ffe8-20241119",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
           findFiberByHostInstance: getClosestInstanceFromNode,
-          reconcilerVersion: "19.0.0-www-classic-eaf2d5c6-20241119"
+          reconcilerVersion: "19.0.0-www-classic-7558ffe8-20241119"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -28687,5 +28688,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.0.0-www-classic-eaf2d5c6-20241119";
+    exports.version = "19.0.0-www-classic-7558ffe8-20241119";
   })();

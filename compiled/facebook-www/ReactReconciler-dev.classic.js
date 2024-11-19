@@ -17757,24 +17757,25 @@ __DEV__ &&
         return mountEvent(callback);
       }
     };
-    HooksDispatcherOnRerenderInDEV.useResourceEffect = function (
-      create,
-      createDeps,
-      update,
-      updateDeps,
-      destroy
-    ) {
-      currentHookNameInDev = "useResourceEffect";
-      warnInvalidHookAccess();
-      mountHookTypesDev();
-      return mountResourceEffect(
+    enableUseResourceEffectHook &&
+      (InvalidNestedHooksDispatcherOnMountInDEV.useResourceEffect = function (
         create,
         createDeps,
         update,
         updateDeps,
         destroy
-      );
-    };
+      ) {
+        currentHookNameInDev = "useResourceEffect";
+        warnInvalidHookAccess();
+        mountHookTypesDev();
+        return mountResourceEffect(
+          create,
+          createDeps,
+          update,
+          updateDeps,
+          destroy
+        );
+      });
     InvalidNestedHooksDispatcherOnMountInDEV.useHostTransitionStatus =
       useHostTransitionStatus;
     InvalidNestedHooksDispatcherOnMountInDEV.useFormState = function (
@@ -19262,7 +19263,7 @@ __DEV__ &&
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-www-classic-eaf2d5c6-20241119"
+        reconcilerVersion: "19.0.0-www-classic-7558ffe8-20241119"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

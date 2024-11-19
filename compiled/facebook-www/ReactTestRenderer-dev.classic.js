@@ -13,7 +13,7 @@
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1128() {
+    function JSCompiler_object_inline_createNodeMock_1113() {
       return null;
     }
     function findHook(fiber, id) {
@@ -3498,29 +3498,19 @@ __DEV__ &&
       return [stateHook, dispatch, !1];
     }
     function pushSimpleEffect(tag, inst, create, deps) {
-      return pushEffectImpl({
-        tag: tag,
-        create: create,
-        deps: deps,
-        inst: inst,
-        next: null
-      });
-    }
-    function pushEffectImpl(effect) {
-      var componentUpdateQueue = currentlyRenderingFiber$1.updateQueue;
-      null === componentUpdateQueue &&
-        ((componentUpdateQueue = createFunctionComponentUpdateQueue()),
-        (currentlyRenderingFiber$1.updateQueue = componentUpdateQueue));
-      var lastEffect = componentUpdateQueue.lastEffect;
-      if (null === lastEffect)
-        componentUpdateQueue.lastEffect = effect.next = effect;
-      else {
-        var firstEffect = lastEffect.next;
-        lastEffect.next = effect;
-        effect.next = firstEffect;
-        componentUpdateQueue.lastEffect = effect;
-      }
-      return effect;
+      tag = { tag: tag, create: create, deps: deps, inst: inst, next: null };
+      inst = currentlyRenderingFiber$1.updateQueue;
+      null === inst &&
+        ((inst = createFunctionComponentUpdateQueue()),
+        (currentlyRenderingFiber$1.updateQueue = inst));
+      create = inst.lastEffect;
+      null === create
+        ? (inst.lastEffect = tag.next = tag)
+        : ((deps = create.next),
+          (create.next = tag),
+          (tag.next = deps),
+          (inst.lastEffect = tag));
+      return tag;
     }
     function createEffectInstance() {
       return { destroy: void 0, resource: void 0 };
@@ -3562,38 +3552,6 @@ __DEV__ &&
       0 === (currentlyRenderingFiber$1.mode & 64)
         ? mountEffectImpl(142608384, Passive, create, deps)
         : mountEffectImpl(8390656, Passive, create, deps);
-    }
-    function mountResourceEffectImpl(
-      fiberFlags,
-      hookFlags,
-      create,
-      createDeps,
-      update,
-      updateDeps,
-      destroy
-    ) {
-      var hook = mountWorkInProgressHook();
-      currentlyRenderingFiber$1.flags |= fiberFlags;
-      fiberFlags = createEffectInstance();
-      fiberFlags.destroy = destroy;
-      create = pushEffectImpl({
-        resourceKind: 0,
-        tag: HasEffect | hookFlags,
-        create: create,
-        deps: createDeps,
-        inst: fiberFlags,
-        next: null
-      });
-      hook.memoizedState = create;
-      hookFlags = pushEffectImpl({
-        resourceKind: 1,
-        tag: hookFlags,
-        update: update,
-        deps: updateDeps,
-        inst: fiberFlags,
-        next: null
-      });
-      hook.memoizedState = hookFlags;
     }
     function mountLayoutEffect(create, deps) {
       var fiberFlags = 4194308;
@@ -14077,37 +14035,6 @@ __DEV__ &&
         return useMemoCache(size);
       }
     };
-    HooksDispatcherOnRerenderInDEV.useResourceEffect = function (
-      create,
-      createDeps,
-      update,
-      updateDeps,
-      destroy
-    ) {
-      currentHookNameInDev = "useResourceEffect";
-      warnInvalidHookAccess();
-      mountHookTypesDev();
-      0 !== (currentlyRenderingFiber$1.mode & 16) &&
-      0 === (currentlyRenderingFiber$1.mode & 64)
-        ? mountResourceEffectImpl(
-            142608384,
-            Passive,
-            create,
-            createDeps,
-            update,
-            updateDeps,
-            destroy
-          )
-        : mountResourceEffectImpl(
-            8390656,
-            Passive,
-            create,
-            createDeps,
-            update,
-            updateDeps,
-            destroy
-          );
-    };
     InvalidNestedHooksDispatcherOnMountInDEV.useHostTransitionStatus =
       useHostTransitionStatus;
     InvalidNestedHooksDispatcherOnMountInDEV.useFormState = function (
@@ -15101,11 +15028,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-www-classic-eaf2d5c6-20241119",
+        version: "19.0.0-www-classic-7558ffe8-20241119",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-www-classic-eaf2d5c6-20241119"
+        reconcilerVersion: "19.0.0-www-classic-7558ffe8-20241119"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15125,7 +15052,7 @@ __DEV__ &&
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1128,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1113,
         isConcurrentOnly = !0 !== global.IS_REACT_NATIVE_TEST_ENVIRONMENT,
         isConcurrent = isConcurrentOnly,
         isStrictMode = !1;
@@ -15240,5 +15167,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.0.0-www-classic-eaf2d5c6-20241119";
+    exports.version = "19.0.0-www-classic-7558ffe8-20241119";
   })();
