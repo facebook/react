@@ -1,4 +1,5 @@
 function TestComponent(t0) {
+  "use memo";
   const $ = _c(2);
   const { x } = t0;
   let t1;

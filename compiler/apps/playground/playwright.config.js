@@ -18,6 +18,8 @@ const baseURL = `http://localhost:${PORT}`;
 export default defineConfig({
   // Timeout per test
   timeout: 30 * 1000,
+  // Run all tests in parallel.
+  fullyParallel: true,
   // Test directory
   testDir: path.join(__dirname, '__tests__/e2e'),
   // If a test fails, retry it additional 2 times
