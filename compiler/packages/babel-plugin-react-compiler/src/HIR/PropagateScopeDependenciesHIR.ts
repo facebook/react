@@ -17,6 +17,11 @@ import {
   areEqualPaths,
   IdentifierId,
   Terminal,
+  InstructionValue,
+  LoadContext,
+  TInstruction,
+  FunctionExpression,
+  ObjectMethod,
 } from './HIR';
 import {
   collectHoistablePropertyLoads,
@@ -223,11 +228,25 @@ export function collectTemporariesSidemap(
     fn,
     usedOutsideDeclaringScope,
     temporaries,
-    false,
+    null,
   );
   return temporaries;
 }
 
+function isLoadContextMutable(
+  instrValue: InstructionValue,
+  id: InstructionId,
+): instrValue is LoadContext {
+  if (instrValue.kind === 'LoadContext') {
+    CompilerError.invariant(instrValue.place.identifier.scope != null, {
+      reason:
+        '[PropagateScopeDependencies] Expected all context variables to be assigned a scope',
+      loc: instrValue.loc,
+    });
+    return id >= instrValue.place.identifier.scope.range.end;
+  }
+  return false;
+}
 /**
  * Recursive collect a sidemap of all `LoadLocal` and `PropertyLoads` with a
  * function and all nested functions.
@@ -239,17 +258,21 @@ function collectTemporariesSidemapImpl(
   fn: HIRFunction,
   usedOutsideDeclaringScope: ReadonlySet<DeclarationId>,
   temporaries: Map<IdentifierId, ReactiveScopeDependency>,
-  isInnerFn: boolean,
+  innerFnContext: {instrId: InstructionId} | null,
 ): void {
   for (const [_, block] of fn.body.blocks) {
-    for (const instr of block.instructions) {
-      const {value, lvalue} = instr;
+    for (const {value, lvalue, id: origInstrId} of block.instructions) {
+      const instrId =
+        innerFnContext != null ? innerFnContext.instrId : origInstrId;
       const usedOutside = usedOutsideDeclaringScope.has(
         lvalue.identifier.declarationId,
       );
 
       if (value.kind === 'PropertyLoad' && !usedOutside) {
-        if (!isInnerFn || temporaries.has(value.object.identifier.id)) {
+        if (
+          innerFnContext == null ||
+          temporaries.has(value.object.identifier.id)
+        ) {
           /**
            * All dependencies of a inner / nested function must have a base
            * identifier from the outermost component / hook. This is because the
@@ -265,13 +288,13 @@ function collectTemporariesSidemapImpl(
           temporaries.set(lvalue.identifier.id, property);
         }
       } else if (
-        value.kind === 'LoadLocal' &&
+        (value.kind === 'LoadLocal' || isLoadContextMutable(value, instrId)) &&
         lvalue.identifier.name == null &&
         value.place.identifier.name !== null &&
         !usedOutside
       ) {
         if (
-          !isInnerFn ||
+          innerFnContext == null ||
           fn.context.some(
             context => context.identifier.id === value.place.identifier.id,
           )
@@ -289,7 +312,7 @@ function collectTemporariesSidemapImpl(
           value.loweredFunc.func,
           usedOutsideDeclaringScope,
           temporaries,
-          true,
+          innerFnContext ?? {instrId},
         );
       }
     }
@@ -364,7 +387,7 @@ class Context {
    * Tracks the traversal state. See Context.declare for explanation of why this
    * is needed.
    */
-  inInnerFn: boolean = false;
+  #innerFnContext: {outerInstrId: InstructionId} | null = null;
 
   constructor(
     temporariesUsedOutsideScope: ReadonlySet<DeclarationId>,
@@ -434,7 +457,7 @@ class Context {
    *     by root identifier mutable ranges).
    */
   declare(identifier: Identifier, decl: Decl): void {
-    if (this.inInnerFn) return;
+    if (this.#innerFnContext != null) return;
     if (!this.#declarations.has(identifier.declarationId)) {
       this.#declarations.set(identifier.declarationId, decl);
     }
@@ -577,11 +600,14 @@ class Context {
       currentScope.reassignments.add(place.identifier);
     }
   }
-  enterInnerFn<T>(cb: () => T): T {
-    const wasInInnerFn = this.inInnerFn;
-    this.inInnerFn = true;
+  enterInnerFn<T>(
+    innerFn: TInstruction<FunctionExpression> | TInstruction<ObjectMethod>,
+    cb: () => T,
+  ): T {
+    const prevContext = this.#innerFnContext;
+    this.#innerFnContext = this.#innerFnContext ?? {outerInstrId: innerFn.id};
     const result = cb();
-    this.inInnerFn = wasInInnerFn;
+    this.#innerFnContext = prevContext;
     return result;
   }
 
@@ -724,9 +750,14 @@ function collectDependencies(
            * Recursively visit the inner function to extract dependencies there
            */
           const innerFn = instr.value.loweredFunc.func;
-          context.enterInnerFn(() => {
-            handleFunction(innerFn);
-          });
+          context.enterInnerFn(
+            instr as
+              | TInstruction<FunctionExpression>
+              | TInstruction<ObjectMethod>,
+            () => {
+              handleFunction(innerFn);
+            },
+          );
         } else {
           handleInstruction(instr, context);
         }
