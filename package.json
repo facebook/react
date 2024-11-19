@@ -79,7 +79,7 @@
     "jest-snapshot-serializer-raw": "^1.2.0",
     "minimatch": "^10.0.1",
     "minimist": "^1.2.3",
-    "mkdirp": "^0.5.1",
+    "mkdirp": "^3.0.1",
     "ncp": "^2.0.0",
     "prettier": "^3.3.3",
     "prettier-2": "npm:prettier@^2",
