@@ -61,7 +61,6 @@
       "react-server": "./server.react-server.js",
       "workerd": "./server.edge.js",
       "bun": "./server.bun.js",
-      "deno": "./server.browser.js",
       "worker": "./server.browser.js",
       "node": "./server.node.js",
       "edge-light": "./server.edge.js",
