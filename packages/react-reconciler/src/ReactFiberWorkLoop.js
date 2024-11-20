@@ -265,7 +265,6 @@ import {
   startProfilerTimer,
   stopProfilerTimerIfRunningAndRecordDuration,
   stopProfilerTimerIfRunningAndRecordIncompleteDuration,
-  markUpdateAsRepeat,
   trackSuspendedTime,
   startYieldTimer,
   yieldStartTime,
@@ -1010,7 +1009,6 @@ export function performWorkOnRoot(
           setCurrentTrackFromLanes(lanes);
           logInconsistentRender(renderStartTime, renderEndTime);
           finalizeRender(lanes, renderEndTime);
-          markUpdateAsRepeat(lanes);
         }
         // A store was mutated in an interleaved event. Render again,
         // synchronously, to block further mutations.
@@ -1037,7 +1035,6 @@ export function performWorkOnRoot(
             setCurrentTrackFromLanes(lanes);
             logErroredRenderPhase(renderStartTime, renderEndTime);
             finalizeRender(lanes, renderEndTime);
-            markUpdateAsRepeat(lanes);
           }
           lanes = errorRetryLanes;
           exitStatus = recoverFromConcurrentError(

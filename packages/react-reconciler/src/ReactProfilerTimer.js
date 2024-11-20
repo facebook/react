@@ -80,9 +80,12 @@ export function startUpdateTimerByLane(lane: Lane): void {
       blockingUpdateTime = now();
       const newEventTime = resolveEventTimeStamp();
       const newEventType = resolveEventType();
-      blockingEventIsRepeat =
-        newEventTime === blockingEventTime &&
-        newEventType === blockingEventType;
+      if (
+        newEventTime !== blockingEventTime ||
+        newEventType !== blockingEventType
+      ) {
+        blockingEventIsRepeat = false;
+      }
       blockingEventTime = newEventTime;
       blockingEventType = newEventType;
     }
@@ -92,26 +95,16 @@ export function startUpdateTimerByLane(lane: Lane): void {
       if (transitionStartTime < 0) {
         const newEventTime = resolveEventTimeStamp();
         const newEventType = resolveEventType();
-        transitionEventIsRepeat =
-          newEventTime === transitionEventTime &&
-          newEventType === transitionEventType;
+        if (
+          newEventTime !== transitionEventTime ||
+          newEventType !== transitionEventType
+        ) {
+          transitionEventIsRepeat = false;
+        }
         transitionEventTime = newEventTime;
         transitionEventType = newEventType;
       }
     }
-  }
-}
-
-export function markUpdateAsRepeat(lanes: Lanes): void {
-  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
-    return;
-  }
-  // We're about to do a retry of this render. It is not a new update, so treat this
-  // as a repeat within the same event.
-  if (includesSyncLane(lanes) || includesBlockingLane(lanes)) {
-    blockingEventIsRepeat = true;
-  } else if (includesTransitionLane(lanes)) {
-    transitionEventIsRepeat = true;
   }
 }
 
@@ -129,6 +122,7 @@ export function trackSuspendedTime(lanes: Lanes, renderEndTime: number) {
 export function clearBlockingTimers(): void {
   blockingUpdateTime = -1.1;
   blockingSuspendedTime = -1.1;
+  blockingEventIsRepeat = true;
 }
 
 export function startAsyncTransitionTimer(): void {
@@ -139,9 +133,12 @@ export function startAsyncTransitionTimer(): void {
     transitionStartTime = now();
     const newEventTime = resolveEventTimeStamp();
     const newEventType = resolveEventType();
-    transitionEventIsRepeat =
-      newEventTime === transitionEventTime &&
-      newEventType === transitionEventType;
+    if (
+      newEventTime !== transitionEventTime ||
+      newEventType !== transitionEventType
+    ) {
+      transitionEventIsRepeat = false;
+    }
     transitionEventTime = newEventTime;
     transitionEventType = newEventType;
   }
@@ -173,6 +170,7 @@ export function clearTransitionTimers(): void {
   transitionStartTime = -1.1;
   transitionUpdateTime = -1.1;
   transitionSuspendedTime = -1.1;
+  transitionEventIsRepeat = true;
 }
 
 export function clampBlockingTimers(finalTime: number): void {
