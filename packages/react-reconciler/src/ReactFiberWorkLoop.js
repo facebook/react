@@ -927,6 +927,7 @@ export function performWorkOnRoot(
       // We've returned from yielding to the event loop. Let's log the time it took.
       const yieldEndTime = now();
       switch (yieldReason) {
+        case SuspendedOnImmediate:
         case SuspendedOnData:
           logSuspendedYieldTime(yieldStartTime, yieldEndTime, yieldedFiber);
           break;
