@@ -41,6 +41,7 @@ let waitFor;
 let waitForThrow;
 let waitForPaint;
 let assertLog;
+let flushSync;
 
 describe('ReactHooksWithNoopRenderer', () => {
   beforeEach(() => {
@@ -62,6 +63,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     useImperativeHandle = React.useImperativeHandle;
     forwardRef = React.forwardRef;
     memo = React.memo;
+    flushSync = React.flushSync;
     useTransition = React.useTransition;
     useDeferredValue = React.useDeferredValue;
     Suspense = React.Suspense;
@@ -4007,6 +4009,97 @@ describe('ReactHooksWithNoopRenderer', () => {
     });
     assertLog(['Render disabled: false', 'Render count: 1']);
     expect(ReactNoop).toMatchRenderedOutput('1');
+  });
+
+  it('useState early bail out behavior', async () => {
+    let notify;
+    let hasUpdates = false;
+
+    function App() {
+      const [state, setState] = useState(1);
+
+      useEffect(() => {
+        notify = name => {
+          setState(s => {
+            let newState = s;
+            if (hasUpdates) {
+              newState = s + 1;
+            }
+
+            Scheduler.log(name + ' New State: ' + newState);
+            return newState;
+          });
+        };
+      }, []);
+
+      Scheduler.log('Render: ' + state);
+      return state;
+    }
+
+    ReactNoop.render(<App />);
+    await waitForAll(['Render: 1']);
+    expect(ReactNoop).toMatchRenderedOutput('1');
+
+    await act(() => {
+      React.startTransition(() => {
+        notify('Transition');
+      });
+      // Mutate a global store value
+      // that is used in the state updater.
+      hasUpdates = true;
+      Scheduler.log('Mutation true');
+      ReactNoop.flushSync(() => {
+        notify('Sync');
+      });
+      Scheduler.log('Mutation false');
+      hasUpdates = false;
+    });
+
+    if (gate(flags => !flags.testingOnlyDisableEagerState)) {
+      // If we kept the existing behavior
+
+      assertLog([
+        // Eagerly compute the transition state
+        'Transition New State: 1',
+
+        // flushSync with global store mutation
+        'Mutation true',
+        'Sync New State: 2',
+        'Render: 2',
+        'Mutation false',
+
+        // Render combined transition + sync updates using
+        // the eagerly computed state (not running the updater again)
+        'Render: 2',
+      ]);
+
+      expect(ReactNoop).toMatchRenderedOutput('2');
+    } else {
+      // If we turned off using the eager state
+
+      assertLog([
+        // Eagerly compute the transition state
+        'Transition New State: 1',
+
+        // flushSync with global store mutation
+        'Mutation true',
+        'Sync New State: 2',
+        'Sync New State: 2',
+        'Render: 2',
+        'Mutation false',
+
+        // Re-apply the transition state
+        'Transition New State: 1',
+
+        // The state updater is rebased and run again.
+        // This time, the mutable value is false
+        // so we don't update the count.
+        'Sync New State: 1',
+        'Render: 1',
+      ]);
+
+      expect(ReactNoop).toMatchRenderedOutput('1');
+    }
   });
 
   // Regression test. Covers a case where an internal state variable

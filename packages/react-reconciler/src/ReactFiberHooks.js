@@ -48,6 +48,7 @@ import {
   disableLegacyMode,
   enableNoCloningMemoCache,
   enableContextProfiling,
+  testingOnlyDisableEagerState,
 } from 'shared/ReactFeatureFlags';
 import {
   REACT_CONTEXT_TYPE,
@@ -1527,7 +1528,11 @@ function updateReducerImpl<S, A>(
         if (update.hasEagerState) {
           // If this update is a state update (not a reducer) and was processed eagerly,
           // we can use the eagerly computed state
-          newState = ((update.eagerState: any): S);
+          if (testingOnlyDisableEagerState) {
+            newState = reducer(newState, action);
+          } else {
+            newState = ((update.eagerState: any): S);
+          }
         } else {
           newState = reducer(newState, action);
         }

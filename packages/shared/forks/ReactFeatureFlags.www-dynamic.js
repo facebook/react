@@ -51,3 +51,5 @@ export const enableSiblingPrerendering = __VARIANT__;
 export const enableTrustedTypesIntegration = false;
 // You probably *don't* want to add more hardcoded ones.
 // Instead, try to add them above with the __VARIANT__ value.
+
+export const testingOnlyDisableEagerState = __VARIANT__;

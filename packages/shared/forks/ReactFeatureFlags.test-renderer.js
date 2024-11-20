@@ -101,6 +101,7 @@ export const disableDefaultPropsExceptForClasses = true;
 
 export const enableObjectFiber = false;
 export const enableOwnerStacks = false;
+export const testingOnlyDisableEagerState = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);
