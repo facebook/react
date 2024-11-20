@@ -93,6 +93,7 @@ import {
   enableTrustedTypesIntegration,
   enableAsyncActions,
   disableLegacyMode,
+  enableMoveBefore,
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
@@ -525,6 +526,7 @@ export function appendInitialChild(
   parentInstance: Instance,
   child: Instance | TextInstance,
 ): void {
+  // Note: This should not use moveBefore() because initial are appended while disconnected.
   parentInstance.appendChild(child);
 }
 
@@ -761,7 +763,12 @@ export function appendChild(
   parentInstance: Instance,
   child: Instance | TextInstance,
 ): void {
-  parentInstance.appendChild(child);
+  if (supportsMoveBefore) {
+    // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
+    parentInstance.moveBefore(child, null);
+  } else {
+    parentInstance.appendChild(child);
+  }
 }
 
 export function appendChildToContainer(
@@ -794,12 +801,21 @@ export function appendChildToContainer(
   }
 }
 
+const supportsMoveBefore =
+  // $FlowFixMe[prop-missing]: We're doing the feature detection here.
+  enableMoveBefore && typeof Node.prototype.moveBefore === 'function';
+
 export function insertBefore(
   parentInstance: Instance,
   child: Instance | TextInstance,
   beforeChild: Instance | TextInstance | SuspenseInstance,
 ): void {
-  parentInstance.insertBefore(child, beforeChild);
+  if (supportsMoveBefore) {
+    // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
+    parentInstance.moveBefore(child, beforeChild);
+  } else {
+    parentInstance.insertBefore(child, beforeChild);
+  }
 }
 
 export function insertInContainerBefore(
