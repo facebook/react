@@ -253,6 +253,7 @@ export type ResourceEffectUpdate = {
   update: ((resource: mixed) => void) | void,
   deps: Array<mixed> | void | null,
   next: Effect,
+  identity: ResourceEffectIdentity,
 };
 
 type StoreInstance<T> = {
@@ -2585,40 +2586,37 @@ function pushSimpleEffect(
   return pushEffectImpl(effect);
 }
 
-function pushResourceEffectIdentity(
-  tag: HookFlags,
+function pushResourceEffect(
+  identityTag: HookFlags,
+  updateTag: HookFlags,
   inst: EffectInstance,
   create: () => mixed,
-  deps: Array<mixed> | void | null,
-): Effect {
-  const effect: ResourceEffectIdentity = {
-    resourceKind: ResourceEffectIdentityKind,
-    tag,
-    create,
-    deps,
-    inst,
-    // Circular
-    next: (null: any),
-  };
-  return pushEffectImpl(effect);
-}
-
-function pushResourceEffectUpdate(
-  tag: HookFlags,
-  inst: EffectInstance,
+  createDeps: Array<mixed> | void | null,
   update: ((resource: mixed) => void) | void,
-  deps: Array<mixed> | void | null,
+  updateDeps: Array<mixed> | void | null,
 ): Effect {
-  const effect: ResourceEffectUpdate = {
-    resourceKind: ResourceEffectUpdateKind,
-    tag,
-    update,
-    deps,
+  const effectIdentity: ResourceEffectIdentity = {
+    resourceKind: ResourceEffectIdentityKind,
+    tag: identityTag,
+    create,
+    deps: createDeps,
     inst,
     // Circular
     next: (null: any),
   };
-  return pushEffectImpl(effect);
+  pushEffectImpl(effectIdentity);
+
+  const effectUpdate: ResourceEffectUpdate = {
+    resourceKind: ResourceEffectUpdateKind,
+    tag: updateTag,
+    update,
+    deps: updateDeps,
+    inst,
+    identity: effectIdentity,
+    // Circular
+    next: (null: any),
+  };
+  return pushEffectImpl(effectUpdate);
 }
 
 function pushEffectImpl(effect: Effect): Effect {
@@ -2792,15 +2790,12 @@ function mountResourceEffectImpl(
   currentlyRenderingFiber.flags |= fiberFlags;
   const inst = createEffectInstance();
   inst.destroy = destroy;
-  hook.memoizedState = pushResourceEffectIdentity(
+  hook.memoizedState = pushResourceEffect(
     HookHasEffect | hookFlags,
+    hookFlags,
     inst,
     create,
     createDeps,
-  );
-  hook.memoizedState = pushResourceEffectUpdate(
-    hookFlags,
-    inst,
     update,
     updateDeps,
   );
@@ -2847,25 +2842,31 @@ function updateResourceEffectImpl(
     const prevEffect: Effect = currentHook.memoizedState;
     if (nextCreateDeps !== null) {
       let prevCreateDeps;
-      // Seems sketchy but in practice we always push an Identity and an Update together. For safety
-      // we error in DEV if this does not hold true.
-      if (prevEffect.resourceKind === ResourceEffectUpdateKind) {
+      if (
+        prevEffect.resourceKind != null &&
+        prevEffect.resourceKind === ResourceEffectUpdateKind
+      ) {
         prevCreateDeps =
-          prevEffect.next.deps != null ? prevEffect.next.deps : null;
+          prevEffect.identity.deps != null ? prevEffect.identity.deps : null;
       } else {
-        if (__DEV__) {
-          console.error(
-            'Expected a ResourceEffectUpdateKind to be pushed together with ' +
-              'ResourceEffectIdentityKind, got %s. This is a bug in React.',
-            prevEffect.resourceKind,
-          );
-        }
-        prevCreateDeps = prevEffect.deps != null ? prevEffect.deps : null;
+        throw new Error(
+          `Expected a ResourceEffectUpdate to be pushed together with ResourceEffectIdentity. This is a bug in React.`,
+        );
       }
       isCreateDepsSame = areHookInputsEqual(nextCreateDeps, prevCreateDeps);
     }
     if (nextUpdateDeps !== null) {
-      const prevUpdateDeps = prevEffect.deps != null ? prevEffect.deps : null;
+      let prevUpdateDeps;
+      if (
+        prevEffect.resourceKind != null &&
+        prevEffect.resourceKind === ResourceEffectUpdateKind
+      ) {
+        prevUpdateDeps = prevEffect.deps != null ? prevEffect.deps : null;
+      } else {
+        throw new Error(
+          `Expected a ResourceEffectUpdate to be pushed together with ResourceEffectIdentity. This is a bug in React.`,
+        );
+      }
       isUpdateDepsSame = areHookInputsEqual(nextUpdateDeps, prevUpdateDeps);
     }
   }
@@ -2874,15 +2875,12 @@ function updateResourceEffectImpl(
     currentlyRenderingFiber.flags |= fiberFlags;
   }
 
-  hook.memoizedState = pushResourceEffectIdentity(
+  hook.memoizedState = pushResourceEffect(
     isCreateDepsSame ? hookFlags : HookHasEffect | hookFlags,
+    isUpdateDepsSame ? hookFlags : HookHasEffect | hookFlags,
     inst,
     create,
     nextCreateDeps,
-  );
-  hook.memoizedState = pushResourceEffectUpdate(
-    isUpdateDepsSame ? hookFlags : HookHasEffect | hookFlags,
-    inst,
     update,
     nextUpdateDeps,
   );

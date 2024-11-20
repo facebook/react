@@ -3927,6 +3927,79 @@ describe('ReactHooksWithNoopRenderer', () => {
         </>,
       );
     });
+
+    // @gate enableUseResourceEffectHook
+    it('composes with other kinds of effects', async () => {
+      let rerender;
+      function App({id, username}) {
+        const [count, rerender_] = useState(0);
+        rerender = rerender_;
+        const opts = useMemo(() => {
+          return {username};
+        }, [username]);
+        useEffect(() => {
+          Scheduler.log(`useEffect(${count})`);
+        }, [count]);
+        useResourceEffect(
+          () => {
+            const resource = new Resource(id, opts);
+            Scheduler.log(`create(${resource.id}, ${resource.opts.username})`);
+            return resource;
+          },
+          [id],
+          resource => {
+            resource.update(opts);
+            Scheduler.log(`update(${resource.id}, ${resource.opts.username})`);
+          },
+          [opts],
+          resource => {
+            resource.destroy();
+            Scheduler.log(`destroy(${resource.id}, ${resource.opts.username})`);
+          },
+        );
+        return null;
+      }
+
+      await act(() => {
+        ReactNoop.render(<App id={1} username="Jack" />);
+      });
+      assertLog(['useEffect(0)', 'create(1, Jack)']);
+
+      await act(() => {
+        ReactNoop.render(<App id={1} username="Lauren" />);
+      });
+      assertLog(['update(1, Lauren)']);
+
+      await act(() => {
+        ReactNoop.render(<App id={1} username="Lauren" />);
+      });
+      assertLog([]);
+
+      await act(() => {
+        ReactNoop.render(<App id={1} username="Jordan" />);
+      });
+      assertLog(['update(1, Jordan)']);
+
+      await act(() => {
+        rerender(n => n + 1);
+      });
+      assertLog(['useEffect(1)']);
+
+      await act(() => {
+        ReactNoop.render(<App id={1} username="Mofei" />);
+      });
+      assertLog(['update(1, Mofei)']);
+
+      await act(() => {
+        ReactNoop.render(<App id={2} username="Jack" />);
+      });
+      assertLog(['destroy(1, Mofei)', 'create(2, Jack)']);
+
+      await act(() => {
+        ReactNoop.render(null);
+      });
+      assertLog(['destroy(2, Jack)']);
+    });
   });
 
   describe('useCallback', () => {
