@@ -5,12 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {HIRFunction, Identifier} from '../HIR/HIR';
+import {HIRFunction, Place} from '../HIR/HIR';
 import DisjointSet from '../Utils/DisjointSet';
 
 export function inferAliasForPhis(
   func: HIRFunction,
-  aliases: DisjointSet<Identifier>,
+  aliases: DisjointSet<Place>,
 ): void {
   for (const [_, block] of func.body.blocks) {
     for (const phi of block.phis) {
@@ -19,7 +19,7 @@ export function inferAliasForPhis(
         (block.instructions.at(0)?.id ?? block.terminal.id);
       if (isPhiMutatedAfterCreation) {
         for (const [, operand] of phi.operands) {
-          aliases.union([phi.place.identifier, operand.identifier]);
+          aliases.union([phi.place, operand]);
         }
       }
     }

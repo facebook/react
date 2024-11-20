@@ -10,6 +10,7 @@ import {
   DependencyPathEntry,
   GeneratedSource,
   Identifier,
+  makeType,
   ReactiveScopeDependency,
 } from '../HIR';
 import {printIdentifier} from '../HIR/PrintHIR';
@@ -308,7 +309,7 @@ function collectMinimalDependenciesInSubtree(
   results: Set<ReactiveScopeDependency>,
 ): void {
   if (isDependency(node.accessType)) {
-    results.add({identifier: rootIdentifier, path});
+    results.add({identifier: rootIdentifier, type: makeType(), path});
   } else {
     for (const [childName, childNode] of node.properties) {
       collectMinimalDependenciesInSubtree(

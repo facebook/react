@@ -21,12 +21,11 @@ import {
   ReactiveTerminalStatement,
   ReactiveValue,
   ScopeId,
-  getHookKind,
   isMutableEffect,
 } from '../HIR';
 import {getFunctionCallSignature} from '../Inference/InferReferenceEffects';
 import {assertExhaustive, getOrInsertDefault} from '../Utils/utils';
-import {getPlaceScope} from '../HIR/HIR';
+import {getHookKindForType, getPlaceScope} from '../HIR/HIR';
 import {
   ReactiveFunctionTransform,
   ReactiveFunctionVisitor,
@@ -672,10 +671,7 @@ function computeMemoizationInputs(
       };
     }
     case 'TaggedTemplateExpression': {
-      const signature = getFunctionCallSignature(
-        env,
-        value.tag.identifier.type,
-      );
+      const signature = getFunctionCallSignature(env, value.tag.type);
       let lvalues = [];
       if (lvalue !== null) {
         lvalues.push({place: lvalue, level: MemoizationLevel.Memoized});
@@ -698,10 +694,7 @@ function computeMemoizationInputs(
       };
     }
     case 'CallExpression': {
-      const signature = getFunctionCallSignature(
-        env,
-        value.callee.identifier.type,
-      );
+      const signature = getFunctionCallSignature(env, value.callee.type);
       let lvalues = [];
       if (lvalue !== null) {
         lvalues.push({place: lvalue, level: MemoizationLevel.Memoized});
@@ -724,10 +717,7 @@ function computeMemoizationInputs(
       };
     }
     case 'MethodCall': {
-      const signature = getFunctionCallSignature(
-        env,
-        value.property.identifier.type,
-      );
+      const signature = getFunctionCallSignature(env, value.property.type);
       let lvalues = [];
       if (lvalue !== null) {
         lvalues.push({place: lvalue, level: MemoizationLevel.Memoized});
@@ -922,11 +912,8 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
         instruction.value.kind === 'CallExpression'
           ? instruction.value.callee
           : instruction.value.property;
-      if (getHookKind(state.env, callee.identifier) != null) {
-        const signature = getFunctionCallSignature(
-          this.env,
-          callee.identifier.type,
-        );
+      if (getHookKindForType(state.env, callee.type) != null) {
+        const signature = getFunctionCallSignature(this.env, callee.type);
         /*
          * Hook values are assumed to escape by default since they can be inputs
          * to reactive scopes in the hook. However if the hook is annotated as

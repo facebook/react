@@ -8,7 +8,6 @@
 import {CompilerError} from '../CompilerError';
 import {
   Environment,
-  Identifier,
   IdentifierId,
   InstructionId,
   Place,
@@ -17,7 +16,8 @@ import {
   ReactiveInstruction,
   ReactiveScopeBlock,
   ReactiveTerminalStatement,
-  getHookKind,
+  Type,
+  getHookKindForType,
   isUseRefType,
   isUseStateType,
 } from '../HIR';
@@ -92,8 +92,8 @@ class Visitor extends ReactiveFunctionVisitor<CreateUpdate> {
     return values.reduce(join2, 'Unknown');
   }
 
-  isCreateOnlyHook(id: Identifier): boolean {
-    return isUseStateType(id) || isUseRefType(id);
+  isCreateOnlyHook(type: Type): boolean {
+    return isUseStateType(type) || isUseRefType(type);
   }
 
   override visitPlace(
@@ -136,15 +136,17 @@ class Visitor extends ReactiveFunctionVisitor<CreateUpdate> {
       let callee = null;
       switch (instruction.value.kind) {
         case 'CallExpression': {
-          callee = instruction.value.callee.identifier;
+          callee = instruction.value.callee;
           break;
         }
         case 'MethodCall': {
-          callee = instruction.value.property.identifier;
+          callee = instruction.value.property;
           break;
         }
       }
-      return callee != null && getHookKind(this.env, callee) != null;
+      return (
+        callee != null && getHookKindForType(this.env, callee.type) != null
+      );
     };
 
     switch (instruction.value.kind) {
@@ -152,7 +154,7 @@ class Visitor extends ReactiveFunctionVisitor<CreateUpdate> {
       case 'MethodCall': {
         if (
           instruction.lvalue &&
-          this.isCreateOnlyHook(instruction.lvalue.identifier)
+          this.isCreateOnlyHook(instruction.lvalue.type)
         ) {
           [...eachCallArgument(instruction.value.args)].forEach(operand =>
             this.visitPlace(instruction.id, operand, 'Create'),

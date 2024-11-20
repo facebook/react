@@ -5,13 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {
-  Effect,
-  HIRFunction,
-  Identifier,
-  InstructionId,
-  Place,
-} from '../HIR/HIR';
+import {Effect, HIRFunction, InstructionId, Place} from '../HIR/HIR';
 import {
   eachInstructionLValue,
   eachInstructionValueOperand,
@@ -20,7 +14,7 @@ import DisjointSet from '../Utils/DisjointSet';
 
 export function inferAliasForStores(
   func: HIRFunction,
-  aliases: DisjointSet<Identifier>,
+  aliases: DisjointSet<Place>,
 ): void {
   for (const [_, block] of func.body.blocks) {
     for (const instr of block.instructions) {
@@ -54,7 +48,7 @@ export function inferAliasForStores(
 }
 
 function maybeAlias(
-  aliases: DisjointSet<Identifier>,
+  aliases: DisjointSet<Place>,
   lvalue: Place,
   rvalue: Place,
   id: InstructionId,
@@ -63,6 +57,6 @@ function maybeAlias(
     lvalue.identifier.mutableRange.end > id + 1 ||
     rvalue.identifier.mutableRange.end > id
   ) {
-    aliases.union([lvalue.identifier, rvalue.identifier]);
+    aliases.union([lvalue, rvalue]);
   }
 }

@@ -41,7 +41,7 @@ import {
   SourceLocation,
   SpreadPattern,
   ValidIdentifierName,
-  getHookKind,
+  getHookKindForType,
   makeIdentifierName,
 } from '../HIR/HIR';
 import {printIdentifier, printPlace} from '../HIR/PrintHIR';
@@ -1687,7 +1687,7 @@ function codegenInstructionValue(
         }
         break;
       }
-      const isHook = getHookKind(cx.env, instrValue.callee.identifier) != null;
+      const isHook = getHookKindForType(cx.env, instrValue.callee.type) != null;
       const callee = codegenPlaceToExpression(cx, instrValue.callee);
       const args = instrValue.args.map(arg => codegenArgument(cx, arg));
       value = createCallExpression(
@@ -1751,7 +1751,7 @@ function codegenInstructionValue(
     }
     case 'MethodCall': {
       const isHook =
-        getHookKind(cx.env, instrValue.property.identifier) != null;
+        getHookKindForType(cx.env, instrValue.property.type) != null;
       const memberExpr = codegenPlaceToExpression(cx, instrValue.property);
       CompilerError.invariant(
         t.isMemberExpression(memberExpr) ||

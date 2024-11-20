@@ -148,7 +148,7 @@ function getContextReassignment(
           if (value.kind === 'CallExpression') {
             const signature = getFunctionCallSignature(
               fn.env,
-              value.callee.identifier.type,
+              value.callee.type,
             );
             if (signature?.noAlias) {
               operands = [value.callee];
@@ -156,16 +156,13 @@ function getContextReassignment(
           } else if (value.kind === 'MethodCall') {
             const signature = getFunctionCallSignature(
               fn.env,
-              value.property.identifier.type,
+              value.property.type,
             );
             if (signature?.noAlias) {
               operands = [value.receiver, value.property];
             }
           } else if (value.kind === 'TaggedTemplateExpression') {
-            const signature = getFunctionCallSignature(
-              fn.env,
-              value.tag.identifier.type,
-            );
+            const signature = getFunctionCallSignature(fn.env, value.tag.type);
             if (signature?.noAlias) {
               operands = [value.tag];
             }

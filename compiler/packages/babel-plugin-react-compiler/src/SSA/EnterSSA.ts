@@ -14,7 +14,6 @@ import {
   Identifier,
   IdentifierId,
   makeInstructionId,
-  makeType,
   Phi,
   Place,
 } from '../HIR/HIR';
@@ -86,7 +85,6 @@ class SSABuilder {
         end: makeInstructionId(0),
       },
       scope: null, // reset along w the mutable range
-      type: makeType(),
       loc: oldId.loc,
     };
   }

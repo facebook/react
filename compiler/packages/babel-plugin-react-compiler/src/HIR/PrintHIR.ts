@@ -165,7 +165,7 @@ export function printPhi(phi: Phi): string {
   const items = [];
   items.push(printPlace(phi.place));
   items.push(printMutableRange(phi.place.identifier));
-  items.push(printType(phi.place.identifier.type));
+  items.push(printType(phi.place.type));
   items.push(': phi(');
   const phis = [];
   for (const [blockId, place] of phi.operands) {
@@ -837,7 +837,7 @@ export function printPlace(place: Place): string {
     ' ',
     printIdentifier(place.identifier),
     printMutableRange(place.identifier),
-    printType(place.identifier.type),
+    printType(place.type),
     place.reactive ? '{reactive}' : null,
   ];
   return items.filter(x => x != null).join('');

@@ -16,6 +16,7 @@ import {
   DependencyPathEntry,
   Instruction,
   Terminal,
+  makeType,
 } from './HIR';
 import {printIdentifier} from './PrintHIR';
 
@@ -282,6 +283,7 @@ function traverseOptionalBlock(
     );
     baseObject = {
       identifier: maybeTest.instructions[0].value.place.identifier,
+      type: maybeTest.instructions[0].value.place.type,
       path,
     };
     test = maybeTest.terminal;
@@ -383,6 +385,7 @@ function traverseOptionalBlock(
   );
   const load = {
     identifier: baseObject.identifier,
+    type: makeType(),
     path: [
       ...baseObject.path,
       {

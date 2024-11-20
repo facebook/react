@@ -18,7 +18,7 @@ import {
   IdentifierId,
   Place,
   SourceLocation,
-  getHookKind,
+  getHookKindForType,
 } from '../HIR/HIR';
 import {
   eachInstructionLValue,
@@ -224,7 +224,7 @@ export function validateHooksUsage(fn: HIRFunction): void {
            * directly a hook, or infer a Global kind from which knownhooks
            * can be derived later via property access (PropertyLoad etc)
            */
-          if (getHookKind(fn.env, instr.lvalue.identifier) != null) {
+          if (getHookKindForType(fn.env, instr.lvalue.type) != null) {
             setKind(instr.lvalue, Kind.KnownHook);
           } else {
             setKind(instr.lvalue, Kind.Global);
@@ -441,7 +441,7 @@ function visitFunctionExpression(errors: CompilerError, fn: HIRFunction): void {
             instr.value.kind === 'CallExpression'
               ? instr.value.callee
               : instr.value.property;
-          const hookKind = getHookKind(fn.env, callee.identifier);
+          const hookKind = getHookKindForType(fn.env, callee.type);
           if (hookKind != null) {
             errors.pushErrorDetail(
               new CompilerErrorDetail({

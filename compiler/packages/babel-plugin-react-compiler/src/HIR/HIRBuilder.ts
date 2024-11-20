@@ -328,7 +328,6 @@ export default class HIRBuilder {
             end: makeInstructionId(0),
           },
           scope: null,
-          type: makeType(),
           loc: node.loc ?? GeneratedSource,
         };
         this.#bindings.set(name, {node, identifier});
@@ -896,6 +895,7 @@ export function createTemporaryPlace(
     identifier: makeTemporaryIdentifier(env.nextIdentifierId, loc),
     reactive: false,
     effect: Effect.Unknown,
+    type: makeType(),
     loc: GeneratedSource,
   };
 }
@@ -908,7 +908,7 @@ export function createTemporaryPlace(
 export function clonePlaceToTemporary(env: Environment, place: Place): Place {
   const temp = createTemporaryPlace(env, place.loc);
   temp.effect = place.effect;
-  temp.identifier.type = place.identifier.type;
+  temp.type = place.type;
   temp.reactive = place.reactive;
   return temp;
 }

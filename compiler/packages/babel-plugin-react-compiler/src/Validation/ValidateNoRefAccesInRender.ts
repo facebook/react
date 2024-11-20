@@ -105,9 +105,9 @@ export function validateNoRefAccessInRender(fn: HIRFunction): void {
 }
 
 function refTypeOfType(place: Place): RefAccessType {
-  if (isRefValueType(place.identifier)) {
+  if (isRefValueType(place.type)) {
     return {kind: 'RefValue'};
-  } else if (isUseRefType(place.identifier)) {
+  } else if (isUseRefType(place.type)) {
     return {kind: 'Ref', refId: nextRefId()};
   } else {
     return {kind: 'None'};
@@ -372,7 +372,7 @@ function validateNoRefAccessInRenderImpl(
               instr.value.kind === 'CallExpression'
                 ? instr.value.callee
                 : instr.value.property;
-            const hookKind = getHookKindForType(fn.env, callee.identifier.type);
+            const hookKind = getHookKindForType(fn.env, callee.type);
             let returnType: RefAccessType = {kind: 'None'};
             const fnType = env.get(callee.identifier.id);
             if (fnType?.kind === 'Structure' && fnType.fn !== null) {
@@ -498,7 +498,7 @@ function validateNoRefAccessInRenderImpl(
         }
 
         if (
-          isUseRefType(instr.lvalue.identifier) &&
+          isUseRefType(instr.lvalue.type) &&
           env.get(instr.lvalue.identifier.id)?.kind !== 'Ref'
         ) {
           env.set(
@@ -510,7 +510,7 @@ function validateNoRefAccessInRenderImpl(
           );
         }
         if (
-          isRefValueType(instr.lvalue.identifier) &&
+          isRefValueType(instr.lvalue.type) &&
           env.get(instr.lvalue.identifier.id)?.kind !== 'RefValue'
         ) {
           env.set(

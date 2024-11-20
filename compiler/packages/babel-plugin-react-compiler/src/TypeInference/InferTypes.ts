@@ -15,6 +15,7 @@ import {
   IdentifierId,
   Instruction,
   makeType,
+  Place,
   PropType,
   Type,
   typeEquals,
@@ -69,17 +70,17 @@ export function inferTypes(func: HIRFunction): void {
 function apply(func: HIRFunction, unifier: Unifier): void {
   for (const [_, block] of func.body.blocks) {
     for (const phi of block.phis) {
-      phi.place.identifier.type = unifier.get(phi.place.identifier.type);
+      phi.place.type = unifier.get(phi.place.type);
     }
     for (const instr of block.instructions) {
       for (const operand of eachInstructionLValue(instr)) {
-        operand.identifier.type = unifier.get(operand.identifier.type);
+        operand.type = unifier.get(operand.type);
       }
       for (const place of eachInstructionOperand(instr)) {
-        place.identifier.type = unifier.get(place.identifier.type);
+        place.type = unifier.get(place.type);
       }
       const {lvalue, value} = instr;
-      lvalue.identifier.type = unifier.get(lvalue.identifier.type);
+      lvalue.type = unifier.get(lvalue.type);
 
       if (
         value.kind === 'FunctionExpression' ||
@@ -107,16 +108,26 @@ function equation(left: Type, right: Type): TypeEquation {
 function* generate(
   func: HIRFunction,
 ): Generator<TypeEquation, void, undefined> {
+  const typeEnv = new Map<IdentifierId, Type>();
+  function getType(place: Place): Type {
+    let type = typeEnv.get(place.identifier.id);
+    if (type === undefined) {
+      type = place.type;
+      typeEnv.set(place.identifier.id, type);
+    }
+    return type;
+  }
+
   if (func.fnType === 'Component') {
     const [props, ref] = func.params;
     if (props && props.kind === 'Identifier') {
-      yield equation(props.identifier.type, {
+      yield equation(getType(props), {
         kind: 'Object',
         shapeId: BuiltInPropsId,
       });
     }
     if (ref && ref.kind === 'Identifier') {
-      yield equation(ref.identifier.type, {
+      yield equation(getType(ref), {
         kind: 'Object',
         shapeId: BuiltInUseRefId,
       });
@@ -127,18 +138,23 @@ function* generate(
   const returnTypes: Array<Type> = [];
   for (const [_, block] of func.body.blocks) {
     for (const phi of block.phis) {
-      yield equation(phi.place.identifier.type, {
+      yield equation(getType(phi.place), {
         kind: 'Phi',
-        operands: [...phi.operands.values()].map(id => id.identifier.type),
+        operands: [...phi.operands.values()].map(id => getType(id)),
       });
     }
 
     for (const instr of block.instructions) {
-      yield* generateInstructionTypes(func.env, names, instr);
+      yield* generateInstructionTypes(
+        func.env,
+        names,
+        (place: Place) => getType(place),
+        instr,
+      );
     }
     const terminal = block.terminal;
     if (terminal.kind === 'return') {
-      returnTypes.push(terminal.value.identifier.type);
+      returnTypes.push(getType(terminal.value));
     }
   }
   if (returnTypes.length > 1) {
@@ -168,10 +184,11 @@ function getName(names: Map<IdentifierId, string>, id: IdentifierId): string {
 function* generateInstructionTypes(
   env: Environment,
   names: Map<IdentifierId, string>,
+  getType: (place: Place) => Type,
   instr: Instruction,
 ): Generator<TypeEquation, void, undefined> {
   const {lvalue, value} = instr;
-  const left = lvalue.identifier.type;
+  const left = getType(lvalue);
 
   switch (value.kind) {
     case 'TemplateLiteral':
@@ -188,7 +205,7 @@ function* generateInstructionTypes(
 
     case 'LoadLocal': {
       setName(names, lvalue.identifier.id, value.place.identifier);
-      yield equation(left, value.place.identifier.type);
+      yield equation(left, getType(value.place));
       break;
     }
 
@@ -201,33 +218,27 @@ function* generateInstructionTypes(
 
     case 'StoreLocal': {
       if (env.config.enableUseTypeAnnotations) {
-        yield equation(
-          value.lvalue.place.identifier.type,
-          value.value.identifier.type,
-        );
+        yield equation(getType(value.lvalue.place), getType(value.value));
         const valueType =
           value.type === null ? makeType() : lowerType(value.type);
-        yield equation(valueType, value.lvalue.place.identifier.type);
+        yield equation(valueType, getType(value.lvalue.place));
         yield equation(left, valueType);
       } else {
-        yield equation(left, value.value.identifier.type);
-        yield equation(
-          value.lvalue.place.identifier.type,
-          value.value.identifier.type,
-        );
+        yield equation(left, getType(value.value));
+        yield equation(getType(value.lvalue.place), getType(value.value));
       }
       break;
     }
 
     case 'StoreGlobal': {
-      yield equation(left, value.value.identifier.type);
+      yield equation(left, getType(value.value));
       break;
     }
 
     case 'BinaryExpression': {
       if (isPrimitiveBinaryOp(value.operator)) {
-        yield equation(value.left.identifier.type, {kind: 'Primitive'});
-        yield equation(value.right.identifier.type, {kind: 'Primitive'});
+        yield equation(getType(value.left), {kind: 'Primitive'});
+        yield equation(getType(value.right), {kind: 'Primitive'});
       }
       yield equation(left, {kind: 'Primitive'});
       break;
@@ -235,8 +246,8 @@ function* generateInstructionTypes(
 
     case 'PostfixUpdate':
     case 'PrefixUpdate': {
-      yield equation(value.value.identifier.type, {kind: 'Primitive'});
-      yield equation(value.lvalue.identifier.type, {kind: 'Primitive'});
+      yield equation(getType(value.value), {kind: 'Primitive'});
+      yield equation(getType(value.lvalue), {kind: 'Primitive'});
       yield equation(left, {kind: 'Primitive'});
       break;
     }
@@ -256,7 +267,7 @@ function* generateInstructionTypes(
        * We should change Hook to a subtype of Function or change unifier logic.
        * (see https://github.com/facebook/react-forget/pull/1427)
        */
-      yield equation(value.callee.identifier.type, {
+      yield equation(getType(value.callee), {
         kind: 'Function',
         shapeId: null,
         return: returnType,
@@ -272,7 +283,7 @@ function* generateInstructionTypes(
        * We should change Hook to a subtype of Function or change unifier logic.
        * (see https://github.com/facebook/react-forget/pull/1427)
        */
-      yield equation(value.tag.identifier.type, {
+      yield equation(getType(value.tag), {
         kind: 'Function',
         shapeId: null,
         return: returnType,
@@ -287,7 +298,7 @@ function* generateInstructionTypes(
           property.kind === 'ObjectProperty' &&
           property.key.kind === 'computed'
         ) {
-          yield equation(property.key.name.identifier.type, {
+          yield equation(getType(property.key.name), {
             kind: 'Primitive',
           });
         }
@@ -304,7 +315,7 @@ function* generateInstructionTypes(
     case 'PropertyLoad': {
       yield equation(left, {
         kind: 'Property',
-        objectType: value.object.identifier.type,
+        objectType: getType(value.object),
         objectName: getName(names, value.object.identifier.id),
         propertyName: value.property,
       });
@@ -313,7 +324,7 @@ function* generateInstructionTypes(
 
     case 'MethodCall': {
       const returnType = makeType();
-      yield equation(value.property.identifier.type, {
+      yield equation(getType(value.property), {
         kind: 'Function',
         return: returnType,
         shapeId: null,
@@ -331,9 +342,9 @@ function* generateInstructionTypes(
           if (item.kind === 'Identifier') {
             // To simulate tuples we use properties with `String(<index>)`, eg "0".
             const propertyName = String(i);
-            yield equation(item.identifier.type, {
+            yield equation(getType(item), {
               kind: 'Property',
-              objectType: value.value.identifier.type,
+              objectType: getType(value.value),
               objectName: getName(names, value.value.identifier.id),
               propertyName,
             });
@@ -348,9 +359,9 @@ function* generateInstructionTypes(
               property.key.kind === 'identifier' ||
               property.key.kind === 'string'
             ) {
-              yield equation(property.place.identifier.type, {
+              yield equation(getType(property.place), {
                 kind: 'Property',
-                objectType: value.value.identifier.type,
+                objectType: getType(value.value),
                 objectName: getName(names, value.value.identifier.id),
                 propertyName: property.key.name,
               });
@@ -363,10 +374,10 @@ function* generateInstructionTypes(
 
     case 'TypeCastExpression': {
       if (env.config.enableUseTypeAnnotations) {
-        yield equation(value.type, value.value.identifier.type);
+        yield equation(value.type, getType(value.value));
         yield equation(left, value.type);
       } else {
-        yield equation(left, value.value.identifier.type);
+        yield equation(left, getType(value.value));
       }
       break;
     }

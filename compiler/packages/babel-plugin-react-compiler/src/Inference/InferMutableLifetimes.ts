@@ -67,7 +67,7 @@ import {assertExhaustive} from '../Utils/utils';
  */
 
 function infer(place: Place, instrId: InstructionId): void {
-  if (!isRefOrRefValue(place.identifier)) {
+  if (!isRefOrRefValue(place.type)) {
     place.identifier.mutableRange.end = makeInstructionId(instrId + 1);
   }
 }
@@ -180,7 +180,7 @@ export function inferMutableLifetimes(
         );
         if (
           declaration != null &&
-          !isRefOrRefValue(instr.value.lvalue.place.identifier)
+          !isRefOrRefValue(instr.value.lvalue.place.type)
         ) {
           const range = instr.value.lvalue.place.identifier.mutableRange;
           if (range.start === 0) {

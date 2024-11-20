@@ -13,9 +13,7 @@ import {
   ReactiveInstruction,
   ReactiveScopeBlock,
   ScopeId,
-  isUseEffectHookType,
-  isUseInsertionEffectHookType,
-  isUseLayoutEffectHookType,
+  isEffectHook,
 } from '../HIR';
 import {isMutable} from '../ReactiveScopes/InferReactiveScopeVariables';
 import {
@@ -93,7 +91,7 @@ class Visitor extends ReactiveFunctionVisitor<CompilerError> {
     this.traverseInstruction(instruction, state);
     if (
       instruction.value.kind === 'CallExpression' &&
-      isEffectHook(instruction.value.callee.identifier) &&
+      isEffectHook(instruction.value.callee.type) &&
       instruction.value.args.length >= 2
     ) {
       const deps = instruction.value.args[1]!;
@@ -121,12 +119,4 @@ class Visitor extends ReactiveFunctionVisitor<CompilerError> {
 
 function isUnmemoized(operand: Identifier, scopes: Set<ScopeId>): boolean {
   return operand.scope != null && !scopes.has(operand.scope.id);
-}
-
-export function isEffectHook(identifier: Identifier): boolean {
-  return (
-    isUseEffectHookType(identifier) ||
-    isUseLayoutEffectHookType(identifier) ||
-    isUseInsertionEffectHookType(identifier)
-  );
 }

@@ -5,13 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {HIRFunction, Identifier} from '../HIR/HIR';
+import prettyFormat from 'pretty-format';
+import {HIRFunction, Place} from '../HIR/HIR';
 import {inferAliases} from './InferAlias';
 import {inferAliasForPhis} from './InferAliasForPhis';
 import {inferAliasForStores} from './InferAliasForStores';
 import {inferMutableLifetimes} from './InferMutableLifetimes';
 import {inferMutableRangesForAlias} from './InferMutableRangesForAlias';
 import {inferTryCatchAliases} from './InferTryCatchAliases';
+import {printIdentifier, printPlace} from '../HIR/PrintHIR';
+import {getOrInsertDefault} from '../Utils/utils';
 
 export function inferMutableRanges(ir: HIRFunction): void {
   // Infer mutable ranges for non fields
@@ -19,6 +22,13 @@ export function inferMutableRanges(ir: HIRFunction): void {
 
   // Calculate aliases
   const aliases = inferAliases(ir);
+  // const a = aliases.canonicalize();
+  // const f = new Map();
+  // for (const [k, v] of a) {
+  //   getOrInsertDefault(f, printPlace(v), []).push(printPlace(k));
+  // }
+  // console.log(prettyFormat(f));
+
   /*
    * Calculate aliases for try/catch, where any value created
    * in the try block could be aliased to the catch param
@@ -29,7 +39,7 @@ export function inferMutableRanges(ir: HIRFunction): void {
    * Eagerly canonicalize so that if nothing changes we can bail out
    * after a single iteration
    */
-  let prevAliases: Map<Identifier, Identifier> = aliases.canonicalize();
+  let prevAliases: Map<Place, Place> = aliases.canonicalize();
   while (true) {
     // Infer mutable ranges for aliases that are not fields
     inferMutableRangesForAlias(ir, aliases);
