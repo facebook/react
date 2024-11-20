@@ -5241,8 +5241,8 @@ if (__DEV__) {
         return mountEvent(callback);
       };
   }
-  if (InvalidNestedHooksDispatcherOnMountInDEV) {
-    (HooksDispatcherOnRerenderInDEV: Dispatcher).useResourceEffect =
+  if (enableUseResourceEffectHook) {
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useResourceEffect =
       function useResourceEffect(
         create: () => mixed,
         createDeps: Array<mixed> | void | null,
