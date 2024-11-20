@@ -3855,6 +3855,34 @@ __DEV__ &&
         next: null
       });
     }
+    function pushResourceEffect(
+      identityTag,
+      updateTag,
+      inst,
+      create,
+      createDeps,
+      update,
+      updateDeps
+    ) {
+      identityTag = {
+        resourceKind: ResourceEffectIdentityKind,
+        tag: identityTag,
+        create: create,
+        deps: createDeps,
+        inst: inst,
+        next: null
+      };
+      pushEffectImpl(identityTag);
+      return pushEffectImpl({
+        resourceKind: ResourceEffectUpdateKind,
+        tag: updateTag,
+        update: update,
+        deps: updateDeps,
+        inst: inst,
+        identity: identityTag,
+        next: null
+      });
+    }
     function pushEffectImpl(effect) {
       var componentUpdateQueue = currentlyRenderingFiber$1.updateQueue;
       null === componentUpdateQueue &&
@@ -3919,56 +3947,39 @@ __DEV__ &&
       updateDeps,
       destroy
     ) {
-      0 !== (currentlyRenderingFiber$1.mode & 16) &&
-      0 === (currentlyRenderingFiber$1.mode & 64)
-        ? mountResourceEffectImpl(
-            142608384,
-            Passive,
+      if (
+        0 !== (currentlyRenderingFiber$1.mode & 16) &&
+        0 === (currentlyRenderingFiber$1.mode & 64)
+      ) {
+        var hookFlags = Passive,
+          hook = mountWorkInProgressHook();
+        currentlyRenderingFiber$1.flags |= 142608384;
+        var inst = createEffectInstance();
+        inst.destroy = destroy;
+        hook.memoizedState = pushResourceEffect(
+          HasEffect | hookFlags,
+          hookFlags,
+          inst,
+          create,
+          createDeps,
+          update,
+          updateDeps
+        );
+      } else
+        (hookFlags = Passive),
+          (hook = mountWorkInProgressHook()),
+          (currentlyRenderingFiber$1.flags |= 8390656),
+          (inst = createEffectInstance()),
+          (inst.destroy = destroy),
+          (hook.memoizedState = pushResourceEffect(
+            HasEffect | hookFlags,
+            hookFlags,
+            inst,
             create,
             createDeps,
             update,
-            updateDeps,
-            destroy
-          )
-        : mountResourceEffectImpl(
-            8390656,
-            Passive,
-            create,
-            createDeps,
-            update,
-            updateDeps,
-            destroy
-          );
-    }
-    function mountResourceEffectImpl(
-      fiberFlags,
-      hookFlags,
-      create,
-      createDeps,
-      update,
-      updateDeps,
-      destroy
-    ) {
-      var hook = mountWorkInProgressHook();
-      currentlyRenderingFiber$1.flags |= fiberFlags;
-      fiberFlags = createEffectInstance();
-      fiberFlags.destroy = destroy;
-      hook.memoizedState = pushEffectImpl({
-        resourceKind: ResourceEffectIdentityKind,
-        tag: HasEffect | hookFlags,
-        create: create,
-        deps: createDeps,
-        inst: fiberFlags,
-        next: null
-      });
-      hook.memoizedState = pushEffectImpl({
-        resourceKind: ResourceEffectUpdateKind,
-        tag: hookFlags,
-        update: update,
-        deps: updateDeps,
-        inst: fiberFlags,
-        next: null
-      });
+            updateDeps
+          ));
     }
     function updateResourceEffectImpl(
       fiberFlags,
@@ -3984,45 +3995,45 @@ __DEV__ &&
       inst.destroy = destroy;
       createDeps = void 0 === createDeps ? null : createDeps;
       updateDeps = void 0 === updateDeps ? null : updateDeps;
-      var isUpdateDepsSame;
       if (null !== currentHook) {
         destroy = currentHook.memoizedState;
         if (null !== createDeps) {
-          if (destroy.resourceKind === ResourceEffectUpdateKind)
+          if (
+            null != destroy.resourceKind &&
+            destroy.resourceKind === ResourceEffectUpdateKind
+          )
             var isCreateDepsSame =
-              null != destroy.next.deps ? destroy.next.deps : null;
+              null != destroy.identity.deps ? destroy.identity.deps : null;
           else
-            error$jscomp$0(
-              "Expected a ResourceEffectUpdateKind to be pushed together with ResourceEffectIdentityKind, got %s. This is a bug in React.",
-              destroy.resourceKind
-            ),
-              (isCreateDepsSame = null != destroy.deps ? destroy.deps : null);
+            throw Error(
+              "Expected a ResourceEffectUpdate to be pushed together with ResourceEffectIdentity. This is a bug in React."
+            );
           isCreateDepsSame = areHookInputsEqual(createDeps, isCreateDepsSame);
         }
-        null !== updateDeps &&
-          (isUpdateDepsSame = areHookInputsEqual(
-            updateDeps,
-            null != destroy.deps ? destroy.deps : null
-          ));
+        if (null !== updateDeps) {
+          if (
+            null != destroy.resourceKind &&
+            destroy.resourceKind === ResourceEffectUpdateKind
+          )
+            var isUpdateDepsSame = null != destroy.deps ? destroy.deps : null;
+          else
+            throw Error(
+              "Expected a ResourceEffectUpdate to be pushed together with ResourceEffectIdentity. This is a bug in React."
+            );
+          isUpdateDepsSame = areHookInputsEqual(updateDeps, isUpdateDepsSame);
+        }
       }
       (isCreateDepsSame && isUpdateDepsSame) ||
         (currentlyRenderingFiber$1.flags |= fiberFlags);
-      hook.memoizedState = pushEffectImpl({
-        resourceKind: ResourceEffectIdentityKind,
-        tag: isCreateDepsSame ? hookFlags : HasEffect | hookFlags,
-        create: create,
-        deps: createDeps,
-        inst: inst,
-        next: null
-      });
-      hook.memoizedState = pushEffectImpl({
-        resourceKind: ResourceEffectUpdateKind,
-        tag: isUpdateDepsSame ? hookFlags : HasEffect | hookFlags,
-        update: update,
-        deps: updateDeps,
-        inst: inst,
-        next: null
-      });
+      hook.memoizedState = pushResourceEffect(
+        isCreateDepsSame ? hookFlags : HasEffect | hookFlags,
+        isUpdateDepsSame ? hookFlags : HasEffect | hookFlags,
+        inst,
+        create,
+        createDeps,
+        update,
+        updateDeps
+      );
     }
     function useEffectEventImpl(payload) {
       currentlyRenderingFiber$1.flags |= 4;
@@ -17114,11 +17125,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-www-classic-7558ffe8-20241119",
+        version: "19.0.0-www-classic-c11c9510-20241120",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-www-classic-7558ffe8-20241119"
+        reconcilerVersion: "19.0.0-www-classic-c11c9510-20241120"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -17152,7 +17163,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.0.0-www-classic-7558ffe8-20241119";
+    exports.version = "19.0.0-www-classic-c11c9510-20241120";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

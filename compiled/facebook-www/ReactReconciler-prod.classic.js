@@ -2446,6 +2446,34 @@ module.exports = function ($$$config) {
       next: null
     });
   }
+  function pushResourceEffect(
+    identityTag,
+    updateTag,
+    inst,
+    create,
+    createDeps,
+    update,
+    updateDeps
+  ) {
+    identityTag = {
+      resourceKind: 0,
+      tag: identityTag,
+      create: create,
+      deps: createDeps,
+      inst: inst,
+      next: null
+    };
+    pushEffectImpl(identityTag);
+    return pushEffectImpl({
+      resourceKind: 1,
+      tag: updateTag,
+      update: update,
+      deps: updateDeps,
+      inst: inst,
+      identity: identityTag,
+      next: null
+    });
+  }
   function pushEffectImpl(effect) {
     var componentUpdateQueue = currentlyRenderingFiber$1.updateQueue;
     null === componentUpdateQueue &&
@@ -2512,22 +2540,15 @@ module.exports = function ($$$config) {
     currentlyRenderingFiber$1.flags |= 8390656;
     var inst = createEffectInstance();
     inst.destroy = destroy;
-    hook.memoizedState = pushEffectImpl({
-      resourceKind: 0,
-      tag: 9,
-      create: create,
-      deps: createDeps,
-      inst: inst,
-      next: null
-    });
-    hook.memoizedState = pushEffectImpl({
-      resourceKind: 1,
-      tag: 8,
-      update: update,
-      deps: updateDeps,
-      inst: inst,
-      next: null
-    });
+    hook.memoizedState = pushResourceEffect(
+      9,
+      8,
+      inst,
+      create,
+      createDeps,
+      update,
+      updateDeps
+    );
   }
   function updateResourceEffect(
     create,
@@ -2541,43 +2562,33 @@ module.exports = function ($$$config) {
     inst.destroy = destroy;
     createDeps = void 0 === createDeps ? null : createDeps;
     updateDeps = void 0 === updateDeps ? null : updateDeps;
-    var isCreateDepsSame, isUpdateDepsSame;
-    null !== currentHook &&
-      ((destroy = currentHook.memoizedState),
-      null !== createDeps &&
-        (isCreateDepsSame = areHookInputsEqual(
-          createDeps,
-          1 === destroy.resourceKind
-            ? null != destroy.next.deps
-              ? destroy.next.deps
-              : null
-            : null != destroy.deps
-              ? destroy.deps
-              : null
-        )),
-      null !== updateDeps &&
-        (isUpdateDepsSame = areHookInputsEqual(
-          updateDeps,
-          null != destroy.deps ? destroy.deps : null
-        )));
+    if (null !== currentHook) {
+      destroy = currentHook.memoizedState;
+      if (null !== createDeps) {
+        if (null != destroy.resourceKind && 1 === destroy.resourceKind)
+          var isCreateDepsSame =
+            null != destroy.identity.deps ? destroy.identity.deps : null;
+        else throw Error(formatProdErrorMessage(543));
+        isCreateDepsSame = areHookInputsEqual(createDeps, isCreateDepsSame);
+      }
+      if (null !== updateDeps) {
+        if (null != destroy.resourceKind && 1 === destroy.resourceKind)
+          var isUpdateDepsSame = null != destroy.deps ? destroy.deps : null;
+        else throw Error(formatProdErrorMessage(543));
+        isUpdateDepsSame = areHookInputsEqual(updateDeps, isUpdateDepsSame);
+      }
+    }
     (isCreateDepsSame && isUpdateDepsSame) ||
       (currentlyRenderingFiber$1.flags |= 2048);
-    hook.memoizedState = pushEffectImpl({
-      resourceKind: 0,
-      tag: isCreateDepsSame ? 8 : 9,
-      create: create,
-      deps: createDeps,
-      inst: inst,
-      next: null
-    });
-    hook.memoizedState = pushEffectImpl({
-      resourceKind: 1,
-      tag: isUpdateDepsSame ? 8 : 9,
-      update: update,
-      deps: updateDeps,
-      inst: inst,
-      next: null
-    });
+    hook.memoizedState = pushResourceEffect(
+      isCreateDepsSame ? 8 : 9,
+      isUpdateDepsSame ? 8 : 9,
+      inst,
+      create,
+      createDeps,
+      update,
+      updateDeps
+    );
   }
   function useEffectEventImpl(payload) {
     currentlyRenderingFiber$1.flags |= 4;
@@ -12836,7 +12847,7 @@ module.exports = function ($$$config) {
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
       findFiberByHostInstance: getInstanceFromNode,
-      reconcilerVersion: "19.0.0-www-classic-7558ffe8-20241119"
+      reconcilerVersion: "19.0.0-www-classic-c11c9510-20241120"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
