@@ -47,6 +47,7 @@ export const favorSafetyOverHydrationPerf = true;
 export const enableComponentStackLocations = true;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = true;
+export const enableMoveBefore = false;
 export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableRenderableContext = false;
 export const enableFabricCompleteRootInCommitPhase = false;
