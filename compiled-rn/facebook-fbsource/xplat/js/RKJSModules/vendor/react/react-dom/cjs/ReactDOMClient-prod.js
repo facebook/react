@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e3375ce482f7fbca6b3b446097360a1d>>
+ * @generated SignedSource<<7b01fb0b70c13edae17ecac2234f6026>>
  */
 
 /*
@@ -3783,6 +3783,34 @@ function pushSimpleEffect(tag, inst, create, deps) {
     next: null
   });
 }
+function pushResourceEffect(
+  identityTag,
+  updateTag,
+  inst,
+  create,
+  createDeps,
+  update,
+  updateDeps
+) {
+  identityTag = {
+    resourceKind: 0,
+    tag: identityTag,
+    create: create,
+    deps: createDeps,
+    inst: inst,
+    next: null
+  };
+  pushEffectImpl(identityTag);
+  return pushEffectImpl({
+    resourceKind: 1,
+    tag: updateTag,
+    update: update,
+    deps: updateDeps,
+    inst: inst,
+    identity: identityTag,
+    next: null
+  });
+}
 function pushEffectImpl(effect) {
   var componentUpdateQueue = currentlyRenderingFiber$1.updateQueue;
   null === componentUpdateQueue &&
@@ -3843,22 +3871,15 @@ function mountResourceEffect(create, createDeps, update, updateDeps, destroy) {
   currentlyRenderingFiber$1.flags |= 8390656;
   var inst = createEffectInstance();
   inst.destroy = destroy;
-  hook.memoizedState = pushEffectImpl({
-    resourceKind: 0,
-    tag: 9,
-    create: create,
-    deps: createDeps,
-    inst: inst,
-    next: null
-  });
-  hook.memoizedState = pushEffectImpl({
-    resourceKind: 1,
-    tag: 8,
-    update: update,
-    deps: updateDeps,
-    inst: inst,
-    next: null
-  });
+  hook.memoizedState = pushResourceEffect(
+    9,
+    8,
+    inst,
+    create,
+    createDeps,
+    update,
+    updateDeps
+  );
 }
 function updateResourceEffect(create, createDeps, update, updateDeps, destroy) {
   var hook = updateWorkInProgressHook(),
@@ -3866,43 +3887,33 @@ function updateResourceEffect(create, createDeps, update, updateDeps, destroy) {
   inst.destroy = destroy;
   createDeps = void 0 === createDeps ? null : createDeps;
   updateDeps = void 0 === updateDeps ? null : updateDeps;
-  var isCreateDepsSame, isUpdateDepsSame;
-  null !== currentHook &&
-    ((destroy = currentHook.memoizedState),
-    null !== createDeps &&
-      (isCreateDepsSame = areHookInputsEqual(
-        createDeps,
-        1 === destroy.resourceKind
-          ? null != destroy.next.deps
-            ? destroy.next.deps
-            : null
-          : null != destroy.deps
-            ? destroy.deps
-            : null
-      )),
-    null !== updateDeps &&
-      (isUpdateDepsSame = areHookInputsEqual(
-        updateDeps,
-        null != destroy.deps ? destroy.deps : null
-      )));
+  if (null !== currentHook) {
+    destroy = currentHook.memoizedState;
+    if (null !== createDeps) {
+      if (null != destroy.resourceKind && 1 === destroy.resourceKind)
+        var isCreateDepsSame =
+          null != destroy.identity.deps ? destroy.identity.deps : null;
+      else throw Error(formatProdErrorMessage(543));
+      isCreateDepsSame = areHookInputsEqual(createDeps, isCreateDepsSame);
+    }
+    if (null !== updateDeps) {
+      if (null != destroy.resourceKind && 1 === destroy.resourceKind)
+        var isUpdateDepsSame = null != destroy.deps ? destroy.deps : null;
+      else throw Error(formatProdErrorMessage(543));
+      isUpdateDepsSame = areHookInputsEqual(updateDeps, isUpdateDepsSame);
+    }
+  }
   (isCreateDepsSame && isUpdateDepsSame) ||
     (currentlyRenderingFiber$1.flags |= 2048);
-  hook.memoizedState = pushEffectImpl({
-    resourceKind: 0,
-    tag: isCreateDepsSame ? 8 : 9,
-    create: create,
-    deps: createDeps,
-    inst: inst,
-    next: null
-  });
-  hook.memoizedState = pushEffectImpl({
-    resourceKind: 1,
-    tag: isUpdateDepsSame ? 8 : 9,
-    update: update,
-    deps: updateDeps,
-    inst: inst,
-    next: null
-  });
+  hook.memoizedState = pushResourceEffect(
+    isCreateDepsSame ? 8 : 9,
+    isUpdateDepsSame ? 8 : 9,
+    inst,
+    create,
+    createDeps,
+    update,
+    updateDeps
+  );
 }
 function updateInsertionEffect(create, deps) {
   return updateEffectImpl(4, 2, create, deps);
@@ -15818,14 +15829,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1735 = React.version;
 if (
-  "19.0.0-native-fb-64f89510-20241119" !==
+  "19.0.0-native-fb-c11c9510-20241120" !==
   isomorphicReactPackageVersion$jscomp$inline_1735
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1735,
-      "19.0.0-native-fb-64f89510-20241119"
+      "19.0.0-native-fb-c11c9510-20241120"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -15847,11 +15858,11 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2193 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-64f89510-20241119",
+  version: "19.0.0-native-fb-c11c9510-20241120",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-native-fb-64f89510-20241119"
+  reconcilerVersion: "19.0.0-native-fb-c11c9510-20241120"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2194 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -15955,4 +15966,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.0.0-native-fb-64f89510-20241119";
+exports.version = "19.0.0-native-fb-c11c9510-20241120";
