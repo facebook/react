@@ -81,7 +81,7 @@ function startReadingFromStream(
     value: ?Uint8Array,
     ...
   }): void | Promise<void> {
-    if (done) {
+    if (done || value == null) {
       close(response);
       return;
     }
