@@ -4018,15 +4018,11 @@ describe('ReactHooksWithNoopRenderer', () => {
     let bValue = 2;
 
     function handleUpdates(selector) {
-      if (selector == 'A') {
+      if (selector === 'A') {
         return aValue;
       } else {
         return bValue;
       }
-    }
-    function Child({children}) {
-      Scheduler.log('Child');
-      return children;
     }
 
     function App({selector}) {
@@ -4119,6 +4115,91 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       expect(ReactNoop).toMatchRenderedOutput('2');
     }
+  });
+
+  it('useReducer early bail out behavior', async () => {
+    let notify;
+    let hasUpdates = false;
+    let aValue = 1;
+    let bValue = 2;
+
+    function handleUpdates(selector) {
+      if (selector === 'A') {
+        return aValue;
+      } else {
+        return bValue;
+      }
+    }
+
+    function App({selector}) {
+      const [state, setState] = useReducer((state, action) => {
+        if (typeof action === 'function') {
+          return action(state);
+        }
+        return action;
+      }, 1);
+      const [previousSelector, setSelector] = useState(selector);
+      Scheduler.log('Render: ' + state);
+      if (selector !== previousSelector) {
+        const newState = handleUpdates(selector);
+        Scheduler.log('Set state in render ' + state + ' -> ' + newState);
+        setState(newState);
+        setSelector(selector);
+      }
+
+      notify = latestSelector => {
+        setState(prevState => {
+          if (previousSelector !== latestSelector) {
+            if (hasUpdates) {
+              const newState = prevState + 1;
+              Scheduler.log(
+                `Set state in updater (${latestSelector}): ${prevState} -> ${newState}`,
+              );
+              return newState;
+            }
+          }
+          Scheduler.log(
+            `No change in updater (${latestSelector}): ${prevState}`,
+          );
+
+          return prevState;
+        });
+      };
+
+      return state;
+    }
+
+    ReactNoop.render(<App selector="A" />);
+    await waitForAll(['Render: 1']);
+    expect(ReactNoop).toMatchRenderedOutput('1');
+
+    await act(async () => {
+      ReactNoop.render(<App selector="B" />);
+
+      React.startTransition(() => {
+        notify('A');
+      });
+
+      React.startTransition(() => {
+        notify('B');
+      });
+
+      hasUpdates = true;
+    });
+
+    assertLog([
+      // Sync update with setState in render
+      'Render: 1',
+      'Set state in render 1 -> 2',
+      'Render: 2',
+
+      // Run transitions
+      'No change in updater (A): 1',
+      'Set state in updater (B): 1 -> 2',
+      'Render: 2',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput('2');
   });
 
   // Regression test. Covers a case where an internal state variable
