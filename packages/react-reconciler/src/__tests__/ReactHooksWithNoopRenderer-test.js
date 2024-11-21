@@ -4014,91 +4014,110 @@ describe('ReactHooksWithNoopRenderer', () => {
   it('useState early bail out behavior', async () => {
     let notify;
     let hasUpdates = false;
+    let aValue = 1;
+    let bValue = 2;
 
-    function App() {
+    function handleUpdates(selector) {
+      if (selector == 'A') {
+        return aValue;
+      } else {
+        return bValue;
+      }
+    }
+    function Child({children}) {
+      Scheduler.log('Child');
+      return children;
+    }
+
+    function App({selector}) {
       const [state, setState] = useState(1);
-
-      useEffect(() => {
-        notify = name => {
-          setState(s => {
-            let newState = s;
-            if (hasUpdates) {
-              newState = s + 1;
-            }
-
-            Scheduler.log(name + ' New State: ' + newState);
-            return newState;
-          });
-        };
-      }, []);
-
+      const [previousSelector, setSelector] = useState(selector);
       Scheduler.log('Render: ' + state);
+      if (selector !== previousSelector) {
+        const newState = handleUpdates(selector);
+        Scheduler.log('Set state in render ' + state + ' -> ' + newState);
+        setState(newState);
+        setSelector(selector);
+      }
+
+      notify = latestSelector => {
+        setState(prevState => {
+          if (previousSelector !== latestSelector) {
+            if (hasUpdates) {
+              const newState = prevState + 1;
+              Scheduler.log(
+                `Set state in updater (${latestSelector}): ${prevState} -> ${newState}`,
+              );
+              return newState;
+            }
+          }
+          Scheduler.log(
+            `No change in updater (${latestSelector}): ${prevState}`,
+          );
+
+          return prevState;
+        });
+      };
+
       return state;
     }
 
-    ReactNoop.render(<App />);
+    ReactNoop.render(<App selector="A" />);
     await waitForAll(['Render: 1']);
     expect(ReactNoop).toMatchRenderedOutput('1');
 
-    await act(() => {
+    await act(async () => {
+      ReactNoop.render(<App selector="B" />);
+
       React.startTransition(() => {
-        notify('Transition');
+        notify('A');
       });
-      // Mutate a global store value
-      // that is used in the state updater.
+
+      React.startTransition(() => {
+        notify('B');
+      });
+
       hasUpdates = true;
-      Scheduler.log('Mutation true');
-      ReactNoop.flushSync(() => {
-        notify('Sync');
-      });
-      Scheduler.log('Mutation false');
-      hasUpdates = false;
     });
 
     if (gate(flags => !flags.testingOnlyDisableEagerState)) {
       // If we kept the existing behavior
 
       assertLog([
-        // Eagerly compute the transition state
-        'Transition New State: 1',
+        // Transition updater eagerly runs
+        'No change in updater (A): 1',
+        'No change in updater (B): 1',
 
-        // flushSync with global store mutation
-        'Mutation true',
-        'Sync New State: 2',
+        // Sync update with setState in render
+        'Render: 1',
+        'Set state in render 1 -> 2',
         'Render: 2',
-        'Mutation false',
 
-        // Render combined transition + sync updates using
-        // the eagerly computed state (not running the updater again)
-        'Render: 2',
-      ]);
-
-      expect(ReactNoop).toMatchRenderedOutput('2');
-    } else {
-      // If we turned off using the eager state
-
-      assertLog([
-        // Eagerly compute the transition state
-        'Transition New State: 1',
-
-        // flushSync with global store mutation
-        'Mutation true',
-        'Sync New State: 2',
-        'Sync New State: 2',
-        'Render: 2',
-        'Mutation false',
-
-        // Re-apply the transition state
-        'Transition New State: 1',
-
-        // The state updater is rebased and run again.
-        // This time, the mutable value is false
-        // so we don't update the count.
-        'Sync New State: 1',
+        // Transition rebased on top without re-running reducer
         'Render: 1',
       ]);
 
       expect(ReactNoop).toMatchRenderedOutput('1');
+    } else {
+      // If we turned off using the eager state
+
+      assertLog([
+        // Transition updater eagerly runs
+        'No change in updater (A): 1',
+        'No change in updater (B): 1',
+
+        // Sync update with setState in render
+        'Render: 1',
+        'Set state in render 1 -> 2',
+        'Render: 2',
+
+        // Transition rebased on top with reducer
+        'No change in updater (A): 1',
+        'Set state in updater (B): 1 -> 2',
+        'Render: 2',
+      ]);
+
+      expect(ReactNoop).toMatchRenderedOutput('2');
     }
   });
 
