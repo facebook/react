@@ -1738,7 +1738,18 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
       previousRenderStartTime > 0
     ) {
       setCurrentTrackFromLanes(workInProgressRootRenderLanes);
-      logInterruptedRenderPhase(previousRenderStartTime, renderStartTime);
+      if (
+        workInProgressRootExitStatus === RootSuspended ||
+        workInProgressRootExitStatus === RootSuspendedWithDelay
+      ) {
+        // If the root was already suspended when it got interrupted and restarted,
+        // then this is considered a prewarm and not an interrupted render because
+        // we couldn't have shown anything anyway so it's not a bad thing that we
+        // got interrupted.
+        logSuspendedRenderPhase(previousRenderStartTime, renderStartTime);
+      } else {
+        logInterruptedRenderPhase(previousRenderStartTime, renderStartTime);
+      }
       finalizeRender(workInProgressRootRenderLanes, renderStartTime);
     }
 
