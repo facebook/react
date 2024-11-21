@@ -32,7 +32,7 @@ function Component(props) {
   const $ = _c(5);
   React.useContext(FooContext);
   const ref = React.useRef();
-  const [x, setX] = React.useState(false);
+  const [, setX] = React.useState(false);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = () => {
