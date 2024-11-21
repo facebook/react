@@ -265,7 +265,6 @@ import {
   startProfilerTimer,
   stopProfilerTimerIfRunningAndRecordDuration,
   stopProfilerTimerIfRunningAndRecordIncompleteDuration,
-  markUpdateAsRepeat,
   trackSuspendedTime,
   startYieldTimer,
   yieldStartTime,
@@ -927,6 +926,7 @@ export function performWorkOnRoot(
       // We've returned from yielding to the event loop. Let's log the time it took.
       const yieldEndTime = now();
       switch (yieldReason) {
+        case SuspendedOnImmediate:
         case SuspendedOnData:
           logSuspendedYieldTime(yieldStartTime, yieldEndTime, yieldedFiber);
           break;
@@ -1009,7 +1009,6 @@ export function performWorkOnRoot(
           setCurrentTrackFromLanes(lanes);
           logInconsistentRender(renderStartTime, renderEndTime);
           finalizeRender(lanes, renderEndTime);
-          markUpdateAsRepeat(lanes);
         }
         // A store was mutated in an interleaved event. Render again,
         // synchronously, to block further mutations.
@@ -1036,7 +1035,6 @@ export function performWorkOnRoot(
             setCurrentTrackFromLanes(lanes);
             logErroredRenderPhase(renderStartTime, renderEndTime);
             finalizeRender(lanes, renderEndTime);
-            markUpdateAsRepeat(lanes);
           }
           lanes = errorRetryLanes;
           exitStatus = recoverFromConcurrentError(
@@ -1740,7 +1738,18 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
       previousRenderStartTime > 0
     ) {
       setCurrentTrackFromLanes(workInProgressRootRenderLanes);
-      logInterruptedRenderPhase(previousRenderStartTime, renderStartTime);
+      if (
+        workInProgressRootExitStatus === RootSuspended ||
+        workInProgressRootExitStatus === RootSuspendedWithDelay
+      ) {
+        // If the root was already suspended when it got interrupted and restarted,
+        // then this is considered a prewarm and not an interrupted render because
+        // we couldn't have shown anything anyway so it's not a bad thing that we
+        // got interrupted.
+        logSuspendedRenderPhase(previousRenderStartTime, renderStartTime);
+      } else {
+        logInterruptedRenderPhase(previousRenderStartTime, renderStartTime);
+      }
       finalizeRender(workInProgressRootRenderLanes, renderStartTime);
     }
 
