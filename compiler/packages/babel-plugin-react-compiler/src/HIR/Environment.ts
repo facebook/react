@@ -293,6 +293,15 @@ const EnvironmentConfigSchema = z.object({
   validateNoCapitalizedCalls: z.nullable(z.array(z.string())).default(null),
   validateBlocklistedImports: z.nullable(z.array(z.string())).default(null),
 
+  /**
+   * Validates that useState() calls use both the state and setter. If either are unused, the program
+   * may fail to update properly. An unused state value is generally used to force an update, but
+   * with the compiler applied a force update should not have any impact. An unused setter will cause
+   * the state value to never update, which implies turning a reactive state input into a non-reactive
+   * output, which will trigger stale UIs.
+   */
+  validateUseState: z.boolean().default(false),
+
   /*
    * When enabled, the compiler assumes that hooks follow the Rules of React:
    * - Hooks may memoize computation based on any of their parameters, thus

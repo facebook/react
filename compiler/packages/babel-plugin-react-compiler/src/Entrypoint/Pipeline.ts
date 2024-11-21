@@ -103,6 +103,7 @@ import {validateNoSetStateInPassiveEffects} from '../Validation/ValidateNoSetSta
 import {validateNoJSXInTryStatement} from '../Validation/ValidateNoJSXInTryStatement';
 import {propagateScopeDependenciesHIR} from '../HIR/PropagateScopeDependenciesHIR';
 import {outlineJSX} from '../Optimization/OutlineJsx';
+import {validateUseState} from '../Validation/ValidateUseState';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -249,6 +250,10 @@ function* runWithEnvironment(
 
   if (env.config.validateNoJSXInTryStatements) {
     validateNoJSXInTryStatement(hir);
+  }
+
+  if (env.config.validateUseState) {
+    validateUseState(hir);
   }
 
   inferReactivePlaces(hir);
