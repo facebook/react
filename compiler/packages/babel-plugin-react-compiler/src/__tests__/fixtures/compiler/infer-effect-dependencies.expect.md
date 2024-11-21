@@ -88,7 +88,13 @@ function Component(t0) {
   } else {
     t3 = $[6];
   }
-  useEffect(t3, [foo, bar, localNonPrimitiveReactive]);
+  useEffect(t3, [
+    foo,
+    bar,
+    ref,
+    localNonPrimitiveReactive,
+    localNonPrimitiveNonreactive,
+  ]);
   let t4;
   if ($[7] !== bar.baz || $[8] !== bar.qux) {
     t4 = () => {
@@ -101,7 +107,7 @@ function Component(t0) {
   } else {
     t4 = $[9];
   }
-  useEffect(t4, [bar, bar.qux]);
+  useEffect(t4, [bar.baz, bar.qux]);
   let t5;
   if ($[10] !== foo) {
     t5 = function f() {

@@ -96,8 +96,10 @@ export function inferEffectDependencies(
             loc: value.loc,
           });
           if (scopeInfo.pruned || !scopeInfo.hasSingleInstr) {
-            // TODO: retry pipeline that ensures effect function expressions
-            // are placed into their own scope
+            /**
+             * TODO: retry pipeline that ensures effect function expressions
+             * are placed into their own scope
+             */
             CompilerError.throwTodo({
               reason:
                 '[InferEffectDependencies] Expected effect function to have non-pruned scope and its scope to have exactly one instruction',
@@ -194,8 +196,10 @@ function writeDependencyToInstructions(
   });
   for (const path of dep.path) {
     if (path.optional) {
-      // TODO: instead of truncating optional paths, reuse
-      // instructions from hoisted dependencies block
+      /**
+       * TODO: instead of truncating optional paths, reuse
+       * instructions from hoisted dependencies block(s)
+       */
       break;
     }
     const nextValue = createTemporaryPlace(env, GeneratedSource);
@@ -221,9 +225,11 @@ function inferReactiveIdentifiers(fn: HIRFunction): Set<IdentifierId> {
   const reactiveIds: Set<IdentifierId> = new Set();
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
-      // no need to traverse into nested functions as
-      // 1. Their effects are recorded in `LoweredFunction.dependencies`
-      // 2. we don't mark `reactive` in these anyways
+      /**
+       * No need to traverse into nested functions as
+       * 1. their effects are recorded in `LoweredFunction.dependencies`
+       * 2. we don't mark `reactive` in these anyways
+       */
       for (const place of eachInstructionOperand(instr)) {
         if (place.reactive) {
           reactiveIds.add(place.identifier.id);
