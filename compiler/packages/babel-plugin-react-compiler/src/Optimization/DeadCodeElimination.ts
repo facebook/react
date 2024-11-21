@@ -6,7 +6,6 @@
  */
 
 import {
-  ArrayPattern,
   BlockId,
   HIRFunction,
   Identifier,
