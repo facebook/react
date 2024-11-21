@@ -78,14 +78,14 @@ function startReadingFromStream(
     value,
   }: {
     done: boolean,
-    value: ?any,
+    value: ?Uint8Array,
     ...
   }): void | Promise<void> {
     if (done) {
       close(response);
       return;
     }
-    const buffer: Uint8Array = (value: any);
+    const buffer: Uint8Array = (value: Uint8Array);
     processBinaryChunk(response, buffer);
     return reader.read().then(progress).catch(error);
   }
