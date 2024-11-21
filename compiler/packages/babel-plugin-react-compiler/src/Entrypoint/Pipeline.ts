@@ -21,6 +21,7 @@ import {
   lower,
   mergeConsecutiveBlocks,
   mergeOverlappingReactiveScopesHIR,
+  printHIR,
   pruneUnusedLabelsHIR,
 } from '../HIR';
 import {
