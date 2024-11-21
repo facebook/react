@@ -28,7 +28,7 @@ import { useCallback, useTransition } from "react";
 
 function useFoo() {
   const $ = _c(1);
-  const [t, start] = useTransition();
+  const [, start] = useTransition();
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = () => {
