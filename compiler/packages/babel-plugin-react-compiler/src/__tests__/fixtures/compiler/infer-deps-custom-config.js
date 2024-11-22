@@ -1,6 +1,5 @@
 // @inferEffectDependencies
-import {useSpecialEffect} from 'react';
-import {print} from 'shared-runtime';
+import {print, useSpecialEffect} from 'shared-runtime';
 
 function CustomConfig({propVal}) {
   // Insertion

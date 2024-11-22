@@ -39,11 +39,13 @@ export function inferEffectDependencies(fn: HIRFunction): void {
   for (const effectTarget of fn.env.config.inferEffectDependencies!) {
     const moduleTargets = getOrInsertWith(
       autodepFnConfigs,
-      effectTarget.module,
+      effectTarget.func.source,
       () => new Map<string, number>(),
     );
-    moduleTargets.set(effectTarget.imported, effectTarget.numRequiredArgs);
-    autodepFnConfigs.set(effectTarget.module, moduleTargets);
+    moduleTargets.set(
+      effectTarget.func.importSpecifierName,
+      effectTarget.numRequiredArgs,
+    );
   }
   const autodepFnLoads = new Map<IdentifierId, number>();
 

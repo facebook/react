@@ -3,8 +3,7 @@
 
 ```javascript
 // @inferEffectDependencies
-import {useSpecialEffect} from 'react';
-import {print} from 'shared-runtime';
+import {print, useSpecialEffect} from 'shared-runtime';
 
 function CustomConfig({propVal}) {
   // Insertion
@@ -19,8 +18,7 @@ function CustomConfig({propVal}) {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @inferEffectDependencies
-import { useSpecialEffect } from "react";
-import { print } from "shared-runtime";
+import { print, useSpecialEffect } from "shared-runtime";
 
 function CustomConfig(t0) {
   const $ = _c(7);

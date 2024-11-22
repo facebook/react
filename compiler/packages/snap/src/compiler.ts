@@ -174,22 +174,6 @@ function makePluginOptions(
       .filter(s => s.length > 0);
   }
 
-  let inferEffectDependencies = null;
-  if (firstLine.includes('@inferEffectDependencies')) {
-    inferEffectDependencies = [
-      {
-        module: 'react',
-        imported: 'useEffect',
-        numRequiredArgs: 1,
-      },
-      {
-        module: 'react',
-        imported: 'useSpecialEffect',
-        numRequiredArgs: 2,
-      },
-    ];
-  }
-
   let logs: Array<{filename: string | null; event: LoggerEvent}> = [];
   let logger: Logger | null = null;
   if (firstLine.includes('@logger')) {
@@ -213,7 +197,6 @@ function makePluginOptions(
       hookPattern,
       validatePreserveExistingMemoizationGuarantees,
       validateBlocklistedImports,
-      inferEffectDependencies,
     },
     compilationMode,
     logger,
