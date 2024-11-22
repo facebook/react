@@ -270,7 +270,7 @@ const EnvironmentConfigSchema = z.object({
     .nullable(
       z.array(
         z.object({
-          func: ExternalFunctionSchema,
+          function: ExternalFunctionSchema,
           numRequiredArgs: z.number(),
         }),
       ),
@@ -647,14 +647,14 @@ const testComplexConfigDefaults: PartialEnvironmentConfig = {
   },
   inferEffectDependencies: [
     {
-      func: {
+      function: {
         source: 'react',
         importSpecifierName: 'useEffect',
       },
       numRequiredArgs: 1,
     },
     {
-      func: {
+      function: {
         source: 'shared-runtime',
         importSpecifierName: 'useSpecialEffect',
       },
