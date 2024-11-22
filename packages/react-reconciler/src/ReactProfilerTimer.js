@@ -108,6 +108,24 @@ export function startUpdateTimerByLane(lane: Lane): void {
   }
 }
 
+export function startPingTimerByLanes(lanes: Lanes): void {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  // Mark the update time and clamp anything before it because we don't want
+  // to show the event time for pings but we also don't want to clear it
+  // because we still need to track if this was a repeat.
+  if (includesSyncLane(lanes) || includesBlockingLane(lanes)) {
+    if (blockingUpdateTime < 0) {
+      blockingClampTime = blockingUpdateTime = now();
+    }
+  } else if (includesTransitionLane(lanes)) {
+    if (transitionUpdateTime < 0) {
+      transitionClampTime = transitionUpdateTime = now();
+    }
+  }
+}
+
 export function trackSuspendedTime(lanes: Lanes, renderEndTime: number) {
   if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
     return;

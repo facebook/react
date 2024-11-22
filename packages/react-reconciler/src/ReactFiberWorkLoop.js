@@ -269,6 +269,7 @@ import {
   startYieldTimer,
   yieldStartTime,
   yieldReason,
+  startPingTimerByLanes,
 } from './ReactProfilerTimer';
 import {setCurrentTrackFromLanes} from './ReactFiberPerformanceTrack';
 
@@ -3960,6 +3961,10 @@ function pingSuspendedRoot(
   }
 
   markRootPinged(root, pingedLanes);
+
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    startPingTimerByLanes(pingedLanes);
+  }
 
   warnIfSuspenseResolutionNotWrappedWithActDEV(root);
 
