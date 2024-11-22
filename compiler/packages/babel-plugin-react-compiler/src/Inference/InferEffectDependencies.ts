@@ -28,10 +28,7 @@ import {eachInstructionOperand, eachTerminalOperand} from '../HIR/visitors';
  * Infers reactive dependencies captured by useEffect lambdas and adds them as
  * a second argument to the useEffect call if no dependency array is provided.
  */
-export function inferEffectDependencies(
-  env: Environment,
-  fn: HIRFunction,
-): void {
+export function inferEffectDependencies(fn: HIRFunction): void {
   let hasRewrite = false;
   const fnExpressions = new Map<
     IdentifierId,
@@ -132,7 +129,7 @@ export function inferEffectDependencies(
             loc: GeneratedSource,
           };
 
-          const depsPlace = createTemporaryPlace(env, GeneratedSource);
+          const depsPlace = createTemporaryPlace(fn.env, GeneratedSource);
           depsPlace.effect = Effect.Read;
 
           newInstructions.push({
