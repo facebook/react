@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<64337c9bdf1d60174b3c117fb6c9d7ed>>
+ * @generated SignedSource<<2c12064cb115edbdb0f3550b6f5ff90d>>
  */
 
 "use strict";
@@ -920,6 +920,22 @@ __DEV__ &&
     function useMemoCache(size) {
       return resolveDispatcher().useMemoCache(size);
     }
+    function useResourceEffect(
+      create,
+      createDeps,
+      update,
+      updateDeps,
+      destroy
+    ) {
+      if (!enableUseResourceEffectHook) throw Error("Not implemented.");
+      return resolveDispatcher().useResourceEffect(
+        create,
+        createDeps,
+        update,
+        updateDeps,
+        destroy
+      );
+    }
     function noop() {}
     function enqueueTask(task) {
       if (null === enqueueTaskImpl)
@@ -1164,7 +1180,10 @@ __DEV__ &&
               });
             }
           : enqueueTask,
-      ReactCompilerRuntime = { c: useMemoCache };
+      ReactCompilerRuntime = { c: useMemoCache },
+      experimental_useResourceEffect = enableUseResourceEffectHook
+        ? useResourceEffect
+        : void 0;
     exports.Children = {
       map: mapChildren,
       forEach: function (children, forEachFunc, forEachContext) {
@@ -1485,22 +1504,7 @@ __DEV__ &&
     exports.experimental_useEffectEvent = function (callback) {
       return resolveDispatcher().useEffectEvent(callback);
     };
-    exports.experimental_useResourceEffect = function (
-      create,
-      createDeps,
-      update,
-      updateDeps,
-      destroy
-    ) {
-      if (!enableUseResourceEffectHook) throw Error("Not implemented.");
-      return resolveDispatcher().useResourceEffect(
-        create,
-        createDeps,
-        update,
-        updateDeps,
-        destroy
-      );
-    };
+    exports.experimental_useResourceEffect = experimental_useResourceEffect;
     exports.forwardRef = function (render) {
       null != render && render.$$typeof === REACT_MEMO_TYPE
         ? error$jscomp$0(
@@ -1712,7 +1716,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.0.0-native-fb-aba370f1-20241122";
+    exports.version = "19.0.0-native-fb-e3b7ef32-20241122";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

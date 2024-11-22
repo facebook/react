@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c0c7ebab661a277a2b33439794b3bb7e>>
+ * @generated SignedSource<<c2d3545673cc089a6fcba0c747614a20>>
  */
 
 "use strict";
@@ -310,6 +310,16 @@ function lazyInitializer(payload) {
 function useMemoCache(size) {
   return ReactSharedInternals.H.useMemoCache(size);
 }
+function useResourceEffect(create, createDeps, update, updateDeps, destroy) {
+  if (!enableUseResourceEffectHook) throw Error("Not implemented.");
+  return ReactSharedInternals.H.useResourceEffect(
+    create,
+    createDeps,
+    update,
+    updateDeps,
+    destroy
+  );
+}
 var reportGlobalError =
   "function" === typeof reportError
     ? reportError
@@ -340,7 +350,10 @@ var reportGlobalError =
         console.error(error);
       };
 function noop() {}
-var ReactCompilerRuntime = { c: useMemoCache };
+var ReactCompilerRuntime = { c: useMemoCache },
+  experimental_useResourceEffect = enableUseResourceEffectHook
+    ? useResourceEffect
+    : void 0;
 exports.Children = {
   map: mapChildren,
   forEach: function (children, forEachFunc, forEachContext) {
@@ -465,22 +478,7 @@ exports.createRef = function () {
 exports.experimental_useEffectEvent = function (callback) {
   return ReactSharedInternals.H.useEffectEvent(callback);
 };
-exports.experimental_useResourceEffect = function (
-  create,
-  createDeps,
-  update,
-  updateDeps,
-  destroy
-) {
-  if (!enableUseResourceEffectHook) throw Error("Not implemented.");
-  return ReactSharedInternals.H.useResourceEffect(
-    create,
-    createDeps,
-    update,
-    updateDeps,
-    destroy
-  );
-};
+exports.experimental_useResourceEffect = experimental_useResourceEffect;
 exports.forwardRef = function (render) {
   return { $$typeof: REACT_FORWARD_REF_TYPE, render: render };
 };
@@ -598,4 +596,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.0.0-native-fb-aba370f1-20241122";
+exports.version = "19.0.0-native-fb-e3b7ef32-20241122";
