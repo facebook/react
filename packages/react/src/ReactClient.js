@@ -65,6 +65,7 @@ import {startTransition} from './ReactStartTransition';
 import {act} from './ReactAct';
 import {captureOwnerStack} from './ReactOwnerStack';
 import ReactCompilerRuntime from './ReactCompilerRuntime';
+import {enableUseResourceEffectHook} from 'shared/ReactFeatureFlags';
 
 const Children = {
   map,
@@ -90,7 +91,6 @@ export {
   useContext,
   useEffect,
   useEffectEvent as experimental_useEffectEvent,
-  useResourceEffect as experimental_useResourceEffect,
   useImperativeHandle,
   useDebugValue,
   useInsertionEffect,
@@ -131,3 +131,6 @@ export {
   act, // DEV-only
   captureOwnerStack, // DEV-only
 };
+
+export const experimental_useResourceEffect: typeof useResourceEffect | void =
+  enableUseResourceEffectHook ? useResourceEffect : undefined;
