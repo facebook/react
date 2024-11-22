@@ -12,7 +12,6 @@
 import {
   insertNodesAndExecuteScripts,
   mergeOptions,
-  withLoadingReadyState,
 } from '../test-utils/FizzTestUtils';
 
 let JSDOM;
@@ -126,117 +125,111 @@ describe('ReactDOMFloat', () => {
       return;
     }
 
-    await withLoadingReadyState(async () => {
-      const bodyMatch = bufferedContent.match(bodyStartMatch);
-      const headMatch = bufferedContent.match(headStartMatch);
+    const bodyMatch = bufferedContent.match(bodyStartMatch);
+    const headMatch = bufferedContent.match(headStartMatch);
 
-      if (streamingContainer === null) {
-        // This is the first streamed content. We decide here where to insert it. If we get <html>, <head>, or <body>
-        // we abandon the pre-built document and start from scratch. If we get anything else we assume it goes into the
-        // container. This is not really production behavior because you can't correctly stream into a deep div effectively
-        // but it's pragmatic for tests.
+    if (streamingContainer === null) {
+      // This is the first streamed content. We decide here where to insert it. If we get <html>, <head>, or <body>
+      // we abandon the pre-built document and start from scratch. If we get anything else we assume it goes into the
+      // container. This is not really production behavior because you can't correctly stream into a deep div effectively
+      // but it's pragmatic for tests.
 
-        if (
-          bufferedContent.startsWith('<head>') ||
-          bufferedContent.startsWith('<head ') ||
-          bufferedContent.startsWith('<body>') ||
-          bufferedContent.startsWith('<body ')
-        ) {
-          // wrap in doctype to normalize the parsing process
-          bufferedContent = '<!DOCTYPE html><html>' + bufferedContent;
-        } else if (
-          bufferedContent.startsWith('<html>') ||
-          bufferedContent.startsWith('<html ')
-        ) {
-          throw new Error(
-            'Recieved <html> without a <!DOCTYPE html> which is almost certainly a bug in React',
-          );
-        }
+      if (
+        bufferedContent.startsWith('<head>') ||
+        bufferedContent.startsWith('<head ') ||
+        bufferedContent.startsWith('<body>') ||
+        bufferedContent.startsWith('<body ')
+      ) {
+        // wrap in doctype to normalize the parsing process
+        bufferedContent = '<!DOCTYPE html><html>' + bufferedContent;
+      } else if (
+        bufferedContent.startsWith('<html>') ||
+        bufferedContent.startsWith('<html ')
+      ) {
+        throw new Error(
+          'Recieved <html> without a <!DOCTYPE html> which is almost certainly a bug in React',
+        );
+      }
 
-        if (bufferedContent.startsWith('<!DOCTYPE html>')) {
-          // we can just use the whole document
-          const tempDom = new JSDOM(bufferedContent);
-
-          // Wipe existing head and body content
-          document.head.innerHTML = '';
-          document.body.innerHTML = '';
-
-          // Copy the <html> attributes over
-          const tempHtmlNode = tempDom.window.document.documentElement;
-          for (let i = 0; i < tempHtmlNode.attributes.length; i++) {
-            const attr = tempHtmlNode.attributes[i];
-            document.documentElement.setAttribute(attr.name, attr.value);
-          }
-
-          if (headMatch) {
-            // We parsed a head open tag. we need to copy head attributes and insert future
-            // content into <head>
-            streamingContainer = document.head;
-            const tempHeadNode = tempDom.window.document.head;
-            for (let i = 0; i < tempHeadNode.attributes.length; i++) {
-              const attr = tempHeadNode.attributes[i];
-              document.head.setAttribute(attr.name, attr.value);
-            }
-            const source = document.createElement('head');
-            source.innerHTML = tempHeadNode.innerHTML;
-            await insertNodesAndExecuteScripts(source, document.head, CSPnonce);
-          }
-
-          if (bodyMatch) {
-            // We parsed a body open tag. we need to copy head attributes and insert future
-            // content into <body>
-            streamingContainer = document.body;
-            const tempBodyNode = tempDom.window.document.body;
-            for (let i = 0; i < tempBodyNode.attributes.length; i++) {
-              const attr = tempBodyNode.attributes[i];
-              document.body.setAttribute(attr.name, attr.value);
-            }
-            const source = document.createElement('body');
-            source.innerHTML = tempBodyNode.innerHTML;
-            await insertNodesAndExecuteScripts(source, document.body, CSPnonce);
-          }
-
-          if (!headMatch && !bodyMatch) {
-            throw new Error('expected <head> or <body> after <html>');
-          }
-        } else {
-          // we assume we are streaming into the default container'
-          streamingContainer = container;
-          const div = document.createElement('div');
-          div.innerHTML = bufferedContent;
-          await insertNodesAndExecuteScripts(div, container, CSPnonce);
-        }
-      } else if (streamingContainer === document.head) {
-        bufferedContent = '<!DOCTYPE html><html><head>' + bufferedContent;
+      if (bufferedContent.startsWith('<!DOCTYPE html>')) {
+        // we can just use the whole document
         const tempDom = new JSDOM(bufferedContent);
 
-        const tempHeadNode = tempDom.window.document.head;
-        const source = document.createElement('head');
-        source.innerHTML = tempHeadNode.innerHTML;
-        await insertNodesAndExecuteScripts(source, document.head, CSPnonce);
+        // Wipe existing head and body content
+        document.head.innerHTML = '';
+        document.body.innerHTML = '';
+
+        // Copy the <html> attributes over
+        const tempHtmlNode = tempDom.window.document.documentElement;
+        for (let i = 0; i < tempHtmlNode.attributes.length; i++) {
+          const attr = tempHtmlNode.attributes[i];
+          document.documentElement.setAttribute(attr.name, attr.value);
+        }
+
+        if (headMatch) {
+          // We parsed a head open tag. we need to copy head attributes and insert future
+          // content into <head>
+          streamingContainer = document.head;
+          const tempHeadNode = tempDom.window.document.head;
+          for (let i = 0; i < tempHeadNode.attributes.length; i++) {
+            const attr = tempHeadNode.attributes[i];
+            document.head.setAttribute(attr.name, attr.value);
+          }
+          const source = document.createElement('head');
+          source.innerHTML = tempHeadNode.innerHTML;
+          await insertNodesAndExecuteScripts(source, document.head, CSPnonce);
+        }
 
         if (bodyMatch) {
+          // We parsed a body open tag. we need to copy head attributes and insert future
+          // content into <body>
           streamingContainer = document.body;
-
           const tempBodyNode = tempDom.window.document.body;
           for (let i = 0; i < tempBodyNode.attributes.length; i++) {
             const attr = tempBodyNode.attributes[i];
             document.body.setAttribute(attr.name, attr.value);
           }
-          const bodySource = document.createElement('body');
-          bodySource.innerHTML = tempBodyNode.innerHTML;
-          await insertNodesAndExecuteScripts(
-            bodySource,
-            document.body,
-            CSPnonce,
-          );
+          const source = document.createElement('body');
+          source.innerHTML = tempBodyNode.innerHTML;
+          await insertNodesAndExecuteScripts(source, document.body, CSPnonce);
+        }
+
+        if (!headMatch && !bodyMatch) {
+          throw new Error('expected <head> or <body> after <html>');
         }
       } else {
+        // we assume we are streaming into the default container'
+        streamingContainer = container;
         const div = document.createElement('div');
         div.innerHTML = bufferedContent;
-        await insertNodesAndExecuteScripts(div, streamingContainer, CSPnonce);
+        await insertNodesAndExecuteScripts(div, container, CSPnonce);
       }
-    }, document);
+    } else if (streamingContainer === document.head) {
+      bufferedContent = '<!DOCTYPE html><html><head>' + bufferedContent;
+      const tempDom = new JSDOM(bufferedContent);
+
+      const tempHeadNode = tempDom.window.document.head;
+      const source = document.createElement('head');
+      source.innerHTML = tempHeadNode.innerHTML;
+      await insertNodesAndExecuteScripts(source, document.head, CSPnonce);
+
+      if (bodyMatch) {
+        streamingContainer = document.body;
+
+        const tempBodyNode = tempDom.window.document.body;
+        for (let i = 0; i < tempBodyNode.attributes.length; i++) {
+          const attr = tempBodyNode.attributes[i];
+          document.body.setAttribute(attr.name, attr.value);
+        }
+        const bodySource = document.createElement('body');
+        bodySource.innerHTML = tempBodyNode.innerHTML;
+        await insertNodesAndExecuteScripts(bodySource, document.body, CSPnonce);
+      }
+    } else {
+      const div = document.createElement('div');
+      div.innerHTML = bufferedContent;
+      await insertNodesAndExecuteScripts(div, streamingContainer, CSPnonce);
+    }
   }
 
   function getMeaningfulChildren(element) {
