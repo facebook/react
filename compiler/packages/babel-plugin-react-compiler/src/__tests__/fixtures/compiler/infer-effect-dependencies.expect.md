@@ -3,6 +3,8 @@
 
 ```javascript
 // @inferEffectDependencies
+import {useEffect, useRef} from 'react';
+
 const moduleNonReactive = 0;
 
 function Component({foo, bar}) {
@@ -45,6 +47,8 @@ function Component({foo, bar}) {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @inferEffectDependencies
+import { useEffect, useRef } from "react";
+
 const moduleNonReactive = 0;
 
 function Component(t0) {
