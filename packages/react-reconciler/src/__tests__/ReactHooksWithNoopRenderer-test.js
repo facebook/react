@@ -3276,6 +3276,11 @@ describe('ReactHooksWithNoopRenderer', () => {
       }
     }
 
+    // @gate !enableUseResourceEffectHook
+    it('is null when flag is disabled', async () => {
+      expect(useResourceEffect).toBe(null);
+    });
+
     // @gate enableUseResourceEffectHook
     it('validates create return value', async () => {
       function App({id}) {
