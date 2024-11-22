@@ -234,6 +234,19 @@ const EnvironmentConfigSchema = z.object({
   enableFunctionDependencyRewrite: z.boolean().default(true),
 
   /**
+   * Enables inference of optional dependency chains. Without this flag
+   * a property chain such as `props?.items?.foo` will infer as a dep on
+   * just `props`. With this flag enabled, we'll infer that full path as
+   * the dependency.
+   */
+  enableOptionalDependencies: z.boolean().default(true),
+
+  /**
+   * Enables inference and auto-insertion of effect dependencies. Still experimental.
+   */
+  inferEffectDependencies: z.boolean().default(false),
+
+  /**
    * Enables inlining ReactElement object literals in place of JSX
    * An alternative to the standard JSX transform which replaces JSX with React's jsxProd() runtime
    * Currently a prod-only optimization, requiring Fast JSX dependencies

@@ -82,6 +82,8 @@ import {
   logYieldTime,
   logActionYieldTime,
   logSuspendedYieldTime,
+  setCurrentTrackFromLanes,
+  markAllLanesInOrder,
 } from './ReactFiberPerformanceTrack';
 
 import {
@@ -265,13 +267,12 @@ import {
   startProfilerTimer,
   stopProfilerTimerIfRunningAndRecordDuration,
   stopProfilerTimerIfRunningAndRecordIncompleteDuration,
-  markUpdateAsRepeat,
   trackSuspendedTime,
   startYieldTimer,
   yieldStartTime,
   yieldReason,
+  startPingTimerByLanes,
 } from './ReactProfilerTimer';
-import {setCurrentTrackFromLanes} from './ReactFiberPerformanceTrack';
 
 // DEV stuff
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
@@ -927,6 +928,7 @@ export function performWorkOnRoot(
       // We've returned from yielding to the event loop. Let's log the time it took.
       const yieldEndTime = now();
       switch (yieldReason) {
+        case SuspendedOnImmediate:
         case SuspendedOnData:
           logSuspendedYieldTime(yieldStartTime, yieldEndTime, yieldedFiber);
           break;
@@ -1009,7 +1011,6 @@ export function performWorkOnRoot(
           setCurrentTrackFromLanes(lanes);
           logInconsistentRender(renderStartTime, renderEndTime);
           finalizeRender(lanes, renderEndTime);
-          markUpdateAsRepeat(lanes);
         }
         // A store was mutated in an interleaved event. Render again,
         // synchronously, to block further mutations.
@@ -1036,7 +1037,6 @@ export function performWorkOnRoot(
             setCurrentTrackFromLanes(lanes);
             logErroredRenderPhase(renderStartTime, renderEndTime);
             finalizeRender(lanes, renderEndTime);
-            markUpdateAsRepeat(lanes);
           }
           lanes = errorRetryLanes;
           exitStatus = recoverFromConcurrentError(
@@ -1728,6 +1728,15 @@ function finalizeRender(lanes: Lanes, finalizationTime: number): void {
 
 function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // The order of tracks within a group are determined by the earliest start time.
+    // Are tracks should show up in priority order and we should ideally always show
+    // every track. This is a hack to ensure that we're displaying all tracks in the
+    // right order. Ideally we could do this only once but because calls that aren't
+    // recorded aren't considered for ordering purposes, we need to keep adding these
+    // over and over again in case recording has just started. We can't tell when
+    // recording starts.
+    markAllLanesInOrder();
+
     const previousRenderStartTime = renderStartTime;
     // Starting a new render. Log the end of any previous renders and the
     // blocked time before the render started.
@@ -1740,7 +1749,18 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
       previousRenderStartTime > 0
     ) {
       setCurrentTrackFromLanes(workInProgressRootRenderLanes);
-      logInterruptedRenderPhase(previousRenderStartTime, renderStartTime);
+      if (
+        workInProgressRootExitStatus === RootSuspended ||
+        workInProgressRootExitStatus === RootSuspendedWithDelay
+      ) {
+        // If the root was already suspended when it got interrupted and restarted,
+        // then this is considered a prewarm and not an interrupted render because
+        // we couldn't have shown anything anyway so it's not a bad thing that we
+        // got interrupted.
+        logSuspendedRenderPhase(previousRenderStartTime, renderStartTime);
+      } else {
+        logInterruptedRenderPhase(previousRenderStartTime, renderStartTime);
+      }
       finalizeRender(workInProgressRootRenderLanes, renderStartTime);
     }
 
@@ -3951,6 +3971,10 @@ function pingSuspendedRoot(
   }
 
   markRootPinged(root, pingedLanes);
+
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    startPingTimerByLanes(pingedLanes);
+  }
 
   warnIfSuspenseResolutionNotWrappedWithActDEV(root);
 
