@@ -1,4 +1,6 @@
 // @inferEffectDependencies
+import {useEffect, useRef} from 'react';
+
 const moduleNonReactive = 0;
 
 function Component({foo, bar}) {
