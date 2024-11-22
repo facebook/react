@@ -8,7 +8,6 @@ import {
   HIRFunction,
   IdentifierId,
   Instruction,
-  isUseEffectHookType,
   makeInstructionId,
   TInstruction,
   InstructionId,
@@ -23,20 +22,33 @@ import {
   markInstructionIds,
 } from '../HIR/HIRBuilder';
 import {eachInstructionOperand, eachTerminalOperand} from '../HIR/visitors';
+import {getOrInsertWith} from '../Utils/utils';
 
 /**
  * Infers reactive dependencies captured by useEffect lambdas and adds them as
  * a second argument to the useEffect call if no dependency array is provided.
  */
-export function inferEffectDependencies(
-  env: Environment,
-  fn: HIRFunction,
-): void {
+export function inferEffectDependencies(fn: HIRFunction): void {
   let hasRewrite = false;
   const fnExpressions = new Map<
     IdentifierId,
     TInstruction<FunctionExpression>
   >();
+
+  const autodepFnConfigs = new Map<string, Map<string, number>>();
+  for (const effectTarget of fn.env.config.inferEffectDependencies!) {
+    const moduleTargets = getOrInsertWith(
+      autodepFnConfigs,
+      effectTarget.function.source,
+      () => new Map<string, number>(),
+    );
+    moduleTargets.set(
+      effectTarget.function.importSpecifierName,
+      effectTarget.numRequiredArgs,
+    );
+  }
+  const autodepFnLoads = new Map<IdentifierId, number>();
+
   const scopeInfos = new Map<
     ScopeId,
     {pruned: boolean; deps: ReactiveScopeDependencies; hasSingleInstr: boolean}
@@ -75,14 +87,22 @@ export function inferEffectDependencies(
           instr as TInstruction<FunctionExpression>,
         );
       } else if (
+        value.kind === 'LoadGlobal' &&
+        value.binding.kind === 'ImportSpecifier'
+      ) {
+        const moduleTargets = autodepFnConfigs.get(value.binding.module);
+        if (moduleTargets != null) {
+          const numRequiredArgs = moduleTargets.get(value.binding.imported);
+          if (numRequiredArgs != null) {
+            autodepFnLoads.set(lvalue.identifier.id, numRequiredArgs);
+          }
+        }
+      } else if (
         /*
-         * This check is not final. Right now we only look for useEffects without a dependency array.
-         * This is likely not how we will ship this feature, but it is good enough for us to make progress
-         * on the implementation and test it.
+         * TODO: Handle method calls
          */
         value.kind === 'CallExpression' &&
-        isUseEffectHookType(value.callee.identifier) &&
-        value.args.length === 1 &&
+        autodepFnLoads.get(value.callee.identifier.id) === value.args.length &&
         value.args[0].kind === 'Identifier'
       ) {
         const fnExpr = fnExpressions.get(value.args[0].identifier.id);
@@ -132,7 +152,7 @@ export function inferEffectDependencies(
             loc: GeneratedSource,
           };
 
-          const depsPlace = createTemporaryPlace(env, GeneratedSource);
+          const depsPlace = createTemporaryPlace(fn.env, GeneratedSource);
           depsPlace.effect = Effect.Read;
 
           newInstructions.push({
@@ -142,8 +162,8 @@ export function inferEffectDependencies(
             value: deps,
           });
 
-          // Step 2: insert the deps array as an argument of the useEffect
-          value.args[1] = {...depsPlace, effect: Effect.Freeze};
+          // Step 2: push the inferred deps array as an argument of the useEffect
+          value.args.push({...depsPlace, effect: Effect.Freeze});
           rewriteInstrs.set(instr.id, newInstructions);
         }
       }

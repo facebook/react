@@ -242,9 +242,40 @@ const EnvironmentConfigSchema = z.object({
   enableOptionalDependencies: z.boolean().default(true),
 
   /**
-   * Enables inference and auto-insertion of effect dependencies. Still experimental.
+   * Enables inference and auto-insertion of effect dependencies. Takes in an array of
+   * configurable module and import pairs to allow for user-land experimentation. For example,
+   * [
+   *   {
+   *     module: 'react',
+   *     imported: 'useEffect',
+   *     numRequiredArgs: 1,
+   *   },{
+   *     module: 'MyExperimentalEffectHooks',
+   *     imported: 'useExperimentalEffect',
+   *     numRequiredArgs: 2,
+   *   },
+   * ]
+   * would insert dependencies for calls of `useEffect` imported from `react` and calls of
+   * useExperimentalEffect` from `MyExperimentalEffectHooks`.
+   *
+   * `numRequiredArgs` tells the compiler the amount of arguments required to append a dependency
+   *  array to the end of the call. With the configuration above, we'd insert dependencies for
+   *  `useEffect` if it is only given a single argument and it would be appended to the argument list.
+   *
+   * numRequiredArgs must always be greater than 0, otherwise there is no function to analyze for dependencies
+   *
+   * Still experimental.
    */
-  inferEffectDependencies: z.boolean().default(false),
+  inferEffectDependencies: z
+    .nullable(
+      z.array(
+        z.object({
+          function: ExternalFunctionSchema,
+          numRequiredArgs: z.number(),
+        }),
+      ),
+    )
+    .default(null),
 
   /**
    * Enables inlining ReactElement object literals in place of JSX
@@ -614,6 +645,22 @@ const testComplexConfigDefaults: PartialEnvironmentConfig = {
     source: 'react-compiler-runtime',
     importSpecifierName: 'useContext_withSelector',
   },
+  inferEffectDependencies: [
+    {
+      function: {
+        source: 'react',
+        importSpecifierName: 'useEffect',
+      },
+      numRequiredArgs: 1,
+    },
+    {
+      function: {
+        source: 'shared-runtime',
+        importSpecifierName: 'useSpecialEffect',
+      },
+      numRequiredArgs: 2,
+    },
+  ],
 };
 
 /**

@@ -174,11 +174,6 @@ function makePluginOptions(
       .filter(s => s.length > 0);
   }
 
-  let inferEffectDependencies = false;
-  if (firstLine.includes('@inferEffectDependencies')) {
-    inferEffectDependencies = true;
-  }
-
   let logs: Array<{filename: string | null; event: LoggerEvent}> = [];
   let logger: Logger | null = null;
   if (firstLine.includes('@logger')) {
@@ -202,7 +197,6 @@ function makePluginOptions(
       hookPattern,
       validatePreserveExistingMemoizationGuarantees,
       validateBlocklistedImports,
-      inferEffectDependencies,
     },
     compilationMode,
     logger,
