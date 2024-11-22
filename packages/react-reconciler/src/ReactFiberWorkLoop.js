@@ -82,6 +82,8 @@ import {
   logYieldTime,
   logActionYieldTime,
   logSuspendedYieldTime,
+  setCurrentTrackFromLanes,
+  markAllLanesInOrder,
 } from './ReactFiberPerformanceTrack';
 
 import {
@@ -271,7 +273,6 @@ import {
   yieldReason,
   startPingTimerByLanes,
 } from './ReactProfilerTimer';
-import {setCurrentTrackFromLanes} from './ReactFiberPerformanceTrack';
 
 // DEV stuff
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
@@ -1727,6 +1728,15 @@ function finalizeRender(lanes: Lanes, finalizationTime: number): void {
 
 function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // The order of tracks within a group are determined by the earliest start time.
+    // Are tracks should show up in priority order and we should ideally always show
+    // every track. This is a hack to ensure that we're displaying all tracks in the
+    // right order. Ideally we could do this only once but because calls that aren't
+    // recorded aren't considered for ordering purposes, we need to keep adding these
+    // over and over again in case recording has just started. We can't tell when
+    // recording starts.
+    markAllLanesInOrder();
+
     const previousRenderStartTime = renderStartTime;
     // Starting a new render. Log the end of any previous renders and the
     // blocked time before the render started.
