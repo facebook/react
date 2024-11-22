@@ -25,7 +25,6 @@ const COMPONENTS_TRACK = 'Components ⚛';
 
 // Reused to avoid thrashing the GC.
 const reusableComponentDevToolDetails = {
-  dataType: 'track-entry',
   color: 'primary',
   track: COMPONENTS_TRACK,
 };
@@ -40,7 +39,6 @@ const reusableComponentOptions = {
 const LANES_TRACK_GROUP = 'Scheduler ⚛';
 
 const reusableLaneDevToolDetails = {
-  dataType: 'track-entry',
   color: 'primary',
   track: 'Blocking', // Lane
   trackGroup: LANES_TRACK_GROUP,
@@ -55,6 +53,63 @@ const reusableLaneOptions = {
 
 export function setCurrentTrackFromLanes(lanes: number): void {
   reusableLaneDevToolDetails.track = getGroupNameOfHighestPriorityLane(lanes);
+}
+
+const blockingLaneMarker = {
+  startTime: 0,
+  detail: {
+    devtools: {
+      color: 'primary-light',
+      track: 'Blocking',
+      trackGroup: LANES_TRACK_GROUP,
+    },
+  },
+};
+
+const transitionLaneMarker = {
+  startTime: 0,
+  detail: {
+    devtools: {
+      color: 'primary-light',
+      track: 'Transition',
+      trackGroup: LANES_TRACK_GROUP,
+    },
+  },
+};
+
+const suspenseLaneMarker = {
+  startTime: 0,
+  detail: {
+    devtools: {
+      color: 'primary-light',
+      track: 'Suspense',
+      trackGroup: LANES_TRACK_GROUP,
+    },
+  },
+};
+
+const idleLaneMarker = {
+  startTime: 0,
+  detail: {
+    devtools: {
+      color: 'primary-light',
+      track: 'Idle',
+      trackGroup: LANES_TRACK_GROUP,
+    },
+  },
+};
+
+export function markAllLanesInOrder() {
+  if (supportsUserTiming) {
+    // Ensure we create all tracks in priority order. Currently performance.mark() are in
+    // first insertion order but performance.measure() are in the reverse order. We can
+    // always add the 0 time slot even if it's in the past. That's still considered for
+    // ordering.
+    performance.mark('Blocking Track', blockingLaneMarker);
+    performance.mark('Transition Track', transitionLaneMarker);
+    performance.mark('Suspense Track', suspenseLaneMarker);
+    performance.mark('Idle Track', idleLaneMarker);
+  }
 }
 
 export function logComponentRender(
