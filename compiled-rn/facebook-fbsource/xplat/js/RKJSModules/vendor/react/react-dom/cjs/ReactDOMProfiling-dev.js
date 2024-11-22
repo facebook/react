@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f5d26777932583272414736718d386d4>>
+ * @generated SignedSource<<fdb540f0caca4805185f18de2b75187e>>
  */
 
 /*
@@ -11882,7 +11882,13 @@ __DEV__ &&
       var tag = node.tag;
       if (5 === tag || 6 === tag)
         (node = node.stateNode),
-          before ? parent.insertBefore(node, before) : parent.appendChild(node);
+          before
+            ? supportsMoveBefore
+              ? parent.moveBefore(node, before)
+              : parent.insertBefore(node, before)
+            : supportsMoveBefore
+              ? parent.moveBefore(node, null)
+              : parent.appendChild(node);
       else if (4 !== tag && 27 !== tag && ((node = node.child), null !== node))
         for (
           insertOrAppendPlacementNode(node, before, parent),
@@ -25400,6 +25406,9 @@ __DEV__ &&
                   .catch(handleErrorInNextTick);
               }
             : scheduleTimeout,
+      supportsMoveBefore =
+        "undefined" !== typeof window &&
+        "function" === typeof window.Node.prototype.moveBefore,
       NotLoaded = 0,
       Loaded = 1,
       Errored = 2,
@@ -25820,11 +25829,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.0.0-native-fb-c11c9510-20241120" !== isomorphicReactPackageVersion)
+      if ("19.0.0-native-fb-aba370f1-20241122" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.0.0-native-fb-c11c9510-20241120\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.0.0-native-fb-aba370f1-20241122\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -25861,11 +25870,11 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.0.0-native-fb-c11c9510-20241120",
+          version: "19.0.0-native-fb-aba370f1-20241122",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
           findFiberByHostInstance: getClosestInstanceFromNode,
-          reconcilerVersion: "19.0.0-native-fb-c11c9510-20241120"
+          reconcilerVersion: "19.0.0-native-fb-aba370f1-20241122"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -26325,7 +26334,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.0.0-native-fb-c11c9510-20241120";
+    exports.version = "19.0.0-native-fb-aba370f1-20241122";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
