@@ -174,9 +174,20 @@ function makePluginOptions(
       .filter(s => s.length > 0);
   }
 
-  let inferEffectDependencies = false;
+  let inferEffectDependencies = null;
   if (firstLine.includes('@inferEffectDependencies')) {
-    inferEffectDependencies = true;
+    inferEffectDependencies = [
+      {
+        module: 'react',
+        imported: 'useEffect',
+        numRequiredArgs: 1,
+      },
+      {
+        module: 'react',
+        imported: 'useSpecialEffect',
+        numRequiredArgs: 2,
+      },
+    ];
   }
 
   let logs: Array<{filename: string | null; event: LoggerEvent}> = [];
