@@ -229,16 +229,13 @@ export function useEffectEvent<Args, F: (...Array<Args>) => mixed>(
   return dispatcher.useEffectEvent(callback);
 }
 
-export function useResourceEffect(
+function experimental_useResourceEffect(
   create: () => mixed,
   createDeps: Array<mixed> | void | null,
   update: ((resource: mixed) => void) | void,
   updateDeps: Array<mixed> | void | null,
   destroy: ((resource: mixed) => void) | void,
 ): void {
-  if (!enableUseResourceEffectHook) {
-    throw new Error('Not implemented.');
-  }
   const dispatcher = resolveDispatcher();
   // $FlowFixMe[not-a-function] This is unstable, thus optional
   return dispatcher.useResourceEffect(
@@ -249,6 +246,8 @@ export function useResourceEffect(
     destroy,
   );
 }
+export const useResourceEffect: typeof experimental_useResourceEffect | null =
+  enableUseResourceEffectHook ? experimental_useResourceEffect : null;
 
 export function useOptimistic<S, A>(
   passthrough: S,
