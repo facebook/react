@@ -229,7 +229,7 @@ export function useEffectEvent<Args, F: (...Array<Args>) => mixed>(
   return dispatcher.useEffectEvent(callback);
 }
 
-export function useResourceEffect(
+function useResourceEffect_(
   create: () => mixed,
   createDeps: Array<mixed> | void | null,
   update: ((resource: mixed) => void) | void,
@@ -249,6 +249,9 @@ export function useResourceEffect(
     destroy,
   );
 }
+
+export const useResourceEffect: typeof useResourceEffect_ | null =
+  enableUseResourceEffectHook ? useResourceEffect_ : null;
 
 export function useOptimistic<S, A>(
   passthrough: S,
