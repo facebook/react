@@ -759,6 +759,12 @@ export function commitTextUpdate(
   textInstance.nodeValue = newText;
 }
 
+const supportsMoveBefore =
+  // $FlowFixMe[prop-missing]: We're doing the feature detection here.
+  enableMoveBefore &&
+  typeof window !== 'undefined' &&
+  typeof window.Node.prototype.moveBefore === 'function';
+
 export function appendChild(
   parentInstance: Instance,
   child: Instance | TextInstance,
@@ -800,10 +806,6 @@ export function appendChildToContainer(
     trapClickOnNonInteractiveElement(((parentNode: any): HTMLElement));
   }
 }
-
-const supportsMoveBefore =
-  // $FlowFixMe[prop-missing]: We're doing the feature detection here.
-  enableMoveBefore && typeof Node.prototype.moveBefore === 'function';
 
 export function insertBefore(
   parentInstance: Instance,
