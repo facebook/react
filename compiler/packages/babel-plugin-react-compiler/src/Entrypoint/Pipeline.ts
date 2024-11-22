@@ -356,7 +356,7 @@ function* runWithEnvironment(
   });
 
   if (env.config.inferEffectDependencies) {
-    inferEffectDependencies(env, hir);
+    inferEffectDependencies(hir);
   }
 
   if (env.config.inlineJsxTransform) {
