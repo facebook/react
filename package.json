@@ -18,7 +18,7 @@
     "@babel/plugin-syntax-typescript": "^7.14.5",
     "@babel/plugin-transform-arrow-functions": "^7.10.4",
     "@babel/plugin-transform-block-scoped-functions": "^7.25.9",
-    "@babel/plugin-transform-block-scoping": "^7.11.1",
+    "@babel/plugin-transform-block-scoping": "^7.25.9",
     "@babel/plugin-transform-classes": "^7.10.4",
     "@babel/plugin-transform-computed-properties": "^7.10.4",
     "@babel/plugin-transform-destructuring": "^7.10.4",
