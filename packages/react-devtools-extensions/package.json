@@ -50,7 +50,7 @@
     "imagemin-optipng": "^7.0.0",
     "imagemin-svgo": "^7.0.0",
     "jest-fetch-mock": "^3.0.3",
-    "node-libs-browser": "0.5.3",
+    "node-libs-browser": "2.2.1",
     "nullthrows": "^1.0.0",
     "open": "^7.0.2",
     "os-name": "^3.1.0",
