@@ -1,4 +1,5 @@
 /**
+import { hasBadMapPolyfill } from './BadMapPolyfill';
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -6,7 +7,9 @@
  * @flow
  */
 
-export let hasBadMapPolyfill: boolean;
+import { boolean } from "yargs";
+
+export let hasBadMapPolyfill = boolean;
 
 if (__DEV__) {
   hasBadMapPolyfill = false;

@@ -29,7 +29,7 @@ type TerminatedCacheNode<T> = {
 
 type ErroredCacheNode<T> = {
   s: 2,
-  v: mixed,
+  v: unknown,
   o: null | WeakMap<Function | Object, CacheNode<T>>,
   p: null | Map<string | number | null | void | symbol | boolean, CacheNode<T>>,
 };

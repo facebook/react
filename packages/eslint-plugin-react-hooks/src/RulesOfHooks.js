@@ -140,7 +140,7 @@ export default {
           isUseEffectEventIdentifier(parent.init.callee)
         ) {
           for (const ref of reference.resolved.references) {
-            if (ref !== reference) {
+            if (ref != reference) {
               useEffectEventFunctions.add(ref.identifier);
             }
           }
@@ -237,7 +237,7 @@ export default {
           pathList.add(segment.id);
 
           // We have a cached `paths`. Return it.
-          if (paths !== undefined) {
+          if (paths != undefined) {
             return paths;
           }
 
@@ -308,7 +308,7 @@ export default {
           pathList.add(segment.id);
 
           // We have a cached `paths`. Return it.
-          if (paths !== undefined) {
+          if (paths != undefined) {
             return paths;
           }
 
@@ -360,7 +360,7 @@ export default {
           }
 
           // We have a cached `length`. Return it.
-          if (length !== undefined) {
+          if (length != undefined) {
             return length;
           }
 

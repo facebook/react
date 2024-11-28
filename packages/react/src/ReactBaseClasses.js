@@ -55,8 +55,8 @@ Component.prototype.isReactComponent = {};
  */
 Component.prototype.setState = function (partialState, callback) {
   if (
-    typeof partialState !== 'object' &&
-    typeof partialState !== 'function' &&
+    typeof partialState != 'object' &&
+    typeof partialState != 'function' &&
     partialState != null
   ) {
     throw new Error(

@@ -9,6 +9,7 @@
 
 'use strict';
 
+// Declaração das variáveis que serão usadas nos testes
 let React;
 let act;
 let Scheduler;
@@ -16,19 +17,22 @@ let ReactDOMClient;
 let simulateEventDispatch;
 let assertLog;
 
+// Descrição do conjunto de testes para ReactInternalTestUtilsDOM
 describe('ReactInternalTestUtilsDOM', () => {
+  // Configuração inicial antes de cada teste
   beforeEach(() => {
     jest.resetModules();
     act = require('internal-test-utils').act;
-    simulateEventDispatch =
-      require('internal-test-utils').simulateEventDispatch;
+    simulateEventDispatch = require('internal-test-utils').simulateEventDispatch;
     Scheduler = require('scheduler/unstable_mock');
     ReactDOMClient = require('react-dom/client');
     React = require('react');
     assertLog = require('internal-test-utils').assertLog;
   });
 
+  // Descrição do conjunto de testes para simulateEventDispatch
   describe('simulateEventDispatch', () => {
+    // Teste para verificar o agrupamento de eventos de captura discretos
     it('should batch discrete capture events', async () => {
       let childRef;
       function Component() {
@@ -70,8 +74,7 @@ describe('ReactInternalTestUtilsDOM', () => {
         await simulateEventDispatch(childRef, 'click');
       });
 
-      // Capture runs on every event we dispatch,
-      // which means we get two for the parent, and one for the child.
+      // Verifica se os logs estão corretos
       assertLog([
         'onClickCapture parent',
         'onClickCapture child',
@@ -83,6 +86,7 @@ describe('ReactInternalTestUtilsDOM', () => {
       document.body.removeChild(container);
     });
 
+    // Teste para verificar o agrupamento de eventos de captura contínuos
     it('should batch continuous capture events', async () => {
       let childRef;
       function Component() {
@@ -124,6 +128,7 @@ describe('ReactInternalTestUtilsDOM', () => {
         await simulateEventDispatch(childRef, 'mouseout');
       });
 
+      // Verifica se os logs estão corretos
       assertLog([
         'onMouseOutCapture parent',
         'onMouseOutCapture child',
@@ -133,6 +138,7 @@ describe('ReactInternalTestUtilsDOM', () => {
       ]);
     });
 
+    // Teste para verificar o agrupamento de eventos de propagação discreta
     it('should batch bubbling discrete events', async () => {
       let childRef;
       function Component() {
@@ -174,6 +180,7 @@ describe('ReactInternalTestUtilsDOM', () => {
         await simulateEventDispatch(childRef, 'click');
       });
 
+      // Verifica se os logs estão corretos
       assertLog([
         'onClick child',
         'onClick parent',
@@ -183,6 +190,7 @@ describe('ReactInternalTestUtilsDOM', () => {
       ]);
     });
 
+    // Teste para verificar o agrupamento de eventos de propagação contínua
     it('should batch bubbling continuous events', async () => {
       let childRef;
       function Component() {
@@ -224,6 +232,7 @@ describe('ReactInternalTestUtilsDOM', () => {
         await simulateEventDispatch(childRef, 'mouseout');
       });
 
+      // Verifica se os logs estão corretos
       assertLog([
         'onMouseOut child',
         'onMouseOut parent',
@@ -233,6 +242,7 @@ describe('ReactInternalTestUtilsDOM', () => {
       ]);
     });
 
+    // Teste para verificar que eventos discretos não são agrupados entre manipuladores
     it('does not batch discrete events between handlers', async () => {
       let childRef = React.createRef();
       function Component() {
@@ -286,6 +296,7 @@ describe('ReactInternalTestUtilsDOM', () => {
         await simulateEventDispatch(childRef.current, 'click');
       });
 
+      // Verifica se os logs estão corretos
       assertLog([
         'Click child',
         'Child microtask',
@@ -296,6 +307,7 @@ describe('ReactInternalTestUtilsDOM', () => {
       ]);
     });
 
+    // Teste para verificar o agrupamento de eventos contínuos entre manipuladores
     it('should batch continuous events between handlers', async () => {
       let childRef = React.createRef();
       function Component() {
@@ -351,6 +363,7 @@ describe('ReactInternalTestUtilsDOM', () => {
         await simulateEventDispatch(childRef.current, 'mouseout');
       });
 
+      // Verifica se os logs estão corretos
       assertLog([
         'Mouseout child',
         'Child microtask',
@@ -360,6 +373,7 @@ describe('ReactInternalTestUtilsDOM', () => {
       ]);
     });
 
+    // Teste para verificar o agrupamento de eventos discretos entre manipuladores de diferentes raízes
     it('should flush discrete events between handlers from different roots', async () => {
       const childContainer = document.createElement('div');
       const parentContainer = document.createElement('main');
@@ -408,9 +422,7 @@ describe('ReactInternalTestUtilsDOM', () => {
           await simulateEventDispatch(childNode, 'click');
         });
 
-        // Since discrete events flush in a microtasks, they flush before
-        // the handler for the other root is called, after the microtask
-        // scheduled in the event fires.
+        // Verifica se os logs estão corretos
         assertLog([
           'Child click',
           'Flush Child microtask',
@@ -424,6 +436,7 @@ describe('ReactInternalTestUtilsDOM', () => {
       }
     });
 
+    // Teste para verificar o agrupamento de eventos contínuos entre manipuladores de diferentes raízes
     it('should batch continuous events between handlers from different roots', async () => {
       const childContainer = document.createElement('div');
       const parentContainer = document.createElement('main');
@@ -472,9 +485,7 @@ describe('ReactInternalTestUtilsDOM', () => {
           await simulateEventDispatch(childNode, 'mouseout');
         });
 
-        // Since continuous events flush in a macrotask, they are batched after
-        // with the handler for the other root, but the microtasks scheduled
-        // in the event handlers still fire in between.
+        // Verifica se os logs estão corretos
         assertLog([
           'Child mouseout',
           'Flush Child microtask',
@@ -487,6 +498,7 @@ describe('ReactInternalTestUtilsDOM', () => {
       }
     });
 
+    // Teste para verificar se eventos são disparados em nós removidos durante a distribuição
     it('should fire on nodes removed while dispatching', async () => {
       let childRef;
       function Component() {
@@ -525,9 +537,11 @@ describe('ReactInternalTestUtilsDOM', () => {
         await simulateEventDispatch(childRef, 'click');
       });
 
+      // Verifica se os logs estão corretos
       assertLog(['onMouseOut child', 'onMouseOut parent']);
     });
 
+    // Teste para verificar se eventos não são disparados se o nó não estiver no documento
     it('should not fire if node is not in the document', async () => {
       let childRef;
       function Component() {
@@ -547,7 +561,7 @@ describe('ReactInternalTestUtilsDOM', () => {
         );
       }
 
-      // Do not attach root to document.
+      // Não anexar a raiz ao documento.
       const root = ReactDOMClient.createRoot(document.createElement('div'));
       await act(() => {
         root.render(<Component />);
@@ -559,7 +573,7 @@ describe('ReactInternalTestUtilsDOM', () => {
         await simulateEventDispatch(childRef, 'mouseout');
       });
 
-      // No events flushed, root not in document.
+      // Nenhum evento disparado, raiz não está no documento.
       assertLog([]);
     });
   });

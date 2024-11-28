@@ -17,27 +17,27 @@ const Pending = 0;
 const Resolved = 1;
 const Rejected = 2;
 
-type UninitializedPayload<T> = {
+const UninitializedPayload = {
   _status: -1,
-  _result: () => Thenable<{default: T, ...}>,
+  _result: () => Thenable<{default: any}>
 };
 
-type PendingPayload = {
+const PendingPayload = {
   _status: 0,
   _result: Wakeable,
 };
 
-type ResolvedPayload<T> = {
+const ResolvedPayload = {
   _status: 1,
   _result: {default: T, ...},
 };
 
-type RejectedPayload = {
+const RejectedPayload = {
   _status: 2,
   _result: mixed,
 };
 
-type Payload<T> =
+const Payload = T
   | UninitializedPayload<T>
   | PendingPayload
   | ResolvedPayload<T>

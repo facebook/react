@@ -6,10 +6,10 @@
  * @flow
  */
 
-import type {RefObject} from 'shared/ReactTypes';
+import {RefObject} from 'shared/ReactTypes';
 
 // an immutable object with a single mutable value
-export function createRef(): RefObject {
+export function createRef() {
   const refObject = {
     current: null,
   };

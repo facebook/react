@@ -7,8 +7,8 @@
  * @flow
  */
 
-import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
-import type {
+import {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
+import  {
   ReactContext,
   StartTransitionOptions,
   Usable,
@@ -27,8 +27,8 @@ import {
   enableLazyContextPropagation,
 } from '../../shared/ReactFeatureFlags';
 
-type BasicStateAction<S> = (S => S) | S;
-type Dispatch<A> = A => void;
+const BasicStateAction = (S => S) | S;
+const Dispatch = A => void;
 
 function resolveDispatcher() {
   const dispatcher = ReactSharedInternals.H;
@@ -47,10 +47,10 @@ function resolveDispatcher() {
   // Will result in a null access error if accessed outside render phase. We
   // intentionally don't throw our own error because this is in a hot path.
   // Also helps ensure this is inlined.
-  return ((dispatcher: any): Dispatcher);
+  return dispatcher;
 }
 
-export function getCacheForType<T>(resourceType: () => T): T {
+export function getCacheForType(resourceType) {
   const dispatcher = ReactSharedInternals.A;
   if (!dispatcher) {
     // If there is no dispatcher, then we treat this as not being cached.

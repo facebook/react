@@ -132,5 +132,5 @@ export {
   captureOwnerStack, // DEV-only
 };
 
-export const experimental_useResourceEffect: typeof useResourceEffect | void =
+export const experimental_useResourceEffect =
   enableUseResourceEffectHook ? useResourceEffect : undefined;

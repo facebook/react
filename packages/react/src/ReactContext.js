@@ -13,7 +13,7 @@ import {
   REACT_CONTEXT_TYPE,
 } from 'shared/ReactSymbols';
 
-import type {ReactContext} from 'shared/ReactTypes';
+import {ReactContext} from 'shared/ReactTypes';
 import {enableRenderableContext} from 'shared/ReactFeatureFlags';
 
 export function createContext<T>(defaultValue: T): ReactContext<T> {

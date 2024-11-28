@@ -195,11 +195,11 @@ export default {
           return false;
         }
         // Look for `let stuff = ...`
-        if (def.node.type !== 'VariableDeclarator') {
+        if (def.node.type != 'VariableDeclarator') {
           return false;
         }
         let init = def.node.init;
-        if (init == null) {
+        if (init === null) {
           return false;
         }
         while (init.type === 'TSAsExpression' || init.type === 'AsExpression') {
@@ -208,13 +208,13 @@ export default {
         // Detect primitive constants
         // const foo = 42
         let declaration = def.node.parent;
-        if (declaration == null) {
+        if (declaration === null) {
           // This might happen if variable is declared after the callback.
           // In that case ESLint won't set up .parent refs.
           // So we'll set them up manually.
           fastFindReferenceWithParent(componentScope.block, def.node.id);
           declaration = def.node.parent;
-          if (declaration == null) {
+          if (declaration === null) {
             return false;
           }
         }
@@ -230,7 +230,7 @@ export default {
         }
         // Detect known Hook calls
         // const [_, setState] = useState()
-        if (init.type !== 'CallExpression') {
+        if (init.type != 'CallExpression') {
           return false;
         }
         let callee = init.callee;
@@ -256,7 +256,7 @@ export default {
           id.type === 'Identifier'
         ) {
           for (const ref of resolved.references) {
-            if (ref !== id) {
+            if (ref != id) {
               useEffectEventVariables.add(ref.identifier);
             }
           }
@@ -328,10 +328,10 @@ export default {
           return false;
         }
         const def = resolved.defs[0];
-        if (def == null) {
+        if (def === null) {
           return false;
         }
-        if (def.node == null || def.node.id == null) {
+        if (def.node === null || def.node.id === null) {
           return false;
         }
         // Search the direct component subscopes for
@@ -357,14 +357,14 @@ export default {
             break;
           }
         }
-        if (fnScope == null) {
+        if (fnScope === null) {
           return false;
         }
         // Does this function capture any values
         // that are in pure scopes (aka render)?
         for (i = 0; i < fnScope.through.length; i++) {
           const ref = fnScope.through[i];
-          if (ref.resolved == null) {
+          if (ref.resolved === null) {
             continue;
           }
           if (
@@ -400,7 +400,7 @@ export default {
       function isInsideEffectCleanup(reference) {
         let curScope = reference.from;
         let isInReturnedFunction = false;
-        while (curScope.block !== node) {
+        while (curScope.block != node) {
           if (curScope.type === 'function') {
             isInReturnedFunction =
               curScope.block.parent != null &&
