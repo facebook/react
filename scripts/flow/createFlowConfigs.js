@@ -27,7 +27,7 @@ function findForks(file) {
   const basePath = path.join(file, '..');
   const forksPath = path.join(basePath, 'forks');
   const forks = fs.readdirSync(path.join('packages', forksPath));
-  forks.forEach(f => allForks.add('forks/' + f));
+  forks.sort((a, b) => a.localeCompare(b)).forEach(f => allForks.add('forks/' + f));
   forkedFiles.set(file, basePath);
   return basePath;
 }
@@ -74,12 +74,12 @@ function writeConfig(
     if (otherRenderer === rendererInfo) {
       return;
     }
-    otherRenderer.paths.forEach(otherPath => {
+    for (const otherPath of otherRenderer.paths) {
       if (rendererInfo.paths.indexOf(otherPath) !== -1) {
-        return;
+        continue;
       }
       ignoredPaths.push(`.*/packages/${otherPath}`);
-    });
+    }
   });
 
   const forks = new Map();
