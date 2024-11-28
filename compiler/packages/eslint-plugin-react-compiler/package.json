@@ -13,7 +13,7 @@
   "dependencies": {
     "@babel/core": "^7.24.4",
     "@babel/parser": "^7.24.4",
-    "@babel/plugin-proposal-private-methods": "^7.18.6",
+    "@babel/plugin-transform-private-methods": "^7.25.9",
     "hermes-parser": "^0.25.1",
     "zod": "^3.22.4",
     "zod-validation-error": "^3.0.3"

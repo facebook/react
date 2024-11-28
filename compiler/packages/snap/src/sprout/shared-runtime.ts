@@ -363,6 +363,14 @@ export function useFragment(..._args: Array<any>): object {
   };
 }
 
+export function useSpecialEffect(
+  fn: () => any,
+  _secondArg: any,
+  deps: Array<any>,
+) {
+  React.useEffect(fn, deps);
+}
+
 export function typedArrayPush<T>(array: Array<T>, item: T): void {
   array.push(item);
 }
@@ -370,4 +378,5 @@ export function typedArrayPush<T>(array: Array<T>, item: T): void {
 export function typedLog(...values: Array<any>): void {
   console.log(...values);
 }
+
 export default typedLog;

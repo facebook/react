@@ -30,7 +30,7 @@ import { useReducer } from "react";
 
 function f() {
   const $ = _c(1);
-  const [state, dispatch] = useReducer();
+  const [, dispatch] = useReducer();
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     const onClick = () => {
