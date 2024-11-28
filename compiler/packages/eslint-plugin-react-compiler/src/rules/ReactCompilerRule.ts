@@ -40,6 +40,18 @@ let reportableLevels = DEFAULT_REPORTABLE_LEVELS;
 function isReportableDiagnostic(
   detail: CompilerErrorDetailOptions,
 ): detail is CompilerErrorDetailWithLoc {
+  if (
+    detail.reason ===
+      'Ref values (the `current` property) may not be accessed during render.' &&
+    detail.loc != null &&
+    typeof detail.loc !== 'symbol'
+  ) {
+    const sourceCode = context.getSourceCode();
+    const line = sourceCode.lines[detail.loc.start.line - 1];
+    if (line.includes('useRef') && line.includes('=== null')) {
+      return false;
+    }
+  }
   return (
     reportableLevels.has(detail.severity) &&
     detail.loc != null &&
@@ -105,6 +117,7 @@ const COMPILER_OPTIONS: Partial<PluginOptions> = {
   panicThreshold: 'none',
   // Don't emit errors on Flow suppressions--Flow already gave a signal
   flowSuppressions: false,
+  allowRefCurrentAccessDuringRender: true,
 };
 
 const rule: Rule.RuleModule = {
