@@ -52,8 +52,7 @@ function Component(props) {
   const { buttons } = props;
   let nonPrimaryButtons;
   if ($[0] !== buttons) {
-    const [primaryButton, ...t0] = buttons;
-    nonPrimaryButtons = t0;
+    [, ...nonPrimaryButtons] = buttons;
     $[0] = buttons;
     $[1] = nonPrimaryButtons;
   } else {

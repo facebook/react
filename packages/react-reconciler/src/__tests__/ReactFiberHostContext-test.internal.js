@@ -83,6 +83,7 @@ describe('ReactFiberHostContext', () => {
         }
         return DefaultEventPriority;
       },
+      trackSchedulerEvent: function () {},
       resolveEventType: function () {
         return null;
       },

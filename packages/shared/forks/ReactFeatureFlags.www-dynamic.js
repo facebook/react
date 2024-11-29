@@ -16,13 +16,10 @@
 export const alwaysThrottleRetries = true;
 export const disableDefaultPropsExceptForClasses = __VARIANT__;
 export const disableLegacyContextForFunctionComponents = __VARIANT__;
-export const disableLegacyMode = __VARIANT__;
 export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;
-export const disableStringRefs = __VARIANT__;
 export const enableDeferRootSchedulingToMicrotask = __VARIANT__;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = __VARIANT__;
 export const enableHiddenSubtreeInsertionEffectCleanup = __VARIANT__;
-export const enableLogStringRefsProd: null | ((string, string) => void) = null;
 export const enableNoCloningMemoCache = __VARIANT__;
 export const enableObjectFiber = __VARIANT__;
 export const enableRenderableContext = __VARIANT__;
@@ -44,6 +41,8 @@ export const enableSchedulingProfiler = __VARIANT__;
 
 export const enableInfiniteRenderLoopDetection = __VARIANT__;
 export const enableSiblingPrerendering = __VARIANT__;
+
+export const enableUseResourceEffectHook = __VARIANT__;
 
 // TODO: These flags are hard-coded to the default values used in open source.
 // Update the tests so that they pass in either mode, then set these

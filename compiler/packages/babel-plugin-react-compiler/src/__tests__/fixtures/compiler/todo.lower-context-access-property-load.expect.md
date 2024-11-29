@@ -22,10 +22,10 @@ function App() {
   const foo = context.foo;
   const bar = context.bar;
   let t0;
-  if ($[0] !== foo || $[1] !== bar) {
+  if ($[0] !== bar || $[1] !== foo) {
     t0 = <Bar foo={foo} bar={bar} />;
-    $[0] = foo;
-    $[1] = bar;
+    $[0] = bar;
+    $[1] = foo;
     $[2] = t0;
   } else {
     t0 = $[2];

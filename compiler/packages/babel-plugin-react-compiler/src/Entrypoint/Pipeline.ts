@@ -36,6 +36,7 @@ import {
   inferReactivePlaces,
   inferReferenceEffects,
   inlineImmediatelyInvokedFunctionExpressions,
+  inferEffectDependencies,
 } from '../Inference';
 import {
   constantPropagation,
@@ -57,7 +58,6 @@ import {
   mergeReactiveScopesThatInvalidateTogether,
   promoteUsedTemporaries,
   propagateEarlyReturns,
-  propagateScopeDependencies,
   pruneHoistedContexts,
   pruneNonEscapingScopes,
   pruneNonReactiveDependencies,
@@ -348,13 +348,15 @@ function* runWithEnvironment(
   });
   assertTerminalSuccessorsExist(hir);
   assertTerminalPredsExist(hir);
-  if (env.config.enablePropagateDepsInHIR) {
-    propagateScopeDependenciesHIR(hir);
-    yield log({
-      kind: 'hir',
-      name: 'PropagateScopeDependenciesHIR',
-      value: hir,
-    });
+  propagateScopeDependenciesHIR(hir);
+  yield log({
+    kind: 'hir',
+    name: 'PropagateScopeDependenciesHIR',
+    value: hir,
+  });
+
+  if (env.config.inferEffectDependencies) {
+    inferEffectDependencies(hir);
   }
 
   if (env.config.inlineJsxTransform) {
@@ -382,15 +384,6 @@ function* runWithEnvironment(
     value: reactiveFunction,
   });
   assertScopeInstructionsWithinScopes(reactiveFunction);
-
-  if (!env.config.enablePropagateDepsInHIR) {
-    propagateScopeDependencies(reactiveFunction);
-    yield log({
-      kind: 'reactive',
-      name: 'PropagateScopeDependencies',
-      value: reactiveFunction,
-    });
-  }
 
   pruneNonEscapingScopes(reactiveFunction);
   yield log({

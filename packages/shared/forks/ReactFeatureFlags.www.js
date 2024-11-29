@@ -19,13 +19,11 @@ export const {
   disableDefaultPropsExceptForClasses,
   disableLegacyContextForFunctionComponents,
   disableSchedulerTimeoutInWorkLoop,
-  disableStringRefs,
   enableDebugTracing,
   enableDeferRootSchedulingToMicrotask,
   enableDO_NOT_USE_disableStrictPassiveEffect,
   enableHiddenSubtreeInsertionEffectCleanup,
   enableInfiniteRenderLoopDetection,
-  enableLogStringRefsProd,
   enableNoCloningMemoCache,
   enableObjectFiber,
   enableRenderableContext,
@@ -33,6 +31,7 @@ export const {
   enableSiblingPrerendering,
   enableTransitionTracing,
   enableTrustedTypesIntegration,
+  enableUseResourceEffectHook,
   favorSafetyOverHydrationPerf,
   renameElementSymbol,
   retryLaneExpirationMs,
@@ -58,6 +57,7 @@ export const enableCPUSuspense = true;
 export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = true;
 export const enableFilterEmptyStringAttributesDOM = true;
+export const enableMoveBefore = false;
 export const enableAsyncActions = true;
 export const disableInputAttributeSyncing = false;
 export const enableLegacyFBSupport = true;
@@ -101,8 +101,6 @@ export const enableLegacyHidden = true;
 
 export const enableComponentStackLocations = true;
 
-export const enableRefAsProp = true;
-
 export const disableTextareaChildren = __EXPERIMENTAL__;
 
 export const consoleManagedByDevToolsDuringStrictMode = true;
@@ -121,8 +119,7 @@ export const enableServerComponentLogs = true;
 export const enableReactTestRendererWarning = false;
 export const useModernStrictMode = true;
 
-export const disableLegacyMode: boolean =
-  __EXPERIMENTAL__ || dynamicFeatureFlags.disableLegacyMode;
+export const disableLegacyMode = true;
 
 export const enableOwnerStacks = false;
 export const enableShallowPropDiffing = false;

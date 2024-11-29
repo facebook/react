@@ -93,6 +93,7 @@ import {
   enableTrustedTypesIntegration,
   enableAsyncActions,
   disableLegacyMode,
+  enableMoveBefore,
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
@@ -525,6 +526,7 @@ export function appendInitialChild(
   parentInstance: Instance,
   child: Instance | TextInstance,
 ): void {
+  // Note: This should not use moveBefore() because initial are appended while disconnected.
   parentInstance.appendChild(child);
 }
 
@@ -606,14 +608,19 @@ export function shouldAttemptEagerTransition(): boolean {
   return false;
 }
 
+let schedulerEvent: void | Event = undefined;
+export function trackSchedulerEvent(): void {
+  schedulerEvent = window.event;
+}
+
 export function resolveEventType(): null | string {
   const event = window.event;
-  return event ? event.type : null;
+  return event && event !== schedulerEvent ? event.type : null;
 }
 
 export function resolveEventTimeStamp(): number {
   const event = window.event;
-  return event ? event.timeStamp : -1.1;
+  return event && event !== schedulerEvent ? event.timeStamp : -1.1;
 }
 
 export const isPrimaryRenderer = true;
@@ -752,11 +759,22 @@ export function commitTextUpdate(
   textInstance.nodeValue = newText;
 }
 
+const supportsMoveBefore =
+  // $FlowFixMe[prop-missing]: We're doing the feature detection here.
+  enableMoveBefore &&
+  typeof window !== 'undefined' &&
+  typeof window.Node.prototype.moveBefore === 'function';
+
 export function appendChild(
   parentInstance: Instance,
   child: Instance | TextInstance,
 ): void {
-  parentInstance.appendChild(child);
+  if (supportsMoveBefore) {
+    // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
+    parentInstance.moveBefore(child, null);
+  } else {
+    parentInstance.appendChild(child);
+  }
 }
 
 export function appendChildToContainer(
@@ -794,7 +812,12 @@ export function insertBefore(
   child: Instance | TextInstance,
   beforeChild: Instance | TextInstance | SuspenseInstance,
 ): void {
-  parentInstance.insertBefore(child, beforeChild);
+  if (supportsMoveBefore) {
+    // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
+    parentInstance.moveBefore(child, beforeChild);
+  } else {
+    parentInstance.insertBefore(child, beforeChild);
+  }
 }
 
 export function insertInContainerBefore(
@@ -3137,10 +3160,9 @@ export function isHostHoistableType(
             console.error(
               'Cannot render a <style> outside the main document without knowing its precedence and a unique href key.' +
                 ' React can hoist and deduplicate <style> tags if you provide a `precedence` prop along with an `href` prop that' +
-                ' does not conflic with the `href` values used in any other hoisted <style> or <link rel="stylesheet" ...> tags. ' +
+                ' does not conflict with the `href` values used in any other hoisted <style> or <link rel="stylesheet" ...> tags. ' +
                 ' Note that hoisting <style> tags is considered an advanced feature that most will not use directly.' +
-                ' Consider moving the <style> tag to the <head> or consider adding a `precedence="default"` and `href="some unique resource identifier"`, or move the <style>' +
-                ' to the <style> tag.',
+                ' Consider moving the <style> tag to the <head> or consider adding a `precedence="default"` and `href="some unique resource identifier"`.',
             );
           }
         }

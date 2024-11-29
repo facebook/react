@@ -27,7 +27,7 @@ jobs:
       # because this used to be called the "next" channel and some
       # downstream consumers might still expect that tag. We can remove this
       # after some time has elapsed and the change has been communicated.
-      dist_tag: canary,next,rc
+      dist_tag: canary,next
     secrets:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 

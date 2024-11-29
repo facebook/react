@@ -20,13 +20,16 @@ export {
   run,
   runPlayground,
   OPT_OUT_DIRECTIVES,
+  OPT_IN_DIRECTIVES,
+  findDirectiveEnablingMemoization,
+  findDirectiveDisablingMemoization,
   type CompilerPipelineValue,
   type PluginOptions,
 } from './Entrypoint';
 export {
   Effect,
   ValueKind,
-  parseConfigPragma,
+  parseConfigPragmaForTests,
   printHIR,
   validateEnvironmentConfig,
   type EnvironmentConfig,

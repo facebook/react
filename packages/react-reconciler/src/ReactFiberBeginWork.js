@@ -108,10 +108,8 @@ import {
   enableAsyncActions,
   enablePostpone,
   enableRenderableContext,
-  enableRefAsProp,
   disableLegacyMode,
   disableDefaultPropsExceptForClasses,
-  disableStringRefs,
   enableOwnerStacks,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
@@ -125,10 +123,7 @@ import {
   REACT_MEMO_TYPE,
   getIteratorFn,
 } from 'shared/ReactSymbols';
-import {
-  getCurrentFiberOwnerNameInDevOrNull,
-  setCurrentFiber,
-} from './ReactCurrentFiber';
+import {setCurrentFiber} from './ReactCurrentFiber';
 import {
   resolveFunctionForHotReloading,
   resolveForwardRefForHotReloading,
@@ -319,7 +314,6 @@ let didWarnAboutBadClass;
 let didWarnAboutContextTypeOnFunctionComponent;
 let didWarnAboutContextTypes;
 let didWarnAboutGetDerivedStateOnFunctionComponent;
-let didWarnAboutFunctionRefs;
 export let didWarnAboutReassigningProps: boolean;
 let didWarnAboutRevealOrder;
 let didWarnAboutTailOptions;
@@ -330,7 +324,6 @@ if (__DEV__) {
   didWarnAboutContextTypeOnFunctionComponent = ({}: {[string]: boolean});
   didWarnAboutContextTypes = ({}: {[string]: boolean});
   didWarnAboutGetDerivedStateOnFunctionComponent = ({}: {[string]: boolean});
-  didWarnAboutFunctionRefs = ({}: {[string]: boolean});
   didWarnAboutReassigningProps = false;
   didWarnAboutRevealOrder = ({}: {[empty]: boolean});
   didWarnAboutTailOptions = ({}: {[string]: boolean});
@@ -416,7 +409,7 @@ function updateForwardRef(
   const ref = workInProgress.ref;
 
   let propsWithoutRef;
-  if (enableRefAsProp && 'ref' in nextProps) {
+  if ('ref' in nextProps) {
     // `ref` is just a prop now, but `forwardRef` expects it to not appear in
     // the props object. This used to happen in the JSX runtime, but now we do
     // it here.
@@ -1058,25 +1051,6 @@ function markRef(current: Fiber | null, workInProgress: Fiber) {
       );
     }
     if (current === null || current.ref !== ref) {
-      if (!disableStringRefs && current !== null) {
-        const oldRef = current.ref;
-        const newRef = ref;
-        if (
-          typeof oldRef === 'function' &&
-          typeof newRef === 'function' &&
-          typeof oldRef.__stringRef === 'string' &&
-          oldRef.__stringRef === newRef.__stringRef &&
-          oldRef.__stringRefType === newRef.__stringRefType &&
-          oldRef.__stringRefOwner === newRef.__stringRefOwner
-        ) {
-          // Although this is a different callback, it represents the same
-          // string ref. To avoid breaking old Meta code that relies on string
-          // refs only being attached once, reuse the old ref. This will
-          // prevent us from detaching and reattaching the ref on each update.
-          workInProgress.ref = oldRef;
-          return;
-        }
-      }
       // Schedule a Ref effect
       workInProgress.flags |= Ref | RefStatic;
     }
@@ -1394,7 +1368,7 @@ function finishClassComponent(
   const instance = workInProgress.stateNode;
 
   // Rerender
-  if (__DEV__ || !disableStringRefs) {
+  if (__DEV__) {
     setCurrentFiber(workInProgress);
   }
   let nextChildren;
@@ -1953,25 +1927,6 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
           '  %s.childContextTypes = ...',
         Component.displayName || Component.name || 'Component',
       );
-    }
-    if (!enableRefAsProp && workInProgress.ref !== null) {
-      let info = '';
-      const componentName = getComponentNameFromType(Component) || 'Unknown';
-      const ownerName = getCurrentFiberOwnerNameInDevOrNull();
-      if (ownerName) {
-        info += '\n\nCheck the render method of `' + ownerName + '`.';
-      }
-
-      const warningKey = componentName + '|' + (ownerName || '');
-      if (!didWarnAboutFunctionRefs[warningKey]) {
-        didWarnAboutFunctionRefs[warningKey] = true;
-        console.error(
-          'Function components cannot be given refs. ' +
-            'Attempts to access this ref will fail. ' +
-            'Did you mean to use React.forwardRef()?%s',
-          info,
-        );
-      }
     }
 
     if (

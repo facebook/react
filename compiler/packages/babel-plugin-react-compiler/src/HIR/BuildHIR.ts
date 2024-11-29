@@ -1418,7 +1418,7 @@ function lowerObjectPropertyKey(
       name: key.node.value,
     };
   } else if (property.node.computed && key.isExpression()) {
-    if (!key.isIdentifier()) {
+    if (!key.isIdentifier() && !key.isMemberExpression()) {
       /*
        * NOTE: allowing complex key expressions can trigger a bug where a mutation is made conditional
        * see fixture
@@ -3186,7 +3186,13 @@ function lowerJsxMemberExpression(
       loc: object.node.loc ?? null,
       suggestions: null,
     });
-    objectPlace = lowerIdentifier(builder, object);
+
+    const kind = getLoadKind(builder, object);
+    objectPlace = lowerValueToTemporary(builder, {
+      kind: kind,
+      place: lowerIdentifier(builder, object),
+      loc: exprPath.node.loc ?? GeneratedSource,
+    });
   }
   const property = exprPath.get('property').node.name;
   return lowerValueToTemporary(builder, {

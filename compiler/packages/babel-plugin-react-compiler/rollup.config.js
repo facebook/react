@@ -28,6 +28,7 @@ const DEV_ROLLUP_CONFIG = {
   plugins: [
     typescript({
       tsconfig: './tsconfig.json',
+      outputToFilesystem: true,
       compilerOptions: {
         noEmit: true,
       },

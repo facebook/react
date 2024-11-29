@@ -25,6 +25,7 @@ export const {
   enableObjectFiber,
   enablePersistedModeClonedFlag,
   enableShallowPropDiffing,
+  enableUseResourceEffectHook,
   passChildrenWhenCloningPersistedNodes,
   enableSiblingPrerendering,
 } = dynamicFlags;
@@ -41,7 +42,6 @@ export const disableLegacyContext = false;
 export const disableLegacyContextForFunctionComponents = false;
 export const disableLegacyMode = false;
 export const disableSchedulerTimeoutInWorkLoop = false;
-export const disableStringRefs = true;
 export const disableTextareaChildren = false;
 export const enableAsyncActions = true;
 export const enableAsyncDebugInfo = false;
@@ -55,6 +55,7 @@ export const enableDebugTracing = false;
 export const enableDeferRootSchedulingToMicrotask = true;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableFilterEmptyStringAttributesDOM = true;
+export const enableMoveBefore = true;
 export const enableFizzExternalRuntime = true;
 export const enableFlightReadableStream = true;
 export const enableGetInspectorDataForInstanceInProduction = true;
@@ -65,7 +66,6 @@ export const enableLazyContextPropagation = true;
 export const enableLegacyCache = false;
 export const enableLegacyFBSupport = false;
 export const enableLegacyHidden = false;
-export const enableLogStringRefsProd: null | ((string, string) => void) = null;
 export const enableNoCloningMemoCache = false;
 export const enableOwnerStacks = false;
 export const enablePostpone = false;
@@ -73,7 +73,6 @@ export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableProfilerTimer = __PROFILE__;
 export const enableReactTestRendererWarning = false;
-export const enableRefAsProp = true;
 export const enableRenderableContext = true;
 export const enableRetryLaneExpiration = false;
 export const enableSchedulingProfiler = __PROFILE__;

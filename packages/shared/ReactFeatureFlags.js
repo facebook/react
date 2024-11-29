@@ -145,7 +145,7 @@ export const enableOwnerStacks = __EXPERIMENTAL__;
 
 export const enableShallowPropDiffing = false;
 
-export const enableSiblingPrerendering = false;
+export const enableSiblingPrerendering = true;
 
 /**
  * Enables an expiration time for retry lanes to avoid starvation.
@@ -160,6 +160,11 @@ export const transitionLaneExpirationMs = 5000;
  * by setState or similar outside of the component owning the state.
  */
 export const enableInfiniteRenderLoopDetection = false;
+
+/**
+ * Experimental new hook for better managing resources in effects.
+ */
+export const enableUseResourceEffectHook = false;
 
 // -----------------------------------------------------------------------------
 // Ready for next major.
@@ -205,23 +210,11 @@ export const disableIEWorkarounds = true;
 // request for certain browsers.
 export const enableFilterEmptyStringAttributesDOM = true;
 
+// Enable the moveBefore() alternative to insertBefore(). This preserves states of moves.
+export const enableMoveBefore = false;
+
 // Disabled caching behavior of `react/cache` in client runtimes.
 export const disableClientCache = true;
-
-// Subtle breaking changes to JSX runtime to make it faster, like passing `ref`
-// as a normal prop instead of stripping it from the props object.
-
-// Passes `ref` as a normal prop instead of stripping it from the props object
-// during element creation.
-export const enableRefAsProp = true;
-export const disableStringRefs = true;
-/**
- * If set to a function, the function will be called with the component name
- * and ref string.
- *
- * NOTE: This happens also in the production build.
- */
-export const enableLogStringRefsProd: null | ((string, string) => void) = null;
 
 // Warn on any usage of ReactTestRenderer
 export const enableReactTestRendererWarning = true;

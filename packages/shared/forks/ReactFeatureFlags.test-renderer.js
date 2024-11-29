@@ -44,8 +44,8 @@ export const enableUseEffectEventHook = false;
 export const favorSafetyOverHydrationPerf = true;
 export const enableComponentStackLocations = true;
 export const enableLegacyFBSupport = false;
-export const enableLogStringRefsProd: null | ((string, string) => void) = null;
 export const enableFilterEmptyStringAttributesDOM = true;
+export const enableMoveBefore = false;
 export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableFabricCompleteRootInCommitPhase = false;
 export const enableHiddenSubtreeInsertionEffectCleanup = false;
@@ -82,7 +82,9 @@ export const enableInfiniteRenderLoopDetection = false;
 
 export const renameElementSymbol = true;
 export const enableShallowPropDiffing = false;
-export const enableSiblingPrerendering = false;
+export const enableSiblingPrerendering = true;
+
+export const enableUseResourceEffectHook = false;
 
 // TODO: This must be in sync with the main ReactFeatureFlags file because
 // the Test Renderer's value must be the same as the one used by the
@@ -91,8 +93,6 @@ export const enableSiblingPrerendering = false;
 // We really need to get rid of this whole module. Any test renderer specific
 // flags should be handled by the Fiber config.
 // const __NEXT_MAJOR__ = __EXPERIMENTAL__;
-export const enableRefAsProp = true;
-export const disableStringRefs = true;
 export const disableLegacyMode = true;
 export const disableLegacyContext = true;
 export const disableLegacyContextForFunctionComponents = true;
