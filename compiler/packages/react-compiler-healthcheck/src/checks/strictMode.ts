@@ -12,6 +12,7 @@ const NextConfigFileRE = /^next\.config\.(js|mjs)$/;
 const StrictModeRE = /<(React\.StrictMode|StrictMode)>/;
 const NextStrictModeRE = /reactStrictMode:\s*true/;
 let StrictModeUsage = false;
+let nextConfigFile: string | undefined;
 
 export default {
   run(source: string, path: string): void {
@@ -19,7 +20,8 @@ export default {
       return;
     }
 
-    if (NextConfigFileRE.exec(path) !== null) {
+    nextConfigFile = path.match(NextConfigFileRE)?.[0];
+    if (nextConfigFile) {
       StrictModeUsage = NextStrictModeRE.exec(source) !== null;
     } else if (JsFileExtensionRE.exec(path) !== null) {
       StrictModeUsage = StrictModeRE.exec(source) !== null;
@@ -31,6 +33,13 @@ export default {
       console.log(chalk.green('StrictMode usage found.'));
     } else {
       console.log(chalk.red('StrictMode usage not found.'));
+      if (nextConfigFile) {
+        console.log(
+          chalk.yellow(
+            `We recommend explicitly enabling reactStrictMode in your ${nextConfigFile} file.`,
+          ),
+        );
+      }
     }
   },
 };
