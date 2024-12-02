@@ -155,7 +155,7 @@ export function getSuspendedThenable(): Thenable<mixed> {
   // this function.
   if (
     suspendedThenable === null ||
-    typeof suspendedThenable.then !== 'function'
+    typeof suspendedThenable?.then !== 'function'
   ) {
     // Check if the thrown value is a valid thenable (i.e., a Promise-like object).
     // React relies on thenables for managing Suspense during asynchronous rendering.
@@ -166,9 +166,7 @@ export function getSuspendedThenable(): Thenable<mixed> {
     // only used in client-side rendering contexts, and not during server-side
     // rendering, where they can lead to incorrect behavior and errors.
     throw new Error(
-      'Invalid use of async components or hooks like `useTranslations` in server' +
-        'rendering context. Ensure all hooks are used in synchronous client-rendered' +
-        'components.',
+      'Invalid use of async components or hooks like `useTranslations` in server rendering context. Ensure all hooks are used in synchronous client-rendered components.',
     );
   }
 

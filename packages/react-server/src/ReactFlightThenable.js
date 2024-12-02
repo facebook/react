@@ -153,9 +153,7 @@ export function getSuspendedThenable(): Thenable<mixed> {
     // only used in client-side rendering contexts, and not during server-side
     // rendering, where they can lead to incorrect behavior and errors.
     throw new Error(
-      'Invalid use of async components or hooks like `useTranslations` in server' +
-        'rendering context. Ensure all hooks are used in synchronous client-rendered' +
-        'components.',
+      'Invalid use of async components or hooks like `useTranslations` in server rendering context. Ensure all hooks are used in synchronous client-rendered components.',
     );
   }
   const thenable = suspendedThenable;
