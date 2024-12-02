@@ -222,6 +222,13 @@ function writeDependencyToInstructions(
        */
       break;
     }
+    if (path.property === 'current') {
+      /*
+       * Prune ref.current accesses. This may over-capture for non-ref values with
+       * a current property, but that's fine.
+       */
+      break;
+    }
     const nextValue = createTemporaryPlace(env, GeneratedSource);
     nextValue.reactive = reactive;
     instructions.push({
