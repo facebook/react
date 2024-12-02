@@ -16,6 +16,7 @@ import {
   Place,
   ReactiveScopeDependencies,
 } from '../HIR';
+import {DEFAULT_EXPORT} from '../HIR/Environment';
 import {
   createTemporaryPlace,
   fixScopeAndIdentifierRanges,
@@ -93,6 +94,17 @@ export function inferEffectDependencies(fn: HIRFunction): void {
         const moduleTargets = autodepFnConfigs.get(value.binding.module);
         if (moduleTargets != null) {
           const numRequiredArgs = moduleTargets.get(value.binding.imported);
+          if (numRequiredArgs != null) {
+            autodepFnLoads.set(lvalue.identifier.id, numRequiredArgs);
+          }
+        }
+      } else if (
+        value.kind === 'LoadGlobal' &&
+        value.binding.kind === 'ImportDefault'
+      ) {
+        const moduleTargets = autodepFnConfigs.get(value.binding.module);
+        if (moduleTargets != null) {
+          const numRequiredArgs = moduleTargets.get(DEFAULT_EXPORT);
           if (numRequiredArgs != null) {
             autodepFnLoads.set(lvalue.identifier.id, numRequiredArgs);
           }
