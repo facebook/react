@@ -53,8 +53,15 @@ describe('ReactDOMOption', () => {
     }).toErrorDev(
       'In HTML, <div> cannot be a child of <option>.\n' +
         'This will cause a hydration error.\n' +
-        '    in div (at **)\n' +
-        '    in option (at **)',
+        '\n' +
+        '> <option value="12">\n' +
+        '>   <div>\n' +
+        '    ...\n' +
+        '\n' +
+        '    in div (at **)' +
+        (gate(flags => flags.enableOwnerStacks)
+          ? ''
+          : '\n    in option (at **)'),
     );
     expect(container.firstChild.innerHTML).toBe('1 <div></div> 2');
     await renderIntoDocument(el);
@@ -134,6 +141,7 @@ describe('ReactDOMOption', () => {
     }).rejects.toThrow('Objects are not valid as a React child');
   });
 
+  // @gate www && !renameElementSymbol
   it('should support element-ish child', async () => {
     // This is similar to <fbt>.
     // We don't toString it because you must instead provide a value prop.
@@ -171,7 +179,6 @@ describe('ReactDOMOption', () => {
     expect(container.firstChild.value).toBe('hello');
   });
 
-  // @gate enableBigIntSupport
   it('should support bigint values', async () => {
     const container = await renderIntoDocument(<option>{5n}</option>);
     expect(container.firstChild.innerHTML).toBe('5');
@@ -237,7 +244,7 @@ describe('ReactDOMOption', () => {
     expect(node.selectedIndex).toEqual(2);
   });
 
-  it('generates a warning and hydration error when an invalid nested tag is used as a child', async () => {
+  it('generates a hydration error when an invalid nested tag is used as a child', async () => {
     const ref = React.createRef();
     const children = (
       <select readOnly={true} value="bar">
@@ -267,12 +274,18 @@ describe('ReactDOMOption', () => {
         });
       });
     }).toErrorDev(
-      [
-        'Warning: Text content did not match. Server: "FooBaz" Client: "Foo"',
-        'Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>',
-        'Warning: In HTML, <div> cannot be a child of <option>',
-      ],
-      {withoutStack: 1},
+      'In HTML, <div> cannot be a child of <option>.\n' +
+        'This will cause a hydration error.\n' +
+        '\n' +
+        '  <select readOnly={true} value="bar">\n' +
+        '>   <option value="bar">\n' +
+        '>     <div ref={{current:null}}>\n' +
+        '      ...\n' +
+        '\n' +
+        '    in div (at **)' +
+        (gate(flags => flags.enableOwnerStacks)
+          ? ''
+          : '\n    in option (at **)'),
     );
     option = container.firstChild.firstChild;
 

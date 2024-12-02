@@ -1,0 +1,191 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/error.invalid-sketchy-code-use-forget.js
+---
+Input:
+/* eslint-disable react-hooks/rules-of-hooks */
+function lowercasecomponent() {
+  "use forget";
+  const x = [];
+  return <div>{x}</div>;
+}
+/* eslint-enable react-hooks/rules-of-hooks */
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "lowercasecomponent",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          57,
+          75
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "StringLiteral",
+              "value": "use forget",
+              "loc": null,
+              "range": [
+                82,
+                94
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              82,
+              95
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    104,
+                    105
+                  ]
+                },
+                "init": {
+                  "type": "ArrayExpression",
+                  "elements": [],
+                  "loc": null,
+                  "range": [
+                    108,
+                    110
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  104,
+                  110
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              98,
+              111
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "div",
+                  "loc": null,
+                  "range": [
+                    122,
+                    125
+                  ]
+                },
+                "attributes": [],
+                "selfClosing": false,
+                "loc": null,
+                "range": [
+                  121,
+                  126
+                ]
+              },
+              "children": [
+                {
+                  "type": "JSXExpressionContainer",
+                  "expression": {
+                    "type": "Identifier",
+                    "name": "x",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      127,
+                      128
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    126,
+                    129
+                  ]
+                }
+              ],
+              "closingElement": {
+                "type": "JSXClosingElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "div",
+                  "loc": null,
+                  "range": [
+                    131,
+                    134
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  129,
+                  135
+                ]
+              },
+              "loc": null,
+              "range": [
+                121,
+                135
+              ]
+            },
+            "loc": null,
+            "range": [
+              114,
+              136
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          78,
+          138
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        48,
+        138
+      ],
+      "loc": null,
+      "range": [
+        48,
+        138
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    48,
+    138
+  ]
+}

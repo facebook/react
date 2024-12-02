@@ -1,0 +1,129 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/codegen-emit-imports-same-source.js
+---
+Input:
+// @enableEmitFreeze @instrumentForget
+
+function useFoo(props) {
+  return foo(props.x);
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "useFoo",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          49,
+          55
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            56,
+            61
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "Identifier",
+                "name": "foo",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  74,
+                  77
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "MemberExpression",
+                  "object": {
+                    "type": "Identifier",
+                    "name": "props",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      78,
+                      83
+                    ]
+                  },
+                  "property": {
+                    "type": "Identifier",
+                    "name": "x",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      84,
+                      85
+                    ]
+                  },
+                  "computed": false,
+                  "loc": null,
+                  "range": [
+                    78,
+                    85
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                74,
+                86
+              ]
+            },
+            "loc": null,
+            "range": [
+              67,
+              87
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          63,
+          89
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        40,
+        89
+      ],
+      "loc": null,
+      "range": [
+        40,
+        89
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    40,
+    89
+  ]
+}

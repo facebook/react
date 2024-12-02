@@ -1,0 +1,383 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/capturing-func-alias-receiver-computed-mutate.js
+---
+Input:
+function component(a) {
+  let x = { a };
+  let y = {};
+  (function () {
+    let a = y;
+    a["x"] = x;
+  })();
+  mutate(y);
+  return y;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "a",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            20
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    30,
+                    31
+                  ]
+                },
+                "init": {
+                  "type": "ObjectExpression",
+                  "properties": [
+                    {
+                      "type": "Property",
+                      "key": {
+                        "type": "Identifier",
+                        "name": "a",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          36,
+                          37
+                        ]
+                      },
+                      "value": {
+                        "type": "Identifier",
+                        "name": "a",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          36,
+                          37
+                        ]
+                      },
+                      "kind": "init",
+                      "method": false,
+                      "shorthand": true,
+                      "computed": false,
+                      "loc": null,
+                      "range": [
+                        36,
+                        37
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    34,
+                    39
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  30,
+                  39
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              26,
+              40
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "y",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    47,
+                    48
+                  ]
+                },
+                "init": {
+                  "type": "ObjectExpression",
+                  "properties": [],
+                  "loc": null,
+                  "range": [
+                    51,
+                    53
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  47,
+                  53
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              43,
+              54
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "FunctionExpression",
+                "id": null,
+                "params": [],
+                "body": {
+                  "type": "BlockStatement",
+                  "body": [
+                    {
+                      "type": "VariableDeclaration",
+                      "kind": "let",
+                      "declarations": [
+                        {
+                          "type": "VariableDeclarator",
+                          "id": {
+                            "type": "Identifier",
+                            "name": "a",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              80,
+                              81
+                            ]
+                          },
+                          "init": {
+                            "type": "Identifier",
+                            "name": "y",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              84,
+                              85
+                            ]
+                          },
+                          "loc": null,
+                          "range": [
+                            80,
+                            85
+                          ]
+                        }
+                      ],
+                      "loc": null,
+                      "range": [
+                        76,
+                        86
+                      ]
+                    },
+                    {
+                      "type": "ExpressionStatement",
+                      "expression": {
+                        "type": "AssignmentExpression",
+                        "operator": "=",
+                        "left": {
+                          "type": "MemberExpression",
+                          "object": {
+                            "type": "Identifier",
+                            "name": "a",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              91,
+                              92
+                            ]
+                          },
+                          "property": {
+                            "type": "StringLiteral",
+                            "value": "x",
+                            "loc": null,
+                            "range": [
+                              93,
+                              96
+                            ]
+                          },
+                          "computed": true,
+                          "loc": null,
+                          "range": [
+                            91,
+                            97
+                          ]
+                        },
+                        "right": {
+                          "type": "Identifier",
+                          "name": "x",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            100,
+                            101
+                          ]
+                        },
+                        "loc": null,
+                        "range": [
+                          91,
+                          101
+                        ]
+                      },
+                      "directive": null,
+                      "loc": null,
+                      "range": [
+                        91,
+                        102
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    70,
+                    106
+                  ]
+                },
+                "generator": false,
+                "async": false,
+                "loc": null,
+                "range": [
+                  58,
+                  106
+                ],
+                "loc": null,
+                "range": [
+                  58,
+                  106
+                ]
+              },
+              "arguments": [],
+              "loc": null,
+              "range": [
+                57,
+                109
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              57,
+              110
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "Identifier",
+                "name": "mutate",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  113,
+                  119
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "Identifier",
+                  "name": "y",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    120,
+                    121
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                113,
+                122
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              113,
+              123
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "y",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                133,
+                134
+              ]
+            },
+            "loc": null,
+            "range": [
+              126,
+              135
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          22,
+          137
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        137
+      ],
+      "loc": null,
+      "range": [
+        0,
+        137
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    137
+  ]
+}

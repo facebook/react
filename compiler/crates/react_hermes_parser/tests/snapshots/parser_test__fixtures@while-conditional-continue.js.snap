@@ -1,0 +1,238 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/while-conditional-continue.js
+---
+Input:
+function foo(a, b, c, d) {
+  while (a) {
+    if (b) {
+      continue;
+    }
+    c();
+    continue;
+  }
+  d();
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "foo",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          12
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "a",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            13,
+            14
+          ]
+        },
+        {
+          "type": "Identifier",
+          "name": "b",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            16,
+            17
+          ]
+        },
+        {
+          "type": "Identifier",
+          "name": "c",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            20
+          ]
+        },
+        {
+          "type": "Identifier",
+          "name": "d",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            22,
+            23
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "WhileStatement",
+            "test": {
+              "type": "Identifier",
+              "name": "a",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                36,
+                37
+              ]
+            },
+            "body": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "IfStatement",
+                  "test": {
+                    "type": "Identifier",
+                    "name": "b",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      49,
+                      50
+                    ]
+                  },
+                  "consequent": {
+                    "type": "BlockStatement",
+                    "body": [
+                      {
+                        "type": "ContinueStatement",
+                        "label": null,
+                        "loc": null,
+                        "range": [
+                          60,
+                          69
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      52,
+                      75
+                    ]
+                  },
+                  "alternate": null,
+                  "loc": null,
+                  "range": [
+                    45,
+                    75
+                  ]
+                },
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "CallExpression",
+                    "callee": {
+                      "type": "Identifier",
+                      "name": "c",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        80,
+                        81
+                      ]
+                    },
+                    "arguments": [],
+                    "loc": null,
+                    "range": [
+                      80,
+                      83
+                    ]
+                  },
+                  "directive": null,
+                  "loc": null,
+                  "range": [
+                    80,
+                    84
+                  ]
+                },
+                {
+                  "type": "ContinueStatement",
+                  "label": null,
+                  "loc": null,
+                  "range": [
+                    89,
+                    98
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                39,
+                102
+              ]
+            },
+            "loc": null,
+            "range": [
+              29,
+              102
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "Identifier",
+                "name": "d",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  105,
+                  106
+                ]
+              },
+              "arguments": [],
+              "loc": null,
+              "range": [
+                105,
+                108
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              105,
+              109
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          25,
+          111
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        111
+      ],
+      "loc": null,
+      "range": [
+        0,
+        111
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    111
+  ]
+}

@@ -1,0 +1,347 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/error.todo.destructure-assignment-to-context-var.js
+---
+Input:
+function useFoo(props) {
+  let x;
+  [x] = props;
+  const foo = () => {
+    x = getX(props);
+  };
+  foo();
+  return { x };
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "useFoo",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          15
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            16,
+            21
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    31,
+                    32
+                  ]
+                },
+                "init": null,
+                "loc": null,
+                "range": [
+                  31,
+                  32
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              27,
+              33
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "AssignmentExpression",
+              "operator": "=",
+              "left": {
+                "type": "ArrayPattern",
+                "elements": [
+                  {
+                    "type": "Identifier",
+                    "name": "x",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      37,
+                      38
+                    ]
+                  }
+                ],
+                "loc": null,
+                "range": [
+                  36,
+                  39
+                ]
+              },
+              "right": {
+                "type": "Identifier",
+                "name": "props",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  42,
+                  47
+                ]
+              },
+              "loc": null,
+              "range": [
+                36,
+                47
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              36,
+              48
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "foo",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    57,
+                    60
+                  ]
+                },
+                "init": {
+                  "type": "ArrowFunctionExpression",
+                  "id": null,
+                  "params": [],
+                  "body": {
+                    "type": "BlockStatement",
+                    "body": [
+                      {
+                        "type": "ExpressionStatement",
+                        "expression": {
+                          "type": "AssignmentExpression",
+                          "operator": "=",
+                          "left": {
+                            "type": "Identifier",
+                            "name": "x",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              75,
+                              76
+                            ]
+                          },
+                          "right": {
+                            "type": "CallExpression",
+                            "callee": {
+                              "type": "Identifier",
+                              "name": "getX",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                79,
+                                83
+                              ]
+                            },
+                            "arguments": [
+                              {
+                                "type": "Identifier",
+                                "name": "props",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  84,
+                                  89
+                                ]
+                              }
+                            ],
+                            "loc": null,
+                            "range": [
+                              79,
+                              90
+                            ]
+                          },
+                          "loc": null,
+                          "range": [
+                            75,
+                            90
+                          ]
+                        },
+                        "directive": null,
+                        "loc": null,
+                        "range": [
+                          75,
+                          91
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      69,
+                      95
+                    ]
+                  },
+                  "generator": false,
+                  "async": false,
+                  "loc": null,
+                  "range": [
+                    63,
+                    95
+                  ],
+                  "expression": false,
+                  "loc": null,
+                  "range": [
+                    63,
+                    95
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  57,
+                  95
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              51,
+              96
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "Identifier",
+                "name": "foo",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  99,
+                  102
+                ]
+              },
+              "arguments": [],
+              "loc": null,
+              "range": [
+                99,
+                104
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              99,
+              105
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "ObjectExpression",
+              "properties": [
+                {
+                  "type": "Property",
+                  "key": {
+                    "type": "Identifier",
+                    "name": "x",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      117,
+                      118
+                    ]
+                  },
+                  "value": {
+                    "type": "Identifier",
+                    "name": "x",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      117,
+                      118
+                    ]
+                  },
+                  "kind": "init",
+                  "method": false,
+                  "shorthand": true,
+                  "computed": false,
+                  "loc": null,
+                  "range": [
+                    117,
+                    118
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                115,
+                120
+              ]
+            },
+            "loc": null,
+            "range": [
+              108,
+              121
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          23,
+          123
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        123
+      ],
+      "loc": null,
+      "range": [
+        0,
+        123
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    123
+  ]
+}

@@ -16,7 +16,6 @@ import type {
 } from 'shared/ReactTypes';
 
 import isArray from 'shared/isArray';
-import {enableBigIntSupport} from 'shared/ReactFeatureFlags';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
@@ -43,6 +42,7 @@ function escape(key: string): string {
     ':': '=2',
   };
   const escapedString = key.replace(escapeRegex, function (match) {
+    // $FlowFixMe[invalid-computed-prop]
     return escaperLookup[match];
   });
 
@@ -128,7 +128,7 @@ function resolveThenable<T>(thenable: Thenable<T>): T {
       }
 
       // Check one more time in case the thenable resolved synchronously.
-      switch (thenable.status) {
+      switch ((thenable: Thenable<T>).status) {
         case 'fulfilled': {
           const fulfilledThenable: FulfilledThenable<T> = (thenable: any);
           return fulfilledThenable.value;
@@ -165,10 +165,6 @@ function mapIntoArray(
   } else {
     switch (type) {
       case 'bigint':
-        if (!enableBigIntSupport) {
-          break;
-        }
-      // fallthrough for enabled BigInt support
       case 'string':
       case 'number':
         invokeCallback = true;
@@ -212,17 +208,20 @@ function mapIntoArray(
           // The `if` statement here prevents auto-disabling of the safe
           // coercion ESLint rule, so we must manually disable it below.
           // $FlowFixMe[incompatible-type] Flow incorrectly thinks React.Portal doesn't have a key
-          if (mappedChild.key && (!child || child.key !== mappedChild.key)) {
-            checkKeyStringCoercion(mappedChild.key);
+          if (mappedChild.key != null) {
+            if (!child || child.key !== mappedChild.key) {
+              checkKeyStringCoercion(mappedChild.key);
+            }
           }
         }
-        mappedChild = cloneAndReplaceKey(
+        const newChild = cloneAndReplaceKey(
           mappedChild,
           // Keep both the (mapped) and old keys if they differ, just as
           // traverseAllChildren used to do for objects as children
           escapedPrefix +
             // $FlowFixMe[incompatible-type] Flow incorrectly thinks React.Portal doesn't have a key
-            (mappedChild.key && (!child || child.key !== mappedChild.key)
+            (mappedChild.key != null &&
+            (!child || child.key !== mappedChild.key)
               ? escapeUserProvidedKey(
                   // $FlowFixMe[unsafe-addition]
                   '' + mappedChild.key, // eslint-disable-line react-internal/safe-string-coercion
@@ -230,6 +229,27 @@ function mapIntoArray(
               : '') +
             childKey,
         );
+        if (__DEV__) {
+          // If `child` was an element without a `key`, we need to validate if
+          // it should have had a `key`, before assigning one to `mappedChild`.
+          // $FlowFixMe[incompatible-type] Flow incorrectly thinks React.Portal doesn't have a key
+          if (
+            nameSoFar !== '' &&
+            child != null &&
+            isValidElement(child) &&
+            child.key == null
+          ) {
+            // We check truthiness of `child._store.validated` instead of being
+            // inequal to `1` to provide a bit of backward compatibility for any
+            // libraries (like `fbt`) which may be hacking this property.
+            if (child._store && !child._store.validated) {
+              // Mark this child as having failed validation, but let the actual
+              // renderer print the warning later.
+              newChild._store.validated = 2;
+            }
+          }
+        }
+        mappedChild = newChild;
       }
       array.push(mappedChild);
     }

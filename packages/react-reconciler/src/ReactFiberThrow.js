@@ -20,6 +20,7 @@ import {
   ClassComponent,
   HostRoot,
   IncompleteClassComponent,
+  IncompleteFunctionComponent,
   FunctionComponent,
   ForwardRef,
   SimpleMemoComponent,
@@ -42,6 +43,7 @@ import {
   enableLazyContextPropagation,
   enableUpdaterTracking,
   enablePostpone,
+  disableLegacyMode,
 } from 'shared/ReactFeatureFlags';
 import {createCapturedValueAtFiber} from './ReactCapturedValue';
 import {
@@ -58,8 +60,8 @@ import {
 } from './ReactFiberSuspenseContext';
 import {
   renderDidError,
+  queueConcurrentError,
   renderDidSuspendDelayIfPossible,
-  onUncaughtError,
   markLegacyErrorBoundaryAsFailed,
   isAlreadyFailedLegacyErrorBoundary,
   attachPingListener,
@@ -67,7 +69,7 @@ import {
   renderDidSuspend,
 } from './ReactFiberWorkLoop';
 import {propagateParentContextChangesToDeferredTree} from './ReactFiberNewContext';
-import {logCapturedError} from './ReactFiberErrorLogger';
+import {logUncaughtError, logCaughtError} from './ReactFiberErrorLogger';
 import {logComponentSuspended} from './DebugTracing';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {
@@ -80,13 +82,16 @@ import {
   getIsHydrating,
   markDidThrowWhileHydratingDEV,
   queueHydrationError,
+  HydrationMismatchException,
 } from './ReactFiberHydrationContext';
 import {ConcurrentRoot} from './ReactRootTags';
 import {noopSuspenseyCommitThenable} from './ReactFiberThenable';
 import {REACT_POSTPONE_TYPE} from 'shared/ReactSymbols';
+import {runWithFiberInDEV} from './ReactCurrentFiber';
+import {callComponentDidCatchInDEV} from './ReactFiberCallUserSpace';
 
 function createRootErrorUpdate(
-  fiber: Fiber,
+  root: FiberRoot,
   errorInfo: CapturedValue<mixed>,
   lane: Lane,
 ): Update<mixed> {
@@ -96,21 +101,28 @@ function createRootErrorUpdate(
   // Caution: React DevTools currently depends on this property
   // being called "element".
   update.payload = {element: null};
-  const error = errorInfo.value;
   update.callback = () => {
-    onUncaughtError(error);
-    logCapturedError(fiber, errorInfo);
+    if (__DEV__) {
+      runWithFiberInDEV(errorInfo.source, logUncaughtError, root, errorInfo);
+    } else {
+      logUncaughtError(root, errorInfo);
+    }
   };
   return update;
 }
 
-function createClassErrorUpdate(
-  fiber: Fiber,
-  errorInfo: CapturedValue<mixed>,
-  lane: Lane,
-): Update<mixed> {
+function createClassErrorUpdate(lane: Lane): Update<mixed> {
   const update = createUpdate(lane);
   update.tag = CaptureUpdate;
+  return update;
+}
+
+function initializeClassErrorUpdate(
+  update: Update<mixed>,
+  root: FiberRoot,
+  fiber: Fiber,
+  errorInfo: CapturedValue<mixed>,
+): void {
   const getDerivedStateFromError = fiber.type.getDerivedStateFromError;
   if (typeof getDerivedStateFromError === 'function') {
     const error = errorInfo.value;
@@ -121,7 +133,17 @@ function createClassErrorUpdate(
       if (__DEV__) {
         markFailedErrorBoundaryForHotReloading(fiber);
       }
-      logCapturedError(fiber, errorInfo);
+      if (__DEV__) {
+        runWithFiberInDEV(
+          errorInfo.source,
+          logCaughtError,
+          root,
+          fiber,
+          errorInfo,
+        );
+      } else {
+        logCaughtError(root, fiber, errorInfo);
+      }
     };
   }
 
@@ -132,7 +154,17 @@ function createClassErrorUpdate(
       if (__DEV__) {
         markFailedErrorBoundaryForHotReloading(fiber);
       }
-      logCapturedError(fiber, errorInfo);
+      if (__DEV__) {
+        runWithFiberInDEV(
+          errorInfo.source,
+          logCaughtError,
+          root,
+          fiber,
+          errorInfo,
+        );
+      } else {
+        logCaughtError(root, fiber, errorInfo);
+      }
       if (typeof getDerivedStateFromError !== 'function') {
         // To preserve the preexisting retry behavior of error boundaries,
         // we keep track of which ones already failed during this batch.
@@ -141,11 +173,15 @@ function createClassErrorUpdate(
         // not defined.
         markLegacyErrorBoundaryAsFailed(this);
       }
-      const error = errorInfo.value;
-      const stack = errorInfo.stack;
-      this.componentDidCatch(error, {
-        componentStack: stack !== null ? stack : '',
-      });
+      if (__DEV__) {
+        callComponentDidCatchInDEV(this, errorInfo);
+      } else {
+        const error = errorInfo.value;
+        const stack = errorInfo.stack;
+        this.componentDidCatch(error, {
+          componentStack: stack !== null ? stack : '',
+        });
+      }
       if (__DEV__) {
         if (typeof getDerivedStateFromError !== 'function') {
           // If componentDidCatch is the only error boundary method defined,
@@ -162,7 +198,6 @@ function createClassErrorUpdate(
       }
     };
   }
-  return update;
 }
 
 function resetSuspendedComponent(sourceFiber: Fiber, rootRenderLanes: Lanes) {
@@ -187,6 +222,7 @@ function resetSuspendedComponent(sourceFiber: Fiber, rootRenderLanes: Lanes) {
   // A legacy mode Suspense quirk, only relevant to hook components.
   const tag = sourceFiber.tag;
   if (
+    !disableLegacyMode &&
     (sourceFiber.mode & ConcurrentMode) === NoMode &&
     (tag === FunctionComponent ||
       tag === ForwardRef ||
@@ -213,7 +249,10 @@ function markSuspenseBoundaryShouldCapture(
 ): Fiber | null {
   // This marks a Suspense boundary so that when we're unwinding the stack,
   // it captures the suspended "exception" and does a second (fallback) pass.
-  if ((suspenseBoundary.mode & ConcurrentMode) === NoMode) {
+  if (
+    !disableLegacyMode &&
+    (suspenseBoundary.mode & ConcurrentMode) === NoMode
+  ) {
     // Legacy Mode Suspense
     //
     // If the boundary is in legacy mode, we should *not*
@@ -260,6 +299,13 @@ function markSuspenseBoundaryShouldCapture(
           const update = createUpdate(SyncLane);
           update.tag = ForceUpdate;
           enqueueUpdate(sourceFiber, update, SyncLane);
+        }
+      } else if (sourceFiber.tag === FunctionComponent) {
+        const currentSourceFiber = sourceFiber.alternate;
+        if (currentSourceFiber === null) {
+          // This is a new mount. Change the tag so it's not mistaken for a
+          // completed function component.
+          sourceFiber.tag = IncompleteFunctionComponent;
         }
       }
 
@@ -345,7 +391,10 @@ function throwException(
       resetSuspendedComponent(sourceFiber, rootRenderLanes);
 
       if (__DEV__) {
-        if (getIsHydrating() && sourceFiber.mode & ConcurrentMode) {
+        if (
+          getIsHydrating() &&
+          (disableLegacyMode || sourceFiber.mode & ConcurrentMode)
+        ) {
           markDidThrowWhileHydratingDEV();
         }
       }
@@ -374,7 +423,7 @@ function throwException(
             // we don't have to recompute it on demand. This would also allow us
             // to unify with `use` which needs to perform this logic even sooner,
             // before `throwException` is called.
-            if (sourceFiber.mode & ConcurrentMode) {
+            if (disableLegacyMode || sourceFiber.mode & ConcurrentMode) {
               if (getShellBoundary() === null) {
                 // Suspended in the "shell" of the app. This is an undesirable
                 // loading state. We should avoid committing this tree.
@@ -442,14 +491,14 @@ function throwException(
               // We only attach ping listeners in concurrent mode. Legacy
               // Suspense always commits fallbacks synchronously, so there are
               // no pings.
-              if (suspenseBoundary.mode & ConcurrentMode) {
+              if (disableLegacyMode || suspenseBoundary.mode & ConcurrentMode) {
                 attachPingListener(root, wakeable, rootRenderLanes);
               }
             }
             return false;
           }
           case OffscreenComponent: {
-            if (suspenseBoundary.mode & ConcurrentMode) {
+            if (disableLegacyMode || suspenseBoundary.mode & ConcurrentMode) {
               suspenseBoundary.flags |= ShouldCapture;
               const isSuspenseyResource =
                 wakeable === noopSuspenseyCommitThenable;
@@ -488,7 +537,7 @@ function throwException(
         // No boundary was found. Unless this is a sync update, this is OK.
         // We can suspend and wait for more data to arrive.
 
-        if (root.tag === ConcurrentRoot) {
+        if (disableLegacyMode || root.tag === ConcurrentRoot) {
           // In a concurrent root, suspending without a Suspense boundary is
           // allowed. It will suspend indefinitely without committing.
           //
@@ -513,7 +562,10 @@ function throwException(
   }
 
   // This is a regular error, not a Suspense wakeable.
-  if (getIsHydrating() && sourceFiber.mode & ConcurrentMode) {
+  if (
+    getIsHydrating() &&
+    (disableLegacyMode || sourceFiber.mode & ConcurrentMode)
+  ) {
     markDidThrowWhileHydratingDEV();
     const suspenseBoundary = getSuspenseHandler();
     // If the error was thrown during hydration, we may be able to recover by
@@ -536,15 +588,55 @@ function throwException(
 
       // Even though the user may not be affected by this error, we should
       // still log it so it can be fixed.
-      queueHydrationError(createCapturedValueAtFiber(value, sourceFiber));
+      if (value !== HydrationMismatchException) {
+        const wrapperError = new Error(
+          'There was an error while hydrating but React was able to recover by ' +
+            'instead client rendering from the nearest Suspense boundary.',
+          {cause: value},
+        );
+        queueHydrationError(
+          createCapturedValueAtFiber(wrapperError, sourceFiber),
+        );
+      }
+      return false;
+    } else {
+      if (value !== HydrationMismatchException) {
+        const wrapperError = new Error(
+          'There was an error while hydrating but React was able to recover by ' +
+            'instead client rendering the entire root.',
+          {cause: value},
+        );
+        queueHydrationError(
+          createCapturedValueAtFiber(wrapperError, sourceFiber),
+        );
+      }
+      const workInProgress: Fiber = (root.current: any).alternate;
+      // Schedule an update at the root to log the error but this shouldn't
+      // actually happen because we should recover.
+      workInProgress.flags |= ShouldCapture;
+      const lane = pickArbitraryLane(rootRenderLanes);
+      workInProgress.lanes = mergeLanes(workInProgress.lanes, lane);
+      const rootErrorInfo = createCapturedValueAtFiber(value, sourceFiber);
+      const update = createRootErrorUpdate(
+        workInProgress.stateNode,
+        rootErrorInfo, // This should never actually get logged due to the recovery.
+        lane,
+      );
+      enqueueCapturedUpdate(workInProgress, update);
+      renderDidError();
       return false;
     }
   } else {
     // Otherwise, fall through to the error path.
   }
 
-  value = createCapturedValueAtFiber(value, sourceFiber);
-  renderDidError(value);
+  const wrapperError = new Error(
+    'There was an error during concurrent rendering but React was able to recover by ' +
+      'instead synchronously rendering the entire root.',
+    {cause: value},
+  );
+  queueConcurrentError(createCapturedValueAtFiber(wrapperError, sourceFiber));
+  renderDidError();
 
   // We didn't find a boundary that could handle this type of exception. Start
   // over and traverse parent path again, this time treating the exception
@@ -556,21 +648,24 @@ function throwException(
     return true;
   }
 
+  const errorInfo = createCapturedValueAtFiber(value, sourceFiber);
   let workInProgress: Fiber = returnFiber;
   do {
     switch (workInProgress.tag) {
       case HostRoot: {
-        const errorInfo = value;
         workInProgress.flags |= ShouldCapture;
         const lane = pickArbitraryLane(rootRenderLanes);
         workInProgress.lanes = mergeLanes(workInProgress.lanes, lane);
-        const update = createRootErrorUpdate(workInProgress, errorInfo, lane);
+        const update = createRootErrorUpdate(
+          workInProgress.stateNode,
+          errorInfo,
+          lane,
+        );
         enqueueCapturedUpdate(workInProgress, update);
         return false;
       }
       case ClassComponent:
         // Capture and retry
-        const errorInfo = value;
         const ctor = workInProgress.type;
         const instance = workInProgress.stateNode;
         if (
@@ -584,11 +679,8 @@ function throwException(
           const lane = pickArbitraryLane(rootRenderLanes);
           workInProgress.lanes = mergeLanes(workInProgress.lanes, lane);
           // Schedule the error boundary to re-render using updated state
-          const update = createClassErrorUpdate(
-            workInProgress,
-            errorInfo,
-            lane,
-          );
+          const update = createClassErrorUpdate(lane);
+          initializeClassErrorUpdate(update, root, workInProgress, errorInfo);
           enqueueCapturedUpdate(workInProgress, update);
           return false;
         }
@@ -603,4 +695,9 @@ function throwException(
   return false;
 }
 
-export {throwException, createRootErrorUpdate, createClassErrorUpdate};
+export {
+  throwException,
+  createRootErrorUpdate,
+  createClassErrorUpdate,
+  initializeClassErrorUpdate,
+};

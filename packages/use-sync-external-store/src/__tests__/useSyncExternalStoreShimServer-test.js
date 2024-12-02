@@ -32,9 +32,7 @@ describe('useSyncExternalStore (userspace shim, server rendering)', () => {
     // React 17.
     jest.mock('react', () => {
       const {
-        // eslint-disable-next-line no-unused-vars
         startTransition: _,
-        // eslint-disable-next-line no-unused-vars
         useSyncExternalStore: __,
         ...otherExports
       } = jest.requireActual('react');
@@ -81,7 +79,7 @@ describe('useSyncExternalStore (userspace shim, server rendering)', () => {
     };
   }
 
-  test('basic server render', async () => {
+  it('basic server render', async () => {
     const store = createExternalStore('client');
 
     function App() {

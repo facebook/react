@@ -9,22 +9,18 @@
 
 import type {Fiber} from './ReactInternalTypes';
 import type {StackCursor} from './ReactFiberStack';
-import type {
-  Container,
-  HostContext,
-  TransitionStatus,
-} from './ReactFiberConfig';
+import type {Container, HostContext} from './ReactFiberConfig';
 import type {Hook} from './ReactFiberHooks';
-import type {ReactContext} from 'shared/ReactTypes';
 
 import {
   getChildHostContext,
   getRootHostContext,
+  HostTransitionContext,
+  NotPendingTransition,
   isPrimaryRenderer,
 } from './ReactFiberConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
-import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
-import {enableAsyncActions, enableFormActions} from 'shared/ReactFeatureFlags';
+import {enableAsyncActions} from 'shared/ReactFeatureFlags';
 
 const contextStackCursor: StackCursor<HostContext | null> = createCursor(null);
 const contextFiberStackCursor: StackCursor<Fiber | null> = createCursor(null);
@@ -37,21 +33,6 @@ const rootInstanceStackCursor: StackCursor<Container | null> =
 // module variable instead.
 const hostTransitionProviderCursor: StackCursor<Fiber | null> =
   createCursor(null);
-
-// TODO: This should initialize to NotPendingTransition, a constant
-// imported from the fiber config. However, because of a cycle in the module
-// graph, that value isn't defined during this module's initialization. I can't
-// think of a way to work around this without moving that value out of the
-// fiber config. For now, the "no provider" case is handled when reading,
-// inside useHostTransitionStatus.
-export const HostTransitionContext: ReactContext<TransitionStatus | null> = {
-  $$typeof: REACT_CONTEXT_TYPE,
-  _currentValue: null,
-  _currentValue2: null,
-  _threadCount: 0,
-  Provider: (null: any),
-  Consumer: (null: any),
-};
 
 function requiredContext<Value>(c: Value | null): Value {
   if (__DEV__) {
@@ -110,7 +91,7 @@ function getHostContext(): HostContext {
 }
 
 function pushHostContext(fiber: Fiber): void {
-  if (enableFormActions && enableAsyncActions) {
+  if (enableAsyncActions) {
     const stateHook: Hook | null = fiber.memoizedState;
     if (stateHook !== null) {
       // Only provide context if this fiber has been upgraded by a host
@@ -139,7 +120,7 @@ function popHostContext(fiber: Fiber): void {
     pop(contextFiberStackCursor, fiber);
   }
 
-  if (enableFormActions && enableAsyncActions) {
+  if (enableAsyncActions) {
     if (hostTransitionProviderCursor.current === fiber) {
       // Do not pop unless this Fiber provided the current context. This is mostly
       // a performance optimization, but conveniently it also prevents a potential
@@ -150,13 +131,13 @@ function popHostContext(fiber: Fiber): void {
       pop(hostTransitionProviderCursor, fiber);
 
       // When popping the transition provider, we reset the context value back
-      // to `null`. We can do this because you're not allowd to nest forms. If
+      // to `NotPendingTransition`. We can do this because you're not allowed to nest forms. If
       // we allowed for multiple nested host transition providers, then we'd
       // need to reset this to the parent provider's status.
       if (isPrimaryRenderer) {
-        HostTransitionContext._currentValue = null;
+        HostTransitionContext._currentValue = NotPendingTransition;
       } else {
-        HostTransitionContext._currentValue2 = null;
+        HostTransitionContext._currentValue2 = NotPendingTransition;
       }
     }
   }

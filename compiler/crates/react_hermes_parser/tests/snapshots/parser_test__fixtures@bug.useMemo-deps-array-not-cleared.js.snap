@@ -1,0 +1,327 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/bug.useMemo-deps-array-not-cleared.js
+---
+Input:
+function App({ text, hasDeps }) {
+  const resolvedText = useMemo(
+    () => {
+      return text.toUpperCase();
+    },
+    hasDeps ? null : [text] // should be DCE'd
+  );
+  return resolvedText;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "App",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          12
+        ]
+      },
+      "params": [
+        {
+          "type": "ObjectPattern",
+          "properties": [
+            {
+              "type": "Property",
+              "key": {
+                "type": "Identifier",
+                "name": "text",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  15,
+                  19
+                ]
+              },
+              "value": {
+                "type": "Identifier",
+                "name": "text",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  15,
+                  19
+                ]
+              },
+              "kind": "init",
+              "computed": false,
+              "shorthand": true,
+              "method": false,
+              "loc": null,
+              "range": [
+                15,
+                19
+              ]
+            },
+            {
+              "type": "Property",
+              "key": {
+                "type": "Identifier",
+                "name": "hasDeps",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  21,
+                  28
+                ]
+              },
+              "value": {
+                "type": "Identifier",
+                "name": "hasDeps",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  21,
+                  28
+                ]
+              },
+              "kind": "init",
+              "computed": false,
+              "shorthand": true,
+              "method": false,
+              "loc": null,
+              "range": [
+                21,
+                28
+              ]
+            }
+          ],
+          "loc": null,
+          "range": [
+            13,
+            30
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "resolvedText",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    42,
+                    54
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useMemo",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      57,
+                      64
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "ArrowFunctionExpression",
+                      "id": null,
+                      "params": [],
+                      "body": {
+                        "type": "BlockStatement",
+                        "body": [
+                          {
+                            "type": "ReturnStatement",
+                            "argument": {
+                              "type": "CallExpression",
+                              "callee": {
+                                "type": "MemberExpression",
+                                "object": {
+                                  "type": "Identifier",
+                                  "name": "text",
+                                  "typeAnnotation": null,
+                                  "loc": null,
+                                  "range": [
+                                    91,
+                                    95
+                                  ]
+                                },
+                                "property": {
+                                  "type": "Identifier",
+                                  "name": "toUpperCase",
+                                  "typeAnnotation": null,
+                                  "loc": null,
+                                  "range": [
+                                    96,
+                                    107
+                                  ]
+                                },
+                                "computed": false,
+                                "loc": null,
+                                "range": [
+                                  91,
+                                  107
+                                ]
+                              },
+                              "arguments": [],
+                              "loc": null,
+                              "range": [
+                                91,
+                                109
+                              ]
+                            },
+                            "loc": null,
+                            "range": [
+                              84,
+                              110
+                            ]
+                          }
+                        ],
+                        "loc": null,
+                        "range": [
+                          76,
+                          116
+                        ]
+                      },
+                      "generator": false,
+                      "async": false,
+                      "loc": null,
+                      "range": [
+                        70,
+                        116
+                      ],
+                      "expression": false,
+                      "loc": null,
+                      "range": [
+                        70,
+                        116
+                      ]
+                    },
+                    {
+                      "type": "ConditionalExpression",
+                      "test": {
+                        "type": "Identifier",
+                        "name": "hasDeps",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          122,
+                          129
+                        ]
+                      },
+                      "alternate": {
+                        "type": "ArrayExpression",
+                        "elements": [
+                          {
+                            "type": "Identifier",
+                            "name": "text",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              140,
+                              144
+                            ]
+                          }
+                        ],
+                        "loc": null,
+                        "range": [
+                          139,
+                          145
+                        ]
+                      },
+                      "consequent": {
+                        "type": "NullLiteral",
+                        "loc": null,
+                        "range": [
+                          132,
+                          136
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        122,
+                        145
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    57,
+                    168
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  42,
+                  168
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              36,
+              169
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "resolvedText",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                179,
+                191
+              ]
+            },
+            "loc": null,
+            "range": [
+              172,
+              192
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          32,
+          194
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        194
+      ],
+      "loc": null,
+      "range": [
+        0,
+        194
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    194
+  ]
+}

@@ -15,6 +15,7 @@ import type {
   Usable,
   ReactFormState,
   Awaited,
+  ReactComponentInfo,
   ReactDebugInfo,
 } from 'shared/ReactTypes';
 import type {WorkTag} from './ReactWorkTags';
@@ -35,6 +36,8 @@ import type {
   Transition,
 } from './ReactFiberTracingMarkerComponent';
 import type {ConcurrentUpdate} from './ReactFiberConcurrentUpdates';
+import type {ComponentStackNode} from 'react-server/src/ReactFizzComponentStack';
+import type {ThenableState} from './ReactFiberThenable';
 
 // Unwind Circular: moved from ReactFiberHooks.old
 export type HookType =
@@ -44,6 +47,7 @@ export type HookType =
   | 'useRef'
   | 'useEffect'
   | 'useEffectEvent'
+  | 'useResourceEffect'
   | 'useInsertionEffect'
   | 'useLayoutEffect'
   | 'useCallback'
@@ -56,19 +60,30 @@ export type HookType =
   | 'useId'
   | 'useCacheRefresh'
   | 'useOptimistic'
-  | 'useFormState';
+  | 'useFormState'
+  | 'useActionState';
 
-export type ContextDependency<T> = {
-  context: ReactContext<T>,
-  next: ContextDependency<mixed> | null,
-  memoizedValue: T,
-  ...
+export type ContextDependency<C> = {
+  context: ReactContext<C>,
+  next: ContextDependency<mixed> | ContextDependencyWithSelect<mixed> | null,
+  memoizedValue: C,
+};
+
+export type ContextDependencyWithSelect<C> = {
+  context: ReactContext<C>,
+  next: ContextDependency<mixed> | ContextDependencyWithSelect<mixed> | null,
+  memoizedValue: C,
+  select: C => Array<mixed>,
+  lastSelectedValue: ?Array<mixed>,
 };
 
 export type Dependencies = {
   lanes: Lanes,
-  firstContext: ContextDependency<mixed> | null,
-  ...
+  firstContext:
+    | ContextDependency<mixed>
+    | ContextDependencyWithSelect<mixed>
+    | null,
+  _debugThenableState?: null | ThenableState, // DEV-only
 };
 
 export type MemoCache = {
@@ -192,7 +207,9 @@ export type Fiber = {
   // __DEV__ only
 
   _debugInfo?: ReactDebugInfo | null,
-  _debugOwner?: Fiber | null,
+  _debugOwner?: ReactComponentInfo | Fiber | null,
+  _debugStack?: string | Error | null,
+  _debugTask?: ConsoleTask | null,
   _debugIsCurrentlyTiming?: boolean,
   _debugNeedsRemount?: boolean,
 
@@ -240,6 +257,7 @@ type BaseFiberRootProperties = {
   pendingLanes: Lanes,
   suspendedLanes: Lanes,
   pingedLanes: Lanes,
+  warmLanes: Lanes,
   expiredLanes: Lanes,
   errorRecoveryDisabledLanes: Lanes,
   shellSuspendCounter: number,
@@ -259,9 +277,20 @@ type BaseFiberRootProperties = {
   // a reference to.
   identifierPrefix: string,
 
+  onUncaughtError: (
+    error: mixed,
+    errorInfo: {+componentStack?: ?string},
+  ) => void,
+  onCaughtError: (
+    error: mixed,
+    errorInfo: {
+      +componentStack?: ?string,
+      +errorBoundary?: ?React$Component<any, any>,
+    },
+  ) => void,
   onRecoverableError: (
     error: mixed,
-    errorInfo: {digest?: ?string, componentStack?: ?string},
+    errorInfo: {+componentStack?: ?string},
   ) => void,
 
   formState: ReactFormState<any, any> | null,
@@ -345,6 +374,11 @@ type TransitionTracingOnlyFiberRootProperties = {
   incompleteTransitions: Map<Transition, TracingMarkerInstance>,
 };
 
+type ProfilerCommitHooksOnlyFiberRootProperties = {
+  effectDuration: number,
+  passiveEffectDuration: number,
+};
+
 // Exported FiberRoot type includes all properties,
 // To avoid requiring potentially error-prone :any casts throughout the project.
 // The types are defined separately within this file to ensure they stay in sync.
@@ -353,7 +387,7 @@ export type FiberRoot = {
   ...SuspenseCallbackOnlyFiberRootProperties,
   ...UpdaterTrackingOnlyFiberRootProperties,
   ...TransitionTracingOnlyFiberRootProperties,
-  ...
+  ...ProfilerCommitHooksOnlyFiberRootProperties,
 };
 
 type BasicStateAction<S> = (S => S) | S;
@@ -368,6 +402,10 @@ export type Dispatcher = {
     initialArg: I,
     init?: (I) => S,
   ): [S, Dispatch<A>],
+  unstable_useContextWithBailout?: <T>(
+    context: ReactContext<T>,
+    select: (T => Array<mixed>) | null,
+  ) => T,
   useContext<T>(context: ReactContext<T>): T,
   useRef<T>(initialValue: T): {current: T},
   useEffect(
@@ -375,6 +413,13 @@ export type Dispatcher = {
     deps: Array<mixed> | void | null,
   ): void,
   useEffectEvent?: <Args, F: (...Array<Args>) => mixed>(callback: F) => F,
+  useResourceEffect?: (
+    create: () => mixed,
+    createDeps: Array<mixed> | void | null,
+    update: ((resource: mixed) => void) | void,
+    updateDeps: Array<mixed> | void | null,
+    destroy: ((resource: mixed) => void) | void,
+  ) => void,
   useInsertionEffect(
     create: () => (() => void) | void,
     deps: Array<mixed> | void | null,
@@ -413,10 +458,16 @@ export type Dispatcher = {
     action: (Awaited<S>, P) => S,
     initialState: Awaited<S>,
     permalink?: string,
-  ) => [Awaited<S>, (P) => void],
+  ) => [Awaited<S>, (P) => void, boolean],
+  useActionState?: <S, P>(
+    action: (Awaited<S>, P) => S,
+    initialState: Awaited<S>,
+    permalink?: string,
+  ) => [Awaited<S>, (P) => void, boolean],
 };
 
-export type CacheDispatcher = {
-  getCacheSignal: () => AbortSignal,
+export type AsyncDispatcher = {
   getCacheForType: <T>(resourceType: () => T) => T,
+  // DEV-only
+  getOwner: () => null | Fiber | ReactComponentInfo | ComponentStackNode,
 };

@@ -1,0 +1,23 @@
+[package]
+name = "react_diagnostics"
+version = "0.1.0"
+publish               = false
+authors.workspace     = true
+description.workspace = true
+edition.workspace     = true
+homepage.workspace    = true
+keywords.workspace    = true
+license.workspace     = true
+repository.workspace  = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# TODO: extract SourceRange into a separate crate so that 
+# we don't depend on full estree here
+react_estree = { workspace = true }
+# TODO: consider extracting a separate react_miette crate which does
+# the translation from react_diagnostics::Diagnostic to miette::Diagnostic
+miette = { workspace = true }
+thiserror = { workspace = true }
+static_assertions = { workspace = true }

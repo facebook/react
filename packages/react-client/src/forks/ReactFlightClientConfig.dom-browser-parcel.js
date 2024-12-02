@@ -7,8 +7,11 @@
  * @flow
  */
 
+export {default as rendererVersion} from 'shared/ReactVersion';
+export const rendererPackageName = 'react-server-dom-parcel';
+
 export * from 'react-client/src/ReactFlightClientStreamConfigWeb';
-export * from 'react-client/src/ReactFlightClientConsoleConfigBrowser';
-export * from 'react-server-dom-parcel/src/ReactFlightClientConfigBundlerParcel';
+export * from 'react-client/src/ReactClientConsoleConfigBrowser';
+export * from 'react-server-dom-parcel/src/shared/ReactFlightClientConfigBundlerParcel';
 export * from 'react-dom-bindings/src/shared/ReactFlightClientConfigDOM';
 export const usedWithSSR = false;

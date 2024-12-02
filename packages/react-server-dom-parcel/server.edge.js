@@ -7,4 +7,14 @@
  * @flow
  */
 
-export * from './src/ReactFlightDOMServerEdge';
+export {
+  renderToReadableStream,
+  decodeReply,
+  decodeAction,
+  decodeFormState,
+  createClientReference,
+  registerServerReference,
+  createTemporaryReferenceSet,
+  registerServerActions,
+  loadServerAction,
+} from './src/server/react-flight-dom-server.edge';

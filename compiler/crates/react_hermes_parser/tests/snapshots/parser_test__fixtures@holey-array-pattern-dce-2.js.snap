@@ -1,0 +1,149 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/holey-array-pattern-dce-2.js
+---
+Input:
+function t(props) {
+  let [foo, bar, ,] = props;
+  return foo;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "t",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          10
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            11,
+            16
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "ArrayPattern",
+                  "elements": [
+                    {
+                      "type": "Identifier",
+                      "name": "foo",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        27,
+                        30
+                      ]
+                    },
+                    {
+                      "type": "Identifier",
+                      "name": "bar",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        32,
+                        35
+                      ]
+                    },
+                    null
+                  ],
+                  "loc": null,
+                  "range": [
+                    26,
+                    39
+                  ]
+                },
+                "init": {
+                  "type": "Identifier",
+                  "name": "props",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    42,
+                    47
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  26,
+                  47
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              22,
+              48
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "foo",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                58,
+                61
+              ]
+            },
+            "loc": null,
+            "range": [
+              51,
+              62
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          18,
+          64
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        64
+      ],
+      "loc": null,
+      "range": [
+        0,
+        64
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    64
+  ]
+}

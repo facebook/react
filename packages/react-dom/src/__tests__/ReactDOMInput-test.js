@@ -114,7 +114,7 @@ describe('ReactDOMInput', () => {
         root.render(<input type="text" value={0} />);
       });
     }).toErrorDev(
-      'Warning: You provided a `value` prop to a form ' +
+      'You provided a `value` prop to a form ' +
         'field without an `onChange` handler. This will render a read-only ' +
         'field. If the field should be mutable use `defaultValue`. ' +
         'Otherwise, set either `onChange` or `readOnly`.',
@@ -127,7 +127,7 @@ describe('ReactDOMInput', () => {
         root.render(<input type="text" value="" />);
       });
     }).toErrorDev(
-      'Warning: You provided a `value` prop to a form ' +
+      'You provided a `value` prop to a form ' +
         'field without an `onChange` handler. This will render a read-only ' +
         'field. If the field should be mutable use `defaultValue`. ' +
         'Otherwise, set either `onChange` or `readOnly`.',
@@ -140,7 +140,7 @@ describe('ReactDOMInput', () => {
         root.render(<input type="text" value="0" />);
       });
     }).toErrorDev(
-      'Warning: You provided a `value` prop to a form ' +
+      'You provided a `value` prop to a form ' +
         'field without an `onChange` handler. This will render a read-only ' +
         'field. If the field should be mutable use `defaultValue`. ' +
         'Otherwise, set either `onChange` or `readOnly`.',
@@ -153,7 +153,7 @@ describe('ReactDOMInput', () => {
         root.render(<input type="checkbox" checked={false} />);
       });
     }).toErrorDev(
-      'Warning: You provided a `checked` prop to a form field without an `onChange` handler.',
+      'You provided a `checked` prop to a form field without an `onChange` handler.',
     );
   });
 
@@ -169,7 +169,7 @@ describe('ReactDOMInput', () => {
         root.render(<input type="checkbox" checked={false} readOnly={false} />);
       });
     }).toErrorDev(
-      'Warning: You provided a `checked` prop to a form field without an `onChange` handler. ' +
+      'You provided a `checked` prop to a form field without an `onChange` handler. ' +
         'This will render a read-only field. If the field should be mutable use `defaultChecked`. ' +
         'Otherwise, set either `onChange` or `readOnly`.',
     );
@@ -218,7 +218,7 @@ describe('ReactDOMInput', () => {
         root.render(<input type="text" value="lion" />);
       });
     }).toErrorDev(
-      'Warning: You provided a `value` prop to a form field without an `onChange` handler.',
+      'You provided a `value` prop to a form field without an `onChange` handler.',
     );
     const node = container.firstChild;
     expect(isValueDirty(node)).toBe(true);
@@ -846,7 +846,6 @@ describe('ReactDOMInput', () => {
     expect(node.value).toBe('0');
   });
 
-  // @gate enableBigIntSupport
   it('should display `value` of bigint 5', async () => {
     await act(() => {
       root.render(<input type="text" value={5n} onChange={emptyFunction} />);
@@ -1912,7 +1911,7 @@ describe('ReactDOMInput', () => {
         root.render(<input type="text" value="zoink" readOnly={false} />);
       });
     }).toErrorDev(
-      'Warning: You provided a `value` prop to a form ' +
+      'You provided a `value` prop to a form ' +
         'field without an `onChange` handler. This will render a read-only ' +
         'field. If the field should be mutable use `defaultValue`. ' +
         'Otherwise, set either `onChange` or `readOnly`.\n' +
@@ -2049,7 +2048,7 @@ describe('ReactDOMInput', () => {
         root.render(<input type="text" />);
       });
     }).toErrorDev(
-      'Warning: A component is changing a controlled input to be uncontrolled. ' +
+      'A component is changing a controlled input to be uncontrolled. ' +
         'This is likely caused by the value changing from a defined to ' +
         'undefined, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
@@ -2072,7 +2071,7 @@ describe('ReactDOMInput', () => {
     }).toErrorDev([
       '`value` prop on `input` should not be null. ' +
         'Consider using an empty string to clear the component or `undefined` for uncontrolled components',
-      'Warning: A component is changing a controlled input to be uncontrolled. ' +
+      'A component is changing a controlled input to be uncontrolled. ' +
         'This is likely caused by the value changing from a defined to ' +
         'undefined, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
@@ -2093,7 +2092,7 @@ describe('ReactDOMInput', () => {
         root.render(<input type="text" defaultValue="uncontrolled" />);
       });
     }).toErrorDev(
-      'Warning: A component is changing a controlled input to be uncontrolled. ' +
+      'A component is changing a controlled input to be uncontrolled. ' +
         'This is likely caused by the value changing from a defined to ' +
         'undefined, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
@@ -2112,7 +2111,7 @@ describe('ReactDOMInput', () => {
         root.render(<input type="text" value="controlled" />);
       });
     }).toErrorDev(
-      'Warning: A component is changing an uncontrolled input to be controlled. ' +
+      'A component is changing an uncontrolled input to be controlled. ' +
         'This is likely caused by the value changing from undefined to ' +
         'a defined value, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
@@ -2136,7 +2135,7 @@ describe('ReactDOMInput', () => {
         root.render(<input type="text" value="controlled" />);
       });
     }).toErrorDev(
-      'Warning: A component is changing an uncontrolled input to be controlled. ' +
+      'A component is changing an uncontrolled input to be controlled. ' +
         'This is likely caused by the value changing from undefined to ' +
         'a defined value, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
@@ -2157,7 +2156,7 @@ describe('ReactDOMInput', () => {
         root.render(<input type="checkbox" />);
       });
     }).toErrorDev(
-      'Warning: A component is changing a controlled input to be uncontrolled. ' +
+      'A component is changing a controlled input to be uncontrolled. ' +
         'This is likely caused by the value changing from a defined to ' +
         'undefined, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
@@ -2178,7 +2177,7 @@ describe('ReactDOMInput', () => {
         root.render(<input type="checkbox" checked={null} />);
       });
     }).toErrorDev(
-      'Warning: A component is changing a controlled input to be uncontrolled. ' +
+      'A component is changing a controlled input to be uncontrolled. ' +
         'This is likely caused by the value changing from a defined to ' +
         'undefined, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
@@ -2199,7 +2198,7 @@ describe('ReactDOMInput', () => {
         root.render(<input type="checkbox" defaultChecked={true} />);
       });
     }).toErrorDev(
-      'Warning: A component is changing a controlled input to be uncontrolled. ' +
+      'A component is changing a controlled input to be uncontrolled. ' +
         'This is likely caused by the value changing from a defined to ' +
         'undefined, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
@@ -2218,7 +2217,7 @@ describe('ReactDOMInput', () => {
         root.render(<input type="checkbox" checked={true} />);
       });
     }).toErrorDev(
-      'Warning: A component is changing an uncontrolled input to be controlled. ' +
+      'A component is changing an uncontrolled input to be controlled. ' +
         'This is likely caused by the value changing from undefined to ' +
         'a defined value, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
@@ -2237,7 +2236,7 @@ describe('ReactDOMInput', () => {
         root.render(<input type="checkbox" checked={true} />);
       });
     }).toErrorDev(
-      'Warning: A component is changing an uncontrolled input to be controlled. ' +
+      'A component is changing an uncontrolled input to be controlled. ' +
         'This is likely caused by the value changing from undefined to ' +
         'a defined value, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
@@ -2256,7 +2255,7 @@ describe('ReactDOMInput', () => {
         root.render(<input type="radio" />);
       });
     }).toErrorDev(
-      'Warning: A component is changing a controlled input to be uncontrolled. ' +
+      'A component is changing a controlled input to be uncontrolled. ' +
         'This is likely caused by the value changing from a defined to ' +
         'undefined, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
@@ -2275,7 +2274,7 @@ describe('ReactDOMInput', () => {
         root.render(<input type="radio" checked={null} />);
       });
     }).toErrorDev(
-      'Warning: A component is changing a controlled input to be uncontrolled. ' +
+      'A component is changing a controlled input to be uncontrolled. ' +
         'This is likely caused by the value changing from a defined to ' +
         'undefined, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
@@ -2294,7 +2293,7 @@ describe('ReactDOMInput', () => {
         root.render(<input type="radio" defaultChecked={true} />);
       });
     }).toErrorDev(
-      'Warning: A component is changing a controlled input to be uncontrolled. ' +
+      'A component is changing a controlled input to be uncontrolled. ' +
         'This is likely caused by the value changing from a defined to ' +
         'undefined, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
@@ -2313,7 +2312,7 @@ describe('ReactDOMInput', () => {
         root.render(<input type="radio" checked={true} />);
       });
     }).toErrorDev(
-      'Warning: A component is changing an uncontrolled input to be controlled. ' +
+      'A component is changing an uncontrolled input to be controlled. ' +
         'This is likely caused by the value changing from undefined to ' +
         'a defined value, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
@@ -2332,7 +2331,7 @@ describe('ReactDOMInput', () => {
         root.render(<input type="radio" checked={true} />);
       });
     }).toErrorDev(
-      'Warning: A component is changing an uncontrolled input to be controlled. ' +
+      'A component is changing an uncontrolled input to be controlled. ' +
         'This is likely caused by the value changing from undefined to ' +
         'a defined value, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
@@ -2396,7 +2395,7 @@ describe('ReactDOMInput', () => {
         root.render(<input type="radio" value="value" />);
       });
     }).toErrorDev(
-      'Warning: A component is changing a controlled input to be uncontrolled. ' +
+      'A component is changing a controlled input to be uncontrolled. ' +
         'This is likely caused by the value changing from a defined to ' +
         'undefined, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +

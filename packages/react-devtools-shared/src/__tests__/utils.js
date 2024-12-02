@@ -151,7 +151,7 @@ export function getLegacyRenderImplementation(): RenderImplementation {
 
   function render(elements) {
     withErrorsOrWarningsIgnored(
-      ['ReactDOM.render is no longer supported in React 18'],
+      ['ReactDOM.render has not been supported since React 18'],
       () => {
         ReactDOM.render(elements, container);
       },
@@ -284,6 +284,19 @@ export function createHOCFilter(isEnabled: boolean = true) {
   };
 }
 
+export function createEnvironmentNameFilter(
+  env: string,
+  isEnabled: boolean = true,
+) {
+  const Types = require('react-devtools-shared/src/frontend/types');
+  return {
+    type: Types.ComponentFilterEnvironmentName,
+    isEnabled,
+    isValid: true,
+    value: env,
+  };
+}
+
 export function createElementTypeFilter(
   elementType: ElementType,
   isEnabled: boolean = true,
@@ -340,7 +353,7 @@ export function legacyRender(elements, container) {
 
   const ReactDOM = require('react-dom');
   withErrorsOrWarningsIgnored(
-    ['ReactDOM.render is no longer supported in React 18'],
+    ['ReactDOM.render has not been supported since React 18'],
     () => {
       ReactDOM.render(elements, container);
     },
@@ -463,6 +476,9 @@ export function overrideFeatureFlags(overrideFlags) {
 }
 
 export function normalizeCodeLocInfo(str) {
+  if (typeof str === 'object' && str !== null) {
+    str = str.stack;
+  }
   if (typeof str !== 'string') {
     return str;
   }

@@ -1,0 +1,27 @@
+---
+source: crates/react_fixtures/tests/fixtures_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_fixtures/tests/fixtures/simple.js
+---
+Input:
+function test() {
+  [true, false, null, 1, 3.14, ...["hello world!"]];
+  return 2;
+}
+
+
+Output:
+function test(
+)
+entry bb0
+bb0 (block)
+  [0] unknown $10 = true
+  [1] unknown $11 = false
+  [2] unknown $12 = null
+  [3] unknown $13 = 1
+  [4] unknown $14 = 3.14
+  [5] unknown $15 = "hello world!"
+  [6] unknown $16 = Array [unknown $15]
+  [7] unknown $17 = Array [unknown $10, unknown $11, unknown $12, unknown $13, unknown $14, ...unknown $16]
+  [8] unknown $18 = 2
+  [9] Return unknown $18

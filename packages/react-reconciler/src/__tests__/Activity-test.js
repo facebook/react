@@ -7,6 +7,7 @@ let Activity;
 let useState;
 let useLayoutEffect;
 let useEffect;
+let useInsertionEffect;
 let useMemo;
 let useRef;
 let startTransition;
@@ -25,6 +26,7 @@ describe('Activity', () => {
     LegacyHidden = React.unstable_LegacyHidden;
     Activity = React.unstable_Activity;
     useState = React.useState;
+    useInsertionEffect = React.useInsertionEffect;
     useLayoutEffect = React.useLayoutEffect;
     useEffect = React.useEffect;
     useMemo = React.useMemo;
@@ -43,6 +45,13 @@ describe('Activity', () => {
   }
 
   function LoggedText({text, children}) {
+    useInsertionEffect(() => {
+      Scheduler.log(`mount insertion ${text}`);
+      return () => {
+        Scheduler.log(`unmount insertion ${text}`);
+      };
+    });
+
     useEffect(() => {
       Scheduler.log(`mount ${text}`);
       return () => {
@@ -118,7 +127,7 @@ describe('Activity', () => {
     );
   });
 
-  // @gate www
+  // @gate enableLegacyHidden && !disableLegacyMode
   it('does not defer in legacy mode', async () => {
     let setState;
     function Foo() {
@@ -163,7 +172,7 @@ describe('Activity', () => {
     );
   });
 
-  // @gate www
+  // @gate enableLegacyHidden
   it('does defer in concurrent mode', async () => {
     let setState;
     function Foo() {
@@ -698,15 +707,10 @@ describe('Activity', () => {
       );
 
       // Before the inner update can finish, we receive another pair of updates.
-      if (gate(flags => flags.enableUnifiedSyncLane)) {
-        React.startTransition(() => {
-          setOuter(2);
-          setInner(2);
-        });
-      } else {
+      React.startTransition(() => {
         setOuter(2);
         setInner(2);
-      }
+      });
 
       // Also, before either of these new updates are processed, the hidden
       // tree is revealed at high priority.
@@ -1241,6 +1245,7 @@ describe('Activity', () => {
   // either an option or a heuristic to mount passive effects inside a hidden
   // tree after a delay.
   // @gate enableActivity
+  // eslint-disable-next-line jest/no-disabled-tests
   it.skip("don't defer passive effects when prerendering in a tree whose effects are already connected", async () => {
     function Child({label}) {
       useEffect(() => {
@@ -1438,6 +1443,63 @@ describe('Activity', () => {
         </div>
       </div>,
     );
+  });
+
+  // @gate enableActivity
+  it('insertion effects are not disconnected when the visibility changes', async () => {
+    function Child({step}) {
+      useInsertionEffect(() => {
+        Scheduler.log(`Commit mount [${step}]`);
+        return () => {
+          Scheduler.log(`Commit unmount [${step}]`);
+        };
+      }, [step]);
+      return <Text text={step} />;
+    }
+
+    function App({show, step}) {
+      return (
+        <Activity mode={show ? 'visible' : 'hidden'}>
+          {useMemo(
+            () => (
+              <Child step={step} />
+            ),
+            [step],
+          )}
+        </Activity>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(<App show={true} step={1} />);
+    });
+    assertLog([1, 'Commit mount [1]']);
+    expect(root).toMatchRenderedOutput(<span prop={1} />);
+
+    // Hide the tree. This will not unmount insertion effects.
+    await act(() => {
+      root.render(<App show={false} step={1} />);
+    });
+    assertLog([]);
+    expect(root).toMatchRenderedOutput(<span hidden={true} prop={1} />);
+
+    // Update.
+    await act(() => {
+      root.render(<App show={false} step={2} />);
+    });
+    // The update is pre-rendered so insertion effects are fired
+    assertLog([2, 'Commit unmount [1]', 'Commit mount [2]']);
+    expect(root).toMatchRenderedOutput(<span hidden={true} prop={2} />);
+
+    // Reveal the tree.
+    await act(() => {
+      root.render(<App show={true} step={2} />);
+    });
+    // The update doesn't render because it was already pre-rendered, and the
+    // insertion effect already fired.
+    assertLog([]);
+    expect(root).toMatchRenderedOutput(<span prop={2} />);
   });
 
   describe('manual interactivity', () => {
@@ -1908,6 +1970,9 @@ describe('Activity', () => {
       'outer',
       'middle',
       'inner',
+      'mount insertion inner',
+      'mount insertion middle',
+      'mount insertion outer',
       'mount layout inner',
       'mount layout middle',
       'mount layout outer',
@@ -1968,6 +2033,22 @@ describe('Activity', () => {
     });
 
     assertLog(['unmount layout inner', 'unmount inner']);
+
+    await act(() => {
+      root.render(null);
+    });
+
+    assertLog([
+      'unmount insertion outer',
+      'unmount layout outer',
+      'unmount insertion middle',
+      'unmount layout middle',
+      ...(gate('enableHiddenSubtreeInsertionEffectCleanup')
+        ? ['unmount insertion inner']
+        : []),
+      'unmount outer',
+      'unmount middle',
+    ]);
   });
 
   // @gate enableActivity

@@ -4,7 +4,8 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @format
+ * @noformat
+ * @nolint
  * @flow strict-local
  */
 
@@ -92,8 +93,8 @@ export function register(name: string, callback: () => ViewConfig): string {
  * This configuration will be lazy-loaded from UIManager.
  */
 export function get(name: string): ViewConfig {
-  let viewConfig;
-  if (!viewConfigs.has(name)) {
+  let viewConfig = viewConfigs.get(name);
+  if (viewConfig == null) {
     const callback = viewConfigCallbacks.get(name);
     if (typeof callback !== 'function') {
       invariant(
@@ -108,15 +109,14 @@ export function get(name: string): ViewConfig {
       );
     }
     viewConfig = callback();
+    invariant(viewConfig, 'View config not found for component `%s`', name);
+
     processEventTypes(viewConfig);
     viewConfigs.set(name, viewConfig);
 
     // Clear the callback after the config is set so that
     // we don't mask any errors during registration.
     viewConfigCallbacks.set(name, null);
-  } else {
-    viewConfig = viewConfigs.get(name);
   }
-  invariant(viewConfig, 'View config not found for name %s', name);
   return viewConfig;
 }

@@ -13,7 +13,16 @@ test('smoke test', async ({page}) => {
     pageErrors.push(error.stack);
   });
   await page.goto('/');
-  await expect(page.locator('h1')).toHaveText('Hello World');
+  await expect(page.getByTestId('promise-as-a-child-test')).toHaveText(
+    'Promise as a child hydrates without errors: deferred text'
+  );
+  await expect(page.getByTestId('prerendered')).not.toBeAttached();
+
+  await expect(consoleErrors).toEqual([]);
+  await expect(pageErrors).toEqual([]);
+
+  await page.goto('/prerender');
+  await expect(page.getByTestId('prerendered')).toBeAttached();
 
   await expect(consoleErrors).toEqual([]);
   await expect(pageErrors).toEqual([]);

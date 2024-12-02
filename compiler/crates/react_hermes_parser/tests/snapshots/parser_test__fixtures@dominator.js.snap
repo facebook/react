@@ -1,0 +1,784 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/dominator.js
+---
+Input:
+function Component(props) {
+  let x = 0;
+  label: if (props.a) {
+    x = 1;
+  } else {
+    if (props.b) {
+      x = 2;
+    } else {
+      break label;
+    }
+    x = 3;
+  }
+  label2: switch (props.c) {
+    case "a": {
+      x = 4;
+      break;
+    }
+    case "b": {
+      break label2;
+    }
+    case "c": {
+      x = 5;
+      // intentional fallthrough
+    }
+    default: {
+      x = 6;
+    }
+  }
+  if (props.d) {
+    return null;
+  }
+  return x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    34,
+                    35
+                  ]
+                },
+                "init": {
+                  "type": "NumericLiteral",
+                  "value": 0.0,
+                  "loc": null,
+                  "range": [
+                    38,
+                    39
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  34,
+                  39
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              40
+            ]
+          },
+          {
+            "type": "LabeledStatement",
+            "label": {
+              "type": "Identifier",
+              "name": "label",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                43,
+                48
+              ]
+            },
+            "body": {
+              "type": "IfStatement",
+              "test": {
+                "type": "MemberExpression",
+                "object": {
+                  "type": "Identifier",
+                  "name": "props",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    54,
+                    59
+                  ]
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "a",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    60,
+                    61
+                  ]
+                },
+                "computed": false,
+                "loc": null,
+                "range": [
+                  54,
+                  61
+                ]
+              },
+              "consequent": {
+                "type": "BlockStatement",
+                "body": [
+                  {
+                    "type": "ExpressionStatement",
+                    "expression": {
+                      "type": "AssignmentExpression",
+                      "operator": "=",
+                      "left": {
+                        "type": "Identifier",
+                        "name": "x",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          69,
+                          70
+                        ]
+                      },
+                      "right": {
+                        "type": "NumericLiteral",
+                        "value": 1.0,
+                        "loc": null,
+                        "range": [
+                          73,
+                          74
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        69,
+                        74
+                      ]
+                    },
+                    "directive": null,
+                    "loc": null,
+                    "range": [
+                      69,
+                      75
+                    ]
+                  }
+                ],
+                "loc": null,
+                "range": [
+                  63,
+                  79
+                ]
+              },
+              "alternate": {
+                "type": "BlockStatement",
+                "body": [
+                  {
+                    "type": "IfStatement",
+                    "test": {
+                      "type": "MemberExpression",
+                      "object": {
+                        "type": "Identifier",
+                        "name": "props",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          95,
+                          100
+                        ]
+                      },
+                      "property": {
+                        "type": "Identifier",
+                        "name": "b",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          101,
+                          102
+                        ]
+                      },
+                      "computed": false,
+                      "loc": null,
+                      "range": [
+                        95,
+                        102
+                      ]
+                    },
+                    "consequent": {
+                      "type": "BlockStatement",
+                      "body": [
+                        {
+                          "type": "ExpressionStatement",
+                          "expression": {
+                            "type": "AssignmentExpression",
+                            "operator": "=",
+                            "left": {
+                              "type": "Identifier",
+                              "name": "x",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                112,
+                                113
+                              ]
+                            },
+                            "right": {
+                              "type": "NumericLiteral",
+                              "value": 2.0,
+                              "loc": null,
+                              "range": [
+                                116,
+                                117
+                              ]
+                            },
+                            "loc": null,
+                            "range": [
+                              112,
+                              117
+                            ]
+                          },
+                          "directive": null,
+                          "loc": null,
+                          "range": [
+                            112,
+                            118
+                          ]
+                        }
+                      ],
+                      "loc": null,
+                      "range": [
+                        104,
+                        124
+                      ]
+                    },
+                    "alternate": {
+                      "type": "BlockStatement",
+                      "body": [
+                        {
+                          "type": "BreakStatement",
+                          "label": {
+                            "type": "Identifier",
+                            "name": "label",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              144,
+                              149
+                            ]
+                          },
+                          "loc": null,
+                          "range": [
+                            138,
+                            150
+                          ]
+                        }
+                      ],
+                      "loc": null,
+                      "range": [
+                        130,
+                        156
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      91,
+                      156
+                    ]
+                  },
+                  {
+                    "type": "ExpressionStatement",
+                    "expression": {
+                      "type": "AssignmentExpression",
+                      "operator": "=",
+                      "left": {
+                        "type": "Identifier",
+                        "name": "x",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          161,
+                          162
+                        ]
+                      },
+                      "right": {
+                        "type": "NumericLiteral",
+                        "value": 3.0,
+                        "loc": null,
+                        "range": [
+                          165,
+                          166
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        161,
+                        166
+                      ]
+                    },
+                    "directive": null,
+                    "loc": null,
+                    "range": [
+                      161,
+                      167
+                    ]
+                  }
+                ],
+                "loc": null,
+                "range": [
+                  85,
+                  171
+                ]
+              },
+              "loc": null,
+              "range": [
+                50,
+                171
+              ]
+            },
+            "loc": null,
+            "range": [
+              43,
+              171
+            ]
+          },
+          {
+            "type": "LabeledStatement",
+            "label": {
+              "type": "Identifier",
+              "name": "label2",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                174,
+                180
+              ]
+            },
+            "body": {
+              "type": "SwitchStatement",
+              "discriminant": {
+                "type": "MemberExpression",
+                "object": {
+                  "type": "Identifier",
+                  "name": "props",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    190,
+                    195
+                  ]
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "c",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    196,
+                    197
+                  ]
+                },
+                "computed": false,
+                "loc": null,
+                "range": [
+                  190,
+                  197
+                ]
+              },
+              "cases": [
+                {
+                  "type": "SwitchCase",
+                  "test": {
+                    "type": "StringLiteral",
+                    "value": "a",
+                    "loc": null,
+                    "range": [
+                      210,
+                      213
+                    ]
+                  },
+                  "consequent": [
+                    {
+                      "type": "BlockStatement",
+                      "body": [
+                        {
+                          "type": "ExpressionStatement",
+                          "expression": {
+                            "type": "AssignmentExpression",
+                            "operator": "=",
+                            "left": {
+                              "type": "Identifier",
+                              "name": "x",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                223,
+                                224
+                              ]
+                            },
+                            "right": {
+                              "type": "NumericLiteral",
+                              "value": 4.0,
+                              "loc": null,
+                              "range": [
+                                227,
+                                228
+                              ]
+                            },
+                            "loc": null,
+                            "range": [
+                              223,
+                              228
+                            ]
+                          },
+                          "directive": null,
+                          "loc": null,
+                          "range": [
+                            223,
+                            229
+                          ]
+                        },
+                        {
+                          "type": "BreakStatement",
+                          "label": null,
+                          "loc": null,
+                          "range": [
+                            236,
+                            242
+                          ]
+                        }
+                      ],
+                      "loc": null,
+                      "range": [
+                        215,
+                        248
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    205,
+                    248
+                  ]
+                },
+                {
+                  "type": "SwitchCase",
+                  "test": {
+                    "type": "StringLiteral",
+                    "value": "b",
+                    "loc": null,
+                    "range": [
+                      258,
+                      261
+                    ]
+                  },
+                  "consequent": [
+                    {
+                      "type": "BlockStatement",
+                      "body": [
+                        {
+                          "type": "BreakStatement",
+                          "label": {
+                            "type": "Identifier",
+                            "name": "label2",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              277,
+                              283
+                            ]
+                          },
+                          "loc": null,
+                          "range": [
+                            271,
+                            284
+                          ]
+                        }
+                      ],
+                      "loc": null,
+                      "range": [
+                        263,
+                        290
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    253,
+                    290
+                  ]
+                },
+                {
+                  "type": "SwitchCase",
+                  "test": {
+                    "type": "StringLiteral",
+                    "value": "c",
+                    "loc": null,
+                    "range": [
+                      300,
+                      303
+                    ]
+                  },
+                  "consequent": [
+                    {
+                      "type": "BlockStatement",
+                      "body": [
+                        {
+                          "type": "ExpressionStatement",
+                          "expression": {
+                            "type": "AssignmentExpression",
+                            "operator": "=",
+                            "left": {
+                              "type": "Identifier",
+                              "name": "x",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                313,
+                                314
+                              ]
+                            },
+                            "right": {
+                              "type": "NumericLiteral",
+                              "value": 5.0,
+                              "loc": null,
+                              "range": [
+                                317,
+                                318
+                              ]
+                            },
+                            "loc": null,
+                            "range": [
+                              313,
+                              318
+                            ]
+                          },
+                          "directive": null,
+                          "loc": null,
+                          "range": [
+                            313,
+                            319
+                          ]
+                        }
+                      ],
+                      "loc": null,
+                      "range": [
+                        305,
+                        358
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    295,
+                    358
+                  ]
+                },
+                {
+                  "type": "SwitchCase",
+                  "test": null,
+                  "consequent": [
+                    {
+                      "type": "BlockStatement",
+                      "body": [
+                        {
+                          "type": "ExpressionStatement",
+                          "expression": {
+                            "type": "AssignmentExpression",
+                            "operator": "=",
+                            "left": {
+                              "type": "Identifier",
+                              "name": "x",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                380,
+                                381
+                              ]
+                            },
+                            "right": {
+                              "type": "NumericLiteral",
+                              "value": 6.0,
+                              "loc": null,
+                              "range": [
+                                384,
+                                385
+                              ]
+                            },
+                            "loc": null,
+                            "range": [
+                              380,
+                              385
+                            ]
+                          },
+                          "directive": null,
+                          "loc": null,
+                          "range": [
+                            380,
+                            386
+                          ]
+                        }
+                      ],
+                      "loc": null,
+                      "range": [
+                        372,
+                        392
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    363,
+                    392
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                182,
+                396
+              ]
+            },
+            "loc": null,
+            "range": [
+              174,
+              396
+            ]
+          },
+          {
+            "type": "IfStatement",
+            "test": {
+              "type": "MemberExpression",
+              "object": {
+                "type": "Identifier",
+                "name": "props",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  403,
+                  408
+                ]
+              },
+              "property": {
+                "type": "Identifier",
+                "name": "d",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  409,
+                  410
+                ]
+              },
+              "computed": false,
+              "loc": null,
+              "range": [
+                403,
+                410
+              ]
+            },
+            "consequent": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ReturnStatement",
+                  "argument": {
+                    "type": "NullLiteral",
+                    "loc": null,
+                    "range": [
+                      425,
+                      429
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    418,
+                    430
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                412,
+                434
+              ]
+            },
+            "alternate": null,
+            "loc": null,
+            "range": [
+              399,
+              434
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                444,
+                445
+              ]
+            },
+            "loc": null,
+            "range": [
+              437,
+              446
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          448
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        448
+      ],
+      "loc": null,
+      "range": [
+        0,
+        448
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    448
+  ]
+}

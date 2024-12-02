@@ -18,7 +18,7 @@ if (global.window) {
 // The issue only reproduced when React was loaded before JSDOM.
 const React = require('react');
 const ReactDOMClient = require('react-dom/client');
-const act = require('internal-test-utils').act;
+const Scheduler = require('scheduler');
 
 // Initialize JSDOM separately.
 // We don't use our normal JSDOM setup because we want to load React first.
@@ -39,6 +39,12 @@ class Bad extends React.Component {
   }
 }
 
+async function fakeAct(cb) {
+  // We don't use act/waitForThrow here because we want to observe how errors are reported for real.
+  await cb();
+  Scheduler.unstable_flushAll();
+}
+
 describe('ReactErrorLoggingRecovery', () => {
   const originalConsoleError = console.error;
 
@@ -55,20 +61,18 @@ describe('ReactErrorLoggingRecovery', () => {
   it('should recover from errors in console.error', async function () {
     const div = document.createElement('div');
     const root = ReactDOMClient.createRoot(div);
-    await expect(async () => {
-      await act(() => {
-        root.render(<Bad />);
-      });
-      await act(() => {
-        root.render(<Bad />);
-      });
-    }).rejects.toThrow('no');
+    await fakeAct(() => {
+      root.render(<Bad />);
+    });
+    await fakeAct(() => {
+      root.render(<Bad />);
+    });
 
-    await expect(async () => {
-      await act(() => {
-        root.render(<span>Hello</span>);
-      });
-    }).rejects.toThrow('Buggy console.error');
+    expect(() => jest.runAllTimers()).toThrow('');
+
+    await fakeAct(() => {
+      root.render(<span>Hello</span>);
+    });
     expect(div.firstChild.textContent).toBe('Hello');
   });
 });

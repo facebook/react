@@ -7,4 +7,15 @@
  * @flow
  */
 
-export * from './src/ReactFlightDOMServerNode';
+export {
+  renderToPipeableStream,
+  decodeReplyFromBusboy,
+  decodeReply,
+  decodeAction,
+  decodeFormState,
+  createClientReference,
+  registerServerReference,
+  createTemporaryReferenceSet,
+  registerServerActions,
+  loadServerAction,
+} from './src/server/react-flight-dom-server.node';

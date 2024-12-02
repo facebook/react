@@ -1,0 +1,222 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/global-jsx-tag-lowered-between-mutations.js
+---
+Input:
+function Component(props) {
+  const maybeMutable = new MaybeMutable();
+  // NOTE: this will produce invalid output.
+  // The HIR is roughly:
+  //                                   ⌵ mutable range of `maybeMutable`
+  // StoreLocal maybeMutable = ...     ⌝
+  // t0 = LoadGlobal View              ⎮ <-- View is lowered inside this mutable range
+  //                                         and thus gets becomes an output of this scope,
+  //                                         gets promoted to temporary
+  // t1 = LoadGlobal maybeMutate       ⎮
+  // t2 = LoadLocal maybeMutable       ⎮
+  // t3 = Call t1(t2)                  ⌟
+  // t4 = Jsx tag=t0 props=[] children=[t3] <-- `t0` is an invalid tag
+  return <View>{maybeMutate(maybeMutable)}</View>;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "maybeMutable",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    36,
+                    48
+                  ]
+                },
+                "init": {
+                  "type": "NewExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "MaybeMutable",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      55,
+                      67
+                    ]
+                  },
+                  "arguments": [],
+                  "loc": null,
+                  "range": [
+                    51,
+                    69
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  69
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              70
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "View",
+                  "loc": null,
+                  "range": [
+                    722,
+                    726
+                  ]
+                },
+                "attributes": [],
+                "selfClosing": false,
+                "loc": null,
+                "range": [
+                  721,
+                  727
+                ]
+              },
+              "children": [
+                {
+                  "type": "JSXExpressionContainer",
+                  "expression": {
+                    "type": "CallExpression",
+                    "callee": {
+                      "type": "Identifier",
+                      "name": "maybeMutate",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        728,
+                        739
+                      ]
+                    },
+                    "arguments": [
+                      {
+                        "type": "Identifier",
+                        "name": "maybeMutable",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          740,
+                          752
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      728,
+                      753
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    727,
+                    754
+                  ]
+                }
+              ],
+              "closingElement": {
+                "type": "JSXClosingElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "View",
+                  "loc": null,
+                  "range": [
+                    756,
+                    760
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  754,
+                  761
+                ]
+              },
+              "loc": null,
+              "range": [
+                721,
+                761
+              ]
+            },
+            "loc": null,
+            "range": [
+              714,
+              762
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          764
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        764
+      ],
+      "loc": null,
+      "range": [
+        0,
+        764
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    764
+  ]
+}

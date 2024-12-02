@@ -7,30 +7,27 @@
  * @flow
  */
 
-import {getVersionedRenderImplementation, normalizeCodeLocInfo} from './utils';
+import {
+  getVersionedRenderImplementation,
+  normalizeCodeLocInfo,
+} from 'react-devtools-shared/src/__tests__/utils';
 
 describe('component stack', () => {
   let React;
   let act;
-  let mockError;
-  let mockWarn;
+  let supportsOwnerStacks;
 
   beforeEach(() => {
-    // Intercept native console methods before DevTools bootstraps.
-    // Normalize component stack locations.
-    mockError = jest.fn();
-    mockWarn = jest.fn();
-    console.error = (...args) => {
-      mockError(...args.map(normalizeCodeLocInfo));
-    };
-    console.warn = (...args) => {
-      mockWarn(...args.map(normalizeCodeLocInfo));
-    };
-
     const utils = require('./utils');
     act = utils.act;
 
     React = require('react');
+    if (
+      React.version.startsWith('19') &&
+      React.version.includes('experimental')
+    ) {
+      supportsOwnerStacks = true;
+    }
   });
 
   const {render} = getVersionedRenderImplementation();
@@ -47,25 +44,30 @@ describe('component stack', () => {
 
     act(() => render(<Grandparent />));
 
-    expect(mockError).toHaveBeenCalledWith(
+    expect(
+      global.consoleErrorMock.mock.calls[0].map(normalizeCodeLocInfo),
+    ).toEqual([
       'Test error.',
       '\n    in Child (at **)' +
         '\n    in Parent (at **)' +
         '\n    in Grandparent (at **)',
-    );
-    expect(mockWarn).toHaveBeenCalledWith(
+    ]);
+    expect(
+      global.consoleWarnMock.mock.calls[0].map(normalizeCodeLocInfo),
+    ).toEqual([
       'Test warning.',
       '\n    in Child (at **)' +
         '\n    in Parent (at **)' +
         '\n    in Grandparent (at **)',
-    );
+    ]);
   });
 
   // This test should have caught #19911
   // but didn't because both DevTools and ReactDOM are running in the same memory space,
   // so the case we're testing against (DevTools prod build and React DEV build) doesn't exist.
   // It would be nice to figure out a way to test this combination at some point...
-  xit('should disable the current dispatcher before shallow rendering so no effects get scheduled', () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('should disable the current dispatcher before shallow rendering so no effects get scheduled', () => {
     let useEffectCount = 0;
 
     const Example = props => {
@@ -81,13 +83,15 @@ describe('component stack', () => {
 
     expect(useEffectCount).toBe(1);
 
-    expect(mockWarn).toHaveBeenCalledWith(
+    expect(
+      global.consoleWarnMock.mock.calls[0].map(normalizeCodeLocInfo),
+    ).toEqual([
       'Warning to trigger appended component stacks.',
       '\n    in Example (at **)',
-    );
+    ]);
   });
 
-  // @reactVersion >=18.3
+  // @reactVersion >= 18.3
   it('should log the current component stack with debug info from promises', () => {
     const Child = () => {
       console.error('Test error.');
@@ -101,6 +105,7 @@ describe('component stack', () => {
       {
         name: 'ServerComponent',
         env: 'Server',
+        owner: null,
       },
     ];
     const Parent = () => ChildPromise;
@@ -108,19 +113,27 @@ describe('component stack', () => {
 
     act(() => render(<Grandparent />));
 
-    expect(mockError).toHaveBeenCalledWith(
+    expect(
+      global.consoleErrorMock.mock.calls[0].map(normalizeCodeLocInfo),
+    ).toEqual([
       'Test error.',
-      '\n    in Child (at **)' +
-        '\n    in ServerComponent (at **)' +
-        '\n    in Parent (at **)' +
-        '\n    in Grandparent (at **)',
-    );
-    expect(mockWarn).toHaveBeenCalledWith(
+      supportsOwnerStacks
+        ? '\n    in Child (at **)'
+        : '\n    in Child (at **)' +
+          '\n    in ServerComponent (at **)' +
+          '\n    in Parent (at **)' +
+          '\n    in Grandparent (at **)',
+    ]);
+    expect(
+      global.consoleWarnMock.mock.calls[0].map(normalizeCodeLocInfo),
+    ).toEqual([
       'Test warning.',
-      '\n    in Child (at **)' +
-        '\n    in ServerComponent (at **)' +
-        '\n    in Parent (at **)' +
-        '\n    in Grandparent (at **)',
-    );
+      supportsOwnerStacks
+        ? '\n    in Child (at **)'
+        : '\n    in Child (at **)' +
+          '\n    in ServerComponent (at **)' +
+          '\n    in Parent (at **)' +
+          '\n    in Grandparent (at **)',
+    ]);
   });
 });

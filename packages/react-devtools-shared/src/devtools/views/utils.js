@@ -142,10 +142,14 @@ export function serializeHooksForCopy(hooks: HooksTree | null): string {
     const current = queue.pop();
 
     // These aren't meaningful
+    // $FlowFixMe[incompatible-use]
     delete current.id;
+    // $FlowFixMe[incompatible-use]
     delete current.isStateEditable;
 
+    // $FlowFixMe[incompatible-use]
     if (current.subHooks.length > 0) {
+      // $FlowFixMe[incompatible-use]
       queue.push(...current.subHooks);
     }
   }

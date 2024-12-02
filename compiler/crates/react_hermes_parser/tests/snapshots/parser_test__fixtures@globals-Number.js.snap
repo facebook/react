@@ -1,0 +1,207 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/globals-Number.js
+---
+Input:
+function Component(props) {
+  const x = {};
+  const y = Number(x);
+  return [x, y];
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    36,
+                    37
+                  ]
+                },
+                "init": {
+                  "type": "ObjectExpression",
+                  "properties": [],
+                  "loc": null,
+                  "range": [
+                    40,
+                    42
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  42
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              43
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "y",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    52,
+                    53
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "Number",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      56,
+                      62
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "Identifier",
+                      "name": "x",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        63,
+                        64
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    56,
+                    65
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  52,
+                  65
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              46,
+              66
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "ArrayExpression",
+              "elements": [
+                {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    77,
+                    78
+                  ]
+                },
+                {
+                  "type": "Identifier",
+                  "name": "y",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    80,
+                    81
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                76,
+                82
+              ]
+            },
+            "loc": null,
+            "range": [
+              69,
+              83
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          85
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        85
+      ],
+      "loc": null,
+      "range": [
+        0,
+        85
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    85
+  ]
+}

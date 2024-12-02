@@ -72,8 +72,8 @@ describe('ReactDOMServerSuspense', () => {
     return children.length === 0
       ? undefined
       : children.length === 1
-      ? children[0]
-      : children;
+        ? children[0]
+        : children;
   }
 
   it('should render the children when no promise is thrown', async () => {
@@ -153,7 +153,7 @@ describe('ReactDOMServerSuspense', () => {
     expect(divB).toBe(divB2);
   });
 
-  it('it throws when rendering a suspending component outside a Suspense node', async () => {
+  it('throws when rendering a suspending component outside a Suspense node', async () => {
     expect(() => {
       ReactDOMServer.renderToString(
         <div>

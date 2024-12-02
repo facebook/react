@@ -1,0 +1,222 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/jsx-empty-expression.js
+---
+Input:
+export function Component(props) {
+  return (
+    <div>
+      {}
+      {props.a}
+    </div>
+  );
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "ExportNamedDeclaration",
+      "declaration": {
+        "type": "FunctionDeclaration",
+        "id": {
+          "type": "Identifier",
+          "name": "Component",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            16,
+            25
+          ]
+        },
+        "params": [
+          {
+            "type": "Identifier",
+            "name": "props",
+            "typeAnnotation": null,
+            "loc": null,
+            "range": [
+              26,
+              31
+            ]
+          }
+        ],
+        "body": {
+          "type": "BlockStatement",
+          "body": [
+            {
+              "type": "ReturnStatement",
+              "argument": {
+                "type": "JSXElement",
+                "openingElement": {
+                  "type": "JSXOpeningElement",
+                  "name": {
+                    "type": "JSXIdentifier",
+                    "name": "div",
+                    "loc": null,
+                    "range": [
+                      51,
+                      54
+                    ]
+                  },
+                  "attributes": [],
+                  "selfClosing": false,
+                  "loc": null,
+                  "range": [
+                    50,
+                    55
+                  ]
+                },
+                "children": [
+                  {
+                    "type": "JSXText",
+                    "value": "\n      ",
+                    "raw": "\n      ",
+                    "loc": null,
+                    "range": [
+                      55,
+                      62
+                    ]
+                  },
+                  {
+                    "type": "JSXExpressionContainer",
+                    "expression": {
+                      "type": "JSXEmptyExpression",
+                      "loc": null,
+                      "range": [
+                        63,
+                        63
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      62,
+                      64
+                    ]
+                  },
+                  {
+                    "type": "JSXText",
+                    "value": "\n      ",
+                    "raw": "\n      ",
+                    "loc": null,
+                    "range": [
+                      64,
+                      71
+                    ]
+                  },
+                  {
+                    "type": "JSXExpressionContainer",
+                    "expression": {
+                      "type": "MemberExpression",
+                      "object": {
+                        "type": "Identifier",
+                        "name": "props",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          72,
+                          77
+                        ]
+                      },
+                      "property": {
+                        "type": "Identifier",
+                        "name": "a",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          78,
+                          79
+                        ]
+                      },
+                      "computed": false,
+                      "loc": null,
+                      "range": [
+                        72,
+                        79
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      71,
+                      80
+                    ]
+                  },
+                  {
+                    "type": "JSXText",
+                    "value": "\n    ",
+                    "raw": "\n    ",
+                    "loc": null,
+                    "range": [
+                      80,
+                      85
+                    ]
+                  }
+                ],
+                "closingElement": {
+                  "type": "JSXClosingElement",
+                  "name": {
+                    "type": "JSXIdentifier",
+                    "name": "div",
+                    "loc": null,
+                    "range": [
+                      87,
+                      90
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    85,
+                    91
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  50,
+                  91
+                ]
+              },
+              "loc": null,
+              "range": [
+                37,
+                96
+              ]
+            }
+          ],
+          "loc": null,
+          "range": [
+            33,
+            98
+          ]
+        },
+        "generator": false,
+        "async": false,
+        "loc": null,
+        "range": [
+          7,
+          98
+        ],
+        "loc": null,
+        "range": [
+          7,
+          98
+        ]
+      },
+      "specifiers": [],
+      "source": null,
+      "loc": null,
+      "range": [
+        0,
+        98
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    98
+  ]
+}

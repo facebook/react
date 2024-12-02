@@ -11,6 +11,7 @@
 
 let React;
 let ReactDOM;
+let findDOMNode;
 let ReactDOMClient;
 let TogglingComponent;
 let act;
@@ -26,6 +27,9 @@ describe('ReactEmptyComponent', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
+    findDOMNode =
+      ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE
+        .findDOMNode;
     Scheduler = require('scheduler');
     const InternalTestUtils = require('internal-test-utils');
     act = InternalTestUtils.act;
@@ -37,12 +41,12 @@ describe('ReactEmptyComponent', () => {
       state = {component: this.props.firstComponent};
 
       componentDidMount() {
-        Scheduler.log('mount ' + ReactDOM.findDOMNode(this)?.nodeName);
+        Scheduler.log('mount ' + findDOMNode(this)?.nodeName);
         this.setState({component: this.props.secondComponent});
       }
 
       componentDidUpdate() {
-        Scheduler.log('update ' + ReactDOM.findDOMNode(this)?.nodeName);
+        Scheduler.log('update ' + findDOMNode(this)?.nodeName);
       }
 
       render() {
@@ -111,17 +115,14 @@ describe('ReactEmptyComponent', () => {
         root1.render(instance1);
       });
 
+      assertLog(['mount undefined', 'update DIV']);
+
       const root2 = ReactDOMClient.createRoot(container2);
       await act(() => {
         root2.render(instance2);
       });
 
-      assertLog([
-        'mount undefined',
-        'update DIV',
-        'mount DIV',
-        'update undefined',
-      ]);
+      assertLog(['mount DIV', 'update undefined']);
     });
 
     it('should be able to switch in a list of children', async () => {
@@ -244,13 +245,13 @@ describe('ReactEmptyComponent', () => {
         componentDidMount() {
           // Make sure the DOM node resolves properly even if we're replacing a
           // `null` component
-          expect(ReactDOM.findDOMNode(this)).not.toBe(null);
+          expect(findDOMNode(this)).not.toBe(null);
         }
 
         componentWillUnmount() {
           // Even though we're getting replaced by `null`, we haven't been
           // replaced yet!
-          expect(ReactDOM.findDOMNode(this)).not.toBe(null);
+          expect(findDOMNode(this)).not.toBe(null);
         }
       }
 

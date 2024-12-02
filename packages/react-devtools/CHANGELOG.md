@@ -4,6 +4,100 @@
 
 ---
 
+### 6.0.1
+October 15, 2024
+
+* Fix React Compiler badging ([poteto](https://github.com/poteto) in [#31196](https://github.com/facebook/react/pull/31196))
+* fix[react-devtools]: record timeline data only when supported ([hoxyq](https://github.com/hoxyq) in [#31154](https://github.com/facebook/react/pull/31154))
+* fix[react-devtools]: remove all listeners when Agent is shutdown ([hoxyq](https://github.com/hoxyq) in [#31151](https://github.com/facebook/react/pull/31151))
+* fix[react-devtools]: wrap key string in preformatted text html element ([hoxyq](https://github.com/hoxyq) in [#31153](https://github.com/facebook/react/pull/31153))
+* fix[react-devtools]: request hook initialization inside http server response ([hoxyq](https://github.com/hoxyq) in [#31102](https://github.com/facebook/react/pull/31102))
+* refactor: allow custom impl of backend reload-to-profile support check ([EdmondChuiHW](https://github.com/EdmondChuiHW) in [#31048](https://github.com/facebook/react/pull/31048))
+
+---
+
+### 6.0.0
+September 25, 2024
+
+#### Features
+* Support Server Components in Tree ([sebmarkbage](https://github.com/sebmarkbage) in [#30684](https://github.com/facebook/react/pull/30684))
+* feat: expose installHook with settings argument from react-devtools-core/backend ([hoxyq](https://github.com/hoxyq) in [#30987](https://github.com/facebook/react/pull/30987))
+* Add Filtering of Environment Names ([sebmarkbage](https://github.com/sebmarkbage) in [#30850](https://github.com/facebook/react/pull/30850))
+* Support secondary environment name when it changes ([sebmarkbage](https://github.com/sebmarkbage) in [#30842](https://github.com/facebook/react/pull/30842))
+* Filter Server Components ([sebmarkbage](https://github.com/sebmarkbage) in [#30839](https://github.com/facebook/react/pull/30839))
+* Make function inspection instant ([sebmarkbage](https://github.com/sebmarkbage) in [#30786](https://github.com/facebook/react/pull/30786))
+* Make Functions Clickable to Jump to Definition ([sebmarkbage](https://github.com/sebmarkbage) in [#30769](https://github.com/facebook/react/pull/30769))
+* [Flight/DevTools] Pass the Server Component's "key" as Part of the ReactComponentInfo ([sebmarkbage](https://github.com/sebmarkbage) in [#30703](https://github.com/facebook/react/pull/30703))
+* Make Element Inspection Feel Snappy ([sebmarkbage](https://github.com/sebmarkbage) in [#30555](https://github.com/facebook/react/pull/30555))
+* Print component stacks as error objects to get source mapping ([sebmarkbage](https://github.com/sebmarkbage) in [#30289](https://github.com/facebook/react/pull/30289))
+
+#### Bugfixes
+* Fix: profiling crashes #30661 #28838 ([EdmondChuiHW](https://github.com/EdmondChuiHW) in [#31024](https://github.com/facebook/react/pull/31024))
+* chore: remove settings manager from react-devtools-core ([hoxyq](https://github.com/hoxyq) in [#30986](https://github.com/facebook/react/pull/30986))
+* fix[react-devtools/extensions]: fixed tabs API calls and displaying restricted access popup ([hoxyq](https://github.com/hoxyq) in [#30825](https://github.com/facebook/react/pull/30825))
+* fix[react-devtools/InspectedElement]: fixed border stylings when some of the panels are not rendered ([hoxyq](https://github.com/hoxyq) in [#30676](https://github.com/facebook/react/pull/30676))
+* fix: path handling in react devtools ([Jack-Works](https://github.com/Jack-Works) in [#29199](https://github.com/facebook/react/pull/29199))
+
+#### Other
+* feat: display message if user ended up opening hook script ([hoxyq](https://github.com/hoxyq) in [#31000](https://github.com/facebook/react/pull/31000))
+* refactor[react-devtools]: move console patching to global hook ([hoxyq](https://github.com/hoxyq) in [#30596](https://github.com/facebook/react/pull/30596))
+* refactor[react-devtools]: initialize renderer interface early ([hoxyq](https://github.com/hoxyq) in [#30946](https://github.com/facebook/react/pull/30946))
+* Use Unicode Atom Symbol instead of Atom Emoji ([sebmarkbage](https://github.com/sebmarkbage) in [#30832](https://github.com/facebook/react/pull/30832))
+* feat[react-devtools]: support Manifest v3 for Firefox extension ([hoxyq](https://github.com/hoxyq) in [#30824](https://github.com/facebook/react/pull/30824))
+* Enable pointEvents while scrolling ([sebmarkbage](https://github.com/sebmarkbage) in [#30560](https://github.com/facebook/react/pull/30560))
+
+---
+
+### 5.3.1
+July 3, 2024
+
+* chore[react-devtools/renderer]: dont show strict mode warning for prod renderer builds ([hoxyq](https://github.com/hoxyq) in [#30158](https://github.com/facebook/react/pull/30158))
+* chore[react-devtools/ui]: fix strict mode badge styles ([hoxyq](https://github.com/hoxyq) in [#30159](https://github.com/facebook/react/pull/30159))
+* fix[react-devtools]: restore original args when recording errors ([hoxyq](https://github.com/hoxyq) in [#30091](https://github.com/facebook/react/pull/30091))
+* Read constructor name more carefully ([LoganDark](https://github.com/LoganDark) in [#29954](https://github.com/facebook/react/pull/29954))
+* refactor[react-devtools/extensions]: dont debounce cleanup logic on navigation ([hoxyq](https://github.com/hoxyq) in [#30027](https://github.com/facebook/react/pull/30027))
+
+---
+
+### 5.3.0
+June 17, 2024
+
+* chore[react-devtools]: improve console arguments formatting before passing it to original console ([hoxyq](https://github.com/hoxyq) in [#29873](https://github.com/facebook/react/pull/29873))
+* chore[react-devtools]: unify console patching and default to ansi escape symbols ([hoxyq](https://github.com/hoxyq) in [#29869](https://github.com/facebook/react/pull/29869))
+* chore[react-devtools/extensions]: make source maps url relative ([hoxyq](https://github.com/hoxyq) in [#29886](https://github.com/facebook/react/pull/29886))
+* fix[react-devtools] divided inspecting elements between inspecting do… ([vzaidman](https://github.com/vzaidman) in [#29885](https://github.com/facebook/react/pull/29885))
+* fix[react-devtools] component badge in light mode is now not invisible ([vzaidman](https://github.com/vzaidman) in [#29852](https://github.com/facebook/react/pull/29852))
+* fix[react-devtools] remove native inspection button when it can't be used ([vzaidman](https://github.com/vzaidman) in [#29779](https://github.com/facebook/react/pull/29779))
+* chore[react-devtools]: ip => internal-ip ([hoxyq](https://github.com/hoxyq) in [#29772](https://github.com/facebook/react/pull/29772))
+* Fix #29724: `ip` dependency update for CVE-2024-29415 ([Rekl0w](https://github.com/Rekl0w) in [#29725](https://github.com/facebook/react/pull/29725))
+* Dim `console` calls on additional Effect invocations due to `StrictMode` ([eps1lon](https://github.com/eps1lon) in [#29007](https://github.com/facebook/react/pull/29007))
+* refactor[react-devtools]: rewrite context menus ([hoxyq](https://github.com/hoxyq) in [#29049](https://github.com/facebook/react/pull/29049))
+
+---
+
+### 5.2.0
+May 8, 2024
+
+* feat[react-devtools]: display forget badge for components in profiling session ([hoxyq](https://github.com/hoxyq) in [#29014](https://github.com/facebook/react/pull/29014))
+* fix[react-devtools]: add backwards compat with legacy element type symbol ([hoxyq](https://github.com/hoxyq) in [#28982](https://github.com/facebook/react/pull/28982))
+* Expose "view source" options to Fusebox integration ([motiz88](https://github.com/motiz88) in [#28973](https://github.com/facebook/react/pull/28973))
+* Enable inspected element context menu in Fusebox ([motiz88](https://github.com/motiz88) in [#28972](https://github.com/facebook/react/pull/28972))
+* Check in `frontend.d.ts` for react-devtools-fusebox, include in build output ([motiz88](https://github.com/motiz88) in [#28970](https://github.com/facebook/react/pull/28970))
+* Rename Forget badge  ([jbonta](https://github.com/jbonta) in [#28858](https://github.com/facebook/react/pull/28858))
+* Devtools: Add support for useFormStatus ([eps1lon](https://github.com/eps1lon) in [#28413](https://github.com/facebook/react/pull/28413))
+
+---
+
+### 5.1.0
+April 15, 2024
+
+* Look for a ReactMemoCacheSentinel on state ([gsathya](https://github.com/gsathya) in [#28831](https://github.com/facebook/react/pull/28831))
+* feat[devtools]: add method for connecting backend with custom messaging protocol ([hoxyq](https://github.com/hoxyq) in [#28552](https://github.com/facebook/react/pull/28552))
+* feat[devtools]: ship source maps for content scripts and ignore list installHook script ([hoxyq](https://github.com/hoxyq) in [#28730](https://github.com/facebook/react/pull/28730))
+* Devtools: Display actual pending state when inspecting `useTransition` ([eps1lon](https://github.com/eps1lon) in [#28499](https://github.com/facebook/react/pull/28499))
+
+---
+
 ### 5.0.2
 March 5, 2024
 

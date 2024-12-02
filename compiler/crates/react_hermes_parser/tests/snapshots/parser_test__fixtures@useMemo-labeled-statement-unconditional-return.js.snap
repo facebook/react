@@ -1,0 +1,235 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/useMemo-labeled-statement-unconditional-return.js
+---
+Input:
+function Component(props) {
+  const x = useMemo(() => {
+    label: {
+      return props.value;
+    }
+  });
+  return x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    36,
+                    37
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useMemo",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      40,
+                      47
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "ArrowFunctionExpression",
+                      "id": null,
+                      "params": [],
+                      "body": {
+                        "type": "BlockStatement",
+                        "body": [
+                          {
+                            "type": "LabeledStatement",
+                            "label": {
+                              "type": "Identifier",
+                              "name": "label",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                60,
+                                65
+                              ]
+                            },
+                            "body": {
+                              "type": "BlockStatement",
+                              "body": [
+                                {
+                                  "type": "ReturnStatement",
+                                  "argument": {
+                                    "type": "MemberExpression",
+                                    "object": {
+                                      "type": "Identifier",
+                                      "name": "props",
+                                      "typeAnnotation": null,
+                                      "loc": null,
+                                      "range": [
+                                        82,
+                                        87
+                                      ]
+                                    },
+                                    "property": {
+                                      "type": "Identifier",
+                                      "name": "value",
+                                      "typeAnnotation": null,
+                                      "loc": null,
+                                      "range": [
+                                        88,
+                                        93
+                                      ]
+                                    },
+                                    "computed": false,
+                                    "loc": null,
+                                    "range": [
+                                      82,
+                                      93
+                                    ]
+                                  },
+                                  "loc": null,
+                                  "range": [
+                                    75,
+                                    94
+                                  ]
+                                }
+                              ],
+                              "loc": null,
+                              "range": [
+                                67,
+                                100
+                              ]
+                            },
+                            "loc": null,
+                            "range": [
+                              60,
+                              100
+                            ]
+                          }
+                        ],
+                        "loc": null,
+                        "range": [
+                          54,
+                          104
+                        ]
+                      },
+                      "generator": false,
+                      "async": false,
+                      "loc": null,
+                      "range": [
+                        48,
+                        104
+                      ],
+                      "expression": false,
+                      "loc": null,
+                      "range": [
+                        48,
+                        104
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    40,
+                    105
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  105
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              106
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                116,
+                117
+              ]
+            },
+            "loc": null,
+            "range": [
+              109,
+              118
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          120
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        120
+      ],
+      "loc": null,
+      "range": [
+        0,
+        120
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    120
+  ]
+}

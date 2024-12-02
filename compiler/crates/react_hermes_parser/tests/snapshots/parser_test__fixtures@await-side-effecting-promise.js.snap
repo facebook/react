@@ -1,0 +1,204 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/await-side-effecting-promise.js
+---
+Input:
+async function Component(props) {
+  const x = [];
+  await populateData(props.id, x);
+  return x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          15,
+          24
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            25,
+            30
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    42,
+                    43
+                  ]
+                },
+                "init": {
+                  "type": "ArrayExpression",
+                  "elements": [],
+                  "loc": null,
+                  "range": [
+                    46,
+                    48
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  42,
+                  48
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              36,
+              49
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "AwaitExpression",
+              "argument": {
+                "type": "CallExpression",
+                "callee": {
+                  "type": "Identifier",
+                  "name": "populateData",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    58,
+                    70
+                  ]
+                },
+                "arguments": [
+                  {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "props",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        71,
+                        76
+                      ]
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "id",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        77,
+                        79
+                      ]
+                    },
+                    "computed": false,
+                    "loc": null,
+                    "range": [
+                      71,
+                      79
+                    ]
+                  },
+                  {
+                    "type": "Identifier",
+                    "name": "x",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      81,
+                      82
+                    ]
+                  }
+                ],
+                "loc": null,
+                "range": [
+                  58,
+                  83
+                ]
+              },
+              "loc": null,
+              "range": [
+                52,
+                83
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              52,
+              84
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                94,
+                95
+              ]
+            },
+            "loc": null,
+            "range": [
+              87,
+              96
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          32,
+          98
+        ]
+      },
+      "generator": false,
+      "async": true,
+      "loc": null,
+      "range": [
+        0,
+        98
+      ],
+      "loc": null,
+      "range": [
+        0,
+        98
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    98
+  ]
+}

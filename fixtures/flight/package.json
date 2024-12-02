@@ -4,13 +4,13 @@
   "version": "0.1.0",
   "private": true,
   "devEngines": {
-    "node": "20.x || 21.x"
+    "node": "20.x || 22.x"
   },
   "dependencies": {
     "@babel/core": "^7.16.0",
     "@babel/plugin-proposal-private-property-in-object": "^7.18.6",
     "@babel/preset-react": "^7.22.5",
-    "@pmmmwh/react-refresh-webpack-plugin": "0.5.7",
+    "@pmmmwh/react-refresh-webpack-plugin": "0.5.15",
     "@svgr/webpack": "^5.5.0",
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^13.0.0",
@@ -49,6 +49,7 @@
     "react-dev-utils": "^12.0.1",
     "react-dom": "experimental",
     "react-refresh": "^0.11.0",
+    "react-server-dom-webpack": "experimental",
     "resolve": "^1.20.0",
     "resolve-url-loader": "^4.0.0",
     "sass-loader": "^12.3.0",
@@ -59,7 +60,7 @@
     "terser-webpack-plugin": "^5.2.5",
     "undici": "^5.20.0",
     "webpack": "^5.64.4",
-    "webpack-dev-middleware": "^5.3.1",
+    "webpack-dev-middleware": "^5.3.4",
     "webpack-hot-middleware": "^2.25.3",
     "webpack-manifest-plugin": "^4.0.2"
   },
@@ -70,8 +71,8 @@
     "predev": "cp -r ../../build/oss-experimental/* ./node_modules/",
     "prebuild": "cp -r ../../build/oss-experimental/* ./node_modules/",
     "dev": "concurrently \"npm run dev:region\" \"npm run dev:global\"",
-    "dev:global": "NODE_ENV=development BUILD_PATH=dist node --experimental-loader ./loader/global.js server/global",
-    "dev:region": "NODE_ENV=development BUILD_PATH=dist nodemon --watch src --watch dist -- --experimental-loader ./loader/region.js --conditions=react-server server/region",
+    "dev:global": "NODE_ENV=development BUILD_PATH=dist node --experimental-loader ./loader/global.js --inspect=127.0.0.1:9230 server/global",
+    "dev:region": "NODE_ENV=development BUILD_PATH=dist nodemon --watch src --watch dist -- --enable-source-maps --experimental-loader ./loader/region.js --conditions=react-server --inspect=127.0.0.1:9229 server/region",
     "start": "node scripts/build.js && concurrently \"npm run start:region\" \"npm run start:global\"",
     "start:global": "NODE_ENV=production node --experimental-loader ./loader/global.js server/global",
     "start:region": "NODE_ENV=production node --experimental-loader ./loader/region.js --conditions=react-server server/region",

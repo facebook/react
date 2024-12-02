@@ -1,0 +1,239 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/error._todo.computed-lval-in-destructure.js
+---
+Input:
+function Component(props) {
+  const computedKey = props.key;
+  const { [computedKey]: x } = props.val;
+
+  return x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "computedKey",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    36,
+                    47
+                  ]
+                },
+                "init": {
+                  "type": "MemberExpression",
+                  "object": {
+                    "type": "Identifier",
+                    "name": "props",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      50,
+                      55
+                    ]
+                  },
+                  "property": {
+                    "type": "Identifier",
+                    "name": "key",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      56,
+                      59
+                    ]
+                  },
+                  "computed": false,
+                  "loc": null,
+                  "range": [
+                    50,
+                    59
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  59
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              60
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "ObjectPattern",
+                  "properties": [
+                    {
+                      "type": "Property",
+                      "key": {
+                        "type": "Identifier",
+                        "name": "computedKey",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          72,
+                          83
+                        ]
+                      },
+                      "value": {
+                        "type": "Identifier",
+                        "name": "x",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          86,
+                          87
+                        ]
+                      },
+                      "kind": "init",
+                      "computed": true,
+                      "shorthand": false,
+                      "method": false,
+                      "loc": null,
+                      "range": [
+                        71,
+                        87
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    69,
+                    89
+                  ]
+                },
+                "init": {
+                  "type": "MemberExpression",
+                  "object": {
+                    "type": "Identifier",
+                    "name": "props",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      92,
+                      97
+                    ]
+                  },
+                  "property": {
+                    "type": "Identifier",
+                    "name": "val",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      98,
+                      101
+                    ]
+                  },
+                  "computed": false,
+                  "loc": null,
+                  "range": [
+                    92,
+                    101
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  69,
+                  101
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              63,
+              102
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                113,
+                114
+              ]
+            },
+            "loc": null,
+            "range": [
+              106,
+              115
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          117
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        117
+      ],
+      "loc": null,
+      "range": [
+        0,
+        117
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    117
+  ]
+}

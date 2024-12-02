@@ -31,7 +31,7 @@ export const SuspenseException: mixed = new Error(
     '`try/catch` block. Capturing without rethrowing will lead to ' +
     'unexpected behavior.\n\n' +
     'To handle async errors, wrap your component in an error boundary, or ' +
-    "call the promise's `.catch` method and pass the result to `use`",
+    "call the promise's `.catch` method and pass the result to `use`.",
 );
 
 export function createThenableState(): ThenableState {
@@ -82,6 +82,9 @@ export function trackUsedThenable<T>(
         // Only instrument the thenable if the status if not defined. If
         // it's defined, but an unknown value, assume it's been instrumented by
         // some custom userspace implementation. We treat it as "pending".
+        // Attach a dummy listener, to ensure that any lazy initialization can
+        // happen. Flight lazily parses JSON when the value is actually awaited.
+        thenable.then(noop, noop);
       } else {
         const pendingThenable: PendingThenable<T> = (thenable: any);
         pendingThenable.status = 'pending';
@@ -101,17 +104,17 @@ export function trackUsedThenable<T>(
             }
           },
         );
+      }
 
-        // Check one more time in case the thenable resolved synchronously
-        switch (thenable.status) {
-          case 'fulfilled': {
-            const fulfilledThenable: FulfilledThenable<T> = (thenable: any);
-            return fulfilledThenable.value;
-          }
-          case 'rejected': {
-            const rejectedThenable: RejectedThenable<T> = (thenable: any);
-            throw rejectedThenable.reason;
-          }
+      // Check one more time in case the thenable resolved synchronously
+      switch ((thenable: Thenable<T>).status) {
+        case 'fulfilled': {
+          const fulfilledThenable: FulfilledThenable<T> = (thenable: any);
+          return fulfilledThenable.value;
+        }
+        case 'rejected': {
+          const rejectedThenable: RejectedThenable<T> = (thenable: any);
+          throw rejectedThenable.reason;
         }
       }
 

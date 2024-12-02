@@ -212,11 +212,7 @@ describe('ReactElementClone', () => {
           ref: this.xyzRef,
         });
         expect(clone.key).toBe('xyz');
-        if (gate(flags => flags.enableRefAsProp)) {
-          expect(clone.props.ref).toBe(this.xyzRef);
-        } else {
-          expect(clone.ref).toBe(this.xyzRef);
-        }
+        expect(clone.props.ref).toBe(this.xyzRef);
         return <div>{clone}</div>;
       }
     }
@@ -294,6 +290,7 @@ describe('ReactElementClone', () => {
     );
   });
 
+  // @gate !disableDefaultPropsExceptForClasses
   it('should normalize props with default values', () => {
     class Component extends React.Component {
       render() {
@@ -315,18 +312,29 @@ describe('ReactElementClone', () => {
     expect(cloneInstance4.props.prop).toBe('newTestKey');
   });
 
-  it('warns for keys for arrays of elements in rest args', () => {
-    expect(() =>
-      React.cloneElement(<div />, null, [<div />, <div />]),
-    ).toErrorDev('Each child in a list should have a unique "key" prop.');
+  it('warns for keys for arrays of elements in rest args', async () => {
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    await expect(async () => {
+      await act(() => {
+        root.render(React.cloneElement(<div />, null, [<div />, <div />]));
+      });
+    }).toErrorDev('Each child in a list should have a unique "key" prop.');
   });
 
-  it('does not warns for arrays of elements with keys', () => {
-    React.cloneElement(<div />, null, [<div key="#1" />, <div key="#2" />]);
+  it('does not warns for arrays of elements with keys', async () => {
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    await act(() => {
+      root.render(
+        React.cloneElement(<div />, null, [<div key="#1" />, <div key="#2" />]),
+      );
+    });
   });
 
-  it('does not warn when the element is directly in rest args', () => {
-    React.cloneElement(<div />, null, <div />, <div />);
+  it('does not warn when the element is directly in rest args', async () => {
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    await act(() => {
+      root.render(React.cloneElement(<div />, null, <div />, <div />));
+    });
   });
 
   it('does not warn when the array contains a non-element', () => {
@@ -337,11 +345,7 @@ describe('ReactElementClone', () => {
     const elementA = React.createElement('div');
     const elementB = React.cloneElement(elementA, elementA.props);
     expect(elementB.key).toBe(null);
-    if (gate(flags => flags.enableRefAsProp)) {
-      expect(elementB.ref).toBe(null);
-    } else {
-      expect(elementB.ref).toBe(null);
-    }
+    expect(elementB.ref).toBe(null);
   });
 
   it('should ignore undefined key and ref', () => {
@@ -358,17 +362,12 @@ describe('ReactElementClone', () => {
     const clone = React.cloneElement(element, props);
     expect(clone.type).toBe(ComponentClass);
     expect(clone.key).toBe('12');
-    if (gate(flags => flags.enableRefAsProp)) {
-      expect(clone.props.ref).toBe('34');
-      expect(() => expect(clone.ref).toBe('34')).toErrorDev(
-        'Accessing element.ref is no longer supported',
-        {withoutStack: true},
-      );
-      expect(clone.props).toEqual({foo: 'ef', ref: '34'});
-    } else {
-      expect(clone.ref).toBe('34');
-      expect(clone.props).toEqual({foo: 'ef'});
-    }
+    expect(clone.props.ref).toBe('34');
+    expect(() => expect(clone.ref).toBe('34')).toErrorDev(
+      'Accessing element.ref was removed in React 19',
+      {withoutStack: true},
+    );
+    expect(clone.props).toEqual({foo: 'ef', ref: '34'});
     if (__DEV__) {
       expect(Object.isFrozen(element)).toBe(true);
       expect(Object.isFrozen(element.props)).toBe(true);
@@ -389,14 +388,8 @@ describe('ReactElementClone', () => {
     const clone = React.cloneElement(element, props);
     expect(clone.type).toBe(ComponentClass);
     expect(clone.key).toBe('null');
-    if (gate(flags => flags.enableRefAsProp)) {
-      expect(clone.ref).toBe(null);
-      expect(clone.props).toEqual({foo: 'ef', ref: null});
-    } else {
-      expect(clone.ref).toBe(null);
-      expect(clone.props).toEqual({foo: 'ef'});
-    }
-
+    expect(clone.ref).toBe(null);
+    expect(clone.props).toEqual({foo: 'ef', ref: null});
     if (__DEV__) {
       expect(Object.isFrozen(element)).toBe(true);
       expect(Object.isFrozen(element.props)).toBe(true);

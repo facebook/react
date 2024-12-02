@@ -11,6 +11,7 @@
 
 let React;
 let ReactDOM;
+let findDOMNode;
 let ReactDOMClient;
 let act;
 let Scheduler;
@@ -24,6 +25,9 @@ describe('ReactUpdates', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
+    findDOMNode =
+      ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE
+        .findDOMNode;
     act = require('internal-test-utils').act;
     Scheduler = require('scheduler');
 
@@ -659,7 +663,7 @@ describe('ReactUpdates', () => {
         a = this;
       }
       componentDidUpdate() {
-        expect(ReactDOM.findDOMNode(b).textContent).toBe('B1');
+        expect(findDOMNode(b).textContent).toBe('B1');
         aUpdated = true;
       }
 
@@ -756,7 +760,6 @@ describe('ReactUpdates', () => {
       });
     });
 
-    /* eslint-disable indent */
     expect(updates).toEqual([
       'Outer-render-0',
       'Inner-render-0-0',
@@ -785,7 +788,6 @@ describe('ReactUpdates', () => {
       'Inner-didUpdate-2-2',
       'Inner-callback-2',
     ]);
-    /* eslint-enable indent */
   });
 
   it('should flush updates in the correct order across roots', async () => {
@@ -801,7 +803,7 @@ describe('ReactUpdates', () => {
       componentDidMount() {
         instances.push(this);
         if (this.props.depth < this.props.count) {
-          const root = ReactDOMClient.createRoot(ReactDOM.findDOMNode(this));
+          const root = ReactDOMClient.createRoot(findDOMNode(this));
           root.render(
             <MockComponent
               depth={this.props.depth + 1}
@@ -889,12 +891,12 @@ describe('ReactUpdates', () => {
       root.render(<Y ref={current => (y = current)} />);
     });
 
-    expect(ReactDOM.findDOMNode(x).textContent).toBe('0');
+    expect(findDOMNode(x).textContent).toBe('0');
 
     await act(() => {
       y.forceUpdate();
     });
-    expect(ReactDOM.findDOMNode(x).textContent).toBe('1');
+    expect(findDOMNode(x).textContent).toBe('1');
   });
 
   it('should queue updates from during mount', async () => {
@@ -1542,11 +1544,11 @@ describe('ReactUpdates', () => {
 
     let limit = 55;
     const root = ReactDOMClient.createRoot(container);
-    expect(() => {
-      ReactDOM.flushSync(() => {
+    await expect(async () => {
+      await act(() => {
         root.render(<EventuallyTerminating ref={ref} />);
       });
-    }).toThrow('Maximum');
+    }).rejects.toThrow('Maximum');
 
     // Verify that we don't go over the limit if these updates are unrelated.
     limit -= 10;
@@ -1566,15 +1568,15 @@ describe('ReactUpdates', () => {
     expect(container.textContent).toBe(limit.toString());
 
     limit += 10;
-    expect(() => {
-      ReactDOM.flushSync(() => {
+    await expect(async () => {
+      await act(() => {
         ref.current.setState({step: 0});
       });
-    }).toThrow('Maximum');
+    }).rejects.toThrow('Maximum');
     expect(ref.current).toBe(null);
   });
 
-  it('does not fall into an infinite update loop', () => {
+  it('does not fall into an infinite update loop', async () => {
     class NonTerminating extends React.Component {
       state = {step: 0};
 
@@ -1599,14 +1601,14 @@ describe('ReactUpdates', () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
 
-    expect(() => {
-      ReactDOM.flushSync(() => {
+    await expect(async () => {
+      await act(() => {
         root.render(<NonTerminating />);
       });
-    }).toThrow('Maximum');
+    }).rejects.toThrow('Maximum');
   });
 
-  it('does not fall into an infinite update loop with useLayoutEffect', () => {
+  it('does not fall into an infinite update loop with useLayoutEffect', async () => {
     function NonTerminating() {
       const [step, setStep] = React.useState(0);
       React.useLayoutEffect(() => {
@@ -1617,11 +1619,11 @@ describe('ReactUpdates', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    expect(() => {
-      ReactDOM.flushSync(() => {
+    await expect(async () => {
+      await act(() => {
         root.render(<NonTerminating />);
       });
-    }).toThrow('Maximum');
+    }).rejects.toThrow('Maximum');
   });
 
   it('can recover after falling into an infinite update loop', async () => {
@@ -1650,29 +1652,29 @@ describe('ReactUpdates', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    expect(() => {
-      ReactDOM.flushSync(() => {
+    await expect(async () => {
+      await act(() => {
         root.render(<NonTerminating />);
       });
-    }).toThrow('Maximum');
+    }).rejects.toThrow('Maximum');
 
     await act(() => {
       root.render(<Terminating />);
     });
     expect(container.textContent).toBe('1');
 
-    expect(() => {
-      ReactDOM.flushSync(() => {
+    await expect(async () => {
+      await act(() => {
         root.render(<NonTerminating />);
       });
-    }).toThrow('Maximum');
+    }).rejects.toThrow('Maximum');
     await act(() => {
       root.render(<Terminating />);
     });
     expect(container.textContent).toBe('1');
   });
 
-  it('does not fall into mutually recursive infinite update loop with same container', () => {
+  it('does not fall into mutually recursive infinite update loop with same container', async () => {
     // Note: this test would fail if there were two or more different roots.
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -1694,14 +1696,14 @@ describe('ReactUpdates', () => {
       }
     }
 
-    expect(() => {
-      ReactDOM.flushSync(() => {
+    await expect(async () => {
+      await act(() => {
         root.render(<A />);
       });
-    }).toThrow('Maximum');
+    }).rejects.toThrow('Maximum');
   });
 
-  it('does not fall into an infinite error loop', () => {
+  it('does not fall into an infinite error loop', async () => {
     function BadRender() {
       throw new Error('error');
     }
@@ -1730,11 +1732,11 @@ describe('ReactUpdates', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    expect(() => {
-      ReactDOM.flushSync(() => {
+    await expect(async () => {
+      await act(() => {
         root.render(<NonTerminating />);
       });
-    }).toThrow('Maximum');
+    }).rejects.toThrow('Maximum');
   });
 
   it('can schedule ridiculously many updates within the same batch without triggering a maximum update error', async () => {
@@ -1775,7 +1777,7 @@ describe('ReactUpdates', () => {
     expect(subscribers.length).toBe(limit);
   });
 
-  it("does not infinite loop if there's a synchronous render phase update on another component", () => {
+  it("does not infinite loop if there's a synchronous render phase update on another component", async () => {
     if (gate(flags => !flags.enableInfiniteRenderLoopDetection)) {
       return;
     }
@@ -1795,12 +1797,12 @@ describe('ReactUpdates', () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
 
-    expect(() => {
-      expect(() => ReactDOM.flushSync(() => root.render(<App />))).toThrow(
-        'Maximum update depth exceeded',
-      );
+    await expect(async () => {
+      await expect(async () => {
+        await act(() => ReactDOM.flushSync(() => root.render(<App />)));
+      }).rejects.toThrow('Maximum update depth exceeded');
     }).toErrorDev(
-      'Warning: Cannot update a component (`App`) while rendering a different component (`Child`)',
+      'Cannot update a component (`App`) while rendering a different component (`Child`)',
     );
   });
 
@@ -1835,7 +1837,7 @@ describe('ReactUpdates', () => {
       }
       expect(error.message).toMatch('Maximum update depth exceeded');
     }).toErrorDev(
-      'Warning: Cannot update a component (`App`) while rendering a different component (`Child`)',
+      'Cannot update a component (`App`) while rendering a different component (`Child`)',
     );
   });
 
@@ -1844,7 +1846,7 @@ describe('ReactUpdates', () => {
     it('warns about a deferred infinite update loop with useEffect', async () => {
       function NonTerminating() {
         const [step, setStep] = React.useState(0);
-        React.useEffect(() => {
+        React.useEffect(function myEffect() {
           setStep(x => x + 1);
         });
         return step;
@@ -1855,11 +1857,15 @@ describe('ReactUpdates', () => {
       }
 
       let error = null;
-      let stack = null;
+      let ownerStack = null;
+      let debugStack = null;
       const originalConsoleError = console.error;
-      console.error = (e, s) => {
+      console.error = e => {
         error = e;
-        stack = s;
+        ownerStack = gate(flags => flags.enableOwnerStacks)
+          ? React.captureOwnerStack()
+          : null;
+        debugStack = new Error().stack;
         Scheduler.log('stop');
       };
       try {
@@ -1872,7 +1878,13 @@ describe('ReactUpdates', () => {
       }
 
       expect(error).toContain('Maximum update depth exceeded');
-      expect(stack).toContain('at NonTerminating');
+      // The currently executing effect should be on the native stack
+      expect(debugStack).toContain('at myEffect');
+      if (gate(flags => flags.enableOwnerStacks)) {
+        expect(ownerStack).toContain('at App');
+      } else {
+        expect(ownerStack).toBe(null);
+      }
     });
 
     it('can have nested updates if they do not cross the limit', async () => {
@@ -1896,6 +1908,8 @@ describe('ReactUpdates', () => {
       await act(() => {
         root.render(<Terminating />);
       });
+
+      assertLog(Array.from({length: LIMIT + 1}, (_, k) => k));
       expect(container.textContent).toBe('50');
       await act(() => {
         _setStep(0);
@@ -1926,7 +1940,7 @@ describe('ReactUpdates', () => {
     });
   }
 
-  it('prevents infinite update loop triggered by synchronous updates in useEffect', () => {
+  it('prevents infinite update loop triggered by synchronous updates in useEffect', async () => {
     // Ignore flushSync warning
     spyOnDev(console, 'error').mockImplementation(() => {});
 
@@ -1950,10 +1964,12 @@ describe('ReactUpdates', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    expect(() => {
-      ReactDOM.flushSync(() => {
-        root.render(<NonTerminating />);
+    await expect(async () => {
+      await act(() => {
+        ReactDOM.flushSync(() => {
+          root.render(<NonTerminating />);
+        });
       });
-    }).toThrow('Maximum update depth exceeded');
+    }).rejects.toThrow('Maximum update depth exceeded');
   });
 });

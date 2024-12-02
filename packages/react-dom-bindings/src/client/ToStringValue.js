@@ -8,7 +8,6 @@
  */
 
 import {checkFormFieldValueStringCoercion} from 'shared/CheckStringCoercion';
-import {enableBigIntSupport} from 'shared/ReactFeatureFlags';
 
 export opaque type ToStringValue =
   | boolean
@@ -31,11 +30,6 @@ export function toString(value: ToStringValue): string {
 export function getToStringValue(value: mixed): ToStringValue {
   switch (typeof value) {
     case 'bigint':
-      if (!enableBigIntSupport) {
-        // bigint is assigned as empty string
-        return '';
-      }
-    // fallthrough for BigInt support
     case 'boolean':
     case 'number':
     case 'string':

@@ -11,6 +11,7 @@
 
 let React;
 let ReactDOM;
+let findDOMNode;
 let ReactDOMClient;
 let ReactDOMServer;
 
@@ -23,6 +24,9 @@ describe('ReactDOM', () => {
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
+    findDOMNode =
+      ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE
+        .findDOMNode;
 
     act = require('internal-test-utils').act;
   });
@@ -166,6 +170,9 @@ describe('ReactDOM', () => {
 
   // @gate !disableLegacyMode
   it('throws in render() if the mount callback in legacy roots is not a function', async () => {
+    spyOnDev(console, 'warn');
+    spyOnDev(console, 'error');
+
     function Foo() {
       this.a = 1;
       this.b = 2;
@@ -180,40 +187,55 @@ describe('ReactDOM', () => {
     }
 
     const myDiv = document.createElement('div');
-    expect(() => {
-      expect(() => {
-        ReactDOM.render(<A />, myDiv, 'no');
-      }).toErrorDev(
-        'Expected the last optional `callback` argument to be ' +
-          'a function. Instead received: no.',
+    await expect(async () => {
+      await expect(async () => {
+        await act(() => {
+          ReactDOM.render(<A />, myDiv, 'no');
+        });
+      }).rejects.toThrowError(
+        'Invalid argument passed as callback. Expected a function. Instead ' +
+          'received: no',
       );
-    }).toThrowError(
-      'Invalid argument passed as callback. Expected a function. Instead ' +
-        'received: no',
+    }).toErrorDev(
+      [
+        'Expected the last optional `callback` argument to be a function. Instead received: no.',
+        'Expected the last optional `callback` argument to be a function. Instead received: no.',
+      ],
+      {withoutStack: 2},
     );
 
-    expect(() => {
-      expect(() => {
-        ReactDOM.render(<A />, myDiv, {foo: 'bar'});
-      }).toErrorDev(
-        'Expected the last optional `callback` argument to be ' +
-          'a function. Instead received: [object Object].',
+    await expect(async () => {
+      await expect(async () => {
+        await act(() => {
+          ReactDOM.render(<A />, myDiv, {foo: 'bar'});
+        });
+      }).rejects.toThrowError(
+        'Invalid argument passed as callback. Expected a function. Instead ' +
+          'received: [object Object]',
       );
-    }).toThrowError(
-      'Invalid argument passed as callback. Expected a function. Instead ' +
-        'received: [object Object]',
+    }).toErrorDev(
+      [
+        "Expected the last optional `callback` argument to be a function. Instead received: { foo: 'bar' }",
+        "Expected the last optional `callback` argument to be a function. Instead received: { foo: 'bar' }.",
+      ],
+      {withoutStack: 2},
     );
 
-    expect(() => {
-      expect(() => {
-        ReactDOM.render(<A />, myDiv, new Foo());
-      }).toErrorDev(
-        'Expected the last optional `callback` argument to be ' +
-          'a function. Instead received: [object Object].',
+    await expect(async () => {
+      await expect(async () => {
+        await act(() => {
+          ReactDOM.render(<A />, myDiv, new Foo());
+        });
+      }).rejects.toThrowError(
+        'Invalid argument passed as callback. Expected a function. Instead ' +
+          'received: [object Object]',
       );
-    }).toThrowError(
-      'Invalid argument passed as callback. Expected a function. Instead ' +
-        'received: [object Object]',
+    }).toErrorDev(
+      [
+        'Expected the last optional `callback` argument to be a function. Instead received: Foo { a: 1, b: 2 }.',
+        'Expected the last optional `callback` argument to be a function. Instead received: Foo { a: 1, b: 2 }.',
+      ],
+      {withoutStack: 2},
     );
   });
 
@@ -234,42 +256,57 @@ describe('ReactDOM', () => {
 
     const myDiv = document.createElement('div');
     ReactDOM.render(<A />, myDiv);
-    expect(() => {
-      expect(() => {
-        ReactDOM.render(<A />, myDiv, 'no');
-      }).toErrorDev(
-        'Expected the last optional `callback` argument to be ' +
-          'a function. Instead received: no.',
+    await expect(async () => {
+      await expect(async () => {
+        await act(() => {
+          ReactDOM.render(<A />, myDiv, 'no');
+        });
+      }).rejects.toThrowError(
+        'Invalid argument passed as callback. Expected a function. Instead ' +
+          'received: no',
       );
-    }).toThrowError(
-      'Invalid argument passed as callback. Expected a function. Instead ' +
-        'received: no',
+    }).toErrorDev(
+      [
+        'Expected the last optional `callback` argument to be a function. Instead received: no.',
+        'Expected the last optional `callback` argument to be a function. Instead received: no.',
+      ],
+      {withoutStack: 2},
     );
 
     ReactDOM.render(<A />, myDiv); // Re-mount
-    expect(() => {
-      expect(() => {
-        ReactDOM.render(<A />, myDiv, {foo: 'bar'});
-      }).toErrorDev(
-        'Expected the last optional `callback` argument to be ' +
-          'a function. Instead received: [object Object].',
+    await expect(async () => {
+      await expect(async () => {
+        await act(() => {
+          ReactDOM.render(<A />, myDiv, {foo: 'bar'});
+        });
+      }).rejects.toThrowError(
+        'Invalid argument passed as callback. Expected a function. Instead ' +
+          'received: [object Object]',
       );
-    }).toThrowError(
-      'Invalid argument passed as callback. Expected a function. Instead ' +
-        'received: [object Object]',
+    }).toErrorDev(
+      [
+        "Expected the last optional `callback` argument to be a function. Instead received: { foo: 'bar' }.",
+        "Expected the last optional `callback` argument to be a function. Instead received: { foo: 'bar' }.",
+      ],
+      {withoutStack: 2},
     );
 
     ReactDOM.render(<A />, myDiv); // Re-mount
-    expect(() => {
-      expect(() => {
-        ReactDOM.render(<A />, myDiv, new Foo());
-      }).toErrorDev(
-        'Expected the last optional `callback` argument to be ' +
-          'a function. Instead received: [object Object].',
+    await expect(async () => {
+      await expect(async () => {
+        await act(() => {
+          ReactDOM.render(<A />, myDiv, new Foo());
+        });
+      }).rejects.toThrowError(
+        'Invalid argument passed as callback. Expected a function. Instead ' +
+          'received: [object Object]',
       );
-    }).toThrowError(
-      'Invalid argument passed as callback. Expected a function. Instead ' +
-        'received: [object Object]',
+    }).toErrorDev(
+      [
+        'Expected the last optional `callback` argument to be a function. Instead received: Foo { a: 1, b: 2 }.',
+        'Expected the last optional `callback` argument to be a function. Instead received: Foo { a: 1, b: 2 }.',
+      ],
+      {withoutStack: 2},
     );
   });
 
@@ -461,7 +498,7 @@ describe('ReactDOM', () => {
     });
 
     const App = () => {
-      ReactDOM.findDOMNode(instance);
+      findDOMNode(instance);
       return <div />;
     };
 
@@ -515,7 +552,7 @@ describe('ReactDOM', () => {
       // ReactDOM(App > div > span)
       'Invalid ARIA attribute `ariaTypo`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
         '    in span (at **)\n' +
-        '    in div (at **)\n' +
+        (gate(flags => flags.enableOwnerStacks) ? '' : '    in div (at **)\n') +
         '    in App (at **)',
       // ReactDOM(App > div > ServerEntry) >>> ReactDOMServer(Child) >>> ReactDOMServer(App2) >>> ReactDOMServer(blink)
       'Invalid ARIA attribute `ariaTypo2`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
@@ -532,7 +569,7 @@ describe('ReactDOM', () => {
       // ReactDOM(App > div > font)
       'Invalid ARIA attribute `ariaTypo5`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
         '    in font (at **)\n' +
-        '    in div (at **)\n' +
+        (gate(flags => flags.enableOwnerStacks) ? '' : '    in div (at **)\n') +
         '    in App (at **)',
     ]);
   });

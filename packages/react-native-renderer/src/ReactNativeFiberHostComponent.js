@@ -7,9 +7,8 @@
  * @flow
  */
 
-import type {ElementRef} from 'react';
 import type {
-  HostComponent,
+  HostInstance,
   MeasureInWindowOnSuccessCallback,
   MeasureLayoutOnSuccessCallback,
   MeasureOnSuccessCallback,
@@ -72,7 +71,7 @@ class ReactNativeFiberHostComponent implements INativeMethods {
   }
 
   measureLayout(
-    relativeToNativeNode: number | ElementRef<HostComponent<mixed>>,
+    relativeToNativeNode: number | HostInstance,
     onSuccess: MeasureLayoutOnSuccessCallback,
     onFail?: () => void /* currently unused */,
   ) {
@@ -92,7 +91,7 @@ class ReactNativeFiberHostComponent implements INativeMethods {
     if (relativeNode == null) {
       if (__DEV__) {
         console.error(
-          'Warning: ref.measureLayout must be called with a node handle or a ref to a native component.',
+          'ref.measureLayout must be called with a node handle or a ref to a native component.',
         );
       }
 
