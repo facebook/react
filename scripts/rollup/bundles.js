@@ -566,7 +566,7 @@ const bundles = [
     global: 'ReactServerDOMServer',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'react-dom', '@parcel/intrinsics'],
+    externals: ['react', 'react-dom'],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
@@ -580,7 +580,6 @@ const bundles = [
       'util',
       'async_hooks',
       'react-dom',
-      '@parcel/intrinsics',
     ],
   },
   {
@@ -595,7 +594,6 @@ const bundles = [
       'util',
       'async_hooks',
       'react-dom',
-      '@parcel/intrinsics',
     ],
   },
 
@@ -607,7 +605,7 @@ const bundles = [
     global: 'ReactServerDOMClient',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'react-dom', '@parcel/intrinsics'],
+    externals: ['react', 'react-dom'],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
@@ -616,7 +614,7 @@ const bundles = [
     global: 'ReactServerDOMClient',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'react-dom', 'util', '@parcel/intrinsics'],
+    externals: ['react', 'react-dom', 'util'],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
@@ -625,7 +623,7 @@ const bundles = [
     global: 'ReactServerDOMClient',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'react-dom', '@parcel/intrinsics'],
+    externals: ['react', 'react-dom'],
   },
 
   /******* React Server DOM ESM Server *******/

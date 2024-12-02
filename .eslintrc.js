@@ -445,6 +445,12 @@ module.exports = {
       },
     },
     {
+      files: ['packages/react-server-dom-parcel/**/*.js'],
+      globals: {
+        parcelRequire: 'readonly',
+      },
+    },
+    {
       files: ['packages/scheduler/**/*.js'],
       globals: {
         TaskController: 'readonly',

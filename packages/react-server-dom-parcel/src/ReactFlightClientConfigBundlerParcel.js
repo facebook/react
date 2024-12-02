@@ -12,8 +12,6 @@ import type {Thenable} from 'shared/ReactTypes';
 import type {ImportMetadata} from './shared/ReactFlightImportMetadata';
 
 import {ID, NAME, BUNDLES} from './shared/ReactFlightImportMetadata';
-// $FlowIgnore
-import {requireModuleById, loadESMBundle} from '@parcel/intrinsics';
 
 export type ServerManifest = {
   [string]: Array<string>,
@@ -26,8 +24,11 @@ export opaque type ClientReferenceMetadata = ImportMetadata;
 
 // eslint-disable-next-line no-unused-vars
 export opaque type ClientReference<T> = {
+  // Module id.
   id: string,
+  // Export name.
   name: string,
+  // List of bundle URLs, relative to the distDir.
   bundles: Array<string>,
 };
 
@@ -72,12 +73,14 @@ export function resolveServerReference<T>(
 export function preloadModule<T>(
   metadata: ClientReference<T>,
 ): null | Thenable<any> {
-  return Promise.all(metadata.bundles.map(b => loadESMBundle(b)));
+  // Bundle paths are relative to the root of the dist dir,
+  // so join with a relative path from this bundle to the root.
+  // Note: parcelRequire.meta is equivalent to import.meta, but works in non-ESM modules.
+  // $FlowIgnore[unsupported-syntax]
+  return Promise.all(metadata.bundles.map(bundlePath => import(parcelRequire.meta.distDir + '/' + bundlePath)));
 }
 
-// Actually require the module or suspend if it's not yet ready.
-// Increase priority if necessary.
 export function requireModule<T>(metadata: ClientReference<T>): T {
-  const moduleExports = requireModuleById(metadata.id);
+  const moduleExports = parcelRequire(metadata.id);
   return moduleExports[metadata.name];
 }
