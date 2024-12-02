@@ -171,6 +171,7 @@ export function getSuspendedThenable(): Thenable<mixed> {
         'components.',
     );
   }
+
   const thenable = suspendedThenable;
   suspendedThenable = null;
   return thenable;
