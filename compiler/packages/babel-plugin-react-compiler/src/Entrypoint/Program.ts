@@ -1125,7 +1125,8 @@ function checkFunctionReferencedBeforeDeclarationAtTopLevel(
 
 type ReactCompilerRuntimeModule =
   | 'react/compiler-runtime' // from react namespace
-  | 'react-compiler-runtime'; // npm package
+  | 'react-compiler-runtime' // npm package
+  | 'react';
 function getReactCompilerRuntimeModule(
   opts: PluginOptions,
 ): ReactCompilerRuntimeModule {
@@ -1138,6 +1139,10 @@ function getReactCompilerRuntimeModule(
     }
     case '19': {
       moduleName = 'react/compiler-runtime';
+      break;
+    }
+    case 'donotuse_meta_internal': {
+      moduleName = 'react';
       break;
     }
     default:
