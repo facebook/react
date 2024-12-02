@@ -9,6 +9,8 @@
 
 import type {Fiber} from './ReactInternalTypes';
 
+import type {SuspendedReason} from './ReactFiberWorkLoop';
+
 import type {Lane, Lanes} from './ReactFiberLane';
 import {
   isTransitionLane,
@@ -48,6 +50,7 @@ export let blockingUpdateTime: number = -1.1; // First sync setState scheduled.
 export let blockingEventTime: number = -1.1; // Event timeStamp of the first setState.
 export let blockingEventType: null | string = null; // Event type of the first setState.
 export let blockingEventIsRepeat: boolean = false;
+export let blockingSuspendedTime: number = -1.1;
 // TODO: This should really be one per Transition lane.
 export let transitionClampTime: number = -0;
 export let transitionStartTime: number = -1.1; // First startTransition call before setState.
@@ -55,6 +58,18 @@ export let transitionUpdateTime: number = -1.1; // First transition setState sch
 export let transitionEventTime: number = -1.1; // Event timeStamp of the first transition.
 export let transitionEventType: null | string = null; // Event type of the first transition.
 export let transitionEventIsRepeat: boolean = false;
+export let transitionSuspendedTime: number = -1.1;
+
+export let yieldReason: SuspendedReason = (0: any);
+export let yieldStartTime: number = -1.1; // The time when we yielded to the event loop
+
+export function startYieldTimer(reason: SuspendedReason) {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  yieldStartTime = now();
+  yieldReason = reason;
+}
 
 export function startUpdateTimerByLane(lane: Lane): void {
   if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
@@ -65,9 +80,12 @@ export function startUpdateTimerByLane(lane: Lane): void {
       blockingUpdateTime = now();
       const newEventTime = resolveEventTimeStamp();
       const newEventType = resolveEventType();
-      blockingEventIsRepeat =
-        newEventTime === blockingEventTime &&
-        newEventType === blockingEventType;
+      if (
+        newEventTime !== blockingEventTime ||
+        newEventType !== blockingEventType
+      ) {
+        blockingEventIsRepeat = false;
+      }
       blockingEventTime = newEventTime;
       blockingEventType = newEventType;
     }
@@ -77,9 +95,12 @@ export function startUpdateTimerByLane(lane: Lane): void {
       if (transitionStartTime < 0) {
         const newEventTime = resolveEventTimeStamp();
         const newEventType = resolveEventType();
-        transitionEventIsRepeat =
-          newEventTime === transitionEventTime &&
-          newEventType === transitionEventType;
+        if (
+          newEventTime !== transitionEventTime ||
+          newEventType !== transitionEventType
+        ) {
+          transitionEventIsRepeat = false;
+        }
         transitionEventTime = newEventTime;
         transitionEventType = newEventType;
       }
@@ -87,21 +108,39 @@ export function startUpdateTimerByLane(lane: Lane): void {
   }
 }
 
-export function markUpdateAsRepeat(lanes: Lanes): void {
+export function startPingTimerByLanes(lanes: Lanes): void {
   if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
     return;
   }
-  // We're about to do a retry of this render. It is not a new update, so treat this
-  // as a repeat within the same event.
+  // Mark the update time and clamp anything before it because we don't want
+  // to show the event time for pings but we also don't want to clear it
+  // because we still need to track if this was a repeat.
   if (includesSyncLane(lanes) || includesBlockingLane(lanes)) {
-    blockingEventIsRepeat = true;
+    if (blockingUpdateTime < 0) {
+      blockingClampTime = blockingUpdateTime = now();
+    }
   } else if (includesTransitionLane(lanes)) {
-    transitionEventIsRepeat = true;
+    if (transitionUpdateTime < 0) {
+      transitionClampTime = transitionUpdateTime = now();
+    }
+  }
+}
+
+export function trackSuspendedTime(lanes: Lanes, renderEndTime: number) {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  if (includesSyncLane(lanes) || includesBlockingLane(lanes)) {
+    blockingSuspendedTime = renderEndTime;
+  } else if (includesTransitionLane(lanes)) {
+    transitionSuspendedTime = renderEndTime;
   }
 }
 
 export function clearBlockingTimers(): void {
   blockingUpdateTime = -1.1;
+  blockingSuspendedTime = -1.1;
+  blockingEventIsRepeat = true;
 }
 
 export function startAsyncTransitionTimer(): void {
@@ -112,9 +151,12 @@ export function startAsyncTransitionTimer(): void {
     transitionStartTime = now();
     const newEventTime = resolveEventTimeStamp();
     const newEventType = resolveEventType();
-    transitionEventIsRepeat =
-      newEventTime === transitionEventTime &&
-      newEventType === transitionEventType;
+    if (
+      newEventTime !== transitionEventTime ||
+      newEventType !== transitionEventType
+    ) {
+      transitionEventIsRepeat = false;
+    }
     transitionEventTime = newEventTime;
     transitionEventType = newEventType;
   }
@@ -145,6 +187,8 @@ export function clearAsyncTransitionTimer(): void {
 export function clearTransitionTimers(): void {
   transitionStartTime = -1.1;
   transitionUpdateTime = -1.1;
+  transitionSuspendedTime = -1.1;
+  transitionEventIsRepeat = true;
 }
 
 export function clampBlockingTimers(finalTime: number): void {

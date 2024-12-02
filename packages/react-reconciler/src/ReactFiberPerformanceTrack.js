@@ -25,7 +25,6 @@ const COMPONENTS_TRACK = 'Components ⚛';
 
 // Reused to avoid thrashing the GC.
 const reusableComponentDevToolDetails = {
-  dataType: 'track-entry',
   color: 'primary',
   track: COMPONENTS_TRACK,
 };
@@ -40,7 +39,6 @@ const reusableComponentOptions = {
 const LANES_TRACK_GROUP = 'Scheduler ⚛';
 
 const reusableLaneDevToolDetails = {
-  dataType: 'track-entry',
   color: 'primary',
   track: 'Blocking', // Lane
   trackGroup: LANES_TRACK_GROUP,
@@ -55,6 +53,63 @@ const reusableLaneOptions = {
 
 export function setCurrentTrackFromLanes(lanes: number): void {
   reusableLaneDevToolDetails.track = getGroupNameOfHighestPriorityLane(lanes);
+}
+
+const blockingLaneMarker = {
+  startTime: 0,
+  detail: {
+    devtools: {
+      color: 'primary-light',
+      track: 'Blocking',
+      trackGroup: LANES_TRACK_GROUP,
+    },
+  },
+};
+
+const transitionLaneMarker = {
+  startTime: 0,
+  detail: {
+    devtools: {
+      color: 'primary-light',
+      track: 'Transition',
+      trackGroup: LANES_TRACK_GROUP,
+    },
+  },
+};
+
+const suspenseLaneMarker = {
+  startTime: 0,
+  detail: {
+    devtools: {
+      color: 'primary-light',
+      track: 'Suspense',
+      trackGroup: LANES_TRACK_GROUP,
+    },
+  },
+};
+
+const idleLaneMarker = {
+  startTime: 0,
+  detail: {
+    devtools: {
+      color: 'primary-light',
+      track: 'Idle',
+      trackGroup: LANES_TRACK_GROUP,
+    },
+  },
+};
+
+export function markAllLanesInOrder() {
+  if (supportsUserTiming) {
+    // Ensure we create all tracks in priority order. Currently performance.mark() are in
+    // first insertion order but performance.measure() are in the reverse order. We can
+    // always add the 0 time slot even if it's in the past. That's still considered for
+    // ordering.
+    performance.mark('Blocking Track', blockingLaneMarker);
+    performance.mark('Transition Track', transitionLaneMarker);
+    performance.mark('Suspense Track', suspenseLaneMarker);
+    performance.mark('Idle Track', idleLaneMarker);
+  }
 }
 
 export function logComponentRender(
@@ -111,6 +166,54 @@ export function logComponentEffect(
     reusableComponentOptions.start = startTime;
     reusableComponentOptions.end = endTime;
     performance.measure(name, reusableComponentOptions);
+  }
+}
+
+export function logYieldTime(startTime: number, endTime: number): void {
+  if (supportsUserTiming) {
+    const yieldDuration = endTime - startTime;
+    if (yieldDuration < 1) {
+      // Skip sub-millisecond yields. This happens all the time and is not interesting.
+      return;
+    }
+    // Being blocked on CPU is potentially bad so we color it by how long it took.
+    reusableComponentDevToolDetails.color =
+      yieldDuration < 5
+        ? 'primary-light'
+        : yieldDuration < 10
+          ? 'primary'
+          : yieldDuration < 100
+            ? 'primary-dark'
+            : 'error';
+    reusableComponentOptions.start = startTime;
+    reusableComponentOptions.end = endTime;
+    performance.measure('Blocked', reusableComponentOptions);
+  }
+}
+
+export function logSuspendedYieldTime(
+  startTime: number,
+  endTime: number,
+  suspendedFiber: Fiber,
+): void {
+  if (supportsUserTiming) {
+    reusableComponentDevToolDetails.color = 'primary-light';
+    reusableComponentOptions.start = startTime;
+    reusableComponentOptions.end = endTime;
+    performance.measure('Suspended', reusableComponentOptions);
+  }
+}
+
+export function logActionYieldTime(
+  startTime: number,
+  endTime: number,
+  suspendedFiber: Fiber,
+): void {
+  if (supportsUserTiming) {
+    reusableComponentDevToolDetails.color = 'primary-light';
+    reusableComponentOptions.start = startTime;
+    reusableComponentOptions.end = endTime;
+    performance.measure('Action', reusableComponentOptions);
   }
 }
 
@@ -219,6 +322,19 @@ export function logSuspendedRenderPhase(
     reusableLaneOptions.start = startTime;
     reusableLaneOptions.end = endTime;
     performance.measure('Prewarm', reusableLaneOptions);
+  }
+}
+
+export function logSuspendedWithDelayPhase(
+  startTime: number,
+  endTime: number,
+): void {
+  // This means the render was suspended and cannot commit until it gets unblocked.
+  if (supportsUserTiming) {
+    reusableLaneDevToolDetails.color = 'primary-dark';
+    reusableLaneOptions.start = startTime;
+    reusableLaneOptions.end = endTime;
+    performance.measure('Suspended', reusableLaneOptions);
   }
 }
 

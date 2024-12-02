@@ -42,10 +42,10 @@ export type CompilerPass = {
   comments: Array<t.CommentBlock | t.CommentLine>;
   code: string | null;
 };
-const OPT_IN_DIRECTIVES = new Set(['use forget', 'use memo']);
+export const OPT_IN_DIRECTIVES = new Set(['use forget', 'use memo']);
 export const OPT_OUT_DIRECTIVES = new Set(['use no forget', 'use no memo']);
 
-function findDirectiveEnablingMemoization(
+export function findDirectiveEnablingMemoization(
   directives: Array<t.Directive>,
 ): Array<t.Directive> {
   return directives.filter(directive =>
@@ -53,7 +53,7 @@ function findDirectiveEnablingMemoization(
   );
 }
 
-function findDirectiveDisablingMemoization(
+export function findDirectiveDisablingMemoization(
   directives: Array<t.Directive>,
 ): Array<t.Directive> {
   return directives.filter(directive =>
@@ -1125,7 +1125,8 @@ function checkFunctionReferencedBeforeDeclarationAtTopLevel(
 
 type ReactCompilerRuntimeModule =
   | 'react/compiler-runtime' // from react namespace
-  | 'react-compiler-runtime'; // npm package
+  | 'react-compiler-runtime' // npm package
+  | 'react';
 function getReactCompilerRuntimeModule(
   opts: PluginOptions,
 ): ReactCompilerRuntimeModule {
@@ -1138,6 +1139,10 @@ function getReactCompilerRuntimeModule(
     }
     case '19': {
       moduleName = 'react/compiler-runtime';
+      break;
+    }
+    case 'donotuse_meta_internal': {
+      moduleName = 'react';
       break;
     }
     default:

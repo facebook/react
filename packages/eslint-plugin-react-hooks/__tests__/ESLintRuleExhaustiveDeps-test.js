@@ -7088,18 +7088,7 @@ const tests = {
       errors: [
         {
           message:
-            "React Hook useEffect has a missing dependency: 'myEffect'. " +
-            'Either include it or remove the dependency array.',
-          suggestions: [
-            {
-              desc: 'Update the dependencies array to be: [myEffect]',
-              output: normalizeIndent`
-                function MyComponent({myEffect}) {
-                  useEffect(myEffect, [myEffect]);
-                }
-              `,
-            },
-          ],
+            'React Hook useEffect received a function whose dependencies are unknown. Pass an inline function instead.',
         },
       ],
     },
@@ -7670,6 +7659,19 @@ const tests = {
         },
       ],
     },
+    {
+      code: normalizeIndent`
+        function useCustomCallback(callback, deps) {
+          return useCallback(callback, deps)
+        }
+      `,
+      errors: [
+        {
+          message:
+            'React Hook useCallback received a function whose dependencies are unknown. Pass an inline function instead.',
+        },
+      ],
+    },
   ],
 };
 
@@ -8193,6 +8195,19 @@ const testsTypescript = {
         },
       ],
     },
+    {
+      code: normalizeIndent`
+        function useCustomCallback(callback, deps) {
+          return useCallback(callback as any, deps)
+        }
+      `,
+      errors: [
+        {
+          message:
+            'React Hook useCallback received a function whose dependencies are unknown. Pass an inline function instead.',
+        },
+      ],
+    },
   ],
 };
 
@@ -8271,6 +8286,10 @@ if (!process.env.CI) {
   testsFlow.invalid = testsFlow.invalid.filter(predicate);
   testsTypescript.valid = testsTypescript.valid.filter(predicate);
   testsTypescript.invalid = testsTypescript.invalid.filter(predicate);
+  testsTypescriptEslintParserV4.valid =
+    testsTypescriptEslintParserV4.valid.filter(predicate);
+  testsTypescriptEslintParserV4.invalid =
+    testsTypescriptEslintParserV4.invalid.filter(predicate);
 }
 
 describe('rules-of-hooks/exhaustive-deps', () => {
