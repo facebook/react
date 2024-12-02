@@ -140,11 +140,20 @@ export function getSuspendedThenable(): Thenable<mixed> {
   // throws an opaque value instead of the thenable itself so that it can't be
   // caught in userspace. Then the work loop accesses the actual thenable using
   // this function.
-  if (suspendedThenable === null) {
-    throw new Error(
-      'Expected a suspended thenable. This is a bug in React. Please file ' +
-        'an issue.',
-    );
+  if (
+    suspendedThenable === null ||
+    typeof suspendedThenable.then !== 'function'
+  ) {
+    // Check if the thrown value is a valid thenable (i.e., a Promise-like object).
+    // React relies on thenables for managing Suspense during asynchronous rendering.
+    // If the thrown value is invalid (null, undefined, or not a thenable),
+    // an error is thrown with a clear message explaining the issue.
+    //
+    // This ensures that async components or hooks, such as `useTranslations`, are
+    // only used in client-side rendering contexts, and not during server-side
+    // rendering, where they can lead to incorrect behavior and errors.
+    throw new Error(544);
+
   }
   const thenable = suspendedThenable;
   suspendedThenable = null;
