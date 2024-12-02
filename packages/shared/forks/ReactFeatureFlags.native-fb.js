@@ -25,6 +25,7 @@ export const {
   enableObjectFiber,
   enablePersistedModeClonedFlag,
   enableShallowPropDiffing,
+  enableUseResourceEffectHook,
   passChildrenWhenCloningPersistedNodes,
   enableSiblingPrerendering,
 } = dynamicFlags;
@@ -54,6 +55,7 @@ export const enableDebugTracing = false;
 export const enableDeferRootSchedulingToMicrotask = true;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableFilterEmptyStringAttributesDOM = true;
+export const enableMoveBefore = true;
 export const enableFizzExternalRuntime = true;
 export const enableFlightReadableStream = true;
 export const enableGetInspectorDataForInstanceInProduction = true;

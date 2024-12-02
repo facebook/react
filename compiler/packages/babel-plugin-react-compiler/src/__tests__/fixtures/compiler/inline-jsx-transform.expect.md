@@ -91,7 +91,7 @@ function Parent(t0) {
         type: "div",
         ref: ref,
         key: null,
-        props: { children: children },
+        props: { ref: ref, children: children },
       };
     }
     $[0] = children;
@@ -180,7 +180,7 @@ function ParentAndRefAndKey(props) {
         type: Parent,
         ref: testRef,
         key: "testKey",
-        props: { a: "a", b: { b: "b" }, c: C },
+        props: { a: "a", b: { b: "b" }, c: C, ref: testRef },
       };
     }
     $[0] = t0;

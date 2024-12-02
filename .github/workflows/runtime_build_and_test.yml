@@ -53,6 +53,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+      - name: Ensure clean build directory
+        run: rm -rf build
       - run: yarn install --frozen-lockfile
       - run: node ./scripts/tasks/flow-ci ${{ matrix.flow_inline_config_shortname }}
 
@@ -73,6 +75,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+      - name: Ensure clean build directory
+        run: rm -rf build
       - run: yarn install --frozen-lockfile
       - run: |
           yarn generate-inline-fizz-runtime
@@ -95,6 +99,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+      - name: Ensure clean build directory
+        run: rm -rf build
       - run: yarn install --frozen-lockfile
       - run: yarn flags
 
@@ -144,6 +150,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+      - name: Ensure clean build directory
+        run: rm -rf build
       - run: yarn install --frozen-lockfile
       - run: yarn test ${{ matrix.params }} --ci --shard=${{ matrix.shard }}
 
@@ -173,6 +181,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+      - name: Ensure clean build directory
+        run: rm -rf build
       - run: yarn install --frozen-lockfile
       - run: yarn build --index=${{ matrix.worker_id }} --total=20 --r=${{ matrix.release_channel }} --ci
         env:
@@ -243,6 +253,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+      - name: Ensure clean build directory
+        run: rm -rf build
       - run: yarn install --frozen-lockfile
       - name: Restore archived build
         uses: actions/download-artifact@v4
@@ -271,6 +283,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+      - name: Ensure clean build directory
+        run: rm -rf build
       - run: yarn install --frozen-lockfile
       - name: Restore archived build
         uses: actions/download-artifact@v4
@@ -314,6 +328,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+      - name: Ensure clean build directory
+        run: rm -rf build
       - run: yarn install --frozen-lockfile
       - name: Restore archived build
         uses: actions/download-artifact@v4
@@ -345,6 +361,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+      - name: Ensure clean build directory
+        run: rm -rf build
       - run: yarn install --frozen-lockfile
       - name: Restore archived build
         uses: actions/download-artifact@v4
@@ -373,6 +391,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: fixtures_dom-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+      - name: Ensure clean build directory
+        run: rm -rf build
       - run: yarn install --frozen-lockfile
       - run: yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
         working-directory: fixtures/dom
@@ -413,6 +433,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: fixtures_flight-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+      - name: Ensure clean build directory
+        run: rm -rf build
       - run: yarn install --frozen-lockfile
       - name: Restore archived build
         uses: actions/download-artifact@v4
@@ -469,6 +491,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+      - name: Ensure clean build directory
+        run: rm -rf build
       - run: yarn install --frozen-lockfile
       - name: Restore archived build
         uses: actions/download-artifact@v4
@@ -515,6 +539,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+      - name: Ensure clean build directory
+        run: rm -rf build
       - run: yarn install --frozen-lockfile
       - name: Restore archived build
         uses: actions/download-artifact@v4
@@ -547,6 +573,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock', 'scripts/release/yarn.lock') }}
+      - name: Ensure clean build directory
+        run: rm -rf build
       - run: yarn install --frozen-lockfile
       - run: yarn install --frozen-lockfile
         working-directory: scripts/release
@@ -586,6 +614,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+      - name: Ensure clean build directory
+        run: rm -rf build
       - run: yarn install --frozen-lockfile
       - name: Restore archived build for PR
         uses: actions/download-artifact@v4
