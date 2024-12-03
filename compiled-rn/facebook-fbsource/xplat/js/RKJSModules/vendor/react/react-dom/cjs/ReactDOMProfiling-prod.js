@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f5a5140271ea04fb5b879336dbe05c8a>>
+ * @generated SignedSource<<1fac56355b16a8c52d540b977fbd4235>>
  */
 
 /*
@@ -5320,7 +5320,9 @@ function findFirstSuspended(row) {
       if (
         null !== state &&
         ((state = state.dehydrated),
-        null === state || "$?" === state.data || "$!" === state.data)
+        null === state ||
+          "$?" === state.data ||
+          isSuspenseInstanceFallback(state))
       )
         return node;
     } else if (19 === node.tag && void 0 !== node.memoizedProps.revealOrder) {
@@ -6462,7 +6464,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         ((nextInstance = nextInstance.dehydrated), null !== nextInstance)
       )
         return (
-          "$!" === nextInstance.data
+          isSuspenseInstanceFallback(nextInstance)
             ? (workInProgress.lanes = 16)
             : (workInProgress.lanes = 536870912),
           null
@@ -6572,7 +6574,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
             (workInProgress = showFallback));
     else if (
       (pushPrimaryTreeSuspenseHandler(workInProgress),
-      "$!" === nextInstance.data)
+      isSuspenseInstanceFallback(nextInstance))
     ) {
       JSCompiler_temp =
         nextInstance.nextSibling && nextInstance.nextSibling.dataset;
@@ -6661,7 +6663,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
             null,
             current
           )),
-          (nextInstance._reactRetry = workInProgress),
+          registerSuspenseInstanceRetry(nextInstance, workInProgress),
           (workInProgress = null))
         : ((renderLanes = JSCompiler_temp$jscomp$0.treeContext),
           (nextHydratableInstance = getNextHydratable(
@@ -12350,20 +12352,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1493 = 0;
-  i$jscomp$inline_1493 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1493++
+  var i$jscomp$inline_1490 = 0;
+  i$jscomp$inline_1490 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1490++
 ) {
-  var eventName$jscomp$inline_1494 =
-      simpleEventPluginEvents[i$jscomp$inline_1493],
-    domEventName$jscomp$inline_1495 =
-      eventName$jscomp$inline_1494.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1496 =
-      eventName$jscomp$inline_1494[0].toUpperCase() +
-      eventName$jscomp$inline_1494.slice(1);
+  var eventName$jscomp$inline_1491 =
+      simpleEventPluginEvents[i$jscomp$inline_1490],
+    domEventName$jscomp$inline_1492 =
+      eventName$jscomp$inline_1491.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1493 =
+      eventName$jscomp$inline_1491[0].toUpperCase() +
+      eventName$jscomp$inline_1491.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1495,
-    "on" + capitalizedEvent$jscomp$inline_1496
+    domEventName$jscomp$inline_1492,
+    "on" + capitalizedEvent$jscomp$inline_1493
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -14255,6 +14257,24 @@ function canHydrateTextInstance(instance, text, inRootOrSingleton) {
   }
   return instance;
 }
+function isSuspenseInstanceFallback(instance) {
+  return (
+    "$!" === instance.data ||
+    ("$?" === instance.data && "complete" === instance.ownerDocument.readyState)
+  );
+}
+function registerSuspenseInstanceRetry(instance, callback) {
+  var ownerDocument = instance.ownerDocument;
+  "complete" !== ownerDocument.readyState &&
+    ownerDocument.addEventListener(
+      "DOMContentLoaded",
+      function () {
+        "$?" === instance.data && callback();
+      },
+      { once: !0 }
+    );
+  instance._reactRetry = callback;
+}
 function getNextHydratable(node) {
   for (; null != node; node = node.nextSibling) {
     var nodeType = node.nodeType;
@@ -15847,16 +15867,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_1736 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1733 = React.version;
 if (
-  "19.0.0-native-fb-e3b7ef32-20241122" !==
-  isomorphicReactPackageVersion$jscomp$inline_1736
+  "19.0.0-native-fb-16d2bbbd-20241203" !==
+  isomorphicReactPackageVersion$jscomp$inline_1733
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1736,
-      "19.0.0-native-fb-e3b7ef32-20241122"
+      isomorphicReactPackageVersion$jscomp$inline_1733,
+      "19.0.0-native-fb-16d2bbbd-20241203"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -15876,25 +15896,25 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_2196 = {
+var internals$jscomp$inline_2190 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-e3b7ef32-20241122",
+  version: "19.0.0-native-fb-16d2bbbd-20241203",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-native-fb-e3b7ef32-20241122"
+  reconcilerVersion: "19.0.0-native-fb-16d2bbbd-20241203"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2197 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2191 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2197.isDisabled &&
-    hook$jscomp$inline_2197.supportsFiber
+    !hook$jscomp$inline_2191.isDisabled &&
+    hook$jscomp$inline_2191.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2197.inject(
-        internals$jscomp$inline_2196
+      (rendererID = hook$jscomp$inline_2191.inject(
+        internals$jscomp$inline_2190
       )),
-        (injectedHook = hook$jscomp$inline_2197);
+        (injectedHook = hook$jscomp$inline_2191);
     } catch (err) {}
 }
 function noop() {}
@@ -16140,4 +16160,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-native-fb-e3b7ef32-20241122";
+exports.version = "19.0.0-native-fb-16d2bbbd-20241203";
