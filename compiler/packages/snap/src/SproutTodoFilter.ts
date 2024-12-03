@@ -504,6 +504,7 @@ const skipFilter = new Set([
   // Depends on external functions
   'idx-method-no-outlining-wildcard',
   'idx-method-no-outlining',
+  'target-flag-meta-internal',
 
   // needs to be executed as a module
   'meta-property',

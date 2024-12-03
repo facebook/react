@@ -18,6 +18,7 @@ import type {
   LoggerEvent,
   PanicThresholdOptions,
   PluginOptions,
+  CompilerReactTarget,
 } from 'babel-plugin-react-compiler/src/Entrypoint';
 import type {Effect, ValueKind} from 'babel-plugin-react-compiler/src/HIR';
 import type {
@@ -55,7 +56,7 @@ function makePluginOptions(
   let validatePreserveExistingMemoizationGuarantees = false;
   let customMacros: null | Array<Macro> = null;
   let validateBlocklistedImports = null;
-  let target = '19' as const;
+  let target: CompilerReactTarget = '19';
 
   if (firstLine.indexOf('@compilationMode(annotation)') !== -1) {
     assert(
@@ -81,8 +82,15 @@ function makePluginOptions(
 
   const targetMatch = /@target="([^"]+)"/.exec(firstLine);
   if (targetMatch) {
-    // @ts-ignore
-    target = targetMatch[1];
+    if (targetMatch[1] === 'donotuse_meta_internal') {
+      target = {
+        kind: targetMatch[1],
+        runtimeModule: 'react',
+      };
+    } else {
+      // @ts-ignore
+      target = targetMatch[1];
+    }
   }
 
   if (firstLine.includes('@panicThreshold(none)')) {
