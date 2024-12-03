@@ -5083,7 +5083,9 @@ function findFirstSuspended(row) {
       if (
         null !== state &&
         ((state = state.dehydrated),
-        null === state || "$?" === state.data || "$!" === state.data)
+        null === state ||
+          "$?" === state.data ||
+          isSuspenseInstanceFallback(state))
       )
         return node;
     } else if (19 === node.tag && void 0 !== node.memoizedProps.revealOrder) {
@@ -6363,7 +6365,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         ((nextInstance = nextInstance.dehydrated), null !== nextInstance)
       )
         return (
-          "$!" === nextInstance.data
+          isSuspenseInstanceFallback(nextInstance)
             ? (workInProgress.lanes = 16)
             : (workInProgress.lanes = 536870912),
           null
@@ -6487,7 +6489,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
             (workInProgress = showFallback));
     else if (
       (pushPrimaryTreeSuspenseHandler(workInProgress),
-      "$!" === nextInstance.data)
+      isSuspenseInstanceFallback(nextInstance))
     ) {
       JSCompiler_temp =
         nextInstance.nextSibling && nextInstance.nextSibling.dataset;
@@ -6576,7 +6578,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
             null,
             current
           )),
-          (nextInstance._reactRetry = workInProgress),
+          registerSuspenseInstanceRetry(nextInstance, workInProgress),
           (workInProgress = null))
         : ((current = JSCompiler_temp$jscomp$0.treeContext),
           (nextHydratableInstance = getNextHydratable(
@@ -13941,14 +13943,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$371;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1657 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1657) {
-      var element$jscomp$inline_1658 = document.createElement("div");
-      element$jscomp$inline_1658.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1657 =
-        "function" === typeof element$jscomp$inline_1658.oninput;
+    var isSupported$jscomp$inline_1654 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1654) {
+      var element$jscomp$inline_1655 = document.createElement("div");
+      element$jscomp$inline_1655.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1654 =
+        "function" === typeof element$jscomp$inline_1655.oninput;
     }
-    JSCompiler_inline_result$jscomp$371 = isSupported$jscomp$inline_1657;
+    JSCompiler_inline_result$jscomp$371 = isSupported$jscomp$inline_1654;
   } else JSCompiler_inline_result$jscomp$371 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$371 &&
@@ -14362,20 +14364,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1698 = 0;
-  i$jscomp$inline_1698 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1698++
+  var i$jscomp$inline_1695 = 0;
+  i$jscomp$inline_1695 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1695++
 ) {
-  var eventName$jscomp$inline_1699 =
-      simpleEventPluginEvents[i$jscomp$inline_1698],
-    domEventName$jscomp$inline_1700 =
-      eventName$jscomp$inline_1699.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1701 =
-      eventName$jscomp$inline_1699[0].toUpperCase() +
-      eventName$jscomp$inline_1699.slice(1);
+  var eventName$jscomp$inline_1696 =
+      simpleEventPluginEvents[i$jscomp$inline_1695],
+    domEventName$jscomp$inline_1697 =
+      eventName$jscomp$inline_1696.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1698 =
+      eventName$jscomp$inline_1696[0].toUpperCase() +
+      eventName$jscomp$inline_1696.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1700,
-    "on" + capitalizedEvent$jscomp$inline_1701
+    domEventName$jscomp$inline_1697,
+    "on" + capitalizedEvent$jscomp$inline_1698
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -16400,6 +16402,24 @@ function canHydrateTextInstance(instance, text, inRootOrSingleton) {
   }
   return instance;
 }
+function isSuspenseInstanceFallback(instance) {
+  return (
+    "$!" === instance.data ||
+    ("$?" === instance.data && "complete" === instance.ownerDocument.readyState)
+  );
+}
+function registerSuspenseInstanceRetry(instance, callback) {
+  var ownerDocument = instance.ownerDocument;
+  "complete" !== ownerDocument.readyState &&
+    ownerDocument.addEventListener(
+      "DOMContentLoaded",
+      function () {
+        "$?" === instance.data && callback();
+      },
+      { once: !0 }
+    );
+  instance._reactRetry = callback;
+}
 function getNextHydratable(node) {
   for (; null != node; node = node.nextSibling) {
     var nodeType = node.nodeType;
@@ -17938,16 +17958,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_1871 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1868 = React.version;
 if (
-  "19.0.0-www-classic-e3b7ef32-20241122" !==
-  isomorphicReactPackageVersion$jscomp$inline_1871
+  "19.0.0-www-classic-16d2bbbd-20241203" !==
+  isomorphicReactPackageVersion$jscomp$inline_1868
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1871,
-      "19.0.0-www-classic-e3b7ef32-20241122"
+      isomorphicReactPackageVersion$jscomp$inline_1868,
+      "19.0.0-www-classic-16d2bbbd-20241203"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17963,28 +17983,28 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_1873 = {
+var internals$jscomp$inline_1870 = {
   bundleType: 0,
-  version: "19.0.0-www-classic-e3b7ef32-20241122",
+  version: "19.0.0-www-classic-16d2bbbd-20241203",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-www-classic-e3b7ef32-20241122"
+  reconcilerVersion: "19.0.0-www-classic-16d2bbbd-20241203"
 };
 enableSchedulingProfiler &&
-  ((internals$jscomp$inline_1873.getLaneLabelMap = getLaneLabelMap),
-  (internals$jscomp$inline_1873.injectProfilingHooks = injectProfilingHooks));
+  ((internals$jscomp$inline_1870.getLaneLabelMap = getLaneLabelMap),
+  (internals$jscomp$inline_1870.injectProfilingHooks = injectProfilingHooks));
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2374 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2368 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2374.isDisabled &&
-    hook$jscomp$inline_2374.supportsFiber
+    !hook$jscomp$inline_2368.isDisabled &&
+    hook$jscomp$inline_2368.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2374.inject(
-        internals$jscomp$inline_1873
+      (rendererID = hook$jscomp$inline_2368.inject(
+        internals$jscomp$inline_1870
       )),
-        (injectedHook = hook$jscomp$inline_2374);
+        (injectedHook = hook$jscomp$inline_2368);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -18335,7 +18355,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-e3b7ef32-20241122";
+exports.version = "19.0.0-www-classic-16d2bbbd-20241203";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
