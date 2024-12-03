@@ -1723,7 +1723,9 @@ describe('ReactFlight', () => {
       jest.resetModules();
       jest.mock('react', () => React);
       ReactNoopFlightClient.read(transport);
-    }).toErrorDev('Each child in a list should have a unique "key" prop.');
+    }).toErrorDev('Each child in a list should have a unique "key" prop.', {
+      withoutStack: gate(flags => !flags.enableOwnerStacks),
+    });
   });
 
   // @gate !__DEV__ || enableOwnerStacks
