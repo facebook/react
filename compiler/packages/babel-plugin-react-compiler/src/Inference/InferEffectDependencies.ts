@@ -178,7 +178,7 @@ export function inferEffectDependencies(fn: HIRFunction): void {
           value.args.push({...depsPlace, effect: Effect.Freeze});
           rewriteInstrs.set(instr.id, newInstructions);
         } else if (loadGlobals.has(value.args[0].identifier.id)) {
-          // We outlined the function expression, so we know it has no dependencies
+          // Global functions have no reactive dependencies, so we can insert an empty array
           newInstructions.push({
             id: makeInstructionId(0),
             loc: GeneratedSource,
