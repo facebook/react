@@ -194,6 +194,8 @@ const SUSPENSE_FALLBACK_START_DATA = '$!';
 const FORM_STATE_IS_MATCHING = 'F!';
 const FORM_STATE_IS_NOT_MATCHING = 'F';
 
+const DOCUMENT_READY_STATE_COMPLETE = 'complete';
+
 const STYLE = 'style';
 
 opaque type HostContextNamespace = 0 | 1 | 2;
@@ -1262,7 +1264,11 @@ export function isSuspenseInstancePending(instance: SuspenseInstance): boolean {
 export function isSuspenseInstanceFallback(
   instance: SuspenseInstance,
 ): boolean {
-  return instance.data === SUSPENSE_FALLBACK_START_DATA;
+  return (
+    instance.data === SUSPENSE_FALLBACK_START_DATA ||
+    (instance.data === SUSPENSE_PENDING_START_DATA &&
+      instance.ownerDocument.readyState === DOCUMENT_READY_STATE_COMPLETE)
+  );
 }
 
 export function getSuspenseInstanceFallbackErrorDetails(
@@ -1303,6 +1309,20 @@ export function registerSuspenseInstanceRetry(
   instance: SuspenseInstance,
   callback: () => void,
 ) {
+  const ownerDocument = instance.ownerDocument;
+  if (ownerDocument.readyState !== DOCUMENT_READY_STATE_COMPLETE) {
+    ownerDocument.addEventListener(
+      'DOMContentLoaded',
+      () => {
+        if (instance.data === SUSPENSE_PENDING_START_DATA) {
+          callback();
+        }
+      },
+      {
+        once: true,
+      },
+    );
+  }
   instance._reactRetry = callback;
 }
 
