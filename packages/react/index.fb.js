@@ -72,7 +72,7 @@ export {useMemoCache as unstable_useMemoCache} from './src/ReactHooks';
 export {useMemoCache as c} from './src/ReactHooks';
 
 // Only export captureOwnerStack if the flag is on, to support feature detection.
-let captureOwnerStack;
+let captureOwnerStack: ?() => null | string;
 if (enableOwnerStacks) {
   captureOwnerStack = captureOwnerStackImpl;
 }
