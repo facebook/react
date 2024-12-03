@@ -1310,20 +1310,28 @@ export function registerSuspenseInstanceRetry(
   callback: () => void,
 ) {
   const ownerDocument = instance.ownerDocument;
-  if (ownerDocument.readyState !== DOCUMENT_READY_STATE_COMPLETE) {
-    ownerDocument.addEventListener(
-      'DOMContentLoaded',
-      () => {
-        if (instance.data === SUSPENSE_PENDING_START_DATA) {
-          callback();
-        }
-      },
-      {
-        once: true,
-      },
-    );
+  if (
+    // The Fizz runtime must have put this boundary into client render or complete
+    // state after the render finished but before it committed. We need to call the
+    // callback now rather than wait
+    instance.data !== SUSPENSE_PENDING_START_DATA ||
+    // The boundary is still in pending status but the document has finished loading
+    // before we could register the event handler that would have scheduled the retry
+    // on load so we call teh callback now.
+    ownerDocument.readyState === DOCUMENT_READY_STATE_COMPLETE
+  ) {
+    callback();
+  } else {
+    // We're still in pending status and the document is still loading so we attach
+    // a listener to the document load even and expose the retry on the instance for
+    // the Fizz runtime to trigger if it ends up resolving this boundary
+    const listener = () => {
+      callback();
+      ownerDocument.removeEventListener('DOMContentLoaded', listener);
+    };
+    ownerDocument.addEventListener('DOMContentLoaded', listener);
+    instance._reactRetry = listener;
   }
-  instance._reactRetry = callback;
 }
 
 export function canHydrateFormStateMarker(
