@@ -439,7 +439,6 @@ export function renderWithHooks<Props, SecondArg>(
     let numberOfReRenders: number = 0;
     do {
       didScheduleRenderPhaseUpdateDuringThisPass = false;
-      localIdCounter = 0;
 
       if (numberOfReRenders >= RE_RENDER_LIMIT) {
         throw new Error(
