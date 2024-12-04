@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<dc5d8ff332c48703f47444b438316429>>
+ * @generated SignedSource<<f7a7850cf9c4dafe88bddd3a7e883702>>
  */
 
 "use strict";
@@ -8106,10 +8106,8 @@ __DEV__ &&
           );
         } else
           isSuspenseInstancePending()
-            ? ((workInProgress.flags |= 128),
+            ? ((workInProgress.flags |= 192),
               (workInProgress.child = current.child),
-              retryDehydratedSuspenseBoundary.bind(null, current),
-              registerSuspenseInstanceRetry(),
               (workInProgress = null))
             : ((workInProgress = mountSuspensePrimaryChildren(
                 workInProgress,
@@ -10838,6 +10836,12 @@ __DEV__ &&
           break;
         case 13:
           recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
+          flags & 64 &&
+            ((finishedRoot = finishedWork.memoizedState),
+            null !== finishedRoot &&
+              null !== finishedRoot.dehydrated &&
+              (retryDehydratedSuspenseBoundary.bind(null, finishedWork),
+              registerSuspenseInstanceRetry()));
           break;
         case 22:
           if (0 !== (finishedWork.mode & 1)) {
@@ -17598,11 +17602,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.0.0-native-fb-16d2bbbd-20241203" !== isomorphicReactPackageVersion)
+    if ("19.0.0-native-fb-de68d2f4-20241204" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.0.0-native-fb-16d2bbbd-20241203\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.0.0-native-fb-de68d2f4-20241204\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17628,11 +17632,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-16d2bbbd-20241203",
+        version: "19.0.0-native-fb-de68d2f4-20241204",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromTag,
-        reconcilerVersion: "19.0.0-native-fb-16d2bbbd-20241203"
+        reconcilerVersion: "19.0.0-native-fb-de68d2f4-20241204"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

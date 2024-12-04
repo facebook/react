@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<31b328fc5daab7fade221e5c06c32d94>>
+ * @generated SignedSource<<20d4f0ac43edf7059230122ab79fd535>>
  */
 
 /*
@@ -6832,13 +6832,8 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       );
     } else
       "$?" === nextInstance.data
-        ? ((workInProgress.flags |= 128),
+        ? ((workInProgress.flags |= 192),
           (workInProgress.child = current.child),
-          (workInProgress = retryDehydratedSuspenseBoundary.bind(
-            null,
-            current
-          )),
-          registerSuspenseInstanceRetry(nextInstance, workInProgress),
           (workInProgress = null))
         : ((renderLanes = JSCompiler_temp$jscomp$0.treeContext),
           (nextHydratableInstance = getNextHydratable(
@@ -8937,6 +8932,16 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
     case 13:
       recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
       flags & 4 && commitSuspenseHydrationCallbacks(finishedRoot, finishedWork);
+      flags & 64 &&
+        ((finishedRoot = finishedWork.memoizedState),
+        null !== finishedRoot &&
+          ((finishedRoot = finishedRoot.dehydrated),
+          null !== finishedRoot &&
+            ((finishedWork = retryDehydratedSuspenseBoundary.bind(
+              null,
+              finishedWork
+            )),
+            registerSuspenseInstanceRetry(finishedRoot, finishedWork))));
       break;
     case 22:
       if (0 !== (finishedWork.mode & 1)) {
@@ -13001,20 +13006,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1578 = 0;
-  i$jscomp$inline_1578 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1578++
+  var i$jscomp$inline_1577 = 0;
+  i$jscomp$inline_1577 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1577++
 ) {
-  var eventName$jscomp$inline_1579 =
-      simpleEventPluginEvents[i$jscomp$inline_1578],
-    domEventName$jscomp$inline_1580 =
-      eventName$jscomp$inline_1579.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1581 =
-      eventName$jscomp$inline_1579[0].toUpperCase() +
-      eventName$jscomp$inline_1579.slice(1);
+  var eventName$jscomp$inline_1578 =
+      simpleEventPluginEvents[i$jscomp$inline_1577],
+    domEventName$jscomp$inline_1579 =
+      eventName$jscomp$inline_1578.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1580 =
+      eventName$jscomp$inline_1578[0].toUpperCase() +
+      eventName$jscomp$inline_1578.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1580,
-    "on" + capitalizedEvent$jscomp$inline_1581
+    domEventName$jscomp$inline_1579,
+    "on" + capitalizedEvent$jscomp$inline_1580
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -14914,15 +14919,16 @@ function isSuspenseInstanceFallback(instance) {
 }
 function registerSuspenseInstanceRetry(instance, callback) {
   var ownerDocument = instance.ownerDocument;
-  "complete" !== ownerDocument.readyState &&
-    ownerDocument.addEventListener(
-      "DOMContentLoaded",
-      function () {
-        "$?" === instance.data && callback();
-      },
-      { once: !0 }
-    );
-  instance._reactRetry = callback;
+  if ("$?" !== instance.data || "complete" === ownerDocument.readyState)
+    callback();
+  else {
+    var listener = function () {
+      callback();
+      ownerDocument.removeEventListener("DOMContentLoaded", listener);
+    };
+    ownerDocument.addEventListener("DOMContentLoaded", listener);
+    instance._reactRetry = listener;
+  }
 }
 function getNextHydratable(node) {
   for (; null != node; node = node.nextSibling) {
@@ -16524,16 +16530,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_1823 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1822 = React.version;
 if (
-  "19.0.0-native-fb-16d2bbbd-20241203" !==
-  isomorphicReactPackageVersion$jscomp$inline_1823
+  "19.0.0-native-fb-de68d2f4-20241204" !==
+  isomorphicReactPackageVersion$jscomp$inline_1822
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1823,
-      "19.0.0-native-fb-16d2bbbd-20241203"
+      isomorphicReactPackageVersion$jscomp$inline_1822,
+      "19.0.0-native-fb-de68d2f4-20241204"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16553,13 +16559,13 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_1830 = {
+var internals$jscomp$inline_1829 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-16d2bbbd-20241203",
+  version: "19.0.0-native-fb-de68d2f4-20241204",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-native-fb-16d2bbbd-20241203",
+  reconcilerVersion: "19.0.0-native-fb-de68d2f4-20241204",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$292 = 0;
@@ -16577,16 +16583,16 @@ var internals$jscomp$inline_1830 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2242 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2241 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2242.isDisabled &&
-    hook$jscomp$inline_2242.supportsFiber
+    !hook$jscomp$inline_2241.isDisabled &&
+    hook$jscomp$inline_2241.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2242.inject(
-        internals$jscomp$inline_1830
+      (rendererID = hook$jscomp$inline_2241.inject(
+        internals$jscomp$inline_1829
       )),
-        (injectedHook = hook$jscomp$inline_2242);
+        (injectedHook = hook$jscomp$inline_2241);
     } catch (err) {}
 }
 function noop() {}
@@ -16832,7 +16838,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-native-fb-16d2bbbd-20241203";
+exports.version = "19.0.0-native-fb-de68d2f4-20241204";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

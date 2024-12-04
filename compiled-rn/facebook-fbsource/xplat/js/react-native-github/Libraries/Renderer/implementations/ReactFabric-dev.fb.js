@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a8721d98ef6c3c10dfe424f014988695>>
+ * @generated SignedSource<<797a9030262014443dae5b782164aed3>>
  */
 
 "use strict";
@@ -7877,10 +7877,8 @@ __DEV__ &&
           );
         } else
           isSuspenseInstancePending()
-            ? ((workInProgress.flags |= 128),
+            ? ((workInProgress.flags |= 192),
               (workInProgress.child = current.child),
-              retryDehydratedSuspenseBoundary.bind(null, current),
-              registerSuspenseInstanceRetry(),
               (workInProgress = null))
             : ((workInProgress = mountSuspensePrimaryChildren(
                 workInProgress,
@@ -10665,6 +10663,12 @@ __DEV__ &&
           break;
         case 13:
           recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
+          flags & 64 &&
+            ((finishedRoot = finishedWork.memoizedState),
+            null !== finishedRoot &&
+              null !== finishedRoot.dehydrated &&
+              (retryDehydratedSuspenseBoundary.bind(null, finishedWork),
+              registerSuspenseInstanceRetry()));
           break;
         case 22:
           if (0 !== (finishedWork.mode & 1)) {
@@ -17376,11 +17380,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-16d2bbbd-20241203",
+        version: "19.0.0-native-fb-de68d2f4-20241204",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-native-fb-16d2bbbd-20241203"
+        reconcilerVersion: "19.0.0-native-fb-de68d2f4-20241204"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

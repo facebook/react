@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f67c57ea0d4ac0e07e44a70f82b82b97>>
+ * @generated SignedSource<<98d65610f536b799a2ff73999f575fb3>>
  */
 
 "use strict";
@@ -5084,10 +5084,8 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       );
     } else
       shim$1()
-        ? ((workInProgress.flags |= 128),
+        ? ((workInProgress.flags |= 192),
           (workInProgress.child = current.child),
-          retryDehydratedSuspenseBoundary.bind(null, current),
-          shim$1(),
           (workInProgress = null))
         : ((workInProgress = mountSuspensePrimaryChildren(
             workInProgress,
@@ -7225,6 +7223,11 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
       break;
     case 13:
       recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
+      flags & 64 &&
+        ((finishedRoot = finishedWork.memoizedState),
+        null !== finishedRoot &&
+          null !== finishedRoot.dehydrated &&
+          (retryDehydratedSuspenseBoundary.bind(null, finishedWork), shim$1()));
       break;
     case 22:
       if (0 !== (finishedWork.mode & 1)) {
@@ -10284,14 +10287,14 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1203 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-16d2bbbd-20241203",
+  version: "19.0.0-native-fb-de68d2f4-20241204",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: function (mockNode) {
     mockNode = nodeToInstanceMap.get(mockNode);
     return void 0 !== mockNode ? mockNode.internalInstanceHandle : null;
   },
-  reconcilerVersion: "19.0.0-native-fb-16d2bbbd-20241203",
+  reconcilerVersion: "19.0.0-native-fb-de68d2f4-20241204",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$146 = 0;
@@ -10442,4 +10445,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.0.0-native-fb-16d2bbbd-20241203";
+exports.version = "19.0.0-native-fb-de68d2f4-20241204";

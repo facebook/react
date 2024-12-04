@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0ebd78a0cf049a802a2b35960edaa452>>
+ * @generated SignedSource<<d41e5384bdb7ebba5c6944401702170a>>
  */
 
 /*
@@ -6828,13 +6828,8 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       );
     } else
       "$?" === nextInstance.data
-        ? ((workInProgress.flags |= 128),
+        ? ((workInProgress.flags |= 192),
           (workInProgress.child = current.child),
-          (workInProgress = retryDehydratedSuspenseBoundary.bind(
-            null,
-            current
-          )),
-          registerSuspenseInstanceRetry(nextInstance, workInProgress),
           (workInProgress = null))
         : ((renderLanes = JSCompiler_temp$jscomp$0.treeContext),
           (nextHydratableInstance = getNextHydratable(
@@ -8933,6 +8928,16 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
     case 13:
       recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
       flags & 4 && commitSuspenseHydrationCallbacks(finishedRoot, finishedWork);
+      flags & 64 &&
+        ((finishedRoot = finishedWork.memoizedState),
+        null !== finishedRoot &&
+          ((finishedRoot = finishedRoot.dehydrated),
+          null !== finishedRoot &&
+            ((finishedWork = retryDehydratedSuspenseBoundary.bind(
+              null,
+              finishedWork
+            )),
+            registerSuspenseInstanceRetry(finishedRoot, finishedWork))));
       break;
     case 22:
       if (0 !== (finishedWork.mode & 1)) {
@@ -12997,20 +13002,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1577 = 0;
-  i$jscomp$inline_1577 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1577++
+  var i$jscomp$inline_1576 = 0;
+  i$jscomp$inline_1576 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1576++
 ) {
-  var eventName$jscomp$inline_1578 =
-      simpleEventPluginEvents[i$jscomp$inline_1577],
-    domEventName$jscomp$inline_1579 =
-      eventName$jscomp$inline_1578.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1580 =
-      eventName$jscomp$inline_1578[0].toUpperCase() +
-      eventName$jscomp$inline_1578.slice(1);
+  var eventName$jscomp$inline_1577 =
+      simpleEventPluginEvents[i$jscomp$inline_1576],
+    domEventName$jscomp$inline_1578 =
+      eventName$jscomp$inline_1577.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1579 =
+      eventName$jscomp$inline_1577[0].toUpperCase() +
+      eventName$jscomp$inline_1577.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1579,
-    "on" + capitalizedEvent$jscomp$inline_1580
+    domEventName$jscomp$inline_1578,
+    "on" + capitalizedEvent$jscomp$inline_1579
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -14910,15 +14915,16 @@ function isSuspenseInstanceFallback(instance) {
 }
 function registerSuspenseInstanceRetry(instance, callback) {
   var ownerDocument = instance.ownerDocument;
-  "complete" !== ownerDocument.readyState &&
-    ownerDocument.addEventListener(
-      "DOMContentLoaded",
-      function () {
-        "$?" === instance.data && callback();
-      },
-      { once: !0 }
-    );
-  instance._reactRetry = callback;
+  if ("$?" !== instance.data || "complete" === ownerDocument.readyState)
+    callback();
+  else {
+    var listener = function () {
+      callback();
+      ownerDocument.removeEventListener("DOMContentLoaded", listener);
+    };
+    ownerDocument.addEventListener("DOMContentLoaded", listener);
+    instance._reactRetry = listener;
+  }
 }
 function getNextHydratable(node) {
   for (; null != node; node = node.nextSibling) {
@@ -16509,16 +16515,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_1822 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1821 = React.version;
 if (
-  "19.0.0-native-fb-16d2bbbd-20241203" !==
-  isomorphicReactPackageVersion$jscomp$inline_1822
+  "19.0.0-native-fb-de68d2f4-20241204" !==
+  isomorphicReactPackageVersion$jscomp$inline_1821
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1822,
-      "19.0.0-native-fb-16d2bbbd-20241203"
+      isomorphicReactPackageVersion$jscomp$inline_1821,
+      "19.0.0-native-fb-de68d2f4-20241204"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16538,13 +16544,13 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_1829 = {
+var internals$jscomp$inline_1828 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-16d2bbbd-20241203",
+  version: "19.0.0-native-fb-de68d2f4-20241204",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-native-fb-16d2bbbd-20241203",
+  reconcilerVersion: "19.0.0-native-fb-de68d2f4-20241204",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$292 = 0;
@@ -16562,16 +16568,16 @@ var internals$jscomp$inline_1829 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2239 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2238 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2239.isDisabled &&
-    hook$jscomp$inline_2239.supportsFiber
+    !hook$jscomp$inline_2238.isDisabled &&
+    hook$jscomp$inline_2238.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2239.inject(
-        internals$jscomp$inline_1829
+      (rendererID = hook$jscomp$inline_2238.inject(
+        internals$jscomp$inline_1828
       )),
-        (injectedHook = hook$jscomp$inline_2239);
+        (injectedHook = hook$jscomp$inline_2238);
     } catch (err) {}
 }
 exports.createRoot = function (container, options) {
@@ -16663,4 +16669,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.0.0-native-fb-16d2bbbd-20241203";
+exports.version = "19.0.0-native-fb-de68d2f4-20241204";

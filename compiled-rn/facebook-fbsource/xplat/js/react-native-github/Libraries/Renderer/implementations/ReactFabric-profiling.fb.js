@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d8d2427d2b5bebacbd5421dad5f3ad67>>
+ * @generated SignedSource<<2b87d10675c5b55655878fb9cf4202ff>>
  */
 
 "use strict";
@@ -6407,10 +6407,8 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       );
     } else
       shim$1()
-        ? ((workInProgress.flags |= 128),
+        ? ((workInProgress.flags |= 192),
           (workInProgress.child = current.child),
-          retryDehydratedSuspenseBoundary.bind(null, current),
-          shim$1(),
           (workInProgress = null))
         : ((workInProgress = mountSuspensePrimaryChildren(
             workInProgress,
@@ -8739,6 +8737,11 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
       break;
     case 13:
       recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
+      flags & 64 &&
+        ((finishedRoot = finishedWork.memoizedState),
+        null !== finishedRoot &&
+          null !== finishedRoot.dehydrated &&
+          (retryDehydratedSuspenseBoundary.bind(null, finishedWork), shim$1()));
       break;
     case 22:
       if (0 !== (finishedWork.mode & 1)) {
@@ -11756,11 +11759,11 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1307 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-16d2bbbd-20241203",
+    version: "19.0.0-native-fb-de68d2f4-20241204",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromNode,
-    reconcilerVersion: "19.0.0-native-fb-16d2bbbd-20241203"
+    reconcilerVersion: "19.0.0-native-fb-de68d2f4-20241204"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1307.rendererConfig = extraDevToolsConfig);

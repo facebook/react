@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<86ac9dae7458acf3d90d9d8f10d24eb9>>
+ * @generated SignedSource<<fb51fc0c7ad8e8f3fae68c93e44325bc>>
  */
 
 "use strict";
@@ -6959,10 +6959,8 @@ __DEV__ &&
           );
         } else
           isSuspenseInstancePending()
-            ? ((workInProgress.flags |= 128),
+            ? ((workInProgress.flags |= 192),
               (workInProgress.child = current.child),
-              retryDehydratedSuspenseBoundary.bind(null, current),
-              registerSuspenseInstanceRetry(),
               (workInProgress = null))
             : ((workInProgress = mountSuspensePrimaryChildren(
                 workInProgress,
@@ -9598,6 +9596,12 @@ __DEV__ &&
           break;
         case 13:
           recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
+          flags & 64 &&
+            ((finishedRoot = finishedWork.memoizedState),
+            null !== finishedRoot &&
+              null !== finishedRoot.dehydrated &&
+              (retryDehydratedSuspenseBoundary.bind(null, finishedWork),
+              registerSuspenseInstanceRetry()));
           break;
         case 22:
           if (0 !== (finishedWork.mode & 1)) {
@@ -15552,11 +15556,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-16d2bbbd-20241203",
+        version: "19.0.0-native-fb-de68d2f4-20241204",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-native-fb-16d2bbbd-20241203"
+        reconcilerVersion: "19.0.0-native-fb-de68d2f4-20241204"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15701,5 +15705,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.0.0-native-fb-16d2bbbd-20241203";
+    exports.version = "19.0.0-native-fb-de68d2f4-20241204";
   })();

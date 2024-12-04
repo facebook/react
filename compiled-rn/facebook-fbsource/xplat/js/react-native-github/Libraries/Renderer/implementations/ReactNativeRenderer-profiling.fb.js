@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a46d10865e5ff4c6f9b227e5724b722c>>
+ * @generated SignedSource<<d64ae518352e6f9982531c52f5810f67>>
  */
 
 "use strict";
@@ -6702,10 +6702,8 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       );
     } else
       shim$1()
-        ? ((workInProgress.flags |= 128),
+        ? ((workInProgress.flags |= 192),
           (workInProgress.child = current.child),
-          retryDehydratedSuspenseBoundary.bind(null, current),
-          shim$1(),
           (workInProgress = null))
         : ((workInProgress = mountSuspensePrimaryChildren(
             workInProgress,
@@ -8941,6 +8939,11 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
       break;
     case 13:
       recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
+      flags & 64 &&
+        ((finishedRoot = finishedWork.memoizedState),
+        null !== finishedRoot &&
+          null !== finishedRoot.dehydrated &&
+          (retryDehydratedSuspenseBoundary.bind(null, finishedWork), shim$1()));
       break;
     case 22:
       if (0 !== (finishedWork.mode & 1)) {
@@ -11886,11 +11889,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.0.0-native-fb-16d2bbbd-20241203" !== isomorphicReactPackageVersion)
+if ("19.0.0-native-fb-de68d2f4-20241204" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.0.0-native-fb-16d2bbbd-20241203\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.0.0-native-fb-de68d2f4-20241204\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11939,11 +11942,11 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1373 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-16d2bbbd-20241203",
+    version: "19.0.0-native-fb-de68d2f4-20241204",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromTag,
-    reconcilerVersion: "19.0.0-native-fb-16d2bbbd-20241203"
+    reconcilerVersion: "19.0.0-native-fb-de68d2f4-20241204"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1373.rendererConfig = extraDevToolsConfig);
