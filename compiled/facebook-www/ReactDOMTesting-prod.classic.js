@@ -6470,13 +6470,8 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       );
     } else
       "$?" === nextInstance.data
-        ? ((workInProgress.flags |= 128),
+        ? ((workInProgress.flags |= 192),
           (workInProgress.child = current.child),
-          (workInProgress = retryDehydratedSuspenseBoundary.bind(
-            null,
-            current
-          )),
-          registerSuspenseInstanceRetry(nextInstance, workInProgress),
           (workInProgress = null))
         : ((current = JSCompiler_temp$jscomp$0.treeContext),
           (nextHydratableInstance = getNextHydratable(
@@ -9110,6 +9105,16 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
     case 13:
       recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
       flags & 4 && commitSuspenseHydrationCallbacks(finishedRoot, finishedWork);
+      flags & 64 &&
+        ((flags = finishedWork.memoizedState),
+        null !== flags &&
+          ((flags = flags.dehydrated),
+          null !== flags &&
+            ((finishedWork = retryDehydratedSuspenseBoundary.bind(
+              null,
+              finishedWork
+            )),
+            registerSuspenseInstanceRetry(flags, finishedWork))));
       break;
     case 22:
       prevProps =
@@ -13526,14 +13531,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$356;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1590 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1590) {
-      var element$jscomp$inline_1591 = document.createElement("div");
-      element$jscomp$inline_1591.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1590 =
-        "function" === typeof element$jscomp$inline_1591.oninput;
+    var isSupported$jscomp$inline_1589 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1589) {
+      var element$jscomp$inline_1590 = document.createElement("div");
+      element$jscomp$inline_1590.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1589 =
+        "function" === typeof element$jscomp$inline_1590.oninput;
     }
-    JSCompiler_inline_result$jscomp$356 = isSupported$jscomp$inline_1590;
+    JSCompiler_inline_result$jscomp$356 = isSupported$jscomp$inline_1589;
   } else JSCompiler_inline_result$jscomp$356 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$356 &&
@@ -13947,20 +13952,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1631 = 0;
-  i$jscomp$inline_1631 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1631++
+  var i$jscomp$inline_1630 = 0;
+  i$jscomp$inline_1630 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1630++
 ) {
-  var eventName$jscomp$inline_1632 =
-      simpleEventPluginEvents[i$jscomp$inline_1631],
-    domEventName$jscomp$inline_1633 =
-      eventName$jscomp$inline_1632.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1634 =
-      eventName$jscomp$inline_1632[0].toUpperCase() +
-      eventName$jscomp$inline_1632.slice(1);
+  var eventName$jscomp$inline_1631 =
+      simpleEventPluginEvents[i$jscomp$inline_1630],
+    domEventName$jscomp$inline_1632 =
+      eventName$jscomp$inline_1631.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1633 =
+      eventName$jscomp$inline_1631[0].toUpperCase() +
+      eventName$jscomp$inline_1631.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1633,
-    "on" + capitalizedEvent$jscomp$inline_1634
+    domEventName$jscomp$inline_1632,
+    "on" + capitalizedEvent$jscomp$inline_1633
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -15993,15 +15998,16 @@ function isSuspenseInstanceFallback(instance) {
 }
 function registerSuspenseInstanceRetry(instance, callback) {
   var ownerDocument = instance.ownerDocument;
-  "complete" !== ownerDocument.readyState &&
-    ownerDocument.addEventListener(
-      "DOMContentLoaded",
-      function () {
-        "$?" === instance.data && callback();
-      },
-      { once: !0 }
-    );
-  instance._reactRetry = callback;
+  if ("$?" !== instance.data || "complete" === ownerDocument.readyState)
+    callback();
+  else {
+    var listener = function () {
+      callback();
+      ownerDocument.removeEventListener("DOMContentLoaded", listener);
+    };
+    ownerDocument.addEventListener("DOMContentLoaded", listener);
+    instance._reactRetry = listener;
+  }
 }
 function getNextHydratable(node) {
   for (; null != node; node = node.nextSibling) {
@@ -17598,16 +17604,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_1804 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1803 = React.version;
 if (
-  "19.0.0-www-classic-16d2bbbd-20241203" !==
-  isomorphicReactPackageVersion$jscomp$inline_1804
+  "19.0.0-www-classic-de68d2f4-20241204" !==
+  isomorphicReactPackageVersion$jscomp$inline_1803
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1804,
-      "19.0.0-www-classic-16d2bbbd-20241203"
+      isomorphicReactPackageVersion$jscomp$inline_1803,
+      "19.0.0-www-classic-de68d2f4-20241204"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17623,25 +17629,25 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2350 = {
+var internals$jscomp$inline_2349 = {
   bundleType: 0,
-  version: "19.0.0-www-classic-16d2bbbd-20241203",
+  version: "19.0.0-www-classic-de68d2f4-20241204",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: getClosestInstanceFromNode,
-  reconcilerVersion: "19.0.0-www-classic-16d2bbbd-20241203"
+  reconcilerVersion: "19.0.0-www-classic-de68d2f4-20241204"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2351 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2350 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2351.isDisabled &&
-    hook$jscomp$inline_2351.supportsFiber
+    !hook$jscomp$inline_2350.isDisabled &&
+    hook$jscomp$inline_2350.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2351.inject(
-        internals$jscomp$inline_2350
+      (rendererID = hook$jscomp$inline_2350.inject(
+        internals$jscomp$inline_2349
       )),
-        (injectedHook = hook$jscomp$inline_2351);
+        (injectedHook = hook$jscomp$inline_2350);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -18143,4 +18149,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-16d2bbbd-20241203";
+exports.version = "19.0.0-www-classic-de68d2f4-20241204";

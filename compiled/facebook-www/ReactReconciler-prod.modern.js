@@ -4898,13 +4898,8 @@ module.exports = function ($$$config) {
         );
       } else
         isSuspenseInstancePending(nextInstance)
-          ? ((workInProgress.flags |= 128),
+          ? ((workInProgress.flags |= 192),
             (workInProgress.child = current.child),
-            (workInProgress = retryDehydratedSuspenseBoundary.bind(
-              null,
-              current
-            )),
-            registerSuspenseInstanceRetry(nextInstance, workInProgress),
             (workInProgress = null))
           : ((current = JSCompiler_temp$jscomp$0.treeContext),
             supportsHydration &&
@@ -7652,6 +7647,16 @@ module.exports = function ($$$config) {
         recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
         flags & 4 &&
           commitSuspenseHydrationCallbacks(finishedRoot, finishedWork);
+        flags & 64 &&
+          ((flags = finishedWork.memoizedState),
+          null !== flags &&
+            ((flags = flags.dehydrated),
+            null !== flags &&
+              ((finishedWork = retryDehydratedSuspenseBoundary.bind(
+                null,
+                finishedWork
+              )),
+              registerSuspenseInstanceRetry(flags, finishedWork))));
         break;
       case 22:
         prevProps =
@@ -12566,7 +12571,7 @@ module.exports = function ($$$config) {
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
       findFiberByHostInstance: getInstanceFromNode,
-      reconcilerVersion: "19.0.0-www-modern-16d2bbbd-20241203"
+      reconcilerVersion: "19.0.0-www-modern-de68d2f4-20241204"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

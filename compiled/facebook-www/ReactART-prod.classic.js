@@ -5332,10 +5332,8 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       );
     } else
       shim$2()
-        ? ((workInProgress.flags |= 128),
+        ? ((workInProgress.flags |= 192),
           (workInProgress.child = current.child),
-          retryDehydratedSuspenseBoundary.bind(null, current),
-          shim$2(),
           (workInProgress = null))
         : ((workInProgress = mountSuspensePrimaryChildren(
             workInProgress,
@@ -7518,6 +7516,11 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
       break;
     case 13:
       recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
+      flags & 64 &&
+        ((flags = finishedWork.memoizedState),
+        null !== flags &&
+          null !== flags.dehydrated &&
+          (retryDehydratedSuspenseBoundary.bind(null, finishedWork), shim$2()));
       break;
     case 22:
       prevProps =
@@ -10824,13 +10827,13 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1509 = {
   bundleType: 0,
-  version: "19.0.0-www-classic-16d2bbbd-20241203",
+  version: "19.0.0-www-classic-de68d2f4-20241204",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: function () {
     return null;
   },
-  reconcilerVersion: "19.0.0-www-classic-16d2bbbd-20241203"
+  reconcilerVersion: "19.0.0-www-classic-de68d2f4-20241204"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1510 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -10856,4 +10859,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.0.0-www-classic-16d2bbbd-20241203";
+exports.version = "19.0.0-www-classic-de68d2f4-20241204";
