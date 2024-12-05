@@ -103,7 +103,6 @@ The most common changes can be codemodded with `npx types-react-codemod@latest p
   \-useReducer\<React.Reducer\<State, Action\>\>(reducer)  
   \+useReducer\<State, \[Action\]\>(reducer)
 
-
 ### All Changes
 
 #### React
