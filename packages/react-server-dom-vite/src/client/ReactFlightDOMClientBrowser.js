@@ -32,9 +32,9 @@ import {
 
 import type {TemporaryReferenceSet} from 'react-client/src/ReactFlightTemporaryReferences';
 
-export {createTemporaryReferenceSet} from 'react-client/src/ReactFlightTemporaryReferences';
-
 import type {ServerManifest} from './ReactFlightClientConfigBundlerVite';
+
+export {createTemporaryReferenceSet} from 'react-client/src/ReactFlightTemporaryReferences';
 
 export type {ServerManifest, TemporaryReferenceSet};
 

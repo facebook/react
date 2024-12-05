@@ -23,11 +23,7 @@ export type ServerReferenceId = string;
 
 import {prepareDestinationForModuleImpl} from 'react-client/src/ReactFlightClientConfig';
 
-export opaque type ClientReferenceMetadata = [
-  string, // module path
-  string, // export name
-  ...string[], // dependencies
-];
+export opaque type ClientReferenceMetadata = string[];
 
 export opaque type ClientReference<T> = {
   get(): T,

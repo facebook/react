@@ -24,11 +24,7 @@ export type ClientManifest = {
 
 export type ServerReferenceId = string;
 
-export type ClientReferenceMetadata = [
-  string, // module path
-  string, // export name
-  ...string[], // dependencies
-];
+export type ClientReferenceMetadata = string[];
 
 export type ClientReferenceKey = string;
 

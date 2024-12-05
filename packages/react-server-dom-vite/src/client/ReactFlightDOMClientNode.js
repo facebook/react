@@ -24,6 +24,8 @@ import {
   close,
 } from 'react-client/src/ReactFlightClient';
 
+import type {ServerManifest} from './ReactFlightClientConfigBundlerVite';
+
 import {createServerReference as createServerReferenceImpl} from 'react-client/src/ReactFlightReplyClient';
 
 function noServerCall() {
@@ -56,14 +58,13 @@ export type Options = {
 
 function createFromNodeStream<T>(
   stream: Readable,
-  moduleRootPath: string,
-  moduleBaseURL: string,
+  serverManifest: ServerManifest,
   options?: Options,
 ): Thenable<T> {
   const response: Response = createResponse(
-    moduleRootPath,
+    serverManifest,
     null,
-    moduleBaseURL,
+    null,
     noServerCall,
     options ? options.encodeFormAction : undefined,
     options && typeof options.nonce === 'string' ? options.nonce : undefined,
