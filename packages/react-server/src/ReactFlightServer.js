@@ -3227,8 +3227,7 @@ function emitHintChunk<Code: HintCode>(
   model: HintModel<Code>,
 ): void {
   const json: string = stringify(model);
-  const id = request.nextChunkId++;
-  const row = serializeRowHeader('H' + code, id) + json + '\n';
+  const row = ':H' + code + json + '\n';
   const processedChunk = stringToChunk(row);
   request.completedHintChunks.push(processedChunk);
 }
