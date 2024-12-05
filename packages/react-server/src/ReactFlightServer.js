@@ -1262,6 +1262,8 @@ function renderFunctionComponent<Props>(
 
       outlineComponentInfo(request, componentDebugInfo);
 
+      // Track when we started rendering this component.
+      emitTimingChunk(request, componentDebugID);
       emitDebugChunk(request, componentDebugID, componentDebugInfo);
 
       // We've emitted the latest environment for this task so we track that.
@@ -3819,6 +3821,20 @@ function forwardDebugInfo(
   }
 }
 
+function emitTimingChunk(request: Request, id: number): void {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  const timestamp = performance.now();
+  request.pendingChunks++;
+  const relativeTimestamp = timestamp - request.timeOrigin;
+  const row =
+    serializeRowHeader('D', id) + '{"time":' + relativeTimestamp + '}\n';
+  const processedChunk = stringToChunk(row);
+  // TODO: Move to its own priority queue.
+  request.completedRegularChunks.push(processedChunk);
+}
+
 function emitChunk(
   request: Request,
   task: Task,
@@ -3910,6 +3926,7 @@ function emitChunk(
 }
 
 function erroredTask(request: Request, task: Task, error: mixed): void {
+  emitTimingChunk(request, task.id);
   request.abortableTasks.delete(task);
   task.status = ERRORED;
   if (
@@ -3972,20 +3989,22 @@ function retryTask(request: Request, task: Task): void {
     task.keyPath = null;
     task.implicitSlot = false;
 
+    if (__DEV__) {
+      const currentEnv = (0, request.environmentName)();
+      if (currentEnv !== task.environmentName) {
+        request.pendingChunks++;
+        // The environment changed since we last emitted any debug information for this
+        // task. We emit an entry that just includes the environment name change.
+        emitDebugChunk(request, task.id, {env: currentEnv});
+      }
+    }
+    // We've finished rendering. Log the end time.
+    emitTimingChunk(request, task.id);
+
     if (typeof resolvedModel === 'object' && resolvedModel !== null) {
       // We're not in a contextual place here so we can refer to this object by this ID for
       // any future references.
       request.writtenObjects.set(resolvedModel, serializeByValueID(task.id));
-
-      if (__DEV__) {
-        const currentEnv = (0, request.environmentName)();
-        if (currentEnv !== task.environmentName) {
-          request.pendingChunks++;
-          // The environment changed since we last emitted any debug information for this
-          // task. We emit an entry that just includes the environment name change.
-          emitDebugChunk(request, task.id, {env: currentEnv});
-        }
-      }
 
       // Object might contain unresolved values like additional elements.
       // This is simulating what the JSON loop would do if this was part of it.
@@ -3995,17 +4014,6 @@ function retryTask(request: Request, task: Task): void {
       // We don't need to escape it again so it's not passed the toJSON replacer.
       // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
       const json: string = stringify(resolvedModel);
-
-      if (__DEV__) {
-        const currentEnv = (0, request.environmentName)();
-        if (currentEnv !== task.environmentName) {
-          request.pendingChunks++;
-          // The environment changed since we last emitted any debug information for this
-          // task. We emit an entry that just includes the environment name change.
-          emitDebugChunk(request, task.id, {env: currentEnv});
-        }
-      }
-
       emitModelChunk(request, task.id, json);
     }
 
@@ -4115,6 +4123,8 @@ function abortTask(task: Task, request: Request, errorId: number): void {
     return;
   }
   task.status = ABORTED;
+  // Track when we aborted this task as its end time.
+  emitTimingChunk(request, task.id);
   // Instead of emitting an error per task.id, we emit a model that only
   // has a single value referencing the error.
   const ref = serializeByValueID(errorId);

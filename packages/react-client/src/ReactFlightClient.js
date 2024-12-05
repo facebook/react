@@ -2518,6 +2518,16 @@ function resolveDebugInfo(
       debugInfo;
     initializeFakeStack(response, componentInfoOrAsyncInfo);
   }
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    if (typeof debugInfo.time === 'number') {
+      // Adjust the time to the current environment's time space.
+      // Since this might be a deduped object, we clone it to avoid
+      // applying the adjustment twice.
+      debugInfo = {
+        time: debugInfo.time + response._timeOrigin,
+      };
+    }
+  }
 
   const chunk = getChunk(response, id);
   const chunkDebugInfo: ReactDebugInfo =
