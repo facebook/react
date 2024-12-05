@@ -8,7 +8,7 @@ Below is a list of all new features, APIs, deprecations, and breaking changes. R
 
 ### React
 
-* Actions: `startTransition` can now accept async functions. Functions passed to `startTranstion` are called “Actions”. A given Transition can include one or more Actions which update state in the background and update the UI with one commit. In addition to updating state, Actions can now perform side effects including async requests, and the Action will wait for the work to finish before finishing the Transition. This feature allows Transitions to include side effects like `fetch()` in the pending state, and provides support for error handling, and optimistic updates.  
+* Actions: `startTransition` can now accept async functions. Functions passed to `startTransition` are called “Actions”. A given Transition can include one or more Actions which update state in the background and update the UI with one commit. In addition to updating state, Actions can now perform side effects including async requests, and the Action will wait for the work to finish before finishing the Transition. This feature allows Transitions to include side effects like `fetch()` in the pending state, and provides support for error handling, and optimistic updates.  
 * `useActionState`: is a new hook to order Actions inside of a Transition with access to the state of the action, and the pending state. It accepts a reducer that can call Actions, and the initial state used for first render. It also accepts an optional string that is used if the action is passed to a form `action` prop to support progressive enhancement in forms.  
 * `useOptimistic`: is a new hook to update state while a Transition is in progress. It returns the state, and a set function that can be called inside a transition to “optimistically” update the state to expected final value immediately while the Transition completes in the background. When the transition finishes, the state is updated to the new value.  
 * `use`: is a new API that allows reading resources in render. In React 19, `use` accepts a promise or Context. If provided a promise, `use` will suspend until a value is resolved. `use` can only be used in render but can be called conditionally.  
@@ -27,7 +27,7 @@ Below is a list of all new features, APIs, deprecations, and breaking changes. R
 
 ### React DOM Server
 
-* Added `prerender` and `prerenderToNodeStream` APIs for static site generation. They are design to work with streaming environments like Node.js Streams and Web Streams. Unlike `renderToString`, they wait for data to load for HTML generation.
+* Added `prerender` and `prerenderToNodeStream` APIs for static site generation. They are designed to work with streaming environments like Node.js Streams and Web Streams. Unlike `renderToString`, they wait for data to load for HTML generation.
 
 ### React Server Components
 
