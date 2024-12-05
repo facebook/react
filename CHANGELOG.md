@@ -77,7 +77,7 @@ React 19 brings in a number of breaking changes, including the removals of long-
 * Diffs for hydration errors: In the case of a mismatch, React 19 logs a single error with a diff of the mismatched content.  
 * Compatibility with third-party scripts and extensions: React will now force a client re-render to fix up any mismatched content caused by elements inserted by third-party JS. 
 
-### Typescript Changes
+### TypeScript Changes
 
 The most common changes can be codemodded with `npx types-react-codemod@latest preset-19 ./path-to-your-react-ts-files`.
 
