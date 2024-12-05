@@ -152,7 +152,6 @@ The most common changes can be codemodded with `npx types-react-codemod@latest p
 * Fix `useSyncExternalStore()` dropped update when state is dispatched in render phase ([\#25578](https://github.com/facebook/react/pull/25578) by [@pandaiolo](https://github.com/pandaiolo))  
 * Fix logging when rendering a lazy fragment ([\#30372](https://github.com/facebook/react/pull/30372) by [@tom-sherman](https://github.com/tom-sherman))  
 * Remove string refs ([\#25383](https://github.com/facebook/react/pull/25383), [\#28322](https://github.com/facebook/react/pull/28322) by [@eps1lon](https://github.com/eps1lon) and [@acdlite](https://github.com/acdlite))  
-* Allow string refs to be codemodded ([\#28867](https://github.com/facebook/react/pull/28867), [\#28879](https://github.com/facebook/react/pull/28879) by [@acdlite](https://github.com/acdlite) and [@kassens](https://github.com/kassens))  
 * Remove Legacy Context (\#30319 by [@kassens](https://github.com/kassens))  
 * Remove `RefreshRuntime.findAffectedHostInstances` ([\#30538](https://github.com/facebook/react/pull/30538) by [@gaearon](https://github.com/gaearon))  
 * Remove client caching from `cache()` API ([\#27977](https://github.com/facebook/react/pull/27977), [\#28250](https://github.com/facebook/react/pull/28250) by [@acdlite](https://github.com/acdlite) and [@gnoff](https://github.com/gnoff))  
@@ -270,7 +269,7 @@ The most common changes can be codemodded with `npx types-react-codemod@latest p
 
 ## 18.3.1 (April 26, 2024)
 
-* Export `act` from `react` [f1338f](https://github.com/facebook/react/commit/f1338f8080abd1386454a10bbf93d67bfe37ce85)
+- Export `act` from `react` [f1338f](https://github.com/facebook/react/commit/f1338f8080abd1386454a10bbf93d67bfe37ce85)
 
 ## 18.3.0 (April 25, 2024)
 
@@ -280,18 +279,18 @@ Read the [React 19 Upgrade Guide](https://react.dev/blog/2024/04/25/react-19-upg
 
 ### React
 
-* Allow writing to `this.refs` to support string ref codemod [909071](https://github.com/facebook/react/commit/9090712fd3ca4e1099e1f92e67933c2cb4f32552)
-* Warn for deprecated `findDOMNode` outside StrictMode [c3b283](https://github.com/facebook/react/commit/c3b283964108b0e8dbcf1f9eb2e7e67815e39dfb)
-* Warn for deprecated `test-utils` methods [d4ea75](https://github.com/facebook/react/commit/d4ea75dc4258095593b6ac764289f42bddeb835c)
-* Warn for deprecated Legacy Context outside StrictMode [415ee0](https://github.com/facebook/react/commit/415ee0e6ea0fe3e288e65868df2e3241143d5f7f)
-* Warn for deprecated string refs outside StrictMode [#25383](https://github.com/facebook/react/pull/25383)
-* Warn for deprecated `defaultProps` for function components [#25699](https://github.com/facebook/react/pull/25699)
-* Warn when spreading `key` [#25697](https://github.com/facebook/react/pull/25697)
-* Warn when using `act` from `test-utils` [d4ea75](https://github.com/facebook/react/commit/d4ea75dc4258095593b6ac764289f42bddeb835c)
+- Allow writing to `this.refs` to support string ref codemod [909071](https://github.com/facebook/react/commit/9090712fd3ca4e1099e1f92e67933c2cb4f32552)
+- Warn for deprecated `findDOMNode` outside StrictMode [c3b283](https://github.com/facebook/react/commit/c3b283964108b0e8dbcf1f9eb2e7e67815e39dfb)
+- Warn for deprecated `test-utils` methods [d4ea75](https://github.com/facebook/react/commit/d4ea75dc4258095593b6ac764289f42bddeb835c)
+- Warn for deprecated Legacy Context outside StrictMode [415ee0](https://github.com/facebook/react/commit/415ee0e6ea0fe3e288e65868df2e3241143d5f7f)
+- Warn for deprecated string refs outside StrictMode [#25383](https://github.com/facebook/react/pull/25383)
+- Warn for deprecated `defaultProps` for function components [#25699](https://github.com/facebook/react/pull/25699)
+- Warn when spreading `key` [#25697](https://github.com/facebook/react/pull/25697)
+- Warn when using `act` from `test-utils` [d4ea75](https://github.com/facebook/react/commit/d4ea75dc4258095593b6ac764289f42bddeb835c)
 
 ### React DOM
-* Warn for deprecated `unmountComponentAtNode` [8a015b](https://github.com/facebook/react/commit/8a015b68cc060079878e426610e64e86fb328f8d)
-* Warn for deprecated `renderToStaticNodeStream` [#28874](https://github.com/facebook/react/pull/28874)
+- Warn for deprecated `unmountComponentAtNode` [8a015b](https://github.com/facebook/react/commit/8a015b68cc060079878e426610e64e86fb328f8d)
+- Warn for deprecated `renderToStaticNodeStream` [#28874](https://github.com/facebook/react/pull/28874)
 
 ## 18.2.0 (June 14, 2022)
 
