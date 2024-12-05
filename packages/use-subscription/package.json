@@ -1,7 +1,7 @@
 {
   "name": "use-subscription",
   "description": "Reusable hooks",
-  "version": "1.8.0",
+  "version": "1.11.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/facebook/react.git",
@@ -21,6 +21,6 @@
     "rxjs": "^5.5.6"
   },
   "dependencies": {
-    "use-sync-external-store": "^1.2.0"
+    "use-sync-external-store": "^1.4.0"
   }
 }

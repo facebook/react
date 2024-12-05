@@ -1,7 +1,7 @@
 {
   "name": "react-reconciler",
   "description": "React package for creating custom renderers.",
-  "version": "0.29.0",
+  "version": "0.32.0",
   "keywords": [
     "react"
   ],
@@ -29,6 +29,6 @@
     "react": "^19.0.0"
   },
   "dependencies": {
-    "scheduler": "^0.23.0"
+    "scheduler": "^0.25.0"
   }
 }
