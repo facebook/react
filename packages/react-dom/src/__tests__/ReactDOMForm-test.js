@@ -1955,6 +1955,63 @@ describe('ReactDOMForm', () => {
     expect(inputRef.current.value).toBe('Initial');
   });
 
+  it('submits once and then submits three times in quick succession', async () => {
+    const root = ReactDOMClient.createRoot(container);
+
+    const TestComponent = () => {
+      return (
+        <form
+          ref={formRef}
+          onSubmit={async e => {
+            e.preventDefault();
+            // Simulate an asynchronous operation that delays for 3 seconds
+            await new Promise(resolve => setTimeout(resolve, 3000));
+          }}>
+          <input type="text" name="name" ref={inputRef} />
+          <input type="submit" value="submit" />
+        </form>
+      );
+    };
+
+    const formRef = React.createRef();
+    const inputRef = React.createRef();
+    await act(() => root.render(<TestComponent />));
+
+    // Submit the form asynchronously once
+    await act(async () => {
+      await submit(formRef.current);
+    });
+
+    // Check the input value after the first submission
+    expect(inputRef.current.value).toBe('');
+
+    await act(() => {
+      startTransition(async () => {
+        // Submit the form.
+        await submit(formRef.current);
+        Scheduler.log('Action started');
+
+        // This happens after an `await`, and is not wrapped in startTransition,
+        // so it will be scheduled synchronously instead of with the transition.
+        // This is almost certainly a mistake, so we log a warning in dev.
+        requestFormReset(formRef.current);
+        Scheduler.log('Request form reset');
+      });
+    });
+
+    // Submit the form three more times in quick succession
+    for (let i = 0; i < 3; i++) {
+      await act(async () => {
+        await act(async () => {
+          await submit(formRef.current);
+        });
+      });
+    }
+
+    // Check the input value after the last submission
+    expect(inputRef.current.value).toBe('');
+  });
+
   it("regression: submitter's formAction prop is coerced correctly before checking if it exists", async () => {
     function App({submitterAction}) {
       return (
