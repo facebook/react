@@ -132,9 +132,10 @@ declare const ensureNativeMethodsAreSynced: NativeMethods;
 (ensureNativeMethodsAreSynced: INativeMethods);
 
 export type HostInstance = NativeMethods;
-/*::
-export type HostComponent<Config: {...}> = component(ref: React$RefSetter<HostInstance>, ...Config);
-*/
+export type HostComponent<Config: {...}> = component(
+  ref: React$RefSetter<HostInstance>,
+  ...Config
+);
 
 type InspectorDataProps = $ReadOnly<{
   [propName: string]: string,
@@ -205,9 +206,7 @@ export type ReactNativeType = {
     componentOrHandle: ?(ElementRef<TElementType> | number),
   ): ?number,
   isChildPublicInstance(
-    // eslint-disable-next-line no-undef
     parent: PublicInstance | HostComponent<empty>,
-    // eslint-disable-next-line no-undef
     child: PublicInstance | HostComponent<empty>,
   ): boolean,
   dispatchCommand(
