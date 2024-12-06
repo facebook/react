@@ -550,6 +550,15 @@ const tests = {
       // TODO: this should error but doesn't.
       // errors: [genericError('useState')],
     },
+    {
+      code: normalizeIndent`
+        // Valid because React supports international languages
+        function ÄndraVärdeComponent() {
+          useHook();
+          return <div />;
+        }
+      `
+    },
   ],
   invalid: [
     {
