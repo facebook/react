@@ -151,9 +151,9 @@ export type EventTargetChildElement = {
   ...
 };
 export type Container =
-  | interface extends Element {_reactRootContainer?: FiberRoot}
-  | interface extends Document {_reactRootContainer?: FiberRoot}
-  | interface extends DocumentFragment {_reactRootContainer?: FiberRoot};
+  | (Element & {_reactRootContainer?: FiberRoot})
+  | (Document & {_reactRootContainer?: FiberRoot})
+  | (DocumentFragment & {_reactRootContainer?: FiberRoot});
 export type Instance = Element;
 export type TextInstance = Text;
 export interface SuspenseInstance extends Comment {
