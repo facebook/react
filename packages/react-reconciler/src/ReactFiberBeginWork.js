@@ -651,6 +651,7 @@ function updateOffscreenComponent(
 
   if (
     nextProps.mode === 'hidden' ||
+    nextProps.mode === 'hidden-connected' ||
     (enableLegacyHidden &&
       nextProps.mode === 'unstable-defer-without-hiding') ||
     nextIsDetached

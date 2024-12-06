@@ -139,6 +139,7 @@ export type Thenable<T> =
 
 export type OffscreenMode =
   | 'hidden'
+  | 'hidden-connected'
   | 'unstable-defer-without-hiding'
   | 'visible'
   | 'manual';
