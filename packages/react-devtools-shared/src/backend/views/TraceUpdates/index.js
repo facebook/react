@@ -36,6 +36,7 @@ export type Data = {
   expirationTime: number,
   lastMeasuredAt: number,
   rect: Rect | null,
+  displayName: string | null,
 };
 
 const nodeToData: Map<HostInstance, Data> = new Map();
@@ -43,11 +44,20 @@ const nodeToData: Map<HostInstance, Data> = new Map();
 let agent: Agent = ((null: any): Agent);
 let drawAnimationFrameID: AnimationFrameID | null = null;
 let isEnabled: boolean = false;
+let showNames: boolean = false;
 let redrawTimeoutID: TimeoutID | null = null;
 
 export function initialize(injectedAgent: Agent): void {
   agent = injectedAgent;
   agent.addListener('traceUpdates', traceUpdates);
+  agent.addListener('showNamesWhenTracing', (shouldShowNames: boolean) => {
+    showNames = shouldShowNames;
+    if (isEnabled) {
+      if (drawAnimationFrameID === null) {
+        drawAnimationFrameID = requestAnimationFrame(prepareToDraw);
+      }
+    }
+  });
 }
 
 export function toggleEnabled(value: boolean): void {
@@ -86,6 +96,11 @@ function traceUpdates(nodes: Set<HostInstance>): void {
       rect = measureNode(node);
     }
 
+    let displayName = agent.getComponentNameForHostInstance(node);
+    if (displayName != null && displayName.startsWith('Forget(')) {
+      displayName = '✨' + displayName.slice(7, -1);
+    }
+
     nodeToData.set(node, {
       count: data != null ? data.count + 1 : 1,
       expirationTime:
@@ -97,6 +112,7 @@ function traceUpdates(nodes: Set<HostInstance>): void {
           : now + DISPLAY_DURATION,
       lastMeasuredAt,
       rect,
+      displayName: showNames ? displayName : null,
     });
   });
 

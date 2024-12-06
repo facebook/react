@@ -154,3 +154,14 @@
   padding: 0;
   margin: 0;
 }
+
+.Setting .Setting {
+  margin-left: 1rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.Setting label:has(input:disabled) {
+  opacity: 0.5;
+  cursor: default;
+}
