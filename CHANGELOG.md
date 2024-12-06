@@ -97,11 +97,15 @@ The most common changes can be codemodded with `npx types-react-codemod@latest p
 * JSX namespace in TypeScript: The global `JSX` namespace is removed to improve interoperability with other libraries using JSX. Instead, the JSX namespace is available from the React package: `import { JSX } from 'react'`  
 * Better `useReducer` typings: Most `useReducer` usage should not require explicit type arguments.  
   For example,  
-  \-useReducer\<React.Reducer\<State, Action\>\>(reducer)  
-  \+useReducer(reducer)  
-  or  
-  \-useReducer\<React.Reducer\<State, Action\>\>(reducer)  
-  \+useReducer\<State, \[Action\]\>(reducer)
+  ```diff
+  -useReducer<React.Reducer<State, Action>>(reducer)
+  +useReducer(reducer)
+  ```
+  or
+  ```diff
+  -useReducer<React.Reducer<State, Action>>(reducer)
+  +useReducer<State, Action>(reducer)
+  ```
 
 
 ## All Changes
