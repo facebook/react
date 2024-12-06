@@ -3716,7 +3716,8 @@ function dispatchReducerAction<S, A>(
   action: A,
 ): void {
   if (__DEV__) {
-    if (typeof arguments[3] === 'function') {
+    // Avoid GCC optimizations affecting function arity
+    if (arguments.length >= 4 && typeof arguments[3] === 'function') {
       console.error(
         "State updates from the useState() and useReducer() Hooks don't support the " +
           'second callback argument. To execute a side effect after ' +

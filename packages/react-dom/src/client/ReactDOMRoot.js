@@ -107,17 +107,18 @@ ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render =
     }
 
     if (__DEV__) {
-      if (typeof arguments[1] === 'function') {
+      // Avoid GCC optimizations affecting function arity
+      if (arguments.length >= 2 && typeof arguments[1] === 'function') {
         console.error(
           'does not support the second callback argument. ' +
             'To execute a side effect after rendering, declare it in a component body with useEffect().',
         );
-      } else if (isValidContainer(arguments[1])) {
+      } else if (arguments.length >= 2 && isValidContainer(arguments[1])) {
         console.error(
           'You passed a container to the second argument of root.render(...). ' +
             "You don't need to pass it again since you already passed it to create the root.",
         );
-      } else if (typeof arguments[1] !== 'undefined') {
+      } else if (arguments.length >= 2 && typeof arguments[1] !== 'undefined') {
         console.error(
           'You passed a second argument to root.render(...) but it only accepts ' +
             'one argument.',
