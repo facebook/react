@@ -440,10 +440,56 @@ addObject(BUILTIN_SHAPES, BuiltInObjectId, [
       returnValueKind: ValueKind.Primitive,
     }),
   ],
-  /*
-   * TODO:
-   * hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, valueOf
-   */
+  [
+    'toLocaleString',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: null,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'hasOwnProperty',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Read],
+      restParam: null,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'isPrototypeOf',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Read],
+      restParam: null,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'propertyIsEnumerable',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [Effect.Read],
+      restParam: null,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Primitive,
+    }),
+  ],
+  [
+    'valueOf',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: null,
+      returnType: {kind: 'Poly'},
+      calleeEffect: Effect.Capture,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
 ]);
 
 addObject(BUILTIN_SHAPES, BuiltInUseStateId, [
