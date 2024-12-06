@@ -27,6 +27,7 @@ import {forwardRef} from './ReactForwardRef';
 import {lazy} from './ReactLazy';
 import {memo} from './ReactMemo';
 import {cache} from './ReactCacheServer';
+import {captureOwnerStack} from './ReactOwnerStack';
 import version from 'shared/ReactVersion';
 
 const Children = {
@@ -57,4 +58,5 @@ export {
   useDebugValue,
   useMemo,
   version,
+  captureOwnerStack, // DEV-only
 };
