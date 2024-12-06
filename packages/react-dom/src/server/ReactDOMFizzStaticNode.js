@@ -39,8 +39,6 @@ import {
   createRootFormatContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
-import {enablePostpone, enableHalt} from 'shared/ReactFeatureFlags';
-
 import {ensureCorrectIsomorphicReactVersion} from '../shared/ensureCorrectIsomorphicReactVersion';
 ensureCorrectIsomorphicReactVersion();
 
@@ -96,15 +94,10 @@ function prerenderToNodeStream(
       });
       const writable = createFakeWritable(readable);
 
-      const result: StaticResult =
-        enablePostpone || enableHalt
-          ? {
-              postponed: getPostponedState(request),
-              prelude: readable,
-            }
-          : ({
-              prelude: readable,
-            }: any);
+      const result = {
+        postponed: getPostponedState(request),
+        prelude: readable,
+      };
       resolve(result);
     }
     const resumableState = createResumableState(
