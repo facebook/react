@@ -1608,6 +1608,117 @@ describe('ReactDOMForm', () => {
     expect(divRef.current.textContent).toEqual('Current username: acdlite');
   });
 
+  it('uncontrolled form inputs are not reset after the action completes with suppressReset property', async () => {
+    const formRef = React.createRef();
+    const inputRef = React.createRef();
+
+    function App() {
+      return (
+        <form
+          suppressReset={true}
+          ref={formRef}
+          action={async formData => {
+            Scheduler.log(`Async action started`);
+            await getText('Wait');
+            startTransition(async () => {
+              await getText('Done');
+              Scheduler.log(`Async action ended`);
+            });
+          }}>
+          <input
+            ref={inputRef}
+            text="text"
+            name="username"
+            defaultValue="(empty)"
+          />
+        </form>
+      );
+    }
+
+    // Initial render
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<App />));
+    expect(inputRef.current.value).toEqual('(empty)');
+
+    // Dirty the uncontrolled input
+    inputRef.current.value = '  AcdLite  ';
+
+    // Submit the form. This will trigger an async action.
+    await submit(formRef.current);
+    assertLog(['Async action started']);
+    expect(inputRef.current.value).toBe('  AcdLite  ');
+
+    // Finish the async action. This will trigger a re-render from the root with
+    // new data from the "server", which suspends.
+    //
+    // The form should not reset yet because we need to update `defaultValue`
+    // first. So we wait for the render to complete.
+    await act(() => resolveText('Wait'));
+    assertLog([]);
+    // The DOM input is still dirty.
+    expect(inputRef.current.value).toBe('  AcdLite  ');
+    await act(() => resolveText('Done'));
+    assertLog(['Async action ended']);
+
+    // The form was not reset to default values
+    expect(inputRef.current.value).toBe('  AcdLite  ');
+  });
+
+  it('uncontrolled form inputs are reset after the action completes without suppressReset property', async () => {
+    const formRef = React.createRef();
+    const inputRef = React.createRef();
+
+    function App() {
+      return (
+        <form
+          ref={formRef}
+          action={async formData => {
+            Scheduler.log(`Async action started`);
+            await getText('Wait');
+            startTransition(async () => {
+              await getText('Done');
+              Scheduler.log(`Async action ended`);
+            });
+          }}>
+          <input
+            ref={inputRef}
+            text="text"
+            name="username"
+            defaultValue="(empty)"
+          />
+        </form>
+      );
+    }
+
+    // Initial render
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<App />));
+    expect(inputRef.current.value).toEqual('(empty)');
+
+    // Dirty the uncontrolled input
+    inputRef.current.value = '  AcdLite  ';
+
+    // Submit the form. This will trigger an async action.
+    await submit(formRef.current);
+    assertLog(['Async action started']);
+    expect(inputRef.current.value).toBe('  AcdLite  ');
+
+    // Finish the async action. This will trigger a re-render from the root with
+    // new data from the "server", which suspends.
+    //
+    // The form should not reset yet because we need to update `defaultValue`
+    // first. So we wait for the render to complete.
+    await act(() => resolveText('Wait'));
+    assertLog([]);
+    // The DOM input is still dirty.
+    expect(inputRef.current.value).toBe('  AcdLite  ');
+    await act(() => resolveText('Done'));
+    assertLog(['Async action ended']);
+
+    // The form was reset to default values
+    expect(inputRef.current.value).toBe('(empty)');
+  });
+
   it('requestFormReset schedules a form reset after transition completes', async () => {
     // This is the same as the previous test, except the form is updated with
     // a userspace action instead of a built-in form action.
