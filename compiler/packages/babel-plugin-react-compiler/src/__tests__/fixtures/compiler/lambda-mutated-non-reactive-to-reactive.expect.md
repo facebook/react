@@ -33,17 +33,15 @@ function f(a) {
   } else {
     x = $[1];
   }
-
-  const t0 = x;
-  let t1;
-  if ($[2] !== t0) {
-    t1 = <div x={t0} />;
-    $[2] = t0;
-    $[3] = t1;
+  let t0;
+  if ($[2] !== x) {
+    t0 = <div x={x} />;
+    $[2] = x;
+    $[3] = t0;
   } else {
-    t1 = $[3];
+    t0 = $[3];
   }
-  return t1;
+  return t0;
 }
 
 export const FIXTURE_ENTRYPOINT = {
