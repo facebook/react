@@ -713,6 +713,57 @@ describe('ReactFlight', () => {
     }
   });
 
+  it('preserves Error names', async () => {
+    // This doesn't cover console replays which display something different.
+    // E.g. `console.log(new NamedError())` would display `NamedError [MyError]: ...`
+    // `console.log(new UnnamedError())` would display `UnnamedError: ...`
+    class UnnamedError extends Error {}
+    class NamedError extends Error {
+      name: 'MyError';
+    }
+
+    function ComponentClient({typeError, namedError, unnamedError}) {
+      return `
+        type: ${typeError.stack.split('\n')[0]}
+        named: ${namedError.stack.split('\n')[0]}
+        unnamed: ${unnamedError.stack.split('\n')[0]}
+      `;
+    }
+    const Component = clientReference(ComponentClient);
+
+    function ServerComponent() {
+      return (
+        <Component
+          typeError={new TypeError('Foo')}
+          namedError={new NamedError('Bar')}
+          unnamedError={new UnnamedError('Baz')}
+        />
+      );
+    }
+
+    const transport = ReactNoopFlightServer.render(<ServerComponent />);
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+
+    if (__DEV__) {
+      // `error.stack` ignores constructor names and `.name`.
+      // only built-in errors have their constructor name used.
+      expect(ReactNoop).toMatchRenderedOutput(`
+        type: TypeError: Foo
+        named: Error: Bar
+        unnamed: Error: Baz
+      `);
+    } else {
+      expect(ReactNoop).toMatchRenderedOutput(`
+        type: Error: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.
+        named: Error: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.
+        unnamed: Error: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.
+      `);
+    }
+  });
+
   it('can transport cyclic objects', async () => {
     function ComponentClient({prop}) {
       expect(prop.obj.obj.obj).toBe(prop.obj.obj);
