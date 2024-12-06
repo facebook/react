@@ -397,12 +397,9 @@ describe('ReactFlightDOMEdge', () => {
     const stream = await serverAct(() =>
       ReactServerDOMServer.renderToReadableStream(children),
     );
-    const [stream1, stream2] = passThrough(stream).tee();
+    const [, stream2] = passThrough(stream).tee();
 
-    const serializedContent = await readResult(stream1);
-
-    expect(serializedContent.length).toBeLessThan(425);
-    expect(timesRendered).toBeLessThan(5);
+    expect(timesRendered).toBe(1);
 
     const model = await ReactServerDOMClient.createFromReadableStream(stream2, {
       serverConsumerManifest: {
@@ -469,11 +466,9 @@ describe('ReactFlightDOMEdge', () => {
     const stream = await serverAct(() =>
       ReactServerDOMServer.renderToReadableStream(children),
     );
-    const [stream1, stream2] = passThrough(stream).tee();
+    const [, stream2] = passThrough(stream).tee();
 
-    const serializedContent = await readResult(stream1);
-    expect(serializedContent.length).toBeLessThan(__DEV__ ? 605 : 400);
-    expect(timesRendered).toBeLessThan(5);
+    expect(timesRendered).toBe(1);
 
     const model = await serverAct(() =>
       ReactServerDOMClient.createFromReadableStream(stream2, {
