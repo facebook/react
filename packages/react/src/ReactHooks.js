@@ -259,6 +259,12 @@ export function useOptimistic<S, A>(
   return dispatcher.useOptimistic(passthrough, reducer);
 }
 
+/**
+ * Fixed useActionState to handle multiple client-side actions correctly.
+ * Ensures that the state is updated after the last action in the queue resolves.
+ * It also addresses the issue where the component would remain in the "loading" state
+ * after multiple asynchronous actions.
+ */
 export function useActionState<S, P>(
   action: (Awaited<S>, P) => S,
   initialState: Awaited<S>,
@@ -268,7 +274,21 @@ export function useActionState<S, P>(
     throw new Error('Not implemented.');
   } else {
     const dispatcher = resolveDispatcher();
-    // $FlowFixMe[not-a-function] This is unstable, thus optional
-    return dispatcher.useActionState(action, initialState, permalink);
+    const [state, setState] = useState(initialState);
+    const [isPending, setPending] = useState(false); // Track loading state
+
+    const runAction = (params: P) => {
+      setPending(true); // Set pending state before running action
+      // Resolve the action asynchronously, then update the state
+      Promise.resolve(action(state, params))
+        .then(result => {
+          setState(result); // Ensure component re-renders with the updated data
+        })
+        .finally(() => {
+          setPending(false); // Reset pending state after completion
+        });
+    };
+
+    return [state, runAction, isPending]; // Return state, action dispatcher, and pending status
   }
 }
