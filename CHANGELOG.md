@@ -1,4 +1,4 @@
-## 19.0.0 (December 5, 2024\)
+## 19.0.0 (December 5, 2024)
 
 Below is a list of all new features, APIs, deprecations, and breaking changes. Read [React 19 release post](https://react.dev/blog/2024/04/25/react-19) and [React 19 upgrade guide](https://react.dev/blog/2024/04/25/react-19-upgrade-guide) for more information.
 
@@ -6,7 +6,7 @@ Below is a list of all new features, APIs, deprecations, and breaking changes. R
 
 ### New Features
 
-### React
+#### React
 
 * Actions: `startTransition` can now accept async functions. Functions passed to `startTransition` are called “Actions”. A given Transition can include one or more Actions which update state in the background and update the UI with one commit. In addition to updating state, Actions can now perform side effects including async requests, and the Action will wait for the work to finish before finishing the Transition. This feature allows Transitions to include side effects like `fetch()` in the pending state, and provides support for error handling, and optimistic updates.  
 * `useActionState`: is a new hook to order Actions inside of a Transition with access to the state of the action, and the pending state. It accepts a reducer that can call Actions, and the initial state used for first render. It also accepts an optional string that is used if the action is passed to a form `action` prop to support progressive enhancement in forms.  
@@ -15,7 +15,7 @@ Below is a list of all new features, APIs, deprecations, and breaking changes. R
 * `ref` as a prop: Refs can now be used as props, removing the need for `forwardRef`.  
 * **Suspense sibling pre-warming**: When a component suspends, React will immediately commit the fallback of the nearest Suspense boundary, without waiting for the entire sibling tree to render. After the fallback commits, React will schedule another render for the suspended siblings to “pre-warm” lazy requests.
 
-### React DOM Client
+#### React DOM Client
 
 * `<form> action` prop: Form Actions allow you to manage forms automatically and integrate with `useFormStatus`. When a `<form> action` succeeds, React will automatically reset the form for uncontrolled components. The form can be reset manually with the new `requestFormReset` API.  
 * `<button> and <input> formAction` prop: Actions can be passed to the `formAction` prop to configure form submission behavior. This allows using different Actions depending on the input.  
@@ -25,11 +25,11 @@ Below is a list of all new features, APIs, deprecations, and breaking changes. R
 * Support for async scripts: Async scripts can be rendered anywhere in the component tree and React will handle ordering and deduplication.  
 * Support for preloading resources: React 19 ships with `preinit`, `preload`, `prefetchDNS`, and `preconnect` APIs to optimize initial page loads by moving discovery of additional resources like fonts out of stylesheet loading. They can also be used to prefetch resources used by an anticipated navigation.
 
-### React DOM Server
+#### React DOM Server
 
 * Added `prerender` and `prerenderToNodeStream` APIs for static site generation. They are designed to work with streaming environments like Node.js Streams and Web Streams. Unlike `renderToString`, they wait for data to load for HTML generation.
 
-### React Server Components
+#### React Server Components
 
 * RSC features such as directives, server components, and server functions are now stable. This means libraries that ship with Server Components can now target React 19 as a peer dependency with a react-server export condition for use in frameworks that support the Full-stack React Architecture. The underlying APIs used to implement a React Server Components bundler or framework do not follow semver and may break between minors in React 19.x. See [docs](https://19.react.dev/reference/rsc/server-components) for how to support React Server Components.
 
@@ -54,7 +54,7 @@ React 19 brings in a number of breaking changes, including the removals of long-
 * Removed: `React.createFactory`: Now that JSX is broadly supported, all `createFactory` usage can be migrated to JSX components.  
 * Removed: `react-test-renderer/shallow`: This has been a re-export of [react-shallow-renderer](https://github.com/enzymejs/react-shallow-renderer) since React 18\. If needed, you can continue to use the third-party package directly. We recommend using [@testing-library/react](https://testing-library.com/docs/react-testing-library/intro/) or [@testing-library/react-native](https://testing-library.com/docs/react-native-testing-library/intro) instead.
 
-### React DOM
+#### React DOM
 
 * Removed: `react-dom/test-utils`: We’ve moved `act` from `react-dom/test-utils` to react. All other utilities have been removed.   
 * Removed: `ReactDOM`.`render`, `ReactDOM`.`hydrate`: These have been removed in favor of the concurrent equivalents: `ReactDOM`.`createRoot` and `ReactDOM.hydrateRoot`.  
@@ -63,7 +63,7 @@ React 19 brings in a number of breaking changes, including the removals of long-
 
 ### Notable Changes
 
-### React
+#### React
 
 * `<Context>` as a provider: You can now render `<Context>` as a provider instead of `<Context.Provider>`.  
 * Cleanup functions for refs: When the component unmounts, React will call the cleanup function returned from the ref callback.  
@@ -72,7 +72,7 @@ React 19 brings in a number of breaking changes, including the removals of long-
 * StrictMode changes: `useMemo` and `useCallback` will now reuse the memoized results from the first render, during the second render. Additionally, StrictMode will now double-invoke ref callback functions on initial mount.  
 * UMD builds removed: To load React 19 with a script tag, we recommend using an ESM-based CDN such as [esm.sh](http://esm.sh).
 
-### React DOM
+#### React DOM
 
 * Diffs for hydration errors: In the case of a mismatch, React 19 logs a single error with a diff of the mismatched content.  
 * Compatibility with third-party scripts and extensions: React will now force a client re-render to fix up any mismatched content caused by elements inserted by third-party JS. 
@@ -107,10 +107,9 @@ The most common changes can be codemodded with `npx types-react-codemod@latest p
   +useReducer<State, Action>(reducer)
   ```
 
+### All Changes
 
-## All Changes
-
-### React
+#### React
 
 * Add support for async Actions ([\#26621](https://github.com/facebook/react/pull/26621), [\#26726](https://github.com/facebook/react/pull/26726), [\#28078](https://github.com/facebook/react/pull/28078), [\#28097](https://github.com/facebook/react/pull/28097), [\#29226](https://github.com/facebook/react/pull/29226), [\#29618](https://github.com/facebook/react/pull/29618), [\#29670](https://github.com/facebook/react/pull/29670), [\#26716](https://github.com/facebook/react/pull/26716) by [@acdlite](https://github.com/acdlite) and [@sebmarkbage](https://github.com/sebmarkbage))  
 * Add `useActionState()` hook to update state based on the result of a Form Action ([\#27270](https://github.com/facebook/react/pull/27270), [\#27278](https://github.com/facebook/react/pull/27278), [\#27309](https://github.com/facebook/react/pull/27309), [\#27302](https://github.com/facebook/react/pull/27302), [\#27307](https://github.com/facebook/react/pull/27307), [\#27366](https://github.com/facebook/react/pull/27366), [\#27370](https://github.com/facebook/react/pull/27370), [\#27321](https://github.com/facebook/react/pull/27321), [\#27374](https://github.com/facebook/react/pull/27374), [\#27372](https://github.com/facebook/react/pull/27372), [\#27397](https://github.com/facebook/react/pull/27397), [\#27399](https://github.com/facebook/react/pull/27399), [\#27460](https://github.com/facebook/react/pull/27460), [\#28557](https://github.com/facebook/react/pull/28557), [\#27570](https://github.com/facebook/react/pull/27570), [\#27571](https://github.com/facebook/react/pull/27571), [\#28631](https://github.com/facebook/react/pull/28631), [\#28788](https://github.com/facebook/react/pull/28788), [\#29694](https://github.com/facebook/react/pull/29694), [\#29695](https://github.com/facebook/react/pull/29695), [\#29694](https://github.com/facebook/react/pull/29694), [\#29665](https://github.com/facebook/react/pull/29665), [\#28232](https://github.com/facebook/react/pull/28232), [\#28319](https://github.com/facebook/react/pull/28319) by [@acdlite](https://github.com/acdlite), [@eps1lon](https://github.com/eps1lon), and [@rickhanlonii](https://github.com/rickhanlonii))  
@@ -165,7 +164,7 @@ The most common changes can be codemodded with `npx types-react-codemod@latest p
 * Remove delay for non-transition updates ([\#26597](https://github.com/facebook/react/pull/26597) by [@acdlite](https://github.com/acdlite))  
 * Remove `createFactory` ([\#27798](https://github.com/facebook/react/pull/27798) by [@kassens](https://github.com/kassens))
 
-### React DOM
+#### React DOM
 
 * Adds Form Actions to handle form submission ([\#26379](https://github.com/facebook/react/pull/26379), [\#26674](https://github.com/facebook/react/pull/26674), [\#26689](https://github.com/facebook/react/pull/26689), [\#26708](https://github.com/facebook/react/pull/26708), [\#26714](https://github.com/facebook/react/pull/26714),  [\#26735](https://github.com/facebook/react/pull/26735), [\#26846](https://github.com/facebook/react/pull/26846), [\#27358](https://github.com/facebook/react/pull/27358),  [\#28056](https://github.com/facebook/react/pull/28056) by [@sebmarkbage](https://github.com/sebmarkbage), [@acdlite](https://github.com/acdlite), and [@jupapios](https://github.com/jupapios))  
 * Add `useFormStatus()` hook to provide status information of the last form submission ([\#26719](https://github.com/facebook/react/pull/26719), [\#26722](https://github.com/facebook/react/pull/26722), [\#26788](https://github.com/facebook/react/pull/26788),  [\#29019](https://github.com/facebook/react/pull/29019), [\#28728](https://github.com/facebook/react/pull/28728), [\#28413](https://github.com/facebook/react/pull/28413) by [@acdlite](https://github.com/acdlite) and [@eps1lon](https://github.com/eps1lon))  
@@ -195,7 +194,7 @@ The most common changes can be codemodded with `npx types-react-codemod@latest p
 * Remove `renderToStaticNodeStream()` ([\#28873](https://github.com/facebook/react/pull/28873) by @gnoff)  
 * Remove `unstable_renderSubtreeIntoContainer` ([\#29771](https://github.com/facebook/react/pull/29771) by [@kassens](https://github.com/kassens))
 
-### React DOM Server
+#### React DOM Server
 
 * Stable release of React Server Components ([Many, many PRs](https://github.com/facebook/react/pulls?q=is%3Apr+is%3Aclosed+%5BFlight%5D+in%3Atitle+created%3A%3C2024-12-01+) by [@sebmarkbage](https://github.com/sebmarkbage), [@acdlite](https://github.com/acdlite), [@gnoff](https://github.com/gnoff), [@sammy-SC](https://github.com/sammy-SC), [@gaearon](https://github.com/gaearon), [@sophiebits](https://github.com/sophiebits), [@unstubbable](https://github.com/unstubbable), [@lubieowoce](https://github.com/lubieowoce))
 * Support Server Actions ([\#26124](https://github.com/facebook/react/pull/26124), [\#26632](https://github.com/facebook/react/pull/26632), [\#27459](https://github.com/facebook/react/pull/27459) by [@sebmarkbage](https://github.com/sebmarkbage) and [@acdlite](https://github.com/acdlite))  
@@ -250,23 +249,23 @@ The most common changes can be codemodded with `npx types-react-codemod@latest p
 * Remove layout effect warning on server ([\#26395](https://github.com/facebook/react/pull/26395) by [@rickhanlonii](https://github.com/rickhanlonii))  
 * Remove `errorInfo.digest` from `onRecoverableError` ([\#28222](https://github.com/facebook/react/pull/28222) by [@gnoff](https://github.com/gnoff))
 
-### ReactTestRenderer
+#### ReactTestRenderer
 
 * Add deprecation error to `react-test-renderer` on web ([\#27903](https://github.com/facebook/react/pull/27903), [\#28904](https://github.com/facebook/react/pull/28904) by [@jackpope](https://github.com/jackpope) and [@acdlite](https://github.com/acdlite))  
 * Render with ConcurrentRoot on web ([\#28498](https://github.com/facebook/react/pull/28498) by [@jackpope](https://github.com/jackpope))  
 * Remove `react-test-renderer/shallow` export ([\#25475](https://github.com/facebook/react/pull/25475), [\#28497](https://github.com/facebook/react/pull/28497) by [@sebmarkbage](https://github.com/sebmarkbage) and [@jackpope](https://github.com/jackpope))
 
-### React Reconciler
+#### React Reconciler
 
 * Enable suspending commits without blocking render ([\#26398](https://github.com/facebook/react/pull/26398), [\#26427](https://github.com/facebook/react/pull/26427) by [@acdlite](https://github.com/acdlite))  
 * Remove `prepareUpdate` ([\#26583](https://github.com/facebook/react/pull/26583), [\#27409](http://github.com/facebook/react/pull/27409) by [@sebmarkbage](https://github.com/sebmarkbage) and [@sophiebits](https://github.com/sophiebits))
 
-### React-Is
+#### React-Is
 
 * Enable tree shaking ([\#27701](https://github.com/facebook/react/pull/27701) by [@markerikson](https://github.com/markerikson))  
 * Remove `isConcurrentMode` and `isAsyncMode` methods ([\#28224](https://github.com/facebook/react/pull/28224) by @gaearon)
 
-### useSyncExternalStore
+#### useSyncExternalStore
 
 * Remove React internals access ([\#29868](https://github.com/facebook/react/pull/29868) by [@phryneas](https://github.com/phryneas))  
 * Fix stale selectors keeping previous store references ([\#25969](https://github.com/facebook/react/pull/25968) by [@jellevoost](https://github.com/jellevoost))
