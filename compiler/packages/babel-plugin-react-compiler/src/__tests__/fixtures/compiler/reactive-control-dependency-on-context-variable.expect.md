@@ -51,7 +51,7 @@ import { identity } from "shared-runtime";
 function Component(props) {
   const $ = _c(4);
   let x;
-  if ($[0] !== props.cond) {
+  if ($[0] !== props) {
     const f = () => {
       if (props.cond) {
         x = 1;
@@ -62,7 +62,7 @@ function Component(props) {
 
     const f2 = identity(f);
     f2();
-    $[0] = props.cond;
+    $[0] = props;
     $[1] = x;
   } else {
     x = $[1];
