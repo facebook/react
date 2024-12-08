@@ -30,9 +30,10 @@ function noServerCall() {
 }
 
 export function createServerReference<A: Iterable<any>, T>(
-  id: any,
+  id: string,
+  exportName: string
 ): (...A) => Promise<T> {
-  return createServerReferenceImpl(id, noServerCall);
+  return createServerReferenceImpl(id + '#' + exportName, noServerCall);
 }
 
 type EncodeFormActionCallback = <A>(

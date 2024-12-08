@@ -50,9 +50,10 @@ function callCurrentServerCallback<A, T>(
 }
 
 export function createServerReference<A: Iterable<any>, T>(
-  id: ServerReferenceId,
+  id: string,
+  exportName: string
 ): (...A) => Promise<T> {
-  return createServerReferenceImpl(id, callCurrentServerCallback);
+  return createServerReferenceImpl(id + '#' + exportName, callCurrentServerCallback);
 }
 
 function startReadingFromStream(

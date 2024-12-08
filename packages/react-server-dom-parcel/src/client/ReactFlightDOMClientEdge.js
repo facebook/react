@@ -39,9 +39,10 @@ function noServerCall() {
 }
 
 export function createServerReference<A: Iterable<any>, T>(
-  id: any,
+  id: string,
+  exportName: string
 ): (...A) => Promise<T> {
-  return createServerReferenceImpl(id, noServerCall);
+  return createServerReferenceImpl(id + '#' + exportName, noServerCall);
 }
 
 type EncodeFormActionCallback = <A>(
@@ -63,8 +64,8 @@ function createResponseFromOptions(options?: Options) {
     null, // serverReferenceConfig
     null, // moduleLoading
     noServerCall,
-    options?.encodeFormAction,
-    typeof options?.nonce === 'string' ? options.nonce : undefined,
+    options ? options.encodeFormAction : undefined,
+    options && typeof options.nonce === 'string' ? options.nonce : undefined,
     options && options.temporaryReferences
       ? options.temporaryReferences
       : undefined,
