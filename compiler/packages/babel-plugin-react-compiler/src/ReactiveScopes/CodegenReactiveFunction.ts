@@ -1354,6 +1354,8 @@ function codegenForInit(
   init: ReactiveValue,
 ): t.Expression | t.VariableDeclaration | null {
   if (init.kind === 'SequenceExpression') {
+    // We may end up emitti
+    const temp = cx.temp;
     const body = codegenBlock(
       cx,
       init.instructions.map(instruction => ({
@@ -1363,7 +1365,7 @@ function codegenForInit(
     ).body;
     const declarators: Array<t.VariableDeclarator> = [];
     let kind: 'let' | 'const' = 'const';
-    body.forEach(instr => {
+    for (const instr of body) {
       let top: undefined | t.VariableDeclarator = undefined;
       if (
         instr.type === 'ExpressionStatement' &&
@@ -1375,30 +1377,29 @@ function codegenForInit(
         top?.init == null
       ) {
         top.init = instr.expression.right;
-      } else {
-        CompilerError.invariant(
-          instr.type === 'VariableDeclaration' &&
-            (instr.kind === 'let' || instr.kind === 'const'),
-          {
-            reason: 'Expected a variable declaration',
-            loc: init.loc,
-            description: `Got ${instr.type}`,
-            suggestions: null,
-          },
-        );
+      } else if (
+        instr.type === 'VariableDeclaration' &&
+        (instr.kind === 'let' || instr.kind === 'const')
+      ) {
         if (instr.kind === 'let') {
           kind = 'let';
         }
         declarators.push(...instr.declarations);
+      } else {
+        /*
+         * We found instructions in the initializer that don't correspond to a variable declarator:
+         * emit as an expression instead
+         */
+        cx.temp = temp;
+        return codegenInstructionValueToExpression(cx, init);
       }
-    });
-    CompilerError.invariant(declarators.length > 0, {
-      reason: 'Expected a variable declaration',
-      loc: init.loc,
-      description: null,
-      suggestions: null,
-    });
-    return t.variableDeclaration(kind, declarators);
+    }
+    if (declarators.length > 0) {
+      return t.variableDeclaration(kind, declarators);
+    } else {
+      cx.temp = temp;
+      return codegenInstructionValueToExpression(cx, init);
+    }
   } else {
     return codegenInstructionValueToExpression(cx, init);
   }

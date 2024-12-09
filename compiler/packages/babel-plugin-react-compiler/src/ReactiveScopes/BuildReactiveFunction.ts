@@ -18,6 +18,7 @@ import {
 } from '../HIR';
 import {
   HIRFunction,
+  InstructionKind,
   ReactiveBreakTerminal,
   ReactiveContinueTerminal,
   ReactiveFunction,
@@ -364,25 +365,24 @@ class Driver {
         const init = this.visitValueBlock(terminal.init, terminal.loc);
         const initBlock = this.cx.ir.blocks.get(init.block)!;
         let initValue = init.value;
-        if (initValue.kind === 'SequenceExpression') {
+        const initBlockHasDeclarations = initBlock.instructions.some(
+          instr =>
+            instr.value.kind === 'DeclareContext' ||
+            instr.value.kind === 'DeclareLocal' ||
+            ((instr.value.kind === 'StoreContext' ||
+              instr.value.kind === 'StoreLocal') &&
+              instr.value.lvalue.kind !== InstructionKind.Reassign),
+        );
+        if (
+          initValue.kind === 'SequenceExpression' &&
+          initBlockHasDeclarations
+        ) {
           const last = initBlock.instructions.at(-1)!;
           initValue.instructions.push(last);
           initValue.value = {
             kind: 'Primitive',
             value: undefined,
             loc: terminal.loc,
-          };
-        } else {
-          initValue = {
-            kind: 'SequenceExpression',
-            instructions: [initBlock.instructions.at(-1)!],
-            id: terminal.id,
-            loc: terminal.loc,
-            value: {
-              kind: 'Primitive',
-              value: undefined,
-              loc: terminal.loc,
-            },
           };
         }
 
