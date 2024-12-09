@@ -209,49 +209,48 @@ export default function (babel, opts = {}) {
   }
 
   function isBuiltinHook(hookName) {
-    switch (hookName) {
-      case 'useState':
-      case 'React.useState':
-      case 'useReducer':
-      case 'React.useReducer':
-      case 'useEffect':
-      case 'React.useEffect':
-      case 'useLayoutEffect':
-      case 'React.useLayoutEffect':
-      case 'useMemo':
-      case 'React.useMemo':
-      case 'useCallback':
-      case 'React.useCallback':
-      case 'useRef':
-      case 'React.useRef':
-      case 'useContext':
-      case 'React.useContext':
-      case 'useImperativeHandle':
-      case 'React.useImperativeHandle':
-      case 'useDebugValue':
-      case 'React.useDebugValue':
-      case 'useId':
-      case 'React.useId':
-      case 'useDeferredValue':
-      case 'React.useDeferredValue':
-      case 'useTransition':
-      case 'React.useTransition':
-      case 'useInsertionEffect':
-      case 'React.useInsertionEffect':
-      case 'useSyncExternalStore':
-      case 'React.useSyncExternalStore':
-      case 'useFormStatus':
-      case 'React.useFormStatus':
-      case 'useFormState':
-      case 'React.useFormState':
-      case 'useActionState':
-      case 'React.useActionState':
-      case 'useOptimistic':
-      case 'React.useOptimistic':
-        return true;
-      default:
-        return false;
-    }
+    const builtinHooks = [
+      'useState',
+      'React.useState',
+      'useReducer',
+      'React.useReducer',
+      'useEffect',
+      'React.useEffect',
+      'useLayoutEffect',
+      'React.useLayoutEffect',
+      'useMemo',
+      'React.useMemo',
+      'useCallback',
+      'React.useCallback',
+      'useRef',
+      'React.useRef',
+      'useContext',
+      'React.useContext',
+      'useImperativeHandle',
+      'React.useImperativeHandle',
+      'useDebugValue',
+      'React.useDebugValue',
+      'useId',
+      'React.useId',
+      'useDeferredValue',
+      'React.useDeferredValue',
+      'useTransition',
+      'React.useTransition',
+      'useInsertionEffect',
+      'React.useInsertionEffect',
+      'useSyncExternalStore',
+      'React.useSyncExternalStore',
+      'useFormStatus',
+      'React.useFormStatus',
+      'useFormState',
+      'React.useFormState',
+      'useActionState',
+      'React.useActionState',
+      'useOptimistic',
+      'React.useOptimistic',
+   ];
+
+    return builtinHooks.includes(hookName)
   }
 
   function getHookCallsSignature(functionNode) {
