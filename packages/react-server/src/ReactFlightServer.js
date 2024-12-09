@@ -1105,6 +1105,143 @@ function callWithDebugContextInDEV<A, T>(
 
 const voidHandler = () => {};
 
+function processServerComponentReturnValue(
+  request: Request,
+  task: Task,
+  Component: any,
+  result: any,
+): any {
+  // A Server Component's return value has a few special properties due to being
+  // in the return position of a Component. We convert them here.
+  if (
+    typeof result !== 'object' ||
+    result === null ||
+    isClientReference(result)
+  ) {
+    return result;
+  }
+
+  if (typeof result.then === 'function') {
+    // When the return value is in children position we can resolve it immediately,
+    // to its value without a wrapper if it's synchronously available.
+    const thenable: Thenable<any> = result;
+    if (__DEV__) {
+      // If the thenable resolves to an element, then it was in a static position,
+      // the return value of a Server Component. That doesn't need further validation
+      // of keys. The Server Component itself would have had a key.
+      thenable.then(resolvedValue => {
+        if (
+          typeof resolvedValue === 'object' &&
+          resolvedValue !== null &&
+          resolvedValue.$$typeof === REACT_ELEMENT_TYPE
+        ) {
+          resolvedValue._store.validated = 1;
+        }
+      }, voidHandler);
+    }
+    if (thenable.status === 'fulfilled') {
+      return thenable.value;
+    }
+    // TODO: Once we accept Promises as children on the client, we can just return
+    // the thenable here.
+    return createLazyWrapperAroundWakeable(result);
+  }
+
+  if (__DEV__) {
+    if ((result: any).$$typeof === REACT_ELEMENT_TYPE) {
+      // If the server component renders to an element, then it was in a static position.
+      // That doesn't need further validation of keys. The Server Component itself would
+      // have had a key.
+      (result: any)._store.validated = 1;
+    }
+  }
+
+  // Normally we'd serialize an Iterator/AsyncIterator as a single-shot which is not compatible
+  // to be rendered as a React Child. However, because we have the function to recreate
+  // an iterable from rendering the element again, we can effectively treat it as multi-
+  // shot. Therefore we treat this as an Iterable/AsyncIterable, whether it was one or not, by
+  // adding a wrapper so that this component effectively renders down to an AsyncIterable.
+  const iteratorFn = getIteratorFn(result);
+  if (iteratorFn) {
+    const iterableChild = result;
+    const multiShot = {
+      [Symbol.iterator]: function () {
+        const iterator = iteratorFn.call(iterableChild);
+        if (__DEV__) {
+          // If this was an Iterator but not a GeneratorFunction we warn because
+          // it might have been a mistake. Technically you can make this mistake with
+          // GeneratorFunctions and even single-shot Iterables too but it's extra
+          // tempting to try to return the value from a generator.
+          if (iterator === iterableChild) {
+            const isGeneratorComponent =
+              // $FlowIgnore[method-unbinding]
+              Object.prototype.toString.call(Component) ===
+                '[object GeneratorFunction]' &&
+              // $FlowIgnore[method-unbinding]
+              Object.prototype.toString.call(iterableChild) ===
+                '[object Generator]';
+            if (!isGeneratorComponent) {
+              callWithDebugContextInDEV(request, task, () => {
+                console.error(
+                  'Returning an Iterator from a Server Component is not supported ' +
+                    'since it cannot be looped over more than once. ',
+                );
+              });
+            }
+          }
+        }
+        return (iterator: any);
+      },
+    };
+    if (__DEV__) {
+      (multiShot: any)._debugInfo = iterableChild._debugInfo;
+    }
+    return multiShot;
+  }
+  if (
+    enableFlightReadableStream &&
+    typeof (result: any)[ASYNC_ITERATOR] === 'function' &&
+    (typeof ReadableStream !== 'function' ||
+      !(result instanceof ReadableStream))
+  ) {
+    const iterableChild = result;
+    const multishot = {
+      [ASYNC_ITERATOR]: function () {
+        const iterator = (iterableChild: any)[ASYNC_ITERATOR]();
+        if (__DEV__) {
+          // If this was an AsyncIterator but not an AsyncGeneratorFunction we warn because
+          // it might have been a mistake. Technically you can make this mistake with
+          // AsyncGeneratorFunctions and even single-shot AsyncIterables too but it's extra
+          // tempting to try to return the value from a generator.
+          if (iterator === iterableChild) {
+            const isGeneratorComponent =
+              // $FlowIgnore[method-unbinding]
+              Object.prototype.toString.call(Component) ===
+                '[object AsyncGeneratorFunction]' &&
+              // $FlowIgnore[method-unbinding]
+              Object.prototype.toString.call(iterableChild) ===
+                '[object AsyncGenerator]';
+            if (!isGeneratorComponent) {
+              callWithDebugContextInDEV(request, task, () => {
+                console.error(
+                  'Returning an AsyncIterator from a Server Component is not supported ' +
+                    'since it cannot be looped over more than once. ',
+                );
+              });
+            }
+          }
+        }
+        return iterator;
+      },
+    };
+    if (__DEV__) {
+      (multishot: any)._debugInfo = iterableChild._debugInfo;
+    }
+    return multishot;
+  }
+  return result;
+}
+
 function renderFunctionComponent<Props>(
   request: Request,
   task: Task,
@@ -1231,123 +1368,9 @@ function renderFunctionComponent<Props>(
     throw null;
   }
 
-  if (
-    typeof result === 'object' &&
-    result !== null &&
-    !isClientReference(result)
-  ) {
-    if (typeof result.then === 'function') {
-      // When the return value is in children position we can resolve it immediately,
-      // to its value without a wrapper if it's synchronously available.
-      const thenable: Thenable<any> = result;
-      if (__DEV__) {
-        // If the thenable resolves to an element, then it was in a static position,
-        // the return value of a Server Component. That doesn't need further validation
-        // of keys. The Server Component itself would have had a key.
-        thenable.then(resolvedValue => {
-          if (
-            typeof resolvedValue === 'object' &&
-            resolvedValue !== null &&
-            resolvedValue.$$typeof === REACT_ELEMENT_TYPE
-          ) {
-            resolvedValue._store.validated = 1;
-          }
-        }, voidHandler);
-      }
-      if (thenable.status === 'fulfilled') {
-        return thenable.value;
-      }
-      // TODO: Once we accept Promises as children on the client, we can just return
-      // the thenable here.
-      result = createLazyWrapperAroundWakeable(result);
-    }
+  // Apply special cases.
+  result = processServerComponentReturnValue(request, task, Component, result);
 
-    // Normally we'd serialize an Iterator/AsyncIterator as a single-shot which is not compatible
-    // to be rendered as a React Child. However, because we have the function to recreate
-    // an iterable from rendering the element again, we can effectively treat it as multi-
-    // shot. Therefore we treat this as an Iterable/AsyncIterable, whether it was one or not, by
-    // adding a wrapper so that this component effectively renders down to an AsyncIterable.
-    const iteratorFn = getIteratorFn(result);
-    if (iteratorFn) {
-      const iterableChild = result;
-      result = {
-        [Symbol.iterator]: function () {
-          const iterator = iteratorFn.call(iterableChild);
-          if (__DEV__) {
-            // If this was an Iterator but not a GeneratorFunction we warn because
-            // it might have been a mistake. Technically you can make this mistake with
-            // GeneratorFunctions and even single-shot Iterables too but it's extra
-            // tempting to try to return the value from a generator.
-            if (iterator === iterableChild) {
-              const isGeneratorComponent =
-                // $FlowIgnore[method-unbinding]
-                Object.prototype.toString.call(Component) ===
-                  '[object GeneratorFunction]' &&
-                // $FlowIgnore[method-unbinding]
-                Object.prototype.toString.call(iterableChild) ===
-                  '[object Generator]';
-              if (!isGeneratorComponent) {
-                callWithDebugContextInDEV(request, task, () => {
-                  console.error(
-                    'Returning an Iterator from a Server Component is not supported ' +
-                      'since it cannot be looped over more than once. ',
-                  );
-                });
-              }
-            }
-          }
-          return (iterator: any);
-        },
-      };
-      if (__DEV__) {
-        (result: any)._debugInfo = iterableChild._debugInfo;
-      }
-    } else if (
-      enableFlightReadableStream &&
-      typeof (result: any)[ASYNC_ITERATOR] === 'function' &&
-      (typeof ReadableStream !== 'function' ||
-        !(result instanceof ReadableStream))
-    ) {
-      const iterableChild = result;
-      result = {
-        [ASYNC_ITERATOR]: function () {
-          const iterator = (iterableChild: any)[ASYNC_ITERATOR]();
-          if (__DEV__) {
-            // If this was an AsyncIterator but not an AsyncGeneratorFunction we warn because
-            // it might have been a mistake. Technically you can make this mistake with
-            // AsyncGeneratorFunctions and even single-shot AsyncIterables too but it's extra
-            // tempting to try to return the value from a generator.
-            if (iterator === iterableChild) {
-              const isGeneratorComponent =
-                // $FlowIgnore[method-unbinding]
-                Object.prototype.toString.call(Component) ===
-                  '[object AsyncGeneratorFunction]' &&
-                // $FlowIgnore[method-unbinding]
-                Object.prototype.toString.call(iterableChild) ===
-                  '[object AsyncGenerator]';
-              if (!isGeneratorComponent) {
-                callWithDebugContextInDEV(request, task, () => {
-                  console.error(
-                    'Returning an AsyncIterator from a Server Component is not supported ' +
-                      'since it cannot be looped over more than once. ',
-                  );
-                });
-              }
-            }
-          }
-          return iterator;
-        },
-      };
-      if (__DEV__) {
-        (result: any)._debugInfo = iterableChild._debugInfo;
-      }
-    } else if (__DEV__ && (result: any).$$typeof === REACT_ELEMENT_TYPE) {
-      // If the server component renders to an element, then it was in a static position.
-      // That doesn't need further validation of keys. The Server Component itself would
-      // have had a key.
-      (result: any)._store.validated = 1;
-    }
-  }
   // Track this element's key on the Server Component on the keyPath context..
   const prevKeyPath = task.keyPath;
   const prevImplicitSlot = task.implicitSlot;
