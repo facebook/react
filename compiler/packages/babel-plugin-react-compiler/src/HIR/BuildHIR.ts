@@ -519,27 +519,23 @@ function lowerStatement(
 
       const initBlock = builder.enter('loop', _blockId => {
         const init = stmt.get('init');
-        if (!init.isVariableDeclaration()) {
-          builder.errors.push({
-            reason:
-              '(BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement',
-            severity: ErrorSeverity.Todo,
-            loc: stmt.node.loc ?? null,
-            suggestions: null,
+        if (init.isVariableDeclaration()) {
+          lowerStatement(builder, init);
+        } else if (init.isExpression()) {
+          lowerExpressionToTemporary(builder, init);
+        } else {
+          lowerValueToTemporary(builder, {
+            kind: 'Primitive',
+            loc: stmt.node.loc ?? GeneratedSource,
+            value: undefined,
           });
-          return {
-            kind: 'unsupported',
-            id: makeInstructionId(0),
-            loc: init.node?.loc ?? GeneratedSource,
-          };
         }
-        lowerStatement(builder, init);
         return {
           kind: 'goto',
           block: testBlock.id,
           variant: GotoVariant.Break,
           id: makeInstructionId(0),
-          loc: init.node.loc ?? GeneratedSource,
+          loc: init.node?.loc ?? GeneratedSource,
         };
       });
 
