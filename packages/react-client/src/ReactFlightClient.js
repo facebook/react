@@ -2460,7 +2460,6 @@ function initializeFakeStack(
     const stack = debugInfo.stack;
     const env = debugInfo.env == null ? '' : debugInfo.env;
     // $FlowFixMe[cannot-write]
-    // $FlowFixMe[prop-missing]
     debugInfo.debugStack = createFakeJSXCallStackInDEV(response, stack, env);
   }
   if (debugInfo.owner != null) {
@@ -2488,12 +2487,14 @@ function resolveDebugInfo(
     debugInfo.env === undefined ? response._rootEnvironmentName : debugInfo.env;
   initializeFakeTask(response, debugInfo, env);
   if (debugInfo.owner === null && response._debugRootOwner != null) {
-    // $FlowFixMe
-    debugInfo.owner = response._debugRootOwner;
+    // $FlowFixMe[prop-missing] By narrowing `owner` to `null`, we narrowed `debugInfo` to `ReactComponentInfo`
+    const componentInfo: ReactComponentInfo = debugInfo;
+    // $FlowFixMe[cannot-write]
+    componentInfo.owner = response._debugRootOwner;
     // We override the stack if we override the owner since the stack where the root JSX
     // was created on the server isn't very useful but where the request was made is.
-    // $FlowFixMe
-    debugInfo.debugStack = response._debugRootStack;
+    // $FlowFixMe[cannot-write]
+    componentInfo.debugStack = response._debugRootStack;
   } else {
     initializeFakeStack(response, debugInfo);
   }
