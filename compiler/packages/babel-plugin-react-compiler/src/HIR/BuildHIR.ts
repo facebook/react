@@ -1078,6 +1078,12 @@ function lowerStatement(
       const left = stmt.get('left');
       const leftLoc = left.node.loc ?? GeneratedSource;
       let test: Place;
+      const advanceIterator = lowerValueToTemporary(builder, {
+        kind: 'IteratorNext',
+        loc: leftLoc,
+        iterator: {...iterator},
+        collection: {...value},
+      });
       if (left.isVariableDeclaration()) {
         const declarations = left.get('declarations');
         CompilerError.invariant(declarations.length === 1, {
@@ -1087,12 +1093,6 @@ function lowerStatement(
           suggestions: null,
         });
         const id = declarations[0].get('id');
-        const advanceIterator = lowerValueToTemporary(builder, {
-          kind: 'IteratorNext',
-          loc: leftLoc,
-          iterator: {...iterator},
-          collection: {...value},
-        });
         const assign = lowerAssignment(
           builder,
           leftLoc,
@@ -1103,13 +1103,19 @@ function lowerStatement(
         );
         test = lowerValueToTemporary(builder, assign);
       } else {
-        builder.errors.push({
-          reason: `(BuildHIR::lowerStatement) Handle ${left.type} inits in ForOfStatement`,
-          severity: ErrorSeverity.Todo,
-          loc: left.node.loc ?? null,
-          suggestions: null,
+        CompilerError.invariant(left.isLVal(), {
+          loc: leftLoc,
+          reason: 'Expected ForOf init to be a variable declaration or lval',
         });
-        return;
+        const assign = lowerAssignment(
+          builder,
+          leftLoc,
+          InstructionKind.Reassign,
+          left,
+          advanceIterator,
+          'Assignment',
+        );
+        test = lowerValueToTemporary(builder, assign);
       }
       builder.terminateWithContinuation(
         {
@@ -1166,6 +1172,11 @@ function lowerStatement(
       const left = stmt.get('left');
       const leftLoc = left.node.loc ?? GeneratedSource;
       let test: Place;
+      const nextPropertyTemp = lowerValueToTemporary(builder, {
+        kind: 'NextPropertyOf',
+        loc: leftLoc,
+        value,
+      });
       if (left.isVariableDeclaration()) {
         const declarations = left.get('declarations');
         CompilerError.invariant(declarations.length === 1, {
@@ -1175,11 +1186,6 @@ function lowerStatement(
           suggestions: null,
         });
         const id = declarations[0].get('id');
-        const nextPropertyTemp = lowerValueToTemporary(builder, {
-          kind: 'NextPropertyOf',
-          loc: leftLoc,
-          value,
-        });
         const assign = lowerAssignment(
           builder,
           leftLoc,
@@ -1190,13 +1196,19 @@ function lowerStatement(
         );
         test = lowerValueToTemporary(builder, assign);
       } else {
-        builder.errors.push({
-          reason: `(BuildHIR::lowerStatement) Handle ${left.type} inits in ForInStatement`,
-          severity: ErrorSeverity.Todo,
-          loc: left.node.loc ?? null,
-          suggestions: null,
+        CompilerError.invariant(left.isLVal(), {
+          loc: leftLoc,
+          reason: 'Expected ForIn init to be a variable declaration or lval',
         });
-        return;
+        const assign = lowerAssignment(
+          builder,
+          leftLoc,
+          InstructionKind.Reassign,
+          left,
+          nextPropertyTemp,
+          'Assignment',
+        );
+        test = lowerValueToTemporary(builder, assign);
       }
       builder.terminateWithContinuation(
         {
