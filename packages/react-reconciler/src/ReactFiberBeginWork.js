@@ -79,6 +79,7 @@ import {
   PerformedWork,
   Placement,
   Hydrating,
+  Callback,
   ContentReset,
   DidCapture,
   Update,
@@ -166,7 +167,6 @@ import {
   isSuspenseInstancePending,
   isSuspenseInstanceFallback,
   getSuspenseInstanceFallbackErrorDetails,
-  registerSuspenseInstanceRetry,
   supportsHydration,
   supportsResources,
   supportsSingletons,
@@ -256,7 +256,6 @@ import {
   isFunctionClassComponent,
 } from './ReactFiber';
 import {
-  retryDehydratedSuspenseBoundary,
   scheduleUpdateOnFiber,
   renderDidSuspendDelayIfPossible,
   markSkippedUpdateLanes,
@@ -2816,12 +2815,10 @@ function updateDehydratedSuspenseComponent(
       // on the client than if we just leave it alone. If the server times out or errors
       // these should update this boundary to the permanent Fallback state instead.
       // Mark it as having captured (i.e. suspended).
-      workInProgress.flags |= DidCapture;
+      // Also Mark it as requiring retry.
+      workInProgress.flags |= DidCapture | Callback;
       // Leave the child in place. I.e. the dehydrated fragment.
       workInProgress.child = current.child;
-      // Register a callback to retry this boundary once the server has sent the result.
-      const retry = retryDehydratedSuspenseBoundary.bind(null, current);
-      registerSuspenseInstanceRetry(suspenseInstance, retry);
       return null;
     } else {
       // This is the first attempt.

@@ -213,11 +213,8 @@ function patchConsole(consoleInst: typeof console, methodName: string) {
           1,
         );
         request.pendingChunks++;
-        // We don't currently use this id for anything but we emit it so that we can later
-        // refer to previous logs in debug info to associate them with a component.
-        const id = request.nextChunkId++;
         const owner: null | ReactComponentInfo = resolveOwner();
-        emitConsoleChunk(request, id, methodName, owner, stack, arguments);
+        emitConsoleChunk(request, methodName, owner, stack, arguments);
       }
       // $FlowFixMe[prop-missing]
       return originalMethod.apply(this, arguments);
@@ -3227,8 +3224,7 @@ function emitHintChunk<Code: HintCode>(
   model: HintModel<Code>,
 ): void {
   const json: string = stringify(model);
-  const id = request.nextChunkId++;
-  const row = serializeRowHeader('H' + code, id) + json + '\n';
+  const row = ':H' + code + json + '\n';
   const processedChunk = stringToChunk(row);
   request.completedHintChunks.push(processedChunk);
 }
@@ -3764,7 +3760,6 @@ function outlineConsoleValue(
 
 function emitConsoleChunk(
   request: Request,
-  id: number,
   methodName: string,
   owner: null | ReactComponentInfo,
   stackTrace: ReactStackTrace,
@@ -3828,7 +3823,7 @@ function emitConsoleChunk(
       replacer,
     );
   }
-  const row = serializeRowHeader('W', id) + json + '\n';
+  const row = ':W' + json + '\n';
   const processedChunk = stringToChunk(row);
   request.completedRegularChunks.push(processedChunk);
 }
