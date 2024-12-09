@@ -86,12 +86,6 @@ let moduleLocal = false;
 
 Todo: (BuildHIR::lowerStatement) Handle ClassDeclaration statements (5:10)
 
-Todo: (BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement (20:22)
-
-Todo: (BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement (23:25)
-
-Todo: (BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement (26:28)
-
 Todo: (BuildHIR::lowerStatement) Handle empty test in ForStatement (26:28)
 
 Todo: (BuildHIR::lowerExpression) Handle tagged template with interpolations (30:32)
