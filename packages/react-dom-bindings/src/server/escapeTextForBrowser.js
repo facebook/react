@@ -40,8 +40,6 @@
 
 import {checkHtmlStringCoercion} from 'shared/CheckStringCoercion';
 
-const matchHtmlRegExp = /["'&<>]/;
-
 /**
  * Escapes special characters and HTML entities in a given html string.
  *
@@ -55,18 +53,13 @@ function escapeHtml(string: string) {
     checkHtmlStringCoercion(string);
   }
   const str = '' + string;
-  const match = matchHtmlRegExp.exec(str);
-
-  if (!match) {
-    return str;
-  }
 
   let escape;
   let html = '';
   let index;
   let lastIndex = 0;
 
-  for (index = match.index; index < str.length; index++) {
+  for (index = 0; index < str.length; index++) {
     switch (str.charCodeAt(index)) {
       case 34: // "
         escape = '&quot;';
