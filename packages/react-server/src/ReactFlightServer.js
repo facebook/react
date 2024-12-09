@@ -20,6 +20,8 @@ import {
   enableTaint,
   enableServerComponentLogs,
   enableOwnerStacks,
+  enableProfilerTimer,
+  enableComponentPerformanceTrack,
 } from 'shared/ReactFeatureFlags';
 
 import {enableFlightReadableStream} from 'shared/ReactFeatureFlags';
@@ -392,6 +394,8 @@ export type Request = {
   onPostpone: (reason: string) => void,
   onAllReady: () => void,
   onFatalError: mixed => void,
+  // Profiling-only
+  timeOrigin: number,
   // DEV-only
   environmentName: () => string,
   filterStackFrame: (url: string, functionName: string) => boolean,
@@ -517,6 +521,23 @@ function RequestInstance(
         : filterStackFrame;
     this.didWarnForKey = null;
   }
+
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // We start by serializing the time origin. Any future timestamps will be
+    // emitted relatively to this origin. Instead of using performance.timeOrigin
+    // as this origin, we use the timestamp at the start of the request.
+    // This avoids leaking unnecessary information like how long the server has
+    // been running and allows for more compact representation of each timestamp.
+    // The time origin is stored as an offset in the time space of this environment.
+    const timeOrigin = (this.timeOrigin = performance.now());
+    emitTimeOriginChunk(
+      this,
+      timeOrigin +
+        // $FlowFixMe[prop-missing]
+        performance.timeOrigin,
+    );
+  }
+
   const rootTask = createTask(
     this,
     model,
@@ -1240,6 +1261,7 @@ function renderFunctionComponent<Props>(
       // being no references to this as an owner.
 
       outlineComponentInfo(request, componentDebugInfo);
+
       emitDebugChunk(request, componentDebugID, componentDebugInfo);
 
       // We've emitted the latest environment for this task so we track that.
@@ -3766,6 +3788,17 @@ function emitConsoleChunk(
   }
   const row = ':W' + json + '\n';
   const processedChunk = stringToChunk(row);
+  request.completedRegularChunks.push(processedChunk);
+}
+
+function emitTimeOriginChunk(request: Request, timeOrigin: number): void {
+  // We emit the time origin once. All ReactTimeInfo timestamps later in the stream
+  // are relative to this time origin. This allows for more compact number encoding
+  // and lower precision loss.
+  request.pendingChunks++;
+  const row = ':N' + timeOrigin + '\n';
+  const processedChunk = stringToChunk(row);
+  // TODO: Move to its own priority queue.
   request.completedRegularChunks.push(processedChunk);
 }
 
