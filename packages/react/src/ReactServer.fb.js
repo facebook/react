@@ -10,6 +10,8 @@
 export {default as __SERVER_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE} from './ReactSharedInternalsServer';
 
 import {forEach, map, count, toArray, only} from './ReactChildren';
+import {enableOwnerStacks} from 'shared/ReactFeatureFlags';
+import {captureOwnerStack as captureOwnerStackImpl} from './ReactOwnerStack';
 import {
   REACT_FRAGMENT_TYPE,
   REACT_PROFILER_TYPE,
@@ -27,7 +29,6 @@ import {forwardRef} from './ReactForwardRef';
 import {lazy} from './ReactLazy';
 import {memo} from './ReactMemo';
 import {cache} from './ReactCacheServer';
-import {captureOwnerStack} from './ReactOwnerStack';
 import version from 'shared/ReactVersion';
 
 const Children = {
@@ -37,6 +38,12 @@ const Children = {
   toArray,
   only,
 };
+
+// Only export captureOwnerStack if the flag is on, to support feature detection.
+let captureOwnerStack: ?() => null | string;
+if (enableOwnerStacks) {
+  captureOwnerStack = captureOwnerStackImpl;
+}
 
 export {
   Children,
