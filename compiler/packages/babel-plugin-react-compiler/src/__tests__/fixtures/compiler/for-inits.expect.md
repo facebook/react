@@ -8,6 +8,8 @@ function Foo() {
   for (bar(); i < 1; i += 1) {}
   for (; i < 1; i += 1) {}
   for (i = 0; i < 1; i += 1) {}
+  let j = 0;
+  for (i = 0, j = 0; i < 1; i += 1) {}
 }
 
 function bar() {}
@@ -28,6 +30,8 @@ function Foo() {
   for (bar(); i < 1; i = i + 1, i) {}
   for (undefined; i < 1; i = i + 1, i) {}
   for (i = 0; i < 1; i = i + 1, i) {}
+  let j;
+  for (((i = 0), (j = 0)), undefined; i < 1; i = i + 1, i) {}
 }
 
 function bar() {}
