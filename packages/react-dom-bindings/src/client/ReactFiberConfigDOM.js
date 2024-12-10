@@ -1072,7 +1072,10 @@ export function canHydrateInstance(
   props: Props,
   inRootOrSingleton: boolean,
 ): null | Instance {
-  while (instance.nodeType === ELEMENT_NODE) {
+  while (
+    instance.nodeType === ELEMENT_NODE ||
+    (inRootOrSingleton && instance.nodeType === TEXT_NODE)
+  ) {
     const element: Element = (instance: any);
     const anyProps = (props: any);
     if (element.nodeName.toLowerCase() !== type.toLowerCase()) {
@@ -1202,11 +1205,9 @@ export function canHydrateInstance(
     }
     instance = nextInstance;
   }
-  // This is a suspense boundary or Text node or we got the end.
+  // This is a suspense boundary or we got the end.
   // Suspense Boundaries are never expected to be injected by 3rd parties. If we see one it should be matched
   // and this is a hydration error.
-  // Text Nodes are also not expected to be injected by 3rd parties. This is less of a guarantee for <body>
-  // but it seems reasonable and conservative to reject this as a hydration error as well
   return null;
 }
 
