@@ -629,21 +629,7 @@ function serializeThenable(
     }
     case 'rejected': {
       const x = thenable.reason;
-      if (
-        enablePostpone &&
-        typeof x === 'object' &&
-        x !== null &&
-        (x: any).$$typeof === REACT_POSTPONE_TYPE
-      ) {
-        const postponeInstance: Postpone = (x: any);
-        logPostpone(request, postponeInstance.message, newTask);
-        emitPostponeChunk(request, newTask.id, postponeInstance);
-      } else {
-        const digest = logRecoverableError(request, x, null);
-        emitErrorChunk(request, newTask.id, digest, x);
-      }
-      newTask.status = ERRORED;
-      request.abortableTasks.delete(newTask);
+      erroredTask(request, newTask, x);
       return newTask.id;
     }
     default: {
@@ -698,21 +684,7 @@ function serializeThenable(
         // We expect that the only status it might be otherwise is ABORTED.
         // When we abort we emit chunks in each pending task slot and don't need
         // to do so again here.
-        if (
-          enablePostpone &&
-          typeof reason === 'object' &&
-          reason !== null &&
-          (reason: any).$$typeof === REACT_POSTPONE_TYPE
-        ) {
-          const postponeInstance: Postpone = (reason: any);
-          logPostpone(request, postponeInstance.message, newTask);
-          emitPostponeChunk(request, newTask.id, postponeInstance);
-        } else {
-          const digest = logRecoverableError(request, reason, newTask);
-          emitErrorChunk(request, newTask.id, digest, reason);
-        }
-        newTask.status = ERRORED;
-        request.abortableTasks.delete(newTask);
+        erroredTask(request, newTask, reason);
         enqueueFlush(request);
       }
     },
@@ -795,8 +767,7 @@ function serializeReadableStream(
     }
     aborted = true;
     request.abortListeners.delete(abortStream);
-    const digest = logRecoverableError(request, reason, streamTask);
-    emitErrorChunk(request, streamTask.id, digest, reason);
+    erroredTask(request, streamTask, reason);
     enqueueFlush(request);
 
     // $FlowFixMe should be able to pass mixed
@@ -808,30 +779,12 @@ function serializeReadableStream(
     }
     aborted = true;
     request.abortListeners.delete(abortStream);
-    if (
-      enablePostpone &&
-      typeof reason === 'object' &&
-      reason !== null &&
-      (reason: any).$$typeof === REACT_POSTPONE_TYPE
-    ) {
-      const postponeInstance: Postpone = (reason: any);
-      logPostpone(request, postponeInstance.message, streamTask);
-      if (enableHalt && request.type === PRERENDER) {
-        request.pendingChunks--;
-      } else {
-        emitPostponeChunk(request, streamTask.id, postponeInstance);
-        enqueueFlush(request);
-      }
+    if (enableHalt && request.type === PRERENDER) {
+      request.pendingChunks--;
     } else {
-      const digest = logRecoverableError(request, reason, streamTask);
-      if (enableHalt && request.type === PRERENDER) {
-        request.pendingChunks--;
-      } else {
-        emitErrorChunk(request, streamTask.id, digest, reason);
-        enqueueFlush(request);
-      }
+      erroredTask(request, streamTask, reason);
+      enqueueFlush(request);
     }
-
     // $FlowFixMe should be able to pass mixed
     reader.cancel(reason).then(error, error);
   }
@@ -937,8 +890,7 @@ function serializeAsyncIterable(
     }
     aborted = true;
     request.abortListeners.delete(abortIterable);
-    const digest = logRecoverableError(request, reason, streamTask);
-    emitErrorChunk(request, streamTask.id, digest, reason);
+    erroredTask(request, streamTask, reason);
     enqueueFlush(request);
     if (typeof (iterator: any).throw === 'function') {
       // The iterator protocol doesn't necessarily include this but a generator do.
@@ -952,28 +904,11 @@ function serializeAsyncIterable(
     }
     aborted = true;
     request.abortListeners.delete(abortIterable);
-    if (
-      enablePostpone &&
-      typeof reason === 'object' &&
-      reason !== null &&
-      (reason: any).$$typeof === REACT_POSTPONE_TYPE
-    ) {
-      const postponeInstance: Postpone = (reason: any);
-      logPostpone(request, postponeInstance.message, streamTask);
-      if (enableHalt && request.type === PRERENDER) {
-        request.pendingChunks--;
-      } else {
-        emitPostponeChunk(request, streamTask.id, postponeInstance);
-        enqueueFlush(request);
-      }
+    if (enableHalt && request.type === PRERENDER) {
+      request.pendingChunks--;
     } else {
-      const digest = logRecoverableError(request, reason, streamTask);
-      if (enableHalt && request.type === PRERENDER) {
-        request.pendingChunks--;
-      } else {
-        emitErrorChunk(request, streamTask.id, digest, reason);
-        enqueueFlush(request);
-      }
+      erroredTask(request, streamTask, reason);
+      enqueueFlush(request);
     }
     if (typeof (iterator: any).throw === 'function') {
       // The iterator protocol doesn't necessarily include this but a generator do.
@@ -2281,8 +2216,7 @@ function serializeBlob(request: Request, blob: Blob): string {
     }
     aborted = true;
     request.abortListeners.delete(abortBlob);
-    const digest = logRecoverableError(request, reason, newTask);
-    emitErrorChunk(request, newTask.id, digest, reason);
+    erroredTask(request, newTask, reason);
     enqueueFlush(request);
     // $FlowFixMe should be able to pass mixed
     reader.cancel(reason).then(error, error);
@@ -2293,28 +2227,11 @@ function serializeBlob(request: Request, blob: Blob): string {
     }
     aborted = true;
     request.abortListeners.delete(abortBlob);
-    if (
-      enablePostpone &&
-      typeof reason === 'object' &&
-      reason !== null &&
-      (reason: any).$$typeof === REACT_POSTPONE_TYPE
-    ) {
-      const postponeInstance: Postpone = (reason: any);
-      logPostpone(request, postponeInstance.message, newTask);
-      if (enableHalt && request.type === PRERENDER) {
-        request.pendingChunks--;
-      } else {
-        emitPostponeChunk(request, newTask.id, postponeInstance);
-        enqueueFlush(request);
-      }
+    if (enableHalt && request.type === PRERENDER) {
+      request.pendingChunks--;
     } else {
-      const digest = logRecoverableError(request, reason, newTask);
-      if (enableHalt && request.type === PRERENDER) {
-        request.pendingChunks--;
-      } else {
-        emitErrorChunk(request, newTask.id, digest, reason);
-        enqueueFlush(request);
-      }
+      erroredTask(request, newTask, reason);
+      enqueueFlush(request);
     }
     // $FlowFixMe should be able to pass mixed
     reader.cancel(reason).then(error, error);
@@ -2414,24 +2331,6 @@ function renderModel(
           return serializeLazyID(newTask.id);
         }
         return serializeByValueID(newTask.id);
-      } else if (enablePostpone && x.$$typeof === REACT_POSTPONE_TYPE) {
-        // Something postponed. We'll still send everything we have up until this point.
-        // We'll replace this element with a lazy reference that postpones on the client.
-        const postponeInstance: Postpone = (x: any);
-        request.pendingChunks++;
-        const postponeId = request.nextChunkId++;
-        logPostpone(request, postponeInstance.message, task);
-        emitPostponeChunk(request, postponeId, postponeInstance);
-
-        // Restore the context. We assume that this will be restored by the inner
-        // functions in case nothing throws so we don't use "finally" here.
-        task.keyPath = prevKeyPath;
-        task.implicitSlot = prevImplicitSlot;
-
-        if (wasReactNode) {
-          return serializeLazyID(postponeId);
-        }
-        return serializeByValueID(postponeId);
       }
     }
 
@@ -2443,8 +2342,21 @@ function renderModel(
     // Something errored. We'll still send everything we have up until this point.
     request.pendingChunks++;
     const errorId = request.nextChunkId++;
-    const digest = logRecoverableError(request, x, task);
-    emitErrorChunk(request, errorId, digest, x);
+    if (
+      enablePostpone &&
+      typeof x === 'object' &&
+      x !== null &&
+      x.$$typeof === REACT_POSTPONE_TYPE
+    ) {
+      // Something postponed. We'll still send everything we have up until this point.
+      // We'll replace this element with a lazy reference that postpones on the client.
+      const postponeInstance: Postpone = (x: any);
+      logPostpone(request, postponeInstance.message, task);
+      emitPostponeChunk(request, errorId, postponeInstance);
+    } else {
+      const digest = logRecoverableError(request, x, task);
+      emitErrorChunk(request, errorId, digest, x);
+    }
     if (wasReactNode) {
       // We'll replace this element with a lazy reference that throws on the client
       // once it gets rendered.
@@ -3964,6 +3876,24 @@ function emitChunk(
   emitModelChunk(request, task.id, json);
 }
 
+function erroredTask(request: Request, task: Task, error: mixed): void {
+  request.abortableTasks.delete(task);
+  task.status = ERRORED;
+  if (
+    enablePostpone &&
+    typeof error === 'object' &&
+    error !== null &&
+    error.$$typeof === REACT_POSTPONE_TYPE
+  ) {
+    const postponeInstance: Postpone = (error: any);
+    logPostpone(request, postponeInstance.message, task);
+    emitPostponeChunk(request, task.id, postponeInstance);
+  } else {
+    const digest = logRecoverableError(request, error, task);
+    emitErrorChunk(request, task.id, digest, error);
+  }
+}
+
 const emptyRoot = {};
 
 function retryTask(request: Request, task: Task): void {
@@ -4083,20 +4013,9 @@ function retryTask(request: Request, task: Task): void {
         const ping = task.ping;
         x.then(ping, ping);
         return;
-      } else if (enablePostpone && x.$$typeof === REACT_POSTPONE_TYPE) {
-        request.abortableTasks.delete(task);
-        task.status = ERRORED;
-        const postponeInstance: Postpone = (x: any);
-        logPostpone(request, postponeInstance.message, task);
-        emitPostponeChunk(request, task.id, postponeInstance);
-        return;
       }
     }
-
-    request.abortableTasks.delete(task);
-    task.status = ERRORED;
-    const digest = logRecoverableError(request, x, task);
-    emitErrorChunk(request, task.id, digest, x);
+    erroredTask(request, task, x);
   } finally {
     if (__DEV__) {
       debugID = prevDebugID;
@@ -4336,7 +4255,12 @@ export function abort(request: Request, reason: mixed): void {
     }
     const abortableTasks = request.abortableTasks;
     if (abortableTasks.size > 0) {
-      if (
+      if (enableHalt && request.type === PRERENDER) {
+        // When prerendering with halt semantics we simply halt the task
+        // and leave the reference unfulfilled.
+        abortableTasks.forEach(task => haltTask(task, request));
+        abortableTasks.clear();
+      } else if (
         enablePostpone &&
         typeof reason === 'object' &&
         reason !== null &&
@@ -4344,21 +4268,14 @@ export function abort(request: Request, reason: mixed): void {
       ) {
         const postponeInstance: Postpone = (reason: any);
         logPostpone(request, postponeInstance.message, null);
-        if (enableHalt && request.type === PRERENDER) {
-          // When prerendering with halt semantics we simply halt the task
-          // and leave the reference unfulfilled.
-          abortableTasks.forEach(task => haltTask(task, request));
-          abortableTasks.clear();
-        } else {
-          // When rendering we produce a shared postpone chunk and then
-          // fulfill each task with a reference to that chunk.
-          const errorId = request.nextChunkId++;
-          request.fatalError = errorId;
-          request.pendingChunks++;
-          emitPostponeChunk(request, errorId, postponeInstance);
-          abortableTasks.forEach(task => abortTask(task, request, errorId));
-          abortableTasks.clear();
-        }
+        // When rendering we produce a shared postpone chunk and then
+        // fulfill each task with a reference to that chunk.
+        const errorId = request.nextChunkId++;
+        request.fatalError = errorId;
+        request.pendingChunks++;
+        emitPostponeChunk(request, errorId, postponeInstance);
+        abortableTasks.forEach(task => abortTask(task, request, errorId));
+        abortableTasks.clear();
       } else {
         const error =
           reason === undefined
@@ -4373,21 +4290,14 @@ export function abort(request: Request, reason: mixed): void {
                 )
               : reason;
         const digest = logRecoverableError(request, error, null);
-        if (enableHalt && request.type === PRERENDER) {
-          // When prerendering with halt semantics we simply halt the task
-          // and leave the reference unfulfilled.
-          abortableTasks.forEach(task => haltTask(task, request));
-          abortableTasks.clear();
-        } else {
-          // When rendering we produce a shared error chunk and then
-          // fulfill each task with a reference to that chunk.
-          const errorId = request.nextChunkId++;
-          request.fatalError = errorId;
-          request.pendingChunks++;
-          emitErrorChunk(request, errorId, digest, error);
-          abortableTasks.forEach(task => abortTask(task, request, errorId));
-          abortableTasks.clear();
-        }
+        // When rendering we produce a shared error chunk and then
+        // fulfill each task with a reference to that chunk.
+        const errorId = request.nextChunkId++;
+        request.fatalError = errorId;
+        request.pendingChunks++;
+        emitErrorChunk(request, errorId, digest, error);
+        abortableTasks.forEach(task => abortTask(task, request, errorId));
+        abortableTasks.clear();
       }
       const onAllReady = request.onAllReady;
       onAllReady();
