@@ -74,11 +74,7 @@ export function resolveServerReference<T>(
 export function preloadModule<T>(
   metadata: ClientReference<T>,
 ): null | Thenable<any> {
-  // Bundle paths are relative to the root of the dist dir,
-  // so join with a relative path from this bundle to the root.
-  // Note: parcelRequire.meta is equivalent to import.meta, but works in non-ESM modules.
-  // $FlowIgnore[unsupported-syntax]
-  return Promise.all(metadata.bundles.map(bundlePath => import(parcelRequire.meta.distDir + '/' + bundlePath)));
+  return Promise.all(metadata.bundles.map(url => parcelRequire.load(url)));
 }
 
 export function requireModule<T>(metadata: ClientReference<T>): T {

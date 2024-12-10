@@ -105,9 +105,7 @@ declare const __turbopack_require__: ((id: string) => any) & {
 
 declare var parcelRequire: {
   (id: string): any,
-  meta: {
-    distDir: string,
-  }
+  load: (url: string) => Promise<mixed>,
 };
 
 declare module 'fs/promises' {
