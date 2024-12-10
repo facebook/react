@@ -28,6 +28,7 @@ import {SettingsContextController} from './Settings/SettingsContext';
 import {TreeContextController} from './Components/TreeContext';
 import ViewElementSourceContext from './Components/ViewElementSourceContext';
 import FetchFileWithCachingContext from './Components/FetchFileWithCachingContext';
+import {InspectedElementContextController} from './Components/InspectedElementContext';
 import HookNamesModuleLoaderContext from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 import {ProfilerContextController} from './Profiler/ProfilerContext';
 import {TimelineContextController} from 'react-devtools-timeline/src/TimelineContext';
@@ -276,43 +277,47 @@ export default function DevTools({
                       <TreeContextController>
                         <ProfilerContextController>
                           <TimelineContextController>
-                            <ThemeProvider>
-                              <div
-                                className={styles.DevTools}
-                                ref={devToolsRef}
-                                data-react-devtools-portal-root={true}>
-                                {showTabBar && (
-                                  <div className={styles.TabBar}>
-                                    <ReactLogo />
-                                    <span className={styles.DevToolsVersion}>
-                                      {process.env.DEVTOOLS_VERSION}
-                                    </span>
-                                    <div className={styles.Spacer} />
-                                    <TabBar
-                                      currentTab={tab}
-                                      id="DevTools"
-                                      selectTab={selectTab}
-                                      tabs={tabs}
-                                      type="navigation"
+                            <InspectedElementContextController>
+                              <ThemeProvider>
+                                <div
+                                  className={styles.DevTools}
+                                  ref={devToolsRef}
+                                  data-react-devtools-portal-root={true}>
+                                  {showTabBar && (
+                                    <div className={styles.TabBar}>
+                                      <ReactLogo />
+                                      <span className={styles.DevToolsVersion}>
+                                        {process.env.DEVTOOLS_VERSION}
+                                      </span>
+                                      <div className={styles.Spacer} />
+                                      <TabBar
+                                        currentTab={tab}
+                                        id="DevTools"
+                                        selectTab={selectTab}
+                                        tabs={tabs}
+                                        type="navigation"
+                                      />
+                                    </div>
+                                  )}
+                                  <div
+                                    className={styles.TabContent}
+                                    hidden={tab !== 'components'}>
+                                    <Components
+                                      portalContainer={
+                                        componentsPortalContainer
+                                      }
                                     />
                                   </div>
-                                )}
-                                <div
-                                  className={styles.TabContent}
-                                  hidden={tab !== 'components'}>
-                                  <Components
-                                    portalContainer={componentsPortalContainer}
-                                  />
+                                  <div
+                                    className={styles.TabContent}
+                                    hidden={tab !== 'profiler'}>
+                                    <Profiler
+                                      portalContainer={profilerPortalContainer}
+                                    />
+                                  </div>
                                 </div>
-                                <div
-                                  className={styles.TabContent}
-                                  hidden={tab !== 'profiler'}>
-                                  <Profiler
-                                    portalContainer={profilerPortalContainer}
-                                  />
-                                </div>
-                              </div>
-                            </ThemeProvider>
+                              </ThemeProvider>
+                            </InspectedElementContextController>
                           </TimelineContextController>
                         </ProfilerContextController>
                       </TreeContextController>

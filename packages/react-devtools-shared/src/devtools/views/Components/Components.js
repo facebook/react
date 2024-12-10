@@ -19,7 +19,6 @@ import {
 } from 'react-devtools-shared/src/storage';
 import InspectedElementErrorBoundary from './InspectedElementErrorBoundary';
 import InspectedElement from './InspectedElement';
-import {InspectedElementContextController} from './InspectedElementContext';
 import {ModalDialog} from '../ModalDialog';
 import SettingsModal from 'react-devtools-shared/src/devtools/views/Settings/SettingsModal';
 import {NativeStyleContextController} from './NativeStyleEditor/context';
@@ -162,9 +161,7 @@ function Components(_: {}) {
             <div className={styles.InspectedElementWrapper}>
               <NativeStyleContextController>
                 <InspectedElementErrorBoundary>
-                  <InspectedElementContextController>
-                    <InspectedElement />
-                  </InspectedElementContextController>
+                  <InspectedElement />
                 </InspectedElementErrorBoundary>
               </NativeStyleContextController>
             </div>
