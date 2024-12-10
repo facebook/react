@@ -9,6 +9,7 @@
 
 export {
   renderToReadableStream,
+  prerender as unstable_prerender,
   decodeReply,
   decodeAction,
   decodeFormState,
