@@ -61,7 +61,9 @@ import type {
   RejectedThenable,
   ReactDebugInfo,
   ReactComponentInfo,
+  ReactEnvironmentInfo,
   ReactAsyncInfo,
+  ReactTimeInfo,
   ReactStackTrace,
   ReactCallSite,
 } from 'shared/ReactTypes';
@@ -3267,7 +3269,11 @@ function emitModelChunk(request: Request, id: number, json: string): void {
 function emitDebugChunk(
   request: Request,
   id: number,
-  debugInfo: ReactComponentInfo | ReactAsyncInfo,
+  debugInfo:
+    | ReactComponentInfo
+    | ReactAsyncInfo
+    | ReactEnvironmentInfo
+    | ReactTimeInfo,
 ): void {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
