@@ -17126,10 +17126,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-www-classic-3b597c05-20241210",
+        version: "19.0.0-www-classic-7c4a7c9d-20241210",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.0.0-www-classic-3b597c05-20241210"
+        reconcilerVersion: "19.0.0-www-classic-7c4a7c9d-20241210"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -17163,7 +17163,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.0.0-www-classic-3b597c05-20241210";
+    exports.version = "19.0.0-www-classic-7c4a7c9d-20241210";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

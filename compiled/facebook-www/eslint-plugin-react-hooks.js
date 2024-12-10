@@ -141,6 +141,13 @@
       }
       return !1;
     }
+    function isInsideDoWhileLoop(node) {
+      for (; node; ) {
+        if ("DoWhileStatement" === node.type) return !0;
+        node = node.parent;
+      }
+      return !1;
+    }
     function isUseEffectEventIdentifier$1(node) {
       return "Identifier" === node.type && "useEffectEvent" === node.name;
     }
@@ -700,7 +707,7 @@
                 pathHistory = new Set(pathHistory);
                 if (pathHistory.has(segment.id)) {
                   cache = Array.from(pathHistory);
-                  segment = cache.slice(cache.indexOf(segment.id) - 1);
+                  segment = cache.slice(cache.indexOf(segment.id) + 1);
                   segment = _createForOfIteratorHelper(segment);
                   var _step5;
                   try {
@@ -830,8 +837,8 @@
 
                         ) {
                           var hook = _step10.value;
-                          cycled &&
-                            !isReactFunction(hook, "use") &&
+                          (!cycled && !isInsideDoWhileLoop(hook)) ||
+                            isReactFunction(hook, "use") ||
                             context.report({
                               node: hook,
                               message:
@@ -852,7 +859,8 @@
                               !cycled &&
                                 pathsFromStartToEnd !==
                                   allPathsFromStartToEnd &&
-                                !isReactFunction(hook, "use"))
+                                !isReactFunction(hook, "use") &&
+                                !isInsideDoWhileLoop(hook))
                             ) {
                               var message =
                                 'React Hook "' +
