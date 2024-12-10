@@ -1271,7 +1271,7 @@ function renderFunctionComponent<Props>(
       // Track when we started rendering this component.
       if (enableProfilerTimer && enableComponentPerformanceTrack) {
         task.timed = true;
-        emitTimingChunk(request, componentDebugID);
+        emitTimingChunk(request, componentDebugID, performance.now());
       }
 
       emitDebugChunk(request, componentDebugID, componentDebugInfo);
@@ -3828,21 +3828,29 @@ function forwardDebugInfo(
 ) {
   for (let i = 0; i < debugInfo.length; i++) {
     request.pendingChunks++;
-    if (typeof debugInfo[i].name === 'string') {
-      // We outline this model eagerly so that we can refer to by reference as an owner.
-      // If we had a smarter way to dedupe we might not have to do this if there ends up
-      // being no references to this as an owner.
-      outlineComponentInfo(request, (debugInfo[i]: any));
+    if (typeof debugInfo[i].time === 'number') {
+      // When forwarding time we need to ensure to convert it to the time space of the payload.
+      emitTimingChunk(request, id, debugInfo[i].time);
+    } else {
+      if (typeof debugInfo[i].name === 'string') {
+        // We outline this model eagerly so that we can refer to by reference as an owner.
+        // If we had a smarter way to dedupe we might not have to do this if there ends up
+        // being no references to this as an owner.
+        outlineComponentInfo(request, (debugInfo[i]: any));
+      }
+      emitDebugChunk(request, id, debugInfo[i]);
     }
-    emitDebugChunk(request, id, debugInfo[i]);
   }
 }
 
-function emitTimingChunk(request: Request, id: number): void {
+function emitTimingChunk(
+  request: Request,
+  id: number,
+  timestamp: number,
+): void {
   if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
     return;
   }
-  const timestamp = performance.now();
   request.pendingChunks++;
   const relativeTimestamp = timestamp - request.timeOrigin;
   const row =
@@ -3945,7 +3953,7 @@ function emitChunk(
 function erroredTask(request: Request, task: Task, error: mixed): void {
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     if (task.timed) {
-      emitTimingChunk(request, task.id);
+      emitTimingChunk(request, task.id, performance.now());
     }
   }
   request.abortableTasks.delete(task);
@@ -4022,7 +4030,7 @@ function retryTask(request: Request, task: Task): void {
     // We've finished rendering. Log the end time.
     if (enableProfilerTimer && enableComponentPerformanceTrack) {
       if (task.timed) {
-        emitTimingChunk(request, task.id);
+        emitTimingChunk(request, task.id, performance.now());
       }
     }
 
@@ -4151,7 +4159,7 @@ function abortTask(task: Task, request: Request, errorId: number): void {
   // Track when we aborted this task as its end time.
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     if (task.timed) {
-      emitTimingChunk(request, task.id);
+      emitTimingChunk(request, task.id, performance.now());
     }
   }
   // Instead of emitting an error per task.id, we emit a model that only

@@ -2744,12 +2744,13 @@ describe('ReactFlight', () => {
           : undefined,
       );
       const result = await promise;
+
       const thirdPartyChildren = await result.props.children[1];
       // We expect the debug info to be transferred from the inner stream to the outer.
       expect(getDebugInfo(thirdPartyChildren[0])).toEqual(
         __DEV__
           ? [
-              {time: 30},
+              {time: 13},
               {
                 name: 'ThirdPartyComponent',
                 env: 'third-party',
@@ -2760,15 +2761,15 @@ describe('ReactFlight', () => {
                   : undefined,
                 props: {},
               },
-              {time: 31},
-              {time: 21},
+              {time: 14},
+              {time: 21}, // This last one is when the promise resolved into the first party.
             ]
           : undefined,
       );
       expect(getDebugInfo(thirdPartyChildren[1])).toEqual(
         __DEV__
           ? [
-              {time: 32},
+              {time: 15},
               {
                 name: 'ThirdPartyLazyComponent',
                 env: 'third-party',
@@ -2779,14 +2780,14 @@ describe('ReactFlight', () => {
                   : undefined,
                 props: {},
               },
-              {time: 33},
+              {time: 16},
             ]
           : undefined,
       );
       expect(getDebugInfo(thirdPartyChildren[2])).toEqual(
         __DEV__
           ? [
-              {time: 28},
+              {time: 11},
               {
                 name: 'ThirdPartyFragmentComponent',
                 env: 'third-party',
@@ -2797,7 +2798,7 @@ describe('ReactFlight', () => {
                   : undefined,
                 props: {},
               },
-              {time: 29},
+              {time: 12},
             ]
           : undefined,
       );
@@ -2906,7 +2907,7 @@ describe('ReactFlight', () => {
       expect(getDebugInfo(thirdPartyFragment.props.children)).toEqual(
         __DEV__
           ? [
-              {time: 24},
+              {time: 11},
               {
                 name: 'ThirdPartyAsyncIterableComponent',
                 env: 'third-party',
@@ -2917,7 +2918,7 @@ describe('ReactFlight', () => {
                   : undefined,
                 props: {},
               },
-              {time: 25},
+              {time: 12},
             ]
           : undefined,
       );
