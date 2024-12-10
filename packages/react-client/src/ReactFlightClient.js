@@ -11,7 +11,9 @@ import type {
   Thenable,
   ReactDebugInfo,
   ReactComponentInfo,
+  ReactEnvironmentInfo,
   ReactAsyncInfo,
+  ReactTimeInfo,
   ReactStackTrace,
   ReactCallSite,
 } from 'shared/ReactTypes';
@@ -2460,7 +2462,6 @@ function initializeFakeStack(
     const stack = debugInfo.stack;
     const env = debugInfo.env == null ? '' : debugInfo.env;
     // $FlowFixMe[cannot-write]
-    // $FlowFixMe[prop-missing]
     debugInfo.debugStack = createFakeJSXCallStackInDEV(response, stack, env);
   }
   if (debugInfo.owner != null) {
@@ -2472,7 +2473,11 @@ function initializeFakeStack(
 function resolveDebugInfo(
   response: Response,
   id: number,
-  debugInfo: ReactComponentInfo | ReactAsyncInfo,
+  debugInfo:
+    | ReactComponentInfo
+    | ReactEnvironmentInfo
+    | ReactAsyncInfo
+    | ReactTimeInfo,
 ): void {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
@@ -2486,16 +2491,26 @@ function resolveDebugInfo(
   // to initialize it when we need it, we might be inside user code.
   const env =
     debugInfo.env === undefined ? response._rootEnvironmentName : debugInfo.env;
-  initializeFakeTask(response, debugInfo, env);
+  if (debugInfo.stack !== undefined) {
+    const componentInfoOrAsyncInfo: ReactComponentInfo | ReactAsyncInfo =
+      // $FlowFixMe[incompatible-type]
+      debugInfo;
+    initializeFakeTask(response, componentInfoOrAsyncInfo, env);
+  }
   if (debugInfo.owner === null && response._debugRootOwner != null) {
-    // $FlowFixMe
-    debugInfo.owner = response._debugRootOwner;
+    // $FlowFixMe[prop-missing] By narrowing `owner` to `null`, we narrowed `debugInfo` to `ReactComponentInfo`
+    const componentInfo: ReactComponentInfo = debugInfo;
+    // $FlowFixMe[cannot-write]
+    componentInfo.owner = response._debugRootOwner;
     // We override the stack if we override the owner since the stack where the root JSX
     // was created on the server isn't very useful but where the request was made is.
-    // $FlowFixMe
-    debugInfo.debugStack = response._debugRootStack;
-  } else {
-    initializeFakeStack(response, debugInfo);
+    // $FlowFixMe[cannot-write]
+    componentInfo.debugStack = response._debugRootStack;
+  } else if (debugInfo.stack !== undefined) {
+    const componentInfoOrAsyncInfo: ReactComponentInfo | ReactAsyncInfo =
+      // $FlowFixMe[incompatible-type]
+      debugInfo;
+    initializeFakeStack(response, componentInfoOrAsyncInfo);
   }
 
   const chunk = getChunk(response, id);
@@ -2779,11 +2794,19 @@ function processFullStringRow(
     }
     case 68 /* "D" */: {
       if (__DEV__) {
-        const chunk: ResolvedModelChunk<ReactComponentInfo | ReactAsyncInfo> =
-          createResolvedModelChunk(response, row);
+        const chunk: ResolvedModelChunk<
+          | ReactComponentInfo
+          | ReactEnvironmentInfo
+          | ReactAsyncInfo
+          | ReactTimeInfo,
+        > = createResolvedModelChunk(response, row);
         initializeModelChunk(chunk);
-        const initializedChunk: SomeChunk<ReactComponentInfo | ReactAsyncInfo> =
-          chunk;
+        const initializedChunk: SomeChunk<
+          | ReactComponentInfo
+          | ReactEnvironmentInfo
+          | ReactAsyncInfo
+          | ReactTimeInfo,
+        > = chunk;
         if (initializedChunk.status === INITIALIZED) {
           resolveDebugInfo(response, id, initializedChunk.value);
         } else {
