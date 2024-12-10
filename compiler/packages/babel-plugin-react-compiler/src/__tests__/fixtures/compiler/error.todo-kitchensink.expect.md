@@ -98,12 +98,6 @@ Todo: (BuildHIR::lowerExpression) Handle tagged template with interpolations (30
 
 Todo: (BuildHIR::lowerExpression) Handle tagged template where cooked value is different from raw value (34:34)
 
-Todo: (BuildHIR::lowerStatement) Handle Identifier inits in ForOfStatement (36:36)
-
-Todo: (BuildHIR::lowerStatement) Handle ArrayPattern inits in ForOfStatement (38:38)
-
-Todo: (BuildHIR::lowerStatement) Handle ObjectPattern inits in ForOfStatement (40:40)
-
 Todo: (BuildHIR::node.lowerReorderableExpression) Expression type `MemberExpression` cannot be safely reordered (57:57)
 
 Todo: (BuildHIR::node.lowerReorderableExpression) Expression type `BinaryExpression` cannot be safely reordered (53:53)

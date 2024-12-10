@@ -39,7 +39,7 @@ import { useState } from "react";
 
 function Component(props) {
   const $ = _c(1);
-  const [_state, setState] = useState();
+  const [, setState] = useState();
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     const a = () => b();
