@@ -14,10 +14,7 @@ import type {
 import type {Destination} from 'react-server/src/ReactServerStreamConfigNode';
 import type {Busboy} from 'busboy';
 import type {Writable} from 'stream';
-import type {
-  ReactFormState,
-  Thenable,
-} from 'shared/ReactTypes';
+import type {ReactFormState, Thenable} from 'shared/ReactTypes';
 import type {
   ServerManifest,
   ServerReferenceId,
@@ -275,7 +272,10 @@ export function decodeReplyFromBusboy<T>(
   return getRoot(response);
 }
 
-export function decodeReply<T>(body: string | FormData, options?: {temporaryReferences?: TemporaryReferenceSet},): Thenable<T> {
+export function decodeReply<T>(
+  body: string | FormData,
+  options?: {temporaryReferences?: TemporaryReferenceSet},
+): Thenable<T> {
   if (typeof body === 'string') {
     const form = new FormData();
     form.append('0', body);
@@ -285,7 +285,7 @@ export function decodeReply<T>(body: string | FormData, options?: {temporaryRefe
     serverManifest,
     '',
     options ? options.temporaryReferences : undefined,
-    body
+    body,
   );
   const root = getRoot<T>(response);
   close(response);

@@ -625,8 +625,7 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
-    entry:
-      'react-server-dom-parcel/src/server/react-flight-dom-server.browser',
+    entry: 'react-server-dom-parcel/src/server/react-flight-dom-server.browser',
     name: 'react-server-dom-parcel-server.browser',
     condition: 'react-server',
     global: 'ReactServerDOMServer',

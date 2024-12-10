@@ -51,9 +51,12 @@ function callCurrentServerCallback<A, T>(
 
 export function createServerReference<A: Iterable<any>, T>(
   id: string,
-  exportName: string
+  exportName: string,
 ): (...A) => Promise<T> {
-  return createServerReferenceImpl(id + '#' + exportName, callCurrentServerCallback);
+  return createServerReferenceImpl(
+    id + '#' + exportName,
+    callCurrentServerCallback,
+  );
 }
 
 function startReadingFromStream(
@@ -115,7 +118,7 @@ export function createFromReadableStream<T>(
 
 export function createFromFetch<T>(
   promiseForResponse: Promise<Response>,
-  options?: Options
+  options?: Options,
 ): Thenable<T> {
   const response: FlightResponse = createResponse(
     null, // bundlerConfig
@@ -158,7 +161,7 @@ export function encodeReply(
         ? options.temporaryReferences
         : undefined,
       resolve,
-      reject
+      reject,
     );
     if (options && options.signal) {
       const signal = options.signal;

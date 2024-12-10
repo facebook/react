@@ -8,10 +8,7 @@
  */
 
 import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
-import type {
-  ReactFormState,
-  Thenable,
-} from 'shared/ReactTypes';
+import type {ReactFormState, Thenable} from 'shared/ReactTypes';
 import {
   preloadModule,
   requireModule,
