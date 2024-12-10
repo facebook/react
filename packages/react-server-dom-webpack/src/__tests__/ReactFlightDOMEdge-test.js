@@ -1134,7 +1134,7 @@ describe('ReactFlightDOMEdge', () => {
     const {pendingResult} = await serverAct(async () => {
       // destructure trick to avoid the act scope from awaiting the returned value
       return {
-        pendingResult: ReactServerDOMStaticServer.prerender(
+        pendingResult: ReactServerDOMStaticServer.unstable_prerender(
           <App />,
           webpackMap,
         ),
@@ -1192,7 +1192,7 @@ describe('ReactFlightDOMEdge', () => {
     const {pendingResult} = await serverAct(async () => {
       // destructure trick to avoid the act scope from awaiting the returned value
       return {
-        pendingResult: ReactServerDOMStaticServer.prerender(
+        pendingResult: ReactServerDOMStaticServer.unstable_prerender(
           <App />,
           webpackMap,
           {
