@@ -347,6 +347,7 @@ type Task = {
   keyPath: null | string, // parent server component keys
   implicitSlot: boolean, // true if the root server component of this sequence had a null key
   thenableState: ThenableState | null,
+  timed: boolean, // Profiling-only. Whether we need to track the completion time of this task.
   environmentName: string, // DEV-only. Used to track if the environment for this task changed.
   debugOwner: null | ReactComponentInfo, // DEV-only
   debugStack: null | Error, // DEV-only
@@ -710,6 +711,11 @@ function serializeThenable(
       }
     },
   );
+
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // If this is async we need to time when this task finishes.
+    newTask.timed = true;
+  }
 
   return newTask.id;
 }
@@ -1263,7 +1269,11 @@ function renderFunctionComponent<Props>(
       outlineComponentInfo(request, componentDebugInfo);
 
       // Track when we started rendering this component.
-      emitTimingChunk(request, componentDebugID);
+      if (enableProfilerTimer && enableComponentPerformanceTrack) {
+        task.timed = true;
+        emitTimingChunk(request, componentDebugID);
+      }
+
       emitDebugChunk(request, componentDebugID, componentDebugInfo);
 
       // We've emitted the latest environment for this task so we track that.
@@ -1793,6 +1803,10 @@ function renderElement(
 }
 
 function pingTask(request: Request, task: Task): void {
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // If this was async we need to emit the time when it completes.
+    task.timed = true;
+  }
   const pingedTasks = request.pingedTasks;
   pingedTasks.push(task);
   if (pingedTasks.length === 1) {
@@ -1886,8 +1900,11 @@ function createTask(
     thenableState: null,
   }: Omit<
     Task,
-    'environmentName' | 'debugOwner' | 'debugStack' | 'debugTask',
+    'timed' | 'environmentName' | 'debugOwner' | 'debugStack' | 'debugTask',
   >): any);
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    task.timed = false;
+  }
   if (__DEV__) {
     task.environmentName = request.environmentName();
     task.debugOwner = debugOwner;
@@ -3926,7 +3943,11 @@ function emitChunk(
 }
 
 function erroredTask(request: Request, task: Task, error: mixed): void {
-  emitTimingChunk(request, task.id);
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    if (task.timed) {
+      emitTimingChunk(request, task.id);
+    }
+  }
   request.abortableTasks.delete(task);
   task.status = ERRORED;
   if (
@@ -3999,7 +4020,11 @@ function retryTask(request: Request, task: Task): void {
       }
     }
     // We've finished rendering. Log the end time.
-    emitTimingChunk(request, task.id);
+    if (enableProfilerTimer && enableComponentPerformanceTrack) {
+      if (task.timed) {
+        emitTimingChunk(request, task.id);
+      }
+    }
 
     if (typeof resolvedModel === 'object' && resolvedModel !== null) {
       // We're not in a contextual place here so we can refer to this object by this ID for
@@ -4124,7 +4149,11 @@ function abortTask(task: Task, request: Request, errorId: number): void {
   }
   task.status = ABORTED;
   // Track when we aborted this task as its end time.
-  emitTimingChunk(request, task.id);
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    if (task.timed) {
+      emitTimingChunk(request, task.id);
+    }
+  }
   // Instead of emitting an error per task.id, we emit a model that only
   // has a single value referencing the error.
   const ref = serializeByValueID(errorId);
