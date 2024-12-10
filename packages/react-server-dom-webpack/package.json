@@ -1,7 +1,7 @@
 {
   "name": "react-server-dom-webpack",
   "description": "React Server Components bindings for DOM using Webpack. This is intended to be integrated into meta-frameworks. It is not intended to be imported directly.",
-  "version": "19.0.0",
+  "version": "19.1.0",
   "keywords": [
     "react"
   ],
@@ -92,8 +92,8 @@
   },
   "main": "index.js",
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/facebook/react.git",
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
     "directory": "packages/react-server-dom-webpack"
   },
   "engines": {

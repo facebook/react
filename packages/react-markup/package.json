@@ -1,6 +1,6 @@
 {
   "name": "react-markup",
-  "version": "19.0.0",
+  "version": "19.1.0",
   "description": "React package generating embedded markup such as e-mails with support for Server Components.",
   "main": "index.js",
   "repository": {
