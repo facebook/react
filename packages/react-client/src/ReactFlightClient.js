@@ -137,6 +137,14 @@ const RESOLVED_MODULE = 'resolved_module';
 const INITIALIZED = 'fulfilled';
 const ERRORED = 'rejected';
 
+type ReactPromiseStatus =
+  | typeof PENDING
+  | typeof BLOCKED
+  | typeof RESOLVED_MODEL
+  | typeof RESOLVED_MODULE
+  | typeof INITIALIZED
+  | typeof ERRORED;
+
 type PendingChunk<T> = {
   status: 'pending',
   value: null | Array<(T) => mixed>,
@@ -205,7 +213,7 @@ type SomeChunk<T> =
 
 // $FlowFixMe[missing-this-annot]
 function ReactPromise(
-  status: any,
+  status: ReactPromiseStatus,
   value: any,
   reason: any,
   response: Response,
