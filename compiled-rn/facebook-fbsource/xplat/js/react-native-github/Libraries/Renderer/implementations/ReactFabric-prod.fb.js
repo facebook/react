@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ef9a514583f67eafd8f3440946023774>>
+ * @generated SignedSource<<b8b8984cb444de9f9e9689c4ad8c4403>>
  */
 
 "use strict";
@@ -11030,15 +11030,14 @@ var HostTransitionContext = {
     !!RN$enableMicrotasksInReact,
   scheduleMicrotask =
     "function" === typeof queueMicrotask ? queueMicrotask : scheduleTimeout;
-function getInstanceFromNode(node) {
-  return null != node.canonical && null != node.canonical.internalInstanceHandle
-    ? node.canonical.internalInstanceHandle
-    : node;
-}
 getFiberCurrentPropsFromNode$1 = function (instance) {
   return instance.canonical.currentProps;
 };
-getInstanceFromNode$1 = getInstanceFromNode;
+getInstanceFromNode$1 = function (node) {
+  return null != node.canonical && null != node.canonical.internalInstanceHandle
+    ? node.canonical.internalInstanceHandle
+    : node;
+};
 getNodeFromInstance$1 = function (fiber) {
   fiber = getPublicInstance(fiber.stateNode);
   if (null == fiber) throw Error("Could not find host instance from fiber");
@@ -11102,11 +11101,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1219 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-de68d2f4-20241204",
+    version: "19.0.0-native-fb-3b597c05-20241210",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    findFiberByHostInstance: getInstanceFromNode,
-    reconcilerVersion: "19.0.0-native-fb-de68d2f4-20241204"
+    reconcilerVersion: "19.0.0-native-fb-3b597c05-20241210"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1219.rendererConfig = extraDevToolsConfig);

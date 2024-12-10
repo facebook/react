@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<fb51fc0c7ad8e8f3fae68c93e44325bc>>
+ * @generated SignedSource<<4719b0b3fc7a219845f10de753a4dfa6>>
  */
 
 "use strict";
@@ -1102,10 +1102,6 @@ __DEV__ &&
     }
     function unhideTextInstance(textInstance) {
       textInstance.isHidden = !1;
-    }
-    function getInstanceFromNode(mockNode) {
-      mockNode = nodeToInstanceMap.get(mockNode);
-      return void 0 !== mockNode ? mockNode.internalInstanceHandle : null;
     }
     function bindToConsole(methodName, args, badgeName) {
       var offset = 0;
@@ -15556,11 +15552,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-de68d2f4-20241204",
+        version: "19.0.0-native-fb-3b597c05-20241210",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-native-fb-de68d2f4-20241204"
+        reconcilerVersion: "19.0.0-native-fb-3b597c05-20241210"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15705,5 +15700,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.0.0-native-fb-de68d2f4-20241204";
+    exports.version = "19.0.0-native-fb-3b597c05-20241210";
   })();
