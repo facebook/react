@@ -1177,6 +1177,93 @@ describe('ReactDOMInput', () => {
     expect(isValueDirty(inputRef.current)).toBe(false);
   });
 
+  it('should not restore controlled inputs to a previous value upon reset', async () => {
+    const inputRef = React.createRef();
+    const checkboxRef = React.createRef();
+    const firstRadioButtonRef = React.createRef();
+    const secondRadioButtonRef = React.createRef();
+
+    function App() {
+      const [inputValue, setInputValue] = React.useState('default1');
+      const [checkboxChecked, setCheckboxChecked] = React.useState(false);
+      const [radioValue, setRadioValue] = React.useState('first');
+
+      return (
+        <form>
+          <input
+            ref={inputRef}
+            value={inputValue}
+            onChange={e => setInputValue(e.target.value)}
+          />
+          <input
+            type="checkbox"
+            ref={checkboxRef}
+            value={checkboxChecked}
+            onChange={e => setCheckboxChecked(e.target.checked)}
+          />
+          <fieldset>
+            <label>
+              <input
+                type="radio"
+                name="radio"
+                value="first"
+                ref={firstRadioButtonRef}
+                checked={radioValue === 'first'}
+                onChange={() => setRadioValue('first')}
+              />
+              First
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="radio"
+                value="second"
+                ref={secondRadioButtonRef}
+                checked={radioValue === 'second'}
+                onChange={() => setRadioValue('second')}
+              />
+              Second
+            </label>
+          </fieldset>
+          <input type="reset" />
+        </form>
+      );
+    }
+
+    await act(() => {
+      root.render(<App />);
+    });
+    expect(inputRef.current.value).toBe('default1');
+    expect(checkboxRef.current.checked).toBe(false);
+    expect(firstRadioButtonRef.current.checked).toBe(true);
+    expect(secondRadioButtonRef.current.checked).toBe(false);
+
+    await act(() => {
+      setUntrackedValue.call(inputRef.current, 'changed');
+      dispatchEventOnNode(inputRef.current, 'input');
+    });
+    expect(inputRef.current.value).toBe('changed');
+
+    await act(() => {
+      checkboxRef.current.click();
+    });
+    expect(checkboxRef.current.checked).toBe(true);
+
+    await act(() => {
+      secondRadioButtonRef.current.click();
+    });
+    expect(firstRadioButtonRef.current.checked).toBe(false);
+    expect(secondRadioButtonRef.current.checked).toBe(true);
+
+    container.firstChild.reset();
+    expect(inputRef.current.value).toBe('changed');
+    expect(isValueDirty(inputRef.current)).toBe(false);
+
+    expect(checkboxRef.current.checked).toBe(true);
+    expect(firstRadioButtonRef.current.checked).toBe(false);
+    expect(secondRadioButtonRef.current.checked).toBe(true);
+  });
+
   it('should not set a value for submit buttons unnecessarily', async () => {
     const stub = <input type="submit" />;
     await act(() => {
