@@ -1267,9 +1267,6 @@ __DEV__ &&
       (null == props.visible || props.visible) && instance.show();
     }
     function unhideTextInstance() {}
-    function getInstanceFromNode() {
-      return null;
-    }
     function createCursor(defaultValue) {
       return { current: defaultValue };
     }
@@ -16892,11 +16889,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-www-modern-de68d2f4-20241204",
+        version: "19.0.0-www-modern-3b597c05-20241210",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-www-modern-de68d2f4-20241204"
+        reconcilerVersion: "19.0.0-www-modern-3b597c05-20241210"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -16930,7 +16926,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.0.0-www-modern-de68d2f4-20241204";
+    exports.version = "19.0.0-www-modern-3b597c05-20241210";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
