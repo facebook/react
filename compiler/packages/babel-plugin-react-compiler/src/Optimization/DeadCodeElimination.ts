@@ -7,6 +7,7 @@
 
 import {
   BlockId,
+  DeclarationId,
   HIRFunction,
   Identifier,
   IdentifierId,
@@ -70,6 +71,16 @@ export function deadCodeElimination(fn: HIRFunction): void {
 class State {
   named: Set<string> = new Set();
   identifiers: Set<IdentifierId> = new Set();
+  valueIdentifiers: Set<DeclarationId> = new Set();
+
+  // Mark the id as being written to inside a value block
+  valueAssignment(identifier: Identifier): void {
+    this.valueIdentifiers.add(identifier.declarationId);
+  }
+
+  isUsedInValueBlock(identifier: Identifier): boolean {
+    return this.valueIdentifiers.has(identifier.declarationId);
+  }
 
   // Mark the identifier as being referenced (not dead code)
   reference(identifier: Identifier): void {
@@ -141,13 +152,28 @@ function findReferencedIdentifiers(fn: HIRFunction): State {
           for (const place of eachInstructionValueOperand(instr.value)) {
             state.reference(place.identifier);
           }
+          if (instr.value.kind === 'StoreLocal') {
+            state.valueAssignment(instr.value.lvalue.place.identifier);
+          }
         } else if (
           state.isIdOrNameUsed(instr.lvalue.identifier) ||
-          !pruneableValue(instr.value, state)
+          !pruneableValue(instr.value, state) // ||
+          /*
+           *  If a declaration declares used somewhere in a value block, we don't want to delete it
+           * (instr.value.kind === 'StoreLocal' && instr.value.lvalue.kind !== InstructionKind.Reassign && state.isUsedInValueBlock(instr.value.lvalue.place.identifier))
+           */
         ) {
           state.reference(instr.lvalue.identifier);
 
           if (instr.value.kind === 'StoreLocal') {
+            if (block.kind !== 'block') {
+              /*
+               * If we're in a value block, mark that the identifier has been assigned to so that
+               * we don't delete its declarations (which could cause this assignment to become a declaration,
+               * which is disallowed in value blocks)
+               */
+              state.valueAssignment(instr.value.lvalue.place.identifier);
+            }
             /*
              * If this is a Let/Const declaration, mark the initializer as referenced
              * only if the ssa'ed lval is also referenced
@@ -272,7 +298,10 @@ function pruneableValue(value: InstructionValue, state: State): boolean {
   switch (value.kind) {
     case 'DeclareLocal': {
       // Declarations are pruneable only if the named variable is never read later
-      return !state.isIdOrNameUsed(value.lvalue.place.identifier);
+      return (
+        !state.isIdOrNameUsed(value.lvalue.place.identifier) &&
+        !state.isUsedInValueBlock(value.lvalue.place.identifier)
+      );
     }
     case 'StoreLocal': {
       if (value.lvalue.kind === InstructionKind.Reassign) {
@@ -280,7 +309,10 @@ function pruneableValue(value: InstructionValue, state: State): boolean {
         return !state.isIdUsed(value.lvalue.place.identifier);
       }
       // Declarations are pruneable only if the named variable is never read later
-      return !state.isIdOrNameUsed(value.lvalue.place.identifier);
+      return (
+        !state.isIdOrNameUsed(value.lvalue.place.identifier) &&
+        !state.isUsedInValueBlock(value.lvalue.place.identifier)
+      );
     }
     case 'Destructure': {
       let isIdOrNameUsed = false;

@@ -9,6 +9,7 @@ import {CompilerError} from '../CompilerError';
 import {
   BasicBlock,
   BlockId,
+  Environment,
   GotoVariant,
   HIR,
   InstructionId,
@@ -19,6 +20,7 @@ import {
 import {
   HIRFunction,
   InstructionKind,
+  makeInstructionId,
   ReactiveBreakTerminal,
   ReactiveContinueTerminal,
   ReactiveFunction,
@@ -30,6 +32,7 @@ import {
   ReactiveValue,
   Terminal,
 } from '../HIR/HIR';
+import {createTemporaryPlace} from '../HIR/HIRBuilder';
 import {assertExhaustive} from '../Utils/utils';
 
 /*
@@ -39,7 +42,7 @@ import {assertExhaustive} from '../Utils/utils';
  * labels for *all* terminals: see PruneUnusedLabels which removes unnecessary labels.
  */
 export function buildReactiveFunction(fn: HIRFunction): ReactiveFunction {
-  const cx = new Context(fn.body);
+  const cx = new Context(fn.body, fn.env);
   const driver = new Driver(cx);
   const body = driver.traverseBlock(cx.block(fn.body.entry));
   return {
@@ -362,7 +365,10 @@ class Driver {
         );
         scheduleIds.push(scheduleId);
 
-        const init = this.visitValueBlock(terminal.init, terminal.loc);
+        const init = this.visitMaybeValuelessValueBlock(
+          terminal.init,
+          terminal.loc,
+        );
         const initBlock = this.cx.ir.blocks.get(init.block)!;
         let initValue = init.value;
         const initBlockHasDeclarations = initBlock.instructions.some(
@@ -851,6 +857,21 @@ class Driver {
     id: BlockId,
     loc: SourceLocation,
   ): {block: BlockId; value: ReactiveValue; place: Place; id: InstructionId} {
+    return this.visitValueBlockImpl(id, loc, false);
+  }
+
+  visitMaybeValuelessValueBlock(
+    id: BlockId,
+    loc: SourceLocation,
+  ): {block: BlockId; value: ReactiveValue; place: Place; id: InstructionId} {
+    return this.visitValueBlockImpl(id, loc, true);
+  }
+
+  visitValueBlockImpl(
+    id: BlockId,
+    loc: SourceLocation,
+    allowValuelessGotos: boolean,
+  ): {block: BlockId; value: ReactiveValue; place: Place; id: InstructionId} {
     const defaultBlock = this.cx.ir.blocks.get(id)!;
     if (defaultBlock.terminal.kind === 'branch') {
       const instructions = defaultBlock.instructions;
@@ -903,12 +924,26 @@ class Driver {
     } else if (defaultBlock.terminal.kind === 'goto') {
       const instructions = defaultBlock.instructions;
       if (instructions.length === 0) {
-        CompilerError.invariant(false, {
-          reason: 'Expected goto value block to have at least one instruction',
-          description: null,
-          loc: null,
-          suggestions: null,
-        });
+        if (allowValuelessGotos) {
+          return {
+            block: defaultBlock.id,
+            place: createTemporaryPlace(this.cx.env, loc),
+            value: {
+              kind: 'Primitive',
+              loc,
+              value: undefined,
+            },
+            id: makeInstructionId(0),
+          };
+        } else {
+          CompilerError.invariant(false, {
+            reason:
+              'Expected goto value block to have at least one instruction',
+            description: null,
+            loc: null,
+            suggestions: null,
+          });
+        }
       } else if (defaultBlock.instructions.length === 1) {
         const instr = defaultBlock.instructions[0]!;
         let place: Place = instr.lvalue;
@@ -984,7 +1019,11 @@ class Driver {
        */
       const init = this.visitValueBlockTerminal(defaultBlock.terminal);
       // Code following the logical terminal
-      const final = this.visitValueBlock(init.fallthrough, loc);
+      const final = this.visitValueBlockImpl(
+        init.fallthrough,
+        loc,
+        allowValuelessGotos,
+      );
       // Stitch the two together...
       const sequence: ReactiveSequenceValue = {
         kind: 'SequenceExpression',
@@ -1244,6 +1283,7 @@ class Driver {
 
 class Context {
   ir: HIR;
+  env: Environment;
   #nextScheduleId: number = 0;
 
   /*
@@ -1273,8 +1313,9 @@ class Context {
    */
   #controlFlowStack: Array<ControlFlowTarget> = [];
 
-  constructor(ir: HIR) {
+  constructor(ir: HIR, env: Environment) {
     this.ir = ir;
+    this.env = env;
   }
 
   block(id: BlockId): BasicBlock {
