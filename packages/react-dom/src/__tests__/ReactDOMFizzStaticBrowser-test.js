@@ -42,7 +42,9 @@ describe('ReactDOMFizzStaticBrowser', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMFizzServer = require('react-dom/server.browser');
-    ReactDOMFizzStatic = require('react-dom/static.browser');
+    if (__EXPERIMENTAL__) {
+      ReactDOMFizzStatic = require('react-dom/static.browser');
+    }
     Suspense = React.Suspense;
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -129,6 +131,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     await insertNodesAndExecuteScripts(temp, container, null);
   }
 
+  // @gate experimental
   it('should call prerender', async () => {
     const result = await serverAct(() =>
       ReactDOMFizzStatic.prerender(<div>hello world</div>),
@@ -137,6 +140,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(prelude).toMatchInlineSnapshot(`"<div>hello world</div>"`);
   });
 
+  // @gate experimental
   it('should emit DOCTYPE at the root of the document', async () => {
     const result = await serverAct(() =>
       ReactDOMFizzStatic.prerender(
@@ -151,6 +155,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     );
   });
 
+  // @gate experimental
   it('should emit bootstrap script src at the end', async () => {
     const result = await serverAct(() =>
       ReactDOMFizzStatic.prerender(<div>hello world</div>, {
@@ -165,6 +170,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     );
   });
 
+  // @gate experimental
   it('emits all HTML as one unit', async () => {
     let hasLoaded = false;
     let resolve;
@@ -196,6 +202,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(prelude).toMatchInlineSnapshot(`"<div><!--$-->Done<!--/$--></div>"`);
   });
 
+  // @gate experimental
   it('should reject the promise when an error is thrown at the root', async () => {
     const reportedErrors = [];
     let caughtError = null;
@@ -219,6 +226,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(reportedErrors).toEqual([theError]);
   });
 
+  // @gate experimental
   it('should reject the promise when an error is thrown inside a fallback', async () => {
     const reportedErrors = [];
     let caughtError = null;
@@ -244,6 +252,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(reportedErrors).toEqual([theError]);
   });
 
+  // @gate experimental
   it('should not error the stream when an error is thrown inside suspense boundary', async () => {
     const reportedErrors = [];
     const result = await serverAct(() =>
@@ -266,6 +275,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(reportedErrors).toEqual([theError]);
   });
 
+  // @gate experimental
   it('should be able to complete by aborting even if the promise never resolves', async () => {
     const errors = [];
     const controller = new AbortController();
@@ -296,6 +306,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(errors).toEqual(['The operation was aborted.']);
   });
 
+  // @gate experimental
   // @gate !enableHalt
   it('should reject if aborting before the shell is complete and enableHalt is disabled', async () => {
     const errors = [];
@@ -365,6 +376,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(content).toBe('');
   });
 
+  // @gate experimental
   it('should be able to abort before something suspends', async () => {
     const errors = [];
     const controller = new AbortController();
@@ -407,6 +419,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     }
   });
 
+  // @gate experimental
   // @gate !enableHalt
   it('should reject if passing an already aborted signal and enableHalt is disabled', async () => {
     const errors = [];
@@ -480,6 +493,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(content).toBe('');
   });
 
+  // @gate experimental
   it('supports custom abort reasons with a string', async () => {
     const promise = new Promise(r => {});
     function Wait() {
@@ -522,6 +536,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(errors).toEqual(['foobar', 'foobar']);
   });
 
+  // @gate experimental
   it('supports custom abort reasons with an Error', async () => {
     const promise = new Promise(r => {});
     function Wait() {
@@ -1595,6 +1610,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     );
   });
 
+  // @gate experimental
   it('logs an error if onHeaders throws but continues the prerender', async () => {
     const errors = [];
     function onError(error) {
@@ -1611,11 +1627,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
         onError,
       }),
     );
-    expect(prerendered.postponed).toBe(
-      gate(flags => flags.enableHalt || flags.enablePostpone)
-        ? null
-        : undefined,
-    );
+    expect(prerendered.postponed).toBe(null);
     expect(errors).toEqual(['bad onHeaders']);
 
     await readIntoContainer(prerendered.prelude);
