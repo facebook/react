@@ -2870,7 +2870,7 @@ describe('ReactFlightDOM', () => {
     resolveGreeting();
     const {prelude} = await pendingResult;
 
-    expect(errors).toEqual(['boom']);
+    expect(errors).toEqual([]);
 
     const preludeWeb = Readable.toWeb(prelude);
     const response = ReactServerDOMClient.createFromReadableStream(preludeWeb);
@@ -3032,7 +3032,7 @@ describe('ReactFlightDOM', () => {
 
     const {prelude} = await pendingResult;
 
-    expect(errors).toEqual(['boom']);
+    expect(errors).toEqual([]);
 
     const preludeWeb = Readable.toWeb(prelude);
     const response = ReactServerDOMClient.createFromReadableStream(preludeWeb);

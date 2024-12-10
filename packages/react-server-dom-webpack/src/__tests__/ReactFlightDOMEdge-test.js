@@ -1209,7 +1209,7 @@ describe('ReactFlightDOMEdge', () => {
     resolveGreeting();
     const {prelude} = await pendingResult;
 
-    expect(errors).toEqual(['boom']);
+    expect(errors).toEqual([]);
 
     function ClientRoot({response}) {
       return use(response);
