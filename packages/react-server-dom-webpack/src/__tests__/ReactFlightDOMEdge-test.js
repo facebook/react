@@ -49,6 +49,20 @@ function normalizeCodeLocInfo(str) {
 
 describe('ReactFlightDOMEdge', () => {
   beforeEach(() => {
+    // Mock performance.now for timing tests
+    let time = 10;
+    const now = jest.fn().mockImplementation(() => {
+      return time++;
+    });
+    Object.defineProperty(performance, 'timeOrigin', {
+      value: time,
+      configurable: true,
+    });
+    Object.defineProperty(performance, 'now', {
+      value: now,
+      configurable: true,
+    });
+
     jest.resetModules();
 
     reactServerAct = require('internal-test-utils').serverAct;
@@ -401,7 +415,7 @@ describe('ReactFlightDOMEdge', () => {
 
     const serializedContent = await readResult(stream1);
 
-    expect(serializedContent.length).toBeLessThan(425);
+    expect(serializedContent.length).toBeLessThan(490);
     expect(timesRendered).toBeLessThan(5);
 
     const model = await ReactServerDOMClient.createFromReadableStream(stream2, {
@@ -472,7 +486,7 @@ describe('ReactFlightDOMEdge', () => {
     const [stream1, stream2] = passThrough(stream).tee();
 
     const serializedContent = await readResult(stream1);
-    expect(serializedContent.length).toBeLessThan(__DEV__ ? 605 : 400);
+    expect(serializedContent.length).toBeLessThan(__DEV__ ? 680 : 400);
     expect(timesRendered).toBeLessThan(5);
 
     const model = await serverAct(() =>
@@ -506,7 +520,7 @@ describe('ReactFlightDOMEdge', () => {
       ),
     );
     const serializedContent = await readResult(stream);
-    const expectedDebugInfoSize = __DEV__ ? 300 * 20 : 0;
+    const expectedDebugInfoSize = __DEV__ ? 320 * 20 : 0;
     expect(serializedContent.length).toBeLessThan(150 + expectedDebugInfoSize);
   });
 
@@ -934,6 +948,7 @@ describe('ReactFlightDOMEdge', () => {
     );
   });
 
+  // @gate !__DEV__ || enableComponentPerformanceTrack
   it('supports async server component debug info as the element owner in DEV', async () => {
     function Container({children}) {
       return children;
@@ -989,16 +1004,19 @@ describe('ReactFlightDOMEdge', () => {
         owner: null,
       });
       expect(lazyWrapper._debugInfo).toEqual([
+        {time: 11},
         greetInfo,
+        {time: 12},
         expect.objectContaining({
           name: 'Container',
           env: 'Server',
           owner: greetInfo,
         }),
+        {time: 13},
       ]);
       // The owner that created the span was the outer server component.
       // We expect the debug info to be referentially equal to the owner.
-      expect(greeting._owner).toBe(lazyWrapper._debugInfo[0]);
+      expect(greeting._owner).toBe(lazyWrapper._debugInfo[1]);
     } else {
       expect(lazyWrapper._debugInfo).toBe(undefined);
       expect(greeting._owner).toBe(undefined);
