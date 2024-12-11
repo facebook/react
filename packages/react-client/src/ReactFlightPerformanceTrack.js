@@ -44,9 +44,9 @@ export function logComponentRender(
     reusableComponentDevToolDetails.color =
       selfTime < 0.5
         ? 'primary-light'
-        : selfTime < 10
+        : selfTime < 50
           ? 'primary'
-          : selfTime < 100
+          : selfTime < 500
             ? 'primary-dark'
             : 'error';
     reusableComponentOptions.start = startTime < 0 ? 0 : startTime;
