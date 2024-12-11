@@ -501,9 +501,10 @@ const EnvironmentConfigSchema = z.object({
   throwUnknownException__testonly: z.boolean().default(false),
 
   /**
-   * Enables deps of a function epxression to be treated as conditional. This
-   * makes sure we don't load a dep when it's a property (to check if it has
-   * changed) and instead check the receiver.
+   * Enables deps of a function expression to be treated as conditional. This
+   * makes sure we don't hoist property loads from function expressions when we
+   * don't know that the property load source object is safe to access in the
+   * outer context
    *
    * This makes sure we don't end up throwing when the reciver is null. Consider
    * this code:
@@ -519,8 +520,14 @@ const EnvironmentConfigSchema = z.object({
    *
    * This does cause the memoization to now be coarse grained, which is
    * non-ideal.
+   *
+   * This is safe to toggle off for a codebase that has no sources of
+   * unsoundness. This includes:
+   * - typing array accesses / other unknown keys as TValue | undefined
+   *   (typescript's noUncheckedIndexedAccess)
+   * - enabling and monitoring warnings for explicit and inferred `any`
    */
-  enableTreatFunctionDepsAsConditional: z.boolean().default(false),
+  enableTreatFunctionDepsAsConditional: z.boolean().default(true),
 
   /**
    * When true, always act as though the dependencies of a memoized value
