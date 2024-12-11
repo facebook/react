@@ -2138,4 +2138,422 @@ describe('Activity', () => {
     });
     assertLog(['attach child']);
   });
+
+  describe('hidden-connected', () => {
+    // @gate enableActivity
+    it('passive effects remain connected when the visibility changes', async () => {
+      function Child({step}) {
+        useEffect(() => {
+          Scheduler.log(`Commit mount [${step}]`);
+          return () => {
+            Scheduler.log(`Commit unmount [${step}]`);
+          };
+        }, [step]);
+        return <Text text={step} />;
+      }
+
+      function App({mode, step}) {
+        return (
+          <Activity mode={mode}>
+            {useMemo(
+              () => (
+                <Child step={step} />
+              ),
+              [step],
+            )}
+          </Activity>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(() => {
+        root.render(<App mode={'visible'} step={1} />);
+      });
+      assertLog([1, 'Commit mount [1]']);
+      expect(root).toMatchRenderedOutput(<span prop={1} />);
+
+      // Hide the tree. This will unmount the effect.
+      await act(() => {
+        root.render(<App mode={'hidden-connected'} step={1} />);
+      });
+      assertLog([]);
+      expect(root).toMatchRenderedOutput(<span hidden={true} prop={1} />);
+
+      // Update.
+      await act(() => {
+        root.render(<App mode={'hidden-connected'} step={2} />);
+      });
+      // The update is rendered and effects are fired
+      assertLog([2, 'Commit mount [2]']);
+      expect(root).toMatchRenderedOutput(<span hidden={true} prop={2} />);
+
+      // Reveal the tree.
+      await act(() => {
+        root.render(<App mode={'visible'} step={2} />);
+      });
+      // Effects are already mounted and tree has been rendered.
+      assertLog([]);
+
+      expect(root).toMatchRenderedOutput(<span prop={2} />);
+    });
+
+    // @gate enableActivity
+    it('layout effects are unmounted when the visibility changes', async () => {
+      function Child({step}) {
+        useLayoutEffect(() => {
+          Scheduler.log(`mount layout effect [${step}]`);
+          return () => {
+            Scheduler.log(`unmount layout effect [${step}]`);
+          };
+        }, [step]);
+        return <Text text={step} />;
+      }
+
+      function App({mode, step}) {
+        return (
+          <Activity mode={mode}>
+            {useMemo(
+              () => (
+                <Child step={step} />
+              ),
+              [step],
+            )}
+          </Activity>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(() => {
+        root.render(<App mode={'visible'} step={1} />);
+      });
+      assertLog([1, 'mount layout effect [1]']);
+      expect(root).toMatchRenderedOutput(<span prop={1} />);
+
+      // Hide the tree. This will unmount the effect.
+      await act(() => {
+        root.render(<App mode={'hidden-connected'} step={1} />);
+      });
+      assertLog(['unmount layout effect [1]']);
+      expect(root).toMatchRenderedOutput(<span hidden={true} prop={1} />);
+
+      // Update.
+      await act(() => {
+        root.render(<App mode={'hidden-connected'} step={2} />);
+      });
+      // The update is rendered and effect is not fired.
+      assertLog([2]);
+      expect(root).toMatchRenderedOutput(<span hidden={true} prop={2} />);
+
+      // Reveal the tree.
+      await act(() => {
+        root.render(<App mode={'visible'} step={2} />);
+      });
+      // Effects are already mounted and tree has been rendered.
+      assertLog(['mount layout effect [2]']);
+
+      expect(root).toMatchRenderedOutput(<span prop={2} />);
+    });
+
+    // @gate enableActivity
+    it('passive effects are unmounted when the visibility changes to hidden', async () => {
+      function Child({step}) {
+        useEffect(() => {
+          Scheduler.log(`Commit mount [${step}]`);
+          return () => {
+            Scheduler.log(`Commit unmount [${step}]`);
+          };
+        }, [step]);
+        return <Text text={step} />;
+      }
+
+      function App({mode, step}) {
+        return (
+          <Activity mode={mode}>
+            {useMemo(
+              () => (
+                <Child step={step} />
+              ),
+              [step],
+            )}
+          </Activity>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(() => {
+        root.render(<App mode={'visible'} step={1} />);
+      });
+
+      assertLog([1, 'Commit mount [1]']);
+      expect(root).toMatchRenderedOutput(<span prop={1} />);
+
+      await act(() => {
+        root.render(<App mode={'hidden-connected'} step={1} />);
+      });
+
+      assertLog([]);
+
+      expect(root).toMatchRenderedOutput(<span hidden={true} prop={1} />);
+      await act(() => {
+        root.render(<App mode={'hidden'} step={1} />);
+      });
+
+      assertLog(['Commit unmount [1]']);
+      expect(root).toMatchRenderedOutput(<span hidden={true} prop={1} />);
+
+      await act(() => {
+        root.render(<App mode={'hidden-connected'} step={1} />);
+      });
+
+      assertLog(['Commit mount [1]']);
+      expect(root).toMatchRenderedOutput(<span hidden={true} prop={1} />);
+    });
+
+    // @gate enableActivity
+    it('layout effects are unmounted when the visibility changes to hidden', async () => {
+      function Child({step}) {
+        useLayoutEffect(() => {
+          Scheduler.log(`mount layout effect [${step}]`);
+          return () => {
+            Scheduler.log(`unmount layout effect [${step}]`);
+          };
+        }, [step]);
+        return <Text text={step} />;
+      }
+
+      function App({mode, step}) {
+        return (
+          <Activity mode={mode}>
+            {useMemo(
+              () => (
+                <Child step={step} />
+              ),
+              [step],
+            )}
+          </Activity>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(() => {
+        root.render(<App mode={'visible'} step={1} />);
+      });
+
+      assertLog([1, 'mount layout effect [1]']);
+      expect(root).toMatchRenderedOutput(<span prop={1} />);
+
+      await act(() => {
+        root.render(<App mode={'hidden-connected'} step={1} />);
+      });
+
+      assertLog(['unmount layout effect [1]']);
+
+      expect(root).toMatchRenderedOutput(<span hidden={true} prop={1} />);
+      await act(() => {
+        root.render(<App mode={'hidden'} step={1} />);
+      });
+
+      assertLog([]);
+      expect(root).toMatchRenderedOutput(<span hidden={true} prop={1} />);
+
+      await act(() => {
+        root.render(<App mode={'hidden-connected'} step={1} />);
+      });
+
+      assertLog([]);
+      expect(root).toMatchRenderedOutput(<span hidden={true} prop={1} />);
+
+      await act(() => {
+        root.render(<App mode={'visible'} step={1} />);
+      });
+
+      assertLog(['mount layout effect [1]']);
+      expect(root).toMatchRenderedOutput(<span prop={1} />);
+    });
+
+    // @gate enableActivity
+    it('lowers update priority for hidden-connected Activity', async () => {
+      let updateChildState;
+      let updateHighPriorityComponentState;
+
+      function Child() {
+        const [state, _stateUpdate] = useState(0);
+        updateChildState = _stateUpdate;
+        const text = 'Child ' + state;
+        return <Text text={text} />;
+      }
+
+      function HighPriorityComponent(props) {
+        const [state, _stateUpdate] = useState(0);
+        updateHighPriorityComponentState = _stateUpdate;
+        const text = 'HighPriorityComponent ' + state;
+        return (
+          <>
+            <Text text={text} />
+            {props.children}
+          </>
+        );
+      }
+
+      function App({show}) {
+        return (
+          <>
+            <HighPriorityComponent>
+              <Activity mode={show ? 'visible' : 'hidden-connected'}>
+                <Child />
+              </Activity>
+            </HighPriorityComponent>
+          </>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+
+      await act(() => {
+        root.render(<App show={false} />);
+      });
+
+      assertLog(['HighPriorityComponent 0', 'Child 0']);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span prop="HighPriorityComponent 0" />
+          <span hidden={true} prop="Child 0" />
+        </>,
+      );
+
+      // State updates from offscreen are **defered**.
+      await act(async () => {
+        updateChildState(1);
+        updateHighPriorityComponentState(1);
+        await waitForPaint(['HighPriorityComponent 1']);
+        expect(root).toMatchRenderedOutput(
+          <>
+            <span prop="HighPriorityComponent 1" />
+            <span hidden={true} prop="Child 0" />
+          </>,
+        );
+      });
+
+      assertLog(['Child 1']);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span prop="HighPriorityComponent 1" />
+          <span hidden={true} prop="Child 1" />
+        </>,
+      );
+
+      await act(() => {
+        root.render(<App show={true} />);
+      });
+
+      assertLog(['HighPriorityComponent 1', 'Child 1']);
+
+      // Activity is visible. State updates from offscreen are **not defered**.
+      await act(async () => {
+        updateChildState(2);
+        updateHighPriorityComponentState(2);
+        await waitForPaint(['HighPriorityComponent 2', 'Child 2']);
+        expect(root).toMatchRenderedOutput(
+          <>
+            <span prop="HighPriorityComponent 2" />
+            <span prop="Child 2" />
+          </>,
+        );
+      });
+    });
+
+    // @gate enableActivity
+    it(
+      'when reusing old components (hidden -> visible), layout effects fire ' +
+        'with same timing as if it were brand new',
+      async () => {
+        function Child({label}) {
+          useLayoutEffect(() => {
+            Scheduler.log('Mount ' + label);
+            return () => {
+              Scheduler.log('Unmount ' + label);
+            };
+          }, [label]);
+          return label;
+        }
+
+        // Initial mount
+        const root = ReactNoop.createRoot();
+        await act(() => {
+          root.render(
+            <Activity mode="visible">
+              <Child key="B" label="B" />
+            </Activity>,
+          );
+        });
+        assertLog(['Mount B']);
+
+        // Hide the component
+        await act(() => {
+          root.render(
+            <Activity mode="hidden-connected">
+              <Child key="B" label="B" />
+            </Activity>,
+          );
+        });
+        assertLog(['Unmount B']);
+
+        // Reappear the component and also add some new siblings.
+        await act(() => {
+          root.render(
+            <Activity mode="visible">
+              <Child key="A" label="A" />
+              <Child key="B" label="B" />
+              <Child key="C" label="C" />
+            </Activity>,
+          );
+        });
+        // B's effect should fire in between A and C even though it's been reused
+        // from a previous render. In other words, it's the same order as if all
+        // three siblings were brand new.
+        assertLog(['Mount A', 'Mount B', 'Mount C']);
+      },
+    );
+
+    it('class component are not unmounted', async () => {
+      class ClassComponent extends React.Component {
+        render() {
+          return <Text text="child" />;
+        }
+
+        componentWillUnmount() {
+          Scheduler.log('componentWillUnmount');
+        }
+
+        componentDidMount() {
+          Scheduler.log('componentDidMount');
+        }
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(() => {
+        // Outer and inner offscreen are hidden.
+        root.render(
+          <Activity mode={'visible'}>
+            <ClassComponent />
+          </Activity>,
+        );
+      });
+
+      assertLog(['child', 'componentDidMount']);
+      expect(root).toMatchRenderedOutput(<span prop="child" />);
+
+      await act(() => {
+        // Outer and inner offscreen are hidden.
+        root.render(
+          <Activity mode={'hidden-connected'}>
+            <ClassComponent />
+          </Activity>,
+        );
+      });
+
+      assertLog(['child']);
+      expect(root).toMatchRenderedOutput(<span hidden={true} prop="child" />);
+    });
+  });
 });

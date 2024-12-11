@@ -217,6 +217,7 @@ import {
 // Used during the commit phase to track the state of the Offscreen component stack.
 // Allows us to avoid traversing the return path to find the nearest Offscreen ancestor.
 let offscreenSubtreeIsHidden: boolean = false;
+let offscreenSubtreeIsHiddenConnected: boolean = false;
 let offscreenSubtreeWasHidden: boolean = false;
 
 // Used to track if a form needs to be reset at the end of the mutation phase.
@@ -1994,7 +1995,6 @@ function commitMutationEffectsOnFiber(
       const newState: OffscreenState | null = finishedWork.memoizedState;
       const isHidden = newState !== null;
       const wasHidden = current !== null && current.memoizedState !== null;
-
       if (disableLegacyMode || finishedWork.mode & ConcurrentMode) {
         // Before committing the children, track on the stack whether this
         // offscreen subtree was already hidden, so that we don't unmount the
@@ -2046,7 +2046,14 @@ function commitMutationEffectsOnFiber(
               (finishedWork.mode & ConcurrentMode) !== NoMode
             ) {
               // Disappear the layout effects of all the children
+              const props: OffscreenProps | null = finishedWork.memoizedProps;
+              const prevOffscreenSubtreeIsHiddenConnected =
+                offscreenSubtreeIsHiddenConnected;
+              offscreenSubtreeIsHiddenConnected =
+                props?.mode === 'hidden-connected';
               recursivelyTraverseDisappearLayoutEffects(finishedWork);
+              offscreenSubtreeIsHiddenConnected =
+                prevOffscreenSubtreeIsHiddenConnected;
             }
           }
         } else {
@@ -2225,16 +2232,16 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
       break;
     }
     case ClassComponent: {
-      // TODO (Offscreen) Check: flags & RefStatic
-      safelyDetachRef(finishedWork, finishedWork.return);
-
-      const instance = finishedWork.stateNode;
-      if (typeof instance.componentWillUnmount === 'function') {
-        safelyCallComponentWillUnmount(
-          finishedWork,
-          finishedWork.return,
-          instance,
-        );
+      if (!offscreenSubtreeIsHiddenConnected) {
+        safelyDetachRef(finishedWork, finishedWork.return);
+        const instance = finishedWork.stateNode;
+        if (typeof instance.componentWillUnmount === 'function') {
+          safelyCallComponentWillUnmount(
+            finishedWork,
+            finishedWork.return,
+            instance,
+          );
+        }
       }
 
       recursivelyTraverseDisappearLayoutEffects(finishedWork);
@@ -2828,8 +2835,10 @@ function commitPassiveMountOnFiber(
       // TODO: Pass `current` as argument to this function
       const instance: OffscreenInstance = finishedWork.stateNode;
       const nextState: OffscreenState | null = finishedWork.memoizedState;
+      const nextProps: OffscreenProps | null = finishedWork.memoizedProps;
 
-      const isHidden = nextState !== null;
+      const isHidden =
+        nextState !== null && nextProps?.mode !== 'hidden-connected';
 
       if (isHidden) {
         if (instance._visibility & OffscreenPassiveEffectsConnected) {
@@ -3437,6 +3446,7 @@ function commitPassiveUnmountOnFiber(finishedWork: Fiber): void {
     case OffscreenComponent: {
       const instance: OffscreenInstance = finishedWork.stateNode;
       const nextState: OffscreenState | null = finishedWork.memoizedState;
+      const props: OffscreenProps = finishedWork.memoizedProps;
 
       const isHidden = nextState !== null;
 
@@ -3452,8 +3462,11 @@ function commitPassiveUnmountOnFiber(finishedWork: Fiber): void {
         // TODO: Add option or heuristic to delay before disconnecting the
         // effects. Then if the tree reappears before the delay has elapsed, we
         // can skip toggling the effects entirely.
-        instance._visibility &= ~OffscreenPassiveEffectsConnected;
-        recursivelyTraverseDisconnectPassiveEffects(finishedWork);
+
+        if (props.mode !== 'hidden-connected') {
+          instance._visibility &= ~OffscreenPassiveEffectsConnected;
+          recursivelyTraverseDisconnectPassiveEffects(finishedWork);
+        }
       } else {
         recursivelyTraversePassiveUnmountEffects(finishedWork);
       }
