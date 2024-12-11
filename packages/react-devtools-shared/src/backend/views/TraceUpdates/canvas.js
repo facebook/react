@@ -137,7 +137,15 @@ function iterateNodes(
   nodeToData.forEach((data, node) => {
     const colorIndex = Math.min(COLORS.length - 1, data.count - 1);
     const color = COLORS[colorIndex];
-    execute({...data, color, node});
+    execute({
+      color,
+      node,
+      count: data.count,
+      displayName: data.displayName,
+      expirationTime: data.expirationTime,
+      lastMeasuredAt: data.lastMeasuredAt,
+      rect: data.rect,
+    });
   });
 }
 
