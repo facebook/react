@@ -414,6 +414,10 @@ export default {
       // Get dependencies from all our resolved references in pure scopes.
       // Key is dependency string, value is whether it's stable.
       const dependencies = new Map();
+      // Keeps track of paths that have optional chaining
+      // Keys is a path string, value is whether or not there are optional
+      // direct descendants
+      // Example: foo.bar?.baz -> { "foo": false, "foo.bar": true }
       const optionalChains = new Map();
       gatherDependenciesRecursively(scope);
 
@@ -713,7 +717,7 @@ export default {
           try {
             declaredDependency = analyzePropertyChain(
               declaredDependencyNode,
-              null,
+              optionalChains,
             );
           } catch (error) {
             if (/Unsupported node type/.test(error.message)) {
@@ -910,9 +914,9 @@ export default {
         let finalPath = '';
         for (let i = 0; i < members.length; i++) {
           if (i !== 0) {
-            const pathSoFar = members.slice(0, i + 1).join('.');
-            const isOptional = optionalChains.get(pathSoFar) === true;
-            finalPath += isOptional ? '?.' : '.';
+            const parentPath = members.slice(0, i).join('.');
+            const isParentOptional = optionalChains.get(parentPath) === true;
+            finalPath += isParentOptional ? '?.' : '.';
           }
           finalPath += members[i];
         }
@@ -1713,19 +1717,18 @@ function getDependency(node) {
  * It just means there is an optional member somewhere inside.
  * This particular node might still represent a required member, so check .optional field.
  */
-function markNode(node, optionalChains, result) {
+function markNode(node, optionalChains, object, property) {
+  const result = `${object}.${property}`;
   if (optionalChains) {
     if (node.optional) {
-      // We only want to consider it optional if *all* usages were optional.
-      if (!optionalChains.has(result)) {
-        // Mark as (maybe) optional. If there's a required usage, this will be overridden.
-        optionalChains.set(result, true);
-      }
-    } else {
-      // Mark as required.
-      optionalChains.set(result, false);
+      optionalChains.set(object, true);
+    } else if (!optionalChains.has(object)) {
+      // Mark as (maybe) required. We only want to consider it required if *no* usages were optional. If
+      // there's an optional usage, this will be overriden.
+      optionalChains.set(object, false);
     }
   }
+  return result;
 }
 
 /**
@@ -1738,23 +1741,15 @@ function markNode(node, optionalChains, result) {
 function analyzePropertyChain(node, optionalChains) {
   if (node.type === 'Identifier' || node.type === 'JSXIdentifier') {
     const result = node.name;
-    if (optionalChains) {
-      // Mark as required.
-      optionalChains.set(result, false);
-    }
     return result;
   } else if (node.type === 'MemberExpression' && !node.computed) {
     const object = analyzePropertyChain(node.object, optionalChains);
     const property = analyzePropertyChain(node.property, null);
-    const result = `${object}.${property}`;
-    markNode(node, optionalChains, result);
-    return result;
+    return markNode(node, optionalChains, object, property);
   } else if (node.type === 'OptionalMemberExpression' && !node.computed) {
     const object = analyzePropertyChain(node.object, optionalChains);
     const property = analyzePropertyChain(node.property, null);
-    const result = `${object}.${property}`;
-    markNode(node, optionalChains, result);
-    return result;
+    return markNode(node, optionalChains, object, property);
   } else if (node.type === 'ChainExpression' && !node.computed) {
     const expression = node.expression;
 
@@ -1764,9 +1759,7 @@ function analyzePropertyChain(node, optionalChains) {
 
     const object = analyzePropertyChain(expression.object, optionalChains);
     const property = analyzePropertyChain(expression.property, null);
-    const result = `${object}.${property}`;
-    markNode(expression, optionalChains, result);
-    return result;
+    return markNode(expression, optionalChains, object, property);
   } else {
     throw new Error(`Unsupported node type: ${node.type}`);
   }

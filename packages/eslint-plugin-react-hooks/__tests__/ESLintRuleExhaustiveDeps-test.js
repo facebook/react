@@ -1629,6 +1629,70 @@ const tests = {
     },
     {
       code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => {
+            if(props.foo?.bar) {
+              console.log(props.foo.bar);
+            }
+          }, [])
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'props.foo?.bar'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [props.foo?.bar]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  useEffect(() => {
+                    if(props.foo?.bar) {
+                      console.log(props.foo.bar);
+                    }
+                  }, [props.foo?.bar])
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function ParentImpliedOptional(props) {
+          useEffect(() => {
+            if(props.foo?.bar) {
+              console.log(props.foo.baz);
+            }
+          }, [])
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has missing dependencies: 'props.foo?.bar' and 'props.foo?.baz'. " +
+            'Either include them or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [props.foo?.bar, props.foo?.baz]',
+              output: normalizeIndent`
+                function ParentImpliedOptional(props) {
+                  useEffect(() => {
+                    if(props.foo?.bar) {
+                      console.log(props.foo.baz);
+                    }
+                  }, [props.foo?.bar, props.foo?.baz])
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
         function MyComponent() {
           const local = someFunc();
           useEffect(() => {
@@ -3938,7 +4002,7 @@ const tests = {
       errors: [
         {
           message:
-            "React Hook useEffect has unnecessary dependencies: 'ref1.current' and 'ref2.current'. " +
+            "React Hook useEffect has unnecessary dependencies: 'ref1?.current' and 'ref2?.current'. " +
             'Either exclude them or remove the dependency array. ' +
             "Mutable values like 'ref1.current' aren't valid dependencies " +
             "because mutating them doesn't re-render the component.",
@@ -4998,7 +5062,7 @@ const tests = {
         {
           message:
             'React Hook useCallback has unnecessary dependencies: ' +
-            "'MutableStore.hello.world', 'global.stuff', 'props.foo', 'x', 'y', and 'z'. " +
+            "'MutableStore?.hello?.world', 'global?.stuff', 'props.foo', 'x', 'y', and 'z'. " +
             'Either exclude them or remove the dependency array. ' +
             "Outer scope values like 'MutableStore.hello.world' aren't valid dependencies " +
             "because mutating them doesn't re-render the component.",
@@ -7923,11 +7987,11 @@ const testsTypescript = {
       errors: [
         {
           message:
-            "React Hook useEffect has missing dependencies: 'pizza.crust' and 'pizza?.toppings'. " +
+            "React Hook useEffect has missing dependencies: 'pizza?.crust' and 'pizza?.toppings'. " +
             'Either include them or remove the dependency array.',
           suggestions: [
             {
-              desc: 'Update the dependencies array to be: [pizza.crust, pizza?.toppings]',
+              desc: 'Update the dependencies array to be: [pizza?.crust, pizza?.toppings]',
               output: normalizeIndent`
                 function MyComponent() {
                   const pizza = {};
@@ -7935,7 +7999,7 @@ const testsTypescript = {
                   useEffect(() => ({
                     crust: pizza.crust,
                     toppings: pizza?.toppings,
-                  }), [pizza.crust, pizza?.toppings]);
+                  }), [pizza?.crust, pizza?.toppings]);
                 }
               `,
             },
@@ -7957,11 +8021,11 @@ const testsTypescript = {
       errors: [
         {
           message:
-            "React Hook useEffect has a missing dependency: 'pizza.crust'. " +
+            "React Hook useEffect has a missing dependency: 'pizza?.crust'. " +
             'Either include it or remove the dependency array.',
           suggestions: [
             {
-              desc: 'Update the dependencies array to be: [pizza.crust]',
+              desc: 'Update the dependencies array to be: [pizza?.crust]',
               output: normalizeIndent`
                 function MyComponent() {
                   const pizza = {};
@@ -7969,7 +8033,7 @@ const testsTypescript = {
                   useEffect(() => ({
                     crust: pizza?.crust,
                     density: pizza.crust.density,
-                  }), [pizza.crust]);
+                  }), [pizza?.crust]);
                 }
               `,
             },
@@ -7991,11 +8055,11 @@ const testsTypescript = {
       errors: [
         {
           message:
-            "React Hook useEffect has a missing dependency: 'pizza.crust'. " +
+            "React Hook useEffect has a missing dependency: 'pizza?.crust'. " +
             'Either include it or remove the dependency array.',
           suggestions: [
             {
-              desc: 'Update the dependencies array to be: [pizza.crust]',
+              desc: 'Update the dependencies array to be: [pizza?.crust]',
               output: normalizeIndent`
                 function MyComponent() {
                   const pizza = {};
@@ -8003,7 +8067,7 @@ const testsTypescript = {
                   useEffect(() => ({
                     crust: pizza.crust,
                     density: pizza?.crust.density,
-                  }), [pizza.crust]);
+                  }), [pizza?.crust]);
                 }
               `,
             },
