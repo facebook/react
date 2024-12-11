@@ -126,6 +126,10 @@ export type JSONValue =
   | {+[key: string]: JSONValue}
   | $ReadOnlyArray<JSONValue>;
 
+type ProfilingResult = {
+  endTime: number,
+};
+
 const ROW_ID = 0;
 const ROW_TAG = 1;
 const ROW_LENGTH = 2;
@@ -146,7 +150,7 @@ type PendingChunk<T> = {
   value: null | Array<(T) => mixed>,
   reason: null | Array<(mixed) => mixed>,
   _response: Response,
-  _children: null | Array<SomeChunk<any>>, // Profiling-only
+  _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
@@ -155,7 +159,7 @@ type BlockedChunk<T> = {
   value: null | Array<(T) => mixed>,
   reason: null | Array<(mixed) => mixed>,
   _response: Response,
-  _children: null | Array<SomeChunk<any>>, // Profiling-only
+  _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
@@ -164,7 +168,7 @@ type ResolvedModelChunk<T> = {
   value: UninitializedModel,
   reason: null,
   _response: Response,
-  _children: null | Array<SomeChunk<any>>, // Profiling-only
+  _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
@@ -173,7 +177,7 @@ type ResolvedModuleChunk<T> = {
   value: ClientReference<T>,
   reason: null,
   _response: Response,
-  _children: null | Array<SomeChunk<any>>, // Profiling-only
+  _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
@@ -182,7 +186,7 @@ type InitializedChunk<T> = {
   value: T,
   reason: null | FlightStreamController,
   _response: Response,
-  _children: null | Array<SomeChunk<any>>, // Profiling-only
+  _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
@@ -193,7 +197,7 @@ type InitializedStreamChunk<
   value: T,
   reason: FlightStreamController,
   _response: Response,
-  _children: null | Array<SomeChunk<any>>, // Profiling-only
+  _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (ReadableStream) => mixed, reject?: (mixed) => mixed): void,
 };
@@ -202,7 +206,7 @@ type ErroredChunk<T> = {
   value: null,
   reason: mixed,
   _response: Response,
-  _children: null | Array<SomeChunk<any>>, // Profiling-only
+  _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
@@ -1235,7 +1239,7 @@ function getOutlinedModel<T>(
   const id = parseInt(path[0], 16);
   const chunk = getChunk(response, id);
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
-    if (initializingChunk._children !== null) {
+    if (isArray(initializingChunk._children)) {
       initializingChunk._children.push(chunk);
     }
   }
@@ -1389,7 +1393,7 @@ function parseModelString(
         const id = parseInt(value.slice(2), 16);
         const chunk = getChunk(response, id);
         if (enableProfilerTimer && enableComponentPerformanceTrack) {
-          if (initializingChunk._children !== null) {
+          if (isArray(initializingChunk._children)) {
             initializingChunk._children.push(chunk);
           }
         }
@@ -1406,7 +1410,7 @@ function parseModelString(
         const id = parseInt(value.slice(2), 16);
         const chunk = getChunk(response, id);
         if (enableProfilerTimer && enableComponentPerformanceTrack) {
-          if (initializingChunk._children !== null) {
+          if (isArray(initializingChunk._children)) {
             initializingChunk._children.push(chunk);
           }
         }
@@ -2749,12 +2753,14 @@ function flushComponentPerformance(root: SomeChunk<any>): number {
   }
   // Write performance.measure() entries for Server Components in tree order.
   // This must be done at the end to collect the end time from the whole tree.
-  if (root._children === null) {
-    // We have already written this chunk. It doesn't contribute to the end time
-    // if its parent since its parent will have already been written too.
-    // TODO: This should really use the end time of the thing that was written
-    // since two parents can refer to the same child and then that should extend.
-    return -Infinity;
+  if (!isArray(root._children)) {
+    // We have already written this chunk. If this was a cycle, then this will
+    // be -Infinity and it won't contribute to the parent end time.
+    // If this was already emitted by another sibling then we reused the same
+    // chunk in two places. We should extend the current end time as if it was
+    // rendered as part of this tree.
+    const previousResult: ProfilingResult = root._children;
+    return previousResult.endTime;
   }
   const children = root._children;
   if (root.status === RESOLVED_MODEL) {
@@ -2763,7 +2769,8 @@ function flushComponentPerformance(root: SomeChunk<any>): number {
     // the performance characteristics of the app by profiling.
     initializeModelChunk(root);
   }
-  root._children = null;
+  const result: ProfilingResult = {endTime: -Infinity};
+  root._children = result;
   let childrenEndTime = -Infinity;
   for (let i = 0; i < children.length; i++) {
     const childEndTime = flushComponentPerformance(children[i]);
@@ -2798,7 +2805,7 @@ function flushComponentPerformance(root: SomeChunk<any>): number {
       }
     }
   }
-  return childrenEndTime;
+  return (result.endTime = childrenEndTime);
 }
 
 function processFullBinaryRow(
