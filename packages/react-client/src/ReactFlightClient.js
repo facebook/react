@@ -564,7 +564,7 @@ type InitializationHandler = {
   errored: boolean,
 };
 let initializingHandler: null | InitializationHandler = null;
-let initializingChunk: BlockedChunk<any> = (null: any);
+let initializingChunk: null | BlockedChunk<any> = null;
 
 function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
   const prevHandler = initializingHandler;
@@ -1239,7 +1239,7 @@ function getOutlinedModel<T>(
   const id = parseInt(path[0], 16);
   const chunk = getChunk(response, id);
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
-    if (isArray(initializingChunk._children)) {
+    if (initializingChunk !== null && isArray(initializingChunk._children)) {
       initializingChunk._children.push(chunk);
     }
   }
@@ -1393,7 +1393,10 @@ function parseModelString(
         const id = parseInt(value.slice(2), 16);
         const chunk = getChunk(response, id);
         if (enableProfilerTimer && enableComponentPerformanceTrack) {
-          if (isArray(initializingChunk._children)) {
+          if (
+            initializingChunk !== null &&
+            isArray(initializingChunk._children)
+          ) {
             initializingChunk._children.push(chunk);
           }
         }
@@ -1410,7 +1413,10 @@ function parseModelString(
         const id = parseInt(value.slice(2), 16);
         const chunk = getChunk(response, id);
         if (enableProfilerTimer && enableComponentPerformanceTrack) {
-          if (isArray(initializingChunk._children)) {
+          if (
+            initializingChunk !== null &&
+            isArray(initializingChunk._children)
+          ) {
             initializingChunk._children.push(chunk);
           }
         }
