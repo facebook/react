@@ -18,20 +18,37 @@ npm install eslint-plugin-react-hooks --save-dev
 yarn add eslint-plugin-react-hooks --dev
 ```
 
-Then extend the recommended eslint config:
+### Legacy Config (.eslintrc)
+
+Extend the recommended eslint config:
 
 ```js
 {
   "extends": [
     // ...
-    "plugin:react-hooks/recommended"
+    "plugin:react-hooks/recommended-legacy"
   ]
 }
+```
+
+### Flat Config (eslint.config.js)
+
+Add the recommended config
+
+```js
+import reactHooks from 'eslint-plugin-react-hooks';
+
+export default [
+  // ...
+  reactHooks.configs['recommended-latest'],
+];
 ```
 
 ### Custom Configuration
 
 If you want more fine-grained configuration, you can instead add a snippet like this to your ESLint configuration file:
+
+#### Legacy Config (.eslintrc)
 
 ```js
 {
@@ -47,6 +64,23 @@ If you want more fine-grained configuration, you can instead add a snippet like 
 }
 ```
 
+#### Flat Config (eslint.config.js)
+
+```js
+import reactHooks from 'eslint-plugin-react-hooks';
+
+export default [
+  {
+    files: ['**/*.{js,jsx}'],
+    plugins: { 'react-hooks': reactHooks },
+    // ...
+    rules: {
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
+    }
+  },
+];
+```
 
 ## Advanced Configuration
 
