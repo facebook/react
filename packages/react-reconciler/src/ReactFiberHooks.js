@@ -3447,7 +3447,7 @@ export function startHostTransition<F>(
 
 function ensureFormComponentIsStateful(formFiber: Fiber) {
   const existingStateHook: Hook | null = formFiber.memoizedState;
-  if (existingStateHook !== null) {
+  if (existingStateHook !== null && existingStateHook.next !== null) {
     // This fiber was already upgraded to be stateful.
     return existingStateHook;
   }
@@ -3535,6 +3535,9 @@ export function requestFormReset(formFiber: Fiber) {
   }
 
   const stateHook = ensureFormComponentIsStateful(formFiber);
+  const isEmpty = stateHook === null || stateHook.length === 0;
+  if (isEmpty) return;
+
   const newResetState = {};
   const resetStateHook: Hook = (stateHook.next: any);
   const resetStateQueue = resetStateHook.queue;
@@ -3784,6 +3787,8 @@ function dispatchSetStateInternal<S, A>(
   action: A,
   lane: Lane,
 ): boolean {
+  const isEmptyQueue = queue === null || queue.length === 0;
+  if (isEmptyQueue) return;
   const update: Update<S, A> = {
     lane,
     revertLane: NoLane,
