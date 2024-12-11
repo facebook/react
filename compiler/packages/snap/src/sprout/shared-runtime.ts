@@ -259,26 +259,35 @@ export function Throw() {
 
 export function ValidateMemoization({
   inputs,
-  output,
+  output: rawOutput,
+  onlyCheckCompiled = false,
 }: {
   inputs: Array<any>;
   output: any;
+  onlyCheckCompiled: boolean;
 }): React.ReactElement {
   'use no forget';
+  // Wrap rawOutput as it might be a function, which useState would invoke.
+  const output = {value: rawOutput};
   const [previousInputs, setPreviousInputs] = React.useState(inputs);
   const [previousOutput, setPreviousOutput] = React.useState(output);
   if (
-    inputs.length !== previousInputs.length ||
-    inputs.some((item, i) => item !== previousInputs[i])
+    onlyCheckCompiled &&
+    (globalThis as any).__SNAP_EVALUATOR_MODE === 'forget'
   ) {
-    // Some input changed, we expect the output to change
-    setPreviousInputs(inputs);
-    setPreviousOutput(output);
-  } else if (output !== previousOutput) {
-    // Else output should be stable
-    throw new Error('Output identity changed but inputs did not');
+    if (
+      inputs.length !== previousInputs.length ||
+      inputs.some((item, i) => item !== previousInputs[i])
+    ) {
+      // Some input changed, we expect the output to change
+      setPreviousInputs(inputs);
+      setPreviousOutput(output);
+    } else if (output.value !== previousOutput.value) {
+      // Else output should be stable
+      throw new Error('Output identity changed but inputs did not');
+    }
   }
-  return React.createElement(Stringify, {inputs, output});
+  return React.createElement(Stringify, {inputs, output: rawOutput});
 }
 
 export function createHookWrapper<TProps, TRet>(
