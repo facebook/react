@@ -30,7 +30,7 @@ import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal
 import {setBatchingImplementation} from './legacy-events/ReactGenericBatching';
 
 import {getInspectorDataForInstance} from './ReactNativeFiberInspector';
-import {LegacyRoot, ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
+import {ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
 import {
   findHostInstance_DEPRECATED,
   findNodeHandle,
@@ -43,7 +43,6 @@ import {getPublicInstanceFromInternalInstanceHandle} from './ReactFiberConfigFab
 
 // Module provided by RN:
 import {ReactFiberErrorDialog} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
-import {disableLegacyMode} from 'shared/ReactFeatureFlags';
 
 if (typeof ReactFiberErrorDialog.showErrorDialog !== 'function') {
   throw new Error(
@@ -100,13 +99,8 @@ function render(
   element: Element<ElementType>,
   containerTag: number,
   callback: ?() => void,
-  concurrentRoot: ?boolean,
   options: ?RenderRootOptions,
 ): ?ElementRef<ElementType> {
-  if (disableLegacyMode && !concurrentRoot) {
-    throw new Error('render: Unsupported Legacy Mode API.');
-  }
-
   let root = roots.get(containerTag);
 
   if (!root) {
@@ -131,7 +125,7 @@ function render(
     // We could create a wrapper for containerTag as well to reduce special casing.
     root = createContainer(
       containerTag,
-      concurrentRoot ? ConcurrentRoot : LegacyRoot,
+      ConcurrentRoot,
       null,
       false,
       null,
