@@ -28,6 +28,7 @@ export const {
   enableUseResourceEffectHook,
   passChildrenWhenCloningPersistedNodes,
   enableSiblingPrerendering,
+  enableOwnerStacks,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
@@ -67,7 +68,6 @@ export const enableLegacyCache = false;
 export const enableLegacyFBSupport = false;
 export const enableLegacyHidden = false;
 export const enableNoCloningMemoCache = false;
-export const enableOwnerStacks = false;
 export const enablePostpone = false;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
