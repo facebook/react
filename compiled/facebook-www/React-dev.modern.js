@@ -460,6 +460,21 @@ __DEV__ &&
         }
       return "";
     }
+    function getTaskName(type) {
+      if (type === REACT_FRAGMENT_TYPE) return "<>";
+      if (
+        "object" === typeof type &&
+        null !== type &&
+        type.$$typeof === REACT_LAZY_TYPE
+      )
+        return "<...>";
+      try {
+        var name = getComponentNameFromType(type);
+        return name ? "<" + name + ">" : "<...>";
+      } catch (x) {
+        return "<...>";
+      }
+    }
     function getOwner() {
       var dispatcher = ReactSharedInternals.A;
       return null === dispatcher ? null : dispatcher.getOwner();
@@ -496,7 +511,16 @@ __DEV__ &&
       componentName = this.props.ref;
       return void 0 !== componentName ? componentName : null;
     }
-    function ReactElement(type, key, self, source, owner, props) {
+    function ReactElement(
+      type,
+      key,
+      self,
+      source,
+      owner,
+      props,
+      debugStack,
+      debugTask
+    ) {
       self = props.ref;
       type = {
         $$typeof: REACT_ELEMENT_TYPE,
@@ -524,6 +548,19 @@ __DEV__ &&
         writable: !0,
         value: null
       });
+      enableOwnerStacks &&
+        (Object.defineProperty(type, "_debugStack", {
+          configurable: !1,
+          enumerable: !1,
+          writable: !0,
+          value: debugStack
+        }),
+        Object.defineProperty(type, "_debugTask", {
+          configurable: !1,
+          enumerable: !1,
+          writable: !0,
+          value: debugTask
+        }));
       Object.freeze && (Object.freeze(type.props), Object.freeze(type));
       return type;
     }
@@ -533,9 +570,11 @@ __DEV__ &&
       maybeKey,
       isStaticChildren,
       source,
-      self
+      self,
+      debugStack,
+      debugTask
     ) {
-      if (isValidElementType(type)) {
+      if (enableOwnerStacks || isValidElementType(type)) {
         var children = config.children;
         if (void 0 !== children)
           if (isStaticChildren)
@@ -624,7 +663,16 @@ __DEV__ &&
             ? type.displayName || type.name || "Unknown"
             : type
         );
-      return ReactElement(type, children, self, source, getOwner(), maybeKey);
+      return ReactElement(
+        type,
+        children,
+        self,
+        source,
+        getOwner(),
+        maybeKey,
+        debugStack,
+        debugTask
+      );
     }
     function cloneAndReplaceKey(oldElement, newKey) {
       newKey = ReactElement(
@@ -633,13 +681,17 @@ __DEV__ &&
         void 0,
         void 0,
         oldElement._owner,
-        oldElement.props
+        oldElement.props,
+        enableOwnerStacks ? oldElement._debugStack : void 0,
+        enableOwnerStacks ? oldElement._debugTask : void 0
       );
       newKey._store.validated = oldElement._store.validated;
       return newKey;
     }
     function validateChildKeys(node, parentType) {
-      if (
+      if (enableOwnerStacks)
+        isValidElement(node) && node._store && (node._store.validated = 1);
+      else if (
         "object" === typeof node &&
         node &&
         node.$$typeof !== REACT_CLIENT_REFERENCE
@@ -670,6 +722,7 @@ __DEV__ &&
     }
     function validateExplicitKey(element, parentType) {
       if (
+        !enableOwnerStacks &&
         element._store &&
         !element._store.validated &&
         null == element.key &&
@@ -1046,6 +1099,11 @@ __DEV__ &&
         }
       }
     }
+    function captureOwnerStack() {
+      if (!enableOwnerStacks) return null;
+      var getCurrentStack = ReactSharedInternals.getCurrentStack;
+      return null === getCurrentStack ? null : getCurrentStack();
+    }
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart &&
@@ -1059,6 +1117,7 @@ __DEV__ &&
       enableUseResourceEffectHook =
         dynamicFeatureFlags.enableUseResourceEffectHook,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
+      enableOwnerStacks = dynamicFeatureFlags.enableOwnerStacks,
       REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_ELEMENT_TYPE = renameElementSymbol
         ? Symbol.for("react.transitional.element")
@@ -1167,6 +1226,12 @@ __DEV__ &&
       "function" === typeof WeakMap ? WeakMap : Map
     )();
     var REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"),
+      createTask =
+        enableOwnerStacks && console.createTask
+          ? console.createTask
+          : function () {
+              return null;
+            },
       specialPropKeyWarningShown,
       didWarnAboutOldJSXRuntime;
     var didWarnAboutElementRef = {};
@@ -1217,42 +1282,45 @@ __DEV__ &&
             }
           : enqueueTask,
       ReactCompilerRuntime = { c: useMemoCache },
+      Children = {
+        map: mapChildren,
+        forEach: function (children, forEachFunc, forEachContext) {
+          mapChildren(
+            children,
+            function () {
+              forEachFunc.apply(this, arguments);
+            },
+            forEachContext
+          );
+        },
+        count: function (children) {
+          var n = 0;
+          mapChildren(children, function () {
+            n++;
+          });
+          return n;
+        },
+        toArray: function (children) {
+          return (
+            mapChildren(children, function (child) {
+              return child;
+            }) || []
+          );
+        },
+        only: function (children) {
+          if (!isValidElement(children))
+            throw Error(
+              "React.Children.only expected to receive a single React element child."
+            );
+          return children;
+        }
+      },
       experimental_useResourceEffect = enableUseResourceEffectHook
         ? useResourceEffect
         : void 0;
-    exports.Children = {
-      map: mapChildren,
-      forEach: function (children, forEachFunc, forEachContext) {
-        mapChildren(
-          children,
-          function () {
-            forEachFunc.apply(this, arguments);
-          },
-          forEachContext
-        );
-      },
-      count: function (children) {
-        var n = 0;
-        mapChildren(children, function () {
-          n++;
-        });
-        return n;
-      },
-      toArray: function (children) {
-        return (
-          mapChildren(children, function (child) {
-            return child;
-          }) || []
-        );
-      },
-      only: function (children) {
-        if (!isValidElement(children))
-          throw Error(
-            "React.Children.only expected to receive a single React element child."
-          );
-        return children;
-      }
-    };
+    exports.captureOwnerStack = void 0;
+    enableOwnerStacks && (exports.captureOwnerStack = captureOwnerStack);
+    exports.Children = Children;
     exports.Component = Component;
     exports.Fragment = REACT_FRAGMENT_TYPE;
     exports.Profiler = REACT_PROFILER_TYPE;
@@ -1440,7 +1508,16 @@ __DEV__ &&
             arguments[JSCompiler_inline_result + 2];
         props.children = defaultProps;
       }
-      props = ReactElement(element.type, key, void 0, void 0, owner, props);
+      props = ReactElement(
+        element.type,
+        key,
+        void 0,
+        void 0,
+        owner,
+        props,
+        enableOwnerStacks ? element._debugStack : void 0,
+        enableOwnerStacks ? element._debugTask : void 0
+      );
       for (key = 2; key < arguments.length; key++)
         validateChildKeys(arguments[key], props.type);
       return props;
@@ -1516,7 +1593,7 @@ __DEV__ &&
       return context;
     };
     exports.createElement = function (type, config, children) {
-      if (isValidElementType(type))
+      if (enableOwnerStacks || isValidElementType(type))
         for (var i = 2; i < arguments.length; i++)
           validateChildKeys(arguments[i], type);
       else {
@@ -1588,7 +1665,16 @@ __DEV__ &&
             ? type.displayName || type.name || "Unknown"
             : type
         );
-      return ReactElement(type, typeString, void 0, void 0, getOwner(), i);
+      return ReactElement(
+        type,
+        typeString,
+        void 0,
+        void 0,
+        getOwner(),
+        i,
+        enableOwnerStacks ? Error("react-stack-top-frame") : void 0,
+        enableOwnerStacks ? createTask(getTaskName(type)) : void 0
+      );
     };
     exports.createRef = function () {
       var refObject = { current: null };
@@ -1642,7 +1728,16 @@ __DEV__ &&
     };
     exports.isValidElement = isValidElement;
     exports.jsx = function (type, config, maybeKey, source, self) {
-      return jsxDEVImpl(type, config, maybeKey, !1, source, self);
+      return jsxDEVImpl(
+        type,
+        config,
+        maybeKey,
+        !1,
+        source,
+        self,
+        enableOwnerStacks ? Error("react-stack-top-frame") : void 0,
+        enableOwnerStacks ? createTask(getTaskName(type)) : void 0
+      );
     };
     exports.jsxDEV = function (
       type,
@@ -1652,10 +1747,28 @@ __DEV__ &&
       source,
       self
     ) {
-      return jsxDEVImpl(type, config, maybeKey, isStaticChildren, source, self);
+      return jsxDEVImpl(
+        type,
+        config,
+        maybeKey,
+        isStaticChildren,
+        source,
+        self,
+        enableOwnerStacks ? Error("react-stack-top-frame") : void 0,
+        enableOwnerStacks ? createTask(getTaskName(type)) : void 0
+      );
     };
     exports.jsxs = function (type, config, maybeKey, source, self) {
-      return jsxDEVImpl(type, config, maybeKey, !0, source, self);
+      return jsxDEVImpl(
+        type,
+        config,
+        maybeKey,
+        !0,
+        source,
+        self,
+        enableOwnerStacks ? Error("react-stack-top-frame") : void 0,
+        enableOwnerStacks ? createTask(getTaskName(type)) : void 0
+      );
     };
     exports.lazy = function (ctor) {
       var lazyType = {
@@ -1841,7 +1954,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.0.0-www-modern-7c4a7c9d-20241210";
+    exports.version = "19.0.0-www-modern-a4964987-20241211";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
