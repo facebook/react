@@ -1028,40 +1028,67 @@ describe('context legacy', () => {
       root.render(<Root />);
     });
 
-    assertConsoleErrorDev([
-      'LegacyContextProvider uses the legacy childContextTypes API ' +
-        'which will soon be removed. Use React.createContext() instead. ' +
-        '(https://react.dev/link/legacy-context)' +
-        '\n    in LegacyContextProvider (at **)' +
-        '\n    in div (at **)' +
-        '\n    in Root (at **)',
-      'LegacyContextConsumer uses the legacy contextTypes API which ' +
-        'will soon be removed. Use React.createContext() with static ' +
-        'contextType instead. (https://react.dev/link/legacy-context)' +
-        '\n    in LegacyContextConsumer (at **)' +
-        '\n    in div (at **)' +
-        '\n    in LegacyContextProvider (at **)' +
-        '\n    in div (at **)' +
-        '\n    in Root (at **)',
-      'FunctionalLegacyContextConsumer uses the legacy contextTypes ' +
-        'API which will be removed soon. Use React.createContext() ' +
-        'with React.useContext() instead. (https://react.dev/link/legacy-context)' +
-        '\n    in FunctionalLegacyContextConsumer (at **)' +
-        '\n    in div (at **)' +
-        '\n    in LegacyContextProvider (at **)' +
-        '\n    in div (at **)' +
-        '\n    in Root (at **)',
-      'Legacy context API has been detected within a strict-mode tree.' +
-        '\n\nThe old API will be supported in all 16.x releases, but applications ' +
-        'using it should migrate to the new version.' +
-        '\n\nPlease update the following components: ' +
-        'FunctionalLegacyContextConsumer, LegacyContextConsumer, LegacyContextProvider' +
-        '\n\nLearn more about this warning here: ' +
-        'https://react.dev/link/legacy-context' +
-        '\n    in LegacyContextProvider (at **)' +
-        '\n    in div (at **)' +
-        '\n    in Root (at **)',
-    ]);
+    if (gate(flags => flags.enableOwnerStacks)) {
+      assertConsoleErrorDev([
+        'LegacyContextProvider uses the legacy childContextTypes API ' +
+          'which will soon be removed. Use React.createContext() instead. ' +
+          '(https://react.dev/link/legacy-context)' +
+          '\n    in Root (at **)',
+        'LegacyContextConsumer uses the legacy contextTypes API which ' +
+          'will soon be removed. Use React.createContext() with static ' +
+          'contextType instead. (https://react.dev/link/legacy-context)' +
+          '\n    in LegacyContextProvider (at **)' +
+          '\n    in Root (at **)',
+        'FunctionalLegacyContextConsumer uses the legacy contextTypes ' +
+          'API which will be removed soon. Use React.createContext() ' +
+          'with React.useContext() instead. (https://react.dev/link/legacy-context)' +
+          '\n    in LegacyContextProvider (at **)' +
+          '\n    in Root (at **)',
+        'Legacy context API has been detected within a strict-mode tree.' +
+          '\n\nThe old API will be supported in all 16.x releases, but applications ' +
+          'using it should migrate to the new version.' +
+          '\n\nPlease update the following components: ' +
+          'FunctionalLegacyContextConsumer, LegacyContextConsumer, LegacyContextProvider' +
+          '\n\nLearn more about this warning here: ' +
+          'https://react.dev/link/legacy-context' +
+          '\n    in Root (at **)',
+      ]);
+    } else {
+      assertConsoleErrorDev([
+        'LegacyContextProvider uses the legacy childContextTypes API ' +
+          'which will soon be removed. Use React.createContext() instead. ' +
+          '(https://react.dev/link/legacy-context)' +
+          '\n    in LegacyContextProvider (at **)' +
+          '\n    in div (at **)' +
+          '\n    in Root (at **)',
+        'LegacyContextConsumer uses the legacy contextTypes API which ' +
+          'will soon be removed. Use React.createContext() with static ' +
+          'contextType instead. (https://react.dev/link/legacy-context)' +
+          '\n    in LegacyContextConsumer (at **)' +
+          '\n    in div (at **)' +
+          '\n    in LegacyContextProvider (at **)' +
+          '\n    in div (at **)' +
+          '\n    in Root (at **)',
+        'FunctionalLegacyContextConsumer uses the legacy contextTypes ' +
+          'API which will be removed soon. Use React.createContext() ' +
+          'with React.useContext() instead. (https://react.dev/link/legacy-context)' +
+          '\n    in FunctionalLegacyContextConsumer (at **)' +
+          '\n    in div (at **)' +
+          '\n    in LegacyContextProvider (at **)' +
+          '\n    in div (at **)' +
+          '\n    in Root (at **)',
+        'Legacy context API has been detected within a strict-mode tree.' +
+          '\n\nThe old API will be supported in all 16.x releases, but applications ' +
+          'using it should migrate to the new version.' +
+          '\n\nPlease update the following components: ' +
+          'FunctionalLegacyContextConsumer, LegacyContextConsumer, LegacyContextProvider' +
+          '\n\nLearn more about this warning here: ' +
+          'https://react.dev/link/legacy-context' +
+          '\n    in LegacyContextProvider (at **)' +
+          '\n    in div (at **)' +
+          '\n    in Root (at **)',
+      ]);
+    }
 
     // Dedupe
     await act(() => {

@@ -26,3 +26,4 @@ export const passChildrenWhenCloningPersistedNodes = __VARIANT__;
 export const enableFabricCompleteRootInCommitPhase = __VARIANT__;
 export const enableSiblingPrerendering = __VARIANT__;
 export const enableUseResourceEffectHook = __VARIANT__;
+export const enableOwnerStacks = __VARIANT__;
