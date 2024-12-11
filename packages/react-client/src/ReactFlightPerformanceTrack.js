@@ -19,6 +19,26 @@ const supportsUserTiming =
 
 const COMPONENTS_TRACK = 'Server Components ⚛';
 
+const componentsTrackMarker = {
+  startTime: 0.001,
+  detail: {
+    devtools: {
+      color: 'primary-light',
+      track: 'Primary',
+      trackGroup: COMPONENTS_TRACK,
+    },
+  },
+};
+
+export function markAllTracksInOrder() {
+  if (supportsUserTiming) {
+    // Ensure we create the Server Component track groups earlier than the Client Scheduler
+    // and Client Components. We can always add the 0 time slot even if it's in the past.
+    // That's still considered for ordering.
+    performance.mark('Server Components Track', componentsTrackMarker);
+  }
+}
+
 // Reused to avoid thrashing the GC.
 const reusableComponentDevToolDetails = {
   color: 'primary',
