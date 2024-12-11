@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0736e99b15f2bbbb13725fad3fa3f238>>
+ * @generated SignedSource<<3c7f29f6780bfb93af85a89083a4e534>>
  */
 
 "use strict";
@@ -405,6 +405,7 @@ exports.cache = function (fn) {
     return fn.apply(null, arguments);
   };
 };
+exports.captureOwnerStack = void 0;
 exports.cloneElement = function (element, config, children) {
   if (null === element || void 0 === element)
     throw Error(
@@ -596,4 +597,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.0.0-native-fb-92b62f50-20241211";
+exports.version = "19.0.0-native-fb-a4964987-20241211";
