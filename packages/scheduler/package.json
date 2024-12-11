@@ -1,6 +1,6 @@
 {
   "name": "scheduler",
-  "version": "0.26.0",
+  "version": "0.25.0",
   "description": "Cooperative scheduler for the browser environment.",
   "repository": {
     "type": "git",

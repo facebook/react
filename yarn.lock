@@ -7351,6 +7351,7 @@ eslint-plugin-no-unsanitized@4.0.2:
 
 "eslint-plugin-react-internal@link:./scripts/eslint-rules":
   version "0.0.0"
+  uid ""
 
 eslint-plugin-react@^6.7.1:
   version "6.10.3"
@@ -13820,7 +13821,7 @@ rc@1.2.8, rc@^1.0.1, rc@^1.1.6, rc@^1.2.8:
     object-assign "^4.1.1"
     scheduler "^0.20.2"
 
-react-is@^16.8.1, react-is@^17.0.1, react-is@^18.0.0, react-is@^18.2.0, "react-is@npm:react-is":
+react-is@^16.8.1, react-is@^17.0.1, react-is@^18.0.0, "react-is@npm:react-is":
   version "18.3.1"
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-18.3.1.tgz#e83557dc12eae63a99e003a46388b1dcbb44db7e"
   integrity sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==
