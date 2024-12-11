@@ -20,12 +20,26 @@ import {like, greet, increment} from './actions.js';
 import {getServerState} from './ServerState.js';
 
 const promisedText = new Promise(resolve =>
-  setTimeout(() => resolve('deferred text'), 100)
+  setTimeout(() => resolve('deferred text'), 50)
 );
+
+function Foo({children}) {
+  return <div>{children}</div>;
+}
+
+function Bar({children}) {
+  return <div>{children}</div>;
+}
+
+async function ServerComponent() {
+  await new Promise(resolve => setTimeout(() => resolve('deferred text'), 50));
+}
 
 export default async function App({prerender}) {
   const res = await fetch('http://localhost:3001/todos');
   const todos = await res.json();
+
+  const dedupedChild = <ServerComponent />;
   return (
     <html lang="en">
       <head>
@@ -66,6 +80,8 @@ export default async function App({prerender}) {
           </div>
           <Client />
           <Note />
+          <Foo>{dedupedChild}</Foo>
+          <Bar>{dedupedChild}</Bar>
         </Container>
       </body>
     </html>
