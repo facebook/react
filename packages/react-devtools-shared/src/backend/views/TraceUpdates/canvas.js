@@ -37,6 +37,9 @@ function drawNative(nodeToData: Map<HostInstance, Data>, agent: Agent) {
   });
 
   agent.emit('drawTraceUpdates', nodesToDraw);
+
+  const mergedNodes = groupAndSortNodes(nodeToData);
+  agent.emit('drawGroupedTraceUpdatesWithNames', mergedNodes);
 }
 
 function drawWeb(nodeToData: Map<HostInstance, Data>) {
@@ -70,6 +73,8 @@ type GroupItem = {
   displayName: string | null,
   count: number,
 };
+
+export type {GroupItem};
 
 export function groupAndSortNodes(
   nodeToData: Map<HostInstance, Data>,

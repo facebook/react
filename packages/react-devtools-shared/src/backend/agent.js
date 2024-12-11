@@ -28,6 +28,7 @@ import type {
   DevToolsHookSettings,
 } from './types';
 import type {ComponentFilter} from 'react-devtools-shared/src/frontend/types';
+import type {GroupItem} from './views/TraceUpdates/canvas';
 import {isReactNativeEnvironment} from './utils';
 import {
   sessionStorageGetItem,
@@ -142,6 +143,7 @@ export default class Agent extends EventEmitter<{
   shutdown: [],
   traceUpdates: [Set<HostInstance>],
   drawTraceUpdates: [Array<HostInstance>],
+  drawGroupedTraceUpdatesWithNames: [Array<Array<GroupItem>>],
   disableTraceUpdates: [],
   getIfHasUnsupportedRendererVersion: [],
   updateHookSettings: [$ReadOnly<DevToolsHookSettings>],
