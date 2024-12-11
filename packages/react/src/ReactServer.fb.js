@@ -41,7 +41,7 @@ const Children = {
 
 // Only export captureOwnerStack if the flag is on, to support feature detection.
 let captureOwnerStack: ?() => null | string;
-if (enableOwnerStacks) {
+if (__DEV__ && enableOwnerStacks) {
   captureOwnerStack = captureOwnerStackImpl;
 }
 

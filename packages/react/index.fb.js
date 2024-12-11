@@ -71,9 +71,9 @@ export {useMemoCache as unstable_useMemoCache} from './src/ReactHooks';
 // react/compiler-runtime
 export {useMemoCache as c} from './src/ReactHooks';
 
-// Only export captureOwnerStack if the flag is on, to support feature detection.
+// Only export captureOwnerStack in development.
 let captureOwnerStack: ?() => null | string;
-if (enableOwnerStacks) {
+if (__DEV__ && enableOwnerStacks) {
   captureOwnerStack = captureOwnerStackImpl;
 }
 
