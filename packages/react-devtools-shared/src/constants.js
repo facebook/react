@@ -50,6 +50,8 @@ export const LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY =
   'React::DevTools::traceUpdatesEnabled';
 export const LOCAL_STORAGE_SUPPORTS_PROFILING_KEY =
   'React::DevTools::supportsProfiling';
+export const LOCAL_STORAGE_SHOW_NAMES_WHEN_TRACING_KEY =
+  'React::DevTools::showNamesWhenTracing';
 
 export const PROFILER_EXPORT_VERSION = 5;
 
