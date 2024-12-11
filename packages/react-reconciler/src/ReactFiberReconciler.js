@@ -42,7 +42,6 @@ import {enableSchedulingProfiler} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   getPublicInstance,
-  getInstanceFromNode,
   rendererVersion,
   rendererPackageName,
   extraDevToolsConfig,
@@ -847,7 +846,6 @@ export function injectIntoDevTools(): boolean {
     version: rendererVersion,
     rendererPackageName: rendererPackageName,
     currentDispatcherRef: ReactSharedInternals,
-    findFiberByHostInstance: getInstanceFromNode,
     // Enables DevTools to detect reconciler version rather than renderer version
     // which may not match for third party renderers.
     reconcilerVersion: ReactVersion,

@@ -7,4 +7,4 @@
  * @flow
  */
 
-export {prerender} from './src/server/react-flight-dom-server.edge';
+export {unstable_prerender} from './src/server/react-flight-dom-server.edge';

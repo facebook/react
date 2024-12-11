@@ -546,16 +546,14 @@ function createPropsProperties(
   let refProperty: ObjectProperty | undefined;
   let keyProperty: ObjectProperty | undefined;
   const props: Array<ObjectProperty | SpreadPattern> = [];
-  const jsxAttributesWithoutKeyAndRef = propAttributes.filter(
-    p => p.kind === 'JsxAttribute' && p.name !== 'key' && p.name !== 'ref',
+  const jsxAttributesWithoutKey = propAttributes.filter(
+    p => p.kind === 'JsxAttribute' && p.name !== 'key',
   );
   const jsxSpreadAttributes = propAttributes.filter(
     p => p.kind === 'JsxSpreadAttribute',
   );
   const spreadPropsOnly =
-    jsxAttributesWithoutKeyAndRef.length === 0 &&
-    jsxSpreadAttributes.length === 1;
-
+    jsxAttributesWithoutKey.length === 0 && jsxSpreadAttributes.length === 1;
   propAttributes.forEach(prop => {
     switch (prop.kind) {
       case 'JsxAttribute': {
