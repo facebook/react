@@ -174,10 +174,6 @@ function SettingsContextController({
   }, [bridge, traceUpdatesEnabled]);
 
   useEffect(() => {
-    console.log(
-      'sent to bridge: setShowNamesWhenTracing',
-      showNamesWhenTracing,
-    );
     bridge.send('setShowNamesWhenTracing', showNamesWhenTracing);
   }, [bridge, showNamesWhenTracing]);
 
