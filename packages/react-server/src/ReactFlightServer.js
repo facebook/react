@@ -20,6 +20,8 @@ import {
   enableTaint,
   enableServerComponentLogs,
   enableOwnerStacks,
+  enableProfilerTimer,
+  enableComponentPerformanceTrack,
 } from 'shared/ReactFeatureFlags';
 
 import {enableFlightReadableStream} from 'shared/ReactFeatureFlags';
@@ -345,6 +347,7 @@ type Task = {
   keyPath: null | string, // parent server component keys
   implicitSlot: boolean, // true if the root server component of this sequence had a null key
   thenableState: ThenableState | null,
+  timed: boolean, // Profiling-only. Whether we need to track the completion time of this task.
   environmentName: string, // DEV-only. Used to track if the environment for this task changed.
   debugOwner: null | ReactComponentInfo, // DEV-only
   debugStack: null | Error, // DEV-only
@@ -392,6 +395,8 @@ export type Request = {
   onPostpone: (reason: string) => void,
   onAllReady: () => void,
   onFatalError: mixed => void,
+  // Profiling-only
+  timeOrigin: number,
   // DEV-only
   environmentName: () => string,
   filterStackFrame: (url: string, functionName: string) => boolean,
@@ -517,6 +522,23 @@ function RequestInstance(
         : filterStackFrame;
     this.didWarnForKey = null;
   }
+
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // We start by serializing the time origin. Any future timestamps will be
+    // emitted relatively to this origin. Instead of using performance.timeOrigin
+    // as this origin, we use the timestamp at the start of the request.
+    // This avoids leaking unnecessary information like how long the server has
+    // been running and allows for more compact representation of each timestamp.
+    // The time origin is stored as an offset in the time space of this environment.
+    const timeOrigin = (this.timeOrigin = performance.now());
+    emitTimeOriginChunk(
+      this,
+      timeOrigin +
+        // $FlowFixMe[prop-missing]
+        performance.timeOrigin,
+    );
+  }
+
   const rootTask = createTask(
     this,
     model,
@@ -689,6 +711,11 @@ function serializeThenable(
       }
     },
   );
+
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // If this is async we need to time when this task finishes.
+    newTask.timed = true;
+  }
 
   return newTask.id;
 }
@@ -1240,6 +1267,13 @@ function renderFunctionComponent<Props>(
       // being no references to this as an owner.
 
       outlineComponentInfo(request, componentDebugInfo);
+
+      // Track when we started rendering this component.
+      if (enableProfilerTimer && enableComponentPerformanceTrack) {
+        task.timed = true;
+        emitTimingChunk(request, componentDebugID, performance.now());
+      }
+
       emitDebugChunk(request, componentDebugID, componentDebugInfo);
 
       // We've emitted the latest environment for this task so we track that.
@@ -1769,6 +1803,10 @@ function renderElement(
 }
 
 function pingTask(request: Request, task: Task): void {
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // If this was async we need to emit the time when it completes.
+    task.timed = true;
+  }
   const pingedTasks = request.pingedTasks;
   pingedTasks.push(task);
   if (pingedTasks.length === 1) {
@@ -1862,8 +1900,11 @@ function createTask(
     thenableState: null,
   }: Omit<
     Task,
-    'environmentName' | 'debugOwner' | 'debugStack' | 'debugTask',
+    'timed' | 'environmentName' | 'debugOwner' | 'debugStack' | 'debugTask',
   >): any);
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    task.timed = false;
+  }
   if (__DEV__) {
     task.environmentName = request.environmentName();
     task.debugOwner = debugOwner;
@@ -3769,6 +3810,17 @@ function emitConsoleChunk(
   request.completedRegularChunks.push(processedChunk);
 }
 
+function emitTimeOriginChunk(request: Request, timeOrigin: number): void {
+  // We emit the time origin once. All ReactTimeInfo timestamps later in the stream
+  // are relative to this time origin. This allows for more compact number encoding
+  // and lower precision loss.
+  request.pendingChunks++;
+  const row = ':N' + timeOrigin + '\n';
+  const processedChunk = stringToChunk(row);
+  // TODO: Move to its own priority queue.
+  request.completedRegularChunks.push(processedChunk);
+}
+
 function forwardDebugInfo(
   request: Request,
   id: number,
@@ -3776,14 +3828,36 @@ function forwardDebugInfo(
 ) {
   for (let i = 0; i < debugInfo.length; i++) {
     request.pendingChunks++;
-    if (typeof debugInfo[i].name === 'string') {
-      // We outline this model eagerly so that we can refer to by reference as an owner.
-      // If we had a smarter way to dedupe we might not have to do this if there ends up
-      // being no references to this as an owner.
-      outlineComponentInfo(request, (debugInfo[i]: any));
+    if (typeof debugInfo[i].time === 'number') {
+      // When forwarding time we need to ensure to convert it to the time space of the payload.
+      emitTimingChunk(request, id, debugInfo[i].time);
+    } else {
+      if (typeof debugInfo[i].name === 'string') {
+        // We outline this model eagerly so that we can refer to by reference as an owner.
+        // If we had a smarter way to dedupe we might not have to do this if there ends up
+        // being no references to this as an owner.
+        outlineComponentInfo(request, (debugInfo[i]: any));
+      }
+      emitDebugChunk(request, id, debugInfo[i]);
     }
-    emitDebugChunk(request, id, debugInfo[i]);
   }
+}
+
+function emitTimingChunk(
+  request: Request,
+  id: number,
+  timestamp: number,
+): void {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  request.pendingChunks++;
+  const relativeTimestamp = timestamp - request.timeOrigin;
+  const row =
+    serializeRowHeader('D', id) + '{"time":' + relativeTimestamp + '}\n';
+  const processedChunk = stringToChunk(row);
+  // TODO: Move to its own priority queue.
+  request.completedRegularChunks.push(processedChunk);
 }
 
 function emitChunk(
@@ -3877,6 +3951,11 @@ function emitChunk(
 }
 
 function erroredTask(request: Request, task: Task, error: mixed): void {
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    if (task.timed) {
+      emitTimingChunk(request, task.id, performance.now());
+    }
+  }
   request.abortableTasks.delete(task);
   task.status = ERRORED;
   if (
@@ -3939,20 +4018,26 @@ function retryTask(request: Request, task: Task): void {
     task.keyPath = null;
     task.implicitSlot = false;
 
+    if (__DEV__) {
+      const currentEnv = (0, request.environmentName)();
+      if (currentEnv !== task.environmentName) {
+        request.pendingChunks++;
+        // The environment changed since we last emitted any debug information for this
+        // task. We emit an entry that just includes the environment name change.
+        emitDebugChunk(request, task.id, {env: currentEnv});
+      }
+    }
+    // We've finished rendering. Log the end time.
+    if (enableProfilerTimer && enableComponentPerformanceTrack) {
+      if (task.timed) {
+        emitTimingChunk(request, task.id, performance.now());
+      }
+    }
+
     if (typeof resolvedModel === 'object' && resolvedModel !== null) {
       // We're not in a contextual place here so we can refer to this object by this ID for
       // any future references.
       request.writtenObjects.set(resolvedModel, serializeByValueID(task.id));
-
-      if (__DEV__) {
-        const currentEnv = (0, request.environmentName)();
-        if (currentEnv !== task.environmentName) {
-          request.pendingChunks++;
-          // The environment changed since we last emitted any debug information for this
-          // task. We emit an entry that just includes the environment name change.
-          emitDebugChunk(request, task.id, {env: currentEnv});
-        }
-      }
 
       // Object might contain unresolved values like additional elements.
       // This is simulating what the JSON loop would do if this was part of it.
@@ -3962,17 +4047,6 @@ function retryTask(request: Request, task: Task): void {
       // We don't need to escape it again so it's not passed the toJSON replacer.
       // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
       const json: string = stringify(resolvedModel);
-
-      if (__DEV__) {
-        const currentEnv = (0, request.environmentName)();
-        if (currentEnv !== task.environmentName) {
-          request.pendingChunks++;
-          // The environment changed since we last emitted any debug information for this
-          // task. We emit an entry that just includes the environment name change.
-          emitDebugChunk(request, task.id, {env: currentEnv});
-        }
-      }
-
       emitModelChunk(request, task.id, json);
     }
 
@@ -4082,6 +4156,12 @@ function abortTask(task: Task, request: Request, errorId: number): void {
     return;
   }
   task.status = ABORTED;
+  // Track when we aborted this task as its end time.
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    if (task.timed) {
+      emitTimingChunk(request, task.id, performance.now());
+    }
+  }
   // Instead of emitting an error per task.id, we emit a model that only
   // has a single value referencing the error.
   const ref = serializeByValueID(errorId);

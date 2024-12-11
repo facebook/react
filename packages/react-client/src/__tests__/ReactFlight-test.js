@@ -125,6 +125,20 @@ let assertConsoleErrorDev;
 
 describe('ReactFlight', () => {
   beforeEach(() => {
+    // Mock performance.now for timing tests
+    let time = 10;
+    const now = jest.fn().mockImplementation(() => {
+      return time++;
+    });
+    Object.defineProperty(performance, 'timeOrigin', {
+      value: time,
+      configurable: true,
+    });
+    Object.defineProperty(performance, 'now', {
+      value: now,
+      configurable: true,
+    });
+
     jest.resetModules();
     jest.mock('react', () => require('react/react.react-server'));
     ReactServer = require('react');
@@ -274,6 +288,7 @@ describe('ReactFlight', () => {
     });
   });
 
+  // @gate !__DEV__ || enableComponentPerformanceTrack
   it('can render a Client Component using a module reference and render there', async () => {
     function UserClient(props) {
       return (
@@ -300,6 +315,7 @@ describe('ReactFlight', () => {
       expect(getDebugInfo(greeting)).toEqual(
         __DEV__
           ? [
+              {time: 11},
               {
                 name: 'Greeting',
                 env: 'Server',
@@ -313,6 +329,7 @@ describe('ReactFlight', () => {
                   lastName: 'Smith',
                 },
               },
+              {time: 12},
             ]
           : undefined,
       );
@@ -322,6 +339,7 @@ describe('ReactFlight', () => {
     expect(ReactNoop).toMatchRenderedOutput(<span>Hello, Seb Smith</span>);
   });
 
+  // @gate !__DEV__ || enableComponentPerformanceTrack
   it('can render a shared forwardRef Component', async () => {
     const Greeting = React.forwardRef(function Greeting(
       {firstName, lastName},
@@ -343,6 +361,7 @@ describe('ReactFlight', () => {
       expect(getDebugInfo(promise)).toEqual(
         __DEV__
           ? [
+              {time: 11},
               {
                 name: 'Greeting',
                 env: 'Server',
@@ -356,6 +375,7 @@ describe('ReactFlight', () => {
                   lastName: 'Smith',
                 },
               },
+              {time: 12},
             ]
           : undefined,
       );
@@ -2659,6 +2679,7 @@ describe('ReactFlight', () => {
     );
   });
 
+  // @gate !__DEV__ || enableComponentPerformanceTrack
   it('preserves debug info for server-to-server pass through', async () => {
     function ThirdPartyLazyComponent() {
       return <span>!</span>;
@@ -2705,6 +2726,7 @@ describe('ReactFlight', () => {
       expect(getDebugInfo(promise)).toEqual(
         __DEV__
           ? [
+              {time: 18},
               {
                 name: 'ServerComponent',
                 env: 'Server',
@@ -2717,15 +2739,18 @@ describe('ReactFlight', () => {
                   transport: expect.arrayContaining([]),
                 },
               },
+              {time: 19},
             ]
           : undefined,
       );
       const result = await promise;
+
       const thirdPartyChildren = await result.props.children[1];
       // We expect the debug info to be transferred from the inner stream to the outer.
       expect(getDebugInfo(thirdPartyChildren[0])).toEqual(
         __DEV__
           ? [
+              {time: 13},
               {
                 name: 'ThirdPartyComponent',
                 env: 'third-party',
@@ -2736,12 +2761,15 @@ describe('ReactFlight', () => {
                   : undefined,
                 props: {},
               },
+              {time: 14},
+              {time: 21}, // This last one is when the promise resolved into the first party.
             ]
           : undefined,
       );
       expect(getDebugInfo(thirdPartyChildren[1])).toEqual(
         __DEV__
           ? [
+              {time: 15},
               {
                 name: 'ThirdPartyLazyComponent',
                 env: 'third-party',
@@ -2752,12 +2780,14 @@ describe('ReactFlight', () => {
                   : undefined,
                 props: {},
               },
+              {time: 16},
             ]
           : undefined,
       );
       expect(getDebugInfo(thirdPartyChildren[2])).toEqual(
         __DEV__
           ? [
+              {time: 11},
               {
                 name: 'ThirdPartyFragmentComponent',
                 env: 'third-party',
@@ -2768,6 +2798,7 @@ describe('ReactFlight', () => {
                   : undefined,
                 props: {},
               },
+              {time: 12},
             ]
           : undefined,
       );
@@ -2833,6 +2864,7 @@ describe('ReactFlight', () => {
       expect(getDebugInfo(promise)).toEqual(
         __DEV__
           ? [
+              {time: 14},
               {
                 name: 'ServerComponent',
                 env: 'Server',
@@ -2845,6 +2877,7 @@ describe('ReactFlight', () => {
                   transport: expect.arrayContaining([]),
                 },
               },
+              {time: 15},
             ]
           : undefined,
       );
@@ -2853,6 +2886,7 @@ describe('ReactFlight', () => {
       expect(getDebugInfo(thirdPartyFragment)).toEqual(
         __DEV__
           ? [
+              {time: 16},
               {
                 name: 'Keyed',
                 env: 'Server',
@@ -2865,6 +2899,7 @@ describe('ReactFlight', () => {
                   children: {},
                 },
               },
+              {time: 17},
             ]
           : undefined,
       );
@@ -2872,6 +2907,7 @@ describe('ReactFlight', () => {
       expect(getDebugInfo(thirdPartyFragment.props.children)).toEqual(
         __DEV__
           ? [
+              {time: 11},
               {
                 name: 'ThirdPartyAsyncIterableComponent',
                 env: 'third-party',
@@ -2882,6 +2918,7 @@ describe('ReactFlight', () => {
                   : undefined,
                 props: {},
               },
+              {time: 12},
             ]
           : undefined,
       );
@@ -3017,6 +3054,7 @@ describe('ReactFlight', () => {
     }
   });
 
+  // @gate !__DEV__ || enableComponentPerformanceTrack
   it('can change the environment name inside a component', async () => {
     let env = 'A';
     function Component(props) {
@@ -3041,6 +3079,7 @@ describe('ReactFlight', () => {
       expect(getDebugInfo(greeting)).toEqual(
         __DEV__
           ? [
+              {time: 11},
               {
                 name: 'Component',
                 env: 'A',
@@ -3054,6 +3093,7 @@ describe('ReactFlight', () => {
               {
                 env: 'B',
               },
+              {time: 12},
             ]
           : undefined,
       );
@@ -3205,6 +3245,7 @@ describe('ReactFlight', () => {
     );
   });
 
+  // @gate !__DEV__ || enableComponentPerformanceTrack
   it('uses the server component debug info as the element owner in DEV', async () => {
     function Container({children}) {
       return children;
@@ -3244,7 +3285,9 @@ describe('ReactFlight', () => {
           },
         };
         expect(getDebugInfo(greeting)).toEqual([
+          {time: 11},
           greetInfo,
+          {time: 12},
           {
             name: 'Container',
             env: 'Server',
@@ -3262,10 +3305,11 @@ describe('ReactFlight', () => {
               }),
             },
           },
+          {time: 13},
         ]);
         // The owner that created the span was the outer server component.
         // We expect the debug info to be referentially equal to the owner.
-        expect(greeting._owner).toBe(greeting._debugInfo[0]);
+        expect(greeting._owner).toBe(greeting._debugInfo[1]);
       } else {
         expect(greeting._debugInfo).toBe(undefined);
         expect(greeting._owner).toBe(undefined);
@@ -3531,7 +3575,7 @@ describe('ReactFlight', () => {
     expect(caughtError.digest).toBe('digest("my-error")');
   });
 
-  // @gate __DEV__
+  // @gate __DEV__ && enableComponentPerformanceTrack
   it('can render deep but cut off JSX in debug info', async () => {
     function createDeepJSX(n) {
       if (n <= 0) {
@@ -3555,7 +3599,7 @@ describe('ReactFlight', () => {
     await act(async () => {
       const rootModel = await ReactNoopFlightClient.read(transport);
       const root = rootModel.root;
-      const children = root._debugInfo[0].props.children;
+      const children = root._debugInfo[1].props.children;
       expect(children.type).toBe('div');
       expect(children.props.children.type).toBe('div');
       ReactNoop.render(root);
@@ -3564,7 +3608,7 @@ describe('ReactFlight', () => {
     expect(ReactNoop).toMatchRenderedOutput(<div>not using props</div>);
   });
 
-  // @gate __DEV__
+  // @gate __DEV__ && enableComponentPerformanceTrack
   it('can render deep but cut off Map/Set in debug info', async () => {
     function createDeepMap(n) {
       if (n <= 0) {
@@ -3603,8 +3647,8 @@ describe('ReactFlight', () => {
 
     await act(async () => {
       const rootModel = await ReactNoopFlightClient.read(transport);
-      const set = rootModel.set._debugInfo[0].props.set;
-      const map = rootModel.map._debugInfo[0].props.map;
+      const set = rootModel.set._debugInfo[1].props.set;
+      const map = rootModel.map._debugInfo[1].props.map;
       expect(set instanceof Set).toBe(true);
       expect(set.size).toBe(1);
       // eslint-disable-next-line no-for-of-loops/no-for-of-loops
