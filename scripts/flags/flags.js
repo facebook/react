@@ -129,14 +129,17 @@ function getReactNativeFeatureFlagsMajor() {
 // The RN and www Feature flag files import files that don't exist.
 // Mock the imports with the dynamic flag values.
 function mockDynamicallyFeatureFlags() {
-  // Mock the ReactNativeInternalFeatureFlags and ReactFeatureFlags modules
+  // Mock the ReactFeatureFlags modules (including the one internal to RN)
   const DynamicFeatureFlagsWWW = require('../../packages/shared/forks/ReactFeatureFlags.www-dynamic.js');
   const DynamicFeatureFlagsNative = require('../../packages/shared/forks/ReactFeatureFlags.native-fb-dynamic.js');
 
   const originalLoad = Module._load;
 
   Module._load = function (request, parent) {
-    if (request === 'ReactNativeInternalFeatureFlags') {
+    if (
+      request ===
+      'react-native/src/private/renderer/featureflags/ReactFeatureFlags'
+    ) {
       return DynamicFeatureFlagsNative;
     } else if (request === 'ReactFeatureFlags') {
       return DynamicFeatureFlagsWWW;
