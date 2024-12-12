@@ -72,22 +72,33 @@ export function logComponentRender(
   startTime: number,
   endTime: number,
   childrenEndTime: number,
+  rootEnv: string,
 ): void {
   if (supportsUserTiming && childrenEndTime >= 0 && trackIdx < 10) {
+    const env = componentInfo.env;
     const name = componentInfo.name;
+    const isPrimaryEnv = env === rootEnv;
     const selfTime = endTime - startTime;
     reusableComponentDevToolDetails.color =
       selfTime < 0.5
-        ? 'primary-light'
+        ? isPrimaryEnv
+          ? 'primary-light'
+          : 'secondary-light'
         : selfTime < 50
-          ? 'primary'
+          ? isPrimaryEnv
+            ? 'primary'
+            : 'secondary'
           : selfTime < 500
-            ? 'primary-dark'
+            ? isPrimaryEnv
+              ? 'primary-dark'
+              : 'secondary-dark'
             : 'error';
     reusableComponentDevToolDetails.track = trackNames[trackIdx];
     reusableComponentOptions.start = startTime < 0 ? 0 : startTime;
     reusableComponentOptions.end = childrenEndTime;
-    performance.measure(name, reusableComponentOptions);
+    const entryName =
+      isPrimaryEnv || env === undefined ? name : name + ' [' + env + ']';
+    performance.measure(entryName, reusableComponentOptions);
   }
 }
 
@@ -103,6 +114,7 @@ export function logDedupedComponentRender(
     reusableComponentDevToolDetails.track = trackNames[trackIdx];
     reusableComponentOptions.start = startTime < 0 ? 0 : startTime;
     reusableComponentOptions.end = endTime;
-    performance.measure(name + ' [deduped]', reusableComponentOptions);
+    const entryName = name + ' [deduped]';
+    performance.measure(entryName, reusableComponentOptions);
   }
 }
