@@ -71,6 +71,8 @@ import {createBoundServerReference} from './ReactFlightReplyClient';
 
 import {readTemporaryReference} from './ReactFlightTemporaryReferences';
 
+import {logComponentRender} from './ReactFlightPerformanceTrack';
+
 import {
   REACT_LAZY_TYPE,
   REACT_ELEMENT_TYPE,
@@ -124,6 +126,10 @@ export type JSONValue =
   | {+[key: string]: JSONValue}
   | $ReadOnlyArray<JSONValue>;
 
+type ProfilingResult = {
+  endTime: number,
+};
+
 const ROW_ID = 0;
 const ROW_TAG = 1;
 const ROW_LENGTH = 2;
@@ -144,7 +150,8 @@ type PendingChunk<T> = {
   value: null | Array<(T) => mixed>,
   reason: null | Array<(mixed) => mixed>,
   _response: Response,
-  _debugInfo?: null | ReactDebugInfo,
+  _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
+  _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type BlockedChunk<T> = {
@@ -152,7 +159,8 @@ type BlockedChunk<T> = {
   value: null | Array<(T) => mixed>,
   reason: null | Array<(mixed) => mixed>,
   _response: Response,
-  _debugInfo?: null | ReactDebugInfo,
+  _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
+  _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type ResolvedModelChunk<T> = {
@@ -160,7 +168,8 @@ type ResolvedModelChunk<T> = {
   value: UninitializedModel,
   reason: null,
   _response: Response,
-  _debugInfo?: null | ReactDebugInfo,
+  _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
+  _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type ResolvedModuleChunk<T> = {
@@ -168,7 +177,8 @@ type ResolvedModuleChunk<T> = {
   value: ClientReference<T>,
   reason: null,
   _response: Response,
-  _debugInfo?: null | ReactDebugInfo,
+  _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
+  _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type InitializedChunk<T> = {
@@ -176,7 +186,8 @@ type InitializedChunk<T> = {
   value: T,
   reason: null | FlightStreamController,
   _response: Response,
-  _debugInfo?: null | ReactDebugInfo,
+  _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
+  _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type InitializedStreamChunk<
@@ -186,7 +197,8 @@ type InitializedStreamChunk<
   value: T,
   reason: FlightStreamController,
   _response: Response,
-  _debugInfo?: null | ReactDebugInfo,
+  _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
+  _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (ReadableStream) => mixed, reject?: (mixed) => mixed): void,
 };
 type ErroredChunk<T> = {
@@ -194,7 +206,8 @@ type ErroredChunk<T> = {
   value: null,
   reason: mixed,
   _response: Response,
-  _debugInfo?: null | ReactDebugInfo,
+  _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
+  _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type SomeChunk<T> =
@@ -216,6 +229,9 @@ function ReactPromise(
   this.value = value;
   this.reason = reason;
   this._response = response;
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    this._children = [];
+  }
   if (__DEV__) {
     this._debugInfo = null;
   }
@@ -548,9 +564,11 @@ type InitializationHandler = {
   errored: boolean,
 };
 let initializingHandler: null | InitializationHandler = null;
+let initializingChunk: null | BlockedChunk<any> = null;
 
 function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
   const prevHandler = initializingHandler;
+  const prevChunk = initializingChunk;
   initializingHandler = null;
 
   const resolvedModel = chunk.value;
@@ -562,6 +580,10 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
   cyclicChunk.status = BLOCKED;
   cyclicChunk.value = null;
   cyclicChunk.reason = null;
+
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    initializingChunk = cyclicChunk;
+  }
 
   try {
     const value: T = parseModel(chunk._response, resolvedModel);
@@ -595,6 +617,9 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
     erroredChunk.reason = error;
   } finally {
     initializingHandler = prevHandler;
+    if (enableProfilerTimer && enableComponentPerformanceTrack) {
+      initializingChunk = prevChunk;
+    }
   }
 }
 
@@ -622,6 +647,9 @@ export function reportGlobalError(response: Response, error: Error): void {
       triggerErrorOnChunk(chunk, error);
     }
   });
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    flushComponentPerformance(getChunk(response, 0));
+  }
 }
 
 function nullRefGetter() {
@@ -1210,6 +1238,11 @@ function getOutlinedModel<T>(
   const path = reference.split(':');
   const id = parseInt(path[0], 16);
   const chunk = getChunk(response, id);
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    if (initializingChunk !== null && isArray(initializingChunk._children)) {
+      initializingChunk._children.push(chunk);
+    }
+  }
   switch (chunk.status) {
     case RESOLVED_MODEL:
       initializeModelChunk(chunk);
@@ -1359,6 +1392,14 @@ function parseModelString(
         // Lazy node
         const id = parseInt(value.slice(2), 16);
         const chunk = getChunk(response, id);
+        if (enableProfilerTimer && enableComponentPerformanceTrack) {
+          if (
+            initializingChunk !== null &&
+            isArray(initializingChunk._children)
+          ) {
+            initializingChunk._children.push(chunk);
+          }
+        }
         // We create a React.lazy wrapper around any lazy values.
         // When passed into React, we'll know how to suspend on this.
         return createLazyChunkWrapper(chunk);
@@ -1371,6 +1412,14 @@ function parseModelString(
         }
         const id = parseInt(value.slice(2), 16);
         const chunk = getChunk(response, id);
+        if (enableProfilerTimer && enableComponentPerformanceTrack) {
+          if (
+            initializingChunk !== null &&
+            isArray(initializingChunk._children)
+          ) {
+            initializingChunk._children.push(chunk);
+          }
+        }
         return chunk;
       }
       case 'S': {
@@ -2702,6 +2751,67 @@ function resolveTypedArray(
     chunk.byteLength / bytesPerElement,
   );
   resolveBuffer(response, id, view);
+}
+
+function flushComponentPerformance(root: SomeChunk<any>): number {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return 0;
+  }
+  // Write performance.measure() entries for Server Components in tree order.
+  // This must be done at the end to collect the end time from the whole tree.
+  if (!isArray(root._children)) {
+    // We have already written this chunk. If this was a cycle, then this will
+    // be -Infinity and it won't contribute to the parent end time.
+    // If this was already emitted by another sibling then we reused the same
+    // chunk in two places. We should extend the current end time as if it was
+    // rendered as part of this tree.
+    const previousResult: ProfilingResult = root._children;
+    return previousResult.endTime;
+  }
+  const children = root._children;
+  if (root.status === RESOLVED_MODEL) {
+    // If the model is not initialized by now, do that now so we can find its
+    // children. This part is a little sketchy since it significantly changes
+    // the performance characteristics of the app by profiling.
+    initializeModelChunk(root);
+  }
+  const result: ProfilingResult = {endTime: -Infinity};
+  root._children = result;
+  let childrenEndTime = -Infinity;
+  for (let i = 0; i < children.length; i++) {
+    const childEndTime = flushComponentPerformance(children[i]);
+    if (childEndTime > childrenEndTime) {
+      childrenEndTime = childEndTime;
+    }
+  }
+  const debugInfo = root._debugInfo;
+  if (debugInfo) {
+    let endTime = 0;
+    for (let i = debugInfo.length - 1; i >= 0; i--) {
+      const info = debugInfo[i];
+      if (typeof info.time === 'number') {
+        endTime = info.time;
+        if (endTime > childrenEndTime) {
+          childrenEndTime = endTime;
+        }
+      }
+      if (typeof info.name === 'string' && i > 0) {
+        // $FlowFixMe: Refined.
+        const componentInfo: ReactComponentInfo = info;
+        const startTimeInfo = debugInfo[i - 1];
+        if (typeof startTimeInfo.time === 'number') {
+          const startTime = startTimeInfo.time;
+          logComponentRender(
+            componentInfo,
+            startTime,
+            endTime,
+            childrenEndTime,
+          );
+        }
+      }
+    }
+  }
+  return (result.endTime = childrenEndTime);
 }
 
 function processFullBinaryRow(
