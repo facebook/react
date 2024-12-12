@@ -1,3 +1,12 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ */
+
 import * as React from 'react';
 import {
   useContext,
@@ -11,23 +20,27 @@ import styles from './HookChangeSummary.css';
 import ButtonIcon from '../ButtonIcon';
 import {InspectedElementContext} from '../Components/InspectedElementContext';
 import {StoreContext} from '../context';
-import {
-  HooksList,
-  State,
-} from 'react-devtools-shared/src/devtools/views/Profiler/types';
 
 import {
   getAlreadyLoadedHookNames,
   getHookSourceLocationKey,
 } from 'react-devtools-shared/src/hookNamesCache';
 import Toggle from '../Toggle';
+import type {HooksNode} from 'react-debug-tools/src/ReactDebugHooks';
+import type {ChangeDescription} from './types';
 
+// $FlowFixMe: Flow doesn't know about Intl.ListFormat
 const hookListFormatter = new Intl.ListFormat('en', {
   style: 'long',
   type: 'conjunction',
 });
 
-const Hook = memo(({hook, hookNames}) => {
+type HookProps = {
+  hook: HooksNode,
+  hookNames: Map<string, string> | null,
+};
+
+const Hook: React.AbstractComponent<HookProps> = memo(({hook, hookNames}) => {
   const hookSource = hook.hookSource;
   const hookName = useMemo(() => {
     if (!hookSource || !hookNames) return null;
@@ -39,7 +52,9 @@ const Hook = memo(({hook, hookNames}) => {
     <ul className={styles.Hook}>
       <li>
         {hook.id !== null && (
-          <span className={styles.PrimitiveHookNumber}>{hook.id + 1}</span>
+          <span className={styles.PrimitiveHookNumber}>
+            {String(hook.id + 1)}
+          </span>
         )}
         <span
           className={hook.id !== null ? styles.PrimitiveHookName : styles.Name}>
@@ -58,7 +73,10 @@ const Hook = memo(({hook, hookNames}) => {
   );
 });
 
-const shouldKeepHook = (hook, hooksArray) => {
+const shouldKeepHook = (
+  hook: HooksNode,
+  hooksArray: Array<number>,
+): boolean => {
   if (hook.id !== null && hooksArray.includes(hook.id)) {
     return true;
   }
@@ -67,7 +85,10 @@ const shouldKeepHook = (hook, hooksArray) => {
   );
 };
 
-const filterHooks = (hook, hooksArray) => {
+const filterHooks = (
+  hook: HooksNode,
+  hooksArray: Array<number>,
+): HooksNode | null => {
   if (!shouldKeepHook(hook, hooksArray)) {
     return null;
   }
@@ -85,13 +106,14 @@ const filterHooks = (hook, hooksArray) => {
   return hook;
 };
 
-type Props = {
+type Props = {|
   fiberID: number,
-  hooks: HooksList | null,
-  state: State | null,
+  hooks: $PropertyType<ChangeDescription, 'hooks'>,
+  state: $PropertyType<ChangeDescription, 'state'>,
   displayMode?: 'detailed' | 'compact',
-};
-const HookChangeSummary = memo(
+|};
+
+const HookChangeSummary: React.AbstractComponent<Props> = memo(
   ({hooks, fiberID, state, displayMode = 'detailed'}: Props) => {
     const {parseHookNames, toggleParseHookNames, inspectedElement} = useContext(
       InspectedElementContext,
@@ -99,7 +121,7 @@ const HookChangeSummary = memo(
     const store = useContext(StoreContext);
 
     const [parseHookNamesOptimistic, setParseHookNamesOptimistic] =
-      useState(parseHookNames);
+      useState<boolean>(parseHookNames);
 
     useEffect(() => {
       setParseHookNamesOptimistic(parseHookNames);
@@ -111,7 +133,8 @@ const HookChangeSummary = memo(
     }, [toggleParseHookNames, parseHookNames]);
 
     const element = fiberID !== null ? store.getElementByID(fiberID) : null;
-    const hookNames = getAlreadyLoadedHookNames(element);
+    const hookNames =
+      element != null ? getAlreadyLoadedHookNames(element) : null;
 
     const filteredHooks = useMemo(() => {
       if (!hooks || !inspectedElement?.hooks) return null;
@@ -129,7 +152,6 @@ const HookChangeSummary = memo(
       return <span>No hooks changed</span>;
     }
 
-    // Fallback to old list of ids when inspectedElement ID doesn't match element ID or when hook counts differ
     if (
       inspectedElement?.id !== element?.id ||
       filteredHooks?.length !== hooks.length ||
@@ -144,13 +166,17 @@ const HookChangeSummary = memo(
       );
     }
 
-    let toggleTitle;
+    let toggleTitle: string;
     if (hookParsingFailed) {
       toggleTitle = 'Hook parsing failed';
     } else if (parseHookNamesOptimistic) {
       toggleTitle = 'Parsing hook names ...';
     } else {
       toggleTitle = 'Parse hook names (may be slow)';
+    }
+
+    if (filteredHooks == null) {
+      return null;
     }
 
     return (
@@ -172,7 +198,7 @@ const HookChangeSummary = memo(
         )}
         {filteredHooks.map(hook => (
           <Hook
-            key={`${inspectedElement?.id}-${hook.id}`}
+            key={`${inspectedElement?.id ?? 'unknown'}-${hook.id}`}
             hook={hook}
             hookNames={hookNames}
           />
