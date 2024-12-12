@@ -78,14 +78,30 @@ export function logComponentRender(
             : 'error';
     const entryName =
       isPrimaryEnv || env === undefined ? name : name + ' [' + env + ']';
-    console.timeStamp(
-      entryName,
-      startTime < 0 ? 0 : startTime,
-      childrenEndTime,
-      trackNames[trackIdx],
-      COMPONENTS_TRACK,
-      color,
-    );
+    const debugTask = componentInfo.debugTask;
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        console.timeStamp.bind(
+          console,
+          entryName,
+          startTime < 0 ? 0 : startTime,
+          childrenEndTime,
+          trackNames[trackIdx],
+          COMPONENTS_TRACK,
+          color,
+        ),
+      );
+    } else {
+      console.timeStamp(
+        entryName,
+        startTime < 0 ? 0 : startTime,
+        childrenEndTime,
+        trackNames[trackIdx],
+        COMPONENTS_TRACK,
+        color,
+      );
+    }
   }
 }
 
@@ -154,13 +170,29 @@ export function logDedupedComponentRender(
   if (supportsUserTiming && endTime >= 0 && trackIdx < 10) {
     const name = componentInfo.name;
     const entryName = name + ' [deduped]';
-    console.timeStamp(
-      entryName,
-      startTime < 0 ? 0 : startTime,
-      endTime,
-      trackNames[trackIdx],
-      COMPONENTS_TRACK,
-      'tertiary-light',
-    );
+    const debugTask = componentInfo.debugTask;
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        console.timeStamp.bind(
+          console,
+          entryName,
+          startTime < 0 ? 0 : startTime,
+          endTime,
+          trackNames[trackIdx],
+          COMPONENTS_TRACK,
+          'tertiary-light',
+        ),
+      );
+    } else {
+      console.timeStamp(
+        entryName,
+        startTime < 0 ? 0 : startTime,
+        endTime,
+        trackNames[trackIdx],
+        COMPONENTS_TRACK,
+        'tertiary-light',
+      );
+    }
   }
 }

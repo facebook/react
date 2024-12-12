@@ -103,14 +103,29 @@ function logComponentTrigger(
   trigger: string,
 ) {
   if (supportsUserTiming) {
-    console.timeStamp(
-      trigger,
-      startTime,
-      endTime,
-      COMPONENTS_TRACK,
-      undefined,
-      'warning',
-    );
+    const debugTask = fiber._debugTask;
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        console.timeStamp.bind(
+          console,
+          trigger,
+          startTime,
+          endTime,
+          COMPONENTS_TRACK,
+          undefined,
+          'warning',
+        ),
+      );
+    } else {
+      console.timeStamp(
+        trigger,
+        startTime,
+        endTime,
+        COMPONENTS_TRACK,
+        undefined,
+        'warning',
+      );
+    }
   }
 }
 
@@ -178,14 +193,30 @@ export function logComponentRender(
               ? 'tertiary-dark'
               : 'primary-dark'
             : 'error';
-    console.timeStamp(
-      name,
-      startTime,
-      endTime,
-      COMPONENTS_TRACK,
-      undefined,
-      color,
-    );
+    const debugTask = fiber._debugTask;
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        console.timeStamp.bind(
+          console,
+          name,
+          startTime,
+          endTime,
+          COMPONENTS_TRACK,
+          undefined,
+          color,
+        ),
+      );
+    } else {
+      console.timeStamp(
+        name,
+        startTime,
+        endTime,
+        COMPONENTS_TRACK,
+        undefined,
+        color,
+      );
+    }
   }
 }
 
@@ -221,7 +252,7 @@ export function logComponentErrored(
               String(error);
         properties.push(['Error', message]);
       }
-      performance.measure(name, {
+      const options = {
         start: startTime,
         end: endTime,
         detail: {
@@ -235,7 +266,16 @@ export function logComponentErrored(
             properties,
           },
         },
-      });
+      };
+      const debugTask = fiber._debugTask;
+      if (__DEV__ && debugTask) {
+        debugTask.run(
+          // $FlowFixMe[method-unbinding]
+          performance.measure.bind(performance, name, options),
+        );
+      } else {
+        performance.measure(name, options);
+      }
     } else {
       console.timeStamp(
         name,
@@ -281,7 +321,7 @@ function logComponentEffectErrored(
               String(error);
         properties.push(['Error', message]);
       }
-      performance.measure(name, {
+      const options = {
         start: startTime,
         end: endTime,
         detail: {
@@ -292,7 +332,16 @@ function logComponentEffectErrored(
             properties,
           },
         },
-      });
+      };
+      const debugTask = fiber._debugTask;
+      if (debugTask) {
+        debugTask.run(
+          // $FlowFixMe[method-unbinding]
+          performance.measure.bind(performance, name, options),
+        );
+      } else {
+        performance.measure(name, options);
+      }
     } else {
       console.timeStamp(
         name,
@@ -331,14 +380,30 @@ export function logComponentEffect(
           : selfTime < 500
             ? 'secondary-dark'
             : 'error';
-    console.timeStamp(
-      name,
-      startTime,
-      endTime,
-      COMPONENTS_TRACK,
-      undefined,
-      color,
-    );
+    const debugTask = fiber._debugTask;
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        console.timeStamp.bind(
+          console,
+          name,
+          startTime,
+          endTime,
+          COMPONENTS_TRACK,
+          undefined,
+          color,
+        ),
+      );
+    } else {
+      console.timeStamp(
+        name,
+        startTime,
+        endTime,
+        COMPONENTS_TRACK,
+        undefined,
+        color,
+      );
+    }
   }
 }
 
@@ -379,14 +444,30 @@ export function logSuspendedYieldTime(
   suspendedFiber: Fiber,
 ): void {
   if (supportsUserTiming) {
-    console.timeStamp(
-      'Suspended',
-      startTime,
-      endTime,
-      COMPONENTS_TRACK,
-      undefined,
-      'primary-light',
-    );
+    const debugTask = suspendedFiber._debugTask;
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        console.timeStamp.bind(
+          console,
+          'Suspended',
+          startTime,
+          endTime,
+          COMPONENTS_TRACK,
+          undefined,
+          'primary-light',
+        ),
+      );
+    } else {
+      console.timeStamp(
+        'Suspended',
+        startTime,
+        endTime,
+        COMPONENTS_TRACK,
+        undefined,
+        'primary-light',
+      );
+    }
   }
 }
 
@@ -396,14 +477,30 @@ export function logActionYieldTime(
   suspendedFiber: Fiber,
 ): void {
   if (supportsUserTiming) {
-    console.timeStamp(
-      'Action',
-      startTime,
-      endTime,
-      COMPONENTS_TRACK,
-      undefined,
-      'primary-light',
-    );
+    const debugTask = suspendedFiber._debugTask;
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        console.timeStamp.bind(
+          console,
+          'Action',
+          startTime,
+          endTime,
+          COMPONENTS_TRACK,
+          undefined,
+          'primary-light',
+        ),
+      );
+    } else {
+      console.timeStamp(
+        'Action',
+        startTime,
+        endTime,
+        COMPONENTS_TRACK,
+        undefined,
+        'primary-light',
+      );
+    }
   }
 }
 
