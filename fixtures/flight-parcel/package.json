@@ -16,9 +16,11 @@
     }
   },
   "scripts": {
-    "prewatch": "cp -r ../../build/oss-experimental/* ./node_modules/",
+    "predev": "cp -r ../../build/oss-experimental/* ./node_modules/",
     "prebuild": "cp -r ../../build/oss-experimental/* ./node_modules/",
-    "watch": "parcel watch",
+    "dev": "concurrently \"npm run dev:watch\" \"npm run dev:start\"",
+    "dev:watch": "NODE_ENV=development parcel watch",
+    "dev:start": "NODE_ENV=development node dist/server.js",
     "build": "parcel build",
     "start": "node dist/server.js"
   },
@@ -33,6 +35,7 @@
     "@types/node": "^22.10.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "concurrently": "^7.3.0",
     "express": "^4.18.2",
     "parcel": "2.0.0-dev.1787",
     "process": "^0.11.10",
