@@ -1,7 +1,18 @@
 'use strict';
 
+var s;
 if (process.env.NODE_ENV === 'production') {
-  module.exports = require('./cjs/react-server-dom-parcel-server.browser.production.js');
+  s = require('./cjs/react-server-dom-parcel-server.browser.production.js');
 } else {
-  module.exports = require('./cjs/react-server-dom-parcel-server.browser.development.js');
+  s = require('./cjs/react-server-dom-parcel-server.browser.development.js');
 }
+
+exports.renderToReadableStream = s.renderToReadableStream;
+exports.decodeReply = s.decodeReply;
+exports.decodeAction = s.decodeAction;
+exports.decodeFormState = s.decodeFormState;
+exports.createClientReference = s.createClientReference;
+exports.registerServerReference = s.registerServerReference;
+exports.createTemporaryReferenceSet = s.createTemporaryReferenceSet;
+exports.registerServerActions = s.registerServerActions;
+exports.loadServerAction = s.loadServerAction;
