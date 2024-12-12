@@ -1,0 +1,48 @@
+{
+  "name": "flight-parcel",
+  "private": true,
+  "workspaces": [
+    "examples/*"
+  ],
+  "server": "dist/server.js",
+  "targets": {
+    "server": {
+      "source": "src/server.tsx",
+      "context": "react-server",
+      "outputFormat": "commonjs",
+      "includeNodeModules": {
+        "express": false
+      }
+    }
+  },
+  "scripts": {
+    "prewatch": "cp -r ../../build/oss-experimental/* ./node_modules/",
+    "prebuild": "cp -r ../../build/oss-experimental/* ./node_modules/",
+    "watch": "parcel watch",
+    "build": "parcel build",
+    "start": "node dist/server.js"
+  },
+  "@parcel/resolver-default": {
+    "packageExports": true
+  },
+  "dependencies": {
+    "@parcel/config-default": "2.0.0-dev.1789",
+    "@parcel/runtime-rsc": "2.13.3-dev.3412",
+    "@types/parcel-env": "^0.0.6",
+    "@types/express": "*",
+    "@types/node": "^22.10.1",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "express": "^4.18.2",
+    "parcel": "2.0.0-dev.1787",
+    "process": "^0.11.10",
+    "react": "^19",
+    "react-dom": "^19",
+    "react-server-dom-parcel": "^0.0.1",
+    "rsc-html-stream": "^0.0.4",
+    "ws": "^8.8.1"
+  },
+  "@parcel/bundler-default": {
+    "minBundleSize": 0
+  }
+}
