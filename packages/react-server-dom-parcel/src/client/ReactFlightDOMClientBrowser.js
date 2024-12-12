@@ -10,7 +10,7 @@
 import type {Thenable} from 'shared/ReactTypes.js';
 import type {Response as FlightResponse} from 'react-client/src/ReactFlightClient';
 import type {ReactServerValue} from 'react-client/src/ReactFlightReplyClient';
-import type {ServerReferenceId} from '../shared/ReactFlightClientConfigBundlerParcel';
+import type {ServerReferenceId} from '../client/ReactFlightClientConfigBundlerParcel';
 
 import {
   createResponse,
@@ -18,6 +18,7 @@ import {
   reportGlobalError,
   processBinaryChunk,
   close,
+  injectIntoDevTools,
 } from 'react-client/src/ReactFlightClient';
 
 import {
@@ -176,4 +177,8 @@ export function encodeReply(
       }
     }
   });
+}
+
+if (__DEV__) {
+  injectIntoDevTools();
 }

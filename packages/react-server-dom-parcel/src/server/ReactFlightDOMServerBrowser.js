@@ -15,7 +15,7 @@ import {
   resolveServerReference,
   type ServerManifest,
   type ServerReferenceId,
-} from '../shared/ReactFlightClientConfigBundlerParcel';
+} from '../client/ReactFlightClientConfigBundlerParcel';
 
 import {
   createRequest,

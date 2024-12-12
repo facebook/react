@@ -18,7 +18,7 @@ import type {ReactFormState, Thenable} from 'shared/ReactTypes';
 import type {
   ServerManifest,
   ServerReferenceId,
-} from '../shared/ReactFlightClientConfigBundlerParcel';
+} from '../client/ReactFlightClientConfigBundlerParcel';
 
 import {Readable} from 'stream';
 import {
@@ -49,7 +49,7 @@ import {
   preloadModule,
   requireModule,
   resolveServerReference,
-} from '../shared/ReactFlightClientConfigBundlerParcel';
+} from '../client/ReactFlightClientConfigBundlerParcel';
 
 export {
   createClientReference,
