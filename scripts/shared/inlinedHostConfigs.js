@@ -217,7 +217,7 @@ module.exports = [
       'react-server-dom-parcel/static',
       'react-server-dom-parcel/static.node',
       'react-server-dom-parcel/src/client/ReactFlightDOMClientNode.js', // react-server-dom-parcel/client.node
-      'react-server-dom-parcel/src/shared/ReactFlightClientConfigBundlerParcel.js',
+      'react-server-dom-parcel/src/client/ReactFlightClientConfigBundlerParcel.js',
       'react-server-dom-parcel/src/server/react-flight-dom-server.node',
       'react-server-dom-parcel/src/server/ReactFlightDOMServerNode.js', // react-server-dom-parcel/src/server/react-flight-dom-server.node
       'react-server-dom-parcel/node-register',
@@ -335,7 +335,7 @@ module.exports = [
       'react-server-dom-parcel/server.browser',
       'react-server-dom-parcel/static.browser',
       'react-server-dom-parcel/src/client/ReactFlightDOMClientBrowser.js', // react-server-dom-parcel/client.browser
-      'react-server-dom-parcel/src/shared/ReactFlightClientConfigBundlerParcel.js',
+      'react-server-dom-parcel/src/client/ReactFlightClientConfigBundlerParcel.js',
       'react-server-dom-parcel/src/server/react-flight-dom-server.browser',
       'react-server-dom-parcel/src/server/ReactFlightDOMServerBrowser.js', // react-server-dom-parcel/src/server/react-flight-dom-server.browser
       'react-devtools',
@@ -455,7 +455,7 @@ module.exports = [
       'react-server-dom-parcel/server.edge',
       'react-server-dom-parcel/static.edge',
       'react-server-dom-parcel/src/client/ReactFlightDOMClientEdge.js', // react-server-dom-parcel/client.edge
-      'react-server-dom-parcel/src/shared/ReactFlightClientConfigBundlerParcel.js',
+      'react-server-dom-parcel/src/client/ReactFlightClientConfigBundlerParcel.js',
       'react-server-dom-parcel/src/server/react-flight-dom-server.edge',
       'react-server-dom-parcel/src/server/ReactFlightDOMServerEdge.js', // react-server-dom-parcel/src/server/react-flight-dom-server.edge
       'react-devtools',

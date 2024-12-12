@@ -9,9 +9,9 @@
 
 import type {Thenable} from 'shared/ReactTypes';
 
-import type {ImportMetadata} from './ReactFlightImportMetadata';
+import type {ImportMetadata} from '../shared/ReactFlightImportMetadata';
 
-import {ID, NAME, BUNDLES} from './ReactFlightImportMetadata';
+import {ID, NAME, BUNDLES} from '../shared/ReactFlightImportMetadata';
 
 export type ServerManifest = {
   [string]: Array<string>,

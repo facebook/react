@@ -12,6 +12,6 @@ export const rendererPackageName = 'react-server-dom-parcel';
 
 export * from 'react-client/src/ReactFlightClientStreamConfigNode';
 export * from 'react-client/src/ReactClientConsoleConfigServer';
-export * from 'react-server-dom-parcel/src/shared/ReactFlightClientConfigBundlerParcel';
+export * from 'react-server-dom-parcel/src/client/ReactFlightClientConfigBundlerParcel';
 export * from 'react-dom-bindings/src/shared/ReactFlightClientConfigDOM';
 export const usedWithSSR = true;
