@@ -13,7 +13,7 @@
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1116() {
+    function JSCompiler_object_inline_createNodeMock_1118() {
       return null;
     }
     function findHook(fiber, id) {
@@ -119,26 +119,30 @@ __DEV__ &&
       return array.sort().join(", ");
     }
     function warn(format) {
-      for (
-        var _len = arguments.length,
-          args = Array(1 < _len ? _len - 1 : 0),
-          _key = 1;
-        _key < _len;
-        _key++
-      )
-        args[_key - 1] = arguments[_key];
-      printWarning("warn", format, args);
+      if (!suppressWarning) {
+        for (
+          var _len = arguments.length,
+            args = Array(1 < _len ? _len - 1 : 0),
+            _key = 1;
+          _key < _len;
+          _key++
+        )
+          args[_key - 1] = arguments[_key];
+        printWarning("warn", format, args);
+      }
     }
     function error$jscomp$0(format) {
-      for (
-        var _len2 = arguments.length,
-          args = Array(1 < _len2 ? _len2 - 1 : 0),
-          _key2 = 1;
-        _key2 < _len2;
-        _key2++
-      )
-        args[_key2 - 1] = arguments[_key2];
-      printWarning("error", format, args);
+      if (!suppressWarning) {
+        for (
+          var _len2 = arguments.length,
+            args = Array(1 < _len2 ? _len2 - 1 : 0),
+            _key2 = 1;
+          _key2 < _len2;
+          _key2++
+        )
+          args[_key2 - 1] = arguments[_key2];
+        printWarning("error", format, args);
+      }
     }
     function printWarning(level, format, args) {
       level =
@@ -736,7 +740,20 @@ __DEV__ &&
         }
     }
     function setIsStrictModeForDevtools(newIsStrictMode) {
-      newIsStrictMode ? disableLogs() : reenableLogs();
+      "function" === typeof log$1 &&
+        (unstable_setDisableYieldValue(newIsStrictMode),
+        (suppressWarning = newIsStrictMode));
+      if (injectedHook && "function" === typeof injectedHook.setStrictMode)
+        try {
+          injectedHook.setStrictMode(rendererID, newIsStrictMode);
+        } catch (err) {
+          hasLoggedError ||
+            ((hasLoggedError = !0),
+            error$jscomp$0(
+              "React instrumentation encountered an error: %s",
+              err
+            ));
+        }
     }
     function clz32Fallback(x) {
       x >>>= 0;
@@ -12988,6 +13005,7 @@ __DEV__ &&
       Scheduler = require("scheduler/unstable_mock"),
       Scheduler$1 = require("scheduler"),
       warningWWW = require("warning"),
+      suppressWarning = !1,
       assign = Object.assign,
       REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_ELEMENT_TYPE = REACT_LEGACY_ELEMENT_TYPE,
@@ -13040,6 +13058,8 @@ __DEV__ &&
       UserBlockingPriority = Scheduler$1.unstable_UserBlockingPriority,
       NormalPriority$1 = Scheduler$1.unstable_NormalPriority,
       IdlePriority = Scheduler$1.unstable_IdlePriority,
+      log$1 = Scheduler$1.log,
+      unstable_setDisableYieldValue = Scheduler$1.unstable_setDisableYieldValue,
       rendererID = null,
       injectedHook = null,
       hasLoggedError = !1,
@@ -15030,10 +15050,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-modern-d5e8f79c-20241212",
+        version: "19.1.0-www-modern-4dff0e62-20241213",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-modern-d5e8f79c-20241212"
+        reconcilerVersion: "19.1.0-www-modern-4dff0e62-20241213"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15053,7 +15073,7 @@ __DEV__ &&
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1116,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1118,
         isConcurrentOnly = !0 !== global.IS_REACT_NATIVE_TEST_ENVIRONMENT,
         isConcurrent = isConcurrentOnly,
         isStrictMode = !1;
@@ -15168,5 +15188,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.1.0-www-modern-d5e8f79c-20241212";
+    exports.version = "19.1.0-www-modern-4dff0e62-20241213";
   })();
