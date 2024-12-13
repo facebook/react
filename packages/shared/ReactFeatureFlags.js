@@ -13,7 +13,7 @@
 // Flags that can likely be deleted or landed without consequences
 // -----------------------------------------------------------------------------
 
-export const enableComponentStackLocations = true;
+// None
 
 // -----------------------------------------------------------------------------
 // Killswitch
@@ -78,7 +78,6 @@ export const enableLegacyFBSupport = false;
 export const enableCache = true;
 export const enableLegacyCache = __EXPERIMENTAL__;
 
-export const enableFlightReadableStream = true;
 export const enableAsyncIterableChildren = __EXPERIMENTAL__;
 
 export const enableTaint = __EXPERIMENTAL__;
@@ -200,11 +199,6 @@ export const disableLegacyContextForFunctionComponents = true;
 // components will encounter in production, especially when used With <Offscreen />.
 // TODO: clean up legacy <StrictMode /> once tests pass WWW.
 export const useModernStrictMode = true;
-
-// Filter certain DOM attributes (e.g. src, href) if their values are empty
-// strings. This prevents e.g. <img src=""> from making an unnecessary HTTP
-// request for certain browsers.
-export const enableFilterEmptyStringAttributesDOM = true;
 
 // Enable the moveBefore() alternative to insertBefore(). This preserves states of moves.
 export const enableMoveBefore = false;
