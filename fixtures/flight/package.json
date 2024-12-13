@@ -39,7 +39,7 @@
     "jest-watch-typeahead": "^1.0.0",
     "mini-css-extract-plugin": "^2.4.5",
     "nodemon": "^2.0.19",
-    "postcss": "^8.4.32",
+    "postcss": "^8.4.33",
     "postcss-flexbugs-fixes": "^5.0.2",
     "postcss-loader": "^6.2.1",
     "postcss-normalize": "^10.0.1",
@@ -60,7 +60,7 @@
     "terser-webpack-plugin": "^5.2.5",
     "undici": "^5.20.0",
     "webpack": "^5.64.4",
-    "webpack-dev-middleware": "^5.3.4",
+    "webpack-dev-middleware": "^7.4.2",
     "webpack-hot-middleware": "^2.25.3",
     "webpack-manifest-plugin": "^4.0.2"
   },
