@@ -20,8 +20,6 @@ let useState;
 let useReducer;
 let assertConsoleErrorDev;
 
-const ReactFeatureFlags = require('shared/ReactFeatureFlags');
-
 describe('ReactStrictMode', () => {
   beforeEach(() => {
     jest.resetModules();
