@@ -106,8 +106,6 @@ export const enableComponentStackLocations = true;
 
 export const disableTextareaChildren = __EXPERIMENTAL__;
 
-export const consoleManagedByDevToolsDuringStrictMode = true;
-
 export const enableFizzExternalRuntime = true;
 
 export const passChildrenWhenCloningPersistedNodes = false;

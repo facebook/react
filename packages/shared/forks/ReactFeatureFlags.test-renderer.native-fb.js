@@ -11,7 +11,6 @@ import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as ExportsType from './ReactFeatureFlags.test-renderer';
 
 export const alwaysThrottleRetries = false;
-export const consoleManagedByDevToolsDuringStrictMode = false;
 export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const disableClientCache = true;
 export const disableCommentsAsDOMContainers = true;

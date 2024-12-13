@@ -61,8 +61,6 @@ export const enableLazyContextPropagation = true;
 export const enableContextProfiling = false;
 export const enableLegacyHidden = false;
 
-export const consoleManagedByDevToolsDuringStrictMode = false;
-
 export const enableTransitionTracing = false;
 
 export const useModernStrictMode = false;
