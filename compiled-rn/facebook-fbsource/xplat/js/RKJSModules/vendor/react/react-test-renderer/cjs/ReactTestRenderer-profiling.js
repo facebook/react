@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3b1282aedf829679ddb2a5ddbab52dc1>>
+ * @generated SignedSource<<71ba5eeec60f944fbdce86203f78c1f8>>
  */
 
 "use strict";
@@ -460,6 +460,8 @@ var isArrayImpl = Array.isArray,
   UserBlockingPriority = Scheduler$1.unstable_UserBlockingPriority,
   NormalPriority$1 = Scheduler$1.unstable_NormalPriority,
   IdlePriority = Scheduler$1.unstable_IdlePriority,
+  log$1 = Scheduler$1.log,
+  unstable_setDisableYieldValue = Scheduler$1.unstable_setDisableYieldValue,
   rendererID = null,
   injectedHook = null,
   injectedProfilingHooks = null,
@@ -490,6 +492,13 @@ function onCommitRoot(root, eventPriority) {
         schedulerPriority,
         didError
       );
+    } catch (err) {}
+}
+function setIsStrictModeForDevtools(newIsStrictMode) {
+  "function" === typeof log$1 && unstable_setDisableYieldValue(newIsStrictMode);
+  if (injectedHook && "function" === typeof injectedHook.setStrictMode)
+    try {
+      injectedHook.setStrictMode(rendererID, newIsStrictMode);
     } catch (err) {}
 }
 function markCommitStopped() {
@@ -2195,7 +2204,14 @@ function mountStateImpl(initialState) {
   if ("function" === typeof initialState) {
     var initialStateInitializer = initialState;
     initialState = initialStateInitializer();
-    shouldDoubleInvokeUserFnsInHooksDEV && initialStateInitializer();
+    if (shouldDoubleInvokeUserFnsInHooksDEV) {
+      setIsStrictModeForDevtools(!0);
+      try {
+        initialStateInitializer();
+      } finally {
+        setIsStrictModeForDevtools(!1);
+      }
+    }
   }
   hook.memoizedState = hook.baseState = initialState;
   hook.queue = {
@@ -2597,7 +2613,14 @@ function updateMemo(nextCreate, deps) {
   if (null !== deps && areHookInputsEqual(deps, prevState[1]))
     return prevState[0];
   prevState = nextCreate();
-  shouldDoubleInvokeUserFnsInHooksDEV && nextCreate();
+  if (shouldDoubleInvokeUserFnsInHooksDEV) {
+    setIsStrictModeForDevtools(!0);
+    try {
+      nextCreate();
+    } finally {
+      setIsStrictModeForDevtools(!1);
+    }
+  }
   hook.memoizedState = [prevState, deps];
   return prevState;
 }
@@ -2868,7 +2891,14 @@ var HooksDispatcherOnMount = {
     var hook = mountWorkInProgressHook();
     deps = void 0 === deps ? null : deps;
     var nextValue = nextCreate();
-    shouldDoubleInvokeUserFnsInHooksDEV && nextCreate();
+    if (shouldDoubleInvokeUserFnsInHooksDEV) {
+      setIsStrictModeForDevtools(!0);
+      try {
+        nextCreate();
+      } finally {
+        setIsStrictModeForDevtools(!1);
+      }
+    }
     hook.memoizedState = [nextValue, deps];
     return nextValue;
   },
@@ -2876,7 +2906,14 @@ var HooksDispatcherOnMount = {
     var hook = mountWorkInProgressHook();
     if (void 0 !== init) {
       var initialState = init(initialArg);
-      shouldDoubleInvokeUserFnsInHooksDEV && init(initialArg);
+      if (shouldDoubleInvokeUserFnsInHooksDEV) {
+        setIsStrictModeForDevtools(!0);
+        try {
+          init(initialArg);
+        } finally {
+          setIsStrictModeForDevtools(!1);
+        }
+      }
     } else initialState = initialArg;
     hook.memoizedState = hook.baseState = initialState;
     reducer = {
@@ -10287,10 +10324,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1203 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-d5e8f79c-20241212",
+  version: "19.1.0-native-fb-4dff0e62-20241213",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-d5e8f79c-20241212",
+  reconcilerVersion: "19.1.0-native-fb-4dff0e62-20241213",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$146 = 0;
@@ -10441,4 +10478,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.1.0-native-fb-d5e8f79c-20241212";
+exports.version = "19.1.0-native-fb-4dff0e62-20241213";
