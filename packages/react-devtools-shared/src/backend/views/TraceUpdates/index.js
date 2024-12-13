@@ -26,7 +26,7 @@ const REMEASUREMENT_AFTER_DURATION = 250;
 
 // Markers for different types of HOCs
 const HOC_MARKERS = new Map([
-  ['Forget', '✨ń'],
+  ['Forget', '✨'],
   ['Memo', '🧠'],
 ]);
 
