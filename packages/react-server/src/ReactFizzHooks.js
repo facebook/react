@@ -42,7 +42,6 @@ import {
   enableCache,
   enableUseEffectEventHook,
   enableUseMemoCacheHook,
-  enableAsyncActions,
 } from 'shared/ReactFeatureFlags';
 import is from 'shared/objectIs';
 import {
@@ -851,6 +850,10 @@ export const HooksDispatcher: Dispatcher = supportsClientAPIs
       useTransition: clientHookNotSupported,
       useId,
       useSyncExternalStore: clientHookNotSupported,
+      useOptimistic,
+      useActionState,
+      useFormState: useActionState,
+      useHostTransitionStatus,
     };
 
 if (enableCache) {
@@ -861,14 +864,6 @@ if (enableUseEffectEventHook) {
 }
 if (enableUseMemoCacheHook) {
   HooksDispatcher.useMemoCache = useMemoCache;
-}
-if (enableAsyncActions) {
-  HooksDispatcher.useHostTransitionStatus = useHostTransitionStatus;
-}
-if (enableAsyncActions) {
-  HooksDispatcher.useOptimistic = useOptimistic;
-  HooksDispatcher.useFormState = useActionState;
-  HooksDispatcher.useActionState = useActionState;
 }
 
 export let currentResumableState: null | ResumableState = (null: any);

@@ -18,10 +18,7 @@ import {REACT_CONSUMER_TYPE} from 'shared/ReactSymbols';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
-import {
-  enableAsyncActions,
-  enableUseResourceEffectHook,
-} from 'shared/ReactFeatureFlags';
+import {enableUseResourceEffectHook} from 'shared/ReactFeatureFlags';
 import {
   enableContextProfiling,
   enableLazyContextPropagation,
@@ -264,11 +261,7 @@ export function useActionState<S, P>(
   initialState: Awaited<S>,
   permalink?: string,
 ): [Awaited<S>, (P) => void, boolean] {
-  if (!enableAsyncActions) {
-    throw new Error('Not implemented.');
-  } else {
-    const dispatcher = resolveDispatcher();
-    // $FlowFixMe[not-a-function] This is unstable, thus optional
-    return dispatcher.useActionState(action, initialState, permalink);
-  }
+  const dispatcher = resolveDispatcher();
+  // $FlowFixMe[not-a-function] This is unstable, thus optional
+  return dispatcher.useActionState(action, initialState, permalink);
 }
