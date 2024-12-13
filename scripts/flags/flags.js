@@ -44,6 +44,13 @@ const argv = yargs
       ],
       default: null,
     },
+    equal: {
+      alias: 'e',
+      describe: 'output if all flags are equal.',
+      requiresArg: false,
+      type: 'boolean',
+      default: false,
+    },
     sort: {
       alias: 's',
       describe: 'sort diff by one or more flags.',
@@ -377,6 +384,8 @@ const FLAG_COLUMNS = Object.keys(FLAG_CONFIG);
 
 // Build the table with the value for each flag.
 const isDiff = argv.diff != null && argv.diff.length > 1;
+const isEqual = argv.equal === true;
+
 const table = {};
 // eslint-disable-next-line no-for-of-loops/no-for-of-loops
 for (const flag of allFlagsUniqueFlags) {
@@ -385,20 +394,26 @@ for (const flag of allFlagsUniqueFlags) {
     return acc;
   }, {});
 
-  if (!isDiff) {
-    table[flag] = values;
-    continue;
-  }
+  if (isDiff || isEqual) {
+    const channels = isDiff ? argv.diff.map(argToHeader) : FLAG_COLUMNS;
+    const subset = channels.reduce((acc, key) => {
+      if (key in values) {
+        acc[key] = values[key];
+      }
+      return acc;
+    }, {});
 
-  const subset = argv.diff.map(argToHeader).reduce((acc, key) => {
-    if (key in values) {
-      acc[key] = values[key];
+    if (isEqual) {
+      if (new Set(Object.values(subset)).size === 1) {
+        table[flag] = subset;
+      }
+    } else {
+      if (new Set(Object.values(subset)).size !== 1) {
+        table[flag] = subset;
+      }
     }
-    return acc;
-  }, {});
-
-  if (new Set(Object.values(subset)).size !== 1) {
-    table[flag] = subset;
+  } else {
+    table[flag] = values;
   }
 }
 
