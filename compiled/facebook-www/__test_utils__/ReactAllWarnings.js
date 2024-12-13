@@ -316,7 +316,6 @@ export default [
   "Unsupported vendor-prefixed style property %s. Did you mean %s?",
   "Use the `defaultValue` or `value` props instead of setting children on <textarea>.",
   "Use the `defaultValue` or `value` props on <select> instead of setting `selected` on <option>.",
-  "Using 'dangerouslySetInnerHTML' in an svg element with Trusted Types enabled in an Internet Explorer will cause the trusted value to be converted to string. Assigning string to 'innerHTML' will throw an error if Trusted Types are enforced. You can try to wrap your svg element inside a div and use 'dangerouslySetInnerHTML' on the enclosing div instead.",
   "Using AsyncIterators as children is unsupported and will likely yield unexpected results because enumerating a generator mutates it. You can use an AsyncIterable that can iterate multiple times over the same items.",
   "Using Iterators as children is unsupported and will likely yield unexpected results because enumerating a generator mutates it. You may convert it to an array with `Array.from()` or the `[...spread]` operator before rendering. You can also use an Iterable that can iterate multiple times over the same items.",
   "Using Maps as children is not supported. Use an array of keyed ReactElements instead.",
