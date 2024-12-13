@@ -42,7 +42,6 @@ export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableHalt = false;
 export const enableHiddenSubtreeInsertionEffectCleanup = false;
 export const enableInfiniteRenderLoopDetection = false;
-export const enableLazyContextPropagation = true;
 export const enableLegacyCache = false;
 export const enableLegacyFBSupport = false;
 export const enableLegacyHidden = false;

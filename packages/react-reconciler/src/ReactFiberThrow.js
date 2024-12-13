@@ -39,7 +39,6 @@ import {
 } from './ReactFiberFlags';
 import {NoMode, ConcurrentMode} from './ReactTypeOfMode';
 import {
-  enableLazyContextPropagation,
   enableUpdaterTracking,
   enablePostpone,
   disableLegacyMode,
@@ -199,21 +198,19 @@ function initializeClassErrorUpdate(
 }
 
 function resetSuspendedComponent(sourceFiber: Fiber, rootRenderLanes: Lanes) {
-  if (enableLazyContextPropagation) {
-    const currentSourceFiber = sourceFiber.alternate;
-    if (currentSourceFiber !== null) {
-      // Since we never visited the children of the suspended component, we
-      // need to propagate the context change now, to ensure that we visit
-      // them during the retry.
-      //
-      // We don't have to do this for errors because we retry errors without
-      // committing in between. So this is specific to Suspense.
-      propagateParentContextChangesToDeferredTree(
-        currentSourceFiber,
-        sourceFiber,
-        rootRenderLanes,
-      );
-    }
+  const currentSourceFiber = sourceFiber.alternate;
+  if (currentSourceFiber !== null) {
+    // Since we never visited the children of the suspended component, we
+    // need to propagate the context change now, to ensure that we visit
+    // them during the retry.
+    //
+    // We don't have to do this for errors because we retry errors without
+    // committing in between. So this is specific to Suspense.
+    propagateParentContextChangesToDeferredTree(
+      currentSourceFiber,
+      sourceFiber,
+      rootRenderLanes,
+    );
   }
 
   // Reset the memoizedState to what it was before we attempted to render it.

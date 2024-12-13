@@ -99,8 +99,6 @@ export const enableObjectFiber = false;
 
 export const enableTransitionTracing = false;
 
-export const enableLazyContextPropagation = true;
-
 // FB-only usage. The new API has different semantics.
 export const enableLegacyHidden = false;
 
