@@ -23,8 +23,6 @@ import {
   enableComponentPerformanceTrack,
 } from 'shared/ReactFeatureFlags';
 
-import {enableFlightReadableStream} from 'shared/ReactFeatureFlags';
-
 import {
   scheduleWork,
   scheduleMicrotask,
@@ -1162,7 +1160,6 @@ function processServerComponentReturnValue(
     return multiShot;
   }
   if (
-    enableFlightReadableStream &&
     typeof (result: any)[ASYNC_ITERATOR] === 'function' &&
     (typeof ReadableStream !== 'function' ||
       !(result instanceof ReadableStream))
@@ -2762,25 +2759,18 @@ function renderModelDestructive(
       return renderFragment(request, task, Array.from((iterator: any)));
     }
 
-    if (enableFlightReadableStream) {
-      // TODO: Blob is not available in old Node. Remove the typeof check later.
-      if (
-        typeof ReadableStream === 'function' &&
-        value instanceof ReadableStream
-      ) {
-        return serializeReadableStream(request, task, value);
-      }
-      const getAsyncIterator: void | (() => $AsyncIterator<any, any, any>) =
-        (value: any)[ASYNC_ITERATOR];
-      if (typeof getAsyncIterator === 'function') {
-        // We treat AsyncIterables as a Fragment and as such we might need to key them.
-        return renderAsyncFragment(
-          request,
-          task,
-          (value: any),
-          getAsyncIterator,
-        );
-      }
+    // TODO: Blob is not available in old Node. Remove the typeof check later.
+    if (
+      typeof ReadableStream === 'function' &&
+      value instanceof ReadableStream
+    ) {
+      return serializeReadableStream(request, task, value);
+    }
+    const getAsyncIterator: void | (() => $AsyncIterator<any, any, any>) =
+      (value: any)[ASYNC_ITERATOR];
+    if (typeof getAsyncIterator === 'function') {
+      // We treat AsyncIterables as a Fragment and as such we might need to key them.
+      return renderAsyncFragment(request, task, (value: any), getAsyncIterator);
     }
 
     // We put the Date check low b/c most of the time Date's will already have been serialized

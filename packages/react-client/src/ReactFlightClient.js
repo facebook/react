@@ -44,7 +44,6 @@ import type {TemporaryReferenceSet} from './ReactFlightTemporaryReferences';
 
 import {
   enablePostpone,
-  enableFlightReadableStream,
   enableOwnerStacks,
   enableServerComponentLogs,
   enableProfilerTimer,
@@ -406,14 +405,12 @@ function wakeChunkIfInitialized<T>(
 
 function triggerErrorOnChunk<T>(chunk: SomeChunk<T>, error: mixed): void {
   if (chunk.status !== PENDING && chunk.status !== BLOCKED) {
-    if (enableFlightReadableStream) {
-      // If we get more data to an already resolved ID, we assume that it's
-      // a stream chunk since any other row shouldn't have more than one entry.
-      const streamChunk: InitializedStreamChunk<any> = (chunk: any);
-      const controller = streamChunk.reason;
-      // $FlowFixMe[incompatible-call]: The error method should accept mixed.
-      controller.error(error);
-    }
+    // If we get more data to an already resolved ID, we assume that it's
+    // a stream chunk since any other row shouldn't have more than one entry.
+    const streamChunk: InitializedStreamChunk<any> = (chunk: any);
+    const controller = streamChunk.reason;
+    // $FlowFixMe[incompatible-call]: The error method should accept mixed.
+    controller.error(error);
     return;
   }
   const listeners = chunk.reason;
@@ -512,13 +509,11 @@ function resolveModelChunk<T>(
   value: UninitializedModel,
 ): void {
   if (chunk.status !== PENDING) {
-    if (enableFlightReadableStream) {
-      // If we get more data to an already resolved ID, we assume that it's
-      // a stream chunk since any other row shouldn't have more than one entry.
-      const streamChunk: InitializedStreamChunk<any> = (chunk: any);
-      const controller = streamChunk.reason;
-      controller.enqueueModel(value);
-    }
+    // If we get more data to an already resolved ID, we assume that it's
+    // a stream chunk since any other row shouldn't have more than one entry.
+    const streamChunk: InitializedStreamChunk<any> = (chunk: any);
+    const controller = streamChunk.reason;
+    controller.enqueueModel(value);
     return;
   }
   const resolveListeners = chunk.value;
@@ -1718,16 +1713,14 @@ function resolveModel(
 
 function resolveText(response: Response, id: number, text: string): void {
   const chunks = response._chunks;
-  if (enableFlightReadableStream) {
-    const chunk = chunks.get(id);
-    if (chunk && chunk.status !== PENDING) {
-      // If we get more data to an already resolved ID, we assume that it's
-      // a stream chunk since any other row shouldn't have more than one entry.
-      const streamChunk: InitializedStreamChunk<any> = (chunk: any);
-      const controller = streamChunk.reason;
-      controller.enqueueValue(text);
-      return;
-    }
+  const chunk = chunks.get(id);
+  if (chunk && chunk.status !== PENDING) {
+    // If we get more data to an already resolved ID, we assume that it's
+    // a stream chunk since any other row shouldn't have more than one entry.
+    const streamChunk: InitializedStreamChunk<any> = (chunk: any);
+    const controller = streamChunk.reason;
+    controller.enqueueValue(text);
+    return;
   }
   chunks.set(id, createInitializedTextChunk(response, text));
 }
@@ -1738,16 +1731,14 @@ function resolveBuffer(
   buffer: $ArrayBufferView | ArrayBuffer,
 ): void {
   const chunks = response._chunks;
-  if (enableFlightReadableStream) {
-    const chunk = chunks.get(id);
-    if (chunk && chunk.status !== PENDING) {
-      // If we get more data to an already resolved ID, we assume that it's
-      // a stream chunk since any other row shouldn't have more than one entry.
-      const streamChunk: InitializedStreamChunk<any> = (chunk: any);
-      const controller = streamChunk.reason;
-      controller.enqueueValue(buffer);
-      return;
-    }
+  const chunk = chunks.get(id);
+  if (chunk && chunk.status !== PENDING) {
+    // If we get more data to an already resolved ID, we assume that it's
+    // a stream chunk since any other row shouldn't have more than one entry.
+    const streamChunk: InitializedStreamChunk<any> = (chunk: any);
+    const controller = streamChunk.reason;
+    controller.enqueueValue(buffer);
+    return;
   }
   chunks.set(id, createInitializedBufferChunk(response, buffer));
 }
@@ -2967,38 +2958,28 @@ function processFullStringRow(
       );
     }
     case 82 /* "R" */: {
-      if (enableFlightReadableStream) {
-        startReadableStream(response, id, undefined);
-        return;
-      }
+      startReadableStream(response, id, undefined);
+      return;
     }
     // Fallthrough
     case 114 /* "r" */: {
-      if (enableFlightReadableStream) {
-        startReadableStream(response, id, 'bytes');
-        return;
-      }
+      startReadableStream(response, id, 'bytes');
+      return;
     }
     // Fallthrough
     case 88 /* "X" */: {
-      if (enableFlightReadableStream) {
-        startAsyncIterable(response, id, false);
-        return;
-      }
+      startAsyncIterable(response, id, false);
+      return;
     }
     // Fallthrough
     case 120 /* "x" */: {
-      if (enableFlightReadableStream) {
-        startAsyncIterable(response, id, true);
-        return;
-      }
+      startAsyncIterable(response, id, true);
+      return;
     }
     // Fallthrough
     case 67 /* "C" */: {
-      if (enableFlightReadableStream) {
-        stopStream(response, id, row);
-        return;
-      }
+      stopStream(response, id, row);
+      return;
     }
     // Fallthrough
     case 80 /* "P" */: {

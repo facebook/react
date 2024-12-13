@@ -147,7 +147,6 @@ describe('ReactFlightDOMReplyEdge', () => {
     expect(await resultBlob.arrayBuffer()).toEqual(await blob.arrayBuffer());
   });
 
-  // @gate enableFlightReadableStream
   it('should supports ReadableStreams with typed arrays', async () => {
     const buffer = new Uint8Array([
       123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
@@ -194,7 +193,6 @@ describe('ReactFlightDOMReplyEdge', () => {
     expect(streamedBuffers).toEqual(buffers);
   });
 
-  // @gate enableFlightReadableStream
   it('should support BYOB binary ReadableStreams', async () => {
     const buffer = new Uint8Array([
       123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,

@@ -31,7 +31,6 @@ export const enableDeferRootSchedulingToMicrotask = true;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableMoveBefore = false;
 export const enableFizzExternalRuntime = true;
-export const enableFlightReadableStream = true;
 export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableHalt = false;
 export const enableInfiniteRenderLoopDetection = false;

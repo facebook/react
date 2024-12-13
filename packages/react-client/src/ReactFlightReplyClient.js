@@ -18,10 +18,7 @@ import type {
 import type {LazyComponent} from 'react/src/ReactLazy';
 import type {TemporaryReferenceSet} from './ReactFlightTemporaryReferences';
 
-import {
-  enableRenderableContext,
-  enableFlightReadableStream,
-} from 'shared/ReactFeatureFlags';
+import {enableRenderableContext} from 'shared/ReactFeatureFlags';
 
 import {
   REACT_ELEMENT_TYPE,
@@ -663,23 +660,21 @@ export function processReply(
         return Array.from((iterator: any));
       }
 
-      if (enableFlightReadableStream) {
-        // TODO: ReadableStream is not available in old Node. Remove the typeof check later.
-        if (
-          typeof ReadableStream === 'function' &&
-          value instanceof ReadableStream
-        ) {
-          return serializeReadableStream(value);
-        }
-        const getAsyncIterator: void | (() => $AsyncIterator<any, any, any>) =
-          (value: any)[ASYNC_ITERATOR];
-        if (typeof getAsyncIterator === 'function') {
-          // We treat AsyncIterables as a Fragment and as such we might need to key them.
-          return serializeAsyncIterable(
-            (value: any),
-            getAsyncIterator.call((value: any)),
-          );
-        }
+      // TODO: ReadableStream is not available in old Node. Remove the typeof check later.
+      if (
+        typeof ReadableStream === 'function' &&
+        value instanceof ReadableStream
+      ) {
+        return serializeReadableStream(value);
+      }
+      const getAsyncIterator: void | (() => $AsyncIterator<any, any, any>) =
+        (value: any)[ASYNC_ITERATOR];
+      if (typeof getAsyncIterator === 'function') {
+        // We treat AsyncIterables as a Fragment and as such we might need to key them.
+        return serializeAsyncIterable(
+          (value: any),
+          getAsyncIterator.call((value: any)),
+        );
       }
 
       // Verify that this is a simple plain object.
