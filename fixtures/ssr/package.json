@@ -4,7 +4,7 @@
   "private": true,
   "devDependencies": {
     "concurrently": "3.1.0",
-    "http-proxy-middleware": "0.17.3",
+    "http-proxy-middleware": "2.0.7",
     "react-scripts": "0.9.5"
   },
   "dependencies": {
