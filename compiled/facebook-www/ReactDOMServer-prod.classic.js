@@ -59,6 +59,7 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
     dynamicFeatureFlags.disableLegacyContextForFunctionComponents,
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+  enableUseResourceEffectHook = dynamicFeatureFlags.enableUseResourceEffectHook,
   renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_ELEMENT_TYPE = renameElementSymbol
@@ -3360,6 +3361,7 @@ var HooksDispatcher = {
 };
 HooksDispatcher.useFormState = useActionState;
 HooksDispatcher.useActionState = useActionState;
+enableUseResourceEffectHook && (HooksDispatcher.useResourceEffect = noop$1);
 var currentResumableState = null,
   DefaultAsyncDispatcher = {
     getCacheForType: function () {
@@ -5910,4 +5912,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.1.0-www-classic-4dff0e62-20241213";
+exports.version = "19.1.0-www-classic-17ca4b15-20241213";

@@ -7521,6 +7521,8 @@ __DEV__ &&
         dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+      enableUseResourceEffectHook =
+        dynamicFeatureFlags.enableUseResourceEffectHook,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
       enableOwnerStacks = dynamicFeatureFlags.enableOwnerStacks,
       REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
@@ -8908,6 +8910,7 @@ __DEV__ &&
       };
     HooksDispatcher.useFormState = useActionState;
     HooksDispatcher.useActionState = useActionState;
+    enableUseResourceEffectHook && (HooksDispatcher.useResourceEffect = noop$1);
     var currentResumableState = null,
       currentTaskInDEV = null,
       DefaultAsyncDispatcher = {
@@ -8987,5 +8990,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.1.0-www-modern-4dff0e62-20241213";
+    exports.version = "19.1.0-www-modern-17ca4b15-20241213";
   })();

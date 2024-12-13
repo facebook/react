@@ -6924,6 +6924,8 @@ __DEV__ &&
         dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+      enableUseResourceEffectHook =
+        dynamicFeatureFlags.enableUseResourceEffectHook,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
       enableOwnerStacks = dynamicFeatureFlags.enableOwnerStacks,
       REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
@@ -8216,6 +8218,7 @@ __DEV__ &&
       };
     HooksDispatcher.useFormState = useActionState;
     HooksDispatcher.useActionState = useActionState;
+    enableUseResourceEffectHook && (HooksDispatcher.useResourceEffect = noop$1);
     var currentResumableState = null,
       currentTaskInDEV = null,
       DefaultAsyncDispatcher = {

@@ -42,6 +42,7 @@ var React = require("react"),
     dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+  enableUseResourceEffectHook = dynamicFeatureFlags.enableUseResourceEffectHook,
   renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_ELEMENT_TYPE = renameElementSymbol
@@ -3237,6 +3238,7 @@ var HooksDispatcher = {
 };
 HooksDispatcher.useFormState = useActionState;
 HooksDispatcher.useActionState = useActionState;
+enableUseResourceEffectHook && (HooksDispatcher.useResourceEffect = noop$1);
 var currentResumableState = null,
   DefaultAsyncDispatcher = {
     getCacheForType: function () {
