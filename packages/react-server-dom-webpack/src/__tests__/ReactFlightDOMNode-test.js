@@ -292,7 +292,6 @@ describe('ReactFlightDOMNode', () => {
     );
   });
 
-  // @gate enableFlightReadableStream
   it('should cancels the underlying ReadableStream when we are cancelled', async () => {
     let controller;
     let cancelReason;
@@ -336,7 +335,6 @@ describe('ReactFlightDOMNode', () => {
     );
   });
 
-  // @gate enableFlightReadableStream
   it('should cancels the underlying ReadableStream when we abort', async () => {
     const errors = [];
     let controller;

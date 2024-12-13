@@ -56,7 +56,6 @@ export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableCPUSuspense = true;
 export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = true;
-export const enableFilterEmptyStringAttributesDOM = true;
 export const enableMoveBefore = false;
 export const disableInputAttributeSyncing = false;
 export const enableLegacyFBSupport = true;
@@ -76,7 +75,6 @@ export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableCache = true;
 export const enableLegacyCache = true;
 
-export const enableFlightReadableStream = true;
 export const enableAsyncIterableChildren = false;
 
 export const enableTaint = false;
@@ -98,8 +96,6 @@ export const enableScopeAPI = true;
 export const enableSuspenseCallback = true;
 
 export const enableLegacyHidden = true;
-
-export const enableComponentStackLocations = true;
 
 export const disableTextareaChildren = __EXPERIMENTAL__;
 
