@@ -16,7 +16,6 @@ import {
   possibleRegistrationNames,
 } from '../events/EventRegistry';
 
-import {canUseDOM} from 'shared/ExecutionEnvironment';
 import {checkHtmlStringCoercion} from 'shared/CheckStringCoercion';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 import {checkControlledValueProps} from '../shared/ReactControlledValuePropTypes';
@@ -50,7 +49,6 @@ import {
 } from './ReactDOMTextarea';
 import {validateTextNesting} from './validateDOMNesting';
 import {track} from './inputValueTracking';
-import setInnerHTML from './setInnerHTML';
 import setTextContent from './setTextContent';
 import {
   createDangerousStringForStyles,
