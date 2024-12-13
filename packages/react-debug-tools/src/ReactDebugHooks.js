@@ -104,21 +104,13 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
       );
       Dispatcher.useDeferredValue(null);
       Dispatcher.useMemo(() => null);
+      Dispatcher.useOptimistic(null, (s: mixed, a: mixed) => s);
+      Dispatcher.useFormState((s: mixed, p: mixed) => s, null);
+      Dispatcher.useActionState((s: mixed, p: mixed) => s, null);
+      Dispatcher.useHostTransitionStatus();
       if (typeof Dispatcher.useMemoCache === 'function') {
         // This type check is for Flow only.
         Dispatcher.useMemoCache(0);
-      }
-      if (typeof Dispatcher.useOptimistic === 'function') {
-        // This type check is for Flow only.
-        Dispatcher.useOptimistic(null, (s: mixed, a: mixed) => s);
-      }
-      if (typeof Dispatcher.useFormState === 'function') {
-        // This type check is for Flow only.
-        Dispatcher.useFormState((s: mixed, p: mixed) => s, null);
-      }
-      if (typeof Dispatcher.useActionState === 'function') {
-        // This type check is for Flow only.
-        Dispatcher.useActionState((s: mixed, p: mixed) => s, null);
       }
       if (typeof Dispatcher.use === 'function') {
         // This type check is for Flow only.
@@ -143,11 +135,6 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
       }
 
       Dispatcher.useId();
-
-      if (typeof Dispatcher.useHostTransitionStatus === 'function') {
-        // This type check is for Flow only.
-        Dispatcher.useHostTransitionStatus();
-      }
     } finally {
       readHookLog = hookLog;
       hookLog = [];

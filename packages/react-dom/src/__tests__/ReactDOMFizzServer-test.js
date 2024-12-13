@@ -6330,7 +6330,6 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual('Hi');
   });
 
-  // @gate enableAsyncActions
   it('useActionState hydrates without a mismatch', async () => {
     // This is testing an implementation detail: useActionState emits comment
     // nodes into the SSR stream, so this checks that they are handled correctly
@@ -6383,7 +6382,6 @@ describe('ReactDOMFizzServer', () => {
     expect(childRef.current).toBe(child);
   });
 
-  // @gate enableAsyncActions
   it("useActionState hydrates without a mismatch if there's a render phase update", async () => {
     async function action(state) {
       return state;

@@ -448,17 +448,17 @@ export type Dispatcher = {
   useId(): string,
   useCacheRefresh?: () => <T>(?() => T, ?T) => void,
   useMemoCache?: (size: number) => Array<any>,
-  useHostTransitionStatus?: () => TransitionStatus,
-  useOptimistic?: <S, A>(
+  useHostTransitionStatus: () => TransitionStatus,
+  useOptimistic: <S, A>(
     passthrough: S,
     reducer: ?(S, A) => S,
   ) => [S, (A) => void],
-  useFormState?: <S, P>(
+  useFormState: <S, P>(
     action: (Awaited<S>, P) => S,
     initialState: Awaited<S>,
     permalink?: string,
   ) => [Awaited<S>, (P) => void, boolean],
-  useActionState?: <S, P>(
+  useActionState: <S, P>(
     action: (Awaited<S>, P) => S,
     initialState: Awaited<S>,
     permalink?: string,

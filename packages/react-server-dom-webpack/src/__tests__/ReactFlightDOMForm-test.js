@@ -361,7 +361,6 @@ describe('ReactFlightDOMForm', () => {
     expect(foo).toBe('barobject');
   });
 
-  // @gate enableAsyncActions
   it("useActionState's dispatch binds the initial state to the provided action", async () => {
     const serverAction = serverExports(
       async function action(prevState, formData) {
@@ -409,7 +408,6 @@ describe('ReactFlightDOMForm', () => {
     expect(await returnValue).toEqual({count: 6});
   });
 
-  // @gate enableAsyncActions
   it('useActionState can reuse state during MPA form submission', async () => {
     const serverAction = serverExports(
       async function action(prevState, formData) {
@@ -498,7 +496,6 @@ describe('ReactFlightDOMForm', () => {
     }
   });
 
-  // @gate enableAsyncActions
   it(
     'useActionState preserves state if arity is the same, but different ' +
       'arguments are bound (i.e. inline closure)',
@@ -617,7 +614,6 @@ describe('ReactFlightDOMForm', () => {
     },
   );
 
-  // @gate enableAsyncActions
   it('useActionState does not reuse state if action signatures are different', async () => {
     // This is the same as the previous test, except instead of using bind to
     // configure the server action (i.e. a closure), it swaps the action.
@@ -704,7 +700,6 @@ describe('ReactFlightDOMForm', () => {
     expect(container.textContent).toBe('111');
   });
 
-  // @gate enableAsyncActions
   it('when permalink is provided, useActionState compares that instead of the keypath', async () => {
     const serverAction = serverExports(
       async function action(prevState, formData) {
@@ -810,7 +805,6 @@ describe('ReactFlightDOMForm', () => {
     expect(container.textContent).toBe('1');
   });
 
-  // @gate enableAsyncActions
   it('useActionState can change the action URL with the `permalink` argument', async () => {
     const serverAction = serverExports(function action(prevState) {
       return {state: prevState.count + 1};
@@ -855,7 +849,6 @@ describe('ReactFlightDOMForm', () => {
     expect(form.action).toBe('http://localhost/permalink');
   });
 
-  // @gate enableAsyncActions
   it('useActionState `permalink` is coerced to string', async () => {
     const serverAction = serverExports(function action(prevState) {
       return {state: prevState.count + 1};
@@ -908,7 +901,6 @@ describe('ReactFlightDOMForm', () => {
     expect(form.action).toBe('http://localhost/permalink');
   });
 
-  // @gate enableAsyncActions
   it('useActionState can return JSX state during MPA form submission', async () => {
     const serverAction = serverExports(
       async function action(prevState, formData) {
@@ -980,7 +972,7 @@ describe('ReactFlightDOMForm', () => {
     expect(form2.firstChild.tagName).toBe('DIV');
   });
 
-  // @gate enableAsyncActions && enableBinaryFlight
+  // @gate enableBinaryFlight
   it('useActionState can return binary state during MPA form submission', async () => {
     const serverAction = serverExports(
       async function action(prevState, formData) {

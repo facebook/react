@@ -44,7 +44,6 @@ import {
   enableUseEffectEventHook,
   enableLegacyCache,
   debugRenderPhaseSideEffectsForStrictMode,
-  enableAsyncActions,
   disableLegacyMode,
   enableNoCloningMemoCache,
   enableContextProfiling,
@@ -907,9 +906,6 @@ export function renderTransitionAwareHostComponentWithHooks(
   workInProgress: Fiber,
   lanes: Lanes,
 ): TransitionStatus {
-  if (!enableAsyncActions) {
-    throw new Error('Not implemented.');
-  }
   return renderWithHooks(
     current,
     workInProgress,
@@ -921,10 +917,6 @@ export function renderTransitionAwareHostComponentWithHooks(
 }
 
 export function TransitionAwareHostComponent(): TransitionStatus {
-  if (!enableAsyncActions) {
-    throw new Error('Not implemented.');
-  }
-
   const dispatcher: any = ReactSharedInternals.H;
   const [maybeThenable] = dispatcher.useState();
   let nextState;
@@ -1490,7 +1482,7 @@ function updateReducerImpl<S, A>(
 
         // Check if this is an optimistic update.
         const revertLane = update.revertLane;
-        if (!enableAsyncActions || revertLane === NoLane) {
+        if (revertLane === NoLane) {
           // This is not an optimistic update, and we're going to apply it now.
           // But, if there were earlier updates that were skipped, we need to
           // leave this update in the queue so it can be rebased later.
@@ -3268,25 +3260,14 @@ function startTransition<S>(
   const prevTransition = ReactSharedInternals.T;
   const currentTransition: BatchConfigTransition = {};
 
-  if (enableAsyncActions) {
-    // We don't really need to use an optimistic update here, because we
-    // schedule a second "revert" update below (which we use to suspend the
-    // transition until the async action scope has finished). But we'll use an
-    // optimistic update anyway to make it less likely the behavior accidentally
-    // diverges; for example, both an optimistic update and this one should
-    // share the same lane.
-    ReactSharedInternals.T = currentTransition;
-    dispatchOptimisticSetState(fiber, false, queue, pendingState);
-  } else {
-    ReactSharedInternals.T = null;
-    dispatchSetStateInternal(
-      fiber,
-      queue,
-      pendingState,
-      requestUpdateLane(fiber),
-    );
-    ReactSharedInternals.T = currentTransition;
-  }
+  // We don't really need to use an optimistic update here, because we
+  // schedule a second "revert" update below (which we use to suspend the
+  // transition until the async action scope has finished). But we'll use an
+  // optimistic update anyway to make it less likely the behavior accidentally
+  // diverges; for example, both an optimistic update and this one should
+  // share the same lane.
+  ReactSharedInternals.T = currentTransition;
+  dispatchOptimisticSetState(fiber, false, queue, pendingState);
 
   if (enableTransitionTracing) {
     if (options !== undefined && options.name !== undefined) {
@@ -3300,78 +3281,61 @@ function startTransition<S>(
   }
 
   try {
-    if (enableAsyncActions) {
-      const returnValue = callback();
-      const onStartTransitionFinish = ReactSharedInternals.S;
-      if (onStartTransitionFinish !== null) {
-        onStartTransitionFinish(currentTransition, returnValue);
-      }
+    const returnValue = callback();
+    const onStartTransitionFinish = ReactSharedInternals.S;
+    if (onStartTransitionFinish !== null) {
+      onStartTransitionFinish(currentTransition, returnValue);
+    }
 
-      // Check if we're inside an async action scope. If so, we'll entangle
-      // this new action with the existing scope.
-      //
-      // If we're not already inside an async action scope, and this action is
-      // async, then we'll create a new async scope.
-      //
-      // In the async case, the resulting render will suspend until the async
-      // action scope has finished.
-      if (
-        returnValue !== null &&
-        typeof returnValue === 'object' &&
-        typeof returnValue.then === 'function'
-      ) {
-        const thenable = ((returnValue: any): Thenable<mixed>);
-        // Create a thenable that resolves to `finishedState` once the async
-        // action has completed.
-        const thenableForFinishedState = chainThenableValue(
-          thenable,
-          finishedState,
-        );
-        dispatchSetStateInternal(
-          fiber,
-          queue,
-          (thenableForFinishedState: any),
-          requestUpdateLane(fiber),
-        );
-      } else {
-        dispatchSetStateInternal(
-          fiber,
-          queue,
-          finishedState,
-          requestUpdateLane(fiber),
-        );
-      }
+    // Check if we're inside an async action scope. If so, we'll entangle
+    // this new action with the existing scope.
+    //
+    // If we're not already inside an async action scope, and this action is
+    // async, then we'll create a new async scope.
+    //
+    // In the async case, the resulting render will suspend until the async
+    // action scope has finished.
+    if (
+      returnValue !== null &&
+      typeof returnValue === 'object' &&
+      typeof returnValue.then === 'function'
+    ) {
+      const thenable = ((returnValue: any): Thenable<mixed>);
+      // Create a thenable that resolves to `finishedState` once the async
+      // action has completed.
+      const thenableForFinishedState = chainThenableValue(
+        thenable,
+        finishedState,
+      );
+      dispatchSetStateInternal(
+        fiber,
+        queue,
+        (thenableForFinishedState: any),
+        requestUpdateLane(fiber),
+      );
     } else {
-      // Async actions are not enabled.
       dispatchSetStateInternal(
         fiber,
         queue,
         finishedState,
         requestUpdateLane(fiber),
       );
-      callback();
     }
   } catch (error) {
-    if (enableAsyncActions) {
-      // This is a trick to get the `useTransition` hook to rethrow the error.
-      // When it unwraps the thenable with the `use` algorithm, the error
-      // will be thrown.
-      const rejectedThenable: RejectedThenable<S> = {
-        then() {},
-        status: 'rejected',
-        reason: error,
-      };
-      dispatchSetStateInternal(
-        fiber,
-        queue,
-        rejectedThenable,
-        requestUpdateLane(fiber),
-      );
-    } else {
-      // The error rethrowing behavior is only enabled when the async actions
-      // feature is on, even for sync actions.
-      throw error;
-    }
+    // This is a trick to get the `useTransition` hook to rethrow the error.
+    // When it unwraps the thenable with the `use` algorithm, the error
+    // will be thrown.
+    const rejectedThenable: RejectedThenable<S> = {
+      then() {},
+      status: 'rejected',
+      reason: error,
+    };
+    dispatchSetStateInternal(
+      fiber,
+      queue,
+      rejectedThenable,
+      requestUpdateLane(fiber),
+    );
   } finally {
     setCurrentUpdatePriority(previousPriority);
 
@@ -3401,15 +3365,6 @@ export function startHostTransition<F>(
   action: (F => mixed) | null,
   formData: F,
 ): void {
-  if (!enableAsyncActions) {
-    // Form actions are enabled, but async actions are not. Call the function,
-    // but don't handle any pending or error states.
-    if (action !== null) {
-      action(formData);
-    }
-    return;
-  }
-
   if (formFiber.tag !== HostComponent) {
     throw new Error(
       'Expected the form instance to be a HostComponent. This ' +
@@ -3595,9 +3550,6 @@ function rerenderTransition(): [
 }
 
 function useHostTransitionStatus(): TransitionStatus {
-  if (!enableAsyncActions) {
-    throw new Error('Not implemented.');
-  }
   return readContext(HostTransitionContext);
 }
 
@@ -4026,6 +3978,10 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useTransition: throwInvalidHookError,
   useSyncExternalStore: throwInvalidHookError,
   useId: throwInvalidHookError,
+  useHostTransitionStatus: throwInvalidHookError,
+  useFormState: throwInvalidHookError,
+  useActionState: throwInvalidHookError,
+  useOptimistic: throwInvalidHookError,
 };
 if (enableCache) {
   (ContextOnlyDispatcher: Dispatcher).useCacheRefresh = throwInvalidHookError;
@@ -4038,15 +3994,6 @@ if (enableUseEffectEventHook) {
 }
 if (enableUseResourceEffectHook) {
   (ContextOnlyDispatcher: Dispatcher).useResourceEffect = throwInvalidHookError;
-}
-if (enableAsyncActions) {
-  (ContextOnlyDispatcher: Dispatcher).useHostTransitionStatus =
-    throwInvalidHookError;
-  (ContextOnlyDispatcher: Dispatcher).useFormState = throwInvalidHookError;
-  (ContextOnlyDispatcher: Dispatcher).useActionState = throwInvalidHookError;
-}
-if (enableAsyncActions) {
-  (ContextOnlyDispatcher: Dispatcher).useOptimistic = throwInvalidHookError;
 }
 if (enableContextProfiling) {
   (ContextOnlyDispatcher: Dispatcher).unstable_useContextWithBailout =
@@ -4072,6 +4019,10 @@ const HooksDispatcherOnMount: Dispatcher = {
   useTransition: mountTransition,
   useSyncExternalStore: mountSyncExternalStore,
   useId: mountId,
+  useHostTransitionStatus: useHostTransitionStatus,
+  useFormState: mountActionState,
+  useActionState: mountActionState,
+  useOptimistic: mountOptimistic,
 };
 if (enableCache) {
   (HooksDispatcherOnMount: Dispatcher).useCacheRefresh = mountRefresh;
@@ -4084,15 +4035,6 @@ if (enableUseEffectEventHook) {
 }
 if (enableUseResourceEffectHook) {
   (HooksDispatcherOnMount: Dispatcher).useResourceEffect = mountResourceEffect;
-}
-if (enableAsyncActions) {
-  (HooksDispatcherOnMount: Dispatcher).useHostTransitionStatus =
-    useHostTransitionStatus;
-  (HooksDispatcherOnMount: Dispatcher).useFormState = mountActionState;
-  (HooksDispatcherOnMount: Dispatcher).useActionState = mountActionState;
-}
-if (enableAsyncActions) {
-  (HooksDispatcherOnMount: Dispatcher).useOptimistic = mountOptimistic;
 }
 if (enableContextProfiling) {
   (HooksDispatcherOnMount: Dispatcher).unstable_useContextWithBailout =
@@ -4118,6 +4060,10 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useTransition: updateTransition,
   useSyncExternalStore: updateSyncExternalStore,
   useId: updateId,
+  useHostTransitionStatus: useHostTransitionStatus,
+  useFormState: updateActionState,
+  useActionState: updateActionState,
+  useOptimistic: updateOptimistic,
 };
 if (enableCache) {
   (HooksDispatcherOnUpdate: Dispatcher).useCacheRefresh = updateRefresh;
@@ -4131,15 +4077,6 @@ if (enableUseEffectEventHook) {
 if (enableUseResourceEffectHook) {
   (HooksDispatcherOnUpdate: Dispatcher).useResourceEffect =
     updateResourceEffect;
-}
-if (enableAsyncActions) {
-  (HooksDispatcherOnUpdate: Dispatcher).useHostTransitionStatus =
-    useHostTransitionStatus;
-  (HooksDispatcherOnUpdate: Dispatcher).useFormState = updateActionState;
-  (HooksDispatcherOnUpdate: Dispatcher).useActionState = updateActionState;
-}
-if (enableAsyncActions) {
-  (HooksDispatcherOnUpdate: Dispatcher).useOptimistic = updateOptimistic;
 }
 if (enableContextProfiling) {
   (HooksDispatcherOnUpdate: Dispatcher).unstable_useContextWithBailout =
@@ -4165,6 +4102,10 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useTransition: rerenderTransition,
   useSyncExternalStore: updateSyncExternalStore,
   useId: updateId,
+  useHostTransitionStatus: useHostTransitionStatus,
+  useFormState: rerenderActionState,
+  useActionState: rerenderActionState,
+  useOptimistic: rerenderOptimistic,
 };
 if (enableCache) {
   (HooksDispatcherOnRerender: Dispatcher).useCacheRefresh = updateRefresh;
@@ -4178,15 +4119,6 @@ if (enableUseEffectEventHook) {
 if (enableUseResourceEffectHook) {
   (HooksDispatcherOnRerender: Dispatcher).useResourceEffect =
     updateResourceEffect;
-}
-if (enableAsyncActions) {
-  (HooksDispatcherOnRerender: Dispatcher).useHostTransitionStatus =
-    useHostTransitionStatus;
-  (HooksDispatcherOnRerender: Dispatcher).useFormState = rerenderActionState;
-  (HooksDispatcherOnRerender: Dispatcher).useActionState = rerenderActionState;
-}
-if (enableAsyncActions) {
-  (HooksDispatcherOnRerender: Dispatcher).useOptimistic = rerenderOptimistic;
 }
 if (enableContextProfiling) {
   (HooksDispatcherOnRerender: Dispatcher).unstable_useContextWithBailout =
@@ -4347,6 +4279,34 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountId();
     },
+    useFormState<S, P>(
+      action: (Awaited<S>, P) => S,
+      initialState: Awaited<S>,
+      permalink?: string,
+    ): [Awaited<S>, (P) => void, boolean] {
+      currentHookNameInDev = 'useFormState';
+      mountHookTypesDev();
+      warnOnUseFormStateInDev();
+      return mountActionState(action, initialState, permalink);
+    },
+    useActionState<S, P>(
+      action: (Awaited<S>, P) => S,
+      initialState: Awaited<S>,
+      permalink?: string,
+    ): [Awaited<S>, (P) => void, boolean] {
+      currentHookNameInDev = 'useActionState';
+      mountHookTypesDev();
+      return mountActionState(action, initialState, permalink);
+    },
+    useOptimistic<S, A>(
+      passthrough: S,
+      reducer: ?(S, A) => S,
+    ): [S, (A) => void] {
+      currentHookNameInDev = 'useOptimistic';
+      mountHookTypesDev();
+      return mountOptimistic(passthrough, reducer);
+    },
+    useHostTransitionStatus,
   };
   if (enableCache) {
     (HooksDispatcherOnMountInDEV: Dispatcher).useCacheRefresh =
@@ -4388,42 +4348,6 @@ if (__DEV__) {
           updateDeps,
           destroy,
         );
-      };
-  }
-  if (enableAsyncActions) {
-    (HooksDispatcherOnMountInDEV: Dispatcher).useHostTransitionStatus =
-      useHostTransitionStatus;
-    (HooksDispatcherOnMountInDEV: Dispatcher).useFormState =
-      function useFormState<S, P>(
-        action: (Awaited<S>, P) => S,
-        initialState: Awaited<S>,
-        permalink?: string,
-      ): [Awaited<S>, (P) => void, boolean] {
-        currentHookNameInDev = 'useFormState';
-        mountHookTypesDev();
-        warnOnUseFormStateInDev();
-        return mountActionState(action, initialState, permalink);
-      };
-    (HooksDispatcherOnMountInDEV: Dispatcher).useActionState =
-      function useActionState<S, P>(
-        action: (Awaited<S>, P) => S,
-        initialState: Awaited<S>,
-        permalink?: string,
-      ): [Awaited<S>, (P) => void, boolean] {
-        currentHookNameInDev = 'useActionState';
-        mountHookTypesDev();
-        return mountActionState(action, initialState, permalink);
-      };
-  }
-  if (enableAsyncActions) {
-    (HooksDispatcherOnMountInDEV: Dispatcher).useOptimistic =
-      function useOptimistic<S, A>(
-        passthrough: S,
-        reducer: ?(S, A) => S,
-      ): [S, (A) => void] {
-        currentHookNameInDev = 'useOptimistic';
-        mountHookTypesDev();
-        return mountOptimistic(passthrough, reducer);
       };
   }
   if (enableContextProfiling) {
@@ -4559,6 +4483,34 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountId();
     },
+    useActionState<S, P>(
+      action: (Awaited<S>, P) => S,
+      initialState: Awaited<S>,
+      permalink?: string,
+    ): [Awaited<S>, (P) => void, boolean] {
+      currentHookNameInDev = 'useActionState';
+      updateHookTypesDev();
+      return mountActionState(action, initialState, permalink);
+    },
+    useFormState<S, P>(
+      action: (Awaited<S>, P) => S,
+      initialState: Awaited<S>,
+      permalink?: string,
+    ): [Awaited<S>, (P) => void, boolean] {
+      currentHookNameInDev = 'useFormState';
+      updateHookTypesDev();
+      warnOnUseFormStateInDev();
+      return mountActionState(action, initialState, permalink);
+    },
+    useOptimistic<S, A>(
+      passthrough: S,
+      reducer: ?(S, A) => S,
+    ): [S, (A) => void] {
+      currentHookNameInDev = 'useOptimistic';
+      updateHookTypesDev();
+      return mountOptimistic(passthrough, reducer);
+    },
+    useHostTransitionStatus,
   };
   if (enableCache) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useCacheRefresh =
@@ -4600,42 +4552,6 @@ if (__DEV__) {
           updateDeps,
           destroy,
         );
-      };
-  }
-  if (enableAsyncActions) {
-    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useHostTransitionStatus =
-      useHostTransitionStatus;
-    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useFormState =
-      function useFormState<S, P>(
-        action: (Awaited<S>, P) => S,
-        initialState: Awaited<S>,
-        permalink?: string,
-      ): [Awaited<S>, (P) => void, boolean] {
-        currentHookNameInDev = 'useFormState';
-        updateHookTypesDev();
-        warnOnUseFormStateInDev();
-        return mountActionState(action, initialState, permalink);
-      };
-    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useActionState =
-      function useActionState<S, P>(
-        action: (Awaited<S>, P) => S,
-        initialState: Awaited<S>,
-        permalink?: string,
-      ): [Awaited<S>, (P) => void, boolean] {
-        currentHookNameInDev = 'useActionState';
-        updateHookTypesDev();
-        return mountActionState(action, initialState, permalink);
-      };
-  }
-  if (enableAsyncActions) {
-    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useOptimistic =
-      function useOptimistic<S, A>(
-        passthrough: S,
-        reducer: ?(S, A) => S,
-      ): [S, (A) => void] {
-        currentHookNameInDev = 'useOptimistic';
-        updateHookTypesDev();
-        return mountOptimistic(passthrough, reducer);
       };
   }
   if (enableContextProfiling) {
@@ -4771,6 +4687,34 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateId();
     },
+    useFormState<S, P>(
+      action: (Awaited<S>, P) => S,
+      initialState: Awaited<S>,
+      permalink?: string,
+    ): [Awaited<S>, (P) => void, boolean] {
+      currentHookNameInDev = 'useFormState';
+      updateHookTypesDev();
+      warnOnUseFormStateInDev();
+      return updateActionState(action, initialState, permalink);
+    },
+    useActionState<S, P>(
+      action: (Awaited<S>, P) => S,
+      initialState: Awaited<S>,
+      permalink?: string,
+    ): [Awaited<S>, (P) => void, boolean] {
+      currentHookNameInDev = 'useActionState';
+      updateHookTypesDev();
+      return updateActionState(action, initialState, permalink);
+    },
+    useOptimistic<S, A>(
+      passthrough: S,
+      reducer: ?(S, A) => S,
+    ): [S, (A) => void] {
+      currentHookNameInDev = 'useOptimistic';
+      updateHookTypesDev();
+      return updateOptimistic(passthrough, reducer);
+    },
+    useHostTransitionStatus,
   };
   if (enableCache) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useCacheRefresh =
@@ -4811,42 +4755,6 @@ if (__DEV__) {
           updateDeps,
           destroy,
         );
-      };
-  }
-  if (enableAsyncActions) {
-    (HooksDispatcherOnUpdateInDEV: Dispatcher).useHostTransitionStatus =
-      useHostTransitionStatus;
-    (HooksDispatcherOnUpdateInDEV: Dispatcher).useFormState =
-      function useFormState<S, P>(
-        action: (Awaited<S>, P) => S,
-        initialState: Awaited<S>,
-        permalink?: string,
-      ): [Awaited<S>, (P) => void, boolean] {
-        currentHookNameInDev = 'useFormState';
-        updateHookTypesDev();
-        warnOnUseFormStateInDev();
-        return updateActionState(action, initialState, permalink);
-      };
-    (HooksDispatcherOnUpdateInDEV: Dispatcher).useActionState =
-      function useActionState<S, P>(
-        action: (Awaited<S>, P) => S,
-        initialState: Awaited<S>,
-        permalink?: string,
-      ): [Awaited<S>, (P) => void, boolean] {
-        currentHookNameInDev = 'useActionState';
-        updateHookTypesDev();
-        return updateActionState(action, initialState, permalink);
-      };
-  }
-  if (enableAsyncActions) {
-    (HooksDispatcherOnUpdateInDEV: Dispatcher).useOptimistic =
-      function useOptimistic<S, A>(
-        passthrough: S,
-        reducer: ?(S, A) => S,
-      ): [S, (A) => void] {
-        currentHookNameInDev = 'useOptimistic';
-        updateHookTypesDev();
-        return updateOptimistic(passthrough, reducer);
       };
   }
   if (enableContextProfiling) {
@@ -4982,6 +4890,34 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateId();
     },
+    useFormState<S, P>(
+      action: (Awaited<S>, P) => S,
+      initialState: Awaited<S>,
+      permalink?: string,
+    ): [Awaited<S>, (P) => void, boolean] {
+      currentHookNameInDev = 'useFormState';
+      updateHookTypesDev();
+      warnOnUseFormStateInDev();
+      return rerenderActionState(action, initialState, permalink);
+    },
+    useActionState<S, P>(
+      action: (Awaited<S>, P) => S,
+      initialState: Awaited<S>,
+      permalink?: string,
+    ): [Awaited<S>, (P) => void, boolean] {
+      currentHookNameInDev = 'useActionState';
+      updateHookTypesDev();
+      return rerenderActionState(action, initialState, permalink);
+    },
+    useOptimistic<S, A>(
+      passthrough: S,
+      reducer: ?(S, A) => S,
+    ): [S, (A) => void] {
+      currentHookNameInDev = 'useOptimistic';
+      updateHookTypesDev();
+      return rerenderOptimistic(passthrough, reducer);
+    },
+    useHostTransitionStatus,
   };
   if (enableCache) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useCacheRefresh =
@@ -5022,42 +4958,6 @@ if (__DEV__) {
           updateDeps,
           destroy,
         );
-      };
-  }
-  if (enableAsyncActions) {
-    (HooksDispatcherOnRerenderInDEV: Dispatcher).useHostTransitionStatus =
-      useHostTransitionStatus;
-    (HooksDispatcherOnRerenderInDEV: Dispatcher).useFormState =
-      function useFormState<S, P>(
-        action: (Awaited<S>, P) => S,
-        initialState: Awaited<S>,
-        permalink?: string,
-      ): [Awaited<S>, (P) => void, boolean] {
-        currentHookNameInDev = 'useFormState';
-        updateHookTypesDev();
-        warnOnUseFormStateInDev();
-        return rerenderActionState(action, initialState, permalink);
-      };
-    (HooksDispatcherOnRerenderInDEV: Dispatcher).useActionState =
-      function useActionState<S, P>(
-        action: (Awaited<S>, P) => S,
-        initialState: Awaited<S>,
-        permalink?: string,
-      ): [Awaited<S>, (P) => void, boolean] {
-        currentHookNameInDev = 'useActionState';
-        updateHookTypesDev();
-        return rerenderActionState(action, initialState, permalink);
-      };
-  }
-  if (enableAsyncActions) {
-    (HooksDispatcherOnRerenderInDEV: Dispatcher).useOptimistic =
-      function useOptimistic<S, A>(
-        passthrough: S,
-        reducer: ?(S, A) => S,
-      ): [S, (A) => void] {
-        currentHookNameInDev = 'useOptimistic';
-        updateHookTypesDev();
-        return rerenderOptimistic(passthrough, reducer);
       };
   }
   if (enableContextProfiling) {
@@ -5212,6 +5112,36 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountId();
     },
+    useFormState<S, P>(
+      action: (Awaited<S>, P) => S,
+      initialState: Awaited<S>,
+      permalink?: string,
+    ): [Awaited<S>, (P) => void, boolean] {
+      currentHookNameInDev = 'useFormState';
+      warnInvalidHookAccess();
+      mountHookTypesDev();
+      return mountActionState(action, initialState, permalink);
+    },
+    useActionState<S, P>(
+      action: (Awaited<S>, P) => S,
+      initialState: Awaited<S>,
+      permalink?: string,
+    ): [Awaited<S>, (P) => void, boolean] {
+      currentHookNameInDev = 'useActionState';
+      warnInvalidHookAccess();
+      mountHookTypesDev();
+      return mountActionState(action, initialState, permalink);
+    },
+    useOptimistic<S, A>(
+      passthrough: S,
+      reducer: ?(S, A) => S,
+    ): [S, (A) => void] {
+      currentHookNameInDev = 'useOptimistic';
+      warnInvalidHookAccess();
+      mountHookTypesDev();
+      return mountOptimistic(passthrough, reducer);
+    },
+    useHostTransitionStatus,
   };
   if (enableCache) {
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useCacheRefresh =
@@ -5258,44 +5188,6 @@ if (__DEV__) {
           updateDeps,
           destroy,
         );
-      };
-  }
-  if (enableAsyncActions) {
-    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useHostTransitionStatus =
-      useHostTransitionStatus;
-    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useFormState =
-      function useFormState<S, P>(
-        action: (Awaited<S>, P) => S,
-        initialState: Awaited<S>,
-        permalink?: string,
-      ): [Awaited<S>, (P) => void, boolean] {
-        currentHookNameInDev = 'useFormState';
-        warnInvalidHookAccess();
-        mountHookTypesDev();
-        return mountActionState(action, initialState, permalink);
-      };
-    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useActionState =
-      function useActionState<S, P>(
-        action: (Awaited<S>, P) => S,
-        initialState: Awaited<S>,
-        permalink?: string,
-      ): [Awaited<S>, (P) => void, boolean] {
-        currentHookNameInDev = 'useActionState';
-        warnInvalidHookAccess();
-        mountHookTypesDev();
-        return mountActionState(action, initialState, permalink);
-      };
-  }
-  if (enableAsyncActions) {
-    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useOptimistic =
-      function useOptimistic<S, A>(
-        passthrough: S,
-        reducer: ?(S, A) => S,
-      ): [S, (A) => void] {
-        currentHookNameInDev = 'useOptimistic';
-        warnInvalidHookAccess();
-        mountHookTypesDev();
-        return mountOptimistic(passthrough, reducer);
       };
   }
   if (enableContextProfiling) {
@@ -5451,6 +5343,36 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateId();
     },
+    useFormState<S, P>(
+      action: (Awaited<S>, P) => S,
+      initialState: Awaited<S>,
+      permalink?: string,
+    ): [Awaited<S>, (P) => void, boolean] {
+      currentHookNameInDev = 'useFormState';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateActionState(action, initialState, permalink);
+    },
+    useActionState<S, P>(
+      action: (Awaited<S>, P) => S,
+      initialState: Awaited<S>,
+      permalink?: string,
+    ): [Awaited<S>, (P) => void, boolean] {
+      currentHookNameInDev = 'useActionState';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateActionState(action, initialState, permalink);
+    },
+    useOptimistic<S, A>(
+      passthrough: S,
+      reducer: ?(S, A) => S,
+    ): [S, (A) => void] {
+      currentHookNameInDev = 'useOptimistic';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateOptimistic(passthrough, reducer);
+    },
+    useHostTransitionStatus,
   };
   if (enableCache) {
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useCacheRefresh =
@@ -5497,44 +5419,6 @@ if (__DEV__) {
           updateDeps,
           destroy,
         );
-      };
-  }
-  if (enableAsyncActions) {
-    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useHostTransitionStatus =
-      useHostTransitionStatus;
-    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useFormState =
-      function useFormState<S, P>(
-        action: (Awaited<S>, P) => S,
-        initialState: Awaited<S>,
-        permalink?: string,
-      ): [Awaited<S>, (P) => void, boolean] {
-        currentHookNameInDev = 'useFormState';
-        warnInvalidHookAccess();
-        updateHookTypesDev();
-        return updateActionState(action, initialState, permalink);
-      };
-    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useActionState =
-      function useActionState<S, P>(
-        action: (Awaited<S>, P) => S,
-        initialState: Awaited<S>,
-        permalink?: string,
-      ): [Awaited<S>, (P) => void, boolean] {
-        currentHookNameInDev = 'useActionState';
-        warnInvalidHookAccess();
-        updateHookTypesDev();
-        return updateActionState(action, initialState, permalink);
-      };
-  }
-  if (enableAsyncActions) {
-    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useOptimistic =
-      function useOptimistic<S, A>(
-        passthrough: S,
-        reducer: ?(S, A) => S,
-      ): [S, (A) => void] {
-        currentHookNameInDev = 'useOptimistic';
-        warnInvalidHookAccess();
-        updateHookTypesDev();
-        return updateOptimistic(passthrough, reducer);
       };
   }
   if (enableContextProfiling) {
@@ -5690,6 +5574,36 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateId();
     },
+    useFormState<S, P>(
+      action: (Awaited<S>, P) => S,
+      initialState: Awaited<S>,
+      permalink?: string,
+    ): [Awaited<S>, (P) => void, boolean] {
+      currentHookNameInDev = 'useFormState';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return rerenderActionState(action, initialState, permalink);
+    },
+    useActionState<S, P>(
+      action: (Awaited<S>, P) => S,
+      initialState: Awaited<S>,
+      permalink?: string,
+    ): [Awaited<S>, (P) => void, boolean] {
+      currentHookNameInDev = 'useActionState';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return rerenderActionState(action, initialState, permalink);
+    },
+    useOptimistic<S, A>(
+      passthrough: S,
+      reducer: ?(S, A) => S,
+    ): [S, (A) => void] {
+      currentHookNameInDev = 'useOptimistic';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return rerenderOptimistic(passthrough, reducer);
+    },
+    useHostTransitionStatus,
   };
   if (enableCache) {
     (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useCacheRefresh =
@@ -5736,44 +5650,6 @@ if (__DEV__) {
           updateDeps,
           destroy,
         );
-      };
-  }
-  if (enableAsyncActions) {
-    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useHostTransitionStatus =
-      useHostTransitionStatus;
-    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useFormState =
-      function useFormState<S, P>(
-        action: (Awaited<S>, P) => S,
-        initialState: Awaited<S>,
-        permalink?: string,
-      ): [Awaited<S>, (P) => void, boolean] {
-        currentHookNameInDev = 'useFormState';
-        warnInvalidHookAccess();
-        updateHookTypesDev();
-        return rerenderActionState(action, initialState, permalink);
-      };
-    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useActionState =
-      function useActionState<S, P>(
-        action: (Awaited<S>, P) => S,
-        initialState: Awaited<S>,
-        permalink?: string,
-      ): [Awaited<S>, (P) => void, boolean] {
-        currentHookNameInDev = 'useActionState';
-        warnInvalidHookAccess();
-        updateHookTypesDev();
-        return rerenderActionState(action, initialState, permalink);
-      };
-  }
-  if (enableAsyncActions) {
-    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useOptimistic =
-      function useOptimistic<S, A>(
-        passthrough: S,
-        reducer: ?(S, A) => S,
-      ): [S, (A) => void] {
-        currentHookNameInDev = 'useOptimistic';
-        warnInvalidHookAccess();
-        updateHookTypesDev();
-        return rerenderOptimistic(passthrough, reducer);
       };
   }
   if (enableContextProfiling) {
