@@ -108,8 +108,6 @@ export const enablePersistedModeClonedFlag = false;
 export const enableAsyncDebugInfo = false;
 export const disableClientCache = true;
 
-export const enableServerComponentLogs = true;
-
 export const enableReactTestRendererWarning = false;
 export const useModernStrictMode = true;
 
