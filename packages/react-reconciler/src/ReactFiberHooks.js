@@ -4891,7 +4891,7 @@ if (__DEV__) {
       };
   }
   if (enableContextProfiling) {
-    (HooksDispatcherOnRerenderInDEV: Dispatcher).unstable_useContextWithBailout =
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).unstable_useContextWithBailout =
       function <T>(
         context: ReactContext<T>,
         select: (T => Array<mixed>) | null,
