@@ -40,7 +40,6 @@ import {
   enableCache,
   enableLazyContextPropagation,
   enableTransitionTracing,
-  enableUseMemoCacheHook,
   enableUseEffectEventHook,
   enableLegacyCache,
   debugRenderPhaseSideEffectsForStrictMode,
@@ -277,8 +276,7 @@ export type FunctionComponentUpdateQueue = {
   lastEffect: Effect | null,
   events: Array<EventFunctionPayload<any, any, any>> | null,
   stores: Array<StoreConsistencyCheck<any>> | null,
-  // NOTE: optional, only set when enableUseMemoCacheHook is enabled
-  memoCache?: MemoCache | null,
+  memoCache: MemoCache | null,
 };
 
 type BasicStateAction<S> = (S => S) | S;
@@ -1127,25 +1125,12 @@ function unstable_useContextWithBailout<T>(
   return readContextAndCompare(context, select);
 }
 
-// NOTE: defining two versions of this function to avoid size impact when this feature is disabled.
-// Previously this function was inlined, the additional `memoCache` property makes it not inlined.
-let createFunctionComponentUpdateQueue: () => FunctionComponentUpdateQueue;
-if (enableUseMemoCacheHook) {
-  createFunctionComponentUpdateQueue = () => {
-    return {
-      lastEffect: null,
-      events: null,
-      stores: null,
-      memoCache: null,
-    };
-  };
-} else {
-  createFunctionComponentUpdateQueue = () => {
-    return {
-      lastEffect: null,
-      events: null,
-      stores: null,
-    };
+function createFunctionComponentUpdateQueue(): FunctionComponentUpdateQueue {
+  return {
+    lastEffect: null,
+    events: null,
+    stores: null,
+    memoCache: null,
   };
 }
 
@@ -1155,13 +1140,11 @@ function resetFunctionComponentUpdateQueue(
   updateQueue.lastEffect = null;
   updateQueue.events = null;
   updateQueue.stores = null;
-  if (enableUseMemoCacheHook) {
-    if (updateQueue.memoCache != null) {
-      // NOTE: this function intentionally does not reset memoCache data. We reuse updateQueue for the memo
-      // cache to avoid increasing the size of fibers that don't need a cache, but we don't want to reset
-      // the cache when other properties are reset.
-      updateQueue.memoCache.index = 0;
-    }
+  if (updateQueue.memoCache != null) {
+    // NOTE: this function intentionally does not reset memoCache data. We reuse updateQueue for the memo
+    // cache to avoid increasing the size of fibers that don't need a cache, but we don't want to reset
+    // the cache when other properties are reset.
+    updateQueue.memoCache.index = 0;
   }
 }
 
@@ -3982,12 +3965,10 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useFormState: throwInvalidHookError,
   useActionState: throwInvalidHookError,
   useOptimistic: throwInvalidHookError,
+  useMemoCache: throwInvalidHookError,
 };
 if (enableCache) {
   (ContextOnlyDispatcher: Dispatcher).useCacheRefresh = throwInvalidHookError;
-}
-if (enableUseMemoCacheHook) {
-  (ContextOnlyDispatcher: Dispatcher).useMemoCache = throwInvalidHookError;
 }
 if (enableUseEffectEventHook) {
   (ContextOnlyDispatcher: Dispatcher).useEffectEvent = throwInvalidHookError;
@@ -4023,12 +4004,10 @@ const HooksDispatcherOnMount: Dispatcher = {
   useFormState: mountActionState,
   useActionState: mountActionState,
   useOptimistic: mountOptimistic,
+  useMemoCache,
 };
 if (enableCache) {
   (HooksDispatcherOnMount: Dispatcher).useCacheRefresh = mountRefresh;
-}
-if (enableUseMemoCacheHook) {
-  (HooksDispatcherOnMount: Dispatcher).useMemoCache = useMemoCache;
 }
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnMount: Dispatcher).useEffectEvent = mountEvent;
@@ -4064,12 +4043,10 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useFormState: updateActionState,
   useActionState: updateActionState,
   useOptimistic: updateOptimistic,
+  useMemoCache,
 };
 if (enableCache) {
   (HooksDispatcherOnUpdate: Dispatcher).useCacheRefresh = updateRefresh;
-}
-if (enableUseMemoCacheHook) {
-  (HooksDispatcherOnUpdate: Dispatcher).useMemoCache = useMemoCache;
 }
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnUpdate: Dispatcher).useEffectEvent = updateEvent;
@@ -4106,12 +4083,10 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useFormState: rerenderActionState,
   useActionState: rerenderActionState,
   useOptimistic: rerenderOptimistic,
+  useMemoCache,
 };
 if (enableCache) {
   (HooksDispatcherOnRerender: Dispatcher).useCacheRefresh = updateRefresh;
-}
-if (enableUseMemoCacheHook) {
-  (HooksDispatcherOnRerender: Dispatcher).useMemoCache = useMemoCache;
 }
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnRerender: Dispatcher).useEffectEvent = updateEvent;
@@ -4307,6 +4282,7 @@ if (__DEV__) {
       return mountOptimistic(passthrough, reducer);
     },
     useHostTransitionStatus,
+    useMemoCache,
   };
   if (enableCache) {
     (HooksDispatcherOnMountInDEV: Dispatcher).useCacheRefresh =
@@ -4315,9 +4291,6 @@ if (__DEV__) {
         mountHookTypesDev();
         return mountRefresh();
       };
-  }
-  if (enableUseMemoCacheHook) {
-    (HooksDispatcherOnMountInDEV: Dispatcher).useMemoCache = useMemoCache;
   }
   if (enableUseEffectEventHook) {
     (HooksDispatcherOnMountInDEV: Dispatcher).useEffectEvent =
@@ -4511,6 +4484,7 @@ if (__DEV__) {
       return mountOptimistic(passthrough, reducer);
     },
     useHostTransitionStatus,
+    useMemoCache,
   };
   if (enableCache) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useCacheRefresh =
@@ -4519,10 +4493,6 @@ if (__DEV__) {
         updateHookTypesDev();
         return mountRefresh();
       };
-  }
-  if (enableUseMemoCacheHook) {
-    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useMemoCache =
-      useMemoCache;
   }
   if (enableUseEffectEventHook) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useEffectEvent =
@@ -4715,6 +4685,7 @@ if (__DEV__) {
       return updateOptimistic(passthrough, reducer);
     },
     useHostTransitionStatus,
+    useMemoCache,
   };
   if (enableCache) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useCacheRefresh =
@@ -4723,9 +4694,6 @@ if (__DEV__) {
         updateHookTypesDev();
         return updateRefresh();
       };
-  }
-  if (enableUseMemoCacheHook) {
-    (HooksDispatcherOnUpdateInDEV: Dispatcher).useMemoCache = useMemoCache;
   }
   if (enableUseEffectEventHook) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useEffectEvent =
@@ -4918,6 +4886,7 @@ if (__DEV__) {
       return rerenderOptimistic(passthrough, reducer);
     },
     useHostTransitionStatus,
+    useMemoCache,
   };
   if (enableCache) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useCacheRefresh =
@@ -4926,9 +4895,6 @@ if (__DEV__) {
         updateHookTypesDev();
         return updateRefresh();
       };
-  }
-  if (enableUseMemoCacheHook) {
-    (HooksDispatcherOnRerenderInDEV: Dispatcher).useMemoCache = useMemoCache;
   }
   if (enableUseEffectEventHook) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useEffectEvent =
@@ -5141,6 +5107,10 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountOptimistic(passthrough, reducer);
     },
+    useMemoCache(size: number): Array<any> {
+      warnInvalidHookAccess();
+      return useMemoCache(size);
+    },
     useHostTransitionStatus,
   };
   if (enableCache) {
@@ -5149,13 +5119,6 @@ if (__DEV__) {
         currentHookNameInDev = 'useCacheRefresh';
         mountHookTypesDev();
         return mountRefresh();
-      };
-  }
-  if (enableUseMemoCacheHook) {
-    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useMemoCache =
-      function (size: number): Array<any> {
-        warnInvalidHookAccess();
-        return useMemoCache(size);
       };
   }
   if (enableUseEffectEventHook) {
@@ -5372,6 +5335,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateOptimistic(passthrough, reducer);
     },
+    useMemoCache(size: number): Array<any> {
+      warnInvalidHookAccess();
+      return useMemoCache(size);
+    },
     useHostTransitionStatus,
   };
   if (enableCache) {
@@ -5380,13 +5347,6 @@ if (__DEV__) {
         currentHookNameInDev = 'useCacheRefresh';
         updateHookTypesDev();
         return updateRefresh();
-      };
-  }
-  if (enableUseMemoCacheHook) {
-    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useMemoCache =
-      function (size: number): Array<any> {
-        warnInvalidHookAccess();
-        return useMemoCache(size);
       };
   }
   if (enableUseEffectEventHook) {
@@ -5603,6 +5563,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return rerenderOptimistic(passthrough, reducer);
     },
+    useMemoCache(size: number): Array<any> {
+      warnInvalidHookAccess();
+      return useMemoCache(size);
+    },
     useHostTransitionStatus,
   };
   if (enableCache) {
@@ -5611,13 +5575,6 @@ if (__DEV__) {
         currentHookNameInDev = 'useCacheRefresh';
         updateHookTypesDev();
         return updateRefresh();
-      };
-  }
-  if (enableUseMemoCacheHook) {
-    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useMemoCache =
-      function (size: number): Array<any> {
-        warnInvalidHookAccess();
-        return useMemoCache(size);
       };
   }
   if (enableUseEffectEventHook) {

@@ -64,7 +64,6 @@ export const enableTransitionTracing = false;
 export const enableTrustedTypesIntegration = false;
 export const enableUpdaterTracking = false;
 export const enableUseEffectEventHook = false;
-export const enableUseMemoCacheHook = true;
 export const favorSafetyOverHydrationPerf = true;
 export const passChildrenWhenCloningPersistedNodes = false;
 export const renameElementSymbol = false;
