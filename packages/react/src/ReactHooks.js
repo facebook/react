@@ -252,7 +252,6 @@ export function useOptimistic<S, A>(
   reducer: ?(S, A) => S,
 ): [S, (A) => void] {
   const dispatcher = resolveDispatcher();
-  // $FlowFixMe[not-a-function] This is unstable, thus optional
   return dispatcher.useOptimistic(passthrough, reducer);
 }
 
@@ -262,6 +261,5 @@ export function useActionState<S, P>(
   permalink?: string,
 ): [Awaited<S>, (P) => void, boolean] {
   const dispatcher = resolveDispatcher();
-  // $FlowFixMe[not-a-function] This is unstable, thus optional
   return dispatcher.useActionState(action, initialState, permalink);
 }

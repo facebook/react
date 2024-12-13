@@ -66,7 +66,6 @@ function resolveDispatcher() {
 
 export function useFormStatus(): FormStatus {
   const dispatcher = resolveDispatcher();
-  // $FlowFixMe[not-a-function] We know this exists because of the feature check above.
   return dispatcher.useHostTransitionStatus();
 }
 
@@ -76,7 +75,6 @@ export function useFormState<S, P>(
   permalink?: string,
 ): [Awaited<S>, (P) => void, boolean] {
   const dispatcher = resolveDispatcher();
-  // $FlowFixMe[not-a-function] This is unstable, thus optional
   return dispatcher.useFormState(action, initialState, permalink);
 }
 

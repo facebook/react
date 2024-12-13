@@ -5106,6 +5106,12 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
+    useId(): string {
+      currentHookNameInDev = 'useId';
+      warnInvalidHookAccess();
+      mountHookTypesDev();
+      return mountId();
+    },
     useFormState<S, P>(
       action: (Awaited<S>, P) => S,
       initialState: Awaited<S>,
@@ -5125,12 +5131,6 @@ if (__DEV__) {
       warnInvalidHookAccess();
       mountHookTypesDev();
       return mountActionState(action, initialState, permalink);
-    },
-    useId(): string {
-      currentHookNameInDev = 'useId';
-      warnInvalidHookAccess();
-      mountHookTypesDev();
-      return mountId();
     },
     useOptimistic<S, A>(
       passthrough: S,
