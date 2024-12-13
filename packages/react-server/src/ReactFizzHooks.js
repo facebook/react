@@ -42,6 +42,7 @@ import {
   enableCache,
   enableUseEffectEventHook,
   enableUseMemoCacheHook,
+  enableUseResourceEffectHook,
 } from 'shared/ReactFeatureFlags';
 import is from 'shared/objectIs';
 import {
@@ -864,6 +865,11 @@ if (enableUseEffectEventHook) {
 }
 if (enableUseMemoCacheHook) {
   HooksDispatcher.useMemoCache = useMemoCache;
+}
+if (enableUseResourceEffectHook) {
+  HooksDispatcher.useResourceEffect = supportsClientAPIs
+    ? noop
+    : clientHookNotSupported;
 }
 
 export let currentResumableState: null | ResumableState = (null: any);
