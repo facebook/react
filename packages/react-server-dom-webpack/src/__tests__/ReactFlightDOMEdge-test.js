@@ -524,7 +524,6 @@ describe('ReactFlightDOMEdge', () => {
     expect(serializedContent.length).toBeLessThan(150 + expectedDebugInfoSize);
   });
 
-  // @gate enableBinaryFlight
   it('should be able to serialize any kind of typed array', async () => {
     const buffer = new Uint8Array([
       123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
@@ -556,7 +555,6 @@ describe('ReactFlightDOMEdge', () => {
     expect(result).toEqual(buffers);
   });
 
-  // @gate enableBinaryFlight
   it('should be able to serialize a blob', async () => {
     const bytes = new Uint8Array([
       123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
@@ -578,7 +576,6 @@ describe('ReactFlightDOMEdge', () => {
     expect(await result.arrayBuffer()).toEqual(await blob.arrayBuffer());
   });
 
-  // @gate enableBinaryFlight
   it('can transport FormData (blobs)', async () => {
     const bytes = new Uint8Array([
       123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
@@ -823,7 +820,7 @@ describe('ReactFlightDOMEdge', () => {
     );
   });
 
-  // @gate enableFlightReadableStream && enableBinaryFlight
+  // @gate enableFlightReadableStream
   it('should supports ReadableStreams with typed arrays', async () => {
     const buffer = new Uint8Array([
       123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
@@ -882,7 +879,7 @@ describe('ReactFlightDOMEdge', () => {
     expect(streamedBuffers).toEqual(buffers);
   });
 
-  // @gate enableFlightReadableStream && enableBinaryFlight
+  // @gate enableFlightReadableStream
   it('should support BYOB binary ReadableStreams', async () => {
     const buffer = new Uint8Array([
       123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,

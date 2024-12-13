@@ -76,7 +76,6 @@ export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableCache = true;
 export const enableLegacyCache = true;
 
-export const enableBinaryFlight = true;
 export const enableFlightReadableStream = true;
 export const enableAsyncIterableChildren = false;
 

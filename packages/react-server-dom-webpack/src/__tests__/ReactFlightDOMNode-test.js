@@ -197,7 +197,6 @@ describe('ReactFlightDOMNode', () => {
     expect(result.text).toBe(testString);
   });
 
-  // @gate enableBinaryFlight
   it('should be able to serialize any kind of typed array', async () => {
     const buffer = new Uint8Array([
       123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
