@@ -206,33 +206,6 @@ describe('when Trusted Types are available in global object', () => {
     }
   });
 
-  describe('dangerouslySetInnerHTML in svg elements in Internet Explorer', () => {
-    let innerHTMLDescriptor;
-
-    // simulate svg elements in Internet Explorer which don't have 'innerHTML' property
-    beforeEach(() => {
-      innerHTMLDescriptor = Object.getOwnPropertyDescriptor(
-        Element.prototype,
-        'innerHTML',
-      );
-      delete Element.prototype.innerHTML;
-      Object.defineProperty(
-        HTMLDivElement.prototype,
-        'innerHTML',
-        innerHTMLDescriptor,
-      );
-    });
-
-    afterEach(() => {
-      delete HTMLDivElement.prototype.innerHTML;
-      Object.defineProperty(
-        Element.prototype,
-        'innerHTML',
-        innerHTMLDescriptor,
-      );
-    });
-  });
-
   it('should warn once when rendering script tag in jsx on client', async () => {
     const root = ReactDOMClient.createRoot(container);
     await expect(async () => {
