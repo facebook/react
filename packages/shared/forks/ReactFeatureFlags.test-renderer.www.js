@@ -21,7 +21,6 @@ export const enableComponentPerformanceTrack = false;
 export const enableUpdaterTracking = false;
 export const enableCache = true;
 export const enableLegacyCache = true;
-export const enableFlightReadableStream = true;
 export const enableAsyncIterableChildren = false;
 export const enableTaint = true;
 export const enablePostpone = false;

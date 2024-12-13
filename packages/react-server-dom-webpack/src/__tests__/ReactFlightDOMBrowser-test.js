@@ -2079,7 +2079,6 @@ describe('ReactFlightDOMBrowser', () => {
     });
   }
 
-  // @gate enableFlightReadableStream
   it('should supports streaming ReadableStream with objects', async () => {
     const errors = [];
     let controller1;
@@ -2161,7 +2160,6 @@ describe('ReactFlightDOMBrowser', () => {
     expect(errors).toEqual(['rejected']);
   });
 
-  // @gate enableFlightReadableStream
   it('should cancels the underlying ReadableStream when we are cancelled', async () => {
     let controller;
     let cancelReason;
@@ -2194,7 +2192,6 @@ describe('ReactFlightDOMBrowser', () => {
     expect(loggedReason).toBe(reason);
   });
 
-  // @gate enableFlightReadableStream
   it('should cancels the underlying ReadableStream when we abort', async () => {
     const errors = [];
     let controller;
@@ -2252,7 +2249,6 @@ describe('ReactFlightDOMBrowser', () => {
     expect(errors).toEqual([reason]);
   });
 
-  // @gate enableFlightReadableStream
   it('should supports streaming AsyncIterables with objects', async () => {
     let resolve;
     const wait = new Promise(r => (resolve = r));
@@ -2369,7 +2365,6 @@ describe('ReactFlightDOMBrowser', () => {
     );
   });
 
-  // @gate enableFlightReadableStream
   it('should cancels the underlying AsyncIterable when we are cancelled', async () => {
     let resolve;
     const wait = new Promise(r => (resolve = r));
@@ -2408,7 +2403,6 @@ describe('ReactFlightDOMBrowser', () => {
     expect(loggedReason).toBe(reason);
   });
 
-  // @gate enableFlightReadableStream
   it('should cancels the underlying AsyncIterable when we abort', async () => {
     const errors = [];
     const abortController = new AbortController();

@@ -2623,7 +2623,7 @@ describe('ReactFlight', () => {
     );
   });
 
-  // @gate enableFlightReadableStream && enableAsyncIterableChildren
+  // @gate enableAsyncIterableChildren
   it('shares state when moving keyed Server Components that render async iterables', async () => {
     function StatefulClient({name, initial}) {
       const [state] = React.useState(initial);
@@ -2814,7 +2814,7 @@ describe('ReactFlight', () => {
     );
   });
 
-  // @gate enableFlightReadableStream && enableAsyncIterableChildren
+  // @gate enableAsyncIterableChildren
   it('preserves debug info for server-to-server pass through of async iterables', async () => {
     let resolve;
     const iteratorPromise = new Promise(r => (resolve = r));
@@ -2849,10 +2849,9 @@ describe('ReactFlight', () => {
       },
     );
 
-    if (gate(flag => flag.enableFlightReadableStream)) {
-      // Wait for the iterator to finish
-      await iteratorPromise;
-    }
+    // Wait for the iterator to finish
+    await iteratorPromise;
+
     await 0; // One more tick for the return value / closing.
 
     const transport = ReactNoopFlightServer.render(

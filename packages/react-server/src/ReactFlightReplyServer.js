@@ -30,7 +30,6 @@ import {
   createTemporaryReference,
   registerTemporaryReference,
 } from './ReactFlightServerTemporaryReferences';
-import {enableFlightReadableStream} from 'shared/ReactFeatureFlags';
 import {ASYNC_ITERATOR} from 'shared/ReactSymbols';
 
 import hasOwnProperty from 'shared/hasOwnProperty';
@@ -230,14 +229,12 @@ function wakeChunkIfInitialized<T>(
 
 function triggerErrorOnChunk<T>(chunk: SomeChunk<T>, error: mixed): void {
   if (chunk.status !== PENDING && chunk.status !== BLOCKED) {
-    if (enableFlightReadableStream) {
-      // If we get more data to an already resolved ID, we assume that it's
-      // a stream chunk since any other row shouldn't have more than one entry.
-      const streamChunk: InitializedStreamChunk<any> = (chunk: any);
-      const controller = streamChunk.reason;
-      // $FlowFixMe[incompatible-call]: The error method should accept mixed.
-      controller.error(error);
-    }
+    // If we get more data to an already resolved ID, we assume that it's
+    // a stream chunk since any other row shouldn't have more than one entry.
+    const streamChunk: InitializedStreamChunk<any> = (chunk: any);
+    const controller = streamChunk.reason;
+    // $FlowFixMe[incompatible-call]: The error method should accept mixed.
+    controller.error(error);
     return;
   }
   const listeners = chunk.reason;
@@ -264,16 +261,14 @@ function resolveModelChunk<T>(
   id: number,
 ): void {
   if (chunk.status !== PENDING) {
-    if (enableFlightReadableStream) {
-      // If we get more data to an already resolved ID, we assume that it's
-      // a stream chunk since any other row shouldn't have more than one entry.
-      const streamChunk: InitializedStreamChunk<any> = (chunk: any);
-      const controller = streamChunk.reason;
-      if (value[0] === 'C') {
-        controller.close(value === 'C' ? '"$undefined"' : value.slice(1));
-      } else {
-        controller.enqueueModel(value);
-      }
+    // If we get more data to an already resolved ID, we assume that it's
+    // a stream chunk since any other row shouldn't have more than one entry.
+    const streamChunk: InitializedStreamChunk<any> = (chunk: any);
+    const controller = streamChunk.reason;
+    if (value[0] === 'C') {
+      controller.close(value === 'C' ? '"$undefined"' : value.slice(1));
+    } else {
+      controller.enqueueModel(value);
     }
     return;
   }
@@ -1054,23 +1049,20 @@ function parseModelString(
         return backingEntry;
       }
     }
-    if (enableFlightReadableStream) {
-      switch (value[1]) {
-        case 'R': {
-          return parseReadableStream(response, value, undefined, obj, key);
-        }
-        case 'r': {
-          return parseReadableStream(response, value, 'bytes', obj, key);
-        }
-        case 'X': {
-          return parseAsyncIterable(response, value, false, obj, key);
-        }
-        case 'x': {
-          return parseAsyncIterable(response, value, true, obj, key);
-        }
+    switch (value[1]) {
+      case 'R': {
+        return parseReadableStream(response, value, undefined, obj, key);
+      }
+      case 'r': {
+        return parseReadableStream(response, value, 'bytes', obj, key);
+      }
+      case 'X': {
+        return parseAsyncIterable(response, value, false, obj, key);
+      }
+      case 'x': {
+        return parseAsyncIterable(response, value, true, obj, key);
       }
     }
-
     // We assume that anything else is a reference ID.
     const ref = value.slice(1);
     return getOutlinedModel(response, ref, obj, key, createModel);
