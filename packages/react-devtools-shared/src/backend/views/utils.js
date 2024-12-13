@@ -139,7 +139,7 @@ export function getElementDimensions(domElement: HTMLElement): {
   };
 }
 
-export function extractHOCNames(displayName: string):{
+export function extractHOCNames(displayName: string): {
   baseComponentName: string,
   hocNames: string[],
 } {
