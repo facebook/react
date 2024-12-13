@@ -3329,6 +3329,16 @@ var HooksDispatcher = {
     if (void 0 === getServerSnapshot) throw Error(formatProdErrorMessage(407));
     return getServerSnapshot();
   },
+  useOptimistic: function (passthrough) {
+    resolveCurrentlyRenderingComponent();
+    return [passthrough, unsupportedSetOptimisticState];
+  },
+  useActionState: useActionState,
+  useFormState: useActionState,
+  useHostTransitionStatus: function () {
+    resolveCurrentlyRenderingComponent();
+    return sharedNotPendingObject;
+  },
   useCacheRefresh: function () {
     return unsupportedRefresh;
   },
@@ -3339,18 +3349,8 @@ var HooksDispatcher = {
     for (var data = Array(size), i = 0; i < size; i++)
       data[i] = REACT_MEMO_CACHE_SENTINEL;
     return data;
-  },
-  useHostTransitionStatus: function () {
-    resolveCurrentlyRenderingComponent();
-    return sharedNotPendingObject;
-  },
-  useOptimistic: function (passthrough) {
-    resolveCurrentlyRenderingComponent();
-    return [passthrough, unsupportedSetOptimisticState];
   }
 };
-HooksDispatcher.useFormState = useActionState;
-HooksDispatcher.useActionState = useActionState;
 enableUseResourceEffectHook && (HooksDispatcher.useResourceEffect = noop$1);
 var currentResumableState = null,
   DefaultAsyncDispatcher = {
@@ -5824,4 +5824,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.1.0-www-modern-fb12845d-20241213";
+exports.version = "19.1.0-www-modern-ef63718a-20241213";

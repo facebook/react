@@ -3216,6 +3216,16 @@ var HooksDispatcher = {
       );
     return getServerSnapshot();
   },
+  useOptimistic: function (passthrough) {
+    resolveCurrentlyRenderingComponent();
+    return [passthrough, unsupportedSetOptimisticState];
+  },
+  useActionState: useActionState,
+  useFormState: useActionState,
+  useHostTransitionStatus: function () {
+    resolveCurrentlyRenderingComponent();
+    return sharedNotPendingObject;
+  },
   useCacheRefresh: function () {
     return unsupportedRefresh;
   },
@@ -3226,18 +3236,8 @@ var HooksDispatcher = {
     for (var data = Array(size), i = 0; i < size; i++)
       data[i] = REACT_MEMO_CACHE_SENTINEL;
     return data;
-  },
-  useHostTransitionStatus: function () {
-    resolveCurrentlyRenderingComponent();
-    return sharedNotPendingObject;
-  },
-  useOptimistic: function (passthrough) {
-    resolveCurrentlyRenderingComponent();
-    return [passthrough, unsupportedSetOptimisticState];
   }
 };
-HooksDispatcher.useFormState = useActionState;
-HooksDispatcher.useActionState = useActionState;
 enableUseResourceEffectHook && (HooksDispatcher.useResourceEffect = noop$1);
 var currentResumableState = null,
   DefaultAsyncDispatcher = {
