@@ -6,9 +6,6 @@ on:
     types: [completed]
     branches:
       - main
-    pull_request:
-      paths-ignore:
-        - compiler/**
   workflow_dispatch:
     inputs:
       commit_sha:
