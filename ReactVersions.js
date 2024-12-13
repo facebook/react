@@ -41,6 +41,7 @@ const stablePackages = {
   'react-server-dom-webpack': ReactVersion,
   'react-server-dom-turbopack': ReactVersion,
   'react-server-dom-parcel': ReactVersion,
+  'react-server-dom-vite': ReactVersion,
   'react-is': ReactVersion,
   'react-reconciler': '0.32.0',
   'react-refresh': '0.17.0',
