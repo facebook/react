@@ -9,8 +9,6 @@
 
 import type {LazyComponent} from 'react/src/ReactLazy';
 
-import {enableComponentStackLocations} from 'shared/ReactFeatureFlags';
-
 import {
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
@@ -28,30 +26,26 @@ import DefaultPrepareStackTrace from 'shared/DefaultPrepareStackTrace';
 let prefix;
 let suffix;
 export function describeBuiltInComponentFrame(name: string): string {
-  if (enableComponentStackLocations) {
-    if (prefix === undefined) {
-      // Extract the VM specific prefix used by each line.
-      try {
-        throw Error();
-      } catch (x) {
-        const match = x.stack.trim().match(/\n( *(at )?)/);
-        prefix = (match && match[1]) || '';
-        suffix =
-          x.stack.indexOf('\n    at') > -1
-            ? // V8
-              ' (<anonymous>)'
-            : // JSC/Spidermonkey
-              x.stack.indexOf('@') > -1
-              ? '@unknown:0:0'
-              : // Other
-                '';
-      }
+  if (prefix === undefined) {
+    // Extract the VM specific prefix used by each line.
+    try {
+      throw Error();
+    } catch (x) {
+      const match = x.stack.trim().match(/\n( *(at )?)/);
+      prefix = (match && match[1]) || '';
+      suffix =
+        x.stack.indexOf('\n    at') > -1
+          ? // V8
+            ' (<anonymous>)'
+          : // JSC/Spidermonkey
+            x.stack.indexOf('@') > -1
+            ? '@unknown:0:0'
+            : // Other
+              '';
     }
-    // We use the prefix to ensure our stacks line up with native stack frames.
-    return '\n' + prefix + name + suffix;
-  } else {
-    return describeComponentFrame(name);
   }
+  // We use the prefix to ensure our stacks line up with native stack frames.
+  return '\n' + prefix + name + suffix;
 }
 
 export function describeDebugInfoFrame(name: string, env: ?string): string {
@@ -296,28 +290,12 @@ export function describeNativeComponentFrame(
   return syntheticFrame;
 }
 
-function describeComponentFrame(name: null | string) {
-  return '\n    in ' + (name || 'Unknown');
-}
-
 export function describeClassComponentFrame(ctor: Function): string {
-  if (enableComponentStackLocations) {
-    return describeNativeComponentFrame(ctor, true);
-  } else {
-    return describeFunctionComponentFrame(ctor);
-  }
+  return describeNativeComponentFrame(ctor, true);
 }
 
 export function describeFunctionComponentFrame(fn: Function): string {
-  if (enableComponentStackLocations) {
-    return describeNativeComponentFrame(fn, false);
-  } else {
-    if (!fn) {
-      return '';
-    }
-    const name = fn.displayName || fn.name || null;
-    return describeComponentFrame(name);
-  }
+  return describeNativeComponentFrame(fn, false);
 }
 
 function shouldConstruct(Component: Function) {
@@ -334,11 +312,7 @@ export function describeUnknownElementTypeFrameInDEV(type: any): string {
     return '';
   }
   if (typeof type === 'function') {
-    if (enableComponentStackLocations) {
-      return describeNativeComponentFrame(type, shouldConstruct(type));
-    } else {
-      return describeFunctionComponentFrame(type);
-    }
+    return describeNativeComponentFrame(type, shouldConstruct(type));
   }
   if (typeof type === 'string') {
     return describeBuiltInComponentFrame(type);
