@@ -27,6 +27,7 @@ let useRef;
 let useImperativeHandle;
 let useInsertionEffect;
 let useLayoutEffect;
+let useResourceEffect;
 let useDebugValue;
 let forwardRef;
 let yieldedValues;
@@ -51,6 +52,7 @@ function initModules() {
   useImperativeHandle = React.useImperativeHandle;
   useInsertionEffect = React.useInsertionEffect;
   useLayoutEffect = React.useLayoutEffect;
+  useResourceEffect = React.experimental_useResourceEffect;
   forwardRef = React.forwardRef;
 
   yieldedValues = [];
@@ -650,6 +652,52 @@ describe('ReactDOMServerHooks', () => {
       expect(clearLog()).toEqual(['Count: 0']);
       expect(domNode.tagName).toEqual('SPAN');
       expect(domNode.textContent).toEqual('Count: 0');
+    });
+  });
+
+  describe('useResourceEffect', () => {
+    gate(flags => {
+      if (flags.enableUseResourceEffectHook) {
+        const yields = [];
+        itRenders(
+          'should ignore resource effects on the server',
+          async render => {
+            function Counter(props) {
+              useResourceEffect(
+                () => {
+                  yieldValue('created on client');
+                  return {resource_counter: props.count};
+                },
+                [props.count],
+                resource => {
+                  resource.resource_counter = props.count;
+                  yieldValue('updated on client');
+                },
+                [props.count],
+                () => {
+                  yieldValue('cleanup on client');
+                },
+              );
+              return <Text text={'Count: ' + props.count} />;
+            }
+
+            const domNode = await render(<Counter count={0} />);
+            yields.push(clearLog());
+            expect(domNode.tagName).toEqual('SPAN');
+            expect(domNode.textContent).toEqual('Count: 0');
+          },
+        );
+
+        it('verifies yields in order', () => {
+          expect(yields).toEqual([
+            ['Count: 0'], // server render
+            ['Count: 0'], // server stream
+            ['Count: 0', 'created on client'], // clean render
+            ['Count: 0', 'created on client'], // hydrated render
+            // nothing yielded for bad markup
+          ]);
+        });
+      }
     });
   });
 
