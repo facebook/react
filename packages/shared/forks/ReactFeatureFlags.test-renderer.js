@@ -49,6 +49,7 @@ export const enableMoveBefore = false;
 export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableFabricCompleteRootInCommitPhase = false;
 export const enableHiddenSubtreeInsertionEffectCleanup = false;
+export const enableHydrationLaneScheduling = true;
 
 export const enableRetryLaneExpiration = false;
 export const retryLaneExpirationMs = 5000;
