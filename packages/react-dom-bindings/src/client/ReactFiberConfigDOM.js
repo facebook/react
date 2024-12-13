@@ -91,7 +91,6 @@ import {
   enableCreateEventHandleAPI,
   enableScopeAPI,
   enableTrustedTypesIntegration,
-  enableAsyncActions,
   disableLegacyMode,
   enableMoveBefore,
 } from 'shared/ReactFeatureFlags';
@@ -193,6 +192,8 @@ const SUSPENSE_PENDING_START_DATA = '$?';
 const SUSPENSE_FALLBACK_START_DATA = '$!';
 const FORM_STATE_IS_MATCHING = 'F!';
 const FORM_STATE_IS_NOT_MATCHING = 'F';
+
+const DOCUMENT_READY_STATE_COMPLETE = 'complete';
 
 const STYLE = 'style';
 
@@ -1262,7 +1263,11 @@ export function isSuspenseInstancePending(instance: SuspenseInstance): boolean {
 export function isSuspenseInstanceFallback(
   instance: SuspenseInstance,
 ): boolean {
-  return instance.data === SUSPENSE_FALLBACK_START_DATA;
+  return (
+    instance.data === SUSPENSE_FALLBACK_START_DATA ||
+    (instance.data === SUSPENSE_PENDING_START_DATA &&
+      instance.ownerDocument.readyState === DOCUMENT_READY_STATE_COMPLETE)
+  );
 }
 
 export function getSuspenseInstanceFallbackErrorDetails(
@@ -1303,7 +1308,29 @@ export function registerSuspenseInstanceRetry(
   instance: SuspenseInstance,
   callback: () => void,
 ) {
-  instance._reactRetry = callback;
+  const ownerDocument = instance.ownerDocument;
+  if (
+    // The Fizz runtime must have put this boundary into client render or complete
+    // state after the render finished but before it committed. We need to call the
+    // callback now rather than wait
+    instance.data !== SUSPENSE_PENDING_START_DATA ||
+    // The boundary is still in pending status but the document has finished loading
+    // before we could register the event handler that would have scheduled the retry
+    // on load so we call teh callback now.
+    ownerDocument.readyState === DOCUMENT_READY_STATE_COMPLETE
+  ) {
+    callback();
+  } else {
+    // We're still in pending status and the document is still loading so we attach
+    // a listener to the document load even and expose the retry on the instance for
+    // the Fizz runtime to trigger if it ends up resolving this boundary
+    const listener = () => {
+      callback();
+      ownerDocument.removeEventListener('DOMContentLoaded', listener);
+    };
+    ownerDocument.addEventListener('DOMContentLoaded', listener);
+    instance._reactRetry = listener;
+  }
 }
 
 export function canHydrateFormStateMarker(
@@ -1350,9 +1377,8 @@ function getNextHydratable(node: ?Node) {
         nodeData === SUSPENSE_START_DATA ||
         nodeData === SUSPENSE_FALLBACK_START_DATA ||
         nodeData === SUSPENSE_PENDING_START_DATA ||
-        (enableAsyncActions &&
-          (nodeData === FORM_STATE_IS_MATCHING ||
-            nodeData === FORM_STATE_IS_NOT_MATCHING))
+        nodeData === FORM_STATE_IS_MATCHING ||
+        nodeData === FORM_STATE_IS_NOT_MATCHING
       ) {
         break;
       }

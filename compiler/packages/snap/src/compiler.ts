@@ -297,6 +297,8 @@ function getEvaluatorPresets(
                       arg.value = './shared-runtime';
                     } else if (arg.value === 'ReactForgetFeatureFlag') {
                       arg.value = './ReactForgetFeatureFlag';
+                    } else if (arg.value === 'useEffectWrapper') {
+                      arg.value = './useEffectWrapper';
                     }
                   }
                 }

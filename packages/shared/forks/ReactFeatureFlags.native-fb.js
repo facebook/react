@@ -28,36 +28,30 @@ export const {
   enableUseResourceEffectHook,
   passChildrenWhenCloningPersistedNodes,
   enableSiblingPrerendering,
+  enableOwnerStacks,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
-export const consoleManagedByDevToolsDuringStrictMode = true;
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 export const disableClientCache = true;
 export const disableCommentsAsDOMContainers = true;
 export const disableDefaultPropsExceptForClasses = true;
-export const disableIEWorkarounds = true;
 export const disableInputAttributeSyncing = false;
 export const disableLegacyContext = false;
 export const disableLegacyContextForFunctionComponents = false;
 export const disableLegacyMode = false;
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const disableTextareaChildren = false;
-export const enableAsyncActions = true;
 export const enableAsyncDebugInfo = false;
 export const enableAsyncIterableChildren = false;
-export const enableBinaryFlight = true;
 export const enableCache = true;
-export const enableComponentStackLocations = true;
 export const enableCPUSuspense = true;
 export const enableCreateEventHandleAPI = false;
 export const enableDebugTracing = false;
 export const enableDeferRootSchedulingToMicrotask = true;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
-export const enableFilterEmptyStringAttributesDOM = true;
 export const enableMoveBefore = true;
 export const enableFizzExternalRuntime = true;
-export const enableFlightReadableStream = true;
 export const enableGetInspectorDataForInstanceInProduction = true;
 export const enableHalt = false;
 export const enableInfiniteRenderLoopDetection = false;
@@ -67,7 +61,6 @@ export const enableLegacyCache = false;
 export const enableLegacyFBSupport = false;
 export const enableLegacyHidden = false;
 export const enableNoCloningMemoCache = false;
-export const enableOwnerStacks = false;
 export const enablePostpone = false;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
@@ -94,6 +87,7 @@ export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
 export const useModernStrictMode = true;
+export const enableHydrationLaneScheduling = true;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

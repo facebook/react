@@ -13,8 +13,9 @@ export {
   decodeReply,
   decodeAction,
   decodeFormState,
+  createClientReference,
   registerServerReference,
-  registerClientReference,
-  createClientModuleProxy,
   createTemporaryReferenceSet,
-} from './ReactFlightDOMServerNode';
+  registerServerActions,
+  loadServerAction,
+} from './src/server/react-flight-dom-server.node';

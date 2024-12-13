@@ -45,7 +45,6 @@ import {createUpdate, ForceUpdate} from './ReactFiberClassUpdateQueue';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
 import {
   enableLazyContextPropagation,
-  enableAsyncActions,
   enableRenderableContext,
 } from 'shared/ReactFeatureFlags';
 import {getHostTransitionProvider} from './ReactFiberHostContext';
@@ -598,7 +597,7 @@ function propagateParentContextChanges(
           }
         }
       }
-    } else if (enableAsyncActions && parent === getHostTransitionProvider()) {
+    } else if (parent === getHostTransitionProvider()) {
       // During a host transition, a host component can act like a context
       // provider. E.g. in React DOM, this would be a <form />.
       const currentParent = parent.alternate;

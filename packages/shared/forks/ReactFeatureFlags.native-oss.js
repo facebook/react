@@ -20,33 +20,26 @@ export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 // All other flags
 // -----------------------------------------------------------------------------
 export const alwaysThrottleRetries = false;
-export const consoleManagedByDevToolsDuringStrictMode = true;
 export const disableClientCache = true;
 export const disableCommentsAsDOMContainers = true;
 export const disableDefaultPropsExceptForClasses = true;
-export const disableIEWorkarounds = true;
 export const disableInputAttributeSyncing = false;
 export const disableLegacyContext = true;
 export const disableLegacyContextForFunctionComponents = true;
 export const disableLegacyMode = false;
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const disableTextareaChildren = false;
-export const enableAsyncActions = true;
 export const enableAsyncDebugInfo = false;
 export const enableAsyncIterableChildren = false;
-export const enableBinaryFlight = true;
 export const enableCache = true;
-export const enableComponentStackLocations = true;
 export const enableCPUSuspense = false;
 export const enableCreateEventHandleAPI = false;
 export const enableDebugTracing = false;
 export const enableDeferRootSchedulingToMicrotask = true;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableFabricCompleteRootInCommitPhase = false;
-export const enableFilterEmptyStringAttributesDOM = true;
 export const enableMoveBefore = true;
 export const enableFizzExternalRuntime = true;
-export const enableFlightReadableStream = true;
 export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableHalt = false;
 export const enableHiddenSubtreeInsertionEffectCleanup = false;
@@ -86,6 +79,8 @@ export const transitionLaneExpirationMs = 5000;
 export const useModernStrictMode = true;
 export const enableSiblingPrerendering = true;
 export const enableUseResourceEffectHook = false;
+
+export const enableHydrationLaneScheduling = true;
 
 // Profiling Only
 export const enableProfilerTimer = __PROFILE__;
