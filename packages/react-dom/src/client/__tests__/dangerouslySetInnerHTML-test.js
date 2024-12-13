@@ -27,36 +27,4 @@ describe('dangerouslySetInnerHTML', () => {
       expect(container.firstChild.innerHTML).toBe('<h1>Hello</h1>');
     });
   });
-
-  describe('when the node does not have an innerHTML property', () => {
-    let innerHTMLDescriptor;
-
-    // In some versions of IE (TODO: which ones?) SVG nodes don't have
-    // innerHTML. To simulate this, we will take it off the Element prototype
-    // and put it onto the HTMLDivElement prototype. We expect that the logic
-    // checks for existence of innerHTML on SVG, and if one doesn't exist, falls
-    // back to using appendChild and removeChild.
-
-    beforeEach(() => {
-      innerHTMLDescriptor = Object.getOwnPropertyDescriptor(
-        Element.prototype,
-        'innerHTML',
-      );
-      delete Element.prototype.innerHTML;
-      Object.defineProperty(
-        HTMLDivElement.prototype,
-        'innerHTML',
-        innerHTMLDescriptor,
-      );
-    });
-
-    afterEach(() => {
-      delete HTMLDivElement.prototype.innerHTML;
-      Object.defineProperty(
-        Element.prototype,
-        'innerHTML',
-        innerHTMLDescriptor,
-      );
-    });
-  });
 });
