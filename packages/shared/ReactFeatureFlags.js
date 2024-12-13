@@ -203,10 +203,6 @@ export const disableLegacyContextForFunctionComponents = true;
 // TODO: clean up legacy <StrictMode /> once tests pass WWW.
 export const useModernStrictMode = true;
 
-// Not ready to break experimental yet.
-// Remove IE and MsApp specific workarounds for innerHTML
-export const disableIEWorkarounds = true;
-
 // Filter certain DOM attributes (e.g. src, href) if their values are empty
 // strings. This prevents e.g. <img src=""> from making an unnecessary HTTP
 // request for certain browsers.
