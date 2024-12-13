@@ -116,7 +116,7 @@ export const enableSuspenseAvoidThisFallbackFizz = false;
 
 export const enableCPUSuspense = __EXPERIMENTAL__;
 
-export const enableHydrationLaneScheduling = __EXPERIMENTAL__;
+export const enableHydrationLaneScheduling = true;
 
 // Enables useMemoCache hook, intended as a compilation target for
 // auto-memoization.
