@@ -571,13 +571,11 @@ __DEV__ &&
           return describeBuiltInComponentFrame("SuspenseList");
         case 0:
         case 15:
-          return (fiber = describeNativeComponentFrame(fiber.type, !1)), fiber;
+          return describeNativeComponentFrame(fiber.type, !1);
         case 11:
-          return (
-            (fiber = describeNativeComponentFrame(fiber.type.render, !1)), fiber
-          );
+          return describeNativeComponentFrame(fiber.type.render, !1);
         case 1:
-          return (fiber = describeNativeComponentFrame(fiber.type, !0)), fiber;
+          return describeNativeComponentFrame(fiber.type, !0);
         default:
           return "";
       }
@@ -16956,10 +16954,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-modern-ef63718a-20241213",
+        version: "19.1.0-www-modern-3ad17ecd-20241213",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-modern-ef63718a-20241213"
+        reconcilerVersion: "19.1.0-www-modern-3ad17ecd-20241213"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -16993,7 +16991,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.1.0-www-modern-ef63718a-20241213";
+    exports.version = "19.1.0-www-modern-3ad17ecd-20241213";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

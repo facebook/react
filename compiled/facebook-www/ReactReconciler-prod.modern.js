@@ -260,13 +260,11 @@ module.exports = function ($$$config) {
         return describeBuiltInComponentFrame("SuspenseList");
       case 0:
       case 15:
-        return (fiber = describeNativeComponentFrame(fiber.type, !1)), fiber;
+        return describeNativeComponentFrame(fiber.type, !1);
       case 11:
-        return (
-          (fiber = describeNativeComponentFrame(fiber.type.render, !1)), fiber
-        );
+        return describeNativeComponentFrame(fiber.type.render, !1);
       case 1:
-        return (fiber = describeNativeComponentFrame(fiber.type, !0)), fiber;
+        return describeNativeComponentFrame(fiber.type, !0);
       default:
         return "";
     }
@@ -12576,7 +12574,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-modern-ef63718a-20241213"
+      reconcilerVersion: "19.1.0-www-modern-3ad17ecd-20241213"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

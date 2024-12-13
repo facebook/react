@@ -4289,7 +4289,7 @@ __DEV__ &&
       if ("string" === typeof type) return describeBuiltInComponentFrame(type);
       if ("function" === typeof type)
         return type.prototype && type.prototype.isReactComponent
-          ? ((type = describeNativeComponentFrame(type, !0)), type)
+          ? describeNativeComponentFrame(type, !0)
           : describeNativeComponentFrame(type, !1);
       if ("object" === typeof type && null !== type) {
         switch (type.$$typeof) {
@@ -9164,5 +9164,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.1.0-www-classic-ef63718a-20241213";
+    exports.version = "19.1.0-www-classic-3ad17ecd-20241213";
   })();

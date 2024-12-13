@@ -408,13 +408,11 @@ function describeFiber(fiber) {
       return describeBuiltInComponentFrame("SuspenseList");
     case 0:
     case 15:
-      return (fiber = describeNativeComponentFrame(fiber.type, !1)), fiber;
+      return describeNativeComponentFrame(fiber.type, !1);
     case 11:
-      return (
-        (fiber = describeNativeComponentFrame(fiber.type.render, !1)), fiber
-      );
+      return describeNativeComponentFrame(fiber.type.render, !1);
     case 1:
-      return (fiber = describeNativeComponentFrame(fiber.type, !0)), fiber;
+      return describeNativeComponentFrame(fiber.type, !0);
     default:
       return "";
   }
@@ -10825,24 +10823,24 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component);
-var internals$jscomp$inline_1509 = {
+var internals$jscomp$inline_1500 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-ef63718a-20241213",
+  version: "19.1.0-www-classic-3ad17ecd-20241213",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-ef63718a-20241213"
+  reconcilerVersion: "19.1.0-www-classic-3ad17ecd-20241213"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1510 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1501 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1510.isDisabled &&
-    hook$jscomp$inline_1510.supportsFiber
+    !hook$jscomp$inline_1501.isDisabled &&
+    hook$jscomp$inline_1501.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1510.inject(
-        internals$jscomp$inline_1509
+      (rendererID = hook$jscomp$inline_1501.inject(
+        internals$jscomp$inline_1500
       )),
-        (injectedHook = hook$jscomp$inline_1510);
+        (injectedHook = hook$jscomp$inline_1501);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
@@ -10856,4 +10854,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.1.0-www-classic-ef63718a-20241213";
+exports.version = "19.1.0-www-classic-3ad17ecd-20241213";

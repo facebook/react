@@ -390,13 +390,11 @@ function describeFiber(fiber) {
       return describeBuiltInComponentFrame("SuspenseList");
     case 0:
     case 15:
-      return (fiber = describeNativeComponentFrame(fiber.type, !1)), fiber;
+      return describeNativeComponentFrame(fiber.type, !1);
     case 11:
-      return (
-        (fiber = describeNativeComponentFrame(fiber.type.render, !1)), fiber
-      );
+      return describeNativeComponentFrame(fiber.type.render, !1);
     case 1:
-      return (fiber = describeNativeComponentFrame(fiber.type, !0)), fiber;
+      return describeNativeComponentFrame(fiber.type, !0);
     default:
       return "";
   }
@@ -13952,19 +13950,19 @@ function getTargetInstForChangeEvent(domEventName, targetInst) {
 }
 var isInputEventSupported = !1;
 if (canUseDOM) {
-  var JSCompiler_inline_result$jscomp$371;
+  var JSCompiler_inline_result$jscomp$368;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1653 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1653) {
-      var element$jscomp$inline_1654 = document.createElement("div");
-      element$jscomp$inline_1654.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1653 =
-        "function" === typeof element$jscomp$inline_1654.oninput;
+    var isSupported$jscomp$inline_1644 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1644) {
+      var element$jscomp$inline_1645 = document.createElement("div");
+      element$jscomp$inline_1645.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1644 =
+        "function" === typeof element$jscomp$inline_1645.oninput;
     }
-    JSCompiler_inline_result$jscomp$371 = isSupported$jscomp$inline_1653;
-  } else JSCompiler_inline_result$jscomp$371 = !1;
+    JSCompiler_inline_result$jscomp$368 = isSupported$jscomp$inline_1644;
+  } else JSCompiler_inline_result$jscomp$368 = !1;
   isInputEventSupported =
-    JSCompiler_inline_result$jscomp$371 &&
+    JSCompiler_inline_result$jscomp$368 &&
     (!document.documentMode || 9 < document.documentMode);
 }
 function stopWatchingForValueChange() {
@@ -14375,20 +14373,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1694 = 0;
-  i$jscomp$inline_1694 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1694++
+  var i$jscomp$inline_1685 = 0;
+  i$jscomp$inline_1685 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1685++
 ) {
-  var eventName$jscomp$inline_1695 =
-      simpleEventPluginEvents[i$jscomp$inline_1694],
-    domEventName$jscomp$inline_1696 =
-      eventName$jscomp$inline_1695.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1697 =
-      eventName$jscomp$inline_1695[0].toUpperCase() +
-      eventName$jscomp$inline_1695.slice(1);
+  var eventName$jscomp$inline_1686 =
+      simpleEventPluginEvents[i$jscomp$inline_1685],
+    domEventName$jscomp$inline_1687 =
+      eventName$jscomp$inline_1686.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1688 =
+      eventName$jscomp$inline_1686[0].toUpperCase() +
+      eventName$jscomp$inline_1686.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1696,
-    "on" + capitalizedEvent$jscomp$inline_1697
+    domEventName$jscomp$inline_1687,
+    "on" + capitalizedEvent$jscomp$inline_1688
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17971,16 +17969,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_1867 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1858 = React.version;
 if (
-  "19.1.0-www-classic-ef63718a-20241213" !==
-  isomorphicReactPackageVersion$jscomp$inline_1867
+  "19.1.0-www-classic-3ad17ecd-20241213" !==
+  isomorphicReactPackageVersion$jscomp$inline_1858
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1867,
-      "19.1.0-www-classic-ef63718a-20241213"
+      isomorphicReactPackageVersion$jscomp$inline_1858,
+      "19.1.0-www-classic-3ad17ecd-20241213"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17996,27 +17994,27 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_1869 = {
+var internals$jscomp$inline_1860 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-ef63718a-20241213",
+  version: "19.1.0-www-classic-3ad17ecd-20241213",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-ef63718a-20241213"
+  reconcilerVersion: "19.1.0-www-classic-3ad17ecd-20241213"
 };
 enableSchedulingProfiler &&
-  ((internals$jscomp$inline_1869.getLaneLabelMap = getLaneLabelMap),
-  (internals$jscomp$inline_1869.injectProfilingHooks = injectProfilingHooks));
+  ((internals$jscomp$inline_1860.getLaneLabelMap = getLaneLabelMap),
+  (internals$jscomp$inline_1860.injectProfilingHooks = injectProfilingHooks));
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2367 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2358 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2367.isDisabled &&
-    hook$jscomp$inline_2367.supportsFiber
+    !hook$jscomp$inline_2358.isDisabled &&
+    hook$jscomp$inline_2358.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2367.inject(
-        internals$jscomp$inline_1869
+      (rendererID = hook$jscomp$inline_2358.inject(
+        internals$jscomp$inline_1860
       )),
-        (injectedHook = hook$jscomp$inline_2367);
+        (injectedHook = hook$jscomp$inline_2358);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -18369,7 +18367,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-classic-ef63718a-20241213";
+exports.version = "19.1.0-www-classic-3ad17ecd-20241213";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
