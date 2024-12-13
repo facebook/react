@@ -1193,6 +1193,46 @@ __DEV__ &&
         rootEntangledLanes &= ~lane;
       }
     }
+    function getBumpedLaneForHydrationByLane(lane) {
+      switch (lane) {
+        case 2:
+          lane = 1;
+          break;
+        case 8:
+          lane = 4;
+          break;
+        case 32:
+          lane = 16;
+          break;
+        case 128:
+        case 256:
+        case 512:
+        case 1024:
+        case 2048:
+        case 4096:
+        case 8192:
+        case 16384:
+        case 32768:
+        case 65536:
+        case 131072:
+        case 262144:
+        case 524288:
+        case 1048576:
+        case 2097152:
+        case 4194304:
+        case 8388608:
+        case 16777216:
+        case 33554432:
+          lane = 64;
+          break;
+        case 268435456:
+          lane = 134217728;
+          break;
+        default:
+          lane = 0;
+      }
+      return lane;
+    }
     function addFiberToLanesMap(root, fiber, lanes) {
       if (isDevToolsPresent)
         for (root = root.pendingUpdatersLaneMap; 0 < lanes; ) {
@@ -9468,73 +9508,38 @@ __DEV__ &&
           didReceiveUpdate || JSCompiler_object_inline_digest_2495)
         ) {
           JSCompiler_object_inline_digest_2495 = workInProgressRoot;
-          if (null !== JSCompiler_object_inline_digest_2495) {
-            JSCompiler_object_inline_stack_2496 = renderLanes & -renderLanes;
-            if (0 !== (JSCompiler_object_inline_stack_2496 & 42))
-              JSCompiler_object_inline_stack_2496 = 1;
-            else
-              switch (JSCompiler_object_inline_stack_2496) {
-                case 2:
-                  JSCompiler_object_inline_stack_2496 = 1;
-                  break;
-                case 8:
-                  JSCompiler_object_inline_stack_2496 = 4;
-                  break;
-                case 32:
-                  JSCompiler_object_inline_stack_2496 = 16;
-                  break;
-                case 128:
-                case 256:
-                case 512:
-                case 1024:
-                case 2048:
-                case 4096:
-                case 8192:
-                case 16384:
-                case 32768:
-                case 65536:
-                case 131072:
-                case 262144:
-                case 524288:
-                case 1048576:
-                case 2097152:
-                case 4194304:
-                case 8388608:
-                case 16777216:
-                case 33554432:
-                  JSCompiler_object_inline_stack_2496 = 64;
-                  break;
-                case 268435456:
-                  JSCompiler_object_inline_stack_2496 = 134217728;
-                  break;
-                default:
-                  JSCompiler_object_inline_stack_2496 = 0;
-              }
-            JSCompiler_object_inline_stack_2496 =
+          if (
+            null !== JSCompiler_object_inline_digest_2495 &&
+            ((JSCompiler_object_inline_stack_2496 = renderLanes & -renderLanes),
+            (JSCompiler_object_inline_stack_2496 =
+              0 !== (JSCompiler_object_inline_stack_2496 & 42)
+                ? 1
+                : getBumpedLaneForHydrationByLane(
+                    JSCompiler_object_inline_stack_2496
+                  )),
+            (JSCompiler_object_inline_stack_2496 =
               0 !==
               (JSCompiler_object_inline_stack_2496 &
                 (JSCompiler_object_inline_digest_2495.suspendedLanes |
                   renderLanes))
                 ? 0
-                : JSCompiler_object_inline_stack_2496;
-            if (
-              0 !== JSCompiler_object_inline_stack_2496 &&
-              JSCompiler_object_inline_stack_2496 !== prevState.retryLane
-            )
-              throw (
-                ((prevState.retryLane = JSCompiler_object_inline_stack_2496),
-                enqueueConcurrentRenderForLane(
-                  current,
-                  JSCompiler_object_inline_stack_2496
-                ),
-                scheduleUpdateOnFiber(
-                  JSCompiler_object_inline_digest_2495,
-                  current,
-                  JSCompiler_object_inline_stack_2496
-                ),
-                SelectiveHydrationException)
-              );
-          }
+                : JSCompiler_object_inline_stack_2496),
+            0 !== JSCompiler_object_inline_stack_2496 &&
+              JSCompiler_object_inline_stack_2496 !== prevState.retryLane)
+          )
+            throw (
+              ((prevState.retryLane = JSCompiler_object_inline_stack_2496),
+              enqueueConcurrentRenderForLane(
+                current,
+                JSCompiler_object_inline_stack_2496
+              ),
+              scheduleUpdateOnFiber(
+                JSCompiler_object_inline_digest_2495,
+                current,
+                JSCompiler_object_inline_stack_2496
+              ),
+              SelectiveHydrationException)
+            );
           JSCompiler_object_inline_message_2494.data ===
             SUSPENSE_PENDING_START_DATA || renderDidSuspendDelayIfPossible();
           workInProgress = retrySuspenseComponentWithoutHydrating(
@@ -23014,8 +23019,12 @@ __DEV__ &&
               queuedTarget.blockedOn = targetInst;
               runWithPriority(queuedTarget.priority, function () {
                 if (13 === nearestMounted.tag) {
-                  var lane = requestUpdateLane(nearestMounted),
-                    root = enqueueConcurrentRenderForLane(nearestMounted, lane);
+                  var lane = requestUpdateLane(nearestMounted);
+                  lane = getBumpedLaneForHydrationByLane(lane);
+                  var root = enqueueConcurrentRenderForLane(
+                    nearestMounted,
+                    lane
+                  );
                   null !== root &&
                     scheduleUpdateOnFiber(root, nearestMounted, lane);
                   markRetryLaneIfNotHydrated(nearestMounted, lane);
@@ -27490,11 +27499,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.0.0-www-modern-a4964987-20241211" !== isomorphicReactPackageVersion)
+      if ("19.1.0-www-modern-d5e8f79c-20241212" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.0.0-www-modern-a4964987-20241211\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.1.0-www-modern-d5e8f79c-20241212\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -27537,10 +27546,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.0.0-www-modern-a4964987-20241211",
+          version: "19.1.0-www-modern-d5e8f79c-20241212",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.0.0-www-modern-a4964987-20241211"
+          reconcilerVersion: "19.1.0-www-modern-d5e8f79c-20241212"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -27814,11 +27823,13 @@ __DEV__ &&
       initialChildren.context = getContextForSubtree(null);
       options = initialChildren.current;
       isStrictMode = requestUpdateLane(options);
+      isStrictMode = getBumpedLaneForHydrationByLane(isStrictMode);
       identifierPrefix = createUpdate(isStrictMode);
       identifierPrefix.callback = null;
       enqueueUpdate(options, identifierPrefix, isStrictMode);
-      initialChildren.current.lanes = isStrictMode;
-      markRootUpdated(initialChildren, isStrictMode);
+      options = isStrictMode;
+      initialChildren.current.lanes = options;
+      markRootUpdated(initialChildren, options);
       ensureRootIsScheduled(initialChildren);
       container[internalContainerInstanceKey] = initialChildren.current;
       listenToAllSupportedEvents(container);
@@ -28145,7 +28156,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.0.0-www-modern-a4964987-20241211";
+    exports.version = "19.1.0-www-modern-d5e8f79c-20241212";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

@@ -662,6 +662,46 @@ module.exports = function ($$$config) {
       rootEntangledLanes &= ~lane;
     }
   }
+  function getBumpedLaneForHydrationByLane(lane) {
+    switch (lane) {
+      case 2:
+        lane = 1;
+        break;
+      case 8:
+        lane = 4;
+        break;
+      case 32:
+        lane = 16;
+        break;
+      case 128:
+      case 256:
+      case 512:
+      case 1024:
+      case 2048:
+      case 4096:
+      case 8192:
+      case 16384:
+      case 32768:
+      case 65536:
+      case 131072:
+      case 262144:
+      case 524288:
+      case 1048576:
+      case 2097152:
+      case 4194304:
+      case 8388608:
+      case 16777216:
+      case 33554432:
+        lane = 64;
+        break;
+      case 268435456:
+        lane = 134217728;
+        break;
+      default:
+        lane = 0;
+    }
+    return lane;
+  }
   function getTransitionsForLanes(root, lanes) {
     if (!enableTransitionTracing) return null;
     for (var transitionsForLanes = []; 0 < lanes; ) {
@@ -4833,62 +4873,25 @@ module.exports = function ($$$config) {
         didReceiveUpdate || JSCompiler_temp)
       ) {
         JSCompiler_temp = workInProgressRoot;
-        if (null !== JSCompiler_temp) {
-          nextProps = renderLanes & -renderLanes;
-          if (0 !== (nextProps & 42)) nextProps = 1;
-          else
-            switch (nextProps) {
-              case 2:
-                nextProps = 1;
-                break;
-              case 8:
-                nextProps = 4;
-                break;
-              case 32:
-                nextProps = 16;
-                break;
-              case 128:
-              case 256:
-              case 512:
-              case 1024:
-              case 2048:
-              case 4096:
-              case 8192:
-              case 16384:
-              case 32768:
-              case 65536:
-              case 131072:
-              case 262144:
-              case 524288:
-              case 1048576:
-              case 2097152:
-              case 4194304:
-              case 8388608:
-              case 16777216:
-              case 33554432:
-                nextProps = 64;
-                break;
-              case 268435456:
-                nextProps = 134217728;
-                break;
-              default:
-                nextProps = 0;
-            }
-          nextProps =
+        if (
+          null !== JSCompiler_temp &&
+          ((nextProps = renderLanes & -renderLanes),
+          (nextProps =
+            0 !== (nextProps & 42)
+              ? 1
+              : getBumpedLaneForHydrationByLane(nextProps)),
+          (nextProps =
             0 !== (nextProps & (JSCompiler_temp.suspendedLanes | renderLanes))
               ? 0
-              : nextProps;
-          if (
-            0 !== nextProps &&
-            nextProps !== JSCompiler_temp$jscomp$0.retryLane
-          )
-            throw (
-              ((JSCompiler_temp$jscomp$0.retryLane = nextProps),
-              enqueueConcurrentRenderForLane(current, nextProps),
-              scheduleUpdateOnFiber(JSCompiler_temp, current, nextProps),
-              SelectiveHydrationException)
-            );
-        }
+              : nextProps),
+          0 !== nextProps && nextProps !== JSCompiler_temp$jscomp$0.retryLane)
+        )
+          throw (
+            ((JSCompiler_temp$jscomp$0.retryLane = nextProps),
+            enqueueConcurrentRenderForLane(current, nextProps),
+            scheduleUpdateOnFiber(JSCompiler_temp, current, nextProps),
+            SelectiveHydrationException)
+          );
         isSuspenseInstancePending(nextInstance) ||
           renderDidSuspendDelayIfPossible();
         workInProgress = retrySuspenseComponentWithoutHydrating(
@@ -12234,8 +12237,9 @@ module.exports = function ($$$config) {
   };
   exports.attemptHydrationAtCurrentPriority = function (fiber) {
     if (13 === fiber.tag) {
-      var lane = requestUpdateLane(),
-        root = enqueueConcurrentRenderForLane(fiber, lane);
+      var lane = requestUpdateLane();
+      lane = getBumpedLaneForHydrationByLane(lane);
+      var root = enqueueConcurrentRenderForLane(fiber, lane);
       null !== root && scheduleUpdateOnFiber(root, fiber, lane);
       markRetryLaneIfNotHydrated(fiber, lane);
     }
@@ -12335,12 +12339,14 @@ module.exports = function ($$$config) {
     initialChildren.context = getContextForSubtree(null);
     containerInfo = initialChildren.current;
     tag = requestUpdateLane();
+    tag = getBumpedLaneForHydrationByLane(tag);
     hydrationCallbacks = createUpdate(tag);
     hydrationCallbacks.callback =
       void 0 !== callback && null !== callback ? callback : null;
     enqueueUpdate(containerInfo, hydrationCallbacks, tag);
-    initialChildren.current.lanes = tag;
-    markRootUpdated(initialChildren, tag);
+    callback = tag;
+    initialChildren.current.lanes = callback;
+    markRootUpdated(initialChildren, callback);
     ensureRootIsScheduled(initialChildren);
     return initialChildren;
   };
@@ -12570,7 +12576,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.0.0-www-modern-a4964987-20241211"
+      reconcilerVersion: "19.1.0-www-modern-d5e8f79c-20241212"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
