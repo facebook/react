@@ -482,6 +482,7 @@ if (argv.cleanup) {
   const diffedFlagColumns =
     argv.diff[0] != null ? argv.diff.map(argToHeader) : FLAG_COLUMNS;
 
+  // eslint-disable-next-line no-for-of-loops/no-for-of-loops
   for (const flag of allFlagsUniqueFlags) {
     const values = diffedFlagColumns.reduce((acc, key) => {
       acc[key] = FLAG_CONFIG[key](flag);
