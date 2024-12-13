@@ -139,7 +139,10 @@ export function getElementDimensions(domElement: HTMLElement): {
   };
 }
 
-export function extractHOCNames(displayName: string) {
+export function extractHOCNames(displayName: string):{
+  baseComponentName: string,
+  hocNames: string[],
+} {
   if (!displayName) return {baseComponentName: '', hocNames: []};
 
   const hocRegex = /([A-Z][a-zA-Z0-9]*?)\((.*)\)/g;
