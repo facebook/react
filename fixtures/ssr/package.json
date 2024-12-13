@@ -4,14 +4,14 @@
   "private": true,
   "devDependencies": {
     "concurrently": "3.1.0",
-    "http-proxy-middleware": "0.17.3",
+    "http-proxy-middleware": "3.0.3",
     "react-scripts": "0.9.5"
   },
   "dependencies": {
-    "express": "^4.14.0",
+    "express": "^4.21.2",
     "ignore-styles": "^5.0.1",
     "import-export": "^1.0.1",
-    "node-fetch": "^1.6.3",
+    "node-fetch": "^3.3.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

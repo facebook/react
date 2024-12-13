@@ -13,7 +13,7 @@
     "babel-preset-react-app": "10.0.0",
     "compression": "^1.7.4",
     "concurrently": "^5.3.0",
-    "express": "^4.17.1",
+    "express": "^4.21.2",
     "nodemon": "^2.0.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
