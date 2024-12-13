@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b104eb0e58cf75aaec8f3c24c761ec3b>>
+ * @generated SignedSource<<1191abc934463f2f48f75796ab5fb5f6>>
  */
 
 /*
@@ -841,6 +841,46 @@ function markRootEntangled(root, entangledLanes) {
       (root[index$8] |= entangledLanes);
     rootEntangledLanes &= ~lane;
   }
+}
+function getBumpedLaneForHydrationByLane(lane) {
+  switch (lane) {
+    case 2:
+      lane = 1;
+      break;
+    case 8:
+      lane = 4;
+      break;
+    case 32:
+      lane = 16;
+      break;
+    case 128:
+    case 256:
+    case 512:
+    case 1024:
+    case 2048:
+    case 4096:
+    case 8192:
+    case 16384:
+    case 32768:
+    case 65536:
+    case 131072:
+    case 262144:
+    case 524288:
+    case 1048576:
+    case 2097152:
+    case 4194304:
+    case 8388608:
+    case 16777216:
+    case 33554432:
+      lane = 64;
+      break;
+    case 268435456:
+      lane = 134217728;
+      break;
+    default:
+      lane = 0;
+  }
+  return lane;
 }
 function lanesToEventPriority(lanes) {
   lanes &= -lanes;
@@ -6596,59 +6636,25 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       didReceiveUpdate || JSCompiler_temp)
     ) {
       JSCompiler_temp = workInProgressRoot;
-      if (null !== JSCompiler_temp) {
-        nextProps = renderLanes & -renderLanes;
-        if (0 !== (nextProps & 42)) nextProps = 1;
-        else
-          switch (nextProps) {
-            case 2:
-              nextProps = 1;
-              break;
-            case 8:
-              nextProps = 4;
-              break;
-            case 32:
-              nextProps = 16;
-              break;
-            case 128:
-            case 256:
-            case 512:
-            case 1024:
-            case 2048:
-            case 4096:
-            case 8192:
-            case 16384:
-            case 32768:
-            case 65536:
-            case 131072:
-            case 262144:
-            case 524288:
-            case 1048576:
-            case 2097152:
-            case 4194304:
-            case 8388608:
-            case 16777216:
-            case 33554432:
-              nextProps = 64;
-              break;
-            case 268435456:
-              nextProps = 134217728;
-              break;
-            default:
-              nextProps = 0;
-          }
-        nextProps =
+      if (
+        null !== JSCompiler_temp &&
+        ((nextProps = renderLanes & -renderLanes),
+        (nextProps =
+          0 !== (nextProps & 42)
+            ? 1
+            : getBumpedLaneForHydrationByLane(nextProps)),
+        (nextProps =
           0 !== (nextProps & (JSCompiler_temp.suspendedLanes | renderLanes))
             ? 0
-            : nextProps;
-        if (0 !== nextProps && nextProps !== JSCompiler_temp$jscomp$0.retryLane)
-          throw (
-            ((JSCompiler_temp$jscomp$0.retryLane = nextProps),
-            enqueueConcurrentRenderForLane(current, nextProps),
-            scheduleUpdateOnFiber(JSCompiler_temp, current, nextProps),
-            SelectiveHydrationException)
-          );
-      }
+            : nextProps),
+        0 !== nextProps && nextProps !== JSCompiler_temp$jscomp$0.retryLane)
+      )
+        throw (
+          ((JSCompiler_temp$jscomp$0.retryLane = nextProps),
+          enqueueConcurrentRenderForLane(current, nextProps),
+          scheduleUpdateOnFiber(JSCompiler_temp, current, nextProps),
+          SelectiveHydrationException)
+        );
       "$?" === nextInstance.data || renderDidSuspendDelayIfPossible();
       workInProgress = retrySuspenseComponentWithoutHydrating(
         current,
@@ -15659,8 +15665,9 @@ function attemptExplicitHydrationTarget(queuedTarget) {
           queuedTarget.blockedOn = targetInst;
           runWithPriority(queuedTarget.priority, function () {
             if (13 === nearestMounted.tag) {
-              var lane = requestUpdateLane(nearestMounted),
-                root = enqueueConcurrentRenderForLane(nearestMounted, lane);
+              var lane = requestUpdateLane(nearestMounted);
+              lane = getBumpedLaneForHydrationByLane(lane);
+              var root = enqueueConcurrentRenderForLane(nearestMounted, lane);
               null !== root &&
                 scheduleUpdateOnFiber(root, nearestMounted, lane);
               markRetryLaneIfNotHydrated(nearestMounted, lane);
@@ -15864,14 +15871,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1731 = React.version;
 if (
-  "19.0.0-native-fb-a4964987-20241211" !==
+  "19.1.0-native-fb-d5e8f79c-20241212" !==
   isomorphicReactPackageVersion$jscomp$inline_1731
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1731,
-      "19.0.0-native-fb-a4964987-20241211"
+      "19.1.0-native-fb-d5e8f79c-20241212"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -15893,10 +15900,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2186 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-a4964987-20241211",
+  version: "19.1.0-native-fb-d5e8f79c-20241212",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.0.0-native-fb-a4964987-20241211"
+  reconcilerVersion: "19.1.0-native-fb-d5e8f79c-20241212"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2187 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -15990,14 +15997,16 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   initialChildren.context = getContextForSubtree(null);
   options = initialChildren.current;
   isStrictMode = requestUpdateLane(options);
+  isStrictMode = getBumpedLaneForHydrationByLane(isStrictMode);
   identifierPrefix = createUpdate(isStrictMode);
   identifierPrefix.callback = null;
   enqueueUpdate(options, identifierPrefix, isStrictMode);
-  initialChildren.current.lanes = isStrictMode;
-  markRootUpdated$1(initialChildren, isStrictMode);
+  options = isStrictMode;
+  initialChildren.current.lanes = options;
+  markRootUpdated$1(initialChildren, options);
   ensureRootIsScheduled(initialChildren);
   container[internalContainerInstanceKey] = initialChildren.current;
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.0.0-native-fb-a4964987-20241211";
+exports.version = "19.1.0-native-fb-d5e8f79c-20241212";
