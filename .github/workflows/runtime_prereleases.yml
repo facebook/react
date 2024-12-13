@@ -41,6 +41,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: runtime-release-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'scripts/release/yarn.lock') }}
+      - name: Ensure clean build directory
+        run: rm -rf build
       - run: yarn install --frozen-lockfile
       - run: yarn install --frozen-lockfile
         working-directory: scripts/release

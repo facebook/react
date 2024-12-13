@@ -139,39 +139,6 @@ function stripExternalRuntimeInNodes(
   );
 }
 
-// Since JSDOM doesn't implement a streaming HTML parser, we manually overwrite
-// readyState here (currently read by ReactDOMServerExternalRuntime). This does
-// not trigger event callbacks, but we do not rely on any right now.
-async function withLoadingReadyState<T>(
-  fn: () => T,
-  document: Document,
-): Promise<T> {
-  // JSDOM implements readyState in document's direct prototype, but this may
-  // change in later versions
-  let prevDescriptor = null;
-  let proto: Object = document;
-  while (proto != null) {
-    prevDescriptor = Object.getOwnPropertyDescriptor(proto, 'readyState');
-    if (prevDescriptor != null) {
-      break;
-    }
-    proto = Object.getPrototypeOf(proto);
-  }
-  Object.defineProperty(document, 'readyState', {
-    get() {
-      return 'loading';
-    },
-    configurable: true,
-  });
-  const result = await fn();
-  // $FlowFixMe[incompatible-type]
-  delete document.readyState;
-  if (prevDescriptor) {
-    Object.defineProperty(proto, 'readyState', prevDescriptor);
-  }
-  return result;
-}
-
 function getVisibleChildren(element: Element): React$Node {
   const children = [];
   let node: any = element.firstChild;
@@ -218,6 +185,5 @@ export {
   insertNodesAndExecuteScripts,
   mergeOptions,
   stripExternalRuntimeInNodes,
-  withLoadingReadyState,
   getVisibleChildren,
 };

@@ -18,7 +18,10 @@ import {REACT_CONSUMER_TYPE} from 'shared/ReactSymbols';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
-import {enableAsyncActions} from 'shared/ReactFeatureFlags';
+import {
+  enableAsyncActions,
+  enableUseResourceEffectHook,
+} from 'shared/ReactFeatureFlags';
 import {
   enableContextProfiling,
   enableLazyContextPropagation,
@@ -212,7 +215,7 @@ export function use<T>(usable: Usable<T>): T {
   return dispatcher.use(usable);
 }
 
-export function useMemoCache(size: number): Array<any> {
+export function useMemoCache(size: number): Array<mixed> {
   const dispatcher = resolveDispatcher();
   // $FlowFixMe[not-a-function] This is unstable, thus optional
   return dispatcher.useMemoCache(size);
@@ -224,6 +227,27 @@ export function useEffectEvent<Args, F: (...Array<Args>) => mixed>(
   const dispatcher = resolveDispatcher();
   // $FlowFixMe[not-a-function] This is unstable, thus optional
   return dispatcher.useEffectEvent(callback);
+}
+
+export function useResourceEffect(
+  create: () => mixed,
+  createDeps: Array<mixed> | void | null,
+  update: ((resource: mixed) => void) | void,
+  updateDeps: Array<mixed> | void | null,
+  destroy: ((resource: mixed) => void) | void,
+): void {
+  if (!enableUseResourceEffectHook) {
+    throw new Error('Not implemented.');
+  }
+  const dispatcher = resolveDispatcher();
+  // $FlowFixMe[not-a-function] This is unstable, thus optional
+  return dispatcher.useResourceEffect(
+    create,
+    createDeps,
+    update,
+    updateDeps,
+    destroy,
+  );
 }
 
 export function useOptimistic<S, A>(

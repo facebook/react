@@ -47,6 +47,7 @@ export const favorSafetyOverHydrationPerf = true;
 export const enableComponentStackLocations = true;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = true;
+export const enableMoveBefore = false;
 export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableRenderableContext = false;
 export const enableFabricCompleteRootInCommitPhase = false;
@@ -92,7 +93,9 @@ export const renameElementSymbol = false;
 export const enableObjectFiber = false;
 export const enableOwnerStacks = false;
 export const enableShallowPropDiffing = false;
-export const enableSiblingPrerendering = false;
+export const enableSiblingPrerendering = true;
+
+export const enableUseResourceEffectHook = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

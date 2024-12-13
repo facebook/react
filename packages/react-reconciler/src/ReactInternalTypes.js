@@ -47,6 +47,7 @@ export type HookType =
   | 'useRef'
   | 'useEffect'
   | 'useEffectEvent'
+  | 'useResourceEffect'
   | 'useInsertionEffect'
   | 'useLayoutEffect'
   | 'useCallback'
@@ -412,6 +413,13 @@ export type Dispatcher = {
     deps: Array<mixed> | void | null,
   ): void,
   useEffectEvent?: <Args, F: (...Array<Args>) => mixed>(callback: F) => F,
+  useResourceEffect?: (
+    create: () => mixed,
+    createDeps: Array<mixed> | void | null,
+    update: ((resource: mixed) => void) | void,
+    updateDeps: Array<mixed> | void | null,
+    destroy: ((resource: mixed) => void) | void,
+  ) => void,
   useInsertionEffect(
     create: () => (() => void) | void,
     deps: Array<mixed> | void | null,

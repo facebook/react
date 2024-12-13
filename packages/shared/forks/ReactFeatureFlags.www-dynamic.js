@@ -27,6 +27,7 @@ export const enableRetryLaneExpiration = __VARIANT__;
 export const enableTransitionTracing = __VARIANT__;
 export const favorSafetyOverHydrationPerf = __VARIANT__;
 export const renameElementSymbol = __VARIANT__;
+export const enableOwnerStacks = __VARIANT__;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
@@ -41,6 +42,8 @@ export const enableSchedulingProfiler = __VARIANT__;
 
 export const enableInfiniteRenderLoopDetection = __VARIANT__;
 export const enableSiblingPrerendering = __VARIANT__;
+
+export const enableUseResourceEffectHook = __VARIANT__;
 
 // TODO: These flags are hard-coded to the default values used in open source.
 // Update the tests so that they pass in either mode, then set these

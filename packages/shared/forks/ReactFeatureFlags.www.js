@@ -31,11 +31,13 @@ export const {
   enableSiblingPrerendering,
   enableTransitionTracing,
   enableTrustedTypesIntegration,
+  enableUseResourceEffectHook,
   favorSafetyOverHydrationPerf,
   renameElementSymbol,
   retryLaneExpirationMs,
   syncLaneExpirationMs,
   transitionLaneExpirationMs,
+  enableOwnerStacks,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -56,6 +58,7 @@ export const enableCPUSuspense = true;
 export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = true;
 export const enableFilterEmptyStringAttributesDOM = true;
+export const enableMoveBefore = false;
 export const enableAsyncActions = true;
 export const disableInputAttributeSyncing = false;
 export const enableLegacyFBSupport = true;
@@ -119,7 +122,6 @@ export const useModernStrictMode = true;
 
 export const disableLegacyMode = true;
 
-export const enableOwnerStacks = false;
 export const enableShallowPropDiffing = false;
 
 // Flow magic to verify the exports of this file match the original version.

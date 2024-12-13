@@ -97,6 +97,7 @@ import {
   MaySuspendCommit,
   FormReset,
   Cloned,
+  PerformedWork,
 } from './ReactFiberFlags';
 import {
   commitStartTime,
@@ -141,6 +142,7 @@ import {
   suspendInstance,
   suspendResource,
   resetFormInstance,
+  registerSuspenseInstanceRetry,
 } from './ReactFiberConfig';
 import {
   captureCommitPhaseError,
@@ -153,6 +155,7 @@ import {
   addMarkerProgressCallbackToPendingTransition,
   addMarkerIncompleteCallbackToPendingTransition,
   addMarkerCompleteCallbackToPendingTransition,
+  retryDehydratedSuspenseBoundary,
 } from './ReactFiberWorkLoop';
 import {
   HasEffect as HookHasEffect,
@@ -525,6 +528,23 @@ function commitLayoutEffectOnFiber(
       if (flags & Update) {
         commitSuspenseHydrationCallbacks(finishedRoot, finishedWork);
       }
+      if (flags & Callback) {
+        // This Boundary is in fallback and has a dehydrated Suspense instance.
+        // We could in theory assume the dehydrated state but we recheck it for
+        // certainty.
+        const finishedState: SuspenseState | null = finishedWork.memoizedState;
+        if (finishedState !== null) {
+          const dehydrated = finishedState.dehydrated;
+          if (dehydrated !== null) {
+            // Register a callback to retry this boundary once the server has sent the result.
+            const retry = retryDehydratedSuspenseBoundary.bind(
+              null,
+              finishedWork,
+            );
+            registerSuspenseInstanceRetry(dehydrated, retry);
+          }
+        }
+      }
       break;
     }
     case OffscreenComponent: {
@@ -602,7 +622,8 @@ function commitLayoutEffectOnFiber(
     enableComponentPerformanceTrack &&
     (finishedWork.mode & ProfileMode) !== NoMode &&
     componentEffectStartTime >= 0 &&
-    componentEffectEndTime >= 0
+    componentEffectEndTime >= 0 &&
+    componentEffectDuration > 0.05
   ) {
     logComponentEffect(
       finishedWork,
@@ -2106,7 +2127,8 @@ function commitMutationEffectsOnFiber(
     enableComponentPerformanceTrack &&
     (finishedWork.mode & ProfileMode) !== NoMode &&
     componentEffectStartTime >= 0 &&
-    componentEffectEndTime >= 0
+    componentEffectEndTime >= 0 &&
+    componentEffectDuration > 0.05
   ) {
     logComponentEffect(
       finishedWork,
@@ -2647,7 +2669,8 @@ function commitPassiveMountOnFiber(
     enableProfilerTimer &&
     enableComponentPerformanceTrack &&
     (finishedWork.mode & ProfileMode) !== NoMode &&
-    ((finishedWork.actualStartTime: any): number) > 0
+    ((finishedWork.actualStartTime: any): number) > 0 &&
+    (finishedWork.flags & PerformedWork) !== NoFlags
   ) {
     logComponentRender(
       finishedWork,
@@ -2929,7 +2952,8 @@ function commitPassiveMountOnFiber(
     enableComponentPerformanceTrack &&
     (finishedWork.mode & ProfileMode) !== NoMode &&
     componentEffectStartTime >= 0 &&
-    componentEffectEndTime >= 0
+    componentEffectEndTime >= 0 &&
+    componentEffectDuration > 0.05
   ) {
     logComponentEffect(
       finishedWork,
@@ -3448,7 +3472,8 @@ function commitPassiveUnmountOnFiber(finishedWork: Fiber): void {
     enableComponentPerformanceTrack &&
     (finishedWork.mode & ProfileMode) !== NoMode &&
     componentEffectStartTime >= 0 &&
-    componentEffectEndTime >= 0
+    componentEffectEndTime >= 0 &&
+    componentEffectDuration > 0.05
   ) {
     logComponentEffect(
       finishedWork,

@@ -29,7 +29,7 @@ import { useActionState } from "react";
 
 function Component() {
   const $ = _c(1);
-  const [actionState, dispatchAction] = useActionState();
+  const [, dispatchAction] = useActionState();
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     const onSubmitAction = () => {

@@ -35,8 +35,7 @@ function Component(props) {
   }
   let d;
   if ($[2] !== props.c) {
-    const [c, ...t0] = props.c;
-    d = t0;
+    [, ...d] = props.c;
     $[2] = props.c;
     $[3] = d;
   } else {

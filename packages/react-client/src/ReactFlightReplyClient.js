@@ -693,7 +693,7 @@ export function processReply(
       ) {
         if (temporaryReferences === undefined) {
           throw new Error(
-            'Only plain objects, and a few built-ins, can be passed to Server Actions. ' +
+            'Only plain objects, and a few built-ins, can be passed to Server Functions. ' +
               'Classes or null prototypes are not supported.' +
               (__DEV__ ? describeObjectForErrorMessage(parent, key) : ''),
           );

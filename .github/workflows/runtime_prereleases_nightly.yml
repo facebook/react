@@ -15,7 +15,7 @@ jobs:
     with:
       commit_sha: ${{ github.sha }}
       release_channel: stable
-      dist_tag: canary,next,rc
+      dist_tag: canary,next
     secrets:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 

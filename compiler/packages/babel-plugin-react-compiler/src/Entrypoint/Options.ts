@@ -121,7 +121,22 @@ export type PluginOptions = {
   target: CompilerReactTarget;
 };
 
-const CompilerReactTargetSchema = z.enum(['17', '18', '19']);
+const CompilerReactTargetSchema = z.union([
+  z.literal('17'),
+  z.literal('18'),
+  z.literal('19'),
+  /**
+   * Used exclusively for Meta apps which are guaranteed to have compatible
+   * react runtime and compiler versions. Note that only the FB-internal bundles
+   * re-export useMemoCache (see
+   * https://github.com/facebook/react/blob/5b0ef217ef32333a8e56f39be04327c89efa346f/packages/react/index.fb.js#L68-L70),
+   * so this option is invalid / creates runtime errors for open-source users.
+   */
+  z.object({
+    kind: z.literal('donotuse_meta_internal'),
+    runtimeModule: z.string().default('react'),
+  }),
+]);
 export type CompilerReactTarget = z.infer<typeof CompilerReactTargetSchema>;
 
 const CompilationModeSchema = z.enum([

@@ -30,6 +30,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: shared-lint-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+      - name: Ensure clean build directory
+        run: rm -rf build
       - run: yarn install --frozen-lockfile
       - run: yarn prettier-check
 
@@ -48,6 +50,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: shared-lint-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+      - name: Ensure clean build directory
+        run: rm -rf build
       - run: yarn install --frozen-lockfile
       - run: node ./scripts/tasks/eslint
 
@@ -66,6 +70,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: shared-lint-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+      - name: Ensure clean build directory
+        run: rm -rf build
       - run: yarn install --frozen-lockfile
       - run: ./scripts/ci/check_license.sh
 
@@ -84,5 +90,7 @@ jobs:
         with:
           path: "**/node_modules"
           key: shared-lint-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+      - name: Ensure clean build directory
+        run: rm -rf build
       - run: yarn install --frozen-lockfile
       - run: ./scripts/ci/test_print_warnings.sh
