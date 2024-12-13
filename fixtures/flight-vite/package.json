@@ -1,0 +1,32 @@
+{
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"build": "vite build --app",
+		"dev": "vite dev",
+		"format": "npx biome format --write",
+		"start": "cross-env NODE_ENV=production node serve.js dist/prerender/entry.prerender.js dist/server/entry.server.js dist/browser",
+		"test": "playwright test"
+	},
+	"dependencies": {
+		"@jacob-ebey/react-server-dom-vite": "19.0.0-experimental.14",
+		"@jacob-ebey/vite-react-server-dom": "0.0.6",
+		"@mjackson/node-fetch-server": "0.5.0",
+		"compression": "^1.7.5",
+		"express": "^4.21.2",
+		"react": "^19.0.0",
+		"react-dom": "^19.0.0",
+		"rsc-html-stream": "0.0.4"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.4",
+		"@playwright/test": "^1.49.0",
+		"@types/dom-navigation": "^1.0.4",
+		"@types/node": "^22.0.0",
+		"@types/react": "^19.0.1",
+		"@types/react-dom": "^19.0.1",
+		"cross-env": "^7.0.3",
+		"playwright": "^1.49.0",
+		"vite": "^6.0.3"
+	}
+}

@@ -1,0 +1,11 @@
+{
+	"compilerOptions": {
+		"strict": true,
+		"lib": ["DOM", "DOM.Iterable", "ES2022"],
+		"types": ["dom-navigation", "node", "vite/client"],
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
+		"target": "ES2022",
+		"jsx": "react-jsx"
+	}
+}
