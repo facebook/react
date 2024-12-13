@@ -21618,42 +21618,36 @@ __DEV__ &&
                   }
                 case "src":
                 case "href":
-                  if (
-                    !(
-                      "" !== propKey ||
-                      ("a" === tag && "href" === value) ||
-                      ("object" === tag && "data" === value)
-                    )
-                  ) {
-                    "src" === value
-                      ? error$jscomp$0(
-                          'An empty string ("") was passed to the %s attribute. This may cause the browser to download the whole page again over the network. To fix this, either do not render the element at all or pass null to %s instead of an empty string.',
-                          value,
-                          value
-                        )
-                      : error$jscomp$0(
-                          'An empty string ("") was passed to the %s attribute. To fix this, either do not render the element at all or pass null to %s instead of an empty string.',
-                          value,
-                          value
-                        );
-                    hydrateSanitizedAttribute(
-                      domElement,
-                      value,
-                      value,
-                      null,
-                      extraAttributes,
-                      serverDifferences
-                    );
-                    continue;
-                  }
-                  hydrateSanitizedAttribute(
-                    domElement,
-                    value,
-                    value,
-                    propKey,
-                    extraAttributes,
-                    serverDifferences
-                  );
+                  "" !== propKey ||
+                  ("a" === tag && "href" === value) ||
+                  ("object" === tag && "data" === value)
+                    ? hydrateSanitizedAttribute(
+                        domElement,
+                        value,
+                        value,
+                        propKey,
+                        extraAttributes,
+                        serverDifferences
+                      )
+                    : ("src" === value
+                        ? error$jscomp$0(
+                            'An empty string ("") was passed to the %s attribute. This may cause the browser to download the whole page again over the network. To fix this, either do not render the element at all or pass null to %s instead of an empty string.',
+                            value,
+                            value
+                          )
+                        : error$jscomp$0(
+                            'An empty string ("") was passed to the %s attribute. To fix this, either do not render the element at all or pass null to %s instead of an empty string.',
+                            value,
+                            value
+                          ),
+                      hydrateSanitizedAttribute(
+                        domElement,
+                        value,
+                        value,
+                        null,
+                        extraAttributes,
+                        serverDifferences
+                      ));
                   continue;
                 case "action":
                 case "formAction":
@@ -28007,11 +28001,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.1.0-www-classic-3ad17ecd-20241213" !== isomorphicReactPackageVersion)
+      if ("19.1.0-www-classic-4996a8fa-20241213" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.1.0-www-classic-3ad17ecd-20241213\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.1.0-www-classic-4996a8fa-20241213\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -28054,10 +28048,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.1.0-www-classic-3ad17ecd-20241213",
+          version: "19.1.0-www-classic-4996a8fa-20241213",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.1.0-www-classic-3ad17ecd-20241213"
+          reconcilerVersion: "19.1.0-www-classic-4996a8fa-20241213"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -28830,5 +28824,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.1.0-www-classic-3ad17ecd-20241213";
+    exports.version = "19.1.0-www-classic-4996a8fa-20241213";
   })();
