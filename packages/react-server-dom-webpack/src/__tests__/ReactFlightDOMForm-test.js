@@ -971,7 +971,7 @@ describe('ReactFlightDOMForm', () => {
     expect(form2.textContent).toBe('error message');
     expect(form2.firstChild.tagName).toBe('DIV');
   });
-  
+
   it('useActionState can return binary state during MPA form submission', async () => {
     const serverAction = serverExports(
       async function action(prevState, formData) {
