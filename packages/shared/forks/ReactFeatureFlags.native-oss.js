@@ -87,6 +87,8 @@ export const useModernStrictMode = true;
 export const enableSiblingPrerendering = true;
 export const enableUseResourceEffectHook = false;
 
+export const enableHydrationLaneScheduling = true;
+
 // Profiling Only
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
