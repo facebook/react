@@ -32,7 +32,6 @@ export const disableTextareaChildren = false;
 export const enableAsyncDebugInfo = false;
 export const enableAsyncIterableChildren = false;
 export const enableCache = true;
-export const enableComponentStackLocations = true;
 export const enableCPUSuspense = false;
 export const enableCreateEventHandleAPI = false;
 export const enableDebugTracing = false;
