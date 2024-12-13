@@ -11,22 +11,18 @@ import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as ExportsType from './ReactFeatureFlags.test-renderer';
 
 export const alwaysThrottleRetries = false;
-export const consoleManagedByDevToolsDuringStrictMode = false;
 export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const disableClientCache = true;
 export const disableCommentsAsDOMContainers = true;
 export const disableDefaultPropsExceptForClasses = true;
-export const disableIEWorkarounds = true;
 export const disableInputAttributeSyncing = false;
 export const disableLegacyContext = false;
 export const disableLegacyContextForFunctionComponents = false;
 export const disableLegacyMode = false;
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const disableTextareaChildren = false;
-export const enableAsyncActions = true;
 export const enableAsyncDebugInfo = false;
 export const enableAsyncIterableChildren = false;
-export const enableBinaryFlight = true;
 export const enableCache = true;
 export const enableComponentStackLocations = true;
 export const enableCPUSuspense = true;
@@ -82,6 +78,7 @@ export const useModernStrictMode = true;
 export const enableFabricCompleteRootInCommitPhase = false;
 export const enableSiblingPrerendering = true;
 export const enableUseResourceEffectHook = true;
+export const enableHydrationLaneScheduling = true;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

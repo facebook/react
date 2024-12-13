@@ -12,8 +12,9 @@ export {
   decodeReply,
   decodeAction,
   decodeFormState,
+  createClientReference,
   registerServerReference,
-  registerClientReference,
-  createClientModuleProxy,
   createTemporaryReferenceSet,
-} from './ReactFlightDOMServerBrowser';
+  registerServerActions,
+  loadServerAction,
+} from './src/server/react-flight-dom-server.edge';

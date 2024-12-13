@@ -2581,7 +2581,6 @@ describe('ReactHooksInspectionIntegration', () => {
     `);
   });
 
-  // @gate enableAsyncActions
   it('should support useOptimistic hook', async () => {
     const useOptimistic = React.useOptimistic;
     function Foo() {
@@ -2647,7 +2646,6 @@ describe('ReactHooksInspectionIntegration', () => {
     `);
   });
 
-  // @gate enableAsyncActions
   it('should support useActionState hook', async () => {
     function Foo() {
       const [value] = React.useActionState(function increment(n) {

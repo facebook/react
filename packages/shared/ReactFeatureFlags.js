@@ -31,7 +31,6 @@ export const enableComponentStackLocations = true;
 
 // TODO: Finish rolling out in www
 export const favorSafetyOverHydrationPerf = true;
-export const enableAsyncActions = true;
 
 // Need to remove didTimeout argument from Scheduler before landing
 export const disableSchedulerTimeoutInWorkLoop = false;
@@ -79,7 +78,6 @@ export const enableLegacyFBSupport = false;
 export const enableCache = true;
 export const enableLegacyCache = __EXPERIMENTAL__;
 
-export const enableBinaryFlight = true;
 export const enableFlightReadableStream = true;
 export const enableAsyncIterableChildren = __EXPERIMENTAL__;
 
@@ -115,6 +113,8 @@ export const enableSuspenseAvoidThisFallback = false;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 
 export const enableCPUSuspense = __EXPERIMENTAL__;
+
+export const enableHydrationLaneScheduling = true;
 
 // Enables useMemoCache hook, intended as a compilation target for
 // auto-memoization.
@@ -200,10 +200,6 @@ export const disableLegacyContextForFunctionComponents = true;
 // components will encounter in production, especially when used With <Offscreen />.
 // TODO: clean up legacy <StrictMode /> once tests pass WWW.
 export const useModernStrictMode = true;
-
-// Not ready to break experimental yet.
-// Remove IE and MsApp specific workarounds for innerHTML
-export const disableIEWorkarounds = true;
 
 // Filter certain DOM attributes (e.g. src, href) if their values are empty
 // strings. This prevents e.g. <img src=""> from making an unnecessary HTTP
@@ -294,7 +290,5 @@ export const enableUpdaterTracking = __PROFILE__;
 
 // Internal only.
 export const enableGetInspectorDataForInstanceInProduction = false;
-
-export const consoleManagedByDevToolsDuringStrictMode = true;
 
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;

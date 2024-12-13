@@ -60,6 +60,10 @@ function ConditionalJsx({shouldWrap}) {
   return content;
 }
 
+function ComponentWithSpreadPropsAndRef({ref, ...other}) {
+  return <Foo ref={ref} {...other} />;
+}
+
 // TODO: Support value blocks
 function TernaryJsx({cond}) {
   return cond ? <div /> : null;
@@ -407,6 +411,41 @@ function ConditionalJsx(t0) {
     content = t3;
   }
   return content;
+}
+
+function ComponentWithSpreadPropsAndRef(t0) {
+  const $ = _c2(6);
+  let other;
+  let ref;
+  if ($[0] !== t0) {
+    ({ ref, ...other } = t0);
+    $[0] = t0;
+    $[1] = other;
+    $[2] = ref;
+  } else {
+    other = $[1];
+    ref = $[2];
+  }
+  let t1;
+  if ($[3] !== other || $[4] !== ref) {
+    if (DEV) {
+      t1 = <Foo ref={ref} {...other} />;
+    } else {
+      t1 = {
+        $$typeof: Symbol.for("react.transitional.element"),
+        type: Foo,
+        ref: ref,
+        key: null,
+        props: { ref: ref, ...other },
+      };
+    }
+    $[3] = other;
+    $[4] = ref;
+    $[5] = t1;
+  } else {
+    t1 = $[5];
+  }
+  return t1;
 }
 
 // TODO: Support value blocks

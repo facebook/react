@@ -91,7 +91,6 @@ import {
   enableCreateEventHandleAPI,
   enableScopeAPI,
   enableTrustedTypesIntegration,
-  enableAsyncActions,
   disableLegacyMode,
   enableMoveBefore,
 } from 'shared/ReactFeatureFlags';
@@ -1378,9 +1377,8 @@ function getNextHydratable(node: ?Node) {
         nodeData === SUSPENSE_START_DATA ||
         nodeData === SUSPENSE_FALLBACK_START_DATA ||
         nodeData === SUSPENSE_PENDING_START_DATA ||
-        (enableAsyncActions &&
-          (nodeData === FORM_STATE_IS_MATCHING ||
-            nodeData === FORM_STATE_IS_NOT_MATCHING))
+        nodeData === FORM_STATE_IS_MATCHING ||
+        nodeData === FORM_STATE_IS_NOT_MATCHING
       ) {
         break;
       }
