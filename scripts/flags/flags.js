@@ -381,7 +381,7 @@ const FLAG_CONFIG = {
 
 const FLAG_COLUMNS = Object.keys(FLAG_CONFIG);
 
-const INTERNAL_VARIANTS = ['WWW Classic', 'WWW Modern', 'RN OSS'];
+const INTERNAL_VARIANTS = ['WWW Classic', 'WWW Modern', 'RN FB'];
 const OSS_VARIANTS = [
   'OSS Next Major',
   'OSS Canary',
@@ -479,9 +479,8 @@ if (argv.cleanup) {
   const earlyExperimentationFlags = [];
   const internalOnlyFlags = [];
 
-  const diffedFlagColumns = argv.diff
-    ? argv.diff.map(argToHeader)
-    : FLAG_COLUMNS;
+  const diffedFlagColumns =
+    argv.diff[0] != null ? argv.diff.map(argToHeader) : FLAG_COLUMNS;
 
   for (const flag of allFlagsUniqueFlags) {
     const values = diffedFlagColumns.reduce((acc, key) => {
