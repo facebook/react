@@ -104,6 +104,7 @@ import {validateNoSetStateInPassiveEffects} from '../Validation/ValidateNoSetSta
 import {validateNoJSXInTryStatement} from '../Validation/ValidateNoJSXInTryStatement';
 import {propagateScopeDependenciesHIR} from '../HIR/PropagateScopeDependenciesHIR';
 import {outlineJSX} from '../Optimization/OutlineJsx';
+import {optimizePropsMethodCalls} from '../Optimization/OptimizePropsMethodCalls';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -208,6 +209,9 @@ function* runWithEnvironment(
   if (env.config.lowerContextAccess) {
     lowerContextAccess(hir, env.config.lowerContextAccess);
   }
+
+  optimizePropsMethodCalls(hir);
+  yield log({kind: 'hir', name: 'OptimizePropsMethodCalls', value: hir});
 
   analyseFunctions(hir);
   yield log({kind: 'hir', name: 'AnalyseFunctions', value: hir});

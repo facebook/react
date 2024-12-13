@@ -50,11 +50,11 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @enableJsxOutlining
 function Component(arr) {
-  const $ = _c(3);
+  const $ = _c(6);
   const x = useX();
   let t0;
   if ($[0] !== arr || $[1] !== x) {
-    t0 = arr.map((i) => {
+    t0 = (i) => {
       arr.map((i_0, id) => {
         const T0 = _temp;
         const child = <T0 i={i_0} x={x} />;
@@ -62,14 +62,23 @@ function Component(arr) {
         const jsx = <div>{child}</div>;
         return jsx;
       });
-    });
+    };
     $[0] = arr;
     $[1] = x;
     $[2] = t0;
   } else {
     t0 = $[2];
   }
-  return t0;
+  let t1;
+  if ($[3] !== arr.map || $[4] !== t0) {
+    t1 = arr.map(t0);
+    $[3] = arr.map;
+    $[4] = t0;
+    $[5] = t1;
+  } else {
+    t1 = $[5];
+  }
+  return t1;
 }
 function _temp(t0) {
   const $ = _c(5);
