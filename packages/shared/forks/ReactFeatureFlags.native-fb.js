@@ -53,7 +53,6 @@ export const enableFizzExternalRuntime = true;
 export const enableGetInspectorDataForInstanceInProduction = true;
 export const enableHalt = false;
 export const enableInfiniteRenderLoopDetection = false;
-export const enableContextProfiling = false;
 export const enableLazyContextPropagation = true;
 export const enableLegacyCache = false;
 export const enableLegacyFBSupport = false;

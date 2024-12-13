@@ -20,7 +20,6 @@ import type {
   Dependencies,
   Fiber,
   Dispatcher as DispatcherType,
-  ContextDependencyWithSelect,
 } from 'react-reconciler/src/ReactInternalTypes';
 import type {TransitionStatus} from 'react-reconciler/src/ReactFiberConfig';
 
@@ -76,13 +75,6 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
     try {
       // Use all hooks here to add them to the hook log.
       Dispatcher.useContext(({_currentValue: null}: any));
-      if (typeof Dispatcher.unstable_useContextWithBailout === 'function') {
-        // This type check is for Flow only.
-        Dispatcher.unstable_useContextWithBailout(
-          ({_currentValue: null}: any),
-          null,
-        );
-      }
       Dispatcher.useState(null);
       Dispatcher.useReducer((s: mixed, a: mixed) => s, null);
       Dispatcher.useRef(null);
@@ -150,10 +142,7 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
 
 let currentFiber: null | Fiber = null;
 let currentHook: null | Hook = null;
-let currentContextDependency:
-  | null
-  | ContextDependency<mixed>
-  | ContextDependencyWithSelect<mixed> = null;
+let currentContextDependency: null | ContextDependency<mixed> = null;
 
 function nextHook(): null | Hook {
   const hook = currentHook;
@@ -270,22 +259,6 @@ function useContext<T>(context: ReactContext<T>): T {
     value: value,
     debugInfo: null,
     dispatcherHookName: 'Context',
-  });
-  return value;
-}
-
-function unstable_useContextWithBailout<T>(
-  context: ReactContext<T>,
-  select: (T => Array<mixed>) | null,
-): T {
-  const value = readContext(context);
-  hookLog.push({
-    displayName: context.displayName || null,
-    primitive: 'ContextWithBailout',
-    stackError: new Error(),
-    value: value,
-    debugInfo: null,
-    dispatcherHookName: 'ContextWithBailout',
   });
   return value;
 }
@@ -764,7 +737,6 @@ const Dispatcher: DispatcherType = {
   useCacheRefresh,
   useCallback,
   useContext,
-  unstable_useContextWithBailout,
   useEffect,
   useImperativeHandle,
   useDebugValue,
