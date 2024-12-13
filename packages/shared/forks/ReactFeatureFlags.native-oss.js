@@ -20,7 +20,6 @@ export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 // All other flags
 // -----------------------------------------------------------------------------
 export const alwaysThrottleRetries = false;
-export const consoleManagedByDevToolsDuringStrictMode = true;
 export const disableClientCache = true;
 export const disableCommentsAsDOMContainers = true;
 export const disableDefaultPropsExceptForClasses = true;
