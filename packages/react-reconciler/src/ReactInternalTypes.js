@@ -210,7 +210,6 @@ export type Fiber = {
   _debugOwner?: ReactComponentInfo | Fiber | null,
   _debugStack?: string | Error | null,
   _debugTask?: ConsoleTask | null,
-  _debugIsCurrentlyTiming?: boolean,
   _debugNeedsRemount?: boolean,
 
   // Used to verify that the order of hooks does not change between renders.
