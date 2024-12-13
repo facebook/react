@@ -43,7 +43,6 @@ import type {Postpone} from 'react/src/ReactPostpone';
 import type {TemporaryReferenceSet} from './ReactFlightTemporaryReferences';
 
 import {
-  enableBinaryFlight,
   enablePostpone,
   enableFlightReadableStream,
   enableOwnerStacks,
@@ -1461,11 +1460,8 @@ function parseModelString(
       }
       case 'B': {
         // Blob
-        if (enableBinaryFlight) {
-          const ref = value.slice(2);
-          return getOutlinedModel(response, ref, parentObject, key, createBlob);
-        }
-        return undefined;
+        const ref = value.slice(2);
+        return getOutlinedModel(response, ref, parentObject, key, createBlob);
       }
       case 'K': {
         // FormData
@@ -2821,53 +2817,51 @@ function processFullBinaryRow(
   buffer: Array<Uint8Array>,
   chunk: Uint8Array,
 ): void {
-  if (enableBinaryFlight) {
-    switch (tag) {
-      case 65 /* "A" */:
-        // We must always clone to extract it into a separate buffer instead of just a view.
-        resolveBuffer(response, id, mergeBuffer(buffer, chunk).buffer);
-        return;
-      case 79 /* "O" */:
-        resolveTypedArray(response, id, buffer, chunk, Int8Array, 1);
-        return;
-      case 111 /* "o" */:
-        resolveBuffer(
-          response,
-          id,
-          buffer.length === 0 ? chunk : mergeBuffer(buffer, chunk),
-        );
-        return;
-      case 85 /* "U" */:
-        resolveTypedArray(response, id, buffer, chunk, Uint8ClampedArray, 1);
-        return;
-      case 83 /* "S" */:
-        resolveTypedArray(response, id, buffer, chunk, Int16Array, 2);
-        return;
-      case 115 /* "s" */:
-        resolveTypedArray(response, id, buffer, chunk, Uint16Array, 2);
-        return;
-      case 76 /* "L" */:
-        resolveTypedArray(response, id, buffer, chunk, Int32Array, 4);
-        return;
-      case 108 /* "l" */:
-        resolveTypedArray(response, id, buffer, chunk, Uint32Array, 4);
-        return;
-      case 71 /* "G" */:
-        resolveTypedArray(response, id, buffer, chunk, Float32Array, 4);
-        return;
-      case 103 /* "g" */:
-        resolveTypedArray(response, id, buffer, chunk, Float64Array, 8);
-        return;
-      case 77 /* "M" */:
-        resolveTypedArray(response, id, buffer, chunk, BigInt64Array, 8);
-        return;
-      case 109 /* "m" */:
-        resolveTypedArray(response, id, buffer, chunk, BigUint64Array, 8);
-        return;
-      case 86 /* "V" */:
-        resolveTypedArray(response, id, buffer, chunk, DataView, 1);
-        return;
-    }
+  switch (tag) {
+    case 65 /* "A" */:
+      // We must always clone to extract it into a separate buffer instead of just a view.
+      resolveBuffer(response, id, mergeBuffer(buffer, chunk).buffer);
+      return;
+    case 79 /* "O" */:
+      resolveTypedArray(response, id, buffer, chunk, Int8Array, 1);
+      return;
+    case 111 /* "o" */:
+      resolveBuffer(
+        response,
+        id,
+        buffer.length === 0 ? chunk : mergeBuffer(buffer, chunk),
+      );
+      return;
+    case 85 /* "U" */:
+      resolveTypedArray(response, id, buffer, chunk, Uint8ClampedArray, 1);
+      return;
+    case 83 /* "S" */:
+      resolveTypedArray(response, id, buffer, chunk, Int16Array, 2);
+      return;
+    case 115 /* "s" */:
+      resolveTypedArray(response, id, buffer, chunk, Uint16Array, 2);
+      return;
+    case 76 /* "L" */:
+      resolveTypedArray(response, id, buffer, chunk, Int32Array, 4);
+      return;
+    case 108 /* "l" */:
+      resolveTypedArray(response, id, buffer, chunk, Uint32Array, 4);
+      return;
+    case 71 /* "G" */:
+      resolveTypedArray(response, id, buffer, chunk, Float32Array, 4);
+      return;
+    case 103 /* "g" */:
+      resolveTypedArray(response, id, buffer, chunk, Float64Array, 8);
+      return;
+    case 77 /* "M" */:
+      resolveTypedArray(response, id, buffer, chunk, BigInt64Array, 8);
+      return;
+    case 109 /* "m" */:
+      resolveTypedArray(response, id, buffer, chunk, BigUint64Array, 8);
+      return;
+    case 86 /* "V" */:
+      resolveTypedArray(response, id, buffer, chunk, DataView, 1);
+      return;
   }
 
   const stringDecoder = response._stringDecoder;
@@ -3061,20 +3055,19 @@ export function processBinaryChunk(
         const resolvedRowTag = chunk[i];
         if (
           resolvedRowTag === 84 /* "T" */ ||
-          (enableBinaryFlight &&
-            (resolvedRowTag === 65 /* "A" */ ||
-              resolvedRowTag === 79 /* "O" */ ||
-              resolvedRowTag === 111 /* "o" */ ||
-              resolvedRowTag === 85 /* "U" */ ||
-              resolvedRowTag === 83 /* "S" */ ||
-              resolvedRowTag === 115 /* "s" */ ||
-              resolvedRowTag === 76 /* "L" */ ||
-              resolvedRowTag === 108 /* "l" */ ||
-              resolvedRowTag === 71 /* "G" */ ||
-              resolvedRowTag === 103 /* "g" */ ||
-              resolvedRowTag === 77 /* "M" */ ||
-              resolvedRowTag === 109 /* "m" */ ||
-              resolvedRowTag === 86)) /* "V" */
+          resolvedRowTag === 65 /* "A" */ ||
+          resolvedRowTag === 79 /* "O" */ ||
+          resolvedRowTag === 111 /* "o" */ ||
+          resolvedRowTag === 85 /* "U" */ ||
+          resolvedRowTag === 83 /* "S" */ ||
+          resolvedRowTag === 115 /* "s" */ ||
+          resolvedRowTag === 76 /* "L" */ ||
+          resolvedRowTag === 108 /* "l" */ ||
+          resolvedRowTag === 71 /* "G" */ ||
+          resolvedRowTag === 103 /* "g" */ ||
+          resolvedRowTag === 77 /* "M" */ ||
+          resolvedRowTag === 109 /* "m" */ ||
+          resolvedRowTag === 86 /* "V" */
         ) {
           rowTag = resolvedRowTag;
           rowState = ROW_LENGTH;
@@ -3187,20 +3180,19 @@ export function processStringChunk(response: Response, chunk: string): void {
         const resolvedRowTag = chunk.charCodeAt(i);
         if (
           resolvedRowTag === 84 /* "T" */ ||
-          (enableBinaryFlight &&
-            (resolvedRowTag === 65 /* "A" */ ||
-              resolvedRowTag === 79 /* "O" */ ||
-              resolvedRowTag === 111 /* "o" */ ||
-              resolvedRowTag === 85 /* "U" */ ||
-              resolvedRowTag === 83 /* "S" */ ||
-              resolvedRowTag === 115 /* "s" */ ||
-              resolvedRowTag === 76 /* "L" */ ||
-              resolvedRowTag === 108 /* "l" */ ||
-              resolvedRowTag === 71 /* "G" */ ||
-              resolvedRowTag === 103 /* "g" */ ||
-              resolvedRowTag === 77 /* "M" */ ||
-              resolvedRowTag === 109 /* "m" */ ||
-              resolvedRowTag === 86)) /* "V" */
+          resolvedRowTag === 65 /* "A" */ ||
+          resolvedRowTag === 79 /* "O" */ ||
+          resolvedRowTag === 111 /* "o" */ ||
+          resolvedRowTag === 85 /* "U" */ ||
+          resolvedRowTag === 83 /* "S" */ ||
+          resolvedRowTag === 115 /* "s" */ ||
+          resolvedRowTag === 76 /* "L" */ ||
+          resolvedRowTag === 108 /* "l" */ ||
+          resolvedRowTag === 71 /* "G" */ ||
+          resolvedRowTag === 103 /* "g" */ ||
+          resolvedRowTag === 77 /* "M" */ ||
+          resolvedRowTag === 109 /* "m" */ ||
+          resolvedRowTag === 86 /* "V" */
         ) {
           rowTag = resolvedRowTag;
           rowState = ROW_LENGTH;

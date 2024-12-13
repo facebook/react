@@ -20,7 +20,6 @@ import type {TemporaryReferenceSet} from './ReactFlightTemporaryReferences';
 
 import {
   enableRenderableContext,
-  enableBinaryFlight,
   enableFlightReadableStream,
 } from 'shared/ReactFeatureFlags';
 
@@ -578,73 +577,71 @@ export function processReply(
         return serializeSetID(setId);
       }
 
-      if (enableBinaryFlight) {
-        if (value instanceof ArrayBuffer) {
-          const blob = new Blob([value]);
-          const blobId = nextPartId++;
-          if (formData === null) {
-            formData = new FormData();
-          }
-          formData.append(formFieldPrefix + blobId, blob);
-          return '$' + 'A' + blobId.toString(16);
+      if (value instanceof ArrayBuffer) {
+        const blob = new Blob([value]);
+        const blobId = nextPartId++;
+        if (formData === null) {
+          formData = new FormData();
         }
-        if (value instanceof Int8Array) {
-          // char
-          return serializeTypedArray('O', value);
+        formData.append(formFieldPrefix + blobId, blob);
+        return '$' + 'A' + blobId.toString(16);
+      }
+      if (value instanceof Int8Array) {
+        // char
+        return serializeTypedArray('O', value);
+      }
+      if (value instanceof Uint8Array) {
+        // unsigned char
+        return serializeTypedArray('o', value);
+      }
+      if (value instanceof Uint8ClampedArray) {
+        // unsigned clamped char
+        return serializeTypedArray('U', value);
+      }
+      if (value instanceof Int16Array) {
+        // sort
+        return serializeTypedArray('S', value);
+      }
+      if (value instanceof Uint16Array) {
+        // unsigned short
+        return serializeTypedArray('s', value);
+      }
+      if (value instanceof Int32Array) {
+        // long
+        return serializeTypedArray('L', value);
+      }
+      if (value instanceof Uint32Array) {
+        // unsigned long
+        return serializeTypedArray('l', value);
+      }
+      if (value instanceof Float32Array) {
+        // float
+        return serializeTypedArray('G', value);
+      }
+      if (value instanceof Float64Array) {
+        // double
+        return serializeTypedArray('g', value);
+      }
+      if (value instanceof BigInt64Array) {
+        // number
+        return serializeTypedArray('M', value);
+      }
+      if (value instanceof BigUint64Array) {
+        // unsigned number
+        // We use "m" instead of "n" since JSON can start with "null"
+        return serializeTypedArray('m', value);
+      }
+      if (value instanceof DataView) {
+        return serializeTypedArray('V', value);
+      }
+      // TODO: Blob is not available in old Node/browsers. Remove the typeof check later.
+      if (typeof Blob === 'function' && value instanceof Blob) {
+        if (formData === null) {
+          formData = new FormData();
         }
-        if (value instanceof Uint8Array) {
-          // unsigned char
-          return serializeTypedArray('o', value);
-        }
-        if (value instanceof Uint8ClampedArray) {
-          // unsigned clamped char
-          return serializeTypedArray('U', value);
-        }
-        if (value instanceof Int16Array) {
-          // sort
-          return serializeTypedArray('S', value);
-        }
-        if (value instanceof Uint16Array) {
-          // unsigned short
-          return serializeTypedArray('s', value);
-        }
-        if (value instanceof Int32Array) {
-          // long
-          return serializeTypedArray('L', value);
-        }
-        if (value instanceof Uint32Array) {
-          // unsigned long
-          return serializeTypedArray('l', value);
-        }
-        if (value instanceof Float32Array) {
-          // float
-          return serializeTypedArray('G', value);
-        }
-        if (value instanceof Float64Array) {
-          // double
-          return serializeTypedArray('g', value);
-        }
-        if (value instanceof BigInt64Array) {
-          // number
-          return serializeTypedArray('M', value);
-        }
-        if (value instanceof BigUint64Array) {
-          // unsigned number
-          // We use "m" instead of "n" since JSON can start with "null"
-          return serializeTypedArray('m', value);
-        }
-        if (value instanceof DataView) {
-          return serializeTypedArray('V', value);
-        }
-        // TODO: Blob is not available in old Node/browsers. Remove the typeof check later.
-        if (typeof Blob === 'function' && value instanceof Blob) {
-          if (formData === null) {
-            formData = new FormData();
-          }
-          const blobId = nextPartId++;
-          formData.append(formFieldPrefix + blobId, value);
-          return serializeBlobID(blobId);
-        }
+        const blobId = nextPartId++;
+        formData.append(formFieldPrefix + blobId, value);
+        return serializeBlobID(blobId);
       }
 
       const iteratorFn = getIteratorFn(value);

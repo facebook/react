@@ -2059,7 +2059,7 @@ describe('ReactFlight', () => {
     expect(errors).toEqual(['Cannot pass a secret token to the client']);
   });
 
-  // @gate enableTaint && enableBinaryFlight
+  // @gate enableTaint
   it('errors when a tainted binary value is serialized', async () => {
     function UserClient({user}) {
       return <span>{user.name}</span>;
