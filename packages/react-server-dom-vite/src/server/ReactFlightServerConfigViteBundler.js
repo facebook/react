@@ -20,11 +20,12 @@ export type ClientManifest = {
   resolveClientReferenceMetadata<T>(
     clientReference: ClientReference<T>,
   ): ClientReferenceMetadata,
-}; // API for loading client reference metadata
+  resolveServerReference<T>(id: ServerReferenceId): ClientReference<T>,
+}; // API for loading client reference metadata and server references
 
 export type ServerReferenceId = string;
 
-export type ClientReferenceMetadata = string[];
+export type ClientReferenceMetadata = mixed;
 
 export type ClientReferenceKey = string;
 

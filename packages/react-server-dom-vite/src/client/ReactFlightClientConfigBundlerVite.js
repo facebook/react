@@ -19,16 +19,16 @@ export type ServerManifest = {
   resolveServerReference<T>(id: ServerReferenceId): ClientReference<T>,
 }; // API for loading references
 
-export type ServerReferenceId = string;
-
-import {prepareDestinationForModuleImpl} from 'react-client/src/ReactFlightClientConfig';
-
-export opaque type ClientReferenceMetadata = string[];
-
 export opaque type ClientReference<T> = {
   get(): T,
   preload(): null | Promise<void>,
 };
+
+export opaque type ClientReferenceMetadata = mixed;
+
+export type ServerReferenceId = string;
+
+import {prepareDestinationForModuleImpl} from 'react-client/src/ReactFlightClientConfig';
 
 // The reason this function needs to defined here in this file instead of just
 // being exported directly from the WebpackDestination... file is because the
