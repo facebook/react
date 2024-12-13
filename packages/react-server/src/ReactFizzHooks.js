@@ -43,6 +43,7 @@ import {
   enableUseEffectEventHook,
   enableUseMemoCacheHook,
   enableAsyncActions,
+  enableUseResourceEffectHook,
 } from 'shared/ReactFeatureFlags';
 import is from 'shared/objectIs';
 import {
@@ -869,6 +870,11 @@ if (enableAsyncActions) {
   HooksDispatcher.useOptimistic = useOptimistic;
   HooksDispatcher.useFormState = useActionState;
   HooksDispatcher.useActionState = useActionState;
+}
+if (enableUseResourceEffectHook) {
+  HooksDispatcher.useResourceEffect = supportsClientAPIs
+    ? noop
+    : clientHookNotSupported;
 }
 
 export let currentResumableState: null | ResumableState = (null: any);
