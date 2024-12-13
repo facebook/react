@@ -5115,7 +5115,7 @@ if (__DEV__) {
       };
   }
   if (enableContextProfiling) {
-    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).unstable_useContextWithBailout =
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).unstable_useContextWithBailout =
       function <T>(
         context: ReactContext<T>,
         select: (T => Array<mixed>) | null,
