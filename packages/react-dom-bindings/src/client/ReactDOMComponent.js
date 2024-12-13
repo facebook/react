@@ -63,10 +63,7 @@ import {validateProperties as validateInputProperties} from '../shared/ReactDOMN
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
 import sanitizeURL from '../shared/sanitizeURL';
 
-import {
-  enableTrustedTypesIntegration,
-  enableFilterEmptyStringAttributesDOM,
-} from 'shared/ReactFeatureFlags';
+import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
 import {
   mediaEventTypes,
   listenToNonDelegatedEvent,
@@ -400,35 +397,33 @@ function setProp(
     // fallthrough
     case 'src':
     case 'href': {
-      if (enableFilterEmptyStringAttributesDOM) {
-        if (
-          value === '' &&
-          // <a href=""> is fine for "reload" links.
-          !(tag === 'a' && key === 'href')
-        ) {
-          if (__DEV__) {
-            if (key === 'src') {
-              console.error(
-                'An empty string ("") was passed to the %s attribute. ' +
-                  'This may cause the browser to download the whole page again over the network. ' +
-                  'To fix this, either do not render the element at all ' +
-                  'or pass null to %s instead of an empty string.',
-                key,
-                key,
-              );
-            } else {
-              console.error(
-                'An empty string ("") was passed to the %s attribute. ' +
-                  'To fix this, either do not render the element at all ' +
-                  'or pass null to %s instead of an empty string.',
-                key,
-                key,
-              );
-            }
+      if (
+        value === '' &&
+        // <a href=""> is fine for "reload" links.
+        !(tag === 'a' && key === 'href')
+      ) {
+        if (__DEV__) {
+          if (key === 'src') {
+            console.error(
+              'An empty string ("") was passed to the %s attribute. ' +
+                'This may cause the browser to download the whole page again over the network. ' +
+                'To fix this, either do not render the element at all ' +
+                'or pass null to %s instead of an empty string.',
+              key,
+              key,
+            );
+          } else {
+            console.error(
+              'An empty string ("") was passed to the %s attribute. ' +
+                'To fix this, either do not render the element at all ' +
+                'or pass null to %s instead of an empty string.',
+              key,
+              key,
+            );
           }
-          domElement.removeAttribute(key);
-          break;
         }
+        domElement.removeAttribute(key);
+        break;
       }
       if (
         value == null ||
@@ -2489,53 +2484,52 @@ function diffHydratedGenericElement(
       // fallthrough
       case 'src':
       case 'href':
-        if (enableFilterEmptyStringAttributesDOM) {
-          if (
-            value === '' &&
-            // <a href=""> is fine for "reload" links.
-            !(tag === 'a' && propKey === 'href') &&
-            !(tag === 'object' && propKey === 'data')
-          ) {
-            if (__DEV__) {
-              if (propKey === 'src') {
-                console.error(
-                  'An empty string ("") was passed to the %s attribute. ' +
-                    'This may cause the browser to download the whole page again over the network. ' +
-                    'To fix this, either do not render the element at all ' +
-                    'or pass null to %s instead of an empty string.',
-                  propKey,
-                  propKey,
-                );
-              } else {
-                console.error(
-                  'An empty string ("") was passed to the %s attribute. ' +
-                    'To fix this, either do not render the element at all ' +
-                    'or pass null to %s instead of an empty string.',
-                  propKey,
-                  propKey,
-                );
-              }
+        if (
+          value === '' &&
+          // <a href=""> is fine for "reload" links.
+          !(tag === 'a' && propKey === 'href') &&
+          !(tag === 'object' && propKey === 'data')
+        ) {
+          if (__DEV__) {
+            if (propKey === 'src') {
+              console.error(
+                'An empty string ("") was passed to the %s attribute. ' +
+                  'This may cause the browser to download the whole page again over the network. ' +
+                  'To fix this, either do not render the element at all ' +
+                  'or pass null to %s instead of an empty string.',
+                propKey,
+                propKey,
+              );
+            } else {
+              console.error(
+                'An empty string ("") was passed to the %s attribute. ' +
+                  'To fix this, either do not render the element at all ' +
+                  'or pass null to %s instead of an empty string.',
+                propKey,
+                propKey,
+              );
             }
-            hydrateSanitizedAttribute(
-              domElement,
-              propKey,
-              propKey,
-              null,
-              extraAttributes,
-              serverDifferences,
-            );
-            continue;
           }
+          hydrateSanitizedAttribute(
+            domElement,
+            propKey,
+            propKey,
+            null,
+            extraAttributes,
+            serverDifferences,
+          );
+          continue;
+        } else {
+          hydrateSanitizedAttribute(
+            domElement,
+            propKey,
+            propKey,
+            value,
+            extraAttributes,
+            serverDifferences,
+          );
+          continue;
         }
-        hydrateSanitizedAttribute(
-          domElement,
-          propKey,
-          propKey,
-          value,
-          extraAttributes,
-          serverDifferences,
-        );
-        continue;
       case 'action':
       case 'formAction': {
         const serverValue = domElement.getAttribute(propKey);

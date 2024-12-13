@@ -201,11 +201,6 @@ export const disableLegacyContextForFunctionComponents = true;
 // TODO: clean up legacy <StrictMode /> once tests pass WWW.
 export const useModernStrictMode = true;
 
-// Filter certain DOM attributes (e.g. src, href) if their values are empty
-// strings. This prevents e.g. <img src=""> from making an unnecessary HTTP
-// request for certain browsers.
-export const enableFilterEmptyStringAttributesDOM = true;
-
 // Enable the moveBefore() alternative to insertBefore(). This preserves states of moves.
 export const enableMoveBefore = false;
 
