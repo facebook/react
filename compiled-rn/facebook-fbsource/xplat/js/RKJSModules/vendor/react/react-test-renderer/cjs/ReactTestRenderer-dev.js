@@ -7,13 +7,13 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b4ad3a86beb4d6bdfa39bb0ab01e11d3>>
+ * @generated SignedSource<<af98a6f5df022c86d2ed30c74be178aa>>
  */
 
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1154() {
+    function JSCompiler_object_inline_createNodeMock_1145() {
       return null;
     }
     function findHook(fiber, id) {
@@ -529,13 +529,11 @@ __DEV__ &&
           return describeBuiltInComponentFrame("SuspenseList");
         case 0:
         case 15:
-          return (fiber = describeNativeComponentFrame(fiber.type, !1)), fiber;
+          return describeNativeComponentFrame(fiber.type, !1);
         case 11:
-          return (
-            (fiber = describeNativeComponentFrame(fiber.type.render, !1)), fiber
-          );
+          return describeNativeComponentFrame(fiber.type.render, !1);
         case 1:
-          return (fiber = describeNativeComponentFrame(fiber.type, !0)), fiber;
+          return describeNativeComponentFrame(fiber.type, !0);
         default:
           return "";
       }
@@ -15528,10 +15526,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-ef63718a-20241213",
+        version: "19.1.0-native-fb-3ad17ecd-20241213",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-ef63718a-20241213"
+        reconcilerVersion: "19.1.0-native-fb-3ad17ecd-20241213"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15553,7 +15551,7 @@ __DEV__ &&
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1154,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1145,
         isConcurrent = !1,
         isStrictMode = !1;
       "object" === typeof options &&
@@ -15676,5 +15674,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.1.0-native-fb-ef63718a-20241213";
+    exports.version = "19.1.0-native-fb-3ad17ecd-20241213";
   })();

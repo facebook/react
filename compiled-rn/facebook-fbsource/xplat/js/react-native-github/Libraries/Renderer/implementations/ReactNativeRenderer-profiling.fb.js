@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<26221eaef719557b3201f8273ab408e5>>
+ * @generated SignedSource<<eb7e8794ffb0b0ca71fc2e14c03167ee>>
  */
 
 "use strict";
@@ -225,13 +225,11 @@ function describeFiber(fiber) {
       return describeBuiltInComponentFrame("SuspenseList");
     case 0:
     case 15:
-      return (fiber = describeNativeComponentFrame(fiber.type, !1)), fiber;
+      return describeNativeComponentFrame(fiber.type, !1);
     case 11:
-      return (
-        (fiber = describeNativeComponentFrame(fiber.type.render, !1)), fiber
-      );
+      return describeNativeComponentFrame(fiber.type.render, !1);
     case 1:
-      return (fiber = describeNativeComponentFrame(fiber.type, !0)), fiber;
+      return describeNativeComponentFrame(fiber.type, !0);
     default:
       return "";
   }
@@ -1232,7 +1230,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_311 = {
+var injectedNamesToPlugins$jscomp$inline_302 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -1278,32 +1276,32 @@ var injectedNamesToPlugins$jscomp$inline_311 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_312 = !1,
-  pluginName$jscomp$inline_313;
-for (pluginName$jscomp$inline_313 in injectedNamesToPlugins$jscomp$inline_311)
+  isOrderingDirty$jscomp$inline_303 = !1,
+  pluginName$jscomp$inline_304;
+for (pluginName$jscomp$inline_304 in injectedNamesToPlugins$jscomp$inline_302)
   if (
-    injectedNamesToPlugins$jscomp$inline_311.hasOwnProperty(
-      pluginName$jscomp$inline_313
+    injectedNamesToPlugins$jscomp$inline_302.hasOwnProperty(
+      pluginName$jscomp$inline_304
     )
   ) {
-    var pluginModule$jscomp$inline_314 =
-      injectedNamesToPlugins$jscomp$inline_311[pluginName$jscomp$inline_313];
+    var pluginModule$jscomp$inline_305 =
+      injectedNamesToPlugins$jscomp$inline_302[pluginName$jscomp$inline_304];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_313) ||
-      namesToPlugins[pluginName$jscomp$inline_313] !==
-        pluginModule$jscomp$inline_314
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_304) ||
+      namesToPlugins[pluginName$jscomp$inline_304] !==
+        pluginModule$jscomp$inline_305
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_313])
+      if (namesToPlugins[pluginName$jscomp$inline_304])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_313 + "`.")
+            (pluginName$jscomp$inline_304 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_313] =
-        pluginModule$jscomp$inline_314;
-      isOrderingDirty$jscomp$inline_312 = !0;
+      namesToPlugins[pluginName$jscomp$inline_304] =
+        pluginModule$jscomp$inline_305;
+      isOrderingDirty$jscomp$inline_303 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_312 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_303 && recomputePluginOrdering();
 var instanceCache = new Map(),
   instanceProps = new Map();
 function getInstanceFromTag(tag) {
@@ -11889,11 +11887,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.1.0-native-fb-ef63718a-20241213" !== isomorphicReactPackageVersion)
+if ("19.1.0-native-fb-3ad17ecd-20241213" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.1.0-native-fb-ef63718a-20241213\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.1.0-native-fb-3ad17ecd-20241213\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11940,16 +11938,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1373 = {
+  internals$jscomp$inline_1364 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-ef63718a-20241213",
+    version: "19.1.0-native-fb-3ad17ecd-20241213",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-ef63718a-20241213"
+    reconcilerVersion: "19.1.0-native-fb-3ad17ecd-20241213"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1373.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1373.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1364.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1364.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$158 = 0;
     31 > index$158;
@@ -11961,20 +11959,20 @@ internals$jscomp$inline_1373.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1373.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1364.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1673 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1664 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1673.isDisabled &&
-    hook$jscomp$inline_1673.supportsFiber
+    !hook$jscomp$inline_1664.isDisabled &&
+    hook$jscomp$inline_1664.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1673.inject(
-        internals$jscomp$inline_1373
+      (rendererID = hook$jscomp$inline_1664.inject(
+        internals$jscomp$inline_1364
       )),
-        (injectedHook = hook$jscomp$inline_1673);
+        (injectedHook = hook$jscomp$inline_1664);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
