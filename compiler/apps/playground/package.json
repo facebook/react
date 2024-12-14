@@ -42,6 +42,7 @@
     "react-dom": "19.0.0-rc-77b637d6-20241016"
   },
   "devDependencies": {
+    "@babel/plugin-transform-flow-strip-types": "^7.25.9",
     "@types/node": "18.11.9",
     "@types/react": "npm:types-react@19.0.0-rc.1",
     "@types/react-dom": "npm:types-react-dom@19.0.0-rc.1",

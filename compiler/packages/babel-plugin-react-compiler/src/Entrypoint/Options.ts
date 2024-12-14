@@ -15,6 +15,7 @@ import {
 } from '../HIR/Environment';
 import {hasOwnProperty} from '../Utils/utils';
 import {fromZodError} from 'zod-validation-error';
+import {CompilerPipelineValue} from './Pipeline';
 
 const PanicThresholdOptionsSchema = z.enum([
   /*
@@ -209,6 +210,7 @@ export type LoggerEvent =
 
 export type Logger = {
   logEvent: (filename: string | null, event: LoggerEvent) => void;
+  debugLogIRs?: (value: CompilerPipelineValue) => void;
 };
 
 export const defaultOptions: PluginOptions = {
