@@ -1,3 +1,4 @@
+import { c as _c } from "react/compiler-runtime";
 function TestComponent(t0) {
   "use memo";
   const $ = _c(2);
@@ -12,7 +13,7 @@ function TestComponent(t0) {
   }
   return t1;
 }
-function anonymous_1(t0) {
+const TestComponent2 = (t0) => {
   "use memo";
   const $ = _c(2);
   const { x } = t0;
@@ -25,4 +26,4 @@ function anonymous_1(t0) {
     t1 = $[1];
   }
   return t1;
-}
+};

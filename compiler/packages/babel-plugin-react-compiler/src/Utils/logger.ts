@@ -17,10 +17,6 @@ let ENABLED: boolean = false;
 
 let lastLogged: string;
 
-export function toggleLogging(enabled: boolean): void {
-  ENABLED = enabled;
-}
-
 export function logDebug(step: string, value: string): void {
   if (ENABLED) {
     process.stdout.write(`${chalk.green(step)}:\n${value}\n\n`);
