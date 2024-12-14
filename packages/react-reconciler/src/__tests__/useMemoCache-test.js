@@ -58,7 +58,6 @@ describe('useMemoCache()', () => {
     ErrorBoundary = _ErrorBoundary;
   });
 
-  // @gate enableUseMemoCacheHook
   it('render component using cache', async () => {
     function Component(props) {
       const cache = useMemoCache(1);
@@ -75,7 +74,6 @@ describe('useMemoCache()', () => {
     expect(root).toMatchRenderedOutput('Ok');
   });
 
-  // @gate enableUseMemoCacheHook
   it('update component using cache', async () => {
     let setX;
     let forceUpdate;
@@ -145,7 +143,6 @@ describe('useMemoCache()', () => {
     expect(data).toBe(data1); // confirm that the cache persisted across renders
   });
 
-  // @gate enableUseMemoCacheHook
   it('update component using cache with setstate during render', async () => {
     let setN;
     function Component(props) {
@@ -210,7 +207,6 @@ describe('useMemoCache()', () => {
     expect(data).toBe(data0);
   });
 
-  // @gate enableUseMemoCacheHook
   it('update component using cache with throw during render', async () => {
     let setN;
     let shouldFail = true;
@@ -293,7 +289,6 @@ describe('useMemoCache()', () => {
     expect(data).toBe(data1); // confirm that the cache persisted across renders
   });
 
-  // @gate enableUseMemoCacheHook
   it('update component and custom hook with caches', async () => {
     let setX;
     let forceUpdate;
@@ -370,7 +365,6 @@ describe('useMemoCache()', () => {
     expect(data).toBe(data1); // confirm that the cache persisted across renders
   });
 
-  // @gate enableUseMemoCacheHook
   it('reuses computations from suspended/interrupted render attempts during an update', async () => {
     // This test demonstrates the benefit of a shared memo cache. By "shared" I
     // mean multiple concurrent render attempts of the same component/hook use
@@ -624,7 +618,6 @@ describe('useMemoCache()', () => {
     );
   });
 
-  // @gate enableUseMemoCacheHook
   it('(repro) infinite renders when used with setState during render', async () => {
     // Output of react compiler on `useUserMemo`
     function useCompilerMemo(value) {

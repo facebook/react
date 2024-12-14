@@ -54,7 +54,6 @@ export const enableSuspenseAvoidThisFallback = true;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 
 export const enableCPUSuspense = true;
-export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = true;
 export const enableMoveBefore = false;
 export const disableInputAttributeSyncing = false;
