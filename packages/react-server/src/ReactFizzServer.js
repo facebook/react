@@ -156,7 +156,6 @@ import {
   disableLegacyContextForFunctionComponents,
   enableScopeAPI,
   enableSuspenseAvoidThisFallbackFizz,
-  enableCache,
   enablePostpone,
   enableHalt,
   enableRenderableContext,
@@ -4450,11 +4449,8 @@ export function performWork(request: Request): void {
   const prevContext = getActiveContext();
   const prevDispatcher = ReactSharedInternals.H;
   ReactSharedInternals.H = HooksDispatcher;
-  let prevAsyncDispatcher = null;
-  if (enableCache || __DEV__) {
-    prevAsyncDispatcher = ReactSharedInternals.A;
-    ReactSharedInternals.A = DefaultAsyncDispatcher;
-  }
+  const prevAsyncDispatcher = ReactSharedInternals.A;
+  ReactSharedInternals.A = DefaultAsyncDispatcher;
 
   const prevRequest = currentRequest;
   currentRequest = request;
@@ -4484,9 +4480,7 @@ export function performWork(request: Request): void {
   } finally {
     setCurrentResumableState(prevResumableState);
     ReactSharedInternals.H = prevDispatcher;
-    if (enableCache) {
-      ReactSharedInternals.A = prevAsyncDispatcher;
-    }
+    ReactSharedInternals.A = prevAsyncDispatcher;
 
     if (__DEV__) {
       ReactSharedInternals.getCurrentStack = prevGetCurrentStackImpl;

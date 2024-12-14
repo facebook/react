@@ -100,7 +100,6 @@ import {
   enableProfilerCommitHooks,
   enableProfilerTimer,
   enableScopeAPI,
-  enableCache,
   enableLazyContextPropagation,
   enableSchedulingProfiler,
   enableTransitionTracing,
@@ -712,12 +711,10 @@ function updateOffscreenComponent(
         cachePool: null,
       };
       workInProgress.memoizedState = nextState;
-      if (enableCache) {
-        // push the cache pool even though we're going to bail out
-        // because otherwise there'd be a context mismatch
-        if (current !== null) {
-          pushTransition(workInProgress, null, null);
-        }
+      // push the cache pool even though we're going to bail out
+      // because otherwise there'd be a context mismatch
+      if (current !== null) {
+        pushTransition(workInProgress, null, null);
       }
       reuseHiddenContextOnStack(workInProgress);
       pushOffscreenSuspenseHandler(workInProgress);
@@ -751,7 +748,7 @@ function updateOffscreenComponent(
         cachePool: null,
       };
       workInProgress.memoizedState = nextState;
-      if (enableCache && current !== null) {
+      if (current !== null) {
         // If the render that spawned this one accessed the cache pool, resume
         // using the same cache. Unless the parent changed, since that means
         // there was a refresh.
@@ -774,12 +771,10 @@ function updateOffscreenComponent(
     if (prevState !== null) {
       // We're going from hidden -> visible.
       let prevCachePool = null;
-      if (enableCache) {
-        // If the render that spawned this one accessed the cache pool, resume
-        // using the same cache. Unless the parent changed, since that means
-        // there was a refresh.
-        prevCachePool = prevState.cachePool;
-      }
+      // If the render that spawned this one accessed the cache pool, resume
+      // using the same cache. Unless the parent changed, since that means
+      // there was a refresh.
+      prevCachePool = prevState.cachePool;
 
       let transitions = null;
       if (enableTransitionTracing) {
@@ -804,13 +799,11 @@ function updateOffscreenComponent(
       // special to do. Need to push to the stack regardless, though, to avoid
       // a push/pop misalignment.
 
-      if (enableCache) {
-        // If the render that spawned this one accessed the cache pool, resume
-        // using the same cache. Unless the parent changed, since that means
-        // there was a refresh.
-        if (current !== null) {
-          pushTransition(workInProgress, null, null);
-        }
+      // If the render that spawned this one accessed the cache pool, resume
+      // using the same cache. Unless the parent changed, since that means
+      // there was a refresh.
+      if (current !== null) {
+        pushTransition(workInProgress, null, null);
       }
 
       // We're about to bail out, but we need to push this to the stack anyway
@@ -833,15 +826,13 @@ function deferHiddenOffscreenComponent(
   const nextState: OffscreenState = {
     baseLanes: nextBaseLanes,
     // Save the cache pool so we can resume later.
-    cachePool: enableCache ? getOffscreenDeferredCache() : null,
+    cachePool: getOffscreenDeferredCache(),
   };
   workInProgress.memoizedState = nextState;
-  if (enableCache) {
-    // push the cache pool even though we're going to bail out
-    // because otherwise there'd be a context mismatch
-    if (current !== null) {
-      pushTransition(workInProgress, null, null);
-    }
+  // push the cache pool even though we're going to bail out
+  // because otherwise there'd be a context mismatch
+  if (current !== null) {
+    pushTransition(workInProgress, null, null);
   }
 
   // We're about to bail out, but we need to push this to the stack anyway
@@ -874,10 +865,6 @@ function updateCacheComponent(
   workInProgress: Fiber,
   renderLanes: Lanes,
 ) {
-  if (!enableCache) {
-    return null;
-  }
-
   prepareToReadContext(workInProgress, renderLanes);
   const parentCache = readContext(CacheContext);
 
@@ -1478,13 +1465,11 @@ function updateHostRoot(
     pushRootMarkerInstance(workInProgress);
   }
 
-  if (enableCache) {
-    const nextCache: Cache = nextState.cache;
-    pushCacheProvider(workInProgress, nextCache);
-    if (nextCache !== prevState.cache) {
-      // The root cache refreshed.
-      propagateContextChange(workInProgress, CacheContext, renderLanes);
-    }
+  const nextCache: Cache = nextState.cache;
+  pushCacheProvider(workInProgress, nextCache);
+  if (nextCache !== prevState.cache) {
+    // The root cache refreshed.
+    propagateContextChange(workInProgress, CacheContext, renderLanes);
   }
 
   // This would ideally go inside processUpdateQueue, but because it suspends,
@@ -1988,28 +1973,26 @@ function updateSuspenseOffscreenState(
   renderLanes: Lanes,
 ): OffscreenState {
   let cachePool: SpawnedCachePool | null = null;
-  if (enableCache) {
-    const prevCachePool: SpawnedCachePool | null = prevOffscreenState.cachePool;
-    if (prevCachePool !== null) {
-      const parentCache = isPrimaryRenderer
-        ? CacheContext._currentValue
-        : CacheContext._currentValue2;
-      if (prevCachePool.parent !== parentCache) {
-        // Detected a refresh in the parent. This overrides any previously
-        // suspended cache.
-        cachePool = {
-          parent: parentCache,
-          pool: parentCache,
-        };
-      } else {
-        // We can reuse the cache from last time. The only thing that would have
-        // overridden it is a parent refresh, which we checked for above.
-        cachePool = prevCachePool;
-      }
+  const prevCachePool: SpawnedCachePool | null = prevOffscreenState.cachePool;
+  if (prevCachePool !== null) {
+    const parentCache = isPrimaryRenderer
+      ? CacheContext._currentValue
+      : CacheContext._currentValue2;
+    if (prevCachePool.parent !== parentCache) {
+      // Detected a refresh in the parent. This overrides any previously
+      // suspended cache.
+      cachePool = {
+        parent: parentCache,
+        pool: parentCache,
+      };
     } else {
-      // If there's no previous cache pool, grab the current one.
-      cachePool = getSuspendedCache();
+      // We can reuse the cache from last time. The only thing that would have
+      // overridden it is a parent refresh, which we checked for above.
+      cachePool = prevCachePool;
     }
+  } else {
+    // If there's no previous cache pool, grab the current one.
+    cachePool = getSuspendedCache();
   }
   return {
     baseLanes: mergeLanes(prevOffscreenState.baseLanes, renderLanes),
@@ -3610,10 +3593,8 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
         pushRootMarkerInstance(workInProgress);
       }
 
-      if (enableCache) {
-        const cache: Cache = current.memoizedState.cache;
-        pushCacheProvider(workInProgress, cache);
-      }
+      const cache: Cache = current.memoizedState.cache;
+      pushCacheProvider(workInProgress, cache);
       resetHydrationState();
       break;
     case HostSingleton:
@@ -3797,10 +3778,8 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       return updateOffscreenComponent(current, workInProgress, renderLanes);
     }
     case CacheComponent: {
-      if (enableCache) {
-        const cache: Cache = current.memoizedState.cache;
-        pushCacheProvider(workInProgress, cache);
-      }
+      const cache: Cache = current.memoizedState.cache;
+      pushCacheProvider(workInProgress, cache);
       break;
     }
     case TracingMarkerComponent: {
@@ -4087,10 +4066,7 @@ function beginWork(
       break;
     }
     case CacheComponent: {
-      if (enableCache) {
-        return updateCacheComponent(current, workInProgress, renderLanes);
-      }
-      break;
+      return updateCacheComponent(current, workInProgress, renderLanes);
     }
     case TracingMarkerComponent: {
       if (enableTransitionTracing) {
