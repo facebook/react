@@ -7,13 +7,14 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<97cdefff67f20a0daa47827b979817a9>>
+ * @generated SignedSource<<683e9f5f7bc802658826ccfe11ea74a7>>
  */
 
 "use strict";
 __DEV__ &&
   (function () {
     function performWorkUntilDeadline() {
+      needsPaint = !1;
       if (isMessageLoopRunning) {
         var currentTime = exports.unstable_now();
         startTime = currentTime;
@@ -163,7 +164,11 @@ __DEV__ &&
         }
     }
     function shouldYieldToHost() {
-      return exports.unstable_now() - startTime < frameInterval ? !1 : !0;
+      return needsPaint
+        ? !0
+        : exports.unstable_now() - startTime < frameInterval
+          ? !1
+          : !0;
     }
     function requestHostCallback() {
       isMessageLoopRunning ||
@@ -202,6 +207,7 @@ __DEV__ &&
       isPerformingWork = !1,
       isHostCallbackScheduled = !1,
       isHostTimeoutScheduled = !1,
+      needsPaint = !1,
       localSetTimeout = "function" === typeof setTimeout ? setTimeout : null,
       localClearTimeout =
         "function" === typeof clearTimeout ? clearTimeout : null,
@@ -272,7 +278,9 @@ __DEV__ &&
       }
     };
     exports.unstable_pauseExecution = function () {};
-    exports.unstable_requestPaint = function () {};
+    exports.unstable_requestPaint = function () {
+      needsPaint = !0;
+    };
     exports.unstable_runWithPriority = function (priorityLevel, eventHandler) {
       switch (priorityLevel) {
         case 1:

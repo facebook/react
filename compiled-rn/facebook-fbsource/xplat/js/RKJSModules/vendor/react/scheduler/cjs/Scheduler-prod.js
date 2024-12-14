@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<cff8a50048229c976ba8e49d76cca4f5>>
+ * @generated SignedSource<<d4805b71c5d03d80651f443b56011707>>
  */
 
 "use strict";
@@ -80,6 +80,7 @@ var taskQueue = [],
   isPerformingWork = !1,
   isHostCallbackScheduled = !1,
   isHostTimeoutScheduled = !1,
+  needsPaint = !1,
   localSetTimeout = "function" === typeof setTimeout ? setTimeout : null,
   localClearTimeout = "function" === typeof clearTimeout ? clearTimeout : null,
   localSetImmediate = "undefined" !== typeof setImmediate ? setImmediate : null;
@@ -111,9 +112,14 @@ var isMessageLoopRunning = !1,
   frameInterval = 5,
   startTime = -1;
 function shouldYieldToHost() {
-  return exports.unstable_now() - startTime < frameInterval ? !1 : !0;
+  return needsPaint
+    ? !0
+    : exports.unstable_now() - startTime < frameInterval
+      ? !1
+      : !0;
 }
 function performWorkUntilDeadline() {
+  needsPaint = !1;
   if (isMessageLoopRunning) {
     var currentTime = exports.unstable_now();
     startTime = currentTime;
@@ -254,7 +260,9 @@ exports.unstable_next = function (eventHandler) {
   }
 };
 exports.unstable_pauseExecution = function () {};
-exports.unstable_requestPaint = function () {};
+exports.unstable_requestPaint = function () {
+  needsPaint = !0;
+};
 exports.unstable_runWithPriority = function (priorityLevel, eventHandler) {
   switch (priorityLevel) {
     case 1:
