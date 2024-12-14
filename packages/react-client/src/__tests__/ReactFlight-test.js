@@ -1379,10 +1379,10 @@ describe('ReactFlight', () => {
             message: 'This is an error',
             stack: expect.stringContaining(
               'Error: This is an error\n' +
-                '    at eval (eval at testFunction (inspected-page.html:29:11),%20%3Canonymous%3E:1:10)\n' +
+                '    at eval (eval at testFunction (inspected-page.html:29:11),%20%3Canonymous%3E:1:35)\n' +
                 '    at ServerComponentError (file://~/(some)(really)(exotic-directory)/ReactFlight-test.js:1166:19)\n' +
-                '    at file:///testing.js:42:3\n' +
-                '    at file:///testing.js:42:3\n' +
+                '    at <anonymous> (file:///testing.js:42:3)\n' +
+                '    at <anonymous> (file:///testing.js:42:3)\n' +
                 '    at div (<anonymous>',
             ),
             digest: 'a dev digest',
@@ -3435,7 +3435,7 @@ describe('ReactFlight', () => {
     );
   });
 
-  // @gate enableOwnerStacks || !__DEV__
+  // @gate (enableOwnerStacks) || !__DEV__
   it('should include only one component stack in replayed logs (if DevTools or polyfill adds them)', () => {
     class MyError extends Error {
       toJSON() {
