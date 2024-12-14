@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0d54858ed5581d8519eaf8a789ce0d6c>>
+ * @generated SignedSource<<92c1b372abf6994e62883fca5283ed33>>
  */
 
 "use strict";
@@ -3217,10 +3217,9 @@ function updateWorkInProgressHook() {
   }
   return workInProgressHook;
 }
-var createFunctionComponentUpdateQueue;
-createFunctionComponentUpdateQueue = function () {
+function createFunctionComponentUpdateQueue() {
   return { lastEffect: null, events: null, stores: null, memoCache: null };
-};
+}
 function useThenable(thenable) {
   var index = thenableIndexCounter$1;
   thenableIndexCounter$1 += 1;
@@ -4160,10 +4159,10 @@ var ContextOnlyDispatcher = {
   useHostTransitionStatus: throwInvalidHookError,
   useFormState: throwInvalidHookError,
   useActionState: throwInvalidHookError,
-  useOptimistic: throwInvalidHookError
+  useOptimistic: throwInvalidHookError,
+  useMemoCache: throwInvalidHookError
 };
 ContextOnlyDispatcher.useCacheRefresh = throwInvalidHookError;
-ContextOnlyDispatcher.useMemoCache = throwInvalidHookError;
 enableUseResourceEffectHook &&
   (ContextOnlyDispatcher.useResourceEffect = throwInvalidHookError);
 var HooksDispatcherOnMount = {
@@ -4322,6 +4321,7 @@ var HooksDispatcherOnMount = {
     queue.dispatch = hook;
     return [passthrough, hook];
   },
+  useMemoCache: useMemoCache,
   useCacheRefresh: function () {
     return (mountWorkInProgressHook().memoizedState = refreshCache.bind(
       null,
@@ -4329,7 +4329,6 @@ var HooksDispatcherOnMount = {
     ));
   }
 };
-HooksDispatcherOnMount.useMemoCache = useMemoCache;
 enableUseResourceEffectHook &&
   (HooksDispatcherOnMount.useResourceEffect = mountResourceEffect);
 var HooksDispatcherOnUpdate = {
@@ -4375,10 +4374,10 @@ var HooksDispatcherOnUpdate = {
   useOptimistic: function (passthrough, reducer) {
     var hook = updateWorkInProgressHook();
     return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
-  }
+  },
+  useMemoCache: useMemoCache
 };
 HooksDispatcherOnUpdate.useCacheRefresh = updateRefresh;
-HooksDispatcherOnUpdate.useMemoCache = useMemoCache;
 enableUseResourceEffectHook &&
   (HooksDispatcherOnUpdate.useResourceEffect = updateResourceEffect);
 var HooksDispatcherOnRerender = {
@@ -4429,10 +4428,10 @@ var HooksDispatcherOnRerender = {
       return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
     hook.baseState = passthrough;
     return [passthrough, hook.queue.dispatch];
-  }
+  },
+  useMemoCache: useMemoCache
 };
 HooksDispatcherOnRerender.useCacheRefresh = updateRefresh;
-HooksDispatcherOnRerender.useMemoCache = useMemoCache;
 enableUseResourceEffectHook &&
   (HooksDispatcherOnRerender.useResourceEffect = updateResourceEffect);
 var thenableState = null,
@@ -11756,10 +11755,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1298 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-4996a8fa-20241213",
+    version: "19.1.0-native-fb-2e25ee37-20241214",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-4996a8fa-20241213"
+    reconcilerVersion: "19.1.0-native-fb-2e25ee37-20241214"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1298.rendererConfig = extraDevToolsConfig);

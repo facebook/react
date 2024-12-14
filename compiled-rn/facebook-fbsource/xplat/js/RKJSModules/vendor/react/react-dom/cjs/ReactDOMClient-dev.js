@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<46966fcc4d7ba85bcb36042400ef13ed>>
+ * @generated SignedSource<<540ca95f3e4f00baced33ea137ff3e38>>
  */
 
 /*
@@ -5128,6 +5128,9 @@ __DEV__ &&
           : (workInProgressHook = workInProgressHook.next = nextCurrentHook);
       }
       return workInProgressHook;
+    }
+    function createFunctionComponentUpdateQueue() {
+      return { lastEffect: null, events: null, stores: null, memoCache: null };
     }
     function useThenable(thenable) {
       var index = thenableIndexCounter$1;
@@ -23733,35 +23736,32 @@ __DEV__ &&
       currentHookNameInDev = null,
       hookTypesDev = null,
       hookTypesUpdateIndexDev = -1,
-      ignorePreviousDependencies = !1;
-    var createFunctionComponentUpdateQueue = function () {
-      return { lastEffect: null, events: null, stores: null, memoCache: null };
-    };
-    var ContextOnlyDispatcher = {
-      readContext: readContext,
-      use: use,
-      useCallback: throwInvalidHookError,
-      useContext: throwInvalidHookError,
-      useEffect: throwInvalidHookError,
-      useImperativeHandle: throwInvalidHookError,
-      useLayoutEffect: throwInvalidHookError,
-      useInsertionEffect: throwInvalidHookError,
-      useMemo: throwInvalidHookError,
-      useReducer: throwInvalidHookError,
-      useRef: throwInvalidHookError,
-      useState: throwInvalidHookError,
-      useDebugValue: throwInvalidHookError,
-      useDeferredValue: throwInvalidHookError,
-      useTransition: throwInvalidHookError,
-      useSyncExternalStore: throwInvalidHookError,
-      useId: throwInvalidHookError,
-      useHostTransitionStatus: throwInvalidHookError,
-      useFormState: throwInvalidHookError,
-      useActionState: throwInvalidHookError,
-      useOptimistic: throwInvalidHookError
-    };
+      ignorePreviousDependencies = !1,
+      ContextOnlyDispatcher = {
+        readContext: readContext,
+        use: use,
+        useCallback: throwInvalidHookError,
+        useContext: throwInvalidHookError,
+        useEffect: throwInvalidHookError,
+        useImperativeHandle: throwInvalidHookError,
+        useLayoutEffect: throwInvalidHookError,
+        useInsertionEffect: throwInvalidHookError,
+        useMemo: throwInvalidHookError,
+        useReducer: throwInvalidHookError,
+        useRef: throwInvalidHookError,
+        useState: throwInvalidHookError,
+        useDebugValue: throwInvalidHookError,
+        useDeferredValue: throwInvalidHookError,
+        useTransition: throwInvalidHookError,
+        useSyncExternalStore: throwInvalidHookError,
+        useId: throwInvalidHookError,
+        useHostTransitionStatus: throwInvalidHookError,
+        useFormState: throwInvalidHookError,
+        useActionState: throwInvalidHookError,
+        useOptimistic: throwInvalidHookError,
+        useMemoCache: throwInvalidHookError
+      };
     ContextOnlyDispatcher.useCacheRefresh = throwInvalidHookError;
-    ContextOnlyDispatcher.useMemoCache = throwInvalidHookError;
     enableUseResourceEffectHook &&
       (ContextOnlyDispatcher.useResourceEffect = throwInvalidHookError);
     var HooksDispatcherOnMountInDEV = null,
@@ -23899,13 +23899,13 @@ __DEV__ &&
         return mountOptimistic(passthrough);
       },
       useHostTransitionStatus: useHostTransitionStatus,
+      useMemoCache: useMemoCache,
       useCacheRefresh: function () {
         currentHookNameInDev = "useCacheRefresh";
         mountHookTypesDev();
         return mountRefresh();
       }
     };
-    HooksDispatcherOnMountInDEV.useMemoCache = useMemoCache;
     enableUseResourceEffectHook &&
       (HooksDispatcherOnMountInDEV.useResourceEffect = function (
         create,
@@ -24054,13 +24054,13 @@ __DEV__ &&
         return mountOptimistic(passthrough);
       },
       useHostTransitionStatus: useHostTransitionStatus,
+      useMemoCache: useMemoCache,
       useCacheRefresh: function () {
         currentHookNameInDev = "useCacheRefresh";
         updateHookTypesDev();
         return mountRefresh();
       }
     };
-    HooksDispatcherOnMountWithHookTypesInDEV.useMemoCache = useMemoCache;
     enableUseResourceEffectHook &&
       (HooksDispatcherOnMountWithHookTypesInDEV.useResourceEffect = function (
         create,
@@ -24201,13 +24201,13 @@ __DEV__ &&
         return updateOptimistic(passthrough, reducer);
       },
       useHostTransitionStatus: useHostTransitionStatus,
+      useMemoCache: useMemoCache,
       useCacheRefresh: function () {
         currentHookNameInDev = "useCacheRefresh";
         updateHookTypesDev();
         return updateWorkInProgressHook().memoizedState;
       }
     };
-    HooksDispatcherOnUpdateInDEV.useMemoCache = useMemoCache;
     enableUseResourceEffectHook &&
       (HooksDispatcherOnUpdateInDEV.useResourceEffect = function (
         create,
@@ -24350,13 +24350,13 @@ __DEV__ &&
         return rerenderOptimistic(passthrough, reducer);
       },
       useHostTransitionStatus: useHostTransitionStatus,
+      useMemoCache: useMemoCache,
       useCacheRefresh: function () {
         currentHookNameInDev = "useCacheRefresh";
         updateHookTypesDev();
         return updateWorkInProgressHook().memoizedState;
       }
     };
-    HooksDispatcherOnRerenderInDEV.useMemoCache = useMemoCache;
     enableUseResourceEffectHook &&
       (HooksDispatcherOnRerenderInDEV.useResourceEffect = function (
         create,
@@ -24519,15 +24519,15 @@ __DEV__ &&
         mountHookTypesDev();
         return mountOptimistic(passthrough);
       },
+      useMemoCache: function (size) {
+        warnInvalidHookAccess();
+        return useMemoCache(size);
+      },
       useHostTransitionStatus: useHostTransitionStatus,
       useCacheRefresh: function () {
         currentHookNameInDev = "useCacheRefresh";
         mountHookTypesDev();
         return mountRefresh();
-      },
-      useMemoCache: function (size) {
-        warnInvalidHookAccess();
-        return useMemoCache(size);
       }
     };
     enableUseResourceEffectHook &&
@@ -24691,15 +24691,15 @@ __DEV__ &&
         updateHookTypesDev();
         return updateOptimistic(passthrough, reducer);
       },
+      useMemoCache: function (size) {
+        warnInvalidHookAccess();
+        return useMemoCache(size);
+      },
       useHostTransitionStatus: useHostTransitionStatus,
       useCacheRefresh: function () {
         currentHookNameInDev = "useCacheRefresh";
         updateHookTypesDev();
         return updateWorkInProgressHook().memoizedState;
-      },
-      useMemoCache: function (size) {
-        warnInvalidHookAccess();
-        return useMemoCache(size);
       }
     };
     enableUseResourceEffectHook &&
@@ -24865,15 +24865,15 @@ __DEV__ &&
         updateHookTypesDev();
         return rerenderOptimistic(passthrough, reducer);
       },
+      useMemoCache: function (size) {
+        warnInvalidHookAccess();
+        return useMemoCache(size);
+      },
       useHostTransitionStatus: useHostTransitionStatus,
       useCacheRefresh: function () {
         currentHookNameInDev = "useCacheRefresh";
         updateHookTypesDev();
         return updateWorkInProgressHook().memoizedState;
-      },
-      useMemoCache: function (size) {
-        warnInvalidHookAccess();
-        return useMemoCache(size);
       }
     };
     enableUseResourceEffectHook &&
@@ -25892,11 +25892,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.1.0-native-fb-4996a8fa-20241213" !== isomorphicReactPackageVersion)
+      if ("19.1.0-native-fb-2e25ee37-20241214" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.1.0-native-fb-4996a8fa-20241213\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.1.0-native-fb-2e25ee37-20241214\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -25933,10 +25933,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.1.0-native-fb-4996a8fa-20241213",
+          version: "19.1.0-native-fb-2e25ee37-20241214",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.1.0-native-fb-4996a8fa-20241213"
+          reconcilerVersion: "19.1.0-native-fb-2e25ee37-20241214"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -26082,5 +26082,5 @@ __DEV__ &&
       listenToAllSupportedEvents(container);
       return new ReactDOMHydrationRoot(initialChildren);
     };
-    exports.version = "19.1.0-native-fb-4996a8fa-20241213";
+    exports.version = "19.1.0-native-fb-2e25ee37-20241214";
   })();
