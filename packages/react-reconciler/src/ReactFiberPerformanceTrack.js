@@ -123,6 +123,7 @@ export function logComponentRender(
   fiber: Fiber,
   startTime: number,
   endTime: number,
+  wasHydrated: boolean,
 ): void {
   const name = getComponentNameFromFiber(fiber);
   if (name === null) {
@@ -138,15 +139,34 @@ export function logComponentRender(
     }
     reusableComponentDevToolDetails.color =
       selfTime < 0.5
-        ? 'primary-light'
+        ? wasHydrated
+          ? 'tertiary-light'
+          : 'primary-light'
         : selfTime < 10
-          ? 'primary'
+          ? wasHydrated
+            ? 'tertiary'
+            : 'primary'
           : selfTime < 100
-            ? 'primary-dark'
+            ? wasHydrated
+              ? 'tertiary-dark'
+              : 'primary-dark'
             : 'error';
     reusableComponentOptions.start = startTime;
     reusableComponentOptions.end = endTime;
     performance.measure(name, reusableComponentOptions);
+  }
+}
+
+export function logSuspenseBoundaryClientRendered(
+  fiber: Fiber,
+  startTime: number,
+  endTime: number,
+): void {
+  if (supportsUserTiming) {
+    reusableComponentDevToolDetails.color = 'error';
+    reusableComponentOptions.start = startTime;
+    reusableComponentOptions.end = endTime;
+    performance.measure('Suspense', reusableComponentOptions);
   }
 }
 
