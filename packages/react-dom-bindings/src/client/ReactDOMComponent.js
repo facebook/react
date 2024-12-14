@@ -2509,16 +2509,8 @@ function diffHydratedGenericElement(
                 propKey,
               );
             }
+            continue;
           }
-          hydrateSanitizedAttribute(
-            domElement,
-            propKey,
-            propKey,
-            null,
-            extraAttributes,
-            serverDifferences,
-          );
-          continue;
         } else {
           hydrateSanitizedAttribute(
             domElement,
