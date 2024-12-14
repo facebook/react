@@ -73,7 +73,6 @@ export const enableComponentPerformanceTrack = false;
 export const enableScopeAPI = false;
 export const enableServerComponentLogs = true;
 export const enableSuspenseAvoidThisFallback = false;
-export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableSuspenseCallback = true;
 export const enableTaint = true;
 export const enableTransitionTracing = false;

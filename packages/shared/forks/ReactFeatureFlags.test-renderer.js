@@ -33,7 +33,6 @@ export const enableSuspenseCallback = false;
 export const enableTrustedTypesIntegration = false;
 export const disableTextareaChildren = false;
 export const enableSuspenseAvoidThisFallback = false;
-export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableCPUSuspense = false;
 export const enableNoCloningMemoCache = false;
 export const enableUseEffectEventHook = false;

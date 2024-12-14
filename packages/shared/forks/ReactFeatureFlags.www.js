@@ -51,7 +51,6 @@ export const enableUpdaterTracking = __PROFILE__;
 export const enableFabricCompleteRootInCommitPhase = false;
 
 export const enableSuspenseAvoidThisFallback = true;
-export const enableSuspenseAvoidThisFallbackFizz = false;
 
 export const enableCPUSuspense = true;
 export const enableUseEffectEventHook = true;

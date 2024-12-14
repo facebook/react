@@ -155,7 +155,6 @@ import {
   disableLegacyContext,
   disableLegacyContextForFunctionComponents,
   enableScopeAPI,
-  enableSuspenseAvoidThisFallbackFizz,
   enableCache,
   enablePostpone,
   enableHalt,
@@ -2194,14 +2193,7 @@ function renderElement(
       throw new Error('ReactDOMServer does not yet support scope components.');
     }
     case REACT_SUSPENSE_TYPE: {
-      if (
-        enableSuspenseAvoidThisFallbackFizz &&
-        props.unstable_avoidThisFallback === true
-      ) {
-        renderBackupSuspenseBoundary(request, task, keyPath, props);
-      } else {
-        renderSuspenseBoundary(request, task, keyPath, props);
-      }
+      renderSuspenseBoundary(request, task, keyPath, props);
       return;
     }
   }
