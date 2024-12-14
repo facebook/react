@@ -62,10 +62,6 @@ export function unstable_shouldYield(): boolean {
   return getCurrentTime() >= deadline;
 }
 
-export function unstable_requestPaint() {
-  // Since we yield every frame regardless, `requestPaint` has no effect.
-}
-
 type SchedulerCallback<T> = (didTimeout_DEPRECATED: boolean) =>
   | T
   // May return a continuation

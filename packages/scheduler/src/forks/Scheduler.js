@@ -466,8 +466,6 @@ function shouldYieldToHost(): boolean {
   return true;
 }
 
-function requestPaint() {}
-
 function forceFrameRate(fps: number) {
   if (fps < 0 || fps > 125) {
     // Using console['error'] to evade Babel and ESLint
@@ -582,7 +580,6 @@ export {
   unstable_wrapCallback,
   unstable_getCurrentPriorityLevel,
   shouldYieldToHost as unstable_shouldYield,
-  requestPaint as unstable_requestPaint,
   unstable_continueExecution,
   unstable_pauseExecution,
   unstable_getFirstCallbackNode,
