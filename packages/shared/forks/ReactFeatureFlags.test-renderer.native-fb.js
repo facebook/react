@@ -57,7 +57,6 @@ export const enableScopeAPI = false;
 export const enableServerComponentLogs = true;
 export const enableShallowPropDiffing = false;
 export const enableSuspenseAvoidThisFallback = false;
-export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableSuspenseCallback = false;
 export const enableTaint = true;
 export const enableTransitionTracing = false;
