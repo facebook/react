@@ -50,7 +50,6 @@ import {
   // Aliased because `act` will override and push to an internal queue
   scheduleCallback as Scheduler_scheduleCallback,
   shouldYield,
-  requestPaint,
   now,
   NormalPriority as NormalSchedulerPriority,
   IdlePriority as IdleSchedulerPriority,
@@ -3427,10 +3426,6 @@ function commitRootImpl(
     if (enableSchedulingProfiler) {
       markLayoutEffectsStopped();
     }
-
-    // Tell Scheduler to yield at the end of the frame, so the browser has an
-    // opportunity to paint.
-    requestPaint();
 
     executionContext = prevExecutionContext;
 

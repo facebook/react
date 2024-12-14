@@ -15,7 +15,6 @@ let runtime;
 let performance;
 let cancelCallback;
 let scheduleCallback;
-let requestPaint;
 let shouldYield;
 let NormalPriority;
 
@@ -40,7 +39,6 @@ describe('SchedulerBrowser', () => {
     cancelCallback = Scheduler.unstable_cancelCallback;
     scheduleCallback = Scheduler.unstable_scheduleCallback;
     NormalPriority = Scheduler.unstable_NormalPriority;
-    requestPaint = Scheduler.unstable_requestPaint;
     shouldYield = Scheduler.unstable_shouldYield;
   });
 
@@ -183,8 +181,6 @@ describe('SchedulerBrowser', () => {
   it('task with continuation', () => {
     scheduleCallback(NormalPriority, () => {
       runtime.log('Task');
-      // Request paint so that we yield at the end of the frame interval
-      requestPaint();
       while (!Scheduler.unstable_shouldYield()) {
         runtime.advanceTime(1);
       }

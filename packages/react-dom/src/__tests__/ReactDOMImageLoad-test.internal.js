@@ -78,7 +78,6 @@ function Img({src: maybeSrc, onLoad, useImageLoader, ref}) {
 
 function Yield() {
   Scheduler.log('Yield');
-  Scheduler.unstable_requestPaint();
   return null;
 }
 
@@ -250,7 +249,6 @@ describe('ReactDOMImageLoad', () => {
       'load triggered',
       'last layout',
     ]);
-    Scheduler.unstable_requestPaint();
     const img = last(images);
     loadImage(img);
     assertLog(['actualLoadSpy [default]', 'onLoadSpy [default]']);

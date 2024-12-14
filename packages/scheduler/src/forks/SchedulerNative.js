@@ -28,7 +28,6 @@ type NativeSchedulerType = {
   unstable_cancelCallback: (task: Task) => void,
   unstable_getCurrentPriorityLevel: () => PriorityLevel,
   unstable_shouldYield: () => boolean,
-  unstable_requestPaint: () => void,
   unstable_now: () => DOMHighResTimeStamp,
 };
 
@@ -81,11 +80,6 @@ export const unstable_shouldYield: () => boolean =
   typeof nativeRuntimeScheduler !== 'undefined'
     ? nativeRuntimeScheduler.unstable_shouldYield
     : Scheduler.unstable_shouldYield;
-
-export const unstable_requestPaint: () => void =
-  typeof nativeRuntimeScheduler !== 'undefined'
-    ? nativeRuntimeScheduler.unstable_requestPaint
-    : Scheduler.unstable_requestPaint;
 
 export const unstable_now: () => number | DOMHighResTimeStamp =
   typeof nativeRuntimeScheduler !== 'undefined'

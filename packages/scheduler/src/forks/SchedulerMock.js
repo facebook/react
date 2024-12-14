@@ -661,10 +661,6 @@ function unstable_advanceTime(ms: number) {
   }
 }
 
-function requestPaint() {
-  needsPaint = true;
-}
-
 export {
   ImmediatePriority as unstable_ImmediatePriority,
   UserBlockingPriority as unstable_UserBlockingPriority,
@@ -678,7 +674,6 @@ export {
   unstable_wrapCallback,
   unstable_getCurrentPriorityLevel,
   shouldYieldToHost as unstable_shouldYield,
-  requestPaint as unstable_requestPaint,
   unstable_continueExecution,
   unstable_pauseExecution,
   unstable_getFirstCallbackNode,

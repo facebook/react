@@ -258,7 +258,6 @@ describe(
         // This triggers a once-upon-a-time bug in Scheduler that caused
         // `shouldYield` to return true even though the current task expired.
         Scheduler.unstable_advanceTime(10000);
-        Scheduler.unstable_requestPaint();
         return null;
       }
 
