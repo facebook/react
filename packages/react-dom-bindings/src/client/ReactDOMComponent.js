@@ -2485,43 +2485,41 @@ function diffHydratedGenericElement(
       case 'src':
       case 'href':
         if (
+          __DEV__ &&
           value === '' &&
           // <a href=""> is fine for "reload" links.
           !(tag === 'a' && propKey === 'href') &&
           !(tag === 'object' && propKey === 'data')
         ) {
-          if (__DEV__) {
-            if (propKey === 'src') {
-              console.error(
-                'An empty string ("") was passed to the %s attribute. ' +
-                  'This may cause the browser to download the whole page again over the network. ' +
-                  'To fix this, either do not render the element at all ' +
-                  'or pass null to %s instead of an empty string.',
-                propKey,
-                propKey,
-              );
-            } else {
-              console.error(
-                'An empty string ("") was passed to the %s attribute. ' +
-                  'To fix this, either do not render the element at all ' +
-                  'or pass null to %s instead of an empty string.',
-                propKey,
-                propKey,
-              );
-            }
-            continue;
+          if (propKey === 'src') {
+            console.error(
+              'An empty string ("") was passed to the %s attribute. ' +
+                'This may cause the browser to download the whole page again over the network. ' +
+                'To fix this, either do not render the element at all ' +
+                'or pass null to %s instead of an empty string.',
+              propKey,
+              propKey,
+            );
+          } else {
+            console.error(
+              'An empty string ("") was passed to the %s attribute. ' +
+                'To fix this, either do not render the element at all ' +
+                'or pass null to %s instead of an empty string.',
+              propKey,
+              propKey,
+            );
           }
-        } else {
-          hydrateSanitizedAttribute(
-            domElement,
-            propKey,
-            propKey,
-            value,
-            extraAttributes,
-            serverDifferences,
-          );
           continue;
         }
+        hydrateSanitizedAttribute(
+          domElement,
+          propKey,
+          propKey,
+          value,
+          extraAttributes,
+          serverDifferences,
+        );
+        continue;
       case 'action':
       case 'formAction': {
         const serverValue = domElement.getAttribute(propKey);
