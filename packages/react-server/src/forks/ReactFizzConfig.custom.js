@@ -51,10 +51,6 @@ export const makeId = $$$config.makeId;
 export const pushTextInstance = $$$config.pushTextInstance;
 export const pushStartInstance = $$$config.pushStartInstance;
 export const pushEndInstance = $$$config.pushEndInstance;
-export const pushStartCompletedSuspenseBoundary =
-  $$$config.pushStartCompletedSuspenseBoundary;
-export const pushEndCompletedSuspenseBoundary =
-  $$$config.pushEndCompletedSuspenseBoundary;
 export const pushSegmentFinale = $$$config.pushSegmentFinale;
 export const pushFormStateMarkerIsMatching =
   $$$config.pushFormStateMarkerIsMatching;

@@ -65,8 +65,6 @@ import {
   pushTextInstance,
   pushStartInstance,
   pushEndInstance,
-  pushStartCompletedSuspenseBoundary,
-  pushEndCompletedSuspenseBoundary,
   pushSegmentFinale,
   getChildFormatContext,
   writeHoistables,
@@ -1487,28 +1485,6 @@ function replaySuspenseBoundary(
   // TODO: This should be queued at a separate lower priority queue so that we only work
   // on preparing fallbacks if we don't have any more main content to task on.
   request.pingedTasks.push(suspendedFallbackTask);
-}
-
-function renderBackupSuspenseBoundary(
-  request: Request,
-  task: Task,
-  keyPath: KeyNode,
-  props: Object,
-) {
-  const content = props.children;
-  const segment = task.blockedSegment;
-  const prevKeyPath = task.keyPath;
-  task.keyPath = keyPath;
-  if (segment === null) {
-    // Replay
-    renderNode(request, task, content, -1);
-  } else {
-    // Render
-    pushStartCompletedSuspenseBoundary(segment.chunks);
-    renderNode(request, task, content, -1);
-    pushEndCompletedSuspenseBoundary(segment.chunks);
-  }
-  task.keyPath = prevKeyPath;
 }
 
 function renderHostElement(

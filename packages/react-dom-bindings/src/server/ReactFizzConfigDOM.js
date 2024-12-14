@@ -3886,18 +3886,6 @@ const clientRenderedSuspenseBoundaryError1D =
 const clientRenderedSuspenseBoundaryError2 =
   stringToPrecomputedChunk('></template>');
 
-export function pushStartCompletedSuspenseBoundary(
-  target: Array<Chunk | PrecomputedChunk>,
-) {
-  target.push(startCompletedSuspenseBoundary);
-}
-
-export function pushEndCompletedSuspenseBoundary(
-  target: Array<Chunk | PrecomputedChunk>,
-) {
-  target.push(endSuspenseBoundary);
-}
-
 export function writeStartCompletedSuspenseBoundary(
   destination: Destination,
   renderState: RenderState,
