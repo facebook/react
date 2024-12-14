@@ -14,7 +14,6 @@ import {
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_PROFILER_TYPE,
-  REACT_DEBUG_TRACING_MODE_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
@@ -28,7 +27,6 @@ import {
 import {
   enableScopeAPI,
   enableTransitionTracing,
-  enableDebugTracing,
   enableLegacyHidden,
   enableRenderableContext,
 } from './ReactFeatureFlags';
@@ -46,7 +44,6 @@ export default function isValidElementType(type: mixed): boolean {
   if (
     type === REACT_FRAGMENT_TYPE ||
     type === REACT_PROFILER_TYPE ||
-    (enableDebugTracing && type === REACT_DEBUG_TRACING_MODE_TYPE) ||
     type === REACT_STRICT_MODE_TYPE ||
     type === REACT_SUSPENSE_TYPE ||
     type === REACT_SUSPENSE_LIST_TYPE ||
