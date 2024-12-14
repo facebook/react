@@ -1,4 +1,5 @@
 "use no memo";
-export default function TestComponent({ x }) {
+function TestComponent({ x }) {
+  "use memo";
   return <Button>{x}</Button>;
 }
