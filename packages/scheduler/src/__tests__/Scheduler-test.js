@@ -183,7 +183,7 @@ describe('SchedulerBrowser', () => {
   it('task with continuation', () => {
     scheduleCallback(NormalPriority, () => {
       runtime.log('Task');
-      // Request paint so that we yield at the end of the frame interval
+      // Request paint so that we yield immediately
       requestPaint();
       while (!Scheduler.unstable_shouldYield()) {
         runtime.advanceTime(1);
@@ -199,7 +199,7 @@ describe('SchedulerBrowser', () => {
     runtime.assertLog([
       'Message Event',
       'Task',
-      gate(flags => (flags.www ? 'Yield at 10ms' : 'Yield at 5ms')),
+      'Yield at 0ms',
       'Post Message',
     ]);
 
