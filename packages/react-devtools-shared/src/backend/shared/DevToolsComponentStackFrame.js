@@ -51,7 +51,7 @@ if (__DEV__) {
   componentFrameCache = new PossiblyWeakMap<$FlowFixMe, string>();
 }
 
-export function describeNativeComponentFrame(
+export function describeFunctionComponentFrame(
   fn: Function,
   construct: boolean,
   currentDispatcherRef: CurrentDispatcherRef,
@@ -280,12 +280,5 @@ export function describeClassComponentFrame(
   ctor: Function,
   currentDispatcherRef: CurrentDispatcherRef,
 ): string {
-  return describeNativeComponentFrame(ctor, true, currentDispatcherRef);
-}
-
-export function describeFunctionComponentFrame(
-  fn: Function,
-  currentDispatcherRef: CurrentDispatcherRef,
-): string {
-  return describeNativeComponentFrame(fn, false, currentDispatcherRef);
+  return describeFunctionComponentFrame(ctor, true, currentDispatcherRef);
 }
