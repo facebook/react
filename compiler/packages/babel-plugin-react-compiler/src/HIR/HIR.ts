@@ -1644,6 +1644,10 @@ export function isArrayType(id: Identifier): boolean {
   return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInArray';
 }
 
+export function isPropsType(id: Identifier): boolean {
+  return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInProps';
+}
+
 export function isRefValueType(id: Identifier): boolean {
   return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInRefValue';
 }

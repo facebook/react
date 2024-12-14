@@ -3,7 +3,7 @@
 
 ```javascript
 // @enableJsxOutlining
-function Component(arr) {
+function Component({arr}) {
   const x = useX();
   return arr.map(i => {
     <>
@@ -49,12 +49,13 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @enableJsxOutlining
-function Component(arr) {
+function Component(t0) {
   const $ = _c(3);
+  const { arr } = t0;
   const x = useX();
-  let t0;
+  let t1;
   if ($[0] !== arr || $[1] !== x) {
-    t0 = arr.map((i) => {
+    t1 = arr.map((i) => {
       arr.map((i_0, id) => {
         const T0 = _temp;
         const child = <T0 i={i_0} x={x} />;
@@ -65,11 +66,11 @@ function Component(arr) {
     });
     $[0] = arr;
     $[1] = x;
-    $[2] = t0;
+    $[2] = t1;
   } else {
-    t0 = $[2];
+    t1 = $[2];
   }
-  return t0;
+  return t1;
 }
 function _temp(t0) {
   const $ = _c(5);
@@ -140,4 +141,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: exception) arr.map is not a function
+(kind: ok) [null,null]
