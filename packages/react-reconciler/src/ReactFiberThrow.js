@@ -37,7 +37,7 @@ import {
   ForceClientRender,
   ScheduleRetry,
 } from './ReactFiberFlags';
-import {NoMode, ConcurrentMode, DebugTracingMode} from './ReactTypeOfMode';
+import {NoMode, ConcurrentMode} from './ReactTypeOfMode';
 import {
   enableLazyContextPropagation,
   enableUpdaterTracking,

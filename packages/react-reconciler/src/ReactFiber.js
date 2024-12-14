@@ -79,7 +79,6 @@ import {NoLanes} from './ReactFiberLane';
 import {
   NoMode,
   ConcurrentMode,
-  DebugTracingMode,
   ProfileMode,
   StrictLegacyMode,
   StrictEffectsMode,
