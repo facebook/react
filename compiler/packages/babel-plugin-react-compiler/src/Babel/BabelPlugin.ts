@@ -39,7 +39,10 @@ export default function BabelPluginReactCompiler(
         ) {
           opts = injectReanimatedFlag(opts);
         }
-        if (isDev) {
+        if (
+          opts.environment.enableResetCacheOnSourceFileChanges !== false &&
+          isDev
+        ) {
           opts = {
             ...opts,
             environment: {

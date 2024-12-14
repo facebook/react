@@ -64,14 +64,12 @@ async function compile(
     const {Effect: EffectEnum, ValueKind: ValueKindEnum} = require(
       COMPILER_INDEX_PATH,
     );
-    const {toggleLogging} = require(LOGGER_PATH);
+    // const {toggleLogging} = require(LOGGER_PATH);
     const {parseConfigPragmaForTests} = require(PARSE_CONFIG_PRAGMA_PATH) as {
       parseConfigPragmaForTests: typeof ParseConfigPragma;
     };
 
-    // only try logging if we filtered out all but one fixture,
-    // since console log order is non-deterministic
-    toggleLogging(shouldLog);
+    // TODO configure debugIR logger
     const result = await transformFixtureInput(
       input,
       fixturePath,
