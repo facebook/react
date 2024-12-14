@@ -111,6 +111,7 @@ import {
   disableLegacyMode,
   disableDefaultPropsExceptForClasses,
   enableOwnerStacks,
+  enableHydrationLaneScheduling,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
@@ -146,6 +147,7 @@ import {
   NoLane,
   NoLanes,
   OffscreenLane,
+  DefaultLane,
   DefaultHydrationLane,
   SomeRetryLane,
   includesSomeLane,
@@ -2646,14 +2648,10 @@ function mountDehydratedSuspenseComponent(
     // have timed out. In theory we could render it in this pass but it would have the
     // wrong priority associated with it and will prevent hydration of parent path.
     // Instead, we'll leave work left on it to render it in a separate commit.
-
-    // TODO This time should be the time at which the server rendered response that is
-    // a parent to this boundary was displayed. However, since we currently don't have
-    // a protocol to transfer that time, we'll just estimate it by using the current
-    // time. This will mean that Suspense timeouts are slightly shifted to later than
-    // they should be.
     // Schedule a normal pri update to render this content.
-    workInProgress.lanes = laneToLanes(DefaultHydrationLane);
+    workInProgress.lanes = laneToLanes(
+      enableHydrationLaneScheduling ? DefaultLane : DefaultHydrationLane,
+    );
   } else {
     // We'll continue hydrating the rest at offscreen priority since we'll already
     // be showing the right content coming from the server, it is no rush.
