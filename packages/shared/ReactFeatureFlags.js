@@ -22,6 +22,8 @@
 // when it rolls out to prod. We should remove these as soon as possible.
 // -----------------------------------------------------------------------------
 
+export const enableHydrationLaneScheduling = true;
+
 // -----------------------------------------------------------------------------
 // Land or remove (moderate effort)
 //
@@ -112,8 +114,6 @@ export const enableSuspenseAvoidThisFallback = false;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 
 export const enableCPUSuspense = __EXPERIMENTAL__;
-
-export const enableHydrationLaneScheduling = true;
 
 // Test this at Meta before enabling.
 export const enableNoCloningMemoCache = false;
