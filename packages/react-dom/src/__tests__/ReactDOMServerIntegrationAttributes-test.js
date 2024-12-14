@@ -63,17 +63,7 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders('empty href on other tags', async render => {
-        const e = await render(
-          // <link href="" /> would be more sensible.
-          // However, that results in a hydration warning as well.
-          // Our test helpers do not support different error counts for initial
-          // server render and hydration.
-          // The number of errors on the server need to be equal to the number of
-          // errors during hydration.
-          // So we use a <div> instead.
-          <div href="" />,
-          1,
-        );
+        const e = await render(<link href="" />, 1);
         expect(e.getAttribute('href')).toBe(null);
       });
 
