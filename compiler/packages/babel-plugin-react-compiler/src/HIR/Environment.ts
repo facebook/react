@@ -172,7 +172,7 @@ const EnvironmentConfigSchema = z.object({
    * This is intended to support hot module reloading (HMR), where the same runtime component
    * instance will be reused across different versions of the component source.
    */
-  enableResetCacheOnSourceFileChanges: z.boolean().default(false),
+  enableResetCacheOnSourceFileChanges: z.nullable(z.boolean()).default(null),
 
   /**
    * Enable using information from existing useMemo/useCallback to understand when a value is done
@@ -721,6 +721,13 @@ export function parseConfigPragmaForTests(pragma: string): EnvironmentConfig {
 
   const config = EnvironmentConfigSchema.safeParse(maybeConfig);
   if (config.success) {
+    /**
+     * Unless explicitly enabled, do not insert HMR handling code
+     * in test fixtures or playground to reduce visual noise.
+     */
+    if (config.data.enableResetCacheOnSourceFileChanges == null) {
+      config.data.enableResetCacheOnSourceFileChanges = false;
+    }
     return config.data;
   }
   CompilerError.invariant(false, {

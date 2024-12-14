@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import generate from '@babel/generator';
 import * as t from '@babel/types';
 import {
   CodeIcon,
@@ -21,17 +20,12 @@ import {memo, ReactNode, useEffect, useState} from 'react';
 import {type Store} from '../../lib/stores';
 import TabbedWindow from '../TabbedWindow';
 import {monacoOptions} from './monacoOptions';
+import { BabelFileResult } from '@babel/core';
 const MemoizedOutput = memo(Output);
 
 export default MemoizedOutput;
 
 export type PrintedCompilerPipelineValue =
-  | {
-      kind: 'ast';
-      name: string;
-      fnName: string | null;
-      value: t.FunctionDeclaration;
-    }
   | {
       kind: 'hir';
       name: string;
@@ -42,7 +36,11 @@ export type PrintedCompilerPipelineValue =
   | {kind: 'debug'; name: string; fnName: string | null; value: string};
 
 export type CompilerOutput =
-  | {kind: 'ok'; results: Map<string, Array<PrintedCompilerPipelineValue>>}
+  | {kind: 'ok'; transformOutput: {
+    ast: t.File
+    code: string
+    sourceMaps: BabelFileResult['map']
+  }, results: Map<string, Array<PrintedCompilerPipelineValue>>}
   | {
       kind: 'err';
       results: Map<string, Array<PrintedCompilerPipelineValue>>;
@@ -61,7 +59,6 @@ async function tabify(
   const tabs = new Map<string, React.ReactNode>();
   const reorderedTabs = new Map<string, React.ReactNode>();
   const concattedResults = new Map<string, string>();
-  let topLevelFnDecls: Array<t.FunctionDeclaration> = [];
   // Concat all top level function declaration results into a single tab for each pass
   for (const [passName, results] of compilerOutput.results) {
     for (const result of results) {
@@ -87,9 +84,6 @@ async function tabify(
           }
           break;
         }
-        case 'ast':
-          topLevelFnDecls.push(result.value);
-          break;
         case 'debug': {
           concattedResults.set(passName, result.value);
           break;
@@ -114,13 +108,16 @@ async function tabify(
     lastPassOutput = text;
   }
   // Ensure that JS and the JS source map come first
-  if (topLevelFnDecls.length > 0) {
-    /**
-     * Make a synthetic Program so we can have a single AST with all the top level
-     * FunctionDeclarations
-     */
-    const ast = t.program(topLevelFnDecls);
-    const {code, sourceMapUrl} = await codegen(ast, source);
+  if (compilerOutput.kind === 'ok') {
+    const sourceMapUrl = getSourceMapUrl(
+      compilerOutput.transformOutput.code,
+      JSON.stringify(compilerOutput.transformOutput.sourceMaps),
+    );
+    const code = await prettier.format(compilerOutput.transformOutput.code, {
+      semi: true,
+      parser: 'babel',
+      plugins: [parserBabel, prettierPluginEstree],
+    });
     reorderedTabs.set(
       'JS',
       <TextTabContent
@@ -145,27 +142,6 @@ async function tabify(
     reorderedTabs.set(name, tab);
   });
   return reorderedTabs;
-}
-
-async function codegen(
-  ast: t.Program,
-  source: string,
-): Promise<{code: any; sourceMapUrl: string | null}> {
-  const generated = generate(
-    ast,
-    {sourceMaps: true, sourceFileName: 'input.js'},
-    source,
-  );
-  const sourceMapUrl = getSourceMapUrl(
-    generated.code,
-    JSON.stringify(generated.map),
-  );
-  const codegenOutput = await prettier.format(generated.code, {
-    semi: true,
-    parser: 'babel',
-    plugins: [parserBabel, prettierPluginEstree],
-  });
-  return {code: codegenOutput, sourceMapUrl};
 }
 
 function utf16ToUTF8(s: string): string {
