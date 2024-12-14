@@ -1804,6 +1804,9 @@ module.exports = function ($$$config) {
     }
     return JSCompiler_temp;
   }
+  function createFunctionComponentUpdateQueue() {
+    return { lastEffect: null, events: null, stores: null, memoCache: null };
+  }
   function useThenable(thenable) {
     var index = thenableIndexCounter$1;
     thenableIndexCounter$1 += 1;
@@ -11670,35 +11673,32 @@ module.exports = function ($$$config) {
     localIdCounter = 0,
     thenableIndexCounter$1 = 0,
     thenableState$1 = null,
-    globalClientIdCounter = 0;
-  var createFunctionComponentUpdateQueue = function () {
-    return { lastEffect: null, events: null, stores: null, memoCache: null };
-  };
-  var ContextOnlyDispatcher = {
-    readContext: readContext,
-    use: use,
-    useCallback: throwInvalidHookError,
-    useContext: throwInvalidHookError,
-    useEffect: throwInvalidHookError,
-    useImperativeHandle: throwInvalidHookError,
-    useLayoutEffect: throwInvalidHookError,
-    useInsertionEffect: throwInvalidHookError,
-    useMemo: throwInvalidHookError,
-    useReducer: throwInvalidHookError,
-    useRef: throwInvalidHookError,
-    useState: throwInvalidHookError,
-    useDebugValue: throwInvalidHookError,
-    useDeferredValue: throwInvalidHookError,
-    useTransition: throwInvalidHookError,
-    useSyncExternalStore: throwInvalidHookError,
-    useId: throwInvalidHookError,
-    useHostTransitionStatus: throwInvalidHookError,
-    useFormState: throwInvalidHookError,
-    useActionState: throwInvalidHookError,
-    useOptimistic: throwInvalidHookError
-  };
+    globalClientIdCounter = 0,
+    ContextOnlyDispatcher = {
+      readContext: readContext,
+      use: use,
+      useCallback: throwInvalidHookError,
+      useContext: throwInvalidHookError,
+      useEffect: throwInvalidHookError,
+      useImperativeHandle: throwInvalidHookError,
+      useLayoutEffect: throwInvalidHookError,
+      useInsertionEffect: throwInvalidHookError,
+      useMemo: throwInvalidHookError,
+      useReducer: throwInvalidHookError,
+      useRef: throwInvalidHookError,
+      useState: throwInvalidHookError,
+      useDebugValue: throwInvalidHookError,
+      useDeferredValue: throwInvalidHookError,
+      useTransition: throwInvalidHookError,
+      useSyncExternalStore: throwInvalidHookError,
+      useId: throwInvalidHookError,
+      useHostTransitionStatus: throwInvalidHookError,
+      useFormState: throwInvalidHookError,
+      useActionState: throwInvalidHookError,
+      useOptimistic: throwInvalidHookError,
+      useMemoCache: throwInvalidHookError
+    };
   ContextOnlyDispatcher.useCacheRefresh = throwInvalidHookError;
-  ContextOnlyDispatcher.useMemoCache = throwInvalidHookError;
   ContextOnlyDispatcher.useEffectEvent = throwInvalidHookError;
   enableUseResourceEffectHook &&
     (ContextOnlyDispatcher.useResourceEffect = throwInvalidHookError);
@@ -11891,23 +11891,23 @@ module.exports = function ($$$config) {
       queue.dispatch = hook;
       return [passthrough, hook];
     },
+    useMemoCache: useMemoCache,
     useCacheRefresh: function () {
       return (mountWorkInProgressHook().memoizedState = refreshCache.bind(
         null,
         currentlyRenderingFiber$1
       ));
+    },
+    useEffectEvent: function (callback) {
+      var hook = mountWorkInProgressHook(),
+        ref = { impl: callback };
+      hook.memoizedState = ref;
+      return function () {
+        if (0 !== (executionContext & 2))
+          throw Error(formatProdErrorMessage(440));
+        return ref.impl.apply(void 0, arguments);
+      };
     }
-  };
-  HooksDispatcherOnMount.useMemoCache = useMemoCache;
-  HooksDispatcherOnMount.useEffectEvent = function (callback) {
-    var hook = mountWorkInProgressHook(),
-      ref = { impl: callback };
-    hook.memoizedState = ref;
-    return function () {
-      if (0 !== (executionContext & 2))
-        throw Error(formatProdErrorMessage(440));
-      return ref.impl.apply(void 0, arguments);
-    };
   };
   enableUseResourceEffectHook &&
     (HooksDispatcherOnMount.useResourceEffect = mountResourceEffect);
@@ -11956,10 +11956,10 @@ module.exports = function ($$$config) {
     useOptimistic: function (passthrough, reducer) {
       var hook = updateWorkInProgressHook();
       return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
-    }
+    },
+    useMemoCache: useMemoCache
   };
   HooksDispatcherOnUpdate.useCacheRefresh = updateRefresh;
-  HooksDispatcherOnUpdate.useMemoCache = useMemoCache;
   HooksDispatcherOnUpdate.useEffectEvent = updateEvent;
   enableUseResourceEffectHook &&
     (HooksDispatcherOnUpdate.useResourceEffect = updateResourceEffect);
@@ -12013,10 +12013,10 @@ module.exports = function ($$$config) {
         return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
       hook.baseState = passthrough;
       return [passthrough, hook.queue.dispatch];
-    }
+    },
+    useMemoCache: useMemoCache
   };
   HooksDispatcherOnRerender.useCacheRefresh = updateRefresh;
-  HooksDispatcherOnRerender.useMemoCache = useMemoCache;
   HooksDispatcherOnRerender.useEffectEvent = updateEvent;
   enableUseResourceEffectHook &&
     (HooksDispatcherOnRerender.useResourceEffect = updateResourceEffect);
@@ -12574,7 +12574,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-modern-4996a8fa-20241213"
+      reconcilerVersion: "19.1.0-www-modern-2e25ee37-20241214"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

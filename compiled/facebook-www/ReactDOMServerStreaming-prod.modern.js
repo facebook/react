@@ -65,7 +65,6 @@ var React = require("react"),
   REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
   REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
   REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
-  REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
   MAYBE_ITERATOR_SYMBOL = Symbol.iterator,
   isArrayImpl = Array.isArray;
 function murmurhash3_32_gc(key, seed) {
@@ -3231,11 +3230,6 @@ var HooksDispatcher = {
   },
   useEffectEvent: function () {
     return throwOnUseEffectEventCall;
-  },
-  useMemoCache: function (size) {
-    for (var data = Array(size), i = 0; i < size; i++)
-      data[i] = REACT_MEMO_CACHE_SENTINEL;
-    return data;
   }
 };
 enableUseResourceEffectHook && (HooksDispatcher.useResourceEffect = noop$1);

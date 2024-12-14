@@ -3351,6 +3351,9 @@ __DEV__ &&
       }
       return JSCompiler_temp;
     }
+    function createFunctionComponentUpdateQueue() {
+      return { lastEffect: null, events: null, stores: null, memoCache: null };
+    }
     function useThenable(thenable) {
       var index = thenableIndexCounter$1;
       thenableIndexCounter$1 += 1;
@@ -16800,35 +16803,32 @@ __DEV__ &&
       currentHookNameInDev = null,
       hookTypesDev = null,
       hookTypesUpdateIndexDev = -1,
-      ignorePreviousDependencies = !1;
-    var createFunctionComponentUpdateQueue = function () {
-      return { lastEffect: null, events: null, stores: null, memoCache: null };
-    };
-    var ContextOnlyDispatcher = {
-      readContext: readContext,
-      use: use,
-      useCallback: throwInvalidHookError,
-      useContext: throwInvalidHookError,
-      useEffect: throwInvalidHookError,
-      useImperativeHandle: throwInvalidHookError,
-      useLayoutEffect: throwInvalidHookError,
-      useInsertionEffect: throwInvalidHookError,
-      useMemo: throwInvalidHookError,
-      useReducer: throwInvalidHookError,
-      useRef: throwInvalidHookError,
-      useState: throwInvalidHookError,
-      useDebugValue: throwInvalidHookError,
-      useDeferredValue: throwInvalidHookError,
-      useTransition: throwInvalidHookError,
-      useSyncExternalStore: throwInvalidHookError,
-      useId: throwInvalidHookError,
-      useHostTransitionStatus: throwInvalidHookError,
-      useFormState: throwInvalidHookError,
-      useActionState: throwInvalidHookError,
-      useOptimistic: throwInvalidHookError
-    };
+      ignorePreviousDependencies = !1,
+      ContextOnlyDispatcher = {
+        readContext: readContext,
+        use: use,
+        useCallback: throwInvalidHookError,
+        useContext: throwInvalidHookError,
+        useEffect: throwInvalidHookError,
+        useImperativeHandle: throwInvalidHookError,
+        useLayoutEffect: throwInvalidHookError,
+        useInsertionEffect: throwInvalidHookError,
+        useMemo: throwInvalidHookError,
+        useReducer: throwInvalidHookError,
+        useRef: throwInvalidHookError,
+        useState: throwInvalidHookError,
+        useDebugValue: throwInvalidHookError,
+        useDeferredValue: throwInvalidHookError,
+        useTransition: throwInvalidHookError,
+        useSyncExternalStore: throwInvalidHookError,
+        useId: throwInvalidHookError,
+        useHostTransitionStatus: throwInvalidHookError,
+        useFormState: throwInvalidHookError,
+        useActionState: throwInvalidHookError,
+        useOptimistic: throwInvalidHookError,
+        useMemoCache: throwInvalidHookError
+      };
     ContextOnlyDispatcher.useCacheRefresh = throwInvalidHookError;
-    ContextOnlyDispatcher.useMemoCache = throwInvalidHookError;
     ContextOnlyDispatcher.useEffectEvent = throwInvalidHookError;
     enableUseResourceEffectHook &&
       (ContextOnlyDispatcher.useResourceEffect = throwInvalidHookError);
@@ -16969,17 +16969,17 @@ __DEV__ &&
         return mountOptimistic(passthrough);
       },
       useHostTransitionStatus: useHostTransitionStatus,
+      useMemoCache: useMemoCache,
       useCacheRefresh: function () {
         currentHookNameInDev = "useCacheRefresh";
         mountHookTypesDev();
         return mountRefresh();
+      },
+      useEffectEvent: function (callback) {
+        currentHookNameInDev = "useEffectEvent";
+        mountHookTypesDev();
+        return mountEvent(callback);
       }
-    };
-    HooksDispatcherOnMountInDEV.useMemoCache = useMemoCache;
-    HooksDispatcherOnMountInDEV.useEffectEvent = function (callback) {
-      currentHookNameInDev = "useEffectEvent";
-      mountHookTypesDev();
-      return mountEvent(callback);
     };
     enableUseResourceEffectHook &&
       (HooksDispatcherOnMountInDEV.useResourceEffect = function (
@@ -17137,19 +17137,17 @@ __DEV__ &&
         return mountOptimistic(passthrough);
       },
       useHostTransitionStatus: useHostTransitionStatus,
+      useMemoCache: useMemoCache,
       useCacheRefresh: function () {
         currentHookNameInDev = "useCacheRefresh";
         updateHookTypesDev();
         return mountRefresh();
+      },
+      useEffectEvent: function (callback) {
+        currentHookNameInDev = "useEffectEvent";
+        updateHookTypesDev();
+        return mountEvent(callback);
       }
-    };
-    HooksDispatcherOnMountWithHookTypesInDEV.useMemoCache = useMemoCache;
-    HooksDispatcherOnMountWithHookTypesInDEV.useEffectEvent = function (
-      callback
-    ) {
-      currentHookNameInDev = "useEffectEvent";
-      updateHookTypesDev();
-      return mountEvent(callback);
     };
     enableUseResourceEffectHook &&
       (HooksDispatcherOnMountWithHookTypesInDEV.useResourceEffect = function (
@@ -17297,17 +17295,17 @@ __DEV__ &&
         return updateOptimistic(passthrough, reducer);
       },
       useHostTransitionStatus: useHostTransitionStatus,
+      useMemoCache: useMemoCache,
       useCacheRefresh: function () {
         currentHookNameInDev = "useCacheRefresh";
         updateHookTypesDev();
         return updateWorkInProgressHook().memoizedState;
+      },
+      useEffectEvent: function (callback) {
+        currentHookNameInDev = "useEffectEvent";
+        updateHookTypesDev();
+        return updateEvent(callback);
       }
-    };
-    HooksDispatcherOnUpdateInDEV.useMemoCache = useMemoCache;
-    HooksDispatcherOnUpdateInDEV.useEffectEvent = function (callback) {
-      currentHookNameInDev = "useEffectEvent";
-      updateHookTypesDev();
-      return updateEvent(callback);
     };
     enableUseResourceEffectHook &&
       (HooksDispatcherOnUpdateInDEV.useResourceEffect = function (
@@ -17459,17 +17457,17 @@ __DEV__ &&
         return rerenderOptimistic(passthrough, reducer);
       },
       useHostTransitionStatus: useHostTransitionStatus,
+      useMemoCache: useMemoCache,
       useCacheRefresh: function () {
         currentHookNameInDev = "useCacheRefresh";
         updateHookTypesDev();
         return updateWorkInProgressHook().memoizedState;
+      },
+      useEffectEvent: function (callback) {
+        currentHookNameInDev = "useEffectEvent";
+        updateHookTypesDev();
+        return updateEvent(callback);
       }
-    };
-    HooksDispatcherOnRerenderInDEV.useMemoCache = useMemoCache;
-    HooksDispatcherOnRerenderInDEV.useEffectEvent = function (callback) {
-      currentHookNameInDev = "useEffectEvent";
-      updateHookTypesDev();
-      return updateEvent(callback);
     };
     enableUseResourceEffectHook &&
       (HooksDispatcherOnRerenderInDEV.useResourceEffect = function (
@@ -17641,15 +17639,15 @@ __DEV__ &&
         mountHookTypesDev();
         return mountOptimistic(passthrough);
       },
+      useMemoCache: function (size) {
+        warnInvalidHookAccess();
+        return useMemoCache(size);
+      },
       useHostTransitionStatus: useHostTransitionStatus,
       useCacheRefresh: function () {
         currentHookNameInDev = "useCacheRefresh";
         mountHookTypesDev();
         return mountRefresh();
-      },
-      useMemoCache: function (size) {
-        warnInvalidHookAccess();
-        return useMemoCache(size);
       },
       useEffectEvent: function (callback) {
         currentHookNameInDev = "useEffectEvent";
@@ -17826,15 +17824,15 @@ __DEV__ &&
         updateHookTypesDev();
         return updateOptimistic(passthrough, reducer);
       },
+      useMemoCache: function (size) {
+        warnInvalidHookAccess();
+        return useMemoCache(size);
+      },
       useHostTransitionStatus: useHostTransitionStatus,
       useCacheRefresh: function () {
         currentHookNameInDev = "useCacheRefresh";
         updateHookTypesDev();
         return updateWorkInProgressHook().memoizedState;
-      },
-      useMemoCache: function (size) {
-        warnInvalidHookAccess();
-        return useMemoCache(size);
       },
       useEffectEvent: function (callback) {
         currentHookNameInDev = "useEffectEvent";
@@ -18013,15 +18011,15 @@ __DEV__ &&
         updateHookTypesDev();
         return rerenderOptimistic(passthrough, reducer);
       },
+      useMemoCache: function (size) {
+        warnInvalidHookAccess();
+        return useMemoCache(size);
+      },
       useHostTransitionStatus: useHostTransitionStatus,
       useCacheRefresh: function () {
         currentHookNameInDev = "useCacheRefresh";
         updateHookTypesDev();
         return updateWorkInProgressHook().memoizedState;
-      },
-      useMemoCache: function (size) {
-        warnInvalidHookAccess();
-        return useMemoCache(size);
       },
       useEffectEvent: function (callback) {
         currentHookNameInDev = "useEffectEvent";
@@ -19129,7 +19127,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-modern-4996a8fa-20241213"
+        reconcilerVersion: "19.1.0-www-modern-2e25ee37-20241214"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

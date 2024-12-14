@@ -2850,6 +2850,9 @@ __DEV__ &&
       }
       return workInProgressHook;
     }
+    function createFunctionComponentUpdateQueue() {
+      return { lastEffect: null, events: null, stores: null, memoCache: null };
+    }
     function useThenable(thenable) {
       var index = thenableIndexCounter$1;
       thenableIndexCounter$1 += 1;
@@ -13382,35 +13385,32 @@ __DEV__ &&
       currentHookNameInDev = null,
       hookTypesDev = null,
       hookTypesUpdateIndexDev = -1,
-      ignorePreviousDependencies = !1;
-    var createFunctionComponentUpdateQueue = function () {
-      return { lastEffect: null, events: null, stores: null, memoCache: null };
-    };
-    var ContextOnlyDispatcher = {
-      readContext: readContext,
-      use: use,
-      useCallback: throwInvalidHookError,
-      useContext: throwInvalidHookError,
-      useEffect: throwInvalidHookError,
-      useImperativeHandle: throwInvalidHookError,
-      useLayoutEffect: throwInvalidHookError,
-      useInsertionEffect: throwInvalidHookError,
-      useMemo: throwInvalidHookError,
-      useReducer: throwInvalidHookError,
-      useRef: throwInvalidHookError,
-      useState: throwInvalidHookError,
-      useDebugValue: throwInvalidHookError,
-      useDeferredValue: throwInvalidHookError,
-      useTransition: throwInvalidHookError,
-      useSyncExternalStore: throwInvalidHookError,
-      useId: throwInvalidHookError,
-      useHostTransitionStatus: throwInvalidHookError,
-      useFormState: throwInvalidHookError,
-      useActionState: throwInvalidHookError,
-      useOptimistic: throwInvalidHookError
-    };
+      ignorePreviousDependencies = !1,
+      ContextOnlyDispatcher = {
+        readContext: readContext,
+        use: use,
+        useCallback: throwInvalidHookError,
+        useContext: throwInvalidHookError,
+        useEffect: throwInvalidHookError,
+        useImperativeHandle: throwInvalidHookError,
+        useLayoutEffect: throwInvalidHookError,
+        useInsertionEffect: throwInvalidHookError,
+        useMemo: throwInvalidHookError,
+        useReducer: throwInvalidHookError,
+        useRef: throwInvalidHookError,
+        useState: throwInvalidHookError,
+        useDebugValue: throwInvalidHookError,
+        useDeferredValue: throwInvalidHookError,
+        useTransition: throwInvalidHookError,
+        useSyncExternalStore: throwInvalidHookError,
+        useId: throwInvalidHookError,
+        useHostTransitionStatus: throwInvalidHookError,
+        useFormState: throwInvalidHookError,
+        useActionState: throwInvalidHookError,
+        useOptimistic: throwInvalidHookError,
+        useMemoCache: throwInvalidHookError
+      };
     ContextOnlyDispatcher.useCacheRefresh = throwInvalidHookError;
-    ContextOnlyDispatcher.useMemoCache = throwInvalidHookError;
     var HooksDispatcherOnMountInDEV = null,
       HooksDispatcherOnMountWithHookTypesInDEV = null,
       HooksDispatcherOnUpdateInDEV = null,
@@ -13538,13 +13538,13 @@ __DEV__ &&
         return mountOptimistic(passthrough);
       },
       useHostTransitionStatus: useHostTransitionStatus,
+      useMemoCache: useMemoCache,
       useCacheRefresh: function () {
         currentHookNameInDev = "useCacheRefresh";
         mountHookTypesDev();
         return mountRefresh();
       }
     };
-    HooksDispatcherOnMountInDEV.useMemoCache = useMemoCache;
     HooksDispatcherOnMountWithHookTypesInDEV = {
       readContext: function (context) {
         return readContext(context);
@@ -13659,13 +13659,13 @@ __DEV__ &&
         return mountOptimistic(passthrough);
       },
       useHostTransitionStatus: useHostTransitionStatus,
+      useMemoCache: useMemoCache,
       useCacheRefresh: function () {
         currentHookNameInDev = "useCacheRefresh";
         updateHookTypesDev();
         return mountRefresh();
       }
     };
-    HooksDispatcherOnMountWithHookTypesInDEV.useMemoCache = useMemoCache;
     HooksDispatcherOnUpdateInDEV = {
       readContext: function (context) {
         return readContext(context);
@@ -13780,13 +13780,13 @@ __DEV__ &&
         return updateOptimistic(passthrough, reducer);
       },
       useHostTransitionStatus: useHostTransitionStatus,
+      useMemoCache: useMemoCache,
       useCacheRefresh: function () {
         currentHookNameInDev = "useCacheRefresh";
         updateHookTypesDev();
         return updateWorkInProgressHook().memoizedState;
       }
     };
-    HooksDispatcherOnUpdateInDEV.useMemoCache = useMemoCache;
     HooksDispatcherOnRerenderInDEV = {
       readContext: function (context) {
         return readContext(context);
@@ -13901,13 +13901,13 @@ __DEV__ &&
         return rerenderOptimistic(passthrough, reducer);
       },
       useHostTransitionStatus: useHostTransitionStatus,
+      useMemoCache: useMemoCache,
       useCacheRefresh: function () {
         currentHookNameInDev = "useCacheRefresh";
         updateHookTypesDev();
         return updateWorkInProgressHook().memoizedState;
       }
     };
-    HooksDispatcherOnRerenderInDEV.useMemoCache = useMemoCache;
     InvalidNestedHooksDispatcherOnMountInDEV = {
       readContext: function (context) {
         warnInvalidContextAccess();
@@ -14042,15 +14042,15 @@ __DEV__ &&
         mountHookTypesDev();
         return mountOptimistic(passthrough);
       },
+      useMemoCache: function (size) {
+        warnInvalidHookAccess();
+        return useMemoCache(size);
+      },
       useHostTransitionStatus: useHostTransitionStatus,
       useCacheRefresh: function () {
         currentHookNameInDev = "useCacheRefresh";
         mountHookTypesDev();
         return mountRefresh();
-      },
-      useMemoCache: function (size) {
-        warnInvalidHookAccess();
-        return useMemoCache(size);
       }
     };
     InvalidNestedHooksDispatcherOnUpdateInDEV = {
@@ -14187,15 +14187,15 @@ __DEV__ &&
         updateHookTypesDev();
         return updateOptimistic(passthrough, reducer);
       },
+      useMemoCache: function (size) {
+        warnInvalidHookAccess();
+        return useMemoCache(size);
+      },
       useHostTransitionStatus: useHostTransitionStatus,
       useCacheRefresh: function () {
         currentHookNameInDev = "useCacheRefresh";
         updateHookTypesDev();
         return updateWorkInProgressHook().memoizedState;
-      },
-      useMemoCache: function (size) {
-        warnInvalidHookAccess();
-        return useMemoCache(size);
       }
     };
     InvalidNestedHooksDispatcherOnRerenderInDEV = {
@@ -14332,15 +14332,15 @@ __DEV__ &&
         updateHookTypesDev();
         return rerenderOptimistic(passthrough, reducer);
       },
+      useMemoCache: function (size) {
+        warnInvalidHookAccess();
+        return useMemoCache(size);
+      },
       useHostTransitionStatus: useHostTransitionStatus,
       useCacheRefresh: function () {
         currentHookNameInDev = "useCacheRefresh";
         updateHookTypesDev();
         return updateWorkInProgressHook().memoizedState;
-      },
-      useMemoCache: function (size) {
-        warnInvalidHookAccess();
-        return useMemoCache(size);
       }
     };
     var callComponent = {
@@ -15004,10 +15004,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-modern-4996a8fa-20241213",
+        version: "19.1.0-www-modern-2e25ee37-20241214",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-modern-4996a8fa-20241213"
+        reconcilerVersion: "19.1.0-www-modern-2e25ee37-20241214"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15142,5 +15142,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.1.0-www-modern-4996a8fa-20241213";
+    exports.version = "19.1.0-www-modern-2e25ee37-20241214";
   })();
