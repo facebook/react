@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3b25e566cb2bc3ac9041a366f4c25e6c>>
+ * @generated SignedSource<<7f6247492a180bf2ef88c217e2e2ea19>>
  */
 
 /*
@@ -61,7 +61,6 @@ var REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_MEMO_TYPE = Symbol.for("react.memo"),
   REACT_LAZY_TYPE = Symbol.for("react.lazy");
 Symbol.for("react.scope");
-Symbol.for("react.debug_trace_mode");
 var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
 Symbol.for("react.legacy_hidden");
 Symbol.for("react.tracing_marker");
@@ -15879,14 +15878,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1723 = React.version;
 if (
-  "19.1.0-native-fb-c80b336d-20241214" !==
+  "19.1.0-native-fb-2d320563-20241215" !==
   isomorphicReactPackageVersion$jscomp$inline_1723
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1723,
-      "19.1.0-native-fb-c80b336d-20241214"
+      "19.1.0-native-fb-2d320563-20241215"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -15908,10 +15907,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2180 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-c80b336d-20241214",
+  version: "19.1.0-native-fb-2d320563-20241215",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-c80b336d-20241214"
+  reconcilerVersion: "19.1.0-native-fb-2d320563-20241215"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2181 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16171,4 +16170,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-native-fb-c80b336d-20241214";
+exports.version = "19.1.0-native-fb-2d320563-20241215";

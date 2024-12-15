@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<aa8679d95337a1adef5f2bbbe4a416eb>>
+ * @generated SignedSource<<b5e6620b3e16334dbdff80539768319f>>
  */
 
 "use strict";
@@ -43,7 +43,6 @@ var assign = Object.assign,
   REACT_MEMO_TYPE = Symbol.for("react.memo"),
   REACT_LAZY_TYPE = Symbol.for("react.lazy");
 Symbol.for("react.scope");
-Symbol.for("react.debug_trace_mode");
 var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
 Symbol.for("react.legacy_hidden");
 Symbol.for("react.tracing_marker");
@@ -10325,10 +10324,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1194 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-c80b336d-20241214",
+  version: "19.1.0-native-fb-2d320563-20241215",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-c80b336d-20241214",
+  reconcilerVersion: "19.1.0-native-fb-2d320563-20241215",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$146 = 0;
@@ -10479,4 +10478,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.1.0-native-fb-c80b336d-20241214";
+exports.version = "19.1.0-native-fb-2d320563-20241215";

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<cab941981c99c35725a20a82c621a008>>
+ * @generated SignedSource<<d0359b8af428e524bbe03d41b26e3c7e>>
  */
 
 "use strict";
@@ -41,7 +41,6 @@ var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/R
   REACT_MEMO_TYPE = Symbol.for("react.memo"),
   REACT_LAZY_TYPE = Symbol.for("react.lazy");
 Symbol.for("react.scope");
-Symbol.for("react.debug_trace_mode");
 var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
 Symbol.for("react.legacy_hidden");
 Symbol.for("react.tracing_marker");
@@ -11230,11 +11229,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.1.0-native-fb-c80b336d-20241214" !== isomorphicReactPackageVersion)
+if ("19.1.0-native-fb-2d320563-20241215" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.1.0-native-fb-c80b336d-20241214\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.1.0-native-fb-2d320563-20241215\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11283,10 +11282,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1276 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-c80b336d-20241214",
+    version: "19.1.0-native-fb-2d320563-20241215",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-c80b336d-20241214"
+    reconcilerVersion: "19.1.0-native-fb-2d320563-20241215"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1276.rendererConfig = extraDevToolsConfig);

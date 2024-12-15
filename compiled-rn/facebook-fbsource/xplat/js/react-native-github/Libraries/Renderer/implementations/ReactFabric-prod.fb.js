@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<24a42b39fe6d138888d258cd1e56d592>>
+ * @generated SignedSource<<e16e7c44cfea277e4153692ac0a05c00>>
  */
 
 "use strict";
@@ -46,7 +46,6 @@ var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/R
   REACT_MEMO_TYPE = Symbol.for("react.memo"),
   REACT_LAZY_TYPE = Symbol.for("react.lazy");
 Symbol.for("react.scope");
-Symbol.for("react.debug_trace_mode");
 var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
 Symbol.for("react.legacy_hidden");
 Symbol.for("react.tracing_marker");
@@ -11098,10 +11097,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1210 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-c80b336d-20241214",
+    version: "19.1.0-native-fb-2d320563-20241215",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-c80b336d-20241214"
+    reconcilerVersion: "19.1.0-native-fb-2d320563-20241215"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1210.rendererConfig = extraDevToolsConfig);

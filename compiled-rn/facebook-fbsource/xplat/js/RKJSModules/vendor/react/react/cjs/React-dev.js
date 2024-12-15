@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1ea95ce80e06cf835f6178898ffffbd5>>
+ * @generated SignedSource<<11a2b6537a511b9ac2818de29f05ae38>>
  */
 
 "use strict";
@@ -1100,7 +1100,6 @@ __DEV__ &&
       REACT_MEMO_TYPE = Symbol.for("react.memo"),
       REACT_LAZY_TYPE = Symbol.for("react.lazy"),
       REACT_SCOPE_TYPE = Symbol.for("react.scope"),
-      REACT_DEBUG_TRACING_MODE_TYPE = Symbol.for("react.debug_trace_mode"),
       REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
       REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
       REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
@@ -1740,7 +1739,6 @@ __DEV__ &&
       }
     };
     exports.unstable_Activity = REACT_OFFSCREEN_TYPE;
-    exports.unstable_DebugTracingMode = REACT_DEBUG_TRACING_MODE_TYPE;
     exports.unstable_LegacyHidden = REACT_LEGACY_HIDDEN_TYPE;
     exports.unstable_Scope = REACT_SCOPE_TYPE;
     exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
@@ -1829,7 +1827,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.1.0-native-fb-c80b336d-20241214";
+    exports.version = "19.1.0-native-fb-2d320563-20241215";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
