@@ -32,12 +32,6 @@ export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
 
-// Enable this flag to help with concurrent mode debugging.
-// It logs information to the console about React scheduling, rendering, and commit phases.
-//
-// NOTE: This feature will only work in DEV mode; all callsites are wrapped with __DEV__.
-export const enableDebugTracing = __EXPERIMENTAL__;
-
 export const enableSchedulingProfiler = __VARIANT__;
 
 export const enableInfiniteRenderLoopDetection = __VARIANT__;

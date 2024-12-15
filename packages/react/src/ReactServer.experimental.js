@@ -15,7 +15,6 @@ import {
   REACT_PROFILER_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
-  REACT_DEBUG_TRACING_MODE_TYPE,
 } from 'shared/ReactSymbols';
 import {
   cloneElement,
@@ -70,7 +69,6 @@ export {
   memo,
   cache,
   startTransition,
-  REACT_DEBUG_TRACING_MODE_TYPE as unstable_DebugTracingMode,
   REACT_SUSPENSE_TYPE as unstable_SuspenseList,
   getCacheForType as unstable_getCacheForType,
   postpone as unstable_postpone,

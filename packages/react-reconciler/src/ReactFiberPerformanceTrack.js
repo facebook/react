@@ -9,9 +9,16 @@
 
 import type {Fiber} from './ReactInternalTypes';
 
+import type {Lanes} from './ReactFiberLane';
+
 import getComponentNameFromFiber from './getComponentNameFromFiber';
 
-import {getGroupNameOfHighestPriorityLane} from './ReactFiberLane';
+import {
+  getGroupNameOfHighestPriorityLane,
+  includesOnlyHydrationLanes,
+  includesOnlyOffscreenLanes,
+  includesOnlyHydrationOrOffscreenLanes,
+} from './ReactFiberLane';
 
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 
@@ -51,7 +58,7 @@ const reusableLaneOptions = {
   },
 };
 
-export function setCurrentTrackFromLanes(lanes: number): void {
+export function setCurrentTrackFromLanes(lanes: Lanes): void {
   reusableLaneDevToolDetails.track = getGroupNameOfHighestPriorityLane(lanes);
 }
 
@@ -223,6 +230,7 @@ export function logBlockingStart(
   eventType: null | string,
   eventIsRepeat: boolean,
   renderStartTime: number,
+  lanes: Lanes,
 ): void {
   if (supportsUserTiming) {
     reusableLaneDevToolDetails.track = 'Blocking';
@@ -240,7 +248,11 @@ export function logBlockingStart(
     }
     if (updateTime > 0) {
       // Log the time from when we called setState until we started rendering.
-      reusableLaneDevToolDetails.color = 'primary-light';
+      reusableLaneDevToolDetails.color = includesOnlyHydrationOrOffscreenLanes(
+        lanes,
+      )
+        ? 'tertiary-light'
+        : 'primary-light';
       reusableLaneOptions.start = updateTime;
       reusableLaneOptions.end = renderStartTime;
       performance.measure('Blocked', reusableLaneOptions);
@@ -292,33 +304,65 @@ export function logTransitionStart(
   }
 }
 
-export function logRenderPhase(startTime: number, endTime: number): void {
+export function logRenderPhase(
+  startTime: number,
+  endTime: number,
+  lanes: Lanes,
+): void {
   if (supportsUserTiming) {
-    reusableLaneDevToolDetails.color = 'primary-dark';
+    reusableLaneDevToolDetails.color = includesOnlyHydrationOrOffscreenLanes(
+      lanes,
+    )
+      ? 'tertiary-dark'
+      : 'primary-dark';
     reusableLaneOptions.start = startTime;
     reusableLaneOptions.end = endTime;
-    performance.measure('Render', reusableLaneOptions);
+    performance.measure(
+      includesOnlyOffscreenLanes(lanes)
+        ? 'Prepared'
+        : includesOnlyHydrationLanes(lanes)
+          ? 'Hydrated'
+          : 'Render',
+      reusableLaneOptions,
+    );
   }
 }
 
 export function logInterruptedRenderPhase(
   startTime: number,
   endTime: number,
+  lanes: Lanes,
 ): void {
   if (supportsUserTiming) {
-    reusableLaneDevToolDetails.color = 'primary-dark';
+    reusableLaneDevToolDetails.color = includesOnlyHydrationOrOffscreenLanes(
+      lanes,
+    )
+      ? 'tertiary-dark'
+      : 'primary-dark';
     reusableLaneOptions.start = startTime;
     reusableLaneOptions.end = endTime;
-    performance.measure('Interrupted Render', reusableLaneOptions);
+    performance.measure(
+      includesOnlyOffscreenLanes(lanes)
+        ? 'Prewarm'
+        : includesOnlyHydrationLanes(lanes)
+          ? 'Interrupted Hydration'
+          : 'Interrupted Render',
+      reusableLaneOptions,
+    );
   }
 }
 
 export function logSuspendedRenderPhase(
   startTime: number,
   endTime: number,
+  lanes: Lanes,
 ): void {
   if (supportsUserTiming) {
-    reusableLaneDevToolDetails.color = 'primary-dark';
+    reusableLaneDevToolDetails.color = includesOnlyHydrationOrOffscreenLanes(
+      lanes,
+    )
+      ? 'tertiary-dark'
+      : 'primary-dark';
     reusableLaneOptions.start = startTime;
     reusableLaneOptions.end = endTime;
     performance.measure('Prewarm', reusableLaneOptions);
@@ -328,10 +372,15 @@ export function logSuspendedRenderPhase(
 export function logSuspendedWithDelayPhase(
   startTime: number,
   endTime: number,
+  lanes: Lanes,
 ): void {
   // This means the render was suspended and cannot commit until it gets unblocked.
   if (supportsUserTiming) {
-    reusableLaneDevToolDetails.color = 'primary-dark';
+    reusableLaneDevToolDetails.color = includesOnlyHydrationOrOffscreenLanes(
+      lanes,
+    )
+      ? 'tertiary-dark'
+      : 'primary-dark';
     reusableLaneOptions.start = startTime;
     reusableLaneOptions.end = endTime;
     performance.measure('Suspended', reusableLaneOptions);
@@ -341,6 +390,7 @@ export function logSuspendedWithDelayPhase(
 export function logErroredRenderPhase(
   startTime: number,
   endTime: number,
+  lanes: Lanes,
 ): void {
   if (supportsUserTiming) {
     reusableLaneDevToolDetails.color = 'error';

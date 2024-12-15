@@ -37,9 +37,8 @@ import {
   ForceClientRender,
   ScheduleRetry,
 } from './ReactFiberFlags';
-import {NoMode, ConcurrentMode, DebugTracingMode} from './ReactTypeOfMode';
+import {NoMode, ConcurrentMode} from './ReactTypeOfMode';
 import {
-  enableDebugTracing,
   enableLazyContextPropagation,
   enableUpdaterTracking,
   enablePostpone,
@@ -70,7 +69,6 @@ import {
 } from './ReactFiberWorkLoop';
 import {propagateParentContextChangesToDeferredTree} from './ReactFiberNewContext';
 import {logUncaughtError, logCaughtError} from './ReactFiberErrorLogger';
-import {logComponentSuspended} from './DebugTracing';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {
   SyncLane,
@@ -396,15 +394,6 @@ function throwException(
           (disableLegacyMode || sourceFiber.mode & ConcurrentMode)
         ) {
           markDidThrowWhileHydratingDEV();
-        }
-      }
-
-      if (__DEV__) {
-        if (enableDebugTracing) {
-          if (sourceFiber.mode & DebugTracingMode) {
-            const name = getComponentNameFromFiber(sourceFiber) || 'Unknown';
-            logComponentSuspended(name, wakeable);
-          }
         }
       }
 

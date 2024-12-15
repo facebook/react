@@ -93,6 +93,8 @@ var isPerformingWork = false;
 var isHostCallbackScheduled = false;
 var isHostTimeoutScheduled = false;
 
+var needsPaint = false;
+
 // Capture local references to native APIs, in case a polyfill overrides them.
 const localSetTimeout = typeof setTimeout === 'function' ? setTimeout : null;
 const localClearTimeout =
@@ -456,6 +458,10 @@ let frameInterval = frameYieldMs;
 let startTime = -1;
 
 function shouldYieldToHost(): boolean {
+  if (needsPaint) {
+    // Yield now.
+    return true;
+  }
   const timeElapsed = getCurrentTime() - startTime;
   if (timeElapsed < frameInterval) {
     // The main thread has only been blocked for a really short amount of time;
@@ -466,7 +472,9 @@ function shouldYieldToHost(): boolean {
   return true;
 }
 
-function requestPaint() {}
+function requestPaint() {
+  needsPaint = true;
+}
 
 function forceFrameRate(fps: number) {
   if (fps < 0 || fps > 125) {
@@ -486,6 +494,7 @@ function forceFrameRate(fps: number) {
 }
 
 const performWorkUntilDeadline = () => {
+  needsPaint = false;
   if (isMessageLoopRunning) {
     const currentTime = getCurrentTime();
     // Keep track of the start time so we can measure how long the main thread
