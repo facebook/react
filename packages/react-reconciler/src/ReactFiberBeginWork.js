@@ -3584,7 +3584,7 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
   // the begin phase. There's still some bookkeeping we that needs to be done
   // in this optimized path, mostly pushing stuff onto the stack.
   switch (workInProgress.tag) {
-    case HostRoot:
+    case HostRoot: {
       pushHostRootContext(workInProgress);
       const root: FiberRoot = workInProgress.stateNode;
       pushRootTransition(workInProgress, root, renderLanes);
@@ -3597,6 +3597,7 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       pushCacheProvider(workInProgress, cache);
       resetHydrationState();
       break;
+    }
     case HostSingleton:
     case HostComponent:
       pushHostContext(workInProgress);
