@@ -138,3 +138,28 @@ export function getElementDimensions(domElement: HTMLElement): {
     paddingBottom: parseInt(calculatedStyle.paddingBottom, 10),
   };
 }
+
+export function extractHOCNames(displayName: string): {
+  baseComponentName: string,
+  hocNames: string[],
+} {
+  if (!displayName) return {baseComponentName: '', hocNames: []};
+
+  const hocRegex = /([A-Z][a-zA-Z0-9]*?)\((.*)\)/g;
+  const hocNames: string[] = [];
+  let baseComponentName = displayName;
+  let match;
+
+  while ((match = hocRegex.exec(baseComponentName)) != null) {
+    if (Array.isArray(match)) {
+      const [, hocName, inner] = match;
+      hocNames.push(hocName);
+      baseComponentName = inner;
+    }
+  }
+
+  return {
+    baseComponentName,
+    hocNames,
+  };
+}

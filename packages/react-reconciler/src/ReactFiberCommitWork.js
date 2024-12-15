@@ -142,6 +142,7 @@ import {
   suspendInstance,
   suspendResource,
   resetFormInstance,
+  registerSuspenseInstanceRetry,
 } from './ReactFiberConfig';
 import {
   captureCommitPhaseError,
@@ -154,6 +155,7 @@ import {
   addMarkerProgressCallbackToPendingTransition,
   addMarkerIncompleteCallbackToPendingTransition,
   addMarkerCompleteCallbackToPendingTransition,
+  retryDehydratedSuspenseBoundary,
 } from './ReactFiberWorkLoop';
 import {
   HasEffect as HookHasEffect,
@@ -525,6 +527,23 @@ function commitLayoutEffectOnFiber(
       );
       if (flags & Update) {
         commitSuspenseHydrationCallbacks(finishedRoot, finishedWork);
+      }
+      if (flags & Callback) {
+        // This Boundary is in fallback and has a dehydrated Suspense instance.
+        // We could in theory assume the dehydrated state but we recheck it for
+        // certainty.
+        const finishedState: SuspenseState | null = finishedWork.memoizedState;
+        if (finishedState !== null) {
+          const dehydrated = finishedState.dehydrated;
+          if (dehydrated !== null) {
+            // Register a callback to retry this boundary once the server has sent the result.
+            const retry = retryDehydratedSuspenseBoundary.bind(
+              null,
+              finishedWork,
+            );
+            registerSuspenseInstanceRetry(dehydrated, retry);
+          }
+        }
       }
       break;
     }

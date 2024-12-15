@@ -16,6 +16,7 @@ import {
   Place,
   ReactiveScopeDependencies,
 } from '../HIR';
+import {DEFAULT_EXPORT} from '../HIR/Environment';
 import {
   createTemporaryPlace,
   fixScopeAndIdentifierRanges,
@@ -54,6 +55,8 @@ export function inferEffectDependencies(fn: HIRFunction): void {
     {pruned: boolean; deps: ReactiveScopeDependencies; hasSingleInstr: boolean}
   >();
 
+  const loadGlobals = new Set<IdentifierId>();
+
   /**
    * When inserting LoadLocals, we need to retain the reactivity of the base
    * identifier, as later passes e.g. PruneNonReactiveDeps take the reactivity of
@@ -86,15 +89,23 @@ export function inferEffectDependencies(fn: HIRFunction): void {
           lvalue.identifier.id,
           instr as TInstruction<FunctionExpression>,
         );
-      } else if (
-        value.kind === 'LoadGlobal' &&
-        value.binding.kind === 'ImportSpecifier'
-      ) {
-        const moduleTargets = autodepFnConfigs.get(value.binding.module);
-        if (moduleTargets != null) {
-          const numRequiredArgs = moduleTargets.get(value.binding.imported);
-          if (numRequiredArgs != null) {
-            autodepFnLoads.set(lvalue.identifier.id, numRequiredArgs);
+      } else if (value.kind === 'LoadGlobal') {
+        loadGlobals.add(lvalue.identifier.id);
+
+        if (
+          value.binding.kind === 'ImportSpecifier' ||
+          value.binding.kind === 'ImportDefault'
+        ) {
+          const moduleTargets = autodepFnConfigs.get(value.binding.module);
+          if (moduleTargets != null) {
+            const importSpecifierName =
+              value.binding.kind === 'ImportSpecifier'
+                ? value.binding.imported
+                : DEFAULT_EXPORT;
+            const numRequiredArgs = moduleTargets.get(importSpecifierName);
+            if (numRequiredArgs != null) {
+              autodepFnLoads.set(lvalue.identifier.id, numRequiredArgs);
+            }
           }
         }
       } else if (
@@ -105,8 +116,19 @@ export function inferEffectDependencies(fn: HIRFunction): void {
         autodepFnLoads.get(value.callee.identifier.id) === value.args.length &&
         value.args[0].kind === 'Identifier'
       ) {
+        const effectDeps: Array<Place> = [];
+        const newInstructions: Array<Instruction> = [];
+        const deps: ArrayExpression = {
+          kind: 'ArrayExpression',
+          elements: effectDeps,
+          loc: GeneratedSource,
+        };
+        const depsPlace = createTemporaryPlace(fn.env, GeneratedSource);
+        depsPlace.effect = Effect.Read;
+
         const fnExpr = fnExpressions.get(value.args[0].identifier.id);
         if (fnExpr != null) {
+          // We have a function expression, so we can infer its dependencies
           const scopeInfo =
             fnExpr.lvalue.identifier.scope != null
               ? scopeInfos.get(fnExpr.lvalue.identifier.scope.id)
@@ -128,14 +150,12 @@ export function inferEffectDependencies(fn: HIRFunction): void {
           }
 
           /**
-           * Step 1: write new instructions to insert a dependency array
+           * Step 1: push dependencies to the effect deps array
            *
            * Note that it's invalid to prune non-reactive deps in this pass, see
            * the `infer-effect-deps/pruned-nonreactive-obj` fixture for an
            * explanation.
            */
-          const effectDeps: Array<Place> = [];
-          const newInstructions: Array<Instruction> = [];
           for (const dep of scopeInfo.deps) {
             const {place, instructions} = writeDependencyToInstructions(
               dep,
@@ -146,14 +166,6 @@ export function inferEffectDependencies(fn: HIRFunction): void {
             newInstructions.push(...instructions);
             effectDeps.push(place);
           }
-          const deps: ArrayExpression = {
-            kind: 'ArrayExpression',
-            elements: effectDeps,
-            loc: GeneratedSource,
-          };
-
-          const depsPlace = createTemporaryPlace(fn.env, GeneratedSource);
-          depsPlace.effect = Effect.Read;
 
           newInstructions.push({
             id: makeInstructionId(0),
@@ -163,6 +175,16 @@ export function inferEffectDependencies(fn: HIRFunction): void {
           });
 
           // Step 2: push the inferred deps array as an argument of the useEffect
+          value.args.push({...depsPlace, effect: Effect.Freeze});
+          rewriteInstrs.set(instr.id, newInstructions);
+        } else if (loadGlobals.has(value.args[0].identifier.id)) {
+          // Global functions have no reactive dependencies, so we can insert an empty array
+          newInstructions.push({
+            id: makeInstructionId(0),
+            loc: GeneratedSource,
+            lvalue: {...depsPlace, effect: Effect.Mutate},
+            value: deps,
+          });
           value.args.push({...depsPlace, effect: Effect.Freeze});
           rewriteInstrs.set(instr.id, newInstructions);
         }
@@ -219,6 +241,13 @@ function writeDependencyToInstructions(
       /**
        * TODO: instead of truncating optional paths, reuse
        * instructions from hoisted dependencies block(s)
+       */
+      break;
+    }
+    if (path.property === 'current') {
+      /*
+       * Prune ref.current accesses. This may over-capture for non-ref values with
+       * a current property, but that's fine.
        */
       break;
     }

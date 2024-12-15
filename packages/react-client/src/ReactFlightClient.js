@@ -11,7 +11,9 @@ import type {
   Thenable,
   ReactDebugInfo,
   ReactComponentInfo,
+  ReactEnvironmentInfo,
   ReactAsyncInfo,
+  ReactTimeInfo,
   ReactStackTrace,
   ReactCallSite,
 } from 'shared/ReactTypes';
@@ -41,11 +43,11 @@ import type {Postpone} from 'react/src/ReactPostpone';
 import type {TemporaryReferenceSet} from './ReactFlightTemporaryReferences';
 
 import {
-  enableBinaryFlight,
   enablePostpone,
-  enableFlightReadableStream,
   enableOwnerStacks,
   enableServerComponentLogs,
+  enableProfilerTimer,
+  enableComponentPerformanceTrack,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -66,6 +68,8 @@ import {
 import {createBoundServerReference} from './ReactFlightReplyClient';
 
 import {readTemporaryReference} from './ReactFlightTemporaryReferences';
+
+import {logComponentRender} from './ReactFlightPerformanceTrack';
 
 import {
   REACT_LAZY_TYPE,
@@ -120,6 +124,10 @@ export type JSONValue =
   | {+[key: string]: JSONValue}
   | $ReadOnlyArray<JSONValue>;
 
+type ProfilingResult = {
+  endTime: number,
+};
+
 const ROW_ID = 0;
 const ROW_TAG = 1;
 const ROW_LENGTH = 2;
@@ -140,7 +148,8 @@ type PendingChunk<T> = {
   value: null | Array<(T) => mixed>,
   reason: null | Array<(mixed) => mixed>,
   _response: Response,
-  _debugInfo?: null | ReactDebugInfo,
+  _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
+  _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type BlockedChunk<T> = {
@@ -148,7 +157,8 @@ type BlockedChunk<T> = {
   value: null | Array<(T) => mixed>,
   reason: null | Array<(mixed) => mixed>,
   _response: Response,
-  _debugInfo?: null | ReactDebugInfo,
+  _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
+  _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type ResolvedModelChunk<T> = {
@@ -156,7 +166,8 @@ type ResolvedModelChunk<T> = {
   value: UninitializedModel,
   reason: null,
   _response: Response,
-  _debugInfo?: null | ReactDebugInfo,
+  _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
+  _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type ResolvedModuleChunk<T> = {
@@ -164,7 +175,8 @@ type ResolvedModuleChunk<T> = {
   value: ClientReference<T>,
   reason: null,
   _response: Response,
-  _debugInfo?: null | ReactDebugInfo,
+  _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
+  _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type InitializedChunk<T> = {
@@ -172,7 +184,8 @@ type InitializedChunk<T> = {
   value: T,
   reason: null | FlightStreamController,
   _response: Response,
-  _debugInfo?: null | ReactDebugInfo,
+  _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
+  _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type InitializedStreamChunk<
@@ -182,7 +195,8 @@ type InitializedStreamChunk<
   value: T,
   reason: FlightStreamController,
   _response: Response,
-  _debugInfo?: null | ReactDebugInfo,
+  _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
+  _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (ReadableStream) => mixed, reject?: (mixed) => mixed): void,
 };
 type ErroredChunk<T> = {
@@ -190,7 +204,8 @@ type ErroredChunk<T> = {
   value: null,
   reason: mixed,
   _response: Response,
-  _debugInfo?: null | ReactDebugInfo,
+  _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
+  _debugInfo?: null | ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type SomeChunk<T> =
@@ -212,6 +227,9 @@ function ReactPromise(
   this.value = value;
   this.reason = reason;
   this._response = response;
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    this._children = [];
+  }
   if (__DEV__) {
     this._debugInfo = null;
   }
@@ -284,6 +302,7 @@ export type Response = {
   _rowLength: number, // remaining bytes in the row. 0 indicates that we're looking for a newline.
   _buffer: Array<Uint8Array>, // chunks received so far as part of this row
   _tempRefs: void | TemporaryReferenceSet, // the set temporary references can be resolved from
+  _timeOrigin: number, // Profiling-only
   _debugRootOwner?: null | ReactComponentInfo, // DEV-only
   _debugRootStack?: null | Error, // DEV-only
   _debugRootTask?: null | ConsoleTask, // DEV-only
@@ -386,14 +405,12 @@ function wakeChunkIfInitialized<T>(
 
 function triggerErrorOnChunk<T>(chunk: SomeChunk<T>, error: mixed): void {
   if (chunk.status !== PENDING && chunk.status !== BLOCKED) {
-    if (enableFlightReadableStream) {
-      // If we get more data to an already resolved ID, we assume that it's
-      // a stream chunk since any other row shouldn't have more than one entry.
-      const streamChunk: InitializedStreamChunk<any> = (chunk: any);
-      const controller = streamChunk.reason;
-      // $FlowFixMe[incompatible-call]: The error method should accept mixed.
-      controller.error(error);
-    }
+    // If we get more data to an already resolved ID, we assume that it's
+    // a stream chunk since any other row shouldn't have more than one entry.
+    const streamChunk: InitializedStreamChunk<any> = (chunk: any);
+    const controller = streamChunk.reason;
+    // $FlowFixMe[incompatible-call]: The error method should accept mixed.
+    controller.error(error);
     return;
   }
   const listeners = chunk.reason;
@@ -492,13 +509,11 @@ function resolveModelChunk<T>(
   value: UninitializedModel,
 ): void {
   if (chunk.status !== PENDING) {
-    if (enableFlightReadableStream) {
-      // If we get more data to an already resolved ID, we assume that it's
-      // a stream chunk since any other row shouldn't have more than one entry.
-      const streamChunk: InitializedStreamChunk<any> = (chunk: any);
-      const controller = streamChunk.reason;
-      controller.enqueueModel(value);
-    }
+    // If we get more data to an already resolved ID, we assume that it's
+    // a stream chunk since any other row shouldn't have more than one entry.
+    const streamChunk: InitializedStreamChunk<any> = (chunk: any);
+    const controller = streamChunk.reason;
+    controller.enqueueModel(value);
     return;
   }
   const resolveListeners = chunk.value;
@@ -543,9 +558,11 @@ type InitializationHandler = {
   errored: boolean,
 };
 let initializingHandler: null | InitializationHandler = null;
+let initializingChunk: null | BlockedChunk<any> = null;
 
 function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
   const prevHandler = initializingHandler;
+  const prevChunk = initializingChunk;
   initializingHandler = null;
 
   const resolvedModel = chunk.value;
@@ -557,6 +574,10 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
   cyclicChunk.status = BLOCKED;
   cyclicChunk.value = null;
   cyclicChunk.reason = null;
+
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    initializingChunk = cyclicChunk;
+  }
 
   try {
     const value: T = parseModel(chunk._response, resolvedModel);
@@ -590,6 +611,9 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
     erroredChunk.reason = error;
   } finally {
     initializingHandler = prevHandler;
+    if (enableProfilerTimer && enableComponentPerformanceTrack) {
+      initializingChunk = prevChunk;
+    }
   }
 }
 
@@ -617,6 +641,9 @@ export function reportGlobalError(response: Response, error: Error): void {
       triggerErrorOnChunk(chunk, error);
     }
   });
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    flushComponentPerformance(getChunk(response, 0));
+  }
 }
 
 function nullRefGetter() {
@@ -1205,6 +1232,11 @@ function getOutlinedModel<T>(
   const path = reference.split(':');
   const id = parseInt(path[0], 16);
   const chunk = getChunk(response, id);
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    if (initializingChunk !== null && isArray(initializingChunk._children)) {
+      initializingChunk._children.push(chunk);
+    }
+  }
   switch (chunk.status) {
     case RESOLVED_MODEL:
       initializeModelChunk(chunk);
@@ -1354,6 +1386,14 @@ function parseModelString(
         // Lazy node
         const id = parseInt(value.slice(2), 16);
         const chunk = getChunk(response, id);
+        if (enableProfilerTimer && enableComponentPerformanceTrack) {
+          if (
+            initializingChunk !== null &&
+            isArray(initializingChunk._children)
+          ) {
+            initializingChunk._children.push(chunk);
+          }
+        }
         // We create a React.lazy wrapper around any lazy values.
         // When passed into React, we'll know how to suspend on this.
         return createLazyChunkWrapper(chunk);
@@ -1366,6 +1406,14 @@ function parseModelString(
         }
         const id = parseInt(value.slice(2), 16);
         const chunk = getChunk(response, id);
+        if (enableProfilerTimer && enableComponentPerformanceTrack) {
+          if (
+            initializingChunk !== null &&
+            isArray(initializingChunk._children)
+          ) {
+            initializingChunk._children.push(chunk);
+          }
+        }
         return chunk;
       }
       case 'S': {
@@ -1407,11 +1455,8 @@ function parseModelString(
       }
       case 'B': {
         // Blob
-        if (enableBinaryFlight) {
-          const ref = value.slice(2);
-          return getOutlinedModel(response, ref, parentObject, key, createBlob);
-        }
-        return undefined;
+        const ref = value.slice(2);
+        return getOutlinedModel(response, ref, parentObject, key, createBlob);
       }
       case 'K': {
         // FormData
@@ -1583,6 +1628,9 @@ function ResponseInstance(
   this._rowLength = 0;
   this._buffer = [];
   this._tempRefs = temporaryReferences;
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    this._timeOrigin = 0;
+  }
   if (__DEV__) {
     // TODO: The Flight Client can be used in a Client Environment too and we should really support
     // getting the owner there as well, but currently the owner of ReactComponentInfo is typed as only
@@ -1665,16 +1713,14 @@ function resolveModel(
 
 function resolveText(response: Response, id: number, text: string): void {
   const chunks = response._chunks;
-  if (enableFlightReadableStream) {
-    const chunk = chunks.get(id);
-    if (chunk && chunk.status !== PENDING) {
-      // If we get more data to an already resolved ID, we assume that it's
-      // a stream chunk since any other row shouldn't have more than one entry.
-      const streamChunk: InitializedStreamChunk<any> = (chunk: any);
-      const controller = streamChunk.reason;
-      controller.enqueueValue(text);
-      return;
-    }
+  const chunk = chunks.get(id);
+  if (chunk && chunk.status !== PENDING) {
+    // If we get more data to an already resolved ID, we assume that it's
+    // a stream chunk since any other row shouldn't have more than one entry.
+    const streamChunk: InitializedStreamChunk<any> = (chunk: any);
+    const controller = streamChunk.reason;
+    controller.enqueueValue(text);
+    return;
   }
   chunks.set(id, createInitializedTextChunk(response, text));
 }
@@ -1685,16 +1731,14 @@ function resolveBuffer(
   buffer: $ArrayBufferView | ArrayBuffer,
 ): void {
   const chunks = response._chunks;
-  if (enableFlightReadableStream) {
-    const chunk = chunks.get(id);
-    if (chunk && chunk.status !== PENDING) {
-      // If we get more data to an already resolved ID, we assume that it's
-      // a stream chunk since any other row shouldn't have more than one entry.
-      const streamChunk: InitializedStreamChunk<any> = (chunk: any);
-      const controller = streamChunk.reason;
-      controller.enqueueValue(buffer);
-      return;
-    }
+  const chunk = chunks.get(id);
+  if (chunk && chunk.status !== PENDING) {
+    // If we get more data to an already resolved ID, we assume that it's
+    // a stream chunk since any other row shouldn't have more than one entry.
+    const streamChunk: InitializedStreamChunk<any> = (chunk: any);
+    const controller = streamChunk.reason;
+    controller.enqueueValue(buffer);
+    return;
   }
   chunks.set(id, createInitializedBufferChunk(response, buffer));
 }
@@ -2460,7 +2504,6 @@ function initializeFakeStack(
     const stack = debugInfo.stack;
     const env = debugInfo.env == null ? '' : debugInfo.env;
     // $FlowFixMe[cannot-write]
-    // $FlowFixMe[prop-missing]
     debugInfo.debugStack = createFakeJSXCallStackInDEV(response, stack, env);
   }
   if (debugInfo.owner != null) {
@@ -2472,7 +2515,11 @@ function initializeFakeStack(
 function resolveDebugInfo(
   response: Response,
   id: number,
-  debugInfo: ReactComponentInfo | ReactAsyncInfo,
+  debugInfo:
+    | ReactComponentInfo
+    | ReactEnvironmentInfo
+    | ReactAsyncInfo
+    | ReactTimeInfo,
 ): void {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
@@ -2486,16 +2533,36 @@ function resolveDebugInfo(
   // to initialize it when we need it, we might be inside user code.
   const env =
     debugInfo.env === undefined ? response._rootEnvironmentName : debugInfo.env;
-  initializeFakeTask(response, debugInfo, env);
+  if (debugInfo.stack !== undefined) {
+    const componentInfoOrAsyncInfo: ReactComponentInfo | ReactAsyncInfo =
+      // $FlowFixMe[incompatible-type]
+      debugInfo;
+    initializeFakeTask(response, componentInfoOrAsyncInfo, env);
+  }
   if (debugInfo.owner === null && response._debugRootOwner != null) {
-    // $FlowFixMe
-    debugInfo.owner = response._debugRootOwner;
+    // $FlowFixMe[prop-missing] By narrowing `owner` to `null`, we narrowed `debugInfo` to `ReactComponentInfo`
+    const componentInfo: ReactComponentInfo = debugInfo;
+    // $FlowFixMe[cannot-write]
+    componentInfo.owner = response._debugRootOwner;
     // We override the stack if we override the owner since the stack where the root JSX
     // was created on the server isn't very useful but where the request was made is.
-    // $FlowFixMe
-    debugInfo.debugStack = response._debugRootStack;
-  } else {
-    initializeFakeStack(response, debugInfo);
+    // $FlowFixMe[cannot-write]
+    componentInfo.debugStack = response._debugRootStack;
+  } else if (debugInfo.stack !== undefined) {
+    const componentInfoOrAsyncInfo: ReactComponentInfo | ReactAsyncInfo =
+      // $FlowFixMe[incompatible-type]
+      debugInfo;
+    initializeFakeStack(response, componentInfoOrAsyncInfo);
+  }
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    if (typeof debugInfo.time === 'number') {
+      // Adjust the time to the current environment's time space.
+      // Since this might be a deduped object, we clone it to avoid
+      // applying the adjustment twice.
+      debugInfo = {
+        time: debugInfo.time + response._timeOrigin,
+      };
+    }
   }
 
   const chunk = getChunk(response, id);
@@ -2673,6 +2740,67 @@ function resolveTypedArray(
   resolveBuffer(response, id, view);
 }
 
+function flushComponentPerformance(root: SomeChunk<any>): number {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return 0;
+  }
+  // Write performance.measure() entries for Server Components in tree order.
+  // This must be done at the end to collect the end time from the whole tree.
+  if (!isArray(root._children)) {
+    // We have already written this chunk. If this was a cycle, then this will
+    // be -Infinity and it won't contribute to the parent end time.
+    // If this was already emitted by another sibling then we reused the same
+    // chunk in two places. We should extend the current end time as if it was
+    // rendered as part of this tree.
+    const previousResult: ProfilingResult = root._children;
+    return previousResult.endTime;
+  }
+  const children = root._children;
+  if (root.status === RESOLVED_MODEL) {
+    // If the model is not initialized by now, do that now so we can find its
+    // children. This part is a little sketchy since it significantly changes
+    // the performance characteristics of the app by profiling.
+    initializeModelChunk(root);
+  }
+  const result: ProfilingResult = {endTime: -Infinity};
+  root._children = result;
+  let childrenEndTime = -Infinity;
+  for (let i = 0; i < children.length; i++) {
+    const childEndTime = flushComponentPerformance(children[i]);
+    if (childEndTime > childrenEndTime) {
+      childrenEndTime = childEndTime;
+    }
+  }
+  const debugInfo = root._debugInfo;
+  if (debugInfo) {
+    let endTime = 0;
+    for (let i = debugInfo.length - 1; i >= 0; i--) {
+      const info = debugInfo[i];
+      if (typeof info.time === 'number') {
+        endTime = info.time;
+        if (endTime > childrenEndTime) {
+          childrenEndTime = endTime;
+        }
+      }
+      if (typeof info.name === 'string' && i > 0) {
+        // $FlowFixMe: Refined.
+        const componentInfo: ReactComponentInfo = info;
+        const startTimeInfo = debugInfo[i - 1];
+        if (typeof startTimeInfo.time === 'number') {
+          const startTime = startTimeInfo.time;
+          logComponentRender(
+            componentInfo,
+            startTime,
+            endTime,
+            childrenEndTime,
+          );
+        }
+      }
+    }
+  }
+  return (result.endTime = childrenEndTime);
+}
+
 function processFullBinaryRow(
   response: Response,
   id: number,
@@ -2680,53 +2808,51 @@ function processFullBinaryRow(
   buffer: Array<Uint8Array>,
   chunk: Uint8Array,
 ): void {
-  if (enableBinaryFlight) {
-    switch (tag) {
-      case 65 /* "A" */:
-        // We must always clone to extract it into a separate buffer instead of just a view.
-        resolveBuffer(response, id, mergeBuffer(buffer, chunk).buffer);
-        return;
-      case 79 /* "O" */:
-        resolveTypedArray(response, id, buffer, chunk, Int8Array, 1);
-        return;
-      case 111 /* "o" */:
-        resolveBuffer(
-          response,
-          id,
-          buffer.length === 0 ? chunk : mergeBuffer(buffer, chunk),
-        );
-        return;
-      case 85 /* "U" */:
-        resolveTypedArray(response, id, buffer, chunk, Uint8ClampedArray, 1);
-        return;
-      case 83 /* "S" */:
-        resolveTypedArray(response, id, buffer, chunk, Int16Array, 2);
-        return;
-      case 115 /* "s" */:
-        resolveTypedArray(response, id, buffer, chunk, Uint16Array, 2);
-        return;
-      case 76 /* "L" */:
-        resolveTypedArray(response, id, buffer, chunk, Int32Array, 4);
-        return;
-      case 108 /* "l" */:
-        resolveTypedArray(response, id, buffer, chunk, Uint32Array, 4);
-        return;
-      case 71 /* "G" */:
-        resolveTypedArray(response, id, buffer, chunk, Float32Array, 4);
-        return;
-      case 103 /* "g" */:
-        resolveTypedArray(response, id, buffer, chunk, Float64Array, 8);
-        return;
-      case 77 /* "M" */:
-        resolveTypedArray(response, id, buffer, chunk, BigInt64Array, 8);
-        return;
-      case 109 /* "m" */:
-        resolveTypedArray(response, id, buffer, chunk, BigUint64Array, 8);
-        return;
-      case 86 /* "V" */:
-        resolveTypedArray(response, id, buffer, chunk, DataView, 1);
-        return;
-    }
+  switch (tag) {
+    case 65 /* "A" */:
+      // We must always clone to extract it into a separate buffer instead of just a view.
+      resolveBuffer(response, id, mergeBuffer(buffer, chunk).buffer);
+      return;
+    case 79 /* "O" */:
+      resolveTypedArray(response, id, buffer, chunk, Int8Array, 1);
+      return;
+    case 111 /* "o" */:
+      resolveBuffer(
+        response,
+        id,
+        buffer.length === 0 ? chunk : mergeBuffer(buffer, chunk),
+      );
+      return;
+    case 85 /* "U" */:
+      resolveTypedArray(response, id, buffer, chunk, Uint8ClampedArray, 1);
+      return;
+    case 83 /* "S" */:
+      resolveTypedArray(response, id, buffer, chunk, Int16Array, 2);
+      return;
+    case 115 /* "s" */:
+      resolveTypedArray(response, id, buffer, chunk, Uint16Array, 2);
+      return;
+    case 76 /* "L" */:
+      resolveTypedArray(response, id, buffer, chunk, Int32Array, 4);
+      return;
+    case 108 /* "l" */:
+      resolveTypedArray(response, id, buffer, chunk, Uint32Array, 4);
+      return;
+    case 71 /* "G" */:
+      resolveTypedArray(response, id, buffer, chunk, Float32Array, 4);
+      return;
+    case 103 /* "g" */:
+      resolveTypedArray(response, id, buffer, chunk, Float64Array, 8);
+      return;
+    case 77 /* "M" */:
+      resolveTypedArray(response, id, buffer, chunk, BigInt64Array, 8);
+      return;
+    case 109 /* "m" */:
+      resolveTypedArray(response, id, buffer, chunk, BigUint64Array, 8);
+      return;
+    case 86 /* "V" */:
+      resolveTypedArray(response, id, buffer, chunk, DataView, 1);
+      return;
   }
 
   const stringDecoder = response._stringDecoder;
@@ -2777,13 +2903,34 @@ function processFullStringRow(
       resolveText(response, id, row);
       return;
     }
+    case 78 /* "N" */: {
+      if (enableProfilerTimer && enableComponentPerformanceTrack) {
+        // Track the time origin for future debug info. We track it relative
+        // to the current environment's time space.
+        const timeOrigin: number = +row;
+        response._timeOrigin =
+          timeOrigin -
+          // $FlowFixMe[prop-missing]
+          performance.timeOrigin;
+        return;
+      }
+      // Fallthrough to share the error with Debug and Console entries.
+    }
     case 68 /* "D" */: {
       if (__DEV__) {
-        const chunk: ResolvedModelChunk<ReactComponentInfo | ReactAsyncInfo> =
-          createResolvedModelChunk(response, row);
+        const chunk: ResolvedModelChunk<
+          | ReactComponentInfo
+          | ReactEnvironmentInfo
+          | ReactAsyncInfo
+          | ReactTimeInfo,
+        > = createResolvedModelChunk(response, row);
         initializeModelChunk(chunk);
-        const initializedChunk: SomeChunk<ReactComponentInfo | ReactAsyncInfo> =
-          chunk;
+        const initializedChunk: SomeChunk<
+          | ReactComponentInfo
+          | ReactEnvironmentInfo
+          | ReactAsyncInfo
+          | ReactTimeInfo,
+        > = chunk;
         if (initializedChunk.status === INITIALIZED) {
           resolveDebugInfo(response, id, initializedChunk.value);
         } else {
@@ -2811,38 +2958,28 @@ function processFullStringRow(
       );
     }
     case 82 /* "R" */: {
-      if (enableFlightReadableStream) {
-        startReadableStream(response, id, undefined);
-        return;
-      }
+      startReadableStream(response, id, undefined);
+      return;
     }
     // Fallthrough
     case 114 /* "r" */: {
-      if (enableFlightReadableStream) {
-        startReadableStream(response, id, 'bytes');
-        return;
-      }
+      startReadableStream(response, id, 'bytes');
+      return;
     }
     // Fallthrough
     case 88 /* "X" */: {
-      if (enableFlightReadableStream) {
-        startAsyncIterable(response, id, false);
-        return;
-      }
+      startAsyncIterable(response, id, false);
+      return;
     }
     // Fallthrough
     case 120 /* "x" */: {
-      if (enableFlightReadableStream) {
-        startAsyncIterable(response, id, true);
-        return;
-      }
+      startAsyncIterable(response, id, true);
+      return;
     }
     // Fallthrough
     case 67 /* "C" */: {
-      if (enableFlightReadableStream) {
-        stopStream(response, id, row);
-        return;
-      }
+      stopStream(response, id, row);
+      return;
     }
     // Fallthrough
     case 80 /* "P" */: {
@@ -2899,20 +3036,19 @@ export function processBinaryChunk(
         const resolvedRowTag = chunk[i];
         if (
           resolvedRowTag === 84 /* "T" */ ||
-          (enableBinaryFlight &&
-            (resolvedRowTag === 65 /* "A" */ ||
-              resolvedRowTag === 79 /* "O" */ ||
-              resolvedRowTag === 111 /* "o" */ ||
-              resolvedRowTag === 85 /* "U" */ ||
-              resolvedRowTag === 83 /* "S" */ ||
-              resolvedRowTag === 115 /* "s" */ ||
-              resolvedRowTag === 76 /* "L" */ ||
-              resolvedRowTag === 108 /* "l" */ ||
-              resolvedRowTag === 71 /* "G" */ ||
-              resolvedRowTag === 103 /* "g" */ ||
-              resolvedRowTag === 77 /* "M" */ ||
-              resolvedRowTag === 109 /* "m" */ ||
-              resolvedRowTag === 86)) /* "V" */
+          resolvedRowTag === 65 /* "A" */ ||
+          resolvedRowTag === 79 /* "O" */ ||
+          resolvedRowTag === 111 /* "o" */ ||
+          resolvedRowTag === 85 /* "U" */ ||
+          resolvedRowTag === 83 /* "S" */ ||
+          resolvedRowTag === 115 /* "s" */ ||
+          resolvedRowTag === 76 /* "L" */ ||
+          resolvedRowTag === 108 /* "l" */ ||
+          resolvedRowTag === 71 /* "G" */ ||
+          resolvedRowTag === 103 /* "g" */ ||
+          resolvedRowTag === 77 /* "M" */ ||
+          resolvedRowTag === 109 /* "m" */ ||
+          resolvedRowTag === 86 /* "V" */
         ) {
           rowTag = resolvedRowTag;
           rowState = ROW_LENGTH;
@@ -3025,20 +3161,19 @@ export function processStringChunk(response: Response, chunk: string): void {
         const resolvedRowTag = chunk.charCodeAt(i);
         if (
           resolvedRowTag === 84 /* "T" */ ||
-          (enableBinaryFlight &&
-            (resolvedRowTag === 65 /* "A" */ ||
-              resolvedRowTag === 79 /* "O" */ ||
-              resolvedRowTag === 111 /* "o" */ ||
-              resolvedRowTag === 85 /* "U" */ ||
-              resolvedRowTag === 83 /* "S" */ ||
-              resolvedRowTag === 115 /* "s" */ ||
-              resolvedRowTag === 76 /* "L" */ ||
-              resolvedRowTag === 108 /* "l" */ ||
-              resolvedRowTag === 71 /* "G" */ ||
-              resolvedRowTag === 103 /* "g" */ ||
-              resolvedRowTag === 77 /* "M" */ ||
-              resolvedRowTag === 109 /* "m" */ ||
-              resolvedRowTag === 86)) /* "V" */
+          resolvedRowTag === 65 /* "A" */ ||
+          resolvedRowTag === 79 /* "O" */ ||
+          resolvedRowTag === 111 /* "o" */ ||
+          resolvedRowTag === 85 /* "U" */ ||
+          resolvedRowTag === 83 /* "S" */ ||
+          resolvedRowTag === 115 /* "s" */ ||
+          resolvedRowTag === 76 /* "L" */ ||
+          resolvedRowTag === 108 /* "l" */ ||
+          resolvedRowTag === 71 /* "G" */ ||
+          resolvedRowTag === 103 /* "g" */ ||
+          resolvedRowTag === 77 /* "M" */ ||
+          resolvedRowTag === 109 /* "m" */ ||
+          resolvedRowTag === 86 /* "V" */
         ) {
           rowTag = resolvedRowTag;
           rowState = ROW_LENGTH;

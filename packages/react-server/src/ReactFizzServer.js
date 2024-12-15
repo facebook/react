@@ -65,8 +65,6 @@ import {
   pushTextInstance,
   pushStartInstance,
   pushEndInstance,
-  pushStartCompletedSuspenseBoundary,
-  pushEndCompletedSuspenseBoundary,
   pushSegmentFinale,
   getChildFormatContext,
   writeHoistables,
@@ -155,7 +153,6 @@ import {
   disableLegacyContext,
   disableLegacyContextForFunctionComponents,
   enableScopeAPI,
-  enableSuspenseAvoidThisFallbackFizz,
   enableCache,
   enablePostpone,
   enableHalt,
@@ -1490,28 +1487,6 @@ function replaySuspenseBoundary(
   request.pingedTasks.push(suspendedFallbackTask);
 }
 
-function renderBackupSuspenseBoundary(
-  request: Request,
-  task: Task,
-  keyPath: KeyNode,
-  props: Object,
-) {
-  const content = props.children;
-  const segment = task.blockedSegment;
-  const prevKeyPath = task.keyPath;
-  task.keyPath = keyPath;
-  if (segment === null) {
-    // Replay
-    renderNode(request, task, content, -1);
-  } else {
-    // Render
-    pushStartCompletedSuspenseBoundary(segment.chunks);
-    renderNode(request, task, content, -1);
-    pushEndCompletedSuspenseBoundary(segment.chunks);
-  }
-  task.keyPath = prevKeyPath;
-}
-
 function renderHostElement(
   request: Request,
   task: Task,
@@ -2194,14 +2169,7 @@ function renderElement(
       throw new Error('ReactDOMServer does not yet support scope components.');
     }
     case REACT_SUSPENSE_TYPE: {
-      if (
-        enableSuspenseAvoidThisFallbackFizz &&
-        props.unstable_avoidThisFallback === true
-      ) {
-        renderBackupSuspenseBoundary(request, task, keyPath, props);
-      } else {
-        renderSuspenseBoundary(request, task, keyPath, props);
-      }
+      renderSuspenseBoundary(request, task, keyPath, props);
       return;
     }
   }

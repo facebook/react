@@ -1035,7 +1035,7 @@ export function performWorkOnRoot(
         if (errorRetryLanes !== NoLanes) {
           if (enableProfilerTimer && enableComponentPerformanceTrack) {
             setCurrentTrackFromLanes(lanes);
-            logErroredRenderPhase(renderStartTime, renderEndTime);
+            logErroredRenderPhase(renderStartTime, renderEndTime, lanes);
             finalizeRender(lanes, renderEndTime);
           }
           lanes = errorRetryLanes;
@@ -1066,7 +1066,7 @@ export function performWorkOnRoot(
       if (exitStatus === RootFatalErrored) {
         if (enableProfilerTimer && enableComponentPerformanceTrack) {
           setCurrentTrackFromLanes(lanes);
-          logErroredRenderPhase(renderStartTime, renderEndTime);
+          logErroredRenderPhase(renderStartTime, renderEndTime, lanes);
           finalizeRender(lanes, renderEndTime);
         }
         prepareFreshStack(root, NoLanes);
@@ -1207,7 +1207,7 @@ function finishConcurrentRender(
       // until we receive more data.
       if (enableProfilerTimer && enableComponentPerformanceTrack) {
         setCurrentTrackFromLanes(lanes);
-        logSuspendedRenderPhase(renderStartTime, renderEndTime);
+        logSuspendedRenderPhase(renderStartTime, renderEndTime, lanes);
         finalizeRender(lanes, renderEndTime);
         trackSuspendedTime(lanes, renderEndTime);
       }
@@ -1757,9 +1757,17 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
         // then this is considered a prewarm and not an interrupted render because
         // we couldn't have shown anything anyway so it's not a bad thing that we
         // got interrupted.
-        logSuspendedRenderPhase(previousRenderStartTime, renderStartTime);
+        logSuspendedRenderPhase(
+          previousRenderStartTime,
+          renderStartTime,
+          lanes,
+        );
       } else {
-        logInterruptedRenderPhase(previousRenderStartTime, renderStartTime);
+        logInterruptedRenderPhase(
+          previousRenderStartTime,
+          renderStartTime,
+          lanes,
+        );
       }
       finalizeRender(workInProgressRootRenderLanes, renderStartTime);
     }
@@ -1783,6 +1791,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
             : clampedUpdateTime >= 0
               ? clampedUpdateTime
               : renderStartTime,
+          lanes,
         );
       }
       logBlockingStart(
@@ -1791,6 +1800,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
         blockingEventType,
         blockingEventIsRepeat,
         renderStartTime,
+        lanes,
       );
       clearBlockingTimers();
     }
@@ -1817,6 +1827,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
             : clampedUpdateTime >= 0
               ? clampedUpdateTime
               : renderStartTime,
+          lanes,
         );
       }
       logTransitionStart(
@@ -3202,9 +3213,13 @@ function commitRootImpl(
     // Log the previous render phase once we commit. I.e. we weren't interrupted.
     setCurrentTrackFromLanes(lanes);
     if (exitStatus === RootErrored) {
-      logErroredRenderPhase(completedRenderStartTime, completedRenderEndTime);
+      logErroredRenderPhase(
+        completedRenderStartTime,
+        completedRenderEndTime,
+        lanes,
+      );
     } else {
-      logRenderPhase(completedRenderStartTime, completedRenderEndTime);
+      logRenderPhase(completedRenderStartTime, completedRenderEndTime, lanes);
     }
   }
 

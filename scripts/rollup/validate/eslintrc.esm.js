@@ -64,6 +64,9 @@ module.exports = {
     __turbopack_load__: 'readonly',
     __turbopack_require__: 'readonly',
 
+    // Flight Parcel
+    parcelRequire: 'readonly',
+
     // jest
     expect: 'readonly',
     jest: 'readonly',

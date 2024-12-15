@@ -210,7 +210,6 @@ export type Fiber = {
   _debugOwner?: ReactComponentInfo | Fiber | null,
   _debugStack?: string | Error | null,
   _debugTask?: ConsoleTask | null,
-  _debugIsCurrentlyTiming?: boolean,
   _debugNeedsRemount?: boolean,
 
   // Used to verify that the order of hooks does not change between renders.
@@ -449,17 +448,17 @@ export type Dispatcher = {
   useId(): string,
   useCacheRefresh?: () => <T>(?() => T, ?T) => void,
   useMemoCache?: (size: number) => Array<any>,
-  useHostTransitionStatus?: () => TransitionStatus,
-  useOptimistic?: <S, A>(
+  useHostTransitionStatus: () => TransitionStatus,
+  useOptimistic: <S, A>(
     passthrough: S,
     reducer: ?(S, A) => S,
   ) => [S, (A) => void],
-  useFormState?: <S, P>(
+  useFormState: <S, P>(
     action: (Awaited<S>, P) => S,
     initialState: Awaited<S>,
     permalink?: string,
   ) => [Awaited<S>, (P) => void, boolean],
-  useActionState?: <S, P>(
+  useActionState: <S, P>(
     action: (Awaited<S>, P) => S,
     initialState: Awaited<S>,
     permalink?: string,

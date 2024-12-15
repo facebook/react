@@ -274,4 +274,11 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     const flags = getTestFlags();
     return gateFn(flags);
   };
+
+  // We augment JSDOM to produce a document that has a loading readyState by default
+  // and can be changed. We mock it here globally so we don't have to import our special
+  // mock in every file.
+  jest.mock('jsdom', () => {
+    return require('internal-test-utils/ReactJSDOM.js');
+  });
 }

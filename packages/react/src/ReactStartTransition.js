@@ -11,10 +11,7 @@ import type {StartTransitionOptions} from 'shared/ReactTypes';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
-import {
-  enableAsyncActions,
-  enableTransitionTracing,
-} from 'shared/ReactFeatureFlags';
+import {enableTransitionTracing} from 'shared/ReactFeatureFlags';
 
 import reportGlobalError from 'shared/reportGlobalError';
 
@@ -37,35 +34,24 @@ export function startTransition(
     }
   }
 
-  if (enableAsyncActions) {
-    try {
-      const returnValue = scope();
-      const onStartTransitionFinish = ReactSharedInternals.S;
-      if (onStartTransitionFinish !== null) {
-        onStartTransitionFinish(currentTransition, returnValue);
-      }
-      if (
-        typeof returnValue === 'object' &&
-        returnValue !== null &&
-        typeof returnValue.then === 'function'
-      ) {
-        returnValue.then(noop, reportGlobalError);
-      }
-    } catch (error) {
-      reportGlobalError(error);
-    } finally {
-      warnAboutTransitionSubscriptions(prevTransition, currentTransition);
-      ReactSharedInternals.T = prevTransition;
+  try {
+    const returnValue = scope();
+    const onStartTransitionFinish = ReactSharedInternals.S;
+    if (onStartTransitionFinish !== null) {
+      onStartTransitionFinish(currentTransition, returnValue);
     }
-  } else {
-    // When async actions are not enabled, startTransition does not
-    // capture errors.
-    try {
-      scope();
-    } finally {
-      warnAboutTransitionSubscriptions(prevTransition, currentTransition);
-      ReactSharedInternals.T = prevTransition;
+    if (
+      typeof returnValue === 'object' &&
+      returnValue !== null &&
+      typeof returnValue.then === 'function'
+    ) {
+      returnValue.then(noop, reportGlobalError);
     }
+  } catch (error) {
+    reportGlobalError(error);
+  } finally {
+    warnAboutTransitionSubscriptions(prevTransition, currentTransition);
+    ReactSharedInternals.T = prevTransition;
   }
 }
 

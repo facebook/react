@@ -16,11 +16,7 @@ import type {
   Transition,
 } from './ReactFiberTracingMarkerComponent';
 
-import {
-  enableCache,
-  enableTransitionTracing,
-  enableAsyncActions,
-} from 'shared/ReactFeatureFlags';
+import {enableCache, enableTransitionTracing} from 'shared/ReactFeatureFlags';
 import {isPrimaryRenderer} from './ReactFiberConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
 import {
@@ -65,7 +61,6 @@ ReactSharedInternals.S = function onStartTransitionFinishForReconciler(
   returnValue: mixed,
 ) {
   if (
-    enableAsyncActions &&
     typeof returnValue === 'object' &&
     returnValue !== null &&
     typeof returnValue.then === 'function'
