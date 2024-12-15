@@ -40,7 +40,6 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
     dynamicFeatureFlags.disableLegacyContextForFunctionComponents,
   disableSchedulerTimeoutInWorkLoop =
     dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
-  enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
   enableDeferRootSchedulingToMicrotask =
     dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
   enableDO_NOT_USE_disableStrictPassiveEffect =
@@ -81,7 +80,6 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   REACT_MEMO_TYPE = Symbol.for("react.memo"),
   REACT_LAZY_TYPE = Symbol.for("react.lazy"),
   REACT_SCOPE_TYPE = Symbol.for("react.scope"),
-  REACT_DEBUG_TRACING_MODE_TYPE = Symbol.for("react.debug_trace_mode"),
   REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
   REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
   REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
@@ -12407,12 +12405,6 @@ function createFiberFromTypeAndProps(
             }),
             key
           );
-      case REACT_DEBUG_TRACING_MODE_TYPE:
-        if (enableDebugTracing) {
-          fiberTag = 8;
-          mode |= 4;
-          break;
-        }
       default:
         if ("object" === typeof type && null !== type)
           switch (type.$$typeof) {
@@ -17282,14 +17274,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1765 = React.version;
 if (
-  "19.1.0-www-classic-c80b336d-20241214" !==
+  "19.1.0-www-classic-2d320563-20241215" !==
   isomorphicReactPackageVersion$jscomp$inline_1765
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1765,
-      "19.1.0-www-classic-c80b336d-20241214"
+      "19.1.0-www-classic-2d320563-20241215"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17307,10 +17299,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2306 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-c80b336d-20241214",
+  version: "19.1.0-www-classic-2d320563-20241215",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-c80b336d-20241214"
+  reconcilerVersion: "19.1.0-www-classic-2d320563-20241215"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2307 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17675,4 +17667,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-classic-c80b336d-20241214";
+exports.version = "19.1.0-www-classic-2d320563-20241215";

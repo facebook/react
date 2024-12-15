@@ -773,7 +773,7 @@ __DEV__ &&
         }
     }
     function setIsStrictModeForDevtools(newIsStrictMode) {
-      "function" === typeof log$2 &&
+      "function" === typeof log$1 &&
         (unstable_setDisableYieldValue(newIsStrictMode),
         (suppressWarning = newIsStrictMode));
       if (injectedHook && "function" === typeof injectedHook.setStrictMode)
@@ -831,7 +831,7 @@ __DEV__ &&
     }
     function clz32Fallback(x) {
       x >>>= 0;
-      return 0 === x ? 32 : (31 - ((log$1(x) / LN2) | 0)) | 0;
+      return 0 === x ? 32 : (31 - ((log(x) / LN2) | 0)) | 0;
     }
     function getLabelForLane(lane) {
       if (enableSchedulingProfiler) {
@@ -1374,100 +1374,6 @@ __DEV__ &&
     }
     function is(x, y) {
       return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
-    }
-    function formatLanes(laneOrLanes) {
-      return "0b" + laneOrLanes.toString(2).padStart(31, "0");
-    }
-    function group() {
-      for (
-        var _len = arguments.length, groupArgs = Array(_len), _key = 0;
-        _key < _len;
-        _key++
-      )
-        groupArgs[_key] = arguments[_key];
-      pendingGroupArgs.push(groupArgs);
-      null === nativeConsoleLog &&
-        ((nativeConsoleLog = nativeConsole.log), (nativeConsole.log = log));
-    }
-    function groupEnd() {
-      for (
-        pendingGroupArgs.pop();
-        printedGroupIndex >= pendingGroupArgs.length;
-
-      )
-        nativeConsole.groupEnd(), printedGroupIndex--;
-      0 === pendingGroupArgs.length &&
-        ((nativeConsole.log = nativeConsoleLog), (nativeConsoleLog = null));
-    }
-    function log() {
-      if (printedGroupIndex < pendingGroupArgs.length - 1) {
-        for (var i = printedGroupIndex + 1; i < pendingGroupArgs.length; i++)
-          nativeConsole.group.apply(nativeConsole, pendingGroupArgs[i]);
-        printedGroupIndex = pendingGroupArgs.length - 1;
-      }
-      "function" === typeof nativeConsoleLog
-        ? nativeConsoleLog.apply(void 0, arguments)
-        : nativeConsole.log.apply(nativeConsole, arguments);
-    }
-    function getWakeableID(wakeable) {
-      wakeableIDs.has(wakeable) || wakeableIDs.set(wakeable, wakeableID++);
-      return wakeableIDs.get(wakeable);
-    }
-    function logComponentSuspended(componentName, wakeable) {
-      if (enableDebugTracing) {
-        var id = getWakeableID(wakeable),
-          display = wakeable.displayName || wakeable;
-        log(
-          "%c\u269b%c " + componentName + " suspended",
-          "background-color: #20232a; color: #61dafb; padding: 0 2px;",
-          "color: #80366d; font-weight: bold;",
-          id,
-          display
-        );
-        wakeable.then(
-          function () {
-            log(
-              "%c\u269b%c " + componentName + " resolved",
-              "background-color: #20232a; color: #61dafb; padding: 0 2px;",
-              "color: #80366d; font-weight: bold;",
-              id,
-              display
-            );
-          },
-          function () {
-            log(
-              "%c\u269b%c " + componentName + " rejected",
-              "background-color: #20232a; color: #61dafb; padding: 0 2px;",
-              "color: #80366d; font-weight: bold;",
-              id,
-              display
-            );
-          }
-        );
-      }
-    }
-    function logRenderStarted(lanes) {
-      enableDebugTracing &&
-        group(
-          "%c\u269b%c render%c (" + formatLanes(lanes) + ")",
-          "background-color: #20232a; color: #61dafb; padding: 0 2px;",
-          "",
-          "font-weight: normal;"
-        );
-    }
-    function logStateUpdateScheduled(componentName, lane, payloadOrAction) {
-      enableDebugTracing &&
-        log(
-          "%c\u269b%c " +
-            componentName +
-            " updated state %c(" +
-            formatLanes(lane) +
-            ")",
-          "background-color: #20232a; color: #61dafb; padding: 0 2px;",
-          "color: #01a252; font-weight: bold;",
-          "",
-          payloadOrAction
-        );
     }
     function createCapturedValueAtFiber(value, source) {
       if ("object" === typeof value && null !== value) {
@@ -4356,7 +4262,7 @@ __DEV__ &&
           "State updates from the useState() and useReducer() Hooks don't support the second callback argument. To execute a side effect after rendering, declare it in the component body with useEffect()."
         );
       JSCompiler_OptimizeArgumentsArray_p0 = requestUpdateLane(fiber);
-      var update = {
+      action = {
         lane: JSCompiler_OptimizeArgumentsArray_p0,
         revertLane: 0,
         action: action,
@@ -4365,25 +4271,26 @@ __DEV__ &&
         next: null
       };
       isRenderPhaseUpdate(fiber)
-        ? enqueueRenderPhaseUpdate(queue, update)
-        : ((update = enqueueConcurrentHookUpdate(
+        ? enqueueRenderPhaseUpdate(queue, action)
+        : ((action = enqueueConcurrentHookUpdate(
             fiber,
             queue,
-            update,
+            action,
             JSCompiler_OptimizeArgumentsArray_p0
           )),
-          null !== update &&
+          null !== action &&
             (scheduleUpdateOnFiber(
-              update,
+              action,
               fiber,
               JSCompiler_OptimizeArgumentsArray_p0
             ),
             entangleTransitionUpdate(
-              update,
+              action,
               queue,
               JSCompiler_OptimizeArgumentsArray_p0
             )));
-      markUpdateInDevTools(fiber, JSCompiler_OptimizeArgumentsArray_p0, action);
+      enableSchedulingProfiler &&
+        markStateUpdateScheduled(fiber, JSCompiler_OptimizeArgumentsArray_p0);
     }
     function dispatchSetState(
       fiber,
@@ -4402,7 +4309,8 @@ __DEV__ &&
         action,
         JSCompiler_OptimizeArgumentsArray_p1
       );
-      markUpdateInDevTools(fiber, JSCompiler_OptimizeArgumentsArray_p1, action);
+      enableSchedulingProfiler &&
+        markStateUpdateScheduled(fiber, JSCompiler_OptimizeArgumentsArray_p1);
     }
     function dispatchSetStateInternal(fiber, queue, action, lane) {
       var update = {
@@ -4461,7 +4369,7 @@ __DEV__ &&
         error$jscomp$0(
           "An optimistic state update occurred outside a transition or action. To fix, move the update to an action, or wrap with startTransition."
         );
-      var update = {
+      action = {
         lane: 2,
         revertLane: requestTransitionLane(),
         action: action,
@@ -4477,12 +4385,12 @@ __DEV__ &&
         (throwIfDuringRender = enqueueConcurrentHookUpdate(
           fiber,
           queue,
-          update,
+          action,
           2
         )),
           null !== throwIfDuringRender &&
             scheduleUpdateOnFiber(throwIfDuringRender, fiber, 2);
-      markUpdateInDevTools(fiber, 2, action);
+      enableSchedulingProfiler && markStateUpdateScheduled(fiber, 2);
     }
     function isRenderPhaseUpdate(fiber) {
       var alternate = fiber.alternate;
@@ -4508,13 +4416,6 @@ __DEV__ &&
         queue.lanes = lane;
         markRootEntangled(root, lane);
       }
-    }
-    function markUpdateInDevTools(fiber, lane, action) {
-      if (enableDebugTracing && fiber.mode & 4) {
-        var name = getComponentNameFromFiber(fiber) || "Unknown";
-        logStateUpdateScheduled(name, lane, action);
-      }
-      enableSchedulingProfiler && markStateUpdateScheduled(fiber, lane);
     }
     function pushDebugInfo(debugInfo) {
       var previousDebugInfo = currentDebugInfo;
@@ -5895,10 +5796,6 @@ __DEV__ &&
             rootRenderLanes,
             !0
           );
-        enableDebugTracing &&
-          sourceFiber.mode & 4 &&
-          ((returnFiber = getComponentNameFromFiber(sourceFiber) || "Unknown"),
-          logComponentSuspended(returnFiber, value));
         returnFiber = suspenseHandlerStackCursor.current;
         if (null !== returnFiber) {
           switch (returnFiber.tag) {
@@ -12895,7 +12792,6 @@ __DEV__ &&
         workInProgressTransitions = getTransitionsForLanes(root, lanes);
         prepareFreshStack(root, lanes);
       }
-      enableDebugTracing && logRenderStarted(lanes);
       enableSchedulingProfiler && markRenderStarted(lanes);
       lanes = !1;
       memoizedUpdaters = workInProgressRootExitStatus;
@@ -12949,7 +12845,6 @@ __DEV__ &&
       executionContext = prevExecutionContext;
       ReactSharedInternals.H = prevDispatcher;
       ReactSharedInternals.A = prevAsyncDispatcher;
-      enableDebugTracing && enableDebugTracing && groupEnd();
       enableSchedulingProfiler && markRenderStopped();
       null === workInProgress &&
         ((workInProgressRoot = null),
@@ -12984,7 +12879,6 @@ __DEV__ &&
           root,
           lanes
         );
-      enableDebugTracing && logRenderStarted(lanes);
       enableSchedulingProfiler && markRenderStarted(lanes);
       a: do
         try {
@@ -13114,7 +13008,6 @@ __DEV__ &&
       ReactSharedInternals.H = prevDispatcher;
       ReactSharedInternals.A = prevAsyncDispatcher;
       executionContext = prevExecutionContext;
-      enableDebugTracing && enableDebugTracing && groupEnd();
       if (null !== workInProgress)
         return (
           enableSchedulingProfiler &&
@@ -13372,25 +13265,13 @@ __DEV__ &&
         throw Error("Should not already be working.");
       var finishedWork = root.finishedWork,
         lanes = root.finishedLanes;
-      enableDebugTracing &&
-        enableDebugTracing &&
-        group(
-          "%c\u269b%c commit%c (" + formatLanes(lanes) + ")",
-          "background-color: #20232a; color: #61dafb; padding: 0 2px;",
-          "",
-          "font-weight: normal;"
-        );
       enableSchedulingProfiler &&
         enableSchedulingProfiler &&
         null !== injectedProfilingHooks &&
         "function" === typeof injectedProfilingHooks.markCommitStarted &&
         injectedProfilingHooks.markCommitStarted(lanes);
       if (null === finishedWork)
-        return (
-          enableDebugTracing && enableDebugTracing && groupEnd(),
-          enableSchedulingProfiler && markCommitStopped(),
-          null
-        );
+        return enableSchedulingProfiler && markCommitStopped(), null;
       0 === lanes &&
         error$jscomp$0(
           "root.finishedLanes should not be empty during a commit. This is a bug in React."
@@ -13440,14 +13321,6 @@ __DEV__ &&
           commitBeforeMutationEffects(root, finishedWork),
           commitMutationEffects(root, finishedWork, lanes),
           (root.current = finishedWork),
-          enableDebugTracing &&
-            enableDebugTracing &&
-            group(
-              "%c\u269b%c layout effects%c (" + formatLanes(lanes) + ")",
-              "background-color: #20232a; color: #61dafb; padding: 0 2px;",
-              "",
-              "font-weight: normal;"
-            ),
           enableSchedulingProfiler &&
             enableSchedulingProfiler &&
             null !== injectedProfilingHooks &&
@@ -13455,7 +13328,6 @@ __DEV__ &&
               typeof injectedProfilingHooks.markLayoutEffectsStarted &&
             injectedProfilingHooks.markLayoutEffectsStarted(lanes),
           commitLayoutEffects(finishedWork, root, lanes),
-          enableDebugTracing && enableDebugTracing && groupEnd(),
           enableSchedulingProfiler &&
             enableSchedulingProfiler &&
             null !== injectedProfilingHooks &&
@@ -13505,7 +13377,6 @@ __DEV__ &&
             : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root)))
         : (nestedUpdateCount = 0);
       flushSyncWorkAcrossRoots_impl(0, !1);
-      enableDebugTracing && enableDebugTracing && groupEnd();
       enableSchedulingProfiler && markCommitStopped();
       return null;
     }
@@ -13564,14 +13435,6 @@ __DEV__ &&
         throw Error("Cannot flush passive effects while already rendering.");
       isFlushingPassiveEffects = !0;
       didScheduleUpdateDuringPassiveEffects = !1;
-      enableDebugTracing &&
-        enableDebugTracing &&
-        group(
-          "%c\u269b%c passive effects%c (" + formatLanes(lanes) + ")",
-          "background-color: #20232a; color: #61dafb; padding: 0 2px;",
-          "",
-          "font-weight: normal;"
-        );
       enableSchedulingProfiler &&
         enableSchedulingProfiler &&
         null !== injectedProfilingHooks &&
@@ -13582,7 +13445,6 @@ __DEV__ &&
       executionContext |= CommitContext;
       commitPassiveUnmountOnFiber(root.current);
       commitPassiveMountOnFiber(root, root.current, lanes, transitions);
-      enableDebugTracing && enableDebugTracing && groupEnd();
       enableSchedulingProfiler &&
         enableSchedulingProfiler &&
         null !== injectedProfilingHooks &&
@@ -14296,12 +14158,6 @@ __DEV__ &&
                 }),
                 key
               );
-          case REACT_DEBUG_TRACING_MODE_TYPE:
-            if (enableDebugTracing) {
-              fiberTag = 8;
-              mode |= 4;
-              break;
-            }
           default:
             if ("object" === typeof type && null !== type)
               switch (type.$$typeof) {
@@ -14606,7 +14462,6 @@ __DEV__ &&
         dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
       disableSchedulerTimeoutInWorkLoop =
         dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
-      enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
       enableDeferRootSchedulingToMicrotask =
         dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
       enableDO_NOT_USE_disableStrictPassiveEffect =
@@ -14647,7 +14502,6 @@ __DEV__ &&
       REACT_MEMO_TYPE = Symbol.for("react.memo"),
       REACT_LAZY_TYPE = Symbol.for("react.lazy"),
       REACT_SCOPE_TYPE = Symbol.for("react.scope"),
-      REACT_DEBUG_TRACING_MODE_TYPE = Symbol.for("react.debug_trace_mode"),
       REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
       REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
       REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
@@ -14697,7 +14551,7 @@ __DEV__ &&
       UserBlockingPriority = Scheduler.unstable_UserBlockingPriority,
       NormalPriority$1 = Scheduler.unstable_NormalPriority,
       IdlePriority = Scheduler.unstable_IdlePriority,
-      log$2 = Scheduler.log,
+      log$1 = Scheduler.log,
       unstable_setDisableYieldValue = Scheduler.unstable_setDisableYieldValue,
       rendererID = null,
       injectedHook = null,
@@ -14705,7 +14559,7 @@ __DEV__ &&
       hasLoggedError = !1,
       isDevToolsPresent = "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__,
       clz32 = Math.clz32 ? Math.clz32 : clz32Fallback,
-      log$1 = Math.log,
+      log = Math.log,
       LN2 = Math.LN2,
       nextTransitionLane = 128,
       nextRetryLane = 4194304,
@@ -14743,12 +14597,6 @@ __DEV__ &&
       emptyContextObject = {};
     Object.freeze(emptyContextObject);
     var objectIs = "function" === typeof Object.is ? Object.is : is,
-      nativeConsole = console,
-      nativeConsoleLog = null,
-      pendingGroupArgs = [],
-      printedGroupIndex = -1,
-      wakeableIDs = new ("function" === typeof WeakMap ? WeakMap : Map)(),
-      wakeableID = 0,
       CapturedStacks = new WeakMap(),
       contextStackCursor = createCursor(null),
       contextFiberStackCursor = createCursor(null),
@@ -16473,14 +16321,10 @@ __DEV__ &&
         void 0 !== callback &&
           null !== callback &&
           (warnOnInvalidCallback(callback), (update.callback = callback));
-        callback = enqueueUpdate(inst, update, lane);
-        null !== callback &&
-          (scheduleUpdateOnFiber(callback, inst, lane),
-          entangleTransitions(callback, inst, lane));
-        enableDebugTracing &&
-          inst.mode & 4 &&
-          ((callback = getComponentNameFromFiber(inst) || "Unknown"),
-          logStateUpdateScheduled(callback, lane, payload));
+        payload = enqueueUpdate(inst, update, lane);
+        null !== payload &&
+          (scheduleUpdateOnFiber(payload, inst, lane),
+          entangleTransitions(payload, inst, lane));
         enableSchedulingProfiler && markStateUpdateScheduled(inst, lane);
       },
       enqueueReplaceState: function (inst, payload, callback) {
@@ -16492,14 +16336,10 @@ __DEV__ &&
         void 0 !== callback &&
           null !== callback &&
           (warnOnInvalidCallback(callback), (update.callback = callback));
-        callback = enqueueUpdate(inst, update, lane);
-        null !== callback &&
-          (scheduleUpdateOnFiber(callback, inst, lane),
-          entangleTransitions(callback, inst, lane));
-        enableDebugTracing &&
-          inst.mode & 4 &&
-          ((callback = getComponentNameFromFiber(inst) || "Unknown"),
-          logStateUpdateScheduled(callback, lane, payload));
+        payload = enqueueUpdate(inst, update, lane);
+        null !== payload &&
+          (scheduleUpdateOnFiber(payload, inst, lane),
+          entangleTransitions(payload, inst, lane));
         enableSchedulingProfiler && markStateUpdateScheduled(inst, lane);
       },
       enqueueForceUpdate: function (inst, callback) {
@@ -16514,20 +16354,6 @@ __DEV__ &&
         null !== callback &&
           (scheduleUpdateOnFiber(callback, inst, lane),
           entangleTransitions(callback, inst, lane));
-        enableDebugTracing &&
-          inst.mode & 4 &&
-          ((callback = getComponentNameFromFiber(inst) || "Unknown"),
-          enableDebugTracing &&
-            log(
-              "%c\u269b%c " +
-                callback +
-                " forced update %c(" +
-                formatLanes(lane) +
-                ")",
-              "background-color: #20232a; color: #61dafb; padding: 0 2px;",
-              "color: #db2e1f; font-weight: bold;",
-              ""
-            ));
         enableSchedulingProfiler &&
           enableSchedulingProfiler &&
           null !== injectedProfilingHooks &&
@@ -16952,10 +16778,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-modern-c80b336d-20241214",
+        version: "19.1.0-www-modern-2d320563-20241215",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-modern-c80b336d-20241214"
+        reconcilerVersion: "19.1.0-www-modern-2d320563-20241215"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -16989,7 +16815,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.1.0-www-modern-c80b336d-20241214";
+    exports.version = "19.1.0-www-modern-2d320563-20241215";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
