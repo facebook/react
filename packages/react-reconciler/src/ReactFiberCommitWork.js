@@ -2209,6 +2209,8 @@ function recursivelyTraverseLayoutEffects(
 }
 
 export function disappearLayoutEffects(finishedWork: Fiber) {
+  const prevEffectStart = pushComponentEffectStart();
+
   switch (finishedWork.tag) {
     case FunctionComponent:
     case ForwardRef:
@@ -2266,6 +2268,25 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
       break;
     }
   }
+
+  if (
+    enableProfilerTimer &&
+    enableProfilerCommitHooks &&
+    enableComponentPerformanceTrack &&
+    (finishedWork.mode & ProfileMode) !== NoMode &&
+    componentEffectStartTime >= 0 &&
+    componentEffectEndTime >= 0 &&
+    componentEffectDuration > 0.05
+  ) {
+    logComponentEffect(
+      finishedWork,
+      componentEffectStartTime,
+      componentEffectEndTime,
+      componentEffectDuration,
+    );
+  }
+
+  popComponentEffectStart(prevEffectStart);
 }
 
 function recursivelyTraverseDisappearLayoutEffects(parentFiber: Fiber) {
@@ -2286,6 +2307,8 @@ export function reappearLayoutEffects(
   // node was reused.
   includeWorkInProgressEffects: boolean,
 ) {
+  const prevEffectStart = pushComponentEffectStart();
+
   // Turn on layout effects in a tree that previously disappeared.
   const flags = finishedWork.flags;
   switch (finishedWork.tag) {
@@ -2421,6 +2444,25 @@ export function reappearLayoutEffects(
       break;
     }
   }
+
+  if (
+    enableProfilerTimer &&
+    enableProfilerCommitHooks &&
+    enableComponentPerformanceTrack &&
+    (finishedWork.mode & ProfileMode) !== NoMode &&
+    componentEffectStartTime >= 0 &&
+    componentEffectEndTime >= 0 &&
+    componentEffectDuration > 0.05
+  ) {
+    logComponentEffect(
+      finishedWork,
+      componentEffectStartTime,
+      componentEffectEndTime,
+      componentEffectDuration,
+    );
+  }
+
+  popComponentEffectStart(prevEffectStart);
 }
 
 function recursivelyTraverseReappearLayoutEffects(
@@ -2995,6 +3037,8 @@ export function reconnectPassiveEffects(
   // node was reused.
   includeWorkInProgressEffects: boolean,
 ) {
+  const prevEffectStart = pushComponentEffectStart();
+
   const flags = finishedWork.flags;
   switch (finishedWork.tag) {
     case FunctionComponent:
@@ -3145,6 +3189,25 @@ export function reconnectPassiveEffects(
       break;
     }
   }
+
+  if (
+    enableProfilerTimer &&
+    enableProfilerCommitHooks &&
+    enableComponentPerformanceTrack &&
+    (finishedWork.mode & ProfileMode) !== NoMode &&
+    componentEffectStartTime >= 0 &&
+    componentEffectEndTime >= 0 &&
+    componentEffectDuration > 0.05
+  ) {
+    logComponentEffect(
+      finishedWork,
+      componentEffectStartTime,
+      componentEffectEndTime,
+      componentEffectDuration,
+    );
+  }
+
+  popComponentEffectStart(prevEffectStart);
 }
 
 function recursivelyTraverseAtomicPassiveEffects(
@@ -3591,6 +3654,8 @@ function commitPassiveUnmountInsideDeletedTreeOnFiber(
   current: Fiber,
   nearestMountedAncestor: Fiber | null,
 ): void {
+  const prevEffectStart = pushComponentEffectStart();
+
   switch (current.tag) {
     case FunctionComponent:
     case ForwardRef:
@@ -3702,6 +3767,25 @@ function commitPassiveUnmountInsideDeletedTreeOnFiber(
       break;
     }
   }
+
+  if (
+    enableProfilerTimer &&
+    enableProfilerCommitHooks &&
+    enableComponentPerformanceTrack &&
+    (current.mode & ProfileMode) !== NoMode &&
+    componentEffectStartTime >= 0 &&
+    componentEffectEndTime >= 0 &&
+    componentEffectDuration > 0.05
+  ) {
+    logComponentEffect(
+      current,
+      componentEffectStartTime,
+      componentEffectEndTime,
+      componentEffectDuration,
+    );
+  }
+
+  popComponentEffectStart(prevEffectStart);
 }
 
 export function invokeLayoutEffectMountInDEV(fiber: Fiber): void {
