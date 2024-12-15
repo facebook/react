@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<592b2f8408f28da5558e7aedab963de7>>
+ * @generated SignedSource<<a517df411392761c0275e6bd65df4cb2>>
  */
 
 "use strict";
@@ -13776,9 +13776,9 @@ __DEV__ &&
         useFormState: throwInvalidHookError,
         useActionState: throwInvalidHookError,
         useOptimistic: throwInvalidHookError,
-        useMemoCache: throwInvalidHookError
+        useMemoCache: throwInvalidHookError,
+        useCacheRefresh: throwInvalidHookError
       };
-    ContextOnlyDispatcher.useCacheRefresh = throwInvalidHookError;
     ContextOnlyDispatcher.useResourceEffect = throwInvalidHookError;
     var HooksDispatcherOnMountInDEV = null,
       HooksDispatcherOnMountWithHookTypesInDEV = null,
@@ -15525,10 +15525,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-2d320563-20241215",
+        version: "19.1.0-native-fb-e06c72fc-20241215",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-2d320563-20241215"
+        reconcilerVersion: "19.1.0-native-fb-e06c72fc-20241215"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15673,5 +15673,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.1.0-native-fb-2d320563-20241215";
+    exports.version = "19.1.0-native-fb-e06c72fc-20241215";
   })();

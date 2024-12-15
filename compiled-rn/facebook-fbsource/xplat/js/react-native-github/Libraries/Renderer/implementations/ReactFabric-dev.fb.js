@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<5df2ceb098a35d352607ea2ba5b0ca2c>>
+ * @generated SignedSource<<be59e8a926aa913f5da56f788dafbb21>>
  */
 
 "use strict";
@@ -15614,9 +15614,9 @@ __DEV__ &&
         useFormState: throwInvalidHookError,
         useActionState: throwInvalidHookError,
         useOptimistic: throwInvalidHookError,
-        useMemoCache: throwInvalidHookError
+        useMemoCache: throwInvalidHookError,
+        useCacheRefresh: throwInvalidHookError
       };
-    ContextOnlyDispatcher.useCacheRefresh = throwInvalidHookError;
     enableUseResourceEffectHook &&
       (ContextOnlyDispatcher.useResourceEffect = throwInvalidHookError);
     var HooksDispatcherOnMountInDEV = null,
@@ -17468,10 +17468,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-2d320563-20241215",
+        version: "19.1.0-native-fb-e06c72fc-20241215",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-2d320563-20241215"
+        reconcilerVersion: "19.1.0-native-fb-e06c72fc-20241215"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

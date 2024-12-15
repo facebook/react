@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7f6247492a180bf2ef88c217e2e2ea19>>
+ * @generated SignedSource<<fdfde35c25d2bc358c04b55000a2d32e>>
  */
 
 /*
@@ -4295,9 +4295,9 @@ var ContextOnlyDispatcher = {
   useFormState: throwInvalidHookError,
   useActionState: throwInvalidHookError,
   useOptimistic: throwInvalidHookError,
-  useMemoCache: throwInvalidHookError
+  useMemoCache: throwInvalidHookError,
+  useCacheRefresh: throwInvalidHookError
 };
-ContextOnlyDispatcher.useCacheRefresh = throwInvalidHookError;
 enableUseResourceEffectHook &&
   (ContextOnlyDispatcher.useResourceEffect = throwInvalidHookError);
 var HooksDispatcherOnMount = {
@@ -4537,9 +4537,9 @@ var HooksDispatcherOnUpdate = {
     var hook = updateWorkInProgressHook();
     return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
   },
-  useMemoCache: useMemoCache
+  useMemoCache: useMemoCache,
+  useCacheRefresh: updateRefresh
 };
-HooksDispatcherOnUpdate.useCacheRefresh = updateRefresh;
 enableUseResourceEffectHook &&
   (HooksDispatcherOnUpdate.useResourceEffect = updateResourceEffect);
 var HooksDispatcherOnRerender = {
@@ -4591,9 +4591,9 @@ var HooksDispatcherOnRerender = {
     hook.baseState = passthrough;
     return [passthrough, hook.queue.dispatch];
   },
-  useMemoCache: useMemoCache
+  useMemoCache: useMemoCache,
+  useCacheRefresh: updateRefresh
 };
-HooksDispatcherOnRerender.useCacheRefresh = updateRefresh;
 enableUseResourceEffectHook &&
   (HooksDispatcherOnRerender.useResourceEffect = updateResourceEffect);
 var thenableState = null,
@@ -15878,14 +15878,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1723 = React.version;
 if (
-  "19.1.0-native-fb-2d320563-20241215" !==
+  "19.1.0-native-fb-e06c72fc-20241215" !==
   isomorphicReactPackageVersion$jscomp$inline_1723
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1723,
-      "19.1.0-native-fb-2d320563-20241215"
+      "19.1.0-native-fb-e06c72fc-20241215"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -15907,10 +15907,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2180 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-2d320563-20241215",
+  version: "19.1.0-native-fb-e06c72fc-20241215",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-2d320563-20241215"
+  reconcilerVersion: "19.1.0-native-fb-e06c72fc-20241215"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2181 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16170,4 +16170,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-native-fb-2d320563-20241215";
+exports.version = "19.1.0-native-fb-e06c72fc-20241215";

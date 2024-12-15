@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<681b4d9ea82b169fbe6b919e6afde912>>
+ * @generated SignedSource<<60f15272ceb92c7ab4c289f8e68d4e04>>
  */
 
 "use strict";
@@ -4454,9 +4454,9 @@ var ContextOnlyDispatcher = {
   useFormState: throwInvalidHookError,
   useActionState: throwInvalidHookError,
   useOptimistic: throwInvalidHookError,
-  useMemoCache: throwInvalidHookError
+  useMemoCache: throwInvalidHookError,
+  useCacheRefresh: throwInvalidHookError
 };
-ContextOnlyDispatcher.useCacheRefresh = throwInvalidHookError;
 enableUseResourceEffectHook &&
   (ContextOnlyDispatcher.useResourceEffect = throwInvalidHookError);
 var HooksDispatcherOnMount = {
@@ -4669,9 +4669,9 @@ var HooksDispatcherOnUpdate = {
     var hook = updateWorkInProgressHook();
     return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
   },
-  useMemoCache: useMemoCache
+  useMemoCache: useMemoCache,
+  useCacheRefresh: updateRefresh
 };
-HooksDispatcherOnUpdate.useCacheRefresh = updateRefresh;
 enableUseResourceEffectHook &&
   (HooksDispatcherOnUpdate.useResourceEffect = updateResourceEffect);
 var HooksDispatcherOnRerender = {
@@ -4723,9 +4723,9 @@ var HooksDispatcherOnRerender = {
     hook.baseState = passthrough;
     return [passthrough, hook.queue.dispatch];
   },
-  useMemoCache: useMemoCache
+  useMemoCache: useMemoCache,
+  useCacheRefresh: updateRefresh
 };
-HooksDispatcherOnRerender.useCacheRefresh = updateRefresh;
 enableUseResourceEffectHook &&
   (HooksDispatcherOnRerender.useResourceEffect = updateResourceEffect);
 var thenableState = null,
@@ -11885,11 +11885,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.1.0-native-fb-2d320563-20241215" !== isomorphicReactPackageVersion)
+if ("19.1.0-native-fb-e06c72fc-20241215" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.1.0-native-fb-2d320563-20241215\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.1.0-native-fb-e06c72fc-20241215\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11938,10 +11938,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1364 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-2d320563-20241215",
+    version: "19.1.0-native-fb-e06c72fc-20241215",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-2d320563-20241215"
+    reconcilerVersion: "19.1.0-native-fb-e06c72fc-20241215"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1364.rendererConfig = extraDevToolsConfig);

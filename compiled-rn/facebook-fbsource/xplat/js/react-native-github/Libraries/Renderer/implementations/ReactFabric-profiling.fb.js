@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f7299d832fe63eb478e0a757992788fe>>
+ * @generated SignedSource<<5d769edd20db6ab7d2323b3c66eb2935>>
  */
 
 "use strict";
@@ -4159,9 +4159,9 @@ var ContextOnlyDispatcher = {
   useFormState: throwInvalidHookError,
   useActionState: throwInvalidHookError,
   useOptimistic: throwInvalidHookError,
-  useMemoCache: throwInvalidHookError
+  useMemoCache: throwInvalidHookError,
+  useCacheRefresh: throwInvalidHookError
 };
-ContextOnlyDispatcher.useCacheRefresh = throwInvalidHookError;
 enableUseResourceEffectHook &&
   (ContextOnlyDispatcher.useResourceEffect = throwInvalidHookError);
 var HooksDispatcherOnMount = {
@@ -4374,9 +4374,9 @@ var HooksDispatcherOnUpdate = {
     var hook = updateWorkInProgressHook();
     return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
   },
-  useMemoCache: useMemoCache
+  useMemoCache: useMemoCache,
+  useCacheRefresh: updateRefresh
 };
-HooksDispatcherOnUpdate.useCacheRefresh = updateRefresh;
 enableUseResourceEffectHook &&
   (HooksDispatcherOnUpdate.useResourceEffect = updateResourceEffect);
 var HooksDispatcherOnRerender = {
@@ -4428,9 +4428,9 @@ var HooksDispatcherOnRerender = {
     hook.baseState = passthrough;
     return [passthrough, hook.queue.dispatch];
   },
-  useMemoCache: useMemoCache
+  useMemoCache: useMemoCache,
+  useCacheRefresh: updateRefresh
 };
-HooksDispatcherOnRerender.useCacheRefresh = updateRefresh;
 enableUseResourceEffectHook &&
   (HooksDispatcherOnRerender.useResourceEffect = updateResourceEffect);
 var thenableState = null,
@@ -11754,10 +11754,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1298 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-2d320563-20241215",
+    version: "19.1.0-native-fb-e06c72fc-20241215",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-2d320563-20241215"
+    reconcilerVersion: "19.1.0-native-fb-e06c72fc-20241215"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1298.rendererConfig = extraDevToolsConfig);

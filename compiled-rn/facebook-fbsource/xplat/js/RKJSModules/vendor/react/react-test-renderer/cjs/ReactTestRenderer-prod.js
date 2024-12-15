@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1e959ec3dea10b2ced2c2d2b1dd3c964>>
+ * @generated SignedSource<<a58cb5b4d9d8dcf144862a836ba85d7c>>
  */
 
 "use strict";
@@ -2727,9 +2727,9 @@ var ContextOnlyDispatcher = {
   useFormState: throwInvalidHookError,
   useActionState: throwInvalidHookError,
   useOptimistic: throwInvalidHookError,
-  useMemoCache: throwInvalidHookError
+  useMemoCache: throwInvalidHookError,
+  useCacheRefresh: throwInvalidHookError
 };
-ContextOnlyDispatcher.useCacheRefresh = throwInvalidHookError;
 ContextOnlyDispatcher.useResourceEffect = throwInvalidHookError;
 var HooksDispatcherOnMount = {
     readContext: readContext,
@@ -2964,9 +2964,9 @@ var HooksDispatcherOnMount = {
       var hook = updateWorkInProgressHook();
       return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
     },
-    useMemoCache: useMemoCache
+    useMemoCache: useMemoCache,
+    useCacheRefresh: updateRefresh
   };
-HooksDispatcherOnUpdate.useCacheRefresh = updateRefresh;
 HooksDispatcherOnUpdate.useResourceEffect = updateResourceEffect;
 var HooksDispatcherOnRerender = {
   readContext: readContext,
@@ -3017,9 +3017,9 @@ var HooksDispatcherOnRerender = {
     hook.baseState = passthrough;
     return [passthrough, hook.queue.dispatch];
   },
-  useMemoCache: useMemoCache
+  useMemoCache: useMemoCache,
+  useCacheRefresh: updateRefresh
 };
-HooksDispatcherOnRerender.useCacheRefresh = updateRefresh;
 HooksDispatcherOnRerender.useResourceEffect = updateResourceEffect;
 var thenableState = null,
   thenableIndexCounter = 0;
@@ -9755,10 +9755,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1381 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-2d320563-20241215",
+  version: "19.1.0-native-fb-e06c72fc-20241215",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-2d320563-20241215"
+  reconcilerVersion: "19.1.0-native-fb-e06c72fc-20241215"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1382 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -9894,4 +9894,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.1.0-native-fb-2d320563-20241215";
+exports.version = "19.1.0-native-fb-e06c72fc-20241215";

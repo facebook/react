@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b5e6620b3e16334dbdff80539768319f>>
+ * @generated SignedSource<<f9127a31cf36f5ff6ad569061f6535a6>>
  */
 
 "use strict";
@@ -2852,9 +2852,9 @@ var ContextOnlyDispatcher = {
   useFormState: throwInvalidHookError,
   useActionState: throwInvalidHookError,
   useOptimistic: throwInvalidHookError,
-  useMemoCache: throwInvalidHookError
+  useMemoCache: throwInvalidHookError,
+  useCacheRefresh: throwInvalidHookError
 };
-ContextOnlyDispatcher.useCacheRefresh = throwInvalidHookError;
 ContextOnlyDispatcher.useResourceEffect = throwInvalidHookError;
 var HooksDispatcherOnMount = {
     readContext: readContext,
@@ -3089,9 +3089,9 @@ var HooksDispatcherOnMount = {
       var hook = updateWorkInProgressHook();
       return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
     },
-    useMemoCache: useMemoCache
+    useMemoCache: useMemoCache,
+    useCacheRefresh: updateRefresh
   };
-HooksDispatcherOnUpdate.useCacheRefresh = updateRefresh;
 HooksDispatcherOnUpdate.useResourceEffect = updateResourceEffect;
 var HooksDispatcherOnRerender = {
   readContext: readContext,
@@ -3142,9 +3142,9 @@ var HooksDispatcherOnRerender = {
     hook.baseState = passthrough;
     return [passthrough, hook.queue.dispatch];
   },
-  useMemoCache: useMemoCache
+  useMemoCache: useMemoCache,
+  useCacheRefresh: updateRefresh
 };
-HooksDispatcherOnRerender.useCacheRefresh = updateRefresh;
 HooksDispatcherOnRerender.useResourceEffect = updateResourceEffect;
 var thenableState = null,
   thenableIndexCounter = 0;
@@ -10324,10 +10324,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1194 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-2d320563-20241215",
+  version: "19.1.0-native-fb-e06c72fc-20241215",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-2d320563-20241215",
+  reconcilerVersion: "19.1.0-native-fb-e06c72fc-20241215",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$146 = 0;
@@ -10478,4 +10478,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.1.0-native-fb-2d320563-20241215";
+exports.version = "19.1.0-native-fb-e06c72fc-20241215";
