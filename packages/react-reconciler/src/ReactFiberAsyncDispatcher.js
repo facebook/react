@@ -14,8 +14,6 @@ import {enableCache} from 'shared/ReactFeatureFlags';
 import {readContext} from './ReactFiberNewContext';
 import {CacheContext} from './ReactFiberCacheComponent';
 
-import {disableStringRefs} from 'shared/ReactFeatureFlags';
-
 import {current as currentOwner} from './ReactCurrentFiber';
 
 function getCacheForType<T>(resourceType: () => T): T {
@@ -35,7 +33,7 @@ export const DefaultAsyncDispatcher: AsyncDispatcher = ({
   getCacheForType,
 }: any);
 
-if (__DEV__ || !disableStringRefs) {
+if (__DEV__) {
   DefaultAsyncDispatcher.getOwner = (): null | Fiber => {
     return currentOwner;
   };

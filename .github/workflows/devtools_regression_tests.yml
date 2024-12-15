@@ -30,7 +30,9 @@ jobs:
         id: node_modules
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock', 'scripts/release/yarn.lock') }}
+          key: runtime-release-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'scripts/release/yarn.lock') }}
+      - name: Ensure clean build directory
+        run: rm -rf build
       - run: yarn install --frozen-lockfile
       - run: yarn install --frozen-lockfile
         working-directory: scripts/release
@@ -62,7 +64,9 @@ jobs:
         id: node_modules
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+          key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+      - name: Ensure clean build directory
+        run: rm -rf build
       - run: yarn install --frozen-lockfile
       - name: Restore archived build
         uses: actions/download-artifact@v4
@@ -103,6 +107,7 @@ jobs:
           - "16.8" # hooks
           - "17.0"
           - "18.0"
+          - "18.2" # compiler polyfill
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
@@ -116,7 +121,7 @@ jobs:
         id: node_modules
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+          key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
       - name: Restore all archived build artifacts
         uses: actions/download-artifact@v4
@@ -150,7 +155,7 @@ jobs:
         id: node_modules
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+          key: runtime-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
       - name: Restore all archived build artifacts
         uses: actions/download-artifact@v4

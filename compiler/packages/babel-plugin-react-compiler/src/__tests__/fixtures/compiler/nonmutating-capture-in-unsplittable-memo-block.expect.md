@@ -73,8 +73,8 @@ import { identity, mutate } from "shared-runtime";
 function useFoo(t0) {
   const $ = _c(4);
   const { a, b } = t0;
-  let z;
   let y;
+  let z;
   if ($[0] !== a || $[1] !== b) {
     const x = { a };
     y = {};
@@ -83,11 +83,11 @@ function useFoo(t0) {
     mutate(y);
     $[0] = a;
     $[1] = b;
-    $[2] = z;
-    $[3] = y;
+    $[2] = y;
+    $[3] = z;
   } else {
-    z = $[2];
-    y = $[3];
+    y = $[2];
+    z = $[3];
   }
   if (z[0] !== y) {
     throw new Error("oh no!");

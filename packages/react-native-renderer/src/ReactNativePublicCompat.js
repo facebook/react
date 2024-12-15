@@ -32,7 +32,7 @@ import {
 
 export function findHostInstance_DEPRECATED<TElementType: ElementType>(
   componentOrHandle: ?(ElementRef<TElementType> | number),
-): ?ElementRef<HostComponent<mixed>> {
+): ?ElementRef<HostComponent<{...}>> {
   if (__DEV__) {
     const owner = currentOwner;
     if (owner !== null && isRendering && owner.stateNode !== null) {
@@ -225,7 +225,7 @@ export function getNodeFromInternalInstanceHandle(
 // Should have been PublicInstance from ReactFiberConfigFabric
 type FabricPublicInstance = mixed;
 // Should have been PublicInstance from ReactFiberConfigNative
-type PaperPublicInstance = HostComponent<mixed>;
+type PaperPublicInstance = HostComponent<empty>;
 
 // Remove this once Paper is no longer supported and DOM Node API are enabled by default in RN.
 export function isChildPublicInstance(

@@ -2787,10 +2787,11 @@ describe('ReactFlightDOM', () => {
     const {pendingResult} = await serverAct(async () => {
       // destructure trick to avoid the act scope from awaiting the returned value
       return {
-        pendingResult: ReactServerDOMStaticServer.prerenderToNodeStream(
-          <App />,
-          webpackMap,
-        ),
+        pendingResult:
+          ReactServerDOMStaticServer.unstable_prerenderToNodeStream(
+            <App />,
+            webpackMap,
+          ),
       };
     });
 
@@ -2853,16 +2854,17 @@ describe('ReactFlightDOM', () => {
     const {pendingResult} = await serverAct(async () => {
       // destructure trick to avoid the act scope from awaiting the returned value
       return {
-        pendingResult: ReactServerDOMStaticServer.prerenderToNodeStream(
-          <App />,
-          webpackMap,
-          {
-            signal: controller.signal,
-            onError(err) {
-              errors.push(err);
+        pendingResult:
+          ReactServerDOMStaticServer.unstable_prerenderToNodeStream(
+            <App />,
+            webpackMap,
+            {
+              signal: controller.signal,
+              onError(err) {
+                errors.push(err);
+              },
             },
-          },
-        ),
+          ),
       };
     });
 
@@ -2870,7 +2872,7 @@ describe('ReactFlightDOM', () => {
     resolveGreeting();
     const {prelude} = await pendingResult;
 
-    expect(errors).toEqual(['boom']);
+    expect(errors).toEqual([]);
 
     const preludeWeb = Readable.toWeb(prelude);
     const response = ReactServerDOMClient.createFromReadableStream(preludeWeb);
@@ -2934,18 +2936,19 @@ describe('ReactFlightDOM', () => {
     const controller = new AbortController();
     const {pendingResult} = await serverAct(() => {
       return {
-        pendingResult: ReactServerDOMStaticServer.prerenderToNodeStream(
-          {
-            multiShotIterable,
-          },
-          {},
-          {
-            onError(x) {
-              errors.push(x);
+        pendingResult:
+          ReactServerDOMStaticServer.unstable_prerenderToNodeStream(
+            {
+              multiShotIterable,
             },
-            signal: controller.signal,
-          },
-        ),
+            {},
+            {
+              onError(x) {
+                errors.push(x);
+              },
+              signal: controller.signal,
+            },
+          ),
       };
     });
 
@@ -3017,22 +3020,23 @@ describe('ReactFlightDOM', () => {
     const errors = [];
     const {pendingResult} = await serverAct(() => {
       return {
-        pendingResult: ReactServerDOMStaticServer.prerenderToNodeStream(
-          <App />,
-          {},
-          {
-            onError(x) {
-              errors.push(x);
+        pendingResult:
+          ReactServerDOMStaticServer.unstable_prerenderToNodeStream(
+            <App />,
+            {},
+            {
+              onError(x) {
+                errors.push(x);
+              },
+              signal: controller.signal,
             },
-            signal: controller.signal,
-          },
-        ),
+          ),
       };
     });
 
     const {prelude} = await pendingResult;
 
-    expect(errors).toEqual(['boom']);
+    expect(errors).toEqual([]);
 
     const preludeWeb = Readable.toWeb(prelude);
     const response = ReactServerDOMClient.createFromReadableStream(preludeWeb);
@@ -3083,5 +3087,55 @@ describe('ReactFlightDOM', () => {
         {'loading three...'}
       </div>,
     );
+  });
+
+  it('rejecting a thenable after an abort before flush should not lead to a frozen readable', async () => {
+    const ClientComponent = clientExports(function (props: {
+      promise: Promise<void>,
+    }) {
+      return 'hello world';
+    });
+
+    let reject;
+    const promise = new Promise((_, re) => {
+      reject = re;
+    });
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="loading...">
+            <ClientComponent promise={promise} />
+          </Suspense>
+        </div>
+      );
+    }
+
+    const errors = [];
+    const {writable, readable} = getTestStream();
+    const {pipe, abort} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(<App />, webpackMap, {
+        onError(x) {
+          errors.push(x);
+        },
+      }),
+    );
+    await serverAct(() => {
+      abort('STOP');
+      reject('STOP');
+    });
+    pipe(writable);
+
+    const reader = readable.getReader();
+    while (true) {
+      const {done} = await reader.read();
+      if (done) {
+        break;
+      }
+    }
+
+    expect(errors).toEqual(['STOP']);
+
+    // We expect it to get to the end here rather than hang on the reader.
   });
 });

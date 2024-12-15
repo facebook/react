@@ -127,6 +127,7 @@ export type HookKind =
   | 'useMemo'
   | 'useCallback'
   | 'useTransition'
+  | 'useImperativeHandle'
   | 'Custom';
 
 /*

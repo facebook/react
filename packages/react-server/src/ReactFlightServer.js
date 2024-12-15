@@ -14,16 +14,14 @@ import type {Postpone} from 'react/src/ReactPostpone';
 import type {TemporaryReferenceSet} from './ReactFlightServerTemporaryReferences';
 
 import {
-  enableBinaryFlight,
   enablePostpone,
   enableHalt,
   enableTaint,
-  enableRefAsProp,
   enableServerComponentLogs,
   enableOwnerStacks,
+  enableProfilerTimer,
+  enableComponentPerformanceTrack,
 } from 'shared/ReactFeatureFlags';
-
-import {enableFlightReadableStream} from 'shared/ReactFeatureFlags';
 
 import {
   scheduleWork,
@@ -62,7 +60,9 @@ import type {
   RejectedThenable,
   ReactDebugInfo,
   ReactComponentInfo,
+  ReactEnvironmentInfo,
   ReactAsyncInfo,
+  ReactTimeInfo,
   ReactStackTrace,
   ReactCallSite,
 } from 'shared/ReactTypes';
@@ -136,6 +136,9 @@ import getPrototypeOf from 'shared/getPrototypeOf';
 import binaryToComparableString from 'shared/binaryToComparableString';
 
 import {SuspenseException, getSuspendedThenable} from './ReactFlightThenable';
+
+// DEV-only set containing internal objects that should not be limited and turned into getters.
+const doNotLimit: WeakSet<Reference> = __DEV__ ? new WeakSet() : (null: any);
 
 function defaultFilterStackFrame(
   filename: string,
@@ -211,11 +214,8 @@ function patchConsole(consoleInst: typeof console, methodName: string) {
           1,
         );
         request.pendingChunks++;
-        // We don't currently use this id for anything but we emit it so that we can later
-        // refer to previous logs in debug info to associate them with a component.
-        const id = request.nextChunkId++;
         const owner: null | ReactComponentInfo = resolveOwner();
-        emitConsoleChunk(request, id, methodName, owner, stack, arguments);
+        emitConsoleChunk(request, methodName, owner, stack, arguments);
       }
       // $FlowFixMe[prop-missing]
       return originalMethod.apply(this, arguments);
@@ -294,7 +294,7 @@ type ReactJSONValue =
 // Serializable values
 export type ReactClientValue =
   // Server Elements and Lazy Components are unwrapped on the Server
-  | React$Element<React$AbstractComponent<any, any>>
+  | React$Element<React$ComponentType<any>>
   | LazyComponent<ReactClientValue, any>
   // References are passed by their value
   | ClientReference<any>
@@ -344,6 +344,7 @@ type Task = {
   keyPath: null | string, // parent server component keys
   implicitSlot: boolean, // true if the root server component of this sequence had a null key
   thenableState: ThenableState | null,
+  timed: boolean, // Profiling-only. Whether we need to track the completion time of this task.
   environmentName: string, // DEV-only. Used to track if the environment for this task changed.
   debugOwner: null | ReactComponentInfo, // DEV-only
   debugStack: null | Error, // DEV-only
@@ -391,6 +392,8 @@ export type Request = {
   onPostpone: (reason: string) => void,
   onAllReady: () => void,
   onFatalError: mixed => void,
+  // Profiling-only
+  timeOrigin: number,
   // DEV-only
   environmentName: () => string,
   filterStackFrame: (url: string, functionName: string) => boolean,
@@ -516,6 +519,23 @@ function RequestInstance(
         : filterStackFrame;
     this.didWarnForKey = null;
   }
+
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // We start by serializing the time origin. Any future timestamps will be
+    // emitted relatively to this origin. Instead of using performance.timeOrigin
+    // as this origin, we use the timestamp at the start of the request.
+    // This avoids leaking unnecessary information like how long the server has
+    // been running and allows for more compact representation of each timestamp.
+    // The time origin is stored as an offset in the time space of this environment.
+    const timeOrigin = (this.timeOrigin = performance.now());
+    emitTimeOriginChunk(
+      this,
+      timeOrigin +
+        // $FlowFixMe[prop-missing]
+        performance.timeOrigin,
+    );
+  }
+
   const rootTask = createTask(
     this,
     model,
@@ -628,21 +648,7 @@ function serializeThenable(
     }
     case 'rejected': {
       const x = thenable.reason;
-      if (
-        enablePostpone &&
-        typeof x === 'object' &&
-        x !== null &&
-        (x: any).$$typeof === REACT_POSTPONE_TYPE
-      ) {
-        const postponeInstance: Postpone = (x: any);
-        logPostpone(request, postponeInstance.message, newTask);
-        emitPostponeChunk(request, newTask.id, postponeInstance);
-      } else {
-        const digest = logRecoverableError(request, x, null);
-        emitErrorChunk(request, newTask.id, digest, x);
-      }
-      newTask.status = ERRORED;
-      request.abortableTasks.delete(newTask);
+      erroredTask(request, newTask, x);
       return newTask.id;
     }
     default: {
@@ -693,24 +699,20 @@ function serializeThenable(
       pingTask(request, newTask);
     },
     reason => {
-      if (
-        enablePostpone &&
-        typeof reason === 'object' &&
-        reason !== null &&
-        (reason: any).$$typeof === REACT_POSTPONE_TYPE
-      ) {
-        const postponeInstance: Postpone = (reason: any);
-        logPostpone(request, postponeInstance.message, newTask);
-        emitPostponeChunk(request, newTask.id, postponeInstance);
-      } else {
-        const digest = logRecoverableError(request, reason, newTask);
-        emitErrorChunk(request, newTask.id, digest, reason);
+      if (newTask.status === PENDING) {
+        // We expect that the only status it might be otherwise is ABORTED.
+        // When we abort we emit chunks in each pending task slot and don't need
+        // to do so again here.
+        erroredTask(request, newTask, reason);
+        enqueueFlush(request);
       }
-      newTask.status = ERRORED;
-      request.abortableTasks.delete(newTask);
-      enqueueFlush(request);
     },
   );
+
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // If this is async we need to time when this task finishes.
+    newTask.timed = true;
+  }
 
   return newTask.id;
 }
@@ -789,8 +791,7 @@ function serializeReadableStream(
     }
     aborted = true;
     request.abortListeners.delete(abortStream);
-    const digest = logRecoverableError(request, reason, streamTask);
-    emitErrorChunk(request, streamTask.id, digest, reason);
+    erroredTask(request, streamTask, reason);
     enqueueFlush(request);
 
     // $FlowFixMe should be able to pass mixed
@@ -802,30 +803,12 @@ function serializeReadableStream(
     }
     aborted = true;
     request.abortListeners.delete(abortStream);
-    if (
-      enablePostpone &&
-      typeof reason === 'object' &&
-      reason !== null &&
-      (reason: any).$$typeof === REACT_POSTPONE_TYPE
-    ) {
-      const postponeInstance: Postpone = (reason: any);
-      logPostpone(request, postponeInstance.message, streamTask);
-      if (enableHalt && request.type === PRERENDER) {
-        request.pendingChunks--;
-      } else {
-        emitPostponeChunk(request, streamTask.id, postponeInstance);
-        enqueueFlush(request);
-      }
+    if (enableHalt && request.type === PRERENDER) {
+      request.pendingChunks--;
     } else {
-      const digest = logRecoverableError(request, reason, streamTask);
-      if (enableHalt && request.type === PRERENDER) {
-        request.pendingChunks--;
-      } else {
-        emitErrorChunk(request, streamTask.id, digest, reason);
-        enqueueFlush(request);
-      }
+      erroredTask(request, streamTask, reason);
+      enqueueFlush(request);
     }
-
     // $FlowFixMe should be able to pass mixed
     reader.cancel(reason).then(error, error);
   }
@@ -931,8 +914,7 @@ function serializeAsyncIterable(
     }
     aborted = true;
     request.abortListeners.delete(abortIterable);
-    const digest = logRecoverableError(request, reason, streamTask);
-    emitErrorChunk(request, streamTask.id, digest, reason);
+    erroredTask(request, streamTask, reason);
     enqueueFlush(request);
     if (typeof (iterator: any).throw === 'function') {
       // The iterator protocol doesn't necessarily include this but a generator do.
@@ -946,28 +928,11 @@ function serializeAsyncIterable(
     }
     aborted = true;
     request.abortListeners.delete(abortIterable);
-    if (
-      enablePostpone &&
-      typeof reason === 'object' &&
-      reason !== null &&
-      (reason: any).$$typeof === REACT_POSTPONE_TYPE
-    ) {
-      const postponeInstance: Postpone = (reason: any);
-      logPostpone(request, postponeInstance.message, streamTask);
-      if (enableHalt && request.type === PRERENDER) {
-        request.pendingChunks--;
-      } else {
-        emitPostponeChunk(request, streamTask.id, postponeInstance);
-        enqueueFlush(request);
-      }
+    if (enableHalt && request.type === PRERENDER) {
+      request.pendingChunks--;
     } else {
-      const digest = logRecoverableError(request, reason, streamTask);
-      if (enableHalt && request.type === PRERENDER) {
-        request.pendingChunks--;
-      } else {
-        emitErrorChunk(request, streamTask.id, digest, reason);
-        enqueueFlush(request);
-      }
+      erroredTask(request, streamTask, reason);
+      enqueueFlush(request);
     }
     if (typeof (iterator: any).throw === 'function') {
       // The iterator protocol doesn't necessarily include this but a generator do.
@@ -1101,6 +1066,142 @@ function callWithDebugContextInDEV<A, T>(
 
 const voidHandler = () => {};
 
+function processServerComponentReturnValue(
+  request: Request,
+  task: Task,
+  Component: any,
+  result: any,
+): any {
+  // A Server Component's return value has a few special properties due to being
+  // in the return position of a Component. We convert them here.
+  if (
+    typeof result !== 'object' ||
+    result === null ||
+    isClientReference(result)
+  ) {
+    return result;
+  }
+
+  if (typeof result.then === 'function') {
+    // When the return value is in children position we can resolve it immediately,
+    // to its value without a wrapper if it's synchronously available.
+    const thenable: Thenable<any> = result;
+    if (__DEV__) {
+      // If the thenable resolves to an element, then it was in a static position,
+      // the return value of a Server Component. That doesn't need further validation
+      // of keys. The Server Component itself would have had a key.
+      thenable.then(resolvedValue => {
+        if (
+          typeof resolvedValue === 'object' &&
+          resolvedValue !== null &&
+          resolvedValue.$$typeof === REACT_ELEMENT_TYPE
+        ) {
+          resolvedValue._store.validated = 1;
+        }
+      }, voidHandler);
+    }
+    if (thenable.status === 'fulfilled') {
+      return thenable.value;
+    }
+    // TODO: Once we accept Promises as children on the client, we can just return
+    // the thenable here.
+    return createLazyWrapperAroundWakeable(result);
+  }
+
+  if (__DEV__) {
+    if ((result: any).$$typeof === REACT_ELEMENT_TYPE) {
+      // If the server component renders to an element, then it was in a static position.
+      // That doesn't need further validation of keys. The Server Component itself would
+      // have had a key.
+      (result: any)._store.validated = 1;
+    }
+  }
+
+  // Normally we'd serialize an Iterator/AsyncIterator as a single-shot which is not compatible
+  // to be rendered as a React Child. However, because we have the function to recreate
+  // an iterable from rendering the element again, we can effectively treat it as multi-
+  // shot. Therefore we treat this as an Iterable/AsyncIterable, whether it was one or not, by
+  // adding a wrapper so that this component effectively renders down to an AsyncIterable.
+  const iteratorFn = getIteratorFn(result);
+  if (iteratorFn) {
+    const iterableChild = result;
+    const multiShot = {
+      [Symbol.iterator]: function () {
+        const iterator = iteratorFn.call(iterableChild);
+        if (__DEV__) {
+          // If this was an Iterator but not a GeneratorFunction we warn because
+          // it might have been a mistake. Technically you can make this mistake with
+          // GeneratorFunctions and even single-shot Iterables too but it's extra
+          // tempting to try to return the value from a generator.
+          if (iterator === iterableChild) {
+            const isGeneratorComponent =
+              // $FlowIgnore[method-unbinding]
+              Object.prototype.toString.call(Component) ===
+                '[object GeneratorFunction]' &&
+              // $FlowIgnore[method-unbinding]
+              Object.prototype.toString.call(iterableChild) ===
+                '[object Generator]';
+            if (!isGeneratorComponent) {
+              callWithDebugContextInDEV(request, task, () => {
+                console.error(
+                  'Returning an Iterator from a Server Component is not supported ' +
+                    'since it cannot be looped over more than once. ',
+                );
+              });
+            }
+          }
+        }
+        return (iterator: any);
+      },
+    };
+    if (__DEV__) {
+      (multiShot: any)._debugInfo = iterableChild._debugInfo;
+    }
+    return multiShot;
+  }
+  if (
+    typeof (result: any)[ASYNC_ITERATOR] === 'function' &&
+    (typeof ReadableStream !== 'function' ||
+      !(result instanceof ReadableStream))
+  ) {
+    const iterableChild = result;
+    const multishot = {
+      [ASYNC_ITERATOR]: function () {
+        const iterator = (iterableChild: any)[ASYNC_ITERATOR]();
+        if (__DEV__) {
+          // If this was an AsyncIterator but not an AsyncGeneratorFunction we warn because
+          // it might have been a mistake. Technically you can make this mistake with
+          // AsyncGeneratorFunctions and even single-shot AsyncIterables too but it's extra
+          // tempting to try to return the value from a generator.
+          if (iterator === iterableChild) {
+            const isGeneratorComponent =
+              // $FlowIgnore[method-unbinding]
+              Object.prototype.toString.call(Component) ===
+                '[object AsyncGeneratorFunction]' &&
+              // $FlowIgnore[method-unbinding]
+              Object.prototype.toString.call(iterableChild) ===
+                '[object AsyncGenerator]';
+            if (!isGeneratorComponent) {
+              callWithDebugContextInDEV(request, task, () => {
+                console.error(
+                  'Returning an AsyncIterator from a Server Component is not supported ' +
+                    'since it cannot be looped over more than once. ',
+                );
+              });
+            }
+          }
+        }
+        return iterator;
+      },
+    };
+    if (__DEV__) {
+      (multishot: any)._debugInfo = iterableChild._debugInfo;
+    }
+    return multishot;
+  }
+  return result;
+}
+
 function renderFunctionComponent<Props>(
   request: Request,
   task: Task,
@@ -1148,14 +1249,27 @@ function renderFunctionComponent<Props>(
             ? null
             : filterStackTrace(request, task.debugStack, 1);
         // $FlowFixMe[cannot-write]
+        componentDebugInfo.props = props;
+        // $FlowFixMe[cannot-write]
         componentDebugInfo.debugStack = task.debugStack;
         // $FlowFixMe[cannot-write]
         componentDebugInfo.debugTask = task.debugTask;
+      } else {
+        // $FlowFixMe[cannot-write]
+        componentDebugInfo.props = props;
       }
       // We outline this model eagerly so that we can refer to by reference as an owner.
       // If we had a smarter way to dedupe we might not have to do this if there ends up
       // being no references to this as an owner.
-      outlineModel(request, componentDebugInfo);
+
+      outlineComponentInfo(request, componentDebugInfo);
+
+      // Track when we started rendering this component.
+      if (enableProfilerTimer && enableComponentPerformanceTrack) {
+        task.timed = true;
+        emitTimingChunk(request, componentDebugID, performance.now());
+      }
+
       emitDebugChunk(request, componentDebugID, componentDebugInfo);
 
       // We've emitted the latest environment for this task so we track that.
@@ -1221,123 +1335,9 @@ function renderFunctionComponent<Props>(
     throw null;
   }
 
-  if (
-    typeof result === 'object' &&
-    result !== null &&
-    !isClientReference(result)
-  ) {
-    if (typeof result.then === 'function') {
-      // When the return value is in children position we can resolve it immediately,
-      // to its value without a wrapper if it's synchronously available.
-      const thenable: Thenable<any> = result;
-      if (__DEV__) {
-        // If the thenable resolves to an element, then it was in a static position,
-        // the return value of a Server Component. That doesn't need further validation
-        // of keys. The Server Component itself would have had a key.
-        thenable.then(resolvedValue => {
-          if (
-            typeof resolvedValue === 'object' &&
-            resolvedValue !== null &&
-            resolvedValue.$$typeof === REACT_ELEMENT_TYPE
-          ) {
-            resolvedValue._store.validated = 1;
-          }
-        }, voidHandler);
-      }
-      if (thenable.status === 'fulfilled') {
-        return thenable.value;
-      }
-      // TODO: Once we accept Promises as children on the client, we can just return
-      // the thenable here.
-      result = createLazyWrapperAroundWakeable(result);
-    }
+  // Apply special cases.
+  result = processServerComponentReturnValue(request, task, Component, result);
 
-    // Normally we'd serialize an Iterator/AsyncIterator as a single-shot which is not compatible
-    // to be rendered as a React Child. However, because we have the function to recreate
-    // an iterable from rendering the element again, we can effectively treat it as multi-
-    // shot. Therefore we treat this as an Iterable/AsyncIterable, whether it was one or not, by
-    // adding a wrapper so that this component effectively renders down to an AsyncIterable.
-    const iteratorFn = getIteratorFn(result);
-    if (iteratorFn) {
-      const iterableChild = result;
-      result = {
-        [Symbol.iterator]: function () {
-          const iterator = iteratorFn.call(iterableChild);
-          if (__DEV__) {
-            // If this was an Iterator but not a GeneratorFunction we warn because
-            // it might have been a mistake. Technically you can make this mistake with
-            // GeneratorFunctions and even single-shot Iterables too but it's extra
-            // tempting to try to return the value from a generator.
-            if (iterator === iterableChild) {
-              const isGeneratorComponent =
-                // $FlowIgnore[method-unbinding]
-                Object.prototype.toString.call(Component) ===
-                  '[object GeneratorFunction]' &&
-                // $FlowIgnore[method-unbinding]
-                Object.prototype.toString.call(iterableChild) ===
-                  '[object Generator]';
-              if (!isGeneratorComponent) {
-                callWithDebugContextInDEV(request, task, () => {
-                  console.error(
-                    'Returning an Iterator from a Server Component is not supported ' +
-                      'since it cannot be looped over more than once. ',
-                  );
-                });
-              }
-            }
-          }
-          return (iterator: any);
-        },
-      };
-      if (__DEV__) {
-        (result: any)._debugInfo = iterableChild._debugInfo;
-      }
-    } else if (
-      enableFlightReadableStream &&
-      typeof (result: any)[ASYNC_ITERATOR] === 'function' &&
-      (typeof ReadableStream !== 'function' ||
-        !(result instanceof ReadableStream))
-    ) {
-      const iterableChild = result;
-      result = {
-        [ASYNC_ITERATOR]: function () {
-          const iterator = (iterableChild: any)[ASYNC_ITERATOR]();
-          if (__DEV__) {
-            // If this was an AsyncIterator but not an AsyncGeneratorFunction we warn because
-            // it might have been a mistake. Technically you can make this mistake with
-            // AsyncGeneratorFunctions and even single-shot AsyncIterables too but it's extra
-            // tempting to try to return the value from a generator.
-            if (iterator === iterableChild) {
-              const isGeneratorComponent =
-                // $FlowIgnore[method-unbinding]
-                Object.prototype.toString.call(Component) ===
-                  '[object AsyncGeneratorFunction]' &&
-                // $FlowIgnore[method-unbinding]
-                Object.prototype.toString.call(iterableChild) ===
-                  '[object AsyncGenerator]';
-              if (!isGeneratorComponent) {
-                callWithDebugContextInDEV(request, task, () => {
-                  console.error(
-                    'Returning an AsyncIterator from a Server Component is not supported ' +
-                      'since it cannot be looped over more than once. ',
-                  );
-                });
-              }
-            }
-          }
-          return iterator;
-        },
-      };
-      if (__DEV__) {
-        (result: any)._debugInfo = iterableChild._debugInfo;
-      }
-    } else if (__DEV__ && (result: any).$$typeof === REACT_ELEMENT_TYPE) {
-      // If the server component renders to an element, then it was in a static position.
-      // That doesn't need further validation of keys. The Server Component itself would
-      // have had a key.
-      (result: any)._store.validated = 1;
-    }
-  }
   // Track this element's key on the Server Component on the keyPath context..
   const prevKeyPath = task.keyPath;
   const prevImplicitSlot = task.implicitSlot;
@@ -1582,6 +1582,13 @@ function renderClientElement(
   } else if (keyPath !== null) {
     key = keyPath + ',' + key;
   }
+  if (__DEV__) {
+    if (task.debugOwner !== null) {
+      // Ensure we outline this owner if it is the first time we see it.
+      // So that we can refer to it directly.
+      outlineComponentInfo(request, task.debugOwner);
+    }
+  }
   const element = __DEV__
     ? enableOwnerStacks
       ? [
@@ -1702,6 +1709,7 @@ function renderElement(
           task.debugStack === null
             ? null
             : filterStackTrace(request, task.debugStack, 1),
+        props: props,
         debugStack: task.debugStack,
         debugTask: task.debugTask,
       };
@@ -1791,6 +1799,10 @@ function renderElement(
 }
 
 function pingTask(request: Request, task: Task): void {
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // If this was async we need to emit the time when it completes.
+    task.timed = true;
+  }
   const pingedTasks = request.pingedTasks;
   pingedTasks.push(task);
   if (pingedTasks.length === 1) {
@@ -1884,8 +1896,11 @@ function createTask(
     thenableState: null,
   }: Omit<
     Task,
-    'environmentName' | 'debugOwner' | 'debugStack' | 'debugTask',
+    'timed' | 'environmentName' | 'debugOwner' | 'debugStack' | 'debugTask',
   >): any);
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    task.timed = false;
+  }
   if (__DEV__) {
     task.environmentName = request.environmentName();
     task.debugOwner = debugOwner;
@@ -1946,6 +1961,12 @@ function serializeNumber(number: number): string | number {
 
 function serializeUndefined(): string {
   return '$undefined';
+}
+
+function serializeDate(date: Date): string {
+  // JSON.stringify automatically calls Date.prototype.toJSON which calls toISOString.
+  // We need only tack on a $D prefix.
+  return '$D' + date.toJSON();
 }
 
 function serializeDateFromDateJSON(dateJSON: string): string {
@@ -2128,22 +2149,48 @@ function serializeSet(request: Request, set: Set<ReactClientValue>): string {
 
 function serializeConsoleMap(
   request: Request,
-  counter: {objectCount: number},
+  counter: {objectLimit: number},
   map: Map<ReactClientValue, ReactClientValue>,
 ): string {
   // Like serializeMap but for renderConsoleValue.
   const entries = Array.from(map);
+  // The Map itself doesn't take up any space but the outlined object does.
+  counter.objectLimit++;
+  for (let i = 0; i < entries.length; i++) {
+    // Outline every object entry in case we run out of space to serialize them.
+    // Because we can't mark these values as limited.
+    const entry = entries[i];
+    doNotLimit.add(entry);
+    const key = entry[0];
+    const value = entry[1];
+    if (typeof key === 'object' && key !== null) {
+      doNotLimit.add(key);
+    }
+    if (typeof value === 'object' && value !== null) {
+      doNotLimit.add(value);
+    }
+  }
   const id = outlineConsoleValue(request, counter, entries);
   return '$Q' + id.toString(16);
 }
 
 function serializeConsoleSet(
   request: Request,
-  counter: {objectCount: number},
+  counter: {objectLimit: number},
   set: Set<ReactClientValue>,
 ): string {
   // Like serializeMap but for renderConsoleValue.
   const entries = Array.from(set);
+  // The Set itself doesn't take up any space but the outlined object does.
+  counter.objectLimit++;
+  for (let i = 0; i < entries.length; i++) {
+    // Outline every object entry in case we run out of space to serialize them.
+    // Because we can't mark these values as limited.
+    const entry = entries[i];
+    if (typeof entry === 'object' && entry !== null) {
+      doNotLimit.add(entry);
+    }
+  }
   const id = outlineConsoleValue(request, counter, entries);
   return '$W' + id.toString(16);
 }
@@ -2206,8 +2253,7 @@ function serializeBlob(request: Request, blob: Blob): string {
     }
     aborted = true;
     request.abortListeners.delete(abortBlob);
-    const digest = logRecoverableError(request, reason, newTask);
-    emitErrorChunk(request, newTask.id, digest, reason);
+    erroredTask(request, newTask, reason);
     enqueueFlush(request);
     // $FlowFixMe should be able to pass mixed
     reader.cancel(reason).then(error, error);
@@ -2218,28 +2264,11 @@ function serializeBlob(request: Request, blob: Blob): string {
     }
     aborted = true;
     request.abortListeners.delete(abortBlob);
-    if (
-      enablePostpone &&
-      typeof reason === 'object' &&
-      reason !== null &&
-      (reason: any).$$typeof === REACT_POSTPONE_TYPE
-    ) {
-      const postponeInstance: Postpone = (reason: any);
-      logPostpone(request, postponeInstance.message, newTask);
-      if (enableHalt && request.type === PRERENDER) {
-        request.pendingChunks--;
-      } else {
-        emitPostponeChunk(request, newTask.id, postponeInstance);
-        enqueueFlush(request);
-      }
+    if (enableHalt && request.type === PRERENDER) {
+      request.pendingChunks--;
     } else {
-      const digest = logRecoverableError(request, reason, newTask);
-      if (enableHalt && request.type === PRERENDER) {
-        request.pendingChunks--;
-      } else {
-        emitErrorChunk(request, newTask.id, digest, reason);
-        enqueueFlush(request);
-      }
+      erroredTask(request, newTask, reason);
+      enqueueFlush(request);
     }
     // $FlowFixMe should be able to pass mixed
     reader.cancel(reason).then(error, error);
@@ -2261,23 +2290,6 @@ function escapeStringValue(value: string): string {
   } else {
     return value;
   }
-}
-
-function isReactComponentInfo(value: any): boolean {
-  // TODO: We don't currently have a brand check on ReactComponentInfo. Reconsider.
-  return (
-    ((typeof value.debugTask === 'object' &&
-      value.debugTask !== null &&
-      // $FlowFixMe[method-unbinding]
-      typeof value.debugTask.run === 'function') ||
-      value.debugStack instanceof Error) &&
-    (enableOwnerStacks
-      ? isArray((value: any).stack) || (value: any).stack === null
-      : typeof (value: any).stack === 'undefined') &&
-    typeof value.name === 'string' &&
-    typeof value.env === 'string' &&
-    value.owner !== undefined
-  );
 }
 
 let modelRoot: null | ReactClientValue = false;
@@ -2356,24 +2368,6 @@ function renderModel(
           return serializeLazyID(newTask.id);
         }
         return serializeByValueID(newTask.id);
-      } else if (enablePostpone && x.$$typeof === REACT_POSTPONE_TYPE) {
-        // Something postponed. We'll still send everything we have up until this point.
-        // We'll replace this element with a lazy reference that postpones on the client.
-        const postponeInstance: Postpone = (x: any);
-        request.pendingChunks++;
-        const postponeId = request.nextChunkId++;
-        logPostpone(request, postponeInstance.message, task);
-        emitPostponeChunk(request, postponeId, postponeInstance);
-
-        // Restore the context. We assume that this will be restored by the inner
-        // functions in case nothing throws so we don't use "finally" here.
-        task.keyPath = prevKeyPath;
-        task.implicitSlot = prevImplicitSlot;
-
-        if (wasReactNode) {
-          return serializeLazyID(postponeId);
-        }
-        return serializeByValueID(postponeId);
       }
     }
 
@@ -2385,8 +2379,21 @@ function renderModel(
     // Something errored. We'll still send everything we have up until this point.
     request.pendingChunks++;
     const errorId = request.nextChunkId++;
-    const digest = logRecoverableError(request, x, task);
-    emitErrorChunk(request, errorId, digest, x);
+    if (
+      enablePostpone &&
+      typeof x === 'object' &&
+      x !== null &&
+      x.$$typeof === REACT_POSTPONE_TYPE
+    ) {
+      // Something postponed. We'll still send everything we have up until this point.
+      // We'll replace this element with a lazy reference that postpones on the client.
+      const postponeInstance: Postpone = (x: any);
+      logPostpone(request, postponeInstance.message, task);
+      emitPostponeChunk(request, errorId, postponeInstance);
+    } else {
+      const digest = logRecoverableError(request, x, task);
+      emitErrorChunk(request, errorId, digest, x);
+    }
     if (wasReactNode) {
       // We'll replace this element with a lazy reference that throws on the client
       // once it gets rendered.
@@ -2475,16 +2482,10 @@ function renderModelDestructive(
         }
 
         const props = element.props;
-        let ref;
-        if (enableRefAsProp) {
-          // TODO: This is a temporary, intermediate step. Once the feature
-          // flag is removed, we should get the ref off the props object right
-          // before using it.
-          const refProp = props.ref;
-          ref = refProp !== undefined ? refProp : null;
-        } else {
-          ref = element.ref;
-        }
+        // TODO: We should get the ref off the props object right before using
+        // it.
+        const refProp = props.ref;
+        const ref = refProp !== undefined ? refProp : null;
 
         // Attempt to render the Server Component.
 
@@ -2665,6 +2666,9 @@ function renderModelDestructive(
             case '3':
               propertyName = 'props';
               break;
+            case '4':
+              propertyName = '_owner';
+              break;
           }
         }
         writtenObjects.set(value, parentReference + ':' + propertyName);
@@ -2685,63 +2689,63 @@ function renderModelDestructive(
     if (typeof FormData === 'function' && value instanceof FormData) {
       return serializeFormData(request, value);
     }
-
-    if (enableBinaryFlight) {
-      if (value instanceof ArrayBuffer) {
-        return serializeTypedArray(request, 'A', new Uint8Array(value));
-      }
-      if (value instanceof Int8Array) {
-        // char
-        return serializeTypedArray(request, 'O', value);
-      }
-      if (value instanceof Uint8Array) {
-        // unsigned char
-        return serializeTypedArray(request, 'o', value);
-      }
-      if (value instanceof Uint8ClampedArray) {
-        // unsigned clamped char
-        return serializeTypedArray(request, 'U', value);
-      }
-      if (value instanceof Int16Array) {
-        // sort
-        return serializeTypedArray(request, 'S', value);
-      }
-      if (value instanceof Uint16Array) {
-        // unsigned short
-        return serializeTypedArray(request, 's', value);
-      }
-      if (value instanceof Int32Array) {
-        // long
-        return serializeTypedArray(request, 'L', value);
-      }
-      if (value instanceof Uint32Array) {
-        // unsigned long
-        return serializeTypedArray(request, 'l', value);
-      }
-      if (value instanceof Float32Array) {
-        // float
-        return serializeTypedArray(request, 'G', value);
-      }
-      if (value instanceof Float64Array) {
-        // double
-        return serializeTypedArray(request, 'g', value);
-      }
-      if (value instanceof BigInt64Array) {
-        // number
-        return serializeTypedArray(request, 'M', value);
-      }
-      if (value instanceof BigUint64Array) {
-        // unsigned number
-        // We use "m" instead of "n" since JSON can start with "null"
-        return serializeTypedArray(request, 'm', value);
-      }
-      if (value instanceof DataView) {
-        return serializeTypedArray(request, 'V', value);
-      }
-      // TODO: Blob is not available in old Node. Remove the typeof check later.
-      if (typeof Blob === 'function' && value instanceof Blob) {
-        return serializeBlob(request, value);
-      }
+    if (value instanceof Error) {
+      return serializeErrorValue(request, value);
+    }
+    if (value instanceof ArrayBuffer) {
+      return serializeTypedArray(request, 'A', new Uint8Array(value));
+    }
+    if (value instanceof Int8Array) {
+      // char
+      return serializeTypedArray(request, 'O', value);
+    }
+    if (value instanceof Uint8Array) {
+      // unsigned char
+      return serializeTypedArray(request, 'o', value);
+    }
+    if (value instanceof Uint8ClampedArray) {
+      // unsigned clamped char
+      return serializeTypedArray(request, 'U', value);
+    }
+    if (value instanceof Int16Array) {
+      // sort
+      return serializeTypedArray(request, 'S', value);
+    }
+    if (value instanceof Uint16Array) {
+      // unsigned short
+      return serializeTypedArray(request, 's', value);
+    }
+    if (value instanceof Int32Array) {
+      // long
+      return serializeTypedArray(request, 'L', value);
+    }
+    if (value instanceof Uint32Array) {
+      // unsigned long
+      return serializeTypedArray(request, 'l', value);
+    }
+    if (value instanceof Float32Array) {
+      // float
+      return serializeTypedArray(request, 'G', value);
+    }
+    if (value instanceof Float64Array) {
+      // double
+      return serializeTypedArray(request, 'g', value);
+    }
+    if (value instanceof BigInt64Array) {
+      // number
+      return serializeTypedArray(request, 'M', value);
+    }
+    if (value instanceof BigUint64Array) {
+      // unsigned number
+      // We use "m" instead of "n" since JSON can start with "null"
+      return serializeTypedArray(request, 'm', value);
+    }
+    if (value instanceof DataView) {
+      return serializeTypedArray(request, 'V', value);
+    }
+    // TODO: Blob is not available in old Node. Remove the typeof check later.
+    if (typeof Blob === 'function' && value instanceof Blob) {
+      return serializeBlob(request, value);
     }
 
     const iteratorFn = getIteratorFn(value);
@@ -2755,25 +2759,26 @@ function renderModelDestructive(
       return renderFragment(request, task, Array.from((iterator: any)));
     }
 
-    if (enableFlightReadableStream) {
-      // TODO: Blob is not available in old Node. Remove the typeof check later.
-      if (
-        typeof ReadableStream === 'function' &&
-        value instanceof ReadableStream
-      ) {
-        return serializeReadableStream(request, task, value);
-      }
-      const getAsyncIterator: void | (() => $AsyncIterator<any, any, any>) =
-        (value: any)[ASYNC_ITERATOR];
-      if (typeof getAsyncIterator === 'function') {
-        // We treat AsyncIterables as a Fragment and as such we might need to key them.
-        return renderAsyncFragment(
-          request,
-          task,
-          (value: any),
-          getAsyncIterator,
-        );
-      }
+    // TODO: Blob is not available in old Node. Remove the typeof check later.
+    if (
+      typeof ReadableStream === 'function' &&
+      value instanceof ReadableStream
+    ) {
+      return serializeReadableStream(request, task, value);
+    }
+    const getAsyncIterator: void | (() => $AsyncIterator<any, any, any>) =
+      (value: any)[ASYNC_ITERATOR];
+    if (typeof getAsyncIterator === 'function') {
+      // We treat AsyncIterables as a Fragment and as such we might need to key them.
+      return renderAsyncFragment(request, task, (value: any), getAsyncIterator);
+    }
+
+    // We put the Date check low b/c most of the time Date's will already have been serialized
+    // before we process it in this function but when rendering a Date() as a top level it can
+    // end up being a Date instance here. This is rare so we deprioritize it by putting it deep
+    // in this function
+    if (value instanceof Date) {
+      return serializeDate(value);
     }
 
     // Verify that this is a simple plain object.
@@ -2789,25 +2794,6 @@ function renderModelDestructive(
       );
     }
     if (__DEV__) {
-      if (isReactComponentInfo(value)) {
-        // This looks like a ReactComponentInfo. We can't serialize the ConsoleTask object so we
-        // need to omit it before serializing.
-        const componentDebugInfo: Omit<
-          ReactComponentInfo,
-          'debugTask' | 'debugStack',
-        > = {
-          name: (value: any).name,
-          env: (value: any).env,
-          key: (value: any).key,
-          owner: (value: any).owner,
-        };
-        if (enableOwnerStacks) {
-          // $FlowFixMe[cannot-write]
-          componentDebugInfo.stack = (value: any).stack;
-        }
-        return componentDebugInfo;
-      }
-
       if (objectName(value) !== 'Object') {
         callWithDebugContextInDEV(request, task, () => {
           console.error(
@@ -3111,6 +3097,36 @@ function emitPostponeChunk(
   request.completedErrorChunks.push(processedChunk);
 }
 
+function serializeErrorValue(request: Request, error: Error): string {
+  if (__DEV__) {
+    let message;
+    let stack: ReactStackTrace;
+    let env = (0, request.environmentName)();
+    try {
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      message = String(error.message);
+      stack = filterStackTrace(request, error, 0);
+      const errorEnv = (error: any).environmentName;
+      if (typeof errorEnv === 'string') {
+        // This probably came from another FlightClient as a pass through.
+        // Keep the environment name.
+        env = errorEnv;
+      }
+    } catch (x) {
+      message = 'An error occurred but serializing the error message failed.';
+      stack = [];
+    }
+    const errorInfo = {message, stack, env};
+    const id = outlineModel(request, errorInfo);
+    return '$Z' + id.toString(16);
+  } else {
+    // In prod we don't emit any information about this Error object to avoid
+    // unintentional leaks. Since this doesn't actually throw on the server
+    // we don't go through onError and so don't register any digest neither.
+    return '$Z';
+  }
+}
+
 function emitErrorChunk(
   request: Request,
   id: number,
@@ -3172,8 +3188,7 @@ function emitHintChunk<Code: HintCode>(
   model: HintModel<Code>,
 ): void {
   const json: string = stringify(model);
-  const id = request.nextChunkId++;
-  const row = serializeRowHeader('H' + code, id) + json + '\n';
+  const row = ':H' + code + json + '\n';
   const processedChunk = stringToChunk(row);
   request.completedHintChunks.push(processedChunk);
 }
@@ -3193,7 +3208,11 @@ function emitModelChunk(request: Request, id: number, json: string): void {
 function emitDebugChunk(
   request: Request,
   id: number,
-  debugInfo: ReactComponentInfo | ReactAsyncInfo,
+  debugInfo:
+    | ReactComponentInfo
+    | ReactAsyncInfo
+    | ReactEnvironmentInfo
+    | ReactTimeInfo,
 ): void {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
@@ -3205,7 +3224,7 @@ function emitDebugChunk(
 
   // We use the console encoding so that we can dedupe objects but don't necessarily
   // use the full serialization that requires a task.
-  const counter = {objectCount: 0};
+  const counter = {objectLimit: 500};
   function replacer(
     this:
       | {+[key: string | number]: ReactClientValue}
@@ -3227,6 +3246,61 @@ function emitDebugChunk(
   const row = serializeRowHeader('D', id) + json + '\n';
   const processedChunk = stringToChunk(row);
   request.completedRegularChunks.push(processedChunk);
+}
+
+function outlineComponentInfo(
+  request: Request,
+  componentInfo: ReactComponentInfo,
+): void {
+  if (!__DEV__) {
+    // These errors should never make it into a build so we don't need to encode them in codes.json
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'outlineComponentInfo should never be called in production mode. This is a bug in React.',
+    );
+  }
+
+  if (request.writtenObjects.has(componentInfo)) {
+    // Already written
+    return;
+  }
+
+  if (componentInfo.owner != null) {
+    // Ensure the owner is already outlined.
+    outlineComponentInfo(request, componentInfo.owner);
+  }
+
+  // Limit the number of objects we write to prevent emitting giant props objects.
+  let objectLimit = 10;
+  if (componentInfo.stack != null) {
+    // Ensure we have enough object limit to encode the stack trace.
+    objectLimit += componentInfo.stack.length;
+  }
+
+  // We use the console encoding so that we can dedupe objects but don't necessarily
+  // use the full serialization that requires a task.
+  const counter = {objectLimit};
+
+  // We can't serialize the ConsoleTask/Error objects so we need to omit them before serializing.
+  const componentDebugInfo: Omit<
+    ReactComponentInfo,
+    'debugTask' | 'debugStack',
+  > = {
+    name: componentInfo.name,
+    env: componentInfo.env,
+    key: componentInfo.key,
+    owner: componentInfo.owner,
+  };
+  if (enableOwnerStacks) {
+    // $FlowFixMe[cannot-write]
+    componentDebugInfo.stack = componentInfo.stack;
+  }
+  // Ensure we serialize props after the stack to favor the stack being complete.
+  // $FlowFixMe[cannot-write]
+  componentDebugInfo.props = componentInfo.props;
+
+  const id = outlineConsoleValue(request, counter, componentDebugInfo);
+  request.writtenObjects.set(componentInfo, serializeByValueID(id));
 }
 
 function emitTypedArrayChunk(
@@ -3286,25 +3360,20 @@ function serializeEval(source: string): string {
 // in the depth it can encode.
 function renderConsoleValue(
   request: Request,
-  counter: {objectCount: number},
+  counter: {objectLimit: number},
   parent:
     | {+[propertyName: string | number]: ReactClientValue}
     | $ReadOnlyArray<ReactClientValue>,
   parentPropertyName: string,
   value: ReactClientValue,
 ): ReactJSONValue {
-  // Make sure that `parent[parentPropertyName]` wasn't JSONified before `value` was passed to us
-  // $FlowFixMe[incompatible-use]
-  const originalValue = parent[parentPropertyName];
-  if (
-    typeof originalValue === 'object' &&
-    originalValue !== value &&
-    !(originalValue instanceof Date)
-  ) {
-  }
-
   if (value === null) {
     return null;
+  }
+
+  // Special Symbol, that's very common.
+  if (value === REACT_ELEMENT_TYPE) {
+    return '$';
   }
 
   if (typeof value === 'object') {
@@ -3330,23 +3399,75 @@ function renderConsoleValue(
       }
     }
 
-    if (counter.objectCount > 500) {
+    const writtenObjects = request.writtenObjects;
+    const existingReference = writtenObjects.get(value);
+    if (existingReference !== undefined) {
+      // We've already emitted this as a real object, so we can
+      // just refer to that by its existing reference.
+      return existingReference;
+    }
+
+    if (counter.objectLimit <= 0 && !doNotLimit.has(value)) {
       // We've reached our max number of objects to serialize across the wire so we serialize this
       // as a marker so that the client can error when this is accessed by the console.
       return serializeLimitedObject();
     }
 
-    counter.objectCount++;
+    counter.objectLimit--;
 
-    const writtenObjects = request.writtenObjects;
-    const existingReference = writtenObjects.get(value);
+    switch ((value: any).$$typeof) {
+      case REACT_ELEMENT_TYPE: {
+        const element: ReactElement = (value: any);
+
+        if (element._owner != null) {
+          outlineComponentInfo(request, element._owner);
+        }
+        if (typeof element.type === 'object' && element.type !== null) {
+          // If the type is an object it can get cut off which shouldn't happen here.
+          doNotLimit.add(element.type);
+        }
+        if (typeof element.key === 'object' && element.key !== null) {
+          // This should never happen but just in case.
+          doNotLimit.add(element.key);
+        }
+        doNotLimit.add(element.props);
+        if (element._owner !== null) {
+          doNotLimit.add(element._owner);
+        }
+
+        if (enableOwnerStacks) {
+          let debugStack: null | ReactStackTrace = null;
+          if (element._debugStack != null) {
+            // Outline the debug stack so that it doesn't get cut off.
+            debugStack = filterStackTrace(request, element._debugStack, 1);
+            doNotLimit.add(debugStack);
+            for (let i = 0; i < debugStack.length; i++) {
+              doNotLimit.add(debugStack[i]);
+            }
+          }
+          return [
+            REACT_ELEMENT_TYPE,
+            element.type,
+            element.key,
+            element.props,
+            element._owner,
+            debugStack,
+            element._store.validated,
+          ];
+        }
+
+        return [
+          REACT_ELEMENT_TYPE,
+          element.type,
+          element.key,
+          element.props,
+          element._owner,
+        ];
+      }
+    }
+
     // $FlowFixMe[method-unbinding]
     if (typeof value.then === 'function') {
-      if (existingReference !== undefined) {
-        // We've seen this promise before, so we can just refer to the same result.
-        return existingReference;
-      }
-
       const thenable: Thenable<any> = (value: any);
       switch (thenable.status) {
         case 'fulfilled': {
@@ -3380,12 +3501,6 @@ function renderConsoleValue(
       return serializeInfinitePromise();
     }
 
-    if (existingReference !== undefined) {
-      // We've already emitted this as a real object, so we can
-      // just refer to that by its existing reference.
-      return existingReference;
-    }
-
     if (isArray(value)) {
       return value;
     }
@@ -3400,87 +3515,68 @@ function renderConsoleValue(
     if (typeof FormData === 'function' && value instanceof FormData) {
       return serializeFormData(request, value);
     }
-
-    if (enableBinaryFlight) {
-      if (value instanceof ArrayBuffer) {
-        return serializeTypedArray(request, 'A', new Uint8Array(value));
-      }
-      if (value instanceof Int8Array) {
-        // char
-        return serializeTypedArray(request, 'O', value);
-      }
-      if (value instanceof Uint8Array) {
-        // unsigned char
-        return serializeTypedArray(request, 'o', value);
-      }
-      if (value instanceof Uint8ClampedArray) {
-        // unsigned clamped char
-        return serializeTypedArray(request, 'U', value);
-      }
-      if (value instanceof Int16Array) {
-        // sort
-        return serializeTypedArray(request, 'S', value);
-      }
-      if (value instanceof Uint16Array) {
-        // unsigned short
-        return serializeTypedArray(request, 's', value);
-      }
-      if (value instanceof Int32Array) {
-        // long
-        return serializeTypedArray(request, 'L', value);
-      }
-      if (value instanceof Uint32Array) {
-        // unsigned long
-        return serializeTypedArray(request, 'l', value);
-      }
-      if (value instanceof Float32Array) {
-        // float
-        return serializeTypedArray(request, 'G', value);
-      }
-      if (value instanceof Float64Array) {
-        // double
-        return serializeTypedArray(request, 'g', value);
-      }
-      if (value instanceof BigInt64Array) {
-        // number
-        return serializeTypedArray(request, 'M', value);
-      }
-      if (value instanceof BigUint64Array) {
-        // unsigned number
-        // We use "m" instead of "n" since JSON can start with "null"
-        return serializeTypedArray(request, 'm', value);
-      }
-      if (value instanceof DataView) {
-        return serializeTypedArray(request, 'V', value);
-      }
-      // TODO: Blob is not available in old Node. Remove the typeof check later.
-      if (typeof Blob === 'function' && value instanceof Blob) {
-        return serializeBlob(request, value);
-      }
+    if (value instanceof Error) {
+      return serializeErrorValue(request, value);
+    }
+    if (value instanceof ArrayBuffer) {
+      return serializeTypedArray(request, 'A', new Uint8Array(value));
+    }
+    if (value instanceof Int8Array) {
+      // char
+      return serializeTypedArray(request, 'O', value);
+    }
+    if (value instanceof Uint8Array) {
+      // unsigned char
+      return serializeTypedArray(request, 'o', value);
+    }
+    if (value instanceof Uint8ClampedArray) {
+      // unsigned clamped char
+      return serializeTypedArray(request, 'U', value);
+    }
+    if (value instanceof Int16Array) {
+      // sort
+      return serializeTypedArray(request, 'S', value);
+    }
+    if (value instanceof Uint16Array) {
+      // unsigned short
+      return serializeTypedArray(request, 's', value);
+    }
+    if (value instanceof Int32Array) {
+      // long
+      return serializeTypedArray(request, 'L', value);
+    }
+    if (value instanceof Uint32Array) {
+      // unsigned long
+      return serializeTypedArray(request, 'l', value);
+    }
+    if (value instanceof Float32Array) {
+      // float
+      return serializeTypedArray(request, 'G', value);
+    }
+    if (value instanceof Float64Array) {
+      // double
+      return serializeTypedArray(request, 'g', value);
+    }
+    if (value instanceof BigInt64Array) {
+      // number
+      return serializeTypedArray(request, 'M', value);
+    }
+    if (value instanceof BigUint64Array) {
+      // unsigned number
+      // We use "m" instead of "n" since JSON can start with "null"
+      return serializeTypedArray(request, 'm', value);
+    }
+    if (value instanceof DataView) {
+      return serializeTypedArray(request, 'V', value);
+    }
+    // TODO: Blob is not available in old Node. Remove the typeof check later.
+    if (typeof Blob === 'function' && value instanceof Blob) {
+      return serializeBlob(request, value);
     }
 
     const iteratorFn = getIteratorFn(value);
     if (iteratorFn) {
       return Array.from((value: any));
-    }
-
-    if (isReactComponentInfo(value)) {
-      // This looks like a ReactComponentInfo. We can't serialize the ConsoleTask object so we
-      // need to omit it before serializing.
-      const componentDebugInfo: Omit<
-        ReactComponentInfo,
-        'debugTask' | 'debugStack',
-      > = {
-        name: (value: any).name,
-        env: (value: any).env,
-        key: (value: any).key,
-        owner: (value: any).owner,
-      };
-      if (enableOwnerStacks) {
-        // $FlowFixMe[cannot-write]
-        componentDebugInfo.stack = (value: any).stack;
-      }
-      return componentDebugInfo;
     }
 
     // $FlowFixMe[incompatible-return]
@@ -3490,6 +3586,9 @@ function renderConsoleValue(
   if (typeof value === 'string') {
     if (value[value.length - 1] === 'Z') {
       // Possibly a Date, whose toJSON automatically calls toISOString
+      // Make sure that `parent[parentPropertyName]` wasn't JSONified before `value` was passed to us
+      // $FlowFixMe[incompatible-use]
+      const originalValue = parent[parentPropertyName];
       if (originalValue instanceof Date) {
         return serializeDateFromDateJSON(value);
       }
@@ -3558,12 +3657,16 @@ function renderConsoleValue(
     return serializeBigInt(value);
   }
 
+  if (value instanceof Date) {
+    return serializeDate(value);
+  }
+
   return 'unknown type ' + typeof value;
 }
 
 function outlineConsoleValue(
   request: Request,
-  counter: {objectCount: number},
+  counter: {objectLimit: number},
   model: ReactClientValue,
 ): number {
   if (!__DEV__) {
@@ -3572,6 +3675,11 @@ function outlineConsoleValue(
     throw new Error(
       'outlineConsoleValue should never be called in production mode. This is a bug in React.',
     );
+  }
+
+  if (typeof model === 'object' && model !== null) {
+    // We can't limit outlined values.
+    doNotLimit.add(model);
   }
 
   function replacer(
@@ -3590,12 +3698,22 @@ function outlineConsoleValue(
         value,
       );
     } catch (x) {
-      return 'unknown value';
+      return (
+        'Unknown Value: React could not send it from the server.\n' + x.message
+      );
     }
   }
 
-  // $FlowFixMe[incompatible-type] stringify can return null
-  const json: string = stringify(model, replacer);
+  let json: string;
+  try {
+    // $FlowFixMe[incompatible-cast] stringify can return null
+    json = (stringify(model, replacer): string);
+  } catch (x) {
+    // $FlowFixMe[incompatible-cast] stringify can return null
+    json = (stringify(
+      'Unknown Value: React could not send it from the server.\n' + x.message,
+    ): string);
+  }
 
   request.pendingChunks++;
   const id = request.nextChunkId++;
@@ -3607,7 +3725,6 @@ function outlineConsoleValue(
 
 function emitConsoleChunk(
   request: Request,
-  id: number,
   methodName: string,
   owner: null | ReactComponentInfo,
   stackTrace: ReactStackTrace,
@@ -3621,7 +3738,7 @@ function emitConsoleChunk(
     );
   }
 
-  const counter = {objectCount: 0};
+  const counter = {objectLimit: 500};
   function replacer(
     this:
       | {+[key: string | number]: ReactClientValue}
@@ -3638,8 +3755,15 @@ function emitConsoleChunk(
         value,
       );
     } catch (x) {
-      return 'unknown value';
+      return (
+        'Unknown Value: React could not send it from the server.\n' + x.message
+      );
     }
+  }
+
+  // Ensure the owner is already outlined.
+  if (owner != null) {
+    outlineComponentInfo(request, owner);
   }
 
   // TODO: Don't double badge if this log came from another Flight Client.
@@ -3647,10 +3771,36 @@ function emitConsoleChunk(
   const payload = [methodName, stackTrace, owner, env];
   // $FlowFixMe[method-unbinding]
   payload.push.apply(payload, args);
-  // $FlowFixMe[incompatible-type] stringify can return null
-  const json: string = stringify(payload, replacer);
-  const row = serializeRowHeader('W', id) + json + '\n';
+  let json: string;
+  try {
+    // $FlowFixMe[incompatible-type] stringify can return null
+    json = stringify(payload, replacer);
+  } catch (x) {
+    json = stringify(
+      [
+        methodName,
+        stackTrace,
+        owner,
+        env,
+        'Unknown Value: React could not send it from the server.',
+        x,
+      ],
+      replacer,
+    );
+  }
+  const row = ':W' + json + '\n';
   const processedChunk = stringToChunk(row);
+  request.completedRegularChunks.push(processedChunk);
+}
+
+function emitTimeOriginChunk(request: Request, timeOrigin: number): void {
+  // We emit the time origin once. All ReactTimeInfo timestamps later in the stream
+  // are relative to this time origin. This allows for more compact number encoding
+  // and lower precision loss.
+  request.pendingChunks++;
+  const row = ':N' + timeOrigin + '\n';
+  const processedChunk = stringToChunk(row);
+  // TODO: Move to its own priority queue.
   request.completedRegularChunks.push(processedChunk);
 }
 
@@ -3661,14 +3811,36 @@ function forwardDebugInfo(
 ) {
   for (let i = 0; i < debugInfo.length; i++) {
     request.pendingChunks++;
-    if (typeof debugInfo[i].name === 'string') {
-      // We outline this model eagerly so that we can refer to by reference as an owner.
-      // If we had a smarter way to dedupe we might not have to do this if there ends up
-      // being no references to this as an owner.
-      outlineModel(request, debugInfo[i]);
+    if (typeof debugInfo[i].time === 'number') {
+      // When forwarding time we need to ensure to convert it to the time space of the payload.
+      emitTimingChunk(request, id, debugInfo[i].time);
+    } else {
+      if (typeof debugInfo[i].name === 'string') {
+        // We outline this model eagerly so that we can refer to by reference as an owner.
+        // If we had a smarter way to dedupe we might not have to do this if there ends up
+        // being no references to this as an owner.
+        outlineComponentInfo(request, (debugInfo[i]: any));
+      }
+      emitDebugChunk(request, id, debugInfo[i]);
     }
-    emitDebugChunk(request, id, debugInfo[i]);
   }
+}
+
+function emitTimingChunk(
+  request: Request,
+  id: number,
+  timestamp: number,
+): void {
+  if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
+    return;
+  }
+  request.pendingChunks++;
+  const relativeTimestamp = timestamp - request.timeOrigin;
+  const row =
+    serializeRowHeader('D', id) + '{"time":' + relativeTimestamp + '}\n';
+  const processedChunk = stringToChunk(row);
+  // TODO: Move to its own priority queue.
+  request.completedRegularChunks.push(processedChunk);
 }
 
 function emitChunk(
@@ -3689,76 +3861,97 @@ function emitChunk(
     emitTextChunk(request, id, value);
     return;
   }
-  if (enableBinaryFlight) {
-    if (value instanceof ArrayBuffer) {
-      emitTypedArrayChunk(request, id, 'A', new Uint8Array(value));
-      return;
-    }
-    if (value instanceof Int8Array) {
-      // char
-      emitTypedArrayChunk(request, id, 'O', value);
-      return;
-    }
-    if (value instanceof Uint8Array) {
-      // unsigned char
-      emitTypedArrayChunk(request, id, 'o', value);
-      return;
-    }
-    if (value instanceof Uint8ClampedArray) {
-      // unsigned clamped char
-      emitTypedArrayChunk(request, id, 'U', value);
-      return;
-    }
-    if (value instanceof Int16Array) {
-      // sort
-      emitTypedArrayChunk(request, id, 'S', value);
-      return;
-    }
-    if (value instanceof Uint16Array) {
-      // unsigned short
-      emitTypedArrayChunk(request, id, 's', value);
-      return;
-    }
-    if (value instanceof Int32Array) {
-      // long
-      emitTypedArrayChunk(request, id, 'L', value);
-      return;
-    }
-    if (value instanceof Uint32Array) {
-      // unsigned long
-      emitTypedArrayChunk(request, id, 'l', value);
-      return;
-    }
-    if (value instanceof Float32Array) {
-      // float
-      emitTypedArrayChunk(request, id, 'G', value);
-      return;
-    }
-    if (value instanceof Float64Array) {
-      // double
-      emitTypedArrayChunk(request, id, 'g', value);
-      return;
-    }
-    if (value instanceof BigInt64Array) {
-      // number
-      emitTypedArrayChunk(request, id, 'M', value);
-      return;
-    }
-    if (value instanceof BigUint64Array) {
-      // unsigned number
-      // We use "m" instead of "n" since JSON can start with "null"
-      emitTypedArrayChunk(request, id, 'm', value);
-      return;
-    }
-    if (value instanceof DataView) {
-      emitTypedArrayChunk(request, id, 'V', value);
-      return;
-    }
+  if (value instanceof ArrayBuffer) {
+    emitTypedArrayChunk(request, id, 'A', new Uint8Array(value));
+    return;
+  }
+  if (value instanceof Int8Array) {
+    // char
+    emitTypedArrayChunk(request, id, 'O', value);
+    return;
+  }
+  if (value instanceof Uint8Array) {
+    // unsigned char
+    emitTypedArrayChunk(request, id, 'o', value);
+    return;
+  }
+  if (value instanceof Uint8ClampedArray) {
+    // unsigned clamped char
+    emitTypedArrayChunk(request, id, 'U', value);
+    return;
+  }
+  if (value instanceof Int16Array) {
+    // sort
+    emitTypedArrayChunk(request, id, 'S', value);
+    return;
+  }
+  if (value instanceof Uint16Array) {
+    // unsigned short
+    emitTypedArrayChunk(request, id, 's', value);
+    return;
+  }
+  if (value instanceof Int32Array) {
+    // long
+    emitTypedArrayChunk(request, id, 'L', value);
+    return;
+  }
+  if (value instanceof Uint32Array) {
+    // unsigned long
+    emitTypedArrayChunk(request, id, 'l', value);
+    return;
+  }
+  if (value instanceof Float32Array) {
+    // float
+    emitTypedArrayChunk(request, id, 'G', value);
+    return;
+  }
+  if (value instanceof Float64Array) {
+    // double
+    emitTypedArrayChunk(request, id, 'g', value);
+    return;
+  }
+  if (value instanceof BigInt64Array) {
+    // number
+    emitTypedArrayChunk(request, id, 'M', value);
+    return;
+  }
+  if (value instanceof BigUint64Array) {
+    // unsigned number
+    // We use "m" instead of "n" since JSON can start with "null"
+    emitTypedArrayChunk(request, id, 'm', value);
+    return;
+  }
+  if (value instanceof DataView) {
+    emitTypedArrayChunk(request, id, 'V', value);
+    return;
   }
   // For anything else we need to try to serialize it using JSON.
   // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
   const json: string = stringify(value, task.toJSON);
   emitModelChunk(request, task.id, json);
+}
+
+function erroredTask(request: Request, task: Task, error: mixed): void {
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    if (task.timed) {
+      emitTimingChunk(request, task.id, performance.now());
+    }
+  }
+  request.abortableTasks.delete(task);
+  task.status = ERRORED;
+  if (
+    enablePostpone &&
+    typeof error === 'object' &&
+    error !== null &&
+    error.$$typeof === REACT_POSTPONE_TYPE
+  ) {
+    const postponeInstance: Postpone = (error: any);
+    logPostpone(request, postponeInstance.message, task);
+    emitPostponeChunk(request, task.id, postponeInstance);
+  } else {
+    const digest = logRecoverableError(request, error, task);
+    emitErrorChunk(request, task.id, digest, error);
+  }
 }
 
 const emptyRoot = {};
@@ -3806,20 +3999,26 @@ function retryTask(request: Request, task: Task): void {
     task.keyPath = null;
     task.implicitSlot = false;
 
+    if (__DEV__) {
+      const currentEnv = (0, request.environmentName)();
+      if (currentEnv !== task.environmentName) {
+        request.pendingChunks++;
+        // The environment changed since we last emitted any debug information for this
+        // task. We emit an entry that just includes the environment name change.
+        emitDebugChunk(request, task.id, {env: currentEnv});
+      }
+    }
+    // We've finished rendering. Log the end time.
+    if (enableProfilerTimer && enableComponentPerformanceTrack) {
+      if (task.timed) {
+        emitTimingChunk(request, task.id, performance.now());
+      }
+    }
+
     if (typeof resolvedModel === 'object' && resolvedModel !== null) {
       // We're not in a contextual place here so we can refer to this object by this ID for
       // any future references.
       request.writtenObjects.set(resolvedModel, serializeByValueID(task.id));
-
-      if (__DEV__) {
-        const currentEnv = (0, request.environmentName)();
-        if (currentEnv !== task.environmentName) {
-          request.pendingChunks++;
-          // The environment changed since we last emitted any debug information for this
-          // task. We emit an entry that just includes the environment name change.
-          emitDebugChunk(request, task.id, {env: currentEnv});
-        }
-      }
 
       // Object might contain unresolved values like additional elements.
       // This is simulating what the JSON loop would do if this was part of it.
@@ -3829,17 +4028,6 @@ function retryTask(request: Request, task: Task): void {
       // We don't need to escape it again so it's not passed the toJSON replacer.
       // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
       const json: string = stringify(resolvedModel);
-
-      if (__DEV__) {
-        const currentEnv = (0, request.environmentName)();
-        if (currentEnv !== task.environmentName) {
-          request.pendingChunks++;
-          // The environment changed since we last emitted any debug information for this
-          // task. We emit an entry that just includes the environment name change.
-          emitDebugChunk(request, task.id, {env: currentEnv});
-        }
-      }
-
       emitModelChunk(request, task.id, json);
     }
 
@@ -3880,20 +4068,9 @@ function retryTask(request: Request, task: Task): void {
         const ping = task.ping;
         x.then(ping, ping);
         return;
-      } else if (enablePostpone && x.$$typeof === REACT_POSTPONE_TYPE) {
-        request.abortableTasks.delete(task);
-        task.status = ERRORED;
-        const postponeInstance: Postpone = (x: any);
-        logPostpone(request, postponeInstance.message, task);
-        emitPostponeChunk(request, task.id, postponeInstance);
-        return;
       }
     }
-
-    request.abortableTasks.delete(task);
-    task.status = ERRORED;
-    const digest = logRecoverableError(request, x, task);
-    emitErrorChunk(request, task.id, digest, x);
+    erroredTask(request, task, x);
   } finally {
     if (__DEV__) {
       debugID = prevDebugID;
@@ -3960,6 +4137,12 @@ function abortTask(task: Task, request: Request, errorId: number): void {
     return;
   }
   task.status = ABORTED;
+  // Track when we aborted this task as its end time.
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    if (task.timed) {
+      emitTimingChunk(request, task.id, performance.now());
+    }
+  }
   // Instead of emitting an error per task.id, we emit a model that only
   // has a single value referencing the error.
   const ref = serializeByValueID(errorId);
@@ -4133,7 +4316,12 @@ export function abort(request: Request, reason: mixed): void {
     }
     const abortableTasks = request.abortableTasks;
     if (abortableTasks.size > 0) {
-      if (
+      if (enableHalt && request.type === PRERENDER) {
+        // When prerendering with halt semantics we simply halt the task
+        // and leave the reference unfulfilled.
+        abortableTasks.forEach(task => haltTask(task, request));
+        abortableTasks.clear();
+      } else if (
         enablePostpone &&
         typeof reason === 'object' &&
         reason !== null &&
@@ -4141,21 +4329,14 @@ export function abort(request: Request, reason: mixed): void {
       ) {
         const postponeInstance: Postpone = (reason: any);
         logPostpone(request, postponeInstance.message, null);
-        if (enableHalt && request.type === PRERENDER) {
-          // When prerendering with halt semantics we simply halt the task
-          // and leave the reference unfulfilled.
-          abortableTasks.forEach(task => haltTask(task, request));
-          abortableTasks.clear();
-        } else {
-          // When rendering we produce a shared postpone chunk and then
-          // fulfill each task with a reference to that chunk.
-          const errorId = request.nextChunkId++;
-          request.fatalError = errorId;
-          request.pendingChunks++;
-          emitPostponeChunk(request, errorId, postponeInstance);
-          abortableTasks.forEach(task => abortTask(task, request, errorId));
-          abortableTasks.clear();
-        }
+        // When rendering we produce a shared postpone chunk and then
+        // fulfill each task with a reference to that chunk.
+        const errorId = request.nextChunkId++;
+        request.fatalError = errorId;
+        request.pendingChunks++;
+        emitPostponeChunk(request, errorId, postponeInstance);
+        abortableTasks.forEach(task => abortTask(task, request, errorId));
+        abortableTasks.clear();
       } else {
         const error =
           reason === undefined
@@ -4170,21 +4351,14 @@ export function abort(request: Request, reason: mixed): void {
                 )
               : reason;
         const digest = logRecoverableError(request, error, null);
-        if (enableHalt && request.type === PRERENDER) {
-          // When prerendering with halt semantics we simply halt the task
-          // and leave the reference unfulfilled.
-          abortableTasks.forEach(task => haltTask(task, request));
-          abortableTasks.clear();
-        } else {
-          // When rendering we produce a shared error chunk and then
-          // fulfill each task with a reference to that chunk.
-          const errorId = request.nextChunkId++;
-          request.fatalError = errorId;
-          request.pendingChunks++;
-          emitErrorChunk(request, errorId, digest, error);
-          abortableTasks.forEach(task => abortTask(task, request, errorId));
-          abortableTasks.clear();
-        }
+        // When rendering we produce a shared error chunk and then
+        // fulfill each task with a reference to that chunk.
+        const errorId = request.nextChunkId++;
+        request.fatalError = errorId;
+        request.pendingChunks++;
+        emitErrorChunk(request, errorId, digest, error);
+        abortableTasks.forEach(task => abortTask(task, request, errorId));
+        abortableTasks.clear();
       }
       const onAllReady = request.onAllReady;
       onAllReady();

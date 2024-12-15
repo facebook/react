@@ -25,6 +25,13 @@ const contentScriptsToInject = [
     runAt: 'document_start',
     world: chrome.scripting.ExecutionWorld.MAIN,
   },
+  {
+    id: '@react-devtools/hook-settings-injector',
+    js: ['build/hookSettingsInjector.js'],
+    matches: ['<all_urls>'],
+    persistAcrossSessions: true,
+    runAt: 'document_start',
+  },
 ];
 
 async function dynamicallyInjectContentScripts() {

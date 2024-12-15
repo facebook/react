@@ -1,4 +1,4 @@
-// @enableTreatFunctionDepsAsConditional @enablePropagateDepsInHIR:false
+// @enableTreatFunctionDepsAsConditional
 import {Stringify} from 'shared-runtime';
 
 function Component({props}) {

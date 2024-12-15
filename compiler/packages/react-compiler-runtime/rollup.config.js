@@ -11,7 +11,6 @@ import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import path from 'path';
 import process from 'process';
-import terser from '@rollup/plugin-terser';
 import banner2 from 'rollup-plugin-banner2';
 
 const NO_INLINE = new Set(['react']);
@@ -37,11 +36,6 @@ const PROD_ROLLUP_CONFIG = {
       rootDir: path.join(process.cwd(), '..'),
     }),
     commonjs(),
-    terser({
-      format: {
-        comments: false,
-      },
-    }),
     banner2(
       () => `/**
  * Copyright (c) Meta Platforms, Inc. and affiliates.

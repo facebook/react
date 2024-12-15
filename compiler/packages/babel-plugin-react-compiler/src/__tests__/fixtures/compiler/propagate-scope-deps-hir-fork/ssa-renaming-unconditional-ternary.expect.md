@@ -39,11 +39,11 @@ function useFoo(props) {
   } else {
     x = $[1];
   }
-  if ($[2] !== props.cond || $[3] !== props.foo || $[4] !== props.bar) {
+  if ($[2] !== props.bar || $[3] !== props.cond || $[4] !== props.foo) {
     props.cond ? ((x = []), x.push(props.foo)) : ((x = []), x.push(props.bar));
-    $[2] = props.cond;
-    $[3] = props.foo;
-    $[4] = props.bar;
+    $[2] = props.bar;
+    $[3] = props.cond;
+    $[4] = props.foo;
     $[5] = x;
   } else {
     x = $[5];

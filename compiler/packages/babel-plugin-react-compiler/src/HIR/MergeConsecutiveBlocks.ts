@@ -84,20 +84,14 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
         id: predecessor.terminal.id,
         lvalue: {
           kind: 'Identifier',
-          identifier: phi.id,
+          identifier: phi.place.identifier,
           effect: Effect.ConditionallyMutate,
           reactive: false,
           loc: GeneratedSource,
         },
         value: {
           kind: 'LoadLocal',
-          place: {
-            kind: 'Identifier',
-            identifier: operand,
-            effect: Effect.Read,
-            reactive: false,
-            loc: GeneratedSource,
-          },
+          place: {...operand},
           loc: GeneratedSource,
         },
         loc: GeneratedSource,

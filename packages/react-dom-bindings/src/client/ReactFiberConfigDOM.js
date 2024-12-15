@@ -91,8 +91,8 @@ import {
   enableCreateEventHandleAPI,
   enableScopeAPI,
   enableTrustedTypesIntegration,
-  enableAsyncActions,
   disableLegacyMode,
+  enableMoveBefore,
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
@@ -192,6 +192,8 @@ const SUSPENSE_PENDING_START_DATA = '$?';
 const SUSPENSE_FALLBACK_START_DATA = '$!';
 const FORM_STATE_IS_MATCHING = 'F!';
 const FORM_STATE_IS_NOT_MATCHING = 'F';
+
+const DOCUMENT_READY_STATE_COMPLETE = 'complete';
 
 const STYLE = 'style';
 
@@ -525,6 +527,7 @@ export function appendInitialChild(
   parentInstance: Instance,
   child: Instance | TextInstance,
 ): void {
+  // Note: This should not use moveBefore() because initial are appended while disconnected.
   parentInstance.appendChild(child);
 }
 
@@ -604,6 +607,21 @@ export function shouldAttemptEagerTransition(): boolean {
   // We're not inside a popstate event.
   currentPopstateTransitionEvent = null;
   return false;
+}
+
+let schedulerEvent: void | Event = undefined;
+export function trackSchedulerEvent(): void {
+  schedulerEvent = window.event;
+}
+
+export function resolveEventType(): null | string {
+  const event = window.event;
+  return event && event !== schedulerEvent ? event.type : null;
+}
+
+export function resolveEventTimeStamp(): number {
+  const event = window.event;
+  return event && event !== schedulerEvent ? event.timeStamp : -1.1;
 }
 
 export const isPrimaryRenderer = true;
@@ -742,11 +760,22 @@ export function commitTextUpdate(
   textInstance.nodeValue = newText;
 }
 
+const supportsMoveBefore =
+  // $FlowFixMe[prop-missing]: We're doing the feature detection here.
+  enableMoveBefore &&
+  typeof window !== 'undefined' &&
+  typeof window.Node.prototype.moveBefore === 'function';
+
 export function appendChild(
   parentInstance: Instance,
   child: Instance | TextInstance,
 ): void {
-  parentInstance.appendChild(child);
+  if (supportsMoveBefore) {
+    // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
+    parentInstance.moveBefore(child, null);
+  } else {
+    parentInstance.appendChild(child);
+  }
 }
 
 export function appendChildToContainer(
@@ -784,7 +813,12 @@ export function insertBefore(
   child: Instance | TextInstance,
   beforeChild: Instance | TextInstance | SuspenseInstance,
 ): void {
-  parentInstance.insertBefore(child, beforeChild);
+  if (supportsMoveBefore) {
+    // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
+    parentInstance.moveBefore(child, beforeChild);
+  } else {
+    parentInstance.insertBefore(child, beforeChild);
+  }
 }
 
 export function insertInContainerBefore(
@@ -1229,7 +1263,11 @@ export function isSuspenseInstancePending(instance: SuspenseInstance): boolean {
 export function isSuspenseInstanceFallback(
   instance: SuspenseInstance,
 ): boolean {
-  return instance.data === SUSPENSE_FALLBACK_START_DATA;
+  return (
+    instance.data === SUSPENSE_FALLBACK_START_DATA ||
+    (instance.data === SUSPENSE_PENDING_START_DATA &&
+      instance.ownerDocument.readyState === DOCUMENT_READY_STATE_COMPLETE)
+  );
 }
 
 export function getSuspenseInstanceFallbackErrorDetails(
@@ -1270,7 +1308,29 @@ export function registerSuspenseInstanceRetry(
   instance: SuspenseInstance,
   callback: () => void,
 ) {
-  instance._reactRetry = callback;
+  const ownerDocument = instance.ownerDocument;
+  if (
+    // The Fizz runtime must have put this boundary into client render or complete
+    // state after the render finished but before it committed. We need to call the
+    // callback now rather than wait
+    instance.data !== SUSPENSE_PENDING_START_DATA ||
+    // The boundary is still in pending status but the document has finished loading
+    // before we could register the event handler that would have scheduled the retry
+    // on load so we call teh callback now.
+    ownerDocument.readyState === DOCUMENT_READY_STATE_COMPLETE
+  ) {
+    callback();
+  } else {
+    // We're still in pending status and the document is still loading so we attach
+    // a listener to the document load even and expose the retry on the instance for
+    // the Fizz runtime to trigger if it ends up resolving this boundary
+    const listener = () => {
+      callback();
+      ownerDocument.removeEventListener('DOMContentLoaded', listener);
+    };
+    ownerDocument.addEventListener('DOMContentLoaded', listener);
+    instance._reactRetry = listener;
+  }
 }
 
 export function canHydrateFormStateMarker(
@@ -1317,9 +1377,8 @@ function getNextHydratable(node: ?Node) {
         nodeData === SUSPENSE_START_DATA ||
         nodeData === SUSPENSE_FALLBACK_START_DATA ||
         nodeData === SUSPENSE_PENDING_START_DATA ||
-        (enableAsyncActions &&
-          (nodeData === FORM_STATE_IS_MATCHING ||
-            nodeData === FORM_STATE_IS_NOT_MATCHING))
+        nodeData === FORM_STATE_IS_MATCHING ||
+        nodeData === FORM_STATE_IS_NOT_MATCHING
       ) {
         break;
       }
@@ -3127,10 +3186,9 @@ export function isHostHoistableType(
             console.error(
               'Cannot render a <style> outside the main document without knowing its precedence and a unique href key.' +
                 ' React can hoist and deduplicate <style> tags if you provide a `precedence` prop along with an `href` prop that' +
-                ' does not conflic with the `href` values used in any other hoisted <style> or <link rel="stylesheet" ...> tags. ' +
+                ' does not conflict with the `href` values used in any other hoisted <style> or <link rel="stylesheet" ...> tags. ' +
                 ' Note that hoisting <style> tags is considered an advanced feature that most will not use directly.' +
-                ' Consider moving the <style> tag to the <head> or consider adding a `precedence="default"` and `href="some unique resource identifier"`, or move the <style>' +
-                ' to the <style> tag.',
+                ' Consider moving the <style> tag to the <head> or consider adding a `precedence="default"` and `href="some unique resource identifier"`.',
             );
           }
         }
@@ -3391,7 +3449,7 @@ export function suspendResource(
   }
 }
 
-export function waitForCommitToBeReady(): null | (Function => Function) {
+export function waitForCommitToBeReady(): null | ((() => void) => () => void) {
   if (suspendedState === null) {
     throw new Error(
       'Internal React Error: suspendedState null when it was expected to exists. Please report this as a React bug.',

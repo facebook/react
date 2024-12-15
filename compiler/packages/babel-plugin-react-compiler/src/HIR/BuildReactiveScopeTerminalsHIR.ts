@@ -14,6 +14,7 @@ import {
   ScopeId,
 } from './HIR';
 import {
+  fixScopeAndIdentifierRanges,
   markInstructionIds,
   markPredecessors,
   reversePostorderBlocks,
@@ -176,20 +177,7 @@ export function buildReactiveScopeTerminalsHIR(fn: HIRFunction): void {
    * Step 5:
    * Fix scope and identifier ranges to account for renumbered instructions
    */
-  for (const [, block] of fn.body.blocks) {
-    const terminal = block.terminal;
-    if (terminal.kind === 'scope' || terminal.kind === 'pruned-scope') {
-      /*
-       * Scope ranges should always align to start at the 'scope' terminal
-       * and end at the first instruction of the fallthrough block
-       */
-      const fallthroughBlock = fn.body.blocks.get(terminal.fallthrough)!;
-      const firstId =
-        fallthroughBlock.instructions[0]?.id ?? fallthroughBlock.terminal.id;
-      terminal.scope.range.start = terminal.id;
-      terminal.scope.range.end = firstId;
-    }
-  }
+  fixScopeAndIdentifierRanges(fn.body);
 }
 
 type TerminalRewriteInfo =

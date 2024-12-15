@@ -65,8 +65,6 @@ import {
   pushTextInstance,
   pushStartInstance,
   pushEndInstance,
-  pushStartCompletedSuspenseBoundary,
-  pushEndCompletedSuspenseBoundary,
   pushSegmentFinale,
   getChildFormatContext,
   writeHoistables,
@@ -155,15 +153,12 @@ import {
   disableLegacyContext,
   disableLegacyContextForFunctionComponents,
   enableScopeAPI,
-  enableSuspenseAvoidThisFallbackFizz,
   enableCache,
   enablePostpone,
   enableHalt,
   enableRenderableContext,
-  enableRefAsProp,
   disableDefaultPropsExceptForClasses,
   enableAsyncIterableChildren,
-  disableStringRefs,
   enableOwnerStacks,
 } from 'shared/ReactFeatureFlags';
 
@@ -316,10 +311,11 @@ type Segment = {
   textEmbedded: boolean,
 };
 
-const OPEN = 0;
-const ABORTING = 1;
-const CLOSING = 2;
-const CLOSED = 3;
+const OPENING = 10;
+const OPEN = 11;
+const ABORTING = 12;
+const CLOSING = 13;
+const CLOSED = 14;
 
 export opaque type Request = {
   destination: null | Destination,
@@ -328,7 +324,7 @@ export opaque type Request = {
   +renderState: RenderState,
   +rootFormatContext: FormatContext,
   +progressiveChunkSize: number,
-  status: 0 | 1 | 2 | 3,
+  status: 10 | 11 | 12 | 13 | 14,
   fatalError: mixed,
   nextSegmentId: number,
   allPendingTasks: number, // when it reaches zero, we can close the connection.
@@ -424,7 +420,7 @@ function RequestInstance(
     progressiveChunkSize === undefined
       ? DEFAULT_PROGRESSIVE_CHUNK_SIZE
       : progressiveChunkSize;
-  this.status = OPEN;
+  this.status = OPENING;
   this.fatalError = null;
   this.nextSegmentId = 0;
   this.allPendingTasks = 0;
@@ -688,7 +684,7 @@ function pingTask(request: Request, task: Task): void {
   pingedTasks.push(task);
   if (request.pingedTasks.length === 1) {
     request.flushScheduled = request.destination !== null;
-    if (request.trackedPostpones !== null) {
+    if (request.trackedPostpones !== null || request.status === OPENING) {
       scheduleMicrotask(() => performWork(request));
     } else {
       scheduleWork(() => performWork(request));
@@ -1491,28 +1487,6 @@ function replaySuspenseBoundary(
   request.pingedTasks.push(suspendedFallbackTask);
 }
 
-function renderBackupSuspenseBoundary(
-  request: Request,
-  task: Task,
-  keyPath: KeyNode,
-  props: Object,
-) {
-  const content = props.children;
-  const segment = task.blockedSegment;
-  const prevKeyPath = task.keyPath;
-  task.keyPath = keyPath;
-  if (segment === null) {
-    // Replay
-    renderNode(request, task, content, -1);
-  } else {
-    // Render
-    pushStartCompletedSuspenseBoundary(segment.chunks);
-    renderNode(request, task, content, -1);
-    pushEndCompletedSuspenseBoundary(segment.chunks);
-  }
-  task.keyPath = prevKeyPath;
-}
-
 function renderHostElement(
   request: Request,
   task: Task,
@@ -1670,14 +1644,12 @@ export function resolveClassComponentProps(
 ): Object {
   let newProps = baseProps;
 
-  if (enableRefAsProp) {
-    // Remove ref from the props object, if it exists.
-    if ('ref' in baseProps) {
-      newProps = ({}: any);
-      for (const propName in baseProps) {
-        if (propName !== 'ref') {
-          newProps[propName] = baseProps[propName];
-        }
+  // Remove ref from the props object, if it exists.
+  if ('ref' in baseProps) {
+    newProps = ({}: any);
+    for (const propName in baseProps) {
+      if (propName !== 'ref') {
+        newProps[propName] = baseProps[propName];
       }
     }
   }
@@ -1972,7 +1944,7 @@ function renderForwardRef(
   ref: any,
 ): void {
   let propsWithoutRef;
-  if (enableRefAsProp && 'ref' in props) {
+  if ('ref' in props) {
     // `ref` is just a prop now, but `forwardRef` expects it to not appear in
     // the props object. This used to happen in the JSX runtime, but now we do
     // it here.
@@ -2197,14 +2169,7 @@ function renderElement(
       throw new Error('ReactDOMServer does not yet support scope components.');
     }
     case REACT_SUSPENSE_TYPE: {
-      if (
-        enableSuspenseAvoidThisFallbackFizz &&
-        props.unstable_avoidThisFallback === true
-      ) {
-        renderBackupSuspenseBoundary(request, task, keyPath, props);
-      } else {
-        renderSuspenseBoundary(request, task, keyPath, props);
-      }
+      renderSuspenseBoundary(request, task, keyPath, props);
       return;
     }
   }
@@ -2594,16 +2559,10 @@ function retryNode(request: Request, task: Task): void {
         const key = element.key;
         const props = element.props;
 
-        let ref;
-        if (enableRefAsProp) {
-          // TODO: This is a temporary, intermediate step. Once the feature
-          // flag is removed, we should get the ref off the props object right
-          // before using it.
-          const refProp = props.ref;
-          ref = refProp !== undefined ? refProp : null;
-        } else {
-          ref = element.ref;
-        }
+        // TODO: We should get the ref off the props object right before using
+        // it.
+        const refProp = props.ref;
+        const ref = refProp !== undefined ? refProp : null;
 
         const debugTask: null | ConsoleTask =
           __DEV__ && enableOwnerStacks ? task.debugTask : null;
@@ -3870,8 +3829,9 @@ function abortTask(task: Task, request: Request, error: mixed): void {
     segment.status = ABORTED;
   }
 
+  const errorInfo = getThrownInfo(task.componentStack);
+
   if (boundary === null) {
-    const errorInfo: ThrownInfo = {};
     if (request.status !== CLOSING && request.status !== CLOSED) {
       const replay: null | ReplaySet = task.replay;
       if (replay === null) {
@@ -3957,7 +3917,6 @@ function abortTask(task: Task, request: Request, error: mixed): void {
     boundary.pendingTasks--;
     // We construct an errorInfo from the boundary's componentStack so the error in dev will indicate which
     // boundary the message is referring to
-    const errorInfo = getThrownInfo(task.componentStack);
     const trackedPostpones = request.trackedPostpones;
     if (boundary.status !== CLIENT_RENDERED) {
       if (enableHalt) {
@@ -4460,7 +4419,7 @@ export function performWork(request: Request): void {
   const prevDispatcher = ReactSharedInternals.H;
   ReactSharedInternals.H = HooksDispatcher;
   let prevAsyncDispatcher = null;
-  if (enableCache || __DEV__ || !disableStringRefs) {
+  if (enableCache || __DEV__) {
     prevAsyncDispatcher = ReactSharedInternals.A;
     ReactSharedInternals.A = DefaultAsyncDispatcher;
   }
@@ -4977,43 +4936,38 @@ function flushCompletedQueues(
 
 export function startWork(request: Request): void {
   request.flushScheduled = request.destination !== null;
-  if (request.trackedPostpones !== null) {
-    // When prerendering we use microtasks for pinging work
-    if (supportsRequestStorage) {
-      scheduleMicrotask(() =>
-        requestStorage.run(request, performWork, request),
-      );
-    } else {
-      scheduleMicrotask(() => performWork(request));
-    }
+  // When prerendering we use microtasks for pinging work
+  if (supportsRequestStorage) {
+    scheduleMicrotask(() => requestStorage.run(request, performWork, request));
   } else {
-    // When rendering/resuming we use regular tasks and we also emit early preloads
-    if (supportsRequestStorage) {
-      scheduleWork(() => requestStorage.run(request, performWork, request));
-    } else {
-      scheduleWork(() => performWork(request));
+    scheduleMicrotask(() => performWork(request));
+  }
+  scheduleWork(() => {
+    if (request.status === OPENING) {
+      request.status = OPEN;
     }
-    // this is either a regular render or a resume. For regular render we want
-    // to call emitEarlyPreloads after the first performWork because we want
-    // are responding to a live request and need to balance sending something early
-    // (i.e. don't want for the shell to finish) but we need something to send.
-    // The only implementation of this is for DOM at the moment and during resumes nothing
-    // actually emits but the code paths here are the same.
-    // During a prerender we don't want to be too aggressive in emitting early preloads
-    // because we aren't responding to a live request and we can wait for the prerender to
-    // postpone before we emit anything.
-    if (supportsRequestStorage) {
-      scheduleWork(() =>
+
+    if (request.trackedPostpones === null) {
+      // this is either a regular render or a resume. For regular render we want
+      // to call emitEarlyPreloads after the first performWork because we want
+      // are responding to a live request and need to balance sending something early
+      // (i.e. don't want for the shell to finish) but we need something to send.
+      // The only implementation of this is for DOM at the moment and during resumes nothing
+      // actually emits but the code paths here are the same.
+      // During a prerender we don't want to be too aggressive in emitting early preloads
+      // because we aren't responding to a live request and we can wait for the prerender to
+      // postpone before we emit anything.
+      if (supportsRequestStorage) {
         requestStorage.run(
           request,
           enqueueEarlyPreloadsAfterInitialWork,
           request,
-        ),
-      );
-    } else {
-      scheduleWork(() => enqueueEarlyPreloadsAfterInitialWork(request));
+        );
+      } else {
+        enqueueEarlyPreloadsAfterInitialWork(request);
+      }
     }
-  }
+  });
 }
 
 function enqueueEarlyPreloadsAfterInitialWork(request: Request) {
@@ -5095,7 +5049,7 @@ export function stopFlowing(request: Request): void {
 
 // This is called to early terminate a request. It puts all pending boundaries in client rendered state.
 export function abort(request: Request, reason: mixed): void {
-  if (request.status === OPEN) {
+  if (request.status === OPEN || request.status === OPENING) {
     request.status = ABORTING;
   }
 

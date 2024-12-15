@@ -27,7 +27,6 @@ import {startReactPolling} from './reactPolling';
 import cloneStyleTags from './cloneStyleTags';
 import fetchFileWithCaching from './fetchFileWithCaching';
 import injectBackendManager from './injectBackendManager';
-import syncSavedPreferences from './syncSavedPreferences';
 import registerEventsLogger from './registerEventsLogger';
 import getProfilingFlags from './getProfilingFlags';
 import debounce from './debounce';
@@ -101,6 +100,10 @@ function createBridgeAndStore() {
     supportsTraceUpdates: true,
     supportsInspectMatchingDOMElement: true,
     supportsClickToInspect: true,
+  });
+
+  store.addListener('settingsUpdated', settings => {
+    chrome.storage.local.set(settings);
   });
 
   if (!isProfiling) {
@@ -393,10 +396,6 @@ let root = null;
 
 let port = null;
 
-// Re-initialize saved filters on navigation,
-// since global values stored on window get reset in this case.
-chrome.devtools.network.onNavigated.addListener(syncSavedPreferences);
-
 // In case when multiple navigation events emitted in a short period of time
 // This debounced callback primarily used to avoid mounting React DevTools multiple times, which results
 // into subscribing to the same events from Bridge and window multiple times
@@ -426,5 +425,4 @@ if (__IS_FIREFOX__) {
 
 connectExtensionPort();
 
-syncSavedPreferences();
 mountReactDevToolsWhenReactHasLoaded();

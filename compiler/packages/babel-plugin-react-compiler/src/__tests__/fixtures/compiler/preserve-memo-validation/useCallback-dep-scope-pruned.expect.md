@@ -6,6 +6,8 @@
 import {useCallback} from 'react';
 import {identity, useIdentity} from 'shared-runtime';
 
+function mutate(_: unknown) {}
+
 /**
  * Repro showing a manual memo whose declaration (useCallback's 1st argument)
  * is memoized, but not its dependency (x). In this case, `x`'s scope is pruned
@@ -32,6 +34,8 @@ export const FIXTURE_ENTRYPOINT = {
 import { c as _c } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees
 import { useCallback } from "react";
 import { identity, useIdentity } from "shared-runtime";
+
+function mutate(_) {}
 
 /**
  * Repro showing a manual memo whose declaration (useCallback's 1st argument)
@@ -62,4 +66,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: exception) mutate is not defined
+(kind: ok) "[[ function params=0 ]]"

@@ -130,7 +130,7 @@ async function renderApp(req, res, next) {
         buildPath = path.join(__dirname, '../build/');
       }
       // Read the module map from the virtual file system.
-      const ssrManifest = JSON.parse(
+      const serverConsumerManifest = JSON.parse(
         await virtualFs.readFile(
           path.join(buildPath, 'react-ssr-manifest.json'),
           'utf8'
@@ -160,14 +160,20 @@ async function renderApp(req, res, next) {
       rscResponse.pipe(rscResponse1);
       rscResponse.pipe(rscResponse2);
 
-      const {formState} = await createFromNodeStream(rscResponse1, ssrManifest);
+      const {formState} = await createFromNodeStream(
+        rscResponse1,
+        serverConsumerManifest
+      );
       rscResponse1.end();
 
       let cachedResult;
       let Root = () => {
         if (!cachedResult) {
           // Read this stream inside the render.
-          cachedResult = createFromNodeStream(rscResponse2, ssrManifest);
+          cachedResult = createFromNodeStream(
+            rscResponse2,
+            serverConsumerManifest
+          );
         }
         return React.use(cachedResult).root;
       };

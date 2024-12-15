@@ -15,6 +15,11 @@ import type {BatchConfigTransition} from './ReactFiberTracingMarkerComponent';
 import {
   disableLegacyMode,
   enableDeferRootSchedulingToMicrotask,
+  disableSchedulerTimeoutInWorkLoop,
+  enableProfilerTimer,
+  enableProfilerNestedUpdatePhase,
+  enableComponentPerformanceTrack,
+  enableSiblingPrerendering,
 } from 'shared/ReactFeatureFlags';
 import {
   NoLane,
@@ -26,17 +31,18 @@ import {
   markStarvedLanesAsExpired,
   claimNextTransitionLane,
   getNextLanesToFlushSync,
+  checkIfRootIsPrerendering,
 } from './ReactFiberLane';
 import {
   CommitContext,
   NoContext,
   RenderContext,
+  flushPassiveEffects,
   getExecutionContext,
   getWorkInProgressRoot,
   getWorkInProgressRootRenderLanes,
   isWorkLoopSuspendedOnData,
-  performConcurrentWorkOnRoot,
-  performSyncWorkOnRoot,
+  performWorkOnRoot,
 } from './ReactFiberWorkLoop';
 import {LegacyRoot} from './ReactRootTags';
 import {
@@ -59,9 +65,14 @@ import {
   supportsMicrotasks,
   scheduleMicrotask,
   shouldAttemptEagerTransition,
+  trackSchedulerEvent,
 } from './ReactFiberConfig';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
+import {
+  resetNestedUpdateFlag,
+  syncNestedUpdateFlag,
+} from './ReactProfilerTimer';
 
 // A linked list of all the roots with pending work. In an idiomatic app,
 // there's only a single root, but we do support multi root apps, hence this
@@ -199,7 +210,10 @@ function flushSyncWorkAcrossRoots_impl(
               ? workInProgressRootRenderLanes
               : NoLanes,
           );
-          if (includesSyncLane(nextLanes)) {
+          if (
+            includesSyncLane(nextLanes) &&
+            !checkIfRootIsPrerendering(root, nextLanes)
+          ) {
             // This root has pending sync work. Flush it now.
             didPerformSomeWork = true;
             performSyncWorkOnRoot(root, nextLanes);
@@ -213,6 +227,12 @@ function flushSyncWorkAcrossRoots_impl(
 }
 
 function processRootScheduleInMicrotask() {
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // Track the currently executing event if there is one so we can ignore this
+    // event when logging events.
+    trackSchedulerEvent();
+  }
+
   // This function is always called inside a microtask. It should never be
   // called synchronously.
   didScheduleMicrotask = false;
@@ -334,7 +354,13 @@ function scheduleTaskForRootDuringMicrotask(
   }
 
   // Schedule a new callback in the host environment.
-  if (includesSyncLane(nextLanes)) {
+  if (
+    includesSyncLane(nextLanes) &&
+    // If we're prerendering, then we should use the concurrent work loop
+    // even if the lanes are synchronous, so that prerendering never blocks
+    // the main thread.
+    !(enableSiblingPrerendering && checkIfRootIsPrerendering(root, nextLanes))
+  ) {
     // Synchronous work is always flushed at the end of the microtask, so we
     // don't need to schedule an additional task.
     if (existingCallbackNode !== null) {
@@ -368,9 +394,10 @@ function scheduleTaskForRootDuringMicrotask(
 
     let schedulerPriorityLevel;
     switch (lanesToEventPriority(nextLanes)) {
+      // Scheduler does have an "ImmediatePriority", but now that we use
+      // microtasks for sync work we no longer use that. Any sync work that
+      // reaches this path is meant to be time sliced.
       case DiscreteEventPriority:
-        schedulerPriorityLevel = ImmediateSchedulerPriority;
-        break;
       case ContinuousEventPriority:
         schedulerPriorityLevel = UserBlockingSchedulerPriority;
         break;
@@ -387,7 +414,7 @@ function scheduleTaskForRootDuringMicrotask(
 
     const newCallbackNode = scheduleCallback(
       schedulerPriorityLevel,
-      performConcurrentWorkOnRoot.bind(null, root),
+      performWorkOnRootViaSchedulerTask.bind(null, root),
     );
 
     root.callbackPriority = newCallbackPriority;
@@ -396,27 +423,101 @@ function scheduleTaskForRootDuringMicrotask(
   }
 }
 
-export type RenderTaskFn = (didTimeout: boolean) => RenderTaskFn | null;
+type RenderTaskFn = (didTimeout: boolean) => RenderTaskFn | null;
 
-export function getContinuationForRoot(
+function performWorkOnRootViaSchedulerTask(
   root: FiberRoot,
-  originalCallbackNode: mixed,
+  didTimeout: boolean,
 ): RenderTaskFn | null {
-  // This is called at the end of `performConcurrentWorkOnRoot` to determine
-  // if we need to schedule a continuation task.
-  //
+  // This is the entry point for concurrent tasks scheduled via Scheduler (and
+  // postTask, in the future).
+
+  if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
+    resetNestedUpdateFlag();
+  }
+
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // Track the currently executing event if there is one so we can ignore this
+    // event when logging events.
+    trackSchedulerEvent();
+  }
+
+  // Flush any pending passive effects before deciding which lanes to work on,
+  // in case they schedule additional work.
+  const originalCallbackNode = root.callbackNode;
+  const didFlushPassiveEffects = flushPassiveEffects();
+  if (didFlushPassiveEffects) {
+    // Something in the passive effect phase may have canceled the current task.
+    // Check if the task node for this root was changed.
+    if (root.callbackNode !== originalCallbackNode) {
+      // The current task was canceled. Exit. We don't need to call
+      // `ensureRootIsScheduled` because the check above implies either that
+      // there's a new task, or that there's no remaining work on this root.
+      return null;
+    } else {
+      // Current task was not canceled. Continue.
+    }
+  }
+
+  // Determine the next lanes to work on, using the fields stored on the root.
+  // TODO: We already called getNextLanes when we scheduled the callback; we
+  // should be able to avoid calling it again by stashing the result on the
+  // root object. However, because we always schedule the callback during
+  // a microtask (scheduleTaskForRootDuringMicrotask), it's possible that
+  // an update was scheduled earlier during this same browser task (and
+  // therefore before the microtasks have run). That's because Scheduler batches
+  // together multiple callbacks into a single browser macrotask, without
+  // yielding to microtasks in between. We should probably change this to align
+  // with the postTask behavior (and literally use postTask when
+  // it's available).
+  const workInProgressRoot = getWorkInProgressRoot();
+  const workInProgressRootRenderLanes = getWorkInProgressRootRenderLanes();
+  const lanes = getNextLanes(
+    root,
+    root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes,
+  );
+  if (lanes === NoLanes) {
+    // No more work on this root.
+    return null;
+  }
+
+  // Enter the work loop.
+  // TODO: We only check `didTimeout` defensively, to account for a Scheduler
+  // bug we're still investigating. Once the bug in Scheduler is fixed,
+  // we can remove this, since we track expiration ourselves.
+  const forceSync = !disableSchedulerTimeoutInWorkLoop && didTimeout;
+  performWorkOnRoot(root, lanes, forceSync);
+
+  // The work loop yielded, but there may or may not be work left at the current
+  // priority. Need to determine whether we need to schedule a continuation.
   // Usually `scheduleTaskForRootDuringMicrotask` only runs inside a microtask;
   // however, since most of the logic for determining if we need a continuation
   // versus a new task is the same, we cheat a bit and call it here. This is
   // only safe to do because we know we're at the end of the browser task.
   // So although it's not an actual microtask, it might as well be.
   scheduleTaskForRootDuringMicrotask(root, now());
-  if (root.callbackNode === originalCallbackNode) {
+  if (root.callbackNode != null && root.callbackNode === originalCallbackNode) {
     // The task node scheduled for this root is the same one that's
     // currently executed. Need to return a continuation.
-    return performConcurrentWorkOnRoot.bind(null, root);
+    return performWorkOnRootViaSchedulerTask.bind(null, root);
   }
   return null;
+}
+
+function performSyncWorkOnRoot(root: FiberRoot, lanes: Lanes) {
+  // This is the entry point for synchronous tasks that don't go
+  // through Scheduler.
+  const didFlushPassiveEffects = flushPassiveEffects();
+  if (didFlushPassiveEffects) {
+    // If passive effects were flushed, exit to the outer work loop in the root
+    // scheduler, so we can recompute the priority.
+    return null;
+  }
+  if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
+    syncNestedUpdateFlag();
+  }
+  const forceSync = true;
+  performWorkOnRoot(root, lanes, forceSync);
 }
 
 const fakeActCallbackNode = {};

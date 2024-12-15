@@ -26,8 +26,8 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(7);
   const item = props.item;
-  let t0;
   let baseVideos;
+  let t0;
   let thumbnails;
   if ($[0] !== item) {
     thumbnails = [];
@@ -40,12 +40,12 @@ function Component(props) {
       }
     });
     $[0] = item;
-    $[1] = t0;
-    $[2] = baseVideos;
+    $[1] = baseVideos;
+    $[2] = t0;
     $[3] = thumbnails;
   } else {
-    t0 = $[1];
-    baseVideos = $[2];
+    baseVideos = $[1];
+    t0 = $[2];
     thumbnails = $[3];
   }
   t0 = undefined;

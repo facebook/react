@@ -29,9 +29,9 @@ export function assertConsistentIdentifiers(fn: HIRFunction): void {
   const assignments: Set<IdentifierId> = new Set();
   for (const [, block] of fn.body.blocks) {
     for (const phi of block.phis) {
-      validate(identifiers, phi.id);
+      validate(identifiers, phi.place.identifier);
       for (const [, operand] of phi.operands) {
-        validate(identifiers, operand);
+        validate(identifiers, operand.identifier);
       }
     }
     for (const instr of block.instructions) {

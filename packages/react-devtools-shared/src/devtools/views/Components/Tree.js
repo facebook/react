@@ -73,7 +73,7 @@ export default function Tree(props: Props): React.Node {
 
   const [treeFocused, setTreeFocused] = useState<boolean>(false);
 
-  const {lineHeight, showInlineWarningsAndErrors} = useContext(SettingsContext);
+  const {lineHeight} = useContext(SettingsContext);
 
   // Make sure a newly selected element is visible in the list.
   // This is helpful for things like the owners list and search.
@@ -325,8 +325,8 @@ export default function Tree(props: Props): React.Node {
   const errorsOrWarningsSubscription = useMemo(
     () => ({
       getCurrentValue: () => ({
-        errors: store.errorCount,
-        warnings: store.warningCount,
+        errors: store.componentWithErrorCount,
+        warnings: store.componentWithWarningCount,
       }),
       subscribe: (callback: Function) => {
         store.addListener('mutated', callback);
@@ -370,40 +370,38 @@ export default function Tree(props: Props): React.Node {
           <Suspense fallback={<Loading />}>
             {ownerID !== null ? <OwnersStack /> : <ComponentSearchInput />}
           </Suspense>
-          {showInlineWarningsAndErrors &&
-            ownerID === null &&
-            (errors > 0 || warnings > 0) && (
-              <React.Fragment>
-                <div className={styles.VRule} />
-                {errors > 0 && (
-                  <div className={styles.IconAndCount}>
-                    <Icon className={styles.ErrorIcon} type="error" />
-                    {errors}
-                  </div>
-                )}
-                {warnings > 0 && (
-                  <div className={styles.IconAndCount}>
-                    <Icon className={styles.WarningIcon} type="warning" />
-                    {warnings}
-                  </div>
-                )}
-                <Button
-                  onClick={handlePreviousErrorOrWarningClick}
-                  title="Scroll to previous error or warning">
-                  <ButtonIcon type="up" />
-                </Button>
-                <Button
-                  onClick={handleNextErrorOrWarningClick}
-                  title="Scroll to next error or warning">
-                  <ButtonIcon type="down" />
-                </Button>
-                <Button
-                  onClick={clearErrorsAndWarnings}
-                  title="Clear all errors and warnings">
-                  <ButtonIcon type="clear" />
-                </Button>
-              </React.Fragment>
-            )}
+          {ownerID === null && (errors > 0 || warnings > 0) && (
+            <React.Fragment>
+              <div className={styles.VRule} />
+              {errors > 0 && (
+                <div className={styles.IconAndCount}>
+                  <Icon className={styles.ErrorIcon} type="error" />
+                  {errors}
+                </div>
+              )}
+              {warnings > 0 && (
+                <div className={styles.IconAndCount}>
+                  <Icon className={styles.WarningIcon} type="warning" />
+                  {warnings}
+                </div>
+              )}
+              <Button
+                onClick={handlePreviousErrorOrWarningClick}
+                title="Scroll to previous error or warning">
+                <ButtonIcon type="up" />
+              </Button>
+              <Button
+                onClick={handleNextErrorOrWarningClick}
+                title="Scroll to next error or warning">
+                <ButtonIcon type="down" />
+              </Button>
+              <Button
+                onClick={clearErrorsAndWarnings}
+                title="Clear all errors and warnings">
+                <ButtonIcon type="clear" />
+              </Button>
+            </React.Fragment>
+          )}
           {!hideSettings && (
             <Fragment>
               <div className={styles.VRule} />

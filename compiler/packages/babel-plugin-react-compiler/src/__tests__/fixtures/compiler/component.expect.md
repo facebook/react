@@ -46,7 +46,7 @@ function Component(props) {
   const items = props.items;
   const maxItems = props.maxItems;
   let renderedItems;
-  if ($[0] !== maxItems || $[1] !== items) {
+  if ($[0] !== items || $[1] !== maxItems) {
     renderedItems = [];
     const seen = new Set();
     const max = Math.max(0, maxItems);
@@ -62,8 +62,8 @@ function Component(props) {
         break;
       }
     }
-    $[0] = maxItems;
-    $[1] = items;
+    $[0] = items;
+    $[1] = maxItems;
     $[2] = renderedItems;
   } else {
     renderedItems = $[2];
@@ -79,15 +79,15 @@ function Component(props) {
     t0 = $[4];
   }
   let t1;
-  if ($[5] !== t0 || $[6] !== renderedItems) {
+  if ($[5] !== renderedItems || $[6] !== t0) {
     t1 = (
       <div>
         {t0}
         {renderedItems}
       </div>
     );
-    $[5] = t0;
-    $[6] = renderedItems;
+    $[5] = renderedItems;
+    $[6] = t0;
     $[7] = t1;
   } else {
     t1 = $[7];

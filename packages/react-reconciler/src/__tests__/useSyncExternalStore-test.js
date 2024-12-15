@@ -24,6 +24,9 @@ let startTransition;
 let waitFor;
 let waitForAll;
 let assertLog;
+let Suspense;
+let useMemo;
+let textCache;
 
 // This tests the native useSyncExternalStore implementation, not the shim.
 // Tests that apply to both the native implementation and the shim should go
@@ -45,7 +48,9 @@ describe('useSyncExternalStore', () => {
     use = React.use;
     useSyncExternalStore = React.useSyncExternalStore;
     startTransition = React.startTransition;
-
+    Suspense = React.Suspense;
+    useMemo = React.useMemo;
+    textCache = new Map();
     const InternalTestUtils = require('internal-test-utils');
     waitFor = InternalTestUtils.waitFor;
     waitForAll = InternalTestUtils.waitForAll;
@@ -53,6 +58,60 @@ describe('useSyncExternalStore', () => {
 
     act = require('internal-test-utils').act;
   });
+
+  function resolveText(text) {
+    const record = textCache.get(text);
+    if (record === undefined) {
+      const newRecord = {
+        status: 'resolved',
+        value: text,
+      };
+      textCache.set(text, newRecord);
+    } else if (record.status === 'pending') {
+      const thenable = record.value;
+      record.status = 'resolved';
+      record.value = text;
+      thenable.pings.forEach(t => t());
+    }
+  }
+  function readText(text) {
+    const record = textCache.get(text);
+    if (record !== undefined) {
+      switch (record.status) {
+        case 'pending':
+          throw record.value;
+        case 'rejected':
+          throw record.value;
+        case 'resolved':
+          return record.value;
+      }
+    } else {
+      const thenable = {
+        pings: [],
+        then(resolve) {
+          if (newRecord.status === 'pending') {
+            thenable.pings.push(resolve);
+          } else {
+            Promise.resolve().then(() => resolve(newRecord.value));
+          }
+        },
+      };
+
+      const newRecord = {
+        status: 'pending',
+        value: thenable,
+      };
+      textCache.set(text, newRecord);
+
+      throw thenable;
+    }
+  }
+
+  function AsyncText({text}) {
+    const result = readText(text);
+    Scheduler.log(text);
+    return result;
+  }
 
   function Text({text}) {
     Scheduler.log(text);
@@ -292,4 +351,91 @@ describe('useSyncExternalStore', () => {
       );
     },
   );
+
+  it('regression: does not infinite loop for only changing store reference in render', async () => {
+    let store = {value: {}};
+    let listeners = [];
+
+    const ExternalStore = {
+      set(value) {
+        // Change the store ref, but not the value.
+        // This will cause a new snapshot to be returned if set is called in render,
+        // but the value is the same. Stores should not do this, but if they do
+        // we shouldn't infinitely render.
+        store = {...store};
+        setTimeout(() => {
+          store = {value};
+          emitChange();
+        }, 100);
+        emitChange();
+      },
+      subscribe(listener) {
+        listeners = [...listeners, listener];
+        return () => {
+          listeners = listeners.filter(l => l !== listener);
+        };
+      },
+      getSnapshot() {
+        return store;
+      },
+    };
+
+    function emitChange() {
+      listeners.forEach(l => l());
+    }
+
+    function StoreText() {
+      const {value} = useSyncExternalStore(
+        ExternalStore.subscribe,
+        ExternalStore.getSnapshot,
+      );
+
+      useMemo(() => {
+        // Set the store value on mount.
+        // This breaks the rules of React, but should be handled gracefully.
+        const newValue = {text: 'B'};
+        if (value == null || newValue !== value) {
+          ExternalStore.set(newValue);
+        }
+      }, []);
+
+      return <Text text={value.text || '(not set)'} />;
+    }
+
+    function App() {
+      return (
+        <>
+          <Suspense fallback={'Loading...'}>
+            <AsyncText text={'A'} />
+            <StoreText />
+          </Suspense>
+        </>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+
+    // The initial render suspends.
+    await act(async () => {
+      root.render(<App />);
+    });
+    assertLog([...(gate('enableSiblingPrerendering') ? ['(not set)'] : [])]);
+
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    // Resolve the data and finish rendering.
+    // When resolving, the store should not get stuck in an infinite loop.
+    await act(() => {
+      resolveText('A');
+    });
+    assertLog([
+      ...(gate('enableSiblingPrerendering')
+        ? ['A', 'B', 'A', 'B', 'B']
+        : gate(flags => flags.alwaysThrottleRetries)
+          ? ['A', '(not set)', 'A', '(not set)', 'B']
+          : ['A', '(not set)', 'A', '(not set)', '(not set)', 'B']),
+    ]);
+
+    expect(root).toMatchRenderedOutput('AB');
+  });
 });

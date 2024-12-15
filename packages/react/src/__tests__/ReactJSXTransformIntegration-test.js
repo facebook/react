@@ -55,11 +55,7 @@ describe('ReactJSXTransformIntegration', () => {
     const element = <Component />;
     expect(element.type).toBe(Component);
     expect(element.key).toBe(null);
-    if (gate(flags => flags.enableRefAsProp)) {
-      expect(element.ref).toBe(null);
-    } else {
-      expect(element.ref).toBe(null);
-    }
+    expect(element.ref).toBe(null);
     const expectation = {};
     Object.freeze(expectation);
     expect(element.props).toEqual(expectation);
@@ -69,11 +65,7 @@ describe('ReactJSXTransformIntegration', () => {
     const element = <div />;
     expect(element.type).toBe('div');
     expect(element.key).toBe(null);
-    if (gate(flags => flags.enableRefAsProp)) {
-      expect(element.ref).toBe(null);
-    } else {
-      expect(element.ref).toBe(null);
-    }
+    expect(element.ref).toBe(null);
     const expectation = {};
     Object.freeze(expectation);
     expect(element.props).toEqual(expectation);
@@ -84,11 +76,7 @@ describe('ReactJSXTransformIntegration', () => {
     const element = <TagName />;
     expect(element.type).toBe('div');
     expect(element.key).toBe(null);
-    if (gate(flags => flags.enableRefAsProp)) {
-      expect(element.ref).toBe(null);
-    } else {
-      expect(element.ref).toBe(null);
-    }
+    expect(element.ref).toBe(null);
     const expectation = {};
     Object.freeze(expectation);
     expect(element.props).toEqual(expectation);
@@ -124,31 +112,20 @@ describe('ReactJSXTransformIntegration', () => {
     const ref = React.createRef();
     const element = <Component ref={ref} foo="56" />;
     expect(element.type).toBe(Component);
-    if (gate(flags => flags.enableRefAsProp)) {
-      expect(() => expect(element.ref).toBe(ref)).toErrorDev(
-        'Accessing element.ref was removed in React 19',
-        {withoutStack: true},
-      );
-      const expectation = {foo: '56', ref};
-      Object.freeze(expectation);
-      expect(element.props).toEqual(expectation);
-    } else {
-      const expectation = {foo: '56'};
-      Object.freeze(expectation);
-      expect(element.props).toEqual(expectation);
-      expect(element.ref).toBe(ref);
-    }
+    expect(() => expect(element.ref).toBe(ref)).toErrorDev(
+      'Accessing element.ref was removed in React 19',
+      {withoutStack: true},
+    );
+    const expectation = {foo: '56', ref};
+    Object.freeze(expectation);
+    expect(element.props).toEqual(expectation);
   });
 
   it('coerces the key to a string', () => {
     const element = <Component key={12} foo="56" />;
     expect(element.type).toBe(Component);
     expect(element.key).toBe('12');
-    if (gate(flags => flags.enableRefAsProp)) {
-      expect(element.ref).toBe(null);
-    } else {
-      expect(element.ref).toBe(null);
-    }
+    expect(element.ref).toBe(null);
     const expectation = {foo: '56'};
     Object.freeze(expectation);
     expect(element.props).toEqual(expectation);

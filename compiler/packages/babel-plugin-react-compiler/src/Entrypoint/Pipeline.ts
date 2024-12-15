@@ -36,11 +36,13 @@ import {
   inferReactivePlaces,
   inferReferenceEffects,
   inlineImmediatelyInvokedFunctionExpressions,
+  inferEffectDependencies,
 } from '../Inference';
 import {
   constantPropagation,
   deadCodeElimination,
   pruneMaybeThrows,
+  inlineJsxTransform,
 } from '../Optimization';
 import {instructionReordering} from '../Optimization/InstructionReordering';
 import {
@@ -56,7 +58,6 @@ import {
   mergeReactiveScopesThatInvalidateTogether,
   promoteUsedTemporaries,
   propagateEarlyReturns,
-  propagateScopeDependencies,
   pruneHoistedContexts,
   pruneNonEscapingScopes,
   pruneNonReactiveDependencies,
@@ -102,6 +103,8 @@ import {lowerContextAccess} from '../Optimization/LowerContextAccess';
 import {validateNoSetStateInPassiveEffects} from '../Validation/ValidateNoSetStateInPassiveEffects';
 import {validateNoJSXInTryStatement} from '../Validation/ValidateNoJSXInTryStatement';
 import {propagateScopeDependenciesHIR} from '../HIR/PropagateScopeDependenciesHIR';
+import {outlineJSX} from '../Optimization/OutlineJsx';
+import {optimizePropsMethodCalls} from '../Optimization/OptimizePropsMethodCalls';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -207,6 +210,9 @@ function* runWithEnvironment(
     lowerContextAccess(hir, env.config.lowerContextAccess);
   }
 
+  optimizePropsMethodCalls(hir);
+  yield log({kind: 'hir', name: 'OptimizePropsMethodCalls', value: hir});
+
   analyseFunctions(hir);
   yield log({kind: 'hir', name: 'AnalyseFunctions', value: hir});
 
@@ -277,6 +283,10 @@ function* runWithEnvironment(
     value: hir,
   });
 
+  if (env.config.enableJsxOutlining) {
+    outlineJSX(hir);
+  }
+
   if (env.config.enableFunctionOutlining) {
     outlineFunctions(hir, fbtOperands);
     yield log({kind: 'hir', name: 'OutlineFunctions', value: hir});
@@ -342,11 +352,22 @@ function* runWithEnvironment(
   });
   assertTerminalSuccessorsExist(hir);
   assertTerminalPredsExist(hir);
-  if (env.config.enablePropagateDepsInHIR) {
-    propagateScopeDependenciesHIR(hir);
+  propagateScopeDependenciesHIR(hir);
+  yield log({
+    kind: 'hir',
+    name: 'PropagateScopeDependenciesHIR',
+    value: hir,
+  });
+
+  if (env.config.inferEffectDependencies) {
+    inferEffectDependencies(hir);
+  }
+
+  if (env.config.inlineJsxTransform) {
+    inlineJsxTransform(hir, env.config.inlineJsxTransform);
     yield log({
       kind: 'hir',
-      name: 'PropagateScopeDependenciesHIR',
+      name: 'inlineJsxTransform',
       value: hir,
     });
   }
@@ -367,15 +388,6 @@ function* runWithEnvironment(
     value: reactiveFunction,
   });
   assertScopeInstructionsWithinScopes(reactiveFunction);
-
-  if (!env.config.enablePropagateDepsInHIR) {
-    propagateScopeDependencies(reactiveFunction);
-    yield log({
-      kind: 'reactive',
-      name: 'PropagateScopeDependencies',
-      value: reactiveFunction,
-    });
-  }
 
   pruneNonEscapingScopes(reactiveFunction);
   yield log({
@@ -553,4 +565,15 @@ export function log(value: CompilerPipelineValue): CompilerPipelineValue {
     }
   }
   return value;
+}
+
+export function* runPlayground(
+  func: NodePath<
+    t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
+  >,
+  config: EnvironmentConfig,
+  fnType: ReactFunctionType,
+): Generator<CompilerPipelineValue, CodegenFunction> {
+  const ast = yield* run(func, config, fnType, '_c', null, null, null);
+  return ast;
 }

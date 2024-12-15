@@ -59,12 +59,19 @@ async function main() {
       type: 'boolean',
       default: false,
     })
-    .option('tags', {
-      description: 'Tags to publish to npm',
-      type: 'string',
+    .option('tag', {
+      description: 'Tag to publish to npm',
+      type: 'choices',
+      choices: ['experimental', 'beta'],
       default: 'experimental',
     })
+    .option('version-name', {
+      description: 'Version name',
+      type: 'string',
+      default: '0.0.0',
+    })
     .help('help')
+    .strict()
     .parseSync();
 
   if (argv.debug === false) {
@@ -82,7 +89,7 @@ async function main() {
     pkgNames = [argv.packages];
   }
   const spinner = ora(
-    `Preparing to publish ${
+    `Preparing to publish ${argv.versionName}@${argv.tag} ${
       argv.forReal === true ? '(for real)' : '(dry run)'
     } [debug=${argv.debug}]`
   ).info();
@@ -118,7 +125,15 @@ async function main() {
       }
     );
     const dateString = await getDateStringForCommit(commit);
-    const otp = argv.ci === false ? await promptForOTP() : null;
+    const otp =
+      argv.ci === false && argv.debug === false ? await promptForOTP() : null;
+    const {hash} = await hashElement(path.resolve(__dirname, '../..'), {
+      encoding: 'hex',
+      folders: {exclude: ['node_modules']},
+      files: {exclude: ['.DS_Store']},
+    });
+    const truncatedHash = hash.slice(0, 7);
+    const newVersion = `${argv.versionName}-${argv.tag}-${truncatedHash}-${dateString}`;
 
     for (const pkgName of pkgNames) {
       const pkgDir = path.resolve(__dirname, `../../packages/${pkgName}`);
@@ -126,13 +141,6 @@ async function main() {
         __dirname,
         `../../packages/${pkgName}/package.json`
       );
-      const {hash} = await hashElement(pkgDir, {
-        encoding: 'hex',
-        folders: {exclude: ['node_modules']},
-        files: {exclude: ['.DS_Store']},
-      });
-      const truncatedHash = hash.slice(0, 7);
-      const newVersion = `0.0.0-experimental-${truncatedHash}-${dateString}`;
 
       spinner.start(`Writing package.json for ${pkgName}@${newVersion}`);
       await writeJson(
@@ -155,17 +163,25 @@ async function main() {
       if (otp != null) {
         opts.push(`--otp=${otp}`);
       }
+      /**
+       * Typically, the `latest` tag is reserved for stable package versions. Since the the compiler
+       * is still pre-release, until we have a stable release let's only add the
+       * `latest` tag to non-experimental releases.
+       *
+       * `latest` is added by default, so we only override it for experimental releases so that
+       * those don't get the `latest` tag.
+       *
+       * TODO: Update this when we have a stable release.
+       */
+      if (argv.tag === 'experimental') {
+        opts.push('--tag=experimental');
+      } else {
+        opts.push('--tag=latest');
+      }
       try {
         await spawnHelper(
           'npm',
-          [
-            'publish',
-            ...opts,
-            '--registry=https://registry.npmjs.org',
-            // For now, since the compiler is experimental only, to simplify installation we push
-            // to the `latest` tag
-            '--tag=latest',
-          ],
+          ['publish', ...opts, '--registry=https://registry.npmjs.org'],
           {
             cwd: pkgDir,
             stdio: 'inherit',
@@ -179,29 +195,27 @@ async function main() {
       spinner.succeed(`Successfully published ${pkgName} to npm`);
 
       spinner.start('Pushing tags to npm');
-      if (typeof argv.tags === 'string') {
-        for (const tag of argv.tags.split(',')) {
-          try {
-            let opts = ['dist-tag', 'add', `${pkgName}@${newVersion}`, tag];
-            if (otp != null) {
-              opts.push(`--otp=${otp}`);
-            }
-            if (argv.debug === true) {
-              spinner.info(`dry-run: npm ${opts.join(' ')}`);
-            } else {
-              await spawnHelper('npm', opts, {
-                cwd: pkgDir,
-                stdio: 'inherit',
-              });
-            }
-          } catch (e) {
-            spinner.fail(e.toString());
-            throw e;
+      if (typeof argv.tag === 'string') {
+        try {
+          let opts = ['dist-tag', 'add', `${pkgName}@${newVersion}`, argv.tag];
+          if (otp != null) {
+            opts.push(`--otp=${otp}`);
           }
-          spinner.succeed(
-            `Successfully pushed dist-tag ${tag} for ${pkgName} to npm`
-          );
+          if (argv.debug === true) {
+            spinner.info(`dry-run: npm ${opts.join(' ')}`);
+          } else {
+            await spawnHelper('npm', opts, {
+              cwd: pkgDir,
+              stdio: 'inherit',
+            });
+          }
+        } catch (e) {
+          spinner.fail(e.toString());
+          throw e;
         }
+        spinner.succeed(
+          `Successfully pushed dist-tag ${argv.tag} for ${pkgName} to npm`
+        );
       }
     }
 

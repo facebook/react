@@ -18,16 +18,19 @@ import {
   startTransition,
 } from 'react';
 
-import {BridgeContext} from '../context';
-import type {FrontendBridge} from '../../../bridge';
+import {BridgeContext, StoreContext} from '../context';
 
-export type DisplayDensity = 'comfortable' | 'compact';
+import type {FrontendBridge} from '../../../bridge';
+import type {DevToolsHookSettings} from '../../../backend/types';
+import type Store from '../../store';
+
 export type Theme = 'auto' | 'light' | 'dark';
 
 type Context = {
   isModalShowing: boolean,
   setIsModalShowing: (value: boolean) => void,
   environmentNames: null | Promise<Array<string>>,
+  hookSettings: null | Promise<$ReadOnly<DevToolsHookSettings>>,
 };
 
 const SettingsModalContext: ReactContext<Context> = createContext<Context>(
@@ -46,27 +49,47 @@ function fetchEnvironmentNames(bridge: FrontendBridge): Promise<Array<string>> {
   });
 }
 
+function fetchHookSettings(
+  store: Store,
+): Promise<$ReadOnly<DevToolsHookSettings>> {
+  return new Promise(resolve => {
+    function onHookSettings(settings: $ReadOnly<DevToolsHookSettings>) {
+      store.removeListener('hookSettings', onHookSettings);
+      resolve(settings);
+    }
+
+    store.addListener('hookSettings', onHookSettings);
+    store.getHookSettings();
+  });
+}
+
 function SettingsModalContextController({
   children,
 }: {
   children: React$Node,
 }): React.Node {
   const bridge = useContext(BridgeContext);
+  const store = useContext(StoreContext);
 
-  const setIsModalShowing: boolean => void = useCallback((value: boolean) => {
-    startTransition(() => {
-      setContext({
-        isModalShowing: value,
-        setIsModalShowing,
-        environmentNames: value ? fetchEnvironmentNames(bridge) : null,
+  const setIsModalShowing: boolean => void = useCallback(
+    (value: boolean) => {
+      startTransition(() => {
+        setContext({
+          isModalShowing: value,
+          setIsModalShowing,
+          environmentNames: value ? fetchEnvironmentNames(bridge) : null,
+          hookSettings: value ? fetchHookSettings(store) : null,
+        });
       });
-    });
-  });
+    },
+    [bridge, store],
+  );
 
   const [currentContext, setContext] = useState<Context>({
     isModalShowing: false,
     setIsModalShowing,
     environmentNames: null,
+    hookSettings: null,
   });
 
   return (

@@ -13,7 +13,6 @@ import {
   insertNodesAndExecuteScripts,
   mergeOptions,
   stripExternalRuntimeInNodes,
-  withLoadingReadyState,
   getVisibleChildren,
 } from '../test-utils/FizzTestUtils';
 
@@ -210,117 +209,111 @@ describe('ReactDOMFizzServer', () => {
       return;
     }
 
-    await withLoadingReadyState(async () => {
-      const bodyMatch = bufferedContent.match(bodyStartMatch);
-      const headMatch = bufferedContent.match(headStartMatch);
+    const bodyMatch = bufferedContent.match(bodyStartMatch);
+    const headMatch = bufferedContent.match(headStartMatch);
 
-      if (streamingContainer === null) {
-        // This is the first streamed content. We decide here where to insert it. If we get <html>, <head>, or <body>
-        // we abandon the pre-built document and start from scratch. If we get anything else we assume it goes into the
-        // container. This is not really production behavior because you can't correctly stream into a deep div effectively
-        // but it's pragmatic for tests.
+    if (streamingContainer === null) {
+      // This is the first streamed content. We decide here where to insert it. If we get <html>, <head>, or <body>
+      // we abandon the pre-built document and start from scratch. If we get anything else we assume it goes into the
+      // container. This is not really production behavior because you can't correctly stream into a deep div effectively
+      // but it's pragmatic for tests.
 
-        if (
-          bufferedContent.startsWith('<head>') ||
-          bufferedContent.startsWith('<head ') ||
-          bufferedContent.startsWith('<body>') ||
-          bufferedContent.startsWith('<body ')
-        ) {
-          // wrap in doctype to normalize the parsing process
-          bufferedContent = '<!DOCTYPE html><html>' + bufferedContent;
-        } else if (
-          bufferedContent.startsWith('<html>') ||
-          bufferedContent.startsWith('<html ')
-        ) {
-          throw new Error(
-            'Recieved <html> without a <!DOCTYPE html> which is almost certainly a bug in React',
-          );
-        }
+      if (
+        bufferedContent.startsWith('<head>') ||
+        bufferedContent.startsWith('<head ') ||
+        bufferedContent.startsWith('<body>') ||
+        bufferedContent.startsWith('<body ')
+      ) {
+        // wrap in doctype to normalize the parsing process
+        bufferedContent = '<!DOCTYPE html><html>' + bufferedContent;
+      } else if (
+        bufferedContent.startsWith('<html>') ||
+        bufferedContent.startsWith('<html ')
+      ) {
+        throw new Error(
+          'Recieved <html> without a <!DOCTYPE html> which is almost certainly a bug in React',
+        );
+      }
 
-        if (bufferedContent.startsWith('<!DOCTYPE html>')) {
-          // we can just use the whole document
-          const tempDom = new JSDOM(bufferedContent);
-
-          // Wipe existing head and body content
-          document.head.innerHTML = '';
-          document.body.innerHTML = '';
-
-          // Copy the <html> attributes over
-          const tempHtmlNode = tempDom.window.document.documentElement;
-          for (let i = 0; i < tempHtmlNode.attributes.length; i++) {
-            const attr = tempHtmlNode.attributes[i];
-            document.documentElement.setAttribute(attr.name, attr.value);
-          }
-
-          if (headMatch) {
-            // We parsed a head open tag. we need to copy head attributes and insert future
-            // content into <head>
-            streamingContainer = document.head;
-            const tempHeadNode = tempDom.window.document.head;
-            for (let i = 0; i < tempHeadNode.attributes.length; i++) {
-              const attr = tempHeadNode.attributes[i];
-              document.head.setAttribute(attr.name, attr.value);
-            }
-            const source = document.createElement('head');
-            source.innerHTML = tempHeadNode.innerHTML;
-            await insertNodesAndExecuteScripts(source, document.head, CSPnonce);
-          }
-
-          if (bodyMatch) {
-            // We parsed a body open tag. we need to copy head attributes and insert future
-            // content into <body>
-            streamingContainer = document.body;
-            const tempBodyNode = tempDom.window.document.body;
-            for (let i = 0; i < tempBodyNode.attributes.length; i++) {
-              const attr = tempBodyNode.attributes[i];
-              document.body.setAttribute(attr.name, attr.value);
-            }
-            const source = document.createElement('body');
-            source.innerHTML = tempBodyNode.innerHTML;
-            await insertNodesAndExecuteScripts(source, document.body, CSPnonce);
-          }
-
-          if (!headMatch && !bodyMatch) {
-            throw new Error('expected <head> or <body> after <html>');
-          }
-        } else {
-          // we assume we are streaming into the default container'
-          streamingContainer = container;
-          const div = document.createElement('div');
-          div.innerHTML = bufferedContent;
-          await insertNodesAndExecuteScripts(div, container, CSPnonce);
-        }
-      } else if (streamingContainer === document.head) {
-        bufferedContent = '<!DOCTYPE html><html><head>' + bufferedContent;
+      if (bufferedContent.startsWith('<!DOCTYPE html>')) {
+        // we can just use the whole document
         const tempDom = new JSDOM(bufferedContent);
 
-        const tempHeadNode = tempDom.window.document.head;
-        const source = document.createElement('head');
-        source.innerHTML = tempHeadNode.innerHTML;
-        await insertNodesAndExecuteScripts(source, document.head, CSPnonce);
+        // Wipe existing head and body content
+        document.head.innerHTML = '';
+        document.body.innerHTML = '';
+
+        // Copy the <html> attributes over
+        const tempHtmlNode = tempDom.window.document.documentElement;
+        for (let i = 0; i < tempHtmlNode.attributes.length; i++) {
+          const attr = tempHtmlNode.attributes[i];
+          document.documentElement.setAttribute(attr.name, attr.value);
+        }
+
+        if (headMatch) {
+          // We parsed a head open tag. we need to copy head attributes and insert future
+          // content into <head>
+          streamingContainer = document.head;
+          const tempHeadNode = tempDom.window.document.head;
+          for (let i = 0; i < tempHeadNode.attributes.length; i++) {
+            const attr = tempHeadNode.attributes[i];
+            document.head.setAttribute(attr.name, attr.value);
+          }
+          const source = document.createElement('head');
+          source.innerHTML = tempHeadNode.innerHTML;
+          await insertNodesAndExecuteScripts(source, document.head, CSPnonce);
+        }
 
         if (bodyMatch) {
+          // We parsed a body open tag. we need to copy head attributes and insert future
+          // content into <body>
           streamingContainer = document.body;
-
           const tempBodyNode = tempDom.window.document.body;
           for (let i = 0; i < tempBodyNode.attributes.length; i++) {
             const attr = tempBodyNode.attributes[i];
             document.body.setAttribute(attr.name, attr.value);
           }
-          const bodySource = document.createElement('body');
-          bodySource.innerHTML = tempBodyNode.innerHTML;
-          await insertNodesAndExecuteScripts(
-            bodySource,
-            document.body,
-            CSPnonce,
-          );
+          const source = document.createElement('body');
+          source.innerHTML = tempBodyNode.innerHTML;
+          await insertNodesAndExecuteScripts(source, document.body, CSPnonce);
+        }
+
+        if (!headMatch && !bodyMatch) {
+          throw new Error('expected <head> or <body> after <html>');
         }
       } else {
+        // we assume we are streaming into the default container'
+        streamingContainer = container;
         const div = document.createElement('div');
         div.innerHTML = bufferedContent;
-        await insertNodesAndExecuteScripts(div, streamingContainer, CSPnonce);
+        await insertNodesAndExecuteScripts(div, container, CSPnonce);
       }
-    }, document);
+    } else if (streamingContainer === document.head) {
+      bufferedContent = '<!DOCTYPE html><html><head>' + bufferedContent;
+      const tempDom = new JSDOM(bufferedContent);
+
+      const tempHeadNode = tempDom.window.document.head;
+      const source = document.createElement('head');
+      source.innerHTML = tempHeadNode.innerHTML;
+      await insertNodesAndExecuteScripts(source, document.head, CSPnonce);
+
+      if (bodyMatch) {
+        streamingContainer = document.body;
+
+        const tempBodyNode = tempDom.window.document.body;
+        for (let i = 0; i < tempBodyNode.attributes.length; i++) {
+          const attr = tempBodyNode.attributes[i];
+          document.body.setAttribute(attr.name, attr.value);
+        }
+        const bodySource = document.createElement('body');
+        bodySource.innerHTML = tempBodyNode.innerHTML;
+        await insertNodesAndExecuteScripts(bodySource, document.body, CSPnonce);
+      }
+    } else {
+      const div = document.createElement('div');
+      div.innerHTML = bufferedContent;
+      await insertNodesAndExecuteScripts(div, streamingContainer, CSPnonce);
+    }
   }
 
   function resolveText(text) {
@@ -2216,151 +2209,6 @@ describe('ReactDOMFizzServer', () => {
     });
     // We should've been able to display the content without waiting for the rest of the fallback.
     expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
-  });
-
-  // @gate enableSuspenseAvoidThisFallbackFizz
-  it('should respect unstable_avoidThisFallback', async () => {
-    const resolved = {
-      0: false,
-      1: false,
-    };
-    const promiseRes = {};
-    const promises = {
-      0: new Promise(res => {
-        promiseRes[0] = () => {
-          resolved[0] = true;
-          res();
-        };
-      }),
-      1: new Promise(res => {
-        promiseRes[1] = () => {
-          resolved[1] = true;
-          res();
-        };
-      }),
-    };
-
-    const InnerComponent = ({isClient, depth}) => {
-      if (isClient) {
-        // Resuspend after re-rendering on client to check that fallback shows on client
-        throw new Promise(() => {});
-      }
-      if (!resolved[depth]) {
-        throw promises[depth];
-      }
-      return (
-        <div>
-          <Text text={`resolved ${depth}`} />
-        </div>
-      );
-    };
-
-    function App({isClient}) {
-      return (
-        <div>
-          <Text text="Non Suspense Content" />
-          <Suspense
-            fallback={
-              <span>
-                <Text text="Avoided Fallback" />
-              </span>
-            }
-            unstable_avoidThisFallback={true}>
-            <InnerComponent isClient={isClient} depth={0} />
-            <div>
-              <Suspense fallback={<Text text="Fallback" />}>
-                <Suspense
-                  fallback={
-                    <span>
-                      <Text text="Avoided Fallback2" />
-                    </span>
-                  }
-                  unstable_avoidThisFallback={true}>
-                  <InnerComponent isClient={isClient} depth={1} />
-                </Suspense>
-              </Suspense>
-            </div>
-          </Suspense>
-        </div>
-      );
-    }
-
-    await jest.runAllTimers();
-
-    await act(() => {
-      const {pipe} = renderToPipeableStream(<App isClient={false} />);
-      pipe(writable);
-    });
-
-    // Nothing is output since root has a suspense with avoidedThisFallback that hasn't resolved
-    expect(getVisibleChildren(container)).toEqual(undefined);
-    expect(container.innerHTML).not.toContain('Avoided Fallback');
-
-    // resolve first suspense component with avoidThisFallback
-    await act(() => {
-      promiseRes[0]();
-    });
-
-    expect(getVisibleChildren(container)).toEqual(
-      <div>
-        Non Suspense Content
-        <div>resolved 0</div>
-        <div>Fallback</div>
-      </div>,
-    );
-
-    expect(container.innerHTML).not.toContain('Avoided Fallback2');
-
-    await act(() => {
-      promiseRes[1]();
-    });
-
-    expect(getVisibleChildren(container)).toEqual(
-      <div>
-        Non Suspense Content
-        <div>resolved 0</div>
-        <div>
-          <div>resolved 1</div>
-        </div>
-      </div>,
-    );
-
-    let root;
-    await act(async () => {
-      root = ReactDOMClient.hydrateRoot(container, <App isClient={false} />);
-      await waitForAll([]);
-      await jest.runAllTimers();
-    });
-
-    // No change after hydration
-    expect(getVisibleChildren(container)).toEqual(
-      <div>
-        Non Suspense Content
-        <div>resolved 0</div>
-        <div>
-          <div>resolved 1</div>
-        </div>
-      </div>,
-    );
-
-    await act(async () => {
-      // Trigger update by changing isClient to true
-      root.render(<App isClient={true} />);
-      await waitForAll([]);
-      await jest.runAllTimers();
-    });
-
-    // Now that we've resuspended at the root we show the root fallback
-    expect(getVisibleChildren(container)).toEqual(
-      <div>
-        Non Suspense Content
-        <div style="display: none;">resolved 0</div>
-        <div style="display: none;">
-          <div>resolved 1</div>
-        </div>
-        <span>Avoided Fallback</span>
-      </div>,
-    );
   });
 
   it('calls getServerSnapshot instead of getSnapshot', async () => {
@@ -5935,7 +5783,7 @@ describe('ReactDOMFizzServer', () => {
           pipe(writable);
         });
       }).toErrorDev([
-        'React expects the `children` prop of <title> tags to be a string, number, bigint, or object with a novel `toString` method but found an Array with length 2 instead. Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert `children` of <title> tags to a single string value which is why Arrays of length greater than 1 are not supported. When using JSX it can be commong to combine text nodes and value nodes. For example: <title>hello {nameOfUser}</title>. While not immediately apparent, `children` in this case is an Array with length 2. If your `children` prop is using this form try rewriting it using a template string: <title>{`hello ${nameOfUser}`}</title>.',
+        'React expects the `children` prop of <title> tags to be a string, number, bigint, or object with a novel `toString` method but found an Array with length 2 instead. Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert `children` of <title> tags to a single string value which is why Arrays of length greater than 1 are not supported. When using JSX it can be common to combine text nodes and value nodes. For example: <title>hello {nameOfUser}</title>. While not immediately apparent, `children` in this case is an Array with length 2. If your `children` prop is using this form try rewriting it using a template string: <title>{`hello ${nameOfUser}`}</title>.',
       ]);
 
       expect(getVisibleChildren(document.head)).toEqual(<title />);
@@ -6337,7 +6185,6 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual('Hi');
   });
 
-  // @gate enableAsyncActions
   it('useActionState hydrates without a mismatch', async () => {
     // This is testing an implementation detail: useActionState emits comment
     // nodes into the SSR stream, so this checks that they are handled correctly
@@ -6390,7 +6237,6 @@ describe('ReactDOMFizzServer', () => {
     expect(childRef.current).toBe(child);
   });
 
-  // @gate enableAsyncActions
   it("useActionState hydrates without a mismatch if there's a render phase update", async () => {
     async function action(state) {
       return state;
@@ -8119,7 +7965,7 @@ describe('ReactDOMFizzServer', () => {
 
     prerendering = false;
 
-    const resumed = await ReactDOMFizzServer.resumeToPipeableStream(
+    const resumed = ReactDOMFizzServer.resumeToPipeableStream(
       <App />,
       JSON.parse(JSON.stringify(prerendered.postponed)),
       {
@@ -8187,7 +8033,7 @@ describe('ReactDOMFizzServer', () => {
     function onPostpone(reason) {
       postpones.push(reason);
     }
-    const result = await renderToPipeableStream(<App />, {
+    const result = renderToPipeableStream(<App />, {
       onError,
       onShellError,
       onPostpone,
@@ -8737,5 +8583,175 @@ describe('ReactDOMFizzServer', () => {
     }).rejects.toThrow('Maximum call stack size exceeded');
 
     expect(caughtError.message).toBe('Maximum call stack size exceeded');
+  });
+
+  it('client renders incomplete Suspense boundaries when the document is no longer loading when hydration begins', async () => {
+    let resolve;
+    const promise = new Promise(r => {
+      resolve = r;
+    });
+
+    function Blocking() {
+      React.use(promise);
+      return null;
+    }
+
+    function App() {
+      return (
+        <div>
+          <p>outside</p>
+          <Suspense fallback={<p>loading...</p>}>
+            <Blocking />
+            <p>inside</p>
+          </Suspense>
+        </div>
+      );
+    }
+
+    const errors = [];
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App />, {
+        onError(err) {
+          errors.push(err.message);
+        },
+      });
+      pipe(writable);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>outside</p>
+        <p>loading...</p>
+      </div>,
+    );
+
+    await act(() => {
+      // We now end the stream and resolve the promise that was blocking the boundary
+      // Because the stream is ended it won't actually propagate to the client
+      writable.end();
+      document.readyState = 'complete';
+      resolve();
+    });
+    // ending the stream early will cause it to error on the server
+    expect(errors).toEqual([
+      expect.stringContaining('The destination stream closed early'),
+    ]);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>outside</p>
+        <p>loading...</p>
+      </div>,
+    );
+
+    const clientErrors = [];
+    ReactDOMClient.hydrateRoot(container, <App />, {
+      onRecoverableError(error, errorInfo) {
+        clientErrors.push(error.message);
+      },
+    });
+    await waitForAll([]);
+    // When we hydrate the client the document is already not loading
+    // so we client render the boundary in fallback
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>outside</p>
+        <p>inside</p>
+      </div>,
+    );
+    expect(clientErrors).toEqual([
+      expect.stringContaining(
+        'The server could not finish this Suspense boundar',
+      ),
+    ]);
+  });
+
+  it('client renders incomplete Suspense boundaries when the document stops loading during hydration', async () => {
+    let resolve;
+    const promise = new Promise(r => {
+      resolve = r;
+    });
+
+    function Blocking() {
+      React.use(promise);
+      return null;
+    }
+
+    function App() {
+      return (
+        <div>
+          <p>outside</p>
+          <Suspense fallback={<p>loading...</p>}>
+            <Blocking />
+            <p>inside</p>
+          </Suspense>
+        </div>
+      );
+    }
+
+    const errors = [];
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App />, {
+        onError(err) {
+          errors.push(err.message);
+        },
+      });
+      pipe(writable);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>outside</p>
+        <p>loading...</p>
+      </div>,
+    );
+
+    await act(() => {
+      // We now end the stream and resolve the promise that was blocking the boundary
+      // Because the stream is ended it won't actually propagate to the client
+      writable.end();
+      resolve();
+    });
+    // ending the stream early will cause it to error on the server
+    expect(errors).toEqual([
+      expect.stringContaining('The destination stream closed early'),
+    ]);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>outside</p>
+        <p>loading...</p>
+      </div>,
+    );
+
+    const clientErrors = [];
+    ReactDOMClient.hydrateRoot(container, <App />, {
+      onRecoverableError(error, errorInfo) {
+        clientErrors.push(error.message);
+      },
+    });
+    await waitForAll([]);
+    // When we hydrate the client is still waiting for the blocked boundary
+    // and won't client render unless the document is no longer loading
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>outside</p>
+        <p>loading...</p>
+      </div>,
+    );
+
+    document.readyState = 'complete';
+    await waitForAll([]);
+    // Now that the document is no longer in loading readyState it will client
+    // render the boundary in fallback
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>outside</p>
+        <p>inside</p>
+      </div>,
+    );
+    expect(clientErrors).toEqual([
+      expect.stringContaining(
+        'The server could not finish this Suspense boundar',
+      ),
+    ]);
   });
 });

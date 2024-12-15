@@ -46,9 +46,9 @@ function mapReactCompilerDiagnosticToMonacoMarker(
 type ReactCompilerMarkerConfig = {
   monaco: Monaco;
   model: editor.ITextModel;
-  details: CompilerErrorDetail[];
+  details: Array<CompilerErrorDetail>;
 };
-let decorations: string[] = [];
+let decorations: Array<string> = [];
 export function renderReactCompilerMarkers({
   monaco,
   model,

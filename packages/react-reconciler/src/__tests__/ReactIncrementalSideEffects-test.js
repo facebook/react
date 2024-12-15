@@ -1299,20 +1299,7 @@ describe('ReactIncrementalSideEffects', () => {
 
     ReactNoop.render(<Foo show={true} />);
 
-    if (gate(flags => flags.enableRefAsProp)) {
-      await waitForAll([]);
-    } else {
-      await expect(async () => await waitForAll([])).toErrorDev(
-        'Function components cannot be given refs. ' +
-          'Attempts to access this ref will fail. ' +
-          'Did you mean to use React.forwardRef()?\n\n' +
-          'Check the render method ' +
-          'of `Foo`.\n' +
-          '    in FunctionComponent (at **)\n' +
-          '    in div (at **)\n' +
-          '    in Foo (at **)',
-      );
-    }
+    await waitForAll([]);
 
     expect(ops).toEqual([
       classInstance,
@@ -1347,38 +1334,4 @@ describe('ReactIncrementalSideEffects', () => {
 
   // TODO: Test that mounts, updates, refs, unmounts and deletions happen in the
   // expected way for aborted and resumed render life-cycles.
-
-  // @gate !disableStringRefs
-  it('supports string refs', async () => {
-    let fooInstance = null;
-
-    class Bar extends React.Component {
-      componentDidMount() {
-        this.test = 'test';
-      }
-      render() {
-        return <div />;
-      }
-    }
-
-    class Foo extends React.Component {
-      render() {
-        fooInstance = this;
-        return <Bar ref="bar" />;
-      }
-    }
-
-    ReactNoop.render(<Foo />);
-    await expect(async () => {
-      await waitForAll([]);
-    }).toErrorDev([
-      'Component "Foo" contains the string ref "bar". ' +
-        'Support for string refs will be removed in a future major release. ' +
-        'We recommend using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
-        '    in Bar (at **)\n' +
-        '    in Foo (at **)',
-    ]);
-    expect(fooInstance.refs.bar.test).toEqual('test');
-  });
 });

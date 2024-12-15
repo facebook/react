@@ -16,16 +16,29 @@ import {ReactVersion} from '../../../../ReactVersions';
 
 const ReactVersionTestingAgainst = process.env.REACT_VERSION || ReactVersion;
 
+let React = require('react');
+let ReactDOM;
+let ReactDOMClient;
+let Scheduler;
+let utils;
+let assertLog;
+let waitFor;
+
+// This flag is on experimental which disables timeline profiler.
+const enableComponentPerformanceTrack =
+  React.version.startsWith('19') && React.version.includes('experimental');
+
 describe('Timeline profiler', () => {
-  let React;
-  let ReactDOM;
-  let ReactDOMClient;
-  let Scheduler;
-  let utils;
-  let assertLog;
-  let waitFor;
+  if (enableComponentPerformanceTrack) {
+    test('no tests', () => {});
+    // Ignore all tests.
+    return;
+  }
 
   describe('User Timing API', () => {
+    if (enableComponentPerformanceTrack) {
+      return;
+    }
     let currentlyNotClearedMarks;
     let registeredMarks;
     let featureDetectionMarkName = null;

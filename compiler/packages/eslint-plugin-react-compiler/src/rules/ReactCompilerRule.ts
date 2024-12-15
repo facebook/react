@@ -166,9 +166,33 @@ const rule: Rule.RuleModule = {
               detail.loc != null && typeof detail.loc !== 'symbol'
                 ? ` (@:${detail.loc.start.line}:${detail.loc.start.column})`
                 : '';
+            /**
+             * Report bailouts with a smaller span (just the first line).
+             * Compiler bailout lints only serve to flag that a react function
+             * has not been optimized by the compiler for codebases which depend
+             * on compiler memo heavily for perf. These lints are also often not
+             * actionable.
+             */
+            let endLoc;
+            if (event.fnLoc.end.line === event.fnLoc.start.line) {
+              endLoc = event.fnLoc.end;
+            } else {
+              endLoc = {
+                line: event.fnLoc.start.line,
+                // Babel loc line numbers are 1-indexed
+                column: sourceCode.split(
+                  /\r?\n|\r|\n/g,
+                  event.fnLoc.start.line,
+                )[event.fnLoc.start.line - 1].length,
+              };
+            }
+            const firstLineLoc = {
+              start: event.fnLoc.start,
+              end: endLoc,
+            };
             context.report({
               message: `[ReactCompilerBailout] ${detail.reason}${locStr}`,
-              loc: event.fnLoc,
+              loc: firstLineLoc,
               suggest,
             });
           }

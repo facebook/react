@@ -1,5 +1,7 @@
 import {identity, makeObject_Primitives} from 'shared-runtime';
 
+function useHook() {}
+
 function useTest({cond}) {
   const val = makeObject_Primitives();
 

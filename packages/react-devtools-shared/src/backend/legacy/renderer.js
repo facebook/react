@@ -1103,10 +1103,6 @@ export function attach(
     // Not implemented
   }
 
-  function patchConsoleForStrictMode() {}
-
-  function unpatchConsoleForStrictMode() {}
-
   function hasElementWithId(id: number): boolean {
     return idToInternalInstanceMap.has(id);
   }
@@ -1141,7 +1137,6 @@ export function attach(
     overrideSuspense,
     overrideValueAtPath,
     renamePath,
-    patchConsoleForStrictMode,
     getElementAttributeByPath,
     getElementSourceFunctionById,
     renderer,
@@ -1150,7 +1145,6 @@ export function attach(
     startProfiling,
     stopProfiling,
     storeAsGlobal,
-    unpatchConsoleForStrictMode,
     updateComponentFilters,
     getEnvironmentNames,
   };

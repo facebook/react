@@ -97,7 +97,7 @@ describe('ReactFlightTurbopackDOMEdge', () => {
       turbopackMap,
     );
     const response = ReactServerDOMClient.createFromReadableStream(stream, {
-      ssrManifest: {
+      serverConsumerManifest: {
         moduleMap: translationMap,
         moduleLoading: null,
       },

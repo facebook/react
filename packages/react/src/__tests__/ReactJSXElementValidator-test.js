@@ -248,23 +248,13 @@ describe('ReactJSXElementValidator', () => {
       }
     }
 
-    if (gate(flags => flags.enableRefAsProp)) {
-      await expect(async () => {
-        const container = document.createElement('div');
-        const root = ReactDOMClient.createRoot(container);
-        await act(() => {
-          root.render(<Foo />);
-        });
-      }).toErrorDev('Invalid prop `ref` supplied to `React.Fragment`.');
-    } else {
-      await expect(async () => {
-        const container = document.createElement('div');
-        const root = ReactDOMClient.createRoot(container);
-        await act(() => {
-          root.render(<Foo />);
-        });
-      }).toErrorDev('Invalid attribute `ref` supplied to `React.Fragment`.');
-    }
+    await expect(async () => {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<Foo />);
+      });
+    }).toErrorDev('Invalid prop `ref` supplied to `React.Fragment`.');
   });
 
   it('does not warn for fragments of multiple elements without keys', async () => {

@@ -62,6 +62,7 @@ function read<T>(source: Source, options: ReadOptions): Thenable<T> {
   const response = createResponse(
     source,
     null,
+    null,
     undefined,
     undefined,
     undefined,

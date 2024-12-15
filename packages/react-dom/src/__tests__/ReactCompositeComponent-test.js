@@ -537,11 +537,8 @@ describe('ReactCompositeComponent', () => {
   });
 
   it('should cleanup even if render() fatals', async () => {
-    const dispatcherEnabled =
-      __DEV__ ||
-      !gate(flags => flags.disableStringRefs) ||
-      gate(flags => flags.enableCache);
-    const ownerEnabled = __DEV__ || !gate(flags => flags.disableStringRefs);
+    const dispatcherEnabled = __DEV__ || gate(flags => flags.enableCache);
+    const ownerEnabled = __DEV__;
 
     let stashedDispatcher;
     class BadComponent extends React.Component {

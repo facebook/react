@@ -73,14 +73,14 @@ function foo(props) {
   }
   const header = t0;
   let y;
-  if ($[5] !== x || $[6] !== props.b || $[7] !== props.c) {
+  if ($[5] !== props.b || $[6] !== props.c || $[7] !== x) {
     y = [x];
     x = [];
     y.push(props.b);
     x.push(props.c);
-    $[5] = x;
-    $[6] = props.b;
-    $[7] = props.c;
+    $[5] = props.b;
+    $[6] = props.c;
+    $[7] = x;
     $[8] = y;
     $[9] = x;
   } else {
@@ -103,15 +103,15 @@ function foo(props) {
   }
   const content = t1;
   let t2;
-  if ($[13] !== header || $[14] !== content) {
+  if ($[13] !== content || $[14] !== header) {
     t2 = (
       <>
         {header}
         {content}
       </>
     );
-    $[13] = header;
-    $[14] = content;
+    $[13] = content;
+    $[14] = header;
     $[15] = t2;
   } else {
     t2 = $[15];

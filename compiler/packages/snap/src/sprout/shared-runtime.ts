@@ -107,8 +107,9 @@ export function setPropertyByKey<
   return arg;
 }
 
-export function arrayPush<T>(arr: Array<T>, ...values: Array<T>): void {
+export function arrayPush<T>(arr: Array<T>, ...values: Array<T>): Array<T> {
   arr.push(...values);
+  return arr;
 }
 
 export function graphql(value: string): string {
@@ -252,6 +253,9 @@ export function Stringify(props: any): React.ReactElement {
     toJSON(props, props?.shouldInvokeFns),
   );
 }
+export function Throw() {
+  throw new Error();
+}
 
 export function ValidateMemoization({
   inputs,
@@ -359,6 +363,14 @@ export function useFragment(..._args: Array<any>): object {
   };
 }
 
+export function useSpecialEffect(
+  fn: () => any,
+  _secondArg: any,
+  deps: Array<any>,
+) {
+  React.useEffect(fn, deps);
+}
+
 export function typedArrayPush<T>(array: Array<T>, item: T): void {
   array.push(item);
 }
@@ -366,4 +378,5 @@ export function typedArrayPush<T>(array: Array<T>, item: T): void {
 export function typedLog(...values: Array<any>): void {
   console.log(...values);
 }
+
 export default typedLog;

@@ -112,8 +112,8 @@ function FiberRootNode(
   }
 
   if (enableProfilerTimer && enableProfilerCommitHooks) {
-    this.effectDuration = 0;
-    this.passiveEffectDuration = 0;
+    this.effectDuration = -0;
+    this.passiveEffectDuration = -0;
   }
 
   if (enableUpdaterTracking) {

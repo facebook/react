@@ -23,10 +23,13 @@ import React from 'react';
  * Instead, it throws an error when `useContext` is not called within a
  * Provider with a value.
  */
-export default function createContext<T>() {
+export default function createContext<T>(): {
+  useContext: () => NonNullable<T>;
+  Provider: React.Provider<T | null>;
+} {
   const context = React.createContext<T | null>(null);
 
-  function useContext() {
+  function useContext(): NonNullable<T> {
     const c = React.useContext(context);
     if (!c)
       throw new Error('useContext must be within a Provider with a value');

@@ -550,6 +550,18 @@ const tests = {
       // TODO: this should error but doesn't.
       // errors: [genericError('useState')],
     },
+    {
+      code: normalizeIndent`
+        // Valid because the hook is outside of the loop
+        const Component = () => {
+          const [state, setState] = useState(0);
+          for (let i = 0; i < 10; i++) {
+            console.log(i);
+          }
+          return <div></div>;
+        };
+      `,
+    },
   ],
   invalid: [
     {
@@ -759,6 +771,30 @@ const tests = {
       code: normalizeIndent`
         // Invalid because it's dangerous and might not warn otherwise.
         // This *must* be invalid.
+        function ComponentWithHookInsideLoop() {
+          do {
+            useHookInsideLoop();
+          } while (cond);
+        }
+      `,
+      errors: [loopError('useHookInsideLoop')],
+    },
+    {
+      code: normalizeIndent`
+        // Invalid because it's dangerous and might not warn otherwise.
+        // This *must* be invalid.
+        function ComponentWithHookInsideLoop() {
+          do {
+            foo();
+          } while (useHookInsideLoop());
+        }
+      `,
+      errors: [loopError('useHookInsideLoop')],
+    },
+    {
+      code: normalizeIndent`
+        // Invalid because it's dangerous and might not warn otherwise.
+        // This *must* be invalid.
         function renderItem() {
           useState();
         }
@@ -849,6 +885,45 @@ const tests = {
             if (b) continue;
             useHook2();
           }
+        }
+      `,
+      errors: [loopError('useHook1'), loopError('useHook2', true)],
+    },
+    {
+      code: normalizeIndent`
+        // Invalid because it's dangerous and might not warn otherwise.
+        // This *must* be invalid.
+        function useHookInLoops() {
+          do {
+            useHook1();
+            if (a) return;
+            useHook2();
+          } while (b);
+
+          do {
+            useHook3();
+            if (c) return;
+            useHook4();
+          } while (d)
+        }
+      `,
+      errors: [
+        loopError('useHook1'),
+        loopError('useHook2'),
+        loopError('useHook3'),
+        loopError('useHook4'),
+      ],
+    },
+    {
+      code: normalizeIndent`
+        // Invalid because it's dangerous and might not warn otherwise.
+        // This *must* be invalid.
+        function useHookInLoops() {
+          do {
+            useHook1();
+            if (a) continue;
+            useHook2();
+          } while (b);
         }
       `,
       errors: [loopError('useHook1'), loopError('useHook2', true)],
@@ -1128,6 +1203,34 @@ const tests = {
         }
       `,
       errors: [asyncComponentHookError('useState')],
+    },
+    {
+      code: normalizeIndent`
+        async function Page() {
+          useId();
+          React.useId();
+        }
+      `,
+      errors: [
+        asyncComponentHookError('useId'),
+        asyncComponentHookError('React.useId'),
+      ],
+    },
+    {
+      code: normalizeIndent`
+        async function useAsyncHook() {
+          useId();
+        }
+      `,
+      errors: [asyncComponentHookError('useId')],
+    },
+    {
+      code: normalizeIndent`
+        async function notAHook() {
+          useId();
+        }
+      `,
+      errors: [functionError('useId', 'notAHook')],
     },
     {
       code: normalizeIndent`

@@ -47,7 +47,7 @@ import { identity, mutate, setProperty } from "shared-runtime";
 function AllocatingPrimitiveAsDepNested(props) {
   const $ = _c(5);
   let t0;
-  if ($[0] !== props.b || $[1] !== props.a) {
+  if ($[0] !== props.a || $[1] !== props.b) {
     const x = {};
     mutate(x);
     const t1 = identity(props.b) + 1;
@@ -62,8 +62,8 @@ function AllocatingPrimitiveAsDepNested(props) {
     const y = t2;
     setProperty(x, props.a);
     t0 = [x, y];
-    $[0] = props.b;
-    $[1] = props.a;
+    $[0] = props.a;
+    $[1] = props.b;
     $[2] = t0;
   } else {
     t0 = $[2];

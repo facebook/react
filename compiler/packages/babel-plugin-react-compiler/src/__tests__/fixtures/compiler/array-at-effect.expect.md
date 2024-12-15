@@ -41,7 +41,7 @@ function ArrayAtTest(props) {
   }
   const arr = t1;
   let t2;
-  if ($[4] !== props.y || $[5] !== arr) {
+  if ($[4] !== arr || $[5] !== props.y) {
     let t3;
     if ($[7] !== props.y) {
       t3 = bar(props.y);
@@ -51,8 +51,8 @@ function ArrayAtTest(props) {
       t3 = $[8];
     }
     t2 = arr.at(t3);
-    $[4] = props.y;
-    $[5] = arr;
+    $[4] = arr;
+    $[5] = props.y;
     $[6] = t2;
   } else {
     t2 = $[6];

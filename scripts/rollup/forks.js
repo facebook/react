@@ -217,6 +217,36 @@ const forks = Object.freeze({
     }
   },
 
+  './packages/shared/DefaultPrepareStackTrace.js': (
+    bundleType,
+    entry,
+    dependencies,
+    moduleType
+  ) => {
+    if (moduleType !== RENDERER && moduleType !== RECONCILER) {
+      return null;
+    }
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+    for (let rendererInfo of inlinedHostConfigs) {
+      if (rendererInfo.entryPoints.indexOf(entry) !== -1) {
+        if (!rendererInfo.isServerSupported) {
+          return null;
+        }
+        const foundFork = findNearestExistingForkFile(
+          './packages/shared/forks/DefaultPrepareStackTrace.',
+          rendererInfo.shortName,
+          '.js'
+        );
+        if (foundFork) {
+          return foundFork;
+        }
+        // fall through to error
+        break;
+      }
+    }
+    return null;
+  },
+
   './packages/react-reconciler/src/ReactFiberConfig.js': (
     bundleType,
     entry,

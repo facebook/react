@@ -13,7 +13,7 @@
 // Flags that can likely be deleted or landed without consequences
 // -----------------------------------------------------------------------------
 
-export const enableComponentStackLocations = true;
+// None
 
 // -----------------------------------------------------------------------------
 // Killswitch
@@ -21,6 +21,8 @@ export const enableComponentStackLocations = true;
 // Flags that exist solely to turn off a change in case it causes a regression
 // when it rolls out to prod. We should remove these as soon as possible.
 // -----------------------------------------------------------------------------
+
+export const enableHydrationLaneScheduling = true;
 
 // -----------------------------------------------------------------------------
 // Land or remove (moderate effort)
@@ -31,7 +33,6 @@ export const enableComponentStackLocations = true;
 
 // TODO: Finish rolling out in www
 export const favorSafetyOverHydrationPerf = true;
-export const enableAsyncActions = true;
 
 // Need to remove didTimeout argument from Scheduler before landing
 export const disableSchedulerTimeoutInWorkLoop = false;
@@ -79,8 +80,6 @@ export const enableLegacyFBSupport = false;
 export const enableCache = true;
 export const enableLegacyCache = __EXPERIMENTAL__;
 
-export const enableBinaryFlight = true;
-export const enableFlightReadableStream = true;
 export const enableAsyncIterableChildren = __EXPERIMENTAL__;
 
 export const enableTaint = __EXPERIMENTAL__;
@@ -111,14 +110,9 @@ export const enableLegacyHidden = false;
 
 // Enables unstable_avoidThisFallback feature in Fiber
 export const enableSuspenseAvoidThisFallback = false;
-// Enables unstable_avoidThisFallback feature in Fizz
-export const enableSuspenseAvoidThisFallbackFizz = false;
 
 export const enableCPUSuspense = __EXPERIMENTAL__;
 
-// Enables useMemoCache hook, intended as a compilation target for
-// auto-memoization.
-export const enableUseMemoCacheHook = true;
 // Test this at Meta before enabling.
 export const enableNoCloningMemoCache = false;
 
@@ -141,13 +135,11 @@ export const enableServerComponentLogs = true;
  */
 export const enablePersistedModeClonedFlag = false;
 
-export const enableAddPropertiesFastPath = false;
-
 export const enableOwnerStacks = __EXPERIMENTAL__;
 
 export const enableShallowPropDiffing = false;
 
-export const enableSiblingPrerendering = false;
+export const enableSiblingPrerendering = true;
 
 /**
  * Enables an expiration time for retry lanes to avoid starvation.
@@ -156,6 +148,17 @@ export const enableRetryLaneExpiration = false;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
+
+/**
+ * Enables a new error detection for infinite render loops from updates caused
+ * by setState or similar outside of the component owning the state.
+ */
+export const enableInfiniteRenderLoopDetection = false;
+
+/**
+ * Experimental new hook for better managing resources in effects.
+ */
+export const enableUseResourceEffectHook = false;
 
 // -----------------------------------------------------------------------------
 // Ready for next major.
@@ -192,31 +195,11 @@ export const disableLegacyContextForFunctionComponents = true;
 // TODO: clean up legacy <StrictMode /> once tests pass WWW.
 export const useModernStrictMode = true;
 
-// Not ready to break experimental yet.
-// Remove IE and MsApp specific workarounds for innerHTML
-export const disableIEWorkarounds = true;
-
-// Filter certain DOM attributes (e.g. src, href) if their values are empty
-// strings. This prevents e.g. <img src=""> from making an unnecessary HTTP
-// request for certain browsers.
-export const enableFilterEmptyStringAttributesDOM = true;
+// Enable the moveBefore() alternative to insertBefore(). This preserves states of moves.
+export const enableMoveBefore = false;
 
 // Disabled caching behavior of `react/cache` in client runtimes.
 export const disableClientCache = true;
-
-/**
- * Enables a new error detection for infinite render loops from updates caused
- * by setState or similar outside of the component owning the state.
- */
-export const enableInfiniteRenderLoopDetection = true;
-
-// Subtle breaking changes to JSX runtime to make it faster, like passing `ref`
-// as a normal prop instead of stripping it from the props object.
-
-// Passes `ref` as a normal prop instead of stripping it from the props object
-// during element creation.
-export const enableRefAsProp = true;
-export const disableStringRefs = true;
 
 // Warn on any usage of ReactTestRenderer
 export const enableReactTestRendererWarning = true;
@@ -260,16 +243,23 @@ export const disableTextareaChildren = false;
 // Debugging and DevTools
 // -----------------------------------------------------------------------------
 
-// Adds user timing marks for e.g. state updates, suspense, and work loop stuff,
-// for an experimental timeline tool.
-export const enableSchedulingProfiler = __PROFILE__;
-
 // Helps identify side effects in render-phase lifecycle hooks and setState
 // reducers by double invoking them in StrictLegacyMode.
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 
 // Gather advanced timing metrics for Profiler subtrees.
 export const enableProfilerTimer = __PROFILE__;
+
+// Adds performance.measure() marks using Chrome extensions to allow formatted
+// Component rendering tracks to show up in the Performance tab.
+// This flag will be used for both Server Component and Client Component tracks.
+// All calls should also be gated on enableProfilerTimer.
+export const enableComponentPerformanceTrack = __EXPERIMENTAL__;
+
+// Adds user timing marks for e.g. state updates, suspense, and work loop stuff,
+// for an experimental timeline tool.
+export const enableSchedulingProfiler: boolean =
+  !enableComponentPerformanceTrack && __PROFILE__;
 
 // Record durations for commit and passive effects phases.
 export const enableProfilerCommitHooks = __PROFILE__;
@@ -289,7 +279,5 @@ export const enableUpdaterTracking = __PROFILE__;
 
 // Internal only.
 export const enableGetInspectorDataForInstanceInProduction = false;
-
-export const consoleManagedByDevToolsDuringStrictMode = true;
 
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;

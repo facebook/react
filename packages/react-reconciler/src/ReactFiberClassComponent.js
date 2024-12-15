@@ -23,7 +23,6 @@ import {
   enableDebugTracing,
   enableSchedulingProfiler,
   enableLazyContextPropagation,
-  enableRefAsProp,
   disableDefaultPropsExceptForClasses,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
@@ -72,6 +71,7 @@ import {
   markStateUpdateScheduled,
   setIsStrictModeForDevtools,
 } from './ReactFiberDevToolsHook';
+import {startUpdateTimerByLane} from './ReactProfilerTimer';
 
 const fakeInternalInstance = {};
 
@@ -194,6 +194,7 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
+      startUpdateTimerByLane(lane);
       scheduleUpdateOnFiber(root, fiber, lane);
       entangleTransitions(root, fiber, lane);
     }
@@ -228,6 +229,7 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
+      startUpdateTimerByLane(lane);
       scheduleUpdateOnFiber(root, fiber, lane);
       entangleTransitions(root, fiber, lane);
     }
@@ -262,6 +264,7 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
+      startUpdateTimerByLane(lane);
       scheduleUpdateOnFiber(root, fiber, lane);
       entangleTransitions(root, fiber, lane);
     }
@@ -1248,14 +1251,12 @@ export function resolveClassComponentProps(
 ): Object {
   let newProps = baseProps;
 
-  if (enableRefAsProp) {
-    // Remove ref from the props object, if it exists.
-    if ('ref' in baseProps) {
-      newProps = ({}: any);
-      for (const propName in baseProps) {
-        if (propName !== 'ref') {
-          newProps[propName] = baseProps[propName];
-        }
+  // Remove ref from the props object, if it exists.
+  if ('ref' in baseProps) {
+    newProps = ({}: any);
+    for (const propName in baseProps) {
+      if (propName !== 'ref') {
+        newProps[propName] = baseProps[propName];
       }
     }
   }

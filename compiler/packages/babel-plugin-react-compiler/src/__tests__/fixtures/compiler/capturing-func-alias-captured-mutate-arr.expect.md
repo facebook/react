@@ -24,7 +24,7 @@ import { c as _c } from "react/compiler-runtime";
 function component(foo, bar) {
   const $ = _c(3);
   let y;
-  if ($[0] !== foo || $[1] !== bar) {
+  if ($[0] !== bar || $[1] !== foo) {
     const x = { foo };
     y = { bar };
     const f0 = function () {
@@ -35,8 +35,8 @@ function component(foo, bar) {
 
     f0();
     mutate(y);
-    $[0] = foo;
-    $[1] = bar;
+    $[0] = bar;
+    $[1] = foo;
     $[2] = y;
   } else {
     y = $[2];

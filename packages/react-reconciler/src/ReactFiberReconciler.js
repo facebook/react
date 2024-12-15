@@ -38,11 +38,13 @@ import {
 } from './ReactWorkTags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import isArray from 'shared/isArray';
-import {enableSchedulingProfiler} from 'shared/ReactFeatureFlags';
+import {
+  enableSchedulingProfiler,
+  enableHydrationLaneScheduling,
+} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   getPublicInstance,
-  getInstanceFromNode,
   rendererVersion,
   rendererPackageName,
   extraDevToolsConfig,
@@ -61,6 +63,7 @@ import {
   onScheduleRoot,
   injectProfilingHooks,
 } from './ReactFiberDevToolsHook';
+import {startUpdateTimerByLane} from './ReactProfilerTimer';
 import {
   requestUpdateLane,
   scheduleUpdateOnFiber,
@@ -91,6 +94,7 @@ import {
   SelectiveHydrationLane,
   getHighestPriorityPendingLanes,
   higherPriorityLane,
+  getBumpedLaneForHydrationByLane,
 } from './ReactFiberLane';
 import {
   scheduleRefresh,
@@ -322,7 +326,10 @@ export function createHydrationContainer(
   // the update to schedule work on the root fiber (and, for legacy roots, to
   // enqueue the callback if one is provided).
   const current = root.current;
-  const lane = requestUpdateLane(current);
+  let lane = requestUpdateLane(current);
+  if (enableHydrationLaneScheduling) {
+    lane = getBumpedLaneForHydrationByLane(lane);
+  }
   const update = createUpdate(lane);
   update.callback =
     callback !== undefined && callback !== null ? callback : null;
@@ -433,6 +440,7 @@ function updateContainerImpl(
 
   const root = enqueueUpdate(rootFiber, update, lane);
   if (root !== null) {
+    startUpdateTimerByLane(lane);
     scheduleUpdateOnFiber(root, rootFiber, lane);
     entangleTransitions(root, rootFiber, lane);
   }
@@ -532,7 +540,10 @@ export function attemptHydrationAtCurrentPriority(fiber: Fiber): void {
     // their priority other than synchronously flush it.
     return;
   }
-  const lane = requestUpdateLane(fiber);
+  let lane = requestUpdateLane(fiber);
+  if (enableHydrationLaneScheduling) {
+    lane = getBumpedLaneForHydrationByLane(lane);
+  }
   const root = enqueueConcurrentRenderForLane(fiber, lane);
   if (root !== null) {
     scheduleUpdateOnFiber(root, fiber, lane);
@@ -845,7 +856,6 @@ export function injectIntoDevTools(): boolean {
     version: rendererVersion,
     rendererPackageName: rendererPackageName,
     currentDispatcherRef: ReactSharedInternals,
-    findFiberByHostInstance: getInstanceFromNode,
     // Enables DevTools to detect reconciler version rather than renderer version
     // which may not match for third party renderers.
     reconcilerVersion: ReactVersion,

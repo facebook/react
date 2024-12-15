@@ -19,11 +19,6 @@ import {componentInfoToComponentLogsMap} from '../shared/DevToolsServerComponent
 
 import {formatConsoleArgumentsToSingleString} from 'react-devtools-shared/src/backend/utils';
 
-import {
-  patchConsoleUsingWindowValues,
-  registerRenderer as registerRendererWithConsole,
-} from '../console';
-
 function supportsConsoleTasks(componentInfo: ReactComponentInfo): boolean {
   // If this ReactComponentInfo supports native console.createTask then we are already running
   // inside a native async stack trace if it's active - meaning the DevTools is open.
@@ -145,9 +140,6 @@ export function attach(
     // The changes will be flushed later when we commit this tree to Fiber.
   }
 
-  patchConsoleUsingWindowValues();
-  registerRendererWithConsole(onErrorOrWarning, getComponentStack);
-
   return {
     cleanup() {},
     clearErrorsAndWarnings() {},
@@ -205,7 +197,6 @@ export function attach(
       };
     },
     logElementToConsole() {},
-    patchConsoleForStrictMode() {},
     getElementAttributeByPath() {},
     getElementSourceFunctionById() {},
     onErrorOrWarning,
@@ -219,7 +210,6 @@ export function attach(
     startProfiling() {},
     stopProfiling() {},
     storeAsGlobal() {},
-    unpatchConsoleForStrictMode() {},
     updateComponentFilters() {},
     getEnvironmentNames() {
       return [];

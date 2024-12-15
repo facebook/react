@@ -157,28 +157,27 @@ export function inferReactivePlaces(fn: HIRFunction): void {
   }
 
   do {
-    const identifierMapping = new Map<Identifier, Identifier>();
     for (const [, block] of fn.body.blocks) {
       let hasReactiveControl = isReactiveControlledBlock(block.id);
 
       for (const phi of block.phis) {
-        if (reactiveIdentifiers.isReactiveIdentifier(phi.id)) {
+        if (reactiveIdentifiers.isReactive(phi.place)) {
           // Already marked reactive on a previous pass
           continue;
         }
         let isPhiReactive = false;
         for (const [, operand] of phi.operands) {
-          if (reactiveIdentifiers.isReactiveIdentifier(operand)) {
+          if (reactiveIdentifiers.isReactive(operand)) {
             isPhiReactive = true;
             break;
           }
         }
         if (isPhiReactive) {
-          reactiveIdentifiers.markReactiveIdentifier(phi.id);
+          reactiveIdentifiers.markReactive(phi.place);
         } else {
           for (const [pred] of phi.operands) {
             if (isReactiveControlledBlock(pred)) {
-              reactiveIdentifiers.markReactiveIdentifier(phi.id);
+              reactiveIdentifiers.markReactive(phi.place);
               break;
             }
           }
@@ -233,10 +232,6 @@ export function inferReactivePlaces(fn: HIRFunction): void {
               case Effect.ConditionallyMutate:
               case Effect.Mutate: {
                 if (isMutable(instruction, operand)) {
-                  const resolvedId = identifierMapping.get(operand.identifier);
-                  if (resolvedId !== undefined) {
-                    reactiveIdentifiers.markReactiveIdentifier(resolvedId);
-                  }
                   reactiveIdentifiers.markReactive(operand);
                 }
                 break;
@@ -261,31 +256,6 @@ export function inferReactivePlaces(fn: HIRFunction): void {
                 );
               }
             }
-          }
-        }
-
-        switch (value.kind) {
-          case 'LoadLocal': {
-            identifierMapping.set(
-              instruction.lvalue.identifier,
-              value.place.identifier,
-            );
-            break;
-          }
-          case 'PropertyLoad':
-          case 'ComputedLoad': {
-            const resolvedId =
-              identifierMapping.get(value.object.identifier) ??
-              value.object.identifier;
-            identifierMapping.set(instruction.lvalue.identifier, resolvedId);
-            break;
-          }
-          case 'LoadContext': {
-            identifierMapping.set(
-              instruction.lvalue.identifier,
-              value.place.identifier,
-            );
-            break;
           }
         }
       }
@@ -372,27 +342,19 @@ class ReactivityMap {
   }
 
   isReactive(place: Place): boolean {
-    const reactive = this.isReactiveIdentifier(place.identifier);
+    const identifier =
+      this.aliasedIdentifiers.find(place.identifier) ?? place.identifier;
+    const reactive = this.reactive.has(identifier.id);
     if (reactive) {
       place.reactive = true;
     }
     return reactive;
   }
 
-  isReactiveIdentifier(inputIdentifier: Identifier): boolean {
-    const identifier =
-      this.aliasedIdentifiers.find(inputIdentifier) ?? inputIdentifier;
-    return this.reactive.has(identifier.id);
-  }
-
   markReactive(place: Place): void {
     place.reactive = true;
-    this.markReactiveIdentifier(place.identifier);
-  }
-
-  markReactiveIdentifier(inputIdentifier: Identifier): void {
     const identifier =
-      this.aliasedIdentifiers.find(inputIdentifier) ?? inputIdentifier;
+      this.aliasedIdentifiers.find(place.identifier) ?? place.identifier;
     if (!this.reactive.has(identifier.id)) {
       this.hasChanges = true;
       this.reactive.add(identifier.id);

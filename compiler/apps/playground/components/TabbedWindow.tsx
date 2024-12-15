@@ -69,6 +69,9 @@ function TabbedWindowItem({
     setTabsOpen(nextState);
   }, [tabsOpen, name, setTabsOpen]);
 
+  // Replace spaces with non-breaking spaces
+  const displayName = name.replace(/ /g, '\u00A0');
+
   return (
     <div key={name} className="flex flex-row">
       {isShow ? (
@@ -80,7 +83,7 @@ function TabbedWindowItem({
             className={`p-4 duration-150 ease-in border-b cursor-pointer border-grey-200 ${
               hasChanged ? 'font-bold' : 'font-light'
             } text-secondary hover:text-link`}>
-            - {name}
+            - {displayName}
           </h2>
           {tabs.get(name) ?? <div>No output for {name}</div>}
         </Resizable>
@@ -94,7 +97,7 @@ function TabbedWindowItem({
             className={`flex-grow-0 w-5 transition-colors duration-150 ease-in ${
               hasChanged ? 'font-bold' : 'font-light'
             } text-secondary hover:text-link`}>
-            {name}
+            {displayName}
           </button>
         </div>
       )}

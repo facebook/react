@@ -2148,8 +2148,8 @@ describe('Store', () => {
         act(() => render(<React.Fragment />));
       });
       expect(store).toMatchInlineSnapshot(`[root]`);
-      expect(store.errorCount).toBe(0);
-      expect(store.warningCount).toBe(0);
+      expect(store.componentWithErrorCount).toBe(0);
+      expect(store.componentWithWarningCount).toBe(0);
     });
 
     // Regression test for https://github.com/facebook/react/issues/23202

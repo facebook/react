@@ -14,6 +14,7 @@ let Stream;
 let React;
 let ReactDOMFizzServer;
 let Suspense;
+let act;
 
 describe('ReactDOMFizzServerNode', () => {
   beforeEach(() => {
@@ -22,6 +23,7 @@ describe('ReactDOMFizzServerNode', () => {
     ReactDOMFizzServer = require('react-dom/server');
     Stream = require('stream');
     Suspense = React.Suspense;
+    act = require('internal-test-utils').act;
   });
 
   function getTestWritable() {
@@ -54,54 +56,59 @@ describe('ReactDOMFizzServerNode', () => {
     throw theInfinitePromise;
   }
 
-  it('should call renderToPipeableStream', () => {
+  it('should call renderToPipeableStream', async () => {
     const {writable, output} = getTestWritable();
-    const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
-      <div>hello world</div>,
-    );
-    pipe(writable);
-    jest.runAllTimers();
+    await act(() => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <div>hello world</div>,
+      );
+      pipe(writable);
+    });
     expect(output.result).toMatchInlineSnapshot(`"<div>hello world</div>"`);
   });
 
-  it('should emit DOCTYPE at the root of the document', () => {
+  it('should emit DOCTYPE at the root of the document', async () => {
     const {writable, output} = getTestWritable();
-    const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
-      <html>
-        <body>hello world</body>
-      </html>,
-    );
-    pipe(writable);
-    jest.runAllTimers();
+    await act(() => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <html>
+          <body>hello world</body>
+        </html>,
+      );
+      pipe(writable);
+    });
     // with Float, we emit empty heads if they are elided when rendering <html>
     expect(output.result).toMatchInlineSnapshot(
       `"<!DOCTYPE html><html><head></head><body>hello world</body></html>"`,
     );
   });
 
-  it('should emit bootstrap script src at the end', () => {
+  it('should emit bootstrap script src at the end', async () => {
     const {writable, output} = getTestWritable();
-    const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
-      <div>hello world</div>,
-      {
-        bootstrapScriptContent: 'INIT();',
-        bootstrapScripts: ['init.js'],
-        bootstrapModules: ['init.mjs'],
-      },
-    );
-    pipe(writable);
-    jest.runAllTimers();
+    await act(() => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <div>hello world</div>,
+        {
+          bootstrapScriptContent: 'INIT();',
+          bootstrapScripts: ['init.js'],
+          bootstrapModules: ['init.mjs'],
+        },
+      );
+      pipe(writable);
+    });
     expect(output.result).toMatchInlineSnapshot(
       `"<link rel="preload" as="script" fetchPriority="low" href="init.js"/><link rel="modulepreload" fetchPriority="low" href="init.mjs"/><div>hello world</div><script>INIT();</script><script src="init.js" async=""></script><script type="module" src="init.mjs" async=""></script>"`,
     );
   });
 
-  it('should start writing after pipe', () => {
+  it('should start writing after pipe', async () => {
     const {writable, output} = getTestWritable();
-    const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
-      <div>hello world</div>,
-    );
-    jest.runAllTimers();
+    let pipe;
+    await act(() => {
+      pipe = ReactDOMFizzServer.renderToPipeableStream(
+        <div>hello world</div>,
+      ).pipe;
+    });
     // First we write our header.
     output.result +=
       '<!doctype html><html><head><title>test</title><head><body>';
@@ -281,24 +288,26 @@ describe('ReactDOMFizzServerNode', () => {
     let isCompleteCalls = 0;
     const errors = [];
     const {writable, output, completed} = getTestWritable();
-    const {pipe, abort} = ReactDOMFizzServer.renderToPipeableStream(
-      <div>
-        <Suspense fallback={<div>Loading</div>}>
-          <InfiniteSuspend />
-        </Suspense>
-      </div>,
-      {
-        onError(x) {
-          errors.push(x.message);
+    let abort;
+    await act(() => {
+      const pipeable = ReactDOMFizzServer.renderToPipeableStream(
+        <div>
+          <Suspense fallback={<div>Loading</div>}>
+            <InfiniteSuspend />
+          </Suspense>
+        </div>,
+        {
+          onError(x) {
+            errors.push(x.message);
+          },
+          onAllReady() {
+            isCompleteCalls++;
+          },
         },
-        onAllReady() {
-          isCompleteCalls++;
-        },
-      },
-    );
-    pipe(writable);
-
-    jest.runAllTimers();
+      );
+      pipeable.pipe(writable);
+      abort = pipeable.abort;
+    });
 
     expect(output.result).toContain('Loading');
     expect(isCompleteCalls).toBe(0);
@@ -360,26 +369,28 @@ describe('ReactDOMFizzServerNode', () => {
     let isCompleteCalls = 0;
     const errors = [];
     const {writable, output, completed} = getTestWritable();
-    const {pipe, abort} = ReactDOMFizzServer.renderToPipeableStream(
-      <div>
-        <Suspense fallback="Loading">
-          <Suspense fallback={<InfiniteSuspend />}>
-            <InfiniteSuspend />
+    let abort;
+    await act(() => {
+      const pipeable = ReactDOMFizzServer.renderToPipeableStream(
+        <div>
+          <Suspense fallback="Loading">
+            <Suspense fallback={<InfiniteSuspend />}>
+              <InfiniteSuspend />
+            </Suspense>
           </Suspense>
-        </Suspense>
-      </div>,
-      {
-        onError(x) {
-          errors.push(x.message);
+        </div>,
+        {
+          onError(x) {
+            errors.push(x.message);
+          },
+          onAllReady() {
+            isCompleteCalls++;
+          },
         },
-        onAllReady() {
-          isCompleteCalls++;
-        },
-      },
-    );
-    pipe(writable);
-
-    jest.runAllTimers();
+      );
+      pipeable.pipe(writable);
+      abort = pipeable.abort;
+    });
 
     expect(output.result).toContain('Loading');
     expect(isCompleteCalls).toBe(0);
@@ -428,15 +439,15 @@ describe('ReactDOMFizzServerNode', () => {
 
     const client = new DelayClient();
     const {writable, output, completed} = getTestWritable();
-    ReactDOMFizzServer.renderToPipeableStream(
-      <DelayContext.Provider value={client}>
-        <Suspense fallback="loading">
-          <Component />
-        </Suspense>
-      </DelayContext.Provider>,
-    ).pipe(writable);
-
-    jest.runAllTimers();
+    await act(() => {
+      ReactDOMFizzServer.renderToPipeableStream(
+        <DelayContext.Provider value={client}>
+          <Suspense fallback="loading">
+            <Component />
+          </Suspense>
+        </DelayContext.Provider>,
+      ).pipe(writable);
+    });
 
     expect(output.error).toBe(undefined);
     expect(output.result).toContain('loading');
@@ -481,29 +492,28 @@ describe('ReactDOMFizzServerNode', () => {
       output: output0,
       completed: completed0,
     } = getTestWritable();
-    ReactDOMFizzServer.renderToPipeableStream(
-      <DelayContext.Provider value={client0}>
-        <Suspense fallback="loading">
-          <Component />
-        </Suspense>
-      </DelayContext.Provider>,
-    ).pipe(writable0);
-
     const client1 = new DelayClient();
     const {
       writable: writable1,
       output: output1,
       completed: completed1,
     } = getTestWritable();
-    ReactDOMFizzServer.renderToPipeableStream(
-      <DelayContext.Provider value={client1}>
-        <Suspense fallback="loading">
-          <Component />
-        </Suspense>
-      </DelayContext.Provider>,
-    ).pipe(writable1);
-
-    jest.runAllTimers();
+    await act(() => {
+      ReactDOMFizzServer.renderToPipeableStream(
+        <DelayContext.Provider value={client0}>
+          <Suspense fallback="loading">
+            <Component />
+          </Suspense>
+        </DelayContext.Provider>,
+      ).pipe(writable0);
+      ReactDOMFizzServer.renderToPipeableStream(
+        <DelayContext.Provider value={client1}>
+          <Suspense fallback="loading">
+            <Component />
+          </Suspense>
+        </DelayContext.Provider>,
+      ).pipe(writable1);
+    });
 
     expect(output0.error).toBe(undefined);
     expect(output0.result).toContain('loading');
@@ -552,22 +562,22 @@ describe('ReactDOMFizzServerNode', () => {
 
     const client = new DelayClient();
     const {writable, output, completed} = getTestWritable();
-    ReactDOMFizzServer.renderToPipeableStream(
-      <>
-        <DelayContext.Provider value={client}>
-          <Suspense fallback="loading">
-            <Component />
-          </Suspense>
-        </DelayContext.Provider>
-        <DelayContext.Provider value={client}>
-          <Suspense fallback="loading">
-            <Component />
-          </Suspense>
-        </DelayContext.Provider>
-      </>,
-    ).pipe(writable);
-
-    jest.runAllTimers();
+    await act(() => {
+      ReactDOMFizzServer.renderToPipeableStream(
+        <>
+          <DelayContext.Provider value={client}>
+            <Suspense fallback="loading">
+              <Component />
+            </Suspense>
+          </DelayContext.Provider>
+          <DelayContext.Provider value={client}>
+            <Suspense fallback="loading">
+              <Component />
+            </Suspense>
+          </DelayContext.Provider>
+        </>,
+      ).pipe(writable);
+    });
 
     expect(output.error).toBe(undefined);
     expect(output.result).toContain('loading');
@@ -630,13 +640,14 @@ describe('ReactDOMFizzServerNode', () => {
     expect(isComplete).toBe(true);
   });
 
-  it('should encode multibyte characters correctly without nulls (#24985)', () => {
+  it('should encode multibyte characters correctly without nulls (#24985)', async () => {
     const {writable, output} = getTestWritable();
-    const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
-      <div>{Array(700).fill('ののの')}</div>,
-    );
-    pipe(writable);
-    jest.runAllTimers();
+    await act(() => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <div>{Array(700).fill('ののの')}</div>,
+      );
+      pipe(writable);
+    });
     expect(output.result.indexOf('\u0000')).toBe(-1);
     expect(output.result).toEqual(
       '<div>' + Array(700).fill('ののの').join('<!-- -->') + '</div>',

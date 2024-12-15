@@ -22,7 +22,6 @@ import type {
   TransitionAbort,
 } from './ReactFiberTracingMarkerComponent';
 import type {OffscreenInstance} from './ReactFiberActivityComponent';
-import type {RenderTaskFn} from './ReactFiberRootScheduler';
 import type {Resource} from './ReactFiberConfig';
 
 import {
@@ -32,7 +31,6 @@ import {
   enableProfilerNestedUpdatePhase,
   enableDebugTracing,
   enableSchedulingProfiler,
-  disableSchedulerTimeoutInWorkLoop,
   enableUpdaterTracking,
   enableCache,
   enableTransitionTracing,
@@ -42,8 +40,8 @@ import {
   enableInfiniteRenderLoopDetection,
   disableLegacyMode,
   disableDefaultPropsExceptForClasses,
-  disableStringRefs,
   enableSiblingPrerendering,
+  enableComponentPerformanceTrack,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import is from 'shared/objectIs';
@@ -67,6 +65,26 @@ import {
   logRenderStarted,
   logRenderStopped,
 } from './DebugTracing';
+import {
+  logBlockingStart,
+  logTransitionStart,
+  logRenderPhase,
+  logInterruptedRenderPhase,
+  logSuspendedRenderPhase,
+  logErroredRenderPhase,
+  logInconsistentRender,
+  logSuspendedWithDelayPhase,
+  logSuspenseThrottlePhase,
+  logSuspendedCommitPhase,
+  logCommitPhase,
+  logPaintYieldPhase,
+  logPassiveCommitPhase,
+  logYieldTime,
+  logActionYieldTime,
+  logSuspendedYieldTime,
+  setCurrentTrackFromLanes,
+  markAllLanesInOrder,
+} from './ReactFiberPerformanceTrack';
 
 import {
   resetAfterCommit,
@@ -82,6 +100,7 @@ import {
   setCurrentUpdatePriority,
   getCurrentUpdatePriority,
   resolveUpdatePriority,
+  trackSchedulerEvent,
 } from './ReactFiberConfig';
 
 import {createWorkInProgress, resetWorkInProgress} from './ReactFiber';
@@ -144,6 +163,7 @@ import {
   includesOnlyRetries,
   includesOnlyTransitions,
   includesBlockingLane,
+  includesTransitionLane,
   includesExpiredLane,
   getNextLanes,
   getEntangledLanes,
@@ -189,7 +209,6 @@ import {
   commitBeforeMutationEffects,
   commitLayoutEffects,
   commitMutationEffects,
-  commitPassiveEffectDurations,
   commitPassiveMountEffects,
   commitPassiveUnmountEffects,
   disappearLayoutEffects,
@@ -221,13 +240,38 @@ import {
 } from './ReactFiberConcurrentUpdates';
 
 import {
+  blockingClampTime,
+  blockingUpdateTime,
+  blockingEventTime,
+  blockingEventType,
+  blockingEventIsRepeat,
+  blockingSuspendedTime,
+  transitionClampTime,
+  transitionStartTime,
+  transitionUpdateTime,
+  transitionEventTime,
+  transitionEventType,
+  transitionEventIsRepeat,
+  transitionSuspendedTime,
+  clearBlockingTimers,
+  clearTransitionTimers,
+  clampBlockingTimers,
+  clampTransitionTimers,
   markNestedUpdateScheduled,
+  renderStartTime,
+  commitStartTime,
+  commitEndTime,
+  recordRenderTime,
   recordCommitTime,
-  resetNestedUpdateFlag,
+  recordCommitEndTime,
   startProfilerTimer,
   stopProfilerTimerIfRunningAndRecordDuration,
   stopProfilerTimerIfRunningAndRecordIncompleteDuration,
-  syncNestedUpdateFlag,
+  trackSuspendedTime,
+  startYieldTimer,
+  yieldStartTime,
+  yieldReason,
+  startPingTimerByLanes,
 } from './ReactProfilerTimer';
 
 // DEV stuff
@@ -265,6 +309,7 @@ import {
 import {processTransitionCallbacks} from './ReactFiberTracingMarkerComponent';
 import {
   SuspenseException,
+  SuspenseActionException,
   SuspenseyCommitException,
   getSuspendedThenable,
   isThenableResolved,
@@ -280,7 +325,6 @@ import {
   ensureRootIsScheduled,
   flushSyncWorkOnAllRoots,
   flushSyncWorkOnLegacyRootsOnly,
-  getContinuationForRoot,
   requestTransitionLane,
 } from './ReactFiberRootScheduler';
 import {getMaskedContext, getUnmaskedContext} from './ReactFiberContext';
@@ -302,8 +346,8 @@ const RootFatalErrored = 1;
 const RootErrored = 2;
 const RootSuspended = 3;
 const RootSuspendedWithDelay = 4;
+const RootSuspendedAtTheShell = 6;
 const RootCompleted = 5;
-const RootDidNotComplete = 6;
 
 // Describes where we are in the React execution stack
 let executionContext: ExecutionContext = NoContext;
@@ -314,7 +358,7 @@ let workInProgress: Fiber | null = null;
 // The lanes we're rendering
 let workInProgressRootRenderLanes: Lanes = NoLanes;
 
-opaque type SuspendedReason = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+export opaque type SuspendedReason = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 const NotSuspended: SuspendedReason = 0;
 const SuspendedOnError: SuspendedReason = 1;
 const SuspendedOnData: SuspendedReason = 2;
@@ -324,6 +368,7 @@ const SuspendedOnInstanceAndReadyToContinue: SuspendedReason = 5;
 const SuspendedOnDeprecatedThrowPromise: SuspendedReason = 6;
 const SuspendedAndReadyToContinue: SuspendedReason = 7;
 const SuspendedOnHydration: SuspendedReason = 8;
+const SuspendedOnAction: SuspendedReason = 9;
 
 // When this is true, the work-in-progress fiber just suspended (or errored) and
 // we've yet to unwind the stack. In some cases, we may yield to the main thread
@@ -580,8 +625,8 @@ let legacyErrorBoundariesThatAlreadyFailed: Set<mixed> | null = null;
 let rootDoesHavePassiveEffects: boolean = false;
 let rootWithPendingPassiveEffects: FiberRoot | null = null;
 let pendingPassiveEffectsLanes: Lanes = NoLanes;
-let pendingPassiveProfilerEffects: Array<Fiber> = [];
 let pendingPassiveEffectsRemainingLanes: Lanes = NoLanes;
+let pendingPassiveEffectsRenderEndTime: number = -0; // Profiling-only
 let pendingPassiveTransitions: Array<Transition> | null = null;
 
 // Use these to prevent an infinite loop of nested updates
@@ -606,7 +651,10 @@ export function getWorkInProgressRootRenderLanes(): Lanes {
 }
 
 export function isWorkLoopSuspendedOnData(): boolean {
-  return workInProgressSuspendedReason === SuspendedOnData;
+  return (
+    workInProgressSuspendedReason === SuspendedOnData ||
+    workInProgressSuspendedReason === SuspendedOnAction
+  );
 }
 
 export function getCurrentTime(): number {
@@ -735,18 +783,20 @@ export function scheduleUpdateOnFiber(
   if (
     // Suspended render phase
     (root === workInProgressRoot &&
-      workInProgressSuspendedReason === SuspendedOnData) ||
+      (workInProgressSuspendedReason === SuspendedOnData ||
+        workInProgressSuspendedReason === SuspendedOnAction)) ||
     // Suspended commit phase
     root.cancelPendingCommit !== null
   ) {
     // The incoming update might unblock the current render. Interrupt the
     // current attempt and restart from the top.
     prepareFreshStack(root, NoLanes);
+    const didAttemptEntireTree = false;
     markRootSuspended(
       root,
       workInProgressRootRenderLanes,
       workInProgressDeferredLane,
-      workInProgressRootDidSkipSuspendedSiblings,
+      didAttemptEntireTree,
     );
   }
 
@@ -809,11 +859,12 @@ export function scheduleUpdateOnFiber(
         // effect of interrupting the current render and switching to the update.
         // TODO: Make sure this doesn't override pings that happen while we've
         // already started rendering.
+        const didAttemptEntireTree = false;
         markRootSuspended(
           root,
           workInProgressRootRenderLanes,
           workInProgressDeferredLane,
-          workInProgressRootDidSkipSuspendedSiblings,
+          didAttemptEntireTree,
         );
       }
     }
@@ -862,150 +913,184 @@ export function isUnsafeClassRenderPhaseUpdate(fiber: Fiber): boolean {
   return (executionContext & RenderContext) !== NoContext;
 }
 
-// This is the entry point for every concurrent task, i.e. anything that
-// goes through Scheduler.
-export function performConcurrentWorkOnRoot(
+export function performWorkOnRoot(
   root: FiberRoot,
-  didTimeout: boolean,
-): RenderTaskFn | null {
-  if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
-    resetNestedUpdateFlag();
-  }
-
+  lanes: Lanes,
+  forceSync: boolean,
+): void {
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     throw new Error('Should not already be working.');
   }
 
-  // Flush any pending passive effects before deciding which lanes to work on,
-  // in case they schedule additional work.
-  const originalCallbackNode = root.callbackNode;
-  const didFlushPassiveEffects = flushPassiveEffects();
-  if (didFlushPassiveEffects) {
-    // Something in the passive effect phase may have canceled the current task.
-    // Check if the task node for this root was changed.
-    if (root.callbackNode !== originalCallbackNode) {
-      // The current task was canceled. Exit. We don't need to call
-      // `ensureRootIsScheduled` because the check above implies either that
-      // there's a new task, or that there's no remaining work on this root.
-      return null;
-    } else {
-      // Current task was not canceled. Continue.
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    if (workInProgressRootRenderLanes !== NoLanes && workInProgress !== null) {
+      const yieldedFiber = workInProgress;
+      // We've returned from yielding to the event loop. Let's log the time it took.
+      const yieldEndTime = now();
+      switch (yieldReason) {
+        case SuspendedOnImmediate:
+        case SuspendedOnData:
+          logSuspendedYieldTime(yieldStartTime, yieldEndTime, yieldedFiber);
+          break;
+        case SuspendedOnAction:
+          logActionYieldTime(yieldStartTime, yieldEndTime, yieldedFiber);
+          break;
+        default:
+          logYieldTime(yieldStartTime, yieldEndTime);
+      }
     }
-  }
-
-  // Determine the next lanes to work on, using the fields stored
-  // on the root.
-  // TODO: This was already computed in the caller. Pass it as an argument.
-  let lanes = getNextLanes(
-    root,
-    root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes,
-  );
-  if (lanes === NoLanes) {
-    // Defensive coding. This is never expected to happen.
-    return null;
   }
 
   // We disable time-slicing in some cases: if the work has been CPU-bound
   // for too long ("expired" work, to prevent starvation), or we're in
   // sync-updates-by-default mode.
-  // TODO: We only check `didTimeout` defensively, to account for a Scheduler
-  // bug we're still investigating. Once the bug in Scheduler is fixed,
-  // we can remove this, since we track expiration ourselves.
   const shouldTimeSlice =
-    !includesBlockingLane(lanes) &&
-    !includesExpiredLane(root, lanes) &&
-    (disableSchedulerTimeoutInWorkLoop || !didTimeout);
+    (!forceSync &&
+      !includesBlockingLane(lanes) &&
+      !includesExpiredLane(root, lanes)) ||
+    // If we're prerendering, then we should use the concurrent work loop
+    // even if the lanes are synchronous, so that prerendering never blocks
+    // the main thread.
+    // TODO: We should consider doing this whenever a sync lane is suspended,
+    // even for regular pings.
+    (enableSiblingPrerendering && checkIfRootIsPrerendering(root, lanes));
+
   let exitStatus = shouldTimeSlice
     ? renderRootConcurrent(root, lanes)
-    : renderRootSync(root, lanes);
+    : renderRootSync(root, lanes, true);
 
-  if (exitStatus !== RootInProgress) {
-    let renderWasConcurrent = shouldTimeSlice;
-    do {
-      if (exitStatus === RootDidNotComplete) {
-        // The render unwound without completing the tree. This happens in special
-        // cases where need to exit the current render without producing a
-        // consistent tree or committing.
-        markRootSuspended(
-          root,
-          lanes,
-          NoLane,
-          workInProgressRootDidSkipSuspendedSiblings,
-        );
-      } else {
-        // The render completed.
+  let renderWasConcurrent = shouldTimeSlice;
 
-        // Check if this render may have yielded to a concurrent event, and if so,
-        // confirm that any newly rendered stores are consistent.
-        // TODO: It's possible that even a concurrent render may never have yielded
-        // to the main thread, if it was fast enough, or if it expired. We could
-        // skip the consistency check in that case, too.
-        const finishedWork: Fiber = (root.current.alternate: any);
-        if (
-          renderWasConcurrent &&
-          !isRenderConsistentWithExternalStores(finishedWork)
-        ) {
-          // A store was mutated in an interleaved event. Render again,
-          // synchronously, to block further mutations.
-          exitStatus = renderRootSync(root, lanes);
-          // We assume the tree is now consistent because we didn't yield to any
-          // concurrent events.
-          renderWasConcurrent = false;
-          // Need to check the exit status again.
-          continue;
+  do {
+    if (exitStatus === RootInProgress) {
+      // Render phase is still in progress.
+      if (
+        enableSiblingPrerendering &&
+        workInProgressRootIsPrerendering &&
+        !shouldTimeSlice
+      ) {
+        // We're in prerendering mode, but time slicing is not enabled. This
+        // happens when something suspends during a synchronous update. Exit the
+        // the work loop. When we resume, we'll use the concurrent work loop so
+        // that prerendering is non-blocking.
+        //
+        // Mark the root as suspended. Usually we do this at the end of the
+        // render phase, but we do it here so that we resume in
+        // prerendering mode.
+        // TODO: Consider always calling markRootSuspended immediately.
+        // Needs to be *after* we attach a ping listener, though.
+        const didAttemptEntireTree = false;
+        markRootSuspended(root, lanes, NoLane, didAttemptEntireTree);
+      }
+      if (enableProfilerTimer && enableComponentPerformanceTrack) {
+        // We're about to yield. Let's keep track of how long we yield to the event loop.
+        // We also stash the suspended reason at the time we yielded since it might have
+        // changed when we resume such as when it gets pinged.
+        startYieldTimer(workInProgressSuspendedReason);
+      }
+      break;
+    } else {
+      let renderEndTime = 0;
+      if (enableProfilerTimer && enableComponentPerformanceTrack) {
+        renderEndTime = now();
+      }
+
+      // The render completed.
+
+      // Check if this render may have yielded to a concurrent event, and if so,
+      // confirm that any newly rendered stores are consistent.
+      // TODO: It's possible that even a concurrent render may never have yielded
+      // to the main thread, if it was fast enough, or if it expired. We could
+      // skip the consistency check in that case, too.
+      const finishedWork: Fiber = (root.current.alternate: any);
+      if (
+        renderWasConcurrent &&
+        !isRenderConsistentWithExternalStores(finishedWork)
+      ) {
+        if (enableProfilerTimer && enableComponentPerformanceTrack) {
+          setCurrentTrackFromLanes(lanes);
+          logInconsistentRender(renderStartTime, renderEndTime);
+          finalizeRender(lanes, renderEndTime);
         }
+        // A store was mutated in an interleaved event. Render again,
+        // synchronously, to block further mutations.
+        exitStatus = renderRootSync(root, lanes, false);
+        // We assume the tree is now consistent because we didn't yield to any
+        // concurrent events.
+        renderWasConcurrent = false;
+        // Need to check the exit status again.
+        continue;
+      }
 
-        // Check if something threw
-        if (exitStatus === RootErrored) {
-          const lanesThatJustErrored = lanes;
-          const errorRetryLanes = getLanesToRetrySynchronouslyOnError(
+      // Check if something threw
+      if (
+        (disableLegacyMode || root.tag !== LegacyRoot) &&
+        exitStatus === RootErrored
+      ) {
+        const lanesThatJustErrored = lanes;
+        const errorRetryLanes = getLanesToRetrySynchronouslyOnError(
+          root,
+          lanesThatJustErrored,
+        );
+        if (errorRetryLanes !== NoLanes) {
+          if (enableProfilerTimer && enableComponentPerformanceTrack) {
+            setCurrentTrackFromLanes(lanes);
+            logErroredRenderPhase(renderStartTime, renderEndTime, lanes);
+            finalizeRender(lanes, renderEndTime);
+          }
+          lanes = errorRetryLanes;
+          exitStatus = recoverFromConcurrentError(
             root,
             lanesThatJustErrored,
+            errorRetryLanes,
           );
-          if (errorRetryLanes !== NoLanes) {
-            lanes = errorRetryLanes;
-            exitStatus = recoverFromConcurrentError(
-              root,
-              lanesThatJustErrored,
-              errorRetryLanes,
-            );
-            renderWasConcurrent = false;
-            // Need to check the exit status again.
-            if (exitStatus !== RootErrored) {
-              // The root did not error this time. Restart the exit algorithm
-              // from the beginning.
-              // TODO: Refactor the exit algorithm to be less confusing. Maybe
-              // more branches + recursion instead of a loop. I think the only
-              // thing that causes it to be a loop is the RootDidNotComplete
-              // check. If that's true, then we don't need a loop/recursion
-              // at all.
-              continue;
-            } else {
-              // The root errored yet again. Proceed to commit the tree.
+          renderWasConcurrent = false;
+          // Need to check the exit status again.
+          if (exitStatus !== RootErrored) {
+            // The root did not error this time. Restart the exit algorithm
+            // from the beginning.
+            // TODO: Refactor the exit algorithm to be less confusing. Maybe
+            // more branches + recursion instead of a loop. I think the only
+            // thing that causes it to be a loop is the RootSuspendedAtTheShell
+            // check. If that's true, then we don't need a loop/recursion
+            // at all.
+            continue;
+          } else {
+            // The root errored yet again. Proceed to commit the tree.
+            if (enableProfilerTimer && enableComponentPerformanceTrack) {
+              renderEndTime = now();
             }
           }
         }
-        if (exitStatus === RootFatalErrored) {
-          prepareFreshStack(root, NoLanes);
-          markRootSuspended(
-            root,
-            lanes,
-            NoLane,
-            workInProgressRootDidSkipSuspendedSiblings,
-          );
-          break;
-        }
-
-        // We now have a consistent tree. The next step is either to commit it,
-        // or, if something suspended, wait to commit it after a timeout.
-        finishConcurrentRender(root, exitStatus, finishedWork, lanes);
       }
-      break;
-    } while (true);
-  }
+      if (exitStatus === RootFatalErrored) {
+        if (enableProfilerTimer && enableComponentPerformanceTrack) {
+          setCurrentTrackFromLanes(lanes);
+          logErroredRenderPhase(renderStartTime, renderEndTime, lanes);
+          finalizeRender(lanes, renderEndTime);
+        }
+        prepareFreshStack(root, NoLanes);
+        // Since this is a fatal error, we're going to pretend we attempted
+        // the entire tree, to avoid scheduling a prerender.
+        const didAttemptEntireTree = true;
+        markRootSuspended(root, lanes, NoLane, didAttemptEntireTree);
+        break;
+      }
+
+      // We now have a consistent tree. The next step is either to commit it,
+      // or, if something suspended, wait to commit it after a timeout.
+      finishConcurrentRender(
+        root,
+        exitStatus,
+        finishedWork,
+        lanes,
+        renderEndTime,
+      );
+    }
+    break;
+  } while (true);
 
   ensureRootIsScheduled(root);
-  return getContinuationForRoot(root, originalCallbackNode);
 }
 
 function recoverFromConcurrentError(
@@ -1036,7 +1121,7 @@ function recoverFromConcurrentError(
     rootWorkInProgress.flags |= ForceClientRender;
   }
 
-  const exitStatus = renderRootSync(root, errorRetryLanes);
+  const exitStatus = renderRootSync(root, errorRetryLanes, false);
   if (exitStatus !== RootErrored) {
     // Successfully finished rendering on retry
 
@@ -1099,6 +1184,7 @@ function finishConcurrentRender(
   exitStatus: RootExitStatus,
   finishedWork: Fiber,
   lanes: Lanes,
+  renderEndTime: number, // Profiling-only
 ) {
   // TODO: The fact that most of these branches are identical suggests that some
   // of the exit statuses are not best modeled as exit statuses and should be
@@ -1109,20 +1195,30 @@ function finishConcurrentRender(
       throw new Error('Root did not complete. This is a bug in React.');
     }
     case RootSuspendedWithDelay: {
-      if (includesOnlyTransitions(lanes)) {
-        // This is a transition, so we should exit without committing a
-        // placeholder and without scheduling a timeout. Delay indefinitely
-        // until we receive more data.
-        markRootSuspended(
-          root,
-          lanes,
-          workInProgressDeferredLane,
-          workInProgressRootDidSkipSuspendedSiblings,
-        );
-        return;
+      if (!includesOnlyTransitions(lanes)) {
+        // Commit the placeholder.
+        break;
       }
-      // Commit the placeholder.
-      break;
+    }
+    // Fallthrough
+    case RootSuspendedAtTheShell: {
+      // This is a transition, so we should exit without committing a
+      // placeholder and without scheduling a timeout. Delay indefinitely
+      // until we receive more data.
+      if (enableProfilerTimer && enableComponentPerformanceTrack) {
+        setCurrentTrackFromLanes(lanes);
+        logSuspendedRenderPhase(renderStartTime, renderEndTime, lanes);
+        finalizeRender(lanes, renderEndTime);
+        trackSuspendedTime(lanes, renderEndTime);
+      }
+      const didAttemptEntireTree = !workInProgressRootDidSkipSuspendedSiblings;
+      markRootSuspended(
+        root,
+        lanes,
+        workInProgressDeferredLane,
+        didAttemptEntireTree,
+      );
+      return;
     }
     case RootErrored: {
       // This render errored. Ignore any recoverable errors because we weren't actually
@@ -1157,6 +1253,10 @@ function finishConcurrentRender(
       workInProgressDeferredLane,
       workInProgressRootInterleavedUpdatedLanes,
       workInProgressSuspendedRetryLanes,
+      exitStatus,
+      IMMEDIATE_COMMIT,
+      renderStartTime,
+      renderEndTime,
     );
   } else {
     if (
@@ -1170,11 +1270,13 @@ function finishConcurrentRender(
 
       // Don't bother with a very short suspense time.
       if (msUntilTimeout > 10) {
+        const didAttemptEntireTree =
+          !workInProgressRootDidSkipSuspendedSiblings;
         markRootSuspended(
           root,
           lanes,
           workInProgressDeferredLane,
-          workInProgressRootDidSkipSuspendedSiblings,
+          didAttemptEntireTree,
         );
 
         const nextLanes = getNextLanes(root, NoLanes);
@@ -1202,6 +1304,10 @@ function finishConcurrentRender(
             workInProgressRootInterleavedUpdatedLanes,
             workInProgressSuspendedRetryLanes,
             workInProgressRootDidSkipSuspendedSiblings,
+            exitStatus,
+            THROTTLED_COMMIT,
+            renderStartTime,
+            renderEndTime,
           ),
           msUntilTimeout,
         );
@@ -1219,6 +1325,10 @@ function finishConcurrentRender(
       workInProgressRootInterleavedUpdatedLanes,
       workInProgressSuspendedRetryLanes,
       workInProgressRootDidSkipSuspendedSiblings,
+      exitStatus,
+      IMMEDIATE_COMMIT,
+      renderStartTime,
+      renderEndTime,
     );
   }
 }
@@ -1234,6 +1344,10 @@ function commitRootWhenReady(
   updatedLanes: Lanes,
   suspendedRetryLanes: Lanes,
   didSkipSuspendedSiblings: boolean,
+  exitStatus: RootExitStatus,
+  suspendedCommitReason: SuspendedCommitReason, // Profiling-only
+  completedRenderStartTime: number, // Profiling-only
+  completedRenderEndTime: number, // Profiling-only
 ) {
   // TODO: Combine retry throttling with Suspensey commits. Right now they run
   // one after the other.
@@ -1274,9 +1388,14 @@ function commitRootWhenReady(
           spawnedLane,
           updatedLanes,
           suspendedRetryLanes,
+          exitStatus,
+          SUSPENDED_COMMIT,
+          completedRenderStartTime,
+          completedRenderEndTime,
         ),
       );
-      markRootSuspended(root, lanes, spawnedLane, didSkipSuspendedSiblings);
+      const didAttemptEntireTree = !didSkipSuspendedSiblings;
+      markRootSuspended(root, lanes, spawnedLane, didAttemptEntireTree);
       return;
     }
   }
@@ -1290,6 +1409,10 @@ function commitRootWhenReady(
     spawnedLane,
     updatedLanes,
     suspendedRetryLanes,
+    exitStatus,
+    suspendedCommitReason,
+    completedRenderStartTime,
+    completedRenderEndTime,
   );
 }
 
@@ -1396,7 +1519,7 @@ function markRootSuspended(
   root: FiberRoot,
   suspendedLanes: Lanes,
   spawnedLane: Lane,
-  didSkipSuspendedSiblings: boolean,
+  didAttemptEntireTree: boolean,
 ) {
   // When suspending, we should always exclude lanes that were pinged or (more
   // rarely, since we try to avoid it) updated during the render phase.
@@ -1405,102 +1528,7 @@ function markRootSuspended(
     suspendedLanes,
     workInProgressRootInterleavedUpdatedLanes,
   );
-  _markRootSuspended(
-    root,
-    suspendedLanes,
-    spawnedLane,
-    didSkipSuspendedSiblings,
-  );
-}
-
-// This is the entry point for synchronous tasks that don't go
-// through Scheduler
-export function performSyncWorkOnRoot(root: FiberRoot, lanes: Lanes): null {
-  if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
-    throw new Error('Should not already be working.');
-  }
-
-  const didFlushPassiveEffects = flushPassiveEffects();
-  if (didFlushPassiveEffects) {
-    // If passive effects were flushed, exit to the outer work loop in the root
-    // scheduler, so we can recompute the priority.
-    // TODO: We don't actually need this `ensureRootIsScheduled` call because
-    // this path is only reachable if the root is already part of the schedule.
-    // I'm including it only for consistency with the other exit points from
-    // this function. Can address in a subsequent refactor.
-    ensureRootIsScheduled(root);
-    return null;
-  }
-
-  if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
-    syncNestedUpdateFlag();
-  }
-
-  let exitStatus = renderRootSync(root, lanes);
-  if (
-    (disableLegacyMode || root.tag !== LegacyRoot) &&
-    exitStatus === RootErrored
-  ) {
-    // If something threw an error, try rendering one more time. We'll render
-    // synchronously to block concurrent data mutations, and we'll includes
-    // all pending updates are included. If it still fails after the second
-    // attempt, we'll give up and commit the resulting tree.
-    const originallyAttemptedLanes = lanes;
-    const errorRetryLanes = getLanesToRetrySynchronouslyOnError(
-      root,
-      originallyAttemptedLanes,
-    );
-    if (errorRetryLanes !== NoLanes) {
-      lanes = errorRetryLanes;
-      exitStatus = recoverFromConcurrentError(
-        root,
-        originallyAttemptedLanes,
-        errorRetryLanes,
-      );
-    }
-  }
-
-  if (exitStatus === RootFatalErrored) {
-    prepareFreshStack(root, NoLanes);
-    markRootSuspended(root, lanes, NoLane, false);
-    ensureRootIsScheduled(root);
-    return null;
-  }
-
-  if (exitStatus === RootDidNotComplete) {
-    // The render unwound without completing the tree. This happens in special
-    // cases where need to exit the current render without producing a
-    // consistent tree or committing.
-    markRootSuspended(
-      root,
-      lanes,
-      workInProgressDeferredLane,
-      workInProgressRootDidSkipSuspendedSiblings,
-    );
-    ensureRootIsScheduled(root);
-    return null;
-  }
-
-  // We now have a consistent tree. Because this is a sync render, we
-  // will commit it even if something suspended.
-  const finishedWork: Fiber = (root.current.alternate: any);
-  root.finishedWork = finishedWork;
-  root.finishedLanes = lanes;
-  commitRoot(
-    root,
-    workInProgressRootRecoverableErrors,
-    workInProgressTransitions,
-    workInProgressRootDidIncludeRecursiveRenderUpdate,
-    workInProgressDeferredLane,
-    workInProgressRootInterleavedUpdatedLanes,
-    workInProgressSuspendedRetryLanes,
-  );
-
-  // Before exiting, make sure there's a callback scheduled for the next
-  // pending level.
-  ensureRootIsScheduled(root);
-
-  return null;
+  _markRootSuspended(root, suspendedLanes, spawnedLane, didAttemptEntireTree);
 }
 
 export function flushRoot(root: FiberRoot, lanes: Lanes) {
@@ -1687,7 +1715,133 @@ function resetWorkInProgressStack() {
   workInProgress = null;
 }
 
+function finalizeRender(lanes: Lanes, finalizationTime: number): void {
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    if (includesSyncLane(lanes) || includesBlockingLane(lanes)) {
+      clampBlockingTimers(finalizationTime);
+    }
+    if (includesTransitionLane(lanes)) {
+      clampTransitionTimers(finalizationTime);
+    }
+  }
+}
+
 function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // The order of tracks within a group are determined by the earliest start time.
+    // Are tracks should show up in priority order and we should ideally always show
+    // every track. This is a hack to ensure that we're displaying all tracks in the
+    // right order. Ideally we could do this only once but because calls that aren't
+    // recorded aren't considered for ordering purposes, we need to keep adding these
+    // over and over again in case recording has just started. We can't tell when
+    // recording starts.
+    markAllLanesInOrder();
+
+    const previousRenderStartTime = renderStartTime;
+    // Starting a new render. Log the end of any previous renders and the
+    // blocked time before the render started.
+    recordRenderTime();
+    // If this was a restart, e.g. due to an interrupting update, then there's no space
+    // in the track to log the cause since we'll have rendered all the way up until the
+    // restart so we need to clamp that.
+    if (
+      workInProgressRootRenderLanes !== NoLanes &&
+      previousRenderStartTime > 0
+    ) {
+      setCurrentTrackFromLanes(workInProgressRootRenderLanes);
+      if (
+        workInProgressRootExitStatus === RootSuspended ||
+        workInProgressRootExitStatus === RootSuspendedWithDelay
+      ) {
+        // If the root was already suspended when it got interrupted and restarted,
+        // then this is considered a prewarm and not an interrupted render because
+        // we couldn't have shown anything anyway so it's not a bad thing that we
+        // got interrupted.
+        logSuspendedRenderPhase(
+          previousRenderStartTime,
+          renderStartTime,
+          lanes,
+        );
+      } else {
+        logInterruptedRenderPhase(
+          previousRenderStartTime,
+          renderStartTime,
+          lanes,
+        );
+      }
+      finalizeRender(workInProgressRootRenderLanes, renderStartTime);
+    }
+
+    if (includesSyncLane(lanes) || includesBlockingLane(lanes)) {
+      const clampedUpdateTime =
+        blockingUpdateTime >= 0 && blockingUpdateTime < blockingClampTime
+          ? blockingClampTime
+          : blockingUpdateTime;
+      const clampedEventTime =
+        blockingEventTime >= 0 && blockingEventTime < blockingClampTime
+          ? blockingClampTime
+          : blockingEventTime;
+      if (blockingSuspendedTime >= 0) {
+        setCurrentTrackFromLanes(lanes);
+        logSuspendedWithDelayPhase(
+          blockingSuspendedTime,
+          // Clamp the suspended time to the first event/update.
+          clampedEventTime >= 0
+            ? clampedEventTime
+            : clampedUpdateTime >= 0
+              ? clampedUpdateTime
+              : renderStartTime,
+          lanes,
+        );
+      }
+      logBlockingStart(
+        clampedUpdateTime,
+        clampedEventTime,
+        blockingEventType,
+        blockingEventIsRepeat,
+        renderStartTime,
+        lanes,
+      );
+      clearBlockingTimers();
+    }
+    if (includesTransitionLane(lanes)) {
+      const clampedStartTime =
+        transitionStartTime >= 0 && transitionStartTime < transitionClampTime
+          ? transitionClampTime
+          : transitionStartTime;
+      const clampedUpdateTime =
+        transitionUpdateTime >= 0 && transitionUpdateTime < transitionClampTime
+          ? transitionClampTime
+          : transitionUpdateTime;
+      const clampedEventTime =
+        transitionEventTime >= 0 && transitionEventTime < transitionClampTime
+          ? transitionClampTime
+          : transitionEventTime;
+      if (transitionSuspendedTime >= 0) {
+        setCurrentTrackFromLanes(lanes);
+        logSuspendedWithDelayPhase(
+          transitionSuspendedTime,
+          // Clamp the suspended time to the first event/update.
+          clampedEventTime >= 0
+            ? clampedEventTime
+            : clampedUpdateTime >= 0
+              ? clampedUpdateTime
+              : renderStartTime,
+          lanes,
+        );
+      }
+      logTransitionStart(
+        clampedStartTime,
+        clampedUpdateTime,
+        clampedEventTime,
+        transitionEventType,
+        transitionEventIsRepeat,
+        renderStartTime,
+      );
+      clearTransitionTimers();
+    }
+  }
+
   root.finishedWork = null;
   root.finishedLanes = NoLanes;
 
@@ -1768,11 +1922,14 @@ function handleThrow(root: FiberRoot, thrownValue: any): void {
   // These should be reset immediately because they're only supposed to be set
   // when React is executing user code.
   resetHooksAfterThrow();
-  if (__DEV__ || !disableStringRefs) {
+  if (__DEV__) {
     resetCurrentFiber();
   }
 
-  if (thrownValue === SuspenseException) {
+  if (
+    thrownValue === SuspenseException ||
+    thrownValue === SuspenseActionException
+  ) {
     // This is a special type of exception used for Suspense. For historical
     // reasons, the rest of the Suspense implementation expects the thrown value
     // to be a thenable, because before `use` existed that was the (unstable)
@@ -1793,7 +1950,9 @@ function handleThrow(root: FiberRoot, thrownValue: any): void {
       !includesNonIdleWork(workInProgressRootSkippedLanes) &&
       !includesNonIdleWork(workInProgressRootInterleavedUpdatedLanes)
         ? // Suspend work loop until data resolves
-          SuspendedOnData
+          thrownValue === SuspenseActionException
+          ? SuspendedOnAction
+          : SuspendedOnData
         : // Don't suspend work loop, except to check if the data has
           // immediately resolved (i.e. in a microtask). Otherwise, trigger the
           // nearest Suspense fallback.
@@ -1860,6 +2019,7 @@ function handleThrow(root: FiberRoot, thrownValue: any): void {
         break;
       }
       case SuspendedOnData:
+      case SuspendedOnAction:
       case SuspendedOnImmediate:
       case SuspendedOnDeprecatedThrowPromise:
       case SuspendedAndReadyToContinue: {
@@ -1964,7 +2124,7 @@ function popDispatcher(prevDispatcher: any) {
 }
 
 function pushAsyncDispatcher() {
-  if (enableCache || __DEV__ || !disableStringRefs) {
+  if (enableCache || __DEV__) {
     const prevAsyncDispatcher = ReactSharedInternals.A;
     ReactSharedInternals.A = DefaultAsyncDispatcher;
     return prevAsyncDispatcher;
@@ -1974,7 +2134,7 @@ function pushAsyncDispatcher() {
 }
 
 function popAsyncDispatcher(prevAsyncDispatcher: any) {
-  if (enableCache || __DEV__ || !disableStringRefs) {
+  if (enableCache || __DEV__) {
     ReactSharedInternals.A = prevAsyncDispatcher;
   }
 }
@@ -2001,7 +2161,12 @@ export function renderDidSuspendDelayIfPossible(): void {
 
   if (
     !workInProgressRootDidSkipSuspendedSiblings &&
-    !includesBlockingLane(workInProgressRootRenderLanes)
+    // Check if the root will be blocked from committing.
+    // TODO: Consider aligning this better with the rest of the logic. Maybe
+    // we should only set the exit status to RootSuspendedWithDelay if this
+    // condition is true? And remove the equivalent checks elsewhere.
+    (includesOnlyTransitions(workInProgressRootRenderLanes) ||
+      getSuspenseHandler() === null)
   ) {
     // This render may not have originally been scheduled as a prerender, but
     // something suspended inside the visible part of the tree, which means we
@@ -2027,11 +2192,12 @@ export function renderDidSuspendDelayIfPossible(): void {
     // pinged or updated while we were rendering.
     // TODO: Consider unwinding immediately, using the
     // SuspendedOnHydration mechanism.
+    const didAttemptEntireTree = false;
     markRootSuspended(
       workInProgressRoot,
       workInProgressRootRenderLanes,
       workInProgressDeferredLane,
-      workInProgressRootDidSkipSuspendedSiblings,
+      didAttemptEntireTree,
     );
   }
 }
@@ -2061,7 +2227,11 @@ export function renderHasNotSuspendedYet(): boolean {
 // TODO: Over time, this function and renderRootConcurrent have become more
 // and more similar. Not sure it makes sense to maintain forked paths. Consider
 // unifying them again.
-function renderRootSync(root: FiberRoot, lanes: Lanes) {
+function renderRootSync(
+  root: FiberRoot,
+  lanes: Lanes,
+  shouldYieldForPrerendering: boolean,
+): RootExitStatus {
   const prevExecutionContext = executionContext;
   executionContext |= RenderContext;
   const prevDispatcher = pushDispatcher(root.containerInfo);
@@ -2101,6 +2271,7 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
   }
 
   let didSuspendInShell = false;
+  let exitStatus = workInProgressRootExitStatus;
   outer: do {
     try {
       if (
@@ -2122,16 +2293,38 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
             // Selective hydration. An update flowed into a dehydrated tree.
             // Interrupt the current render so the work loop can switch to the
             // hydration lane.
+            // TODO: I think we might not need to reset the stack here; we can
+            // just yield and reset the stack when we re-enter the work loop,
+            // like normal.
             resetWorkInProgressStack();
-            workInProgressRootExitStatus = RootDidNotComplete;
+            exitStatus = RootSuspendedAtTheShell;
             break outer;
           }
           case SuspendedOnImmediate:
-          case SuspendedOnData: {
-            if (!didSuspendInShell && getSuspenseHandler() === null) {
+          case SuspendedOnData:
+          case SuspendedOnAction:
+          case SuspendedOnDeprecatedThrowPromise: {
+            if (getSuspenseHandler() === null) {
               didSuspendInShell = true;
             }
-            // Intentional fallthrough
+            const reason = workInProgressSuspendedReason;
+            workInProgressSuspendedReason = NotSuspended;
+            workInProgressThrownValue = null;
+            throwAndUnwindWorkLoop(root, unitOfWork, thrownValue, reason);
+            if (
+              enableSiblingPrerendering &&
+              shouldYieldForPrerendering &&
+              workInProgressRootIsPrerendering
+            ) {
+              // We've switched into prerendering mode. This implies that we
+              // suspended outside of a Suspense boundary, which means this
+              // render will be blocked from committing. Yield to the main
+              // thread so we can switch to prerendering using the concurrent
+              // work loop.
+              exitStatus = RootInProgress;
+              break outer;
+            }
+            break;
           }
           default: {
             // Unwind then continue with the normal work loop.
@@ -2144,6 +2337,7 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
         }
       }
       workLoopSync();
+      exitStatus = workInProgressRootExitStatus;
       break;
     } catch (thrownValue) {
       handleThrow(root, thrownValue);
@@ -2166,14 +2360,6 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
   popDispatcher(prevDispatcher);
   popAsyncDispatcher(prevAsyncDispatcher);
 
-  if (workInProgress !== null) {
-    // This is a sync render, so we should have finished the whole tree.
-    throw new Error(
-      'Cannot commit an incomplete root. This error is likely caused by a ' +
-        'bug in React. Please file an issue.',
-    );
-  }
-
   if (__DEV__) {
     if (enableDebugTracing) {
       logRenderStopped();
@@ -2184,14 +2370,21 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
     markRenderStopped();
   }
 
-  // Set this to null to indicate there's no in-progress render.
-  workInProgressRoot = null;
-  workInProgressRootRenderLanes = NoLanes;
+  if (workInProgress !== null) {
+    // Did not complete the tree. This can happen if something suspended in
+    // the shell.
+  } else {
+    // Normal case. We completed the whole tree.
 
-  // It's safe to process the queue now that the render phase is complete.
-  finishQueueingConcurrentUpdates();
+    // Set this to null to indicate there's no in-progress render.
+    workInProgressRoot = null;
+    workInProgressRootRenderLanes = NoLanes;
 
-  return workInProgressRootExitStatus;
+    // It's safe to process the queue now that the render phase is complete.
+    finishQueueingConcurrentUpdates();
+  }
+
+  return exitStatus;
 }
 
 // The work loop is an extremely hot path. Tell Closure not to inline it.
@@ -2229,6 +2422,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
     }
 
     workInProgressTransitions = getTransitionsForLanes(root, lanes);
+
     resetRenderTimer();
     prepareFreshStack(root, lanes);
   } else {
@@ -2236,9 +2430,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
     //
     // If we were previously in prerendering mode, check if we received any new
     // data during an interleaved event.
-    if (workInProgressRootIsPrerendering) {
-      workInProgressRootIsPrerendering = checkIfRootIsPrerendering(root, lanes);
-    }
+    workInProgressRootIsPrerendering = checkIfRootIsPrerendering(root, lanes);
   }
 
   if (__DEV__) {
@@ -2274,7 +2466,8 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             );
             break;
           }
-          case SuspendedOnData: {
+          case SuspendedOnData:
+          case SuspendedOnAction: {
             const thenable: Thenable<mixed> = (thrownValue: any);
             if (isThenableResolved(thenable)) {
               // The data resolved. Try rendering the component again.
@@ -2292,7 +2485,8 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             const onResolution = () => {
               // Check if the root is still suspended on this promise.
               if (
-                workInProgressSuspendedReason === SuspendedOnData &&
+                (workInProgressSuspendedReason === SuspendedOnData ||
+                  workInProgressSuspendedReason === SuspendedOnAction) &&
                 workInProgressRoot === root
               ) {
                 // Mark the root as ready to continue rendering.
@@ -2425,7 +2619,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             // Interrupt the current render so the work loop can switch to the
             // hydration lane.
             resetWorkInProgressStack();
-            workInProgressRootExitStatus = RootDidNotComplete;
+            workInProgressRootExitStatus = RootSuspendedAtTheShell;
             break outer;
           }
           default: {
@@ -2532,9 +2726,6 @@ function performUnitOfWork(unitOfWork: Fiber): void {
     }
   }
 
-  if (!disableStringRefs) {
-    resetCurrentFiber();
-  }
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
   if (next === null) {
     // If this doesn't spawn new work, complete the current work.
@@ -2554,11 +2745,6 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
     next = replayBeginWork(unitOfWork);
   }
 
-  // The begin phase finished successfully without suspending. Return to the
-  // normal work loop.
-  if (!disableStringRefs) {
-    resetCurrentFiber();
-  }
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
   if (next === null) {
     // If this doesn't spawn new work, complete the current work.
@@ -2748,6 +2934,7 @@ function throwAndUnwindWorkLoop(
         // can prerender the siblings.
         if (
           suspendedReason === SuspendedOnData ||
+          suspendedReason === SuspendedOnAction ||
           suspendedReason === SuspendedOnImmediate ||
           suspendedReason === SuspendedOnDeprecatedThrowPromise
         ) {
@@ -2826,35 +3013,22 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
     const returnFiber = completedWork.return;
 
     let next;
-    if (!enableProfilerTimer || (completedWork.mode & ProfileMode) === NoMode) {
-      if (__DEV__) {
-        next = runWithFiberInDEV(
-          completedWork,
-          completeWork,
-          current,
-          completedWork,
-          entangledRenderLanes,
-        );
-      } else {
-        next = completeWork(current, completedWork, entangledRenderLanes);
-      }
+    startProfilerTimer(completedWork);
+    if (__DEV__) {
+      next = runWithFiberInDEV(
+        completedWork,
+        completeWork,
+        current,
+        completedWork,
+        entangledRenderLanes,
+      );
     } else {
-      startProfilerTimer(completedWork);
-      if (__DEV__) {
-        next = runWithFiberInDEV(
-          completedWork,
-          completeWork,
-          current,
-          completedWork,
-          entangledRenderLanes,
-        );
-      } else {
-        next = completeWork(current, completedWork, entangledRenderLanes);
-      }
+      next = completeWork(current, completedWork, entangledRenderLanes);
+    }
+    if (enableProfilerTimer && (completedWork.mode & ProfileMode) !== NoMode) {
       // Update render duration assuming we didn't error.
       stopProfilerTimerIfRunningAndRecordIncompleteDuration(completedWork);
     }
-
     if (next !== null) {
       // Completing this fiber spawned new work. Work on that next.
       workInProgress = next;
@@ -2954,9 +3128,14 @@ function unwindUnitOfWork(unitOfWork: Fiber, skipSiblings: boolean): void {
   } while (incompleteWork !== null);
 
   // We've unwound all the way to the root.
-  workInProgressRootExitStatus = RootDidNotComplete;
+  workInProgressRootExitStatus = RootSuspendedAtTheShell;
   workInProgress = null;
 }
+
+type SuspendedCommitReason = 0 | 1 | 2;
+const IMMEDIATE_COMMIT = 0;
+const SUSPENDED_COMMIT = 1;
+const THROTTLED_COMMIT = 2;
 
 function commitRoot(
   root: FiberRoot,
@@ -2966,6 +3145,10 @@ function commitRoot(
   spawnedLane: Lane,
   updatedLanes: Lanes,
   suspendedRetryLanes: Lanes,
+  exitStatus: RootExitStatus,
+  suspendedCommitReason: SuspendedCommitReason, // Profiling-only
+  completedRenderStartTime: number, // Profiling-only
+  completedRenderEndTime: number, // Profiling-only
 ) {
   // TODO: This no longer makes any sense. We already wrap the mutation and
   // layout phases. Should be able to remove.
@@ -2983,13 +3166,15 @@ function commitRoot(
       spawnedLane,
       updatedLanes,
       suspendedRetryLanes,
+      exitStatus,
+      suspendedCommitReason,
+      completedRenderStartTime,
+      completedRenderEndTime,
     );
   } finally {
     ReactSharedInternals.T = prevTransition;
     setCurrentUpdatePriority(previousUpdateLanePriority);
   }
-
-  return null;
 }
 
 function commitRootImpl(
@@ -3001,6 +3186,10 @@ function commitRootImpl(
   spawnedLane: Lane,
   updatedLanes: Lanes,
   suspendedRetryLanes: Lanes,
+  exitStatus: RootExitStatus, // Profiling-only
+  suspendedCommitReason: SuspendedCommitReason, // Profiling-only
+  completedRenderStartTime: number, // Profiling-only
+  completedRenderEndTime: number, // Profiling-only
 ) {
   do {
     // `flushPassiveEffects` will call `flushSyncUpdateQueue` at the end, which
@@ -3019,6 +3208,20 @@ function commitRootImpl(
 
   const finishedWork = root.finishedWork;
   const lanes = root.finishedLanes;
+
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // Log the previous render phase once we commit. I.e. we weren't interrupted.
+    setCurrentTrackFromLanes(lanes);
+    if (exitStatus === RootErrored) {
+      logErroredRenderPhase(
+        completedRenderStartTime,
+        completedRenderEndTime,
+        lanes,
+      );
+    } else {
+      logRenderPhase(completedRenderStartTime, completedRenderEndTime, lanes);
+    }
+  }
 
   if (__DEV__) {
     if (enableDebugTracing) {
@@ -3106,12 +3309,17 @@ function commitRootImpl(
   // TODO: Delete all other places that schedule the passive effect callback
   // They're redundant.
   if (
+    // If this subtree rendered with profiling this commit, we need to visit it to log it.
+    (enableProfilerTimer &&
+      enableComponentPerformanceTrack &&
+      finishedWork.actualDuration !== 0) ||
     (finishedWork.subtreeFlags & PassiveMask) !== NoFlags ||
     (finishedWork.flags & PassiveMask) !== NoFlags
   ) {
     if (!rootDoesHavePassiveEffects) {
       rootDoesHavePassiveEffects = true;
       pendingPassiveEffectsRemainingLanes = remainingLanes;
+      pendingPassiveEffectsRenderEndTime = completedRenderEndTime;
       // workInProgressTransitions might be overwritten, so we want
       // to store it in pendingPassiveTransitions until they get processed
       // We need to pass this through as an argument to commitRoot
@@ -3120,12 +3328,30 @@ function commitRootImpl(
       // with setTimeout
       pendingPassiveTransitions = transitions;
       scheduleCallback(NormalSchedulerPriority, () => {
-        flushPassiveEffects();
+        if (enableProfilerTimer && enableComponentPerformanceTrack) {
+          // Track the currently executing event if there is one so we can ignore this
+          // event when logging events.
+          trackSchedulerEvent();
+        }
+        flushPassiveEffects(true);
         // This render triggered passive effects: release the root cache pool
         // *after* passive effects fire to avoid freeing a cache pool that may
         // be referenced by a node in the tree (HostRoot, Cache boundary etc)
         return null;
       });
+    }
+  }
+
+  if (enableProfilerTimer) {
+    // Mark the current commit time to be shared by all Profilers in this
+    // batch. This enables them to be grouped later.
+    recordCommitTime();
+    if (enableComponentPerformanceTrack) {
+      if (suspendedCommitReason === SUSPENDED_COMMIT) {
+        logSuspendedCommitPhase(completedRenderEndTime, commitStartTime);
+      } else if (suspendedCommitReason === THROTTLED_COMMIT) {
+        logSuspenseThrottlePhase(completedRenderEndTime, commitStartTime);
+      }
     }
   }
 
@@ -3163,12 +3389,6 @@ function commitRootImpl(
       root,
       finishedWork,
     );
-
-    if (enableProfilerTimer) {
-      // Mark the current commit time to be shared by all Profilers in this
-      // batch. This enables them to be grouped later.
-      recordCommitTime();
-    }
 
     // The next phase is the mutation phase, where we mutate the host tree.
     commitMutationEffects(root, finishedWork, lanes);
@@ -3220,12 +3440,16 @@ function commitRootImpl(
   } else {
     // No effects.
     root.current = finishedWork;
-    // Measure these anyway so the flamegraph explicitly shows that there were
-    // no effects.
-    // TODO: Maybe there's a better way to report this.
-    if (enableProfilerTimer) {
-      recordCommitTime();
-    }
+  }
+
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    recordCommitEndTime();
+    logCommitPhase(
+      suspendedCommitReason === IMMEDIATE_COMMIT
+        ? completedRenderEndTime
+        : commitStartTime,
+      commitEndTime,
+    );
   }
 
   const rootDidHavePassiveEffects = rootDoesHavePassiveEffects;
@@ -3356,6 +3580,12 @@ function commitRootImpl(
     nestedUpdateCount = 0;
   }
 
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    if (!rootDidHavePassiveEffects) {
+      finalizeRender(lanes, commitEndTime);
+    }
+  }
+
   // If layout work was scheduled, flush it now.
   flushSyncWorkOnAllRoots();
 
@@ -3436,7 +3666,7 @@ function releaseRootPooledCache(root: FiberRoot, remainingLanes: Lanes) {
   }
 }
 
-export function flushPassiveEffects(): boolean {
+export function flushPassiveEffects(wasDelayedCommit?: boolean): boolean {
   // Returns whether passive effects were flushed.
   // TODO: Combine this check with the one in flushPassiveEFfectsImpl. We should
   // probably just combine the two functions. I believe they were only separate
@@ -3461,7 +3691,7 @@ export function flushPassiveEffects(): boolean {
     try {
       setCurrentUpdatePriority(priority);
       ReactSharedInternals.T = null;
-      return flushPassiveEffectsImpl();
+      return flushPassiveEffectsImpl(wasDelayedCommit);
     } finally {
       setCurrentUpdatePriority(previousPriority);
       ReactSharedInternals.T = prevTransition;
@@ -3475,20 +3705,7 @@ export function flushPassiveEffects(): boolean {
   return false;
 }
 
-export function enqueuePendingPassiveProfilerEffect(fiber: Fiber): void {
-  if (enableProfilerTimer && enableProfilerCommitHooks) {
-    pendingPassiveProfilerEffects.push(fiber);
-    if (!rootDoesHavePassiveEffects) {
-      rootDoesHavePassiveEffects = true;
-      scheduleCallback(NormalSchedulerPriority, () => {
-        flushPassiveEffects();
-        return null;
-      });
-    }
-  }
-}
-
-function flushPassiveEffectsImpl() {
+function flushPassiveEffectsImpl(wasDelayedCommit: void | boolean) {
   if (rootWithPendingPassiveEffects === null) {
     return false;
   }
@@ -3509,6 +3726,12 @@ function flushPassiveEffectsImpl() {
     throw new Error('Cannot flush passive effects while already rendering.');
   }
 
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // We're about to log a lot of profiling for this commit.
+    // We set this once so we don't have to recompute it for every log.
+    setCurrentTrackFromLanes(lanes);
+  }
+
   if (__DEV__) {
     isFlushingPassiveEffects = true;
     didScheduleUpdateDuringPassiveEffects = false;
@@ -3516,6 +3739,16 @@ function flushPassiveEffectsImpl() {
     if (enableDebugTracing) {
       logPassiveEffectsStarted(lanes);
     }
+  }
+
+  let passiveEffectStartTime = 0;
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    passiveEffectStartTime = now();
+    logPaintYieldPhase(
+      commitEndTime,
+      passiveEffectStartTime,
+      !!wasDelayedCommit,
+    );
   }
 
   if (enableSchedulingProfiler) {
@@ -3526,17 +3759,13 @@ function flushPassiveEffectsImpl() {
   executionContext |= CommitContext;
 
   commitPassiveUnmountEffects(root.current);
-  commitPassiveMountEffects(root, root.current, lanes, transitions);
-
-  // TODO: Move to commitPassiveMountEffects
-  if (enableProfilerTimer && enableProfilerCommitHooks) {
-    const profilerEffects = pendingPassiveProfilerEffects;
-    pendingPassiveProfilerEffects = [];
-    for (let i = 0; i < profilerEffects.length; i++) {
-      const fiber = ((profilerEffects[i]: any): Fiber);
-      commitPassiveEffectDurations(root, fiber);
-    }
-  }
+  commitPassiveMountEffects(
+    root,
+    root.current,
+    lanes,
+    transitions,
+    pendingPassiveEffectsRenderEndTime,
+  );
 
   if (__DEV__) {
     if (enableDebugTracing) {
@@ -3553,6 +3782,12 @@ function flushPassiveEffectsImpl() {
   }
 
   executionContext = prevExecutionContext;
+
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    const passiveEffectsEndTime = now();
+    logPassiveCommitPhase(passiveEffectStartTime, passiveEffectsEndTime);
+    finalizeRender(lanes, passiveEffectsEndTime);
+  }
 
   flushSyncWorkOnAllRoots();
 
@@ -3752,6 +3987,10 @@ function pingSuspendedRoot(
 
   markRootPinged(root, pingedLanes);
 
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    startPingTimerByLanes(pingedLanes);
+  }
+
   warnIfSuspenseResolutionNotWrappedWithActDEV(root);
 
   if (
@@ -3763,6 +4002,9 @@ function pingSuspendedRoot(
     // the logic of whether or not a root suspends once it completes.
     // TODO: If we're rendering sync either due to Sync, Batched or expired,
     // we should probably never restart.
+    // TODO: Attach different listeners depending on whether the listener was
+    // attached during prerendering. Prerender pings should not interrupt
+    // normal renders.
 
     // If we're suspended with delay, or if it's a retry, we'll always suspend
     // so we can always restart.
@@ -3942,15 +4184,18 @@ function doubleInvokeEffectsOnFiber(
   shouldDoubleInvokePassiveEffects: boolean = true,
 ) {
   setIsStrictModeForDevtools(true);
-  disappearLayoutEffects(fiber);
-  if (shouldDoubleInvokePassiveEffects) {
-    disconnectPassiveEffect(fiber);
+  try {
+    disappearLayoutEffects(fiber);
+    if (shouldDoubleInvokePassiveEffects) {
+      disconnectPassiveEffect(fiber);
+    }
+    reappearLayoutEffects(root, fiber.alternate, fiber, false);
+    if (shouldDoubleInvokePassiveEffects) {
+      reconnectPassiveEffects(root, fiber, NoLanes, null, false);
+    }
+  } finally {
+    setIsStrictModeForDevtools(false);
   }
-  reappearLayoutEffects(root, fiber.alternate, fiber, false);
-  if (shouldDoubleInvokePassiveEffects) {
-    reconnectPassiveEffects(root, fiber, NoLanes, null, false);
-  }
-  setIsStrictModeForDevtools(false);
 }
 
 function doubleInvokeEffectsInDEVIfNecessary(

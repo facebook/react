@@ -912,3 +912,23 @@ export function clonePlaceToTemporary(env: Environment, place: Place): Place {
   temp.reactive = place.reactive;
   return temp;
 }
+
+/**
+ * Fix scope and identifier ranges to account for renumbered instructions
+ */
+export function fixScopeAndIdentifierRanges(func: HIR): void {
+  for (const [, block] of func.blocks) {
+    const terminal = block.terminal;
+    if (terminal.kind === 'scope' || terminal.kind === 'pruned-scope') {
+      /*
+       * Scope ranges should always align to start at the 'scope' terminal
+       * and end at the first instruction of the fallthrough block
+       */
+      const fallthroughBlock = func.blocks.get(terminal.fallthrough)!;
+      const firstId =
+        fallthroughBlock.instructions[0]?.id ?? fallthroughBlock.terminal.id;
+      terminal.scope.range.start = terminal.id;
+      terminal.scope.range.end = firstId;
+    }
+  }
+}

@@ -100,4 +100,77 @@ describe('ReactFragment', () => {
       ]),
     ]);
   });
+
+  it('retains owner stacks when rethrowing an error', async () => {
+    function Foo() {
+      return (
+        <RethrowingBoundary>
+          <Bar />
+        </RethrowingBoundary>
+      );
+    }
+    function Bar() {
+      return <SomethingThatErrors />;
+    }
+    function SomethingThatErrors() {
+      throw new Error('uh oh');
+    }
+
+    class RethrowingBoundary extends React.Component {
+      static getDerivedStateFromError(error) {
+        throw error;
+      }
+
+      render() {
+        return this.props.children;
+      }
+    }
+
+    const errors = [];
+    class CatchingBoundary extends React.Component {
+      constructor() {
+        super();
+        this.state = {};
+      }
+      static getDerivedStateFromError(error) {
+        return {errored: true};
+      }
+      render() {
+        if (this.state.errored) {
+          return null;
+        }
+        return this.props.children;
+      }
+    }
+
+    ReactNoop.createRoot({
+      onCaughtError(error, errorInfo) {
+        errors.push(
+          error.message,
+          normalizeCodeLocInfo(errorInfo.componentStack),
+          React.captureOwnerStack
+            ? normalizeCodeLocInfo(React.captureOwnerStack())
+            : null,
+        );
+      },
+    }).render(
+      <CatchingBoundary>
+        <Foo />
+      </CatchingBoundary>,
+    );
+    await waitForAll([]);
+    expect(errors).toEqual([
+      'uh oh',
+      componentStack([
+        'SomethingThatErrors',
+        'Bar',
+        'RethrowingBoundary',
+        'Foo',
+        'CatchingBoundary',
+      ]),
+      gate(flags => flags.enableOwnerStacks) && __DEV__
+        ? componentStack(['Bar', 'Foo'])
+        : null,
+    ]);
+  });
 });

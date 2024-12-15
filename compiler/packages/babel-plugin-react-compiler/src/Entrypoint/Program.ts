@@ -42,10 +42,10 @@ export type CompilerPass = {
   comments: Array<t.CommentBlock | t.CommentLine>;
   code: string | null;
 };
-const OPT_IN_DIRECTIVES = new Set(['use forget', 'use memo']);
+export const OPT_IN_DIRECTIVES = new Set(['use forget', 'use memo']);
 export const OPT_OUT_DIRECTIVES = new Set(['use no forget', 'use no memo']);
 
-function findDirectiveEnablingMemoization(
+export function findDirectiveEnablingMemoization(
   directives: Array<t.Directive>,
 ): Array<t.Directive> {
   return directives.filter(directive =>
@@ -53,7 +53,7 @@ function findDirectiveEnablingMemoization(
   );
 }
 
-function findDirectiveDisablingMemoization(
+export function findDirectiveDisablingMemoization(
   directives: Array<t.Directive>,
 ): Array<t.Directive> {
   return directives.filter(directive =>
@@ -199,7 +199,7 @@ function insertNewOutlinedFunctionNode(
   program: NodePath<t.Program>,
   originalFn: BabelFn,
   compiledFn: CodegenFunction,
-): NodePath<t.Function> {
+): BabelFn {
   switch (originalFn.type) {
     case 'FunctionDeclaration': {
       return originalFn.insertAfter(
@@ -298,7 +298,6 @@ export function compileProgram(
     return;
   }
   const useMemoCacheIdentifier = program.scope.generateUidIdentifier('c');
-  const moduleName = pass.opts.runtimeModule ?? 'react/compiler-runtime';
 
   /*
    * Record lint errors and critical errors as depending on Forget's config,
@@ -492,18 +491,11 @@ export function compileProgram(
       fn.skip();
       ALREADY_COMPILED.add(fn.node);
       if (outlined.type !== null) {
-        CompilerError.throwTodo({
-          reason: `Implement support for outlining React functions (components/hooks)`,
-          loc: outlined.fn.loc,
+        queue.push({
+          kind: 'outlined',
+          fn,
+          fnType: outlined.type,
         });
-        /*
-         * Above should be as simple as the following, but needs testing:
-         * queue.push({
-         *   kind: "outlined",
-         *   fn,
-         *   fnType: outlined.type,
-         * });
-         */
       }
     }
     compiledFns.push({
@@ -605,7 +597,7 @@ export function compileProgram(
     if (needsMemoCacheFunctionImport) {
       updateMemoCacheFunctionImport(
         program,
-        moduleName,
+        getReactCompilerRuntimeModule(pass.opts),
         useMemoCacheIdentifier.name,
       );
     }
@@ -638,8 +630,12 @@ function shouldSkipCompilation(
     }
   }
 
-  const moduleName = pass.opts.runtimeModule ?? 'react/compiler-runtime';
-  if (hasMemoCacheFunctionImport(program, moduleName)) {
+  if (
+    hasMemoCacheFunctionImport(
+      program,
+      getReactCompilerRuntimeModule(pass.opts),
+    )
+  ) {
     return true;
   }
   return false;
@@ -1125,4 +1121,25 @@ function checkFunctionReferencedBeforeDeclarationAtTopLevel(
   });
 
   return errors.details.length > 0 ? errors : null;
+}
+
+function getReactCompilerRuntimeModule(opts: PluginOptions): string {
+  if (opts.target === '19') {
+    return 'react/compiler-runtime'; // from react namespace
+  } else if (opts.target === '17' || opts.target === '18') {
+    return 'react-compiler-runtime'; // npm package
+  } else {
+    CompilerError.invariant(
+      opts.target != null &&
+        opts.target.kind === 'donotuse_meta_internal' &&
+        typeof opts.target.runtimeModule === 'string',
+      {
+        reason: 'Expected target to already be validated',
+        description: null,
+        loc: null,
+        suggestions: null,
+      },
+    );
+    return opts.target.runtimeModule;
+  }
 }

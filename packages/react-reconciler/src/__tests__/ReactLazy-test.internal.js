@@ -1236,30 +1236,6 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('2');
   });
 
-  // @gate !enableRefAsProp || !__DEV__
-  it('warns about ref on functions for lazy-loaded components', async () => {
-    const Foo = props => <div />;
-    const LazyFoo = lazy(() => {
-      return fakeImport(Foo);
-    });
-
-    const ref = React.createRef();
-    ReactTestRenderer.create(
-      <Suspense fallback={<Text text="Loading..." />}>
-        <LazyFoo ref={ref} />
-      </Suspense>,
-      {
-        unstable_isConcurrent: true,
-      },
-    );
-
-    await waitForAll(['Loading...']);
-    await resolveFakeImport(Foo);
-    await expect(async () => {
-      await waitForAll([]);
-    }).toErrorDev('Function components cannot be given refs');
-  });
-
   it('should error with a component stack naming the resolved component', async () => {
     let componentStackMessage;
 

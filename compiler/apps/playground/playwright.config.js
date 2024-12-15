@@ -18,6 +18,8 @@ const baseURL = `http://localhost:${PORT}`;
 export default defineConfig({
   // Timeout per test
   timeout: 30 * 1000,
+  // Run all tests in parallel.
+  fullyParallel: true,
   // Test directory
   testDir: path.join(__dirname, '__tests__/e2e'),
   // If a test fails, retry it additional 2 times
@@ -30,12 +32,15 @@ export default defineConfig({
   // Run your local dev server before starting the tests:
   // https://playwright.dev/docs/test-advanced#launching-a-development-web-server-during-the-tests
   webServer: {
-    command:
-      'yarn workspace babel-plugin-react-compiler build && yarn workspace react-compiler-runtime build && yarn dev',
+    command: 'yarn dev',
     url: baseURL,
     timeout: 300 * 1000,
     reuseExistingServer: !process.env.CI,
   },
+
+  // 'github' for GitHub Actions CI to generate annotations, plus a concise 'dot'
+  // default 'list' when running locally
+  reporter: process.env.CI ? 'github' : 'list',
 
   use: {
     // Use baseURL so to make navigations relative.

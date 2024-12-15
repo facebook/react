@@ -59,10 +59,10 @@ function Component(props) {
     t1 = $[3];
   }
   let t2;
-  if ($[4] !== t1 || $[5] !== a_0) {
+  if ($[4] !== a_0 || $[5] !== t1) {
     t2 = <ValidateMemoization inputs={t1} output={a_0} />;
-    $[4] = t1;
-    $[5] = a_0;
+    $[4] = a_0;
+    $[5] = t1;
     $[6] = t2;
   } else {
     t2 = $[6];

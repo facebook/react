@@ -40,7 +40,7 @@ function useFoo(t0) {
   const $ = _c(3);
   const { input, max } = t0;
   let x;
-  if ($[0] !== max || $[1] !== input.a.b) {
+  if ($[0] !== input.a.b || $[1] !== max) {
     x = [];
     let i = 0;
     while (true) {
@@ -52,8 +52,8 @@ function useFoo(t0) {
 
     x.push(i);
     x.push(input.a.b);
-    $[0] = max;
-    $[1] = input.a.b;
+    $[0] = input.a.b;
+    $[1] = max;
     $[2] = x;
   } else {
     x = $[2];

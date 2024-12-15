@@ -34,6 +34,7 @@ import {
   ReactiveInstruction,
   ReactiveScope,
   ReactiveScopeBlock,
+  ReactiveScopeDeclaration,
   ReactiveScopeDependency,
   ReactiveTerminal,
   ReactiveValue,
@@ -572,7 +573,8 @@ function codegenReactiveScope(
   const changeExpressions: Array<t.Expression> = [];
   const changeExpressionComments: Array<string> = [];
   const outputComments: Array<string> = [];
-  for (const dep of scope.dependencies) {
+
+  for (const dep of [...scope.dependencies].sort(compareScopeDependency)) {
     const index = cx.nextCacheIndex;
     changeExpressionComments.push(printDependencyComment(dep));
     const comparison = t.binaryExpression(
@@ -615,7 +617,10 @@ function codegenReactiveScope(
     );
   }
   let firstOutputIndex: number | null = null;
-  for (const [, {identifier}] of scope.declarations) {
+
+  for (const [, {identifier}] of [...scope.declarations].sort(([, a], [, b]) =>
+    compareScopeDeclaration(a, b),
+  )) {
     const index = cx.nextCacheIndex;
     if (firstOutputIndex === null) {
       firstOutputIndex = index;
@@ -981,22 +986,12 @@ function codegenTerminal(
             suggestions: null,
           });
         case InstructionKind.Catch:
-          CompilerError.invariant(false, {
-            reason: 'Unexpected catch variable as for..in collection',
-            description: null,
-            loc: iterableItem.loc,
-            suggestions: null,
-          });
         case InstructionKind.HoistedConst:
-          CompilerError.invariant(false, {
-            reason: 'Unexpected HoistedConst variable in for..in collection',
-            description: null,
-            loc: iterableItem.loc,
-            suggestions: null,
-          });
         case InstructionKind.HoistedLet:
+        case InstructionKind.HoistedFunction:
+        case InstructionKind.Function:
           CompilerError.invariant(false, {
-            reason: 'Unexpected HoistedLet variable in for..in collection',
+            reason: `Unexpected ${iterableItem.value.lvalue.kind} variable in for..in collection`,
             description: null,
             loc: iterableItem.loc,
             suggestions: null,
@@ -1075,30 +1070,13 @@ function codegenTerminal(
           varDeclKind = 'let' as const;
           break;
         case InstructionKind.Reassign:
-          CompilerError.invariant(false, {
-            reason:
-              'Destructure should never be Reassign as it would be an Object/ArrayPattern',
-            description: null,
-            loc: iterableItem.loc,
-            suggestions: null,
-          });
         case InstructionKind.Catch:
-          CompilerError.invariant(false, {
-            reason: 'Unexpected catch variable as for..of collection',
-            description: null,
-            loc: iterableItem.loc,
-            suggestions: null,
-          });
         case InstructionKind.HoistedConst:
-          CompilerError.invariant(false, {
-            reason: 'Unexpected HoistedConst variable in for..of collection',
-            description: null,
-            loc: iterableItem.loc,
-            suggestions: null,
-          });
         case InstructionKind.HoistedLet:
+        case InstructionKind.HoistedFunction:
+        case InstructionKind.Function:
           CompilerError.invariant(false, {
-            reason: 'Unexpected HoistedLet variable in for..of collection',
+            reason: `Unexpected ${iterableItem.value.lvalue.kind} variable in for..of collection`,
             description: null,
             loc: iterableItem.loc,
             suggestions: null,
@@ -1261,6 +1239,35 @@ function codegenInstructionNullable(
           t.variableDeclarator(codegenLValue(cx, lvalue), value),
         ]);
       }
+      case InstructionKind.Function: {
+        CompilerError.invariant(instr.lvalue === null, {
+          reason: `Function declaration cannot be referenced as an expression`,
+          description: null,
+          loc: instr.value.loc,
+          suggestions: null,
+        });
+        const genLvalue = codegenLValue(cx, lvalue);
+        CompilerError.invariant(genLvalue.type === 'Identifier', {
+          reason: 'Expected an identifier as a function declaration lvalue',
+          description: null,
+          loc: instr.value.loc,
+          suggestions: null,
+        });
+        CompilerError.invariant(value?.type === 'FunctionExpression', {
+          reason: 'Expected a function as a function declaration value',
+          description: null,
+          loc: instr.value.loc,
+          suggestions: null,
+        });
+        return createFunctionDeclaration(
+          instr.loc,
+          genLvalue,
+          value.params,
+          value.body,
+          value.generator,
+          value.async,
+        );
+      }
       case InstructionKind.Let: {
         CompilerError.invariant(instr.lvalue === null, {
           reason: `Const declaration cannot be referenced as an expression`,
@@ -1303,19 +1310,11 @@ function codegenInstructionNullable(
       case InstructionKind.Catch: {
         return t.emptyStatement();
       }
-      case InstructionKind.HoistedLet: {
+      case InstructionKind.HoistedLet:
+      case InstructionKind.HoistedConst:
+      case InstructionKind.HoistedFunction: {
         CompilerError.invariant(false, {
-          reason:
-            'Expected HoistedLet to have been pruned in PruneHoistedContexts',
-          description: null,
-          loc: instr.loc,
-          suggestions: null,
-        });
-      }
-      case InstructionKind.HoistedConst: {
-        CompilerError.invariant(false, {
-          reason:
-            'Expected HoistedConsts to have been pruned in PruneHoistedContexts',
+          reason: `Expected ${kind} to have been pruned in PruneHoistedContexts`,
           description: null,
           loc: instr.loc,
           suggestions: null,
@@ -1355,20 +1354,6 @@ function codegenForInit(
   init: ReactiveValue,
 ): t.Expression | t.VariableDeclaration | null {
   if (init.kind === 'SequenceExpression') {
-    for (const instr of init.instructions) {
-      if (instr.value.kind === 'DeclareContext') {
-        CompilerError.throwTodo({
-          reason: `Support for loops where the index variable is a context variable`,
-          loc: instr.loc,
-          description:
-            instr.value.lvalue.place.identifier.name != null
-              ? `\`${instr.value.lvalue.place.identifier.name.value}\` is a context variable`
-              : null,
-          suggestions: null,
-        });
-      }
-    }
-
     const body = codegenBlock(
       cx,
       init.instructions.map(instruction => ({
@@ -1379,20 +1364,33 @@ function codegenForInit(
     const declarators: Array<t.VariableDeclarator> = [];
     let kind: 'let' | 'const' = 'const';
     body.forEach(instr => {
-      CompilerError.invariant(
-        instr.type === 'VariableDeclaration' &&
-          (instr.kind === 'let' || instr.kind === 'const'),
-        {
-          reason: 'Expected a variable declaration',
-          loc: init.loc,
-          description: `Got ${instr.type}`,
-          suggestions: null,
-        },
-      );
-      if (instr.kind === 'let') {
-        kind = 'let';
+      let top: undefined | t.VariableDeclarator = undefined;
+      if (
+        instr.type === 'ExpressionStatement' &&
+        instr.expression.type === 'AssignmentExpression' &&
+        instr.expression.operator === '=' &&
+        instr.expression.left.type === 'Identifier' &&
+        (top = declarators.at(-1))?.id.type === 'Identifier' &&
+        top?.id.name === instr.expression.left.name &&
+        top?.init == null
+      ) {
+        top.init = instr.expression.right;
+      } else {
+        CompilerError.invariant(
+          instr.type === 'VariableDeclaration' &&
+            (instr.kind === 'let' || instr.kind === 'const'),
+          {
+            reason: 'Expected a variable declaration',
+            loc: init.loc,
+            description: `Got ${instr.type}`,
+            suggestions: null,
+          },
+        );
+        if (instr.kind === 'let') {
+          kind = 'let';
+        }
+        declarators.push(...instr.declarations);
       }
-      declarators.push(...instr.declarations);
     });
     CompilerError.invariant(declarators.length > 0, {
       reason: 'Expected a variable declaration',
@@ -1486,6 +1484,7 @@ const createBinaryExpression = withLoc(t.binaryExpression);
 const createExpressionStatement = withLoc(t.expressionStatement);
 const _createLabelledStatement = withLoc(t.labeledStatement);
 const createVariableDeclaration = withLoc(t.variableDeclaration);
+const createFunctionDeclaration = withLoc(t.functionDeclaration);
 const _createWhileStatement = withLoc(t.whileStatement);
 const createTaggedTemplateExpression = withLoc(t.taggedTemplateExpression);
 const createLogicalExpression = withLoc(t.logicalExpression);
@@ -2570,4 +2569,46 @@ function convertIdentifier(identifier: Identifier): t.Identifier {
     },
   );
   return t.identifier(identifier.name.value);
+}
+
+function compareScopeDependency(
+  a: ReactiveScopeDependency,
+  b: ReactiveScopeDependency,
+): number {
+  CompilerError.invariant(
+    a.identifier.name?.kind === 'named' && b.identifier.name?.kind === 'named',
+    {
+      reason: '[Codegen] Expected named identifier for dependency',
+      loc: a.identifier.loc,
+    },
+  );
+  const aName = [
+    a.identifier.name.value,
+    ...a.path.map(entry => `${entry.optional ? '?' : ''}${entry.property}`),
+  ].join('.');
+  const bName = [
+    b.identifier.name.value,
+    ...b.path.map(entry => `${entry.optional ? '?' : ''}${entry.property}`),
+  ].join('.');
+  if (aName < bName) return -1;
+  else if (aName > bName) return 1;
+  else return 0;
+}
+
+function compareScopeDeclaration(
+  a: ReactiveScopeDeclaration,
+  b: ReactiveScopeDeclaration,
+): number {
+  CompilerError.invariant(
+    a.identifier.name?.kind === 'named' && b.identifier.name?.kind === 'named',
+    {
+      reason: '[Codegen] Expected named identifier for declaration',
+      loc: a.identifier.loc,
+    },
+  );
+  const aName = a.identifier.name.value;
+  const bName = b.identifier.name.value;
+  if (aName < bName) return -1;
+  else if (aName > bName) return 1;
+  else return 0;
 }

@@ -244,34 +244,6 @@ describe('ReactJSXRuntime', () => {
     );
   });
 
-  // @gate !enableRefAsProp || !__DEV__
-  it('should warn when `ref` is being accessed', async () => {
-    const container = document.createElement('div');
-    class Child extends React.Component {
-      render() {
-        return JSXRuntime.jsx('div', {children: this.props.ref});
-      }
-    }
-    class Parent extends React.Component {
-      render() {
-        return JSXRuntime.jsx('div', {
-          children: JSXRuntime.jsx(Child, {ref: React.createRef()}),
-        });
-      }
-    }
-    await expect(async () => {
-      const root = ReactDOMClient.createRoot(container);
-      await act(() => {
-        root.render(JSXRuntime.jsx(Parent, {}));
-      });
-    }).toErrorDev(
-      'Child: `ref` is not a prop. Trying to access it will result ' +
-        'in `undefined` being returned. If you need to access the same ' +
-        'value within the child component, you should pass it as a different ' +
-        'prop. (https://react.dev/link/special-props)',
-    );
-  });
-
   it('should warn when unkeyed children are passed to jsx', async () => {
     const container = document.createElement('div');
 
@@ -377,7 +349,6 @@ describe('ReactJSXRuntime', () => {
     expect(didCall).toBe(false);
   });
 
-  // @gate enableRefAsProp
   it('does not clone props object if key and ref is not spread', async () => {
     const config = {
       foo: 'foo',

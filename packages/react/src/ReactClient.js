@@ -42,6 +42,7 @@ import {
   useContext,
   useEffect,
   useEffectEvent,
+  useResourceEffect,
   useImperativeHandle,
   useDebugValue,
   useInsertionEffect,
@@ -63,6 +64,8 @@ import ReactSharedInternals from './ReactSharedInternalsClient';
 import {startTransition} from './ReactStartTransition';
 import {act} from './ReactAct';
 import {captureOwnerStack} from './ReactOwnerStack';
+import ReactCompilerRuntime from './ReactCompilerRuntime';
+import {enableUseResourceEffectHook} from 'shared/ReactFeatureFlags';
 
 const Children = {
   map,
@@ -109,6 +112,7 @@ export {
   isValidElement,
   ReactVersion as version,
   ReactSharedInternals as __CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
+  ReactCompilerRuntime as __COMPILER_RUNTIME,
   // Concurrent Mode
   useTransition,
   startTransition,
@@ -127,3 +131,6 @@ export {
   act, // DEV-only
   captureOwnerStack, // DEV-only
 };
+
+export const experimental_useResourceEffect: typeof useResourceEffect | void =
+  enableUseResourceEffectHook ? useResourceEffect : undefined;

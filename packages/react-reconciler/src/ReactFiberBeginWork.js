@@ -79,6 +79,7 @@ import {
   PerformedWork,
   Placement,
   Hydrating,
+  Callback,
   ContentReset,
   DidCapture,
   Update,
@@ -105,14 +106,12 @@ import {
   enableTransitionTracing,
   enableLegacyHidden,
   enableCPUSuspense,
-  enableAsyncActions,
   enablePostpone,
   enableRenderableContext,
-  enableRefAsProp,
   disableLegacyMode,
   disableDefaultPropsExceptForClasses,
-  disableStringRefs,
   enableOwnerStacks,
+  enableHydrationLaneScheduling,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
@@ -125,10 +124,7 @@ import {
   REACT_MEMO_TYPE,
   getIteratorFn,
 } from 'shared/ReactSymbols';
-import {
-  getCurrentFiberOwnerNameInDevOrNull,
-  setCurrentFiber,
-} from './ReactCurrentFiber';
+import {setCurrentFiber} from './ReactCurrentFiber';
 import {
   resolveFunctionForHotReloading,
   resolveForwardRefForHotReloading,
@@ -151,6 +147,7 @@ import {
   NoLane,
   NoLanes,
   OffscreenLane,
+  DefaultLane,
   DefaultHydrationLane,
   SomeRetryLane,
   includesSomeLane,
@@ -171,7 +168,6 @@ import {
   isSuspenseInstancePending,
   isSuspenseInstanceFallback,
   getSuspenseInstanceFallbackErrorDetails,
-  registerSuspenseInstanceRetry,
   supportsHydration,
   supportsResources,
   supportsSingletons,
@@ -261,7 +257,6 @@ import {
   isFunctionClassComponent,
 } from './ReactFiber';
 import {
-  retryDehydratedSuspenseBoundary,
   scheduleUpdateOnFiber,
   renderDidSuspendDelayIfPossible,
   markSkippedUpdateLanes,
@@ -319,7 +314,6 @@ let didWarnAboutBadClass;
 let didWarnAboutContextTypeOnFunctionComponent;
 let didWarnAboutContextTypes;
 let didWarnAboutGetDerivedStateOnFunctionComponent;
-let didWarnAboutFunctionRefs;
 export let didWarnAboutReassigningProps: boolean;
 let didWarnAboutRevealOrder;
 let didWarnAboutTailOptions;
@@ -330,7 +324,6 @@ if (__DEV__) {
   didWarnAboutContextTypeOnFunctionComponent = ({}: {[string]: boolean});
   didWarnAboutContextTypes = ({}: {[string]: boolean});
   didWarnAboutGetDerivedStateOnFunctionComponent = ({}: {[string]: boolean});
-  didWarnAboutFunctionRefs = ({}: {[string]: boolean});
   didWarnAboutReassigningProps = false;
   didWarnAboutRevealOrder = ({}: {[empty]: boolean});
   didWarnAboutTailOptions = ({}: {[string]: boolean});
@@ -416,7 +409,7 @@ function updateForwardRef(
   const ref = workInProgress.ref;
 
   let propsWithoutRef;
-  if (enableRefAsProp && 'ref' in nextProps) {
+  if ('ref' in nextProps) {
     // `ref` is just a prop now, but `forwardRef` expects it to not appear in
     // the props object. This used to happen in the JSX runtime, but now we do
     // it here.
@@ -1026,11 +1019,15 @@ function updateProfiler(
     workInProgress.flags |= Update;
 
     if (enableProfilerCommitHooks) {
+      // Schedule a passive effect for this Profiler to call onPostCommit hooks.
+      // This effect should be scheduled even if there is no onPostCommit callback for this Profiler,
+      // because the effect is also where times bubble to parent Profilers.
+      workInProgress.flags |= Passive;
       // Reset effect durations for the next eventual effect phase.
       // These are reset during render to allow the DevTools commit hook a chance to read them,
       const stateNode = workInProgress.stateNode;
-      stateNode.effectDuration = 0;
-      stateNode.passiveEffectDuration = 0;
+      stateNode.effectDuration = -0;
+      stateNode.passiveEffectDuration = -0;
     }
   }
   const nextProps = workInProgress.pendingProps;
@@ -1054,25 +1051,6 @@ function markRef(current: Fiber | null, workInProgress: Fiber) {
       );
     }
     if (current === null || current.ref !== ref) {
-      if (!disableStringRefs && current !== null) {
-        const oldRef = current.ref;
-        const newRef = ref;
-        if (
-          typeof oldRef === 'function' &&
-          typeof newRef === 'function' &&
-          typeof oldRef.__stringRef === 'string' &&
-          oldRef.__stringRef === newRef.__stringRef &&
-          oldRef.__stringRefType === newRef.__stringRefType &&
-          oldRef.__stringRefOwner === newRef.__stringRefOwner
-        ) {
-          // Although this is a different callback, it represents the same
-          // string ref. To avoid breaking old Meta code that relies on string
-          // refs only being attached once, reuse the old ref. This will
-          // prevent us from detaching and reattaching the ref on each update.
-          workInProgress.ref = oldRef;
-          return;
-        }
-      }
       // Schedule a Ref effect
       workInProgress.flags |= Ref | RefStatic;
     }
@@ -1390,7 +1368,7 @@ function finishClassComponent(
   const instance = workInProgress.stateNode;
 
   // Rerender
-  if (__DEV__ || !disableStringRefs) {
+  if (__DEV__) {
     setCurrentFiber(workInProgress);
   }
   let nextChildren;
@@ -1642,55 +1620,53 @@ function updateHostComponent(
     workInProgress.flags |= ContentReset;
   }
 
-  if (enableAsyncActions) {
-    const memoizedState = workInProgress.memoizedState;
-    if (memoizedState !== null) {
-      // This fiber has been upgraded to a stateful component. The only way
-      // happens currently is for form actions. We use hooks to track the
-      // pending and error state of the form.
-      //
-      // Once a fiber is upgraded to be stateful, it remains stateful for the
-      // rest of its lifetime.
-      const newState = renderTransitionAwareHostComponentWithHooks(
-        current,
-        workInProgress,
-        renderLanes,
-      );
+  const memoizedState = workInProgress.memoizedState;
+  if (memoizedState !== null) {
+    // This fiber has been upgraded to a stateful component. The only way
+    // happens currently is for form actions. We use hooks to track the
+    // pending and error state of the form.
+    //
+    // Once a fiber is upgraded to be stateful, it remains stateful for the
+    // rest of its lifetime.
+    const newState = renderTransitionAwareHostComponentWithHooks(
+      current,
+      workInProgress,
+      renderLanes,
+    );
 
-      // If the transition state changed, propagate the change to all the
-      // descendents. We use Context as an implementation detail for this.
-      //
-      // This is intentionally set here instead of pushHostContext because
-      // pushHostContext gets called before we process the state hook, to avoid
-      // a state mismatch in the event that something suspends.
-      //
-      // NOTE: This assumes that there cannot be nested transition providers,
-      // because the only renderer that implements this feature is React DOM,
-      // and forms cannot be nested. If we did support nested providers, then
-      // we would need to push a context value even for host fibers that
-      // haven't been upgraded yet.
-      if (isPrimaryRenderer) {
-        HostTransitionContext._currentValue = newState;
-      } else {
-        HostTransitionContext._currentValue2 = newState;
-      }
-      if (enableLazyContextPropagation) {
-        // In the lazy propagation implementation, we don't scan for matching
-        // consumers until something bails out.
-      } else {
-        if (didReceiveUpdate) {
-          if (current !== null) {
-            const oldStateHook: Hook = current.memoizedState;
-            const oldState: TransitionStatus = oldStateHook.memoizedState;
-            // This uses regular equality instead of Object.is because we assume
-            // that host transition state doesn't include NaN as a valid type.
-            if (oldState !== newState) {
-              propagateContextChange(
-                workInProgress,
-                HostTransitionContext,
-                renderLanes,
-              );
-            }
+    // If the transition state changed, propagate the change to all the
+    // descendents. We use Context as an implementation detail for this.
+    //
+    // This is intentionally set here instead of pushHostContext because
+    // pushHostContext gets called before we process the state hook, to avoid
+    // a state mismatch in the event that something suspends.
+    //
+    // NOTE: This assumes that there cannot be nested transition providers,
+    // because the only renderer that implements this feature is React DOM,
+    // and forms cannot be nested. If we did support nested providers, then
+    // we would need to push a context value even for host fibers that
+    // haven't been upgraded yet.
+    if (isPrimaryRenderer) {
+      HostTransitionContext._currentValue = newState;
+    } else {
+      HostTransitionContext._currentValue2 = newState;
+    }
+    if (enableLazyContextPropagation) {
+      // In the lazy propagation implementation, we don't scan for matching
+      // consumers until something bails out.
+    } else {
+      if (didReceiveUpdate) {
+        if (current !== null) {
+          const oldStateHook: Hook = current.memoizedState;
+          const oldState: TransitionStatus = oldStateHook.memoizedState;
+          // This uses regular equality instead of Object.is because we assume
+          // that host transition state doesn't include NaN as a valid type.
+          if (oldState !== newState) {
+            propagateContextChange(
+              workInProgress,
+              HostTransitionContext,
+              renderLanes,
+            );
           }
         }
       }
@@ -1949,25 +1925,6 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
           '  %s.childContextTypes = ...',
         Component.displayName || Component.name || 'Component',
       );
-    }
-    if (!enableRefAsProp && workInProgress.ref !== null) {
-      let info = '';
-      const componentName = getComponentNameFromType(Component) || 'Unknown';
-      const ownerName = getCurrentFiberOwnerNameInDevOrNull();
-      if (ownerName) {
-        info += '\n\nCheck the render method of `' + ownerName + '`.';
-      }
-
-      const warningKey = componentName + '|' + (ownerName || '');
-      if (!didWarnAboutFunctionRefs[warningKey]) {
-        didWarnAboutFunctionRefs[warningKey] = true;
-        console.error(
-          'Function components cannot be given refs. ' +
-            'Attempts to access this ref will fail. ' +
-            'Did you mean to use React.forwardRef()?%s',
-          info,
-        );
-      }
     }
 
     if (
@@ -2691,14 +2648,10 @@ function mountDehydratedSuspenseComponent(
     // have timed out. In theory we could render it in this pass but it would have the
     // wrong priority associated with it and will prevent hydration of parent path.
     // Instead, we'll leave work left on it to render it in a separate commit.
-
-    // TODO This time should be the time at which the server rendered response that is
-    // a parent to this boundary was displayed. However, since we currently don't have
-    // a protocol to transfer that time, we'll just estimate it by using the current
-    // time. This will mean that Suspense timeouts are slightly shifted to later than
-    // they should be.
     // Schedule a normal pri update to render this content.
-    workInProgress.lanes = laneToLanes(DefaultHydrationLane);
+    workInProgress.lanes = laneToLanes(
+      enableHydrationLaneScheduling ? DefaultLane : DefaultHydrationLane,
+    );
   } else {
     // We'll continue hydrating the rest at offscreen priority since we'll already
     // be showing the right content coming from the server, it is no rush.
@@ -2857,12 +2810,10 @@ function updateDehydratedSuspenseComponent(
       // on the client than if we just leave it alone. If the server times out or errors
       // these should update this boundary to the permanent Fallback state instead.
       // Mark it as having captured (i.e. suspended).
-      workInProgress.flags |= DidCapture;
+      // Also Mark it as requiring retry.
+      workInProgress.flags |= DidCapture | Callback;
       // Leave the child in place. I.e. the dehydrated fragment.
       workInProgress.child = current.child;
-      // Register a callback to retry this boundary once the server has sent the result.
-      const retry = retryDehydratedSuspenseBoundary.bind(null, current);
-      registerSuspenseInstanceRetry(suspenseInstance, retry);
       return null;
     } else {
       // This is the first attempt.
@@ -3700,11 +3651,15 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
         }
 
         if (enableProfilerCommitHooks) {
+          // Schedule a passive effect for this Profiler to call onPostCommit hooks.
+          // This effect should be scheduled even if there is no onPostCommit callback for this Profiler,
+          // because the effect is also where times bubble to parent Profilers.
+          workInProgress.flags |= Passive;
           // Reset effect durations for the next eventual effect phase.
           // These are reset during render to allow the DevTools commit hook a chance to read them,
           const stateNode = workInProgress.stateNode;
-          stateNode.effectDuration = 0;
-          stateNode.passiveEffectDuration = 0;
+          stateNode.effectDuration = -0;
+          stateNode.passiveEffectDuration = -0;
         }
       }
       break;

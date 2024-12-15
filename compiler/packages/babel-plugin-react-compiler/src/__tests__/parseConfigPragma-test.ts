@@ -5,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {parseConfigPragma, validateEnvironmentConfig} from '..';
+import {parseConfigPragmaForTests, validateEnvironmentConfig} from '..';
 
-describe('parseConfigPragma()', () => {
+describe('parseConfigPragmaForTests()', () => {
   it('parses flags in various forms', () => {
     const defaultConfig = validateEnvironmentConfig({});
 
@@ -17,7 +17,7 @@ describe('parseConfigPragma()', () => {
     expect(defaultConfig.validateNoSetStateInPassiveEffects).toBe(false);
     expect(defaultConfig.validateNoSetStateInRender).toBe(true);
 
-    const config = parseConfigPragma(
+    const config = parseConfigPragmaForTests(
       '@enableUseTypeAnnotations @validateNoSetStateInPassiveEffects:true @validateNoSetStateInRender:false',
     );
     expect(config).toEqual({

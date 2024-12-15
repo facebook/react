@@ -15,15 +15,17 @@ function Component() {
   );
 }
 
-function cx(obj) {
-  const classes = [];
-  for (const [key, value] of Object.entries(obj)) {
-    if (value) {
-      classes.push(key);
+const cx = {
+  foo(obj) {
+    const classes = [];
+    for (const [key, value] of Object.entries(obj)) {
+      if (value) {
+        classes.push(key);
+      }
     }
-  }
-  return classes.join(' ');
-}
+    return classes.join(' ');
+  },
+};
 
 function useTheme() {
   return {

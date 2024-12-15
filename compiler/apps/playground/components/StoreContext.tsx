@@ -29,7 +29,7 @@ export const useStoreDispatch = StoreDispatchContext.useContext;
 /**
  * Make Store and dispatch function available to all sub-components in children.
  */
-export function StoreProvider({children}: {children: ReactNode}) {
+export function StoreProvider({children}: {children: ReactNode}): JSX.Element {
   const [store, dispatch] = useReducer(storeReducer, emptyStore);
 
   return (

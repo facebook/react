@@ -15,7 +15,8 @@ import type {
   OwnersList,
   ProfilingDataBackend,
   RendererID,
-  ConsolePatchSettings,
+  DevToolsHookSettings,
+  ProfilingSettings,
 } from 'react-devtools-shared/src/backend/types';
 import type {StyleAndLayout as StyleAndLayoutPayload} from 'react-devtools-shared/src/backend/NativeStyleEditor/types';
 
@@ -170,11 +171,7 @@ type NativeStyleEditor_SetValueParams = {
 };
 
 type SavedPreferencesParams = {
-  appendComponentStack: boolean,
-  breakOnConsoleErrors: boolean,
   componentFilters: Array<ComponentFilter>,
-  showInlineWarningsAndErrors: boolean,
-  hideConsoleLogsInStrictMode: boolean,
 };
 
 export type BackendEvents = {
@@ -185,8 +182,7 @@ export type BackendEvents = {
   fastRefreshScheduled: [],
   getSavedPreferences: [],
   inspectedElement: [InspectedElementPayload],
-  isBackendStorageAPISupported: [boolean],
-  isSynchronousXHRSupported: [boolean],
+  isReloadAndProfileSupportedByBackend: [boolean],
   operations: [Array<number>],
   ownersList: [OwnersList],
   overrideComponentFilters: [Array<ComponentFilter>],
@@ -207,7 +203,12 @@ export type BackendEvents = {
     {isSupported: boolean, validAttributes: ?$ReadOnlyArray<string>},
   ],
   NativeStyleEditor_styleAndLayout: [StyleAndLayoutPayload],
+
+  hookSettings: [$ReadOnly<DevToolsHookSettings>],
 };
+
+type StartProfilingParams = ProfilingSettings;
+type ReloadAndProfilingParams = ProfilingSettings;
 
 type FrontendEvents = {
   clearErrorsAndWarnings: [{rendererID: RendererID}],
@@ -229,19 +230,20 @@ type FrontendEvents = {
   overrideSuspense: [OverrideSuspense],
   overrideValueAtPath: [OverrideValueAtPath],
   profilingData: [ProfilingDataBackend],
-  reloadAndProfile: [boolean],
+  reloadAndProfile: [ReloadAndProfilingParams],
   renamePath: [RenamePath],
   savedPreferences: [SavedPreferencesParams],
   setTraceUpdatesEnabled: [boolean],
+  setShowNamesWhenTracing: [boolean],
   shutdown: [],
   startInspectingHost: [],
-  startProfiling: [boolean],
+  startProfiling: [StartProfilingParams],
   stopInspectingHost: [boolean],
   stopProfiling: [],
   storeAsGlobal: [StoreAsGlobalParams],
   updateComponentFilters: [Array<ComponentFilter>],
   getEnvironmentNames: [],
-  updateConsolePatchSettings: [ConsolePatchSettings],
+  updateHookSettings: [$ReadOnly<DevToolsHookSettings>],
   viewAttributeSource: [ViewAttributeSourceParams],
   viewElementSource: [ElementAndRendererID],
 
@@ -267,6 +269,8 @@ type FrontendEvents = {
 
   resumeElementPolling: [],
   pauseElementPolling: [],
+
+  getHookSettings: [],
 };
 
 class Bridge<

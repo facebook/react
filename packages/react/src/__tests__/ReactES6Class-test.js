@@ -592,25 +592,4 @@ describe('ReactES6Class', () => {
       ]);
     });
   }
-
-  if (!require('shared/ReactFeatureFlags').disableStringRefs) {
-    it('supports string refs', () => {
-      class Foo extends React.Component {
-        render() {
-          return <Inner name="foo" ref="inner" />;
-        }
-      }
-      const ref = React.createRef();
-      expect(() => {
-        runTest(<Foo ref={ref} />, 'DIV', 'foo');
-      }).toErrorDev([
-        'Component "Foo" contains the string ref "inner". ' +
-          'Support for string refs will be removed in a future major release. ' +
-          'We recommend using useRef() or createRef() instead. ' +
-          'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
-          '    in Inner (at **)',
-      ]);
-      expect(ref.current.refs.inner.getName()).toBe('foo');
-    });
-  }
 });
