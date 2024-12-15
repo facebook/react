@@ -3136,9 +3136,6 @@ function unwrapThenable(thenable) {
   null === thenableState && (thenableState = []);
   return trackUsedThenable(thenableState, thenable, index);
 }
-function unsupportedRefresh() {
-  throw Error("Cache cannot be refreshed during server rendering.");
-}
 function noop$1() {}
 var HooksDispatcher = {
   readContext: function (context) {
@@ -3223,9 +3220,6 @@ var HooksDispatcher = {
   useHostTransitionStatus: function () {
     resolveCurrentlyRenderingComponent();
     return sharedNotPendingObject;
-  },
-  useCacheRefresh: function () {
-    return unsupportedRefresh;
   },
   useEffectEvent: function () {
     return throwOnUseEffectEventCall;

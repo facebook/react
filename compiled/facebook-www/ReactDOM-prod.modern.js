@@ -3715,9 +3715,9 @@ var ContextOnlyDispatcher = {
   useFormState: throwInvalidHookError,
   useActionState: throwInvalidHookError,
   useOptimistic: throwInvalidHookError,
-  useMemoCache: throwInvalidHookError
+  useMemoCache: throwInvalidHookError,
+  useCacheRefresh: throwInvalidHookError
 };
-ContextOnlyDispatcher.useCacheRefresh = throwInvalidHookError;
 ContextOnlyDispatcher.useEffectEvent = throwInvalidHookError;
 enableUseResourceEffectHook &&
   (ContextOnlyDispatcher.useResourceEffect = throwInvalidHookError);
@@ -3971,9 +3971,9 @@ var HooksDispatcherOnUpdate = {
     var hook = updateWorkInProgressHook();
     return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
   },
-  useMemoCache: useMemoCache
+  useMemoCache: useMemoCache,
+  useCacheRefresh: updateRefresh
 };
-HooksDispatcherOnUpdate.useCacheRefresh = updateRefresh;
 HooksDispatcherOnUpdate.useEffectEvent = updateEvent;
 enableUseResourceEffectHook &&
   (HooksDispatcherOnUpdate.useResourceEffect = updateResourceEffect);
@@ -4028,9 +4028,9 @@ var HooksDispatcherOnRerender = {
     hook.baseState = passthrough;
     return [passthrough, hook.queue.dispatch];
   },
-  useMemoCache: useMemoCache
+  useMemoCache: useMemoCache,
+  useCacheRefresh: updateRefresh
 };
-HooksDispatcherOnRerender.useCacheRefresh = updateRefresh;
 HooksDispatcherOnRerender.useEffectEvent = updateEvent;
 enableUseResourceEffectHook &&
   (HooksDispatcherOnRerender.useResourceEffect = updateResourceEffect);
@@ -17005,14 +17005,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1755 = React.version;
 if (
-  "19.1.0-www-modern-2d320563-20241215" !==
+  "19.1.0-www-modern-e06c72fc-20241215" !==
   isomorphicReactPackageVersion$jscomp$inline_1755
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1755,
-      "19.1.0-www-modern-2d320563-20241215"
+      "19.1.0-www-modern-e06c72fc-20241215"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17030,10 +17030,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2288 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-2d320563-20241215",
+  version: "19.1.0-www-modern-e06c72fc-20241215",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-2d320563-20241215"
+  reconcilerVersion: "19.1.0-www-modern-e06c72fc-20241215"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2289 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17398,4 +17398,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-modern-2d320563-20241215";
+exports.version = "19.1.0-www-modern-e06c72fc-20241215";

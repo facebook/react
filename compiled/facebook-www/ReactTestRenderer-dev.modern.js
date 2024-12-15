@@ -13407,10 +13407,10 @@ __DEV__ &&
         useFormState: throwInvalidHookError,
         useActionState: throwInvalidHookError,
         useOptimistic: throwInvalidHookError,
-        useMemoCache: throwInvalidHookError
-      };
-    ContextOnlyDispatcher.useCacheRefresh = throwInvalidHookError;
-    var HooksDispatcherOnMountInDEV = null,
+        useMemoCache: throwInvalidHookError,
+        useCacheRefresh: throwInvalidHookError
+      },
+      HooksDispatcherOnMountInDEV = null,
       HooksDispatcherOnMountWithHookTypesInDEV = null,
       HooksDispatcherOnUpdateInDEV = null,
       HooksDispatcherOnRerenderInDEV = null,
@@ -15003,10 +15003,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-modern-2d320563-20241215",
+        version: "19.1.0-www-modern-e06c72fc-20241215",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-modern-2d320563-20241215"
+        reconcilerVersion: "19.1.0-www-modern-e06c72fc-20241215"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15141,5 +15141,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.1.0-www-modern-2d320563-20241215";
+    exports.version = "19.1.0-www-modern-e06c72fc-20241215";
   })();

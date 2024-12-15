@@ -11688,9 +11688,9 @@ module.exports = function ($$$config) {
       useFormState: throwInvalidHookError,
       useActionState: throwInvalidHookError,
       useOptimistic: throwInvalidHookError,
-      useMemoCache: throwInvalidHookError
+      useMemoCache: throwInvalidHookError,
+      useCacheRefresh: throwInvalidHookError
     };
-  ContextOnlyDispatcher.useCacheRefresh = throwInvalidHookError;
   ContextOnlyDispatcher.useEffectEvent = throwInvalidHookError;
   enableUseResourceEffectHook &&
     (ContextOnlyDispatcher.useResourceEffect = throwInvalidHookError);
@@ -11949,9 +11949,9 @@ module.exports = function ($$$config) {
       var hook = updateWorkInProgressHook();
       return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
     },
-    useMemoCache: useMemoCache
+    useMemoCache: useMemoCache,
+    useCacheRefresh: updateRefresh
   };
-  HooksDispatcherOnUpdate.useCacheRefresh = updateRefresh;
   HooksDispatcherOnUpdate.useEffectEvent = updateEvent;
   enableUseResourceEffectHook &&
     (HooksDispatcherOnUpdate.useResourceEffect = updateResourceEffect);
@@ -12006,9 +12006,9 @@ module.exports = function ($$$config) {
       hook.baseState = passthrough;
       return [passthrough, hook.queue.dispatch];
     },
-    useMemoCache: useMemoCache
+    useMemoCache: useMemoCache,
+    useCacheRefresh: updateRefresh
   };
-  HooksDispatcherOnRerender.useCacheRefresh = updateRefresh;
   HooksDispatcherOnRerender.useEffectEvent = updateEvent;
   enableUseResourceEffectHook &&
     (HooksDispatcherOnRerender.useResourceEffect = updateResourceEffect);
@@ -12566,7 +12566,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-modern-2d320563-20241215"
+      reconcilerVersion: "19.1.0-www-modern-e06c72fc-20241215"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

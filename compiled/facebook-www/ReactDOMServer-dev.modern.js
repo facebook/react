@@ -4033,9 +4033,6 @@ __DEV__ &&
       null === thenableState && (thenableState = []);
       return trackUsedThenable(thenableState, thenable, index);
     }
-    function unsupportedRefresh() {
-      throw Error("Cache cannot be refreshed during server rendering.");
-    }
     function noop$1() {}
     function disabledLog() {}
     function disableLogs() {
@@ -8895,9 +8892,6 @@ __DEV__ &&
           resolveCurrentlyRenderingComponent();
           return NotPending;
         },
-        useCacheRefresh: function () {
-          return unsupportedRefresh;
-        },
         useEffectEvent: function () {
           return throwOnUseEffectEventCall;
         }
@@ -8982,5 +8976,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.1.0-www-modern-2d320563-20241215";
+    exports.version = "19.1.0-www-modern-e06c72fc-20241215";
   })();

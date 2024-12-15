@@ -3819,9 +3819,6 @@ __DEV__ &&
       null === thenableState && (thenableState = []);
       return trackUsedThenable(thenableState, thenable, index);
     }
-    function unsupportedRefresh() {
-      throw Error("Cache cannot be refreshed during server rendering.");
-    }
     function noop$1() {}
     function disabledLog() {}
     function disableLogs() {
@@ -8202,9 +8199,6 @@ __DEV__ &&
         useHostTransitionStatus: function () {
           resolveCurrentlyRenderingComponent();
           return NotPending;
-        },
-        useCacheRefresh: function () {
-          return unsupportedRefresh;
         },
         useEffectEvent: function () {
           return throwOnUseEffectEventCall;
