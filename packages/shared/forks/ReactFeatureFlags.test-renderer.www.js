@@ -11,7 +11,6 @@ import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as ExportsType from './ReactFeatureFlags.test-renderer.www';
 
 export const debugRenderPhaseSideEffectsForStrictMode = false;
-export const enableDebugTracing = false;
 export const enableAsyncDebugInfo = false;
 export const enableSchedulingProfiler = false;
 export const enableProfilerTimer = __PROFILE__;
@@ -19,7 +18,6 @@ export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableComponentPerformanceTrack = false;
 export const enableUpdaterTracking = false;
-export const enableCache = true;
 export const enableLegacyCache = true;
 export const enableAsyncIterableChildren = false;
 export const enableTaint = true;

@@ -621,6 +621,18 @@ export function includesTransitionLane(lanes: Lanes): boolean {
   return (lanes & TransitionLanes) !== NoLanes;
 }
 
+export function includesOnlyHydrationLanes(lanes: Lanes): boolean {
+  return (lanes & HydrationLanes) === lanes;
+}
+
+export function includesOnlyOffscreenLanes(lanes: Lanes): boolean {
+  return (lanes & OffscreenLane) === lanes;
+}
+
+export function includesOnlyHydrationOrOffscreenLanes(lanes: Lanes): boolean {
+  return (lanes & (HydrationLanes | OffscreenLane)) === lanes;
+}
+
 export function includesBlockingLane(lanes: Lanes): boolean {
   const SyncDefaultLanes =
     InputContinuousHydrationLane |

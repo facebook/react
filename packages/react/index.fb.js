@@ -33,7 +33,6 @@ export {
   StrictMode,
   Suspense,
   unstable_Activity,
-  unstable_DebugTracingMode,
   unstable_getCacheForType,
   unstable_LegacyHidden,
   unstable_Scope,

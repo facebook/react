@@ -22,6 +22,8 @@
 // when it rolls out to prod. We should remove these as soon as possible.
 // -----------------------------------------------------------------------------
 
+export const enableHydrationLaneScheduling = true;
+
 // -----------------------------------------------------------------------------
 // Land or remove (moderate effort)
 //
@@ -75,7 +77,6 @@ export const enableLegacyFBSupport = false;
 // likely to include in an upcoming release.
 // -----------------------------------------------------------------------------
 
-export const enableCache = true;
 export const enableLegacyCache = __EXPERIMENTAL__;
 
 export const enableAsyncIterableChildren = __EXPERIMENTAL__;
@@ -110,8 +111,6 @@ export const enableLegacyHidden = false;
 export const enableSuspenseAvoidThisFallback = false;
 
 export const enableCPUSuspense = __EXPERIMENTAL__;
-
-export const enableHydrationLaneScheduling = true;
 
 // Test this at Meta before enabling.
 export const enableNoCloningMemoCache = false;
@@ -266,11 +265,6 @@ export const enableProfilerCommitHooks = __PROFILE__;
 
 // Phase param passed to onRender callback differentiates between an "update" and a "cascading-update".
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
-
-// Adds verbose console logging for e.g. state updates, suspense, and work loop
-// stuff. Intended to enable React core members to more easily debug scheduling
-// issues in DEV builds.
-export const enableDebugTracing = false;
 
 export const enableAsyncDebugInfo = __EXPERIMENTAL__;
 

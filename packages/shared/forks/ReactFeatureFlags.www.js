@@ -19,7 +19,6 @@ export const {
   disableDefaultPropsExceptForClasses,
   disableLegacyContextForFunctionComponents,
   disableSchedulerTimeoutInWorkLoop,
-  enableDebugTracing,
   enableDeferRootSchedulingToMicrotask,
   enableDO_NOT_USE_disableStrictPassiveEffect,
   enableHiddenSubtreeInsertionEffectCleanup,
@@ -70,7 +69,6 @@ export const enableSchedulingProfiler: boolean =
 export const disableLegacyContext = __EXPERIMENTAL__;
 export const enableGetInspectorDataForInstanceInProduction = false;
 
-export const enableCache = true;
 export const enableLegacyCache = true;
 
 export const enableAsyncIterableChildren = false;

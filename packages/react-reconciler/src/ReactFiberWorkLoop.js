@@ -29,10 +29,8 @@ import {
   enableProfilerTimer,
   enableProfilerCommitHooks,
   enableProfilerNestedUpdatePhase,
-  enableDebugTracing,
   enableSchedulingProfiler,
   enableUpdaterTracking,
-  enableCache,
   enableTransitionTracing,
   useModernStrictMode,
   disableLegacyContext,
@@ -55,16 +53,6 @@ import {
   NormalPriority as NormalSchedulerPriority,
   IdlePriority as IdleSchedulerPriority,
 } from './Scheduler';
-import {
-  logCommitStarted,
-  logCommitStopped,
-  logLayoutEffectsStarted,
-  logLayoutEffectsStopped,
-  logPassiveEffectsStarted,
-  logPassiveEffectsStopped,
-  logRenderStarted,
-  logRenderStopped,
-} from './DebugTracing';
 import {
   logBlockingStart,
   logTransitionStart,
@@ -1035,7 +1023,7 @@ export function performWorkOnRoot(
         if (errorRetryLanes !== NoLanes) {
           if (enableProfilerTimer && enableComponentPerformanceTrack) {
             setCurrentTrackFromLanes(lanes);
-            logErroredRenderPhase(renderStartTime, renderEndTime);
+            logErroredRenderPhase(renderStartTime, renderEndTime, lanes);
             finalizeRender(lanes, renderEndTime);
           }
           lanes = errorRetryLanes;
@@ -1066,7 +1054,7 @@ export function performWorkOnRoot(
       if (exitStatus === RootFatalErrored) {
         if (enableProfilerTimer && enableComponentPerformanceTrack) {
           setCurrentTrackFromLanes(lanes);
-          logErroredRenderPhase(renderStartTime, renderEndTime);
+          logErroredRenderPhase(renderStartTime, renderEndTime, lanes);
           finalizeRender(lanes, renderEndTime);
         }
         prepareFreshStack(root, NoLanes);
@@ -1207,7 +1195,7 @@ function finishConcurrentRender(
       // until we receive more data.
       if (enableProfilerTimer && enableComponentPerformanceTrack) {
         setCurrentTrackFromLanes(lanes);
-        logSuspendedRenderPhase(renderStartTime, renderEndTime);
+        logSuspendedRenderPhase(renderStartTime, renderEndTime, lanes);
         finalizeRender(lanes, renderEndTime);
         trackSuspendedTime(lanes, renderEndTime);
       }
@@ -1757,9 +1745,17 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
         // then this is considered a prewarm and not an interrupted render because
         // we couldn't have shown anything anyway so it's not a bad thing that we
         // got interrupted.
-        logSuspendedRenderPhase(previousRenderStartTime, renderStartTime);
+        logSuspendedRenderPhase(
+          previousRenderStartTime,
+          renderStartTime,
+          lanes,
+        );
       } else {
-        logInterruptedRenderPhase(previousRenderStartTime, renderStartTime);
+        logInterruptedRenderPhase(
+          previousRenderStartTime,
+          renderStartTime,
+          lanes,
+        );
       }
       finalizeRender(workInProgressRootRenderLanes, renderStartTime);
     }
@@ -1783,6 +1779,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
             : clampedUpdateTime >= 0
               ? clampedUpdateTime
               : renderStartTime,
+          lanes,
         );
       }
       logBlockingStart(
@@ -1791,6 +1788,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
         blockingEventType,
         blockingEventIsRepeat,
         renderStartTime,
+        lanes,
       );
       clearBlockingTimers();
     }
@@ -1817,6 +1815,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
             : clampedUpdateTime >= 0
               ? clampedUpdateTime
               : renderStartTime,
+          lanes,
         );
       }
       logTransitionStart(
@@ -2113,19 +2112,13 @@ function popDispatcher(prevDispatcher: any) {
 }
 
 function pushAsyncDispatcher() {
-  if (enableCache || __DEV__) {
-    const prevAsyncDispatcher = ReactSharedInternals.A;
-    ReactSharedInternals.A = DefaultAsyncDispatcher;
-    return prevAsyncDispatcher;
-  } else {
-    return null;
-  }
+  const prevAsyncDispatcher = ReactSharedInternals.A;
+  ReactSharedInternals.A = DefaultAsyncDispatcher;
+  return prevAsyncDispatcher;
 }
 
 function popAsyncDispatcher(prevAsyncDispatcher: any) {
-  if (enableCache || __DEV__) {
-    ReactSharedInternals.A = prevAsyncDispatcher;
-  }
+  ReactSharedInternals.A = prevAsyncDispatcher;
 }
 
 export function markCommitTimeOfFallback() {
@@ -2249,12 +2242,6 @@ function renderRootSync(
     prepareFreshStack(root, lanes);
   }
 
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      logRenderStarted(lanes);
-    }
-  }
-
   if (enableSchedulingProfiler) {
     markRenderStarted(lanes);
   }
@@ -2349,12 +2336,6 @@ function renderRootSync(
   popDispatcher(prevDispatcher);
   popAsyncDispatcher(prevAsyncDispatcher);
 
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      logRenderStopped();
-    }
-  }
-
   if (enableSchedulingProfiler) {
     markRenderStopped();
   }
@@ -2420,12 +2401,6 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
     // If we were previously in prerendering mode, check if we received any new
     // data during an interleaved event.
     workInProgressRootIsPrerendering = checkIfRootIsPrerendering(root, lanes);
-  }
-
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      logRenderStarted(lanes);
-    }
   }
 
   if (enableSchedulingProfiler) {
@@ -2639,12 +2614,6 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
   popDispatcher(prevDispatcher);
   popAsyncDispatcher(prevAsyncDispatcher);
   executionContext = prevExecutionContext;
-
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      logRenderStopped();
-    }
-  }
 
   // Check if the tree has completed.
   if (workInProgress !== null) {
@@ -3202,15 +3171,13 @@ function commitRootImpl(
     // Log the previous render phase once we commit. I.e. we weren't interrupted.
     setCurrentTrackFromLanes(lanes);
     if (exitStatus === RootErrored) {
-      logErroredRenderPhase(completedRenderStartTime, completedRenderEndTime);
+      logErroredRenderPhase(
+        completedRenderStartTime,
+        completedRenderEndTime,
+        lanes,
+      );
     } else {
-      logRenderPhase(completedRenderStartTime, completedRenderEndTime);
-    }
-  }
-
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      logCommitStarted(lanes);
+      logRenderPhase(completedRenderStartTime, completedRenderEndTime, lanes);
     }
   }
 
@@ -3219,16 +3186,9 @@ function commitRootImpl(
   }
 
   if (finishedWork === null) {
-    if (__DEV__) {
-      if (enableDebugTracing) {
-        logCommitStopped();
-      }
-    }
-
     if (enableSchedulingProfiler) {
       markCommitStopped();
     }
-
     return null;
   } else {
     if (__DEV__) {
@@ -3394,21 +3354,10 @@ function commitRootImpl(
     // The next phase is the layout phase, where we call effects that read
     // the host tree after it's been mutated. The idiomatic use case for this is
     // layout, but class component lifecycles also fire here for legacy reasons.
-    if (__DEV__) {
-      if (enableDebugTracing) {
-        logLayoutEffectsStarted(lanes);
-      }
-    }
     if (enableSchedulingProfiler) {
       markLayoutEffectsStarted(lanes);
     }
     commitLayoutEffects(finishedWork, root, lanes);
-    if (__DEV__) {
-      if (enableDebugTracing) {
-        logLayoutEffectsStopped();
-      }
-    }
-
     if (enableSchedulingProfiler) {
       markLayoutEffectsStopped();
     }
@@ -3574,12 +3523,6 @@ function commitRootImpl(
   // If layout work was scheduled, flush it now.
   flushSyncWorkOnAllRoots();
 
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      logCommitStopped();
-    }
-  }
-
   if (enableSchedulingProfiler) {
     markCommitStopped();
   }
@@ -3637,16 +3580,14 @@ function makeErrorInfo(componentStack: ?string) {
 }
 
 function releaseRootPooledCache(root: FiberRoot, remainingLanes: Lanes) {
-  if (enableCache) {
-    const pooledCacheLanes = (root.pooledCacheLanes &= remainingLanes);
-    if (pooledCacheLanes === NoLanes) {
-      // None of the remaining work relies on the cache pool. Clear it so
-      // subsequent requests get a new cache
-      const pooledCache = root.pooledCache;
-      if (pooledCache != null) {
-        root.pooledCache = null;
-        releaseCache(pooledCache);
-      }
+  const pooledCacheLanes = (root.pooledCacheLanes &= remainingLanes);
+  if (pooledCacheLanes === NoLanes) {
+    // None of the remaining work relies on the cache pool. Clear it so
+    // subsequent requests get a new cache
+    const pooledCache = root.pooledCache;
+    if (pooledCache != null) {
+      root.pooledCache = null;
+      releaseCache(pooledCache);
     }
   }
 }
@@ -3720,10 +3661,6 @@ function flushPassiveEffectsImpl(wasDelayedCommit: void | boolean) {
   if (__DEV__) {
     isFlushingPassiveEffects = true;
     didScheduleUpdateDuringPassiveEffects = false;
-
-    if (enableDebugTracing) {
-      logPassiveEffectsStarted(lanes);
-    }
   }
 
   let passiveEffectStartTime = 0;
@@ -3751,12 +3688,6 @@ function flushPassiveEffectsImpl(wasDelayedCommit: void | boolean) {
     transitions,
     pendingPassiveEffectsRenderEndTime,
   );
-
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      logPassiveEffectsStopped();
-    }
-  }
 
   if (enableSchedulingProfiler) {
     markPassiveEffectsStopped();
