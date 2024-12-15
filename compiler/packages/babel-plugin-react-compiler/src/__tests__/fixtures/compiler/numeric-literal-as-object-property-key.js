@@ -2,5 +2,5 @@ function Test() {
   const obj = {
     21: 'dimaMachina'
   }
-  return <div />
+  return <div>{obj[21]}</div>
 }

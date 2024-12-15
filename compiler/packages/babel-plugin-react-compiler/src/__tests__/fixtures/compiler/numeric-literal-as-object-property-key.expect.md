@@ -6,7 +6,7 @@ function Test() {
   const obj = {
     21: 'dimaMachina'
   }
-  return <div />
+  return <div>{obj[21]}</div>
 }
 
 ```
@@ -19,7 +19,9 @@ function Test() {
   const $ = _c(1);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = <div />;
+    const obj = { 21: "dimaMachina" };
+
+    t0 = <div>{obj[21]}</div>;
     $[0] = t0;
   } else {
     t0 = $[0];
