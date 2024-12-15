@@ -20,7 +20,6 @@ import {
 import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
-  enableDebugTracing,
   enableSchedulingProfiler,
   enableLazyContextPropagation,
   disableDefaultPropsExceptForClasses,
@@ -35,12 +34,7 @@ import assign from 'shared/assign';
 import isArray from 'shared/isArray';
 import {REACT_CONTEXT_TYPE, REACT_CONSUMER_TYPE} from 'shared/ReactSymbols';
 
-import {
-  DebugTracingMode,
-  NoMode,
-  StrictLegacyMode,
-  StrictEffectsMode,
-} from './ReactTypeOfMode';
+import {NoMode, StrictLegacyMode, StrictEffectsMode} from './ReactTypeOfMode';
 
 import {
   enqueueUpdate,
@@ -65,7 +59,6 @@ import {
 } from './ReactFiberContext';
 import {readContext, checkIfContextChanged} from './ReactFiberNewContext';
 import {requestUpdateLane, scheduleUpdateOnFiber} from './ReactFiberWorkLoop';
-import {logForceUpdateScheduled, logStateUpdateScheduled} from './DebugTracing';
 import {
   markForceUpdateScheduled,
   markStateUpdateScheduled,
@@ -199,15 +192,6 @@ const classComponentUpdater = {
       entangleTransitions(root, fiber, lane);
     }
 
-    if (__DEV__) {
-      if (enableDebugTracing) {
-        if (fiber.mode & DebugTracingMode) {
-          const name = getComponentNameFromFiber(fiber) || 'Unknown';
-          logStateUpdateScheduled(name, lane, payload);
-        }
-      }
-    }
-
     if (enableSchedulingProfiler) {
       markStateUpdateScheduled(fiber, lane);
     }
@@ -234,15 +218,6 @@ const classComponentUpdater = {
       entangleTransitions(root, fiber, lane);
     }
 
-    if (__DEV__) {
-      if (enableDebugTracing) {
-        if (fiber.mode & DebugTracingMode) {
-          const name = getComponentNameFromFiber(fiber) || 'Unknown';
-          logStateUpdateScheduled(name, lane, payload);
-        }
-      }
-    }
-
     if (enableSchedulingProfiler) {
       markStateUpdateScheduled(fiber, lane);
     }
@@ -267,15 +242,6 @@ const classComponentUpdater = {
       startUpdateTimerByLane(lane);
       scheduleUpdateOnFiber(root, fiber, lane);
       entangleTransitions(root, fiber, lane);
-    }
-
-    if (__DEV__) {
-      if (enableDebugTracing) {
-        if (fiber.mode & DebugTracingMode) {
-          const name = getComponentNameFromFiber(fiber) || 'Unknown';
-          logForceUpdateScheduled(name, lane);
-        }
-      }
     }
 
     if (enableSchedulingProfiler) {

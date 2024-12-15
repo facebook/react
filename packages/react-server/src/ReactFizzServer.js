@@ -134,7 +134,6 @@ import {
   REACT_LAZY_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
-  REACT_DEBUG_TRACING_MODE_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_PROFILER_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
@@ -2136,7 +2135,6 @@ function renderElement(
     // www build. As a migration step, we could add a special prop to Offscreen
     // that simulates the old behavior (no hiding, no change to effects).
     case REACT_LEGACY_HIDDEN_TYPE:
-    case REACT_DEBUG_TRACING_MODE_TYPE:
     case REACT_STRICT_MODE_TYPE:
     case REACT_PROFILER_TYPE:
     case REACT_FRAGMENT_TYPE: {
