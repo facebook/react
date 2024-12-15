@@ -77,7 +77,6 @@ export const enableLegacyFBSupport = false;
 // likely to include in an upcoming release.
 // -----------------------------------------------------------------------------
 
-export const enableCache = true;
 export const enableLegacyCache = __EXPERIMENTAL__;
 
 export const enableAsyncIterableChildren = __EXPERIMENTAL__;

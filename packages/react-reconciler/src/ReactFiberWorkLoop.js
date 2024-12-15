@@ -31,7 +31,6 @@ import {
   enableProfilerNestedUpdatePhase,
   enableSchedulingProfiler,
   enableUpdaterTracking,
-  enableCache,
   enableTransitionTracing,
   useModernStrictMode,
   disableLegacyContext,
@@ -2113,19 +2112,13 @@ function popDispatcher(prevDispatcher: any) {
 }
 
 function pushAsyncDispatcher() {
-  if (enableCache || __DEV__) {
-    const prevAsyncDispatcher = ReactSharedInternals.A;
-    ReactSharedInternals.A = DefaultAsyncDispatcher;
-    return prevAsyncDispatcher;
-  } else {
-    return null;
-  }
+  const prevAsyncDispatcher = ReactSharedInternals.A;
+  ReactSharedInternals.A = DefaultAsyncDispatcher;
+  return prevAsyncDispatcher;
 }
 
 function popAsyncDispatcher(prevAsyncDispatcher: any) {
-  if (enableCache || __DEV__) {
-    ReactSharedInternals.A = prevAsyncDispatcher;
-  }
+  ReactSharedInternals.A = prevAsyncDispatcher;
 }
 
 export function markCommitTimeOfFallback() {
@@ -3587,16 +3580,14 @@ function makeErrorInfo(componentStack: ?string) {
 }
 
 function releaseRootPooledCache(root: FiberRoot, remainingLanes: Lanes) {
-  if (enableCache) {
-    const pooledCacheLanes = (root.pooledCacheLanes &= remainingLanes);
-    if (pooledCacheLanes === NoLanes) {
-      // None of the remaining work relies on the cache pool. Clear it so
-      // subsequent requests get a new cache
-      const pooledCache = root.pooledCache;
-      if (pooledCache != null) {
-        root.pooledCache = null;
-        releaseCache(pooledCache);
-      }
+  const pooledCacheLanes = (root.pooledCacheLanes &= remainingLanes);
+  if (pooledCacheLanes === NoLanes) {
+    // None of the remaining work relies on the cache pool. Clear it so
+    // subsequent requests get a new cache
+    const pooledCache = root.pooledCache;
+    if (pooledCache != null) {
+      root.pooledCache = null;
+      releaseCache(pooledCache);
     }
   }
 }

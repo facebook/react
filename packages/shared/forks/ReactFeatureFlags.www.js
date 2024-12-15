@@ -69,7 +69,6 @@ export const enableSchedulingProfiler: boolean =
 export const disableLegacyContext = __EXPERIMENTAL__;
 export const enableGetInspectorDataForInstanceInProduction = false;
 
-export const enableCache = true;
 export const enableLegacyCache = true;
 
 export const enableAsyncIterableChildren = false;

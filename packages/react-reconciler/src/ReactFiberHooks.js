@@ -36,7 +36,6 @@ import {
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   enableSchedulingProfiler,
-  enableCache,
   enableLazyContextPropagation,
   enableTransitionTracing,
   enableUseEffectEventHook,
@@ -3591,9 +3590,6 @@ function updateRefresh(): any {
 }
 
 function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T): void {
-  if (!enableCache) {
-    return;
-  }
   // TODO: Does Cache work in legacy mode? Should decide and write a test.
   // TODO: Consider warning if the refresh is at discrete priority, or if we
   // otherwise suspect that it wasn't batched properly.
@@ -3954,10 +3950,8 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useActionState: throwInvalidHookError,
   useOptimistic: throwInvalidHookError,
   useMemoCache: throwInvalidHookError,
+  useCacheRefresh: throwInvalidHookError,
 };
-if (enableCache) {
-  (ContextOnlyDispatcher: Dispatcher).useCacheRefresh = throwInvalidHookError;
-}
 if (enableUseEffectEventHook) {
   (ContextOnlyDispatcher: Dispatcher).useEffectEvent = throwInvalidHookError;
 }
@@ -3993,10 +3987,8 @@ const HooksDispatcherOnMount: Dispatcher = {
   useActionState: mountActionState,
   useOptimistic: mountOptimistic,
   useMemoCache,
+  useCacheRefresh: mountRefresh,
 };
-if (enableCache) {
-  (HooksDispatcherOnMount: Dispatcher).useCacheRefresh = mountRefresh;
-}
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnMount: Dispatcher).useEffectEvent = mountEvent;
 }
@@ -4032,10 +4024,8 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useActionState: updateActionState,
   useOptimistic: updateOptimistic,
   useMemoCache,
+  useCacheRefresh: updateRefresh,
 };
-if (enableCache) {
-  (HooksDispatcherOnUpdate: Dispatcher).useCacheRefresh = updateRefresh;
-}
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnUpdate: Dispatcher).useEffectEvent = updateEvent;
 }
@@ -4072,10 +4062,8 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useActionState: rerenderActionState,
   useOptimistic: rerenderOptimistic,
   useMemoCache,
+  useCacheRefresh: updateRefresh,
 };
-if (enableCache) {
-  (HooksDispatcherOnRerender: Dispatcher).useCacheRefresh = updateRefresh;
-}
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnRerender: Dispatcher).useEffectEvent = updateEvent;
 }
@@ -4271,15 +4259,12 @@ if (__DEV__) {
     },
     useHostTransitionStatus,
     useMemoCache,
+    useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
+      mountHookTypesDev();
+      return mountRefresh();
+    },
   };
-  if (enableCache) {
-    (HooksDispatcherOnMountInDEV: Dispatcher).useCacheRefresh =
-      function useCacheRefresh() {
-        currentHookNameInDev = 'useCacheRefresh';
-        mountHookTypesDev();
-        return mountRefresh();
-      };
-  }
   if (enableUseEffectEventHook) {
     (HooksDispatcherOnMountInDEV: Dispatcher).useEffectEvent =
       function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
@@ -4473,15 +4458,12 @@ if (__DEV__) {
     },
     useHostTransitionStatus,
     useMemoCache,
+    useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
+      updateHookTypesDev();
+      return mountRefresh();
+    },
   };
-  if (enableCache) {
-    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useCacheRefresh =
-      function useCacheRefresh() {
-        currentHookNameInDev = 'useCacheRefresh';
-        updateHookTypesDev();
-        return mountRefresh();
-      };
-  }
   if (enableUseEffectEventHook) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useEffectEvent =
       function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
@@ -4674,15 +4656,12 @@ if (__DEV__) {
     },
     useHostTransitionStatus,
     useMemoCache,
+    useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
+      updateHookTypesDev();
+      return updateRefresh();
+    },
   };
-  if (enableCache) {
-    (HooksDispatcherOnUpdateInDEV: Dispatcher).useCacheRefresh =
-      function useCacheRefresh() {
-        currentHookNameInDev = 'useCacheRefresh';
-        updateHookTypesDev();
-        return updateRefresh();
-      };
-  }
   if (enableUseEffectEventHook) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useEffectEvent =
       function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
@@ -4875,15 +4854,12 @@ if (__DEV__) {
     },
     useHostTransitionStatus,
     useMemoCache,
+    useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
+      updateHookTypesDev();
+      return updateRefresh();
+    },
   };
-  if (enableCache) {
-    (HooksDispatcherOnRerenderInDEV: Dispatcher).useCacheRefresh =
-      function useCacheRefresh() {
-        currentHookNameInDev = 'useCacheRefresh';
-        updateHookTypesDev();
-        return updateRefresh();
-      };
-  }
   if (enableUseEffectEventHook) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useEffectEvent =
       function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
@@ -5100,15 +5076,12 @@ if (__DEV__) {
       return useMemoCache(size);
     },
     useHostTransitionStatus,
+    useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
+      mountHookTypesDev();
+      return mountRefresh();
+    },
   };
-  if (enableCache) {
-    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useCacheRefresh =
-      function useCacheRefresh() {
-        currentHookNameInDev = 'useCacheRefresh';
-        mountHookTypesDev();
-        return mountRefresh();
-      };
-  }
   if (enableUseEffectEventHook) {
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useEffectEvent =
       function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
@@ -5328,15 +5301,12 @@ if (__DEV__) {
       return useMemoCache(size);
     },
     useHostTransitionStatus,
+    useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
+      updateHookTypesDev();
+      return updateRefresh();
+    },
   };
-  if (enableCache) {
-    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useCacheRefresh =
-      function useCacheRefresh() {
-        currentHookNameInDev = 'useCacheRefresh';
-        updateHookTypesDev();
-        return updateRefresh();
-      };
-  }
   if (enableUseEffectEventHook) {
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useEffectEvent =
       function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
@@ -5556,15 +5526,12 @@ if (__DEV__) {
       return useMemoCache(size);
     },
     useHostTransitionStatus,
+    useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
+      updateHookTypesDev();
+      return updateRefresh();
+    },
   };
-  if (enableCache) {
-    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useCacheRefresh =
-      function useCacheRefresh() {
-        currentHookNameInDev = 'useCacheRefresh';
-        updateHookTypesDev();
-        return updateRefresh();
-      };
-  }
   if (enableUseEffectEventHook) {
     (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useEffectEvent =
       function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(

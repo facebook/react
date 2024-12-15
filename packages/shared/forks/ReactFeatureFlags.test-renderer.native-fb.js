@@ -23,7 +23,6 @@ export const disableSchedulerTimeoutInWorkLoop = false;
 export const disableTextareaChildren = false;
 export const enableAsyncDebugInfo = false;
 export const enableAsyncIterableChildren = false;
-export const enableCache = true;
 export const enableCPUSuspense = true;
 export const enableCreateEventHandleAPI = false;
 export const enableDeferRootSchedulingToMicrotask = true;

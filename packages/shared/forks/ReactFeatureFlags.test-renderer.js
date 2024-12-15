@@ -18,7 +18,6 @@ export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableComponentPerformanceTrack = false;
 export const enableUpdaterTracking = false;
-export const enableCache = true;
 export const enableLegacyCache = __EXPERIMENTAL__;
 export const enableAsyncIterableChildren = false;
 export const enableTaint = true;
