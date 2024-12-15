@@ -2888,6 +2888,7 @@ function commitPassiveMountOnFiber(
               finishedWork,
               committedLanes,
               committedTransitions,
+              endTime,
             );
           } else {
             // Legacy Mode: Fire the effects even if the tree is hidden.
@@ -2926,6 +2927,7 @@ function commitPassiveMountOnFiber(
             committedLanes,
             committedTransitions,
             includeWorkInProgressEffects,
+            endTime,
           );
         }
       }
@@ -3005,6 +3007,7 @@ function recursivelyTraverseReconnectPassiveEffects(
   committedLanes: Lanes,
   committedTransitions: Array<Transition> | null,
   includeWorkInProgressEffects: boolean,
+  endTime: number,
 ) {
   // This function visits both newly finished work and nodes that were re-used
   // from a previously committed tree. We cannot check non-static flags if the
@@ -3016,14 +3019,30 @@ function recursivelyTraverseReconnectPassiveEffects(
   // TODO (Offscreen) Check: flags & (RefStatic | LayoutStatic)
   let child = parentFiber.child;
   while (child !== null) {
-    reconnectPassiveEffects(
-      finishedRoot,
-      child,
-      committedLanes,
-      committedTransitions,
-      childShouldIncludeWorkInProgressEffects,
-    );
-    child = child.sibling;
+    if (enableProfilerTimer && enableComponentPerformanceTrack) {
+      const nextSibling = child.sibling;
+      reconnectPassiveEffects(
+        finishedRoot,
+        child,
+        committedLanes,
+        committedTransitions,
+        childShouldIncludeWorkInProgressEffects,
+        nextSibling !== null
+          ? ((nextSibling.actualStartTime: any): number)
+          : endTime,
+      );
+      child = nextSibling;
+    } else {
+      reconnectPassiveEffects(
+        finishedRoot,
+        child,
+        committedLanes,
+        committedTransitions,
+        childShouldIncludeWorkInProgressEffects,
+        endTime,
+      );
+      child = child.sibling;
+    }
   }
 }
 
@@ -3036,8 +3055,27 @@ export function reconnectPassiveEffects(
   // from a previously committed tree. We cannot check non-static flags if the
   // node was reused.
   includeWorkInProgressEffects: boolean,
+  endTime: number, // Profiling-only. The start time of the next Fiber or root completion.
 ) {
   const prevEffectStart = pushComponentEffectStart();
+
+  // If this component rendered in Profiling mode (DEV or in Profiler component) then log its
+  // render time. We do this after the fact in the passive effect to avoid the overhead of this
+  // getting in the way of the render characteristics and avoid the overhead of unwinding
+  // uncommitted renders.
+  if (
+    enableProfilerTimer &&
+    enableComponentPerformanceTrack &&
+    (finishedWork.mode & ProfileMode) !== NoMode &&
+    ((finishedWork.actualStartTime: any): number) > 0 &&
+    (finishedWork.flags & PerformedWork) !== NoFlags
+  ) {
+    logComponentRender(
+      finishedWork,
+      ((finishedWork.actualStartTime: any): number),
+      endTime,
+    );
+  }
 
   const flags = finishedWork.flags;
   switch (finishedWork.tag) {
@@ -3050,6 +3088,7 @@ export function reconnectPassiveEffects(
         committedLanes,
         committedTransitions,
         includeWorkInProgressEffects,
+        endTime,
       );
       // TODO: Check for PassiveStatic flag
       commitHookPassiveMountEffects(finishedWork, HookPassive);
@@ -3069,6 +3108,7 @@ export function reconnectPassiveEffects(
           committedLanes,
           committedTransitions,
           includeWorkInProgressEffects,
+          endTime,
         );
 
         if (includeWorkInProgressEffects && flags & Passive) {
@@ -3095,6 +3135,7 @@ export function reconnectPassiveEffects(
             committedLanes,
             committedTransitions,
             includeWorkInProgressEffects,
+            endTime,
           );
         } else {
           if (disableLegacyMode || finishedWork.mode & ConcurrentMode) {
@@ -3108,6 +3149,7 @@ export function reconnectPassiveEffects(
               finishedWork,
               committedLanes,
               committedTransitions,
+              endTime,
             );
           } else {
             // Legacy Mode: Fire the effects even if the tree is hidden.
@@ -3118,6 +3160,7 @@ export function reconnectPassiveEffects(
               committedLanes,
               committedTransitions,
               includeWorkInProgressEffects,
+              endTime,
             );
           }
         }
@@ -3137,6 +3180,7 @@ export function reconnectPassiveEffects(
           committedLanes,
           committedTransitions,
           includeWorkInProgressEffects,
+          endTime,
         );
       }
 
@@ -3154,6 +3198,7 @@ export function reconnectPassiveEffects(
         committedLanes,
         committedTransitions,
         includeWorkInProgressEffects,
+        endTime,
       );
       if (includeWorkInProgressEffects && flags & Passive) {
         // TODO: Pass `current` as argument to this function
@@ -3170,6 +3215,7 @@ export function reconnectPassiveEffects(
           committedLanes,
           committedTransitions,
           includeWorkInProgressEffects,
+          endTime,
         );
         if (includeWorkInProgressEffects && flags & Passive) {
           commitTracingMarkerPassiveMountEffect(finishedWork);
@@ -3185,6 +3231,7 @@ export function reconnectPassiveEffects(
         committedLanes,
         committedTransitions,
         includeWorkInProgressEffects,
+        endTime,
       );
       break;
     }
@@ -3215,6 +3262,7 @@ function recursivelyTraverseAtomicPassiveEffects(
   parentFiber: Fiber,
   committedLanes: Lanes,
   committedTransitions: Array<Transition> | null,
+  endTime: number, // Profiling-only. The start time of the next Fiber or root completion.
 ) {
   // "Atomic" effects are ones that need to fire on every commit, even during
   // pre-rendering. We call this function when traversing a hidden tree whose
@@ -3223,13 +3271,28 @@ function recursivelyTraverseAtomicPassiveEffects(
   if (parentFiber.subtreeFlags & PassiveMask) {
     let child = parentFiber.child;
     while (child !== null) {
-      commitAtomicPassiveEffects(
-        finishedRoot,
-        child,
-        committedLanes,
-        committedTransitions,
-      );
-      child = child.sibling;
+      if (enableProfilerTimer && enableComponentPerformanceTrack) {
+        const nextSibling = child.sibling;
+        commitAtomicPassiveEffects(
+          finishedRoot,
+          child,
+          committedLanes,
+          committedTransitions,
+          nextSibling !== null
+            ? ((nextSibling.actualStartTime: any): number)
+            : endTime,
+        );
+        child = nextSibling;
+      } else {
+        commitAtomicPassiveEffects(
+          finishedRoot,
+          child,
+          committedLanes,
+          committedTransitions,
+          endTime,
+        );
+        child = child.sibling;
+      }
     }
   }
 }
@@ -3239,7 +3302,24 @@ function commitAtomicPassiveEffects(
   finishedWork: Fiber,
   committedLanes: Lanes,
   committedTransitions: Array<Transition> | null,
+  endTime: number, // Profiling-only. The start time of the next Fiber or root completion.
 ) {
+  // If this component rendered in Profiling mode (DEV or in Profiler component) then log its
+  // render time. A render can happen even if the subtree is offscreen.
+  if (
+    enableProfilerTimer &&
+    enableComponentPerformanceTrack &&
+    (finishedWork.mode & ProfileMode) !== NoMode &&
+    ((finishedWork.actualStartTime: any): number) > 0 &&
+    (finishedWork.flags & PerformedWork) !== NoFlags
+  ) {
+    logComponentRender(
+      finishedWork,
+      ((finishedWork.actualStartTime: any): number),
+      endTime,
+    );
+  }
+
   // "Atomic" effects are ones that need to fire on every commit, even during
   // pre-rendering. We call this function when traversing a hidden tree whose
   // regular effects are currently disconnected.
@@ -3251,6 +3331,7 @@ function commitAtomicPassiveEffects(
         finishedWork,
         committedLanes,
         committedTransitions,
+        endTime,
       );
       if (flags & Passive) {
         // TODO: Pass `current` as argument to this function
@@ -3266,6 +3347,7 @@ function commitAtomicPassiveEffects(
         finishedWork,
         committedLanes,
         committedTransitions,
+        endTime,
       );
       if (flags & Passive) {
         // TODO: Pass `current` as argument to this function
@@ -3280,6 +3362,7 @@ function commitAtomicPassiveEffects(
         finishedWork,
         committedLanes,
         committedTransitions,
+        endTime,
       );
       break;
     }

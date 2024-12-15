@@ -4107,7 +4107,7 @@ function doubleInvokeEffectsOnFiber(
     }
     reappearLayoutEffects(root, fiber.alternate, fiber, false);
     if (shouldDoubleInvokePassiveEffects) {
-      reconnectPassiveEffects(root, fiber, NoLanes, null, false);
+      reconnectPassiveEffects(root, fiber, NoLanes, null, false, 0);
     }
   } finally {
     setIsStrictModeForDevtools(false);
