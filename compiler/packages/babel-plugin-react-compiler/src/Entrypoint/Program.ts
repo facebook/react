@@ -963,6 +963,10 @@ function returnsNonNode(
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
   >,
 ): boolean {
+  if (node.type === 'ArrowFunctionExpression' && node.node.body.type === 'JSXElement') {
+    return false
+  }
+
   let hasReturn = false;
   let returnsNonNode = false;
 
