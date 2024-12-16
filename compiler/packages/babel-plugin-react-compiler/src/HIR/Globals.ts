@@ -89,6 +89,21 @@ const UNTYPED_GLOBALS: Set<string> = new Set([
 
 const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
   [
+    'Object',
+    addObject(DEFAULT_SHAPES, 'Object', [
+      [
+        'keys',
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [Effect.Read],
+          restParam: null,
+          returnType: {kind: 'Object', shapeId: BuiltInArrayId},
+          calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Mutable,
+        }),
+      ],
+    ]),
+  ],
+  [
     'Array',
     addObject(DEFAULT_SHAPES, 'Array', [
       [
