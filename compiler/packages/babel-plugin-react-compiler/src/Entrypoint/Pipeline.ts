@@ -221,7 +221,7 @@ function runWithEnvironment(
   }
 
   optimizePropsMethodCalls(hir);
-  yield log({kind: 'hir', name: 'OptimizePropsMethodCalls', value: hir});
+  log({kind: 'hir', name: 'OptimizePropsMethodCalls', value: hir});
 
   analyseFunctions(hir);
   log({kind: 'hir', name: 'AnalyseFunctions', value: hir});
