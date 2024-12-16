@@ -12,7 +12,7 @@
 let React;
 let ReactNoop;
 
-describe('arity', () => {
+describe('useState', () => {
   beforeEach(() => {
     jest.resetModules();
 
@@ -20,7 +20,7 @@ describe('arity', () => {
     ReactNoop = require('react-noop-renderer');
   });
 
-  it("ensure useState setter's arity is correct", () => {
+  it('ensure arity is correct', () => {
     expect(React.useState).toBeDefined();
     expect(React.useState.length).toBe(1);
 
@@ -33,16 +33,5 @@ describe('arity', () => {
 
     ReactNoop.render(<Component />);
 
-  });
-
-  it("ensure useReducer setter's arity is correct", () => {
-    function Component() {
-      const [, dispatch] = React.useReducer(() => 'Halo!');
-
-      expect(dispatch.length).toBe(1);
-      return null;
-    }
-
-    ReactNoop.render(<Component />);
   });
 });
