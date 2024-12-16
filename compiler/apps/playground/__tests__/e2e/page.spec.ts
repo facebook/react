@@ -55,7 +55,7 @@ const TestComponent2 = ({ x }) => {
 };`,
   },
   {
-    name: 'function-scope-beats-module-scope',
+    name: 'todo-function-scope-does-not-beat-module-scope',
     input: `
 'use no memo';
 function TestComponent({ x }) {
