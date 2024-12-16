@@ -358,6 +358,7 @@ class Context {
 
   #temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>;
   #temporariesUsedOutsideScope: ReadonlySet<DeclarationId>;
+  #processedInstrsInOptional: ReadonlySet<Instruction | Terminal>;
 
   /**
    * Tracks the traversal state. See Context.declare for explanation of why this
@@ -368,9 +369,11 @@ class Context {
   constructor(
     temporariesUsedOutsideScope: ReadonlySet<DeclarationId>,
     temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
+    processedInstrsInOptional: ReadonlySet<Instruction | Terminal>,
   ) {
     this.#temporariesUsedOutsideScope = temporariesUsedOutsideScope;
     this.#temporaries = temporaries;
+    this.#processedInstrsInOptional = processedInstrsInOptional;
   }
 
   enterScope(scope: ReactiveScope): void {
@@ -574,22 +577,49 @@ class Context {
       currentScope.reassignments.add(place.identifier);
     }
   }
+  enterInnerFn<T>(cb: () => T): T {
+    const wasInInnerFn = this.inInnerFn;
+    this.inInnerFn = true;
+    const result = cb();
+    this.inInnerFn = wasInInnerFn;
+    return result;
+  }
+
+  /**
+   * Skip dependencies that are subexpressions of other dependencies. e.g. if a
+   * dependency is tracked in the temporaries sidemap, it can be added at
+   * site-of-use
+   */
+  isDeferredDependency(
+    instr:
+      | {kind: HIRValue.Instruction; value: Instruction}
+      | {kind: HIRValue.Terminal; value: Terminal},
+  ): boolean {
+    return (
+      this.#processedInstrsInOptional.has(instr.value) ||
+      (instr.kind === HIRValue.Instruction &&
+        this.#temporaries.has(instr.value.lvalue.identifier.id))
+    );
+  }
+}
+enum HIRValue {
+  Instruction = 1,
+  Terminal,
 }
 
 function handleInstruction(instr: Instruction, context: Context): void {
   const {id, value, lvalue} = instr;
-  if (value.kind === 'LoadLocal') {
-    if (
-      value.place.identifier.name === null ||
-      lvalue.identifier.name !== null ||
-      context.isUsedOutsideDeclaringScope(lvalue)
-    ) {
-      context.visitOperand(value.place);
-    }
-  } else if (value.kind === 'PropertyLoad') {
-    if (context.isUsedOutsideDeclaringScope(lvalue)) {
-      context.visitProperty(value.object, value.property, false);
-    }
+  context.declare(lvalue.identifier, {
+    id,
+    scope: context.currentScope,
+  });
+  if (
+    context.isDeferredDependency({kind: HIRValue.Instruction, value: instr})
+  ) {
+    return;
+  }
+  if (value.kind === 'PropertyLoad') {
+    context.visitProperty(value.object, value.property, false);
   } else if (value.kind === 'StoreLocal') {
     context.visitOperand(value.value);
     if (value.lvalue.kind === InstructionKind.Reassign) {
@@ -632,11 +662,6 @@ function handleInstruction(instr: Instruction, context: Context): void {
       context.visitOperand(operand);
     }
   }
-
-  context.declare(lvalue.identifier, {
-    id,
-    scope: context.currentScope,
-  });
 }
 
 function collectDependencies(
@@ -645,7 +670,11 @@ function collectDependencies(
   temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
   processedInstrsInOptional: ReadonlySet<Instruction | Terminal>,
 ): Map<ReactiveScope, Array<ReactiveScopeDependency>> {
-  const context = new Context(usedOutsideDeclaringScope, temporaries);
+  const context = new Context(
+    usedOutsideDeclaringScope,
+    temporaries,
+    processedInstrsInOptional,
+  );
 
   for (const param of fn.params) {
     if (param.kind === 'Identifier') {
@@ -694,16 +723,21 @@ function collectDependencies(
           /**
            * Recursively visit the inner function to extract dependencies there
            */
-          const wasInInnerFn = context.inInnerFn;
-          context.inInnerFn = true;
-          handleFunction(instr.value.loweredFunc.func);
-          context.inInnerFn = wasInInnerFn;
-        } else if (!processedInstrsInOptional.has(instr)) {
+          const innerFn = instr.value.loweredFunc.func;
+          context.enterInnerFn(() => {
+            handleFunction(innerFn);
+          });
+        } else {
           handleInstruction(instr, context);
         }
       }
 
-      if (!processedInstrsInOptional.has(block.terminal)) {
+      if (
+        !context.isDeferredDependency({
+          kind: HIRValue.Terminal,
+          value: block.terminal,
+        })
+      ) {
         for (const place of eachTerminalOperand(block.terminal)) {
           context.visitOperand(place);
         }
