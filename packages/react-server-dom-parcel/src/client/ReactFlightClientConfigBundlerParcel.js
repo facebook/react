@@ -12,6 +12,7 @@ import type {Thenable} from 'shared/ReactTypes';
 import type {ImportMetadata} from '../shared/ReactFlightImportMetadata';
 
 import {ID, NAME, BUNDLES} from '../shared/ReactFlightImportMetadata';
+import {prepareDestinationWithChunks} from 'react-client/src/ReactFlightClientConfig';
 
 export type ServerManifest = {
   [string]: Array<string>,
@@ -31,7 +32,7 @@ export function prepareDestinationForModule(
   nonce: ?string,
   metadata: ClientReferenceMetadata,
 ) {
-  return;
+  prepareDestinationWithChunks(moduleLoading, metadata[BUNDLES], nonce);
 }
 
 export function resolveClientReference<T>(
