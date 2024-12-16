@@ -32,6 +32,7 @@ describe('arity', () => {
     }
 
     ReactNoop.render(<Component />);
+
   });
 
   it("ensure useReducer setter's arity is correct", () => {
