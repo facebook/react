@@ -3644,9 +3644,7 @@ function dispatchReducerAction<S, A>(
   action: A,
 ): void {
   if (__DEV__) {
-    // @nocollapse - avoid GCC optimizations affecting function arity
-    const args = arguments;
-    if (typeof args[3] === 'function') {
+    if (typeof arguments[3] === 'function') {
       console.error(
         "State updates from the useState() and useReducer() Hooks don't support the " +
           'second callback argument. To execute a side effect after ' +
@@ -3686,9 +3684,7 @@ function dispatchSetState<S, A>(
   action: A,
 ): void {
   if (__DEV__) {
-    // @nocollapse - avoid GCC optimizations affecting function arity
-    const args = arguments;
-    if (typeof args[3] === 'function') {
+    if (typeof arguments[3] === 'function') {
       console.error(
         "State updates from the useState() and useReducer() Hooks don't support the " +
           'second callback argument. To execute a side effect after ' +
