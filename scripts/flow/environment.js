@@ -107,8 +107,8 @@ declare var parcelRequire: {
   (id: string): any,
   load: (url: string) => Promise<mixed>,
   meta: {
-    publicUrl: string
-  }
+    publicUrl: string,
+  },
 };
 
 declare module 'fs/promises' {
