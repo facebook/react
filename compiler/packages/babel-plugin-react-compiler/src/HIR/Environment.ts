@@ -249,6 +249,8 @@ const EnvironmentConfigSchema = z.object({
    */
   enableOptionalDependencies: z.boolean().default(true),
 
+  enableFire: z.boolean().default(false),
+
   /**
    * Enables inference and auto-insertion of effect dependencies. Takes in an array of
    * configurable module and import pairs to allow for user-land experimentation. For example,
