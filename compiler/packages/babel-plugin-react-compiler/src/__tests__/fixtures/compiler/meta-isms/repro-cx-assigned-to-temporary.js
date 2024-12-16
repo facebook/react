@@ -1,4 +1,4 @@
-// @compilationMode(infer) @enableAssumeHooksFollowRulesOfReact:false @customMacros(cx)
+// @compilationMode(infer) @customMacros(cx)
 import {identity} from 'shared-runtime';
 
 const DARK = 'dark';
