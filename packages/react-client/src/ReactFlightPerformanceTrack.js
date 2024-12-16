@@ -22,7 +22,8 @@ const COMPONENTS_TRACK = 'Server Components ⚛';
 // Reused to avoid thrashing the GC.
 const reusableComponentDevToolDetails = {
   color: 'primary',
-  track: COMPONENTS_TRACK,
+  track: '',
+  trackGroup: COMPONENTS_TRACK,
 };
 const reusableComponentOptions = {
   start: -0,
@@ -32,13 +33,27 @@ const reusableComponentOptions = {
   },
 };
 
+const trackNames = [
+  'Primary',
+  'Parallel',
+  'Parallel\u200b', // Padded with zero-width space to give each track a unique name.
+  'Parallel\u200b\u200b',
+  'Parallel\u200b\u200b\u200b',
+  'Parallel\u200b\u200b\u200b\u200b',
+  'Parallel\u200b\u200b\u200b\u200b\u200b',
+  'Parallel\u200b\u200b\u200b\u200b\u200b\u200b',
+  'Parallel\u200b\u200b\u200b\u200b\u200b\u200b\u200b',
+  'Parallel\u200b\u200b\u200b\u200b\u200b\u200b\u200b\u200b',
+];
+
 export function logComponentRender(
   componentInfo: ReactComponentInfo,
+  trackIdx: number,
   startTime: number,
   endTime: number,
   childrenEndTime: number,
 ): void {
-  if (supportsUserTiming && childrenEndTime >= 0) {
+  if (supportsUserTiming && childrenEndTime >= 0 && trackIdx < 10) {
     const name = componentInfo.name;
     const selfTime = endTime - startTime;
     reusableComponentDevToolDetails.color =
@@ -49,6 +64,7 @@ export function logComponentRender(
           : selfTime < 500
             ? 'primary-dark'
             : 'error';
+    reusableComponentDevToolDetails.track = trackNames[trackIdx];
     reusableComponentOptions.start = startTime < 0 ? 0 : startTime;
     reusableComponentOptions.end = childrenEndTime;
     performance.measure(name, reusableComponentOptions);

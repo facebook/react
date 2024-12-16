@@ -125,6 +125,7 @@ export type JSONValue =
   | $ReadOnlyArray<JSONValue>;
 
 type ProfilingResult = {
+  track: number,
   endTime: number,
 };
 
@@ -642,7 +643,7 @@ export function reportGlobalError(response: Response, error: Error): void {
     }
   });
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
-    flushComponentPerformance(getChunk(response, 0));
+    flushComponentPerformance(getChunk(response, 0), 0, -Infinity);
   }
 }
 
@@ -2740,9 +2741,16 @@ function resolveTypedArray(
   resolveBuffer(response, id, view);
 }
 
-function flushComponentPerformance(root: SomeChunk<any>): number {
+function flushComponentPerformance(
+  root: SomeChunk<any>,
+  trackIdx: number, // Next available track
+  trackTime: number, // The time after which it is available
+): ProfilingResult {
   if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
-    return 0;
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'flushComponentPerformance should never be called in production mode. This is a bug in React.',
+    );
   }
   // Write performance.measure() entries for Server Components in tree order.
   // This must be done at the end to collect the end time from the whole tree.
@@ -2753,7 +2761,9 @@ function flushComponentPerformance(root: SomeChunk<any>): number {
     // chunk in two places. We should extend the current end time as if it was
     // rendered as part of this tree.
     const previousResult: ProfilingResult = root._children;
-    return previousResult.endTime;
+    // Since we didn't bump the track this time, we just return the same track.
+    previousResult.track = trackIdx;
+    return previousResult;
   }
   const children = root._children;
   if (root.status === RESOLVED_MODEL) {
@@ -2762,16 +2772,49 @@ function flushComponentPerformance(root: SomeChunk<any>): number {
     // the performance characteristics of the app by profiling.
     initializeModelChunk(root);
   }
-  const result: ProfilingResult = {endTime: -Infinity};
+
+  // First find the start time of the first component to know if it was running
+  // in parallel with the previous.
+  const debugInfo = root._debugInfo;
+  if (debugInfo) {
+    for (let i = 1; i < debugInfo.length; i++) {
+      const info = debugInfo[i];
+      if (typeof info.name === 'string') {
+        // $FlowFixMe: Refined.
+        const startTimeInfo = debugInfo[i - 1];
+        if (typeof startTimeInfo.time === 'number') {
+          const startTime = startTimeInfo.time;
+          if (startTime < trackTime) {
+            // The start time of this component is before the end time of the previous
+            // component on this track so we need to bump the next one to a parallel track.
+            trackIdx++;
+            trackTime = startTime;
+          }
+          break;
+        }
+      }
+    }
+  }
+
+  const result: ProfilingResult = {track: trackIdx, endTime: -Infinity};
   root._children = result;
   let childrenEndTime = -Infinity;
+  let childTrackIdx = trackIdx;
+  let childTrackTime = trackTime;
   for (let i = 0; i < children.length; i++) {
-    const childEndTime = flushComponentPerformance(children[i]);
+    const childResult = flushComponentPerformance(
+      children[i],
+      childTrackIdx,
+      childTrackTime,
+    );
+    childTrackIdx = childResult.track;
+    const childEndTime = childResult.endTime;
+    childTrackTime = childEndTime;
     if (childEndTime > childrenEndTime) {
       childrenEndTime = childEndTime;
     }
   }
-  const debugInfo = root._debugInfo;
+
   if (debugInfo) {
     let endTime = 0;
     for (let i = debugInfo.length - 1; i >= 0; i--) {
@@ -2790,6 +2833,7 @@ function flushComponentPerformance(root: SomeChunk<any>): number {
           const startTime = startTimeInfo.time;
           logComponentRender(
             componentInfo,
+            trackIdx,
             startTime,
             endTime,
             childrenEndTime,
@@ -2798,7 +2842,8 @@ function flushComponentPerformance(root: SomeChunk<any>): number {
       }
     }
   }
-  return (result.endTime = childrenEndTime);
+  result.endTime = childrenEndTime;
+  return result;
 }
 
 function processFullBinaryRow(
