@@ -39,12 +39,11 @@ import {
   enableLazyContextPropagation,
   enableTransitionTracing,
   enableUseEffectEventHook,
+  enableUseResourceEffectHook,
   enableLegacyCache,
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyMode,
   enableNoCloningMemoCache,
-  enableContextProfiling,
-  enableUseResourceEffectHook,
 } from 'shared/ReactFeatureFlags';
 import {
   REACT_CONTEXT_TYPE,
@@ -78,11 +77,7 @@ import {
   ContinuousEventPriority,
   higherEventPriority,
 } from './ReactEventPriorities';
-import {
-  readContext,
-  readContextAndCompare,
-  checkIfContextChanged,
-} from './ReactFiberNewContext';
+import {readContext, checkIfContextChanged} from './ReactFiberNewContext';
 import {HostRoot, CacheComponent, HostComponent} from './ReactWorkTags';
 import {
   LayoutStatic as LayoutStaticEffect,
@@ -1109,16 +1104,6 @@ function updateWorkInProgressHook(): Hook {
     }
   }
   return workInProgressHook;
-}
-
-function unstable_useContextWithBailout<T>(
-  context: ReactContext<T>,
-  select: (T => Array<mixed>) | null,
-): T {
-  if (select === null) {
-    return readContext(context);
-  }
-  return readContextAndCompare(context, select);
 }
 
 function createFunctionComponentUpdateQueue(): FunctionComponentUpdateQueue {
@@ -3958,10 +3943,6 @@ if (enableUseEffectEventHook) {
 if (enableUseResourceEffectHook) {
   (ContextOnlyDispatcher: Dispatcher).useResourceEffect = throwInvalidHookError;
 }
-if (enableContextProfiling) {
-  (ContextOnlyDispatcher: Dispatcher).unstable_useContextWithBailout =
-    throwInvalidHookError;
-}
 
 const HooksDispatcherOnMount: Dispatcher = {
   readContext,
@@ -3994,10 +3975,6 @@ if (enableUseEffectEventHook) {
 }
 if (enableUseResourceEffectHook) {
   (HooksDispatcherOnMount: Dispatcher).useResourceEffect = mountResourceEffect;
-}
-if (enableContextProfiling) {
-  (HooksDispatcherOnMount: Dispatcher).unstable_useContextWithBailout =
-    unstable_useContextWithBailout;
 }
 
 const HooksDispatcherOnUpdate: Dispatcher = {
@@ -4033,10 +4010,6 @@ if (enableUseResourceEffectHook) {
   (HooksDispatcherOnUpdate: Dispatcher).useResourceEffect =
     updateResourceEffect;
 }
-if (enableContextProfiling) {
-  (HooksDispatcherOnUpdate: Dispatcher).unstable_useContextWithBailout =
-    unstable_useContextWithBailout;
-}
 
 const HooksDispatcherOnRerender: Dispatcher = {
   readContext,
@@ -4070,10 +4043,6 @@ if (enableUseEffectEventHook) {
 if (enableUseResourceEffectHook) {
   (HooksDispatcherOnRerender: Dispatcher).useResourceEffect =
     updateResourceEffect;
-}
-if (enableContextProfiling) {
-  (HooksDispatcherOnRerender: Dispatcher).unstable_useContextWithBailout =
-    unstable_useContextWithBailout;
 }
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -4296,17 +4265,6 @@ if (__DEV__) {
         );
       };
   }
-  if (enableContextProfiling) {
-    (HooksDispatcherOnMountInDEV: Dispatcher).unstable_useContextWithBailout =
-      function <T>(
-        context: ReactContext<T>,
-        select: (T => Array<mixed>) | null,
-      ): T {
-        currentHookNameInDev = 'useContext';
-        mountHookTypesDev();
-        return unstable_useContextWithBailout(context, select);
-      };
-  }
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -4492,17 +4450,6 @@ if (__DEV__) {
           updateDeps,
           destroy,
         );
-      };
-  }
-  if (enableContextProfiling) {
-    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).unstable_useContextWithBailout =
-      function <T>(
-        context: ReactContext<T>,
-        select: (T => Array<mixed>) | null,
-      ): T {
-        currentHookNameInDev = 'useContext';
-        updateHookTypesDev();
-        return unstable_useContextWithBailout(context, select);
       };
   }
 
@@ -4692,17 +4639,6 @@ if (__DEV__) {
         );
       };
   }
-  if (enableContextProfiling) {
-    (HooksDispatcherOnUpdateInDEV: Dispatcher).unstable_useContextWithBailout =
-      function <T>(
-        context: ReactContext<T>,
-        select: (T => Array<mixed>) | null,
-      ): T {
-        currentHookNameInDev = 'useContext';
-        updateHookTypesDev();
-        return unstable_useContextWithBailout(context, select);
-      };
-  }
 
   HooksDispatcherOnRerenderInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -4888,17 +4824,6 @@ if (__DEV__) {
           updateDeps,
           destroy,
         );
-      };
-  }
-  if (enableContextProfiling) {
-    (HooksDispatcherOnRerenderInDEV: Dispatcher).unstable_useContextWithBailout =
-      function <T>(
-        context: ReactContext<T>,
-        select: (T => Array<mixed>) | null,
-      ): T {
-        currentHookNameInDev = 'useContext';
-        updateHookTypesDev();
-        return unstable_useContextWithBailout(context, select);
       };
   }
 
@@ -5114,18 +5039,6 @@ if (__DEV__) {
         );
       };
   }
-  if (enableContextProfiling) {
-    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).unstable_useContextWithBailout =
-      function <T>(
-        context: ReactContext<T>,
-        select: (T => Array<mixed>) | null,
-      ): T {
-        currentHookNameInDev = 'useContext';
-        warnInvalidHookAccess();
-        mountHookTypesDev();
-        return unstable_useContextWithBailout(context, select);
-      };
-  }
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -5339,18 +5252,6 @@ if (__DEV__) {
         );
       };
   }
-  if (enableContextProfiling) {
-    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).unstable_useContextWithBailout =
-      function <T>(
-        context: ReactContext<T>,
-        select: (T => Array<mixed>) | null,
-      ): T {
-        currentHookNameInDev = 'useContext';
-        warnInvalidHookAccess();
-        updateHookTypesDev();
-        return unstable_useContextWithBailout(context, select);
-      };
-  }
 
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -5562,18 +5463,6 @@ if (__DEV__) {
           updateDeps,
           destroy,
         );
-      };
-  }
-  if (enableContextProfiling) {
-    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).unstable_useContextWithBailout =
-      function <T>(
-        context: ReactContext<T>,
-        select: (T => Array<mixed>) | null,
-      ): T {
-        currentHookNameInDev = 'useContext';
-        warnInvalidHookAccess();
-        updateHookTypesDev();
-        return unstable_useContextWithBailout(context, select);
       };
   }
 }
