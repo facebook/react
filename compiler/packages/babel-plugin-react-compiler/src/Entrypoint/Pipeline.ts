@@ -80,13 +80,6 @@ import {
 } from '../SSA';
 import {inferTypes} from '../TypeInference';
 import {
-  logCodegenFunction,
-  logDebug,
-  logHIRFunction,
-  logReactiveFunction,
-} from '../Utils/logger';
-import {assertExhaustive} from '../Utils/utils';
-import {
   validateContextVariableLValues,
   validateHooksUsage,
   validateMemoizedEffectDependencies,
@@ -139,13 +132,7 @@ function run(
     name: 'EnvironmentConfig',
     value: prettyFormat(env.config),
   });
-  printLog({
-    kind: 'debug',
-    name: 'EnvironmentConfig',
-    value: prettyFormat(env.config),
-  });
-  const ast = runWithEnvironment(func, env);
-  return ast;
+  return runWithEnvironment(func, env);
 }
 
 /*
@@ -158,10 +145,8 @@ function runWithEnvironment(
   >,
   env: Environment,
 ): CodegenFunction {
-  const log = (value: CompilerPipelineValue): CompilerPipelineValue => {
-    printLog(value);
+  const log = (value: CompilerPipelineValue): void => {
     env.logger?.debugLogIRs?.(value);
-    return value;
   };
   const hir = lower(func, env).unwrap();
   log({kind: 'hir', name: 'HIR', value: hir});
@@ -544,29 +529,4 @@ export function compileFn(
     filename,
     code,
   );
-}
-
-function printLog(value: CompilerPipelineValue): CompilerPipelineValue {
-  switch (value.kind) {
-    case 'ast': {
-      logCodegenFunction(value.name, value.value);
-      break;
-    }
-    case 'hir': {
-      logHIRFunction(value.name, value.value);
-      break;
-    }
-    case 'reactive': {
-      logReactiveFunction(value.name, value.value);
-      break;
-    }
-    case 'debug': {
-      logDebug(value.name, value.value);
-      break;
-    }
-    default: {
-      assertExhaustive(value, 'Unexpected compilation kind');
-    }
-  }
-  return value;
 }
