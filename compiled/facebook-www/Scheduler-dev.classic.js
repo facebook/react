@@ -14,7 +14,7 @@
 __DEV__ &&
   (function () {
     function performWorkUntilDeadline() {
-      needsPaint = !1;
+      enableRequestPaint && (needsPaint = !1);
       if (isMessageLoopRunning) {
         var currentTime = exports.unstable_now();
         startTime = currentTime;
@@ -229,7 +229,7 @@ __DEV__ &&
         }
     }
     function shouldYieldToHost() {
-      return needsPaint
+      return enableRequestPaint && needsPaint
         ? !0
         : exports.unstable_now() - startTime < frameInterval
           ? !1
@@ -253,6 +253,7 @@ __DEV__ &&
         dynamicFeatureFlags.userBlockingPriorityTimeout,
       normalPriorityTimeout = dynamicFeatureFlags.normalPriorityTimeout,
       lowPriorityTimeout = dynamicFeatureFlags.lowPriorityTimeout,
+      enableRequestPaint = dynamicFeatureFlags.enableRequestPaint,
       runIdCounter = 0,
       mainThreadIdCounter = 0,
       eventLogSize = 0,
@@ -373,7 +374,7 @@ __DEV__ &&
       isSchedulerPaused = !0;
     };
     exports.unstable_requestPaint = function () {
-      needsPaint = !0;
+      enableRequestPaint && (needsPaint = !0);
     };
     exports.unstable_runWithPriority = function (priorityLevel, eventHandler) {
       switch (priorityLevel) {

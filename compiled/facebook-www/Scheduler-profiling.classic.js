@@ -18,7 +18,8 @@
 var dynamicFeatureFlags = require("SchedulerFeatureFlags"),
   userBlockingPriorityTimeout = dynamicFeatureFlags.userBlockingPriorityTimeout,
   normalPriorityTimeout = dynamicFeatureFlags.normalPriorityTimeout,
-  lowPriorityTimeout = dynamicFeatureFlags.lowPriorityTimeout;
+  lowPriorityTimeout = dynamicFeatureFlags.lowPriorityTimeout,
+  enableRequestPaint = dynamicFeatureFlags.enableRequestPaint;
 function push(heap, node) {
   var index = heap.length;
   heap.push(node);
@@ -121,14 +122,14 @@ var isMessageLoopRunning = !1,
   frameInterval = 10,
   startTime = -1;
 function shouldYieldToHost() {
-  return needsPaint
+  return enableRequestPaint && needsPaint
     ? !0
     : exports.unstable_now() - startTime < frameInterval
       ? !1
       : !0;
 }
 function performWorkUntilDeadline() {
-  needsPaint = !1;
+  enableRequestPaint && (needsPaint = !1);
   if (isMessageLoopRunning) {
     var currentTime = exports.unstable_now();
     startTime = currentTime;
@@ -275,7 +276,7 @@ exports.unstable_pauseExecution = function () {
   isSchedulerPaused = !0;
 };
 exports.unstable_requestPaint = function () {
-  needsPaint = !0;
+  enableRequestPaint && (needsPaint = !0);
 };
 exports.unstable_runWithPriority = function (priorityLevel, eventHandler) {
   switch (priorityLevel) {
