@@ -3644,7 +3644,7 @@ function dispatchReducerAction<S, A>(
   action: A,
 ): void {
   if (__DEV__) {
-    // @nocollapse - avoid GCC optimizations affecting function arity
+    // using a reference to `arguments` bails out of GCC optimizations which affect function arity
     const args = arguments;
     if (typeof args[3] === 'function') {
       console.error(
@@ -3686,7 +3686,7 @@ function dispatchSetState<S, A>(
   action: A,
 ): void {
   if (__DEV__) {
-    // @nocollapse - avoid GCC optimizations affecting function arity
+    // using a reference to `arguments` bails out of GCC optimizations which affect function arity
     const args = arguments;
     if (typeof args[3] === 'function') {
       console.error(

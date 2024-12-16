@@ -106,7 +106,7 @@ ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render =
     }
 
     if (__DEV__) {
-      // @nocollapse - avoid GCC optimizations affecting function arity
+      // using a reference to `arguments` bails out of GCC optimizations which affect function arity
       const args = arguments;
       if (typeof args[1] === 'function') {
         console.error(
@@ -133,7 +133,7 @@ ReactDOMHydrationRoot.prototype.unmount = ReactDOMRoot.prototype.unmount =
   // $FlowFixMe[missing-this-annot]
   function (): void {
     if (__DEV__) {
-      // @nocollapse - avoid GCC optimizations affecting function arity
+      // using a reference to `arguments` bails out of GCC optimizations which affect function arity
       const args = arguments;
       if (typeof args[0] === 'function') {
         console.error(
