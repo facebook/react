@@ -18,6 +18,7 @@ let scheduleCallback;
 let requestPaint;
 let shouldYield;
 let NormalPriority;
+let SchedulerFeatureFlags;
 
 // The Scheduler implementation uses browser APIs like `MessageChannel` and
 // `setTimeout` to schedule work on the main thread. Most of our tests treat
@@ -42,6 +43,7 @@ describe('SchedulerBrowser', () => {
     NormalPriority = Scheduler.unstable_NormalPriority;
     requestPaint = Scheduler.unstable_requestPaint;
     shouldYield = Scheduler.unstable_shouldYield;
+    SchedulerFeatureFlags = require('../SchedulerFeatureFlags');
   });
 
   afterEach(() => {
@@ -199,7 +201,9 @@ describe('SchedulerBrowser', () => {
     runtime.assertLog([
       'Message Event',
       'Task',
-      'Yield at 0ms',
+      SchedulerFeatureFlags.enableRequestPaint
+        ? 'Yield at 0ms'
+        : `Yield at ${SchedulerFeatureFlags.frameYieldMs}ms`,
       'Post Message',
     ]);
 
