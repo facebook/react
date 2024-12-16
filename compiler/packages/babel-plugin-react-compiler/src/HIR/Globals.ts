@@ -9,6 +9,7 @@ import {Effect, ValueKind, ValueReason} from './HIR';
 import {
   BUILTIN_SHAPES,
   BuiltInArrayId,
+  BuiltInFireId,
   BuiltInMixedReadonlyId,
   BuiltInUseActionStateId,
   BuiltInUseContextHookId,
@@ -466,6 +467,21 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
         returnValueKind: ValueKind.Frozen,
       },
       BuiltInUseOperatorId,
+    ),
+  ],
+  [
+    'fire',
+    addFunction(
+      DEFAULT_SHAPES,
+      [],
+      {
+        positionalParams: [],
+        restParam: null,
+        returnType: {kind: 'Primitive'},
+        calleeEffect: Effect.Read,
+        returnValueKind: ValueKind.Frozen,
+      },
+      BuiltInFireId,
     ),
   ],
 ];
