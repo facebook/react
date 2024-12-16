@@ -69,7 +69,11 @@ import {createBoundServerReference} from './ReactFlightReplyClient';
 
 import {readTemporaryReference} from './ReactFlightTemporaryReferences';
 
-import {logComponentRender} from './ReactFlightPerformanceTrack';
+import {
+  markAllTracksInOrder,
+  logComponentRender,
+  logDedupedComponentRender,
+} from './ReactFlightPerformanceTrack';
 
 import {
   REACT_LAZY_TYPE,
@@ -127,6 +131,7 @@ export type JSONValue =
 type ProfilingResult = {
   track: number,
   endTime: number,
+  component: null | ReactComponentInfo,
 };
 
 const ROW_ID = 0;
@@ -643,7 +648,14 @@ export function reportGlobalError(response: Response, error: Error): void {
     }
   });
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
-    flushComponentPerformance(getChunk(response, 0), 0, -Infinity);
+    markAllTracksInOrder();
+    flushComponentPerformance(
+      response,
+      getChunk(response, 0),
+      0,
+      -Infinity,
+      -Infinity,
+    );
   }
 }
 
@@ -2742,9 +2754,11 @@ function resolveTypedArray(
 }
 
 function flushComponentPerformance(
+  response: Response,
   root: SomeChunk<any>,
   trackIdx: number, // Next available track
-  trackTime: number, // The time after which it is available
+  trackTime: number, // The time after which it is available,
+  parentEndTime: number,
 ): ProfilingResult {
   if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
     // eslint-disable-next-line react-internal/prod-error-codes
@@ -2761,6 +2775,22 @@ function flushComponentPerformance(
     // chunk in two places. We should extend the current end time as if it was
     // rendered as part of this tree.
     const previousResult: ProfilingResult = root._children;
+    const previousEndTime = previousResult.endTime;
+    if (
+      parentEndTime > -Infinity &&
+      parentEndTime < previousEndTime &&
+      previousResult.component !== null
+    ) {
+      // Log a placeholder for the deduped value under this child starting
+      // from the end of the self time of the parent and spanning until the
+      // the deduped end.
+      logDedupedComponentRender(
+        previousResult.component,
+        trackIdx,
+        parentEndTime,
+        previousEndTime,
+      );
+    }
     // Since we didn't bump the track this time, we just return the same track.
     previousResult.track = trackIdx;
     return previousResult;
@@ -2788,25 +2818,42 @@ function flushComponentPerformance(
             // The start time of this component is before the end time of the previous
             // component on this track so we need to bump the next one to a parallel track.
             trackIdx++;
-            trackTime = startTime;
           }
+          trackTime = startTime;
           break;
+        }
+      }
+    }
+    for (let i = debugInfo.length - 1; i >= 0; i--) {
+      const info = debugInfo[i];
+      if (typeof info.time === 'number') {
+        if (info.time > parentEndTime) {
+          parentEndTime = info.time;
         }
       }
     }
   }
 
-  const result: ProfilingResult = {track: trackIdx, endTime: -Infinity};
+  const result: ProfilingResult = {
+    track: trackIdx,
+    endTime: -Infinity,
+    component: null,
+  };
   root._children = result;
   let childrenEndTime = -Infinity;
   let childTrackIdx = trackIdx;
   let childTrackTime = trackTime;
   for (let i = 0; i < children.length; i++) {
     const childResult = flushComponentPerformance(
+      response,
       children[i],
       childTrackIdx,
       childTrackTime,
+      parentEndTime,
     );
+    if (childResult.component !== null) {
+      result.component = childResult.component;
+    }
     childTrackIdx = childResult.track;
     const childEndTime = childResult.endTime;
     childTrackTime = childEndTime;
@@ -2837,7 +2884,10 @@ function flushComponentPerformance(
             startTime,
             endTime,
             childrenEndTime,
+            response._rootEnvironmentName,
           );
+          // Track the root most component of the result for deduping logging.
+          result.component = componentInfo;
         }
       }
     }

@@ -19,6 +19,26 @@ const supportsUserTiming =
 
 const COMPONENTS_TRACK = 'Server Components ⚛';
 
+const componentsTrackMarker = {
+  startTime: 0.001,
+  detail: {
+    devtools: {
+      color: 'primary-light',
+      track: 'Primary',
+      trackGroup: COMPONENTS_TRACK,
+    },
+  },
+};
+
+export function markAllTracksInOrder() {
+  if (supportsUserTiming) {
+    // Ensure we create the Server Component track groups earlier than the Client Scheduler
+    // and Client Components. We can always add the 0 time slot even if it's in the past.
+    // That's still considered for ordering.
+    performance.mark('Server Components Track', componentsTrackMarker);
+  }
+}
+
 // Reused to avoid thrashing the GC.
 const reusableComponentDevToolDetails = {
   color: 'primary',
@@ -52,21 +72,49 @@ export function logComponentRender(
   startTime: number,
   endTime: number,
   childrenEndTime: number,
+  rootEnv: string,
 ): void {
   if (supportsUserTiming && childrenEndTime >= 0 && trackIdx < 10) {
+    const env = componentInfo.env;
     const name = componentInfo.name;
+    const isPrimaryEnv = env === rootEnv;
     const selfTime = endTime - startTime;
     reusableComponentDevToolDetails.color =
       selfTime < 0.5
-        ? 'primary-light'
+        ? isPrimaryEnv
+          ? 'primary-light'
+          : 'secondary-light'
         : selfTime < 50
-          ? 'primary'
+          ? isPrimaryEnv
+            ? 'primary'
+            : 'secondary'
           : selfTime < 500
-            ? 'primary-dark'
+            ? isPrimaryEnv
+              ? 'primary-dark'
+              : 'secondary-dark'
             : 'error';
     reusableComponentDevToolDetails.track = trackNames[trackIdx];
     reusableComponentOptions.start = startTime < 0 ? 0 : startTime;
     reusableComponentOptions.end = childrenEndTime;
-    performance.measure(name, reusableComponentOptions);
+    const entryName =
+      isPrimaryEnv || env === undefined ? name : name + ' [' + env + ']';
+    performance.measure(entryName, reusableComponentOptions);
+  }
+}
+
+export function logDedupedComponentRender(
+  componentInfo: ReactComponentInfo,
+  trackIdx: number,
+  startTime: number,
+  endTime: number,
+): void {
+  if (supportsUserTiming && endTime >= 0 && trackIdx < 10) {
+    const name = componentInfo.name;
+    reusableComponentDevToolDetails.color = 'tertiary-light';
+    reusableComponentDevToolDetails.track = trackNames[trackIdx];
+    reusableComponentOptions.start = startTime < 0 ? 0 : startTime;
+    reusableComponentOptions.end = endTime;
+    const entryName = name + ' [deduped]';
+    performance.measure(entryName, reusableComponentOptions);
   }
 }

@@ -101,9 +101,6 @@ export const enableTransitionTracing = false;
 
 export const enableLazyContextPropagation = true;
 
-// Expose unstable useContext for performance testing
-export const enableContextProfiling = false;
-
 // FB-only usage. The new API has different semantics.
 export const enableLegacyHidden = false;
 
