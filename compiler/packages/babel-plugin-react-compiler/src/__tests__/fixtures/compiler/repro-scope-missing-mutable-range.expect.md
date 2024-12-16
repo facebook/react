@@ -35,17 +35,15 @@ function HomeDiscoStoreItemTileRating(props) {
   } else {
     count = $[1];
   }
-
-  const t0 = count;
-  let t1;
-  if ($[2] !== t0) {
-    t1 = <Text>{t0}</Text>;
-    $[2] = t0;
-    $[3] = t1;
+  let t0;
+  if ($[2] !== count) {
+    t0 = <Text>{count}</Text>;
+    $[2] = count;
+    $[3] = t0;
   } else {
-    t1 = $[3];
+    t0 = $[3];
   }
-  return t1;
+  return t0;
 }
 
 ```
