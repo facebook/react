@@ -32,6 +32,5 @@ describe('useState', () => {
     }
 
     ReactNoop.render(<Component />);
-
   });
 });
