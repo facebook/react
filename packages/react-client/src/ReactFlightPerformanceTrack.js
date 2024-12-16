@@ -90,3 +90,19 @@ export function logComponentRender(
     performance.measure(name, reusableComponentOptions);
   }
 }
+
+export function logDedupedComponentRender(
+  componentInfo: ReactComponentInfo,
+  trackIdx: number,
+  startTime: number,
+  endTime: number,
+): void {
+  if (supportsUserTiming && endTime >= 0 && trackIdx < 10) {
+    const name = componentInfo.name;
+    reusableComponentDevToolDetails.color = 'tertiary-light';
+    reusableComponentDevToolDetails.track = trackNames[trackIdx];
+    reusableComponentOptions.start = startTime < 0 ? 0 : startTime;
+    reusableComponentOptions.end = endTime;
+    performance.measure(name + ' [deduped]', reusableComponentOptions);
+  }
+}
