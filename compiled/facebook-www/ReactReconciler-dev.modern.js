@@ -3226,37 +3226,6 @@ __DEV__ &&
       }
       return workInProgressHook;
     }
-    function unstable_useContextWithBailout(context, select) {
-      if (null === select) var JSCompiler_temp = readContext(context);
-      else {
-        JSCompiler_temp = currentlyRenderingFiber;
-        var value = isPrimaryRenderer
-          ? context._currentValue
-          : context._currentValue2;
-        context = {
-          context: context,
-          memoizedValue: value,
-          next: null,
-          select: select,
-          lastSelectedValue: select(value)
-        };
-        if (null === lastContextDependency) {
-          if (null === JSCompiler_temp)
-            throw Error(
-              "Context can only be read while React is rendering. In classes, you can read it in the render method or getDerivedStateFromProps. In function components, you can read it directly in the function body, but not inside Hooks like useReducer() or useMemo()."
-            );
-          lastContextDependency = context;
-          JSCompiler_temp.dependencies = {
-            lanes: 0,
-            firstContext: context,
-            _debugThenableState: null
-          };
-          JSCompiler_temp.flags |= 524288;
-        } else lastContextDependency = lastContextDependency.next = context;
-        JSCompiler_temp = value;
-      }
-      return JSCompiler_temp;
-    }
     function createFunctionComponentUpdateQueue() {
       return { lastEffect: null, events: null, stores: null, memoCache: null };
     }
@@ -9066,23 +9035,8 @@ __DEV__ &&
           a: for (; null !== list; ) {
             var dependency = list;
             list = fiber;
-            var i = 0;
-            b: for (; i < contexts.length; i++)
+            for (var i = 0; i < contexts.length; i++)
               if (dependency.context === contexts[i]) {
-                var select = dependency.select;
-                if (
-                  null != select &&
-                  null != dependency.lastSelectedValue &&
-                  !checkIfSelectedContextValuesChanged(
-                    dependency.lastSelectedValue,
-                    select(
-                      isPrimaryRenderer
-                        ? dependency.context._currentValue
-                        : dependency.context._currentValue2
-                    )
-                  )
-                )
-                  continue b;
                 list.lanes |= renderLanes;
                 dependency = list.alternate;
                 null !== dependency && (dependency.lanes |= renderLanes);
@@ -9180,17 +9134,6 @@ __DEV__ &&
         );
       workInProgress.flags |= 262144;
     }
-    function checkIfSelectedContextValuesChanged(
-      oldComparedValue,
-      newComparedValue
-    ) {
-      if (isArrayImpl(oldComparedValue) && isArrayImpl(newComparedValue)) {
-        if (oldComparedValue.length !== newComparedValue.length) return !0;
-        for (var i = 0; i < oldComparedValue.length; i++)
-          if (!objectIs(newComparedValue[i], oldComparedValue[i])) return !0;
-      } else throw Error("Compared context values must be arrays");
-      return !1;
-    }
     function checkIfContextChanged(currentDependencies) {
       for (
         currentDependencies = currentDependencies.firstContext;
@@ -9198,22 +9141,13 @@ __DEV__ &&
 
       ) {
         var context = currentDependencies.context;
-        context = isPrimaryRenderer
-          ? context._currentValue
-          : context._currentValue2;
-        var oldValue = currentDependencies.memoizedValue;
         if (
-          null != currentDependencies.select &&
-          null != currentDependencies.lastSelectedValue
-        ) {
-          if (
-            checkIfSelectedContextValuesChanged(
-              currentDependencies.lastSelectedValue,
-              currentDependencies.select(context)
-            )
+          !objectIs(
+            isPrimaryRenderer ? context._currentValue : context._currentValue2,
+            currentDependencies.memoizedValue
           )
-            return !0;
-        } else if (!objectIs(context, oldValue)) return !0;
+        )
+          return !0;
         currentDependencies = currentDependencies.next;
       }
       return !1;
@@ -16680,8 +16614,6 @@ __DEV__ &&
     ContextOnlyDispatcher.useEffectEvent = throwInvalidHookError;
     enableUseResourceEffectHook &&
       (ContextOnlyDispatcher.useResourceEffect = throwInvalidHookError);
-    ContextOnlyDispatcher.unstable_useContextWithBailout =
-      throwInvalidHookError;
     var HooksDispatcherOnMountInDEV = null,
       HooksDispatcherOnMountWithHookTypesInDEV = null,
       HooksDispatcherOnUpdateInDEV = null,
@@ -16855,14 +16787,6 @@ __DEV__ &&
           destroy
         );
       });
-    HooksDispatcherOnMountInDEV.unstable_useContextWithBailout = function (
-      context,
-      select
-    ) {
-      currentHookNameInDev = "useContext";
-      mountHookTypesDev();
-      return unstable_useContextWithBailout(context, select);
-    };
     HooksDispatcherOnMountWithHookTypesInDEV = {
       readContext: function (context) {
         return readContext(context);
@@ -17015,12 +16939,6 @@ __DEV__ &&
           destroy
         );
       });
-    HooksDispatcherOnMountWithHookTypesInDEV.unstable_useContextWithBailout =
-      function (context, select) {
-        currentHookNameInDev = "useContext";
-        updateHookTypesDev();
-        return unstable_useContextWithBailout(context, select);
-      };
     HooksDispatcherOnUpdateInDEV = {
       readContext: function (context) {
         return readContext(context);
@@ -17175,14 +17093,6 @@ __DEV__ &&
           destroy
         );
       });
-    HooksDispatcherOnUpdateInDEV.unstable_useContextWithBailout = function (
-      context,
-      select
-    ) {
-      currentHookNameInDev = "useContext";
-      updateHookTypesDev();
-      return unstable_useContextWithBailout(context, select);
-    };
     HooksDispatcherOnRerenderInDEV = {
       readContext: function (context) {
         return readContext(context);
@@ -17337,14 +17247,6 @@ __DEV__ &&
           destroy
         );
       });
-    HooksDispatcherOnRerenderInDEV.unstable_useContextWithBailout = function (
-      context,
-      select
-    ) {
-      currentHookNameInDev = "useContext";
-      updateHookTypesDev();
-      return unstable_useContextWithBailout(context, select);
-    };
     InvalidNestedHooksDispatcherOnMountInDEV = {
       readContext: function (context) {
         warnInvalidContextAccess();
@@ -17523,13 +17425,6 @@ __DEV__ &&
           destroy
         );
       });
-    InvalidNestedHooksDispatcherOnMountInDEV.unstable_useContextWithBailout =
-      function (context, select) {
-        currentHookNameInDev = "useContext";
-        warnInvalidHookAccess();
-        mountHookTypesDev();
-        return unstable_useContextWithBailout(context, select);
-      };
     InvalidNestedHooksDispatcherOnUpdateInDEV = {
       readContext: function (context) {
         warnInvalidContextAccess();
@@ -17710,13 +17605,6 @@ __DEV__ &&
           destroy
         );
       });
-    InvalidNestedHooksDispatcherOnUpdateInDEV.unstable_useContextWithBailout =
-      function (context, select) {
-        currentHookNameInDev = "useContext";
-        warnInvalidHookAccess();
-        updateHookTypesDev();
-        return unstable_useContextWithBailout(context, select);
-      };
     InvalidNestedHooksDispatcherOnRerenderInDEV = {
       readContext: function (context) {
         warnInvalidContextAccess();
@@ -17892,13 +17780,6 @@ __DEV__ &&
             destroy
           );
         });
-    InvalidNestedHooksDispatcherOnRerenderInDEV.unstable_useContextWithBailout =
-      function (context, select) {
-        currentHookNameInDev = "useContext";
-        warnInvalidHookAccess();
-        updateHookTypesDev();
-        return unstable_useContextWithBailout(context, select);
-      };
     var callComponent = {
         "react-stack-bottom-frame": function (Component, props, secondArg) {
           var wasRendering = isRendering;
@@ -18953,7 +18834,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-modern-f7b1273d-20241216"
+        reconcilerVersion: "19.1.0-www-modern-909ed63e-20241216"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

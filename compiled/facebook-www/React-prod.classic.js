@@ -569,9 +569,6 @@ exports.unstable_getCacheForType = function (resourceType) {
 exports.unstable_useCacheRefresh = function () {
   return ReactSharedInternals.H.useCacheRefresh();
 };
-exports.unstable_useContextWithBailout = function (context, select) {
-  return ReactSharedInternals.H.unstable_useContextWithBailout(context, select);
-};
 exports.unstable_useMemoCache = useMemoCache;
 exports.use = function (usable) {
   return ReactSharedInternals.H.use(usable);
@@ -633,4 +630,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.1.0-www-classic-f7b1273d-20241216";
+exports.version = "19.1.0-www-classic-909ed63e-20241216";

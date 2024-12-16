@@ -2702,28 +2702,6 @@ function updateWorkInProgressHook() {
   }
   return workInProgressHook;
 }
-function unstable_useContextWithBailout(context, select) {
-  if (null === select) var JSCompiler_temp = readContext(context);
-  else {
-    JSCompiler_temp = currentlyRenderingFiber;
-    var value = context._currentValue;
-    context = {
-      context: context,
-      memoizedValue: value,
-      next: null,
-      select: select,
-      lastSelectedValue: select(value)
-    };
-    if (null === lastContextDependency) {
-      if (null === JSCompiler_temp) throw Error(formatProdErrorMessage(308));
-      lastContextDependency = context;
-      JSCompiler_temp.dependencies = { lanes: 0, firstContext: context };
-      JSCompiler_temp.flags |= 524288;
-    } else lastContextDependency = lastContextDependency.next = context;
-    JSCompiler_temp = value;
-  }
-  return JSCompiler_temp;
-}
 function createFunctionComponentUpdateQueue() {
   return { lastEffect: null, events: null, stores: null, memoCache: null };
 }
@@ -3807,7 +3785,6 @@ var ContextOnlyDispatcher = {
 ContextOnlyDispatcher.useEffectEvent = throwInvalidHookError;
 enableUseResourceEffectHook &&
   (ContextOnlyDispatcher.useResourceEffect = throwInvalidHookError);
-ContextOnlyDispatcher.unstable_useContextWithBailout = throwInvalidHookError;
 var HooksDispatcherOnMount = {
   readContext: readContext,
   use: use,
@@ -4011,8 +3988,6 @@ var HooksDispatcherOnMount = {
 };
 enableUseResourceEffectHook &&
   (HooksDispatcherOnMount.useResourceEffect = mountResourceEffect);
-HooksDispatcherOnMount.unstable_useContextWithBailout =
-  unstable_useContextWithBailout;
 var HooksDispatcherOnUpdate = {
   readContext: readContext,
   use: use,
@@ -4063,8 +4038,6 @@ var HooksDispatcherOnUpdate = {
 HooksDispatcherOnUpdate.useEffectEvent = updateEvent;
 enableUseResourceEffectHook &&
   (HooksDispatcherOnUpdate.useResourceEffect = updateResourceEffect);
-HooksDispatcherOnUpdate.unstable_useContextWithBailout =
-  unstable_useContextWithBailout;
 var HooksDispatcherOnRerender = {
   readContext: readContext,
   use: use,
@@ -4120,8 +4093,6 @@ var HooksDispatcherOnRerender = {
 HooksDispatcherOnRerender.useEffectEvent = updateEvent;
 enableUseResourceEffectHook &&
   (HooksDispatcherOnRerender.useResourceEffect = updateResourceEffect);
-HooksDispatcherOnRerender.unstable_useContextWithBailout =
-  unstable_useContextWithBailout;
 var thenableState = null,
   thenableIndexCounter = 0;
 function unwrapThenable(thenable) {
@@ -7221,19 +7192,8 @@ function propagateContextChanges(
       a: for (; null !== list; ) {
         var dependency = list;
         list = fiber;
-        var i = 0;
-        b: for (; i < contexts.length; i++)
+        for (var i = 0; i < contexts.length; i++)
           if (dependency.context === contexts[i]) {
-            var select = dependency.select;
-            if (
-              null != select &&
-              null != dependency.lastSelectedValue &&
-              !checkIfSelectedContextValuesChanged(
-                dependency.lastSelectedValue,
-                select(dependency.context._currentValue)
-              )
-            )
-              continue b;
             list.lanes |= renderLanes;
             dependency = list.alternate;
             null !== dependency && (dependency.lanes |= renderLanes);
@@ -7320,37 +7280,19 @@ function propagateParentContextChanges(
     );
   workInProgress.flags |= 262144;
 }
-function checkIfSelectedContextValuesChanged(
-  oldComparedValue,
-  newComparedValue
-) {
-  if (isArrayImpl(oldComparedValue) && isArrayImpl(newComparedValue)) {
-    if (oldComparedValue.length !== newComparedValue.length) return !0;
-    for (var i = 0; i < oldComparedValue.length; i++)
-      if (!objectIs(newComparedValue[i], oldComparedValue[i])) return !0;
-  } else throw Error(formatProdErrorMessage(541));
-  return !1;
-}
 function checkIfContextChanged(currentDependencies) {
   for (
     currentDependencies = currentDependencies.firstContext;
     null !== currentDependencies;
 
   ) {
-    var newValue = currentDependencies.context._currentValue,
-      oldValue = currentDependencies.memoizedValue;
     if (
-      null != currentDependencies.select &&
-      null != currentDependencies.lastSelectedValue
-    ) {
-      if (
-        checkIfSelectedContextValuesChanged(
-          currentDependencies.lastSelectedValue,
-          currentDependencies.select(newValue)
-        )
+      !objectIs(
+        currentDependencies.context._currentValue,
+        currentDependencies.memoizedValue
       )
-        return !0;
-    } else if (!objectIs(newValue, oldValue)) return !0;
+    )
+      return !0;
     currentDependencies = currentDependencies.next;
   }
   return !1;
@@ -17334,14 +17276,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1784 = React.version;
 if (
-  "19.1.0-www-modern-f7b1273d-20241216" !==
+  "19.1.0-www-modern-909ed63e-20241216" !==
   isomorphicReactPackageVersion$jscomp$inline_1784
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1784,
-      "19.1.0-www-modern-f7b1273d-20241216"
+      "19.1.0-www-modern-909ed63e-20241216"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17357,24 +17299,24 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2322 = {
+var internals$jscomp$inline_2315 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-f7b1273d-20241216",
+  version: "19.1.0-www-modern-909ed63e-20241216",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-f7b1273d-20241216"
+  reconcilerVersion: "19.1.0-www-modern-909ed63e-20241216"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2323 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2316 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2323.isDisabled &&
-    hook$jscomp$inline_2323.supportsFiber
+    !hook$jscomp$inline_2316.isDisabled &&
+    hook$jscomp$inline_2316.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2323.inject(
-        internals$jscomp$inline_2322
+      (rendererID = hook$jscomp$inline_2316.inject(
+        internals$jscomp$inline_2315
       )),
-        (injectedHook = hook$jscomp$inline_2323);
+        (injectedHook = hook$jscomp$inline_2316);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -17878,4 +17820,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-modern-f7b1273d-20241216";
+exports.version = "19.1.0-www-modern-909ed63e-20241216";

@@ -1870,14 +1870,6 @@ __DEV__ &&
     exports.unstable_useCacheRefresh = function () {
       return resolveDispatcher().useCacheRefresh();
     };
-    exports.unstable_useContextWithBailout = function (context, select) {
-      var dispatcher = resolveDispatcher();
-      context.$$typeof === REACT_CONSUMER_TYPE &&
-        error$jscomp$0(
-          "Calling useContext(Context.Consumer) is not supported and will cause bugs. Did you mean to call useContext(Context) instead?"
-        );
-      return dispatcher.unstable_useContextWithBailout(context, select);
-    };
     exports.unstable_useMemoCache = useMemoCache;
     exports.use = function (usable) {
       return resolveDispatcher().use(usable);
@@ -1950,7 +1942,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.1.0-www-modern-f7b1273d-20241216";
+    exports.version = "19.1.0-www-modern-909ed63e-20241216";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
