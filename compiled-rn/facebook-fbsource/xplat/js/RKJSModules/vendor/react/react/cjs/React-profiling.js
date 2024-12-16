@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<74cbeb6c83f4d21d603d9b9f4b6af8f9>>
+ * @generated SignedSource<<5542be63bee5d0aaffe62e111ca41de2>>
  */
 
 "use strict";
@@ -535,9 +535,6 @@ exports.unstable_getCacheForType = function (resourceType) {
 exports.unstable_useCacheRefresh = function () {
   return ReactSharedInternals.H.useCacheRefresh();
 };
-exports.unstable_useContextWithBailout = function () {
-  throw Error("Not implemented.");
-};
 exports.unstable_useMemoCache = useMemoCache;
 exports.use = function (usable) {
   return ReactSharedInternals.H.use(usable);
@@ -599,7 +596,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.1.0-native-fb-e06c72fc-20241215";
+exports.version = "19.1.0-native-fb-909ed63e-20241216";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
