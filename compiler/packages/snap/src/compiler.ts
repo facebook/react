@@ -56,6 +56,7 @@ function makePluginOptions(
   let validatePreserveExistingMemoizationGuarantees = false;
   let customMacros: null | Array<Macro> = null;
   let validateBlocklistedImports = null;
+  let enableFire = false;
   let target: CompilerReactTarget = '19';
 
   if (firstLine.indexOf('@compilationMode(annotation)') !== -1) {
@@ -125,6 +126,10 @@ function makePluginOptions(
    */
   if (firstLine.includes('@validatePreserveExistingMemoizationGuarantees')) {
     validatePreserveExistingMemoizationGuarantees = true;
+  }
+
+  if (firstLine.includes('@enableFire')) {
+    enableFire = true;
   }
 
   const hookPatternMatch = /@hookPattern:"([^"]+)"/.exec(firstLine);
@@ -205,6 +210,7 @@ function makePluginOptions(
       hookPattern,
       validatePreserveExistingMemoizationGuarantees,
       validateBlocklistedImports,
+      enableFire,
     },
     compilationMode,
     logger,
