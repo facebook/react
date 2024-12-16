@@ -25,6 +25,7 @@ describe('parseConfigPragmaForTests()', () => {
       enableUseTypeAnnotations: true,
       validateNoSetStateInPassiveEffects: true,
       validateNoSetStateInRender: false,
+      enableResetCacheOnSourceFileChanges: false,
     });
   });
 });
