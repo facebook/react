@@ -27,7 +27,6 @@ export const enableCreateEventHandleAPI = false;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableMoveBefore = false;
 export const enableFizzExternalRuntime = true;
-export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableHalt = false;
 export const enableInfiniteRenderLoopDetection = false;
 export const enableHiddenSubtreeInsertionEffectCleanup = true;

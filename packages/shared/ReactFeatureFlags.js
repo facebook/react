@@ -260,6 +260,4 @@ export const enableAsyncDebugInfo = __EXPERIMENTAL__;
 export const enableUpdaterTracking = __PROFILE__;
 
 // Internal only.
-export const enableGetInspectorDataForInstanceInProduction = false;
-
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
