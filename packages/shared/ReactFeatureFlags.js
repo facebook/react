@@ -141,9 +141,6 @@ export const enableSiblingPrerendering = true;
  * Enables an expiration time for retry lanes to avoid starvation.
  */
 export const enableRetryLaneExpiration = false;
-export const retryLaneExpirationMs = 5000;
-export const syncLaneExpirationMs = 250;
-export const transitionLaneExpirationMs = 5000;
 
 /**
  * Enables a new error detection for infinite render loops from updates caused

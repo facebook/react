@@ -33,9 +33,6 @@ export const {
   enableUseResourceEffectHook,
   favorSafetyOverHydrationPerf,
   renameElementSymbol,
-  retryLaneExpirationMs,
-  syncLaneExpirationMs,
-  transitionLaneExpirationMs,
   enableOwnerStacks,
 } = dynamicFeatureFlags;
 

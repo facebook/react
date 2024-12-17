@@ -43,9 +43,6 @@ export const enableHiddenSubtreeInsertionEffectCleanup = false;
 export const enableHydrationLaneScheduling = true;
 
 export const enableRetryLaneExpiration = false;
-export const retryLaneExpirationMs = 5000;
-export const syncLaneExpirationMs = 250;
-export const transitionLaneExpirationMs = 5000;
 
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = true;
