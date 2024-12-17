@@ -18,6 +18,7 @@ import {
   userBlockingPriorityTimeout,
   lowPriorityTimeout,
   normalPriorityTimeout,
+  enableRequestPaint,
 } from '../SchedulerFeatureFlags';
 
 import {push, pop, peek} from '../SchedulerMinHeap';
@@ -458,7 +459,7 @@ let frameInterval = frameYieldMs;
 let startTime = -1;
 
 function shouldYieldToHost(): boolean {
-  if (needsPaint) {
+  if (enableRequestPaint && needsPaint) {
     // Yield now.
     return true;
   }
@@ -473,7 +474,9 @@ function shouldYieldToHost(): boolean {
 }
 
 function requestPaint() {
-  needsPaint = true;
+  if (enableRequestPaint) {
+    needsPaint = true;
+  }
 }
 
 function forceFrameRate(fps: number) {
@@ -494,7 +497,9 @@ function forceFrameRate(fps: number) {
 }
 
 const performWorkUntilDeadline = () => {
-  needsPaint = false;
+  if (enableRequestPaint) {
+    needsPaint = false;
+  }
   if (isMessageLoopRunning) {
     const currentTime = getCurrentTime();
     // Keep track of the start time so we can measure how long the main thread

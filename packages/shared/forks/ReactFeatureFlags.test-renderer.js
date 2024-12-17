@@ -10,7 +10,7 @@
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as ExportsType from './ReactFeatureFlags.test-renderer';
 
-export const debugRenderPhaseSideEffectsForStrictMode = false;
+export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 export const enableAsyncDebugInfo = false;
 export const enableSchedulingProfiler = false;
 export const enableProfilerTimer = __PROFILE__;
@@ -49,12 +49,11 @@ export const transitionLaneExpirationMs = 5000;
 
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = true;
-export const enableContextProfiling = false;
 export const enableLegacyHidden = false;
 
 export const enableTransitionTracing = false;
 
-export const useModernStrictMode = false;
+export const useModernStrictMode = true;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableFizzExternalRuntime = true;
 export const enableDeferRootSchedulingToMicrotask = true;
