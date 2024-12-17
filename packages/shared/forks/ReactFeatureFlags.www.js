@@ -19,7 +19,6 @@ export const {
   disableDefaultPropsExceptForClasses,
   disableLegacyContextForFunctionComponents,
   disableSchedulerTimeoutInWorkLoop,
-  enableDebugTracing,
   enableDeferRootSchedulingToMicrotask,
   enableDO_NOT_USE_disableStrictPassiveEffect,
   enableHiddenSubtreeInsertionEffectCleanup,
@@ -31,11 +30,13 @@ export const {
   enableSiblingPrerendering,
   enableTransitionTracing,
   enableTrustedTypesIntegration,
+  enableUseResourceEffectHook,
   favorSafetyOverHydrationPerf,
   renameElementSymbol,
   retryLaneExpirationMs,
   syncLaneExpirationMs,
   transitionLaneExpirationMs,
+  enableOwnerStacks,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -49,17 +50,15 @@ export const enableUpdaterTracking = __PROFILE__;
 export const enableFabricCompleteRootInCommitPhase = false;
 
 export const enableSuspenseAvoidThisFallback = true;
-export const enableSuspenseAvoidThisFallbackFizz = false;
 
-export const disableIEWorkarounds = true;
 export const enableCPUSuspense = true;
-export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = true;
-export const enableFilterEmptyStringAttributesDOM = true;
-export const enableAsyncActions = true;
+export const enableMoveBefore = false;
 export const disableInputAttributeSyncing = false;
 export const enableLegacyFBSupport = true;
 export const enableLazyContextPropagation = true;
+
+export const enableHydrationLaneScheduling = true;
 
 export const enableComponentPerformanceTrack = false;
 
@@ -70,11 +69,8 @@ export const enableSchedulingProfiler: boolean =
 export const disableLegacyContext = __EXPERIMENTAL__;
 export const enableGetInspectorDataForInstanceInProduction = false;
 
-export const enableCache = true;
 export const enableLegacyCache = true;
 
-export const enableBinaryFlight = true;
-export const enableFlightReadableStream = true;
 export const enableAsyncIterableChildren = false;
 
 export const enableTaint = false;
@@ -82,8 +78,6 @@ export const enableTaint = false;
 export const enablePostpone = false;
 
 export const enableHalt = false;
-
-export const enableContextProfiling = true;
 
 // TODO: www currently relies on this feature. It's disabled in open source.
 // Need to remove it.
@@ -97,11 +91,7 @@ export const enableSuspenseCallback = true;
 
 export const enableLegacyHidden = true;
 
-export const enableComponentStackLocations = true;
-
 export const disableTextareaChildren = __EXPERIMENTAL__;
-
-export const consoleManagedByDevToolsDuringStrictMode = true;
 
 export const enableFizzExternalRuntime = true;
 
@@ -119,7 +109,6 @@ export const useModernStrictMode = true;
 
 export const disableLegacyMode = true;
 
-export const enableOwnerStacks = false;
 export const enableShallowPropDiffing = false;
 
 // Flow magic to verify the exports of this file match the original version.

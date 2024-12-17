@@ -27,10 +27,7 @@ import {
 
 import {Children} from 'react';
 
-import {
-  enableFilterEmptyStringAttributesDOM,
-  enableFizzExternalRuntime,
-} from 'shared/ReactFeatureFlags';
+import {enableFizzExternalRuntime} from 'shared/ReactFeatureFlags';
 
 import type {
   Destination,
@@ -1210,30 +1207,28 @@ function pushAttribute(
     }
     case 'src':
     case 'href': {
-      if (enableFilterEmptyStringAttributesDOM) {
-        if (value === '') {
-          if (__DEV__) {
-            if (name === 'src') {
-              console.error(
-                'An empty string ("") was passed to the %s attribute. ' +
-                  'This may cause the browser to download the whole page again over the network. ' +
-                  'To fix this, either do not render the element at all ' +
-                  'or pass null to %s instead of an empty string.',
-                name,
-                name,
-              );
-            } else {
-              console.error(
-                'An empty string ("") was passed to the %s attribute. ' +
-                  'To fix this, either do not render the element at all ' +
-                  'or pass null to %s instead of an empty string.',
-                name,
-                name,
-              );
-            }
+      if (value === '') {
+        if (__DEV__) {
+          if (name === 'src') {
+            console.error(
+              'An empty string ("") was passed to the %s attribute. ' +
+                'This may cause the browser to download the whole page again over the network. ' +
+                'To fix this, either do not render the element at all ' +
+                'or pass null to %s instead of an empty string.',
+              name,
+              name,
+            );
+          } else {
+            console.error(
+              'An empty string ("") was passed to the %s attribute. ' +
+                'To fix this, either do not render the element at all ' +
+                'or pass null to %s instead of an empty string.',
+              name,
+              name,
+            );
           }
-          return;
         }
+        return;
       }
     }
     // Fall through to the last case which shouldn't remove empty strings.
@@ -1633,19 +1628,17 @@ function pushStartObject(
             checkAttributeStringCoercion(propValue, 'data');
           }
           const sanitizedValue = sanitizeURL('' + propValue);
-          if (enableFilterEmptyStringAttributesDOM) {
-            if (sanitizedValue === '') {
-              if (__DEV__) {
-                console.error(
-                  'An empty string ("") was passed to the %s attribute. ' +
-                    'To fix this, either do not render the element at all ' +
-                    'or pass null to %s instead of an empty string.',
-                  propKey,
-                  propKey,
-                );
-              }
-              break;
+          if (sanitizedValue === '') {
+            if (__DEV__) {
+              console.error(
+                'An empty string ("") was passed to the %s attribute. ' +
+                  'To fix this, either do not render the element at all ' +
+                  'or pass null to %s instead of an empty string.',
+                propKey,
+                propKey,
+              );
             }
+            break;
           }
           target.push(
             attributeSeparator,
@@ -3087,7 +3080,7 @@ function pushTitle(
         console.error(
           'React expects the `children` prop of <title> tags to be a string, number, bigint, or object with a novel `toString` method but found an Array with length %s instead.' +
             ' Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert `children` of <title> tags to a single string value' +
-            ' which is why Arrays of length greater than 1 are not supported. When using JSX it can be commong to combine text nodes and value nodes.' +
+            ' which is why Arrays of length greater than 1 are not supported. When using JSX it can be common to combine text nodes and value nodes.' +
             ' For example: <title>hello {nameOfUser}</title>. While not immediately apparent, `children` in this case is an Array with length 2. If your `children` prop' +
             ' is using this form try rewriting it using a template string: <title>{`hello ${nameOfUser}`}</title>.',
           children.length,
@@ -3615,11 +3608,7 @@ export function pushStartInstance(
       // Fast track very common tags
       break;
     case 'a':
-      if (enableFilterEmptyStringAttributesDOM) {
-        return pushStartAnchor(target, props);
-      } else {
-        break;
-      }
+      return pushStartAnchor(target, props);
     case 'g':
     case 'p':
     case 'li':
@@ -3896,18 +3885,6 @@ const clientRenderedSuspenseBoundaryError1D =
   stringToPrecomputedChunk(' data-cstck="');
 const clientRenderedSuspenseBoundaryError2 =
   stringToPrecomputedChunk('></template>');
-
-export function pushStartCompletedSuspenseBoundary(
-  target: Array<Chunk | PrecomputedChunk>,
-) {
-  target.push(startCompletedSuspenseBoundary);
-}
-
-export function pushEndCompletedSuspenseBoundary(
-  target: Array<Chunk | PrecomputedChunk>,
-) {
-  target.push(endSuspenseBoundary);
-}
 
 export function writeStartCompletedSuspenseBoundary(
   destination: Destination,

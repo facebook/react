@@ -106,7 +106,7 @@ async function renderApp(res, returnValue, formState) {
 }
 
 async function prerenderApp(res, returnValue, formState) {
-  const {prerenderToNodeStream} = await import(
+  const {unstable_prerenderToNodeStream: prerenderToNodeStream} = await import(
     'react-server-dom-webpack/static'
   );
   // const m = require('../src/App.js');

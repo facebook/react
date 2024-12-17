@@ -224,10 +224,11 @@ export function resolveUpdatePriority(): EventPriority {
   }
   return DefaultEventPriority;
 }
+
+export function trackSchedulerEvent(): void {}
 export function resolveEventType(): null | string {
   return null;
 }
-
 export function resolveEventTimeStamp(): number {
   return -1.1;
 }

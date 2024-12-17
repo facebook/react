@@ -1573,7 +1573,6 @@ describe('ReactHooksInspectionIntegration', () => {
   });
 
   describe('useMemoCache', () => {
-    // @gate enableUseMemoCacheHook
     it('should not be inspectable', async () => {
       function Foo() {
         const $ = useMemoCache(1);
@@ -1601,7 +1600,6 @@ describe('ReactHooksInspectionIntegration', () => {
       expect(tree.length).toEqual(0);
     });
 
-    // @gate enableUseMemoCacheHook
     it('should work in combination with other hooks', async () => {
       function useSomething() {
         const [something] = React.useState(null);
@@ -2581,7 +2579,6 @@ describe('ReactHooksInspectionIntegration', () => {
     `);
   });
 
-  // @gate enableAsyncActions
   it('should support useOptimistic hook', async () => {
     const useOptimistic = React.useOptimistic;
     function Foo() {
@@ -2647,7 +2644,6 @@ describe('ReactHooksInspectionIntegration', () => {
     `);
   });
 
-  // @gate enableAsyncActions
   it('should support useActionState hook', async () => {
     function Foo() {
       const [value] = React.useActionState(function increment(n) {

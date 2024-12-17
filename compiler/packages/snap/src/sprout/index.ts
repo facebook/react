@@ -32,7 +32,15 @@ export function runSprout(
   originalCode: string,
   forgetCode: string,
 ): SproutResult {
-  const forgetResult = doEval(forgetCode);
+  let forgetResult;
+  try {
+    (globalThis as any).__SNAP_EVALUATOR_MODE = 'forget';
+    forgetResult = doEval(forgetCode);
+  } catch (e) {
+    throw e;
+  } finally {
+    (globalThis as any).__SNAP_EVALUATOR_MODE = undefined;
+  }
   if (forgetResult.kind === 'UnexpectedError') {
     return makeError('Unexpected error in Forget runner', forgetResult.value);
   }

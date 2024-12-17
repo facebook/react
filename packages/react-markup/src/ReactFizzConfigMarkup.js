@@ -49,8 +49,6 @@ export {
   getChildFormatContext,
   makeId,
   pushEndInstance,
-  pushStartCompletedSuspenseBoundary,
-  pushEndCompletedSuspenseBoundary,
   pushFormStateMarkerIsMatching,
   pushFormStateMarkerIsNotMatching,
   writeStartSegment,

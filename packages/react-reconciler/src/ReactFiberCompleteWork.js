@@ -37,7 +37,6 @@ import {
   enableScopeAPI,
   enablePersistedModeClonedFlag,
   enableProfilerTimer,
-  enableCache,
   enableTransitionTracing,
   enableRenderableContext,
   passChildrenWhenCloningPersistedNodes,
@@ -985,18 +984,16 @@ function completeWork(
         }
       }
 
-      if (enableCache) {
-        let previousCache: Cache | null = null;
-        if (current !== null) {
-          previousCache = current.memoizedState.cache;
-        }
-        const cache: Cache = workInProgress.memoizedState.cache;
-        if (cache !== previousCache) {
-          // Run passive effects to retain/release the cache.
-          workInProgress.flags |= Passive;
-        }
-        popCacheProvider(workInProgress, cache);
+      let previousCache: Cache | null = null;
+      if (current !== null) {
+        previousCache = current.memoizedState.cache;
       }
+      const cache: Cache = workInProgress.memoizedState.cache;
+      if (cache !== previousCache) {
+        // Run passive effects to retain/release the cache.
+        workInProgress.flags |= Passive;
+      }
+      popCacheProvider(workInProgress, cache);
 
       if (enableTransitionTracing) {
         popRootMarkerInstance(workInProgress);
@@ -1384,7 +1381,7 @@ function completeWork(
         current !== null &&
         (current.memoizedState: null | SuspenseState) !== null;
 
-      if (enableCache && nextDidTimeout) {
+      if (nextDidTimeout) {
         const offscreenFiber: Fiber = (workInProgress.child: any);
         let previousCache: Cache | null = null;
         if (
@@ -1783,26 +1780,24 @@ function completeWork(
         scheduleRetryEffect(workInProgress, retryQueue);
       }
 
-      if (enableCache) {
-        let previousCache: Cache | null = null;
-        if (
-          current !== null &&
-          current.memoizedState !== null &&
-          current.memoizedState.cachePool !== null
-        ) {
-          previousCache = current.memoizedState.cachePool.pool;
-        }
-        let cache: Cache | null = null;
-        if (
-          workInProgress.memoizedState !== null &&
-          workInProgress.memoizedState.cachePool !== null
-        ) {
-          cache = workInProgress.memoizedState.cachePool.pool;
-        }
-        if (cache !== previousCache) {
-          // Run passive effects to retain/release the cache.
-          workInProgress.flags |= Passive;
-        }
+      let previousCache: Cache | null = null;
+      if (
+        current !== null &&
+        current.memoizedState !== null &&
+        current.memoizedState.cachePool !== null
+      ) {
+        previousCache = current.memoizedState.cachePool.pool;
+      }
+      let cache: Cache | null = null;
+      if (
+        workInProgress.memoizedState !== null &&
+        workInProgress.memoizedState.cachePool !== null
+      ) {
+        cache = workInProgress.memoizedState.cachePool.pool;
+      }
+      if (cache !== previousCache) {
+        // Run passive effects to retain/release the cache.
+        workInProgress.flags |= Passive;
       }
 
       popTransition(workInProgress, current);
@@ -1810,19 +1805,17 @@ function completeWork(
       return null;
     }
     case CacheComponent: {
-      if (enableCache) {
-        let previousCache: Cache | null = null;
-        if (current !== null) {
-          previousCache = current.memoizedState.cache;
-        }
-        const cache: Cache = workInProgress.memoizedState.cache;
-        if (cache !== previousCache) {
-          // Run passive effects to retain/release the cache.
-          workInProgress.flags |= Passive;
-        }
-        popCacheProvider(workInProgress, cache);
-        bubbleProperties(workInProgress);
+      let previousCache: Cache | null = null;
+      if (current !== null) {
+        previousCache = current.memoizedState.cache;
       }
+      const cache: Cache = workInProgress.memoizedState.cache;
+      if (cache !== previousCache) {
+        // Run passive effects to retain/release the cache.
+        workInProgress.flags |= Passive;
+      }
+      popCacheProvider(workInProgress, cache);
+      bubbleProperties(workInProgress);
       return null;
     }
     case TracingMarkerComponent: {

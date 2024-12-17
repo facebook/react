@@ -11,3 +11,4 @@ export {inferMutableRanges} from './InferMutableRanges';
 export {inferReactivePlaces} from './InferReactivePlaces';
 export {default as inferReferenceEffects} from './InferReferenceEffects';
 export {inlineImmediatelyInvokedFunctionExpressions} from './InlineImmediatelyInvokedFunctionExpressions';
+export {inferEffectDependencies} from './InferEffectDependencies';

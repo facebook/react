@@ -546,41 +546,56 @@ function createPropsProperties(
   let refProperty: ObjectProperty | undefined;
   let keyProperty: ObjectProperty | undefined;
   const props: Array<ObjectProperty | SpreadPattern> = [];
-  const jsxAttributesWithoutKeyAndRef = propAttributes.filter(
-    p => p.kind === 'JsxAttribute' && p.name !== 'key' && p.name !== 'ref',
+  const jsxAttributesWithoutKey = propAttributes.filter(
+    p => p.kind === 'JsxAttribute' && p.name !== 'key',
   );
   const jsxSpreadAttributes = propAttributes.filter(
     p => p.kind === 'JsxSpreadAttribute',
   );
   const spreadPropsOnly =
-    jsxAttributesWithoutKeyAndRef.length === 0 &&
-    jsxSpreadAttributes.length === 1;
-
+    jsxAttributesWithoutKey.length === 0 && jsxSpreadAttributes.length === 1;
   propAttributes.forEach(prop => {
     switch (prop.kind) {
       case 'JsxAttribute': {
-        if (prop.name === 'ref') {
-          refProperty = {
-            kind: 'ObjectProperty',
-            key: {name: 'ref', kind: 'string'},
-            type: 'property',
-            place: {...prop.place},
-          };
-        } else if (prop.name === 'key') {
-          keyProperty = {
-            kind: 'ObjectProperty',
-            key: {name: 'key', kind: 'string'},
-            type: 'property',
-            place: {...prop.place},
-          };
-        } else {
-          const attributeProperty: ObjectProperty = {
-            kind: 'ObjectProperty',
-            key: {name: prop.name, kind: 'string'},
-            type: 'property',
-            place: {...prop.place},
-          };
-          props.push(attributeProperty);
+        switch (prop.name) {
+          case 'key': {
+            keyProperty = {
+              kind: 'ObjectProperty',
+              key: {name: 'key', kind: 'string'},
+              type: 'property',
+              place: {...prop.place},
+            };
+            break;
+          }
+          case 'ref': {
+            /**
+             * In the current JSX implementation, ref is both
+             * a property on the element and a property on props.
+             */
+            refProperty = {
+              kind: 'ObjectProperty',
+              key: {name: 'ref', kind: 'string'},
+              type: 'property',
+              place: {...prop.place},
+            };
+            const refPropProperty: ObjectProperty = {
+              kind: 'ObjectProperty',
+              key: {name: 'ref', kind: 'string'},
+              type: 'property',
+              place: {...prop.place},
+            };
+            props.push(refPropProperty);
+            break;
+          }
+          default: {
+            const attributeProperty: ObjectProperty = {
+              kind: 'ObjectProperty',
+              key: {name: prop.name, kind: 'string'},
+              type: 'property',
+              place: {...prop.place},
+            };
+            props.push(attributeProperty);
+          }
         }
         break;
       }

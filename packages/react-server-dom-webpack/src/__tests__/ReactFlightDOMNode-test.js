@@ -197,7 +197,6 @@ describe('ReactFlightDOMNode', () => {
     expect(result.text).toBe(testString);
   });
 
-  // @gate enableBinaryFlight
   it('should be able to serialize any kind of typed array', async () => {
     const buffer = new Uint8Array([
       123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
@@ -293,7 +292,6 @@ describe('ReactFlightDOMNode', () => {
     );
   });
 
-  // @gate enableFlightReadableStream
   it('should cancels the underlying ReadableStream when we are cancelled', async () => {
     let controller;
     let cancelReason;
@@ -337,7 +335,6 @@ describe('ReactFlightDOMNode', () => {
     );
   });
 
-  // @gate enableFlightReadableStream
   it('should cancels the underlying ReadableStream when we abort', async () => {
     const errors = [];
     let controller;
@@ -411,10 +408,11 @@ describe('ReactFlightDOMNode', () => {
     const {pendingResult} = await serverAct(async () => {
       // destructure trick to avoid the act scope from awaiting the returned value
       return {
-        pendingResult: ReactServerDOMStaticServer.prerenderToNodeStream(
-          <App />,
-          webpackMap,
-        ),
+        pendingResult:
+          ReactServerDOMStaticServer.unstable_prerenderToNodeStream(
+            <App />,
+            webpackMap,
+          ),
       };
     });
 
@@ -469,23 +467,24 @@ describe('ReactFlightDOMNode', () => {
     const {pendingResult} = await serverAct(async () => {
       // destructure trick to avoid the act scope from awaiting the returned value
       return {
-        pendingResult: ReactServerDOMStaticServer.prerenderToNodeStream(
-          <App />,
-          webpackMap,
-          {
-            signal: controller.signal,
-            onError(err) {
-              errors.push(err);
+        pendingResult:
+          ReactServerDOMStaticServer.unstable_prerenderToNodeStream(
+            <App />,
+            webpackMap,
+            {
+              signal: controller.signal,
+              onError(err) {
+                errors.push(err);
+              },
             },
-          },
-        ),
+          ),
       };
     });
 
     controller.abort('boom');
     resolveGreeting();
     const {prelude} = await pendingResult;
-    expect(errors).toEqual(['boom']);
+    expect(errors).toEqual([]);
 
     function ClientRoot({response}) {
       return use(response);

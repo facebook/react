@@ -34,7 +34,6 @@ const skipFilter = new Set([
   'capturing-arrow-function-1',
   'capturing-func-mutate-3',
   'capturing-func-mutate-nested',
-  'capturing-func-mutate',
   'capturing-function-1',
   'capturing-function-alias-computed-load',
   'capturing-function-decl',
@@ -236,7 +235,6 @@ const skipFilter = new Set([
   'capturing-fun-alias-captured-mutate-2',
   'capturing-fun-alias-captured-mutate-arr-2',
   'capturing-func-alias-captured-mutate-arr',
-  'capturing-func-alias-captured-mutate',
   'capturing-func-alias-computed-mutate',
   'capturing-func-alias-mutate',
   'capturing-func-alias-receiver-computed-mutate',
@@ -475,16 +473,20 @@ const skipFilter = new Set([
   'rules-of-hooks/rules-of-hooks-93dc5d5e538a',
   'rules-of-hooks/rules-of-hooks-69521d94fa03',
 
+  // false positives
+  'invalid-jsx-lowercase-localvar',
+
   // bugs
   'fbt/bug-fbt-plural-multiple-function-calls',
   'fbt/bug-fbt-plural-multiple-mixed-call-tag',
+  `bug-capturing-func-maybealias-captured-mutate`,
   'bug-object-expression-computed-key-modified-during-after-construction-hoisted-sequence-expr',
   'bug-invalid-hoisting-functionexpr',
   'bug-aliased-capture-aliased-mutate',
   'bug-aliased-capture-mutate',
   'bug-functiondecl-hoisting',
   'bug-try-catch-maybe-null-dependency',
-  'bug-nonreactive-ref',
+  'bug-type-inference-control-flow',
   'reduce-reactive-deps/bug-infer-function-cond-access-not-hoisted',
   'bug-invalid-phi-as-dependency',
   'reduce-reactive-deps/bug-merge-uncond-optional-chain-and-cond',
@@ -503,6 +505,7 @@ const skipFilter = new Set([
   // Depends on external functions
   'idx-method-no-outlining-wildcard',
   'idx-method-no-outlining',
+  'target-flag-meta-internal',
 
   // needs to be executed as a module
   'meta-property',

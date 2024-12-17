@@ -13,7 +13,7 @@ function Foo(props, ref) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Foo,
-  params: [{bar: 'foo'}, {ref: {cuurrent: 1}}],
+  params: [{bar: 'foo'}, {ref: {current: 1}}],
   isComponent: true,
 };
 
@@ -26,35 +26,39 @@ import { c as _c } from "react/compiler-runtime";
 import { useEffect } from "react";
 
 function Foo(props, ref) {
-  const $ = _c(4);
+  const $ = _c(5);
   let t0;
-  let t1;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] !== ref) {
     t0 = () => {
       ref.current = 2;
     };
-    t1 = [];
-    $[0] = t0;
-    $[1] = t1;
+    $[0] = ref;
+    $[1] = t0;
   } else {
-    t0 = $[0];
-    t1 = $[1];
+    t0 = $[1];
+  }
+  let t1;
+  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = [];
+    $[2] = t1;
+  } else {
+    t1 = $[2];
   }
   useEffect(t0, t1);
   let t2;
-  if ($[2] !== props.bar) {
+  if ($[3] !== props.bar) {
     t2 = <div>{props.bar}</div>;
-    $[2] = props.bar;
-    $[3] = t2;
+    $[3] = props.bar;
+    $[4] = t2;
   } else {
-    t2 = $[3];
+    t2 = $[4];
   }
   return t2;
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Foo,
-  params: [{ bar: "foo" }, { ref: { cuurrent: 1 } }],
+  params: [{ bar: "foo" }, { ref: { current: 1 } }],
   isComponent: true,
 };
 

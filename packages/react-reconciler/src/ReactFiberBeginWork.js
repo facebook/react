@@ -79,6 +79,7 @@ import {
   PerformedWork,
   Placement,
   Hydrating,
+  Callback,
   ContentReset,
   DidCapture,
   Update,
@@ -99,18 +100,17 @@ import {
   enableProfilerCommitHooks,
   enableProfilerTimer,
   enableScopeAPI,
-  enableCache,
   enableLazyContextPropagation,
   enableSchedulingProfiler,
   enableTransitionTracing,
   enableLegacyHidden,
   enableCPUSuspense,
-  enableAsyncActions,
   enablePostpone,
   enableRenderableContext,
   disableLegacyMode,
   disableDefaultPropsExceptForClasses,
   enableOwnerStacks,
+  enableHydrationLaneScheduling,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
@@ -146,6 +146,7 @@ import {
   NoLane,
   NoLanes,
   OffscreenLane,
+  DefaultLane,
   DefaultHydrationLane,
   SomeRetryLane,
   includesSomeLane,
@@ -166,7 +167,6 @@ import {
   isSuspenseInstancePending,
   isSuspenseInstanceFallback,
   getSuspenseInstanceFallbackErrorDetails,
-  registerSuspenseInstanceRetry,
   supportsHydration,
   supportsResources,
   supportsSingletons,
@@ -256,7 +256,6 @@ import {
   isFunctionClassComponent,
 } from './ReactFiber';
 import {
-  retryDehydratedSuspenseBoundary,
   scheduleUpdateOnFiber,
   renderDidSuspendDelayIfPossible,
   markSkippedUpdateLanes,
@@ -714,12 +713,10 @@ function updateOffscreenComponent(
         cachePool: null,
       };
       workInProgress.memoizedState = nextState;
-      if (enableCache) {
-        // push the cache pool even though we're going to bail out
-        // because otherwise there'd be a context mismatch
-        if (current !== null) {
-          pushTransition(workInProgress, null, null);
-        }
+      // push the cache pool even though we're going to bail out
+      // because otherwise there'd be a context mismatch
+      if (current !== null) {
+        pushTransition(workInProgress, null, null);
       }
       reuseHiddenContextOnStack(workInProgress);
       pushOffscreenSuspenseHandler(workInProgress);
@@ -753,7 +750,7 @@ function updateOffscreenComponent(
         cachePool: null,
       };
       workInProgress.memoizedState = nextState;
-      if (enableCache && current !== null) {
+      if (current !== null) {
         // If the render that spawned this one accessed the cache pool, resume
         // using the same cache. Unless the parent changed, since that means
         // there was a refresh.
@@ -776,12 +773,10 @@ function updateOffscreenComponent(
     if (prevState !== null) {
       // We're going from hidden -> visible.
       let prevCachePool = null;
-      if (enableCache) {
-        // If the render that spawned this one accessed the cache pool, resume
-        // using the same cache. Unless the parent changed, since that means
-        // there was a refresh.
-        prevCachePool = prevState.cachePool;
-      }
+      // If the render that spawned this one accessed the cache pool, resume
+      // using the same cache. Unless the parent changed, since that means
+      // there was a refresh.
+      prevCachePool = prevState.cachePool;
 
       let transitions = null;
       if (enableTransitionTracing) {
@@ -806,13 +801,11 @@ function updateOffscreenComponent(
       // special to do. Need to push to the stack regardless, though, to avoid
       // a push/pop misalignment.
 
-      if (enableCache) {
-        // If the render that spawned this one accessed the cache pool, resume
-        // using the same cache. Unless the parent changed, since that means
-        // there was a refresh.
-        if (current !== null) {
-          pushTransition(workInProgress, null, null);
-        }
+      // If the render that spawned this one accessed the cache pool, resume
+      // using the same cache. Unless the parent changed, since that means
+      // there was a refresh.
+      if (current !== null) {
+        pushTransition(workInProgress, null, null);
       }
 
       // We're about to bail out, but we need to push this to the stack anyway
@@ -835,15 +828,13 @@ function deferHiddenOffscreenComponent(
   const nextState: OffscreenState = {
     baseLanes: nextBaseLanes,
     // Save the cache pool so we can resume later.
-    cachePool: enableCache ? getOffscreenDeferredCache() : null,
+    cachePool: getOffscreenDeferredCache(),
   };
   workInProgress.memoizedState = nextState;
-  if (enableCache) {
-    // push the cache pool even though we're going to bail out
-    // because otherwise there'd be a context mismatch
-    if (current !== null) {
-      pushTransition(workInProgress, null, null);
-    }
+  // push the cache pool even though we're going to bail out
+  // because otherwise there'd be a context mismatch
+  if (current !== null) {
+    pushTransition(workInProgress, null, null);
   }
 
   // We're about to bail out, but we need to push this to the stack anyway
@@ -876,10 +867,6 @@ function updateCacheComponent(
   workInProgress: Fiber,
   renderLanes: Lanes,
 ) {
-  if (!enableCache) {
-    return null;
-  }
-
   prepareToReadContext(workInProgress, renderLanes);
   const parentCache = readContext(CacheContext);
 
@@ -1480,13 +1467,11 @@ function updateHostRoot(
     pushRootMarkerInstance(workInProgress);
   }
 
-  if (enableCache) {
-    const nextCache: Cache = nextState.cache;
-    pushCacheProvider(workInProgress, nextCache);
-    if (nextCache !== prevState.cache) {
-      // The root cache refreshed.
-      propagateContextChange(workInProgress, CacheContext, renderLanes);
-    }
+  const nextCache: Cache = nextState.cache;
+  pushCacheProvider(workInProgress, nextCache);
+  if (nextCache !== prevState.cache) {
+    // The root cache refreshed.
+    propagateContextChange(workInProgress, CacheContext, renderLanes);
   }
 
   // This would ideally go inside processUpdateQueue, but because it suspends,
@@ -1620,55 +1605,53 @@ function updateHostComponent(
     workInProgress.flags |= ContentReset;
   }
 
-  if (enableAsyncActions) {
-    const memoizedState = workInProgress.memoizedState;
-    if (memoizedState !== null) {
-      // This fiber has been upgraded to a stateful component. The only way
-      // happens currently is for form actions. We use hooks to track the
-      // pending and error state of the form.
-      //
-      // Once a fiber is upgraded to be stateful, it remains stateful for the
-      // rest of its lifetime.
-      const newState = renderTransitionAwareHostComponentWithHooks(
-        current,
-        workInProgress,
-        renderLanes,
-      );
+  const memoizedState = workInProgress.memoizedState;
+  if (memoizedState !== null) {
+    // This fiber has been upgraded to a stateful component. The only way
+    // happens currently is for form actions. We use hooks to track the
+    // pending and error state of the form.
+    //
+    // Once a fiber is upgraded to be stateful, it remains stateful for the
+    // rest of its lifetime.
+    const newState = renderTransitionAwareHostComponentWithHooks(
+      current,
+      workInProgress,
+      renderLanes,
+    );
 
-      // If the transition state changed, propagate the change to all the
-      // descendents. We use Context as an implementation detail for this.
-      //
-      // This is intentionally set here instead of pushHostContext because
-      // pushHostContext gets called before we process the state hook, to avoid
-      // a state mismatch in the event that something suspends.
-      //
-      // NOTE: This assumes that there cannot be nested transition providers,
-      // because the only renderer that implements this feature is React DOM,
-      // and forms cannot be nested. If we did support nested providers, then
-      // we would need to push a context value even for host fibers that
-      // haven't been upgraded yet.
-      if (isPrimaryRenderer) {
-        HostTransitionContext._currentValue = newState;
-      } else {
-        HostTransitionContext._currentValue2 = newState;
-      }
-      if (enableLazyContextPropagation) {
-        // In the lazy propagation implementation, we don't scan for matching
-        // consumers until something bails out.
-      } else {
-        if (didReceiveUpdate) {
-          if (current !== null) {
-            const oldStateHook: Hook = current.memoizedState;
-            const oldState: TransitionStatus = oldStateHook.memoizedState;
-            // This uses regular equality instead of Object.is because we assume
-            // that host transition state doesn't include NaN as a valid type.
-            if (oldState !== newState) {
-              propagateContextChange(
-                workInProgress,
-                HostTransitionContext,
-                renderLanes,
-              );
-            }
+    // If the transition state changed, propagate the change to all the
+    // descendents. We use Context as an implementation detail for this.
+    //
+    // This is intentionally set here instead of pushHostContext because
+    // pushHostContext gets called before we process the state hook, to avoid
+    // a state mismatch in the event that something suspends.
+    //
+    // NOTE: This assumes that there cannot be nested transition providers,
+    // because the only renderer that implements this feature is React DOM,
+    // and forms cannot be nested. If we did support nested providers, then
+    // we would need to push a context value even for host fibers that
+    // haven't been upgraded yet.
+    if (isPrimaryRenderer) {
+      HostTransitionContext._currentValue = newState;
+    } else {
+      HostTransitionContext._currentValue2 = newState;
+    }
+    if (enableLazyContextPropagation) {
+      // In the lazy propagation implementation, we don't scan for matching
+      // consumers until something bails out.
+    } else {
+      if (didReceiveUpdate) {
+        if (current !== null) {
+          const oldStateHook: Hook = current.memoizedState;
+          const oldState: TransitionStatus = oldStateHook.memoizedState;
+          // This uses regular equality instead of Object.is because we assume
+          // that host transition state doesn't include NaN as a valid type.
+          if (oldState !== newState) {
+            propagateContextChange(
+              workInProgress,
+              HostTransitionContext,
+              renderLanes,
+            );
           }
         }
       }
@@ -1992,28 +1975,26 @@ function updateSuspenseOffscreenState(
   renderLanes: Lanes,
 ): OffscreenState {
   let cachePool: SpawnedCachePool | null = null;
-  if (enableCache) {
-    const prevCachePool: SpawnedCachePool | null = prevOffscreenState.cachePool;
-    if (prevCachePool !== null) {
-      const parentCache = isPrimaryRenderer
-        ? CacheContext._currentValue
-        : CacheContext._currentValue2;
-      if (prevCachePool.parent !== parentCache) {
-        // Detected a refresh in the parent. This overrides any previously
-        // suspended cache.
-        cachePool = {
-          parent: parentCache,
-          pool: parentCache,
-        };
-      } else {
-        // We can reuse the cache from last time. The only thing that would have
-        // overridden it is a parent refresh, which we checked for above.
-        cachePool = prevCachePool;
-      }
+  const prevCachePool: SpawnedCachePool | null = prevOffscreenState.cachePool;
+  if (prevCachePool !== null) {
+    const parentCache = isPrimaryRenderer
+      ? CacheContext._currentValue
+      : CacheContext._currentValue2;
+    if (prevCachePool.parent !== parentCache) {
+      // Detected a refresh in the parent. This overrides any previously
+      // suspended cache.
+      cachePool = {
+        parent: parentCache,
+        pool: parentCache,
+      };
     } else {
-      // If there's no previous cache pool, grab the current one.
-      cachePool = getSuspendedCache();
+      // We can reuse the cache from last time. The only thing that would have
+      // overridden it is a parent refresh, which we checked for above.
+      cachePool = prevCachePool;
     }
+  } else {
+    // If there's no previous cache pool, grab the current one.
+    cachePool = getSuspendedCache();
   }
   return {
     baseLanes: mergeLanes(prevOffscreenState.baseLanes, renderLanes),
@@ -2650,14 +2631,10 @@ function mountDehydratedSuspenseComponent(
     // have timed out. In theory we could render it in this pass but it would have the
     // wrong priority associated with it and will prevent hydration of parent path.
     // Instead, we'll leave work left on it to render it in a separate commit.
-
-    // TODO This time should be the time at which the server rendered response that is
-    // a parent to this boundary was displayed. However, since we currently don't have
-    // a protocol to transfer that time, we'll just estimate it by using the current
-    // time. This will mean that Suspense timeouts are slightly shifted to later than
-    // they should be.
     // Schedule a normal pri update to render this content.
-    workInProgress.lanes = laneToLanes(DefaultHydrationLane);
+    workInProgress.lanes = laneToLanes(
+      enableHydrationLaneScheduling ? DefaultLane : DefaultHydrationLane,
+    );
   } else {
     // We'll continue hydrating the rest at offscreen priority since we'll already
     // be showing the right content coming from the server, it is no rush.
@@ -2816,12 +2793,10 @@ function updateDehydratedSuspenseComponent(
       // on the client than if we just leave it alone. If the server times out or errors
       // these should update this boundary to the permanent Fallback state instead.
       // Mark it as having captured (i.e. suspended).
-      workInProgress.flags |= DidCapture;
+      // Also Mark it as requiring retry.
+      workInProgress.flags |= DidCapture | Callback;
       // Leave the child in place. I.e. the dehydrated fragment.
       workInProgress.child = current.child;
-      // Register a callback to retry this boundary once the server has sent the result.
-      const retry = retryDehydratedSuspenseBoundary.bind(null, current);
-      registerSuspenseInstanceRetry(suspenseInstance, retry);
       return null;
     } else {
       // This is the first attempt.
@@ -3607,7 +3582,7 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
   // the begin phase. There's still some bookkeeping we that needs to be done
   // in this optimized path, mostly pushing stuff onto the stack.
   switch (workInProgress.tag) {
-    case HostRoot:
+    case HostRoot: {
       pushHostRootContext(workInProgress);
       const root: FiberRoot = workInProgress.stateNode;
       pushRootTransition(workInProgress, root, renderLanes);
@@ -3616,12 +3591,11 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
         pushRootMarkerInstance(workInProgress);
       }
 
-      if (enableCache) {
-        const cache: Cache = current.memoizedState.cache;
-        pushCacheProvider(workInProgress, cache);
-      }
+      const cache: Cache = current.memoizedState.cache;
+      pushCacheProvider(workInProgress, cache);
       resetHydrationState();
       break;
+    }
     case HostSingleton:
     case HostComponent:
       pushHostContext(workInProgress);
@@ -3803,10 +3777,8 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       return updateOffscreenComponent(current, workInProgress, renderLanes);
     }
     case CacheComponent: {
-      if (enableCache) {
-        const cache: Cache = current.memoizedState.cache;
-        pushCacheProvider(workInProgress, cache);
-      }
+      const cache: Cache = current.memoizedState.cache;
+      pushCacheProvider(workInProgress, cache);
       break;
     }
     case TracingMarkerComponent: {
@@ -4093,10 +4065,7 @@ function beginWork(
       break;
     }
     case CacheComponent: {
-      if (enableCache) {
-        return updateCacheComponent(current, workInProgress, renderLanes);
-      }
-      break;
+      return updateCacheComponent(current, workInProgress, renderLanes);
     }
     case TracingMarkerComponent: {
       if (enableTransitionTracing) {
