@@ -11,11 +11,7 @@
  */
 
 "use strict";
-var dynamicFeatureFlags = require("SchedulerFeatureFlags"),
-  userBlockingPriorityTimeout = dynamicFeatureFlags.userBlockingPriorityTimeout,
-  normalPriorityTimeout = dynamicFeatureFlags.normalPriorityTimeout,
-  lowPriorityTimeout = dynamicFeatureFlags.lowPriorityTimeout,
-  enableRequestPaint = dynamicFeatureFlags.enableRequestPaint;
+var enableRequestPaint = require("SchedulerFeatureFlags").enableRequestPaint;
 function push(heap, node) {
   var index = heap.length;
   heap.push(node);
@@ -80,7 +76,6 @@ if ("object" === typeof performance && "function" === typeof performance.now) {
 var taskQueue = [],
   timerQueue = [],
   taskIdCounter = 1,
-  isSchedulerPaused = !1,
   currentTask = null,
   currentPriorityLevel = 3,
   isPerformingWork = !1,
@@ -144,11 +139,9 @@ function performWorkUntilDeadline() {
             advanceTimers(currentTime);
             for (
               currentTask = peek(taskQueue);
+              null !== currentTask &&
               !(
-                null === currentTask ||
-                isSchedulerPaused ||
-                (currentTask.expirationTime > currentTime &&
-                  shouldYieldToHost())
+                currentTask.expirationTime > currentTime && shouldYieldToHost()
               );
 
             ) {
@@ -232,7 +225,6 @@ exports.unstable_cancelCallback = function (task) {
   task.callback = null;
 };
 exports.unstable_continueExecution = function () {
-  isSchedulerPaused = !1;
   isHostCallbackScheduled ||
     isPerformingWork ||
     ((isHostCallbackScheduled = !0), requestHostCallback());
@@ -268,9 +260,7 @@ exports.unstable_next = function (eventHandler) {
     currentPriorityLevel = previousPriorityLevel;
   }
 };
-exports.unstable_pauseExecution = function () {
-  isSchedulerPaused = !0;
-};
+exports.unstable_pauseExecution = function () {};
 exports.unstable_requestPaint = function () {
   enableRequestPaint && (needsPaint = !0);
 };
@@ -311,16 +301,16 @@ exports.unstable_scheduleCallback = function (
       var timeout = -1;
       break;
     case 2:
-      timeout = userBlockingPriorityTimeout;
+      timeout = 250;
       break;
     case 5:
       timeout = 1073741823;
       break;
     case 4:
-      timeout = lowPriorityTimeout;
+      timeout = 1e4;
       break;
     default:
-      timeout = normalPriorityTimeout;
+      timeout = 5e3;
   }
   timeout = options + timeout;
   priorityLevel = {

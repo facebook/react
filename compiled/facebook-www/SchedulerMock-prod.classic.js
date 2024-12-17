@@ -63,7 +63,6 @@ function compare(a, b) {
 var taskQueue = [],
   timerQueue = [],
   taskIdCounter = 1,
-  isSchedulerPaused = !1,
   currentTask = null,
   currentPriorityLevel = 3,
   isPerformingWork = !1,
@@ -118,12 +117,9 @@ function flushWork(hasTimeRemaining, initialTime) {
       advanceTimers(initialTime);
       for (
         currentTask = peek(taskQueue);
-        !(
-          null === currentTask ||
-          isSchedulerPaused ||
-          (currentTask.expirationTime > initialTime &&
-            (!hasTimeRemaining || shouldYieldToHost()))
-        );
+        null !== currentTask &&
+        (!(currentTask.expirationTime > initialTime) ||
+          (hasTimeRemaining && !shouldYieldToHost()));
 
       ) {
         var callback = currentTask.callback;
@@ -234,7 +230,6 @@ exports.unstable_clearLog = function () {
   return values;
 };
 exports.unstable_continueExecution = function () {
-  isSchedulerPaused = !1;
   isHostCallbackScheduled ||
     isPerformingWork ||
     ((isHostCallbackScheduled = !0), (scheduledCallback = flushWork));
@@ -327,9 +322,7 @@ exports.unstable_next = function (eventHandler) {
 exports.unstable_now = function () {
   return currentMockTime;
 };
-exports.unstable_pauseExecution = function () {
-  isSchedulerPaused = !0;
-};
+exports.unstable_pauseExecution = function () {};
 exports.unstable_requestPaint = function () {
   needsPaint = !0;
 };
