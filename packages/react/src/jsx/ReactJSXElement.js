@@ -698,8 +698,6 @@ export function createElement(type, config, children) {
     // Unlike the jsx() runtime, createElement() doesn't warn about key spread.
   }
 
-  let propName;
-
   // Reserved names are extracted
   const props = {};
 
@@ -734,7 +732,7 @@ export function createElement(type, config, children) {
     }
 
     // Remaining properties are added to a new props object
-    for (propName in config) {
+    for (const propName in config) {
       if (
         hasOwnProperty.call(config, propName) &&
         // Skip over reserved prop names
@@ -772,7 +770,7 @@ export function createElement(type, config, children) {
   // Resolve default props
   if (type && type.defaultProps) {
     const defaultProps = type.defaultProps;
-    for (propName in defaultProps) {
+    for (const propName in defaultProps) {
       if (props[propName] === undefined) {
         props[propName] = defaultProps[propName];
       }
