@@ -72,6 +72,8 @@ export const enableSiblingPrerendering = true;
 
 export const enableUseResourceEffectHook = false;
 
+export const enableYieldingBeforePassive = true;
+
 // TODO: This must be in sync with the main ReactFeatureFlags file because
 // the Test Renderer's value must be the same as the one used by the
 // react package.

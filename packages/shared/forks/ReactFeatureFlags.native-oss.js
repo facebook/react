@@ -76,6 +76,8 @@ export const enableUseResourceEffectHook = false;
 
 export const enableHydrationLaneScheduling = true;
 
+export const enableYieldingBeforePassive = false;
+
 // Profiling Only
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;

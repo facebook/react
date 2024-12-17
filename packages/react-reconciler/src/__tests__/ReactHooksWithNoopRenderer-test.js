@@ -2695,13 +2695,23 @@ describe('ReactHooksWithNoopRenderer', () => {
         React.startTransition(() => {
           ReactNoop.render(<Counter count={1} />);
         });
-        await waitForPaint([
-          'Create passive [current: 0]',
-          'Destroy insertion [current: 0]',
-          'Create insertion [current: 0]',
-          'Destroy layout [current: 1]',
-          'Create layout [current: 1]',
-        ]);
+        if (gate(flags => flags.enableYieldingBeforePassive)) {
+          await waitForPaint(['Create passive [current: 0]']);
+          await waitForPaint([
+            'Destroy insertion [current: 0]',
+            'Create insertion [current: 0]',
+            'Destroy layout [current: 1]',
+            'Create layout [current: 1]',
+          ]);
+        } else {
+          await waitForPaint([
+            'Create passive [current: 0]',
+            'Destroy insertion [current: 0]',
+            'Create insertion [current: 0]',
+            'Destroy layout [current: 1]',
+            'Create layout [current: 1]',
+          ]);
+        }
         expect(committedText).toEqual('1');
       });
       assertLog([

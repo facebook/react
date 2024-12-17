@@ -77,6 +77,9 @@ export const enableLegacyFBSupport = false;
 // likely to include in an upcoming release.
 // -----------------------------------------------------------------------------
 
+// Yield to the browser event loop and not just the scheduler event loop before passive effects.
+export const enableYieldingBeforePassive = __EXPERIMENTAL__;
+
 export const enableLegacyCache = __EXPERIMENTAL__;
 
 export const enableAsyncIterableChildren = __EXPERIMENTAL__;
