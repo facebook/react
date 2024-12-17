@@ -12,7 +12,6 @@
 import type {PriorityLevel} from '../SchedulerPriorities';
 
 import {
-  enableSchedulerDebugging,
   enableProfiling,
   frameYieldMs,
   userBlockingPriorityTimeout,
@@ -82,9 +81,6 @@ var timerQueue: Array<Task> = [];
 
 // Incrementing id counter. Used to maintain insertion order.
 var taskIdCounter = 1;
-
-// Pausing the scheduler is useful for debugging.
-var isSchedulerPaused = false;
 
 var currentTask = null;
 var currentPriorityLevel = NormalPriority;
@@ -193,10 +189,7 @@ function workLoop(initialTime: number) {
   let currentTime = initialTime;
   advanceTimers(currentTime);
   currentTask = peek(taskQueue);
-  while (
-    currentTask !== null &&
-    !(enableSchedulerDebugging && isSchedulerPaused)
-  ) {
+  while (currentTask !== null) {
     if (!enableAlwaysYieldScheduler) {
       if (currentTask.expirationTime > currentTime && shouldYieldToHost()) {
         // This currentTask hasn't expired, and we've reached the deadline.
@@ -422,22 +415,6 @@ function unstable_scheduleCallback(
   return newTask;
 }
 
-function unstable_pauseExecution() {
-  isSchedulerPaused = true;
-}
-
-function unstable_continueExecution() {
-  isSchedulerPaused = false;
-  if (!isHostCallbackScheduled && !isPerformingWork) {
-    isHostCallbackScheduled = true;
-    requestHostCallback();
-  }
-}
-
-function unstable_getFirstCallbackNode(): Task | null {
-  return peek(taskQueue);
-}
-
 function unstable_cancelCallback(task: Task) {
   if (enableProfiling) {
     if (task.isQueued) {
@@ -606,9 +583,6 @@ export {
   unstable_getCurrentPriorityLevel,
   shouldYieldToHost as unstable_shouldYield,
   requestPaint as unstable_requestPaint,
-  unstable_continueExecution,
-  unstable_pauseExecution,
-  unstable_getFirstCallbackNode,
   getCurrentTime as unstable_now,
   forceFrameRate as unstable_forceFrameRate,
 };

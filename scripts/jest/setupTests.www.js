@@ -34,9 +34,9 @@ jest.mock('scheduler/src/SchedulerFeatureFlags', () => {
     schedulerSrcPath + '/src/forks/SchedulerFeatureFlags.www'
   );
 
-  // These flags are not a dynamic on www, but we still want to run
-  // tests in both versions.
-  actual.enableSchedulerDebugging = __VARIANT__;
+  // Add flags here that are not a dynamic on www,
+  // but we still want to run tests in both versions.
+  // <this list is empty>
 
   return actual;
 });
