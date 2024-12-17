@@ -56,7 +56,6 @@ export const enableUseEffectEventHook = true;
 export const enableMoveBefore = false;
 export const disableInputAttributeSyncing = false;
 export const enableLegacyFBSupport = true;
-export const enableLazyContextPropagation = true;
 
 export const enableHydrationLaneScheduling = true;
 
