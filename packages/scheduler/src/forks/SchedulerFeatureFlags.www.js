@@ -10,13 +10,12 @@
 // $FlowFixMe[cannot-resolve-module]
 const dynamicFeatureFlags = require('SchedulerFeatureFlags');
 
-export const {
-  userBlockingPriorityTimeout,
-  normalPriorityTimeout,
-  lowPriorityTimeout,
-  enableRequestPaint,
-} = dynamicFeatureFlags;
+export const {enableRequestPaint} = dynamicFeatureFlags;
 
-export const frameYieldMs = 10;
-export const enableSchedulerDebugging = true;
+export const enableSchedulerDebugging = false;
 export const enableProfiling = __DEV__;
+export const frameYieldMs = 10;
+
+export const userBlockingPriorityTimeout = 250;
+export const normalPriorityTimeout = 5000;
+export const lowPriorityTimeout = 10000;
