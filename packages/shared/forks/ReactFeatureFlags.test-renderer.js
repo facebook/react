@@ -53,7 +53,7 @@ export const enableLegacyHidden = false;
 
 export const enableTransitionTracing = false;
 
-export const useModernStrictMode = false;
+export const useModernStrictMode = true;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableFizzExternalRuntime = true;
 export const enableDeferRootSchedulingToMicrotask = true;
