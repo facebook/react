@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<228efb504e000ca7558ff605a12df677>>
+ * @generated SignedSource<<c591083af671f994ec67ed51d1169407>>
  */
 
 /*
@@ -15867,14 +15867,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1722 = React.version;
 if (
-  "19.1.0-native-fb-909ed63e-20241216" !==
+  "19.1.0-native-fb-975cea2d-20241216" !==
   isomorphicReactPackageVersion$jscomp$inline_1722
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1722,
-      "19.1.0-native-fb-909ed63e-20241216"
+      "19.1.0-native-fb-975cea2d-20241216"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -15896,10 +15896,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2177 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-909ed63e-20241216",
+  version: "19.1.0-native-fb-975cea2d-20241216",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-909ed63e-20241216"
+  reconcilerVersion: "19.1.0-native-fb-975cea2d-20241216"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2178 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16005,4 +16005,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.1.0-native-fb-909ed63e-20241216";
+exports.version = "19.1.0-native-fb-975cea2d-20241216";

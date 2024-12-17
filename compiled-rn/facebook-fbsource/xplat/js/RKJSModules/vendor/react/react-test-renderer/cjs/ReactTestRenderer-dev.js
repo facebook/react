@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0afd16134514eb3b83dff235a3ca8af3>>
+ * @generated SignedSource<<8581d6a859ab565ddb71e0e0358094c0>>
  */
 
 "use strict";
@@ -2280,13 +2280,13 @@ __DEV__ &&
       }
     }
     function processUpdateQueue(
-      workInProgress$jscomp$0,
+      workInProgress,
       props,
       instance$jscomp$0,
       renderLanes
     ) {
       didReadFromEntangledAsyncAction = !1;
-      var queue = workInProgress$jscomp$0.updateQueue;
+      var queue = workInProgress.updateQueue;
       hasForceUpdate = !1;
       currentlyProcessingQueue = queue.shared;
       var firstBaseUpdate = queue.firstBaseUpdate,
@@ -2301,7 +2301,7 @@ __DEV__ &&
           ? (firstBaseUpdate = firstPendingUpdate)
           : (lastBaseUpdate.next = firstPendingUpdate);
         lastBaseUpdate = lastPendingUpdate;
-        var current = workInProgress$jscomp$0.alternate;
+        var current = workInProgress.alternate;
         null !== current &&
           ((current = current.updateQueue),
           (pendingQueue = current.lastBaseUpdate),
@@ -2337,40 +2337,57 @@ __DEV__ &&
                   next: null
                 });
             a: {
-              var workInProgress = workInProgress$jscomp$0,
-                update = pendingQueue;
-              updateLane = props;
-              var instance = instance$jscomp$0;
-              switch (update.tag) {
+              updateLane = workInProgress;
+              var partialState = pendingQueue;
+              var nextProps = props,
+                instance = instance$jscomp$0;
+              switch (partialState.tag) {
                 case ReplaceState:
-                  workInProgress = update.payload;
-                  if ("function" === typeof workInProgress) {
+                  partialState = partialState.payload;
+                  if ("function" === typeof partialState) {
                     isDisallowedContextReadInDEV = !0;
-                    newState = workInProgress.call(
+                    var nextState = partialState.call(
                       instance,
                       newState,
-                      updateLane
+                      nextProps
                     );
+                    if (updateLane.mode & 8) {
+                      setIsStrictModeForDevtools(!0);
+                      try {
+                        partialState.call(instance, newState, nextProps);
+                      } finally {
+                        setIsStrictModeForDevtools(!1);
+                      }
+                    }
                     isDisallowedContextReadInDEV = !1;
+                    newState = nextState;
                     break a;
                   }
-                  newState = workInProgress;
+                  newState = partialState;
                   break a;
                 case CaptureUpdate:
-                  workInProgress.flags = (workInProgress.flags & -65537) | 128;
+                  updateLane.flags = (updateLane.flags & -65537) | 128;
                 case UpdateState:
-                  workInProgress = update.payload;
-                  "function" === typeof workInProgress
-                    ? ((isDisallowedContextReadInDEV = !0),
-                      (updateLane = workInProgress.call(
-                        instance,
-                        newState,
-                        updateLane
-                      )),
-                      (isDisallowedContextReadInDEV = !1))
-                    : (updateLane = workInProgress);
-                  if (null === updateLane || void 0 === updateLane) break a;
-                  newState = assign({}, newState, updateLane);
+                  nextState = partialState.payload;
+                  if ("function" === typeof nextState) {
+                    isDisallowedContextReadInDEV = !0;
+                    partialState = nextState.call(
+                      instance,
+                      newState,
+                      nextProps
+                    );
+                    if (updateLane.mode & 8) {
+                      setIsStrictModeForDevtools(!0);
+                      try {
+                        nextState.call(instance, newState, nextProps);
+                      } finally {
+                        setIsStrictModeForDevtools(!1);
+                      }
+                    }
+                    isDisallowedContextReadInDEV = !1;
+                  } else partialState = nextState;
+                  if (null === partialState || void 0 === partialState) break a;
+                  newState = assign({}, newState, partialState);
                   break a;
                 case ForceUpdate:
                   hasForceUpdate = !0;
@@ -2378,8 +2395,8 @@ __DEV__ &&
             }
             updateLane = pendingQueue.callback;
             null !== updateLane &&
-              ((workInProgress$jscomp$0.flags |= 64),
-              isHiddenUpdate && (workInProgress$jscomp$0.flags |= 8192),
+              ((workInProgress.flags |= 64),
+              isHiddenUpdate && (workInProgress.flags |= 8192),
               (isHiddenUpdate = queue.callbacks),
               null === isHiddenUpdate
                 ? (queue.callbacks = [updateLane])
@@ -2414,8 +2431,8 @@ __DEV__ &&
         queue.lastBaseUpdate = current;
         null === firstBaseUpdate && (queue.shared.lanes = 0);
         workInProgressRootSkippedLanes |= lastBaseUpdate;
-        workInProgress$jscomp$0.lanes = lastBaseUpdate;
-        workInProgress$jscomp$0.memoizedState = newState;
+        workInProgress.lanes = lastBaseUpdate;
+        workInProgress.memoizedState = newState;
       }
       currentlyProcessingQueue = null;
     }
@@ -2708,18 +2725,32 @@ __DEV__ &&
           : null !== hookTypesDev
             ? HooksDispatcherOnMountWithHookTypesInDEV
             : HooksDispatcherOnMountInDEV;
-      shouldDoubleInvokeUserFnsInHooksDEV = !1;
-      nextRenderLanes = callComponentInDEV(Component, props, secondArg);
+      shouldDoubleInvokeUserFnsInHooksDEV = nextRenderLanes =
+        0 !== (workInProgress.mode & 8);
+      var children = callComponentInDEV(Component, props, secondArg);
       shouldDoubleInvokeUserFnsInHooksDEV = !1;
       didScheduleRenderPhaseUpdateDuringThisPass &&
-        (nextRenderLanes = renderWithHooksAgain(
+        (children = renderWithHooksAgain(
           workInProgress,
           Component,
           props,
           secondArg
         ));
+      if (nextRenderLanes) {
+        setIsStrictModeForDevtools(!0);
+        try {
+          children = renderWithHooksAgain(
+            workInProgress,
+            Component,
+            props,
+            secondArg
+          );
+        } finally {
+          setIsStrictModeForDevtools(!1);
+        }
+      }
       finishRenderingHooks(current, workInProgress);
-      return nextRenderLanes;
+      return children;
     }
     function finishRenderingHooks(current, workInProgress) {
       workInProgress._debugHookTypes = hookTypesDev;
@@ -5331,9 +5362,17 @@ __DEV__ &&
       getDerivedStateFromProps,
       nextProps
     ) {
-      var prevState = workInProgress.memoizedState;
-      getDerivedStateFromProps = getDerivedStateFromProps(nextProps, prevState);
-      void 0 === getDerivedStateFromProps &&
+      var prevState = workInProgress.memoizedState,
+        partialState = getDerivedStateFromProps(nextProps, prevState);
+      if (workInProgress.mode & 8) {
+        setIsStrictModeForDevtools(!0);
+        try {
+          partialState = getDerivedStateFromProps(nextProps, prevState);
+        } finally {
+          setIsStrictModeForDevtools(!1);
+        }
+      }
+      void 0 === partialState &&
         ((ctor = getComponentNameFromType(ctor) || "Component"),
         didWarnAboutUndefinedDerivedState.has(ctor) ||
           (didWarnAboutUndefinedDerivedState.add(ctor),
@@ -5342,9 +5381,9 @@ __DEV__ &&
             ctor
           )));
       prevState =
-        null === getDerivedStateFromProps || void 0 === getDerivedStateFromProps
+        null === partialState || void 0 === partialState
           ? prevState
-          : assign({}, prevState, getDerivedStateFromProps);
+          : assign({}, prevState, partialState);
       workInProgress.memoizedState = prevState;
       0 === workInProgress.lanes &&
         (workInProgress.updateQueue.baseState = prevState);
@@ -5358,23 +5397,35 @@ __DEV__ &&
       newState,
       nextContext
     ) {
-      workInProgress = workInProgress.stateNode;
-      return "function" === typeof workInProgress.shouldComponentUpdate
-        ? ((oldProps = workInProgress.shouldComponentUpdate(
-            newProps,
-            newState,
-            nextContext
-          )),
-          void 0 === oldProps &&
-            error$jscomp$0(
-              "%s.shouldComponentUpdate(): Returned undefined instead of a boolean value. Make sure to return true or false.",
-              getComponentNameFromType(ctor) || "Component"
-            ),
-          oldProps)
-        : ctor.prototype && ctor.prototype.isPureReactComponent
-          ? !shallowEqual(oldProps, newProps) ||
-            !shallowEqual(oldState, newState)
-          : !0;
+      var instance = workInProgress.stateNode;
+      if ("function" === typeof instance.shouldComponentUpdate) {
+        oldProps = instance.shouldComponentUpdate(
+          newProps,
+          newState,
+          nextContext
+        );
+        if (workInProgress.mode & 8) {
+          setIsStrictModeForDevtools(!0);
+          try {
+            oldProps = instance.shouldComponentUpdate(
+              newProps,
+              newState,
+              nextContext
+            );
+          } finally {
+            setIsStrictModeForDevtools(!1);
+          }
+        }
+        void 0 === oldProps &&
+          error$jscomp$0(
+            "%s.shouldComponentUpdate(): Returned undefined instead of a boolean value. Make sure to return true or false.",
+            getComponentNameFromType(ctor) || "Component"
+          );
+        return oldProps;
+      }
+      return ctor.prototype && ctor.prototype.isPureReactComponent
+        ? !shallowEqual(oldProps, newProps) || !shallowEqual(oldState, newState)
+        : !0;
     }
     function constructClassInstance(workInProgress, ctor, props) {
       var isLegacyContextConsumer = !1,
@@ -5414,47 +5465,57 @@ __DEV__ &&
             void 0 !== isLegacyContextConsumer)
             ? getMaskedContext(workInProgress, unmaskedContext)
             : emptyContextObject));
-      props = new ctor(props, context);
-      addendum = workInProgress.memoizedState =
-        null !== props.state && void 0 !== props.state ? props.state : null;
-      props.updater = classComponentUpdater;
-      workInProgress.stateNode = props;
-      props._reactInternals = workInProgress;
-      props._reactInternalInstance = fakeInternalInstance;
+      addendum = new ctor(props, context);
+      if (workInProgress.mode & 8) {
+        setIsStrictModeForDevtools(!0);
+        try {
+          addendum = new ctor(props, context);
+        } finally {
+          setIsStrictModeForDevtools(!1);
+        }
+      }
+      props = workInProgress.memoizedState =
+        null !== addendum.state && void 0 !== addendum.state
+          ? addendum.state
+          : null;
+      addendum.updater = classComponentUpdater;
+      workInProgress.stateNode = addendum;
+      addendum._reactInternals = workInProgress;
+      addendum._reactInternalInstance = fakeInternalInstance;
       "function" === typeof ctor.getDerivedStateFromProps &&
-        null === addendum &&
-        ((addendum = getComponentNameFromType(ctor) || "Component"),
-        didWarnAboutUninitializedState.has(addendum) ||
-          (didWarnAboutUninitializedState.add(addendum),
+        null === props &&
+        ((props = getComponentNameFromType(ctor) || "Component"),
+        didWarnAboutUninitializedState.has(props) ||
+          (didWarnAboutUninitializedState.add(props),
           error$jscomp$0(
             "`%s` uses `getDerivedStateFromProps` but its initial state is %s. This is not recommended. Instead, define the initial state by assigning an object to `this.state` in the constructor of `%s`. This ensures that `getDerivedStateFromProps` arguments have a consistent shape.",
-            addendum,
-            null === props.state ? "null" : "undefined",
-            addendum
+            props,
+            null === addendum.state ? "null" : "undefined",
+            props
           )));
       if (
         "function" === typeof ctor.getDerivedStateFromProps ||
-        "function" === typeof props.getSnapshotBeforeUpdate
+        "function" === typeof addendum.getSnapshotBeforeUpdate
       ) {
-        var foundWillReceivePropsName = (addendum = null),
+        var foundWillReceivePropsName = (props = null),
           foundWillUpdateName = null;
-        "function" === typeof props.componentWillMount &&
-        !0 !== props.componentWillMount.__suppressDeprecationWarning
-          ? (addendum = "componentWillMount")
-          : "function" === typeof props.UNSAFE_componentWillMount &&
-            (addendum = "UNSAFE_componentWillMount");
-        "function" === typeof props.componentWillReceiveProps &&
-        !0 !== props.componentWillReceiveProps.__suppressDeprecationWarning
+        "function" === typeof addendum.componentWillMount &&
+        !0 !== addendum.componentWillMount.__suppressDeprecationWarning
+          ? (props = "componentWillMount")
+          : "function" === typeof addendum.UNSAFE_componentWillMount &&
+            (props = "UNSAFE_componentWillMount");
+        "function" === typeof addendum.componentWillReceiveProps &&
+        !0 !== addendum.componentWillReceiveProps.__suppressDeprecationWarning
           ? (foundWillReceivePropsName = "componentWillReceiveProps")
-          : "function" === typeof props.UNSAFE_componentWillReceiveProps &&
+          : "function" === typeof addendum.UNSAFE_componentWillReceiveProps &&
             (foundWillReceivePropsName = "UNSAFE_componentWillReceiveProps");
-        "function" === typeof props.componentWillUpdate &&
-        !0 !== props.componentWillUpdate.__suppressDeprecationWarning
+        "function" === typeof addendum.componentWillUpdate &&
+        !0 !== addendum.componentWillUpdate.__suppressDeprecationWarning
           ? (foundWillUpdateName = "componentWillUpdate")
-          : "function" === typeof props.UNSAFE_componentWillUpdate &&
+          : "function" === typeof addendum.UNSAFE_componentWillUpdate &&
             (foundWillUpdateName = "UNSAFE_componentWillUpdate");
         if (
-          null !== addendum ||
+          null !== props ||
           null !== foundWillReceivePropsName ||
           null !== foundWillUpdateName
         ) {
@@ -5469,7 +5530,7 @@ __DEV__ &&
               "Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n%s uses %s but also contains the following legacy lifecycles:%s%s%s\n\nThe above lifecycles should be removed. Learn more about this warning here:\nhttps://react.dev/link/unsafe-component-lifecycles",
               _componentName,
               ctor,
-              null !== addendum ? "\n  " + addendum : "",
+              null !== props ? "\n  " + props : "",
               null !== foundWillReceivePropsName
                 ? "\n  " + foundWillReceivePropsName
                 : "",
@@ -5482,7 +5543,7 @@ __DEV__ &&
         (workInProgress.__reactInternalMemoizedUnmaskedChildContext =
           unmaskedContext),
         (workInProgress.__reactInternalMemoizedMaskedChildContext = context));
-      return props;
+      return addendum;
     }
     function callComponentWillReceiveProps(
       workInProgress,
@@ -6669,10 +6730,19 @@ __DEV__ &&
       ) {
         var nextChildren = null;
         profilerStartTime = -1;
-      } else
-        markComponentRenderStarted(workInProgress),
-          (nextChildren = callRenderInDEV(shouldUpdate)),
-          markComponentRenderStopped();
+      } else {
+        markComponentRenderStarted(workInProgress);
+        nextChildren = callRenderInDEV(shouldUpdate);
+        if (workInProgress.mode & 8) {
+          setIsStrictModeForDevtools(!0);
+          try {
+            callRenderInDEV(shouldUpdate);
+          } finally {
+            setIsStrictModeForDevtools(!1);
+          }
+        }
+        markComponentRenderStopped();
+      }
       workInProgress.flags |= 1;
       null !== current$jscomp$0 && didCaptureError
         ? ((didCaptureError = nextChildren),
@@ -15525,10 +15595,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-909ed63e-20241216",
+        version: "19.1.0-native-fb-975cea2d-20241216",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-909ed63e-20241216"
+        reconcilerVersion: "19.1.0-native-fb-975cea2d-20241216"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15673,5 +15743,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.1.0-native-fb-909ed63e-20241216";
+    exports.version = "19.1.0-native-fb-975cea2d-20241216";
   })();
