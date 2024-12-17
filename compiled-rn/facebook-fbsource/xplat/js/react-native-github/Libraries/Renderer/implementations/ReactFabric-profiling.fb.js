@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a0eac2dbdaeee885930802f4d4c855bb>>
+ * @generated SignedSource<<644c8527676835007c243c3966a9df0e>>
  */
 
 "use strict";
@@ -9825,7 +9825,6 @@ var DefaultAsyncDispatcher = {
   workInProgressRootRenderTargetTime = Infinity,
   workInProgressTransitions = null,
   legacyErrorBoundariesThatAlreadyFailed = null,
-  rootDoesHavePassiveEffects = !1,
   rootWithPendingPassiveEffects = null,
   pendingPassiveEffectsLanes = 0,
   pendingPassiveEffectsRemainingLanes = 0,
@@ -10738,9 +10737,6 @@ function commitRootImpl(
     throw Error(
       "Cannot commit the same tree as before. This error is likely caused by a bug in React. Please file an issue."
     );
-  root.callbackNode = null;
-  root.callbackPriority = 0;
-  root.cancelPendingCommit = null;
   var remainingLanes = finishedWork.lanes | finishedWork.childLanes;
   remainingLanes |= concurrentlyUpdatedLanes;
   markRootFinished(
@@ -10754,24 +10750,30 @@ function commitRootImpl(
   root === workInProgressRoot &&
     ((workInProgress = workInProgressRoot = null),
     (workInProgressRootRenderLanes = 0));
-  (0 === (finishedWork.subtreeFlags & 10256) &&
-    0 === (finishedWork.flags & 10256)) ||
-    rootDoesHavePassiveEffects ||
-    ((rootDoesHavePassiveEffects = !0),
-    (pendingPassiveEffectsRemainingLanes = remainingLanes),
-    (pendingPassiveTransitions = transitions),
-    scheduleCallback(NormalPriority$1, function () {
-      flushPassiveEffects(!0);
-      return null;
-    }));
+  spawnedLane = !1;
+  0 !== (finishedWork.subtreeFlags & 10256) ||
+  0 !== (finishedWork.flags & 10256)
+    ? ((spawnedLane = !0),
+      (pendingPassiveEffectsRemainingLanes = remainingLanes),
+      (pendingPassiveTransitions = transitions),
+      (root.callbackNode = null),
+      (root.callbackPriority = 0),
+      (root.cancelPendingCommit = null),
+      scheduleCallback(NormalPriority$1, function () {
+        flushPassiveEffects(!0);
+        return null;
+      }))
+    : ((root.callbackNode = null),
+      (root.callbackPriority = 0),
+      (root.cancelPendingCommit = null));
   commitStartTime = now();
   transitions = 0 !== (finishedWork.flags & 15990);
   0 !== (finishedWork.subtreeFlags & 15990) || transitions
     ? ((transitions = ReactSharedInternals.T),
       (ReactSharedInternals.T = null),
-      (spawnedLane = currentUpdatePriority),
+      (updatedLanes = currentUpdatePriority),
       (currentUpdatePriority = 2),
-      (updatedLanes = executionContext),
+      (suspendedRetryLanes = executionContext),
       (executionContext |= 4),
       commitBeforeMutationEffects(root, finishedWork),
       commitMutationEffects(root, finishedWork, didIncludeRenderPhaseUpdate),
@@ -10786,12 +10788,12 @@ function commitRootImpl(
         "function" === typeof injectedProfilingHooks.markLayoutEffectsStopped &&
         injectedProfilingHooks.markLayoutEffectsStopped(),
       requestPaint(),
-      (executionContext = updatedLanes),
-      (currentUpdatePriority = spawnedLane),
+      (executionContext = suspendedRetryLanes),
+      (currentUpdatePriority = updatedLanes),
       (ReactSharedInternals.T = transitions))
     : (root.current = finishedWork);
-  rootDoesHavePassiveEffects
-    ? ((rootDoesHavePassiveEffects = !1),
+  spawnedLane
+    ? ((spawnedLane = !1),
       (rootWithPendingPassiveEffects = root),
       (pendingPassiveEffectsLanes = didIncludeRenderPhaseUpdate))
     : releaseRootPooledCache(root, remainingLanes);
@@ -10799,7 +10801,6 @@ function commitRootImpl(
   0 === remainingLanes && (legacyErrorBoundariesThatAlreadyFailed = null);
   onCommitRoot(finishedWork.stateNode, renderPriorityLevel);
   isDevToolsPresent && root.memoizedUpdaters.clear();
-  ensureRootIsScheduled(root);
   if (null !== recoverableErrors)
     for (
       renderPriorityLevel = root.onRecoverableError, finishedWork = 0;
@@ -10813,6 +10814,7 @@ function commitRootImpl(
   0 !== (pendingPassiveEffectsLanes & 3) &&
     0 !== root.tag &&
     flushPassiveEffects();
+  ensureRootIsScheduled(root);
   remainingLanes = root.pendingLanes;
   0 !== (didIncludeRenderPhaseUpdate & 4194218) && 0 !== (remainingLanes & 42)
     ? ((nestedUpdateScheduled = !0),
@@ -11750,10 +11752,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1298 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-f5077bcc-20241217",
+    version: "19.1.0-native-fb-facec3ee-20241217",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-f5077bcc-20241217"
+    reconcilerVersion: "19.1.0-native-fb-facec3ee-20241217"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1298.rendererConfig = extraDevToolsConfig);

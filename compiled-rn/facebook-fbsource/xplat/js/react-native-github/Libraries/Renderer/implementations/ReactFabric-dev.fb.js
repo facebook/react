@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<94a15d13b969194ffde03158a4b9169c>>
+ * @generated SignedSource<<418c7615e76bd487dc0ade94b58bc04c>>
  */
 
 "use strict";
@@ -13087,9 +13087,6 @@ __DEV__ &&
         throw Error(
           "Cannot commit the same tree as before. This error is likely caused by a bug in React. Please file an issue."
         );
-      root.callbackNode = null;
-      root.callbackPriority = 0;
-      root.cancelPendingCommit = null;
       var remainingLanes = finishedWork.lanes | finishedWork.childLanes;
       remainingLanes |= concurrentlyUpdatedLanes;
       markRootFinished(
@@ -13103,24 +13100,30 @@ __DEV__ &&
       root === workInProgressRoot &&
         ((workInProgress = workInProgressRoot = null),
         (workInProgressRootRenderLanes = 0));
-      (0 === (finishedWork.subtreeFlags & 10256) &&
-        0 === (finishedWork.flags & 10256)) ||
-        rootDoesHavePassiveEffects ||
-        ((rootDoesHavePassiveEffects = !0),
-        (pendingPassiveEffectsRemainingLanes = remainingLanes),
-        (pendingPassiveTransitions = transitions),
-        scheduleCallback(NormalPriority$1, function () {
-          flushPassiveEffects(!0);
-          return null;
-        }));
+      spawnedLane = !1;
+      0 !== (finishedWork.subtreeFlags & 10256) ||
+      0 !== (finishedWork.flags & 10256)
+        ? ((spawnedLane = !0),
+          (pendingPassiveEffectsRemainingLanes = remainingLanes),
+          (pendingPassiveTransitions = transitions),
+          (root.callbackNode = null),
+          (root.callbackPriority = 0),
+          (root.cancelPendingCommit = null),
+          scheduleCallback(NormalPriority$1, function () {
+            flushPassiveEffects(!0);
+            return null;
+          }))
+        : ((root.callbackNode = null),
+          (root.callbackPriority = 0),
+          (root.cancelPendingCommit = null));
       commitStartTime = now();
       transitions = 0 !== (finishedWork.flags & 15990);
       0 !== (finishedWork.subtreeFlags & 15990) || transitions
         ? ((transitions = ReactSharedInternals.T),
           (ReactSharedInternals.T = null),
-          (spawnedLane = currentUpdatePriority),
+          (updatedLanes = currentUpdatePriority),
           (currentUpdatePriority = DiscreteEventPriority),
-          (updatedLanes = executionContext),
+          (suspendedRetryLanes = executionContext),
           (executionContext |= CommitContext),
           commitBeforeMutationEffects(root, finishedWork),
           commitMutationEffects(
@@ -13141,12 +13144,12 @@ __DEV__ &&
               typeof injectedProfilingHooks.markLayoutEffectsStopped &&
             injectedProfilingHooks.markLayoutEffectsStopped(),
           requestPaint(),
-          (executionContext = updatedLanes),
-          (currentUpdatePriority = spawnedLane),
+          (executionContext = suspendedRetryLanes),
+          (currentUpdatePriority = updatedLanes),
           (ReactSharedInternals.T = transitions))
         : (root.current = finishedWork);
-      (transitions = rootDoesHavePassiveEffects)
-        ? ((rootDoesHavePassiveEffects = !1),
+      (transitions = spawnedLane)
+        ? ((spawnedLane = !1),
           (rootWithPendingPassiveEffects = root),
           (pendingPassiveEffectsLanes = didIncludeRenderPhaseUpdate))
         : (releaseRootPooledCache(root, remainingLanes),
@@ -13157,7 +13160,6 @@ __DEV__ &&
       transitions || commitDoubleInvokeEffectsInDEV(root, !1);
       onCommitRoot(finishedWork.stateNode, renderPriorityLevel);
       isDevToolsPresent && root.memoizedUpdaters.clear();
-      ensureRootIsScheduled(root);
       if (null !== recoverableErrors)
         for (
           renderPriorityLevel = root.onRecoverableError, finishedWork = 0;
@@ -13165,16 +13167,17 @@ __DEV__ &&
           finishedWork++
         )
           (remainingLanes = recoverableErrors[finishedWork]),
-            (transitions = makeErrorInfo(remainingLanes.stack)),
+            (spawnedLane = makeErrorInfo(remainingLanes.stack)),
             runWithFiberInDEV(
               remainingLanes.source,
               renderPriorityLevel,
               remainingLanes.value,
-              transitions
+              spawnedLane
             );
       0 !== (pendingPassiveEffectsLanes & 3) &&
         0 !== root.tag &&
         flushPassiveEffects();
+      ensureRootIsScheduled(root);
       remainingLanes = root.pendingLanes;
       0 !== (didIncludeRenderPhaseUpdate & 4194218) &&
       0 !== (remainingLanes & 42)
@@ -17138,7 +17141,6 @@ __DEV__ &&
       RENDER_TIMEOUT_MS = 500,
       workInProgressTransitions = null,
       legacyErrorBoundariesThatAlreadyFailed = null,
-      rootDoesHavePassiveEffects = !1,
       rootWithPendingPassiveEffects = null,
       pendingPassiveEffectsLanes = 0,
       pendingPassiveEffectsRemainingLanes = 0,
@@ -17460,10 +17462,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-f5077bcc-20241217",
+        version: "19.1.0-native-fb-facec3ee-20241217",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-f5077bcc-20241217"
+        reconcilerVersion: "19.1.0-native-fb-facec3ee-20241217"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

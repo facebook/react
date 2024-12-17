@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<dcaedc3ddcec1168cdfe15a66aca8e4c>>
+ * @generated SignedSource<<d6bc0c9e177b4c80248c51340a9d4705>>
  */
 
 /*
@@ -11477,7 +11477,6 @@ var DefaultAsyncDispatcher = {
   workInProgressRootRenderTargetTime = Infinity,
   workInProgressTransitions = null,
   legacyErrorBoundariesThatAlreadyFailed = null,
-  rootDoesHavePassiveEffects = !1,
   rootWithPendingPassiveEffects = null,
   pendingPassiveEffectsLanes = 0,
   pendingPassiveEffectsRemainingLanes = 0,
@@ -12444,9 +12443,6 @@ function commitRootImpl(
   root.finishedWork = null;
   root.finishedLanes = 0;
   if (finishedWork === root.current) throw Error(formatProdErrorMessage(177));
-  root.callbackNode = null;
-  root.callbackPriority = 0;
-  root.cancelPendingCommit = null;
   var remainingLanes = finishedWork.lanes | finishedWork.childLanes;
   remainingLanes |= concurrentlyUpdatedLanes;
   markRootFinished(
@@ -12460,24 +12456,30 @@ function commitRootImpl(
   root === workInProgressRoot &&
     ((workInProgress = workInProgressRoot = null),
     (workInProgressRootRenderLanes = 0));
-  (0 === (finishedWork.subtreeFlags & 10256) &&
-    0 === (finishedWork.flags & 10256)) ||
-    rootDoesHavePassiveEffects ||
-    ((rootDoesHavePassiveEffects = !0),
-    (pendingPassiveEffectsRemainingLanes = remainingLanes),
-    (pendingPassiveTransitions = transitions),
-    scheduleCallback$1(NormalPriority$1, function () {
-      flushPassiveEffects(!0);
-      return null;
-    }));
+  spawnedLane = !1;
+  0 !== (finishedWork.subtreeFlags & 10256) ||
+  0 !== (finishedWork.flags & 10256)
+    ? ((spawnedLane = !0),
+      (pendingPassiveEffectsRemainingLanes = remainingLanes),
+      (pendingPassiveTransitions = transitions),
+      (root.callbackNode = null),
+      (root.callbackPriority = 0),
+      (root.cancelPendingCommit = null),
+      scheduleCallback$1(NormalPriority$1, function () {
+        flushPassiveEffects(!0);
+        return null;
+      }))
+    : ((root.callbackNode = null),
+      (root.callbackPriority = 0),
+      (root.cancelPendingCommit = null));
   commitStartTime = now();
   transitions = 0 !== (finishedWork.flags & 15990);
   0 !== (finishedWork.subtreeFlags & 15990) || transitions
     ? ((transitions = ReactSharedInternals.T),
       (ReactSharedInternals.T = null),
-      (spawnedLane = ReactDOMSharedInternals.p),
+      (updatedLanes = ReactDOMSharedInternals.p),
       (ReactDOMSharedInternals.p = 2),
-      (updatedLanes = executionContext),
+      (suspendedRetryLanes = executionContext),
       (executionContext |= 4),
       commitBeforeMutationEffects(root, finishedWork),
       commitMutationEffects(root, finishedWork, didIncludeRenderPhaseUpdate),
@@ -12495,12 +12497,12 @@ function commitRootImpl(
         "function" === typeof injectedProfilingHooks.markLayoutEffectsStopped &&
         injectedProfilingHooks.markLayoutEffectsStopped(),
       requestPaint(),
-      (executionContext = updatedLanes),
-      (ReactDOMSharedInternals.p = spawnedLane),
+      (executionContext = suspendedRetryLanes),
+      (ReactDOMSharedInternals.p = updatedLanes),
       (ReactSharedInternals.T = transitions))
     : (root.current = finishedWork);
-  rootDoesHavePassiveEffects
-    ? ((rootDoesHavePassiveEffects = !1),
+  spawnedLane
+    ? ((spawnedLane = !1),
       (rootWithPendingPassiveEffects = root),
       (pendingPassiveEffectsLanes = didIncludeRenderPhaseUpdate))
     : releaseRootPooledCache(root, remainingLanes);
@@ -12508,7 +12510,6 @@ function commitRootImpl(
   0 === remainingLanes && (legacyErrorBoundariesThatAlreadyFailed = null);
   onCommitRoot(finishedWork.stateNode, renderPriorityLevel);
   isDevToolsPresent && root.memoizedUpdaters.clear();
-  ensureRootIsScheduled(root);
   if (null !== recoverableErrors)
     for (
       renderPriorityLevel = root.onRecoverableError, finishedWork = 0;
@@ -12522,6 +12523,7 @@ function commitRootImpl(
   0 !== (pendingPassiveEffectsLanes & 3) &&
     0 !== root.tag &&
     flushPassiveEffects();
+  ensureRootIsScheduled(root);
   remainingLanes = root.pendingLanes;
   0 !== (didIncludeRenderPhaseUpdate & 4194218) && 0 !== (remainingLanes & 42)
     ? ((nestedUpdateScheduled = !0),
@@ -16535,14 +16537,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1813 = React.version;
 if (
-  "19.1.0-native-fb-f5077bcc-20241217" !==
+  "19.1.0-native-fb-facec3ee-20241217" !==
   isomorphicReactPackageVersion$jscomp$inline_1813
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1813,
-      "19.1.0-native-fb-f5077bcc-20241217"
+      "19.1.0-native-fb-facec3ee-20241217"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16564,10 +16566,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_1820 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-f5077bcc-20241217",
+  version: "19.1.0-native-fb-facec3ee-20241217",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-f5077bcc-20241217",
+  reconcilerVersion: "19.1.0-native-fb-facec3ee-20241217",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$292 = 0;
@@ -16842,7 +16844,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-native-fb-f5077bcc-20241217";
+exports.version = "19.1.0-native-fb-facec3ee-20241217";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
