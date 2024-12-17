@@ -17,8 +17,6 @@ export {
   compileFn as compile,
   compileProgram,
   parsePluginOptions,
-  run,
-  runPlayground,
   OPT_OUT_DIRECTIVES,
   OPT_IN_DIRECTIVES,
   findDirectiveEnablingMemoization,

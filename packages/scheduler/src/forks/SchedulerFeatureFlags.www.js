@@ -14,6 +14,7 @@ export const {
   userBlockingPriorityTimeout,
   normalPriorityTimeout,
   lowPriorityTimeout,
+  enableRequestPaint,
 } = dynamicFeatureFlags;
 
 export const frameYieldMs = 10;

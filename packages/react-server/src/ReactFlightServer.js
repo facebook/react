@@ -14,7 +14,6 @@ import type {Postpone} from 'react/src/ReactPostpone';
 import type {TemporaryReferenceSet} from './ReactFlightServerTemporaryReferences';
 
 import {
-  enableBinaryFlight,
   enablePostpone,
   enableHalt,
   enableTaint,
@@ -23,8 +22,6 @@ import {
   enableProfilerTimer,
   enableComponentPerformanceTrack,
 } from 'shared/ReactFeatureFlags';
-
-import {enableFlightReadableStream} from 'shared/ReactFeatureFlags';
 
 import {
   scheduleWork,
@@ -1163,7 +1160,6 @@ function processServerComponentReturnValue(
     return multiShot;
   }
   if (
-    enableFlightReadableStream &&
     typeof (result: any)[ASYNC_ITERATOR] === 'function' &&
     (typeof ReadableStream !== 'function' ||
       !(result instanceof ReadableStream))
@@ -2696,63 +2692,60 @@ function renderModelDestructive(
     if (value instanceof Error) {
       return serializeErrorValue(request, value);
     }
-
-    if (enableBinaryFlight) {
-      if (value instanceof ArrayBuffer) {
-        return serializeTypedArray(request, 'A', new Uint8Array(value));
-      }
-      if (value instanceof Int8Array) {
-        // char
-        return serializeTypedArray(request, 'O', value);
-      }
-      if (value instanceof Uint8Array) {
-        // unsigned char
-        return serializeTypedArray(request, 'o', value);
-      }
-      if (value instanceof Uint8ClampedArray) {
-        // unsigned clamped char
-        return serializeTypedArray(request, 'U', value);
-      }
-      if (value instanceof Int16Array) {
-        // sort
-        return serializeTypedArray(request, 'S', value);
-      }
-      if (value instanceof Uint16Array) {
-        // unsigned short
-        return serializeTypedArray(request, 's', value);
-      }
-      if (value instanceof Int32Array) {
-        // long
-        return serializeTypedArray(request, 'L', value);
-      }
-      if (value instanceof Uint32Array) {
-        // unsigned long
-        return serializeTypedArray(request, 'l', value);
-      }
-      if (value instanceof Float32Array) {
-        // float
-        return serializeTypedArray(request, 'G', value);
-      }
-      if (value instanceof Float64Array) {
-        // double
-        return serializeTypedArray(request, 'g', value);
-      }
-      if (value instanceof BigInt64Array) {
-        // number
-        return serializeTypedArray(request, 'M', value);
-      }
-      if (value instanceof BigUint64Array) {
-        // unsigned number
-        // We use "m" instead of "n" since JSON can start with "null"
-        return serializeTypedArray(request, 'm', value);
-      }
-      if (value instanceof DataView) {
-        return serializeTypedArray(request, 'V', value);
-      }
-      // TODO: Blob is not available in old Node. Remove the typeof check later.
-      if (typeof Blob === 'function' && value instanceof Blob) {
-        return serializeBlob(request, value);
-      }
+    if (value instanceof ArrayBuffer) {
+      return serializeTypedArray(request, 'A', new Uint8Array(value));
+    }
+    if (value instanceof Int8Array) {
+      // char
+      return serializeTypedArray(request, 'O', value);
+    }
+    if (value instanceof Uint8Array) {
+      // unsigned char
+      return serializeTypedArray(request, 'o', value);
+    }
+    if (value instanceof Uint8ClampedArray) {
+      // unsigned clamped char
+      return serializeTypedArray(request, 'U', value);
+    }
+    if (value instanceof Int16Array) {
+      // sort
+      return serializeTypedArray(request, 'S', value);
+    }
+    if (value instanceof Uint16Array) {
+      // unsigned short
+      return serializeTypedArray(request, 's', value);
+    }
+    if (value instanceof Int32Array) {
+      // long
+      return serializeTypedArray(request, 'L', value);
+    }
+    if (value instanceof Uint32Array) {
+      // unsigned long
+      return serializeTypedArray(request, 'l', value);
+    }
+    if (value instanceof Float32Array) {
+      // float
+      return serializeTypedArray(request, 'G', value);
+    }
+    if (value instanceof Float64Array) {
+      // double
+      return serializeTypedArray(request, 'g', value);
+    }
+    if (value instanceof BigInt64Array) {
+      // number
+      return serializeTypedArray(request, 'M', value);
+    }
+    if (value instanceof BigUint64Array) {
+      // unsigned number
+      // We use "m" instead of "n" since JSON can start with "null"
+      return serializeTypedArray(request, 'm', value);
+    }
+    if (value instanceof DataView) {
+      return serializeTypedArray(request, 'V', value);
+    }
+    // TODO: Blob is not available in old Node. Remove the typeof check later.
+    if (typeof Blob === 'function' && value instanceof Blob) {
+      return serializeBlob(request, value);
     }
 
     const iteratorFn = getIteratorFn(value);
@@ -2766,25 +2759,18 @@ function renderModelDestructive(
       return renderFragment(request, task, Array.from((iterator: any)));
     }
 
-    if (enableFlightReadableStream) {
-      // TODO: Blob is not available in old Node. Remove the typeof check later.
-      if (
-        typeof ReadableStream === 'function' &&
-        value instanceof ReadableStream
-      ) {
-        return serializeReadableStream(request, task, value);
-      }
-      const getAsyncIterator: void | (() => $AsyncIterator<any, any, any>) =
-        (value: any)[ASYNC_ITERATOR];
-      if (typeof getAsyncIterator === 'function') {
-        // We treat AsyncIterables as a Fragment and as such we might need to key them.
-        return renderAsyncFragment(
-          request,
-          task,
-          (value: any),
-          getAsyncIterator,
-        );
-      }
+    // TODO: Blob is not available in old Node. Remove the typeof check later.
+    if (
+      typeof ReadableStream === 'function' &&
+      value instanceof ReadableStream
+    ) {
+      return serializeReadableStream(request, task, value);
+    }
+    const getAsyncIterator: void | (() => $AsyncIterator<any, any, any>) =
+      (value: any)[ASYNC_ITERATOR];
+    if (typeof getAsyncIterator === 'function') {
+      // We treat AsyncIterables as a Fragment and as such we might need to key them.
+      return renderAsyncFragment(request, task, (value: any), getAsyncIterator);
     }
 
     // We put the Date check low b/c most of the time Date's will already have been serialized
@@ -3532,63 +3518,60 @@ function renderConsoleValue(
     if (value instanceof Error) {
       return serializeErrorValue(request, value);
     }
-
-    if (enableBinaryFlight) {
-      if (value instanceof ArrayBuffer) {
-        return serializeTypedArray(request, 'A', new Uint8Array(value));
-      }
-      if (value instanceof Int8Array) {
-        // char
-        return serializeTypedArray(request, 'O', value);
-      }
-      if (value instanceof Uint8Array) {
-        // unsigned char
-        return serializeTypedArray(request, 'o', value);
-      }
-      if (value instanceof Uint8ClampedArray) {
-        // unsigned clamped char
-        return serializeTypedArray(request, 'U', value);
-      }
-      if (value instanceof Int16Array) {
-        // sort
-        return serializeTypedArray(request, 'S', value);
-      }
-      if (value instanceof Uint16Array) {
-        // unsigned short
-        return serializeTypedArray(request, 's', value);
-      }
-      if (value instanceof Int32Array) {
-        // long
-        return serializeTypedArray(request, 'L', value);
-      }
-      if (value instanceof Uint32Array) {
-        // unsigned long
-        return serializeTypedArray(request, 'l', value);
-      }
-      if (value instanceof Float32Array) {
-        // float
-        return serializeTypedArray(request, 'G', value);
-      }
-      if (value instanceof Float64Array) {
-        // double
-        return serializeTypedArray(request, 'g', value);
-      }
-      if (value instanceof BigInt64Array) {
-        // number
-        return serializeTypedArray(request, 'M', value);
-      }
-      if (value instanceof BigUint64Array) {
-        // unsigned number
-        // We use "m" instead of "n" since JSON can start with "null"
-        return serializeTypedArray(request, 'm', value);
-      }
-      if (value instanceof DataView) {
-        return serializeTypedArray(request, 'V', value);
-      }
-      // TODO: Blob is not available in old Node. Remove the typeof check later.
-      if (typeof Blob === 'function' && value instanceof Blob) {
-        return serializeBlob(request, value);
-      }
+    if (value instanceof ArrayBuffer) {
+      return serializeTypedArray(request, 'A', new Uint8Array(value));
+    }
+    if (value instanceof Int8Array) {
+      // char
+      return serializeTypedArray(request, 'O', value);
+    }
+    if (value instanceof Uint8Array) {
+      // unsigned char
+      return serializeTypedArray(request, 'o', value);
+    }
+    if (value instanceof Uint8ClampedArray) {
+      // unsigned clamped char
+      return serializeTypedArray(request, 'U', value);
+    }
+    if (value instanceof Int16Array) {
+      // sort
+      return serializeTypedArray(request, 'S', value);
+    }
+    if (value instanceof Uint16Array) {
+      // unsigned short
+      return serializeTypedArray(request, 's', value);
+    }
+    if (value instanceof Int32Array) {
+      // long
+      return serializeTypedArray(request, 'L', value);
+    }
+    if (value instanceof Uint32Array) {
+      // unsigned long
+      return serializeTypedArray(request, 'l', value);
+    }
+    if (value instanceof Float32Array) {
+      // float
+      return serializeTypedArray(request, 'G', value);
+    }
+    if (value instanceof Float64Array) {
+      // double
+      return serializeTypedArray(request, 'g', value);
+    }
+    if (value instanceof BigInt64Array) {
+      // number
+      return serializeTypedArray(request, 'M', value);
+    }
+    if (value instanceof BigUint64Array) {
+      // unsigned number
+      // We use "m" instead of "n" since JSON can start with "null"
+      return serializeTypedArray(request, 'm', value);
+    }
+    if (value instanceof DataView) {
+      return serializeTypedArray(request, 'V', value);
+    }
+    // TODO: Blob is not available in old Node. Remove the typeof check later.
+    if (typeof Blob === 'function' && value instanceof Blob) {
+      return serializeBlob(request, value);
     }
 
     const iteratorFn = getIteratorFn(value);
@@ -3878,71 +3861,69 @@ function emitChunk(
     emitTextChunk(request, id, value);
     return;
   }
-  if (enableBinaryFlight) {
-    if (value instanceof ArrayBuffer) {
-      emitTypedArrayChunk(request, id, 'A', new Uint8Array(value));
-      return;
-    }
-    if (value instanceof Int8Array) {
-      // char
-      emitTypedArrayChunk(request, id, 'O', value);
-      return;
-    }
-    if (value instanceof Uint8Array) {
-      // unsigned char
-      emitTypedArrayChunk(request, id, 'o', value);
-      return;
-    }
-    if (value instanceof Uint8ClampedArray) {
-      // unsigned clamped char
-      emitTypedArrayChunk(request, id, 'U', value);
-      return;
-    }
-    if (value instanceof Int16Array) {
-      // sort
-      emitTypedArrayChunk(request, id, 'S', value);
-      return;
-    }
-    if (value instanceof Uint16Array) {
-      // unsigned short
-      emitTypedArrayChunk(request, id, 's', value);
-      return;
-    }
-    if (value instanceof Int32Array) {
-      // long
-      emitTypedArrayChunk(request, id, 'L', value);
-      return;
-    }
-    if (value instanceof Uint32Array) {
-      // unsigned long
-      emitTypedArrayChunk(request, id, 'l', value);
-      return;
-    }
-    if (value instanceof Float32Array) {
-      // float
-      emitTypedArrayChunk(request, id, 'G', value);
-      return;
-    }
-    if (value instanceof Float64Array) {
-      // double
-      emitTypedArrayChunk(request, id, 'g', value);
-      return;
-    }
-    if (value instanceof BigInt64Array) {
-      // number
-      emitTypedArrayChunk(request, id, 'M', value);
-      return;
-    }
-    if (value instanceof BigUint64Array) {
-      // unsigned number
-      // We use "m" instead of "n" since JSON can start with "null"
-      emitTypedArrayChunk(request, id, 'm', value);
-      return;
-    }
-    if (value instanceof DataView) {
-      emitTypedArrayChunk(request, id, 'V', value);
-      return;
-    }
+  if (value instanceof ArrayBuffer) {
+    emitTypedArrayChunk(request, id, 'A', new Uint8Array(value));
+    return;
+  }
+  if (value instanceof Int8Array) {
+    // char
+    emitTypedArrayChunk(request, id, 'O', value);
+    return;
+  }
+  if (value instanceof Uint8Array) {
+    // unsigned char
+    emitTypedArrayChunk(request, id, 'o', value);
+    return;
+  }
+  if (value instanceof Uint8ClampedArray) {
+    // unsigned clamped char
+    emitTypedArrayChunk(request, id, 'U', value);
+    return;
+  }
+  if (value instanceof Int16Array) {
+    // sort
+    emitTypedArrayChunk(request, id, 'S', value);
+    return;
+  }
+  if (value instanceof Uint16Array) {
+    // unsigned short
+    emitTypedArrayChunk(request, id, 's', value);
+    return;
+  }
+  if (value instanceof Int32Array) {
+    // long
+    emitTypedArrayChunk(request, id, 'L', value);
+    return;
+  }
+  if (value instanceof Uint32Array) {
+    // unsigned long
+    emitTypedArrayChunk(request, id, 'l', value);
+    return;
+  }
+  if (value instanceof Float32Array) {
+    // float
+    emitTypedArrayChunk(request, id, 'G', value);
+    return;
+  }
+  if (value instanceof Float64Array) {
+    // double
+    emitTypedArrayChunk(request, id, 'g', value);
+    return;
+  }
+  if (value instanceof BigInt64Array) {
+    // number
+    emitTypedArrayChunk(request, id, 'M', value);
+    return;
+  }
+  if (value instanceof BigUint64Array) {
+    // unsigned number
+    // We use "m" instead of "n" since JSON can start with "null"
+    emitTypedArrayChunk(request, id, 'm', value);
+    return;
+  }
+  if (value instanceof DataView) {
+    emitTypedArrayChunk(request, id, 'V', value);
+    return;
   }
   // For anything else we need to try to serialize it using JSON.
   // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do

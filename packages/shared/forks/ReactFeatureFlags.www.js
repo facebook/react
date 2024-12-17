@@ -19,7 +19,6 @@ export const {
   disableDefaultPropsExceptForClasses,
   disableLegacyContextForFunctionComponents,
   disableSchedulerTimeoutInWorkLoop,
-  enableDebugTracing,
   enableDeferRootSchedulingToMicrotask,
   enableDO_NOT_USE_disableStrictPassiveEffect,
   enableHiddenSubtreeInsertionEffectCleanup,
@@ -51,12 +50,9 @@ export const enableUpdaterTracking = __PROFILE__;
 export const enableFabricCompleteRootInCommitPhase = false;
 
 export const enableSuspenseAvoidThisFallback = true;
-export const enableSuspenseAvoidThisFallbackFizz = false;
 
 export const enableCPUSuspense = true;
-export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = true;
-export const enableFilterEmptyStringAttributesDOM = true;
 export const enableMoveBefore = false;
 export const disableInputAttributeSyncing = false;
 export const enableLegacyFBSupport = true;
@@ -73,11 +69,8 @@ export const enableSchedulingProfiler: boolean =
 export const disableLegacyContext = __EXPERIMENTAL__;
 export const enableGetInspectorDataForInstanceInProduction = false;
 
-export const enableCache = true;
 export const enableLegacyCache = true;
 
-export const enableBinaryFlight = true;
-export const enableFlightReadableStream = true;
 export const enableAsyncIterableChildren = false;
 
 export const enableTaint = false;
@@ -85,8 +78,6 @@ export const enableTaint = false;
 export const enablePostpone = false;
 
 export const enableHalt = false;
-
-export const enableContextProfiling = true;
 
 // TODO: www currently relies on this feature. It's disabled in open source.
 // Need to remove it.
@@ -99,8 +90,6 @@ export const enableScopeAPI = true;
 export const enableSuspenseCallback = true;
 
 export const enableLegacyHidden = true;
-
-export const enableComponentStackLocations = true;
 
 export const disableTextareaChildren = __EXPERIMENTAL__;
 

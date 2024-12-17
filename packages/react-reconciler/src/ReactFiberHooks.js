@@ -35,19 +35,15 @@ import {
 } from './ReactFiberConfig';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
-  enableDebugTracing,
   enableSchedulingProfiler,
-  enableCache,
   enableLazyContextPropagation,
   enableTransitionTracing,
-  enableUseMemoCacheHook,
   enableUseEffectEventHook,
+  enableUseResourceEffectHook,
   enableLegacyCache,
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyMode,
   enableNoCloningMemoCache,
-  enableContextProfiling,
-  enableUseResourceEffectHook,
 } from 'shared/ReactFeatureFlags';
 import {
   REACT_CONTEXT_TYPE,
@@ -57,7 +53,6 @@ import {
 import {
   NoMode,
   ConcurrentMode,
-  DebugTracingMode,
   StrictEffectsMode,
   StrictLegacyMode,
   NoStrictPassiveEffectsMode,
@@ -82,11 +77,7 @@ import {
   ContinuousEventPriority,
   higherEventPriority,
 } from './ReactEventPriorities';
-import {
-  readContext,
-  readContextAndCompare,
-  checkIfContextChanged,
-} from './ReactFiberNewContext';
+import {readContext, checkIfContextChanged} from './ReactFiberNewContext';
 import {HostRoot, CacheComponent, HostComponent} from './ReactWorkTags';
 import {
   LayoutStatic as LayoutStaticEffect,
@@ -126,7 +117,6 @@ import {
   getIsHydrating,
   tryToClaimNextHydratableFormMarkerInstance,
 } from './ReactFiberHydrationContext';
-import {logStateUpdateScheduled} from './DebugTracing';
 import {
   markStateUpdateScheduled,
   setIsStrictModeForDevtools,
@@ -277,8 +267,7 @@ export type FunctionComponentUpdateQueue = {
   lastEffect: Effect | null,
   events: Array<EventFunctionPayload<any, any, any>> | null,
   stores: Array<StoreConsistencyCheck<any>> | null,
-  // NOTE: optional, only set when enableUseMemoCacheHook is enabled
-  memoCache?: MemoCache | null,
+  memoCache: MemoCache | null,
 };
 
 type BasicStateAction<S> = (S => S) | S;
@@ -1117,35 +1106,12 @@ function updateWorkInProgressHook(): Hook {
   return workInProgressHook;
 }
 
-function unstable_useContextWithBailout<T>(
-  context: ReactContext<T>,
-  select: (T => Array<mixed>) | null,
-): T {
-  if (select === null) {
-    return readContext(context);
-  }
-  return readContextAndCompare(context, select);
-}
-
-// NOTE: defining two versions of this function to avoid size impact when this feature is disabled.
-// Previously this function was inlined, the additional `memoCache` property makes it not inlined.
-let createFunctionComponentUpdateQueue: () => FunctionComponentUpdateQueue;
-if (enableUseMemoCacheHook) {
-  createFunctionComponentUpdateQueue = () => {
-    return {
-      lastEffect: null,
-      events: null,
-      stores: null,
-      memoCache: null,
-    };
-  };
-} else {
-  createFunctionComponentUpdateQueue = () => {
-    return {
-      lastEffect: null,
-      events: null,
-      stores: null,
-    };
+function createFunctionComponentUpdateQueue(): FunctionComponentUpdateQueue {
+  return {
+    lastEffect: null,
+    events: null,
+    stores: null,
+    memoCache: null,
   };
 }
 
@@ -1155,13 +1121,11 @@ function resetFunctionComponentUpdateQueue(
   updateQueue.lastEffect = null;
   updateQueue.events = null;
   updateQueue.stores = null;
-  if (enableUseMemoCacheHook) {
-    if (updateQueue.memoCache != null) {
-      // NOTE: this function intentionally does not reset memoCache data. We reuse updateQueue for the memo
-      // cache to avoid increasing the size of fibers that don't need a cache, but we don't want to reset
-      // the cache when other properties are reset.
-      updateQueue.memoCache.index = 0;
-    }
+  if (updateQueue.memoCache != null) {
+    // NOTE: this function intentionally does not reset memoCache data. We reuse updateQueue for the memo
+    // cache to avoid increasing the size of fibers that don't need a cache, but we don't want to reset
+    // the cache when other properties are reset.
+    updateQueue.memoCache.index = 0;
   }
 }
 
@@ -3611,9 +3575,6 @@ function updateRefresh(): any {
 }
 
 function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T): void {
-  if (!enableCache) {
-    return;
-  }
   // TODO: Does Cache work in legacy mode? Should decide and write a test.
   // TODO: Consider warning if the refresh is at discrete priority, or if we
   // otherwise suspect that it wasn't batched properly.
@@ -3945,15 +3906,6 @@ function entangleTransitionUpdate<S, A>(
 }
 
 function markUpdateInDevTools<A>(fiber: Fiber, lane: Lane, action: A): void {
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      if (fiber.mode & DebugTracingMode) {
-        const name = getComponentNameFromFiber(fiber) || 'Unknown';
-        logStateUpdateScheduled(name, lane, action);
-      }
-    }
-  }
-
   if (enableSchedulingProfiler) {
     markStateUpdateScheduled(fiber, lane);
   }
@@ -3982,22 +3934,14 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useFormState: throwInvalidHookError,
   useActionState: throwInvalidHookError,
   useOptimistic: throwInvalidHookError,
+  useMemoCache: throwInvalidHookError,
+  useCacheRefresh: throwInvalidHookError,
 };
-if (enableCache) {
-  (ContextOnlyDispatcher: Dispatcher).useCacheRefresh = throwInvalidHookError;
-}
-if (enableUseMemoCacheHook) {
-  (ContextOnlyDispatcher: Dispatcher).useMemoCache = throwInvalidHookError;
-}
 if (enableUseEffectEventHook) {
   (ContextOnlyDispatcher: Dispatcher).useEffectEvent = throwInvalidHookError;
 }
 if (enableUseResourceEffectHook) {
   (ContextOnlyDispatcher: Dispatcher).useResourceEffect = throwInvalidHookError;
-}
-if (enableContextProfiling) {
-  (ContextOnlyDispatcher: Dispatcher).unstable_useContextWithBailout =
-    throwInvalidHookError;
 }
 
 const HooksDispatcherOnMount: Dispatcher = {
@@ -4023,22 +3967,14 @@ const HooksDispatcherOnMount: Dispatcher = {
   useFormState: mountActionState,
   useActionState: mountActionState,
   useOptimistic: mountOptimistic,
+  useMemoCache,
+  useCacheRefresh: mountRefresh,
 };
-if (enableCache) {
-  (HooksDispatcherOnMount: Dispatcher).useCacheRefresh = mountRefresh;
-}
-if (enableUseMemoCacheHook) {
-  (HooksDispatcherOnMount: Dispatcher).useMemoCache = useMemoCache;
-}
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnMount: Dispatcher).useEffectEvent = mountEvent;
 }
 if (enableUseResourceEffectHook) {
   (HooksDispatcherOnMount: Dispatcher).useResourceEffect = mountResourceEffect;
-}
-if (enableContextProfiling) {
-  (HooksDispatcherOnMount: Dispatcher).unstable_useContextWithBailout =
-    unstable_useContextWithBailout;
 }
 
 const HooksDispatcherOnUpdate: Dispatcher = {
@@ -4064,23 +4000,15 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useFormState: updateActionState,
   useActionState: updateActionState,
   useOptimistic: updateOptimistic,
+  useMemoCache,
+  useCacheRefresh: updateRefresh,
 };
-if (enableCache) {
-  (HooksDispatcherOnUpdate: Dispatcher).useCacheRefresh = updateRefresh;
-}
-if (enableUseMemoCacheHook) {
-  (HooksDispatcherOnUpdate: Dispatcher).useMemoCache = useMemoCache;
-}
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnUpdate: Dispatcher).useEffectEvent = updateEvent;
 }
 if (enableUseResourceEffectHook) {
   (HooksDispatcherOnUpdate: Dispatcher).useResourceEffect =
     updateResourceEffect;
-}
-if (enableContextProfiling) {
-  (HooksDispatcherOnUpdate: Dispatcher).unstable_useContextWithBailout =
-    unstable_useContextWithBailout;
 }
 
 const HooksDispatcherOnRerender: Dispatcher = {
@@ -4106,23 +4034,15 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useFormState: rerenderActionState,
   useActionState: rerenderActionState,
   useOptimistic: rerenderOptimistic,
+  useMemoCache,
+  useCacheRefresh: updateRefresh,
 };
-if (enableCache) {
-  (HooksDispatcherOnRerender: Dispatcher).useCacheRefresh = updateRefresh;
-}
-if (enableUseMemoCacheHook) {
-  (HooksDispatcherOnRerender: Dispatcher).useMemoCache = useMemoCache;
-}
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnRerender: Dispatcher).useEffectEvent = updateEvent;
 }
 if (enableUseResourceEffectHook) {
   (HooksDispatcherOnRerender: Dispatcher).useResourceEffect =
     updateResourceEffect;
-}
-if (enableContextProfiling) {
-  (HooksDispatcherOnRerender: Dispatcher).unstable_useContextWithBailout =
-    unstable_useContextWithBailout;
 }
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -4307,18 +4227,13 @@ if (__DEV__) {
       return mountOptimistic(passthrough, reducer);
     },
     useHostTransitionStatus,
+    useMemoCache,
+    useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
+      mountHookTypesDev();
+      return mountRefresh();
+    },
   };
-  if (enableCache) {
-    (HooksDispatcherOnMountInDEV: Dispatcher).useCacheRefresh =
-      function useCacheRefresh() {
-        currentHookNameInDev = 'useCacheRefresh';
-        mountHookTypesDev();
-        return mountRefresh();
-      };
-  }
-  if (enableUseMemoCacheHook) {
-    (HooksDispatcherOnMountInDEV: Dispatcher).useMemoCache = useMemoCache;
-  }
   if (enableUseEffectEventHook) {
     (HooksDispatcherOnMountInDEV: Dispatcher).useEffectEvent =
       function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
@@ -4348,17 +4263,6 @@ if (__DEV__) {
           updateDeps,
           destroy,
         );
-      };
-  }
-  if (enableContextProfiling) {
-    (HooksDispatcherOnMountInDEV: Dispatcher).unstable_useContextWithBailout =
-      function <T>(
-        context: ReactContext<T>,
-        select: (T => Array<mixed>) | null,
-      ): T {
-        currentHookNameInDev = 'useContext';
-        mountHookTypesDev();
-        return unstable_useContextWithBailout(context, select);
       };
   }
 
@@ -4511,19 +4415,13 @@ if (__DEV__) {
       return mountOptimistic(passthrough, reducer);
     },
     useHostTransitionStatus,
+    useMemoCache,
+    useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
+      updateHookTypesDev();
+      return mountRefresh();
+    },
   };
-  if (enableCache) {
-    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useCacheRefresh =
-      function useCacheRefresh() {
-        currentHookNameInDev = 'useCacheRefresh';
-        updateHookTypesDev();
-        return mountRefresh();
-      };
-  }
-  if (enableUseMemoCacheHook) {
-    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useMemoCache =
-      useMemoCache;
-  }
   if (enableUseEffectEventHook) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useEffectEvent =
       function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
@@ -4552,17 +4450,6 @@ if (__DEV__) {
           updateDeps,
           destroy,
         );
-      };
-  }
-  if (enableContextProfiling) {
-    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).unstable_useContextWithBailout =
-      function <T>(
-        context: ReactContext<T>,
-        select: (T => Array<mixed>) | null,
-      ): T {
-        currentHookNameInDev = 'useContext';
-        updateHookTypesDev();
-        return unstable_useContextWithBailout(context, select);
       };
   }
 
@@ -4715,18 +4602,13 @@ if (__DEV__) {
       return updateOptimistic(passthrough, reducer);
     },
     useHostTransitionStatus,
+    useMemoCache,
+    useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
+      updateHookTypesDev();
+      return updateRefresh();
+    },
   };
-  if (enableCache) {
-    (HooksDispatcherOnUpdateInDEV: Dispatcher).useCacheRefresh =
-      function useCacheRefresh() {
-        currentHookNameInDev = 'useCacheRefresh';
-        updateHookTypesDev();
-        return updateRefresh();
-      };
-  }
-  if (enableUseMemoCacheHook) {
-    (HooksDispatcherOnUpdateInDEV: Dispatcher).useMemoCache = useMemoCache;
-  }
   if (enableUseEffectEventHook) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useEffectEvent =
       function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
@@ -4755,17 +4637,6 @@ if (__DEV__) {
           updateDeps,
           destroy,
         );
-      };
-  }
-  if (enableContextProfiling) {
-    (HooksDispatcherOnUpdateInDEV: Dispatcher).unstable_useContextWithBailout =
-      function <T>(
-        context: ReactContext<T>,
-        select: (T => Array<mixed>) | null,
-      ): T {
-        currentHookNameInDev = 'useContext';
-        updateHookTypesDev();
-        return unstable_useContextWithBailout(context, select);
       };
   }
 
@@ -4918,18 +4789,13 @@ if (__DEV__) {
       return rerenderOptimistic(passthrough, reducer);
     },
     useHostTransitionStatus,
+    useMemoCache,
+    useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
+      updateHookTypesDev();
+      return updateRefresh();
+    },
   };
-  if (enableCache) {
-    (HooksDispatcherOnRerenderInDEV: Dispatcher).useCacheRefresh =
-      function useCacheRefresh() {
-        currentHookNameInDev = 'useCacheRefresh';
-        updateHookTypesDev();
-        return updateRefresh();
-      };
-  }
-  if (enableUseMemoCacheHook) {
-    (HooksDispatcherOnRerenderInDEV: Dispatcher).useMemoCache = useMemoCache;
-  }
   if (enableUseEffectEventHook) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useEffectEvent =
       function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
@@ -4958,17 +4824,6 @@ if (__DEV__) {
           updateDeps,
           destroy,
         );
-      };
-  }
-  if (enableContextProfiling) {
-    (HooksDispatcherOnRerenderInDEV: Dispatcher).unstable_useContextWithBailout =
-      function <T>(
-        context: ReactContext<T>,
-        select: (T => Array<mixed>) | null,
-      ): T {
-        currentHookNameInDev = 'useContext';
-        updateHookTypesDev();
-        return unstable_useContextWithBailout(context, select);
       };
   }
 
@@ -5141,23 +4996,17 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountOptimistic(passthrough, reducer);
     },
+    useMemoCache(size: number): Array<any> {
+      warnInvalidHookAccess();
+      return useMemoCache(size);
+    },
     useHostTransitionStatus,
+    useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
+      mountHookTypesDev();
+      return mountRefresh();
+    },
   };
-  if (enableCache) {
-    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useCacheRefresh =
-      function useCacheRefresh() {
-        currentHookNameInDev = 'useCacheRefresh';
-        mountHookTypesDev();
-        return mountRefresh();
-      };
-  }
-  if (enableUseMemoCacheHook) {
-    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useMemoCache =
-      function (size: number): Array<any> {
-        warnInvalidHookAccess();
-        return useMemoCache(size);
-      };
-  }
   if (enableUseEffectEventHook) {
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useEffectEvent =
       function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
@@ -5188,18 +5037,6 @@ if (__DEV__) {
           updateDeps,
           destroy,
         );
-      };
-  }
-  if (enableContextProfiling) {
-    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).unstable_useContextWithBailout =
-      function <T>(
-        context: ReactContext<T>,
-        select: (T => Array<mixed>) | null,
-      ): T {
-        currentHookNameInDev = 'useContext';
-        warnInvalidHookAccess();
-        mountHookTypesDev();
-        return unstable_useContextWithBailout(context, select);
       };
   }
 
@@ -5372,23 +5209,17 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateOptimistic(passthrough, reducer);
     },
+    useMemoCache(size: number): Array<any> {
+      warnInvalidHookAccess();
+      return useMemoCache(size);
+    },
     useHostTransitionStatus,
+    useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
+      updateHookTypesDev();
+      return updateRefresh();
+    },
   };
-  if (enableCache) {
-    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useCacheRefresh =
-      function useCacheRefresh() {
-        currentHookNameInDev = 'useCacheRefresh';
-        updateHookTypesDev();
-        return updateRefresh();
-      };
-  }
-  if (enableUseMemoCacheHook) {
-    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useMemoCache =
-      function (size: number): Array<any> {
-        warnInvalidHookAccess();
-        return useMemoCache(size);
-      };
-  }
   if (enableUseEffectEventHook) {
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useEffectEvent =
       function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
@@ -5419,18 +5250,6 @@ if (__DEV__) {
           updateDeps,
           destroy,
         );
-      };
-  }
-  if (enableContextProfiling) {
-    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).unstable_useContextWithBailout =
-      function <T>(
-        context: ReactContext<T>,
-        select: (T => Array<mixed>) | null,
-      ): T {
-        currentHookNameInDev = 'useContext';
-        warnInvalidHookAccess();
-        updateHookTypesDev();
-        return unstable_useContextWithBailout(context, select);
       };
   }
 
@@ -5603,23 +5422,17 @@ if (__DEV__) {
       updateHookTypesDev();
       return rerenderOptimistic(passthrough, reducer);
     },
+    useMemoCache(size: number): Array<any> {
+      warnInvalidHookAccess();
+      return useMemoCache(size);
+    },
     useHostTransitionStatus,
+    useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
+      updateHookTypesDev();
+      return updateRefresh();
+    },
   };
-  if (enableCache) {
-    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useCacheRefresh =
-      function useCacheRefresh() {
-        currentHookNameInDev = 'useCacheRefresh';
-        updateHookTypesDev();
-        return updateRefresh();
-      };
-  }
-  if (enableUseMemoCacheHook) {
-    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useMemoCache =
-      function (size: number): Array<any> {
-        warnInvalidHookAccess();
-        return useMemoCache(size);
-      };
-  }
   if (enableUseEffectEventHook) {
     (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useEffectEvent =
       function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
@@ -5650,18 +5463,6 @@ if (__DEV__) {
           updateDeps,
           destroy,
         );
-      };
-  }
-  if (enableContextProfiling) {
-    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).unstable_useContextWithBailout =
-      function <T>(
-        context: ReactContext<T>,
-        select: (T => Array<mixed>) | null,
-      ): T {
-        currentHookNameInDev = 'useContext';
-        warnInvalidHookAccess();
-        updateHookTypesDev();
-        return unstable_useContextWithBailout(context, select);
       };
   }
 }

@@ -142,8 +142,6 @@ export {
   makeId,
   pushStartInstance,
   pushEndInstance,
-  pushStartCompletedSuspenseBoundary,
-  pushEndCompletedSuspenseBoundary,
   pushFormStateMarkerIsMatching,
   pushFormStateMarkerIsNotMatching,
   writeStartSegment,

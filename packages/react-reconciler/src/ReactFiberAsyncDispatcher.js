@@ -10,16 +10,12 @@
 import type {AsyncDispatcher, Fiber} from './ReactInternalTypes';
 import type {Cache} from './ReactFiberCacheComponent';
 
-import {enableCache} from 'shared/ReactFeatureFlags';
 import {readContext} from './ReactFiberNewContext';
 import {CacheContext} from './ReactFiberCacheComponent';
 
 import {current as currentOwner} from './ReactCurrentFiber';
 
 function getCacheForType<T>(resourceType: () => T): T {
-  if (!enableCache) {
-    throw new Error('Not implemented.');
-  }
   const cache: Cache = readContext(CacheContext);
   let cacheForType: T | void = (cache.data.get(resourceType): any);
   if (cacheForType === undefined) {

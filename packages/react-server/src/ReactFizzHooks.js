@@ -39,9 +39,7 @@ import {
 import {createFastHash} from './ReactServerStreamConfig';
 
 import {
-  enableCache,
   enableUseEffectEventHook,
-  enableUseMemoCacheHook,
   enableUseResourceEffectHook,
 } from 'shared/ReactFeatureFlags';
 import is from 'shared/objectIs';
@@ -859,16 +857,12 @@ export const HooksDispatcher: Dispatcher = supportsClientAPIs
       useActionState,
       useFormState: useActionState,
       useHostTransitionStatus,
+      useMemoCache,
+      useCacheRefresh,
     };
 
-if (enableCache) {
-  HooksDispatcher.useCacheRefresh = useCacheRefresh;
-}
 if (enableUseEffectEventHook) {
   HooksDispatcher.useEffectEvent = useEffectEvent;
-}
-if (enableUseMemoCacheHook) {
-  HooksDispatcher.useMemoCache = useMemoCache;
 }
 if (enableUseResourceEffectHook) {
   HooksDispatcher.useResourceEffect = supportsClientAPIs

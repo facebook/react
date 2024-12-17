@@ -13,7 +13,7 @@
 // Flags that can likely be deleted or landed without consequences
 // -----------------------------------------------------------------------------
 
-export const enableComponentStackLocations = true;
+// None
 
 // -----------------------------------------------------------------------------
 // Killswitch
@@ -21,6 +21,8 @@ export const enableComponentStackLocations = true;
 // Flags that exist solely to turn off a change in case it causes a regression
 // when it rolls out to prod. We should remove these as soon as possible.
 // -----------------------------------------------------------------------------
+
+export const enableHydrationLaneScheduling = true;
 
 // -----------------------------------------------------------------------------
 // Land or remove (moderate effort)
@@ -75,11 +77,8 @@ export const enableLegacyFBSupport = false;
 // likely to include in an upcoming release.
 // -----------------------------------------------------------------------------
 
-export const enableCache = true;
 export const enableLegacyCache = __EXPERIMENTAL__;
 
-export const enableBinaryFlight = true;
-export const enableFlightReadableStream = true;
 export const enableAsyncIterableChildren = __EXPERIMENTAL__;
 
 export const enableTaint = __EXPERIMENTAL__;
@@ -102,24 +101,14 @@ export const enableTransitionTracing = false;
 
 export const enableLazyContextPropagation = true;
 
-// Expose unstable useContext for performance testing
-export const enableContextProfiling = false;
-
 // FB-only usage. The new API has different semantics.
 export const enableLegacyHidden = false;
 
 // Enables unstable_avoidThisFallback feature in Fiber
 export const enableSuspenseAvoidThisFallback = false;
-// Enables unstable_avoidThisFallback feature in Fizz
-export const enableSuspenseAvoidThisFallbackFizz = false;
 
 export const enableCPUSuspense = __EXPERIMENTAL__;
 
-export const enableHydrationLaneScheduling = true;
-
-// Enables useMemoCache hook, intended as a compilation target for
-// auto-memoization.
-export const enableUseMemoCacheHook = true;
 // Test this at Meta before enabling.
 export const enableNoCloningMemoCache = false;
 
@@ -202,11 +191,6 @@ export const disableLegacyContextForFunctionComponents = true;
 // TODO: clean up legacy <StrictMode /> once tests pass WWW.
 export const useModernStrictMode = true;
 
-// Filter certain DOM attributes (e.g. src, href) if their values are empty
-// strings. This prevents e.g. <img src=""> from making an unnecessary HTTP
-// request for certain browsers.
-export const enableFilterEmptyStringAttributesDOM = true;
-
 // Enable the moveBefore() alternative to insertBefore(). This preserves states of moves.
 export const enableMoveBefore = false;
 
@@ -278,11 +262,6 @@ export const enableProfilerCommitHooks = __PROFILE__;
 
 // Phase param passed to onRender callback differentiates between an "update" and a "cascading-update".
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
-
-// Adds verbose console logging for e.g. state updates, suspense, and work loop
-// stuff. Intended to enable React core members to more easily debug scheduling
-// issues in DEV builds.
-export const enableDebugTracing = false;
 
 export const enableAsyncDebugInfo = __EXPERIMENTAL__;
 

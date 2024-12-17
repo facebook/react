@@ -43,9 +43,7 @@ import type {Postpone} from 'react/src/ReactPostpone';
 import type {TemporaryReferenceSet} from './ReactFlightTemporaryReferences';
 
 import {
-  enableBinaryFlight,
   enablePostpone,
-  enableFlightReadableStream,
   enableOwnerStacks,
   enableServerComponentLogs,
   enableProfilerTimer,
@@ -71,7 +69,11 @@ import {createBoundServerReference} from './ReactFlightReplyClient';
 
 import {readTemporaryReference} from './ReactFlightTemporaryReferences';
 
-import {logComponentRender} from './ReactFlightPerformanceTrack';
+import {
+  markAllTracksInOrder,
+  logComponentRender,
+  logDedupedComponentRender,
+} from './ReactFlightPerformanceTrack';
 
 import {
   REACT_LAZY_TYPE,
@@ -127,7 +129,9 @@ export type JSONValue =
   | $ReadOnlyArray<JSONValue>;
 
 type ProfilingResult = {
+  track: number,
   endTime: number,
+  component: null | ReactComponentInfo,
 };
 
 const ROW_ID = 0;
@@ -407,14 +411,12 @@ function wakeChunkIfInitialized<T>(
 
 function triggerErrorOnChunk<T>(chunk: SomeChunk<T>, error: mixed): void {
   if (chunk.status !== PENDING && chunk.status !== BLOCKED) {
-    if (enableFlightReadableStream) {
-      // If we get more data to an already resolved ID, we assume that it's
-      // a stream chunk since any other row shouldn't have more than one entry.
-      const streamChunk: InitializedStreamChunk<any> = (chunk: any);
-      const controller = streamChunk.reason;
-      // $FlowFixMe[incompatible-call]: The error method should accept mixed.
-      controller.error(error);
-    }
+    // If we get more data to an already resolved ID, we assume that it's
+    // a stream chunk since any other row shouldn't have more than one entry.
+    const streamChunk: InitializedStreamChunk<any> = (chunk: any);
+    const controller = streamChunk.reason;
+    // $FlowFixMe[incompatible-call]: The error method should accept mixed.
+    controller.error(error);
     return;
   }
   const listeners = chunk.reason;
@@ -513,13 +515,11 @@ function resolveModelChunk<T>(
   value: UninitializedModel,
 ): void {
   if (chunk.status !== PENDING) {
-    if (enableFlightReadableStream) {
-      // If we get more data to an already resolved ID, we assume that it's
-      // a stream chunk since any other row shouldn't have more than one entry.
-      const streamChunk: InitializedStreamChunk<any> = (chunk: any);
-      const controller = streamChunk.reason;
-      controller.enqueueModel(value);
-    }
+    // If we get more data to an already resolved ID, we assume that it's
+    // a stream chunk since any other row shouldn't have more than one entry.
+    const streamChunk: InitializedStreamChunk<any> = (chunk: any);
+    const controller = streamChunk.reason;
+    controller.enqueueModel(value);
     return;
   }
   const resolveListeners = chunk.value;
@@ -648,7 +648,14 @@ export function reportGlobalError(response: Response, error: Error): void {
     }
   });
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
-    flushComponentPerformance(getChunk(response, 0));
+    markAllTracksInOrder();
+    flushComponentPerformance(
+      response,
+      getChunk(response, 0),
+      0,
+      -Infinity,
+      -Infinity,
+    );
   }
 }
 
@@ -1461,11 +1468,8 @@ function parseModelString(
       }
       case 'B': {
         // Blob
-        if (enableBinaryFlight) {
-          const ref = value.slice(2);
-          return getOutlinedModel(response, ref, parentObject, key, createBlob);
-        }
-        return undefined;
+        const ref = value.slice(2);
+        return getOutlinedModel(response, ref, parentObject, key, createBlob);
       }
       case 'K': {
         // FormData
@@ -1722,16 +1726,14 @@ function resolveModel(
 
 function resolveText(response: Response, id: number, text: string): void {
   const chunks = response._chunks;
-  if (enableFlightReadableStream) {
-    const chunk = chunks.get(id);
-    if (chunk && chunk.status !== PENDING) {
-      // If we get more data to an already resolved ID, we assume that it's
-      // a stream chunk since any other row shouldn't have more than one entry.
-      const streamChunk: InitializedStreamChunk<any> = (chunk: any);
-      const controller = streamChunk.reason;
-      controller.enqueueValue(text);
-      return;
-    }
+  const chunk = chunks.get(id);
+  if (chunk && chunk.status !== PENDING) {
+    // If we get more data to an already resolved ID, we assume that it's
+    // a stream chunk since any other row shouldn't have more than one entry.
+    const streamChunk: InitializedStreamChunk<any> = (chunk: any);
+    const controller = streamChunk.reason;
+    controller.enqueueValue(text);
+    return;
   }
   chunks.set(id, createInitializedTextChunk(response, text));
 }
@@ -1742,16 +1744,14 @@ function resolveBuffer(
   buffer: $ArrayBufferView | ArrayBuffer,
 ): void {
   const chunks = response._chunks;
-  if (enableFlightReadableStream) {
-    const chunk = chunks.get(id);
-    if (chunk && chunk.status !== PENDING) {
-      // If we get more data to an already resolved ID, we assume that it's
-      // a stream chunk since any other row shouldn't have more than one entry.
-      const streamChunk: InitializedStreamChunk<any> = (chunk: any);
-      const controller = streamChunk.reason;
-      controller.enqueueValue(buffer);
-      return;
-    }
+  const chunk = chunks.get(id);
+  if (chunk && chunk.status !== PENDING) {
+    // If we get more data to an already resolved ID, we assume that it's
+    // a stream chunk since any other row shouldn't have more than one entry.
+    const streamChunk: InitializedStreamChunk<any> = (chunk: any);
+    const controller = streamChunk.reason;
+    controller.enqueueValue(buffer);
+    return;
   }
   chunks.set(id, createInitializedBufferChunk(response, buffer));
 }
@@ -2753,9 +2753,18 @@ function resolveTypedArray(
   resolveBuffer(response, id, view);
 }
 
-function flushComponentPerformance(root: SomeChunk<any>): number {
+function flushComponentPerformance(
+  response: Response,
+  root: SomeChunk<any>,
+  trackIdx: number, // Next available track
+  trackTime: number, // The time after which it is available,
+  parentEndTime: number,
+): ProfilingResult {
   if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
-    return 0;
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'flushComponentPerformance should never be called in production mode. This is a bug in React.',
+    );
   }
   // Write performance.measure() entries for Server Components in tree order.
   // This must be done at the end to collect the end time from the whole tree.
@@ -2766,7 +2775,25 @@ function flushComponentPerformance(root: SomeChunk<any>): number {
     // chunk in two places. We should extend the current end time as if it was
     // rendered as part of this tree.
     const previousResult: ProfilingResult = root._children;
-    return previousResult.endTime;
+    const previousEndTime = previousResult.endTime;
+    if (
+      parentEndTime > -Infinity &&
+      parentEndTime < previousEndTime &&
+      previousResult.component !== null
+    ) {
+      // Log a placeholder for the deduped value under this child starting
+      // from the end of the self time of the parent and spanning until the
+      // the deduped end.
+      logDedupedComponentRender(
+        previousResult.component,
+        trackIdx,
+        parentEndTime,
+        previousEndTime,
+      );
+    }
+    // Since we didn't bump the track this time, we just return the same track.
+    previousResult.track = trackIdx;
+    return previousResult;
   }
   const children = root._children;
   if (root.status === RESOLVED_MODEL) {
@@ -2775,16 +2802,66 @@ function flushComponentPerformance(root: SomeChunk<any>): number {
     // the performance characteristics of the app by profiling.
     initializeModelChunk(root);
   }
-  const result: ProfilingResult = {endTime: -Infinity};
+
+  // First find the start time of the first component to know if it was running
+  // in parallel with the previous.
+  const debugInfo = root._debugInfo;
+  if (debugInfo) {
+    for (let i = 1; i < debugInfo.length; i++) {
+      const info = debugInfo[i];
+      if (typeof info.name === 'string') {
+        // $FlowFixMe: Refined.
+        const startTimeInfo = debugInfo[i - 1];
+        if (typeof startTimeInfo.time === 'number') {
+          const startTime = startTimeInfo.time;
+          if (startTime < trackTime) {
+            // The start time of this component is before the end time of the previous
+            // component on this track so we need to bump the next one to a parallel track.
+            trackIdx++;
+          }
+          trackTime = startTime;
+          break;
+        }
+      }
+    }
+    for (let i = debugInfo.length - 1; i >= 0; i--) {
+      const info = debugInfo[i];
+      if (typeof info.time === 'number') {
+        if (info.time > parentEndTime) {
+          parentEndTime = info.time;
+        }
+      }
+    }
+  }
+
+  const result: ProfilingResult = {
+    track: trackIdx,
+    endTime: -Infinity,
+    component: null,
+  };
   root._children = result;
   let childrenEndTime = -Infinity;
+  let childTrackIdx = trackIdx;
+  let childTrackTime = trackTime;
   for (let i = 0; i < children.length; i++) {
-    const childEndTime = flushComponentPerformance(children[i]);
+    const childResult = flushComponentPerformance(
+      response,
+      children[i],
+      childTrackIdx,
+      childTrackTime,
+      parentEndTime,
+    );
+    if (childResult.component !== null) {
+      result.component = childResult.component;
+    }
+    childTrackIdx = childResult.track;
+    const childEndTime = childResult.endTime;
+    childTrackTime = childEndTime;
     if (childEndTime > childrenEndTime) {
       childrenEndTime = childEndTime;
     }
   }
-  const debugInfo = root._debugInfo;
+
   if (debugInfo) {
     let endTime = 0;
     for (let i = debugInfo.length - 1; i >= 0; i--) {
@@ -2803,15 +2880,20 @@ function flushComponentPerformance(root: SomeChunk<any>): number {
           const startTime = startTimeInfo.time;
           logComponentRender(
             componentInfo,
+            trackIdx,
             startTime,
             endTime,
             childrenEndTime,
+            response._rootEnvironmentName,
           );
+          // Track the root most component of the result for deduping logging.
+          result.component = componentInfo;
         }
       }
     }
   }
-  return (result.endTime = childrenEndTime);
+  result.endTime = childrenEndTime;
+  return result;
 }
 
 function processFullBinaryRow(
@@ -2821,53 +2903,51 @@ function processFullBinaryRow(
   buffer: Array<Uint8Array>,
   chunk: Uint8Array,
 ): void {
-  if (enableBinaryFlight) {
-    switch (tag) {
-      case 65 /* "A" */:
-        // We must always clone to extract it into a separate buffer instead of just a view.
-        resolveBuffer(response, id, mergeBuffer(buffer, chunk).buffer);
-        return;
-      case 79 /* "O" */:
-        resolveTypedArray(response, id, buffer, chunk, Int8Array, 1);
-        return;
-      case 111 /* "o" */:
-        resolveBuffer(
-          response,
-          id,
-          buffer.length === 0 ? chunk : mergeBuffer(buffer, chunk),
-        );
-        return;
-      case 85 /* "U" */:
-        resolveTypedArray(response, id, buffer, chunk, Uint8ClampedArray, 1);
-        return;
-      case 83 /* "S" */:
-        resolveTypedArray(response, id, buffer, chunk, Int16Array, 2);
-        return;
-      case 115 /* "s" */:
-        resolveTypedArray(response, id, buffer, chunk, Uint16Array, 2);
-        return;
-      case 76 /* "L" */:
-        resolveTypedArray(response, id, buffer, chunk, Int32Array, 4);
-        return;
-      case 108 /* "l" */:
-        resolveTypedArray(response, id, buffer, chunk, Uint32Array, 4);
-        return;
-      case 71 /* "G" */:
-        resolveTypedArray(response, id, buffer, chunk, Float32Array, 4);
-        return;
-      case 103 /* "g" */:
-        resolveTypedArray(response, id, buffer, chunk, Float64Array, 8);
-        return;
-      case 77 /* "M" */:
-        resolveTypedArray(response, id, buffer, chunk, BigInt64Array, 8);
-        return;
-      case 109 /* "m" */:
-        resolveTypedArray(response, id, buffer, chunk, BigUint64Array, 8);
-        return;
-      case 86 /* "V" */:
-        resolveTypedArray(response, id, buffer, chunk, DataView, 1);
-        return;
-    }
+  switch (tag) {
+    case 65 /* "A" */:
+      // We must always clone to extract it into a separate buffer instead of just a view.
+      resolveBuffer(response, id, mergeBuffer(buffer, chunk).buffer);
+      return;
+    case 79 /* "O" */:
+      resolveTypedArray(response, id, buffer, chunk, Int8Array, 1);
+      return;
+    case 111 /* "o" */:
+      resolveBuffer(
+        response,
+        id,
+        buffer.length === 0 ? chunk : mergeBuffer(buffer, chunk),
+      );
+      return;
+    case 85 /* "U" */:
+      resolveTypedArray(response, id, buffer, chunk, Uint8ClampedArray, 1);
+      return;
+    case 83 /* "S" */:
+      resolveTypedArray(response, id, buffer, chunk, Int16Array, 2);
+      return;
+    case 115 /* "s" */:
+      resolveTypedArray(response, id, buffer, chunk, Uint16Array, 2);
+      return;
+    case 76 /* "L" */:
+      resolveTypedArray(response, id, buffer, chunk, Int32Array, 4);
+      return;
+    case 108 /* "l" */:
+      resolveTypedArray(response, id, buffer, chunk, Uint32Array, 4);
+      return;
+    case 71 /* "G" */:
+      resolveTypedArray(response, id, buffer, chunk, Float32Array, 4);
+      return;
+    case 103 /* "g" */:
+      resolveTypedArray(response, id, buffer, chunk, Float64Array, 8);
+      return;
+    case 77 /* "M" */:
+      resolveTypedArray(response, id, buffer, chunk, BigInt64Array, 8);
+      return;
+    case 109 /* "m" */:
+      resolveTypedArray(response, id, buffer, chunk, BigUint64Array, 8);
+      return;
+    case 86 /* "V" */:
+      resolveTypedArray(response, id, buffer, chunk, DataView, 1);
+      return;
   }
 
   const stringDecoder = response._stringDecoder;
@@ -2973,38 +3053,28 @@ function processFullStringRow(
       );
     }
     case 82 /* "R" */: {
-      if (enableFlightReadableStream) {
-        startReadableStream(response, id, undefined);
-        return;
-      }
+      startReadableStream(response, id, undefined);
+      return;
     }
     // Fallthrough
     case 114 /* "r" */: {
-      if (enableFlightReadableStream) {
-        startReadableStream(response, id, 'bytes');
-        return;
-      }
+      startReadableStream(response, id, 'bytes');
+      return;
     }
     // Fallthrough
     case 88 /* "X" */: {
-      if (enableFlightReadableStream) {
-        startAsyncIterable(response, id, false);
-        return;
-      }
+      startAsyncIterable(response, id, false);
+      return;
     }
     // Fallthrough
     case 120 /* "x" */: {
-      if (enableFlightReadableStream) {
-        startAsyncIterable(response, id, true);
-        return;
-      }
+      startAsyncIterable(response, id, true);
+      return;
     }
     // Fallthrough
     case 67 /* "C" */: {
-      if (enableFlightReadableStream) {
-        stopStream(response, id, row);
-        return;
-      }
+      stopStream(response, id, row);
+      return;
     }
     // Fallthrough
     case 80 /* "P" */: {
@@ -3061,20 +3131,19 @@ export function processBinaryChunk(
         const resolvedRowTag = chunk[i];
         if (
           resolvedRowTag === 84 /* "T" */ ||
-          (enableBinaryFlight &&
-            (resolvedRowTag === 65 /* "A" */ ||
-              resolvedRowTag === 79 /* "O" */ ||
-              resolvedRowTag === 111 /* "o" */ ||
-              resolvedRowTag === 85 /* "U" */ ||
-              resolvedRowTag === 83 /* "S" */ ||
-              resolvedRowTag === 115 /* "s" */ ||
-              resolvedRowTag === 76 /* "L" */ ||
-              resolvedRowTag === 108 /* "l" */ ||
-              resolvedRowTag === 71 /* "G" */ ||
-              resolvedRowTag === 103 /* "g" */ ||
-              resolvedRowTag === 77 /* "M" */ ||
-              resolvedRowTag === 109 /* "m" */ ||
-              resolvedRowTag === 86)) /* "V" */
+          resolvedRowTag === 65 /* "A" */ ||
+          resolvedRowTag === 79 /* "O" */ ||
+          resolvedRowTag === 111 /* "o" */ ||
+          resolvedRowTag === 85 /* "U" */ ||
+          resolvedRowTag === 83 /* "S" */ ||
+          resolvedRowTag === 115 /* "s" */ ||
+          resolvedRowTag === 76 /* "L" */ ||
+          resolvedRowTag === 108 /* "l" */ ||
+          resolvedRowTag === 71 /* "G" */ ||
+          resolvedRowTag === 103 /* "g" */ ||
+          resolvedRowTag === 77 /* "M" */ ||
+          resolvedRowTag === 109 /* "m" */ ||
+          resolvedRowTag === 86 /* "V" */
         ) {
           rowTag = resolvedRowTag;
           rowState = ROW_LENGTH;
@@ -3187,20 +3256,19 @@ export function processStringChunk(response: Response, chunk: string): void {
         const resolvedRowTag = chunk.charCodeAt(i);
         if (
           resolvedRowTag === 84 /* "T" */ ||
-          (enableBinaryFlight &&
-            (resolvedRowTag === 65 /* "A" */ ||
-              resolvedRowTag === 79 /* "O" */ ||
-              resolvedRowTag === 111 /* "o" */ ||
-              resolvedRowTag === 85 /* "U" */ ||
-              resolvedRowTag === 83 /* "S" */ ||
-              resolvedRowTag === 115 /* "s" */ ||
-              resolvedRowTag === 76 /* "L" */ ||
-              resolvedRowTag === 108 /* "l" */ ||
-              resolvedRowTag === 71 /* "G" */ ||
-              resolvedRowTag === 103 /* "g" */ ||
-              resolvedRowTag === 77 /* "M" */ ||
-              resolvedRowTag === 109 /* "m" */ ||
-              resolvedRowTag === 86)) /* "V" */
+          resolvedRowTag === 65 /* "A" */ ||
+          resolvedRowTag === 79 /* "O" */ ||
+          resolvedRowTag === 111 /* "o" */ ||
+          resolvedRowTag === 85 /* "U" */ ||
+          resolvedRowTag === 83 /* "S" */ ||
+          resolvedRowTag === 115 /* "s" */ ||
+          resolvedRowTag === 76 /* "L" */ ||
+          resolvedRowTag === 108 /* "l" */ ||
+          resolvedRowTag === 71 /* "G" */ ||
+          resolvedRowTag === 103 /* "g" */ ||
+          resolvedRowTag === 77 /* "M" */ ||
+          resolvedRowTag === 109 /* "m" */ ||
+          resolvedRowTag === 86 /* "V" */
         ) {
           rowTag = resolvedRowTag;
           rowState = ROW_LENGTH;
