@@ -9063,7 +9063,6 @@ function addTransitionProgressCallbackToPendingTransition(
     ));
 }
 var legacyErrorBoundariesThatAlreadyFailed = null,
-  rootDoesHavePassiveEffects = !1,
   rootWithPendingPassiveEffects = null,
   pendingPassiveEffectsLanes = 0,
   pendingPassiveEffectsRemainingLanes = 0,
@@ -9930,9 +9929,6 @@ function commitRootImpl(
   root.finishedWork = null;
   root.finishedLanes = 0;
   if (finishedWork === root.current) throw Error(formatProdErrorMessage(177));
-  root.callbackNode = null;
-  root.callbackPriority = 0;
-  root.cancelPendingCommit = null;
   var remainingLanes = finishedWork.lanes | finishedWork.childLanes;
   remainingLanes |= concurrentlyUpdatedLanes;
   markRootFinished(
@@ -9947,42 +9943,47 @@ function commitRootImpl(
   root === workInProgressRoot &&
     ((workInProgress = workInProgressRoot = null),
     (workInProgressRootRenderLanes = 0));
-  (0 === (finishedWork.subtreeFlags & 10256) &&
-    0 === (finishedWork.flags & 10256)) ||
-    rootDoesHavePassiveEffects ||
-    ((rootDoesHavePassiveEffects = !0),
-    (pendingPassiveEffectsRemainingLanes = remainingLanes),
-    (pendingPassiveTransitions = transitions),
-    scheduleCallback(NormalPriority$1, function () {
-      flushPassiveEffects(!0);
-      return null;
-    }));
+  spawnedLane = !1;
+  0 !== (finishedWork.subtreeFlags & 10256) ||
+  0 !== (finishedWork.flags & 10256)
+    ? ((spawnedLane = !0),
+      (pendingPassiveEffectsRemainingLanes = remainingLanes),
+      (pendingPassiveTransitions = transitions),
+      (root.callbackNode = null),
+      (root.callbackPriority = 0),
+      (root.cancelPendingCommit = null),
+      scheduleCallback(NormalPriority$1, function () {
+        flushPassiveEffects(!0);
+        return null;
+      }))
+    : ((root.callbackNode = null),
+      (root.callbackPriority = 0),
+      (root.cancelPendingCommit = null));
   transitions = 0 !== (finishedWork.flags & 15990);
   0 !== (finishedWork.subtreeFlags & 15990) || transitions
     ? ((transitions = ReactSharedInternals.T),
       (ReactSharedInternals.T = null),
-      (spawnedLane = currentUpdatePriority),
+      (updatedLanes = currentUpdatePriority),
       (currentUpdatePriority = 2),
-      (updatedLanes = executionContext),
+      (suspendedRetryLanes = executionContext),
       (executionContext |= 4),
       commitBeforeMutationEffects(root, finishedWork),
       commitMutationEffectsOnFiber(finishedWork, root),
       (root.current = finishedWork),
       commitLayoutEffectOnFiber(root, finishedWork.alternate, finishedWork),
       requestPaint(),
-      (executionContext = updatedLanes),
-      (currentUpdatePriority = spawnedLane),
+      (executionContext = suspendedRetryLanes),
+      (currentUpdatePriority = updatedLanes),
       (ReactSharedInternals.T = transitions))
     : (root.current = finishedWork);
-  rootDoesHavePassiveEffects
-    ? ((rootDoesHavePassiveEffects = !1),
+  spawnedLane
+    ? ((spawnedLane = !1),
       (rootWithPendingPassiveEffects = root),
       (pendingPassiveEffectsLanes = lanes))
     : releaseRootPooledCache(root, remainingLanes);
   remainingLanes = root.pendingLanes;
   0 === remainingLanes && (legacyErrorBoundariesThatAlreadyFailed = null);
   onCommitRoot(finishedWork.stateNode, renderPriorityLevel);
-  ensureRootIsScheduled(root);
   if (null !== recoverableErrors)
     for (
       renderPriorityLevel = root.onRecoverableError, finishedWork = 0;
@@ -9994,6 +9995,7 @@ function commitRootImpl(
           componentStack: remainingLanes.stack
         });
   0 !== (pendingPassiveEffectsLanes & 3) && flushPassiveEffects();
+  ensureRootIsScheduled(root);
   remainingLanes = root.pendingLanes;
   (enableInfiniteRenderLoopDetection &&
     (didIncludeRenderPhaseUpdate || didIncludeCommitPhaseUpdate)) ||
@@ -10755,10 +10757,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1493 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-34ee3919-20241217",
+  version: "19.1.0-www-classic-facec3ee-20241217",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-34ee3919-20241217"
+  reconcilerVersion: "19.1.0-www-classic-facec3ee-20241217"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1494 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -10784,4 +10786,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.1.0-www-classic-34ee3919-20241217";
+exports.version = "19.1.0-www-classic-facec3ee-20241217";

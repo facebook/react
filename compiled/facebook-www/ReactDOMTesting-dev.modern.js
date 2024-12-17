@@ -16598,9 +16598,6 @@ __DEV__ &&
         throw Error(
           "Cannot commit the same tree as before. This error is likely caused by a bug in React. Please file an issue."
         );
-      root.callbackNode = null;
-      root.callbackPriority = 0;
-      root.cancelPendingCommit = null;
       var remainingLanes = finishedWork.lanes | finishedWork.childLanes;
       remainingLanes |= concurrentlyUpdatedLanes;
       markRootFinished(
@@ -16615,58 +16612,64 @@ __DEV__ &&
       root === workInProgressRoot &&
         ((workInProgress = workInProgressRoot = null),
         (workInProgressRootRenderLanes = 0));
-      (0 === (finishedWork.subtreeFlags & 10256) &&
-        0 === (finishedWork.flags & 10256)) ||
-        rootDoesHavePassiveEffects ||
-        ((rootDoesHavePassiveEffects = !0),
-        (pendingPassiveEffectsRemainingLanes = remainingLanes),
-        (pendingPassiveTransitions = transitions),
-        scheduleCallback(NormalPriority$1, function () {
-          flushPassiveEffects(!0);
-          return null;
-        }));
+      spawnedLane = !1;
+      0 !== (finishedWork.subtreeFlags & 10256) ||
+      0 !== (finishedWork.flags & 10256)
+        ? ((spawnedLane = !0),
+          (pendingPassiveEffectsRemainingLanes = remainingLanes),
+          (pendingPassiveTransitions = transitions),
+          (root.callbackNode = null),
+          (root.callbackPriority = 0),
+          (root.cancelPendingCommit = null),
+          scheduleCallback(NormalPriority$1, function () {
+            flushPassiveEffects(!0);
+            return null;
+          }))
+        : ((root.callbackNode = null),
+          (root.callbackPriority = 0),
+          (root.cancelPendingCommit = null));
       commitStartTime = now();
       transitions = 0 !== (finishedWork.flags & 15990);
-      0 !== (finishedWork.subtreeFlags & 15990) || transitions
-        ? ((transitions = ReactSharedInternals.T),
-          (ReactSharedInternals.T = null),
-          (spawnedLane = Internals.p),
-          (Internals.p = DiscreteEventPriority),
-          (updatedLanes = executionContext),
-          (executionContext |= CommitContext),
-          (suspendedRetryLanes = commitBeforeMutationEffects(
-            root,
-            finishedWork
-          )),
-          commitMutationEffects(root, finishedWork, lanes),
-          suspendedRetryLanes &&
-            ((_enabled = !0),
-            dispatchAfterDetachedBlur(selectionInformation.focusedElem),
-            (_enabled = !1)),
-          restoreSelection(selectionInformation, root.containerInfo),
-          (_enabled = !!eventsEnabled),
-          (selectionInformation = eventsEnabled = null),
-          (root.current = finishedWork),
+      if (0 !== (finishedWork.subtreeFlags & 15990) || transitions) {
+        transitions = ReactSharedInternals.T;
+        ReactSharedInternals.T = null;
+        updatedLanes = Internals.p;
+        Internals.p = DiscreteEventPriority;
+        suspendedRetryLanes = executionContext;
+        executionContext |= CommitContext;
+        var shouldFireAfterActiveInstanceBlur = commitBeforeMutationEffects(
+          root,
+          finishedWork
+        );
+        commitMutationEffects(root, finishedWork, lanes);
+        shouldFireAfterActiveInstanceBlur &&
+          ((_enabled = !0),
+          dispatchAfterDetachedBlur(selectionInformation.focusedElem),
+          (_enabled = !1));
+        restoreSelection(selectionInformation, root.containerInfo);
+        _enabled = !!eventsEnabled;
+        selectionInformation = eventsEnabled = null;
+        root.current = finishedWork;
+        enableSchedulingProfiler &&
           enableSchedulingProfiler &&
-            enableSchedulingProfiler &&
-            null !== injectedProfilingHooks &&
-            "function" ===
-              typeof injectedProfilingHooks.markLayoutEffectsStarted &&
-            injectedProfilingHooks.markLayoutEffectsStarted(lanes),
-          commitLayoutEffects(finishedWork, root, lanes),
+          null !== injectedProfilingHooks &&
+          "function" ===
+            typeof injectedProfilingHooks.markLayoutEffectsStarted &&
+          injectedProfilingHooks.markLayoutEffectsStarted(lanes);
+        commitLayoutEffects(finishedWork, root, lanes);
+        enableSchedulingProfiler &&
           enableSchedulingProfiler &&
-            enableSchedulingProfiler &&
-            null !== injectedProfilingHooks &&
-            "function" ===
-              typeof injectedProfilingHooks.markLayoutEffectsStopped &&
-            injectedProfilingHooks.markLayoutEffectsStopped(),
-          requestPaint(),
-          (executionContext = updatedLanes),
-          (Internals.p = spawnedLane),
-          (ReactSharedInternals.T = transitions))
-        : (root.current = finishedWork);
-      (transitions = rootDoesHavePassiveEffects)
-        ? ((rootDoesHavePassiveEffects = !1),
+          null !== injectedProfilingHooks &&
+          "function" ===
+            typeof injectedProfilingHooks.markLayoutEffectsStopped &&
+          injectedProfilingHooks.markLayoutEffectsStopped();
+        requestPaint();
+        executionContext = suspendedRetryLanes;
+        Internals.p = updatedLanes;
+        ReactSharedInternals.T = transitions;
+      } else root.current = finishedWork;
+      (transitions = spawnedLane)
+        ? ((spawnedLane = !1),
           (rootWithPendingPassiveEffects = root),
           (pendingPassiveEffectsLanes = lanes))
         : (releaseRootPooledCache(root, remainingLanes),
@@ -16678,7 +16681,6 @@ __DEV__ &&
       onCommitRoot$1(finishedWork.stateNode, renderPriorityLevel);
       isDevToolsPresent && root.memoizedUpdaters.clear();
       onCommitRoot();
-      ensureRootIsScheduled(root);
       if (null !== recoverableErrors)
         for (
           renderPriorityLevel = root.onRecoverableError, finishedWork = 0;
@@ -16686,14 +16688,15 @@ __DEV__ &&
           finishedWork++
         )
           (remainingLanes = recoverableErrors[finishedWork]),
-            (transitions = makeErrorInfo(remainingLanes.stack)),
+            (spawnedLane = makeErrorInfo(remainingLanes.stack)),
             runWithFiberInDEV(
               remainingLanes.source,
               renderPriorityLevel,
               remainingLanes.value,
-              transitions
+              spawnedLane
             );
       0 !== (pendingPassiveEffectsLanes & 3) && flushPassiveEffects();
+      ensureRootIsScheduled(root);
       remainingLanes = root.pendingLanes;
       (enableInfiniteRenderLoopDetection &&
         (didIncludeRenderPhaseUpdate || didIncludeCommitPhaseUpdate)) ||
@@ -26646,7 +26649,6 @@ __DEV__ &&
       currentPendingTransitionCallbacks = null,
       currentEndTime = null,
       legacyErrorBoundariesThatAlreadyFailed = null,
-      rootDoesHavePassiveEffects = !1,
       rootWithPendingPassiveEffects = null,
       pendingPassiveEffectsLanes = 0,
       pendingPassiveEffectsRemainingLanes = 0,
@@ -27484,11 +27486,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.1.0-www-modern-34ee3919-20241217" !== isomorphicReactPackageVersion)
+      if ("19.1.0-www-modern-facec3ee-20241217" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.1.0-www-modern-34ee3919-20241217\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.1.0-www-modern-facec3ee-20241217\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -27531,10 +27533,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.1.0-www-modern-34ee3919-20241217",
+          version: "19.1.0-www-modern-facec3ee-20241217",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.1.0-www-modern-34ee3919-20241217"
+          reconcilerVersion: "19.1.0-www-modern-facec3ee-20241217"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -28307,5 +28309,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.1.0-www-modern-34ee3919-20241217";
+    exports.version = "19.1.0-www-modern-facec3ee-20241217";
   })();

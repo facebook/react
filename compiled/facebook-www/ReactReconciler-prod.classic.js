@@ -10796,9 +10796,6 @@ module.exports = function ($$$config) {
     root.finishedWork = null;
     root.finishedLanes = 0;
     if (finishedWork === root.current) throw Error(formatProdErrorMessage(177));
-    root.callbackNode = null;
-    root.callbackPriority = 0;
-    root.cancelPendingCommit = null;
     var remainingLanes = finishedWork.lanes | finishedWork.childLanes;
     remainingLanes |= concurrentlyUpdatedLanes;
     markRootFinished(
@@ -10813,44 +10810,52 @@ module.exports = function ($$$config) {
     root === workInProgressRoot &&
       ((workInProgress = workInProgressRoot = null),
       (workInProgressRootRenderLanes = 0));
-    (0 === (finishedWork.subtreeFlags & 10256) &&
-      0 === (finishedWork.flags & 10256)) ||
-      rootDoesHavePassiveEffects ||
-      ((rootDoesHavePassiveEffects = !0),
-      (pendingPassiveEffectsRemainingLanes = remainingLanes),
-      (pendingPassiveTransitions = transitions),
-      scheduleCallback(NormalPriority$1, function () {
-        flushPassiveEffects(!0);
-        return null;
-      }));
+    spawnedLane = !1;
+    0 !== (finishedWork.subtreeFlags & 10256) ||
+    0 !== (finishedWork.flags & 10256)
+      ? ((spawnedLane = !0),
+        (pendingPassiveEffectsRemainingLanes = remainingLanes),
+        (pendingPassiveTransitions = transitions),
+        (root.callbackNode = null),
+        (root.callbackPriority = 0),
+        (root.cancelPendingCommit = null),
+        scheduleCallback(NormalPriority$1, function () {
+          flushPassiveEffects(!0);
+          return null;
+        }))
+      : ((root.callbackNode = null),
+        (root.callbackPriority = 0),
+        (root.cancelPendingCommit = null));
     transitions = 0 !== (finishedWork.flags & 15990);
-    0 !== (finishedWork.subtreeFlags & 15990) || transitions
-      ? ((transitions = ReactSharedInternals.T),
-        (ReactSharedInternals.T = null),
-        (spawnedLane = getCurrentUpdatePriority()),
-        setCurrentUpdatePriority(2),
-        (updatedLanes = executionContext),
-        (executionContext |= 4),
-        (suspendedRetryLanes = commitBeforeMutationEffects(root, finishedWork)),
-        commitMutationEffectsOnFiber(finishedWork, root),
-        suspendedRetryLanes && afterActiveInstanceBlur(),
-        resetAfterCommit(root.containerInfo),
-        (root.current = finishedWork),
-        commitLayoutEffectOnFiber(root, finishedWork.alternate, finishedWork),
-        requestPaint(),
-        (executionContext = updatedLanes),
-        setCurrentUpdatePriority(spawnedLane),
-        (ReactSharedInternals.T = transitions))
-      : (root.current = finishedWork);
-    rootDoesHavePassiveEffects
-      ? ((rootDoesHavePassiveEffects = !1),
+    if (0 !== (finishedWork.subtreeFlags & 15990) || transitions) {
+      transitions = ReactSharedInternals.T;
+      ReactSharedInternals.T = null;
+      updatedLanes = getCurrentUpdatePriority();
+      setCurrentUpdatePriority(2);
+      suspendedRetryLanes = executionContext;
+      executionContext |= 4;
+      var shouldFireAfterActiveInstanceBlur$179 = commitBeforeMutationEffects(
+        root,
+        finishedWork
+      );
+      commitMutationEffectsOnFiber(finishedWork, root);
+      shouldFireAfterActiveInstanceBlur$179 && afterActiveInstanceBlur();
+      resetAfterCommit(root.containerInfo);
+      root.current = finishedWork;
+      commitLayoutEffectOnFiber(root, finishedWork.alternate, finishedWork);
+      requestPaint();
+      executionContext = suspendedRetryLanes;
+      setCurrentUpdatePriority(updatedLanes);
+      ReactSharedInternals.T = transitions;
+    } else root.current = finishedWork;
+    spawnedLane
+      ? ((spawnedLane = !1),
         (rootWithPendingPassiveEffects = root),
         (pendingPassiveEffectsLanes = lanes))
       : releaseRootPooledCache(root, remainingLanes);
     remainingLanes = root.pendingLanes;
     0 === remainingLanes && (legacyErrorBoundariesThatAlreadyFailed = null);
     onCommitRoot(finishedWork.stateNode, renderPriorityLevel);
-    ensureRootIsScheduled(root);
     if (null !== recoverableErrors)
       for (
         renderPriorityLevel = root.onRecoverableError, finishedWork = 0;
@@ -10862,6 +10867,7 @@ module.exports = function ($$$config) {
             componentStack: remainingLanes.stack
           });
     0 !== (pendingPassiveEffectsLanes & 3) && flushPassiveEffects();
+    ensureRootIsScheduled(root);
     remainingLanes = root.pendingLanes;
     (enableInfiniteRenderLoopDetection &&
       (didIncludeRenderPhaseUpdate || didIncludeCommitPhaseUpdate)) ||
@@ -12419,7 +12425,6 @@ module.exports = function ($$$config) {
     currentPendingTransitionCallbacks = null,
     currentEndTime = null,
     legacyErrorBoundariesThatAlreadyFailed = null,
-    rootDoesHavePassiveEffects = !1,
     rootWithPendingPassiveEffects = null,
     pendingPassiveEffectsLanes = 0,
     pendingPassiveEffectsRemainingLanes = 0,
@@ -12777,7 +12782,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-classic-34ee3919-20241217"
+      reconcilerVersion: "19.1.0-www-classic-facec3ee-20241217"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
