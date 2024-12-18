@@ -186,12 +186,6 @@ export const disableLegacyContext = true;
  */
 export const disableLegacyContextForFunctionComponents = true;
 
-// Not ready to break experimental yet.
-// Modern <StrictMode /> behaviour aligns more with what components
-// components will encounter in production, especially when used With <Offscreen />.
-// TODO: clean up legacy <StrictMode /> once tests pass WWW.
-export const useModernStrictMode = true;
-
 // Enable the moveBefore() alternative to insertBefore(). This preserves states of moves.
 export const enableMoveBefore = false;
 

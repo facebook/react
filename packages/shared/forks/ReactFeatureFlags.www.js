@@ -106,7 +106,6 @@ export const disableClientCache = true;
 export const enableServerComponentLogs = true;
 
 export const enableReactTestRendererWarning = false;
-export const useModernStrictMode = true;
 
 export const disableLegacyMode = true;
 

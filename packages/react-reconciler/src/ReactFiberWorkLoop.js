@@ -32,7 +32,6 @@ import {
   enableSchedulingProfiler,
   enableUpdaterTracking,
   enableTransitionTracing,
-  useModernStrictMode,
   disableLegacyContext,
   alwaysThrottleRetries,
   enableInfiniteRenderLoopDetection,
@@ -4205,7 +4204,7 @@ function commitDoubleInvokeEffectsInDEV(
   hasPassiveEffects: boolean,
 ) {
   if (__DEV__) {
-    if (useModernStrictMode && (disableLegacyMode || root.tag !== LegacyRoot)) {
+    if (disableLegacyMode || root.tag !== LegacyRoot) {
       let doubleInvokeEffects = true;
 
       if (
