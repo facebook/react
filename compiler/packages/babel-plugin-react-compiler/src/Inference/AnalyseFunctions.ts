@@ -19,7 +19,6 @@ import {
 import {deadCodeElimination} from '../Optimization';
 import {inferReactiveScopeVariables} from '../ReactiveScopes';
 import {rewriteInstructionKindsBasedOnReassignment} from '../SSA';
-import {logHIRFunction} from '../Utils/logger';
 import {inferMutableContextVariables} from './InferMutableContextVariables';
 import {inferMutableRanges} from './InferMutableRanges';
 import inferReferenceEffects from './InferReferenceEffects';
@@ -112,7 +111,11 @@ function lower(func: HIRFunction): void {
   rewriteInstructionKindsBasedOnReassignment(func);
   inferReactiveScopeVariables(func);
   inferMutableContextVariables(func);
-  logHIRFunction('AnalyseFunction (inner)', func);
+  func.env.logger?.debugLogIRs?.({
+    kind: 'hir',
+    name: 'AnalyseFunction (inner)',
+    value: func,
+  });
 }
 
 function infer(

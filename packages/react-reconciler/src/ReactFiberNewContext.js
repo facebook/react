@@ -12,7 +12,6 @@ import type {
   Fiber,
   ContextDependency,
   Dependencies,
-  ContextDependencyWithSelect,
 } from './ReactInternalTypes';
 import type {StackCursor} from './ReactFiberStack';
 import type {Lanes} from './ReactFiberLane';
@@ -48,8 +47,6 @@ import {
   enableRenderableContext,
 } from 'shared/ReactFeatureFlags';
 import {getHostTransitionProvider} from './ReactFiberHostContext';
-import isArray from '../../shared/isArray';
-import {enableContextProfiling} from '../../shared/ReactFeatureFlags';
 
 const valueCursor: StackCursor<mixed> = createCursor(null);
 
@@ -69,10 +66,7 @@ if (__DEV__) {
 }
 
 let currentlyRenderingFiber: Fiber | null = null;
-let lastContextDependency:
-  | ContextDependency<mixed>
-  | ContextDependencyWithSelect<mixed>
-  | null = null;
+let lastContextDependency: ContextDependency<mixed> | null = null;
 
 let isDisallowedContextReadInDEV: boolean = false;
 
@@ -401,23 +395,6 @@ function propagateContextChanges<T>(
           const context: ReactContext<T> = contexts[i];
           // Check if the context matches.
           if (dependency.context === context) {
-            if (enableContextProfiling) {
-              const select = dependency.select;
-              if (select != null && dependency.lastSelectedValue != null) {
-                const newValue = isPrimaryRenderer
-                  ? dependency.context._currentValue
-                  : dependency.context._currentValue2;
-                if (
-                  !checkIfSelectedContextValuesChanged(
-                    dependency.lastSelectedValue,
-                    select(newValue),
-                  )
-                ) {
-                  // Compared value hasn't changed. Bail out early.
-                  continue findContext;
-                }
-              }
-            }
             // Match! Schedule an update on this fiber.
 
             // In the lazy implementation, don't mark a dirty flag on the
@@ -657,29 +634,6 @@ function propagateParentContextChanges(
   workInProgress.flags |= DidPropagateContext;
 }
 
-function checkIfSelectedContextValuesChanged(
-  oldComparedValue: Array<mixed>,
-  newComparedValue: Array<mixed>,
-): boolean {
-  // We have an implicit contract that compare functions must return arrays.
-  // This allows us to compare multiple values in the same context access
-  // since compiling to additional hook calls regresses perf.
-  if (isArray(oldComparedValue) && isArray(newComparedValue)) {
-    if (oldComparedValue.length !== newComparedValue.length) {
-      return true;
-    }
-
-    for (let i = 0; i < oldComparedValue.length; i++) {
-      if (!is(newComparedValue[i], oldComparedValue[i])) {
-        return true;
-      }
-    }
-  } else {
-    throw new Error('Compared context values must be arrays');
-  }
-  return false;
-}
-
 export function checkIfContextChanged(
   currentDependencies: Dependencies,
 ): boolean {
@@ -698,23 +652,8 @@ export function checkIfContextChanged(
       ? context._currentValue
       : context._currentValue2;
     const oldValue = dependency.memoizedValue;
-    if (
-      enableContextProfiling &&
-      dependency.select != null &&
-      dependency.lastSelectedValue != null
-    ) {
-      if (
-        checkIfSelectedContextValuesChanged(
-          dependency.lastSelectedValue,
-          dependency.select(newValue),
-        )
-      ) {
-        return true;
-      }
-    } else {
-      if (!is(newValue, oldValue)) {
-        return true;
-      }
+    if (!is(newValue, oldValue)) {
+      return true;
     }
     dependency = dependency.next;
   }
@@ -747,21 +686,6 @@ export function prepareToReadContext(
   }
 }
 
-export function readContextAndCompare<C>(
-  context: ReactContext<C>,
-  select: C => Array<mixed>,
-): C {
-  if (!(enableLazyContextPropagation && enableContextProfiling)) {
-    throw new Error('Not implemented.');
-  }
-
-  return readContextForConsumer_withSelect(
-    currentlyRenderingFiber,
-    context,
-    select,
-  );
-}
-
 export function readContext<T>(context: ReactContext<T>): T {
   if (__DEV__) {
     // This warning would fire if you read context inside a Hook like useMemo.
@@ -789,59 +713,10 @@ export function readContextDuringReconciliation<T>(
   return readContextForConsumer(consumer, context);
 }
 
-function readContextForConsumer_withSelect<C>(
+function readContextForConsumer<T>(
   consumer: Fiber | null,
-  context: ReactContext<C>,
-  select: C => Array<mixed>,
-): C {
-  const value = isPrimaryRenderer
-    ? context._currentValue
-    : context._currentValue2;
-
-  const contextItem = {
-    context: ((context: any): ReactContext<mixed>),
-    memoizedValue: value,
-    next: null,
-    select: ((select: any): (context: mixed) => Array<mixed>),
-    lastSelectedValue: select(value),
-  };
-
-  if (lastContextDependency === null) {
-    if (consumer === null) {
-      throw new Error(
-        'Context can only be read while React is rendering. ' +
-          'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
-          'In function components, you can read it directly in the function body, but not ' +
-          'inside Hooks like useReducer() or useMemo().',
-      );
-    }
-
-    // This is the first dependency for this component. Create a new list.
-    lastContextDependency = contextItem;
-    consumer.dependencies = __DEV__
-      ? {
-          lanes: NoLanes,
-          firstContext: contextItem,
-          _debugThenableState: null,
-        }
-      : {
-          lanes: NoLanes,
-          firstContext: contextItem,
-        };
-    if (enableLazyContextPropagation) {
-      consumer.flags |= NeedsPropagation;
-    }
-  } else {
-    // Append a new context item.
-    lastContextDependency = lastContextDependency.next = contextItem;
-  }
-  return value;
-}
-
-function readContextForConsumer<C>(
-  consumer: Fiber | null,
-  context: ReactContext<C>,
-): C {
+  context: ReactContext<T>,
+): T {
   const value = isPrimaryRenderer
     ? context._currentValue
     : context._currentValue2;

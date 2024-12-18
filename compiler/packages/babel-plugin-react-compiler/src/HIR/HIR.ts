@@ -840,6 +840,11 @@ export type LoadLocal = {
   place: Place;
   loc: SourceLocation;
 };
+export type LoadContext = {
+  kind: 'LoadContext';
+  place: Place;
+  loc: SourceLocation;
+};
 
 /*
  * The value of a given instruction. Note that values are not recursive: complex
@@ -852,11 +857,7 @@ export type LoadLocal = {
 
 export type InstructionValue =
   | LoadLocal
-  | {
-      kind: 'LoadContext';
-      place: Place;
-      loc: SourceLocation;
-    }
+  | LoadContext
   | {
       kind: 'DeclareLocal';
       lvalue: LValue;

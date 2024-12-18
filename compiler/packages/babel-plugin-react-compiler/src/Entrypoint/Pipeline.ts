@@ -80,13 +80,6 @@ import {
 } from '../SSA';
 import {inferTypes} from '../TypeInference';
 import {
-  logCodegenFunction,
-  logDebug,
-  logHIRFunction,
-  logReactiveFunction,
-} from '../Utils/logger';
-import {assertExhaustive} from '../Utils/utils';
-import {
   validateContextVariableLValues,
   validateHooksUsage,
   validateMemoizedEffectDependencies,
@@ -112,7 +105,7 @@ export type CompilerPipelineValue =
   | {kind: 'reactive'; name: string; value: ReactiveFunction}
   | {kind: 'debug'; name: string; value: string};
 
-export function* run(
+function run(
   func: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
   >,
@@ -122,7 +115,7 @@ export function* run(
   logger: Logger | null,
   filename: string | null,
   code: string | null,
-): Generator<CompilerPipelineValue, CodegenFunction> {
+): CodegenFunction {
   const contextIdentifiers = findContextIdentifiers(func);
   const env = new Environment(
     func.scope,
@@ -134,30 +127,32 @@ export function* run(
     code,
     useMemoCacheIdentifier,
   );
-  yield log({
+  env.logger?.debugLogIRs?.({
     kind: 'debug',
     name: 'EnvironmentConfig',
     value: prettyFormat(env.config),
   });
-  const ast = yield* runWithEnvironment(func, env);
-  return ast;
+  return runWithEnvironment(func, env);
 }
 
 /*
  * Note: this is split from run() to make `config` out of scope, so that all
  * access to feature flags has to be through the Environment for consistency.
  */
-function* runWithEnvironment(
+function runWithEnvironment(
   func: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
   >,
   env: Environment,
-): Generator<CompilerPipelineValue, CodegenFunction> {
+): CodegenFunction {
+  const log = (value: CompilerPipelineValue): void => {
+    env.logger?.debugLogIRs?.(value);
+  };
   const hir = lower(func, env).unwrap();
-  yield log({kind: 'hir', name: 'HIR', value: hir});
+  log({kind: 'hir', name: 'HIR', value: hir});
 
   pruneMaybeThrows(hir);
-  yield log({kind: 'hir', name: 'PruneMaybeThrows', value: hir});
+  log({kind: 'hir', name: 'PruneMaybeThrows', value: hir});
 
   validateContextVariableLValues(hir);
   validateUseMemo(hir);
@@ -168,35 +163,35 @@ function* runWithEnvironment(
     !env.config.enableChangeDetectionForDebugging
   ) {
     dropManualMemoization(hir);
-    yield log({kind: 'hir', name: 'DropManualMemoization', value: hir});
+    log({kind: 'hir', name: 'DropManualMemoization', value: hir});
   }
 
   inlineImmediatelyInvokedFunctionExpressions(hir);
-  yield log({
+  log({
     kind: 'hir',
     name: 'InlineImmediatelyInvokedFunctionExpressions',
     value: hir,
   });
 
   mergeConsecutiveBlocks(hir);
-  yield log({kind: 'hir', name: 'MergeConsecutiveBlocks', value: hir});
+  log({kind: 'hir', name: 'MergeConsecutiveBlocks', value: hir});
 
   assertConsistentIdentifiers(hir);
   assertTerminalSuccessorsExist(hir);
 
   enterSSA(hir);
-  yield log({kind: 'hir', name: 'SSA', value: hir});
+  log({kind: 'hir', name: 'SSA', value: hir});
 
   eliminateRedundantPhi(hir);
-  yield log({kind: 'hir', name: 'EliminateRedundantPhi', value: hir});
+  log({kind: 'hir', name: 'EliminateRedundantPhi', value: hir});
 
   assertConsistentIdentifiers(hir);
 
   constantPropagation(hir);
-  yield log({kind: 'hir', name: 'ConstantPropagation', value: hir});
+  log({kind: 'hir', name: 'ConstantPropagation', value: hir});
 
   inferTypes(hir);
-  yield log({kind: 'hir', name: 'InferTypes', value: hir});
+  log({kind: 'hir', name: 'InferTypes', value: hir});
 
   if (env.config.validateHooksUsage) {
     validateHooksUsage(hir);
@@ -211,30 +206,30 @@ function* runWithEnvironment(
   }
 
   optimizePropsMethodCalls(hir);
-  yield log({kind: 'hir', name: 'OptimizePropsMethodCalls', value: hir});
+  log({kind: 'hir', name: 'OptimizePropsMethodCalls', value: hir});
 
   analyseFunctions(hir);
-  yield log({kind: 'hir', name: 'AnalyseFunctions', value: hir});
+  log({kind: 'hir', name: 'AnalyseFunctions', value: hir});
 
   inferReferenceEffects(hir);
-  yield log({kind: 'hir', name: 'InferReferenceEffects', value: hir});
+  log({kind: 'hir', name: 'InferReferenceEffects', value: hir});
 
   validateLocalsNotReassignedAfterRender(hir);
 
   // Note: Has to come after infer reference effects because "dead" code may still affect inference
   deadCodeElimination(hir);
-  yield log({kind: 'hir', name: 'DeadCodeElimination', value: hir});
+  log({kind: 'hir', name: 'DeadCodeElimination', value: hir});
 
   if (env.config.enableInstructionReordering) {
     instructionReordering(hir);
-    yield log({kind: 'hir', name: 'InstructionReordering', value: hir});
+    log({kind: 'hir', name: 'InstructionReordering', value: hir});
   }
 
   pruneMaybeThrows(hir);
-  yield log({kind: 'hir', name: 'PruneMaybeThrows', value: hir});
+  log({kind: 'hir', name: 'PruneMaybeThrows', value: hir});
 
   inferMutableRanges(hir);
-  yield log({kind: 'hir', name: 'InferMutableRanges', value: hir});
+  log({kind: 'hir', name: 'InferMutableRanges', value: hir});
 
   if (env.config.assertValidMutableRanges) {
     assertValidMutableRanges(hir);
@@ -257,27 +252,27 @@ function* runWithEnvironment(
   }
 
   inferReactivePlaces(hir);
-  yield log({kind: 'hir', name: 'InferReactivePlaces', value: hir});
+  log({kind: 'hir', name: 'InferReactivePlaces', value: hir});
 
   rewriteInstructionKindsBasedOnReassignment(hir);
-  yield log({
+  log({
     kind: 'hir',
     name: 'RewriteInstructionKindsBasedOnReassignment',
     value: hir,
   });
 
   propagatePhiTypes(hir);
-  yield log({
+  log({
     kind: 'hir',
     name: 'PropagatePhiTypes',
     value: hir,
   });
 
   inferReactiveScopeVariables(hir);
-  yield log({kind: 'hir', name: 'InferReactiveScopeVariables', value: hir});
+  log({kind: 'hir', name: 'InferReactiveScopeVariables', value: hir});
 
   const fbtOperands = memoizeFbtAndMacroOperandsInSameScope(hir);
-  yield log({
+  log({
     kind: 'hir',
     name: 'MemoizeFbtAndMacroOperandsInSameScope',
     value: hir,
@@ -289,39 +284,39 @@ function* runWithEnvironment(
 
   if (env.config.enableFunctionOutlining) {
     outlineFunctions(hir, fbtOperands);
-    yield log({kind: 'hir', name: 'OutlineFunctions', value: hir});
+    log({kind: 'hir', name: 'OutlineFunctions', value: hir});
   }
 
   alignMethodCallScopes(hir);
-  yield log({
+  log({
     kind: 'hir',
     name: 'AlignMethodCallScopes',
     value: hir,
   });
 
   alignObjectMethodScopes(hir);
-  yield log({
+  log({
     kind: 'hir',
     name: 'AlignObjectMethodScopes',
     value: hir,
   });
 
   pruneUnusedLabelsHIR(hir);
-  yield log({
+  log({
     kind: 'hir',
     name: 'PruneUnusedLabelsHIR',
     value: hir,
   });
 
   alignReactiveScopesToBlockScopesHIR(hir);
-  yield log({
+  log({
     kind: 'hir',
     name: 'AlignReactiveScopesToBlockScopesHIR',
     value: hir,
   });
 
   mergeOverlappingReactiveScopesHIR(hir);
-  yield log({
+  log({
     kind: 'hir',
     name: 'MergeOverlappingReactiveScopesHIR',
     value: hir,
@@ -329,7 +324,7 @@ function* runWithEnvironment(
   assertValidBlockNesting(hir);
 
   buildReactiveScopeTerminalsHIR(hir);
-  yield log({
+  log({
     kind: 'hir',
     name: 'BuildReactiveScopeTerminalsHIR',
     value: hir,
@@ -338,14 +333,14 @@ function* runWithEnvironment(
   assertValidBlockNesting(hir);
 
   flattenReactiveLoopsHIR(hir);
-  yield log({
+  log({
     kind: 'hir',
     name: 'FlattenReactiveLoopsHIR',
     value: hir,
   });
 
   flattenScopesWithHooksOrUseHIR(hir);
-  yield log({
+  log({
     kind: 'hir',
     name: 'FlattenScopesWithHooksOrUseHIR',
     value: hir,
@@ -353,7 +348,7 @@ function* runWithEnvironment(
   assertTerminalSuccessorsExist(hir);
   assertTerminalPredsExist(hir);
   propagateScopeDependenciesHIR(hir);
-  yield log({
+  log({
     kind: 'hir',
     name: 'PropagateScopeDependenciesHIR',
     value: hir,
@@ -365,7 +360,7 @@ function* runWithEnvironment(
 
   if (env.config.inlineJsxTransform) {
     inlineJsxTransform(hir, env.config.inlineJsxTransform);
-    yield log({
+    log({
       kind: 'hir',
       name: 'inlineJsxTransform',
       value: hir,
@@ -373,7 +368,7 @@ function* runWithEnvironment(
   }
 
   const reactiveFunction = buildReactiveFunction(hir);
-  yield log({
+  log({
     kind: 'reactive',
     name: 'BuildReactiveFunction',
     value: reactiveFunction,
@@ -382,7 +377,7 @@ function* runWithEnvironment(
   assertWellFormedBreakTargets(reactiveFunction);
 
   pruneUnusedLabels(reactiveFunction);
-  yield log({
+  log({
     kind: 'reactive',
     name: 'PruneUnusedLabels',
     value: reactiveFunction,
@@ -390,35 +385,35 @@ function* runWithEnvironment(
   assertScopeInstructionsWithinScopes(reactiveFunction);
 
   pruneNonEscapingScopes(reactiveFunction);
-  yield log({
+  log({
     kind: 'reactive',
     name: 'PruneNonEscapingScopes',
     value: reactiveFunction,
   });
 
   pruneNonReactiveDependencies(reactiveFunction);
-  yield log({
+  log({
     kind: 'reactive',
     name: 'PruneNonReactiveDependencies',
     value: reactiveFunction,
   });
 
   pruneUnusedScopes(reactiveFunction);
-  yield log({
+  log({
     kind: 'reactive',
     name: 'PruneUnusedScopes',
     value: reactiveFunction,
   });
 
   mergeReactiveScopesThatInvalidateTogether(reactiveFunction);
-  yield log({
+  log({
     kind: 'reactive',
     name: 'MergeReactiveScopesThatInvalidateTogether',
     value: reactiveFunction,
   });
 
   pruneAlwaysInvalidatingScopes(reactiveFunction);
-  yield log({
+  log({
     kind: 'reactive',
     name: 'PruneAlwaysInvalidatingScopes',
     value: reactiveFunction,
@@ -426,7 +421,7 @@ function* runWithEnvironment(
 
   if (env.config.enableChangeDetectionForDebugging != null) {
     pruneInitializationDependencies(reactiveFunction);
-    yield log({
+    log({
       kind: 'reactive',
       name: 'PruneInitializationDependencies',
       value: reactiveFunction,
@@ -434,49 +429,49 @@ function* runWithEnvironment(
   }
 
   propagateEarlyReturns(reactiveFunction);
-  yield log({
+  log({
     kind: 'reactive',
     name: 'PropagateEarlyReturns',
     value: reactiveFunction,
   });
 
   pruneUnusedLValues(reactiveFunction);
-  yield log({
+  log({
     kind: 'reactive',
     name: 'PruneUnusedLValues',
     value: reactiveFunction,
   });
 
   promoteUsedTemporaries(reactiveFunction);
-  yield log({
+  log({
     kind: 'reactive',
     name: 'PromoteUsedTemporaries',
     value: reactiveFunction,
   });
 
   extractScopeDeclarationsFromDestructuring(reactiveFunction);
-  yield log({
+  log({
     kind: 'reactive',
     name: 'ExtractScopeDeclarationsFromDestructuring',
     value: reactiveFunction,
   });
 
   stabilizeBlockIds(reactiveFunction);
-  yield log({
+  log({
     kind: 'reactive',
     name: 'StabilizeBlockIds',
     value: reactiveFunction,
   });
 
   const uniqueIdentifiers = renameVariables(reactiveFunction);
-  yield log({
+  log({
     kind: 'reactive',
     name: 'RenameVariables',
     value: reactiveFunction,
   });
 
   pruneHoistedContexts(reactiveFunction);
-  yield log({
+  log({
     kind: 'reactive',
     name: 'PruneHoistedContexts',
     value: reactiveFunction,
@@ -497,9 +492,9 @@ function* runWithEnvironment(
     uniqueIdentifiers,
     fbtOperands,
   }).unwrap();
-  yield log({kind: 'ast', name: 'Codegen', value: ast});
+  log({kind: 'ast', name: 'Codegen', value: ast});
   for (const outlined of ast.outlined) {
-    yield log({kind: 'ast', name: 'Codegen (outlined)', value: outlined.fn});
+    log({kind: 'ast', name: 'Codegen (outlined)', value: outlined.fn});
   }
 
   /**
@@ -525,7 +520,7 @@ export function compileFn(
   filename: string | null,
   code: string | null,
 ): CodegenFunction {
-  let generator = run(
+  return run(
     func,
     config,
     fnType,
@@ -534,46 +529,4 @@ export function compileFn(
     filename,
     code,
   );
-  while (true) {
-    const next = generator.next();
-    if (next.done) {
-      return next.value;
-    }
-  }
-}
-
-export function log(value: CompilerPipelineValue): CompilerPipelineValue {
-  switch (value.kind) {
-    case 'ast': {
-      logCodegenFunction(value.name, value.value);
-      break;
-    }
-    case 'hir': {
-      logHIRFunction(value.name, value.value);
-      break;
-    }
-    case 'reactive': {
-      logReactiveFunction(value.name, value.value);
-      break;
-    }
-    case 'debug': {
-      logDebug(value.name, value.value);
-      break;
-    }
-    default: {
-      assertExhaustive(value, 'Unexpected compilation kind');
-    }
-  }
-  return value;
-}
-
-export function* runPlayground(
-  func: NodePath<
-    t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
-  >,
-  config: EnvironmentConfig,
-  fnType: ReactFunctionType,
-): Generator<CompilerPipelineValue, CodegenFunction> {
-  const ast = yield* run(func, config, fnType, '_c', null, null, null);
-  return ast;
 }
