@@ -45,4 +45,31 @@ describe('ReactFlightDOMReplyEdge', () => {
 
     expect(decoded).toEqual({some: 'object'});
   });
+
+  it('should abort when parsing an incomplete payload', async () => {
+    const infinitePromise = new Promise(() => {});
+    const controller = new AbortController();
+    const promiseForResult = ReactServerDOMClient.encodeReply(
+      {promise: infinitePromise},
+      {
+        signal: controller.signal,
+      },
+    );
+    controller.abort();
+    const body = await promiseForResult;
+
+    const decoded = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+    );
+
+    let error = null;
+    try {
+      await decoded.promise;
+    } catch (x) {
+      error = x;
+    }
+    expect(error).not.toBe(null);
+    expect(error.message).toBe('Connection closed.');
+  });
 });
