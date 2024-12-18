@@ -28,8 +28,6 @@ describe('useRef', () => {
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
 
-    const ReactFeatureFlags = require('shared/ReactFeatureFlags');
-
     act = require('internal-test-utils').act;
     useCallback = React.useCallback;
     useEffect = React.useEffect;

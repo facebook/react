@@ -13,7 +13,6 @@
 'use strict';
 
 let React;
-let ReactFeatureFlags;
 let ReactTestRenderer;
 let Scheduler;
 let ReactDOMServer;
@@ -26,8 +25,6 @@ let waitForThrow;
 describe('ReactHooks', () => {
   beforeEach(() => {
     jest.resetModules();
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
