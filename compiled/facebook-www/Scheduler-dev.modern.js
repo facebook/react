@@ -217,7 +217,9 @@ __DEV__ &&
       advanceTimers(currentTime);
       if (!isHostCallbackScheduled)
         if (null !== peek(taskQueue))
-          (isHostCallbackScheduled = !0), requestHostCallback();
+          (isHostCallbackScheduled = !0),
+            isMessageLoopRunning ||
+              ((isMessageLoopRunning = !0), schedulePerformWorkUntilDeadline());
         else {
           var firstTimer = peek(timerQueue);
           null !== firstTimer &&
@@ -233,10 +235,6 @@ __DEV__ &&
         : exports.unstable_now() - startTime < frameInterval
           ? !1
           : !0;
-    }
-    function requestHostCallback() {
-      isMessageLoopRunning ||
-        ((isMessageLoopRunning = !0), schedulePerformWorkUntilDeadline());
     }
     function requestHostTimeout(callback, ms) {
       taskTimeoutID = localSetTimeout(function () {
@@ -327,11 +325,6 @@ __DEV__ &&
       }
       task.callback = null;
     };
-    exports.unstable_continueExecution = function () {
-      isHostCallbackScheduled ||
-        isPerformingWork ||
-        ((isHostCallbackScheduled = !0), requestHostCallback());
-    };
     exports.unstable_forceFrameRate = function (fps) {
       0 > fps || 125 < fps
         ? console.error(
@@ -341,9 +334,6 @@ __DEV__ &&
     };
     exports.unstable_getCurrentPriorityLevel = function () {
       return currentPriorityLevel;
-    };
-    exports.unstable_getFirstCallbackNode = function () {
-      return peek(taskQueue);
     };
     exports.unstable_next = function (eventHandler) {
       switch (currentPriorityLevel) {
@@ -363,7 +353,6 @@ __DEV__ &&
         currentPriorityLevel = previousPriorityLevel;
       }
     };
-    exports.unstable_pauseExecution = function () {};
     exports.unstable_requestPaint = function () {
       enableRequestPaint && (needsPaint = !0);
     };
@@ -446,7 +435,10 @@ __DEV__ &&
           (priorityLevel.isQueued = !0),
           isHostCallbackScheduled ||
             isPerformingWork ||
-            ((isHostCallbackScheduled = !0), requestHostCallback()));
+            ((isHostCallbackScheduled = !0),
+            isMessageLoopRunning ||
+              ((isMessageLoopRunning = !0),
+              schedulePerformWorkUntilDeadline())));
       return priorityLevel;
     };
     exports.unstable_shouldYield = shouldYieldToHost;
