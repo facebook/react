@@ -91,7 +91,7 @@ module.exports = {
         message:
           'Google Closure Compiler optimized `arguments` access. ' +
           'This affects function arity. ' +
-          'Access `arguments.length` to avoid this optimization',
+          'Create a reference to `arguments` to avoid this optimization',
       },
     ],
   },
