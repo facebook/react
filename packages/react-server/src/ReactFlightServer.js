@@ -3810,11 +3810,11 @@ function forwardDebugInfo(
   debugInfo: ReactDebugInfo,
 ) {
   for (let i = 0; i < debugInfo.length; i++) {
-    request.pendingChunks++;
     if (typeof debugInfo[i].time === 'number') {
       // When forwarding time we need to ensure to convert it to the time space of the payload.
       emitTimingChunk(request, id, debugInfo[i].time);
     } else {
+      request.pendingChunks++;
       if (typeof debugInfo[i].name === 'string') {
         // We outline this model eagerly so that we can refer to by reference as an owner.
         // If we had a smarter way to dedupe we might not have to do this if there ends up
