@@ -24,7 +24,7 @@ import {
   close,
 } from 'react-client/src/ReactFlightClient';
 
-import type {ServerManifest} from './ReactFlightClientConfigBundlerVite';
+import {manifest} from 'virtual:react-server-dom-vite/manifest';
 
 import {createServerReference as createServerReferenceImpl} from 'react-client/src/ReactFlightReplyClient';
 
@@ -58,11 +58,10 @@ export type Options = {
 
 function createFromNodeStream<T>(
   stream: Readable,
-  serverManifest: ServerManifest,
   options?: Options,
 ): Thenable<T> {
   const response: Response = createResponse(
-    serverManifest,
+    manifest,
     null,
     null,
     noServerCall,

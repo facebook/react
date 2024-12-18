@@ -736,7 +736,14 @@ const bundles = [
     condition: 'react-server',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'util', 'crypto', 'async_hooks', 'react-dom'],
+    externals: [
+      'react',
+      'util',
+      'crypto',
+      'async_hooks',
+      'react-dom',
+      'virtual:react-server-dom-vite/manifest',
+    ],
   },
 
   /******* React Server DOM Vite Client *******/
@@ -746,7 +753,7 @@ const bundles = [
     entry: 'react-server-dom-vite/client.browser',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'react-dom'],
+    externals: ['react', 'react-dom', 'virtual:react-server-dom-vite/manifest'],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
@@ -754,7 +761,13 @@ const bundles = [
     entry: 'react-server-dom-vite/client.node',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'react-dom', 'util', 'crypto'],
+    externals: [
+      'react',
+      'react-dom',
+      'util',
+      'crypto',
+      'virtual:react-server-dom-vite/manifest',
+    ],
   },
 
   /******* React Suspense Test Utils *******/

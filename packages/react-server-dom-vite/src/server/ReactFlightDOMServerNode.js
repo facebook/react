@@ -12,8 +12,6 @@ import type {
   ReactClientValue,
 } from 'react-server/src/ReactFlightServer';
 import type {Destination} from 'react-server/src/ReactServerStreamConfigNode';
-import type {ClientManifest} from './ReactFlightServerConfigViteBundler';
-import type {ServerManifest} from 'react-client/src/ReactFlightClientConfig';
 import type {Busboy} from 'busboy';
 import type {Writable} from 'stream';
 import type {Thenable} from 'shared/ReactTypes';
@@ -54,6 +52,8 @@ import type {TemporaryReferenceSet} from 'react-server/src/ReactFlightServerTemp
 
 export {createTemporaryReferenceSet} from 'react-server/src/ReactFlightServerTemporaryReferences';
 
+import {manifest} from 'virtual:react-server-dom-vite/manifest';
+
 export type {TemporaryReferenceSet};
 
 function createDrainHandler(destination: Destination, request: Request) {
@@ -83,12 +83,11 @@ type PipeableStream = {
 
 function renderToPipeableStream(
   model: ReactClientValue,
-  clientManifest: ClientManifest,
   options?: Options,
 ): PipeableStream {
   const request = createRequest(
     model,
-    clientManifest,
+    manifest,
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.onPostpone : undefined,
@@ -158,7 +157,6 @@ type StaticResult = {
 
 function prerenderToNodeStream(
   model: ReactClientValue,
-  clientManifest: ClientManifest,
   options?: PrerenderOptions,
 ): Promise<StaticResult> {
   return new Promise((resolve, reject) => {
@@ -175,7 +173,7 @@ function prerenderToNodeStream(
 
     const request = createPrerenderRequest(
       model,
-      clientManifest,
+      manifest,
       onAllReady,
       onFatalError,
       options ? options.onError : undefined,
@@ -205,11 +203,10 @@ function prerenderToNodeStream(
 
 function decodeReplyFromBusboy<T>(
   busboyStream: Busboy,
-  serverManifest: ServerManifest,
   options?: {temporaryReferences?: TemporaryReferenceSet},
 ): Thenable<T> {
   const response = createResponse(
-    serverManifest,
+    manifest,
     '',
     options ? options.temporaryReferences : undefined,
   );
@@ -265,7 +262,6 @@ function decodeReplyFromBusboy<T>(
 
 function decodeReply<T>(
   body: string | FormData,
-  serverManifest: ServerManifest,
   options?: {temporaryReferences?: TemporaryReferenceSet},
 ): Thenable<T> {
   if (typeof body === 'string') {
@@ -274,7 +270,7 @@ function decodeReply<T>(
     body = form;
   }
   const response = createResponse(
-    serverManifest,
+    manifest,
     '',
     options ? options.temporaryReferences : undefined,
     body,
