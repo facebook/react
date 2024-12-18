@@ -12,6 +12,7 @@ import type {Fiber} from './ReactInternalTypes';
 import type {SuspenseInstance} from './ReactFiberConfig';
 import type {Lane} from './ReactFiberLane';
 import type {TreeContext} from './ReactFiberTreeContext';
+import type {CapturedValue} from './ReactCapturedValue';
 
 import {SuspenseComponent, SuspenseListComponent} from './ReactWorkTags';
 import {NoFlags, DidCapture} from './ReactFiberFlags';
@@ -49,6 +50,8 @@ export type SuspenseState = {
   // OffscreenLane is the default for dehydrated boundaries.
   // NoLane is the default for normal boundaries, which turns into "normal" pri.
   retryLane: Lane,
+  // Stashed Errors that happened while attempting to hydrate this boundary.
+  hydrationErrors: Array<CapturedValue<mixed>> | null,
 };
 
 export type SuspenseListTailMode = 'collapsed' | 'hidden' | void;

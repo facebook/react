@@ -11,6 +11,8 @@ import type {Fiber} from './ReactInternalTypes';
 
 import type {Lanes} from './ReactFiberLane';
 
+import type {CapturedValue} from './ReactCapturedValue';
+
 import getComponentNameFromFiber from './getComponentNameFromFiber';
 
 import {
@@ -161,12 +163,37 @@ export function logSuspenseBoundaryClientRendered(
   fiber: Fiber,
   startTime: number,
   endTime: number,
+  errors: Array<CapturedValue<mixed>>,
 ): void {
   if (supportsUserTiming) {
-    reusableComponentDevToolDetails.color = 'error';
-    reusableComponentOptions.start = startTime;
-    reusableComponentOptions.end = endTime;
-    performance.measure('Suspense', reusableComponentOptions);
+    const properties = [];
+    if (__DEV__) {
+      for (let i = 0; i < errors.length; i++) {
+        const capturedValue = errors[i];
+        const error = capturedValue.value;
+        const message =
+          typeof error === 'object' &&
+          error !== null &&
+          typeof error.message === 'string'
+            ? // eslint-disable-next-line react-internal/safe-string-coercion
+              String(error.message)
+            : // eslint-disable-next-line react-internal/safe-string-coercion
+              String(error);
+        properties.push(['Error', message]);
+      }
+    }
+    performance.measure('Suspense', {
+      start: startTime,
+      end: endTime,
+      detail: {
+        devtools: {
+          color: 'error',
+          track: COMPONENTS_TRACK,
+          tooltipText: 'Hydration failed',
+          properties,
+        },
+      },
+    });
   }
 }
 

@@ -52,7 +52,6 @@ import {
   enableLegacyHidden,
   disableLegacyMode,
   enableComponentPerformanceTrack,
-  enablePostpone,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -145,8 +144,6 @@ import {
   suspendResource,
   resetFormInstance,
   registerSuspenseInstanceRetry,
-  isSuspenseInstanceFallback,
-  getSuspenseInstanceFallbackErrorDetails,
 } from './ReactFiberConfig';
 import {
   captureCommitPhaseError,
@@ -2878,7 +2875,6 @@ function commitPassiveMountOnFiber(
           prevState.dehydrated !== null &&
           (nextState === null || nextState.dehydrated === null)
         ) {
-          const suspenseInstance: SuspenseInstance = prevState.dehydrated;
           // This was dehydrated but is no longer dehydrated. We may have now either hydrated it
           // or client rendered it.
           const deletions = finishedWork.deletions;
@@ -2890,19 +2886,16 @@ function commitPassiveMountOnFiber(
             // This was an abandoned hydration that deleted the dehydrated fragment. That means we
             // are not hydrating this Suspense boundary.
             inHydratedSubtree = false;
-            if (
-              enablePostpone &&
-              isSuspenseInstanceFallback(suspenseInstance) &&
-              getSuspenseInstanceFallbackErrorDetails(suspenseInstance)
-                .digest === 'POSTPONE'
-            ) {
-              // Client Rendered Intentionally. Don't log it as an error.
-            } else {
+            const hydrationErrors = prevState.hydrationErrors;
+            // If there were no hydration errors, that suggests that this was an intentional client
+            // rendered boundary. Such as postpone.
+            if (hydrationErrors !== null) {
               const startTime: number = (finishedWork.actualStartTime: any);
               logSuspenseBoundaryClientRendered(
                 finishedWork,
                 startTime,
                 endTime,
+                hydrationErrors,
               );
             }
           } else {
