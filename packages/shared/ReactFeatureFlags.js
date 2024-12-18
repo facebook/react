@@ -234,10 +234,6 @@ export const disableTextareaChildren = false;
 // Debugging and DevTools
 // -----------------------------------------------------------------------------
 
-// Helps identify side effects in render-phase lifecycle hooks and setState
-// reducers by double invoking them in StrictLegacyMode.
-export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
-
 // Gather advanced timing metrics for Profiler subtrees.
 export const enableProfilerTimer = __PROFILE__;
 

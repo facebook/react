@@ -10,7 +10,6 @@
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as ExportsType from './ReactFeatureFlags.test-renderer.www';
 
-export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 export const enableAsyncDebugInfo = false;
 export const enableSchedulingProfiler = false;
 export const enableProfilerTimer = __PROFILE__;

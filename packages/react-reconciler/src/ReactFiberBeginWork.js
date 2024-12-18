@@ -92,7 +92,6 @@ import {
   DidDefer,
 } from './ReactFiberFlags';
 import {
-  debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
   disableLegacyContextForFunctionComponents,
   enableProfilerCommitHooks,
@@ -1375,10 +1374,7 @@ function finishClassComponent(
     }
     if (__DEV__) {
       nextChildren = callRenderInDEV(instance);
-      if (
-        debugRenderPhaseSideEffectsForStrictMode &&
-        workInProgress.mode & StrictLegacyMode
-      ) {
+      if (workInProgress.mode & StrictLegacyMode) {
         setIsStrictModeForDevtools(true);
         try {
           callRenderInDEV(instance);

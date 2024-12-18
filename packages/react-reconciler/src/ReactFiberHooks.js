@@ -40,7 +40,6 @@ import {
   enableUseEffectEventHook,
   enableUseResourceEffectHook,
   enableLegacyCache,
-  debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyMode,
   enableNoCloningMemoCache,
 } from 'shared/ReactFeatureFlags';
@@ -623,9 +622,7 @@ export function renderWithHooks<Props, SecondArg>(
   //
   // There are plenty of tests to ensure this behavior is correct.
   const shouldDoubleRenderDEV =
-    __DEV__ &&
-    debugRenderPhaseSideEffectsForStrictMode &&
-    (workInProgress.mode & StrictLegacyMode) !== NoMode;
+    __DEV__ && (workInProgress.mode & StrictLegacyMode) !== NoMode;
 
   shouldDoubleInvokeUserFnsInHooksDEV = shouldDoubleRenderDEV;
   let children = __DEV__
