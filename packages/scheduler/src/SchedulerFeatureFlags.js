@@ -7,7 +7,6 @@
  * @flow strict
  */
 
-export const enableSchedulerDebugging = false;
 export const enableProfiling = false;
 export const frameYieldMs = 5;
 

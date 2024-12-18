@@ -12,7 +12,6 @@ const dynamicFeatureFlags = require('SchedulerFeatureFlags');
 
 export const {enableRequestPaint} = dynamicFeatureFlags;
 
-export const enableSchedulerDebugging = false;
 export const enableProfiling = __DEV__;
 export const frameYieldMs = 10;
 
