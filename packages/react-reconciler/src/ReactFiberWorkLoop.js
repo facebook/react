@@ -23,6 +23,7 @@ import type {
 } from './ReactFiberTracingMarkerComponent';
 import type {OffscreenInstance} from './ReactFiberActivityComponent';
 import type {Resource} from './ReactFiberConfig';
+import type {RootState} from './ReactFiberRoot';
 
 import {
   enableCreateEventHandleAPI,
@@ -60,6 +61,7 @@ import {
   logRenderPhase,
   logInterruptedRenderPhase,
   logSuspendedRenderPhase,
+  logRecoveredRenderPhase,
   logErroredRenderPhase,
   logInconsistentRender,
   logSuspendedWithDelayPhase,
@@ -3183,6 +3185,19 @@ function commitRootImpl(
         completedRenderStartTime,
         completedRenderEndTime,
         lanes,
+      );
+    } else if (recoverableErrors !== null) {
+      const hydrationFailed =
+        finishedWork !== null &&
+        finishedWork.alternate !== null &&
+        (finishedWork.alternate.memoizedState: RootState).isDehydrated &&
+        (finishedWork.flags & ForceClientRender) !== NoFlags;
+      logRecoveredRenderPhase(
+        completedRenderStartTime,
+        completedRenderEndTime,
+        lanes,
+        recoverableErrors,
+        hydrationFailed,
       );
     } else {
       logRenderPhase(completedRenderStartTime, completedRenderEndTime, lanes);

@@ -434,6 +434,48 @@ export function logSuspendedWithDelayPhase(
   }
 }
 
+export function logRecoveredRenderPhase(
+  startTime: number,
+  endTime: number,
+  lanes: Lanes,
+  recoverableErrors: Array<CapturedValue<mixed>>,
+  hydrationFailed: boolean,
+): void {
+  if (supportsUserTiming) {
+    const properties = [];
+    if (__DEV__) {
+      for (let i = 0; i < recoverableErrors.length; i++) {
+        const capturedValue = recoverableErrors[i];
+        const error = capturedValue.value;
+        const message =
+          typeof error === 'object' &&
+          error !== null &&
+          typeof error.message === 'string'
+            ? // eslint-disable-next-line react-internal/safe-string-coercion
+              String(error.message)
+            : // eslint-disable-next-line react-internal/safe-string-coercion
+              String(error);
+        properties.push(['Recoverable Error', message]);
+      }
+    }
+    performance.measure('Recovered', {
+      start: startTime,
+      end: endTime,
+      detail: {
+        devtools: {
+          color: 'primary-dark',
+          track: reusableLaneDevToolDetails.track,
+          trackGroup: LANES_TRACK_GROUP,
+          tooltipText: hydrationFailed
+            ? 'Hydration Failed'
+            : 'Recovered after Error',
+          properties,
+        },
+      },
+    });
+  }
+}
+
 export function logErroredRenderPhase(
   startTime: number,
   endTime: number,
@@ -443,7 +485,7 @@ export function logErroredRenderPhase(
     reusableLaneDevToolDetails.color = 'error';
     reusableLaneOptions.start = startTime;
     reusableLaneOptions.end = endTime;
-    performance.measure('Errored Render', reusableLaneOptions);
+    performance.measure('Errored', reusableLaneOptions);
   }
 }
 
