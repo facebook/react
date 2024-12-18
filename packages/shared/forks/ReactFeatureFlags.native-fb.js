@@ -32,7 +32,6 @@ export const {
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
-export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 export const disableClientCache = true;
 export const disableCommentsAsDOMContainers = true;
 export const disableDefaultPropsExceptForClasses = true;

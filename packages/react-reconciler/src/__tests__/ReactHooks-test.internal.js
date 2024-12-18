@@ -1240,8 +1240,6 @@ describe('ReactHooks', () => {
   });
 
   it('double-invokes components with Hooks in Strict Mode', async () => {
-    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = true;
-
     const {useState, StrictMode} = React;
     let renderCount = 0;
 
@@ -1459,7 +1457,6 @@ describe('ReactHooks', () => {
   });
 
   it('double-invokes useMemo in DEV StrictMode despite []', async () => {
-    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = true;
     const {useMemo, StrictMode} = React;
 
     let useMemoCount = 0;

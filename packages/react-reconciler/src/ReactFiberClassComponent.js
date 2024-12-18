@@ -18,7 +18,6 @@ import {
   MountLayoutDev,
 } from './ReactFiberFlags';
 import {
-  debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
   enableSchedulingProfiler,
   disableDefaultPropsExceptForClasses,
@@ -138,10 +137,7 @@ function applyDerivedStateFromProps(
   const prevState = workInProgress.memoizedState;
   let partialState = getDerivedStateFromProps(nextProps, prevState);
   if (__DEV__) {
-    if (
-      debugRenderPhaseSideEffectsForStrictMode &&
-      workInProgress.mode & StrictLegacyMode
-    ) {
+    if (workInProgress.mode & StrictLegacyMode) {
       setIsStrictModeForDevtools(true);
       try {
         // Invoke the function an extra time to help detect side-effects.
@@ -266,10 +262,7 @@ function checkShouldComponentUpdate(
       nextContext,
     );
     if (__DEV__) {
-      if (
-        debugRenderPhaseSideEffectsForStrictMode &&
-        workInProgress.mode & StrictLegacyMode
-      ) {
+      if (workInProgress.mode & StrictLegacyMode) {
         setIsStrictModeForDevtools(true);
         try {
           // Invoke the function an extra time to help detect side-effects.
@@ -598,10 +591,7 @@ function constructClassInstance(
   let instance = new ctor(props, context);
   // Instantiate twice to help detect side-effects.
   if (__DEV__) {
-    if (
-      debugRenderPhaseSideEffectsForStrictMode &&
-      workInProgress.mode & StrictLegacyMode
-    ) {
+    if (workInProgress.mode & StrictLegacyMode) {
       setIsStrictModeForDevtools(true);
       try {
         instance = new ctor(props, context);

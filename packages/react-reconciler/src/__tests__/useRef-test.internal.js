@@ -29,7 +29,6 @@ describe('useRef', () => {
     Scheduler = require('scheduler');
 
     const ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
 
     act = require('internal-test-utils').act;
     useCallback = React.useCallback;

@@ -202,7 +202,6 @@ describe('ReactStrictMode', () => {
     expect(instance.state.count).toBe(2);
   });
 
-  // @gate debugRenderPhaseSideEffectsForStrictMode
   it('double invokes useState and useReducer initializers functions', async () => {
     const log = [];
 
@@ -390,7 +389,6 @@ describe('ReactStrictMode', () => {
     expect(instance.state.count).toBe(2);
   });
 
-  // @gate debugRenderPhaseSideEffectsForStrictMode
   it('double invokes useMemo functions', async () => {
     let log = [];
 
@@ -436,7 +434,6 @@ describe('ReactStrictMode', () => {
     ]);
   });
 
-  // @gate debugRenderPhaseSideEffectsForStrictMode
   it('double invokes useMemo functions with first result', async () => {
     let log = [];
     function Uppercased({text}) {
@@ -499,7 +496,6 @@ describe('ReactStrictMode', () => {
     expect(log[2]).toBe(log[3]);
   });
 
-  // @gate debugRenderPhaseSideEffectsForStrictMode
   it('double invokes setState updater functions', async () => {
     const log = [];
 
@@ -532,7 +528,6 @@ describe('ReactStrictMode', () => {
     expect(log).toEqual(['Compute count: 1', 'Compute count: 1']);
   });
 
-  // @gate debugRenderPhaseSideEffectsForStrictMode
   it('double invokes reducer functions', async () => {
     const log = [];
 
