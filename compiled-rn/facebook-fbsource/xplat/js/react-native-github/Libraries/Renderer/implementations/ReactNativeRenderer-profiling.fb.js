@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<507eaf6716e975f999ecadd3408434ef>>
+ * @generated SignedSource<<f5dd6565641498bd3f1a598d035e3d79>>
  */
 
 "use strict";
@@ -11883,11 +11883,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.1.0-native-fb-facec3ee-20241217" !== isomorphicReactPackageVersion)
+if ("19.1.0-native-fb-6a4b46cd-20241217" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.1.0-native-fb-facec3ee-20241217\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.1.0-native-fb-6a4b46cd-20241217\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11934,16 +11934,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1364 = {
+  internals$jscomp$inline_1366 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-facec3ee-20241217",
+    version: "19.1.0-native-fb-6a4b46cd-20241217",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-facec3ee-20241217"
+    reconcilerVersion: "19.1.0-native-fb-6a4b46cd-20241217"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1364.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1364.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1366.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1366.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$158 = 0;
     31 > index$158;
@@ -11955,20 +11955,20 @@ internals$jscomp$inline_1364.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1364.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1366.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1664 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1666 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1664.isDisabled &&
-    hook$jscomp$inline_1664.supportsFiber
+    !hook$jscomp$inline_1666.isDisabled &&
+    hook$jscomp$inline_1666.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1664.inject(
-        internals$jscomp$inline_1364
+      (rendererID = hook$jscomp$inline_1666.inject(
+        internals$jscomp$inline_1366
       )),
-        (injectedHook = hook$jscomp$inline_1664);
+        (injectedHook = hook$jscomp$inline_1666);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

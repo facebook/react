@@ -7,13 +7,13 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<78902a0cc7577afcd187780d1f27e17e>>
+ * @generated SignedSource<<38a44e63586d1220c58ce7dfe0609a72>>
  */
 
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1162() {
+    function JSCompiler_object_inline_createNodeMock_1163() {
       return null;
     }
     function findHook(fiber, id) {
@@ -12436,7 +12436,7 @@ __DEV__ &&
           shouldDoubleInvokePassiveEffects && disconnectPassiveEffect(fiber),
           reappearLayoutEffects(root, fiber.alternate, fiber, !1),
           shouldDoubleInvokePassiveEffects &&
-            reconnectPassiveEffects(root, fiber, 0, null, !1);
+            reconnectPassiveEffects(root, fiber, 0, null, !1, 0);
       } finally {
         setIsStrictModeForDevtools(!1);
       }
@@ -15539,10 +15539,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-facec3ee-20241217",
+        version: "19.1.0-native-fb-6a4b46cd-20241217",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-facec3ee-20241217"
+        reconcilerVersion: "19.1.0-native-fb-6a4b46cd-20241217"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15564,7 +15564,7 @@ __DEV__ &&
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1162,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1163,
         isConcurrent = !1,
         isStrictMode = !1;
       "object" === typeof options &&
@@ -15687,5 +15687,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.1.0-native-fb-facec3ee-20241217";
+    exports.version = "19.1.0-native-fb-6a4b46cd-20241217";
   })();

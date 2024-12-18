@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a0666bcf403a267398991f8dd77002b0>>
+ * @generated SignedSource<<032e7a193ad2de91a48b411603409a53>>
  */
 
 "use strict";
@@ -11227,11 +11227,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.1.0-native-fb-facec3ee-20241217" !== isomorphicReactPackageVersion)
+if ("19.1.0-native-fb-6a4b46cd-20241217" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.1.0-native-fb-facec3ee-20241217\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.1.0-native-fb-6a4b46cd-20241217\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11278,26 +11278,26 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1276 = {
+  internals$jscomp$inline_1278 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-facec3ee-20241217",
+    version: "19.1.0-native-fb-6a4b46cd-20241217",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-facec3ee-20241217"
+    reconcilerVersion: "19.1.0-native-fb-6a4b46cd-20241217"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1276.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1278.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1613 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1615 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1613.isDisabled &&
-    hook$jscomp$inline_1613.supportsFiber
+    !hook$jscomp$inline_1615.isDisabled &&
+    hook$jscomp$inline_1615.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1613.inject(
-        internals$jscomp$inline_1276
+      (rendererID = hook$jscomp$inline_1615.inject(
+        internals$jscomp$inline_1278
       )),
-        (injectedHook = hook$jscomp$inline_1613);
+        (injectedHook = hook$jscomp$inline_1615);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

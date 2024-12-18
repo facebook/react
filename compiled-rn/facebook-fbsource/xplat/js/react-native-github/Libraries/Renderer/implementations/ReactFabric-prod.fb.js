@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<984bb256b5ad155121b0f65f811da48e>>
+ * @generated SignedSource<<c64b7cf7184dd9e2e5560a282fecc06f>>
  */
 
 "use strict";
@@ -11093,26 +11093,26 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1210 = {
+  internals$jscomp$inline_1212 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-facec3ee-20241217",
+    version: "19.1.0-native-fb-6a4b46cd-20241217",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-facec3ee-20241217"
+    reconcilerVersion: "19.1.0-native-fb-6a4b46cd-20241217"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1210.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1212.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1526 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1528 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1526.isDisabled &&
-    hook$jscomp$inline_1526.supportsFiber
+    !hook$jscomp$inline_1528.isDisabled &&
+    hook$jscomp$inline_1528.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1526.inject(
-        internals$jscomp$inline_1210
+      (rendererID = hook$jscomp$inline_1528.inject(
+        internals$jscomp$inline_1212
       )),
-        (injectedHook = hook$jscomp$inline_1526);
+        (injectedHook = hook$jscomp$inline_1528);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
