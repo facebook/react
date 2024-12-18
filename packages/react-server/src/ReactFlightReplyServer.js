@@ -173,6 +173,8 @@ export type Response = {
   _prefix: string,
   _formData: FormData,
   _chunks: Map<number, SomeChunk<any>>,
+  _closed: boolean,
+  _closedReason: mixed,
   _temporaryReferences: void | TemporaryReferenceSet,
 };
 
@@ -259,6 +261,14 @@ function createResolvedModelChunk<T>(
 ): ResolvedModelChunk<T> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
   return new Chunk(RESOLVED_MODEL, value, id, response);
+}
+
+function createErroredChunk<T>(
+  response: Response,
+  reason: mixed,
+): ErroredChunk<T> {
+  // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
+  return new Chunk(ERRORED, null, reason, response);
 }
 
 function resolveModelChunk<T>(
@@ -501,6 +511,8 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
 // Report that any missing chunks in the model is now going to throw this
 // error upon read. Also notify any pending promises.
 export function reportGlobalError(response: Response, error: Error): void {
+  response._closed = true;
+  response._closedReason = error;
   response._chunks.forEach(chunk => {
     // If this chunk was already resolved or errored, it won't
     // trigger an error but if it wasn't then we need to
@@ -522,6 +534,10 @@ function getChunk(response: Response, id: number): SomeChunk<any> {
     if (backingEntry != null) {
       // We assume that this is a string entry for now.
       chunk = createResolvedModelChunk(response, (backingEntry: any), id);
+    } else if (response._closed) {
+      // We have already errored the response and we're not going to get
+      // anything more streaming in so this will immediately error.
+      chunk = createErroredChunk(response, response._closedReason);
     } else {
       // We're still waiting on this entry to stream in.
       chunk = createPendingChunk(response);
@@ -1102,6 +1118,8 @@ export function createResponse(
     _prefix: formFieldPrefix,
     _formData: backingFormData,
     _chunks: chunks,
+    _closed: false,
+    _closedReason: null,
     _temporaryReferences: temporaryReferences,
   };
   return response;
