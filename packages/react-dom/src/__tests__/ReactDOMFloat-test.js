@@ -732,6 +732,65 @@ describe('ReactDOMFloat', () => {
   });
 
   // @gate enableFloat
+  it('can send style insertion implementation independent of boundary commpletion instruction implementation', async () => {
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <Suspense fallback="loading foo...">
+              <BlockedOn value="foo">foo</BlockedOn>
+            </Suspense>
+            <Suspense fallback="loading bar...">
+              <BlockedOn value="bar">
+                <link rel="stylesheet" href="bar" precedence="bar" />
+                bar
+              </BlockedOn>
+            </Suspense>
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          {'loading foo...'}
+          {'loading bar...'}
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('foo');
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          foo
+          {'loading bar...'}
+        </body>
+      </html>,
+    );
+    await act(() => {
+      resolveText('bar');
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="bar" data-precedence="bar" />
+        </head>
+        <body>
+          foo
+          {'loading bar...'}
+          <link rel="preload" href="bar" as="style" />
+        </body>
+      </html>,
+    );
+  });
+
+  // @gate enableFloat
   it('can avoid inserting a late stylesheet if it already rendered on the client', async () => {
     await act(() => {
       renderToPipeableStream(
