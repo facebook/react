@@ -42,7 +42,6 @@ export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableHalt = false;
 export const enableHiddenSubtreeInsertionEffectCleanup = false;
 export const enableInfiniteRenderLoopDetection = false;
-export const enableLazyContextPropagation = true;
 export const enableLegacyCache = false;
 export const enableLegacyFBSupport = false;
 export const enableLegacyHidden = false;
@@ -76,6 +75,8 @@ export const enableSiblingPrerendering = true;
 export const enableUseResourceEffectHook = false;
 
 export const enableHydrationLaneScheduling = true;
+
+export const enableYieldingBeforePassive = false;
 
 // Profiling Only
 export const enableProfilerTimer = __PROFILE__;

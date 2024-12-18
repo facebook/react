@@ -21,7 +21,6 @@ import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
   enableSchedulingProfiler,
-  enableLazyContextPropagation,
   disableDefaultPropsExceptForClasses,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
@@ -1092,7 +1091,6 @@ function updateClassInstance(
     !hasContextChanged() &&
     !checkHasForceUpdateAfterProcessing() &&
     !(
-      enableLazyContextPropagation &&
       current !== null &&
       current.dependencies !== null &&
       checkIfContextChanged(current.dependencies)
@@ -1144,8 +1142,7 @@ function updateClassInstance(
     // both before and after `shouldComponentUpdate` has been called. Not ideal,
     // but I'm loath to refactor this function. This only happens for memoized
     // components so it's not that common.
-    (enableLazyContextPropagation &&
-      current !== null &&
+    (current !== null &&
       current.dependencies !== null &&
       checkIfContextChanged(current.dependencies));
 

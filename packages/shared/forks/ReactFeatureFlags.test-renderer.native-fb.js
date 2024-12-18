@@ -32,8 +32,6 @@ export const enableFizzExternalRuntime = true;
 export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableHalt = false;
 export const enableInfiniteRenderLoopDetection = false;
-export const enableLazyContextPropagation = true;
-export const enableContextProfiling = false;
 export const enableHiddenSubtreeInsertionEffectCleanup = true;
 export const enableLegacyCache = false;
 export const enableLegacyFBSupport = false;
@@ -72,6 +70,7 @@ export const enableFabricCompleteRootInCommitPhase = false;
 export const enableSiblingPrerendering = true;
 export const enableUseResourceEffectHook = true;
 export const enableHydrationLaneScheduling = true;
+export const enableYieldingBeforePassive = true;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

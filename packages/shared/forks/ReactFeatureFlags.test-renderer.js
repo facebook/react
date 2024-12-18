@@ -48,7 +48,6 @@ export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
 
 export const disableSchedulerTimeoutInWorkLoop = false;
-export const enableLazyContextPropagation = true;
 export const enableLegacyHidden = false;
 
 export const enableTransitionTracing = false;
@@ -72,6 +71,8 @@ export const enableShallowPropDiffing = false;
 export const enableSiblingPrerendering = true;
 
 export const enableUseResourceEffectHook = false;
+
+export const enableYieldingBeforePassive = true;
 
 // TODO: This must be in sync with the main ReactFeatureFlags file because
 // the Test Renderer's value must be the same as the one used by the

@@ -755,10 +755,16 @@ describe('ReactExpiration', () => {
 
       // The update finishes without yielding. But it does not flush the effect.
       await waitFor(['B1'], {
-        additionalLogsAfterAttemptingToYield: ['C1'],
+        additionalLogsAfterAttemptingToYield: gate(
+          flags => flags.enableYieldingBeforePassive,
+        )
+          ? ['C1', 'Effect: 1']
+          : ['C1'],
       });
     });
-    // The effect flushes after paint.
-    assertLog(['Effect: 1']);
+    if (!gate(flags => flags.enableYieldingBeforePassive)) {
+      // The effect flushes after paint.
+      assertLog(['Effect: 1']);
+    }
   });
 });

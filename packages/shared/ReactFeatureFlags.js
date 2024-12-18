@@ -77,6 +77,9 @@ export const enableLegacyFBSupport = false;
 // likely to include in an upcoming release.
 // -----------------------------------------------------------------------------
 
+// Yield to the browser event loop and not just the scheduler event loop before passive effects.
+export const enableYieldingBeforePassive = __EXPERIMENTAL__;
+
 export const enableLegacyCache = __EXPERIMENTAL__;
 
 export const enableAsyncIterableChildren = __EXPERIMENTAL__;
@@ -98,8 +101,6 @@ export const enableFabricCompleteRootInCommitPhase = false;
 export const enableObjectFiber = false;
 
 export const enableTransitionTracing = false;
-
-export const enableLazyContextPropagation = true;
 
 // FB-only usage. The new API has different semantics.
 export const enableLegacyHidden = false;

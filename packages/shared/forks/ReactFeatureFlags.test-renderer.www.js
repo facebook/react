@@ -50,7 +50,6 @@ export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
 
 export const disableSchedulerTimeoutInWorkLoop = false;
-export const enableLazyContextPropagation = true;
 export const enableLegacyHidden = false;
 
 export const enableTransitionTracing = false;
@@ -84,6 +83,8 @@ export const enableSiblingPrerendering = true;
 export const enableUseResourceEffectHook = false;
 
 export const enableHydrationLaneScheduling = true;
+
+export const enableYieldingBeforePassive = true;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);
