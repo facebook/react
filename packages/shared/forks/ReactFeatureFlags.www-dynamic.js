@@ -39,9 +39,6 @@ export const enableSiblingPrerendering = __VARIANT__;
 
 export const enableUseResourceEffectHook = __VARIANT__;
 
-// No GK yet.
-export const enableYieldingBeforePassive = __VARIANT__;
-
 // TODO: These flags are hard-coded to the default values used in open source.
 // Update the tests so that they pass in either mode, then set these
 // to __VARIANT__.
