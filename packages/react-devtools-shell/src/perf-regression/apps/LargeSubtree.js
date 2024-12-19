@@ -10,7 +10,7 @@
 import * as React from 'react';
 
 function generateArray(size: number) {
-  return Array.from({length: size}, () => Math.floor(Math.random() * size));
+  return Array.from(Array(size), () => Math.floor(Math.random() * size));
 }
 
 const arr = generateArray(50000);
