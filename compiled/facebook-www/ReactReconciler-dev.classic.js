@@ -2124,6 +2124,18 @@ __DEV__ &&
         ((nextHydratableInstance = hydrationParentFiber = null),
         (didSuspendOrErrorDEV = isHydrating = !1));
     }
+    function upgradeHydrationErrorsToRecoverable() {
+      var queuedErrors = hydrationErrors;
+      null !== queuedErrors &&
+        (null === workInProgressRootRecoverableErrors
+          ? (workInProgressRootRecoverableErrors = queuedErrors)
+          : workInProgressRootRecoverableErrors.push.apply(
+              workInProgressRootRecoverableErrors,
+              queuedErrors
+            ),
+        (hydrationErrors = null));
+      return queuedErrors;
+    }
     function queueHydrationError(error) {
       null === hydrationErrors
         ? (hydrationErrors = [error])
@@ -7824,7 +7836,8 @@ __DEV__ &&
                       null !== treeContextProvider
                         ? { id: treeContextId, overflow: treeContextOverflow }
                         : null,
-                    retryLane: 536870912
+                    retryLane: 536870912,
+                    hydrationErrors: null
                   }),
                   (didSuspend = createFiber(18, null, null, NoMode)),
                   (didSuspend.stateNode = JSCompiler_temp$jscomp$0),
@@ -9863,9 +9876,7 @@ __DEV__ &&
                 (current.memoizedState.isDehydrated &&
                   0 === (workInProgress.flags & 256)) ||
                 ((workInProgress.flags |= 1024),
-                null !== hydrationErrors &&
-                  (queueRecoverableErrors(hydrationErrors),
-                  (hydrationErrors = null)));
+                upgradeHydrationErrorsToRecoverable());
           updateHostContainer(current, workInProgress);
           bubbleProperties(workInProgress);
           enableTransitionTracing &&
@@ -10133,9 +10144,10 @@ __DEV__ &&
                         nextResource.treeBaseDuration));
               nextResource = !1;
             } else
-              null !== hydrationErrors &&
-                (queueRecoverableErrors(hydrationErrors),
-                (hydrationErrors = null)),
+              (nextResource = upgradeHydrationErrorsToRecoverable()),
+                null !== current &&
+                  null !== current.memoizedState &&
+                  (current.memoizedState.hydrationErrors = nextResource),
                 (nextResource = !0);
             if (!nextResource) {
               if (workInProgress.flags & 256)
@@ -13002,6 +13014,14 @@ __DEV__ &&
                 committedTransitions
               );
           break;
+        case 13:
+          recursivelyTraversePassiveMountEffects(
+            finishedRoot,
+            finishedWork,
+            committedLanes,
+            committedTransitions
+          );
+          break;
         case 23:
           recursivelyTraversePassiveMountEffects(
             finishedRoot,
@@ -13927,7 +13947,13 @@ __DEV__ &&
                   }
                   exitStatus = workInProgressRootRecoverableErrors;
                   workInProgressRootRecoverableErrors = errorRetryLanes;
-                  null !== exitStatus && queueRecoverableErrors(exitStatus);
+                  null !== exitStatus &&
+                    (null === workInProgressRootRecoverableErrors
+                      ? (workInProgressRootRecoverableErrors = exitStatus)
+                      : workInProgressRootRecoverableErrors.push.apply(
+                          workInProgressRootRecoverableErrors,
+                          exitStatus
+                        ));
                 }
                 exitStatus = errorRetryLanes$jscomp$0;
               }
@@ -14042,14 +14068,6 @@ __DEV__ &&
         break;
       } while (1);
       ensureRootIsScheduled(root);
-    }
-    function queueRecoverableErrors(errors) {
-      null === workInProgressRootRecoverableErrors
-        ? (workInProgressRootRecoverableErrors = errors)
-        : workInProgressRootRecoverableErrors.push.apply(
-            workInProgressRootRecoverableErrors,
-            errors
-          );
     }
     function commitRootWhenReady(
       root,
@@ -18353,7 +18371,12 @@ __DEV__ &&
     var didWarnAboutTailOptions = {};
     var didWarnAboutDefaultPropsOnFunctionComponent = {};
     var updateLegacyHiddenComponent = updateOffscreenComponent,
-      SUSPENDED_MARKER = { dehydrated: null, treeContext: null, retryLane: 0 },
+      SUSPENDED_MARKER = {
+        dehydrated: null,
+        treeContext: null,
+        retryLane: 0,
+        hydrationErrors: null
+      },
       hasWarnedAboutUsingNoValuePropOnContextProvider = !1,
       emptyObject = {},
       didWarnAboutUndefinedSnapshotBeforeUpdate = null;
@@ -19026,7 +19049,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-classic-95465dc4-20241218"
+        reconcilerVersion: "19.1.0-www-classic-17520b63-20241218"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

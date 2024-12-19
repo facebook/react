@@ -1058,6 +1058,18 @@ module.exports = function ($$$config) {
       ((nextHydratableInstance = hydrationParentFiber = null),
       (isHydrating = !1));
   }
+  function upgradeHydrationErrorsToRecoverable() {
+    var queuedErrors = hydrationErrors;
+    null !== queuedErrors &&
+      (null === workInProgressRootRecoverableErrors
+        ? (workInProgressRootRecoverableErrors = queuedErrors)
+        : workInProgressRootRecoverableErrors.push.apply(
+            workInProgressRootRecoverableErrors,
+            queuedErrors
+          ),
+      (hydrationErrors = null));
+    return queuedErrors;
+  }
   function queueHydrationError(error) {
     null === hydrationErrors
       ? (hydrationErrors = [error])
@@ -5131,7 +5143,8 @@ module.exports = function ($$$config) {
                       null !== treeContextProvider
                         ? { id: treeContextId, overflow: treeContextOverflow }
                         : null,
-                    retryLane: 536870912
+                    retryLane: 536870912,
+                    hydrationErrors: null
                   }),
                   (JSCompiler_temp$jscomp$0 = createFiber(18, null, null, 0)),
                   (JSCompiler_temp$jscomp$0.stateNode = nextInstance),
@@ -6751,9 +6764,7 @@ module.exports = function ($$$config) {
               (current.memoizedState.isDehydrated &&
                 0 === (workInProgress.flags & 256)) ||
               ((workInProgress.flags |= 1024),
-              null !== hydrationErrors &&
-                (queueRecoverableErrors(hydrationErrors),
-                (hydrationErrors = null)));
+              upgradeHydrationErrorsToRecoverable());
         updateHostContainer(current, workInProgress);
         bubbleProperties(workInProgress);
         enableTransitionTracing &&
@@ -6955,9 +6966,10 @@ module.exports = function ($$$config) {
             bubbleProperties(workInProgress);
             nextResource = !1;
           } else
-            null !== hydrationErrors &&
-              (queueRecoverableErrors(hydrationErrors),
-              (hydrationErrors = null)),
+            (nextResource = upgradeHydrationErrorsToRecoverable()),
+              null !== current &&
+                null !== current.memoizedState &&
+                (current.memoizedState.hydrationErrors = nextResource),
               (nextResource = !0);
           if (!nextResource) {
             if (workInProgress.flags & 256)
@@ -6978,11 +6990,11 @@ module.exports = function ($$$config) {
             null !== newProps.alternate.memoizedState &&
             null !== newProps.alternate.memoizedState.cachePool &&
             (nextResource = newProps.alternate.memoizedState.cachePool.pool);
-          var cache$122 = null;
+          var cache$123 = null;
           null !== newProps.memoizedState &&
             null !== newProps.memoizedState.cachePool &&
-            (cache$122 = newProps.memoizedState.cachePool.pool);
-          cache$122 !== nextResource && (newProps.flags |= 2048);
+            (cache$123 = newProps.memoizedState.cachePool.pool);
+          cache$123 !== nextResource && (newProps.flags |= 2048);
         }
         renderLanes !== current &&
           (enableTransitionTracing && (workInProgress.child.flags |= 2048),
@@ -7018,8 +7030,8 @@ module.exports = function ($$$config) {
         if (null === nextResource)
           return bubbleProperties(workInProgress), null;
         newProps = 0 !== (workInProgress.flags & 128);
-        cache$122 = nextResource.rendering;
-        if (null === cache$122)
+        cache$123 = nextResource.rendering;
+        if (null === cache$123)
           if (newProps) cutOffTailIfNeeded(nextResource, !1);
           else {
             if (
@@ -7027,11 +7039,11 @@ module.exports = function ($$$config) {
               (null !== current && 0 !== (current.flags & 128))
             )
               for (current = workInProgress.child; null !== current; ) {
-                cache$122 = findFirstSuspended(current);
-                if (null !== cache$122) {
+                cache$123 = findFirstSuspended(current);
+                if (null !== cache$123) {
                   workInProgress.flags |= 128;
                   cutOffTailIfNeeded(nextResource, !1);
-                  current = cache$122.updateQueue;
+                  current = cache$123.updateQueue;
                   workInProgress.updateQueue = current;
                   scheduleRetryEffect(workInProgress, current);
                   workInProgress.subtreeFlags = 0;
@@ -7060,7 +7072,7 @@ module.exports = function ($$$config) {
           }
         else {
           if (!newProps)
-            if (((current = findFirstSuspended(cache$122)), null !== current)) {
+            if (((current = findFirstSuspended(cache$123)), null !== current)) {
               if (
                 ((workInProgress.flags |= 128),
                 (newProps = !0),
@@ -7070,7 +7082,7 @@ module.exports = function ($$$config) {
                 cutOffTailIfNeeded(nextResource, !0),
                 null === nextResource.tail &&
                   "hidden" === nextResource.tailMode &&
-                  !cache$122.alternate &&
+                  !cache$123.alternate &&
                   !isHydrating)
               )
                 return bubbleProperties(workInProgress), null;
@@ -7083,13 +7095,13 @@ module.exports = function ($$$config) {
                 cutOffTailIfNeeded(nextResource, !1),
                 (workInProgress.lanes = 4194304));
           nextResource.isBackwards
-            ? ((cache$122.sibling = workInProgress.child),
-              (workInProgress.child = cache$122))
+            ? ((cache$123.sibling = workInProgress.child),
+              (workInProgress.child = cache$123))
             : ((current = nextResource.last),
               null !== current
-                ? (current.sibling = cache$122)
-                : (workInProgress.child = cache$122),
-              (nextResource.last = cache$122));
+                ? (current.sibling = cache$123)
+                : (workInProgress.child = cache$123),
+              (nextResource.last = cache$123));
         }
         if (null !== nextResource.tail)
           return (
@@ -7348,10 +7360,10 @@ module.exports = function ($$$config) {
                 inst.destroy = lastEffect;
               }
             } else {
-              var create$139 = updateQueue.create,
-                inst$140 = updateQueue.inst;
-              lastEffect = create$139();
-              inst$140.destroy = lastEffect;
+              var create$140 = updateQueue.create,
+                inst$141 = updateQueue.inst;
+              lastEffect = create$140();
+              inst$141.destroy = lastEffect;
             }
           updateQueue = updateQueue.next;
         } while (updateQueue !== firstEffect);
@@ -7506,8 +7518,8 @@ module.exports = function ($$$config) {
       else if ("function" === typeof ref)
         try {
           ref(null);
-        } catch (error$142) {
-          captureCommitPhaseError(current, nearestMountedAncestor, error$142);
+        } catch (error$143) {
+          captureCommitPhaseError(current, nearestMountedAncestor, error$143);
         }
       else ref.current = null;
   }
@@ -7777,11 +7789,11 @@ module.exports = function ($$$config) {
                 current,
                 finishedRoot.__reactInternalSnapshotBeforeUpdate
               );
-            } catch (error$141) {
+            } catch (error$142) {
               captureCommitPhaseError(
                 finishedWork,
                 finishedWork.return,
-                error$141
+                error$142
               );
             }
           }
@@ -8793,21 +8805,21 @@ module.exports = function ($$$config) {
                 break;
               }
             case 5:
-              var parent$143 = JSCompiler_inline_result.stateNode;
+              var parent$144 = JSCompiler_inline_result.stateNode;
               JSCompiler_inline_result.flags & 32 &&
-                (resetTextContent(parent$143),
+                (resetTextContent(parent$144),
                 (JSCompiler_inline_result.flags &= -33));
-              var before$144 = getHostSibling(finishedWork);
-              insertOrAppendPlacementNode(finishedWork, before$144, parent$143);
+              var before$145 = getHostSibling(finishedWork);
+              insertOrAppendPlacementNode(finishedWork, before$145, parent$144);
               break;
             case 3:
             case 4:
-              var parent$145 = JSCompiler_inline_result.stateNode.containerInfo,
-                before$146 = getHostSibling(finishedWork);
+              var parent$146 = JSCompiler_inline_result.stateNode.containerInfo,
+                before$147 = getHostSibling(finishedWork);
               insertOrAppendPlacementNodeIntoContainer(
                 finishedWork,
-                before$146,
-                parent$145
+                before$147,
+                parent$146
               );
               break;
             default:
@@ -9177,6 +9189,14 @@ module.exports = function ($$$config) {
               committedTransitions
             );
         break;
+      case 13:
+        recursivelyTraversePassiveMountEffects(
+          finishedRoot,
+          finishedWork,
+          committedLanes,
+          committedTransitions
+        );
+        break;
       case 23:
         recursivelyTraversePassiveMountEffects(
           finishedRoot,
@@ -9302,9 +9322,9 @@ module.exports = function ($$$config) {
             );
           break;
         case 22:
-          var instance$158 = finishedWork.stateNode;
+          var instance$159 = finishedWork.stateNode;
           null !== finishedWork.memoizedState
-            ? instance$158._visibility & 4
+            ? instance$159._visibility & 4
               ? recursivelyTraverseReconnectPassiveEffects(
                   finishedRoot,
                   finishedWork,
@@ -9316,7 +9336,7 @@ module.exports = function ($$$config) {
                   finishedRoot,
                   finishedWork
                 )
-            : ((instance$158._visibility |= 4),
+            : ((instance$159._visibility |= 4),
               recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork,
@@ -9329,7 +9349,7 @@ module.exports = function ($$$config) {
             commitOffscreenPassiveMountEffects(
               finishedWork.alternate,
               finishedWork,
-              instance$158
+              instance$159
             );
           break;
         case 24:
@@ -9995,7 +10015,13 @@ module.exports = function ($$$config) {
                 renderWasConcurrent = workInProgressRootRecoverableErrors;
                 workInProgressRootRecoverableErrors = exitStatus;
                 null !== renderWasConcurrent &&
-                  queueRecoverableErrors(renderWasConcurrent);
+                  (null === workInProgressRootRecoverableErrors
+                    ? (workInProgressRootRecoverableErrors =
+                        renderWasConcurrent)
+                    : workInProgressRootRecoverableErrors.push.apply(
+                        workInProgressRootRecoverableErrors,
+                        renderWasConcurrent
+                      ));
               }
               exitStatus = JSCompiler_inline_result;
             }
@@ -10092,14 +10118,6 @@ module.exports = function ($$$config) {
       break;
     } while (1);
     ensureRootIsScheduled(root$jscomp$0);
-  }
-  function queueRecoverableErrors(errors) {
-    null === workInProgressRootRecoverableErrors
-      ? (workInProgressRootRecoverableErrors = errors)
-      : workInProgressRootRecoverableErrors.push.apply(
-          workInProgressRootRecoverableErrors,
-          errors
-        );
   }
   function commitRootWhenReady(
     root,
@@ -10415,8 +10433,8 @@ module.exports = function ($$$config) {
         workLoopSync();
         exitStatus = workInProgressRootExitStatus;
         break;
-      } catch (thrownValue$173) {
-        handleThrow(root, thrownValue$173);
+      } catch (thrownValue$174) {
+        handleThrow(root, thrownValue$174);
       }
     while (1);
     lanes && root.shellSuspendCounter++;
@@ -10537,8 +10555,8 @@ module.exports = function ($$$config) {
         }
         workLoopConcurrent();
         break;
-      } catch (thrownValue$175) {
-        handleThrow(root, thrownValue$175);
+      } catch (thrownValue$176) {
+        handleThrow(root, thrownValue$176);
       }
     while (1);
     lastContextDependency = currentlyRenderingFiber$1 = null;
@@ -10834,12 +10852,12 @@ module.exports = function ($$$config) {
       setCurrentUpdatePriority(2);
       suspendedRetryLanes = executionContext;
       executionContext |= 4;
-      var shouldFireAfterActiveInstanceBlur$179 = commitBeforeMutationEffects(
+      var shouldFireAfterActiveInstanceBlur$180 = commitBeforeMutationEffects(
         root,
         finishedWork
       );
       commitMutationEffectsOnFiber(finishedWork, root);
-      shouldFireAfterActiveInstanceBlur$179 && afterActiveInstanceBlur();
+      shouldFireAfterActiveInstanceBlur$180 && afterActiveInstanceBlur();
       resetAfterCommit(root.containerInfo);
       root.current = finishedWork;
       commitLayoutEffectOnFiber(root, finishedWork.alternate, finishedWork);
@@ -12360,7 +12378,12 @@ module.exports = function ($$$config) {
     SelectiveHydrationException = Error(formatProdErrorMessage(461)),
     didReceiveUpdate = !1,
     updateLegacyHiddenComponent = updateOffscreenComponent,
-    SUSPENDED_MARKER = { dehydrated: null, treeContext: null, retryLane: 0 },
+    SUSPENDED_MARKER = {
+      dehydrated: null,
+      treeContext: null,
+      retryLane: 0,
+      hydrationErrors: null
+    },
     emptyObject = {},
     offscreenSubtreeIsHidden = !1,
     offscreenSubtreeWasHidden = !1,
@@ -12782,7 +12805,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-classic-95465dc4-20241218"
+      reconcilerVersion: "19.1.0-www-classic-17520b63-20241218"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
