@@ -2,7 +2,7 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"build-deps": "cd ../.. && RELEASE_CHANNEL=stable node ./scripts/rollup/build.js react/index,react/jsx,react.react-server,react-dom/index,react-dom/client,react-dom/server,react-dom.react-server,react-dom-server.node,react-dom-server-legacy.node,scheduler,,react-server-dom-vite/ --type=NODE_DEV,ESM_PROD,NODE_ES2015 && cp -r ./build/node_modules/* ./fixtures/flight-vite-mini/node_modules/",
+		"build-deps": "rm -rf node_modules/{react,react-dom/react-server-dom-vite} && cd ../.. && RELEASE_CHANNEL=experimental node ./scripts/rollup/build.js react/index,react/jsx,react.react-server,react-jsx-runtime.react-server,react-jsx-dev-runtime.react-server,react-dom/index,react-dom/client,react-dom/server,react-dom.react-server,react-dom-server.node,react-dom-server-legacy.node,scheduler,react-server-dom-vite/ --type=NODE_DEV,NODE_PROD && cp -r ./build/node_modules/* ./fixtures/flight-vite-mini/node_modules/",
 		"dev": "vite dev",
 		"build": "vite build --app",
 		"preview": "vite preview",
