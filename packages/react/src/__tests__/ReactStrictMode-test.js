@@ -19,6 +19,7 @@ let useMemo;
 let useState;
 let useReducer;
 let assertConsoleErrorDev;
+let assertConsoleWarnDev;
 
 describe('ReactStrictMode', () => {
   beforeEach(() => {
@@ -27,7 +28,11 @@ describe('ReactStrictMode', () => {
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
-    ({act, assertConsoleErrorDev} = require('internal-test-utils'));
+    ({
+      act,
+      assertConsoleErrorDev,
+      assertConsoleWarnDev,
+    } = require('internal-test-utils'));
     useMemo = React.useMemo;
     useState = React.useState;
     useReducer = React.useReducer;
@@ -40,20 +45,19 @@ describe('ReactStrictMode', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await expect(async () => {
-      await act(() => {
-        root.render(
-          <React.StrictMode>
-            <Foo />
-          </React.StrictMode>,
-        );
-      });
-    }).toErrorDev(
+    await act(() => {
+      root.render(
+        <React.StrictMode>
+          <Foo />
+        </React.StrictMode>,
+      );
+    });
+    assertConsoleErrorDev([
       'Invalid ARIA attribute `ariaTypo`. ' +
         'ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
         '    in div (at **)\n' +
         '    in Foo (at **)',
-    );
+    ]);
   });
 
   it('should appear in the SSR component stack', () => {
@@ -61,18 +65,17 @@ describe('ReactStrictMode', () => {
       return <div ariaTypo="" />;
     }
 
-    expect(() => {
-      ReactDOMServer.renderToString(
-        <React.StrictMode>
-          <Foo />
-        </React.StrictMode>,
-      );
-    }).toErrorDev(
+    ReactDOMServer.renderToString(
+      <React.StrictMode>
+        <Foo />
+      </React.StrictMode>,
+    );
+    assertConsoleErrorDev([
       'Invalid ARIA attribute `ariaTypo`. ' +
         'ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
         '    in div (at **)\n' +
         '    in Foo (at **)',
-    );
+    ]);
   });
 
   // @gate __DEV__
@@ -620,9 +623,8 @@ describe('Concurrent Mode', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await expect(
-      async () => await act(() => root.render(<StrictRoot />)),
-    ).toErrorDev(
+    await act(() => root.render(<StrictRoot />));
+    assertConsoleErrorDev(
       [
         `Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
 
@@ -681,31 +683,29 @@ Please update the following components: App`,
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
 
-    await expect(async () => {
-      await expect(
-        async () => await act(() => root.render(<StrictRoot />)),
-      ).toErrorDev(
-        [
-          `Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
+    await act(() => root.render(<StrictRoot />));
+    assertConsoleErrorDev(
+      [
+        `Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move code with side effects to componentDidMount, and set initial state in the constructor.
 
 Please update the following components: App`,
-          `Using UNSAFE_componentWillReceiveProps in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
+        `Using UNSAFE_componentWillReceiveProps in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
 * If you're updating state whenever props change, refactor your code to use memoization techniques or move it to static getDerivedStateFromProps. Learn more at: https://react.dev/link/derived-state
 
 Please update the following components: Child`,
-          `Using UNSAFE_componentWillUpdate in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
+        `Using UNSAFE_componentWillUpdate in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
 
 Please update the following components: App`,
-        ],
-        {withoutStack: true},
-      );
-    }).toWarnDev(
+      ],
+      {withoutStack: true},
+    );
+    assertConsoleWarnDev(
       [
         `componentWillMount has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
 
@@ -752,17 +752,25 @@ Please update the following components: Parent`,
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await expect(async () => {
-      await act(() => root.render(<StrictRoot foo={true} />));
-    }).toErrorDev(
-      'Using UNSAFE_componentWillMount in strict mode is not recommended',
+    await act(() => root.render(<StrictRoot foo={true} />));
+    assertConsoleErrorDev(
+      [
+        'Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. ' +
+          'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
+          '* Move code with side effects to componentDidMount, and set initial state in the constructor.\n\n' +
+          'Please update the following components: Foo',
+      ],
       {withoutStack: true},
     );
 
-    await expect(async () => {
-      await act(() => root.render(<StrictRoot foo={false} />));
-    }).toErrorDev(
-      'Using UNSAFE_componentWillMount in strict mode is not recommended',
+    await act(() => root.render(<StrictRoot foo={false} />));
+    assertConsoleErrorDev(
+      [
+        'Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. ' +
+          'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
+          '* Move code with side effects to componentDidMount, and set initial state in the constructor.\n\n' +
+          'Please update the following components: Bar',
+      ],
       {withoutStack: true},
     );
 
@@ -810,12 +818,20 @@ Please update the following components: Parent`,
     const container = document.createElement('div');
 
     const root = ReactDOMClient.createRoot(container);
-    await expect(async () => {
-      await act(() => {
-        root.render(<SyncRoot />);
-      });
-    }).toErrorDev(
-      'Using UNSAFE_componentWillReceiveProps in strict mode is not recommended',
+    await act(() => {
+      root.render(<SyncRoot />);
+    });
+    assertConsoleErrorDev(
+      [
+        'Using UNSAFE_componentWillReceiveProps in strict mode is not recommended ' +
+          'and may indicate bugs in your code. ' +
+          'See https://react.dev/link/unsafe-component-lifecycles for details.\n\n' +
+          '* Move data fetching code or side effects to componentDidUpdate.\n' +
+          "* If you're updating state whenever props change, " +
+          'refactor your code to use memoization techniques or move it to ' +
+          'static getDerivedStateFromProps. Learn more at: https://react.dev/link/derived-state\n\n' +
+          'Please update the following components: Bar, Foo',
+      ],
       {withoutStack: true},
     );
 

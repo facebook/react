@@ -7,6 +7,11 @@
 
 'use strict';
 
+const {
+  patchConsoleMethods,
+  resetAllUnexpectedConsoleCalls,
+  flushAllUnexpectedConsoleCalls,
+} = require('internal-test-utils/consoleMock');
 const spyOn = jest.spyOn;
 
 // Spying on console methods in production builds can mask errors.
@@ -35,6 +40,11 @@ global.spyOnProd = function (...args) {
     return spyOn(...args);
   }
 };
+
+// Patch the console to assert that all console error/warn/log calls assert.
+patchConsoleMethods({includeLog: !!process.env.CI});
+beforeEach(resetAllUnexpectedConsoleCalls);
+afterEach(flushAllUnexpectedConsoleCalls);
 
 expect.extend({
   ...require('../matchers/reactTestMatchers'),

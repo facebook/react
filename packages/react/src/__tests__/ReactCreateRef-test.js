@@ -12,6 +12,7 @@
 let React;
 let ReactDOM;
 let ReactDOMClient;
+let assertConsoleErrorDev;
 
 describe('ReactCreateRef', () => {
   beforeEach(() => {
@@ -20,6 +21,7 @@ describe('ReactCreateRef', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
+    ({assertConsoleErrorDev} = require('internal-test-utils'));
   });
 
   it('should warn in dev if an invalid ref object is provided', () => {
@@ -34,38 +36,36 @@ describe('ReactCreateRef', () => {
     }
 
     const root = ReactDOMClient.createRoot(document.createElement('div'));
-    expect(() =>
-      ReactDOM.flushSync(() => {
-        root.render(
-          <Wrapper>
-            <div ref={{}} />
-          </Wrapper>,
-        );
-      }),
-    ).toErrorDev(
+    ReactDOM.flushSync(() => {
+      root.render(
+        <Wrapper>
+          <div ref={{}} />
+        </Wrapper>,
+      );
+    });
+    assertConsoleErrorDev([
       'Unexpected ref object provided for div. ' +
         'Use either a ref-setter function or React.createRef().\n' +
         '    in div (at **)' +
         (gate(flags => flags.enableOwnerStacks)
           ? ''
           : '\n    in Wrapper (at **)'),
-    );
+    ]);
 
-    expect(() =>
-      ReactDOM.flushSync(() => {
-        root.render(
-          <Wrapper>
-            <ExampleComponent ref={{}} />
-          </Wrapper>,
-        );
-      }),
-    ).toErrorDev(
+    ReactDOM.flushSync(() => {
+      root.render(
+        <Wrapper>
+          <ExampleComponent ref={{}} />
+        </Wrapper>,
+      );
+    });
+    assertConsoleErrorDev([
       'Unexpected ref object provided for ExampleComponent. ' +
         'Use either a ref-setter function or React.createRef().\n' +
         '    in ExampleComponent (at **)' +
         (gate(flags => flags.enableOwnerStacks)
           ? ''
           : '\n    in Wrapper (at **)'),
-    );
+    ]);
   });
 });
