@@ -43,12 +43,7 @@ async function getWorkflowRun(commit) {
   );
 
   const json = JSON.parse(res.stdout);
-  const workflowRun = json.workflow_runs.find(
-    run =>
-      run.head_sha === commit &&
-      run.status === 'completed' &&
-      run.conclusion === 'success'
-  );
+  const workflowRun = json.workflow_runs.find(run => run.head_sha === commit);
 
   if (workflowRun == null || workflowRun.id == null) {
     console.log(
