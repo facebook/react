@@ -32,11 +32,11 @@ import {
 
 import type {TemporaryReferenceSet} from 'react-client/src/ReactFlightTemporaryReferences';
 
+import type {ServerManifest} from './ReactFlightClientConfigBundlerVite';
+
 export {createTemporaryReferenceSet} from 'react-client/src/ReactFlightTemporaryReferences';
 
-import {manifest} from 'virtual:react-server-dom-vite/manifest';
-
-export type {TemporaryReferenceSet};
+export type {ServerManifest, TemporaryReferenceSet};
 
 type CallServerCallback = <A, T>(string, args: A) => Promise<T>;
 
@@ -48,9 +48,12 @@ export type Options = {
   environmentName?: string,
 };
 
-function createResponseFromOptions(options: void | Options) {
+function createResponseFromOptions(
+  serverManifest: ServerManifest,
+  options: void | Options,
+) {
   return createResponse(
-    manifest,
+    serverManifest,
     null,
     null,
     options && options.callServer ? options.callServer : undefined,
@@ -98,18 +101,26 @@ function startReadingFromStream(
 
 function createFromReadableStream<T>(
   stream: ReadableStream,
+  serverManifest: ServerManifest,
   options?: Options,
 ): Thenable<T> {
-  const response: FlightResponse = createResponseFromOptions(manifest, options);
+  const response: FlightResponse = createResponseFromOptions(
+    serverManifest,
+    options,
+  );
   startReadingFromStream(response, stream);
   return getRoot(response);
 }
 
 function createFromFetch<T>(
   promiseForResponse: Promise<Response>,
+  serverManifest: ServerManifest,
   options?: Options,
 ): Thenable<T> {
-  const response: FlightResponse = createResponseFromOptions(manifest, options);
+  const response: FlightResponse = createResponseFromOptions(
+    serverManifest,
+    options,
+  );
   promiseForResponse.then(
     function (r) {
       startReadingFromStream(response, (r.body: any));
