@@ -508,16 +508,7 @@ describe('ReactFlightDOMNode', () => {
       ),
     );
     ssrStream.abort('bam');
-    if (__DEV__) {
-      expect(errors).toEqual([new Error('Connection closed.')]);
-    } else {
-      // This is likely a bug. In Dev we get a connection closed error
-      // because the debug info creates a chunk that has a pending status
-      // and when the stream finishes we error if any chunks are still pending.
-      // In production there is no debug info so the missing chunk is never instantiated
-      // because nothing triggers model evaluation before the stream completes
-      expect(errors).toEqual(['bam']);
-    }
+    expect(errors).toEqual([new Error('Connection closed.')]);
     // Should still match the result when parsed
     const result = await readResult(ssrStream);
     const div = document.createElement('div');
