@@ -2510,26 +2510,17 @@ function diffHydratedGenericElement(
               );
             }
           }
-          hydrateSanitizedAttribute(
-            domElement,
-            propKey,
-            propKey,
-            null,
-            extraAttributes,
-            serverDifferences,
-          );
-          continue;
-        } else {
-          hydrateSanitizedAttribute(
-            domElement,
-            propKey,
-            propKey,
-            value,
-            extraAttributes,
-            serverDifferences,
-          );
           continue;
         }
+        hydrateSanitizedAttribute(
+          domElement,
+          propKey,
+          propKey,
+          value,
+          extraAttributes,
+          serverDifferences,
+        );
+        continue;
       case 'action':
       case 'formAction': {
         const serverValue = domElement.getAttribute(propKey);
