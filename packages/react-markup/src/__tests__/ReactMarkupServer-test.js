@@ -209,7 +209,6 @@ if (!__EXPERIMENTAL__) {
       );
     });
 
-    // @gate enableCache
     it('supports cache', async () => {
       let counter = 0;
       const getCount = React.cache(() => {

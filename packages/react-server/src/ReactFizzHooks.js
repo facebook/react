@@ -39,10 +39,8 @@ import {
 import {createFastHash} from './ReactServerStreamConfig';
 
 import {
-  enableCache,
   enableUseEffectEventHook,
-  enableUseMemoCacheHook,
-  enableAsyncActions,
+  enableUseResourceEffectHook,
 } from 'shared/ReactFeatureFlags';
 import is from 'shared/objectIs';
 import {
@@ -832,6 +830,10 @@ export const HooksDispatcher: Dispatcher = supportsClientAPIs
       useId,
       // Subscriptions are not setup in a server environment.
       useSyncExternalStore,
+      useOptimistic,
+      useActionState,
+      useFormState: useActionState,
+      useHostTransitionStatus,
     }
   : {
       readContext,
@@ -851,24 +853,21 @@ export const HooksDispatcher: Dispatcher = supportsClientAPIs
       useTransition: clientHookNotSupported,
       useId,
       useSyncExternalStore: clientHookNotSupported,
+      useOptimistic,
+      useActionState,
+      useFormState: useActionState,
+      useHostTransitionStatus,
+      useMemoCache,
+      useCacheRefresh,
     };
 
-if (enableCache) {
-  HooksDispatcher.useCacheRefresh = useCacheRefresh;
-}
 if (enableUseEffectEventHook) {
   HooksDispatcher.useEffectEvent = useEffectEvent;
 }
-if (enableUseMemoCacheHook) {
-  HooksDispatcher.useMemoCache = useMemoCache;
-}
-if (enableAsyncActions) {
-  HooksDispatcher.useHostTransitionStatus = useHostTransitionStatus;
-}
-if (enableAsyncActions) {
-  HooksDispatcher.useOptimistic = useOptimistic;
-  HooksDispatcher.useFormState = useActionState;
-  HooksDispatcher.useActionState = useActionState;
+if (enableUseResourceEffectHook) {
+  HooksDispatcher.useResourceEffect = supportsClientAPIs
+    ? noop
+    : clientHookNotSupported;
 }
 
 export let currentResumableState: null | ResumableState = (null: any);

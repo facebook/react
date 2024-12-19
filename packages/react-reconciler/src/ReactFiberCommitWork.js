@@ -47,7 +47,6 @@ import {
   enableSuspenseCallback,
   enableScopeAPI,
   enableUpdaterTracking,
-  enableCache,
   enableTransitionTracing,
   enableUseEffectEventHook,
   enableLegacyHidden,
@@ -142,6 +141,7 @@ import {
   suspendInstance,
   suspendResource,
   resetFormInstance,
+  registerSuspenseInstanceRetry,
 } from './ReactFiberConfig';
 import {
   captureCommitPhaseError,
@@ -154,6 +154,7 @@ import {
   addMarkerProgressCallbackToPendingTransition,
   addMarkerIncompleteCallbackToPendingTransition,
   addMarkerCompleteCallbackToPendingTransition,
+  retryDehydratedSuspenseBoundary,
 } from './ReactFiberWorkLoop';
 import {
   HasEffect as HookHasEffect,
@@ -525,6 +526,23 @@ function commitLayoutEffectOnFiber(
       );
       if (flags & Update) {
         commitSuspenseHydrationCallbacks(finishedRoot, finishedWork);
+      }
+      if (flags & Callback) {
+        // This Boundary is in fallback and has a dehydrated Suspense instance.
+        // We could in theory assume the dehydrated state but we recheck it for
+        // certainty.
+        const finishedState: SuspenseState | null = finishedWork.memoizedState;
+        if (finishedState !== null) {
+          const dehydrated = finishedState.dehydrated;
+          if (dehydrated !== null) {
+            // Register a callback to retry this boundary once the server has sent the result.
+            const retry = retryDehydratedSuspenseBoundary.bind(
+              null,
+              finishedWork,
+            );
+            registerSuspenseInstanceRetry(dehydrated, retry);
+          }
+        }
       }
       break;
     }
@@ -2191,6 +2209,8 @@ function recursivelyTraverseLayoutEffects(
 }
 
 export function disappearLayoutEffects(finishedWork: Fiber) {
+  const prevEffectStart = pushComponentEffectStart();
+
   switch (finishedWork.tag) {
     case FunctionComponent:
     case ForwardRef:
@@ -2248,6 +2268,25 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
       break;
     }
   }
+
+  if (
+    enableProfilerTimer &&
+    enableProfilerCommitHooks &&
+    enableComponentPerformanceTrack &&
+    (finishedWork.mode & ProfileMode) !== NoMode &&
+    componentEffectStartTime >= 0 &&
+    componentEffectEndTime >= 0 &&
+    componentEffectDuration > 0.05
+  ) {
+    logComponentEffect(
+      finishedWork,
+      componentEffectStartTime,
+      componentEffectEndTime,
+      componentEffectDuration,
+    );
+  }
+
+  popComponentEffectStart(prevEffectStart);
 }
 
 function recursivelyTraverseDisappearLayoutEffects(parentFiber: Fiber) {
@@ -2268,6 +2307,8 @@ export function reappearLayoutEffects(
   // node was reused.
   includeWorkInProgressEffects: boolean,
 ) {
+  const prevEffectStart = pushComponentEffectStart();
+
   // Turn on layout effects in a tree that previously disappeared.
   const flags = finishedWork.flags;
   switch (finishedWork.tag) {
@@ -2403,6 +2444,25 @@ export function reappearLayoutEffects(
       break;
     }
   }
+
+  if (
+    enableProfilerTimer &&
+    enableProfilerCommitHooks &&
+    enableComponentPerformanceTrack &&
+    (finishedWork.mode & ProfileMode) !== NoMode &&
+    componentEffectStartTime >= 0 &&
+    componentEffectEndTime >= 0 &&
+    componentEffectDuration > 0.05
+  ) {
+    logComponentEffect(
+      finishedWork,
+      componentEffectStartTime,
+      componentEffectEndTime,
+      componentEffectDuration,
+    );
+  }
+
+  popComponentEffectStart(prevEffectStart);
 }
 
 function recursivelyTraverseReappearLayoutEffects(
@@ -2436,33 +2496,31 @@ function commitOffscreenPassiveMountEffects(
   finishedWork: Fiber,
   instance: OffscreenInstance,
 ) {
-  if (enableCache) {
-    let previousCache: Cache | null = null;
-    if (
-      current !== null &&
-      current.memoizedState !== null &&
-      current.memoizedState.cachePool !== null
-    ) {
-      previousCache = current.memoizedState.cachePool.pool;
+  let previousCache: Cache | null = null;
+  if (
+    current !== null &&
+    current.memoizedState !== null &&
+    current.memoizedState.cachePool !== null
+  ) {
+    previousCache = current.memoizedState.cachePool.pool;
+  }
+  let nextCache: Cache | null = null;
+  if (
+    finishedWork.memoizedState !== null &&
+    finishedWork.memoizedState.cachePool !== null
+  ) {
+    nextCache = finishedWork.memoizedState.cachePool.pool;
+  }
+  // Retain/release the cache used for pending (suspended) nodes.
+  // Note that this is only reached in the non-suspended/visible case:
+  // when the content is suspended/hidden, the retain/release occurs
+  // via the parent Suspense component (see case above).
+  if (nextCache !== previousCache) {
+    if (nextCache != null) {
+      retainCache(nextCache);
     }
-    let nextCache: Cache | null = null;
-    if (
-      finishedWork.memoizedState !== null &&
-      finishedWork.memoizedState.cachePool !== null
-    ) {
-      nextCache = finishedWork.memoizedState.cachePool.pool;
-    }
-    // Retain/release the cache used for pending (suspended) nodes.
-    // Note that this is only reached in the non-suspended/visible case:
-    // when the content is suspended/hidden, the retain/release occurs
-    // via the parent Suspense component (see case above).
-    if (nextCache !== previousCache) {
-      if (nextCache != null) {
-        retainCache(nextCache);
-      }
-      if (previousCache != null) {
-        releaseCache(previousCache);
-      }
+    if (previousCache != null) {
+      releaseCache(previousCache);
     }
   }
 
@@ -2533,22 +2591,20 @@ function commitCachePassiveMountEffect(
   current: Fiber | null,
   finishedWork: Fiber,
 ) {
-  if (enableCache) {
-    let previousCache: Cache | null = null;
-    if (finishedWork.alternate !== null) {
-      previousCache = finishedWork.alternate.memoizedState.cache;
-    }
-    const nextCache = finishedWork.memoizedState.cache;
-    // Retain/release the cache. In theory the cache component
-    // could be "borrowing" a cache instance owned by some parent,
-    // in which case we could avoid retaining/releasing. But it
-    // is non-trivial to determine when that is the case, so we
-    // always retain/release.
-    if (nextCache !== previousCache) {
-      retainCache(nextCache);
-      if (previousCache != null) {
-        releaseCache(previousCache);
-      }
+  let previousCache: Cache | null = null;
+  if (finishedWork.alternate !== null) {
+    previousCache = finishedWork.alternate.memoizedState.cache;
+  }
+  const nextCache = finishedWork.memoizedState.cache;
+  // Retain/release the cache. In theory the cache component
+  // could be "borrowing" a cache instance owned by some parent,
+  // in which case we could avoid retaining/releasing. But it
+  // is non-trivial to determine when that is the case, so we
+  // always retain/release.
+  if (nextCache !== previousCache) {
+    retainCache(nextCache);
+    if (previousCache != null) {
+      releaseCache(previousCache);
     }
   }
 }
@@ -2693,23 +2749,21 @@ function commitPassiveMountOnFiber(
         endTime,
       );
       if (flags & Passive) {
-        if (enableCache) {
-          let previousCache: Cache | null = null;
-          if (finishedWork.alternate !== null) {
-            previousCache = finishedWork.alternate.memoizedState.cache;
-          }
-          const nextCache = finishedWork.memoizedState.cache;
-          // Retain/release the root cache.
-          // Note that on initial mount, previousCache and nextCache will be the same
-          // and this retain won't occur. To counter this, we instead retain the HostRoot's
-          // initial cache when creating the root itself (see createFiberRoot() in
-          // ReactFiberRoot.js). Subsequent updates that change the cache are reflected
-          // here, such that previous/next caches are retained correctly.
-          if (nextCache !== previousCache) {
-            retainCache(nextCache);
-            if (previousCache != null) {
-              releaseCache(previousCache);
-            }
+        let previousCache: Cache | null = null;
+        if (finishedWork.alternate !== null) {
+          previousCache = finishedWork.alternate.memoizedState.cache;
+        }
+        const nextCache = finishedWork.memoizedState.cache;
+        // Retain/release the root cache.
+        // Note that on initial mount, previousCache and nextCache will be the same
+        // and this retain won't occur. To counter this, we instead retain the HostRoot's
+        // initial cache when creating the root itself (see createFiberRoot() in
+        // ReactFiberRoot.js). Subsequent updates that change the cache are reflected
+        // here, such that previous/next caches are retained correctly.
+        if (nextCache !== previousCache) {
+          retainCache(nextCache);
+          if (previousCache != null) {
+            releaseCache(previousCache);
           }
         }
 
@@ -2826,17 +2880,16 @@ function commitPassiveMountOnFiber(
           if (disableLegacyMode || finishedWork.mode & ConcurrentMode) {
             // The effects are currently disconnected. Since the tree is hidden,
             // don't connect them. This also applies to the initial render.
-            if (enableCache || enableTransitionTracing) {
-              // "Atomic" effects are ones that need to fire on every commit,
-              // even during pre-rendering. An example is updating the reference
-              // count on cache instances.
-              recursivelyTraverseAtomicPassiveEffects(
-                finishedRoot,
-                finishedWork,
-                committedLanes,
-                committedTransitions,
-              );
-            }
+            // "Atomic" effects are ones that need to fire on every commit,
+            // even during pre-rendering. An example is updating the reference
+            // count on cache instances.
+            recursivelyTraverseAtomicPassiveEffects(
+              finishedRoot,
+              finishedWork,
+              committedLanes,
+              committedTransitions,
+              endTime,
+            );
           } else {
             // Legacy Mode: Fire the effects even if the tree is hidden.
             instance._visibility |= OffscreenPassiveEffectsConnected;
@@ -2874,6 +2927,7 @@ function commitPassiveMountOnFiber(
             committedLanes,
             committedTransitions,
             includeWorkInProgressEffects,
+            endTime,
           );
         }
       }
@@ -2953,6 +3007,7 @@ function recursivelyTraverseReconnectPassiveEffects(
   committedLanes: Lanes,
   committedTransitions: Array<Transition> | null,
   includeWorkInProgressEffects: boolean,
+  endTime: number,
 ) {
   // This function visits both newly finished work and nodes that were re-used
   // from a previously committed tree. We cannot check non-static flags if the
@@ -2964,14 +3019,30 @@ function recursivelyTraverseReconnectPassiveEffects(
   // TODO (Offscreen) Check: flags & (RefStatic | LayoutStatic)
   let child = parentFiber.child;
   while (child !== null) {
-    reconnectPassiveEffects(
-      finishedRoot,
-      child,
-      committedLanes,
-      committedTransitions,
-      childShouldIncludeWorkInProgressEffects,
-    );
-    child = child.sibling;
+    if (enableProfilerTimer && enableComponentPerformanceTrack) {
+      const nextSibling = child.sibling;
+      reconnectPassiveEffects(
+        finishedRoot,
+        child,
+        committedLanes,
+        committedTransitions,
+        childShouldIncludeWorkInProgressEffects,
+        nextSibling !== null
+          ? ((nextSibling.actualStartTime: any): number)
+          : endTime,
+      );
+      child = nextSibling;
+    } else {
+      reconnectPassiveEffects(
+        finishedRoot,
+        child,
+        committedLanes,
+        committedTransitions,
+        childShouldIncludeWorkInProgressEffects,
+        endTime,
+      );
+      child = child.sibling;
+    }
   }
 }
 
@@ -2984,7 +3055,28 @@ export function reconnectPassiveEffects(
   // from a previously committed tree. We cannot check non-static flags if the
   // node was reused.
   includeWorkInProgressEffects: boolean,
+  endTime: number, // Profiling-only. The start time of the next Fiber or root completion.
 ) {
+  const prevEffectStart = pushComponentEffectStart();
+
+  // If this component rendered in Profiling mode (DEV or in Profiler component) then log its
+  // render time. We do this after the fact in the passive effect to avoid the overhead of this
+  // getting in the way of the render characteristics and avoid the overhead of unwinding
+  // uncommitted renders.
+  if (
+    enableProfilerTimer &&
+    enableComponentPerformanceTrack &&
+    (finishedWork.mode & ProfileMode) !== NoMode &&
+    ((finishedWork.actualStartTime: any): number) > 0 &&
+    (finishedWork.flags & PerformedWork) !== NoFlags
+  ) {
+    logComponentRender(
+      finishedWork,
+      ((finishedWork.actualStartTime: any): number),
+      endTime,
+    );
+  }
+
   const flags = finishedWork.flags;
   switch (finishedWork.tag) {
     case FunctionComponent:
@@ -2996,6 +3088,7 @@ export function reconnectPassiveEffects(
         committedLanes,
         committedTransitions,
         includeWorkInProgressEffects,
+        endTime,
       );
       // TODO: Check for PassiveStatic flag
       commitHookPassiveMountEffects(finishedWork, HookPassive);
@@ -3015,6 +3108,7 @@ export function reconnectPassiveEffects(
           committedLanes,
           committedTransitions,
           includeWorkInProgressEffects,
+          endTime,
         );
 
         if (includeWorkInProgressEffects && flags & Passive) {
@@ -3041,22 +3135,22 @@ export function reconnectPassiveEffects(
             committedLanes,
             committedTransitions,
             includeWorkInProgressEffects,
+            endTime,
           );
         } else {
           if (disableLegacyMode || finishedWork.mode & ConcurrentMode) {
             // The effects are currently disconnected. Since the tree is hidden,
             // don't connect them. This also applies to the initial render.
-            if (enableCache || enableTransitionTracing) {
-              // "Atomic" effects are ones that need to fire on every commit,
-              // even during pre-rendering. An example is updating the reference
-              // count on cache instances.
-              recursivelyTraverseAtomicPassiveEffects(
-                finishedRoot,
-                finishedWork,
-                committedLanes,
-                committedTransitions,
-              );
-            }
+            // "Atomic" effects are ones that need to fire on every commit,
+            // even during pre-rendering. An example is updating the reference
+            // count on cache instances.
+            recursivelyTraverseAtomicPassiveEffects(
+              finishedRoot,
+              finishedWork,
+              committedLanes,
+              committedTransitions,
+              endTime,
+            );
           } else {
             // Legacy Mode: Fire the effects even if the tree is hidden.
             instance._visibility |= OffscreenPassiveEffectsConnected;
@@ -3066,6 +3160,7 @@ export function reconnectPassiveEffects(
               committedLanes,
               committedTransitions,
               includeWorkInProgressEffects,
+              endTime,
             );
           }
         }
@@ -3085,6 +3180,7 @@ export function reconnectPassiveEffects(
           committedLanes,
           committedTransitions,
           includeWorkInProgressEffects,
+          endTime,
         );
       }
 
@@ -3102,6 +3198,7 @@ export function reconnectPassiveEffects(
         committedLanes,
         committedTransitions,
         includeWorkInProgressEffects,
+        endTime,
       );
       if (includeWorkInProgressEffects && flags & Passive) {
         // TODO: Pass `current` as argument to this function
@@ -3118,6 +3215,7 @@ export function reconnectPassiveEffects(
           committedLanes,
           committedTransitions,
           includeWorkInProgressEffects,
+          endTime,
         );
         if (includeWorkInProgressEffects && flags & Passive) {
           commitTracingMarkerPassiveMountEffect(finishedWork);
@@ -3133,10 +3231,30 @@ export function reconnectPassiveEffects(
         committedLanes,
         committedTransitions,
         includeWorkInProgressEffects,
+        endTime,
       );
       break;
     }
   }
+
+  if (
+    enableProfilerTimer &&
+    enableProfilerCommitHooks &&
+    enableComponentPerformanceTrack &&
+    (finishedWork.mode & ProfileMode) !== NoMode &&
+    componentEffectStartTime >= 0 &&
+    componentEffectEndTime >= 0 &&
+    componentEffectDuration > 0.05
+  ) {
+    logComponentEffect(
+      finishedWork,
+      componentEffectStartTime,
+      componentEffectEndTime,
+      componentEffectDuration,
+    );
+  }
+
+  popComponentEffectStart(prevEffectStart);
 }
 
 function recursivelyTraverseAtomicPassiveEffects(
@@ -3144,6 +3262,7 @@ function recursivelyTraverseAtomicPassiveEffects(
   parentFiber: Fiber,
   committedLanes: Lanes,
   committedTransitions: Array<Transition> | null,
+  endTime: number, // Profiling-only. The start time of the next Fiber or root completion.
 ) {
   // "Atomic" effects are ones that need to fire on every commit, even during
   // pre-rendering. We call this function when traversing a hidden tree whose
@@ -3152,13 +3271,28 @@ function recursivelyTraverseAtomicPassiveEffects(
   if (parentFiber.subtreeFlags & PassiveMask) {
     let child = parentFiber.child;
     while (child !== null) {
-      commitAtomicPassiveEffects(
-        finishedRoot,
-        child,
-        committedLanes,
-        committedTransitions,
-      );
-      child = child.sibling;
+      if (enableProfilerTimer && enableComponentPerformanceTrack) {
+        const nextSibling = child.sibling;
+        commitAtomicPassiveEffects(
+          finishedRoot,
+          child,
+          committedLanes,
+          committedTransitions,
+          nextSibling !== null
+            ? ((nextSibling.actualStartTime: any): number)
+            : endTime,
+        );
+        child = nextSibling;
+      } else {
+        commitAtomicPassiveEffects(
+          finishedRoot,
+          child,
+          committedLanes,
+          committedTransitions,
+          endTime,
+        );
+        child = child.sibling;
+      }
     }
   }
 }
@@ -3168,7 +3302,24 @@ function commitAtomicPassiveEffects(
   finishedWork: Fiber,
   committedLanes: Lanes,
   committedTransitions: Array<Transition> | null,
+  endTime: number, // Profiling-only. The start time of the next Fiber or root completion.
 ) {
+  // If this component rendered in Profiling mode (DEV or in Profiler component) then log its
+  // render time. A render can happen even if the subtree is offscreen.
+  if (
+    enableProfilerTimer &&
+    enableComponentPerformanceTrack &&
+    (finishedWork.mode & ProfileMode) !== NoMode &&
+    ((finishedWork.actualStartTime: any): number) > 0 &&
+    (finishedWork.flags & PerformedWork) !== NoFlags
+  ) {
+    logComponentRender(
+      finishedWork,
+      ((finishedWork.actualStartTime: any): number),
+      endTime,
+    );
+  }
+
   // "Atomic" effects are ones that need to fire on every commit, even during
   // pre-rendering. We call this function when traversing a hidden tree whose
   // regular effects are currently disconnected.
@@ -3180,6 +3331,7 @@ function commitAtomicPassiveEffects(
         finishedWork,
         committedLanes,
         committedTransitions,
+        endTime,
       );
       if (flags & Passive) {
         // TODO: Pass `current` as argument to this function
@@ -3195,6 +3347,7 @@ function commitAtomicPassiveEffects(
         finishedWork,
         committedLanes,
         committedTransitions,
+        endTime,
       );
       if (flags & Passive) {
         // TODO: Pass `current` as argument to this function
@@ -3209,6 +3362,7 @@ function commitAtomicPassiveEffects(
         finishedWork,
         committedLanes,
         committedTransitions,
+        endTime,
       );
       break;
     }
@@ -3583,6 +3737,8 @@ function commitPassiveUnmountInsideDeletedTreeOnFiber(
   current: Fiber,
   nearestMountedAncestor: Fiber | null,
 ): void {
+  const prevEffectStart = pushComponentEffectStart();
+
   switch (current.tag) {
     case FunctionComponent:
     case ForwardRef:
@@ -3599,27 +3755,23 @@ function commitPassiveUnmountInsideDeletedTreeOnFiber(
     // the cache instance owned by the root will never be freed.
     // When effects are run, the cache should be freed here:
     // case HostRoot: {
-    //   if (enableCache) {
-    //     const cache = current.memoizedState.cache;
-    //     releaseCache(cache);
-    //   }
+    //   const cache = current.memoizedState.cache;
+    //   releaseCache(cache);
     //   break;
     // }
     case LegacyHiddenComponent:
     case OffscreenComponent: {
-      if (enableCache) {
-        if (
-          current.memoizedState !== null &&
-          current.memoizedState.cachePool !== null
-        ) {
-          const cache: Cache = current.memoizedState.cachePool.pool;
-          // Retain/release the cache used for pending (suspended) nodes.
-          // Note that this is only reached in the non-suspended/visible case:
-          // when the content is suspended/hidden, the retain/release occurs
-          // via the parent Suspense component (see case above).
-          if (cache != null) {
-            retainCache(cache);
-          }
+      if (
+        current.memoizedState !== null &&
+        current.memoizedState.cachePool !== null
+      ) {
+        const cache: Cache = current.memoizedState.cachePool.pool;
+        // Retain/release the cache used for pending (suspended) nodes.
+        // Note that this is only reached in the non-suspended/visible case:
+        // when the content is suspended/hidden, the retain/release occurs
+        // via the parent Suspense component (see case above).
+        if (cache != null) {
+          retainCache(cache);
         }
       }
       break;
@@ -3662,10 +3814,8 @@ function commitPassiveUnmountInsideDeletedTreeOnFiber(
       break;
     }
     case CacheComponent: {
-      if (enableCache) {
-        const cache = current.memoizedState.cache;
-        releaseCache(cache);
-      }
+      const cache = current.memoizedState.cache;
+      releaseCache(cache);
       break;
     }
     case TracingMarkerComponent: {
@@ -3700,6 +3850,25 @@ function commitPassiveUnmountInsideDeletedTreeOnFiber(
       break;
     }
   }
+
+  if (
+    enableProfilerTimer &&
+    enableProfilerCommitHooks &&
+    enableComponentPerformanceTrack &&
+    (current.mode & ProfileMode) !== NoMode &&
+    componentEffectStartTime >= 0 &&
+    componentEffectEndTime >= 0 &&
+    componentEffectDuration > 0.05
+  ) {
+    logComponentEffect(
+      current,
+      componentEffectStartTime,
+      componentEffectEndTime,
+      componentEffectDuration,
+    );
+  }
+
+  popComponentEffectStart(prevEffectStart);
 }
 
 export function invokeLayoutEffectMountInDEV(fiber: Fiber): void {

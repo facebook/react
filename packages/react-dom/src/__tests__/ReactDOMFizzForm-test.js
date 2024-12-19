@@ -398,7 +398,6 @@ describe('ReactDOMFizzForm', () => {
     expect(buttonRef.current.hasAttribute('formTarget')).toBe(false);
   });
 
-  // @gate enableAsyncActions
   it('useFormStatus is not pending during server render', async () => {
     function App() {
       const {pending} = useFormStatus();
@@ -488,7 +487,6 @@ describe('ReactDOMFizzForm', () => {
     expect(rootActionCalled).toBe(false);
   });
 
-  // @gate enableAsyncActions
   it('useOptimistic returns passthrough value', async () => {
     function App() {
       const [optimisticState] = useOptimistic('hi');
@@ -507,7 +505,6 @@ describe('ReactDOMFizzForm', () => {
     expect(container.textContent).toBe('hi');
   });
 
-  // @gate enableAsyncActions
   it('useActionState returns initial state', async () => {
     async function action(state) {
       return state;

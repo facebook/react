@@ -56,6 +56,10 @@ function ConditionalJsx({shouldWrap}) {
   return content;
 }
 
+function ComponentWithSpreadPropsAndRef({ref, ...other}) {
+  return <Foo ref={ref} {...other} />;
+}
+
 // TODO: Support value blocks
 function TernaryJsx({cond}) {
   return cond ? <div /> : null;

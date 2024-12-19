@@ -1,4 +1,7 @@
 // @inferEffectDependencies
+import {useEffect, useRef} from 'react';
+import useEffectWrapper from 'useEffectWrapper';
+
 const moduleNonReactive = 0;
 
 function Component({foo, bar}) {
@@ -33,4 +36,8 @@ function Component({foo, bar}) {
 
   // No inferred dep array, the argument is not a lambda
   useEffect(f);
+
+  useEffectWrapper(() => {
+    console.log(foo);
+  });
 }

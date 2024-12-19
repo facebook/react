@@ -1,8 +1,8 @@
-function anonymous_1() {
+const TestComponent = function () {
   "use no memo";
   return <Button>{x}</Button>;
-}
-function anonymous_3({ x }) {
+};
+const TestComponent2 = ({ x }) => {
   "use no memo";
   return <Button>{x}</Button>;
-}
+};

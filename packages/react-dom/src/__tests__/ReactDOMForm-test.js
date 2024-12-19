@@ -669,7 +669,6 @@ describe('ReactDOMForm', () => {
     expect(actionCalled).toBe(false);
   });
 
-  // @gate enableAsyncActions
   it('form actions are transitions', async () => {
     const formRef = React.createRef();
 
@@ -707,7 +706,6 @@ describe('ReactDOMForm', () => {
     expect(container.textContent).toBe('Updated');
   });
 
-  // @gate enableAsyncActions
   it('multiple form actions', async () => {
     const formRef = React.createRef();
 
@@ -798,12 +796,6 @@ describe('ReactDOMForm', () => {
   });
 
   it('sync errors in form actions can be captured by an error boundary', async () => {
-    if (gate(flags => !flags.enableAsyncActions)) {
-      // TODO: Uncaught JSDOM errors fail the test after the scope has finished
-      // so don't work with the `gate` mechanism.
-      return;
-    }
-
     class ErrorBoundary extends React.Component {
       state = {error: null};
       static getDerivedStateFromError(error) {
@@ -844,12 +836,6 @@ describe('ReactDOMForm', () => {
   });
 
   it('async errors in form actions can be captured by an error boundary', async () => {
-    if (gate(flags => !flags.enableAsyncActions)) {
-      // TODO: Uncaught JSDOM errors fail the test after the scope has finished
-      // so don't work with the `gate` mechanism.
-      return;
-    }
-
     class ErrorBoundary extends React.Component {
       state = {error: null};
       static getDerivedStateFromError(error) {
@@ -895,7 +881,6 @@ describe('ReactDOMForm', () => {
     expect(container.textContent).toBe('Oh no!');
   });
 
-  // @gate enableAsyncActions
   it('useFormStatus reads the status of a pending form action', async () => {
     const formRef = React.createRef();
 
@@ -992,7 +977,6 @@ describe('ReactDOMForm', () => {
     );
   });
 
-  // @gate enableAsyncActions
   it('useActionState updates state asynchronously and queues multiple actions', async () => {
     let actionCounter = 0;
     async function action(state, type) {
@@ -1052,7 +1036,6 @@ describe('ReactDOMForm', () => {
     expect(container.textContent).toBe('2');
   });
 
-  // @gate enableAsyncActions
   it('useActionState supports inline actions', async () => {
     let increment;
     function App({stepSize}) {
@@ -1084,7 +1067,6 @@ describe('ReactDOMForm', () => {
     assertLog(['Pending 1', '11']);
   });
 
-  // @gate enableAsyncActions
   it('useActionState: dispatch throws if called during render', async () => {
     function App() {
       const [state, dispatch, isPending] = useActionState(async () => {}, 0);
@@ -1100,7 +1082,6 @@ describe('ReactDOMForm', () => {
     });
   });
 
-  // @gate enableAsyncActions
   it('useActionState: queues multiple actions and runs them in order', async () => {
     let action;
     function App() {
@@ -1132,7 +1113,6 @@ describe('ReactDOMForm', () => {
     expect(container.textContent).toBe('D');
   });
 
-  // @gate enableAsyncActions
   it(
     'useActionState: when calling a queued action, uses the implementation ' +
       'that was current at the time it was dispatched, not the most recent one',
@@ -1179,7 +1159,6 @@ describe('ReactDOMForm', () => {
     },
   );
 
-  // @gate enableAsyncActions
   it('useActionState: works if action is sync', async () => {
     let increment;
     function App({stepSize}) {
@@ -1211,7 +1190,6 @@ describe('ReactDOMForm', () => {
     assertLog(['Pending 1', '11']);
   });
 
-  // @gate enableAsyncActions
   it('useActionState: can mix sync and async actions', async () => {
     let action;
     function App() {
@@ -1239,7 +1217,6 @@ describe('ReactDOMForm', () => {
     expect(container.textContent).toBe('E');
   });
 
-  // @gate enableAsyncActions
   it('useActionState: error handling (sync action)', async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
@@ -1288,7 +1265,6 @@ describe('ReactDOMForm', () => {
     expect(container.textContent).toBe('Caught an error: Oops!');
   });
 
-  // @gate enableAsyncActions
   it('useActionState: error handling (async action)', async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
@@ -1394,7 +1370,6 @@ describe('ReactDOMForm', () => {
     expect(container.textContent).toBe('Caught an error: Oops!');
   });
 
-  // @gate enableAsyncActions
   it('useActionState works in StrictMode', async () => {
     let actionCounter = 0;
     async function action(state, type) {

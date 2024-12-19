@@ -10,7 +10,6 @@
 import ReactVersion from 'shared/ReactVersion';
 import {
   REACT_FRAGMENT_TYPE,
-  REACT_DEBUG_TRACING_MODE_TYPE,
   REACT_PROFILER_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
@@ -38,7 +37,6 @@ import {postpone} from './ReactPostpone';
 import {
   getCacheForType,
   useCallback,
-  unstable_useContextWithBailout,
   useContext,
   useEffect,
   useEffectEvent,
@@ -87,7 +85,6 @@ export {
   cache,
   postpone as unstable_postpone,
   useCallback,
-  unstable_useContextWithBailout,
   useContext,
   useEffect,
   useEffectEvent as experimental_useEffectEvent,
@@ -105,7 +102,6 @@ export {
   REACT_FRAGMENT_TYPE as Fragment,
   REACT_PROFILER_TYPE as Profiler,
   REACT_STRICT_MODE_TYPE as StrictMode,
-  REACT_DEBUG_TRACING_MODE_TYPE as unstable_DebugTracingMode,
   REACT_SUSPENSE_TYPE as Suspense,
   createElement,
   cloneElement,

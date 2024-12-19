@@ -34,7 +34,7 @@ import { print } from "shared-runtime";
  * before OutlineFunctions
  */
 function OutlinedFunctionInEffect() {
-  useEffect(_temp);
+  useEffect(_temp, []);
 }
 function _temp() {
   return print("hello world!");

@@ -1123,30 +1123,23 @@ function checkFunctionReferencedBeforeDeclarationAtTopLevel(
   return errors.details.length > 0 ? errors : null;
 }
 
-type ReactCompilerRuntimeModule =
-  | 'react/compiler-runtime' // from react namespace
-  | 'react-compiler-runtime'; // npm package
-function getReactCompilerRuntimeModule(
-  opts: PluginOptions,
-): ReactCompilerRuntimeModule {
-  let moduleName: ReactCompilerRuntimeModule | null = null;
-  switch (opts.target) {
-    case '17':
-    case '18': {
-      moduleName = 'react-compiler-runtime';
-      break;
-    }
-    case '19': {
-      moduleName = 'react/compiler-runtime';
-      break;
-    }
-    default:
-      CompilerError.invariant(moduleName != null, {
+function getReactCompilerRuntimeModule(opts: PluginOptions): string {
+  if (opts.target === '19') {
+    return 'react/compiler-runtime'; // from react namespace
+  } else if (opts.target === '17' || opts.target === '18') {
+    return 'react-compiler-runtime'; // npm package
+  } else {
+    CompilerError.invariant(
+      opts.target != null &&
+        opts.target.kind === 'donotuse_meta_internal' &&
+        typeof opts.target.runtimeModule === 'string',
+      {
         reason: 'Expected target to already be validated',
         description: null,
         loc: null,
         suggestions: null,
-      });
+      },
+    );
+    return opts.target.runtimeModule;
   }
-  return moduleName;
 }

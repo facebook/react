@@ -18,6 +18,8 @@ import type {
   LoggerEvent,
   PanicThresholdOptions,
   PluginOptions,
+  CompilerReactTarget,
+  CompilerPipelineValue,
 } from 'babel-plugin-react-compiler/src/Entrypoint';
 import type {Effect, ValueKind} from 'babel-plugin-react-compiler/src/HIR';
 import type {
@@ -44,6 +46,7 @@ export function parseLanguage(source: string): 'flow' | 'typescript' {
 function makePluginOptions(
   firstLine: string,
   parseConfigPragmaFn: typeof ParseConfigPragma,
+  debugIRLogger: (value: CompilerPipelineValue) => void,
   EffectEnum: typeof Effect,
   ValueKindEnum: typeof ValueKind,
 ): [PluginOptions, Array<{filename: string | null; event: LoggerEvent}>] {
@@ -55,7 +58,8 @@ function makePluginOptions(
   let validatePreserveExistingMemoizationGuarantees = false;
   let customMacros: null | Array<Macro> = null;
   let validateBlocklistedImports = null;
-  let target = '19' as const;
+  let enableFire = false;
+  let target: CompilerReactTarget = '19';
 
   if (firstLine.indexOf('@compilationMode(annotation)') !== -1) {
     assert(
@@ -81,8 +85,15 @@ function makePluginOptions(
 
   const targetMatch = /@target="([^"]+)"/.exec(firstLine);
   if (targetMatch) {
-    // @ts-ignore
-    target = targetMatch[1];
+    if (targetMatch[1] === 'donotuse_meta_internal') {
+      target = {
+        kind: targetMatch[1],
+        runtimeModule: 'react',
+      };
+    } else {
+      // @ts-ignore
+      target = targetMatch[1];
+    }
   }
 
   if (firstLine.includes('@panicThreshold(none)')) {
@@ -117,6 +128,10 @@ function makePluginOptions(
    */
   if (firstLine.includes('@validatePreserveExistingMemoizationGuarantees')) {
     validatePreserveExistingMemoizationGuarantees = true;
+  }
+
+  if (firstLine.includes('@enableFire')) {
+    enableFire = true;
   }
 
   const hookPatternMatch = /@hookPattern:"([^"]+)"/.exec(firstLine);
@@ -174,20 +189,15 @@ function makePluginOptions(
       .filter(s => s.length > 0);
   }
 
-  let inferEffectDependencies = false;
-  if (firstLine.includes('@inferEffectDependencies')) {
-    inferEffectDependencies = true;
-  }
-
-  let logs: Array<{filename: string | null; event: LoggerEvent}> = [];
-  let logger: Logger | null = null;
-  if (firstLine.includes('@logger')) {
-    logger = {
-      logEvent(filename: string | null, event: LoggerEvent): void {
-        logs.push({filename, event});
-      },
-    };
-  }
+  const logs: Array<{filename: string | null; event: LoggerEvent}> = [];
+  const logger: Logger = {
+    logEvent: firstLine.includes('@logger')
+      ? (filename, event) => {
+          logs.push({filename, event});
+        }
+      : () => {},
+    debugLogIRs: debugIRLogger,
+  };
 
   const config = parseConfigPragmaFn(firstLine);
   const options = {
@@ -202,7 +212,7 @@ function makePluginOptions(
       hookPattern,
       validatePreserveExistingMemoizationGuarantees,
       validateBlocklistedImports,
-      inferEffectDependencies,
+      enableFire,
     },
     compilationMode,
     logger,
@@ -295,6 +305,8 @@ function getEvaluatorPresets(
                       arg.value = './shared-runtime';
                     } else if (arg.value === 'ReactForgetFeatureFlag') {
                       arg.value = './ReactForgetFeatureFlag';
+                    } else if (arg.value === 'useEffectWrapper') {
+                      arg.value = './useEffectWrapper';
                     }
                   }
                 }
@@ -334,6 +346,7 @@ export async function transformFixtureInput(
   parseConfigPragmaFn: typeof ParseConfigPragma,
   plugin: BabelCore.PluginObj,
   includeEvaluator: boolean,
+  debugIRLogger: (value: CompilerPipelineValue) => void,
   EffectEnum: typeof Effect,
   ValueKindEnum: typeof ValueKind,
 ): Promise<{kind: 'ok'; value: TransformResult} | {kind: 'err'; msg: string}> {
@@ -361,6 +374,7 @@ export async function transformFixtureInput(
   const [options, logs] = makePluginOptions(
     firstLine,
     parseConfigPragmaFn,
+    debugIRLogger,
     EffectEnum,
     ValueKindEnum,
   );

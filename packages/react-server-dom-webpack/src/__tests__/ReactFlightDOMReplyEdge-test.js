@@ -53,7 +53,6 @@ describe('ReactFlightDOMReplyEdge', () => {
     expect(decoded).toEqual({some: 'object'});
   });
 
-  // @gate enableBinaryFlight
   it('should be able to serialize any kind of typed array', async () => {
     const buffer = new Uint8Array([
       123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
@@ -85,7 +84,6 @@ describe('ReactFlightDOMReplyEdge', () => {
     expect(new Uint8Array(result[0])).toEqual(new Uint8Array(buffers[0]));
   });
 
-  // @gate enableBinaryFlight
   it('should be able to serialize a typed array inside a Map', async () => {
     const array = new Uint8Array([
       123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
@@ -102,7 +100,6 @@ describe('ReactFlightDOMReplyEdge', () => {
     expect(result.get('array')).toEqual(array);
   });
 
-  // @gate enableBinaryFlight
   it('should be able to serialize a blob', async () => {
     const bytes = new Uint8Array([
       123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
@@ -150,7 +147,6 @@ describe('ReactFlightDOMReplyEdge', () => {
     expect(await resultBlob.arrayBuffer()).toEqual(await blob.arrayBuffer());
   });
 
-  // @gate enableFlightReadableStream && enableBinaryFlight
   it('should supports ReadableStreams with typed arrays', async () => {
     const buffer = new Uint8Array([
       123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
@@ -197,7 +193,6 @@ describe('ReactFlightDOMReplyEdge', () => {
     expect(streamedBuffers).toEqual(buffers);
   });
 
-  // @gate enableFlightReadableStream && enableBinaryFlight
   it('should support BYOB binary ReadableStreams', async () => {
     const buffer = new Uint8Array([
       123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
@@ -249,5 +244,32 @@ describe('ReactFlightDOMReplyEdge', () => {
         Array.from(new Uint8Array(c.buffer, c.byteOffset, c.byteLength)),
       ),
     );
+  });
+
+  it('should abort when parsing an incomplete payload', async () => {
+    const infinitePromise = new Promise(() => {});
+    const controller = new AbortController();
+    const promiseForResult = ReactServerDOMClient.encodeReply(
+      {promise: infinitePromise},
+      {
+        signal: controller.signal,
+      },
+    );
+    controller.abort();
+    const body = await promiseForResult;
+
+    const decoded = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+    );
+
+    let error = null;
+    try {
+      await decoded.promise;
+    } catch (x) {
+      error = x;
+    }
+    expect(error).not.toBe(null);
+    expect(error.message).toBe('Connection closed.');
   });
 });

@@ -64,6 +64,9 @@ module.exports = {
     __turbopack_load__: 'readonly',
     __turbopack_require__: 'readonly',
 
+    // Flight Parcel
+    parcelRequire: 'readonly',
+
     // jest
     expect: 'readonly',
     jest: 'readonly',
@@ -83,6 +86,17 @@ module.exports = {
   rules: {
     'no-undef': 'error',
     'no-shadow-restricted-names': 'error',
+    'no-restricted-syntax': [
+      'error',
+      // TODO: Can be removed once we upgrade GCC to a version without `optimizeArgumentsArray` optimization.
+      {
+        selector: 'Identifier[name=/^JSCompiler_OptimizeArgumentsArray_/]',
+        message:
+          'Google Closure Compiler optimized `arguments` access. ' +
+          'This affects function arity. ' +
+          'Create a reference to `arguments` to avoid this optimization',
+      },
+    ],
   },
 
   // These plugins aren't used, but eslint complains if an eslint-ignore comment

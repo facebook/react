@@ -10,7 +10,6 @@
 import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
 import type {Awaited} from 'shared/ReactTypes';
 
-import {enableAsyncActions} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 
@@ -66,13 +65,8 @@ function resolveDispatcher() {
 }
 
 export function useFormStatus(): FormStatus {
-  if (!enableAsyncActions) {
-    throw new Error('Not implemented.');
-  } else {
-    const dispatcher = resolveDispatcher();
-    // $FlowFixMe[not-a-function] We know this exists because of the feature check above.
-    return dispatcher.useHostTransitionStatus();
-  }
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useHostTransitionStatus();
 }
 
 export function useFormState<S, P>(
@@ -80,13 +74,8 @@ export function useFormState<S, P>(
   initialState: Awaited<S>,
   permalink?: string,
 ): [Awaited<S>, (P) => void, boolean] {
-  if (!enableAsyncActions) {
-    throw new Error('Not implemented.');
-  } else {
-    const dispatcher = resolveDispatcher();
-    // $FlowFixMe[not-a-function] This is unstable, thus optional
-    return dispatcher.useFormState(action, initialState, permalink);
-  }
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useFormState(action, initialState, permalink);
 }
 
 export function requestFormReset(form: HTMLFormElement) {

@@ -3,6 +3,9 @@
 
 ```javascript
 // @inferEffectDependencies
+import {useEffect, useRef} from 'react';
+import useEffectWrapper from 'useEffectWrapper';
+
 const moduleNonReactive = 0;
 
 function Component({foo, bar}) {
@@ -37,6 +40,10 @@ function Component({foo, bar}) {
 
   // No inferred dep array, the argument is not a lambda
   useEffect(f);
+
+  useEffectWrapper(() => {
+    console.log(foo);
+  });
 }
 
 ```
@@ -45,10 +52,13 @@ function Component({foo, bar}) {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @inferEffectDependencies
+import { useEffect, useRef } from "react";
+import useEffectWrapper from "useEffectWrapper";
+
 const moduleNonReactive = 0;
 
 function Component(t0) {
-  const $ = _c(12);
+  const $ = _c(14);
   const { foo, bar } = t0;
 
   const ref = useRef(0);
@@ -121,6 +131,17 @@ function Component(t0) {
   const f = t5;
 
   useEffect(f);
+  let t6;
+  if ($[12] !== foo) {
+    t6 = () => {
+      console.log(foo);
+    };
+    $[12] = foo;
+    $[13] = t6;
+  } else {
+    t6 = $[13];
+  }
+  useEffectWrapper(t6, [foo]);
 }
 
 ```
