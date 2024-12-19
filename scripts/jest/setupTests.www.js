@@ -8,6 +8,9 @@ jest.mock('shared/ReactFeatureFlags', () => {
   );
   const actual = jest.requireActual('shared/forks/ReactFeatureFlags.www');
 
+  // Can be removed once it becomes truly dynamic behind a GK.
+  actual.enableYieldingBeforePassive = __VARIANT__;
+
   // Flags that aren't currently used, but we still want to force variants to keep the
   // code live.
   actual.disableInputAttributeSyncing = __VARIANT__;
