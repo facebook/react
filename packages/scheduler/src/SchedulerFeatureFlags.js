@@ -16,4 +16,5 @@ export const normalPriorityTimeout = 5000;
 export const lowPriorityTimeout = 10000;
 export const enableRequestPaint = true;
 
-export const enableAlwaysYieldScheduler = __EXPERIMENTAL__;
+// Introduced a regression by not flushing passive effects with Suspensey CSS: https://codesandbox.io/p/sandbox/suspensey-css-and-passive-effects-mww52c
+export const enableAlwaysYieldScheduler = false;
