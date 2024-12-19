@@ -727,6 +727,49 @@ const bundles = [
     externals: ['acorn'],
   },
 
+  /******* React Server DOM Vite Server *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-server-dom-vite/src/server/react-flight-dom-server.node',
+    name: 'react-server-dom-vite-server.node',
+    condition: 'react-server',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: [
+      'react',
+      'util',
+      'crypto',
+      'async_hooks',
+      'react-dom',
+      'virtual:react-server-dom-vite/manifest',
+    ],
+  },
+
+  /******* React Server DOM Vite Client *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD],
+    moduleType: RENDERER,
+    entry: 'react-server-dom-vite/client.browser',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react', 'react-dom', 'virtual:react-server-dom-vite/manifest'],
+  },
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-server-dom-vite/client.node',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: [
+      'react',
+      'react-dom',
+      'util',
+      'crypto',
+      'virtual:react-server-dom-vite/manifest',
+    ],
+  },
+
   /******* React Suspense Test Utils *******/
   {
     bundleTypes: [NODE_ES2015],
