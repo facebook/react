@@ -72,6 +72,14 @@ export function hasAlreadyLoadedHookNames(element: Element): boolean {
   return record != null && record.status === Resolved;
 }
 
+export function getAlreadyLoadedHookNames(element: Element): HookNames | null {
+  const record = map.get(element);
+  if (record != null && record.status === Resolved) {
+    return record.value;
+  }
+  return null;
+}
+
 export function loadHookNames(
   element: Element,
   hooksTree: HooksTree,
