@@ -22,6 +22,7 @@ let waitForPaint;
 let assertLog;
 let waitForThrow;
 let act;
+let assertConsoleErrorDev;
 
 describe('ReactCache', () => {
   beforeEach(() => {
@@ -39,6 +40,7 @@ describe('ReactCache', () => {
     assertLog = InternalTestUtils.assertLog;
     waitForThrow = InternalTestUtils.waitForThrow;
     waitForPaint = InternalTestUtils.waitForPaint;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
     act = InternalTestUtils.act;
 
     TextResource = createResource(
@@ -190,20 +192,31 @@ describe('ReactCache', () => {
     );
 
     if (__DEV__) {
-      await expect(async () => {
-        await waitForAll([
-          'App',
-          'Loading...',
+      await waitForAll([
+        'App',
+        'Loading...',
 
-          ...(gate('enableSiblingPrerendering') ? ['App'] : []),
-        ]);
-      }).toErrorDev([
+        ...(gate('enableSiblingPrerendering') ? ['App'] : []),
+      ]);
+      assertConsoleErrorDev([
         'Invalid key type. Expected a string, number, symbol, or ' +
           "boolean, but instead received: [ 'Hi', 100 ]\n\n" +
           'To use non-primitive values as keys, you must pass a hash ' +
-          'function as the second argument to createResource().',
+          'function as the second argument to createResource().\n' +
+          '    in App (at **)' +
+          (gate(flags => flags.enableOwnerStacks)
+            ? ''
+            : '\n    in Suspense (at **)'),
 
-        ...(gate('enableSiblingPrerendering') ? ['Invalid key type'] : []),
+        ...(gate('enableSiblingPrerendering')
+          ? [
+              'Invalid key type. Expected a string, number, symbol, or ' +
+                "boolean, but instead received: [ 'Hi', 100 ]\n\n" +
+                'To use non-primitive values as keys, you must pass a hash ' +
+                'function as the second argument to createResource().\n' +
+                '    in App (at **)',
+            ]
+          : []),
       ]);
     } else {
       await waitForAll([

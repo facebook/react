@@ -38,6 +38,7 @@ let ReactServerDOM;
 let Scheduler;
 let ReactServerScheduler;
 let reactServerAct;
+let assertConsoleErrorDev;
 
 describe('ReactFlightDOMBrowser', () => {
   beforeEach(() => {
@@ -75,7 +76,7 @@ describe('ReactFlightDOMBrowser', () => {
     Scheduler = require('scheduler');
     patchMessageChannel(Scheduler);
 
-    act = require('internal-test-utils').act;
+    ({act, assertConsoleErrorDev} = require('internal-test-utils'));
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
@@ -1156,25 +1157,38 @@ describe('ReactFlightDOMBrowser', () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
 
-    await expect(async () => {
-      const stream = await serverAct(() =>
-        ReactServerDOMServer.renderToReadableStream(
-          <>
-            <Parent>{Array(6).fill(<div>no key</div>)}</Parent>
-            <ParentModule.Parent>
-              {Array(6).fill(<div>no key</div>)}
-            </ParentModule.Parent>
-          </>,
-          webpackMap,
-        ),
-      );
-      const result =
-        await ReactServerDOMClient.createFromReadableStream(stream);
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        <>
+          <Parent>{Array(6).fill(<div>no key</div>)}</Parent>
+          <ParentModule.Parent>
+            {Array(6).fill(<div>no key</div>)}
+          </ParentModule.Parent>
+        </>,
+        webpackMap,
+      ),
+    );
+    const result = await ReactServerDOMClient.createFromReadableStream(stream);
 
-      await act(() => {
-        root.render(result);
-      });
-    }).toErrorDev('Each child in a list should have a unique "key" prop.');
+    if (!gate(flags => flags.enableOwnerStacks)) {
+      assertConsoleErrorDev([
+        'Each child in a list should have a unique "key" prop. ' +
+          'See https://react.dev/link/warning-keys for more information.\n' +
+          '    in div (at **)',
+      ]);
+    }
+
+    await act(() => {
+      root.render(result);
+    });
+    if (gate(flags => flags.enableOwnerStacks)) {
+      assertConsoleErrorDev([
+        'Each child in a list should have a unique "key" prop.\n\n' +
+          'Check the top-level render call using <ParentClient>. ' +
+          'See https://react.dev/link/warning-keys for more information.\n' +
+          '    in div (at **)',
+      ]);
+    }
   });
 
   it('basic use(promise)', async () => {

@@ -14,6 +14,7 @@ let React;
 let ReactTestRenderer;
 let ReactDebugTools;
 let act;
+let assertConsoleErrorDev;
 let useMemoCache;
 
 function normalizeSourceLoc(tree) {
@@ -33,7 +34,7 @@ describe('ReactHooksInspectionIntegration', () => {
     jest.resetModules();
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
-    act = require('internal-test-utils').act;
+    ({act, assertConsoleErrorDev} = require('internal-test-utils'));
     ReactDebugTools = require('react-debug-tools');
     useMemoCache = require('react/compiler-runtime').c;
   });
@@ -2344,10 +2345,12 @@ describe('ReactHooksInspectionIntegration', () => {
       </Suspense>,
     );
 
-    await expect(async () => {
-      await act(async () => await LazyFoo);
-    }).toErrorDev([
-      'Foo: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
+    await act(async () => await LazyFoo);
+    assertConsoleErrorDev([
+      'Foo: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.' +
+        (gate(flags => flags.enableOwnerStacks)
+          ? ''
+          : '\n    in Foo (at **)\n' + '   in Suspense (at **)'),
     ]);
 
     const childFiber = renderer.root._currentFiber();

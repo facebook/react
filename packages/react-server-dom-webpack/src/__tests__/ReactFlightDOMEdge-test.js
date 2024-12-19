@@ -37,6 +37,7 @@ let ReactServerDOMStaticServer;
 let ReactServerDOMClient;
 let use;
 let reactServerAct;
+let assertConsoleErrorDev;
 
 function normalizeCodeLocInfo(str) {
   return (
@@ -66,6 +67,8 @@ describe('ReactFlightDOMEdge', () => {
     jest.resetModules();
 
     reactServerAct = require('internal-test-utils').serverAct;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
 
     // Simulate the condition resolution
     jest.mock('react', () => require('react/react.react-server'));
@@ -802,17 +805,19 @@ describe('ReactFlightDOMEdge', () => {
       ),
     };
 
-    expect(() => {
-      ServerModule.greet.bind({}, 'hi');
-    }).toErrorDev(
-      'Cannot bind "this" of a Server Action. Pass null or undefined as the first argument to .bind().',
+    ServerModule.greet.bind({}, 'hi');
+    assertConsoleErrorDev(
+      [
+        'Cannot bind "this" of a Server Action. Pass null or undefined as the first argument to .bind().',
+      ],
       {withoutStack: true},
     );
 
-    expect(() => {
-      ServerModuleImportedOnClient.greet.bind({}, 'hi');
-    }).toErrorDev(
-      'Cannot bind "this" of a Server Action. Pass null or undefined as the first argument to .bind().',
+    ServerModuleImportedOnClient.greet.bind({}, 'hi');
+    assertConsoleErrorDev(
+      [
+        'Cannot bind "this" of a Server Action. Pass null or undefined as the first argument to .bind().',
+      ],
       {withoutStack: true},
     );
   });
