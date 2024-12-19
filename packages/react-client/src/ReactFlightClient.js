@@ -307,6 +307,8 @@ export type Response = {
   _rowTag: number, // 0 indicates that we're currently parsing the row ID
   _rowLength: number, // remaining bytes in the row. 0 indicates that we're looking for a newline.
   _buffer: Array<Uint8Array>, // chunks received so far as part of this row
+  _closed: boolean,
+  _closedReason: mixed,
   _tempRefs: void | TemporaryReferenceSet, // the set temporary references can be resolved from
   _timeOrigin: number, // Profiling-only
   _debugRootOwner?: null | ReactComponentInfo, // DEV-only
@@ -358,7 +360,7 @@ function createBlockedChunk<T>(response: Response): BlockedChunk<T> {
 
 function createErrorChunk<T>(
   response: Response,
-  error: Error | Postpone,
+  error: mixed,
 ): ErroredChunk<T> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
   return new ReactPromise(ERRORED, null, error, response);
@@ -639,6 +641,8 @@ function initializeModuleChunk<T>(chunk: ResolvedModuleChunk<T>): void {
 // Report that any missing chunks in the model is now going to throw this
 // error upon read. Also notify any pending promises.
 export function reportGlobalError(response: Response, error: Error): void {
+  response._closed = true;
+  response._closedReason = error;
   response._chunks.forEach(chunk => {
     // If this chunk was already resolved or errored, it won't
     // trigger an error but if it wasn't then we need to
@@ -913,7 +917,13 @@ function getChunk(response: Response, id: number): SomeChunk<any> {
   const chunks = response._chunks;
   let chunk = chunks.get(id);
   if (!chunk) {
-    chunk = createPendingChunk(response);
+    if (response._closed) {
+      // We have already errored the response and we're not going to get
+      // anything more streaming in so this will immediately error.
+      chunk = createErrorChunk(response, response._closedReason);
+    } else {
+      chunk = createPendingChunk(response);
+    }
     chunks.set(id, chunk);
   }
   return chunk;
@@ -1640,6 +1650,8 @@ function ResponseInstance(
   this._rowTag = 0;
   this._rowLength = 0;
   this._buffer = [];
+  this._closed = false;
+  this._closedReason = null;
   this._tempRefs = temporaryReferences;
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     this._timeOrigin = 0;

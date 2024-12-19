@@ -2574,17 +2574,7 @@ describe('ReactFlightDOMBrowser', () => {
       root.render(<ClientRoot response={response} />);
     });
 
-    if (__DEV__) {
-      expect(errors).toEqual([new Error('Connection closed.')]);
-      expect(container.innerHTML).toBe('');
-    } else {
-      // This is likely a bug. In Dev we get a connection closed error
-      // because the debug info creates a chunk that has a pending status
-      // and when the stream finishes we error if any chunks are still pending.
-      // In production there is no debug info so the missing chunk is never instantiated
-      // because nothing triggers model evaluation before the stream completes
-      expect(errors).toEqual([]);
-      expect(container.innerHTML).toBe('<div>loading...</div>');
-    }
+    expect(errors).toEqual([new Error('Connection closed.')]);
+    expect(container.innerHTML).toBe('');
   });
 });
