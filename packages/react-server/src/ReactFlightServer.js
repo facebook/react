@@ -2904,7 +2904,7 @@ function renderModelDestructive(
       );
     } else if (/^on[A-Z]/.test(parentPropertyName)) {
       throw new Error(
-        'Event handlers cannot be passed to Client Component props.' +
+        'Event handlers cannot be passed to Client Component props from Server Component.' +
           describeObjectForErrorMessage(parent, parentPropertyName) +
           '\nIf you need interactivity, consider converting part of this to a Client Component.',
       );
