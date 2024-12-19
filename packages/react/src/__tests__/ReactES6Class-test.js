@@ -264,47 +264,54 @@ describe('ReactES6Class', () => {
     runTest(<Foo update={true} />, 'DIV', 'updated');
   });
 
-  // @gate !disableLegacyContext
-  it('renders based on context in the constructor', () => {
-    class Foo extends React.Component {
-      constructor(props, context) {
-        super(props, context);
-        this.state = {tag: context.tag, className: this.context.className};
-      }
-      render() {
-        const Tag = this.state.tag;
-        return <Tag className={this.state.className} />;
-      }
-    }
-    Foo.contextTypes = {
-      tag: PropTypes.string,
-      className: PropTypes.string,
-    };
+  if (!require('shared/ReactFeatureFlags').disableLegacyContext) {
+    it('renders based on context in the constructor', () => {
+      class Foo extends React.Component {
+        constructor(props, context) {
+          super(props, context);
+          this.state = {tag: context.tag, className: this.context.className};
+        }
 
-    class Outer extends React.Component {
-      getChildContext() {
-        return {tag: 'span', className: 'foo'};
+        render() {
+          const Tag = this.state.tag;
+          return <Tag className={this.state.className} />;
+        }
       }
-      render() {
-        return <Foo />;
-      }
-    }
-    Outer.childContextTypes = {
-      tag: PropTypes.string,
-      className: PropTypes.string,
-    };
-    runTest(<Outer />, 'SPAN', 'foo');
 
-    assertConsoleErrorDev([
-      'Outer uses the legacy childContextTypes API which will soon be removed. ' +
-        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
-        '    in Outer (at **)',
-      'Foo uses the legacy contextTypes API which will soon be removed. ' +
-        'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
-        (gate(flags => flags.enableOwnerStacks) ? '' : '    in Foo (at **)\n') +
-        '    in Outer (at **)',
-    ]);
-  });
+      Foo.contextTypes = {
+        tag: PropTypes.string,
+        className: PropTypes.string,
+      };
+
+      class Outer extends React.Component {
+        getChildContext() {
+          return {tag: 'span', className: 'foo'};
+        }
+
+        render() {
+          return <Foo />;
+        }
+      }
+
+      Outer.childContextTypes = {
+        tag: PropTypes.string,
+        className: PropTypes.string,
+      };
+      runTest(<Outer />, 'SPAN', 'foo');
+
+      assertConsoleErrorDev([
+        'Outer uses the legacy childContextTypes API which will soon be removed. ' +
+          'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+          '    in Outer (at **)',
+        'Foo uses the legacy contextTypes API which will soon be removed. ' +
+          'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+          (gate(flags => flags.enableOwnerStacks)
+            ? ''
+            : '    in Foo (at **)\n') +
+          '    in Outer (at **)',
+      ]);
+    });
+  }
 
   it('renders only once when setting state in componentWillMount', () => {
     let renderCount = 0;
@@ -603,32 +610,39 @@ describe('ReactES6Class', () => {
     );
   });
 
-  // @gate !disableLegacyContext
-  it('supports this.context passed via getChildContext', () => {
-    class Bar extends React.Component {
-      render() {
-        return <div className={this.context.bar} />;
+  if (!require('shared/ReactFeatureFlags').disableLegacyContext) {
+    it('supports this.context passed via getChildContext', () => {
+      class Bar extends React.Component {
+        render() {
+          return <div className={this.context.bar} />;
+        }
       }
-    }
-    Bar.contextTypes = {bar: PropTypes.string};
-    class Foo extends React.Component {
-      getChildContext() {
-        return {bar: 'bar-through-context'};
+
+      Bar.contextTypes = {bar: PropTypes.string};
+
+      class Foo extends React.Component {
+        getChildContext() {
+          return {bar: 'bar-through-context'};
+        }
+
+        render() {
+          return <Bar />;
+        }
       }
-      render() {
-        return <Bar />;
-      }
-    }
-    Foo.childContextTypes = {bar: PropTypes.string};
-    runTest(<Foo />, 'DIV', 'bar-through-context');
-    assertConsoleErrorDev([
-      'Foo uses the legacy childContextTypes API which will soon be removed. ' +
-        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
-        '    in Foo (at **)',
-      'Bar uses the legacy contextTypes API which will soon be removed. ' +
-        'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
-        (gate(flags => flags.enableOwnerStacks) ? '' : '    in Bar (at **)\n') +
-        '    in Foo (at **)',
-    ]);
-  });
+
+      Foo.childContextTypes = {bar: PropTypes.string};
+      runTest(<Foo />, 'DIV', 'bar-through-context');
+      assertConsoleErrorDev([
+        'Foo uses the legacy childContextTypes API which will soon be removed. ' +
+          'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+          '    in Foo (at **)',
+        'Bar uses the legacy contextTypes API which will soon be removed. ' +
+          'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+          (gate(flags => flags.enableOwnerStacks)
+            ? ''
+            : '    in Bar (at **)\n') +
+          '    in Foo (at **)',
+      ]);
+    });
+  }
 });
