@@ -2,6 +2,11 @@
   "name": "react-release-script",
   "version": "0.0.0",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
+    "directory": "scripts/release"
+  },
   "scripts": {},
   "license": "MIT",
   "dependencies": {

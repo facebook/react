@@ -26,7 +26,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/facebook/react.git",
+    "url": "https://github.com/facebook/react.git",
     "directory": "compiler/packages/react-compiler-healthcheck"
   }
 }
