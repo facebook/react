@@ -80,6 +80,9 @@ export const enableLegacyFBSupport = false;
 // Yield to the browser event loop and not just the scheduler event loop before passive effects.
 export const enableYieldingBeforePassive = __EXPERIMENTAL__;
 
+// Experiment to intentionally yield less to block high framerate animations.
+export const enableThrottledScheduling = false;
+
 export const enableLegacyCache = __EXPERIMENTAL__;
 
 export const enableAsyncIterableChildren = __EXPERIMENTAL__;
