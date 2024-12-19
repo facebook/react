@@ -97,6 +97,7 @@ import {
   FormReset,
   Cloned,
   PerformedWork,
+  ForceClientRender,
 } from './ReactFiberFlags';
 import {
   commitStartTime,
@@ -113,6 +114,7 @@ import {
 import {
   logComponentRender,
   logComponentEffect,
+  logSuspenseBoundaryClientRendered,
 } from './ReactFiberPerformanceTrack';
 import {ConcurrentMode, NoMode, ProfileMode} from './ReactTypeOfMode';
 import {deferHiddenCallbacks} from './ReactFiberClassUpdateQueue';
@@ -2689,6 +2691,8 @@ function recursivelyTraversePassiveMountEffects(
   }
 }
 
+let inHydratedSubtree = false;
+
 function commitPassiveMountOnFiber(
   finishedRoot: FiberRoot,
   finishedWork: Fiber,
@@ -2713,6 +2717,7 @@ function commitPassiveMountOnFiber(
       finishedWork,
       ((finishedWork.actualStartTime: any): number),
       endTime,
+      inHydratedSubtree,
     );
   }
 
@@ -2741,6 +2746,17 @@ function commitPassiveMountOnFiber(
     }
     case HostRoot: {
       const prevEffectDuration = pushNestedEffectDurations();
+
+      const wasInHydratedSubtree = inHydratedSubtree;
+      if (enableProfilerTimer && enableComponentPerformanceTrack) {
+        // Detect if this was a hydration commit by look at if the previous state was
+        // dehydrated and this wasn't a forced client render.
+        inHydratedSubtree =
+          finishedWork.alternate !== null &&
+          (finishedWork.alternate.memoizedState: RootState).isDehydrated &&
+          (finishedWork.flags & ForceClientRender) === NoFlags;
+      }
+
       recursivelyTraversePassiveMountEffects(
         finishedRoot,
         finishedWork,
@@ -2748,6 +2764,11 @@ function commitPassiveMountOnFiber(
         committedTransitions,
         endTime,
       );
+
+      if (enableProfilerTimer && enableComponentPerformanceTrack) {
+        inHydratedSubtree = wasInHydratedSubtree;
+      }
+
       if (flags & Passive) {
         let previousCache: Cache | null = null;
         if (finishedWork.alternate !== null) {
@@ -2838,6 +2859,64 @@ function commitPassiveMountOnFiber(
           committedTransitions,
           endTime,
         );
+      }
+      break;
+    }
+    case SuspenseComponent: {
+      const wasInHydratedSubtree = inHydratedSubtree;
+      if (enableProfilerTimer && enableComponentPerformanceTrack) {
+        const prevState: SuspenseState | null =
+          finishedWork.alternate !== null
+            ? finishedWork.alternate.memoizedState
+            : null;
+        const nextState: SuspenseState | null = finishedWork.memoizedState;
+        if (
+          prevState !== null &&
+          prevState.dehydrated !== null &&
+          (nextState === null || nextState.dehydrated === null)
+        ) {
+          // This was dehydrated but is no longer dehydrated. We may have now either hydrated it
+          // or client rendered it.
+          const deletions = finishedWork.deletions;
+          if (
+            deletions !== null &&
+            deletions.length > 0 &&
+            deletions[0].tag === DehydratedFragment
+          ) {
+            // This was an abandoned hydration that deleted the dehydrated fragment. That means we
+            // are not hydrating this Suspense boundary.
+            inHydratedSubtree = false;
+            const hydrationErrors = prevState.hydrationErrors;
+            // If there were no hydration errors, that suggests that this was an intentional client
+            // rendered boundary. Such as postpone.
+            if (hydrationErrors !== null) {
+              const startTime: number = (finishedWork.actualStartTime: any);
+              logSuspenseBoundaryClientRendered(
+                finishedWork,
+                startTime,
+                endTime,
+                hydrationErrors,
+              );
+            }
+          } else {
+            // If any children committed they were hydrated.
+            inHydratedSubtree = true;
+          }
+        } else {
+          inHydratedSubtree = false;
+        }
+      }
+
+      recursivelyTraversePassiveMountEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        committedTransitions,
+        endTime,
+      );
+
+      if (enableProfilerTimer && enableComponentPerformanceTrack) {
+        inHydratedSubtree = wasInHydratedSubtree;
       }
       break;
     }
@@ -3074,6 +3153,7 @@ export function reconnectPassiveEffects(
       finishedWork,
       ((finishedWork.actualStartTime: any): number),
       endTime,
+      inHydratedSubtree,
     );
   }
 
@@ -3317,6 +3397,7 @@ function commitAtomicPassiveEffects(
       finishedWork,
       ((finishedWork.actualStartTime: any): number),
       endTime,
+      inHydratedSubtree,
     );
   }
 

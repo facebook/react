@@ -1933,6 +1933,7 @@ const SUSPENDED_MARKER: SuspenseState = {
   dehydrated: null,
   treeContext: null,
   retryLane: NoLane,
+  hydrationErrors: null,
 };
 
 function mountSuspenseOffscreenState(renderLanes: Lanes): OffscreenState {

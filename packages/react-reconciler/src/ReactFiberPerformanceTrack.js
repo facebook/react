@@ -11,6 +11,8 @@ import type {Fiber} from './ReactInternalTypes';
 
 import type {Lanes} from './ReactFiberLane';
 
+import type {CapturedValue} from './ReactCapturedValue';
+
 import getComponentNameFromFiber from './getComponentNameFromFiber';
 
 import {
@@ -123,6 +125,7 @@ export function logComponentRender(
   fiber: Fiber,
   startTime: number,
   endTime: number,
+  wasHydrated: boolean,
 ): void {
   const name = getComponentNameFromFiber(fiber);
   if (name === null) {
@@ -138,15 +141,59 @@ export function logComponentRender(
     }
     reusableComponentDevToolDetails.color =
       selfTime < 0.5
-        ? 'primary-light'
+        ? wasHydrated
+          ? 'tertiary-light'
+          : 'primary-light'
         : selfTime < 10
-          ? 'primary'
+          ? wasHydrated
+            ? 'tertiary'
+            : 'primary'
           : selfTime < 100
-            ? 'primary-dark'
+            ? wasHydrated
+              ? 'tertiary-dark'
+              : 'primary-dark'
             : 'error';
     reusableComponentOptions.start = startTime;
     reusableComponentOptions.end = endTime;
     performance.measure(name, reusableComponentOptions);
+  }
+}
+
+export function logSuspenseBoundaryClientRendered(
+  fiber: Fiber,
+  startTime: number,
+  endTime: number,
+  errors: Array<CapturedValue<mixed>>,
+): void {
+  if (supportsUserTiming) {
+    const properties = [];
+    if (__DEV__) {
+      for (let i = 0; i < errors.length; i++) {
+        const capturedValue = errors[i];
+        const error = capturedValue.value;
+        const message =
+          typeof error === 'object' &&
+          error !== null &&
+          typeof error.message === 'string'
+            ? // eslint-disable-next-line react-internal/safe-string-coercion
+              String(error.message)
+            : // eslint-disable-next-line react-internal/safe-string-coercion
+              String(error);
+        properties.push(['Error', message]);
+      }
+    }
+    performance.measure('Suspense', {
+      start: startTime,
+      end: endTime,
+      detail: {
+        devtools: {
+          color: 'error',
+          track: COMPONENTS_TRACK,
+          tooltipText: 'Hydration failed',
+          properties,
+        },
+      },
+    });
   }
 }
 
@@ -387,6 +434,48 @@ export function logSuspendedWithDelayPhase(
   }
 }
 
+export function logRecoveredRenderPhase(
+  startTime: number,
+  endTime: number,
+  lanes: Lanes,
+  recoverableErrors: Array<CapturedValue<mixed>>,
+  hydrationFailed: boolean,
+): void {
+  if (supportsUserTiming) {
+    const properties = [];
+    if (__DEV__) {
+      for (let i = 0; i < recoverableErrors.length; i++) {
+        const capturedValue = recoverableErrors[i];
+        const error = capturedValue.value;
+        const message =
+          typeof error === 'object' &&
+          error !== null &&
+          typeof error.message === 'string'
+            ? // eslint-disable-next-line react-internal/safe-string-coercion
+              String(error.message)
+            : // eslint-disable-next-line react-internal/safe-string-coercion
+              String(error);
+        properties.push(['Recoverable Error', message]);
+      }
+    }
+    performance.measure('Recovered', {
+      start: startTime,
+      end: endTime,
+      detail: {
+        devtools: {
+          color: 'primary-dark',
+          track: reusableLaneDevToolDetails.track,
+          trackGroup: LANES_TRACK_GROUP,
+          tooltipText: hydrationFailed
+            ? 'Hydration Failed'
+            : 'Recovered after Error',
+          properties,
+        },
+      },
+    });
+  }
+}
+
 export function logErroredRenderPhase(
   startTime: number,
   endTime: number,
@@ -396,7 +485,7 @@ export function logErroredRenderPhase(
     reusableLaneDevToolDetails.color = 'error';
     reusableLaneOptions.start = startTime;
     reusableLaneOptions.end = endTime;
-    performance.measure('Errored Render', reusableLaneOptions);
+    performance.measure('Errored', reusableLaneOptions);
   }
 }
 
