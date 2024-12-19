@@ -491,4 +491,46 @@ describe('ReactSuspenseyCommitPhase', () => {
       </>,
     );
   });
+
+  // FIXME: Should pass with `enableYieldingBeforePassive`
+  // @gate !enableYieldingBeforePassive
+  it('runs passive effects after suspended commit resolves', async () => {
+    function Effect() {
+      React.useEffect(() => {
+        Scheduler.log('flush effect');
+      });
+      return <Text text="render effect" />;
+    }
+
+    const root = ReactNoop.createRoot();
+
+    await act(() => {
+      root.render(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <Effect />
+          <SuspenseyImage src="A" />
+        </Suspense>,
+      );
+    });
+
+    assertLog([
+      'render effect',
+      'Image requested [A]',
+      'Loading...',
+      'render effect',
+    ]);
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    await act(() => {
+      resolveSuspenseyThing('A');
+    });
+
+    assertLog(['flush effect']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        {'render effect'}
+        <suspensey-thing src="A" />
+      </>,
+    );
+  });
 });
