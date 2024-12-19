@@ -2,11 +2,14 @@
 
 declare module 'react-server-dom-parcel/client' {
   export function createFromFetch<T>(res: Promise<Response>): Promise<T>;
-  export function createFromReadableStream<T>(stream: ReadableStream): Promise<T>;
   export function encodeReply(value: any): Promise<string | URLSearchParams | FormData>;
 
   type CallServerCallback = <T>(id: string, args: any[]) => Promise<T>;
   export function setServerCallback(cb: CallServerCallback): void;
+}
+
+declare module 'react-server-dom-parcel/client.edge' {
+  export function createFromReadableStream<T>(stream: ReadableStream): Promise<T>;
 }
 
 declare module 'react-server-dom-parcel/server.edge' {
@@ -17,5 +20,10 @@ declare module 'react-server-dom-parcel/server.edge' {
 }
 
 declare module '@parcel/runtime-rsc' {
+  import {JSX} from 'react';
   export function Resources(): JSX.Element;
+}
+
+declare module 'react-dom/server.edge' {
+  export * from 'react-dom/server';
 }
