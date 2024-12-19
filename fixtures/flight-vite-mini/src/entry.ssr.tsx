@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import ReactClient from "@jacob-ebey/react-server-dom-vite/client";
+import ReactClient from "react-server-dom-vite/client";
 import ReactDomServer from "react-dom/server";
 import type { ModuleRunner } from "vite/module-runner";
 import type { ServerPayload } from "./entry.rsc";

@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
-declare module "@jacob-ebey/react-server-dom-vite/server" {
+declare module "react-server-dom-vite/server" {
 	export function renderToPipeableStream<T>(
 		data: T,
 		manifest: import(".").ClientReferenceMetadataManifest,
@@ -21,7 +21,7 @@ declare module "@jacob-ebey/react-server-dom-vite/server" {
 	): Promise<import("react-dom/client").ReactFormState>;
 }
 
-declare module "@jacob-ebey/react-server-dom-vite/client" {
+declare module "react-server-dom-vite/client" {
 	export function createFromNodeStream<T>(
 		stream: import("node:stream").Readable,
 		manifest: import(".").ClientReferenceManifest,

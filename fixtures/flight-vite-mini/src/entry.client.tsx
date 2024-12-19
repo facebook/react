@@ -1,4 +1,4 @@
-import ReactClient from "@jacob-ebey/react-server-dom-vite/client";
+import ReactClient from "react-server-dom-vite/client";
 import React from "react";
 import ReactDomClient from "react-dom/client";
 import type { ServerPayload } from "./entry.rsc";
