@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<91ad323c632b636cb296e0d7a9d25567>>
+ * @generated SignedSource<<9983d89f9b5e1b427095ed1c23a06d94>>
  */
 
 "use strict";
@@ -15531,10 +15531,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-9463d51e-20241219",
+        version: "19.1.0-native-fb-8f92ea46-20241219",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-9463d51e-20241219"
+        reconcilerVersion: "19.1.0-native-fb-8f92ea46-20241219"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15679,5 +15679,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.1.0-native-fb-9463d51e-20241219";
+    exports.version = "19.1.0-native-fb-8f92ea46-20241219";
   })();

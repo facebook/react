@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<4794f89211f6002aac1eab17ef7deb6d>>
+ * @generated SignedSource<<0aa31a904fd9ab46080403092821d67a>>
  */
 
 "use strict";
@@ -80,6 +80,7 @@ var taskQueue = [],
   isPerformingWork = !1,
   isHostCallbackScheduled = !1,
   isHostTimeoutScheduled = !1,
+  needsPaint = !1,
   localSetTimeout = "function" === typeof setTimeout ? setTimeout : null,
   localClearTimeout = "function" === typeof clearTimeout ? clearTimeout : null,
   localSetImmediate = "undefined" !== typeof setImmediate ? setImmediate : null;
@@ -112,7 +113,15 @@ var isMessageLoopRunning = !1,
   taskTimeoutID = -1,
   frameInterval = 5,
   startTime = -1;
+function shouldYieldToHost() {
+  return needsPaint
+    ? !0
+    : exports.unstable_now() - startTime < frameInterval
+      ? !1
+      : !0;
+}
 function performWorkUntilDeadline() {
+  needsPaint = !1;
   if (isMessageLoopRunning) {
     var currentTime = exports.unstable_now();
     startTime = currentTime;
@@ -129,7 +138,14 @@ function performWorkUntilDeadline() {
         try {
           b: {
             advanceTimers(currentTime);
-            for (currentTask = peek(taskQueue); null !== currentTask; ) {
+            for (
+              currentTask = peek(taskQueue);
+              null !== currentTask &&
+              !(
+                currentTask.expirationTime > currentTime && shouldYieldToHost()
+              );
+
+            ) {
               var callback = currentTask.callback;
               if ("function" === typeof callback) {
                 currentTask.callback = null;
@@ -148,11 +164,6 @@ function performWorkUntilDeadline() {
                 advanceTimers(currentTime);
               } else pop(taskQueue);
               currentTask = peek(taskQueue);
-              if (
-                null === currentTask ||
-                currentTask.expirationTime > currentTime
-              )
-                break;
             }
             if (null !== currentTask) hasMoreWork = !0;
             else {
@@ -238,7 +249,9 @@ exports.unstable_next = function (eventHandler) {
     currentPriorityLevel = previousPriorityLevel;
   }
 };
-exports.unstable_requestPaint = function () {};
+exports.unstable_requestPaint = function () {
+  needsPaint = !0;
+};
 exports.unstable_runWithPriority = function (priorityLevel, eventHandler) {
   switch (priorityLevel) {
     case 1:
@@ -314,9 +327,7 @@ exports.unstable_scheduleCallback = function (
           ((isMessageLoopRunning = !0), schedulePerformWorkUntilDeadline())));
   return priorityLevel;
 };
-exports.unstable_shouldYield = function () {
-  return exports.unstable_now() - startTime < frameInterval ? !1 : !0;
-};
+exports.unstable_shouldYield = shouldYieldToHost;
 exports.unstable_wrapCallback = function (callback) {
   var parentPriorityLevel = currentPriorityLevel;
   return function () {

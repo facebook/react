@@ -7,19 +7,22 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d4a8b27f14f4afe2376ef77d5559cb14>>
+ * @generated SignedSource<<aa1070dcd3c8f6e44eafdf6a0a2475ab>>
  */
 
 "use strict";
 __DEV__ &&
   (function () {
     function performWorkUntilDeadline() {
+      needsPaint = !1;
       if (isMessageLoopRunning) {
         var currentTime = exports.unstable_now();
         startTime = currentTime;
         var hasMoreWork = !0;
         try {
           a: {
+            null !== eventLog &&
+              logEvent([8, 1e3 * currentTime, mainThreadIdCounter]);
             isHostCallbackScheduled = !1;
             isHostTimeoutScheduled &&
               ((isHostTimeoutScheduled = !1),
@@ -28,49 +31,83 @@ __DEV__ &&
             isPerformingWork = !0;
             var previousPriorityLevel = currentPriorityLevel;
             try {
-              b: {
-                advanceTimers(currentTime);
-                for (currentTask = peek(taskQueue); null !== currentTask; ) {
-                  var callback = currentTask.callback;
-                  if ("function" === typeof callback) {
-                    currentTask.callback = null;
-                    currentPriorityLevel = currentTask.priorityLevel;
-                    var continuationCallback = callback(
-                      currentTask.expirationTime <= currentTime
+              try {
+                b: {
+                  advanceTimers(currentTime);
+                  for (
+                    currentTask = peek(taskQueue);
+                    null !== currentTask &&
+                    !(
+                      currentTask.expirationTime > currentTime &&
+                      shouldYieldToHost()
                     );
-                    currentTime = exports.unstable_now();
-                    if ("function" === typeof continuationCallback) {
-                      currentTask.callback = continuationCallback;
+
+                  ) {
+                    var callback = currentTask.callback;
+                    if ("function" === typeof callback) {
+                      currentTask.callback = null;
+                      currentPriorityLevel = currentTask.priorityLevel;
+                      var didUserCallbackTimeout =
+                          currentTask.expirationTime <= currentTime,
+                        task = currentTask,
+                        ms = currentTime;
+                      runIdCounter++;
+                      null !== eventLog &&
+                        logEvent([5, 1e3 * ms, task.id, runIdCounter]);
+                      var continuationCallback = callback(
+                        didUserCallbackTimeout
+                      );
+                      currentTime = exports.unstable_now();
+                      if ("function" === typeof continuationCallback) {
+                        currentTask.callback = continuationCallback;
+                        null !== eventLog &&
+                          logEvent([
+                            6,
+                            1e3 * currentTime,
+                            currentTask.id,
+                            runIdCounter
+                          ]);
+                        advanceTimers(currentTime);
+                        hasMoreWork = !0;
+                        break b;
+                      }
+                      null !== eventLog &&
+                        logEvent([2, 1e3 * currentTime, currentTask.id]);
+                      currentTask.isQueued = !1;
+                      currentTask === peek(taskQueue) && pop(taskQueue);
                       advanceTimers(currentTime);
-                      hasMoreWork = !0;
-                      break b;
-                    }
-                    currentTask === peek(taskQueue) && pop(taskQueue);
-                    advanceTimers(currentTime);
-                  } else pop(taskQueue);
-                  currentTask = peek(taskQueue);
-                  if (
-                    null === currentTask ||
-                    currentTask.expirationTime > currentTime
-                  )
-                    break;
+                    } else pop(taskQueue);
+                    currentTask = peek(taskQueue);
+                  }
+                  if (null !== currentTask) hasMoreWork = !0;
+                  else {
+                    var firstTimer = peek(timerQueue);
+                    null !== firstTimer &&
+                      requestHostTimeout(
+                        handleTimeout,
+                        firstTimer.startTime - currentTime
+                      );
+                    hasMoreWork = !1;
+                  }
                 }
-                if (null !== currentTask) hasMoreWork = !0;
-                else {
-                  var firstTimer = peek(timerQueue);
-                  null !== firstTimer &&
-                    requestHostTimeout(
-                      handleTimeout,
-                      firstTimer.startTime - currentTime
-                    );
-                  hasMoreWork = !1;
+                break a;
+              } catch (error) {
+                if (null !== currentTask) {
+                  var currentTime$jscomp$0 = exports.unstable_now();
+                  null !== eventLog &&
+                    logEvent([3, 1e3 * currentTime$jscomp$0, currentTask.id]);
+                  currentTask.isQueued = !1;
                 }
+                throw error;
               }
-              break a;
             } finally {
-              (currentTask = null),
-                (currentPriorityLevel = previousPriorityLevel),
-                (isPerformingWork = !1);
+              currentTask = null;
+              currentPriorityLevel = previousPriorityLevel;
+              isPerformingWork = !1;
+              var ms$jscomp$0 = exports.unstable_now();
+              mainThreadIdCounter++;
+              null !== eventLog &&
+                logEvent([7, 1e3 * ms$jscomp$0, mainThreadIdCounter]);
             }
             hasMoreWork = void 0;
           }
@@ -133,13 +170,44 @@ __DEV__ &&
       var diff = a.sortIndex - b.sortIndex;
       return 0 !== diff ? diff : a.id - b.id;
     }
+    function logEvent(entries) {
+      if (null !== eventLog) {
+        var offset = eventLogIndex;
+        eventLogIndex += entries.length;
+        if (eventLogIndex + 1 > eventLogSize) {
+          eventLogSize *= 2;
+          if (524288 < eventLogSize) {
+            console.error(
+              "Scheduler Profiling: Event log exceeded maximum size. Don't forget to call `stopLoggingProfilingEvents()`."
+            );
+            stopLoggingProfilingEvents();
+            return;
+          }
+          var newEventLog = new Int32Array(4 * eventLogSize);
+          newEventLog.set(eventLog);
+          eventLogBuffer = newEventLog.buffer;
+          eventLog = newEventLog;
+        }
+        eventLog.set(entries, offset);
+      }
+    }
+    function stopLoggingProfilingEvents() {
+      var buffer = eventLogBuffer;
+      eventLogSize = 0;
+      eventLog = eventLogBuffer = null;
+      eventLogIndex = 0;
+      return buffer;
+    }
     function advanceTimers(currentTime) {
       for (var timer = peek(timerQueue); null !== timer; ) {
         if (null === timer.callback) pop(timerQueue);
         else if (timer.startTime <= currentTime)
           pop(timerQueue),
             (timer.sortIndex = timer.expirationTime),
-            push(taskQueue, timer);
+            push(taskQueue, timer),
+            null !== eventLog &&
+              logEvent([1, 1e3 * currentTime, timer.id, timer.priorityLevel]),
+            (timer.isQueued = !0);
         else break;
         timer = peek(timerQueue);
       }
@@ -161,6 +229,13 @@ __DEV__ &&
             );
         }
     }
+    function shouldYieldToHost() {
+      return needsPaint
+        ? !0
+        : exports.unstable_now() - startTime < frameInterval
+          ? !1
+          : !0;
+    }
     function requestHostTimeout(callback, ms) {
       taskTimeoutID = localSetTimeout(function () {
         callback(exports.unstable_now());
@@ -170,6 +245,12 @@ __DEV__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart &&
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
+    var runIdCounter = 0,
+      mainThreadIdCounter = 0,
+      eventLogSize = 0,
+      eventLogBuffer = null,
+      eventLog = null,
+      eventLogIndex = 0;
     exports.unstable_now = void 0;
     if (
       "object" === typeof performance &&
@@ -194,6 +275,7 @@ __DEV__ &&
       isPerformingWork = !1,
       isHostCallbackScheduled = !1,
       isHostTimeoutScheduled = !1,
+      needsPaint = !1,
       localSetTimeout = "function" === typeof setTimeout ? setTimeout : null,
       localClearTimeout =
         "function" === typeof clearTimeout ? clearTimeout : null,
@@ -218,13 +300,27 @@ __DEV__ &&
       schedulePerformWorkUntilDeadline = function () {
         localSetTimeout(performWorkUntilDeadline, 0);
       };
+    channel = {
+      startLoggingProfilingEvents: function () {
+        eventLogSize = 131072;
+        eventLogBuffer = new ArrayBuffer(4 * eventLogSize);
+        eventLog = new Int32Array(eventLogBuffer);
+        eventLogIndex = 0;
+      },
+      stopLoggingProfilingEvents: stopLoggingProfilingEvents
+    };
     exports.unstable_IdlePriority = 5;
     exports.unstable_ImmediatePriority = 1;
     exports.unstable_LowPriority = 4;
     exports.unstable_NormalPriority = 3;
-    exports.unstable_Profiling = null;
+    exports.unstable_Profiling = channel;
     exports.unstable_UserBlockingPriority = 2;
     exports.unstable_cancelCallback = function (task) {
+      if (task.isQueued) {
+        var currentTime = exports.unstable_now();
+        null !== eventLog && logEvent([4, 1e3 * currentTime, task.id]);
+        task.isQueued = !1;
+      }
       task.callback = null;
     };
     exports.unstable_forceFrameRate = function (fps) {
@@ -255,7 +351,9 @@ __DEV__ &&
         currentPriorityLevel = previousPriorityLevel;
       }
     };
-    exports.unstable_requestPaint = function () {};
+    exports.unstable_requestPaint = function () {
+      needsPaint = !0;
+    };
     exports.unstable_runWithPriority = function (priorityLevel, eventHandler) {
       switch (priorityLevel) {
         case 1:
@@ -311,7 +409,8 @@ __DEV__ &&
         priorityLevel: priorityLevel,
         startTime: options,
         expirationTime: timeout,
-        sortIndex: -1
+        sortIndex: -1,
+        isQueued: !1
       };
       options > currentTime
         ? ((priorityLevel.sortIndex = options),
@@ -324,6 +423,14 @@ __DEV__ &&
             requestHostTimeout(handleTimeout, options - currentTime)))
         : ((priorityLevel.sortIndex = timeout),
           push(taskQueue, priorityLevel),
+          null !== eventLog &&
+            logEvent([
+              1,
+              1e3 * currentTime,
+              priorityLevel.id,
+              priorityLevel.priorityLevel
+            ]),
+          (priorityLevel.isQueued = !0),
           isHostCallbackScheduled ||
             isPerformingWork ||
             ((isHostCallbackScheduled = !0),
@@ -332,9 +439,7 @@ __DEV__ &&
               schedulePerformWorkUntilDeadline())));
       return priorityLevel;
     };
-    exports.unstable_shouldYield = function () {
-      return exports.unstable_now() - startTime < frameInterval ? !1 : !0;
-    };
+    exports.unstable_shouldYield = shouldYieldToHost;
     exports.unstable_wrapCallback = function (callback) {
       var parentPriorityLevel = currentPriorityLevel;
       return function () {

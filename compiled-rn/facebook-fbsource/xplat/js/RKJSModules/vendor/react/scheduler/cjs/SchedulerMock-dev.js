@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<5886fbc0f64ed5eebaca2fb991a78031>>
+ * @generated SignedSource<<48b071025d7f0a25695dc074cdce9c88>>
  */
 
 "use strict";
@@ -65,13 +65,44 @@ __DEV__ &&
       var diff = a.sortIndex - b.sortIndex;
       return 0 !== diff ? diff : a.id - b.id;
     }
+    function logEvent(entries) {
+      if (null !== eventLog) {
+        var offset = eventLogIndex;
+        eventLogIndex += entries.length;
+        if (eventLogIndex + 1 > eventLogSize) {
+          eventLogSize *= 2;
+          if (524288 < eventLogSize) {
+            console.error(
+              "Scheduler Profiling: Event log exceeded maximum size. Don't forget to call `stopLoggingProfilingEvents()`."
+            );
+            stopLoggingProfilingEvents();
+            return;
+          }
+          var newEventLog = new Int32Array(4 * eventLogSize);
+          newEventLog.set(eventLog);
+          eventLogBuffer = newEventLog.buffer;
+          eventLog = newEventLog;
+        }
+        eventLog.set(entries, offset);
+      }
+    }
+    function stopLoggingProfilingEvents() {
+      var buffer = eventLogBuffer;
+      eventLogSize = 0;
+      eventLog = eventLogBuffer = null;
+      eventLogIndex = 0;
+      return buffer;
+    }
     function advanceTimers(currentTime) {
       for (var timer = peek(timerQueue); null !== timer; ) {
         if (null === timer.callback) pop(timerQueue);
         else if (timer.startTime <= currentTime)
           pop(timerQueue),
             (timer.sortIndex = timer.expirationTime),
-            push(taskQueue, timer);
+            push(taskQueue, timer),
+            null !== eventLog &&
+              logEvent([1, 1e3 * currentTime, timer.id, timer.priorityLevel]),
+            (timer.isQueued = !0);
         else break;
         timer = peek(timerQueue);
       }
@@ -91,6 +122,8 @@ __DEV__ &&
         }
     }
     function flushWork(hasTimeRemaining, initialTime) {
+      null !== eventLog &&
+        logEvent([8, 1e3 * initialTime, mainThreadIdCounter]);
       isHostCallbackScheduled = !1;
       isHostTimeoutScheduled &&
         ((isHostTimeoutScheduled = !1),
@@ -99,54 +132,83 @@ __DEV__ &&
       isPerformingWork = !0;
       var previousPriorityLevel = currentPriorityLevel;
       try {
-        a: {
-          advanceTimers(initialTime);
-          for (
-            currentTask = peek(taskQueue);
-            null !== currentTask &&
-            (!(currentTask.expirationTime > initialTime) ||
-              (hasTimeRemaining && !shouldYieldToHost()));
+        try {
+          a: {
+            advanceTimers(initialTime);
+            for (
+              currentTask = peek(taskQueue);
+              null !== currentTask &&
+              (!(currentTask.expirationTime > initialTime) ||
+                (hasTimeRemaining && !shouldYieldToHost()));
 
-          ) {
-            var callback = currentTask.callback;
-            if ("function" === typeof callback) {
-              currentTask.callback = null;
-              currentPriorityLevel = currentTask.priorityLevel;
-              var continuationCallback = callback(
-                currentTask.expirationTime <= initialTime
-              );
-              initialTime = currentMockTime;
-              if ("function" === typeof continuationCallback) {
-                if (
-                  ((currentTask.callback = continuationCallback),
-                  advanceTimers(initialTime),
-                  shouldYieldForPaint)
-                ) {
-                  var JSCompiler_inline_result = (needsPaint = !0);
-                  break a;
-                }
-              } else
-                currentTask === peek(taskQueue) && pop(taskQueue),
-                  advanceTimers(initialTime);
-            } else pop(taskQueue);
-            currentTask = peek(taskQueue);
-          }
-          if (null !== currentTask) JSCompiler_inline_result = !0;
-          else {
-            var firstTimer = peek(timerQueue);
-            if (null !== firstTimer) {
-              var ms = firstTimer.startTime - initialTime;
-              scheduledTimeout = handleTimeout;
-              timeoutTime = currentMockTime + ms;
+            ) {
+              var callback = currentTask.callback;
+              if ("function" === typeof callback) {
+                currentTask.callback = null;
+                currentPriorityLevel = currentTask.priorityLevel;
+                var didUserCallbackTimeout =
+                    currentTask.expirationTime <= initialTime,
+                  task = currentTask,
+                  ms = initialTime;
+                runIdCounter++;
+                null !== eventLog &&
+                  logEvent([5, 1e3 * ms, task.id, runIdCounter]);
+                var continuationCallback = callback(didUserCallbackTimeout);
+                initialTime = currentMockTime;
+                if ("function" === typeof continuationCallback) {
+                  if (
+                    ((currentTask.callback = continuationCallback),
+                    null !== eventLog &&
+                      logEvent([
+                        6,
+                        1e3 * initialTime,
+                        currentTask.id,
+                        runIdCounter
+                      ]),
+                    advanceTimers(initialTime),
+                    shouldYieldForPaint)
+                  ) {
+                    var JSCompiler_inline_result = (needsPaint = !0);
+                    break a;
+                  }
+                } else
+                  null !== eventLog &&
+                    logEvent([2, 1e3 * initialTime, currentTask.id]),
+                    (currentTask.isQueued = !1),
+                    currentTask === peek(taskQueue) && pop(taskQueue),
+                    advanceTimers(initialTime);
+              } else pop(taskQueue);
+              currentTask = peek(taskQueue);
             }
-            JSCompiler_inline_result = !1;
+            if (null !== currentTask) JSCompiler_inline_result = !0;
+            else {
+              var firstTimer = peek(timerQueue);
+              if (null !== firstTimer) {
+                var ms$jscomp$0 = firstTimer.startTime - initialTime;
+                scheduledTimeout = handleTimeout;
+                timeoutTime = currentMockTime + ms$jscomp$0;
+              }
+              JSCompiler_inline_result = !1;
+            }
           }
+          return JSCompiler_inline_result;
+        } catch (error) {
+          throw (
+            (null !== currentTask &&
+              ((hasTimeRemaining = currentMockTime),
+              null !== eventLog &&
+                logEvent([3, 1e3 * hasTimeRemaining, currentTask.id]),
+              (currentTask.isQueued = !1)),
+            error)
+          );
         }
-        return JSCompiler_inline_result;
       } finally {
         (currentTask = null),
           (currentPriorityLevel = previousPriorityLevel),
-          (isPerformingWork = !1);
+          (isPerformingWork = !1),
+          mainThreadIdCounter++,
+          null !== eventLog &&
+            logEvent([7, 1e3 * currentMockTime, mainThreadIdCounter]);
       }
     }
     function shouldYieldToHost() {
@@ -174,7 +236,13 @@ __DEV__ &&
         }
       } else return !1;
     }
-    var taskQueue = [],
+    var runIdCounter = 0,
+      mainThreadIdCounter = 0,
+      eventLogSize = 0,
+      eventLogBuffer = null,
+      eventLog = null,
+      eventLogIndex = 0,
+      taskQueue = [],
       timerQueue = [],
       taskIdCounter = 1,
       currentTask = null,
@@ -192,7 +260,16 @@ __DEV__ &&
       isFlushing = !1,
       needsPaint = !1,
       shouldYieldForPaint = !1,
-      disableYieldValue = !1;
+      disableYieldValue = !1,
+      unstable_Profiling = {
+        startLoggingProfilingEvents: function () {
+          eventLogSize = 131072;
+          eventLogBuffer = new ArrayBuffer(4 * eventLogSize);
+          eventLog = new Int32Array(eventLogBuffer);
+          eventLogIndex = 0;
+        },
+        stopLoggingProfilingEvents: stopLoggingProfilingEvents
+      };
     exports.log = function (value) {
       "disabledLog" === console.log.name ||
         disableYieldValue ||
@@ -213,7 +290,7 @@ __DEV__ &&
     exports.unstable_ImmediatePriority = 1;
     exports.unstable_LowPriority = 4;
     exports.unstable_NormalPriority = 3;
-    exports.unstable_Profiling = null;
+    exports.unstable_Profiling = unstable_Profiling;
     exports.unstable_UserBlockingPriority = 2;
     exports.unstable_advanceTime = function (ms) {
       "disabledLog" === console.log.name ||
@@ -226,6 +303,11 @@ __DEV__ &&
           (scheduledTimeout = null)));
     };
     exports.unstable_cancelCallback = function (task) {
+      if (task.isQueued) {
+        var currentTime = currentMockTime;
+        null !== eventLog && logEvent([4, 1e3 * currentTime, task.id]);
+        task.isQueued = !1;
+      }
       task.callback = null;
     };
     exports.unstable_clearLog = function () {
@@ -378,7 +460,8 @@ __DEV__ &&
         priorityLevel: priorityLevel,
         startTime: options,
         expirationTime: timeout,
-        sortIndex: -1
+        sortIndex: -1,
+        isQueued: !1
       };
       options > currentTime
         ? ((priorityLevel.sortIndex = options),
@@ -392,6 +475,14 @@ __DEV__ &&
             (timeoutTime = currentMockTime + (options - currentTime))))
         : ((priorityLevel.sortIndex = timeout),
           push(taskQueue, priorityLevel),
+          null !== eventLog &&
+            logEvent([
+              1,
+              1e3 * currentTime,
+              priorityLevel.id,
+              priorityLevel.priorityLevel
+            ]),
+          (priorityLevel.isQueued = !0),
           isHostCallbackScheduled ||
             isPerformingWork ||
             ((isHostCallbackScheduled = !0), (scheduledCallback = flushWork)));
