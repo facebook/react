@@ -477,22 +477,15 @@ const skipFilter = new Set([
   'invalid-jsx-lowercase-localvar',
 
   // bugs
-  'fbt/bug-fbt-plural-multiple-function-calls',
-  'fbt/bug-fbt-plural-multiple-mixed-call-tag',
-  `bug-capturing-func-maybealias-captured-mutate`,
   'bug-object-expression-computed-key-modified-during-after-construction-hoisted-sequence-expr',
-  'bug-invalid-hoisting-functionexpr',
+  `bug-capturing-func-maybealias-captured-mutate`,
   'bug-aliased-capture-aliased-mutate',
   'bug-aliased-capture-mutate',
   'bug-functiondecl-hoisting',
-  'bug-try-catch-maybe-null-dependency',
   'bug-type-inference-control-flow',
-  'reduce-reactive-deps/bug-infer-function-cond-access-not-hoisted',
+  'fbt/bug-fbt-plural-multiple-function-calls',
+  'fbt/bug-fbt-plural-multiple-mixed-call-tag',
   'bug-invalid-phi-as-dependency',
-  'reduce-reactive-deps/bug-merge-uncond-optional-chain-and-cond',
-  'original-reactive-scopes-fork/bug-nonmutating-capture-in-unsplittable-memo-block',
-  'original-reactive-scopes-fork/bug-hoisted-declaration-with-scope',
-  'bug-codegen-inline-iife',
 
   // 'react-compiler-runtime' not yet supported
   'flag-enable-emit-hook-guards',
