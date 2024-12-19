@@ -1,0 +1,26 @@
+{
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build --app",
+		"preview": "vite preview",
+		"format": "npx biome format --write",
+		"test-e2e": "playwright test",
+		"test-e2e-preview": "E2E_PREVIEW=1 playwright test"
+	},
+	"dependencies": {
+		"@jacob-ebey/react-server-dom-vite": "19.0.0-experimental.14",
+		"react": "^19.0.0",
+		"react-dom": "^19.0.0"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.4",
+		"@playwright/test": "^1.49.0",
+		"@types/node": "^22.0.0",
+		"@types/react": "^19.0.1",
+		"@types/react-dom": "^19.0.1",
+		"@vitejs/plugin-react": "^4.3.4",
+		"vite": "^6.0.3"
+	}
+}
