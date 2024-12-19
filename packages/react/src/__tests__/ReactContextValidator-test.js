@@ -78,7 +78,9 @@ describe('ReactContextValidator', () => {
         '    in ComponentInFooBarContext (at **)',
       'Component uses the legacy contextTypes API which will soon be removed. ' +
         'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
-        '    in ComponentInFooBarContext (at **)',
+        (gate(flags => flags.enableOwnerStacks)
+          ? '    in ComponentInFooBarContext (at **)'
+          : '    in Component (at **)'),
     ]);
     expect(instance.childRef.current.context).toEqual({foo: 'abc'});
   });
@@ -157,7 +159,9 @@ describe('ReactContextValidator', () => {
         '    in Parent (at **)',
       'Component uses the legacy contextTypes API which will soon be removed. ' +
         'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
-        '    in Parent (at **)',
+        (gate(flags => flags.enableOwnerStacks)
+          ? '    in Parent (at **)'
+          : '    in Component (at **)'),
     ]);
 
     expect(constructorContext).toEqual({foo: 'abc'});
@@ -278,12 +282,21 @@ describe('ReactContextValidator', () => {
         '    in ParentContextProvider (at **)',
       'MiddleMissingContext uses the legacy childContextTypes API which will soon be removed. ' +
         'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        (gate(flags => flags.enableOwnerStacks)
+          ? ''
+          : '    in MiddleMissingContext (at **)\n') +
         '    in ParentContextProvider (at **)',
       'MiddleMissingContext.childContextTypes is specified but there is no getChildContext() method on the instance. ' +
         'You can either define getChildContext() on MiddleMissingContext or remove childContextTypes from it.\n' +
+        (gate(flags => flags.enableOwnerStacks)
+          ? ''
+          : '    in MiddleMissingContext (at **)\n') +
         '    in ParentContextProvider (at **)',
       'ChildContextConsumer uses the legacy contextTypes API which will soon be removed. ' +
         'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+        (gate(flags => flags.enableOwnerStacks)
+          ? ''
+          : '    in ChildContextConsumer (at **)\n') +
         '    in MiddleMissingContext (at **)\n' +
         '    in ParentContextProvider (at **)',
     ]);
