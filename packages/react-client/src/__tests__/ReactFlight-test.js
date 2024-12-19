@@ -3445,7 +3445,6 @@ describe('ReactFlight', () => {
       },
     );
 
-    let transport;
     // Reset the modules so that we get a new overridden console on top of the
     // one installed by expect. This ensures that we still emit console.error
     // calls.
@@ -3453,7 +3452,7 @@ describe('ReactFlight', () => {
     jest.mock('react', () => require('react/react.react-server'));
     ReactServer = require('react');
     ReactNoopFlightServer = require('react-noop-renderer/flight-server');
-    transport = ReactNoopFlightServer.render({
+    const transport = ReactNoopFlightServer.render({
       root: ReactServer.createElement(App),
     });
     assertConsoleErrorDev(['Error: err']);
