@@ -13,6 +13,8 @@ let act;
 
 let React;
 let ReactDOMClient;
+let assertConsoleErrorDev;
+let assertConsoleWarnDev;
 
 // NOTE: This module tests the old, "classic" JSX runtime, React.createElement.
 // Do not use JSX syntax in this module; call React.createElement directly.
@@ -22,7 +24,11 @@ describe('ReactCreateElement', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    act = require('internal-test-utils').act;
+    ({
+      act,
+      assertConsoleErrorDev,
+      assertConsoleWarnDev,
+    } = require('internal-test-utils'));
 
     React = require('react');
     ReactDOMClient = require('react-dom/client');
@@ -63,25 +69,34 @@ describe('ReactCreateElement', () => {
       }
     }
     const root = ReactDOMClient.createRoot(document.createElement('div'));
-    await expect(async () => {
-      await act(() => {
-        root.render(React.createElement(Parent));
-      });
-    }).toErrorDev(
+    await act(() => {
+      root.render(React.createElement(Parent));
+    });
+    assertConsoleErrorDev([
       'Child: `key` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
-        'prop. (https://react.dev/link/special-props)',
-    );
+        'prop. (https://react.dev/link/special-props)\n' +
+        (gate(flags => flags.enableOwnerStacks)
+          ? ['    in Parent (at **)']
+          : [
+              '    in Child (at **)\n' +
+                '    in div (at **)\n' +
+                '    in Parent (at **)',
+            ]),
+    ]);
   });
 
   it('should warn when `key` is being accessed on a host element', () => {
     const element = React.createElement('div', {key: '3'});
-    expect(() => void element.props.key).toErrorDev(
-      'div: `key` is not a prop. Trying to access it will result ' +
-        'in `undefined` being returned. If you need to access the same ' +
-        'value within the child component, you should pass it as a different ' +
-        'prop. (https://react.dev/link/special-props)',
+    void element.props.key;
+    assertConsoleErrorDev(
+      [
+        'div: `key` is not a prop. Trying to access it will result ' +
+          'in `undefined` being returned. If you need to access the same ' +
+          'value within the child component, you should pass it as a different ' +
+          'prop. (https://react.dev/link/special-props)',
+      ],
       {withoutStack: true},
     );
   });
@@ -141,9 +156,16 @@ describe('ReactCreateElement', () => {
       foo: '56',
     });
     expect(element.type).toBe(ComponentClass);
-    expect(() => expect(element.ref).toBe(ref)).toErrorDev(
-      'Accessing element.ref was removed in React 19',
-      {withoutStack: true},
+    expect(element.ref).toBe(ref);
+    assertConsoleErrorDev(
+      [
+        'Accessing element.ref was removed in React 19. ref is now a ' +
+          'regular prop. It will be removed from the JSX Element ' +
+          'type in a future release.',
+      ],
+      {
+        withoutStack: true,
+      },
     );
     const expectation = {foo: '56', ref};
     Object.freeze(expectation);
@@ -412,11 +434,13 @@ describe('ReactCreateElement', () => {
 
   it('warns if outdated JSX transform is detected', async () => {
     // Warns if __self is detected, because that's only passed by a compiler
-    expect(() => {
-      React.createElement('div', {className: 'foo', __self: this});
-    }).toWarnDev(
-      'Your app (or one of its dependencies) is using an outdated ' +
-        'JSX transform.',
+    React.createElement('div', {className: 'foo', __self: this});
+    assertConsoleWarnDev(
+      [
+        'Your app (or one of its dependencies) is using an outdated JSX ' +
+          'transform. Update to the modern JSX transform for ' +
+          'faster performance: https://react.dev/link/new-jsx-transform',
+      ],
       {
         withoutStack: true,
       },

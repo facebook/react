@@ -12,6 +12,7 @@
 let React;
 let ReactDOMClient;
 let act;
+let assertConsoleErrorDev;
 
 // TODO: Historically this module was used to confirm that the JSX transform
 // produces the correct output. However, most users (and indeed our own test
@@ -29,7 +30,7 @@ describe('ReactJSXTransformIntegration', () => {
 
     React = require('react');
     ReactDOMClient = require('react-dom/client');
-    act = require('internal-test-utils').act;
+    ({act, assertConsoleErrorDev} = require('internal-test-utils'));
 
     Component = class extends React.Component {
       render() {
@@ -112,8 +113,13 @@ describe('ReactJSXTransformIntegration', () => {
     const ref = React.createRef();
     const element = <Component ref={ref} foo="56" />;
     expect(element.type).toBe(Component);
-    expect(() => expect(element.ref).toBe(ref)).toErrorDev(
-      'Accessing element.ref was removed in React 19',
+    expect(element.ref).toBe(ref);
+    assertConsoleErrorDev(
+      [
+        'Accessing element.ref was removed in React 19. ref is now a ' +
+          'regular prop. It will be removed from the JSX Element ' +
+          'type in a future release.',
+      ],
       {withoutStack: true},
     );
     const expectation = {foo: '56', ref};

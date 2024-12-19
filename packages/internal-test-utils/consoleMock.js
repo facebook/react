@@ -273,6 +273,7 @@ function normalizeCodeLocInfo(str) {
       // We strip that out in our normalization to make it look more like component stacks.
       name = name.slice(0, name.length - 7);
     }
+    name = name.replace(/.*\/([^\/]+):\d+:\d+/, '**/$1:**:**');
     return '\n    in ' + name + ' (at **)';
   });
 }

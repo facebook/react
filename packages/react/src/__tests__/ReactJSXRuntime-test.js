@@ -14,6 +14,7 @@ let ReactDOMClient;
 let JSXRuntime;
 let JSXDEVRuntime;
 let act;
+let assertConsoleErrorDev;
 
 // NOTE: Prefer to call the JSXRuntime directly in these tests so we can be
 // certain that we are testing the runtime behavior, as opposed to the Babel
@@ -26,7 +27,7 @@ describe('ReactJSXRuntime', () => {
     JSXRuntime = require('react/jsx-runtime');
     JSXDEVRuntime = require('react/jsx-dev-runtime');
     ReactDOMClient = require('react-dom/client');
-    act = require('internal-test-utils').act;
+    ({act, assertConsoleErrorDev} = require('internal-test-utils'));
   });
 
   it('allows static methods to be called using the type property', () => {
@@ -205,41 +206,49 @@ describe('ReactJSXRuntime', () => {
         });
       }
     }
-    await expect(async () => {
-      const root = ReactDOMClient.createRoot(container);
-      await act(() => {
-        root.render(JSXRuntime.jsx(Parent, {}));
-      });
-    }).toErrorDev(
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(JSXRuntime.jsx(Parent, {}));
+    });
+    assertConsoleErrorDev([
       'Child: `key` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
-        'prop. (https://react.dev/link/special-props)',
-    );
+        'prop. (https://react.dev/link/special-props)\n' +
+        (gate(flags => flags.enableOwnerStacks)
+          ? '    in Parent (at **)'
+          : '    in Child (at **)\n' +
+            '    in div (at **)\n' +
+            '    in Parent (at **)'),
+    ]);
   });
 
   it('warns when a jsxs is passed something that is not an array', async () => {
     const container = document.createElement('div');
-    await expect(async () => {
-      const root = ReactDOMClient.createRoot(container);
-      await act(() => {
-        root.render(JSXRuntime.jsxs('div', {children: 'foo'}, null));
-      });
-    }).toErrorDev(
-      'React.jsx: Static children should always be an array. ' +
-        'You are likely explicitly calling React.jsxs or React.jsxDEV. ' +
-        'Use the Babel transform instead.',
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(JSXRuntime.jsxs('div', {children: 'foo'}, null));
+    });
+    assertConsoleErrorDev(
+      [
+        'React.jsx: Static children should always be an array. ' +
+          'You are likely explicitly calling React.jsxs or React.jsxDEV. ' +
+          'Use the Babel transform instead.',
+      ],
       {withoutStack: true},
     );
   });
 
   it('should warn when `key` is being accessed on a host element', () => {
     const element = JSXRuntime.jsxs('div', {}, '3');
-    expect(() => void element.props.key).toErrorDev(
-      'div: `key` is not a prop. Trying to access it will result ' +
-        'in `undefined` being returned. If you need to access the same ' +
-        'value within the child component, you should pass it as a different ' +
-        'prop. (https://react.dev/link/special-props)',
+    void element.props.key;
+    assertConsoleErrorDev(
+      [
+        'div: `key` is not a prop. Trying to access it will result ' +
+          'in `undefined` being returned. If you need to access the same ' +
+          'value within the child component, you should pass it as a different ' +
+          'prop. (https://react.dev/link/special-props)',
+      ],
       {withoutStack: true},
     );
   });
@@ -263,19 +272,18 @@ describe('ReactJSXRuntime', () => {
         });
       }
     }
-    await expect(async () => {
-      const root = ReactDOMClient.createRoot(container);
-      await act(() => {
-        root.render(JSXRuntime.jsx(Parent, {}));
-      });
-    }).toErrorDev(
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(JSXRuntime.jsx(Parent, {}));
+    });
+    assertConsoleErrorDev([
       'Each child in a list should have a unique "key" prop.\n\n' +
         'Check the render method of `Parent`. See https://react.dev/link/warning-keys for more information.\n' +
         (gate(flags => flags.enableOwnerStacks)
           ? ''
           : '    in Child (at **)\n') +
         '    in Parent (at **)',
-    );
+    ]);
   });
 
   it('should warn when keys are passed as part of props', async () => {
@@ -292,19 +300,19 @@ describe('ReactJSXRuntime', () => {
         });
       }
     }
-    await expect(async () => {
-      const root = ReactDOMClient.createRoot(container);
-      await act(() => {
-        root.render(JSXRuntime.jsx(Parent, {}));
-      });
-    }).toErrorDev(
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(JSXRuntime.jsx(Parent, {}));
+    });
+    assertConsoleErrorDev([
       'A props object containing a "key" prop is being spread into JSX:\n' +
         '  let props = {key: someKey, prop: ...};\n' +
         '  <Child {...props} />\n' +
         'React keys must be passed directly to JSX without using spread:\n' +
         '  let props = {prop: ...};\n' +
-        '  <Child key={someKey} {...props} />',
-    );
+        '  <Child key={someKey} {...props} />\n' +
+        '    in Parent (at **)',
+    ]);
   });
 
   it('should not warn when unkeyed children are passed to jsxs', async () => {
@@ -368,13 +376,18 @@ describe('ReactJSXRuntime', () => {
       key: 'key',
     };
 
-    let elementWithSpreadKey;
-    expect(() => {
-      elementWithSpreadKey = __DEV__
-        ? JSXDEVRuntime.jsxDEV('div', configWithKey)
-        : JSXRuntime.jsx('div', configWithKey);
-    }).toErrorDev(
-      'A props object containing a "key" prop is being spread into JSX',
+    const elementWithSpreadKey = __DEV__
+      ? JSXDEVRuntime.jsxDEV('div', configWithKey)
+      : JSXRuntime.jsx('div', configWithKey);
+    assertConsoleErrorDev(
+      [
+        'A props object containing a "key" prop is being spread into JSX:\n' +
+          '  let props = {key: someKey, foo: ..., bar: ...};\n' +
+          '  <div {...props} />\n' +
+          'React keys must be passed directly to JSX without using spread:\n' +
+          '  let props = {foo: ..., bar: ...};\n' +
+          '  <div key={someKey} {...props} />',
+      ],
       {withoutStack: true},
     );
     expect(elementWithSpreadKey.props).not.toBe(configWithKey);

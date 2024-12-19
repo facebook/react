@@ -10,13 +10,13 @@
 'use strict';
 
 let act;
-
+let assertConsoleErrorDev;
 let React;
 let ReactDOMClient;
 
 describe('ReactPureComponent', () => {
   beforeEach(() => {
-    act = require('internal-test-utils').act;
+    ({act, assertConsoleErrorDev} = require('internal-test-utils'));
 
     React = require('react');
     ReactDOMClient = require('react-dom/client');
@@ -90,16 +90,15 @@ describe('ReactPureComponent', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await expect(async () => {
-      await act(() => {
-        root.render(<Component />);
-      });
-    }).toErrorDev(
-      '' +
-        'Component has a method called shouldComponentUpdate(). ' +
+    await act(() => {
+      root.render(<Component />);
+    });
+    assertConsoleErrorDev([
+      'Component has a method called shouldComponentUpdate(). ' +
         'shouldComponentUpdate should not be used when extending React.PureComponent. ' +
-        'Please extend React.Component if shouldComponentUpdate is used.',
-    );
+        'Please extend React.Component if shouldComponentUpdate is used.\n' +
+        '    in Component (at **)',
+    ]);
     await act(() => {
       root.render(<Component />);
     });
@@ -133,15 +132,14 @@ describe('ReactPureComponent', () => {
       }
     }
     const root = ReactDOMClient.createRoot(document.createElement('div'));
-    await expect(async () => {
-      await act(() => {
-        root.render(<PureComponent />);
-      });
-    }).toErrorDev(
-      '' +
-        'PureComponent has a method called shouldComponentUpdate(). ' +
+    await act(() => {
+      root.render(<PureComponent />);
+    });
+    assertConsoleErrorDev([
+      'PureComponent has a method called shouldComponentUpdate(). ' +
         'shouldComponentUpdate should not be used when extending React.PureComponent. ' +
-        'Please extend React.Component if shouldComponentUpdate is used.',
-    );
+        'Please extend React.Component if shouldComponentUpdate is used.\n' +
+        '    in PureComponent (at **)',
+    ]);
   });
 });
