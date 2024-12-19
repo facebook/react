@@ -78,8 +78,7 @@ export const enableLegacyFBSupport = false;
 // -----------------------------------------------------------------------------
 
 // Yield to the browser event loop and not just the scheduler event loop before passive effects.
-// Fix gated tests that fail with this flag enabled before turning it back on.
-export const enableYieldingBeforePassive = false;
+export const enableYieldingBeforePassive = __EXPERIMENTAL__;
 
 export const enableLegacyCache = __EXPERIMENTAL__;
 

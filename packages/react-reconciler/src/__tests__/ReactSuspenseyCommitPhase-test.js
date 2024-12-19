@@ -492,8 +492,6 @@ describe('ReactSuspenseyCommitPhase', () => {
     );
   });
 
-  // FIXME: Should pass with `enableYieldingBeforePassive`
-  // @gate !enableYieldingBeforePassive
   it('runs passive effects after suspended commit resolves', async () => {
     function Effect() {
       React.useEffect(() => {

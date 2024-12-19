@@ -3278,6 +3278,9 @@ function commitRootImpl(
       // We don't schedule a separate task for flushing passive effects.
       // Instead, we just rely on ensureRootIsScheduled below to schedule
       // a callback for us to flush the passive effects.
+      // We do need to clear this callback.
+      // Otherwise, we'll still think the commit is suspended.
+      root.cancelPendingCommit = null;
     } else {
       // So we can clear these now to allow a new callback to be scheduled.
       root.callbackNode = null;
