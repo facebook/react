@@ -78,7 +78,8 @@ export const enableLegacyFBSupport = false;
 // -----------------------------------------------------------------------------
 
 // Yield to the browser event loop and not just the scheduler event loop before passive effects.
-export const enableYieldingBeforePassive = __EXPERIMENTAL__;
+// Introduced a regression by not flushing passive effects with Suspensey CSS: https://codesandbox.io/p/sandbox/suspensey-css-and-passive-effects-mww52c
+export const enableYieldingBeforePassive = false;
 
 export const enableLegacyCache = __EXPERIMENTAL__;
 
