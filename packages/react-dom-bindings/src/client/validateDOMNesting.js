@@ -297,6 +297,8 @@ function isTagValidWithParent(tag: string, parentTag: ?string): boolean {
         tag === 'hr' ||
         tag === 'option' ||
         tag === 'optgroup' ||
+        tag === 'script' ||
+        tag === 'template' ||
         tag === '#text'
       );
     case 'optgroup':

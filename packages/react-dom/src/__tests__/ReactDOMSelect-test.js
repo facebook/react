@@ -911,9 +911,7 @@ describe('ReactDOMSelect', () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
     async function changeView() {
-      await act(() => {
-        root.unmount();
-      });
+      root.unmount();
     }
 
     const stub = (

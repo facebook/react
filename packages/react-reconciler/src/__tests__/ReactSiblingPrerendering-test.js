@@ -200,6 +200,10 @@ describe('ReactSiblingPrerendering', () => {
       await waitForPaint(['A']);
       expect(root).toMatchRenderedOutput('A');
 
+      if (gate(flags => flags.enableYieldingBeforePassive)) {
+        // Passive effects.
+        await waitForPaint([]);
+      }
       // The second render is a prerender of the hidden content.
       await waitForPaint([
         'Suspend! [B]',
@@ -237,6 +241,10 @@ describe('ReactSiblingPrerendering', () => {
       // Immediately after the fallback commits, retry the boundary again. This
       // time we include B, since we're not blocking the fallback from showing.
       if (gate('enableSiblingPrerendering')) {
+        if (gate(flags => flags.enableYieldingBeforePassive)) {
+          // Passive effects.
+          await waitForPaint([]);
+        }
         await waitForPaint(['Suspend! [A]', 'Suspend! [B]']);
       }
     });
@@ -452,6 +460,10 @@ describe('ReactSiblingPrerendering', () => {
           </>,
         );
 
+        if (gate(flags => flags.enableYieldingBeforePassive)) {
+          // Passive effects.
+          await waitForPaint([]);
+        }
         // Immediately after the fallback commits, retry the boundary again.
         // Because the promise for A resolved, this is a normal render, _not_
         // a prerender. So when we proceed to B, and B suspends, we unwind again
@@ -471,6 +483,10 @@ describe('ReactSiblingPrerendering', () => {
           </>,
         );
 
+        if (gate(flags => flags.enableYieldingBeforePassive)) {
+          // Passive effects.
+          await waitForPaint([]);
+        }
         // Now we can proceed to prerendering C.
         if (gate('enableSiblingPrerendering')) {
           await waitForPaint(['Suspend! [B]', 'Suspend! [C]']);

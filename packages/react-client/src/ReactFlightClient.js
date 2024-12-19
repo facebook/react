@@ -69,7 +69,11 @@ import {createBoundServerReference} from './ReactFlightReplyClient';
 
 import {readTemporaryReference} from './ReactFlightTemporaryReferences';
 
-import {logComponentRender} from './ReactFlightPerformanceTrack';
+import {
+  markAllTracksInOrder,
+  logComponentRender,
+  logDedupedComponentRender,
+} from './ReactFlightPerformanceTrack';
 
 import {
   REACT_LAZY_TYPE,
@@ -125,7 +129,9 @@ export type JSONValue =
   | $ReadOnlyArray<JSONValue>;
 
 type ProfilingResult = {
+  track: number,
   endTime: number,
+  component: null | ReactComponentInfo,
 };
 
 const ROW_ID = 0;
@@ -301,6 +307,8 @@ export type Response = {
   _rowTag: number, // 0 indicates that we're currently parsing the row ID
   _rowLength: number, // remaining bytes in the row. 0 indicates that we're looking for a newline.
   _buffer: Array<Uint8Array>, // chunks received so far as part of this row
+  _closed: boolean,
+  _closedReason: mixed,
   _tempRefs: void | TemporaryReferenceSet, // the set temporary references can be resolved from
   _timeOrigin: number, // Profiling-only
   _debugRootOwner?: null | ReactComponentInfo, // DEV-only
@@ -352,7 +360,7 @@ function createBlockedChunk<T>(response: Response): BlockedChunk<T> {
 
 function createErrorChunk<T>(
   response: Response,
-  error: Error | Postpone,
+  error: mixed,
 ): ErroredChunk<T> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
   return new ReactPromise(ERRORED, null, error, response);
@@ -633,6 +641,8 @@ function initializeModuleChunk<T>(chunk: ResolvedModuleChunk<T>): void {
 // Report that any missing chunks in the model is now going to throw this
 // error upon read. Also notify any pending promises.
 export function reportGlobalError(response: Response, error: Error): void {
+  response._closed = true;
+  response._closedReason = error;
   response._chunks.forEach(chunk => {
     // If this chunk was already resolved or errored, it won't
     // trigger an error but if it wasn't then we need to
@@ -642,7 +652,14 @@ export function reportGlobalError(response: Response, error: Error): void {
     }
   });
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
-    flushComponentPerformance(getChunk(response, 0));
+    markAllTracksInOrder();
+    flushComponentPerformance(
+      response,
+      getChunk(response, 0),
+      0,
+      -Infinity,
+      -Infinity,
+    );
   }
 }
 
@@ -900,7 +917,13 @@ function getChunk(response: Response, id: number): SomeChunk<any> {
   const chunks = response._chunks;
   let chunk = chunks.get(id);
   if (!chunk) {
-    chunk = createPendingChunk(response);
+    if (response._closed) {
+      // We have already errored the response and we're not going to get
+      // anything more streaming in so this will immediately error.
+      chunk = createErrorChunk(response, response._closedReason);
+    } else {
+      chunk = createPendingChunk(response);
+    }
     chunks.set(id, chunk);
   }
   return chunk;
@@ -1627,6 +1650,8 @@ function ResponseInstance(
   this._rowTag = 0;
   this._rowLength = 0;
   this._buffer = [];
+  this._closed = false;
+  this._closedReason = null;
   this._tempRefs = temporaryReferences;
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     this._timeOrigin = 0;
@@ -2740,9 +2765,18 @@ function resolveTypedArray(
   resolveBuffer(response, id, view);
 }
 
-function flushComponentPerformance(root: SomeChunk<any>): number {
+function flushComponentPerformance(
+  response: Response,
+  root: SomeChunk<any>,
+  trackIdx: number, // Next available track
+  trackTime: number, // The time after which it is available,
+  parentEndTime: number,
+): ProfilingResult {
   if (!enableProfilerTimer || !enableComponentPerformanceTrack) {
-    return 0;
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'flushComponentPerformance should never be called in production mode. This is a bug in React.',
+    );
   }
   // Write performance.measure() entries for Server Components in tree order.
   // This must be done at the end to collect the end time from the whole tree.
@@ -2753,7 +2787,25 @@ function flushComponentPerformance(root: SomeChunk<any>): number {
     // chunk in two places. We should extend the current end time as if it was
     // rendered as part of this tree.
     const previousResult: ProfilingResult = root._children;
-    return previousResult.endTime;
+    const previousEndTime = previousResult.endTime;
+    if (
+      parentEndTime > -Infinity &&
+      parentEndTime < previousEndTime &&
+      previousResult.component !== null
+    ) {
+      // Log a placeholder for the deduped value under this child starting
+      // from the end of the self time of the parent and spanning until the
+      // the deduped end.
+      logDedupedComponentRender(
+        previousResult.component,
+        trackIdx,
+        parentEndTime,
+        previousEndTime,
+      );
+    }
+    // Since we didn't bump the track this time, we just return the same track.
+    previousResult.track = trackIdx;
+    return previousResult;
   }
   const children = root._children;
   if (root.status === RESOLVED_MODEL) {
@@ -2762,16 +2814,66 @@ function flushComponentPerformance(root: SomeChunk<any>): number {
     // the performance characteristics of the app by profiling.
     initializeModelChunk(root);
   }
-  const result: ProfilingResult = {endTime: -Infinity};
+
+  // First find the start time of the first component to know if it was running
+  // in parallel with the previous.
+  const debugInfo = root._debugInfo;
+  if (debugInfo) {
+    for (let i = 1; i < debugInfo.length; i++) {
+      const info = debugInfo[i];
+      if (typeof info.name === 'string') {
+        // $FlowFixMe: Refined.
+        const startTimeInfo = debugInfo[i - 1];
+        if (typeof startTimeInfo.time === 'number') {
+          const startTime = startTimeInfo.time;
+          if (startTime < trackTime) {
+            // The start time of this component is before the end time of the previous
+            // component on this track so we need to bump the next one to a parallel track.
+            trackIdx++;
+          }
+          trackTime = startTime;
+          break;
+        }
+      }
+    }
+    for (let i = debugInfo.length - 1; i >= 0; i--) {
+      const info = debugInfo[i];
+      if (typeof info.time === 'number') {
+        if (info.time > parentEndTime) {
+          parentEndTime = info.time;
+        }
+      }
+    }
+  }
+
+  const result: ProfilingResult = {
+    track: trackIdx,
+    endTime: -Infinity,
+    component: null,
+  };
   root._children = result;
   let childrenEndTime = -Infinity;
+  let childTrackIdx = trackIdx;
+  let childTrackTime = trackTime;
   for (let i = 0; i < children.length; i++) {
-    const childEndTime = flushComponentPerformance(children[i]);
+    const childResult = flushComponentPerformance(
+      response,
+      children[i],
+      childTrackIdx,
+      childTrackTime,
+      parentEndTime,
+    );
+    if (childResult.component !== null) {
+      result.component = childResult.component;
+    }
+    childTrackIdx = childResult.track;
+    const childEndTime = childResult.endTime;
+    childTrackTime = childEndTime;
     if (childEndTime > childrenEndTime) {
       childrenEndTime = childEndTime;
     }
   }
-  const debugInfo = root._debugInfo;
+
   if (debugInfo) {
     let endTime = 0;
     for (let i = debugInfo.length - 1; i >= 0; i--) {
@@ -2790,15 +2892,20 @@ function flushComponentPerformance(root: SomeChunk<any>): number {
           const startTime = startTimeInfo.time;
           logComponentRender(
             componentInfo,
+            trackIdx,
             startTime,
             endTime,
             childrenEndTime,
+            response._rootEnvironmentName,
           );
+          // Track the root most component of the result for deduping logging.
+          result.component = componentInfo;
         }
       }
     }
   }
-  return (result.endTime = childrenEndTime);
+  result.endTime = childrenEndTime;
+  return result;
 }
 
 function processFullBinaryRow(

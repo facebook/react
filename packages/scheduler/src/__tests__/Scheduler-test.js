@@ -18,6 +18,7 @@ let scheduleCallback;
 let requestPaint;
 let shouldYield;
 let NormalPriority;
+let SchedulerFeatureFlags;
 
 // The Scheduler implementation uses browser APIs like `MessageChannel` and
 // `setTimeout` to schedule work on the main thread. Most of our tests treat
@@ -42,6 +43,7 @@ describe('SchedulerBrowser', () => {
     NormalPriority = Scheduler.unstable_NormalPriority;
     requestPaint = Scheduler.unstable_requestPaint;
     shouldYield = Scheduler.unstable_shouldYield;
+    SchedulerFeatureFlags = require('../SchedulerFeatureFlags');
   });
 
   afterEach(() => {
@@ -199,7 +201,10 @@ describe('SchedulerBrowser', () => {
     runtime.assertLog([
       'Message Event',
       'Task',
-      'Yield at 0ms',
+      gate(flags => flags.enableAlwaysYieldScheduler) ||
+      !SchedulerFeatureFlags.enableRequestPaint
+        ? gate(flags => (flags.www ? 'Yield at 10ms' : 'Yield at 5ms'))
+        : 'Yield at 0ms',
       'Post Message',
     ]);
 
@@ -216,7 +221,13 @@ describe('SchedulerBrowser', () => {
     });
     runtime.assertLog(['Post Message']);
     runtime.fireMessageEvent();
-    runtime.assertLog(['Message Event', 'A', 'B']);
+    if (gate(flags => flags.enableAlwaysYieldScheduler)) {
+      runtime.assertLog(['Message Event', 'A', 'Post Message']);
+      runtime.fireMessageEvent();
+      runtime.assertLog(['Message Event', 'B']);
+    } else {
+      runtime.assertLog(['Message Event', 'A', 'B']);
+    }
   });
 
   it('multiple tasks with a yield in between', () => {
@@ -263,6 +274,10 @@ describe('SchedulerBrowser', () => {
     runtime.assertLog(['Message Event', 'Oops!', 'Post Message']);
 
     runtime.fireMessageEvent();
+    if (gate(flags => flags.enableAlwaysYieldScheduler)) {
+      runtime.assertLog(['Message Event', 'Post Message']);
+      runtime.fireMessageEvent();
+    }
     runtime.assertLog(['Message Event', 'Yay']);
   });
 

@@ -77,6 +77,9 @@ export const enableLegacyFBSupport = false;
 // likely to include in an upcoming release.
 // -----------------------------------------------------------------------------
 
+// Yield to the browser event loop and not just the scheduler event loop before passive effects.
+export const enableYieldingBeforePassive = __EXPERIMENTAL__;
+
 export const enableLegacyCache = __EXPERIMENTAL__;
 
 export const enableAsyncIterableChildren = __EXPERIMENTAL__;
@@ -98,11 +101,6 @@ export const enableFabricCompleteRootInCommitPhase = false;
 export const enableObjectFiber = false;
 
 export const enableTransitionTracing = false;
-
-export const enableLazyContextPropagation = true;
-
-// Expose unstable useContext for performance testing
-export const enableContextProfiling = false;
 
 // FB-only usage. The new API has different semantics.
 export const enableLegacyHidden = false;
@@ -188,12 +186,6 @@ export const disableLegacyContext = true;
  */
 export const disableLegacyContextForFunctionComponents = true;
 
-// Not ready to break experimental yet.
-// Modern <StrictMode /> behaviour aligns more with what components
-// components will encounter in production, especially when used With <Offscreen />.
-// TODO: clean up legacy <StrictMode /> once tests pass WWW.
-export const useModernStrictMode = true;
-
 // Enable the moveBefore() alternative to insertBefore(). This preserves states of moves.
 export const enableMoveBefore = false;
 
@@ -241,10 +233,6 @@ export const disableTextareaChildren = false;
 // -----------------------------------------------------------------------------
 // Debugging and DevTools
 // -----------------------------------------------------------------------------
-
-// Helps identify side effects in render-phase lifecycle hooks and setState
-// reducers by double invoking them in StrictLegacyMode.
-export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 
 // Gather advanced timing metrics for Profiler subtrees.
 export const enableProfilerTimer = __PROFILE__;

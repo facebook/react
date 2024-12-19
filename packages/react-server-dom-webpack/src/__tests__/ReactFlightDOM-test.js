@@ -2902,16 +2902,7 @@ describe('ReactFlightDOM', () => {
       abortFizz('bam');
     });
 
-    if (__DEV__) {
-      expect(errors).toEqual([new Error('Connection closed.')]);
-    } else {
-      // This is likely a bug. In Dev we get a connection closed error
-      // because the debug info creates a chunk that has a pending status
-      // and when the stream finishes we error if any chunks are still pending.
-      // In production there is no debug info so the missing chunk is never instantiated
-      // because nothing triggers model evaluation before the stream completes
-      expect(errors).toEqual(['bam']);
-    }
+    expect(errors).toEqual([new Error('Connection closed.')]);
 
     const container = document.createElement('div');
     await readInto(container, fizzReadable);
@@ -3066,17 +3057,8 @@ describe('ReactFlightDOM', () => {
     });
 
     // one error per boundary
-    if (__DEV__) {
-      const err = new Error('Connection closed.');
-      expect(errors).toEqual([err, err, err]);
-    } else {
-      // This is likely a bug. In Dev we get a connection closed error
-      // because the debug info creates a chunk that has a pending status
-      // and when the stream finishes we error if any chunks are still pending.
-      // In production there is no debug info so the missing chunk is never instantiated
-      // because nothing triggers model evaluation before the stream completes
-      expect(errors).toEqual(['boom', 'boom', 'boom']);
-    }
+    const err = new Error('Connection closed.');
+    expect(errors).toEqual([err, err, err]);
 
     const container = document.createElement('div');
     await readInto(container, fizzReadable);
