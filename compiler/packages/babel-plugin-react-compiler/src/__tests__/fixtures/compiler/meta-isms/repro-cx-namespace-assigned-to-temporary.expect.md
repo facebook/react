@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @compilationMode(infer) @enableAssumeHooksFollowRulesOfReact:false @customMacros(cx)
+// @compilationMode(infer) @customMacros(cx)
 import {identity} from 'shared-runtime';
 
 const DARK = 'dark';
@@ -49,26 +49,32 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @compilationMode(infer) @enableAssumeHooksFollowRulesOfReact:false @customMacros(cx)
+import { c as _c } from "react/compiler-runtime"; // @compilationMode(infer) @customMacros(cx)
 import { identity } from "shared-runtime";
 
 const DARK = "dark";
 
 function Component() {
-  const $ = _c(2);
+  const $ = _c(4);
   const theme = useTheme();
-
-  const t0 = cx.foo({
-    "styles/light": true,
-    "styles/dark": identity([theme.getTheme()]),
-  });
-  let t1;
-  if ($[0] !== t0) {
-    t1 = <div className={t0} />;
-    $[0] = t0;
-    $[1] = t1;
+  let t0;
+  if ($[0] !== theme) {
+    t0 = cx.foo({
+      "styles/light": true,
+      "styles/dark": identity([theme.getTheme()]),
+    });
+    $[0] = theme;
+    $[1] = t0;
   } else {
-    t1 = $[1];
+    t0 = $[1];
+  }
+  let t1;
+  if ($[2] !== t0) {
+    t1 = <div className={t0} />;
+    $[2] = t0;
+    $[3] = t1;
+  } else {
+    t1 = $[3];
   }
   return t1;
 }
