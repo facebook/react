@@ -7,14 +7,13 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c26ee0273b3bf3e0f0276f5832b5f17a>>
+ * @generated SignedSource<<a6da6d4d4f8b68d10079b0775726c016>>
  */
 
 "use strict";
 __DEV__ &&
   (function () {
     function performWorkUntilDeadline() {
-      needsPaint = !1;
       if (isMessageLoopRunning) {
         var currentTime = exports.unstable_now();
         startTime = currentTime;
@@ -31,15 +30,7 @@ __DEV__ &&
             try {
               b: {
                 advanceTimers(currentTime);
-                for (
-                  currentTask = peek(taskQueue);
-                  null !== currentTask &&
-                  !(
-                    currentTask.expirationTime > currentTime &&
-                    shouldYieldToHost()
-                  );
-
-                ) {
+                for (currentTask = peek(taskQueue); null !== currentTask; ) {
                   var callback = currentTask.callback;
                   if ("function" === typeof callback) {
                     currentTask.callback = null;
@@ -58,6 +49,11 @@ __DEV__ &&
                     advanceTimers(currentTime);
                   } else pop(taskQueue);
                   currentTask = peek(taskQueue);
+                  if (
+                    null === currentTask ||
+                    currentTask.expirationTime > currentTime
+                  )
+                    break;
                 }
                 if (null !== currentTask) hasMoreWork = !0;
                 else {
@@ -165,13 +161,6 @@ __DEV__ &&
             );
         }
     }
-    function shouldYieldToHost() {
-      return needsPaint
-        ? !0
-        : exports.unstable_now() - startTime < frameInterval
-          ? !1
-          : !0;
-    }
     function requestHostTimeout(callback, ms) {
       taskTimeoutID = localSetTimeout(function () {
         callback(exports.unstable_now());
@@ -205,7 +194,6 @@ __DEV__ &&
       isPerformingWork = !1,
       isHostCallbackScheduled = !1,
       isHostTimeoutScheduled = !1,
-      needsPaint = !1,
       localSetTimeout = "function" === typeof setTimeout ? setTimeout : null,
       localClearTimeout =
         "function" === typeof clearTimeout ? clearTimeout : null,
@@ -267,9 +255,7 @@ __DEV__ &&
         currentPriorityLevel = previousPriorityLevel;
       }
     };
-    exports.unstable_requestPaint = function () {
-      needsPaint = !0;
-    };
+    exports.unstable_requestPaint = function () {};
     exports.unstable_runWithPriority = function (priorityLevel, eventHandler) {
       switch (priorityLevel) {
         case 1:
@@ -346,7 +332,9 @@ __DEV__ &&
               schedulePerformWorkUntilDeadline())));
       return priorityLevel;
     };
-    exports.unstable_shouldYield = shouldYieldToHost;
+    exports.unstable_shouldYield = function () {
+      return exports.unstable_now() - startTime < frameInterval ? !1 : !0;
+    };
     exports.unstable_wrapCallback = function (callback) {
       var parentPriorityLevel = currentPriorityLevel;
       return function () {
@@ -360,6 +348,11 @@ __DEV__ &&
       };
     };
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
+      "function" ===
+        typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
+      __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop(Error());
+  })();
+OBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop(Error());
