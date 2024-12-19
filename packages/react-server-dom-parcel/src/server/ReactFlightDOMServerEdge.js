@@ -17,6 +17,8 @@ import {
   type ServerReferenceId,
 } from '../client/ReactFlightClientConfigBundlerParcel';
 
+import {ASYNC_ITERATOR} from 'shared/ReactSymbols';
+
 import {
   createRequest,
   createPrerenderRequest,
@@ -30,6 +32,9 @@ import {
   createResponse,
   close,
   getRoot,
+  reportGlobalError,
+  resolveField,
+  resolveFile,
 } from 'react-server/src/ReactFlightReplyServer';
 
 import {
@@ -187,6 +192,50 @@ export function decodeReply<T>(
   const root = getRoot<T>(response);
   close(response);
   return root;
+}
+
+export function decodeReplyFromAsyncIterable<T>(
+  iterable: AsyncIterable<[string, string | File]>,
+  options?: {temporaryReferences?: TemporaryReferenceSet},
+): Thenable<T> {
+  const iterator: AsyncIterator<[string, string | File]> =
+    iterable[ASYNC_ITERATOR]();
+
+  const response = createResponse(
+    serverManifest,
+    '',
+    options ? options.temporaryReferences : undefined,
+  );
+
+  function progress(
+    entry:
+      | {done: false, +value: [string, string | File], ...}
+      | {done: true, +value: void, ...},
+  ) {
+    if (entry.done) {
+      close(response);
+    } else {
+      const [name, value] = entry.value;
+      if (typeof value === 'string') {
+        resolveField(response, name, value);
+      } else {
+        resolveFile(response, name, value);
+      }
+      iterator.next().then(progress, error);
+    }
+  }
+  function error(reason: Error) {
+    reportGlobalError(response, reason);
+    if (typeof (iterator: any).throw === 'function') {
+      // The iterator protocol doesn't necessarily include this but a generator do.
+      // $FlowFixMe should be able to pass mixed
+      iterator.throw(reason).then(error, error);
+    }
+  }
+
+  iterator.next().then(progress, error);
+
+  return getRoot(response);
 }
 
 export function decodeAction<T>(body: FormData): Promise<() => T> | null {
