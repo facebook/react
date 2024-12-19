@@ -142,8 +142,8 @@ describe 'ReactCoffeeScriptClass', ->
         React.createElement('div')
       getDerivedStateFromProps: ->
         {}
-      ReactDOM.flushSync ->
-        root.render React.createElement(Foo, foo: 'foo')
+    ReactDOM.flushSync ->
+     root.render React.createElement(Foo, foo: 'foo')
     assertConsoleErrorDev [
       'Foo: getDerivedStateFromProps() is defined as an instance method and will be ignored. Instead, declare it as a static method.\n' +
         '    in Foo (at **)']
@@ -154,7 +154,6 @@ describe 'ReactCoffeeScriptClass', ->
         React.createElement('div')
       getDerivedStateFromError: ->
         {}
-
     ReactDOM.flushSync ->
       root.render React.createElement(Foo, foo: 'foo')
 
@@ -169,7 +168,6 @@ describe 'ReactCoffeeScriptClass', ->
         React.createElement('div')
     Foo.getSnapshotBeforeUpdate = () ->
       {}
-
     ReactDOM.flushSync ->
       root.render React.createElement(Foo, foo: 'foo')
 
