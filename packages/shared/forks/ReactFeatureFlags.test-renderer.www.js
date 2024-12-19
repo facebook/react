@@ -82,7 +82,7 @@ export const enableUseResourceEffectHook = false;
 
 export const enableHydrationLaneScheduling = true;
 
-export const enableYieldingBeforePassive = true;
+export const enableYieldingBeforePassive = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);
