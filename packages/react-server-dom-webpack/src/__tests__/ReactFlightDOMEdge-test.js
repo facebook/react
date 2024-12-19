@@ -1261,4 +1261,52 @@ describe('ReactFlightDOMEdge', () => {
     div.innerHTML = result;
     expect(div.textContent).toBe('loading...');
   });
+
+  // @gate enableHalt
+  it('should abort parsing an incomplete prerender payload', async () => {
+    const infinitePromise = new Promise(() => {});
+    const controller = new AbortController();
+    const errors = [];
+    const {pendingResult} = await serverAct(async () => {
+      // destructure trick to avoid the act scope from awaiting the returned value
+      return {
+        pendingResult: ReactServerDOMStaticServer.unstable_prerender(
+          {promise: infinitePromise},
+          webpackMap,
+          {
+            signal: controller.signal,
+            onError(err) {
+              errors.push(err);
+            },
+          },
+        ),
+      };
+    });
+
+    controller.abort();
+    const {prelude} = await pendingResult;
+
+    expect(errors).toEqual([]);
+
+    const response = ReactServerDOMClient.createFromReadableStream(prelude, {
+      serverConsumerManifest: {
+        moduleMap: {},
+        moduleLoading: {},
+      },
+    });
+
+    // Wait for the stream to finish and therefore abort before we try to .then the response.
+    await 0;
+
+    const result = await response;
+
+    let error = null;
+    try {
+      await result.promise;
+    } catch (x) {
+      error = x;
+    }
+    expect(error).not.toBe(null);
+    expect(error.message).toBe('Connection closed.');
+  });
 });
