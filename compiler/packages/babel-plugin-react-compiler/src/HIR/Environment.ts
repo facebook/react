@@ -281,13 +281,28 @@ const EnvironmentConfigSchema = z.object({
       z.array(
         z.object({
           function: ExternalFunctionSchema,
-          numRequiredArgs: z.number(),
+          numRequiredArgs: z.number().min(1, 'numRequiredArgs must be > 0'),
         }),
       ),
     )
     .default(null),
 
   /**
+   * Enables inference of effect dependencies for the given list of functions. Takes in an array of
+   * configurable module and import pairs to allow for user-land experimentation. For example,
+   * [
+   *   {
+   *     module: 'react',
+   *     imported: 'useEffect',
+   *     numRequiredArgs: 1,
+   *   },{
+   *     module: '
+   *    }),
+   *  ),
+   *)
+   *.default(null),
+   *
+   * /**
    * Enables inlining ReactElement object literals in place of JSX
    * An alternative to the standard JSX transform which replaces JSX with React's jsxProd() runtime
    * Currently a prod-only optimization, requiring Fast JSX dependencies
