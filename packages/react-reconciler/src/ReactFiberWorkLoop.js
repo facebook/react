@@ -251,6 +251,7 @@ import {
   renderStartTime,
   commitStartTime,
   commitEndTime,
+  commitErrors,
   recordRenderTime,
   recordCommitTime,
   recordCommitEndTime,
@@ -263,6 +264,7 @@ import {
   yieldReason,
   startPingTimerByLanes,
   recordEffectError,
+  resetCommitErrors,
 } from './ReactProfilerTimer';
 
 // DEV stuff
@@ -3322,6 +3324,7 @@ function commitRootImpl(
   if (enableProfilerTimer) {
     // Mark the current commit time to be shared by all Profilers in this
     // batch. This enables them to be grouped later.
+    resetCommitErrors();
     recordCommitTime();
     if (enableComponentPerformanceTrack) {
       if (suspendedCommitReason === SUSPENDED_COMMIT) {
@@ -3415,6 +3418,7 @@ function commitRootImpl(
         ? completedRenderEndTime
         : commitStartTime,
       commitEndTime,
+      commitErrors,
     );
   }
 
@@ -3704,6 +3708,7 @@ function flushPassiveEffectsImpl(wasDelayedCommit: void | boolean) {
 
   let passiveEffectStartTime = 0;
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    resetCommitErrors();
     passiveEffectStartTime = now();
     logPaintYieldPhase(
       commitEndTime,
@@ -3740,7 +3745,11 @@ function flushPassiveEffectsImpl(wasDelayedCommit: void | boolean) {
 
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     const passiveEffectsEndTime = now();
-    logPassiveCommitPhase(passiveEffectStartTime, passiveEffectsEndTime);
+    logPassiveCommitPhase(
+      passiveEffectStartTime,
+      passiveEffectsEndTime,
+      commitErrors,
+    );
     finalizeRender(lanes, passiveEffectsEndTime);
   }
 

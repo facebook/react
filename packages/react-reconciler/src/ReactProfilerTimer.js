@@ -42,6 +42,7 @@ const {unstable_now: now} = Scheduler;
 export let renderStartTime: number = -0;
 export let commitStartTime: number = -0;
 export let commitEndTime: number = -0;
+export let commitErrors: null | Array<CapturedValue<mixed>> = null;
 export let profilerStartTime: number = -1.1;
 export let profilerEffectDuration: number = -0;
 export let componentEffectDuration: number = -0;
@@ -429,10 +430,21 @@ export function recordEffectDuration(fiber: Fiber): void {
 }
 
 export function recordEffectError(errorInfo: CapturedValue<mixed>): void {
+  if (!enableProfilerTimer || !enableProfilerCommitHooks) {
+    return;
+  }
   if (componentEffectErrors === null) {
     componentEffectErrors = [];
   }
   componentEffectErrors.push(errorInfo);
+  if (commitErrors === null) {
+    commitErrors = [];
+  }
+  commitErrors.push(errorInfo);
+}
+
+export function resetCommitErrors(): void {
+  commitErrors = null;
 }
 
 export function startEffectTimer(): void {

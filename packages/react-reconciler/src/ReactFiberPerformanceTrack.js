@@ -585,7 +585,54 @@ export function logSuspendedCommitPhase(
   }
 }
 
-export function logCommitPhase(startTime: number, endTime: number): void {
+export function logCommitErrored(
+  startTime: number,
+  endTime: number,
+  errors: Array<CapturedValue<mixed>>,
+  passive: boolean,
+): void {
+  if (supportsUserTiming) {
+    const properties = [];
+    if (__DEV__) {
+      for (let i = 0; i < errors.length; i++) {
+        const capturedValue = errors[i];
+        const error = capturedValue.value;
+        const message =
+          typeof error === 'object' &&
+          error !== null &&
+          typeof error.message === 'string'
+            ? // eslint-disable-next-line react-internal/safe-string-coercion
+              String(error.message)
+            : // eslint-disable-next-line react-internal/safe-string-coercion
+              String(error);
+        properties.push(['Error', message]);
+      }
+    }
+    performance.measure('Errored', {
+      start: startTime,
+      end: endTime,
+      detail: {
+        devtools: {
+          color: 'error',
+          track: reusableLaneDevToolDetails.track,
+          trackGroup: LANES_TRACK_GROUP,
+          tooltipText: passive ? 'Remaining Effects Errored' : 'Commit Errored',
+          properties,
+        },
+      },
+    });
+  }
+}
+
+export function logCommitPhase(
+  startTime: number,
+  endTime: number,
+  errors: null | Array<CapturedValue<mixed>>,
+): void {
+  if (errors !== null) {
+    logCommitErrored(startTime, endTime, errors, false);
+    return;
+  }
   if (supportsUserTiming) {
     reusableLaneDevToolDetails.color = 'secondary-dark';
     reusableLaneOptions.start = startTime;
@@ -613,7 +660,12 @@ export function logPaintYieldPhase(
 export function logPassiveCommitPhase(
   startTime: number,
   endTime: number,
+  errors: null | Array<CapturedValue<mixed>>,
 ): void {
+  if (errors !== null) {
+    logCommitErrored(startTime, endTime, errors, true);
+    return;
+  }
   if (supportsUserTiming) {
     reusableLaneDevToolDetails.color = 'secondary-dark';
     reusableLaneOptions.start = startTime;
