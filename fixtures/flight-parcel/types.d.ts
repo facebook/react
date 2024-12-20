@@ -16,6 +16,6 @@ declare module 'react-server-dom-parcel/server.edge' {
   export function decodeAction(body: FormData): Promise<(...args: any[]) => any>;
 }
 
-declare module '@parcel/runtime-rsc' {
+declare module 'react-server-dom-parcel/runtime' {
   export function Resources(): JSX.Element;
 }

@@ -2,7 +2,7 @@
 
 import './client';
 import './Todos.css';
-import {Resources} from '@parcel/runtime-rsc';
+import {Resources} from 'react-server-dom-parcel/runtime';
 import {Dialog} from './Dialog';
 import {TodoDetail} from './TodoDetail';
 import {TodoCreate} from './TodoCreate';

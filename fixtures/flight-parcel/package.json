@@ -16,7 +16,7 @@
     }
   },
   "scripts": {
-    "predev": "cp -r ../../build/oss-experimental/* ./node_modules/",
+    "predev": "cp -r ../../build/oss-experimental/* ./node_modules/ && cp -r ../../build/oss-experimental/react-server-dom-parcel ./node_modules/parcel-runtime-rsc",
     "prebuild": "cp -r ../../build/oss-experimental/* ./node_modules/",
     "dev": "concurrently \"npm run dev:watch\" \"npm run dev:start\"",
     "dev:watch": "NODE_ENV=development parcel watch",
@@ -29,7 +29,6 @@
   },
   "dependencies": {
     "@parcel/config-default": "2.0.0-dev.1789",
-    "@parcel/runtime-rsc": "2.13.3-dev.3412",
     "@types/parcel-env": "^0.0.6",
     "@types/express": "*",
     "@types/node": "^22.10.1",

@@ -685,6 +685,23 @@ const bundles = [
     externals: ['react', 'react-dom'],
   },
 
+  /******* React Server DOM Parcel Runtime Plugin *******/
+  {
+    bundleTypes: [NODE_ES2015],
+    moduleType: RENDERER_UTILS,
+    entry: 'react-server-dom-parcel/runtime',
+    global: 'ReactServerParcelRuntime',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: [
+      '@parcel/plugin',
+      '@parcel/utils',
+      '@parcel/rust',
+      'path',
+      'nullthrows',
+    ],
+  },
+
   /******* React Server DOM ESM Server *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD],

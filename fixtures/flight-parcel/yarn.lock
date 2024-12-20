@@ -498,15 +498,6 @@
     react-error-overlay "6.0.9"
     react-refresh ">=0.9 <=0.14"
 
-"@parcel/runtime-rsc@2.13.3-dev.3412":
-  version "2.13.3-dev.3412"
-  resolved "https://registry.yarnpkg.com/@parcel/runtime-rsc/-/runtime-rsc-2.13.3-dev.3412.tgz#434cc6afeff78027b6703af5ef27fdbbddd3d6df"
-  integrity sha512-kz+kJWJkQhEDIcnJhiG5PbG2zX4hRkwwiS7aIbby/9rMHexaENy54KMA6+PbMLXZdSlq42HvUSPyW3nHOz7+ew==
-  dependencies:
-    "@parcel/plugin" "2.0.0-dev.1789+0b82b13d6"
-    "@parcel/utils" "2.0.0-dev.1789+0b82b13d6"
-    nullthrows "^1.1.1"
-
 "@parcel/runtime-service-worker@2.13.3-dev.3412+0b82b13d6":
   version "2.13.3-dev.3412"
   resolved "https://registry.yarnpkg.com/@parcel/runtime-service-worker/-/runtime-service-worker-2.13.3-dev.3412.tgz#c59e6ce37e8e961d2f14b8bc03a5818a9f905cf7"

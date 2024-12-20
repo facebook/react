@@ -372,3 +372,18 @@ declare const Bun: {
     input: string | $TypedArray | DataView | ArrayBuffer | SharedArrayBuffer,
   ): number,
 };
+
+declare module '@parcel/plugin' {
+  declare class Runtime {
+    constructor(config: any): Runtime;
+  }
+}
+
+declare module '@parcel/utils' {
+  declare function urlJoin(publicURL: string, assetPath: string): string;
+  declare function normalizeSeparators(filePath: any): string;
+}
+
+declare module '@parcel/rust' {
+  declare function hashString(str: string): string;
+}
