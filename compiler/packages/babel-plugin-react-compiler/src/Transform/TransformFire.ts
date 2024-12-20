@@ -5,7 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, CompilerErrorDetailOptions, ErrorSeverity} from '..';
+import {
+  CompilerError,
+  CompilerErrorDetailOptions,
+  ErrorSeverity,
+  SourceLocation,
+} from '..';
 import {
   CallExpression,
   Effect,
@@ -28,14 +33,11 @@ import {
 import {createTemporaryPlace, markInstructionIds} from '../HIR/HIRBuilder';
 import {getOrInsertWith} from '../Utils/utils';
 import {BuiltInFireId, DefaultNonmutatingHook} from '../HIR/ObjectShape';
+import {eachInstructionOperand} from '../HIR/visitors';
+import {printSourceLocationLine} from '../HIR/PrintHIR';
 
 /*
  * TODO(jmbrown):
- *   In this stack:
- *     - Assert no lingering fire calls
- *     - Ensure a fired function is not called regularly elsewhere in the same effect
- *
- *   Future:
  *   - rewrite dep arrays
  *   - traverse object methods
  *   - method calls
@@ -47,6 +49,9 @@ const CANNOT_COMPILE_FIRE = 'Cannot compile `fire`';
 export function transformFire(fn: HIRFunction): void {
   const context = new Context(fn.env);
   replaceFireFunctions(fn, context);
+  if (!context.hasErrors()) {
+    ensureNoMoreFireUses(fn, context);
+  }
   context.throwIfErrorsFound();
 }
 
@@ -120,6 +125,11 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
               }
               rewriteInstrs.set(loadUseEffectInstrId, newInstrs);
             }
+            ensureNoRemainingCalleeCaptures(
+              lambda.loweredFunc.func,
+              context,
+              capturedCallees,
+            );
           }
         }
       } else if (
@@ -159,7 +169,10 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
             }
 
             const fireFunctionBinding =
-              context.getOrGenerateFireFunctionBinding(loadLocal.place);
+              context.getOrGenerateFireFunctionBinding(
+                loadLocal.place,
+                value.loc,
+              );
 
             loadLocal.place = {...fireFunctionBinding};
 
@@ -320,6 +333,69 @@ function visitFunctionExpressionAndPropagateFireDependencies(
   return calleesCapturedByFnExpression;
 }
 
+/*
+ * eachInstructionOperand is not sufficient for our cases because:
+ *  1. fire is a global, which will not appear
+ *  2. The HIR may be malformed, so can't rely on function deps and must
+ *     traverse the whole function.
+ */
+function* eachReachablePlace(fn: HIRFunction): Iterable<Place> {
+  for (const [, block] of fn.body.blocks) {
+    for (const instr of block.instructions) {
+      if (
+        instr.value.kind === 'FunctionExpression' ||
+        instr.value.kind === 'ObjectMethod'
+      ) {
+        yield* eachReachablePlace(instr.value.loweredFunc.func);
+      } else {
+        yield* eachInstructionOperand(instr);
+      }
+    }
+  }
+}
+
+function ensureNoRemainingCalleeCaptures(
+  fn: HIRFunction,
+  context: Context,
+  capturedCallees: FireCalleesToFireFunctionBinding,
+): void {
+  for (const place of eachReachablePlace(fn)) {
+    const calleeInfo = capturedCallees.get(place.identifier.id);
+    if (calleeInfo != null) {
+      const calleeName =
+        calleeInfo.capturedCalleeIdentifier.name?.kind === 'named'
+          ? calleeInfo.capturedCalleeIdentifier.name.value
+          : '<unknown>';
+      context.pushError({
+        loc: place.loc,
+        description: `All uses of ${calleeName} must be either used with a fire() call in \
+this effect or not used with a fire() call at all. ${calleeName} was used with fire() on line \
+${printSourceLocationLine(calleeInfo.fireLoc)} in this effect`,
+        severity: ErrorSeverity.InvalidReact,
+        reason: CANNOT_COMPILE_FIRE,
+        suggestions: null,
+      });
+    }
+  }
+}
+
+function ensureNoMoreFireUses(fn: HIRFunction, context: Context): void {
+  for (const place of eachReachablePlace(fn)) {
+    if (
+      place.identifier.type.kind === 'Function' &&
+      place.identifier.type.shapeId === BuiltInFireId
+    ) {
+      context.pushError({
+        loc: place.identifier.loc,
+        description: 'Cannot use `fire` outside of a useEffect function',
+        severity: ErrorSeverity.Invariant,
+        reason: CANNOT_COMPILE_FIRE,
+        suggestions: null,
+      });
+    }
+  }
+}
+
 function makeLoadUseFireInstruction(env: Environment): Instruction {
   const useFirePlace = createTemporaryPlace(env, GeneratedSource);
   useFirePlace.effect = Effect.Read;
@@ -422,6 +498,7 @@ type FireCalleesToFireFunctionBinding = Map<
   {
     fireFunctionBinding: Place;
     capturedCalleeIdentifier: Identifier;
+    fireLoc: SourceLocation;
   }
 >;
 
@@ -523,8 +600,10 @@ class Context {
   getLoadLocalInstr(id: IdentifierId): LoadLocal | undefined {
     return this.#loadLocals.get(id);
   }
-
-  getOrGenerateFireFunctionBinding(callee: Place): Place {
+  getOrGenerateFireFunctionBinding(
+    callee: Place,
+    fireLoc: SourceLocation,
+  ): Place {
     const fireFunctionBinding = getOrInsertWith(
       this.#fireCalleesToFireFunctions,
       callee.identifier.id,
@@ -534,6 +613,7 @@ class Context {
     this.#capturedCalleeIdentifierIds.set(callee.identifier.id, {
       fireFunctionBinding,
       capturedCalleeIdentifier: callee.identifier,
+      fireLoc,
     });
 
     return fireFunctionBinding;
@@ -575,8 +655,12 @@ class Context {
     return this.#loadGlobalInstructionIds.get(id);
   }
 
+  hasErrors(): boolean {
+    return this.#errors.hasErrors();
+  }
+
   throwIfErrorsFound(): void {
-    if (this.#errors.hasErrors()) throw this.#errors;
+    if (this.hasErrors()) throw this.#errors;
   }
 }
 
