@@ -108,9 +108,12 @@ import {
   resetComponentEffectTimers,
   pushComponentEffectStart,
   popComponentEffectStart,
+  pushComponentEffectErrors,
+  popComponentEffectErrors,
   componentEffectStartTime,
   componentEffectEndTime,
   componentEffectDuration,
+  componentEffectErrors,
 } from './ReactProfilerTimer';
 import {
   logComponentRender,
@@ -396,7 +399,7 @@ function commitLayoutEffectOnFiber(
   committedLanes: Lanes,
 ): void {
   const prevEffectStart = pushComponentEffectStart();
-
+  const prevEffectErrors = pushComponentEffectErrors();
   // When updating this function, also update reappearLayoutEffects, which does
   // most of the same things when an offscreen tree goes from hidden -> visible.
   const flags = finishedWork.flags;
@@ -632,10 +635,12 @@ function commitLayoutEffectOnFiber(
       componentEffectStartTime,
       componentEffectEndTime,
       componentEffectDuration,
+      componentEffectErrors,
     );
   }
 
   popComponentEffectStart(prevEffectStart);
+  popComponentEffectErrors(prevEffectErrors);
 }
 
 function abortRootTransitions(
@@ -1628,7 +1633,7 @@ function commitMutationEffectsOnFiber(
   lanes: Lanes,
 ) {
   const prevEffectStart = pushComponentEffectStart();
-
+  const prevEffectErrors = pushComponentEffectErrors();
   const current = finishedWork.alternate;
   const flags = finishedWork.flags;
 
@@ -2137,10 +2142,12 @@ function commitMutationEffectsOnFiber(
       componentEffectStartTime,
       componentEffectEndTime,
       componentEffectDuration,
+      componentEffectErrors,
     );
   }
 
   popComponentEffectStart(prevEffectStart);
+  popComponentEffectErrors(prevEffectErrors);
 }
 
 function commitReconciliationEffects(finishedWork: Fiber) {
@@ -2213,7 +2220,7 @@ function recursivelyTraverseLayoutEffects(
 
 export function disappearLayoutEffects(finishedWork: Fiber) {
   const prevEffectStart = pushComponentEffectStart();
-
+  const prevEffectErrors = pushComponentEffectErrors();
   switch (finishedWork.tag) {
     case FunctionComponent:
     case ForwardRef:
@@ -2286,10 +2293,12 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
       componentEffectStartTime,
       componentEffectEndTime,
       componentEffectDuration,
+      componentEffectErrors,
     );
   }
 
   popComponentEffectStart(prevEffectStart);
+  popComponentEffectErrors(prevEffectErrors);
 }
 
 function recursivelyTraverseDisappearLayoutEffects(parentFiber: Fiber) {
@@ -2311,7 +2320,7 @@ export function reappearLayoutEffects(
   includeWorkInProgressEffects: boolean,
 ) {
   const prevEffectStart = pushComponentEffectStart();
-
+  const prevEffectErrors = pushComponentEffectErrors();
   // Turn on layout effects in a tree that previously disappeared.
   const flags = finishedWork.flags;
   switch (finishedWork.tag) {
@@ -2462,10 +2471,12 @@ export function reappearLayoutEffects(
       componentEffectStartTime,
       componentEffectEndTime,
       componentEffectDuration,
+      componentEffectErrors,
     );
   }
 
   popComponentEffectStart(prevEffectStart);
+  popComponentEffectErrors(prevEffectErrors);
 }
 
 function recursivelyTraverseReappearLayoutEffects(
@@ -2702,7 +2713,7 @@ function commitPassiveMountOnFiber(
   endTime: number, // Profiling-only. The start time of the next Fiber or root completion.
 ): void {
   const prevEffectStart = pushComponentEffectStart();
-
+  const prevEffectErrors = pushComponentEffectErrors();
   // When updating this function, also update reconnectPassiveEffects, which does
   // most of the same things when an offscreen tree goes from hidden -> visible,
   // or when toggling effects inside a hidden tree.
@@ -3114,10 +3125,12 @@ function commitPassiveMountOnFiber(
       componentEffectStartTime,
       componentEffectEndTime,
       componentEffectDuration,
+      componentEffectErrors,
     );
   }
 
   popComponentEffectStart(prevEffectStart);
+  popComponentEffectErrors(prevEffectErrors);
 }
 
 function recursivelyTraverseReconnectPassiveEffects(
@@ -3177,7 +3190,7 @@ export function reconnectPassiveEffects(
   endTime: number, // Profiling-only. The start time of the next Fiber or root completion.
 ) {
   const prevEffectStart = pushComponentEffectStart();
-
+  const prevEffectErrors = pushComponentEffectErrors();
   // If this component rendered in Profiling mode (DEV or in Profiler component) then log its
   // render time. We do this after the fact in the passive effect to avoid the overhead of this
   // getting in the way of the render characteristics and avoid the overhead of unwinding
@@ -3371,10 +3384,12 @@ export function reconnectPassiveEffects(
       componentEffectStartTime,
       componentEffectEndTime,
       componentEffectDuration,
+      componentEffectErrors,
     );
   }
 
   popComponentEffectStart(prevEffectStart);
+  popComponentEffectErrors(prevEffectErrors);
 }
 
 function recursivelyTraverseAtomicPassiveEffects(
@@ -3651,7 +3666,7 @@ function recursivelyTraversePassiveUnmountEffects(parentFiber: Fiber): void {
 
 function commitPassiveUnmountOnFiber(finishedWork: Fiber): void {
   const prevEffectStart = pushComponentEffectStart();
-
+  const prevEffectErrors = pushComponentEffectErrors();
   switch (finishedWork.tag) {
     case FunctionComponent:
     case ForwardRef:
@@ -3736,10 +3751,12 @@ function commitPassiveUnmountOnFiber(finishedWork: Fiber): void {
       componentEffectStartTime,
       componentEffectEndTime,
       componentEffectDuration,
+      componentEffectErrors,
     );
   }
 
   popComponentEffectStart(prevEffectStart);
+  popComponentEffectErrors(prevEffectErrors);
 }
 
 function recursivelyTraverseDisconnectPassiveEffects(parentFiber: Fiber): void {
@@ -3859,7 +3876,7 @@ function commitPassiveUnmountInsideDeletedTreeOnFiber(
   nearestMountedAncestor: Fiber | null,
 ): void {
   const prevEffectStart = pushComponentEffectStart();
-
+  const prevEffectErrors = pushComponentEffectErrors();
   switch (current.tag) {
     case FunctionComponent:
     case ForwardRef:
@@ -3986,10 +4003,12 @@ function commitPassiveUnmountInsideDeletedTreeOnFiber(
       componentEffectStartTime,
       componentEffectEndTime,
       componentEffectDuration,
+      componentEffectErrors,
     );
   }
 
   popComponentEffectStart(prevEffectStart);
+  popComponentEffectErrors(prevEffectErrors);
 }
 
 export function invokeLayoutEffectMountInDEV(fiber: Fiber): void {

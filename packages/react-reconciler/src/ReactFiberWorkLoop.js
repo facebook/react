@@ -262,6 +262,7 @@ import {
   yieldStartTime,
   yieldReason,
   startPingTimerByLanes,
+  recordEffectError,
 } from './ReactProfilerTimer';
 
 // DEV stuff
@@ -3823,6 +3824,9 @@ function captureCommitPhaseErrorOnRoot(
   error: mixed,
 ) {
   const errorInfo = createCapturedValueAtFiber(error, sourceFiber);
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    recordEffectError(errorInfo);
+  }
   const update = createRootErrorUpdate(
     rootFiber.stateNode,
     errorInfo,
@@ -3864,6 +3868,9 @@ export function captureCommitPhaseError(
           !isAlreadyFailedLegacyErrorBoundary(instance))
       ) {
         const errorInfo = createCapturedValueAtFiber(error, sourceFiber);
+        if (enableProfilerTimer && enableComponentPerformanceTrack) {
+          recordEffectError(errorInfo);
+        }
         const update = createClassErrorUpdate((SyncLane: Lane));
         const root = enqueueUpdate(fiber, update, (SyncLane: Lane));
         if (root !== null) {

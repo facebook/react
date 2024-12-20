@@ -207,12 +207,60 @@ export function logComponentErrored(
   }
 }
 
+function logComponentEffectErrored(
+  fiber: Fiber,
+  startTime: number,
+  endTime: number,
+  errors: Array<CapturedValue<mixed>>,
+): void {
+  if (supportsUserTiming) {
+    const name = getComponentNameFromFiber(fiber);
+    if (name === null) {
+      // Skip
+      return;
+    }
+    const properties = [];
+    if (__DEV__) {
+      for (let i = 0; i < errors.length; i++) {
+        const capturedValue = errors[i];
+        const error = capturedValue.value;
+        const message =
+          typeof error === 'object' &&
+          error !== null &&
+          typeof error.message === 'string'
+            ? // eslint-disable-next-line react-internal/safe-string-coercion
+              String(error.message)
+            : // eslint-disable-next-line react-internal/safe-string-coercion
+              String(error);
+        properties.push(['Error', message]);
+      }
+    }
+    performance.measure(name, {
+      start: startTime,
+      end: endTime,
+      detail: {
+        devtools: {
+          color: 'error',
+          track: COMPONENTS_TRACK,
+          tooltipText: 'A life cycle or effect errored',
+          properties,
+        },
+      },
+    });
+  }
+}
+
 export function logComponentEffect(
   fiber: Fiber,
   startTime: number,
   endTime: number,
   selfTime: number,
+  errors: null | Array<CapturedValue<mixed>>,
 ): void {
+  if (errors !== null) {
+    logComponentEffectErrored(fiber, startTime, endTime, errors);
+    return;
+  }
   const name = getComponentNameFromFiber(fiber);
   if (name === null) {
     // Skip
