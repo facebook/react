@@ -22,6 +22,7 @@ function Component(props) {
 ## Code
 
 ```javascript
+import { useFire } from "react";
 import { c as _c } from "react/compiler-runtime"; // @enableFire
 import { fire } from "react";
 

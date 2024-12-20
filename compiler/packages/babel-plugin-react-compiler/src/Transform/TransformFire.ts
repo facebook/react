@@ -32,7 +32,6 @@ import {BuiltInFireId, DefaultNonmutatingHook} from '../HIR/ObjectShape';
 /*
  * TODO(jmbrown):
  *   In this stack:
- *     - Insert useFire import
  *     - Assert no lingering fire calls
  *     - Ensure a fired function is not called regularly elsewhere in the same effect
  *
@@ -226,6 +225,7 @@ function replaceFireFunctions(fn: HIRFunction, context: Context): void {
 
     if (rewriteInstrs.size > 0 || deleteInstrs.size > 0) {
       hasRewrite = true;
+      fn.env.hasFireRewrite = true;
     }
   }
 
