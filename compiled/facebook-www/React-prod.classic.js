@@ -630,4 +630,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.1.0-www-classic-17520b63-20241218";
+exports.version = "19.1.0-www-classic-de82912e-20241220";
