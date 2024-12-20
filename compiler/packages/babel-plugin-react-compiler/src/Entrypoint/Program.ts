@@ -567,7 +567,10 @@ export function compileProgram(
 
     const hasFireRewrite = compiledFns.some(c => c.compiledFn.hasFireRewrite);
     if (environment.enableFire && hasFireRewrite) {
-      externalFunctions.push({source: 'react', importSpecifierName: 'useFire'});
+      externalFunctions.push({
+        source: getReactCompilerRuntimeModule(pass.opts),
+        importSpecifierName: 'useFire',
+      });
     }
   } catch (err) {
     handleError(err, pass, null);
