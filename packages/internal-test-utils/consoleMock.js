@@ -491,10 +491,7 @@ export function createLogAssertion(
         }
 
         // Main logic to check if log is expected, with the component stack.
-        if (
-          normalizedMessage === expectedMessage ||
-          normalizedMessage.includes(expectedMessage)
-        ) {
+        if (normalizedMessage === expectedMessage) {
           if (isLikelyAComponentStack(normalizedMessage)) {
             if (expectedWithoutStack === true) {
               unexpectedIncludingComponentStack.push(normalizedMessage);
