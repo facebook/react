@@ -98,6 +98,7 @@ import {validateNoJSXInTryStatement} from '../Validation/ValidateNoJSXInTryState
 import {propagateScopeDependenciesHIR} from '../HIR/PropagateScopeDependenciesHIR';
 import {outlineJSX} from '../Optimization/OutlineJsx';
 import {optimizePropsMethodCalls} from '../Optimization/OptimizePropsMethodCalls';
+import {transformFire} from '../Transform';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -195,6 +196,11 @@ function runWithEnvironment(
 
   if (env.config.validateHooksUsage) {
     validateHooksUsage(hir);
+  }
+
+  if (env.config.enableFire) {
+    transformFire(hir);
+    log({kind: 'hir', name: 'TransformFire', value: hir});
   }
 
   if (env.config.validateNoCapitalizedCalls) {
