@@ -2702,25 +2702,6 @@ function commitPassiveMountOnFiber(
 ): void {
   const prevEffectStart = pushComponentEffectStart();
 
-  // If this component rendered in Profiling mode (DEV or in Profiler component) then log its
-  // render time. We do this after the fact in the passive effect to avoid the overhead of this
-  // getting in the way of the render characteristics and avoid the overhead of unwinding
-  // uncommitted renders.
-  if (
-    enableProfilerTimer &&
-    enableComponentPerformanceTrack &&
-    (finishedWork.mode & ProfileMode) !== NoMode &&
-    ((finishedWork.actualStartTime: any): number) > 0 &&
-    (finishedWork.flags & PerformedWork) !== NoFlags
-  ) {
-    logComponentRender(
-      finishedWork,
-      ((finishedWork.actualStartTime: any): number),
-      endTime,
-      inHydratedSubtree,
-    );
-  }
-
   // When updating this function, also update reconnectPassiveEffects, which does
   // most of the same things when an offscreen tree goes from hidden -> visible,
   // or when toggling effects inside a hidden tree.
@@ -2729,6 +2710,25 @@ function commitPassiveMountOnFiber(
     case FunctionComponent:
     case ForwardRef:
     case SimpleMemoComponent: {
+      // If this component rendered in Profiling mode (DEV or in Profiler component) then log its
+      // render time. We do this after the fact in the passive effect to avoid the overhead of this
+      // getting in the way of the render characteristics and avoid the overhead of unwinding
+      // uncommitted renders.
+      if (
+        enableProfilerTimer &&
+        enableComponentPerformanceTrack &&
+        (finishedWork.mode & ProfileMode) !== NoMode &&
+        ((finishedWork.actualStartTime: any): number) > 0 &&
+        (finishedWork.flags & PerformedWork) !== NoFlags
+      ) {
+        logComponentRender(
+          finishedWork,
+          ((finishedWork.actualStartTime: any): number),
+          endTime,
+          inHydratedSubtree,
+        );
+      }
+
       recursivelyTraversePassiveMountEffects(
         finishedRoot,
         finishedWork,
@@ -2742,6 +2742,35 @@ function commitPassiveMountOnFiber(
           HookPassive | HookHasEffect,
         );
       }
+      break;
+    }
+    case ClassComponent: {
+      // If this component rendered in Profiling mode (DEV or in Profiler component) then log its
+      // render time. We do this after the fact in the passive effect to avoid the overhead of this
+      // getting in the way of the render characteristics and avoid the overhead of unwinding
+      // uncommitted renders.
+      if (
+        enableProfilerTimer &&
+        enableComponentPerformanceTrack &&
+        (finishedWork.mode & ProfileMode) !== NoMode &&
+        ((finishedWork.actualStartTime: any): number) > 0 &&
+        (finishedWork.flags & PerformedWork) !== NoFlags
+      ) {
+        logComponentRender(
+          finishedWork,
+          ((finishedWork.actualStartTime: any): number),
+          endTime,
+          inHydratedSubtree,
+        );
+      }
+
+      recursivelyTraversePassiveMountEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        committedTransitions,
+        endTime,
+      );
       break;
     }
     case HostRoot: {
