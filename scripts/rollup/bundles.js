@@ -80,7 +80,7 @@ const bundles = [
     global: 'React',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: true,
-    externals: ['ReactNativeInternalFeatureFlags'],
+    externals: ['react-native'],
   },
 
   /******* Isomorphic Shared Subset *******/
@@ -112,7 +112,7 @@ const bundles = [
     global: 'JSXRuntime',
     minifyWithProdErrorCodes: true,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'ReactNativeInternalFeatureFlags'],
+    externals: ['react', 'react-native'],
   },
 
   /******* Compiler Runtime *******/
@@ -136,7 +136,7 @@ const bundles = [
     global: 'JSXRuntime',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'ReactNativeInternalFeatureFlags'],
+    externals: ['react', 'react-native'],
   },
 
   /******* React JSX DEV Runtime *******/
@@ -157,7 +157,7 @@ const bundles = [
     global: 'JSXDEVRuntime',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'ReactNativeInternalFeatureFlags'],
+    externals: ['react', 'react-native'],
   },
 
   /******* React JSX DEV Runtime React Server *******/
@@ -170,7 +170,7 @@ const bundles = [
     global: 'JSXDEVRuntime',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'ReactNativeInternalFeatureFlags'],
+    externals: ['react', 'react-native'],
   },
 
   /******* React DOM *******/
@@ -768,7 +768,7 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-native-renderer',
     global: 'ReactNativeRenderer',
-    externals: ['react-native', 'ReactNativeInternalFeatureFlags'],
+    externals: ['react-native'],
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: true,
     babel: opts =>
@@ -802,7 +802,7 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-native-renderer/fabric',
     global: 'ReactFabric',
-    externals: ['react-native', 'ReactNativeInternalFeatureFlags'],
+    externals: ['react-native'],
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: true,
     babel: opts =>
@@ -845,7 +845,7 @@ const bundles = [
       'react',
       'scheduler',
       'scheduler/unstable_mock',
-      'ReactNativeInternalFeatureFlags',
+      'react-native',
     ],
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
@@ -1006,7 +1006,7 @@ const bundles = [
     global: 'ReactIs',
     minifyWithProdErrorCodes: true,
     wrapWithModuleBoundaries: false,
-    externals: ['ReactNativeInternalFeatureFlags'],
+    externals: ['react-native'],
   },
 
   /******* React Debug Tools *******/
@@ -1114,7 +1114,7 @@ const bundles = [
     global: 'Scheduler',
     minifyWithProdErrorCodes: true,
     wrapWithModuleBoundaries: true,
-    externals: ['ReactNativeInternalFeatureFlags'],
+    externals: ['react-native'],
   },
 
   /******* React Scheduler Mock (experimental) *******/
@@ -1132,7 +1132,7 @@ const bundles = [
     global: 'SchedulerMock',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['ReactNativeInternalFeatureFlags'],
+    externals: ['react-native'],
   },
 
   /******* React Scheduler Native *******/
@@ -1143,7 +1143,7 @@ const bundles = [
     global: 'SchedulerNative',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['ReactNativeInternalFeatureFlags'],
+    externals: ['react-native'],
   },
 
   /******* React Scheduler Post Task (experimental) *******/
