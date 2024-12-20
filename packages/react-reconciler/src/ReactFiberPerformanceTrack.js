@@ -13,6 +13,8 @@ import type {Lanes} from './ReactFiberLane';
 
 import type {CapturedValue} from './ReactCapturedValue';
 
+import {SuspenseComponent} from './ReactWorkTags';
+
 import getComponentNameFromFiber from './getComponentNameFromFiber';
 
 import {
@@ -159,13 +161,18 @@ export function logComponentRender(
   }
 }
 
-export function logSuspenseBoundaryClientRendered(
+export function logComponentErrored(
   fiber: Fiber,
   startTime: number,
   endTime: number,
   errors: Array<CapturedValue<mixed>>,
 ): void {
   if (supportsUserTiming) {
+    const name = getComponentNameFromFiber(fiber);
+    if (name === null) {
+      // Skip
+      return;
+    }
     const properties = [];
     if (__DEV__) {
       for (let i = 0; i < errors.length; i++) {
@@ -182,14 +189,17 @@ export function logSuspenseBoundaryClientRendered(
         properties.push(['Error', message]);
       }
     }
-    performance.measure('Suspense', {
+    performance.measure(name, {
       start: startTime,
       end: endTime,
       detail: {
         devtools: {
           color: 'error',
           track: COMPONENTS_TRACK,
-          tooltipText: 'Hydration failed',
+          tooltipText:
+            fiber.tag === SuspenseComponent
+              ? 'Hydration failed'
+              : 'Error boundary caught an error',
           properties,
         },
       },

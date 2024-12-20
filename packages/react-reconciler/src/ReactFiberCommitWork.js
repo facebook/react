@@ -98,6 +98,7 @@ import {
   Cloned,
   PerformedWork,
   ForceClientRender,
+  DidCapture,
 } from './ReactFiberFlags';
 import {
   commitStartTime,
@@ -113,8 +114,8 @@ import {
 } from './ReactProfilerTimer';
 import {
   logComponentRender,
+  logComponentErrored,
   logComponentEffect,
-  logSuspenseBoundaryClientRendered,
 } from './ReactFiberPerformanceTrack';
 import {ConcurrentMode, NoMode, ProfileMode} from './ReactTypeOfMode';
 import {deferHiddenCallbacks} from './ReactFiberClassUpdateQueue';
@@ -2753,15 +2754,25 @@ function commitPassiveMountOnFiber(
         enableProfilerTimer &&
         enableComponentPerformanceTrack &&
         (finishedWork.mode & ProfileMode) !== NoMode &&
-        ((finishedWork.actualStartTime: any): number) > 0 &&
-        (finishedWork.flags & PerformedWork) !== NoFlags
+        ((finishedWork.actualStartTime: any): number) > 0
       ) {
-        logComponentRender(
-          finishedWork,
-          ((finishedWork.actualStartTime: any): number),
-          endTime,
-          inHydratedSubtree,
-        );
+        if ((finishedWork.flags & DidCapture) !== NoFlags) {
+          logComponentErrored(
+            finishedWork,
+            ((finishedWork.actualStartTime: any): number),
+            endTime,
+            // TODO: The captured values are all hidden inside the updater/callback closures so
+            // we can't get to the errors but they're there so we should be able to log them.
+            [],
+          );
+        } else if ((finishedWork.flags & PerformedWork) !== NoFlags) {
+          logComponentRender(
+            finishedWork,
+            ((finishedWork.actualStartTime: any): number),
+            endTime,
+            inHydratedSubtree,
+          );
+        }
       }
 
       recursivelyTraversePassiveMountEffects(
@@ -2920,7 +2931,7 @@ function commitPassiveMountOnFiber(
             // rendered boundary. Such as postpone.
             if (hydrationErrors !== null) {
               const startTime: number = (finishedWork.actualStartTime: any);
-              logSuspenseBoundaryClientRendered(
+              logComponentErrored(
                 finishedWork,
                 startTime,
                 endTime,
