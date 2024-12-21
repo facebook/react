@@ -231,7 +231,7 @@ function printFinalInstructions() {
   const publishReleaseScriptPath = join(__dirname, 'publish-release.js');
   const pathToPrint = relative(process.cwd(), publishReleaseScriptPath);
 
-  console.log('');
+  console.log(' ');
   console.log('Continue by running the publish-release script:');
   console.log(chalk.bold.green('  ' + pathToPrint));
 }
