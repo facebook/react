@@ -10,7 +10,7 @@ function Component(props) {
   }, [dispatch]);
 
   useEffect(() => {
-    const cleanup = GlobalEventEmitter.addListener("onInput", () => {
+    const cleanup = GlobalEventEmitter.addListener('onInput', () => {
       if (item.value) {
         exit();
       }

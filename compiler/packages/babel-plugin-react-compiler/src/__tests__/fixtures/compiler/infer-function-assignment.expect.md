@@ -3,7 +3,7 @@
 
 ```javascript
 // @compilationMode(infer)
-const Component = (props) => {
+const Component = props => {
   return <div />;
 };
 

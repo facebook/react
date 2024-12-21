@@ -461,7 +461,6 @@ describe('StrictEffectsMode defaults', () => {
       expect(log).toEqual([]);
     });
 
-    //@gate useModernStrictMode
     it('disconnects refs during double invoking', async () => {
       const onRefMock = jest.fn();
       function App({text}) {

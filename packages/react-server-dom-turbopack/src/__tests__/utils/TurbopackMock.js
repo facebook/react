@@ -8,7 +8,6 @@
 'use strict';
 
 const url = require('url');
-const Module = require('module');
 
 let turbopackModuleIdx = 0;
 const turbopackServerModules = {};
@@ -23,41 +22,16 @@ global.__turbopack_require__ = function (id) {
   return turbopackClientModules[id] || turbopackServerModules[id];
 };
 
-const previousCompile = Module.prototype._compile;
-
-const register = require('react-server-dom-turbopack/node-register');
-// Register node compile
-register();
-
-const nodeCompile = Module.prototype._compile;
-
-if (previousCompile === nodeCompile) {
-  throw new Error(
-    'Expected the Node loader to register the _compile extension',
-  );
-}
-
-Module.prototype._compile = previousCompile;
+const Server = require('react-server-dom-turbopack/server');
+const registerClientReference = Server.registerClientReference;
+const registerServerReference = Server.registerServerReference;
+const createClientModuleProxy = Server.createClientModuleProxy;
 
 exports.turbopackMap = turbopackClientMap;
 exports.turbopackModules = turbopackClientModules;
 exports.turbopackServerMap = turbopackServerMap;
 exports.moduleLoading = {
   prefix: '/prefix/',
-};
-
-exports.clientModuleError = function clientModuleError(moduleError) {
-  const idx = '' + turbopackModuleIdx++;
-  turbopackErroredModules[idx] = moduleError;
-  const path = url.pathToFileURL(idx).href;
-  turbopackClientMap[path] = {
-    id: idx,
-    chunks: [],
-    name: '*',
-  };
-  const mod = new Module();
-  nodeCompile.call(mod, '"use client"', idx);
-  return mod.exports;
 };
 
 exports.clientExports = function clientExports(moduleExports, chunkUrl) {
@@ -107,9 +81,66 @@ exports.clientExports = function clientExports(moduleExports, chunkUrl) {
       name: 's',
     };
   }
-  const mod = new Module();
-  nodeCompile.call(mod, '"use client"', idx);
-  return mod.exports;
+  return createClientModuleProxy(path);
+};
+
+exports.clientExportsESM = function clientExportsESM(
+  moduleExports,
+  options?: {forceClientModuleProxy?: boolean} = {},
+) {
+  const chunks = [];
+  const idx = '' + turbopackModuleIdx++;
+  turbopackClientModules[idx] = moduleExports;
+  const path = url.pathToFileURL(idx).href;
+
+  const createClientReferencesForExports = ({exports, async}) => {
+    turbopackClientMap[path] = {
+      id: idx,
+      chunks,
+      name: '*',
+      async: true,
+    };
+
+    if (options.forceClientModuleProxy) {
+      return createClientModuleProxy(path);
+    }
+
+    if (typeof exports === 'object') {
+      const references = {};
+
+      for (const name in exports) {
+        const id = path + '#' + name;
+        turbopackClientMap[path + '#' + name] = {
+          id: idx,
+          chunks,
+          name: name,
+          async,
+        };
+        references[name] = registerClientReference(() => {}, id, name);
+      }
+
+      return references;
+    }
+
+    return registerClientReference(() => {}, path, '*');
+  };
+
+  if (
+    moduleExports &&
+    typeof moduleExports === 'object' &&
+    typeof moduleExports.then === 'function'
+  ) {
+    return moduleExports.then(
+      asyncModuleExports =>
+        createClientReferencesForExports({
+          exports: asyncModuleExports,
+          async: true,
+        }),
+      () => {},
+    );
+  }
+
+  return createClientReferencesForExports({exports: moduleExports});
 };
 
 // This tests server to server references. There's another case of client to server references.
@@ -142,8 +173,25 @@ exports.serverExports = function serverExports(moduleExports) {
       name: 's',
     };
   }
-  const mod = new Module();
-  mod.exports = moduleExports;
-  nodeCompile.call(mod, '"use server"', idx);
-  return mod.exports;
+
+  if (typeof exports === 'function') {
+    // The module exports a function directly,
+    registerServerReference(
+      (exports: any),
+      idx,
+      // Represents the whole Module object instead of a particular import.
+      null,
+    );
+  } else {
+    const keys = Object.keys(exports);
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
+      const value = exports[keys[i]];
+      if (typeof value === 'function') {
+        registerServerReference((value: any), idx, key);
+      }
+    }
+  }
+
+  return moduleExports;
 };

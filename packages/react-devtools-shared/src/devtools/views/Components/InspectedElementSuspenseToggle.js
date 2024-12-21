@@ -51,7 +51,7 @@ export default function InspectedElementSuspenseToggle({
   };
 
   return (
-    <div className={styles.InspectedElementTree}>
+    <div>
       <div className={styles.HeaderRow}>
         <div className={styles.Header}>suspense</div>
       </div>

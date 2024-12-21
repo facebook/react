@@ -3,7 +3,7 @@
 
 ```javascript
 // @compilationMode(infer)
-import { useIdentity, identity } from "shared-runtime";
+import {useIdentity, identity} from 'shared-runtime';
 
 function Component(fakeProps: number) {
   const x = useIdentity(fakeProps);

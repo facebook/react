@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { Stringify } from "shared-runtime";
+import {Stringify} from 'shared-runtime';
 
 function Component() {
   // https://legacy.reactjs.org/docs/jsx-in-depth.html#props-default-to-true

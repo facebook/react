@@ -179,6 +179,8 @@ export default {
       //               ^^^ true for this reference
       // const [state, dispatch] = useReducer() / React.useReducer()
       //               ^^^ true for this reference
+      // const [state, dispatch] = useActionState() / React.useActionState()
+      //               ^^^ true for this reference
       // const ref = useRef()
       //       ^^^ true for this reference
       // const onStuff = useEffectEvent(() => {})
@@ -260,7 +262,11 @@ export default {
           }
           // useEffectEvent() return value is always unstable.
           return true;
-        } else if (name === 'useState' || name === 'useReducer') {
+        } else if (
+          name === 'useState' ||
+          name === 'useReducer' ||
+          name === 'useActionState'
+        ) {
           // Only consider second value in initializing tuple stable.
           if (
             id.type === 'ArrayPattern' &&
@@ -646,6 +652,7 @@ export default {
       const isTSAsArrayExpression =
         declaredDependenciesNode.type === 'TSAsExpression' &&
         declaredDependenciesNode.expression.type === 'ArrayExpression';
+
       if (!isArrayExpression && !isTSAsArrayExpression) {
         // If the declared dependencies are not an array expression then we
         // can't verify that the user provided the correct dependencies. Tell
@@ -1190,7 +1197,7 @@ export default {
         // Not a React Hook call that needs deps.
         return;
       }
-      const callback = node.arguments[callbackIndex];
+      let callback = node.arguments[callbackIndex];
       const reactiveHook = node.callee;
       const reactiveHookName = getNodeWithoutReactNamespace(reactiveHook).name;
       const maybeNode = node.arguments[callbackIndex + 1];
@@ -1235,20 +1242,18 @@ export default {
         return;
       }
 
+      while (
+        callback.type === 'TSAsExpression' ||
+        callback.type === 'AsExpression'
+      ) {
+        callback = callback.expression;
+      }
+
       switch (callback.type) {
         case 'FunctionExpression':
         case 'ArrowFunctionExpression':
           visitFunctionWithDependencies(
             callback,
-            declaredDependenciesNode,
-            reactiveHook,
-            reactiveHookName,
-            isEffect,
-          );
-          return; // Handled
-        case 'TSAsExpression':
-          visitFunctionWithDependencies(
-            callback.expression,
             declaredDependenciesNode,
             reactiveHook,
             reactiveHookName,
@@ -1284,6 +1289,13 @@ export default {
           const def = variable.defs[0];
           if (!def || !def.node) {
             break; // Unhandled
+          }
+          if (def.type === 'Parameter') {
+            reportProblem({
+              node: reactiveHook,
+              message: getUnknownDependenciesMessage(reactiveHookName),
+            });
+            return;
           }
           if (def.type !== 'Variable' && def.type !== 'FunctionName') {
             // Parameter or an unusual pattern. Bail out.
@@ -1327,9 +1339,7 @@ export default {
           // useEffect(generateEffectBody(), []);
           reportProblem({
             node: reactiveHook,
-            message:
-              `React Hook ${reactiveHookName} received a function whose dependencies ` +
-              `are unknown. Pass an inline function instead.`,
+            message: getUnknownDependenciesMessage(reactiveHookName),
           });
           return; // Handled
       }
@@ -1905,4 +1915,11 @@ function isUseEffectEventIdentifier(node) {
     return node.type === 'Identifier' && node.name === 'useEffectEvent';
   }
   return false;
+}
+
+function getUnknownDependenciesMessage(reactiveHookName) {
+  return (
+    `React Hook ${reactiveHookName} received a function whose dependencies ` +
+    `are unknown. Pass an inline function instead.`
+  );
 }

@@ -26,6 +26,13 @@ $ npm run dev
 $ yarn
 ```
 
+## Testing
+```sh
+# Install playwright browser binaries
+$ npx playwright install --with-deps
+# Run tests
+$ yarn test
+```
 ## Deployment
 
 This project has been deployed using Vercel. Vercel does the exact same thing as we would

@@ -15,9 +15,14 @@ on:
       - compiler/Cargo.*
       - compiler/*.toml
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
 env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: -Dwarnings
+  TZ: /usr/share/zoneinfo/America/Los_Angeles
 
 defaults:
   run:

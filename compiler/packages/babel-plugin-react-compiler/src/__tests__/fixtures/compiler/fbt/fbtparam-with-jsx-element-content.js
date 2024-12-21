@@ -1,6 +1,6 @@
-import fbt from "fbt";
+import fbt from 'fbt';
 
-function Component({ name, data, icon }) {
+function Component({name, data, icon}) {
   return (
     <Text type="body4">
       <fbt desc="Lorem ipsum">

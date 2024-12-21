@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from 'react';
 
 function Component(props) {
   const x = React.useMemo(() => {
@@ -11,5 +11,5 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: 42 }],
+  params: [{value: 42}],
 };

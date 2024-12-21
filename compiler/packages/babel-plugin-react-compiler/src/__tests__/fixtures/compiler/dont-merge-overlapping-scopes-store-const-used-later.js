@@ -1,4 +1,4 @@
-import { Stringify, makeObject_Primitives } from "shared-runtime";
+import {Stringify, makeObject_Primitives} from 'shared-runtime';
 
 function Component(props) {
   const array = [props.count];
@@ -10,5 +10,5 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ count: 42 }],
+  params: [{count: 42}],
 };

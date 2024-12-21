@@ -2,9 +2,9 @@
 ## Input
 
 ```javascript
-import fbt from "fbt";
+import fbt from 'fbt';
 
-function Component({ name, data, icon }) {
+function Component({name, data, icon}) {
   return (
     <Text type="body4">
       <fbt desc="Lorem ipsum">
@@ -32,7 +32,7 @@ function Component(t0) {
   const $ = _c(4);
   const { name, data, icon } = t0;
   let t1;
-  if ($[0] !== name || $[1] !== icon || $[2] !== data) {
+  if ($[0] !== data || $[1] !== icon || $[2] !== name) {
     t1 = (
       <Text type="body4">
         {fbt._(
@@ -61,9 +61,9 @@ function Component(t0) {
         )}
       </Text>
     );
-    $[0] = name;
+    $[0] = data;
     $[1] = icon;
-    $[2] = data;
+    $[2] = name;
     $[3] = t1;
   } else {
     t1 = $[3];

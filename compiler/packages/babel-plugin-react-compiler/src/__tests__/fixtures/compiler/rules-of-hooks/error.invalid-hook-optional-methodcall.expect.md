@@ -3,7 +3,7 @@
 
 ```javascript
 function Component() {
-  const { result } = Module.useConditionalHook?.() ?? {};
+  const {result} = Module.useConditionalHook?.() ?? {};
   return result;
 }
 
@@ -14,8 +14,8 @@ function Component() {
 
 ```
   1 | function Component() {
-> 2 |   const { result } = Module.useConditionalHook?.() ?? {};
-    |                      ^^^^^^^^^^^^^^^^^^^^^^^^^ InvalidReact: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning) (2:2)
+> 2 |   const {result} = Module.useConditionalHook?.() ?? {};
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^ InvalidReact: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning) (2:2)
   3 |   return result;
   4 | }
   5 |

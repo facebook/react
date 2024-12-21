@@ -4,7 +4,7 @@
 ```javascript
 // @validatePreserveExistingMemoizationGuarantees
 
-import { useCallback } from "react";
+import {useCallback} from 'react';
 
 // It's correct to produce memo blocks with fewer deps than source
 function useFoo(a, b) {

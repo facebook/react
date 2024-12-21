@@ -3,10 +3,10 @@
 
 ```javascript
 // @gating @panicThreshold(none) @compilationMode(infer)
-let someGlobal = "joe";
+let someGlobal = 'joe';
 
 function Component() {
-  someGlobal = "wat";
+  someGlobal = 'wat';
   return <div>{someGlobal}</div>;
 }
 

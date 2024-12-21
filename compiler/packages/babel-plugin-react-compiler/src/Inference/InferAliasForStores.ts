@@ -11,20 +11,20 @@ import {
   Identifier,
   InstructionId,
   Place,
-} from "../HIR/HIR";
+} from '../HIR/HIR';
 import {
   eachInstructionLValue,
   eachInstructionValueOperand,
-} from "../HIR/visitors";
-import DisjointSet from "../Utils/DisjointSet";
+} from '../HIR/visitors';
+import DisjointSet from '../Utils/DisjointSet';
 
 export function inferAliasForStores(
   func: HIRFunction,
-  aliases: DisjointSet<Identifier>
+  aliases: DisjointSet<Identifier>,
 ): void {
   for (const [_, block] of func.body.blocks) {
     for (const instr of block.instructions) {
-      const { value, lvalue } = instr;
+      const {value, lvalue} = instr;
       const isStore =
         lvalue.effect === Effect.Store ||
         /*
@@ -32,7 +32,7 @@ export function inferAliasForStores(
          * as Effect.Store.
          */
         ![...eachInstructionValueOperand(value)].every(
-          (operand) => operand.effect !== Effect.Store
+          operand => operand.effect !== Effect.Store,
         );
 
       if (!isStore) {
@@ -57,7 +57,7 @@ function maybeAlias(
   aliases: DisjointSet<Identifier>,
   lvalue: Place,
   rvalue: Place,
-  id: InstructionId
+  id: InstructionId,
 ): void {
   if (
     lvalue.identifier.mutableRange.end > id + 1 ||

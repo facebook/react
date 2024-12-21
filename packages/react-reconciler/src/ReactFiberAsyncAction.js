@@ -17,6 +17,14 @@ import type {BatchConfigTransition} from './ReactFiberTracingMarkerComponent';
 
 import {requestTransitionLane} from './ReactFiberRootScheduler';
 import {NoLane} from './ReactFiberLane';
+import {
+  hasScheduledTransitionWork,
+  clearAsyncTransitionTimer,
+} from './ReactProfilerTimer';
+import {
+  enableComponentPerformanceTrack,
+  enableProfilerTimer,
+} from 'shared/ReactFeatureFlags';
 
 // If there are multiple, concurrent async actions, they are entangled. All
 // transition updates that occur while the async action is still in progress
@@ -64,24 +72,34 @@ export function entangleAsyncAction<S>(
 }
 
 function pingEngtangledActionScope() {
-  if (
-    currentEntangledListeners !== null &&
-    --currentEntangledPendingCount === 0
-  ) {
-    // All the actions have finished. Close the entangled async action scope
-    // and notify all the listeners.
-    if (currentEntangledActionThenable !== null) {
-      const fulfilledThenable: FulfilledThenable<void> =
-        (currentEntangledActionThenable: any);
-      fulfilledThenable.status = 'fulfilled';
+  if (--currentEntangledPendingCount === 0) {
+    if (enableProfilerTimer && enableComponentPerformanceTrack) {
+      if (!hasScheduledTransitionWork()) {
+        // If we have received no updates since we started the entangled Actions
+        // that means it didn't lead to a Transition being rendered. We need to
+        // clear the timer so that if we start another entangled sequence we use
+        // the next start timer instead of appearing like we were blocked the
+        // whole time. We currently don't log a track for Actions that don't
+        // render a Transition.
+        clearAsyncTransitionTimer();
+      }
     }
-    const listeners = currentEntangledListeners;
-    currentEntangledListeners = null;
-    currentEntangledLane = NoLane;
-    currentEntangledActionThenable = null;
-    for (let i = 0; i < listeners.length; i++) {
-      const listener = listeners[i];
-      listener();
+    if (currentEntangledListeners !== null) {
+      // All the actions have finished. Close the entangled async action scope
+      // and notify all the listeners.
+      if (currentEntangledActionThenable !== null) {
+        const fulfilledThenable: FulfilledThenable<void> =
+          (currentEntangledActionThenable: any);
+        fulfilledThenable.status = 'fulfilled';
+      }
+      const listeners = currentEntangledListeners;
+      currentEntangledListeners = null;
+      currentEntangledLane = NoLane;
+      currentEntangledActionThenable = null;
+      for (let i = 0; i < listeners.length; i++) {
+        const listener = listeners[i];
+        listener();
+      }
     }
   }
 }

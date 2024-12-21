@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { Stringify } from "shared-runtime";
+import {Stringify} from 'shared-runtime';
 
 /**
  * We currently hoist the accessed properties of function expressions,
@@ -17,7 +17,7 @@ import { Stringify } from "shared-runtime";
  *  Forget:
  *  (kind: exception) Cannot read properties of null (reading 'prop')
  */
-function Component({ obj, isObjNull }) {
+function Component({obj, isObjNull}) {
   const callback = () => {
     if (!isObjNull) {
       return obj.prop;
@@ -30,7 +30,7 @@ function Component({ obj, isObjNull }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ obj: null, isObjNull: true }],
+  params: [{obj: null, isObjNull: true}],
 };
 
 ```
@@ -58,7 +58,7 @@ function Component(t0) {
   const $ = _c(5);
   const { obj, isObjNull } = t0;
   let t1;
-  if ($[0] !== isObjNull || $[1] !== obj.prop) {
+  if ($[0] !== isObjNull || $[1] !== obj) {
     t1 = () => {
       if (!isObjNull) {
         return obj.prop;
@@ -67,7 +67,7 @@ function Component(t0) {
       }
     };
     $[0] = isObjNull;
-    $[1] = obj.prop;
+    $[1] = obj;
     $[2] = t1;
   } else {
     t1 = $[2];

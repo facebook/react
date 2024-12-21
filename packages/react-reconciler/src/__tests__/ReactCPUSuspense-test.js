@@ -231,7 +231,11 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       );
     });
     // Inner contents suspended, so we continue showing a fallback.
-    assertLog(['Suspend! [Inner]']);
+    assertLog([
+      'Suspend! [Inner]',
+
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Inner]'] : []),
+    ]);
     expect(root).toMatchRenderedOutput(
       <>
         Outer

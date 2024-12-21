@@ -2,10 +2,10 @@
 ## Input
 
 ```javascript
-// @instrumentForget @compilationMode(annotation)
+// @enableEmitInstrumentForget @compilationMode(annotation)
 
 function Bar(props) {
-  "use forget";
+  'use forget';
   return <div>{props.bar}</div>;
 }
 
@@ -14,7 +14,7 @@ function NoForget(props) {
 }
 
 function Foo(props) {
-  "use forget";
+  'use forget';
   return <Foo>{props.bar}</Foo>;
 }
 
@@ -24,7 +24,7 @@ function Foo(props) {
 
 ```javascript
 import { useRenderCounter, shouldInstrument } from "react-compiler-runtime";
-import { c as _c } from "react/compiler-runtime"; // @instrumentForget @compilationMode(annotation)
+import { c as _c } from "react/compiler-runtime"; // @enableEmitInstrumentForget @compilationMode(annotation)
 
 function Bar(props) {
   "use forget";

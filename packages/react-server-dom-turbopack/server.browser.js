@@ -7,4 +7,13 @@
  * @flow
  */
 
-export * from './src/ReactFlightDOMServerBrowser';
+export {
+  renderToReadableStream,
+  decodeReply,
+  decodeAction,
+  decodeFormState,
+  registerServerReference,
+  registerClientReference,
+  createClientModuleProxy,
+  createTemporaryReferenceSet,
+} from './src/server/react-flight-dom-server.browser';

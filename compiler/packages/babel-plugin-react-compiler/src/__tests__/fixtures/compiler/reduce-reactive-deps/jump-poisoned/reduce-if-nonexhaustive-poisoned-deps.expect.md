@@ -2,9 +2,9 @@
 ## Input
 
 ```javascript
-import { identity } from "shared-runtime";
+import {identity} from 'shared-runtime';
 
-function useFoo({ input, cond, hasAB }) {
+function useFoo({input, cond, hasAB}) {
   const x = [];
   if (cond) {
     if (!hasAB) {
@@ -19,15 +19,15 @@ function useFoo({ input, cond, hasAB }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useFoo,
-  params: [{ input: { b: 1 }, cond: true, hasAB: false }],
+  params: [{input: {b: 1}, cond: true, hasAB: false}],
   sequentialRenders: [
-    { input: { a: { b: 1 } }, cond: true, hasAB: true },
-    { input: null, cond: true, hasAB: false },
+    {input: {a: {b: 1}}, cond: true, hasAB: true},
+    {input: null, cond: true, hasAB: false},
     // preserve nullthrows
-    { input: { a: { b: undefined } }, cond: true, hasAB: true },
-    { input: { a: undefined }, cond: true, hasAB: true },
-    { input: { a: { b: undefined } }, cond: true, hasAB: true },
-    { input: undefined, cond: true, hasAB: true },
+    {input: {a: {b: undefined}}, cond: true, hasAB: true},
+    {input: {a: undefined}, cond: true, hasAB: true},
+    {input: {a: {b: undefined}}, cond: true, hasAB: true},
+    {input: undefined, cond: true, hasAB: true},
   ],
 };
 
@@ -42,8 +42,8 @@ import { identity } from "shared-runtime";
 function useFoo(t0) {
   const $ = _c(9);
   const { input, cond, hasAB } = t0;
-  let x;
   let t1;
+  let x;
   if ($[0] !== cond || $[1] !== hasAB || $[2] !== input) {
     t1 = Symbol.for("react.early_return_sentinel");
     bb0: {
@@ -77,11 +77,11 @@ function useFoo(t0) {
     $[0] = cond;
     $[1] = hasAB;
     $[2] = input;
-    $[3] = x;
-    $[4] = t1;
+    $[3] = t1;
+    $[4] = x;
   } else {
-    x = $[3];
-    t1 = $[4];
+    t1 = $[3];
+    x = $[4];
   }
   if (t1 !== Symbol.for("react.early_return_sentinel")) {
     return t1;

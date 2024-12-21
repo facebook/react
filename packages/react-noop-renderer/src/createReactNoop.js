@@ -35,13 +35,10 @@ import {
   ConcurrentRoot,
   LegacyRoot,
 } from 'react-reconciler/constants';
-import {
-  enableRefAsProp,
-  disableLegacyMode,
-  disableStringRefs,
-} from 'shared/ReactFeatureFlags';
+import {disableLegacyMode} from 'shared/ReactFeatureFlags';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
+import ReactVersion from 'shared/ReactVersion';
 
 type Container = {
   rootID: string,
@@ -80,6 +77,8 @@ type TextInstance = {
 type HostContext = Object;
 type CreateRootOptions = {
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
+  onUncaughtError?: (error: mixed, errorInfo: {componentStack: string}) => void,
+  onCaughtError?: (error: mixed, errorInfo: {componentStack: string}) => void,
   ...
 };
 
@@ -367,6 +366,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   }
 
   const sharedHostConfig = {
+    rendererVersion: ReactVersion,
+    rendererPackageName: 'react-noop',
+
     supportsSingletons: false,
 
     getRootHostContext() {
@@ -503,15 +505,15 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       typeof queueMicrotask === 'function'
         ? queueMicrotask
         : typeof Promise !== 'undefined'
-        ? callback =>
-            Promise.resolve(null)
-              .then(callback)
-              .catch(error => {
-                setTimeout(() => {
-                  throw error;
-                });
-              })
-        : setTimeout,
+          ? callback =>
+              Promise.resolve(null)
+                .then(callback)
+                .catch(error => {
+                  setTimeout(() => {
+                    throw error;
+                  });
+                })
+          : setTimeout,
 
     prepareForCommit(): null | Object {
       return null;
@@ -527,6 +529,16 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         return currentUpdatePriority;
       }
       return currentEventPriority;
+    },
+
+    trackSchedulerEvent(): void {},
+
+    resolveEventType(): null | string {
+      return null;
+    },
+
+    resolveEventTimeStamp(): number {
+      return -1.1;
     },
 
     shouldAttemptEagerTransition(): boolean {
@@ -635,6 +647,14 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     NotPendingTransition: (null: TransitionStatus),
 
     resetFormInstance(form: Instance) {},
+
+    bindToConsole(methodName, args, badgeName) {
+      return Function.prototype.bind.apply(
+        // eslint-disable-next-line react-internal/no-production-logging
+        console[methodName],
+        [console].concat(args),
+      );
+    },
   };
 
   const hostConfig = useMutation
@@ -811,7 +831,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   let currentEventPriority = DefaultEventPriority;
 
   function createJSXElementForTestComparison(type, props) {
-    if (__DEV__ && enableRefAsProp) {
+    if (__DEV__) {
       const element = {
         type: type,
         $$typeof: REACT_ELEMENT_TYPE,
@@ -825,14 +845,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         value: null,
       });
       return element;
-    } else if (!__DEV__ && disableStringRefs) {
-      return {
-        $$typeof: REACT_ELEMENT_TYPE,
-        type: type,
-        key: null,
-        ref: null,
-        props: props,
-      };
     } else {
       return {
         $$typeof: REACT_ELEMENT_TYPE,
@@ -840,8 +852,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         key: null,
         ref: null,
         props: props,
-        _owner: null,
-        _store: __DEV__ ? {} : undefined,
       };
     }
   }
@@ -1049,8 +1059,12 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         null,
         false,
         '',
-        NoopRenderer.defaultOnUncaughtError,
-        NoopRenderer.defaultOnCaughtError,
+        options && options.onUncaughtError
+          ? options.onUncaughtError
+          : NoopRenderer.defaultOnUncaughtError,
+        options && options.onCaughtError
+          ? options.onCaughtError
+          : NoopRenderer.defaultOnCaughtError,
         onRecoverableError,
         options && options.unstable_transitionCallbacks
           ? options.unstable_transitionCallbacks

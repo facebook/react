@@ -8,7 +8,7 @@ import {
   makeObject_Primitives,
   mutateAndReturn,
   useHook,
-} from "shared-runtime";
+} from 'shared-runtime';
 
 /**
  * value and `mutateAndReturn(value)` should end up in the same reactive scope.

@@ -2,15 +2,9 @@
 ## Input
 
 ```javascript
-import { setProperty } from "shared-runtime";
+import {setProperty} from 'shared-runtime';
 
-function useFoo({
-  o,
-  branchCheck,
-}: {
-  o: { value: number };
-  branchCheck: boolean;
-}) {
+function useFoo({o, branchCheck}: {o: {value: number}; branchCheck: boolean}) {
   let x = {};
   if (branchCheck) {
     setProperty(x, o.value);
@@ -26,7 +20,7 @@ function useFoo({
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useFoo,
-  params: [{ o: { value: 2 }, branchCheck: false }],
+  params: [{o: {value: 2}, branchCheck: false}],
 };
 
 ```

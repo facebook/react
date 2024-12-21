@@ -20,76 +20,67 @@ const dynamicFlags: DynamicExportsType = (dynamicFlagsUntyped: any);
 // the exports object every time a flag is read.
 export const {
   alwaysThrottleRetries,
-  consoleManagedByDevToolsDuringStrictMode,
-  disableDefaultPropsExceptForClasses,
-  enableAddPropertiesFastPath,
-  enableDeferRootSchedulingToMicrotask,
-  enableFastJSX,
-  enableInfiniteRenderLoopDetection,
+  enableFabricCompleteRootInCommitPhase,
+  enableHiddenSubtreeInsertionEffectCleanup,
+  enableObjectFiber,
+  enablePersistedModeClonedFlag,
   enableShallowPropDiffing,
+  enableUseResourceEffectHook,
   passChildrenWhenCloningPersistedNodes,
+  enableSiblingPrerendering,
+  enableOwnerStacks,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
-export const allowConcurrentByDefault = false;
-export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 export const disableClientCache = true;
 export const disableCommentsAsDOMContainers = true;
-export const disableIEWorkarounds = true;
+export const disableDefaultPropsExceptForClasses = true;
 export const disableInputAttributeSyncing = false;
 export const disableLegacyContext = false;
+export const disableLegacyContextForFunctionComponents = false;
 export const disableLegacyMode = false;
 export const disableSchedulerTimeoutInWorkLoop = false;
-export const disableStringRefs = true;
 export const disableTextareaChildren = false;
-export const enableAsyncActions = true;
 export const enableAsyncDebugInfo = false;
 export const enableAsyncIterableChildren = false;
-export const enableBinaryFlight = true;
-export const enableCache = true;
-export const enableComponentStackLocations = true;
 export const enableCPUSuspense = true;
 export const enableCreateEventHandleAPI = false;
-export const enableDebugTracing = false;
+export const enableDeferRootSchedulingToMicrotask = true;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
-export const enableFilterEmptyStringAttributesDOM = true;
+export const enableMoveBefore = true;
 export const enableFizzExternalRuntime = true;
-export const enableFlightReadableStream = true;
 export const enableGetInspectorDataForInstanceInProduction = true;
-export const enableLazyContextPropagation = false;
+export const enableHalt = false;
+export const enableInfiniteRenderLoopDetection = false;
 export const enableLegacyCache = false;
 export const enableLegacyFBSupport = false;
 export const enableLegacyHidden = false;
 export const enableNoCloningMemoCache = false;
-export const enableOwnerStacks = false;
 export const enablePostpone = false;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableProfilerTimer = __PROFILE__;
 export const enableReactTestRendererWarning = false;
-export const enableRefAsProp = true;
 export const enableRenderableContext = true;
 export const enableRetryLaneExpiration = false;
 export const enableSchedulingProfiler = __PROFILE__;
+export const enableComponentPerformanceTrack = false;
 export const enableScopeAPI = false;
 export const enableServerComponentLogs = true;
 export const enableSuspenseAvoidThisFallback = false;
-export const enableSuspenseAvoidThisFallbackFizz = false;
-export const enableSuspenseCallback = false;
+export const enableSuspenseCallback = true;
 export const enableTaint = true;
 export const enableTransitionTracing = false;
 export const enableTrustedTypesIntegration = false;
 export const enableUpdaterTracking = __PROFILE__;
-export const enableUseDeferredValueInitialArg = true;
 export const enableUseEffectEventHook = false;
-export const enableUseMemoCacheHook = true;
 export const favorSafetyOverHydrationPerf = true;
-export const forceConcurrentByDefaultForTesting = false;
 export const renameElementSymbol = false;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
-export const useModernStrictMode = true;
+export const enableHydrationLaneScheduling = true;
+export const enableYieldingBeforePassive = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

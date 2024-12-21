@@ -60,7 +60,16 @@ describe('ReactNativeAttributePayloadFabric.create', () => {
     });
   });
 
-  it('should ignore fields that are set to undefined', () => {
+  it('should nullify previously defined style prop that is subsequently set to null or undefined', () => {
+    expect(
+      create({style: [{a: 0}, {a: undefined}]}, {style: {a: true}}),
+    ).toEqual({a: null});
+    expect(create({style: [{a: 0}, {a: null}]}, {style: {a: true}})).toEqual({
+      a: null,
+    });
+  });
+
+  it('should ignore non-style fields that are set to undefined', () => {
     expect(create({}, {a: true})).toEqual(null);
     expect(create({a: undefined}, {a: true})).toEqual(null);
     expect(create({a: undefined, b: undefined}, {a: true, b: true})).toEqual(

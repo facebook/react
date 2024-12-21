@@ -7,7 +7,7 @@
 // separately from props.b)
 // Correctness:
 
-import { identity, mutate, setProperty } from "shared-runtime";
+import {identity, mutate, setProperty} from 'shared-runtime';
 
 //   y depends on either props.b or props.b + 1
 function PrimitiveAsDepNested(props) {
@@ -20,16 +20,16 @@ function PrimitiveAsDepNested(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: PrimitiveAsDepNested,
-  params: [{ a: 1, b: 2 }],
+  params: [{a: 1, b: 2}],
   sequentialRenders: [
     // change b
-    { a: 1, b: 3 },
+    {a: 1, b: 3},
     // change b
-    { a: 1, b: 4 },
+    {a: 1, b: 4},
     // change a
-    { a: 2, b: 4 },
+    {a: 2, b: 4},
     // change a
-    { a: 3, b: 4 },
+    {a: 3, b: 4},
   ],
 };
 
@@ -49,7 +49,7 @@ import { identity, mutate, setProperty } from "shared-runtime";
 function PrimitiveAsDepNested(props) {
   const $ = _c(5);
   let t0;
-  if ($[0] !== props.b || $[1] !== props.a) {
+  if ($[0] !== props.a || $[1] !== props.b) {
     const x = {};
     mutate(x);
     const t1 = props.b + 1;
@@ -64,8 +64,8 @@ function PrimitiveAsDepNested(props) {
     const y = t2;
     setProperty(x, props.a);
     t0 = [x, y];
-    $[0] = props.b;
-    $[1] = props.a;
+    $[0] = props.a;
+    $[1] = props.b;
     $[2] = t0;
   } else {
     t0 = $[2];

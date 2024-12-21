@@ -2,12 +2,12 @@
 ## Input
 
 ```javascript
-import { useEffect, useState } from "react";
+import {useEffect, useState} from 'react';
 
 function Component() {
-  const [state, setState] = useState("hello");
+  const [state, setState] = useState('hello');
   useEffect(() => {
-    setState("goodbye");
+    setState('goodbye');
   }, []);
 
   return <div>{state}</div>;

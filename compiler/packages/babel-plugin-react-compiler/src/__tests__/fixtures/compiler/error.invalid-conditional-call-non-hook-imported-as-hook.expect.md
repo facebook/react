@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { makeArray as useArray } from "other";
+import {makeArray as useArray} from 'other';
 
 function Component(props) {
   let data;

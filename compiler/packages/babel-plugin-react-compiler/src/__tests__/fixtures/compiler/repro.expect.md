@@ -7,10 +7,10 @@ function Component(props) {
   const thumbnails = [];
   const baseVideos = getBaseVideos(item);
   useMemo(() => {
-    baseVideos.forEach((video) => {
+    baseVideos.forEach(video => {
       const baseVideo = video.hasBaseVideo;
       if (Boolean(baseVideo)) {
-        thumbnails.push({ extraVideo: true });
+        thumbnails.push({extraVideo: true});
       }
     });
   });
@@ -24,12 +24,14 @@ function Component(props) {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = _c(2);
+  const $ = _c(7);
   const item = props.item;
+  let baseVideos;
   let t0;
+  let thumbnails;
   if ($[0] !== item) {
-    const thumbnails = [];
-    const baseVideos = getBaseVideos(item);
+    thumbnails = [];
+    baseVideos = getBaseVideos(item);
 
     baseVideos.forEach((video) => {
       const baseVideo = video.hasBaseVideo;
@@ -37,14 +39,26 @@ function Component(props) {
         thumbnails.push({ extraVideo: true });
       }
     });
-
-    t0 = <FlatList baseVideos={baseVideos} items={thumbnails} />;
     $[0] = item;
-    $[1] = t0;
+    $[1] = baseVideos;
+    $[2] = t0;
+    $[3] = thumbnails;
   } else {
-    t0 = $[1];
+    baseVideos = $[1];
+    t0 = $[2];
+    thumbnails = $[3];
   }
-  return t0;
+  t0 = undefined;
+  let t1;
+  if ($[4] !== baseVideos || $[5] !== thumbnails) {
+    t1 = <FlatList baseVideos={baseVideos} items={thumbnails} />;
+    $[4] = baseVideos;
+    $[5] = thumbnails;
+    $[6] = t1;
+  } else {
+    t1 = $[6];
+  }
+  return t1;
 }
 
 ```

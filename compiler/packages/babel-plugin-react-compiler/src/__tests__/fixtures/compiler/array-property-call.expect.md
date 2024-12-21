@@ -3,16 +3,16 @@
 
 ```javascript
 function Component(props) {
-  const a = [props.a, props.b, "hello"];
+  const a = [props.a, props.b, 'hello'];
   const x = a.push(42);
   const y = a.at(props.c);
 
-  return { a, x, y };
+  return {a, x, y};
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ a: 1, b: 2, c: 0 }],
+  params: [{a: 1, b: 2, c: 0}],
   isComponent: false,
 };
 
@@ -24,18 +24,18 @@ export const FIXTURE_ENTRYPOINT = {
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(11);
-  let t0;
   let a;
+  let t0;
   if ($[0] !== props.a || $[1] !== props.b) {
     a = [props.a, props.b, "hello"];
     t0 = a.push(42);
     $[0] = props.a;
     $[1] = props.b;
-    $[2] = t0;
-    $[3] = a;
+    $[2] = a;
+    $[3] = t0;
   } else {
-    t0 = $[2];
-    a = $[3];
+    a = $[2];
+    t0 = $[3];
   }
   const x = t0;
   let t1;

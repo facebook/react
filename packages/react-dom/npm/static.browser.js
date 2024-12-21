@@ -9,3 +9,4 @@ if (process.env.NODE_ENV === 'production') {
 
 exports.version = s.version;
 exports.prerender = s.prerender;
+exports.resumeAndPrerender = s.resumeAndPrerender;

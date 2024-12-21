@@ -43,11 +43,11 @@ function foo(a, b, c) {
   }
   const y = t1;
   let t2;
-  if ($[4] !== x || $[5] !== y.method || $[6] !== b) {
+  if ($[4] !== b || $[5] !== x || $[6] !== y.method) {
     t2 = x[y.method](b);
-    $[4] = x;
-    $[5] = y.method;
-    $[6] = b;
+    $[4] = b;
+    $[5] = x;
+    $[6] = y.method;
     $[7] = t2;
   } else {
     t2 = $[7];

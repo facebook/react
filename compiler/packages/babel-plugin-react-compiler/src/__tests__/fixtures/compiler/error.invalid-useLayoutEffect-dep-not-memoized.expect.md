@@ -3,7 +3,7 @@
 
 ```javascript
 // @validateMemoizedEffectDependencies
-import { useLayoutEffect } from "react";
+import {useLayoutEffect} from 'react';
 
 function Component(props) {
   const data = {};

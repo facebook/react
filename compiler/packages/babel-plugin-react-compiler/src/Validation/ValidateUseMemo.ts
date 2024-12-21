@@ -5,41 +5,41 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "..";
-import { FunctionExpression, HIRFunction, IdentifierId } from "../HIR";
+import {CompilerError} from '..';
+import {FunctionExpression, HIRFunction, IdentifierId} from '../HIR';
 
 export function validateUseMemo(fn: HIRFunction): void {
   const useMemos = new Set<IdentifierId>();
   const react = new Set<IdentifierId>();
   const functions = new Map<IdentifierId, FunctionExpression>();
   for (const [, block] of fn.body.blocks) {
-    for (const { lvalue, value } of block.instructions) {
+    for (const {lvalue, value} of block.instructions) {
       switch (value.kind) {
-        case "LoadGlobal": {
-          if (value.binding.name === "useMemo") {
+        case 'LoadGlobal': {
+          if (value.binding.name === 'useMemo') {
             useMemos.add(lvalue.identifier.id);
-          } else if (value.binding.name === "React") {
+          } else if (value.binding.name === 'React') {
             react.add(lvalue.identifier.id);
           }
           break;
         }
-        case "PropertyLoad": {
+        case 'PropertyLoad': {
           if (react.has(value.object.identifier.id)) {
-            if (value.property === "useMemo") {
+            if (value.property === 'useMemo') {
               useMemos.add(lvalue.identifier.id);
             }
           }
           break;
         }
-        case "FunctionExpression": {
+        case 'FunctionExpression': {
           functions.set(lvalue.identifier.id, value);
           break;
         }
-        case "MethodCall":
-        case "CallExpression": {
+        case 'MethodCall':
+        case 'CallExpression': {
           // Is the function being called useMemo, with at least 1 argument?
           const callee =
-            value.kind === "CallExpression"
+            value.kind === 'CallExpression'
               ? value.callee.identifier.id
               : value.property.identifier.id;
           const isUseMemo = useMemos.has(callee);
@@ -52,7 +52,7 @@ export function validateUseMemo(fn: HIRFunction): void {
            * expression, validate the function
            */
           const [arg] = value.args;
-          if (arg.kind !== "Identifier") {
+          if (arg.kind !== 'Identifier') {
             continue;
           }
           const body = functions.get(arg.identifier.id);
@@ -62,7 +62,7 @@ export function validateUseMemo(fn: HIRFunction): void {
 
           if (body.loweredFunc.func.params.length > 0) {
             CompilerError.throwInvalidReact({
-              reason: "useMemo callbacks may not accept any arguments",
+              reason: 'useMemo callbacks may not accept any arguments',
               description: null,
               loc: body.loc,
               suggestions: null,
@@ -72,7 +72,7 @@ export function validateUseMemo(fn: HIRFunction): void {
           if (body.loweredFunc.func.async || body.loweredFunc.func.generator) {
             CompilerError.throwInvalidReact({
               reason:
-                "useMemo callbacks may not be async or generator functions",
+                'useMemo callbacks may not be async or generator functions',
               description: null,
               loc: body.loc,
               suggestions: null,

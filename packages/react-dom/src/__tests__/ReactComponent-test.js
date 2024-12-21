@@ -14,6 +14,7 @@ let ReactDOM;
 let ReactDOMClient;
 let ReactDOMServer;
 let act;
+let assertConsoleErrorDev;
 
 describe('ReactComponent', () => {
   beforeEach(() => {
@@ -24,6 +25,8 @@ describe('ReactComponent', () => {
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
     act = require('internal-test-utils').act;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
   });
 
   // @gate !disableLegacyMode
@@ -37,19 +40,6 @@ describe('ReactComponent', () => {
     expect(function () {
       ReactDOM.render(<div />, null);
     }).toThrowError(/Target container is not a DOM element./);
-  });
-
-  // @gate !disableStringRefs
-  it('should throw when supplying a string ref outside of render method', async () => {
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    await expect(
-      act(() => {
-        root.render(<div ref="badDiv" />);
-      }),
-      // TODO: This throws an AggregateError. Need to update test infra to
-      // support matching against AggregateError.
-    ).rejects.toThrow();
   });
 
   it('should throw (in dev) when children are mutated during render', async () => {
@@ -127,105 +117,6 @@ describe('ReactComponent', () => {
         );
       });
     }
-  });
-
-  // @gate !disableStringRefs
-  it('string refs do not detach and reattach on every render', async () => {
-    spyOnDev(console, 'error').mockImplementation(() => {});
-
-    let refVal;
-    class Child extends React.Component {
-      componentDidUpdate() {
-        // The parent ref should still be attached because it hasn't changed
-        // since the last render. If the ref had changed, then this would be
-        // undefined because refs are attached during the same phase (layout)
-        // as componentDidUpdate, in child -> parent order. So the new parent
-        // ref wouldn't have attached yet.
-        refVal = this.props.contextRef();
-      }
-
-      render() {
-        if (this.props.show) {
-          return <div>child</div>;
-        }
-      }
-    }
-
-    class Parent extends React.Component {
-      render() {
-        return (
-          <div id="test-root" ref="root">
-            <Child
-              contextRef={() => this.refs.root}
-              show={this.props.showChild}
-            />
-          </div>
-        );
-      }
-    }
-
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-
-    await act(() => {
-      root.render(<Parent />);
-    });
-
-    expect(refVal).toBe(undefined);
-    await act(() => {
-      root.render(<Parent showChild={true} />);
-    });
-    expect(refVal).toBe(container.querySelector('#test-root'));
-  });
-
-  // @gate !disableStringRefs
-  it('should support string refs on owned components', async () => {
-    const innerObj = {};
-    const outerObj = {};
-
-    class Wrapper extends React.Component {
-      getObject = () => {
-        return this.props.object;
-      };
-
-      render() {
-        return <div>{this.props.children}</div>;
-      }
-    }
-
-    class Component extends React.Component {
-      render() {
-        const inner = <Wrapper object={innerObj} ref="inner" />;
-        const outer = (
-          <Wrapper object={outerObj} ref="outer">
-            {inner}
-          </Wrapper>
-        );
-        return outer;
-      }
-
-      componentDidMount() {
-        expect(this.refs.inner.getObject()).toEqual(innerObj);
-        expect(this.refs.outer.getObject()).toEqual(outerObj);
-      }
-    }
-
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    await expect(async () => {
-      await act(() => {
-        root.render(<Component />);
-      });
-    }).toErrorDev([
-      'Component "Component" contains the string ref "inner". ' +
-        'Support for string refs will be removed in a future major release. ' +
-        'We recommend using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
-        '    in Wrapper (at **)\n' +
-        '    in div (at **)\n' +
-        '    in Wrapper (at **)\n' +
-        '    in Component (at **)',
-    ]);
   });
 
   it('should not have string refs on unmounted components', async () => {
@@ -511,19 +402,25 @@ describe('ReactComponent', () => {
   });
 
   it('throws usefully when rendering badly-typed elements', async () => {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
     const X = undefined;
-    let container = document.createElement('div');
-    let root = ReactDOMClient.createRoot(container);
-    await expect(
-      expect(async () => {
-        await act(() => {
-          root.render(<X />);
-        });
-      }).toErrorDev(
-        'React.jsx: type is invalid -- expected a string (for built-in components) ' +
-          'or a class/function (for composite components) but got: undefined.',
-      ),
-    ).rejects.toThrowError(
+    const XElement = <X />;
+    if (gate(flags => !flags.enableOwnerStacks)) {
+      assertConsoleErrorDev(
+        [
+          'React.jsx: type is invalid -- expected a string (for built-in components) ' +
+            'or a class/function (for composite components) but got: undefined.',
+        ],
+        {withoutStack: true},
+      );
+    }
+    await expect(async () => {
+      await act(() => {
+        root.render(XElement);
+      });
+    }).rejects.toThrowError(
       'Element type is invalid: expected a string (for built-in components) ' +
         'or a class/function (for composite components) but got: undefined.' +
         (__DEV__
@@ -533,20 +430,43 @@ describe('ReactComponent', () => {
     );
 
     const Y = null;
-    container = document.createElement('div');
-    root = ReactDOMClient.createRoot(container);
-    await expect(
-      expect(async () => {
-        await act(() => {
-          root.render(<Y />);
-        });
-      }).toErrorDev(
-        'React.jsx: type is invalid -- expected a string (for built-in components) ' +
-          'or a class/function (for composite components) but got: null.',
-      ),
-    ).rejects.toThrowError(
+    const YElement = <Y />;
+    if (gate(flags => !flags.enableOwnerStacks)) {
+      assertConsoleErrorDev(
+        [
+          'React.jsx: type is invalid -- expected a string (for built-in components) ' +
+            'or a class/function (for composite components) but got: null.',
+        ],
+        {withoutStack: true},
+      );
+    }
+    await expect(async () => {
+      await act(() => {
+        root.render(YElement);
+      });
+    }).rejects.toThrowError(
       'Element type is invalid: expected a string (for built-in components) ' +
         'or a class/function (for composite components) but got: null.',
+    );
+
+    const Z = true;
+    const ZElement = <Z />;
+    if (gate(flags => !flags.enableOwnerStacks)) {
+      assertConsoleErrorDev(
+        [
+          'React.jsx: type is invalid -- expected a string (for built-in components) ' +
+            'or a class/function (for composite components) but got: boolean.',
+        ],
+        {withoutStack: true},
+      );
+    }
+    await expect(async () => {
+      await act(() => {
+        root.render(ZElement);
+      });
+    }).rejects.toThrowError(
+      'Element type is invalid: expected a string (for built-in components) ' +
+        'or a class/function (for composite components) but got: boolean.',
     );
   });
 

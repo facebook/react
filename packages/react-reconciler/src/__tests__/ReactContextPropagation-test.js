@@ -35,11 +35,6 @@ describe('ReactLazyContextPropagation', () => {
     seededCache = null;
   });
 
-  // NOTE: These tests are not specific to the lazy propagation (as opposed to
-  // eager propagation). The behavior should be the same in both
-  // implementations. These are tests that are more relevant to the lazy
-  // propagation implementation, though.
-
   function createTextCache() {
     if (seededCache !== null) {
       // Trick to seed a cache before it exists.
@@ -399,7 +394,13 @@ describe('ReactLazyContextPropagation', () => {
       // the fallback displays despite this being a refresh.
       setContext('B');
     });
-    assertLog(['Suspend! [B]', 'Loading...', 'B']);
+    assertLog([
+      'Suspend! [B]',
+      'Loading...',
+      'B',
+
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [B]'] : []),
+    ]);
     expect(root).toMatchRenderedOutput('Loading...B');
 
     await act(async () => {
@@ -479,7 +480,13 @@ describe('ReactLazyContextPropagation', () => {
       // the fallback displays despite this being a refresh.
       setContext('B');
     });
-    assertLog(['Suspend! [B]', 'Loading...', 'B']);
+    assertLog([
+      'Suspend! [B]',
+      'Loading...',
+      'B',
+
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [B]'] : []),
+    ]);
     expect(root).toMatchRenderedOutput('Loading...B');
 
     await act(async () => {
@@ -812,7 +819,12 @@ describe('ReactLazyContextPropagation', () => {
     await act(() => {
       setContext('B');
     });
-    assertLog(['Suspend! [B]', 'Loading...']);
+    assertLog([
+      'Suspend! [B]',
+      'Loading...',
+
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [B]'] : []),
+    ]);
     expect(root).toMatchRenderedOutput('Loading...');
 
     await act(async () => {

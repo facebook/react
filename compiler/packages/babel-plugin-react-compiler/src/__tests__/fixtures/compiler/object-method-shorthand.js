@@ -9,5 +9,5 @@ function Component() {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ x: 1 }, { a: 2 }, { b: 2 }],
+  params: [{x: 1}, {a: 2}, {b: 2}],
 };

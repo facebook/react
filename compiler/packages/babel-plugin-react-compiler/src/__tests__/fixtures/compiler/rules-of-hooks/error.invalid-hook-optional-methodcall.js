@@ -1,4 +1,4 @@
 function Component() {
-  const { result } = Module.useConditionalHook?.() ?? {};
+  const {result} = Module.useConditionalHook?.() ?? {};
   return result;
 }

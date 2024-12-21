@@ -1,7 +1,7 @@
 // @validatePreserveExistingMemoizationGuarantees
-import { useMemo } from "react";
+import {useMemo} from 'react';
 
-function Component({ propA }) {
+function Component({propA}) {
   return useMemo(() => {
     return {
       value: propA.x().y,

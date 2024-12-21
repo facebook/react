@@ -54,18 +54,19 @@ export default function InspectedElementPropsTree({
     type === ElementTypeClass || canEditFunctionPropsRenamePaths;
 
   const entries = props != null ? Object.entries(props) : null;
-  if (entries !== null) {
-    entries.sort(alphaSortEntries);
+  if (entries === null) {
+    // Skip the section for null props.
+    return null;
   }
 
-  const isEmpty = entries === null || entries.length === 0;
+  entries.sort(alphaSortEntries);
+
+  const isEmpty = entries.length === 0;
 
   const handleCopy = () => copy(serializeDataForCopy(((props: any): Object)));
 
   return (
-    <div
-      className={styles.InspectedElementTree}
-      data-testname="InspectedElementPropsTree">
+    <div data-testname="InspectedElementPropsTree">
       <div className={styles.HeaderRow}>
         <div className={styles.Header}>props</div>
         {!isEmpty && (

@@ -385,12 +385,16 @@ describe('ReactDOMForm', () => {
           </form>,
         );
       });
-    }).toErrorDev([
+    }).toErrorDev(
       'In HTML, <form> cannot be a descendant of <form>.\n' +
-        'This will cause a hydration error.' +
+        'This will cause a hydration error.\n' +
+        '\n' +
+        '> <form action={function outerAction}>\n' +
+        '    <input>\n' +
+        '>   <form action={function innerAction} ref={{current:null}}>\n' +
         '\n    in form (at **)' +
-        '\n    in form (at **)',
-    ]);
+        (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in form (at **)'),
+    );
 
     await submit(ref.current);
 
@@ -665,7 +669,6 @@ describe('ReactDOMForm', () => {
     expect(actionCalled).toBe(false);
   });
 
-  // @gate enableAsyncActions
   it('form actions are transitions', async () => {
     const formRef = React.createRef();
 
@@ -703,7 +706,6 @@ describe('ReactDOMForm', () => {
     expect(container.textContent).toBe('Updated');
   });
 
-  // @gate enableAsyncActions
   it('multiple form actions', async () => {
     const formRef = React.createRef();
 
@@ -794,12 +796,6 @@ describe('ReactDOMForm', () => {
   });
 
   it('sync errors in form actions can be captured by an error boundary', async () => {
-    if (gate(flags => !flags.enableAsyncActions)) {
-      // TODO: Uncaught JSDOM errors fail the test after the scope has finished
-      // so don't work with the `gate` mechanism.
-      return;
-    }
-
     class ErrorBoundary extends React.Component {
       state = {error: null};
       static getDerivedStateFromError(error) {
@@ -840,12 +836,6 @@ describe('ReactDOMForm', () => {
   });
 
   it('async errors in form actions can be captured by an error boundary', async () => {
-    if (gate(flags => !flags.enableAsyncActions)) {
-      // TODO: Uncaught JSDOM errors fail the test after the scope has finished
-      // so don't work with the `gate` mechanism.
-      return;
-    }
-
     class ErrorBoundary extends React.Component {
       state = {error: null};
       static getDerivedStateFromError(error) {
@@ -891,7 +881,6 @@ describe('ReactDOMForm', () => {
     expect(container.textContent).toBe('Oh no!');
   });
 
-  // @gate enableAsyncActions
   it('useFormStatus reads the status of a pending form action', async () => {
     const formRef = React.createRef();
 
@@ -988,7 +977,6 @@ describe('ReactDOMForm', () => {
     );
   });
 
-  // @gate enableAsyncActions
   it('useActionState updates state asynchronously and queues multiple actions', async () => {
     let actionCounter = 0;
     async function action(state, type) {
@@ -1048,7 +1036,6 @@ describe('ReactDOMForm', () => {
     expect(container.textContent).toBe('2');
   });
 
-  // @gate enableAsyncActions
   it('useActionState supports inline actions', async () => {
     let increment;
     function App({stepSize}) {
@@ -1080,7 +1067,6 @@ describe('ReactDOMForm', () => {
     assertLog(['Pending 1', '11']);
   });
 
-  // @gate enableAsyncActions
   it('useActionState: dispatch throws if called during render', async () => {
     function App() {
       const [state, dispatch, isPending] = useActionState(async () => {}, 0);
@@ -1096,7 +1082,6 @@ describe('ReactDOMForm', () => {
     });
   });
 
-  // @gate enableAsyncActions
   it('useActionState: queues multiple actions and runs them in order', async () => {
     let action;
     function App() {
@@ -1128,7 +1113,6 @@ describe('ReactDOMForm', () => {
     expect(container.textContent).toBe('D');
   });
 
-  // @gate enableAsyncActions
   it(
     'useActionState: when calling a queued action, uses the implementation ' +
       'that was current at the time it was dispatched, not the most recent one',
@@ -1175,7 +1159,6 @@ describe('ReactDOMForm', () => {
     },
   );
 
-  // @gate enableAsyncActions
   it('useActionState: works if action is sync', async () => {
     let increment;
     function App({stepSize}) {
@@ -1207,7 +1190,6 @@ describe('ReactDOMForm', () => {
     assertLog(['Pending 1', '11']);
   });
 
-  // @gate enableAsyncActions
   it('useActionState: can mix sync and async actions', async () => {
     let action;
     function App() {
@@ -1235,7 +1217,6 @@ describe('ReactDOMForm', () => {
     expect(container.textContent).toBe('E');
   });
 
-  // @gate enableAsyncActions
   it('useActionState: error handling (sync action)', async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
@@ -1284,7 +1265,6 @@ describe('ReactDOMForm', () => {
     expect(container.textContent).toBe('Caught an error: Oops!');
   });
 
-  // @gate enableAsyncActions
   it('useActionState: error handling (async action)', async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
@@ -1390,7 +1370,6 @@ describe('ReactDOMForm', () => {
     expect(container.textContent).toBe('Caught an error: Oops!');
   });
 
-  // @gate enableAsyncActions
   it('useActionState works in StrictMode', async () => {
     let actionCounter = 0;
     async function action(state, type) {
@@ -1455,13 +1434,23 @@ describe('ReactDOMForm', () => {
         </Suspense>,
       ),
     );
-    assertLog(['Suspend! [Count: 0]', 'Loading...']);
+    assertLog([
+      'Suspend! [Count: 0]',
+      'Loading...',
+
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Count: 0]'] : []),
+    ]);
     await act(() => resolveText('Count: 0'));
     assertLog(['Count: 0']);
 
     // Dispatch outside of a transition. This will trigger a loading state.
     await act(() => dispatch());
-    assertLog(['Suspend! [Count: 1]', 'Loading...']);
+    assertLog([
+      'Suspend! [Count: 1]',
+      'Loading...',
+
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Count: 1]'] : []),
+    ]);
     expect(container.textContent).toBe('Loading...');
 
     await act(() => resolveText('Count: 1'));
@@ -1491,7 +1480,11 @@ describe('ReactDOMForm', () => {
 
     const root = ReactDOMClient.createRoot(container);
     await act(() => root.render(<App />));
-    assertLog(['Suspend! [Count: 0]']);
+    assertLog([
+      'Suspend! [Count: 0]',
+
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Count: 0]'] : []),
+    ]);
     await act(() => resolveText('Count: 0'));
     assertLog(['Count: 0']);
 
@@ -1504,7 +1497,11 @@ describe('ReactDOMForm', () => {
         {withoutStack: true},
       ],
     ]);
-    assertLog(['Suspend! [Count: 1]']);
+    assertLog([
+      'Suspend! [Count: 1]',
+
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [Count: 1]'] : []),
+    ]);
     expect(container.textContent).toBe('Count: 0');
   });
 

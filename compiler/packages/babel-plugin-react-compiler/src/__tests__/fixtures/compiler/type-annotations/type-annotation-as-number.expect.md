@@ -3,9 +3,9 @@
 
 ```javascript
 // @enableUseTypeAnnotations
-import { identity } from "shared-runtime";
+import {identity} from 'shared-runtime';
 
-function Component(props: { id: number }) {
+function Component(props: {id: number}) {
   const x = identity(props.id);
   const y = x as number;
   return y;
@@ -13,7 +13,7 @@ function Component(props: { id: number }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ id: 42 }],
+  params: [{id: 42}],
 };
 
 ```

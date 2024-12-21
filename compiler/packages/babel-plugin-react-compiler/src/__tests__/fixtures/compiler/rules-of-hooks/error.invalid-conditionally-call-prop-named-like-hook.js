@@ -1,4 +1,4 @@
-function Component({ cond, useFoo }) {
+function Component({cond, useFoo}) {
   if (cond) {
     useFoo();
   }

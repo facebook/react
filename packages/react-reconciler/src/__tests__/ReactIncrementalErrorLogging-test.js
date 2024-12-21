@@ -91,15 +91,16 @@ describe('ReactIncrementalErrorLogging', () => {
           'Consider adding an error boundary to your tree ' +
             'to customize error handling behavior.',
         ),
-        expect.stringMatching(
-          new RegExp(
-            gate(flags => flags.enableOwnerStacks)
-              ? '\\s+(in|at) ErrorThrowingComponent'
-              : '\\s+(in|at) ErrorThrowingComponent (.*)\n' +
-                '\\s+(in|at) span(.*)\n' +
-                '\\s+(in|at) div(.*)',
-          ),
-        ),
+        // The component stack is not added without the polyfill/devtools.
+        // expect.stringMatching(
+        //  new RegExp(
+        //    gate(flags => flags.enableOwnerStacks)
+        //      ? '\\s+(in|at) ErrorThrowingComponent'
+        //      : '\\s+(in|at) ErrorThrowingComponent (.*)\n' +
+        //        '\\s+(in|at) span(.*)\n' +
+        //        '\\s+(in|at) div(.*)',
+        //  ),
+        // ),
       );
     }
   });
@@ -139,15 +140,16 @@ describe('ReactIncrementalErrorLogging', () => {
           'Consider adding an error boundary to your tree ' +
             'to customize error handling behavior.',
         ),
-        expect.stringMatching(
-          new RegExp(
-            gate(flags => flags.enableOwnerStacks)
-              ? '\\s+(in|at) ErrorThrowingComponent'
-              : '\\s+(in|at) ErrorThrowingComponent (.*)\n' +
-                '\\s+(in|at) span(.*)\n' +
-                '\\s+(in|at) div(.*)',
-          ),
-        ),
+        // The component stack is not added without the polyfill/devtools.
+        // expect.stringMatching(
+        //   new RegExp(
+        //     gate(flags => flags.enableOwnerStacks)
+        //       ? '\\s+(in|at) ErrorThrowingComponent'
+        //       : '\\s+(in|at) ErrorThrowingComponent (.*)\n' +
+        //         '\\s+(in|at) span(.*)\n' +
+        //         '\\s+(in|at) div(.*)',
+        //   ),
+        // ),
       );
     }
   });
@@ -199,16 +201,17 @@ describe('ReactIncrementalErrorLogging', () => {
           'React will try to recreate this component tree from scratch ' +
             'using the error boundary you provided, ErrorBoundary.',
         ),
-        expect.stringMatching(
-          new RegExp(
-            gate(flags => flags.enableOwnerStacks)
-              ? '\\s+(in|at) ErrorThrowingComponent'
-              : '\\s+(in|at) ErrorThrowingComponent (.*)\n' +
-                '\\s+(in|at) span(.*)\n' +
-                '\\s+(in|at) ErrorBoundary(.*)\n' +
-                '\\s+(in|at) div(.*)',
-          ),
-        ),
+        // The component stack is not added without the polyfill/devtools.
+        // expect.stringMatching(
+        //   new RegExp(
+        //     gate(flags => flags.enableOwnerStacks)
+        //       ? '\\s+(in|at) ErrorThrowingComponent'
+        //       : '\\s+(in|at) ErrorThrowingComponent (.*)\n' +
+        //         '\\s+(in|at) span(.*)\n' +
+        //         '\\s+(in|at) ErrorBoundary(.*)\n' +
+        //         '\\s+(in|at) div(.*)',
+        //   ),
+        // ),
       );
     } else {
       expect(logCapturedErrorCalls[0]).toEqual(
@@ -282,13 +285,14 @@ describe('ReactIncrementalErrorLogging', () => {
           'React will try to recreate this component tree from scratch ' +
             'using the error boundary you provided, ErrorBoundary.',
         ),
-        expect.stringMatching(
-          gate(flag => flag.enableOwnerStacks)
-            ? new RegExp('\\s+(in|at) Foo')
-            : new RegExp(
-                '\\s+(in|at) Foo (.*)\n' + '\\s+(in|at) ErrorBoundary(.*)',
-              ),
-        ),
+        // The component stack is not added without the polyfill/devtools.
+        // expect.stringMatching(
+        //   gate(flag => flag.enableOwnerStacks)
+        //     ? new RegExp('\\s+(in|at) Foo')
+        //     : new RegExp(
+        //         '\\s+(in|at) Foo (.*)\n' + '\\s+(in|at) ErrorBoundary(.*)',
+        //       ),
+        // ),
       );
     } else {
       expect(console.error).toHaveBeenCalledWith(

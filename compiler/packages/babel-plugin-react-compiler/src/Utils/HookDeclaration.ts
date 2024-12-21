@@ -5,20 +5,20 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import * as t from "@babel/types";
+import * as t from '@babel/types';
 
 export type HookDeclaration = t.FunctionDeclaration & {
   __hookDeclaration: boolean;
 };
 
 export function isHookDeclaration(
-  node: t.FunctionDeclaration
+  node: t.FunctionDeclaration,
 ): node is HookDeclaration {
-  return Object.prototype.hasOwnProperty.call(node, "__hookDeclaration");
+  return Object.prototype.hasOwnProperty.call(node, '__hookDeclaration');
 }
 
 export function parseHookDeclaration(
-  node: t.FunctionDeclaration
+  node: t.FunctionDeclaration,
 ): HookDeclaration | null {
   return isHookDeclaration(node) ? node : null;
 }

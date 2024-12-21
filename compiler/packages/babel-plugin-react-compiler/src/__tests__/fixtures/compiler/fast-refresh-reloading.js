@@ -1,6 +1,6 @@
 // @enableResetCacheOnSourceFileChanges
-import { useMemo, useState } from "react";
-import { ValidateMemoization } from "shared-runtime";
+import {useMemo, useState} from 'react';
+import {ValidateMemoization} from 'shared-runtime';
 
 function Component(props) {
   const [state, setState] = useState(0);

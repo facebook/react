@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "../CompilerError";
+import {CompilerError} from '../CompilerError';
 
 // Represents items which form disjoint sets.
 export default class DisjointSet<T> {
@@ -19,7 +19,7 @@ export default class DisjointSet<T> {
   union(items: Array<T>): void {
     const first = items.shift();
     CompilerError.invariant(first != null, {
-      reason: "Expected set to be non-empty",
+      reason: 'Expected set to be non-empty',
       description: null,
       loc: null,
       suggestions: null,

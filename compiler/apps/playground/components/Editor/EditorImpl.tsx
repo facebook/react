@@ -5,99 +5,107 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { parse, ParserPlugin } from "@babel/parser";
-import traverse, { NodePath } from "@babel/traverse";
-import * as t from "@babel/types";
-import {
+import {parse as babelParse, ParseResult} from '@babel/parser';
+import * as HermesParser from 'hermes-parser';
+import * as t from '@babel/types';
+import BabelPluginReactCompiler, {
   CompilerError,
   CompilerErrorDetail,
   Effect,
   ErrorSeverity,
-  parseConfigPragma,
-  printHIR,
-  printReactiveFunction,
-  run,
+  parseConfigPragmaForTests,
   ValueKind,
   type Hook,
-} from "babel-plugin-react-compiler/src";
-import { type ReactFunctionType } from "babel-plugin-react-compiler/src/HIR/Environment";
-import clsx from "clsx";
-import invariant from "invariant";
-import { useSnackbar } from "notistack";
-import { useDeferredValue, useMemo } from "react";
-import { useMountEffect } from "../../hooks";
-import { defaultStore } from "../../lib/defaultStore";
+  PluginOptions,
+  CompilerPipelineValue,
+  parsePluginOptions,
+} from 'babel-plugin-react-compiler/src';
+import {type EnvironmentConfig} from 'babel-plugin-react-compiler/src/HIR/Environment';
+import clsx from 'clsx';
+import invariant from 'invariant';
+import {useSnackbar} from 'notistack';
+import {useDeferredValue, useMemo} from 'react';
+import {useMountEffect} from '../../hooks';
+import {defaultStore} from '../../lib/defaultStore';
 import {
   createMessage,
   initStoreFromUrlOrLocalStorage,
   MessageLevel,
   MessageSource,
   type Store,
-} from "../../lib/stores";
-import { useStore, useStoreDispatch } from "../StoreContext";
-import Input from "./Input";
+} from '../../lib/stores';
+import {useStore, useStoreDispatch} from '../StoreContext';
+import Input from './Input';
 import {
   CompilerOutput,
+  CompilerTransformOutput,
   default as Output,
   PrintedCompilerPipelineValue,
-} from "./Output";
+} from './Output';
+import {printFunctionWithOutlined} from 'babel-plugin-react-compiler/src/HIR/PrintHIR';
+import {printReactiveFunctionWithOutlined} from 'babel-plugin-react-compiler/src/ReactiveScopes/PrintReactiveFunction';
+import {transformFromAstSync} from '@babel/core';
 
-function parseFunctions(
-  source: string
-): Array<
-  NodePath<
-    t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
-  >
-> {
-  const items: Array<
-    NodePath<
-      t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
-    >
-  > = [];
-  try {
-    const isFlow = source
-      .trim()
-      .split("\n", 1)[0]
-      .match(/\s*\/\/\s*\@flow\s*/);
-    let type_transform: ParserPlugin;
-    if (isFlow) {
-      type_transform = "flow";
-    } else {
-      type_transform = "typescript";
-    }
-    const ast = parse(source, {
-      plugins: [type_transform, "jsx"],
-      sourceType: "module",
+function parseInput(
+  input: string,
+  language: 'flow' | 'typescript',
+): ParseResult<t.File> {
+  // Extract the first line to quickly check for custom test directives
+  if (language === 'flow') {
+    return HermesParser.parse(input, {
+      babel: true,
+      flow: 'all',
+      sourceType: 'module',
+      enableExperimentalComponentSyntax: true,
     });
-    traverse(ast, {
-      FunctionDeclaration(nodePath) {
-        items.push(nodePath);
-        nodePath.skip();
-      },
-      ArrowFunctionExpression(nodePath) {
-        items.push(nodePath);
-        nodePath.skip();
-      },
-      FunctionExpression(nodePath) {
-        items.push(nodePath);
-        nodePath.skip();
-      },
-    });
-  } catch (e) {
-    console.error(e);
-    CompilerError.throwInvalidJS({
-      reason: String(e),
-      description: null,
-      loc: null,
-      suggestions: null,
-    });
+  } else {
+    return babelParse(input, {
+      plugins: ['typescript', 'jsx'],
+      sourceType: 'module',
+    }) as ParseResult<t.File>;
   }
-  return items;
+}
+
+function invokeCompiler(
+  source: string,
+  language: 'flow' | 'typescript',
+  environment: EnvironmentConfig,
+  logIR: (pipelineValue: CompilerPipelineValue) => void,
+): CompilerTransformOutput {
+  const opts: PluginOptions = parsePluginOptions({
+    logger: {
+      debugLogIRs: logIR,
+      logEvent: () => {},
+    },
+    environment,
+    compilationMode: 'all',
+    panicThreshold: 'all_errors',
+  });
+  const ast = parseInput(source, language);
+  let result = transformFromAstSync(ast, source, {
+    filename: '_playgroundFile.js',
+    highlightCode: false,
+    retainLines: true,
+    plugins: [[BabelPluginReactCompiler, opts]],
+    ast: true,
+    sourceType: 'module',
+    configFile: false,
+    sourceMaps: true,
+    babelrc: false,
+  });
+  if (result?.ast == null || result?.code == null || result?.map == null) {
+    throw new Error('Expected successful compilation');
+  }
+  return {
+    code: result.code,
+    sourceMaps: result.map,
+    language,
+  };
 }
 
 const COMMON_HOOKS: Array<[string, Hook]> = [
   [
-    "useFragment",
+    'useFragment',
     {
       valueKind: ValueKind.Frozen,
       effectKind: Effect.Freeze,
@@ -106,7 +114,7 @@ const COMMON_HOOKS: Array<[string, Hook]> = [
     },
   ],
   [
-    "usePaginationFragment",
+    'usePaginationFragment',
     {
       valueKind: ValueKind.Frozen,
       effectKind: Effect.Freeze,
@@ -115,7 +123,7 @@ const COMMON_HOOKS: Array<[string, Hook]> = [
     },
   ],
   [
-    "useRefetchableFragment",
+    'useRefetchableFragment',
     {
       valueKind: ValueKind.Frozen,
       effectKind: Effect.Freeze,
@@ -124,7 +132,7 @@ const COMMON_HOOKS: Array<[string, Hook]> = [
     },
   ],
   [
-    "useLazyLoadQuery",
+    'useLazyLoadQuery',
     {
       valueKind: ValueKind.Frozen,
       effectKind: Effect.Freeze,
@@ -133,7 +141,7 @@ const COMMON_HOOKS: Array<[string, Hook]> = [
     },
   ],
   [
-    "usePreloadedQuery",
+    'usePreloadedQuery',
     {
       valueKind: ValueKind.Frozen,
       effectKind: Effect.Freeze,
@@ -143,30 +151,10 @@ const COMMON_HOOKS: Array<[string, Hook]> = [
   ],
 ];
 
-function isHookName(s: string): boolean {
-  return /^use[A-Z0-9]/.test(s);
-}
-
-function getReactFunctionType(
-  id: NodePath<t.Identifier | null | undefined>
-): ReactFunctionType {
-  if (id && id.node && id.isIdentifier()) {
-    if (isHookName(id.node.name)) {
-      return "Hook";
-    }
-
-    const isPascalCaseNameSpace = /^[A-Z].*/;
-    if (isPascalCaseNameSpace.test(id.node.name)) {
-      return "Component";
-    }
-  }
-  return "Other";
-}
-
-function compile(source: string): CompilerOutput {
-  const results = new Map<string, PrintedCompilerPipelineValue[]>();
+function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
+  const results = new Map<string, Array<PrintedCompilerPipelineValue>>();
   const error = new CompilerError();
-  const upsert = (result: PrintedCompilerPipelineValue) => {
+  const upsert: (result: PrintedCompilerPipelineValue) => void = result => {
     const entry = results.get(result.name);
     if (Array.isArray(entry)) {
       entry.push(result);
@@ -174,79 +162,49 @@ function compile(source: string): CompilerOutput {
       results.set(result.name, [result]);
     }
   };
+  let language: 'flow' | 'typescript';
+  if (source.match(/\@flow/)) {
+    language = 'flow';
+  } else {
+    language = 'typescript';
+  }
+  let transformOutput;
   try {
     // Extract the first line to quickly check for custom test directives
-    const pragma = source.substring(0, source.indexOf("\n"));
-    const config = parseConfigPragma(pragma);
+    const pragma = source.substring(0, source.indexOf('\n'));
+    const config = parseConfigPragmaForTests(pragma);
 
-    for (const fn of parseFunctions(source)) {
-      if (!fn.isFunctionDeclaration()) {
-        error.pushErrorDetail(
-          new CompilerErrorDetail({
-            reason: `Unexpected function type ${fn.node.type}`,
-            description:
-              "Playground only supports parsing function declarations",
-            severity: ErrorSeverity.Todo,
-            loc: fn.node.loc ?? null,
-            suggestions: null,
-          })
-        );
-        continue;
-      }
-
-      const id = fn.get("id");
-      for (const result of run(
-        fn,
-        {
-          ...config,
-          customHooks: new Map([...COMMON_HOOKS]),
-        },
-        getReactFunctionType(id),
-        "_c",
-        null,
-        null,
-        null
-      )) {
-        const fnName = fn.node.id?.name ?? null;
+    transformOutput = invokeCompiler(
+      source,
+      language,
+      {...config, customHooks: new Map([...COMMON_HOOKS])},
+      result => {
         switch (result.kind) {
-          case "ast": {
+          case 'ast': {
+            break;
+          }
+          case 'hir': {
             upsert({
-              kind: "ast",
-              fnName,
+              kind: 'hir',
+              fnName: result.value.id,
               name: result.name,
-              value: {
-                type: "FunctionDeclaration",
-                id: result.value.id,
-                async: result.value.async,
-                generator: result.value.generator,
-                body: result.value.body,
-                params: result.value.params,
-              },
+              value: printFunctionWithOutlined(result.value),
             });
             break;
           }
-          case "hir": {
+          case 'reactive': {
             upsert({
-              kind: "hir",
-              fnName,
+              kind: 'reactive',
+              fnName: result.value.id,
               name: result.name,
-              value: printHIR(result.value.body),
+              value: printReactiveFunctionWithOutlined(result.value),
             });
             break;
           }
-          case "reactive": {
+          case 'debug': {
             upsert({
-              kind: "reactive",
-              fnName,
-              name: result.name,
-              value: printReactiveFunction(result.value),
-            });
-            break;
-          }
-          case "debug": {
-            upsert({
-              kind: "debug",
-              fnName,
+              kind: 'debug',
+              fnName: null,
               name: result.name,
               value: result.value,
             });
@@ -257,16 +215,20 @@ function compile(source: string): CompilerOutput {
             throw new Error(`Unhandled result ${result}`);
           }
         }
-      }
-    }
+      },
+    );
   } catch (err) {
-    // error might be an invariant violation or other runtime error
-    // (i.e. object shape that is not CompilerError)
+    /**
+     * error might be an invariant violation or other runtime error
+     * (i.e. object shape that is not CompilerError)
+     */
     if (err instanceof CompilerError && err.details.length > 0) {
       error.details.push(...err.details);
     } else {
-      // Handle unexpected failures by logging (to get a stack trace)
-      // and reporting
+      /**
+       * Handle unexpected failures by logging (to get a stack trace)
+       * and reporting
+       */
       console.error(err);
       error.details.push(
         new CompilerErrorDetail({
@@ -274,24 +236,24 @@ function compile(source: string): CompilerOutput {
           reason: `Unexpected failure when transforming input! ${err}`,
           loc: null,
           suggestions: null,
-        })
+        }),
       );
     }
   }
   if (error.hasErrors()) {
-    return { kind: "err", results, error: error };
+    return [{kind: 'err', results, error: error}, language];
   }
-  return { kind: "ok", results };
+  return [{kind: 'ok', results, transformOutput}, language];
 }
 
-export default function Editor() {
+export default function Editor(): JSX.Element {
   const store = useStore();
   const deferredStore = useDeferredValue(store);
   const dispatchStore = useStoreDispatch();
-  const { enqueueSnackbar } = useSnackbar();
-  const compilerOutput = useMemo(
+  const {enqueueSnackbar} = useSnackbar();
+  const [compilerOutput, language] = useMemo(
     () => compile(deferredStore.source),
-    [deferredStore.source]
+    [deferredStore.source],
   );
 
   useMountEffect(() => {
@@ -299,34 +261,35 @@ export default function Editor() {
     try {
       mountStore = initStoreFromUrlOrLocalStorage();
     } catch (e) {
-      invariant(e instanceof Error, "Only Error may be caught.");
+      invariant(e instanceof Error, 'Only Error may be caught.');
       enqueueSnackbar(e.message, {
-        variant: "message",
+        variant: 'warning',
         ...createMessage(
-          "Bad URL - fell back to the default Playground.",
+          'Bad URL - fell back to the default Playground.',
           MessageLevel.Info,
-          MessageSource.Playground
+          MessageSource.Playground,
         ),
       });
       mountStore = defaultStore;
     }
     dispatchStore({
-      type: "setStore",
-      payload: { store: mountStore },
+      type: 'setStore',
+      payload: {store: mountStore},
     });
   });
 
   return (
     <>
       <div className="relative flex basis top-14">
-        <div className={clsx("relative sm:basis-1/4")}>
+        <div className={clsx('relative sm:basis-1/4')}>
           <Input
+            language={language}
             errors={
-              compilerOutput.kind === "err" ? compilerOutput.error.details : []
+              compilerOutput.kind === 'err' ? compilerOutput.error.details : []
             }
           />
         </div>
-        <div className={clsx("flex sm:flex flex-wrap")}>
+        <div className={clsx('flex sm:flex flex-wrap')}>
           <Output store={deferredStore} compilerOutput={compilerOutput} />
         </div>
       </div>

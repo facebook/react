@@ -5,11 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-"use no forget";
+'use no memo';
 
-import * as React from "react";
+import * as React from 'react';
 
-const { useRef, useEffect, isValidElement } = React;
+const {useRef, useEffect, isValidElement} = React;
 const ReactSecretInternals =
   //@ts-ignore
   React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE ??
@@ -18,60 +18,57 @@ const ReactSecretInternals =
 
 type MemoCache = Array<number | typeof $empty>;
 
-const $empty = Symbol.for("react.memo_cache_sentinel");
-/**
- * DANGER: this hook is NEVER meant to be called directly!
- **/
-export function c(size: number) {
-  return React.useState(() => {
-    const $ = new Array(size);
-    for (let ii = 0; ii < size; ii++) {
-      $[ii] = $empty;
-    }
-    // This symbol is added to tell the react devtools that this array is from
-    // useMemoCache.
-    // @ts-ignore
-    $[$empty] = true;
-    return $;
-  })[0];
-}
+const $empty = Symbol.for('react.memo_cache_sentinel');
 
-export function $read(memoCache: MemoCache, index: number) {
-  const value = memoCache[index];
-  if (value === $empty) {
-    throw new Error("useMemoCache: read before write");
-  }
-  return value;
-}
+// Re-export React.c if present, otherwise fallback to the userspace polyfill for versions of React
+// < 19.
+export const c =
+  // @ts-expect-error
+  typeof React.__COMPILER_RUNTIME?.c === 'function'
+    ? // @ts-expect-error
+      React.__COMPILER_RUNTIME.c
+    : function c(size: number) {
+        return React.useMemo<Array<unknown>>(() => {
+          const $ = new Array(size);
+          for (let ii = 0; ii < size; ii++) {
+            $[ii] = $empty;
+          }
+          // This symbol is added to tell the react devtools that this array is from
+          // useMemoCache.
+          // @ts-ignore
+          $[$empty] = true;
+          return $;
+        }, []);
+      };
 
-const LazyGuardDispatcher: { [key: string]: (...args: Array<any>) => any } = {};
+const LazyGuardDispatcher: {[key: string]: (...args: Array<any>) => any} = {};
 [
-  "readContext",
-  "useCallback",
-  "useContext",
-  "useEffect",
-  "useImperativeHandle",
-  "useInsertionEffect",
-  "useLayoutEffect",
-  "useMemo",
-  "useReducer",
-  "useRef",
-  "useState",
-  "useDebugValue",
-  "useDeferredValue",
-  "useTransition",
-  "useMutableSource",
-  "useSyncExternalStore",
-  "useId",
-  "unstable_isNewReconciler",
-  "getCacheSignal",
-  "getCacheForType",
-  "useCacheRefresh",
-].forEach((name) => {
+  'readContext',
+  'useCallback',
+  'useContext',
+  'useEffect',
+  'useImperativeHandle',
+  'useInsertionEffect',
+  'useLayoutEffect',
+  'useMemo',
+  'useReducer',
+  'useRef',
+  'useState',
+  'useDebugValue',
+  'useDeferredValue',
+  'useTransition',
+  'useMutableSource',
+  'useSyncExternalStore',
+  'useId',
+  'unstable_isNewReconciler',
+  'getCacheSignal',
+  'getCacheForType',
+  'useCacheRefresh',
+].forEach(name => {
   LazyGuardDispatcher[name] = () => {
     throw new Error(
-      `[React] Unexpected React hook call (${name}) from a React Forget compiled function. ` +
-        "Check that all hooks are called directly and named according to convention ('use[A-Z]') "
+      `[React] Unexpected React hook call (${name}) from a React compiled function. ` +
+        "Check that all hooks are called directly and named according to convention ('use[A-Z]') ",
     );
   };
 });
@@ -79,10 +76,10 @@ const LazyGuardDispatcher: { [key: string]: (...args: Array<any>) => any } = {};
 let originalDispatcher: unknown = null;
 
 // Allow guards are not emitted for useMemoCache
-LazyGuardDispatcher["useMemoCache"] = (count: number) => {
+LazyGuardDispatcher['useMemoCache'] = (count: number) => {
   if (originalDispatcher == null) {
     throw new Error(
-      "React Forget internal invariant violation: unexpected null dispatcher"
+      'React Compiler internal invariant violation: unexpected null dispatcher',
     );
   } else {
     return (originalDispatcher as any).useMemoCache(count);
@@ -106,12 +103,12 @@ const guardFrames: Array<unknown> = [];
 /**
  * When `enableEmitHookGuards` is set, this does runtime validation
  * of the no-conditional-hook-calls rule.
- * As Forget needs to statically understand which calls to move out of
- * conditional branches (i.e. Forget cannot memoize the results of hook
+ * As React Compiler needs to statically understand which calls to move out of
+ * conditional branches (i.e. React Compiler cannot memoize the results of hook
  * calls), its understanding of "the rules of React" are more restrictive.
  * This validation throws on unsound inputs at runtime.
  *
- * Components should only be invoked through React as Forget could memoize
+ * Components should only be invoked through React as React Compiler could memoize
  * the call to AnotherComponent, introducing conditional hook calls in its
  * compiled output.
  * ```js
@@ -151,9 +148,9 @@ export function $dispatcherGuard(kind: GuardKind) {
 
     if (curr === LazyGuardDispatcher) {
       throw new Error(
-        `[React] Unexpected call to custom hook or component from a React Forget compiled function. ` +
+        `[React] Unexpected call to custom hook or component from a React compiled function. ` +
           "Check that (1) all hooks are called directly and named according to convention ('use[A-Z]') " +
-          "and (2) components are returned as JSX instead of being directly invoked."
+          'and (2) components are returned as JSX instead of being directly invoked.',
       );
     }
     setCurrent(LazyGuardDispatcher);
@@ -163,7 +160,7 @@ export function $dispatcherGuard(kind: GuardKind) {
 
     if (lastFrame == null) {
       throw new Error(
-        "React Forget internal error: unexpected null in guard stack"
+        'React Compiler internal error: unexpected null in guard stack',
       );
     }
     if (guardFrames.length === 0) {
@@ -179,12 +176,12 @@ export function $dispatcherGuard(kind: GuardKind) {
     const lastFrame = guardFrames.pop();
     if (lastFrame == null) {
       throw new Error(
-        "React Forget internal error: unexpected null in guard stack"
+        'React Compiler internal error: unexpected null in guard stack',
       );
     }
     setCurrent(lastFrame);
   } else {
-    throw new Error("Forget internal error: unreachable block" + kind);
+    throw new Error('React Compiler internal error: unreachable block' + kind);
   }
 }
 
@@ -195,7 +192,7 @@ export function $reset($: MemoCache) {
 }
 
 export function $makeReadOnly() {
-  throw new Error("TODO: implement $makeReadOnly in react-compiler-runtime");
+  throw new Error('TODO: implement $makeReadOnly in react-compiler-runtime');
 }
 
 /**
@@ -203,17 +200,17 @@ export function $makeReadOnly() {
  */
 export const renderCounterRegistry: Map<
   string,
-  Set<{ count: number }>
+  Set<{count: number}>
 > = new Map();
 export function clearRenderCounterRegistry() {
   for (const counters of renderCounterRegistry.values()) {
-    counters.forEach((counter) => {
+    counters.forEach(counter => {
       counter.count = 0;
     });
   }
 }
 
-function registerRenderCounter(name: string, val: { count: number }) {
+function registerRenderCounter(name: string, val: {count: number}) {
   let counters = renderCounterRegistry.get(name);
   if (counters == null) {
     counters = new Set();
@@ -222,7 +219,7 @@ function registerRenderCounter(name: string, val: { count: number }) {
   counters.add(val);
 }
 
-function removeRenderCounter(name: string, val: { count: number }): void {
+function removeRenderCounter(name: string, val: {count: number}): void {
   const counters = renderCounterRegistry.get(name);
   if (counters == null) {
     return;
@@ -231,7 +228,7 @@ function removeRenderCounter(name: string, val: { count: number }): void {
 }
 
 export function useRenderCounter(name: string): void {
-  const val = useRef<{ count: number }>(null);
+  const val = useRef<{count: number}>(null);
 
   if (val.current != null) {
     val.current.count += 1;
@@ -239,7 +236,7 @@ export function useRenderCounter(name: string): void {
   useEffect(() => {
     // Not counting initial render shouldn't be a problem
     if (val.current == null) {
-      const counter = { count: 0 };
+      const counter = {count: 0};
       registerRenderCounter(name, counter);
       // @ts-ignore
       val.current = counter;
@@ -260,7 +257,7 @@ export function $structuralCheck(
   variableName: string,
   fnName: string,
   kind: string,
-  loc: string
+  loc: string,
 ): void {
   function error(l: string, r: string, path: string, depth: number) {
     const str = `${fnName}:${loc} [${kind}] ${variableName}${path} changed from ${l} to ${r} at depth ${depth}`;
@@ -278,13 +275,13 @@ export function $structuralCheck(
       return;
     } else if (typeof oldValue !== typeof newValue) {
       error(`type ${typeof oldValue}`, `type ${typeof newValue}`, path, depth);
-    } else if (typeof oldValue === "object") {
+    } else if (typeof oldValue === 'object') {
       const oldArray = Array.isArray(oldValue);
       const newArray = Array.isArray(newValue);
       if (oldValue === null && newValue !== null) {
-        error("null", `type ${typeof newValue}`, path, depth);
+        error('null', `type ${typeof newValue}`, path, depth);
       } else if (newValue === null) {
-        error(`type ${typeof oldValue}`, "null", path, depth);
+        error(`type ${typeof oldValue}`, 'null', path, depth);
       } else if (oldValue instanceof Map) {
         if (!(newValue instanceof Map)) {
           error(`Map instance`, `other value`, path, depth);
@@ -293,7 +290,7 @@ export function $structuralCheck(
             `Map instance with size ${oldValue.size}`,
             `Map instance with size ${newValue.size}`,
             path,
-            depth
+            depth,
           );
         } else {
           for (const [k, v] of oldValue) {
@@ -302,7 +299,7 @@ export function $structuralCheck(
                 `Map instance with key ${k}`,
                 `Map instance without key ${k}`,
                 path,
-                depth
+                depth,
               );
             } else {
               recur(v, newValue.get(k), `${path}.get(${k})`, depth + 1);
@@ -310,7 +307,7 @@ export function $structuralCheck(
           }
         }
       } else if (newValue instanceof Map) {
-        error("other value", `Map instance`, path, depth);
+        error('other value', `Map instance`, path, depth);
       } else if (oldValue instanceof Set) {
         if (!(newValue instanceof Set)) {
           error(`Set instance`, `other value`, path, depth);
@@ -319,7 +316,7 @@ export function $structuralCheck(
             `Set instance with size ${oldValue.size}`,
             `Set instance with size ${newValue.size}`,
             path,
-            depth
+            depth,
           );
         } else {
           for (const v of newValue) {
@@ -328,27 +325,27 @@ export function $structuralCheck(
                 `Set instance without element ${v}`,
                 `Set instance with element ${v}`,
                 path,
-                depth
+                depth,
               );
             }
           }
         }
       } else if (newValue instanceof Set) {
-        error("other value", `Set instance`, path, depth);
+        error('other value', `Set instance`, path, depth);
       } else if (oldArray || newArray) {
         if (oldArray !== newArray) {
           error(
-            `type ${oldArray ? "array" : "object"}`,
-            `type ${newArray ? "array" : "object"}`,
+            `type ${oldArray ? 'array' : 'object'}`,
+            `type ${newArray ? 'array' : 'object'}`,
             path,
-            depth
+            depth,
           );
         } else if (oldValue.length !== newValue.length) {
           error(
             `array with length ${oldValue.length}`,
             `array with length ${newValue.length}`,
             path,
-            depth
+            depth,
           );
         } else {
           for (let ii = 0; ii < oldValue.length; ii++) {
@@ -358,24 +355,24 @@ export function $structuralCheck(
       } else if (isValidElement(oldValue) || isValidElement(newValue)) {
         if (isValidElement(oldValue) !== isValidElement(newValue)) {
           error(
-            `type ${isValidElement(oldValue) ? "React element" : "object"}`,
-            `type ${isValidElement(newValue) ? "React element" : "object"}`,
+            `type ${isValidElement(oldValue) ? 'React element' : 'object'}`,
+            `type ${isValidElement(newValue) ? 'React element' : 'object'}`,
             path,
-            depth
+            depth,
           );
         } else if (oldValue.type !== newValue.type) {
           error(
             `React element of type ${oldValue.type}`,
             `React element of type ${newValue.type}`,
             path,
-            depth
+            depth,
           );
         } else {
           recur(
             oldValue.props,
             newValue.props,
             `[props of ${path}]`,
-            depth + 1
+            depth + 1,
           );
         }
       } else {
@@ -385,7 +382,7 @@ export function $structuralCheck(
               `object without key ${key}`,
               `object with key ${key}`,
               path,
-              depth
+              depth,
             );
           }
         }
@@ -395,28 +392,28 @@ export function $structuralCheck(
               `object with key ${key}`,
               `object without key ${key}`,
               path,
-              depth
+              depth,
             );
           } else {
             recur(oldValue[key], newValue[key], `${path}.${key}`, depth + 1);
           }
         }
       }
-    } else if (typeof oldValue === "function") {
+    } else if (typeof oldValue === 'function') {
       // Bail on functions for now
       return;
     } else if (isNaN(oldValue) || isNaN(newValue)) {
       if (isNaN(oldValue) !== isNaN(newValue)) {
         error(
-          `${isNaN(oldValue) ? "NaN" : "non-NaN value"}`,
-          `${isNaN(newValue) ? "NaN" : "non-NaN value"}`,
+          `${isNaN(oldValue) ? 'NaN' : 'non-NaN value'}`,
+          `${isNaN(newValue) ? 'NaN' : 'non-NaN value'}`,
           path,
-          depth
+          depth,
         );
       }
     } else if (oldValue !== newValue) {
       error(oldValue, newValue, path, depth);
     }
   }
-  recur(oldValue, newValue, "", 0);
+  recur(oldValue, newValue, '', 0);
 }

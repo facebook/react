@@ -2,9 +2,9 @@
 ## Input
 
 ```javascript
-import { Stringify } from "shared-runtime";
+import {Stringify} from 'shared-runtime';
 
-function Component({ kind, ...props }) {
+function Component({kind, ...props}) {
   switch (kind) {
     default:
       return <Stringify {...props} />;
@@ -13,7 +13,7 @@ function Component({ kind, ...props }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ kind: "foo", a: 1, b: true, c: "sathya" }],
+  params: [{kind: 'foo', a: 1, b: true, c: 'sathya'}],
 };
 
 ```

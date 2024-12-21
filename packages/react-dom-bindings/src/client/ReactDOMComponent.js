@@ -16,7 +16,6 @@ import {
   possibleRegistrationNames,
 } from '../events/EventRegistry';
 
-import {canUseDOM} from 'shared/ExecutionEnvironment';
 import {checkHtmlStringCoercion} from 'shared/CheckStringCoercion';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 import {checkControlledValueProps} from '../shared/ReactControlledValuePropTypes';
@@ -50,7 +49,6 @@ import {
 } from './ReactDOMTextarea';
 import {validateTextNesting} from './validateDOMNesting';
 import {track} from './inputValueTracking';
-import setInnerHTML from './setInnerHTML';
 import setTextContent from './setTextContent';
 import {
   createDangerousStringForStyles,
@@ -65,11 +63,7 @@ import {validateProperties as validateInputProperties} from '../shared/ReactDOMN
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
 import sanitizeURL from '../shared/sanitizeURL';
 
-import {
-  disableIEWorkarounds,
-  enableTrustedTypesIntegration,
-  enableFilterEmptyStringAttributesDOM,
-} from 'shared/ReactFeatureFlags';
+import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
 import {
   mediaEventTypes,
   listenToNonDelegatedEvent,
@@ -83,19 +77,8 @@ let didWarnFormActionTarget = false;
 let didWarnFormActionMethod = false;
 let didWarnForNewBooleanPropsWithEmptyValue: {[string]: boolean};
 let didWarnPopoverTargetObject = false;
-let canDiffStyleForHydrationWarning;
 if (__DEV__) {
   didWarnForNewBooleanPropsWithEmptyValue = {};
-  // IE 11 parses & normalizes the style attribute as opposed to other
-  // browsers. It adds spaces and sorts the properties in some
-  // non-alphabetical order. Handling that would require sorting CSS
-  // properties in the client & server versions or applying
-  // `expectedStyle` to a temporary DOM node to read its `style` attribute
-  // normalized. Since it only affects IE, we're skipping style warnings
-  // in that browser completely in favor of doing all that work.
-  // See https://github.com/facebook/react/issues/11807
-  canDiffStyleForHydrationWarning =
-    disableIEWorkarounds || (canUseDOM && !document.documentMode);
 }
 
 function validatePropertiesInDevelopment(type: string, props: any) {
@@ -414,35 +397,33 @@ function setProp(
     // fallthrough
     case 'src':
     case 'href': {
-      if (enableFilterEmptyStringAttributesDOM) {
-        if (
-          value === '' &&
-          // <a href=""> is fine for "reload" links.
-          !(tag === 'a' && key === 'href')
-        ) {
-          if (__DEV__) {
-            if (key === 'src') {
-              console.error(
-                'An empty string ("") was passed to the %s attribute. ' +
-                  'This may cause the browser to download the whole page again over the network. ' +
-                  'To fix this, either do not render the element at all ' +
-                  'or pass null to %s instead of an empty string.',
-                key,
-                key,
-              );
-            } else {
-              console.error(
-                'An empty string ("") was passed to the %s attribute. ' +
-                  'To fix this, either do not render the element at all ' +
-                  'or pass null to %s instead of an empty string.',
-                key,
-                key,
-              );
-            }
+      if (
+        value === '' &&
+        // <a href=""> is fine for "reload" links.
+        !(tag === 'a' && key === 'href')
+      ) {
+        if (__DEV__) {
+          if (key === 'src') {
+            console.error(
+              'An empty string ("") was passed to the %s attribute. ' +
+                'This may cause the browser to download the whole page again over the network. ' +
+                'To fix this, either do not render the element at all ' +
+                'or pass null to %s instead of an empty string.',
+              key,
+              key,
+            );
+          } else {
+            console.error(
+              'An empty string ("") was passed to the %s attribute. ' +
+                'To fix this, either do not render the element at all ' +
+                'or pass null to %s instead of an empty string.',
+              key,
+              key,
+            );
           }
-          domElement.removeAttribute(key);
-          break;
         }
+        domElement.removeAttribute(key);
+        break;
       }
       if (
         value == null ||
@@ -579,11 +560,7 @@ function setProp(
               'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
             );
           }
-          if (disableIEWorkarounds) {
-            domElement.innerHTML = nextHtml;
-          } else {
-            setInnerHTML(domElement, nextHtml);
-          }
+          domElement.innerHTML = nextHtml;
         }
       }
       break;
@@ -939,11 +916,7 @@ function setPropOnCustomElement(
               'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
             );
           }
-          if (disableIEWorkarounds) {
-            domElement.innerHTML = nextHtml;
-          } else {
-            setInnerHTML(domElement, nextHtml);
-          }
+          domElement.innerHTML = nextHtml;
         }
       }
       break;
@@ -1030,6 +1003,53 @@ export function setInitialProperties(
     case 'li': {
       // Fast track the most common tag types
       break;
+    }
+    // img tags previously were implemented as void elements with non delegated events however Safari (and possibly Firefox)
+    // begin fetching the image as soon as the `src` or `srcSet` property is set and if we set these before other properties
+    // that can modify the request (such as crossorigin) or the resource fetch (such as sizes) then the browser will load
+    // the wrong thing or load more than one thing. This implementation ensures src and srcSet are set on the instance last
+    case 'img': {
+      listenToNonDelegatedEvent('error', domElement);
+      listenToNonDelegatedEvent('load', domElement);
+      // Mostly a port of Void Element logic with special casing to ensure srcset and src are set last
+      let hasSrc = false;
+      let hasSrcSet = false;
+      for (const propKey in props) {
+        if (!props.hasOwnProperty(propKey)) {
+          continue;
+        }
+        const propValue = props[propKey];
+        if (propValue == null) {
+          continue;
+        }
+        switch (propKey) {
+          case 'src':
+            hasSrc = true;
+            break;
+          case 'srcSet':
+            hasSrcSet = true;
+            break;
+          case 'children':
+          case 'dangerouslySetInnerHTML': {
+            // TODO: Can we make this a DEV warning to avoid this deny list?
+            throw new Error(
+              `${tag} is a void element tag and must neither have \`children\` nor ` +
+                'use `dangerouslySetInnerHTML`.',
+            );
+          }
+          // defaultChecked and defaultValue are ignored by setProp
+          default: {
+            setProp(domElement, tag, propKey, propValue, props, null);
+          }
+        }
+      }
+      if (hasSrcSet) {
+        setProp(domElement, tag, 'srcSet', props.srcSet, props, null);
+      }
+      if (hasSrc) {
+        setProp(domElement, tag, 'src', props.src, props, null);
+      }
+      return;
     }
     case 'input': {
       if (__DEV__) {
@@ -1269,7 +1289,6 @@ export function setInitialProperties(
     }
     case 'embed':
     case 'source':
-    case 'img':
     case 'link': {
       // These are void elements that also need delegated events.
       listenToNonDelegatedEvent('error', domElement);
@@ -1885,27 +1904,23 @@ function diffHydratedStyles(
     }
     return;
   }
-  if (canDiffStyleForHydrationWarning) {
-    // First we compare the string form and see if it's equivalent.
-    // This lets us bail out on anything that used to pass in this form.
-    // It also lets us compare anything that's not parsed by this browser.
-    const clientValue = createDangerousStringForStyles(value);
-    const serverValue = domElement.getAttribute('style');
+  // First we compare the string form and see if it's equivalent.
+  // This lets us bail out on anything that used to pass in this form.
+  // It also lets us compare anything that's not parsed by this browser.
+  const clientValue = createDangerousStringForStyles(value);
+  const serverValue = domElement.getAttribute('style');
 
-    if (serverValue === clientValue) {
-      return;
-    }
-    const normalizedClientValue =
-      normalizeMarkupForTextOrAttribute(clientValue);
-    const normalizedServerValue =
-      normalizeMarkupForTextOrAttribute(serverValue);
-    if (normalizedServerValue === normalizedClientValue) {
-      return;
-    }
-
-    // Otherwise, we create the object from the DOM for the diff view.
-    serverDifferences.style = getStylesObjectFromElement(domElement);
+  if (serverValue === clientValue) {
+    return;
   }
+  const normalizedClientValue = normalizeMarkupForTextOrAttribute(clientValue);
+  const normalizedServerValue = normalizeMarkupForTextOrAttribute(serverValue);
+  if (normalizedServerValue === normalizedClientValue) {
+    return;
+  }
+
+  // Otherwise, we create the object from the DOM for the diff view.
+  serverDifferences.style = getStylesObjectFromElement(domElement);
 }
 
 function hydrateAttribute(
@@ -2469,53 +2484,52 @@ function diffHydratedGenericElement(
       // fallthrough
       case 'src':
       case 'href':
-        if (enableFilterEmptyStringAttributesDOM) {
-          if (
-            value === '' &&
-            // <a href=""> is fine for "reload" links.
-            !(tag === 'a' && propKey === 'href') &&
-            !(tag === 'object' && propKey === 'data')
-          ) {
-            if (__DEV__) {
-              if (propKey === 'src') {
-                console.error(
-                  'An empty string ("") was passed to the %s attribute. ' +
-                    'This may cause the browser to download the whole page again over the network. ' +
-                    'To fix this, either do not render the element at all ' +
-                    'or pass null to %s instead of an empty string.',
-                  propKey,
-                  propKey,
-                );
-              } else {
-                console.error(
-                  'An empty string ("") was passed to the %s attribute. ' +
-                    'To fix this, either do not render the element at all ' +
-                    'or pass null to %s instead of an empty string.',
-                  propKey,
-                  propKey,
-                );
-              }
+        if (
+          value === '' &&
+          // <a href=""> is fine for "reload" links.
+          !(tag === 'a' && propKey === 'href') &&
+          !(tag === 'object' && propKey === 'data')
+        ) {
+          if (__DEV__) {
+            if (propKey === 'src') {
+              console.error(
+                'An empty string ("") was passed to the %s attribute. ' +
+                  'This may cause the browser to download the whole page again over the network. ' +
+                  'To fix this, either do not render the element at all ' +
+                  'or pass null to %s instead of an empty string.',
+                propKey,
+                propKey,
+              );
+            } else {
+              console.error(
+                'An empty string ("") was passed to the %s attribute. ' +
+                  'To fix this, either do not render the element at all ' +
+                  'or pass null to %s instead of an empty string.',
+                propKey,
+                propKey,
+              );
             }
-            hydrateSanitizedAttribute(
-              domElement,
-              propKey,
-              propKey,
-              null,
-              extraAttributes,
-              serverDifferences,
-            );
-            continue;
           }
+          hydrateSanitizedAttribute(
+            domElement,
+            propKey,
+            propKey,
+            null,
+            extraAttributes,
+            serverDifferences,
+          );
+          continue;
+        } else {
+          hydrateSanitizedAttribute(
+            domElement,
+            propKey,
+            propKey,
+            value,
+            extraAttributes,
+            serverDifferences,
+          );
+          continue;
         }
-        hydrateSanitizedAttribute(
-          domElement,
-          propKey,
-          propKey,
-          value,
-          extraAttributes,
-          serverDifferences,
-        );
-        continue;
       case 'action':
       case 'formAction': {
         const serverValue = domElement.getAttribute(propKey);

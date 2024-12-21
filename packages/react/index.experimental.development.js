@@ -9,6 +9,7 @@
 
 export {
   __CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
+  __COMPILER_RUNTIME,
   Children,
   Component,
   Fragment,
@@ -27,7 +28,6 @@ export {
   memo,
   cache,
   startTransition,
-  unstable_DebugTracingMode,
   unstable_Activity,
   unstable_postpone,
   unstable_getCacheForType,
@@ -40,6 +40,7 @@ export {
   useDeferredValue,
   useEffect,
   experimental_useEffectEvent,
+  experimental_useResourceEffect,
   useImperativeHandle,
   useInsertionEffect,
   useLayoutEffect,

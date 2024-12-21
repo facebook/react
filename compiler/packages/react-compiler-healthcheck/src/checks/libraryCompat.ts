@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import chalk from "chalk";
-import { config } from "../config";
+import chalk from 'chalk';
+import {config} from '../config';
 
 const packageJsonRE = /package\.json$/;
 const knownIncompatibleLibrariesUsage = new Set();

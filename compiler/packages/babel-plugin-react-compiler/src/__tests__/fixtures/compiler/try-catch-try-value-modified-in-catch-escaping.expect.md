@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-const { throwInput } = require("shared-runtime");
+const {throwInput} = require('shared-runtime');
 
 function Component(props) {
   let x;
@@ -19,7 +19,7 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ y: "foo", e: "bar" }],
+  params: [{y: 'foo', e: 'bar'}],
 };
 
 ```
@@ -33,7 +33,7 @@ const { throwInput } = require("shared-runtime");
 function Component(props) {
   const $ = _c(3);
   let x;
-  if ($[0] !== props.y || $[1] !== props.e) {
+  if ($[0] !== props.e || $[1] !== props.y) {
     try {
       const y = [];
       y.push(props.y);
@@ -43,8 +43,8 @@ function Component(props) {
       e.push(props.e);
       x = e;
     }
-    $[0] = props.y;
-    $[1] = props.e;
+    $[0] = props.e;
+    $[1] = props.y;
     $[2] = x;
   } else {
     x = $[2];

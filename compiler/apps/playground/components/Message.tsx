@@ -10,13 +10,13 @@ import {
   ExclamationIcon,
   InformationCircleIcon,
   XIcon,
-} from "@heroicons/react/solid";
-import { CustomContentProps, SnackbarContent, useSnackbar } from "notistack";
-import { forwardRef } from "react";
-import { MessageLevel, MessageSource } from "../lib/stores";
+} from '@heroicons/react/solid';
+import {CustomContentProps, SnackbarContent, useSnackbar} from 'notistack';
+import {forwardRef} from 'react';
+import {MessageLevel, MessageSource} from '../lib/stores';
 
 // https://notistack.com/examples/advanced/custom-component#custom-variant-(typescript)
-declare module "notistack" {
+declare module 'notistack' {
   interface VariantOverrides {
     message: {
       title: string;
@@ -34,15 +34,14 @@ interface MessageProps extends CustomContentProps {
 }
 
 const Message = forwardRef<HTMLDivElement, MessageProps>(
-  ({ id, title, level, source, codeframe }, ref) => {
-    const { closeSnackbar } = useSnackbar();
+  ({id, title, level, source, codeframe}, ref) => {
+    const {closeSnackbar} = useSnackbar();
     const isDismissible = source !== MessageSource.Playground;
 
     return (
       <SnackbarContent
         ref={ref}
-        className="flex items-start justify-between gap-3 px-4 py-3 text-sm bg-white border rounded-md shadow w-toast"
-      >
+        className="flex items-start justify-between gap-3 px-4 py-3 text-sm bg-white border rounded-md shadow w-toast">
         <div className="flex gap-3 w-toast-body">
           {level === MessageLevel.Warning ? (
             <div className="flex items-center justify-center flex-none rounded-md w-7 h-7 bg-amber-100">
@@ -69,16 +68,15 @@ const Message = forwardRef<HTMLDivElement, MessageProps>(
         {isDismissible ? (
           <button
             className="flex items-center justify-center flex-none transition-colors duration-150 ease-in rounded-md justify-self-end group w-7 h-7 hover:bg-gray-200"
-            onClick={() => closeSnackbar(id)}
-          >
+            onClick={() => closeSnackbar(id)}>
             <XIcon className="w-5 h-5 fill-gray-500 group-hover:fill-gray-800" />
           </button>
         ) : null}
       </SnackbarContent>
     );
-  }
+  },
 );
 
-Message.displayName = "MessageComponent";
+Message.displayName = 'MessageComponent';
 
 export default Message;

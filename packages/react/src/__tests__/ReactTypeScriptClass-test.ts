@@ -244,7 +244,6 @@ let getDefaultPropsWasCalled = false;
 class ClassicProperties extends React.Component {
   contextTypes = {};
   contextType = {};
-  propTypes = {};
   getDefaultProps() {
     getDefaultPropsWasCalled = true;
     return {};
@@ -519,7 +518,10 @@ describe('ReactTypeScriptClass', function() {
 
   if (!ReactFeatureFlags.disableLegacyContext) {
     it('renders based on context in the constructor', function() {
-      test(React.createElement(ProvideChildContextTypes), 'SPAN', 'foo');
+      expect(() => test(React.createElement(ProvideChildContextTypes), 'SPAN', 'foo')).toErrorDev([
+        'ProvideChildContextTypes uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+        'StateBasedOnContext uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.'
+      ]);
     });
   }
 
@@ -612,7 +614,6 @@ describe('ReactTypeScriptClass', function() {
             'a plain JavaScript class.',
           'getDefaultProps was defined on ClassicProperties, ' +
             'a plain JavaScript class.',
-          'propTypes was defined as an instance property on ClassicProperties.',
           'contextTypes was defined as an instance property on ClassicProperties.',
           'contextType was defined as an instance property on ClassicProperties.',
         ]);
@@ -689,24 +690,11 @@ describe('ReactTypeScriptClass', function() {
   });
 
   if (!ReactFeatureFlags.disableLegacyContext) {
-    it('supports this.context passed via getChildContext', function() {
-      test(React.createElement(ProvideContext), 'DIV', 'bar-through-context');
-    });
-  }
-
-  if (!ReactFeatureFlags.disableStringRefs) {
-    it('supports string refs', function() {
-      const ref = React.createRef();
-      expect(() => {
-        test(React.createElement(ClassicRefs, {ref: ref}), 'DIV', 'foo');
-      }).toErrorDev([
-        'Component "ClassicRefs" contains the string ref "inner". ' +
-          'Support for string refs will be removed in a future major release. ' +
-          'We recommend using useRef() or createRef() instead. ' +
-          'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
-          '    in Inner (at **)',
-      ]);
-      expect(ref.current.refs.inner.getName()).toBe('foo');
+    it('supports this.context passed via getChildContext', () => {
+      expect(() => test(React.createElement(ProvideContext), 'DIV', 'bar-through-context')).toErrorDev([
+        'ProvideContext uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+        'ReadContext uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+]      );
     });
   }
 });

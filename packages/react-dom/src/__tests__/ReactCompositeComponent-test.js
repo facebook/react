@@ -537,11 +537,7 @@ describe('ReactCompositeComponent', () => {
   });
 
   it('should cleanup even if render() fatals', async () => {
-    const dispatcherEnabled =
-      __DEV__ ||
-      !gate(flags => flags.disableStringRefs) ||
-      gate(flags => flags.enableCache);
-    const ownerEnabled = __DEV__ || !gate(flags => flags.disableStringRefs);
+    const ownerEnabled = __DEV__;
 
     let stashedDispatcher;
     class BadComponent extends React.Component {
@@ -554,7 +550,7 @@ describe('ReactCompositeComponent', () => {
     }
 
     const instance = <BadComponent />;
-    expect(ReactSharedInternals.A).toBe(dispatcherEnabled ? null : undefined);
+    expect(ReactSharedInternals.A).toBe(null);
 
     const root = ReactDOMClient.createRoot(document.createElement('div'));
     await expect(async () => {
@@ -563,15 +559,11 @@ describe('ReactCompositeComponent', () => {
       });
     }).rejects.toThrow();
 
-    expect(ReactSharedInternals.A).toBe(dispatcherEnabled ? null : undefined);
-    if (dispatcherEnabled) {
-      if (ownerEnabled) {
-        expect(stashedDispatcher.getOwner()).toBe(null);
-      } else {
-        expect(stashedDispatcher.getOwner).toBe(undefined);
-      }
+    expect(ReactSharedInternals.A).toBe(null);
+    if (ownerEnabled) {
+      expect(stashedDispatcher.getOwner()).toBe(null);
     } else {
-      expect(stashedDispatcher).toBe(undefined);
+      expect(stashedDispatcher.getOwner).toBe(undefined);
     }
   });
 

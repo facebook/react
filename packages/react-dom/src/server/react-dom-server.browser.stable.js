@@ -8,3 +8,4 @@
  */
 
 export {renderToReadableStream, version} from './ReactDOMFizzServerBrowser.js';
+export {prerender} from './ReactDOMFizzStaticBrowser.js';

@@ -1,8 +1,8 @@
-import { arrayPush } from "shared-runtime";
+import {arrayPush} from 'shared-runtime';
 
-function useFoo({ input, cond }) {
+function useFoo({input, cond}) {
   if (cond) {
-    throw new Error("throw with error!");
+    throw new Error('throw with error!');
   }
 
   // unconditional
@@ -13,15 +13,15 @@ function useFoo({ input, cond }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useFoo,
-  params: [{ input: { a: { b: 2 } }, cond: false }],
+  params: [{input: {a: {b: 2}}, cond: false}],
   sequentialRenders: [
-    { input: null, cond: true },
-    { input: { a: { b: 2 } }, cond: false },
-    { input: null, cond: true },
+    {input: null, cond: true},
+    {input: {a: {b: 2}}, cond: false},
+    {input: null, cond: true},
     // preserve nullthrows
-    { input: {}, cond: false },
-    { input: { a: { b: null } }, cond: false },
-    { input: { a: null }, cond: false },
-    { input: { a: { b: 3 } }, cond: false },
+    {input: {}, cond: false},
+    {input: {a: {b: null}}, cond: false},
+    {input: {a: null}, cond: false},
+    {input: {a: {b: 3}}, cond: false},
   ],
 };

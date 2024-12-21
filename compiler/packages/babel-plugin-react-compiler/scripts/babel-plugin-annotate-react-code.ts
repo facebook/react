@@ -5,15 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type * as BabelCore from "@babel/core";
-import { NodePath } from "@babel/core";
-import * as t from "@babel/types";
+import type * as BabelCore from '@babel/core';
+import {NodePath} from '@babel/core';
+import * as t from '@babel/types';
 
 export default function AnnotateReactCodeBabelPlugin(
-  _babel: typeof BabelCore
+  _babel: typeof BabelCore,
 ): BabelCore.PluginObj {
   return {
-    name: "annotate-react-code",
+    name: 'annotate-react-code',
     visitor: {
       Program(prog): void {
         annotate(prog);
@@ -56,23 +56,23 @@ function buildTypeOfReactForget(): t.Statement {
   // typeof globalThis[Symbol.for("react_forget")]
   return t.expressionStatement(
     t.unaryExpression(
-      "typeof",
+      'typeof',
       t.memberExpression(
-        t.identifier("globalThis"),
+        t.identifier('globalThis'),
         t.callExpression(
           t.memberExpression(
-            t.identifier("Symbol"),
-            t.identifier("for"),
+            t.identifier('Symbol'),
+            t.identifier('for'),
             false,
-            false
+            false,
           ),
-          [t.stringLiteral("react_forget")]
+          [t.stringLiteral('react_forget')],
         ),
         true,
-        false
+        false,
       ),
-      true
-    )
+      true,
+    ),
   );
 }
 
@@ -89,9 +89,9 @@ type BabelFn =
   | NodePath<t.ArrowFunctionExpression>;
 
 export function isComponentDeclaration(
-  node: t.FunctionDeclaration
+  node: t.FunctionDeclaration,
 ): node is ComponentDeclaration {
-  return Object.prototype.hasOwnProperty.call(node, "__componentDeclaration");
+  return Object.prototype.hasOwnProperty.call(node, '__componentDeclaration');
 }
 
 /*
@@ -101,7 +101,7 @@ export function isComponentDeclaration(
 function isComponentOrHookLike(
   node: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
-  >
+  >,
 ): boolean {
   const functionName = getFunctionName(node);
   // Check if the name is component or hook like:
@@ -114,7 +114,7 @@ function isComponentOrHookLike(
        * helpers are _usually_ named with lowercase, but some code may
        * violate this rule
        */
-      node.get("params").length <= 1
+      node.get('params').length <= 1
     );
   } else if (functionName !== null && isHook(functionName)) {
     // Hooks have hook invocations or JSX, but can take any # of arguments
@@ -151,11 +151,11 @@ function isHook(path: NodePath<t.Expression | t.PrivateName>): boolean {
   } else if (
     path.isMemberExpression() &&
     !path.node.computed &&
-    isHook(path.get("property"))
+    isHook(path.get('property'))
   ) {
-    const obj = path.get("object").node;
+    const obj = path.get('object').node;
     const isPascalCaseNameSpace = /^[A-Z].*/;
-    return obj.type === "Identifier" && isPascalCaseNameSpace.test(obj.name);
+    return obj.type === 'Identifier' && isPascalCaseNameSpace.test(obj.name);
   } else {
     return false;
   }
@@ -177,8 +177,8 @@ function isComponentName(path: NodePath<t.Expression>): boolean {
 function isForwardRefCallback(path: NodePath<t.Expression>): boolean {
   return !!(
     path.parentPath.isCallExpression() &&
-    path.parentPath.get("callee").isExpression() &&
-    isReactAPI(path.parentPath.get("callee"), "forwardRef")
+    path.parentPath.get('callee').isExpression() &&
+    isReactAPI(path.parentPath.get('callee'), 'forwardRef')
   );
 }
 
@@ -190,22 +190,22 @@ function isForwardRefCallback(path: NodePath<t.Expression>): boolean {
 function isMemoCallback(path: NodePath<t.Expression>): boolean {
   return (
     path.parentPath.isCallExpression() &&
-    path.parentPath.get("callee").isExpression() &&
-    isReactAPI(path.parentPath.get("callee"), "memo")
+    path.parentPath.get('callee').isExpression() &&
+    isReactAPI(path.parentPath.get('callee'), 'memo')
   );
 }
 
 function isReactAPI(
   path: NodePath<t.Expression | t.PrivateName | t.V8IntrinsicIdentifier>,
-  functionName: string
+  functionName: string,
 ): boolean {
   const node = path.node;
   return (
-    (node.type === "Identifier" && node.name === functionName) ||
-    (node.type === "MemberExpression" &&
-      node.object.type === "Identifier" &&
-      node.object.name === "React" &&
-      node.property.type === "Identifier" &&
+    (node.type === 'Identifier' && node.name === functionName) ||
+    (node.type === 'MemberExpression' &&
+      node.object.type === 'Identifier' &&
+      node.object.name === 'React' &&
+      node.property.type === 'Identifier' &&
       node.property.name === functionName)
   );
 }
@@ -218,7 +218,7 @@ function callsHooksOrCreatesJsx(node: NodePath<t.Node>): boolean {
       createsJsx = true;
     },
     CallExpression(call) {
-      const callee = call.get("callee");
+      const callee = call.get('callee');
       if (callee.isExpression() && isHook(callee)) {
         invokesHooks = true;
       }
@@ -239,10 +239,10 @@ function callsHooksOrCreatesJsx(node: NodePath<t.Node>): boolean {
 function getFunctionName(
   path: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
-  >
+  >,
 ): NodePath<t.Expression> | null {
   if (path.isFunctionDeclaration()) {
-    const id = path.get("id");
+    const id = path.get('id');
     if (id.isIdentifier()) {
       return id;
     }
@@ -250,31 +250,31 @@ function getFunctionName(
   }
   let id: NodePath<t.LVal | t.Expression | t.PrivateName> | null = null;
   const parent = path.parentPath;
-  if (parent.isVariableDeclarator() && parent.get("init").node === path.node) {
+  if (parent.isVariableDeclarator() && parent.get('init').node === path.node) {
     // const useHook = () => {};
-    id = parent.get("id");
+    id = parent.get('id');
   } else if (
     parent.isAssignmentExpression() &&
-    parent.get("right").node === path.node &&
-    parent.get("operator") === "="
+    parent.get('right').node === path.node &&
+    parent.get('operator') === '='
   ) {
     // useHook = () => {};
-    id = parent.get("left");
+    id = parent.get('left');
   } else if (
     parent.isProperty() &&
-    parent.get("value").node === path.node &&
-    !parent.get("computed") &&
-    parent.get("key").isLVal()
+    parent.get('value').node === path.node &&
+    !parent.get('computed') &&
+    parent.get('key').isLVal()
   ) {
     /*
      * {useHook: () => {}}
      * {useHook() {}}
      */
-    id = parent.get("key");
+    id = parent.get('key');
   } else if (
     parent.isAssignmentPattern() &&
-    parent.get("right").node === path.node &&
-    !parent.get("computed")
+    parent.get('right').node === path.node &&
+    !parent.get('computed')
   ) {
     /*
      * const {useHook = () => {}} = {};
@@ -283,7 +283,7 @@ function getFunctionName(
      * Kinda clowny, but we'd said we'd follow spec convention for
      * `IsAnonymousFunctionDefinition()` usage.
      */
-    id = parent.get("left");
+    id = parent.get('left');
   }
   if (id !== null && (id.isIdentifier() || id.isMemberExpression())) {
     return id;

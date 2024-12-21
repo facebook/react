@@ -587,133 +587,131 @@ describe('ReactDOMComponent', () => {
       expect(node.hasAttribute('data-foo')).toBe(false);
     });
 
-    if (ReactFeatureFlags.enableFilterEmptyStringAttributesDOM) {
-      it('should not add an empty src attribute', async () => {
-        const container = document.createElement('div');
-        const root = ReactDOMClient.createRoot(container);
-        await expect(async () => {
-          await act(() => {
-            root.render(<img src="" />);
-          });
-        }).toErrorDev(
-          'An empty string ("") was passed to the src attribute. ' +
-            'This may cause the browser to download the whole page again over the network. ' +
-            'To fix this, either do not render the element at all ' +
-            'or pass null to src instead of an empty string.',
+    it('should not add an empty src attribute', async () => {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await expect(async () => {
+        await act(() => {
+          root.render(<img src="" />);
+        });
+      }).toErrorDev(
+        'An empty string ("") was passed to the src attribute. ' +
+          'This may cause the browser to download the whole page again over the network. ' +
+          'To fix this, either do not render the element at all ' +
+          'or pass null to src instead of an empty string.',
+      );
+      const node = container.firstChild;
+      expect(node.hasAttribute('src')).toBe(false);
+
+      await act(() => {
+        root.render(<img src="abc" />);
+      });
+      expect(node.hasAttribute('src')).toBe(true);
+
+      await expect(async () => {
+        await act(() => {
+          root.render(<img src="" />);
+        });
+      }).toErrorDev(
+        'An empty string ("") was passed to the src attribute. ' +
+          'This may cause the browser to download the whole page again over the network. ' +
+          'To fix this, either do not render the element at all ' +
+          'or pass null to src instead of an empty string.',
+      );
+      expect(node.hasAttribute('src')).toBe(false);
+    });
+
+    it('should not add an empty href attribute', async () => {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await expect(async () => {
+        await act(() => {
+          root.render(<link href="" />);
+        });
+      }).toErrorDev(
+        'An empty string ("") was passed to the href attribute. ' +
+          'To fix this, either do not render the element at all ' +
+          'or pass null to href instead of an empty string.',
+      );
+      const node = container.firstChild;
+      expect(node.hasAttribute('href')).toBe(false);
+
+      await act(() => {
+        root.render(<link href="abc" />);
+      });
+      expect(node.hasAttribute('href')).toBe(true);
+
+      await expect(async () => {
+        await act(() => {
+          root.render(<link href="" />);
+        });
+      }).toErrorDev(
+        'An empty string ("") was passed to the href attribute. ' +
+          'To fix this, either do not render the element at all ' +
+          'or pass null to href instead of an empty string.',
+      );
+      expect(node.hasAttribute('href')).toBe(false);
+    });
+
+    it('should allow an empty href attribute on anchors', async () => {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<a href="" />);
+      });
+      const node = container.firstChild;
+      expect(node.getAttribute('href')).toBe('');
+    });
+
+    it('should allow an empty action attribute', async () => {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<form action="" />);
+      });
+      const node = container.firstChild;
+      expect(node.getAttribute('action')).toBe('');
+
+      await act(() => {
+        root.render(<form action="abc" />);
+      });
+      expect(node.hasAttribute('action')).toBe(true);
+
+      await act(() => {
+        root.render(<form action="" />);
+      });
+      expect(node.getAttribute('action')).toBe('');
+    });
+
+    it('allows empty string of a formAction to override the default of a parent', async () => {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(
+          <form action="hello">
+            <button formAction="" />,
+          </form>,
         );
-        const node = container.firstChild;
-        expect(node.hasAttribute('src')).toBe(false);
+      });
+      const node = container.firstChild.firstChild;
+      expect(node.hasAttribute('formaction')).toBe(true);
+      expect(node.getAttribute('formaction')).toBe('');
+    });
 
-        await act(() => {
-          root.render(<img src="abc" />);
-        });
-        expect(node.hasAttribute('src')).toBe(true);
-
-        await expect(async () => {
-          await act(() => {
-            root.render(<img src="" />);
-          });
-        }).toErrorDev(
-          'An empty string ("") was passed to the src attribute. ' +
-            'This may cause the browser to download the whole page again over the network. ' +
-            'To fix this, either do not render the element at all ' +
-            'or pass null to src instead of an empty string.',
+    it('should not filter attributes for custom elements', async () => {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(
+          <some-custom-element action="" formAction="" href="" src="" />,
         );
-        expect(node.hasAttribute('src')).toBe(false);
       });
-
-      it('should not add an empty href attribute', async () => {
-        const container = document.createElement('div');
-        const root = ReactDOMClient.createRoot(container);
-        await expect(async () => {
-          await act(() => {
-            root.render(<link href="" />);
-          });
-        }).toErrorDev(
-          'An empty string ("") was passed to the href attribute. ' +
-            'To fix this, either do not render the element at all ' +
-            'or pass null to href instead of an empty string.',
-        );
-        const node = container.firstChild;
-        expect(node.hasAttribute('href')).toBe(false);
-
-        await act(() => {
-          root.render(<link href="abc" />);
-        });
-        expect(node.hasAttribute('href')).toBe(true);
-
-        await expect(async () => {
-          await act(() => {
-            root.render(<link href="" />);
-          });
-        }).toErrorDev(
-          'An empty string ("") was passed to the href attribute. ' +
-            'To fix this, either do not render the element at all ' +
-            'or pass null to href instead of an empty string.',
-        );
-        expect(node.hasAttribute('href')).toBe(false);
-      });
-
-      it('should allow an empty href attribute on anchors', async () => {
-        const container = document.createElement('div');
-        const root = ReactDOMClient.createRoot(container);
-        await act(() => {
-          root.render(<a href="" />);
-        });
-        const node = container.firstChild;
-        expect(node.getAttribute('href')).toBe('');
-      });
-
-      it('should allow an empty action attribute', async () => {
-        const container = document.createElement('div');
-        const root = ReactDOMClient.createRoot(container);
-        await act(() => {
-          root.render(<form action="" />);
-        });
-        const node = container.firstChild;
-        expect(node.getAttribute('action')).toBe('');
-
-        await act(() => {
-          root.render(<form action="abc" />);
-        });
-        expect(node.hasAttribute('action')).toBe(true);
-
-        await act(() => {
-          root.render(<form action="" />);
-        });
-        expect(node.getAttribute('action')).toBe('');
-      });
-
-      it('allows empty string of a formAction to override the default of a parent', async () => {
-        const container = document.createElement('div');
-        const root = ReactDOMClient.createRoot(container);
-        await act(() => {
-          root.render(
-            <form action="hello">
-              <button formAction="" />,
-            </form>,
-          );
-        });
-        const node = container.firstChild.firstChild;
-        expect(node.hasAttribute('formaction')).toBe(true);
-        expect(node.getAttribute('formaction')).toBe('');
-      });
-
-      it('should not filter attributes for custom elements', async () => {
-        const container = document.createElement('div');
-        const root = ReactDOMClient.createRoot(container);
-        await act(() => {
-          root.render(
-            <some-custom-element action="" formAction="" href="" src="" />,
-          );
-        });
-        const node = container.firstChild;
-        expect(node.hasAttribute('action')).toBe(true);
-        expect(node.hasAttribute('formAction')).toBe(true);
-        expect(node.hasAttribute('href')).toBe(true);
-        expect(node.hasAttribute('src')).toBe(true);
-      });
-    }
+      const node = container.firstChild;
+      expect(node.hasAttribute('action')).toBe(true);
+      expect(node.hasAttribute('formAction')).toBe(true);
+      expect(node.hasAttribute('href')).toBe(true);
+      expect(node.hasAttribute('src')).toBe(true);
+    });
 
     it('should apply React-specific aliases to HTML elements', async () => {
       const container = document.createElement('div');
@@ -2193,13 +2191,18 @@ describe('ReactDOMComponent', () => {
             </div>,
           );
         });
-      }).toErrorDev([
-        'In HTML, <tr> cannot be a child of ' +
-          '<div>.\n' +
-          'This will cause a hydration error.' +
+      }).toErrorDev(
+        'In HTML, <tr> cannot be a child of <div>.\n' +
+          'This will cause a hydration error.\n' +
+          '\n' +
+          '> <div>\n' +
+          '>   <tr>\n' +
+          '    ...\n' +
           '\n    in tr (at **)' +
-          '\n    in div (at **)',
-      ]);
+          (gate(flags => flags.enableOwnerStacks)
+            ? ''
+            : '\n    in div (at **)'),
+      );
     });
 
     it('warns on invalid nesting at root', async () => {
@@ -2215,12 +2218,13 @@ describe('ReactDOMComponent', () => {
           );
         });
       }).toErrorDev(
-        'In HTML, <p> cannot be a descendant ' +
-          'of <p>.\n' +
+        'In HTML, <p> cannot be a descendant of <p>.\n' +
           'This will cause a hydration error.' +
           // There is no outer `p` here because root container is not part of the stack.
           '\n    in p (at **)' +
-          '\n    in span (at **)',
+          (gate(flags => flags.enableOwnerStacks)
+            ? ''
+            : '\n    in span (at **)'),
       );
     });
 
@@ -2248,29 +2252,90 @@ describe('ReactDOMComponent', () => {
         await act(() => {
           root.render(<Foo />);
         });
-      }).toErrorDev([
-        'In HTML, <tr> cannot be a child of ' +
-          '<table>. Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated ' +
-          'by the browser.\n' +
-          'This will cause a hydration error.' +
-          '\n    in tr (at **)' +
-          '\n    in Row (at **)' +
-          '\n    in table (at **)' +
-          '\n    in Foo (at **)',
-        'In HTML, text nodes cannot be a ' +
-          'child of <tr>.\n' +
-          'This will cause a hydration error.' +
-          '\n    in tr (at **)' +
-          '\n    in Row (at **)' +
-          '\n    in table (at **)' +
-          '\n    in Foo (at **)',
-        'In HTML, whitespace text nodes cannot ' +
-          "be a child of <table>. Make sure you don't have any extra " +
-          'whitespace between tags on each line of your source code.\n' +
-          'This will cause a hydration error.' +
-          '\n    in table (at **)' +
-          '\n    in Foo (at **)',
-      ]);
+      }).toErrorDev(
+        gate(flags => flags.enableOwnerStacks)
+          ? [
+              'In HTML, <tr> cannot be a child of ' +
+                '<table>. Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated ' +
+                'by the browser.\n' +
+                'This will cause a hydration error.\n' +
+                '\n' +
+                '  <Foo>\n' +
+                '>   <table>\n' +
+                '      <Row>\n' +
+                '>       <tr>\n' +
+                '      ...\n' +
+                '\n    in tr (at **)' +
+                '\n    in Row (at **)',
+              '<table> cannot contain a nested <tr>.\nSee this log for the ancestor stack trace.' +
+                '\n    in table (at **)' +
+                '\n    in Foo (at **)',
+              'In HTML, text nodes cannot be a ' +
+                'child of <tr>.\n' +
+                'This will cause a hydration error.\n' +
+                '\n' +
+                '  <Foo>\n' +
+                '    <table>\n' +
+                '      <Row>\n' +
+                '        <tr>\n' +
+                '>         x\n' +
+                '      ...\n' +
+                '\n    in tr (at **)' +
+                '\n    in Row (at **)',
+              'In HTML, whitespace text nodes cannot ' +
+                "be a child of <table>. Make sure you don't have any extra " +
+                'whitespace between tags on each line of your source code.\n' +
+                'This will cause a hydration error.\n' +
+                '\n' +
+                '  <Foo>\n' +
+                '>   <table>\n' +
+                '      <Row>\n' +
+                '>     {" "}\n' +
+                '\n    in table (at **)' +
+                '\n    in Foo (at **)',
+            ]
+          : [
+              'In HTML, <tr> cannot be a child of ' +
+                '<table>. Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated ' +
+                'by the browser.\n' +
+                'This will cause a hydration error.\n' +
+                '\n' +
+                '  <Foo>\n' +
+                '>   <table>\n' +
+                '      <Row>\n' +
+                '>       <tr>\n' +
+                '      ...\n' +
+                '\n    in tr (at **)' +
+                '\n    in Row (at **)' +
+                '\n    in table (at **)' +
+                '\n    in Foo (at **)',
+              'In HTML, text nodes cannot be a ' +
+                'child of <tr>.\n' +
+                'This will cause a hydration error.\n' +
+                '\n' +
+                '  <Foo>\n' +
+                '    <table>\n' +
+                '      <Row>\n' +
+                '        <tr>\n' +
+                '>         x\n' +
+                '      ...\n' +
+                '\n    in tr (at **)' +
+                '\n    in Row (at **)' +
+                '\n    in table (at **)' +
+                '\n    in Foo (at **)',
+              'In HTML, whitespace text nodes cannot ' +
+                "be a child of <table>. Make sure you don't have any extra " +
+                'whitespace between tags on each line of your source code.\n' +
+                'This will cause a hydration error.\n' +
+                '\n' +
+                '  <Foo>\n' +
+                '>   <table>\n' +
+                '      <Row>\n' +
+                '>     {" "}\n' +
+                '\n    in table (at **)' +
+                '\n    in Foo (at **)',
+            ],
+      );
     });
 
     it('warns nicely for updating table rows to use text', async () => {
@@ -2297,7 +2362,11 @@ describe('ReactDOMComponent', () => {
         'In HTML, whitespace text nodes cannot ' +
           "be a child of <table>. Make sure you don't have any extra " +
           'whitespace between tags on each line of your source code.\n' +
-          'This will cause a hydration error.' +
+          'This will cause a hydration error.\n' +
+          '\n' +
+          '  <Foo>\n' +
+          '    <table>\n' +
+          '>     {" "}\n' +
           '\n    in table (at **)' +
           '\n    in Foo (at **)',
       ]);
@@ -2325,12 +2394,21 @@ describe('ReactDOMComponent', () => {
       }).toErrorDev([
         'In HTML, text nodes cannot be a ' +
           'child of <tr>.\n' +
-          'This will cause a hydration error.' +
+          'This will cause a hydration error.\n' +
+          '\n' +
+          '  <Foo>\n' +
+          '    <table>\n' +
+          '      <tbody>\n' +
+          '        <Row>\n' +
+          '          <tr>\n' +
+          '>           text\n' +
           '\n    in tr (at **)' +
           '\n    in Row (at **)' +
-          '\n    in tbody (at **)' +
-          '\n    in table (at **)' +
-          '\n    in Foo (at **)',
+          (gate(flags => flags.enableOwnerStacks)
+            ? ''
+            : '\n    in tbody (at **)' +
+              '\n    in table (at **)' +
+              '\n    in Foo (at **)'),
       ]);
     });
 
@@ -2359,11 +2437,21 @@ describe('ReactDOMComponent', () => {
           root.render(<App1 />);
         });
       }).toErrorDev(
-        '\n    in tr (at **)' +
-          '\n    in Row (at **)' +
-          '\n    in FancyRow (at **)' +
-          '\n    in table (at **)' +
-          '\n    in Viz1 (at **)',
+        gate(flags => flags.enableOwnerStacks)
+          ? [
+              '\n    in tr (at **)' +
+                '\n    in Row (at **)' +
+                '\n    in FancyRow (at **)' +
+                '\n    in Viz1 (at **)',
+              '\n    in table (at **)' + '\n    in Viz1 (at **)',
+            ]
+          : [
+              '\n    in tr (at **)' +
+                '\n    in Row (at **)' +
+                '\n    in FancyRow (at **)' +
+                '\n    in table (at **)' +
+                '\n    in Viz1 (at **)',
+            ],
       );
     });
 
@@ -2405,13 +2493,26 @@ describe('ReactDOMComponent', () => {
           root.render(<App2 />);
         });
       }).toErrorDev(
-        '\n    in tr (at **)' +
-          '\n    in Row (at **)' +
-          '\n    in FancyRow (at **)' +
-          '\n    in table (at **)' +
-          '\n    in Table (at **)' +
-          '\n    in FancyTable (at **)' +
-          '\n    in Viz2 (at **)',
+        gate(flags => flags.enableOwnerStacks)
+          ? [
+              '\n    in tr (at **)' +
+                '\n    in Row (at **)' +
+                '\n    in FancyRow (at **)' +
+                '\n    in Viz2 (at **)',
+              '\n    in table (at **)' +
+                '\n    in Table (at **)' +
+                '\n    in FancyTable (at **)' +
+                '\n    in Viz2 (at **)',
+            ]
+          : [
+              '\n    in tr (at **)' +
+                '\n    in Row (at **)' +
+                '\n    in FancyRow (at **)' +
+                '\n    in table (at **)' +
+                '\n    in Table (at **)' +
+                '\n    in FancyTable (at **)' +
+                '\n    in Viz2 (at **)',
+            ],
       );
     });
 
@@ -2446,12 +2547,23 @@ describe('ReactDOMComponent', () => {
           );
         });
       }).toErrorDev(
-        '\n    in tr (at **)' +
-          '\n    in Row (at **)' +
-          '\n    in FancyRow (at **)' +
-          '\n    in table (at **)' +
-          '\n    in Table (at **)' +
-          '\n    in FancyTable (at **)',
+        gate(flags => flags.enableOwnerStacks)
+          ? [
+              '\n    in tr (at **)' +
+                '\n    in Row (at **)' +
+                '\n    in FancyRow (at **)',
+              '\n    in table (at **)' +
+                '\n    in Table (at **)' +
+                '\n    in FancyTable (at **)',
+            ]
+          : [
+              '\n    in tr (at **)' +
+                '\n    in Row (at **)' +
+                '\n    in FancyRow (at **)' +
+                '\n    in table (at **)' +
+                '\n    in Table (at **)' +
+                '\n    in FancyTable (at **)',
+            ],
       );
     });
 
@@ -2475,10 +2587,19 @@ describe('ReactDOMComponent', () => {
           );
         });
       }).toErrorDev(
-        '\n    in tr (at **)' +
-          '\n    in Row (at **)' +
-          '\n    in FancyRow (at **)' +
-          '\n    in table (at **)',
+        gate(flags => flags.enableOwnerStacks)
+          ? [
+              '\n    in tr (at **)' +
+                '\n    in Row (at **)' +
+                '\n    in FancyRow (at **)',
+              '\n    in table (at **)',
+            ]
+          : [
+              '\n    in tr (at **)' +
+                '\n    in Row (at **)' +
+                '\n    in FancyRow (at **)' +
+                '\n    in table (at **)',
+            ],
       );
     });
 
@@ -2506,10 +2627,19 @@ describe('ReactDOMComponent', () => {
           );
         });
       }).toErrorDev(
-        '\n    in tr (at **)' +
-          '\n    in table (at **)' +
-          '\n    in Table (at **)' +
-          '\n    in FancyTable (at **)',
+        gate(flags => flags.enableOwnerStacks)
+          ? [
+              '\n    in tr (at **)',
+              '\n    in table (at **)' +
+                '\n    in Table (at **)' +
+                '\n    in FancyTable (at **)',
+            ]
+          : [
+              '\n    in tr (at **)' +
+                '\n    in table (at **)' +
+                '\n    in Table (at **)' +
+                '\n    in FancyTable (at **)',
+            ],
       );
 
       class Link extends React.Component {
@@ -2531,11 +2661,18 @@ describe('ReactDOMComponent', () => {
           );
         });
       }).toErrorDev(
-        '\n    in a (at **)' +
-          '\n    in Link (at **)' +
-          '\n    in div (at **)' +
-          '\n    in a (at **)' +
-          '\n    in Link (at **)',
+        gate(flags => flags.enableOwnerStacks)
+          ? [
+              '\n    in a (at **)' + '\n    in Link (at **)',
+              '\n    in a (at **)' + '\n    in Link (at **)',
+            ]
+          : [
+              '\n    in a (at **)' +
+                '\n    in Link (at **)' +
+                '\n    in div (at **)' +
+                '\n    in a (at **)' +
+                '\n    in Link (at **)',
+            ],
       );
     });
 

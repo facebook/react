@@ -1,15 +1,22 @@
-import { Stringify, graphql } from "shared-runtime";
+import {Stringify, graphql} from 'shared-runtime';
 
 function useFragment(_arg1, _arg2) {
-  "use no forget";
+  'use no forget';
   return {
-    urls: ["url1", "url2", "url3"],
-    comments: ["comment1"],
+    urls: ['url1', 'url2', 'url3'],
+    comments: ['comment1'],
   };
 }
 
 function Component(props) {
-  const post = useFragment(graphql`...`, props.post);
+  const post = useFragment(
+    graphql`
+      fragment F on T {
+        id
+      }
+    `,
+    props.post
+  );
   const allUrls = [];
   // `media` and `urls` are exported from the scope that will wrap this code,
   // but `comments` is not (it doesn't need to be memoized, bc the callback
@@ -18,8 +25,8 @@ function Component(props) {
   // out of the scope, and the destructure statement ends up turning into
   // a reassignment, instead of a const declaration. this means we try to
   // reassign `comments` when there's no declaration for it.
-  const { media = null, comments = [], urls = [] } = post;
-  const onClick = (e) => {
+  const {media = null, comments = [], urls = []} = post;
+  const onClick = e => {
     if (!comments.length) {
       return;
     }
@@ -31,6 +38,6 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ post: {} }],
+  params: [{post: {}}],
   isComponent: true,
 };

@@ -93,6 +93,7 @@ export function decodeAction<T>(
   // $FlowFixMe[prop-missing]
   body.forEach((value: string | File, key: string) => {
     if (!key.startsWith('$ACTION_')) {
+      // $FlowFixMe[incompatible-call]
       formData.append(key, value);
       return;
     }

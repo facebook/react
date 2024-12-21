@@ -305,6 +305,256 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
+    // @gate __DEV__ && enableActivity
+    it('ignores ref for class component in hidden subtree', async () => {
+      const code = `
+        import {unstable_Activity as Activity} from 'react';
+
+        // Avoid creating a new class on Fast Refresh.
+        global.A = global.A ?? class A extends React.Component {
+          render() {
+            return <div />;
+          }
+        }
+        const A = global.A;
+
+        function hiddenRef() {
+          throw new Error('Unexpected hiddenRef() invocation.');
+        }
+
+        export default function App() {
+          return (
+            <Activity mode="hidden">
+              <A ref={hiddenRef} />
+            </Activity>
+          );
+        };
+      `;
+
+      await render(code);
+      await patch(code);
+    });
+
+    // @gate __DEV__ && enableActivity
+    it('ignores ref for hoistable resource in hidden subtree', async () => {
+      const code = `
+        import {unstable_Activity as Activity} from 'react';
+
+        function hiddenRef() {
+          throw new Error('Unexpected hiddenRef() invocation.');
+        }
+
+        export default function App() {
+          return (
+            <Activity mode="hidden">
+              <link rel="preload" href="foo" ref={hiddenRef} />
+            </Activity>
+          );
+        };
+      `;
+
+      await render(code);
+      await patch(code);
+    });
+
+    // @gate __DEV__ && enableActivity
+    it('ignores ref for host component in hidden subtree', async () => {
+      const code = `
+        import {unstable_Activity as Activity} from 'react';
+
+        function hiddenRef() {
+          throw new Error('Unexpected hiddenRef() invocation.');
+        }
+
+        export default function App() {
+          return (
+            <Activity mode="hidden">
+              <div ref={hiddenRef} />
+            </Activity>
+          );
+        };
+      `;
+
+      await render(code);
+      await patch(code);
+    });
+
+    // @gate __DEV__ && enableActivity
+    it('ignores ref for Activity in hidden subtree', async () => {
+      const code = `
+        import {unstable_Activity as Activity} from 'react';
+
+        function hiddenRef(value) {
+          throw new Error('Unexpected hiddenRef() invocation.');
+        }
+
+        export default function App() {
+          return (
+            <Activity mode="hidden">
+              <Activity mode="visible" ref={hiddenRef}>
+                <div />
+              </Activity>
+            </Activity>
+          );
+        };
+      `;
+
+      await render(code);
+      await patch(code);
+    });
+
+    // @gate __DEV__ && enableActivity && enableScopeAPI
+    it('ignores ref for Scope in hidden subtree', async () => {
+      const code = `
+        import {
+          unstable_Activity as Activity,
+          unstable_Scope as Scope,
+        } from 'react';
+
+        function hiddenRef(value) {
+          throw new Error('Unexpected hiddenRef() invocation.');
+        }
+
+        export default function App() {
+          return (
+            <Activity mode="hidden">
+              <Scope ref={hiddenRef}>
+                <div />
+              </Scope>
+            </Activity>
+          );
+        };
+      `;
+
+      await render(code);
+      await patch(code);
+    });
+
+    // @gate __DEV__ && enableActivity
+    it('ignores ref for functional component in hidden subtree', async () => {
+      const code = `
+        import {unstable_Activity as Activity} from 'react';
+
+        // Avoid creating a new component on Fast Refresh.
+        global.A = global.A ?? function A() {
+          return <div />;
+        }
+        const A = global.A;
+
+        function hiddenRef() {
+          throw new Error('Unexpected hiddenRef() invocation.');
+        }
+
+        export default function App() {
+          return (
+            <Activity mode="hidden">
+              <A ref={hiddenRef} />
+            </Activity>
+          );
+        };
+      `;
+
+      await render(code);
+      await patch(code);
+    });
+
+    // @gate __DEV__ && enableActivity
+    it('ignores ref for ref forwarding component in hidden subtree', async () => {
+      const code = `
+        import {
+          forwardRef,
+          unstable_Activity as Activity,
+        } from 'react';
+
+        // Avoid creating a new component on Fast Refresh.
+        global.A = global.A ?? forwardRef(function A(props, ref) {
+          return <div ref={ref} />;
+        });
+        const A = global.A;
+
+        function hiddenRef() {
+          throw new Error('Unexpected hiddenRef() invocation.');
+        }
+
+        export default function App() {
+          return (
+            <Activity mode="hidden">
+              <A ref={hiddenRef} />
+            </Activity>
+          );
+        };
+      `;
+
+      await render(code);
+      await patch(code);
+    });
+
+    // @gate __DEV__ && enableActivity
+    it('ignores ref for simple memo component in hidden subtree', async () => {
+      const code = `
+        import {
+          memo,
+          unstable_Activity as Activity,
+        } from 'react';
+
+        // Avoid creating a new component on Fast Refresh.
+        global.A = global.A ?? memo(function A() {
+          return <div />;
+        });
+        const A = global.A;
+
+        function hiddenRef() {
+          throw new Error('Unexpected hiddenRef() invocation.');
+        }
+
+        export default function App() {
+          return (
+            <Activity mode="hidden">
+              <A ref={hiddenRef} />
+            </Activity>
+          );
+        };
+      `;
+
+      await render(code);
+      await patch(code);
+    });
+
+    // @gate __DEV__ && enableActivity
+    it('ignores ref for memo component in hidden subtree', async () => {
+      // A custom compare function means this won't use SimpleMemoComponent.
+      const code = `
+        import {
+          memo,
+          unstable_Activity as Activity,
+        } from 'react';
+
+        // Avoid creating a new component on Fast Refresh.
+        global.A = global.A ?? memo(
+          function A() {
+            return <div />;
+          },
+          () => false,
+        );
+        const A = global.A;
+
+        function hiddenRef() {
+          throw new Error('Unexpected hiddenRef() invocation.');
+        }
+
+        export default function App() {
+          return (
+            <Activity mode="hidden">
+              <A ref={hiddenRef} />
+            </Activity>
+          );
+        };
+      `;
+
+      await render(code);
+      await patch(code);
+    });
+
     it('reloads HOCs if they return functions', async () => {
       if (__DEV__) {
         await render(`
@@ -1634,6 +1884,60 @@ describe('ReactFreshIntegration', () => {
         `);
         expect(container.firstChild).toBe(el);
         expect(el.textContent).toBe('C2');
+      }
+    });
+
+    it('resets useMemoCache cache slots', async () => {
+      if (__DEV__) {
+        await render(`
+          const useMemoCache = require('react/compiler-runtime').c;
+          let cacheMisses = 0;
+          const cacheMiss = (id) => {
+            cacheMisses++;
+            return id;
+          };
+          export default function App(t0) {
+            const $ = useMemoCache(1);
+            const {reset1} = t0;
+            let t1;
+            if ($[0] !== reset1) {
+              $[0] = t1 = cacheMiss({reset1});
+            } else {
+              t1 = $[1];
+            }
+            return <h1>{cacheMisses}</h1>;
+          }
+        `);
+        const el = container.firstChild;
+        expect(el.textContent).toBe('1');
+        await patch(`
+          const useMemoCache = require('react/compiler-runtime').c;
+          let cacheMisses = 0;
+          const cacheMiss = (id) => {
+            cacheMisses++;
+            return id;
+          };
+          export default function App(t0) {
+            const $ = useMemoCache(2);
+            const {reset1, reset2} = t0;
+            let t1;
+            if ($[0] !== reset1) {
+              $[0] = t1 = cacheMiss({reset1});
+            } else {
+              t1 = $[1];
+            }
+            let t2;
+            if ($[1] !== reset2) {
+              $[1] = t2 = cacheMiss({reset2});
+            } else {
+              t2 = $[1];
+            }
+            return <h1>{cacheMisses}</h1>;
+          }
+        `);
+        expect(container.firstChild).toBe(el);
+        // cache size changed between refreshes
+        expect(el.textContent).toBe('2');
       }
     });
 

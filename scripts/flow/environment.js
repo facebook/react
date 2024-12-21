@@ -26,7 +26,7 @@ declare const AggregateError: Class<Error>;
 declare const FinalizationRegistry: any;
 
 declare module 'create-react-class' {
-  declare const exports: React$CreateClass;
+  declare const exports: $FlowFixMe;
 }
 
 declare interface ConsoleTask {
@@ -45,6 +45,8 @@ declare opaque type React$Element<
   +key: React$Key | null,
   +ref: any,
 };
+
+declare type React$CustomJSXFactory = any;
 
 declare const trustedTypes: {
   isHTML: (value: any) => boolean,
@@ -99,6 +101,11 @@ declare const __webpack_require__: ((id: string) => any) & {
 declare function __turbopack_load__(id: string): Promise<mixed>;
 declare const __turbopack_require__: ((id: string) => any) & {
   u: string => string,
+};
+
+declare var parcelRequire: {
+  (id: string): any,
+  load: (url: string) => Promise<mixed>,
 };
 
 declare module 'fs/promises' {

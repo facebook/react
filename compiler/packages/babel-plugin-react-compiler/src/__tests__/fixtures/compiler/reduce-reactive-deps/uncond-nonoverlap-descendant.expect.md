@@ -14,7 +14,7 @@ function TestNonOverlappingDescendantTracked(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: TestNonOverlappingDescendantTracked,
-  params: [{ a: { x: {}, c: { x: { y: { z: 3 } } } } }],
+  params: [{a: {x: {}, c: {x: {y: {z: 3}}}}}],
 };
 
 ```
@@ -27,13 +27,13 @@ import { c as _c } from "react/compiler-runtime"; // Test that we can track non-
 function TestNonOverlappingDescendantTracked(props) {
   const $ = _c(4);
   let x;
-  if ($[0] !== props.a.x.y || $[1] !== props.a.c.x.y.z || $[2] !== props.b) {
+  if ($[0] !== props.a.c.x.y.z || $[1] !== props.a.x.y || $[2] !== props.b) {
     x = {};
     x.a = props.a.x.y;
     x.b = props.b;
     x.c = props.a.c.x.y.z;
-    $[0] = props.a.x.y;
-    $[1] = props.a.c.x.y.z;
+    $[0] = props.a.c.x.y.z;
+    $[1] = props.a.x.y;
     $[2] = props.b;
     $[3] = x;
   } else {

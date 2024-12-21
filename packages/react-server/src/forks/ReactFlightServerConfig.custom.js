@@ -14,12 +14,12 @@ export * from '../ReactFlightServerConfigBundlerCustom';
 
 export * from '../ReactFlightServerConfigDebugNoop';
 
+export * from '../ReactFlightStackConfigV8';
+
 export type Hints = any;
 export type HintCode = any;
 // eslint-disable-next-line no-unused-vars
 export type HintModel<T: any> = any;
-
-export const isPrimaryRenderer = false;
 
 export const supportsRequestStorage = false;
 export const requestStorage: AsyncLocalStorage<Request | void> = (null: any);

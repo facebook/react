@@ -1,3 +1,3 @@
-function Component({ useFoo }) {
+function Component({useFoo}) {
   useFoo();
 }

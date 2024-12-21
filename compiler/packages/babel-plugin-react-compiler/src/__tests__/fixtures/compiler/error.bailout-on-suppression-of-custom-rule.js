@@ -2,7 +2,7 @@
 
 /* eslint-disable my-app/react-rule */
 function lowercasecomponent() {
-  "use forget";
+  'use forget';
   const x = [];
   // eslint-disable-next-line my-app/react-rule
   return <div>{x}</div>;

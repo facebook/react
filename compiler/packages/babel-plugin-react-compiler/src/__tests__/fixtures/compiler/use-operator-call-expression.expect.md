@@ -2,8 +2,8 @@
 ## Input
 
 ```javascript
-import { ValidateMemoization } from "shared-runtime";
-import { use, useMemo } from "react";
+import {ValidateMemoization} from 'shared-runtime';
+import {use, useMemo} from 'react';
 
 const FooContext = React.createContext(null);
 function Component(props) {
@@ -22,17 +22,17 @@ function Inner(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: 42 }],
+  params: [{value: 42}],
   sequentialRenders: [
-    { value: null },
-    { value: 42 },
-    { value: 42 },
-    { value: null },
-    { value: null },
-    { value: 42 },
-    { value: null },
-    { value: 42 },
-    { value: null },
+    {value: null},
+    {value: 42},
+    {value: 42},
+    {value: null},
+    {value: null},
+    {value: 42},
+    {value: null},
+    {value: 42},
+    {value: null},
   ],
 };
 
@@ -89,10 +89,10 @@ function Inner(props) {
     t2 = $[3];
   }
   let t3;
-  if ($[4] !== t2 || $[5] !== output) {
+  if ($[4] !== output || $[5] !== t2) {
     t3 = <ValidateMemoization inputs={t2} output={output} />;
-    $[4] = t2;
-    $[5] = output;
+    $[4] = output;
+    $[5] = t2;
     $[6] = t3;
   } else {
     t3 = $[6];

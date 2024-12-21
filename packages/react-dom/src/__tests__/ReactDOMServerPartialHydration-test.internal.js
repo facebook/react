@@ -2551,14 +2551,7 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = true;
 
     await act(async () => {
-      if (gate(flags => flags.forceConcurrentByDefaultForTesting)) {
-        await waitFor(['Before']);
-        // This took a long time to render.
-        Scheduler.unstable_advanceTime(1000);
-        await waitFor(['After']);
-      } else {
-        await waitFor(['Before', 'After']);
-      }
+      await waitFor(['Before', 'After']);
 
       // This will cause us to skip the second row completely.
     });
@@ -3750,6 +3743,10 @@ describe('ReactDOMServerPartialHydration', () => {
     await waitForPaint(['App']);
     expect(visibleRef.current).toBe(visibleSpan);
 
+    if (gate(flags => flags.enableYieldingBeforePassive)) {
+      // Passive effects.
+      await waitForPaint([]);
+    }
     // Subsequently, the hidden child is prerendered on the client
     await waitForPaint(['HiddenChild']);
     expect(container).toMatchInlineSnapshot(`

@@ -1,4 +1,4 @@
-import { arrayPush } from "shared-runtime";
+import {arrayPush} from 'shared-runtime';
 
 function Foo(cond) {
   let x = null;
@@ -14,6 +14,6 @@ function Foo(cond) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Foo,
-  params: [{ cond: true }],
-  sequentialRenders: [{ cond: true }, { cond: true }],
+  params: [{cond: true}],
+  sequentialRenders: [{cond: true}, {cond: true}],
 };

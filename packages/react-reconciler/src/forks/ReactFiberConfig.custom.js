@@ -42,6 +42,10 @@ export opaque type TransitionStatus = mixed;
 export opaque type FormInstance = mixed;
 export type EventResponder = any;
 
+export const rendererVersion = $$$config.rendererVersion;
+export const rendererPackageName = $$$config.rendererPackageName;
+export const extraDevToolsConfig = $$$config.extraDevToolsConfig;
+
 export const getPublicInstance = $$$config.getPublicInstance;
 export const getRootHostContext = $$$config.getRootHostContext;
 export const getChildHostContext = $$$config.getChildHostContext;
@@ -69,6 +73,9 @@ export const getInstanceFromScope = $$$config.getInstanceFromScope;
 export const setCurrentUpdatePriority = $$$config.setCurrentUpdatePriority;
 export const getCurrentUpdatePriority = $$$config.getCurrentUpdatePriority;
 export const resolveUpdatePriority = $$$config.resolveUpdatePriority;
+export const trackSchedulerEvent = $$$config.trackSchedulerEvent;
+export const resolveEventType = $$$config.resolveEventType;
+export const resolveEventTimeStamp = $$$config.resolveEventTimeStamp;
 export const shouldAttemptEagerTransition =
   $$$config.shouldAttemptEagerTransition;
 export const detachDeletedInstance = $$$config.detachDeletedInstance;
@@ -79,7 +86,9 @@ export const startSuspendingCommit = $$$config.startSuspendingCommit;
 export const suspendInstance = $$$config.suspendInstance;
 export const waitForCommitToBeReady = $$$config.waitForCommitToBeReady;
 export const NotPendingTransition = $$$config.NotPendingTransition;
+export const HostTransitionContext = $$$config.HostTransitionContext;
 export const resetFormInstance = $$$config.resetFormInstance;
+export const bindToConsole = $$$config.bindToConsole;
 
 // -------------------
 //      Microtasks

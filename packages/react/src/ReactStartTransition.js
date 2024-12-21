@@ -11,10 +11,7 @@ import type {StartTransitionOptions} from 'shared/ReactTypes';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
-import {
-  enableAsyncActions,
-  enableTransitionTracing,
-} from 'shared/ReactFeatureFlags';
+import {enableTransitionTracing} from 'shared/ReactFeatureFlags';
 
 import reportGlobalError from 'shared/reportGlobalError';
 
@@ -23,52 +20,38 @@ export function startTransition(
   options?: StartTransitionOptions,
 ) {
   const prevTransition = ReactSharedInternals.T;
-  const transition: BatchConfigTransition = {};
-  ReactSharedInternals.T = transition;
-  const currentTransition = ReactSharedInternals.T;
+  const currentTransition: BatchConfigTransition = {};
+  ReactSharedInternals.T = currentTransition;
 
   if (__DEV__) {
-    ReactSharedInternals.T._updatedFibers = new Set();
+    currentTransition._updatedFibers = new Set();
   }
 
   if (enableTransitionTracing) {
     if (options !== undefined && options.name !== undefined) {
-      // $FlowFixMe[incompatible-use] found when upgrading Flow
-      ReactSharedInternals.T.name = options.name;
-      // $FlowFixMe[incompatible-use] found when upgrading Flow
-      ReactSharedInternals.T.startTime = -1;
+      currentTransition.name = options.name;
+      currentTransition.startTime = -1;
     }
   }
 
-  if (enableAsyncActions) {
-    try {
-      const returnValue = scope();
-      const onStartTransitionFinish = ReactSharedInternals.S;
-      if (onStartTransitionFinish !== null) {
-        onStartTransitionFinish(transition, returnValue);
-      }
-      if (
-        typeof returnValue === 'object' &&
-        returnValue !== null &&
-        typeof returnValue.then === 'function'
-      ) {
-        returnValue.then(noop, reportGlobalError);
-      }
-    } catch (error) {
-      reportGlobalError(error);
-    } finally {
-      warnAboutTransitionSubscriptions(prevTransition, currentTransition);
-      ReactSharedInternals.T = prevTransition;
+  try {
+    const returnValue = scope();
+    const onStartTransitionFinish = ReactSharedInternals.S;
+    if (onStartTransitionFinish !== null) {
+      onStartTransitionFinish(currentTransition, returnValue);
     }
-  } else {
-    // When async actions are not enabled, startTransition does not
-    // capture errors.
-    try {
-      scope();
-    } finally {
-      warnAboutTransitionSubscriptions(prevTransition, currentTransition);
-      ReactSharedInternals.T = prevTransition;
+    if (
+      typeof returnValue === 'object' &&
+      returnValue !== null &&
+      typeof returnValue.then === 'function'
+    ) {
+      returnValue.then(noop, reportGlobalError);
     }
+  } catch (error) {
+    reportGlobalError(error);
+  } finally {
+    warnAboutTransitionSubscriptions(prevTransition, currentTransition);
+    ReactSharedInternals.T = prevTransition;
   }
 }
 

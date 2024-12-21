@@ -216,16 +216,19 @@ export function dehydrate(
       if (level >= LEVEL_THRESHOLD && !isPathAllowedCheck) {
         return createDehydrated(type, true, data, cleaned, path);
       }
-      return data.map((item, i) =>
-        dehydrate(
-          item,
+      const arr: Array<Object> = [];
+      for (let i = 0; i < data.length; i++) {
+        arr[i] = dehydrateKey(
+          data,
+          i,
           cleaned,
           unserializable,
           path.concat([i]),
           isPathAllowed,
           isPathAllowedCheck ? 1 : level + 1,
-        ),
-      );
+        );
+      }
+      return arr;
 
     case 'html_all_collection':
     case 'typed_array':
@@ -311,8 +314,9 @@ export function dehydrate(
         } = {};
         getAllEnumerableKeys(data).forEach(key => {
           const name = key.toString();
-          object[name] = dehydrate(
-            data[key],
+          object[name] = dehydrateKey(
+            data,
+            key,
             cleaned,
             unserializable,
             path.concat([name]),
@@ -370,6 +374,46 @@ export function dehydrate(
 
     default:
       return data;
+  }
+}
+
+function dehydrateKey(
+  parent: Object,
+  key: number | string | symbol,
+  cleaned: Array<Array<string | number>>,
+  unserializable: Array<Array<string | number>>,
+  path: Array<string | number>,
+  isPathAllowed: (path: Array<string | number>) => boolean,
+  level: number = 0,
+): $PropertyType<DehydratedData, 'data'> {
+  try {
+    return dehydrate(
+      parent[key],
+      cleaned,
+      unserializable,
+      path,
+      isPathAllowed,
+      level,
+    );
+  } catch (error) {
+    let preview = '';
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      typeof error.stack === 'string'
+    ) {
+      preview = error.stack;
+    } else if (typeof error === 'string') {
+      preview = error;
+    }
+    cleaned.push(path);
+    return {
+      inspectable: false,
+      preview_short: '[Exception]',
+      preview_long: preview ? '[Exception: ' + preview + ']' : '[Exception]',
+      name: preview,
+      type: 'unknown',
+    };
   }
 }
 

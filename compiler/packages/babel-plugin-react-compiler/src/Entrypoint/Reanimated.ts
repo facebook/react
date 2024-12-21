@@ -1,13 +1,13 @@
-import type * as BabelCore from "@babel/core";
-import { hasOwnProperty } from "../Utils/utils";
-import { PluginOptions } from "./Options";
+import type * as BabelCore from '@babel/core';
+import {hasOwnProperty} from '../Utils/utils';
+import {PluginOptions} from './Options';
 
 function hasModule(name: string): boolean {
   try {
     return !!require.resolve(name);
   } catch (error: any) {
     if (
-      error.code === "MODULE_NOT_FOUND" &&
+      error.code === 'MODULE_NOT_FOUND' &&
       error.message.indexOf(name) !== -1
     ) {
       return false;
@@ -24,22 +24,22 @@ function hasModule(name: string): boolean {
  * See https://github.com/expo/expo/blob/e4b8d86442482c7316365a6b7ec1141eec73409d/packages/babel-preset-expo/src/index.ts#L300-L301
  */
 export function pipelineUsesReanimatedPlugin(
-  plugins: Array<BabelCore.PluginItem> | null | undefined
+  plugins: Array<BabelCore.PluginItem> | null | undefined,
 ): boolean {
   if (Array.isArray(plugins)) {
     for (const plugin of plugins) {
-      if (hasOwnProperty(plugin, "key")) {
+      if (hasOwnProperty(plugin, 'key')) {
         const key = (plugin as any).key; // already checked
         if (
-          typeof key === "string" &&
-          key.indexOf("react-native-reanimated") !== -1
+          typeof key === 'string' &&
+          key.indexOf('react-native-reanimated') !== -1
         ) {
           return true;
         }
       }
     }
   }
-  return hasModule("react-native-reanimated");
+  return hasModule('react-native-reanimated');
 }
 
 export function injectReanimatedFlag(options: PluginOptions): PluginOptions {

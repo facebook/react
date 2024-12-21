@@ -3,31 +3,33 @@
 
 ```javascript
 // @compilationMode(infer) @enableAssumeHooksFollowRulesOfReact:false @customMacros(cx)
-import { identity } from "shared-runtime";
+import {identity} from 'shared-runtime';
 
-const DARK = "dark";
+const DARK = 'dark';
 
 function Component() {
   const theme = useTheme();
   return (
     <div
       className={cx.foo({
-        "styles/light": true,
-        "styles/dark": identity([theme.getTheme()]),
+        'styles/light': true,
+        'styles/dark': identity([theme.getTheme()]),
       })}
     />
   );
 }
 
-function cx(obj) {
-  const classes = [];
-  for (const [key, value] of Object.entries(obj)) {
-    if (value) {
-      classes.push(key);
+const cx = {
+  foo(obj) {
+    const classes = [];
+    for (const [key, value] of Object.entries(obj)) {
+      if (value) {
+        classes.push(key);
+      }
     }
-  }
-  return classes.join(" ");
-}
+    return classes.join(' ');
+  },
+};
 
 function useTheme() {
   return {
@@ -71,15 +73,17 @@ function Component() {
   return t1;
 }
 
-function cx(obj) {
-  const classes = [];
-  for (const [key, value] of Object.entries(obj)) {
-    if (value) {
-      classes.push(key);
+const cx = {
+  foo(obj) {
+    const classes = [];
+    for (const [key, value] of Object.entries(obj)) {
+      if (value) {
+        classes.push(key);
+      }
     }
-  }
-  return classes.join(" ");
-}
+    return classes.join(" ");
+  },
+};
 
 function useTheme() {
   return {
@@ -97,4 +101,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: exception) cx.foo is not a function
+(kind: ok) <div class="styles/light styles/dark"></div>

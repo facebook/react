@@ -1,4 +1,4 @@
-import { useHook } from "shared-runtime";
+import {useHook} from 'shared-runtime';
 
 function Component(props) {
   const data = useHook();
@@ -18,5 +18,5 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ data: [{ id: "1" }, { id: "2" }] }],
+  params: [{data: [{id: '1'}, {id: '2'}]}],
 };

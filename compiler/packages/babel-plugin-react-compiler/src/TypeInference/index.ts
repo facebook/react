@@ -5,4 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export { inferTypes } from "./InferTypes";
+export {inferTypes} from './InferTypes';

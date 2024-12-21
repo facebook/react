@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-"use strict";
+'use strict';
 
 // NOTE: Extracted from https://github.com/facebook/react/blob/main/packages/eslint-plugin-react-hooks/__tests__/ESLintRulesOfHooks-test.js
 
@@ -13,9 +13,9 @@
  * A string template tag that removes padding from the left side of multi-line strings
  */
 function normalizeIndent(strings) {
-  const codeLines = strings[0].split("\n");
+  const codeLines = strings[0].split('\n');
   const leftPadding = codeLines[1].match(/\s+/)[0];
-  return codeLines.map((line) => line.slice(leftPadding.length)).join("\n");
+  return codeLines.map(line => line.slice(leftPadding.length)).join('\n');
 }
 
 module.exports.tests = {

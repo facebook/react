@@ -31,13 +31,11 @@ import {
   enableProfilerTimer,
   enableScopeAPI,
   enableLegacyHidden,
-  forceConcurrentByDefaultForTesting,
-  allowConcurrentByDefault,
   enableTransitionTracing,
-  enableDebugTracing,
   enableDO_NOT_USE_disableStrictPassiveEffect,
   enableRenderableContext,
   disableLegacyMode,
+  enableObjectFiber,
   enableOwnerStacks,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
@@ -81,17 +79,14 @@ import {NoLanes} from './ReactFiberLane';
 import {
   NoMode,
   ConcurrentMode,
-  DebugTracingMode,
   ProfileMode,
   StrictLegacyMode,
   StrictEffectsMode,
-  ConcurrentUpdatesByDefaultMode,
   NoStrictPassiveEffectsMode,
 } from './ReactTypeOfMode';
 import {
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
-  REACT_DEBUG_TRACING_MODE_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
@@ -189,18 +184,11 @@ function FiberNode(
     // Learn more about this here:
     // https://github.com/facebook/react/issues/14365
     // https://bugs.chromium.org/p/v8/issues/detail?id=8538
-    this.actualDuration = Number.NaN;
-    this.actualStartTime = Number.NaN;
-    this.selfBaseDuration = Number.NaN;
-    this.treeBaseDuration = Number.NaN;
 
-    // It's okay to replace the initial doubles with smis after initialization.
-    // This won't trigger the performance cliff mentioned above,
-    // and it simplifies other profiler code (including DevTools).
-    this.actualDuration = 0;
-    this.actualStartTime = -1;
-    this.selfBaseDuration = 0;
-    this.treeBaseDuration = 0;
+    this.actualDuration = -0;
+    this.actualStartTime = -1.1;
+    this.selfBaseDuration = -0;
+    this.treeBaseDuration = -0;
   }
 
   if (__DEV__) {
@@ -232,7 +220,7 @@ function FiberNode(
 //    is faster.
 // 5) It should be easy to port this to a C struct and keep a C implementation
 //    compatible.
-function createFiber(
+function createFiberImplClass(
   tag: WorkTag,
   pendingProps: mixed,
   key: null | string,
@@ -241,6 +229,79 @@ function createFiber(
   // $FlowFixMe[invalid-constructor]: the shapes are exact here but Flow doesn't like constructors
   return new FiberNode(tag, pendingProps, key, mode);
 }
+
+function createFiberImplObject(
+  tag: WorkTag,
+  pendingProps: mixed,
+  key: null | string,
+  mode: TypeOfMode,
+): Fiber {
+  const fiber: Fiber = {
+    // Instance
+    // tag, key - defined at the bottom as dynamic properties
+    elementType: null,
+    type: null,
+    stateNode: null,
+
+    // Fiber
+    return: null,
+    child: null,
+    sibling: null,
+    index: 0,
+
+    ref: null,
+    refCleanup: null,
+
+    // pendingProps - defined at the bottom as dynamic properties
+    memoizedProps: null,
+    updateQueue: null,
+    memoizedState: null,
+    dependencies: null,
+
+    // Effects
+    flags: NoFlags,
+    subtreeFlags: NoFlags,
+    deletions: null,
+
+    lanes: NoLanes,
+    childLanes: NoLanes,
+
+    alternate: null,
+
+    // dynamic properties at the end for more efficient hermes bytecode
+    tag,
+    key,
+    pendingProps,
+    mode,
+  };
+
+  if (enableProfilerTimer) {
+    fiber.actualDuration = -0;
+    fiber.actualStartTime = -1.1;
+    fiber.selfBaseDuration = -0;
+    fiber.treeBaseDuration = -0;
+  }
+
+  if (__DEV__) {
+    // This isn't directly used but is handy for debugging internals:
+    fiber._debugInfo = null;
+    fiber._debugOwner = null;
+    if (enableOwnerStacks) {
+      fiber._debugStack = null;
+      fiber._debugTask = null;
+    }
+    fiber._debugNeedsRemount = false;
+    fiber._debugHookTypes = null;
+    if (!hasBadMapPolyfill && typeof Object.preventExtensions === 'function') {
+      Object.preventExtensions(fiber);
+    }
+  }
+  return fiber;
+}
+
+const createFiber = enableObjectFiber
+  ? createFiberImplObject
+  : createFiberImplClass;
 
 function shouldConstruct(Component: Function) {
   const prototype = Component.prototype;
@@ -311,8 +372,8 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
       // This prevents time from endlessly accumulating in new commits.
       // This has the downside of resetting values for different priority renders,
       // But works for yielding (the common case) and should support resuming.
-      workInProgress.actualDuration = 0;
-      workInProgress.actualStartTime = -1;
+      workInProgress.actualDuration = -0;
+      workInProgress.actualStartTime = -1.1;
     }
   }
 
@@ -333,10 +394,16 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
   workInProgress.dependencies =
     currentDependencies === null
       ? null
-      : {
-          lanes: currentDependencies.lanes,
-          firstContext: currentDependencies.firstContext,
-        };
+      : __DEV__
+        ? {
+            lanes: currentDependencies.lanes,
+            firstContext: currentDependencies.firstContext,
+            _debugThenableState: currentDependencies._debugThenableState,
+          }
+        : {
+            lanes: currentDependencies.lanes,
+            firstContext: currentDependencies.firstContext,
+          };
 
   // These will be overridden during the parent's reconciliation
   workInProgress.sibling = current.sibling;
@@ -432,10 +499,16 @@ export function resetWorkInProgress(
     workInProgress.dependencies =
       currentDependencies === null
         ? null
-        : {
-            lanes: currentDependencies.lanes,
-            firstContext: currentDependencies.firstContext,
-          };
+        : __DEV__
+          ? {
+              lanes: currentDependencies.lanes,
+              firstContext: currentDependencies.firstContext,
+              _debugThenableState: currentDependencies._debugThenableState,
+            }
+          : {
+              lanes: currentDependencies.lanes,
+              firstContext: currentDependencies.firstContext,
+            };
 
     if (enableProfilerTimer) {
       // Note: We don't reset the actualTime counts. It's useful to accumulate
@@ -451,25 +524,12 @@ export function resetWorkInProgress(
 export function createHostRootFiber(
   tag: RootTag,
   isStrictMode: boolean,
-  concurrentUpdatesByDefaultOverride: null | boolean,
 ): Fiber {
   let mode;
   if (disableLegacyMode || tag === ConcurrentRoot) {
     mode = ConcurrentMode;
     if (isStrictMode === true) {
       mode |= StrictLegacyMode | StrictEffectsMode;
-    }
-    if (
-      // We only use this flag for our repo tests to check both behaviors.
-      forceConcurrentByDefaultForTesting
-    ) {
-      mode |= ConcurrentUpdatesByDefaultMode;
-    } else if (
-      // Only for internal experiments.
-      allowConcurrentByDefault &&
-      concurrentUpdatesByDefaultOverride
-    ) {
-      mode |= ConcurrentUpdatesByDefaultMode;
     }
   } else {
     mode = NoMode;
@@ -485,6 +545,7 @@ export function createHostRootFiber(
   return createFiber(HostRoot, null, null, mode);
 }
 
+// TODO: Get rid of this helper. Only createFiberFromElement should exist.
 export function createFiberFromTypeAndProps(
   type: any, // React$ElementType
   key: null | string,
@@ -513,8 +574,8 @@ export function createFiberFromTypeAndProps(
       fiberTag = isHostHoistableType(type, pendingProps, hostContext)
         ? HostHoistable
         : isHostSingletonType(type)
-        ? HostSingleton
-        : HostComponent;
+          ? HostSingleton
+          : HostComponent;
     } else if (supportsResources) {
       const hostContext = getHostContext();
       fiberTag = isHostHoistableType(type, pendingProps, hostContext)
@@ -564,13 +625,6 @@ export function createFiberFromTypeAndProps(
       case REACT_TRACING_MARKER_TYPE:
         if (enableTransitionTracing) {
           return createFiberFromTracingMarker(pendingProps, mode, lanes, key);
-        }
-      // Fall through
-      case REACT_DEBUG_TRACING_MODE_TYPE:
-        if (enableDebugTracing) {
-          fiberTag = Mode;
-          mode |= DebugTracingMode;
-          break;
         }
       // Fall through
       default: {
@@ -650,11 +704,18 @@ export function createFiberFromTypeAndProps(
           typeString = type === null ? 'null' : typeof type;
         }
 
-        throw new Error(
+        // The type is invalid but it's conceptually a child that errored and not the
+        // current component itself so we create a virtual child that throws in its
+        // begin phase. This is the same thing we do in ReactChildFiber if we throw
+        // but we do it here so that we can assign the debug owner and stack from the
+        // element itself. That way the error stack will point to the JSX callsite.
+        fiberTag = Throw;
+        pendingProps = new Error(
           'Element type is invalid: expected a string (for built-in ' +
             'components) or a class/function (for composite components) ' +
             `but got: ${typeString}.${info}`,
         );
+        resolvedType = null;
       }
     }
   }

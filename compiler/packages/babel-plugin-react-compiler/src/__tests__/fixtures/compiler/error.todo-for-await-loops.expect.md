@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-async function Component({ items }) {
+async function Component({items}) {
   const x = [];
   for await (const item of items) {
     x.push(item);
@@ -16,7 +16,7 @@ async function Component({ items }) {
 ## Error
 
 ```
-  1 | async function Component({ items }) {
+  1 | async function Component({items}) {
   2 |   const x = [];
 > 3 |   for await (const item of items) {
     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

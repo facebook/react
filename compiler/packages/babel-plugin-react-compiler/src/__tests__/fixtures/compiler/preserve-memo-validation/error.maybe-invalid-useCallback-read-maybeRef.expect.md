@@ -3,7 +3,7 @@
 
 ```javascript
 // @validatePreserveExistingMemoizationGuarantees
-import { useCallback } from "react";
+import {useCallback} from 'react';
 
 function useHook(maybeRef) {
   return useCallback(() => {

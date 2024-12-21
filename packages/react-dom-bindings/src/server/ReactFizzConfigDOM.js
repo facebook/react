@@ -27,10 +27,7 @@ import {
 
 import {Children} from 'react';
 
-import {
-  enableFilterEmptyStringAttributesDOM,
-  enableFizzExternalRuntime,
-} from 'shared/ReactFeatureFlags';
+import {enableFizzExternalRuntime} from 'shared/ReactFeatureFlags';
 
 import type {
   Destination,
@@ -107,6 +104,8 @@ export type HeadersDescriptor = {
 // Used to distinguish these contexts from ones used in other renderers.
 // E.g. this can be used to distinguish legacy renderers from this modern one.
 export const isPrimaryRenderer = true;
+
+export const supportsClientAPIs = true;
 
 export type StreamingFormat = 0 | 1;
 const ScriptStreamingFormat: StreamingFormat = 0;
@@ -429,9 +428,13 @@ export function createRenderState(
         fontPreloads: '',
         highImagePreloads: '',
         remainingCapacity:
-          typeof maxHeadersLength === 'number'
+          // We seed the remainingCapacity with 2 extra bytes because when we decrement the capacity
+          // we always assume we are inserting an interstitial ", " however the first header does not actually
+          // consume these two extra bytes.
+          2 +
+          (typeof maxHeadersLength === 'number'
             ? maxHeadersLength
-            : DEFAULT_HEADERS_CAPACITY_IN_UTF16_CODE_UNITS,
+            : DEFAULT_HEADERS_CAPACITY_IN_UTF16_CODE_UNITS),
       }
     : null;
   const renderState: RenderState = {
@@ -509,8 +512,8 @@ export function createRenderState(
           typeof scriptConfig === 'string' || scriptConfig.crossOrigin == null
             ? undefined
             : scriptConfig.crossOrigin === 'use-credentials'
-            ? 'use-credentials'
-            : '';
+              ? 'use-credentials'
+              : '';
       }
 
       preloadBootstrapScriptOrModule(resumableState, renderState, src, props);
@@ -561,8 +564,8 @@ export function createRenderState(
           typeof scriptConfig === 'string' || scriptConfig.crossOrigin == null
             ? undefined
             : scriptConfig.crossOrigin === 'use-credentials'
-            ? 'use-credentials'
-            : '';
+              ? 'use-credentials'
+              : '';
       }
 
       preloadBootstrapScriptOrModule(resumableState, renderState, src, props);
@@ -730,8 +733,8 @@ export function createRootFormatContext(namespaceURI?: string): FormatContext {
     namespaceURI === 'http://www.w3.org/2000/svg'
       ? SVG_MODE
       : namespaceURI === 'http://www.w3.org/1998/Math/MathML'
-      ? MATHML_MODE
-      : ROOT_HTML_MODE;
+        ? MATHML_MODE
+        : ROOT_HTML_MODE;
   return createFormatContext(insertionMode, null, NO_SCOPE);
 }
 
@@ -1204,30 +1207,28 @@ function pushAttribute(
     }
     case 'src':
     case 'href': {
-      if (enableFilterEmptyStringAttributesDOM) {
-        if (value === '') {
-          if (__DEV__) {
-            if (name === 'src') {
-              console.error(
-                'An empty string ("") was passed to the %s attribute. ' +
-                  'This may cause the browser to download the whole page again over the network. ' +
-                  'To fix this, either do not render the element at all ' +
-                  'or pass null to %s instead of an empty string.',
-                name,
-                name,
-              );
-            } else {
-              console.error(
-                'An empty string ("") was passed to the %s attribute. ' +
-                  'To fix this, either do not render the element at all ' +
-                  'or pass null to %s instead of an empty string.',
-                name,
-                name,
-              );
-            }
+      if (value === '') {
+        if (__DEV__) {
+          if (name === 'src') {
+            console.error(
+              'An empty string ("") was passed to the %s attribute. ' +
+                'This may cause the browser to download the whole page again over the network. ' +
+                'To fix this, either do not render the element at all ' +
+                'or pass null to %s instead of an empty string.',
+              name,
+              name,
+            );
+          } else {
+            console.error(
+              'An empty string ("") was passed to the %s attribute. ' +
+                'To fix this, either do not render the element at all ' +
+                'or pass null to %s instead of an empty string.',
+              name,
+              name,
+            );
           }
-          return;
         }
+        return;
       }
     }
     // Fall through to the last case which shouldn't remove empty strings.
@@ -1627,19 +1628,17 @@ function pushStartObject(
             checkAttributeStringCoercion(propValue, 'data');
           }
           const sanitizedValue = sanitizeURL('' + propValue);
-          if (enableFilterEmptyStringAttributesDOM) {
-            if (sanitizedValue === '') {
-              if (__DEV__) {
-                console.error(
-                  'An empty string ("") was passed to the %s attribute. ' +
-                    'To fix this, either do not render the element at all ' +
-                    'or pass null to %s instead of an empty string.',
-                  propKey,
-                  propKey,
-                );
-              }
-              break;
+          if (sanitizedValue === '') {
+            if (__DEV__) {
+              console.error(
+                'An empty string ("") was passed to the %s attribute. ' +
+                  'To fix this, either do not render the element at all ' +
+                  'or pass null to %s instead of an empty string.',
+                propKey,
+                propKey,
+              );
             }
+            break;
           }
           target.push(
             attributeSeparator,
@@ -2487,8 +2486,8 @@ function pushLink(
               props.onLoad && props.onError
                 ? '`onLoad` and `onError` props'
                 : props.onLoad
-                ? '`onLoad` prop'
-                : '`onError` prop';
+                  ? '`onLoad` prop'
+                  : '`onError` prop';
             console.error(
               'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and %s. The presence of loading and error handlers indicates an intent to manage the stylesheet loading state from your from your Component code and React will not hoist or deduplicate this stylesheet. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop remove the %s, otherwise remove the `precedence` prop.',
               propDescription,
@@ -2663,8 +2662,8 @@ function pushStyle(
           typeof child === 'function'
             ? 'a Function'
             : typeof child === 'symbol'
-            ? 'a Sybmol'
-            : 'an Array';
+              ? 'a Sybmol'
+              : 'an Array';
         console.error(
           'React expect children of <style> tags to be a string, number, or object with a `toString` method but found %s instead. ' +
             'In browsers style Elements can only have `Text` Nodes as children.',
@@ -2951,7 +2950,7 @@ function pushImg(
         // make this behavior different between render and prerender since in the latter case
         // we are less sensitive to the current requests runtime per and more sensitive to maximizing
         // headers.
-        (headers.remainingCapacity -= header.length) >= 2)
+        (headers.remainingCapacity -= header.length + 2) >= 0)
       ) {
         // If we postpone in the shell we will still emit this preload so we track
         // it to make sure we don't reset it.
@@ -3081,7 +3080,7 @@ function pushTitle(
         console.error(
           'React expects the `children` prop of <title> tags to be a string, number, bigint, or object with a novel `toString` method but found an Array with length %s instead.' +
             ' Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert `children` of <title> tags to a single string value' +
-            ' which is why Arrays of length greater than 1 are not supported. When using JSX it can be commong to combine text nodes and value nodes.' +
+            ' which is why Arrays of length greater than 1 are not supported. When using JSX it can be common to combine text nodes and value nodes.' +
             ' For example: <title>hello {nameOfUser}</title>. While not immediately apparent, `children` in this case is an Array with length 2. If your `children` prop' +
             ' is using this form try rewriting it using a template string: <title>{`hello ${nameOfUser}`}</title>.',
           children.length,
@@ -3331,8 +3330,8 @@ function pushScriptImpl(
         typeof children === 'number'
           ? 'a number for children'
           : Array.isArray(children)
-          ? 'an array for children'
-          : 'something unexpected for children';
+            ? 'an array for children'
+            : 'something unexpected for children';
       console.error(
         'A script element was rendered with %s. If script element has children it must be a single string.' +
           ' Consider using dangerouslySetInnerHTML or passing a plain string as children.',
@@ -3609,11 +3608,7 @@ export function pushStartInstance(
       // Fast track very common tags
       break;
     case 'a':
-      if (enableFilterEmptyStringAttributesDOM) {
-        return pushStartAnchor(target, props);
-      } else {
-        break;
-      }
+      return pushStartAnchor(target, props);
     case 'g':
     case 'p':
     case 'li':
@@ -3890,18 +3885,6 @@ const clientRenderedSuspenseBoundaryError1D =
   stringToPrecomputedChunk(' data-cstck="');
 const clientRenderedSuspenseBoundaryError2 =
   stringToPrecomputedChunk('></template>');
-
-export function pushStartCompletedSuspenseBoundary(
-  target: Array<Chunk | PrecomputedChunk>,
-) {
-  target.push(startCompletedSuspenseBoundary);
-}
-
-export function pushEndCompletedSuspenseBoundary(
-  target: Array<Chunk | PrecomputedChunk>,
-) {
-  target.push(endSuspenseBoundary);
-}
 
 export function writeStartCompletedSuspenseBoundary(
   destination: Destination,
@@ -5391,7 +5374,7 @@ function prefetchDNS(href: string) {
         // make this behavior different between render and prerender since in the latter case
         // we are less sensitive to the current requests runtime per and more sensitive to maximizing
         // headers.
-        (headers.remainingCapacity -= header.length) >= 2)
+        (headers.remainingCapacity -= header.length + 2) >= 0)
       ) {
         // Store this as resettable in case we are prerendering and postpone in the Shell
         renderState.resets.dns[key] = EXISTS;
@@ -5430,8 +5413,8 @@ function preconnect(href: string, crossOrigin: ?CrossOriginEnum) {
       crossOrigin === 'use-credentials'
         ? 'credentials'
         : typeof crossOrigin === 'string'
-        ? 'anonymous'
-        : 'default';
+          ? 'anonymous'
+          : 'default';
     const key = getResourceKey(href);
     if (!resumableState.connectResources[bucket].hasOwnProperty(key)) {
       resumableState.connectResources[bucket][key] = EXISTS;
@@ -5450,7 +5433,7 @@ function preconnect(href: string, crossOrigin: ?CrossOriginEnum) {
         // make this behavior different between render and prerender since in the latter case
         // we are less sensitive to the current requests runtime per and more sensitive to maximizing
         // headers.
-        (headers.remainingCapacity -= header.length) >= 2)
+        (headers.remainingCapacity -= header.length + 2) >= 0)
       ) {
         // Store this in resettableState in case we are prerending and postpone in the Shell
         renderState.resets.connect[bucket][key] = EXISTS;
@@ -5516,7 +5499,7 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
           // make this behavior different between render and prerender since in the latter case
           // we are less sensitive to the current requests runtime per and more sensitive to maximizing
           // headers.
-          (headers.remainingCapacity -= header.length) >= 2)
+          (headers.remainingCapacity -= header.length + 2) >= 0)
         ) {
           // If we postpone in the shell we will still emit a preload as a header so we
           // track this to make sure we don't reset it.
@@ -5631,7 +5614,7 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
           // make this behavior different between render and prerender since in the latter case
           // we are less sensitive to the current requests runtime per and more sensitive to maximizing
           // headers.
-          (headers.remainingCapacity -= header.length) >= 2)
+          (headers.remainingCapacity -= header.length + 2) >= 0)
         ) {
           // If we postpone in the shell we will still emit this preload so we
           // track it here to prevent it from being reset.
@@ -6071,6 +6054,7 @@ function getPreloadAsHeader(
   let value = `<${escapedHref}>; rel=preload; as="${escapedAs}"`;
   for (const paramName in params) {
     if (hasOwnProperty.call(params, paramName)) {
+      // $FlowFixMe[invalid-computed-prop]
       const paramValue = params[paramName];
       if (typeof paramValue === 'string') {
         value += `; ${paramName.toLowerCase()}="${escapeStringForLinkHeaderQuotedParamValueContext(
@@ -6257,7 +6241,7 @@ export function emitEarlyPreloads(
             // This means that a particularly long header might close out the header queue where later
             // headers could still fit. We could in the future alter the behavior here based on prerender vs render
             // since during prerender we aren't as concerned with pure runtime performance.
-            if ((headers.remainingCapacity -= header.length) >= 2) {
+            if ((headers.remainingCapacity -= header.length + 2) >= 0) {
               renderState.resets.style[key] = PRELOAD_NO_CREDS;
               if (linkHeader) {
                 linkHeader += ', ';

@@ -1,4 +1,4 @@
-const { ObjectWithHooks } = require("shared-runtime");
+const {ObjectWithHooks} = require('shared-runtime');
 
 function Component(props) {
   const x = [];

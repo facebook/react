@@ -5,7 +5,7 @@
 function Component(props) {
   const x = useMemo(() => {
     switch (props.key) {
-      case "key": {
+      case 'key': {
         return props.value;
       }
       default: {
@@ -18,8 +18,8 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: ['TodoAdd'],
+  isComponent: 'TodoAdd',
 };
 
 ```

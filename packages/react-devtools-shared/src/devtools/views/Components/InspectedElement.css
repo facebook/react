@@ -45,12 +45,13 @@
 .SelectedComponentName {
   flex: 1 1 auto;
   overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: normal;
+  display: flex;
+  padding: 0.25rem 0;
+  height: 100%;
+  align-items: flex-end;
 }
 
-.Component {
-  flex: 1 1 auto;
+.ComponentName {
   color: var(--color-component-name);
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-monospace-normal);
@@ -58,6 +59,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
+}
+
+.StrictModeNonCompliantComponentName {
+  color: var(--color-console-error-icon);
 }
 
 .Loading {
@@ -68,6 +73,7 @@
 }
 
 .StrictModeNonCompliant {
-  margin-right: 0.25rem;
+  display: inline-flex;
+  padding: 0.25rem;
   color: var(--color-console-error-icon);
 }

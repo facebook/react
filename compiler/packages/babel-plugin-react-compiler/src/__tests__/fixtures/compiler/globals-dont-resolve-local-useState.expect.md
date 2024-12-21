@@ -2,8 +2,8 @@
 ## Input
 
 ```javascript
-import { useState as _useState, useCallback, useEffect } from "react";
-import { ValidateMemoization } from "shared-runtime";
+import {useState as _useState, useCallback, useEffect} from 'react';
+import {ValidateMemoization} from 'shared-runtime';
 
 function useState(value) {
   const [state, setState] = _useState(value);
@@ -11,9 +11,9 @@ function useState(value) {
 }
 
 function Component() {
-  const [state, setState] = useState("hello");
+  const [state, setState] = useState('hello');
 
-  return <div onClick={() => setState("goodbye")}>{state}</div>;
+  return <div onClick={() => setState('goodbye')}>{state}</div>;
 }
 
 export const FIXTURE_ENTRYPOINT = {
@@ -56,10 +56,10 @@ function Component() {
     t0 = $[1];
   }
   let t1;
-  if ($[2] !== t0 || $[3] !== state) {
+  if ($[2] !== state || $[3] !== t0) {
     t1 = <div onClick={t0}>{state}</div>;
-    $[2] = t0;
-    $[3] = state;
+    $[2] = state;
+    $[3] = t0;
     $[4] = t1;
   } else {
     t1 = $[4];

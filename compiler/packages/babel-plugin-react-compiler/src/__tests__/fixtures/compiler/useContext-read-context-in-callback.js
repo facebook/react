@@ -1,6 +1,6 @@
-import { createContext, useContext } from "react";
+import {createContext, useContext} from 'react';
 
-const FooContext = createContext({ current: null });
+const FooContext = createContext({current: null});
 
 function Component(props) {
   const foo = useContext(FooContext);
@@ -13,5 +13,5 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ children: <div>Hello</div> }],
+  params: [{children: <div>Hello</div>}],
 };

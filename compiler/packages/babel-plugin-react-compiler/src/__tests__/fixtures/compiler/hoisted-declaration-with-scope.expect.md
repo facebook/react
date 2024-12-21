@@ -2,23 +2,23 @@
 ## Input
 
 ```javascript
-import { StaticText1, Stringify, identity, useHook } from "shared-runtime";
+import {StaticText1, Stringify, identity, useHook} from 'shared-runtime';
 
 /**
  * `button` and `dispatcher` must end up in the same memo block. It would be
  * invalid for `button` to take a dependency on `dispatcher` as dispatcher
  * is created later.
  */
-function useFoo({ onClose }) {
+function useFoo({onClose}) {
   const button = StaticText1 ?? (
     <Stringify
       primary={{
-        label: identity("label"),
+        label: identity('label'),
         onPress: onClose,
       }}
       secondary={{
         onPress: () => {
-          dispatcher.go("route2");
+          dispatcher.go('route2');
         },
       }}
     />
@@ -31,7 +31,7 @@ function useFoo({ onClose }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useFoo,
-  params: [{ onClose: identity() }],
+  params: [{onClose: identity()}],
 };
 
 ```

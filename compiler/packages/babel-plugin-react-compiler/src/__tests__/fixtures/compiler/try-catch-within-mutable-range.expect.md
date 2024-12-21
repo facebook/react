@@ -2,12 +2,12 @@
 ## Input
 
 ```javascript
-const { throwErrorWithMessage, shallowCopy } = require("shared-runtime");
+const {throwErrorWithMessage, shallowCopy} = require('shared-runtime');
 
 function Component(props) {
   const x = [];
   try {
-    x.push(throwErrorWithMessage("oops"));
+    x.push(throwErrorWithMessage('oops'));
   } catch {
     x.push(shallowCopy({}));
   }

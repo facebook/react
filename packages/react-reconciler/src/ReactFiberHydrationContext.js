@@ -280,6 +280,7 @@ function tryHydrateSuspense(fiber: Fiber, nextInstance: any) {
       dehydrated: suspenseInstance,
       treeContext: getSuspendedTreeContext(),
       retryLane: OffscreenLane,
+      hydrationErrors: null,
     };
     fiber.memoizedState = suspenseState;
     // Store the dehydrated fragment as a child fiber.
@@ -701,14 +702,18 @@ function resetHydrationState(): void {
   didSuspendOrErrorDEV = false;
 }
 
-export function upgradeHydrationErrorsToRecoverable(): void {
-  if (hydrationErrors !== null) {
+export function upgradeHydrationErrorsToRecoverable(): Array<
+  CapturedValue<mixed>,
+> | null {
+  const queuedErrors = hydrationErrors;
+  if (queuedErrors !== null) {
     // Successfully completed a forced client render. The errors that occurred
     // during the hydration attempt are now recovered. We will log them in
     // commit phase, once the entire tree has finished.
-    queueRecoverableErrors(hydrationErrors);
+    queueRecoverableErrors(queuedErrors);
     hydrationErrors = null;
   }
+  return queuedErrors;
 }
 
 function getIsHydrating(): boolean {

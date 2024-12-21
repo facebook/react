@@ -1,5 +1,5 @@
-import { ValidateMemoization } from "shared-runtime";
-import { use, useMemo } from "react";
+import {ValidateMemoization} from 'shared-runtime';
+import {use, useMemo} from 'react';
 
 const FooContext = React.createContext(null);
 function Component(props) {
@@ -18,16 +18,16 @@ function Inner(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: 42 }],
+  params: [{value: 42}],
   sequentialRenders: [
-    { value: null },
-    { value: 42 },
-    { value: 42 },
-    { value: null },
-    { value: null },
-    { value: 42 },
-    { value: null },
-    { value: 42 },
-    { value: null },
+    {value: null},
+    {value: 42},
+    {value: 42},
+    {value: null},
+    {value: null},
+    {value: 42},
+    {value: null},
+    {value: 42},
+    {value: null},
   ],
 };

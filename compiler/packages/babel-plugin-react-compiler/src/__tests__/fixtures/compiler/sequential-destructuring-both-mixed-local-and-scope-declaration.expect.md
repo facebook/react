@@ -2,13 +2,13 @@
 ## Input
 
 ```javascript
-import { identity } from "shared-runtime";
+import {identity} from 'shared-runtime';
 
 function Component(statusName) {
   // status is local, text is a scope declaration
-  const { status, text } = foo(statusName);
+  const {status, text} = foo(statusName);
   // color is local, font is a scope declaration
-  const { color, font } = getStyles(status);
+  const {color, font} = getStyles(status);
   // bg is a declaration
   const bg = identity(color);
   return (
@@ -26,14 +26,14 @@ function foo(name) {
 
 function getStyles(status) {
   return {
-    font: "comic-sans",
-    color: "#657b83",
+    font: 'comic-sans',
+    color: '#657b83',
   };
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: ["Sathya"],
+  params: ['Sathya'],
 };
 
 ```
@@ -46,9 +46,9 @@ import { identity } from "shared-runtime";
 
 function Component(statusName) {
   const $ = _c(12);
+  let font;
   let t0;
   let text;
-  let font;
   if ($[0] !== statusName) {
     const { status, text: t1 } = foo(statusName);
     text = t1;
@@ -58,13 +58,13 @@ function Component(statusName) {
 
     t0 = identity(color);
     $[0] = statusName;
-    $[1] = t0;
-    $[2] = text;
-    $[3] = font;
+    $[1] = font;
+    $[2] = t0;
+    $[3] = text;
   } else {
-    t0 = $[1];
-    text = $[2];
-    font = $[3];
+    font = $[1];
+    t0 = $[2];
+    text = $[3];
   }
   const bg = t0;
   let t1;

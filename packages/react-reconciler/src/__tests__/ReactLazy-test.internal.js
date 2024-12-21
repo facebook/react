@@ -213,14 +213,18 @@ describe('ReactLazy', () => {
       unstable_isConcurrent: true,
     });
 
+    function App() {
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <LazyText text="Hi" />
+        </Suspense>
+      );
+    }
+
     let error;
     try {
       await act(() => {
-        root.update(
-          <Suspense fallback={<Text text="Loading..." />}>
-            <LazyText text="Hi" />
-          </Suspense>,
-        );
+        root.update(<App />);
       });
     } catch (e) {
       error = e;
@@ -305,7 +309,12 @@ describe('ReactLazy', () => {
       unstable_isConcurrent: true,
     });
 
-    await waitForAll(['Suspend! [LazyChildA]', 'Loading...']);
+    await waitForAll([
+      'Suspend! [LazyChildA]',
+      'Loading...',
+
+      ...(gate('enableSiblingPrerendering') ? ['Suspend! [LazyChildB]'] : []),
+    ]);
     expect(root).not.toMatchRenderedOutput('AB');
 
     await act(async () => {
@@ -314,9 +323,23 @@ describe('ReactLazy', () => {
       // B suspends even though it happens to share the same import as A.
       // TODO: React.lazy should implement the `status` and `value` fields, so
       // we can unwrap the result synchronously if it already loaded. Like `use`.
-      await waitFor(['A', 'Suspend! [LazyChildB]']);
+      await waitFor([
+        'A',
+
+        // When enableSiblingPrerendering is on, LazyChildB was already
+        // initialized. So it also already resolved when we called
+        // resolveFakeImport above. So it doesn't suspend again.
+        ...(gate('enableSiblingPrerendering')
+          ? ['B']
+          : ['Suspend! [LazyChildB]']),
+      ]);
     });
-    assertLog(['A', 'B', 'Did mount: A', 'Did mount: B']);
+    assertLog([
+      ...(gate('enableSiblingPrerendering') ? [] : ['A', 'B']),
+
+      'Did mount: A',
+      'Did mount: B',
+    ]);
     expect(root).toMatchRenderedOutput('AB');
 
     // Swap the position of A and B
@@ -753,6 +776,32 @@ describe('ReactLazy', () => {
     );
   });
 
+  it('throws with a useful error when wrapping fragment with lazy()', async () => {
+    const BadLazy = lazy(() => fakeImport(React.Fragment));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+
+    await resolveFakeImport(React.Fragment);
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+    );
+    await waitForThrow(
+      'Element type is invalid. Received a promise that resolves to: Fragment. ' +
+        'Lazy element type must resolve to a class or function.',
+    );
+  });
+
   it('throws with a useful error when wrapping lazy() multiple times', async () => {
     const Lazy1 = lazy(() => fakeImport(Text));
     const Lazy2 = lazy(() => fakeImport(Lazy1));
@@ -811,10 +860,10 @@ describe('ReactLazy', () => {
             'Add: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
           ]
         : shouldWarnAboutMemoDefaultProps
-        ? [
-            'Add: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
-          ]
-        : [],
+          ? [
+              'Add: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
+            ]
+          : [],
     );
     expect(root).toMatchRenderedOutput('22');
 
@@ -1042,7 +1091,7 @@ describe('ReactLazy', () => {
     expect(ref.current).toBe(null);
 
     await act(() => resolveFakeImport(Foo));
-    assertLog(['Foo']);
+    assertLog(['Foo', ...(gate('enableSiblingPrerendering') ? ['Foo'] : [])]);
 
     await act(() => resolveFakeImport(ForwardRefBar));
     assertLog(['Foo', 'forwardRef', 'Bar']);
@@ -1185,30 +1234,6 @@ describe('ReactLazy', () => {
     );
     await waitForAll([]);
     expect(root).toMatchRenderedOutput('2');
-  });
-
-  // @gate !enableRefAsProp || !__DEV__
-  it('warns about ref on functions for lazy-loaded components', async () => {
-    const Foo = props => <div />;
-    const LazyFoo = lazy(() => {
-      return fakeImport(Foo);
-    });
-
-    const ref = React.createRef();
-    ReactTestRenderer.create(
-      <Suspense fallback={<Text text="Loading..." />}>
-        <LazyFoo ref={ref} />
-      </Suspense>,
-      {
-        unstable_isConcurrent: true,
-      },
-    );
-
-    await waitForAll(['Loading...']);
-    await resolveFakeImport(Foo);
-    await expect(async () => {
-      await waitForAll([]);
-    }).toErrorDev('Function components cannot be given refs');
   });
 
   it('should error with a component stack naming the resolved component', async () => {
@@ -1354,11 +1379,21 @@ describe('ReactLazy', () => {
       unstable_isConcurrent: true,
     });
 
-    await waitForAll(['Init A', 'Loading...']);
+    await waitForAll([
+      'Init A',
+      'Loading...',
+
+      ...(gate('enableSiblingPrerendering') ? ['Init B'] : []),
+    ]);
     expect(root).not.toMatchRenderedOutput('AB');
 
     await act(() => resolveFakeImport(ChildA));
-    assertLog(['A', 'Init B']);
+    assertLog([
+      'A',
+
+      // When enableSiblingPrerendering is on, B was already initialized.
+      ...(gate('enableSiblingPrerendering') ? ['A'] : ['Init B']),
+    ]);
 
     await act(() => resolveFakeImport(ChildB));
     assertLog(['A', 'B', 'Did mount: A', 'Did mount: B']);

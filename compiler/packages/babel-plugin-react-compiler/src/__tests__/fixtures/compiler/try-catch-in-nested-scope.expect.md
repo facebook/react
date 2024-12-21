@@ -2,20 +2,20 @@
 ## Input
 
 ```javascript
-import { mutate, setProperty, throwErrorWithMessageIf } from "shared-runtime";
+import {mutate, setProperty, throwErrorWithMessageIf} from 'shared-runtime';
 
-function useFoo({ value, cond }) {
+function useFoo({value, cond}) {
   let y = [value];
-  let x = { cond };
+  let x = {cond};
 
   try {
     mutate(x);
-    throwErrorWithMessageIf(x.cond, "error");
+    throwErrorWithMessageIf(x.cond, 'error');
   } catch {
-    setProperty(x, "henderson");
+    setProperty(x, 'henderson');
     return x;
   }
-  setProperty(x, "nevada");
+  setProperty(x, 'nevada');
   y.push(x);
 
   return y;
@@ -23,11 +23,11 @@ function useFoo({ value, cond }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useFoo,
-  params: [{ value: 4, cond: true }],
+  params: [{value: 4, cond: true}],
   sequentialRenders: [
-    { value: 4, cond: true },
-    { value: 5, cond: true },
-    { value: 5, cond: false },
+    {value: 4, cond: true},
+    {value: 5, cond: true},
+    {value: 5, cond: false},
   ],
 };
 
@@ -42,9 +42,9 @@ import { mutate, setProperty, throwErrorWithMessageIf } from "shared-runtime";
 function useFoo(t0) {
   const $ = _c(6);
   const { value, cond } = t0;
-  let y;
   let t1;
-  if ($[0] !== value || $[1] !== cond) {
+  let y;
+  if ($[0] !== cond || $[1] !== value) {
     t1 = Symbol.for("react.early_return_sentinel");
     bb0: {
       y = [value];
@@ -68,13 +68,13 @@ function useFoo(t0) {
       }
       y.push(x);
     }
-    $[0] = value;
-    $[1] = cond;
-    $[2] = y;
-    $[3] = t1;
+    $[0] = cond;
+    $[1] = value;
+    $[2] = t1;
+    $[3] = y;
   } else {
-    y = $[2];
-    t1 = $[3];
+    t1 = $[2];
+    y = $[3];
   }
   if (t1 !== Symbol.for("react.early_return_sentinel")) {
     return t1;

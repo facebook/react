@@ -1,16 +1,16 @@
-import { createHookWrapper } from "shared-runtime";
+import {createHookWrapper} from 'shared-runtime';
 
-function useHook({ a, b, c }) {
+function useHook({a, b, c}) {
   return {
     x: [a],
     y() {
       return [b];
     },
-    z: { c },
+    z: {c},
   };
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: createHookWrapper(useHook),
-  params: [{ a: 1, b: 2, c: 2 }],
+  params: [{a: 1, b: 2, c: 2}],
 };

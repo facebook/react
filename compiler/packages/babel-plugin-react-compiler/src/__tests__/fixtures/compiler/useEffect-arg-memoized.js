@@ -5,7 +5,7 @@ function Component(props) {
   // onUpdate should be memoized even though it doesn't
   // flow into the return value
   const onUpdate = () => {
-    dispatch({ kind: "update" });
+    dispatch({kind: 'update'});
   };
 
   useEffect(() => {

@@ -1,5 +1,5 @@
 function component(a) {
-  let y = { b: { a } };
+  let y = {b: {a}};
   let x = function () {
     y.b.a = 2;
   };
@@ -9,6 +9,6 @@ function component(a) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: component,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: ['TodoAdd'],
+  isComponent: 'TodoAdd',
 };

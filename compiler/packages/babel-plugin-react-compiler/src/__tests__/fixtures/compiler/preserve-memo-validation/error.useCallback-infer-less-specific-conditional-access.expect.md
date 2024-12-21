@@ -3,10 +3,10 @@
 
 ```javascript
 // @validatePreserveExistingMemoizationGuarantees
-import { useCallback } from "react";
-import { mutate } from "shared-runtime";
+import {useCallback} from 'react';
+import {mutate} from 'shared-runtime';
 
-function Component({ propA, propB }) {
+function Component({propA, propB}) {
   return useCallback(() => {
     const x = {};
     if (propA?.a) {
@@ -25,7 +25,7 @@ function Component({ propA, propB }) {
 
 ```
    4 |
-   5 | function Component({ propA, propB }) {
+   5 | function Component({propA, propB}) {
 >  6 |   return useCallback(() => {
      |                      ^^^^^^^
 >  7 |     const x = {};

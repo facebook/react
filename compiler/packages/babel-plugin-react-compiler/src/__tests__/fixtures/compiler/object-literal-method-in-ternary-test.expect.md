@@ -2,13 +2,9 @@
 ## Input
 
 ```javascript
-import {
-  createHookWrapper,
-  CONST_STRING0,
-  CONST_STRING1,
-} from "shared-runtime";
+import {createHookWrapper, CONST_STRING0, CONST_STRING1} from 'shared-runtime';
 
-function useHook({ value }) {
+function useHook({value}) {
   return {
     getValue() {
       return identity(value);
@@ -20,7 +16,7 @@ function useHook({ value }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: createHookWrapper(useHook),
-  params: [{ value: 0 }],
+  params: [{value: 0}],
 };
 
 ```

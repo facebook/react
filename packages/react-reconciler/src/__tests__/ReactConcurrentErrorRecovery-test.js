@@ -397,8 +397,14 @@ describe('ReactConcurrentErrorRecovery', () => {
           );
         });
       });
-      assertLog(['Suspend! [Async]']);
-      // The render suspended without committing or surfacing the error.
+      assertLog([
+        'Suspend! [Async]',
+
+        ...(gate('enableSiblingPrerendering')
+          ? ['Caught an error: Oops!']
+          : []),
+      ]);
+      // The render suspended without committing the error.
       expect(root).toMatchRenderedOutput(null);
 
       // Try the reverse order, too: throw then suspend
@@ -414,7 +420,13 @@ describe('ReactConcurrentErrorRecovery', () => {
           );
         });
       });
-      assertLog(['Suspend! [Async]']);
+      assertLog([
+        'Suspend! [Async]',
+
+        ...(gate('enableSiblingPrerendering')
+          ? ['Caught an error: Oops!']
+          : []),
+      ]);
       expect(root).toMatchRenderedOutput(null);
 
       await act(async () => {

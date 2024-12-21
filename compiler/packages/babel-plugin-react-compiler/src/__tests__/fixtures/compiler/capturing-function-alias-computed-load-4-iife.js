@@ -10,6 +10,6 @@ function bar(a) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: bar,
-  params: [{ a: ["val1", "val2"] }],
+  params: [{a: ['val1', 'val2']}],
   isComponent: false,
 };

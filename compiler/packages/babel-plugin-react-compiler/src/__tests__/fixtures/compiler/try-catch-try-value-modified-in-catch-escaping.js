@@ -1,4 +1,4 @@
-const { throwInput } = require("shared-runtime");
+const {throwInput} = require('shared-runtime');
 
 function Component(props) {
   let x;
@@ -15,5 +15,5 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ y: "foo", e: "bar" }],
+  params: [{y: 'foo', e: 'bar'}],
 };

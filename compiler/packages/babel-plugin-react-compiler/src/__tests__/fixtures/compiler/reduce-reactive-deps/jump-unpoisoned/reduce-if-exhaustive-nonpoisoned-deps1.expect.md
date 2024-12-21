@@ -2,9 +2,9 @@
 ## Input
 
 ```javascript
-import { identity } from "shared-runtime";
+import {identity} from 'shared-runtime';
 
-function useFoo({ input, cond2, cond1 }) {
+function useFoo({input, cond2, cond1}) {
   const x = [];
   if (cond1) {
     if (!cond2) {
@@ -21,14 +21,14 @@ function useFoo({ input, cond2, cond1 }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useFoo,
-  params: [{ input: { b: 1 }, cond1: true, cond2: false }],
+  params: [{input: {b: 1}, cond1: true, cond2: false}],
   sequentialRenders: [
-    { input: { a: { b: 1 } }, cond1: true, cond2: true },
-    { input: null, cond1: true, cond2: false },
+    {input: {a: {b: 1}}, cond1: true, cond2: true},
+    {input: null, cond1: true, cond2: false},
     // preserve nullthrows
-    { input: { a: { b: undefined } }, cond1: true, cond2: true },
-    { input: { a: null }, cond1: true, cond2: true },
-    { input: { a: { b: undefined } }, cond1: true, cond2: true },
+    {input: {a: {b: undefined}}, cond1: true, cond2: true},
+    {input: {a: null}, cond1: true, cond2: true},
+    {input: {a: {b: undefined}}, cond1: true, cond2: true},
   ],
 };
 
@@ -43,8 +43,8 @@ import { identity } from "shared-runtime";
 function useFoo(t0) {
   const $ = _c(11);
   const { input, cond2, cond1 } = t0;
-  let x;
   let t1;
+  let x;
   if ($[0] !== cond1 || $[1] !== cond2 || $[2] !== input.a.b) {
     t1 = Symbol.for("react.early_return_sentinel");
     bb0: {
@@ -88,11 +88,11 @@ function useFoo(t0) {
     $[0] = cond1;
     $[1] = cond2;
     $[2] = input.a.b;
-    $[3] = x;
-    $[4] = t1;
+    $[3] = t1;
+    $[4] = x;
   } else {
-    x = $[3];
-    t1 = $[4];
+    t1 = $[3];
+    x = $[4];
   }
   if (t1 !== Symbol.for("react.early_return_sentinel")) {
     return t1;

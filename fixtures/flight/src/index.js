@@ -6,6 +6,14 @@ import {createFromFetch, encodeReply} from 'react-server-dom-webpack/client';
 // TODO: This should be a dependency of the App but we haven't implemented CSS in Node yet.
 import './style.css';
 
+function findSourceMapURL(fileName) {
+  return (
+    document.location.origin +
+    '/source-maps?name=' +
+    encodeURIComponent(fileName)
+  );
+}
+
 let updateRoot;
 async function callServer(id, args) {
   const response = fetch('/', {
@@ -16,7 +24,10 @@ async function callServer(id, args) {
     },
     body: await encodeReply(args),
   });
-  const {returnValue, root} = await createFromFetch(response, {callServer});
+  const {returnValue, root} = await createFromFetch(response, {
+    callServer,
+    findSourceMapURL,
+  });
   // Refresh the tree with the new RSC payload.
   startTransition(() => {
     updateRoot(root);
@@ -39,13 +50,7 @@ async function hydrateApp() {
     }),
     {
       callServer,
-      findSourceMapURL(fileName) {
-        return (
-          document.location.origin +
-          '/source-maps?name=' +
-          encodeURIComponent(fileName)
-        );
-      },
+      findSourceMapURL,
     }
   );
 

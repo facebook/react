@@ -1,4 +1,4 @@
-import { useState } from "react"; // @enableChangeDetectionForDebugging
+import {useState} from 'react'; // @enableChangeDetectionForDebugging
 
 function useOther(x) {
   return x;
@@ -17,6 +17,6 @@ function f(x) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ x: 42 }],
+  params: [{x: 42}],
   isComponent: true,
 };

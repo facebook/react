@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "../CompilerError";
+import {CompilerError} from '../CompilerError';
 import {
   BasicBlock,
   BlockId,
@@ -15,7 +15,7 @@ import {
   Place,
   ReactiveBlock,
   SourceLocation,
-} from "../HIR";
+} from '../HIR';
 import {
   HIRFunction,
   ReactiveBreakTerminal,
@@ -28,8 +28,8 @@ import {
   ReactiveTernaryValue,
   ReactiveValue,
   Terminal,
-} from "../HIR/HIR";
-import { assertExhaustive } from "../Utils/utils";
+} from '../HIR/HIR';
+import {assertExhaustive} from '../Utils/utils';
 
 /*
  * Converts from HIR (lower-level CFG) to ReactiveFunction, a tree representation
@@ -76,7 +76,7 @@ class Driver {
     this.cx.emitted.add(block.id);
     for (const instruction of block.instructions) {
       blockValue.push({
-        kind: "instruction",
+        kind: 'instruction',
         instruction,
       });
     }
@@ -84,11 +84,11 @@ class Driver {
     const terminal = block.terminal;
     const scheduleIds = [];
     switch (terminal.kind) {
-      case "return": {
+      case 'return': {
         blockValue.push({
-          kind: "terminal",
+          kind: 'terminal',
           terminal: {
-            kind: "return",
+            kind: 'return',
             loc: terminal.loc,
             value: terminal.value,
             id: terminal.id,
@@ -97,11 +97,11 @@ class Driver {
         });
         break;
       }
-      case "throw": {
+      case 'throw': {
         blockValue.push({
-          kind: "terminal",
+          kind: 'terminal',
           terminal: {
-            kind: "throw",
+            kind: 'throw',
             loc: terminal.loc,
             value: terminal.value,
             id: terminal.id,
@@ -110,7 +110,7 @@ class Driver {
         });
         break;
       }
-      case "if": {
+      case 'if': {
         const fallthroughId =
           this.cx.reachable(terminal.fallthrough) &&
           !this.cx.isScheduled(terminal.fallthrough)
@@ -122,7 +122,7 @@ class Driver {
             : null;
 
         if (fallthroughId !== null) {
-          const scheduleId = this.cx.schedule(fallthroughId, "if");
+          const scheduleId = this.cx.schedule(fallthroughId, 'if');
           scheduleIds.push(scheduleId);
         }
 
@@ -134,7 +134,7 @@ class Driver {
           });
         } else {
           consequent = this.traverseBlock(
-            this.cx.ir.blocks.get(terminal.consequent)!
+            this.cx.ir.blocks.get(terminal.consequent)!,
           );
         }
 
@@ -152,9 +152,9 @@ class Driver {
 
         this.cx.unscheduleAll(scheduleIds);
         blockValue.push({
-          kind: "terminal",
+          kind: 'terminal',
           terminal: {
-            kind: "if",
+            kind: 'if',
             loc: terminal.loc,
             test: terminal.test,
             consequent: consequent ?? this.emptyBlock(),
@@ -174,14 +174,14 @@ class Driver {
         }
         break;
       }
-      case "switch": {
+      case 'switch': {
         const fallthroughId =
           this.cx.reachable(terminal.fallthrough) &&
           !this.cx.isScheduled(terminal.fallthrough)
             ? terminal.fallthrough
             : null;
         if (fallthroughId !== null) {
-          const scheduleId = this.cx.schedule(fallthroughId, "switch");
+          const scheduleId = this.cx.schedule(fallthroughId, 'switch');
           scheduleIds.push(scheduleId);
         }
 
@@ -201,20 +201,20 @@ class Driver {
             return;
           } else {
             consequent = this.traverseBlock(
-              this.cx.ir.blocks.get(case_.block)!
+              this.cx.ir.blocks.get(case_.block)!,
             );
-            const scheduleId = this.cx.schedule(case_.block, "case");
+            const scheduleId = this.cx.schedule(case_.block, 'case');
             scheduleIds.push(scheduleId);
           }
-          cases.push({ test, block: consequent });
+          cases.push({test, block: consequent});
         });
         cases.reverse();
 
         this.cx.unscheduleAll(scheduleIds);
         blockValue.push({
-          kind: "terminal",
+          kind: 'terminal',
           terminal: {
-            kind: "switch",
+            kind: 'switch',
             loc: terminal.loc,
             test: terminal.test,
             cases,
@@ -233,7 +233,7 @@ class Driver {
         }
         break;
       }
-      case "do-while": {
+      case 'do-while': {
         const fallthroughId = !this.cx.isScheduled(terminal.fallthrough)
           ? terminal.fallthrough
           : null;
@@ -245,7 +245,7 @@ class Driver {
         const scheduleId = this.cx.scheduleLoop(
           terminal.fallthrough,
           terminal.test,
-          terminal.loop
+          terminal.loop,
         );
         scheduleIds.push(scheduleId);
 
@@ -261,14 +261,14 @@ class Driver {
 
         const testValue = this.visitValueBlock(
           terminal.test,
-          terminal.loc
+          terminal.loc,
         ).value;
 
         this.cx.unscheduleAll(scheduleIds);
         blockValue.push({
-          kind: "terminal",
+          kind: 'terminal',
           terminal: {
-            kind: "do-while",
+            kind: 'do-while',
             loc: terminal.loc,
             test: testValue,
             loop: loopBody,
@@ -287,7 +287,7 @@ class Driver {
         }
         break;
       }
-      case "while": {
+      case 'while': {
         const fallthroughId =
           this.cx.reachable(terminal.fallthrough) &&
           !this.cx.isScheduled(terminal.fallthrough)
@@ -301,13 +301,13 @@ class Driver {
         const scheduleId = this.cx.scheduleLoop(
           terminal.fallthrough,
           terminal.test,
-          terminal.loop
+          terminal.loop,
         );
         scheduleIds.push(scheduleId);
 
         const testValue = this.visitValueBlock(
           terminal.test,
-          terminal.loc
+          terminal.loc,
         ).value;
 
         let loopBody: ReactiveBlock;
@@ -322,9 +322,9 @@ class Driver {
 
         this.cx.unscheduleAll(scheduleIds);
         blockValue.push({
-          kind: "terminal",
+          kind: 'terminal',
           terminal: {
-            kind: "while",
+            kind: 'while',
             loc: terminal.loc,
             test: testValue,
             loop: loopBody,
@@ -343,7 +343,7 @@ class Driver {
         }
         break;
       }
-      case "for": {
+      case 'for': {
         const loopId =
           !this.cx.isScheduled(terminal.loop) &&
           terminal.loop !== terminal.fallthrough
@@ -357,29 +357,29 @@ class Driver {
         const scheduleId = this.cx.scheduleLoop(
           terminal.fallthrough,
           terminal.update ?? terminal.test,
-          terminal.loop
+          terminal.loop,
         );
         scheduleIds.push(scheduleId);
 
         const init = this.visitValueBlock(terminal.init, terminal.loc);
         const initBlock = this.cx.ir.blocks.get(init.block)!;
         let initValue = init.value;
-        if (initValue.kind === "SequenceExpression") {
+        if (initValue.kind === 'SequenceExpression') {
           const last = initBlock.instructions.at(-1)!;
           initValue.instructions.push(last);
           initValue.value = {
-            kind: "Primitive",
+            kind: 'Primitive',
             value: undefined,
             loc: terminal.loc,
           };
         } else {
           initValue = {
-            kind: "SequenceExpression",
+            kind: 'SequenceExpression',
             instructions: [initBlock.instructions.at(-1)!],
             id: terminal.id,
             loc: terminal.loc,
             value: {
-              kind: "Primitive",
+              kind: 'Primitive',
               value: undefined,
               loc: terminal.loc,
             },
@@ -388,7 +388,7 @@ class Driver {
 
         const testValue = this.visitValueBlock(
           terminal.test,
-          terminal.loc
+          terminal.loc,
         ).value;
 
         const updateValue =
@@ -408,9 +408,9 @@ class Driver {
 
         this.cx.unscheduleAll(scheduleIds);
         blockValue.push({
-          kind: "terminal",
+          kind: 'terminal',
           terminal: {
-            kind: "for",
+            kind: 'for',
             loc: terminal.loc,
             init: initValue,
             test: testValue,
@@ -419,16 +419,14 @@ class Driver {
             id: terminal.id,
           },
           label:
-            fallthroughId == null
-              ? null
-              : { id: fallthroughId, implicit: false },
+            fallthroughId == null ? null : {id: fallthroughId, implicit: false},
         });
         if (fallthroughId !== null) {
           this.visitBlock(this.cx.ir.blocks.get(fallthroughId)!, blockValue);
         }
         break;
       }
-      case "for-of": {
+      case 'for-of': {
         const loopId =
           !this.cx.isScheduled(terminal.loop) &&
           terminal.loop !== terminal.fallthrough
@@ -442,29 +440,29 @@ class Driver {
         const scheduleId = this.cx.scheduleLoop(
           terminal.fallthrough,
           terminal.init,
-          terminal.loop
+          terminal.loop,
         );
         scheduleIds.push(scheduleId);
 
         const init = this.visitValueBlock(terminal.init, terminal.loc);
         const initBlock = this.cx.ir.blocks.get(init.block)!;
         let initValue = init.value;
-        if (initValue.kind === "SequenceExpression") {
+        if (initValue.kind === 'SequenceExpression') {
           const last = initBlock.instructions.at(-1)!;
           initValue.instructions.push(last);
           initValue.value = {
-            kind: "Primitive",
+            kind: 'Primitive',
             value: undefined,
             loc: terminal.loc,
           };
         } else {
           initValue = {
-            kind: "SequenceExpression",
+            kind: 'SequenceExpression',
             instructions: [initBlock.instructions.at(-1)!],
             id: terminal.id,
             loc: terminal.loc,
             value: {
-              kind: "Primitive",
+              kind: 'Primitive',
               value: undefined,
               loc: terminal.loc,
             },
@@ -474,22 +472,22 @@ class Driver {
         const test = this.visitValueBlock(terminal.test, terminal.loc);
         const testBlock = this.cx.ir.blocks.get(test.block)!;
         let testValue = test.value;
-        if (testValue.kind === "SequenceExpression") {
+        if (testValue.kind === 'SequenceExpression') {
           const last = testBlock.instructions.at(-1)!;
           testValue.instructions.push(last);
           testValue.value = {
-            kind: "Primitive",
+            kind: 'Primitive',
             value: undefined,
             loc: terminal.loc,
           };
         } else {
           testValue = {
-            kind: "SequenceExpression",
+            kind: 'SequenceExpression',
             instructions: [testBlock.instructions.at(-1)!],
             id: terminal.id,
             loc: terminal.loc,
             value: {
-              kind: "Primitive",
+              kind: 'Primitive',
               value: undefined,
               loc: terminal.loc,
             },
@@ -508,9 +506,9 @@ class Driver {
 
         this.cx.unscheduleAll(scheduleIds);
         blockValue.push({
-          kind: "terminal",
+          kind: 'terminal',
           terminal: {
-            kind: "for-of",
+            kind: 'for-of',
             loc: terminal.loc,
             init: initValue,
             test: testValue,
@@ -518,16 +516,14 @@ class Driver {
             id: terminal.id,
           },
           label:
-            fallthroughId == null
-              ? null
-              : { id: fallthroughId, implicit: false },
+            fallthroughId == null ? null : {id: fallthroughId, implicit: false},
         });
         if (fallthroughId !== null) {
           this.visitBlock(this.cx.ir.blocks.get(fallthroughId)!, blockValue);
         }
         break;
       }
-      case "for-in": {
+      case 'for-in': {
         const loopId =
           !this.cx.isScheduled(terminal.loop) &&
           terminal.loop !== terminal.fallthrough
@@ -541,29 +537,29 @@ class Driver {
         const scheduleId = this.cx.scheduleLoop(
           terminal.fallthrough,
           terminal.init,
-          terminal.loop
+          terminal.loop,
         );
         scheduleIds.push(scheduleId);
 
         const init = this.visitValueBlock(terminal.init, terminal.loc);
         const initBlock = this.cx.ir.blocks.get(init.block)!;
         let initValue = init.value;
-        if (initValue.kind === "SequenceExpression") {
+        if (initValue.kind === 'SequenceExpression') {
           const last = initBlock.instructions.at(-1)!;
           initValue.instructions.push(last);
           initValue.value = {
-            kind: "Primitive",
+            kind: 'Primitive',
             value: undefined,
             loc: terminal.loc,
           };
         } else {
           initValue = {
-            kind: "SequenceExpression",
+            kind: 'SequenceExpression',
             instructions: [initBlock.instructions.at(-1)!],
             id: terminal.id,
             loc: terminal.loc,
             value: {
-              kind: "Primitive",
+              kind: 'Primitive',
               value: undefined,
               loc: terminal.loc,
             },
@@ -582,38 +578,36 @@ class Driver {
 
         this.cx.unscheduleAll(scheduleIds);
         blockValue.push({
-          kind: "terminal",
+          kind: 'terminal',
           terminal: {
-            kind: "for-in",
+            kind: 'for-in',
             loc: terminal.loc,
             init: initValue,
             loop: loopBody,
             id: terminal.id,
           },
           label:
-            fallthroughId == null
-              ? null
-              : { id: fallthroughId, implicit: false },
+            fallthroughId == null ? null : {id: fallthroughId, implicit: false},
         });
         if (fallthroughId !== null) {
           this.visitBlock(this.cx.ir.blocks.get(fallthroughId)!, blockValue);
         }
         break;
       }
-      case "branch": {
+      case 'branch': {
         let consequent: ReactiveBlock | null = null;
         if (this.cx.isScheduled(terminal.consequent)) {
           const break_ = this.visitBreak(
             terminal.consequent,
             terminal.id,
-            terminal.loc
+            terminal.loc,
           );
           if (break_ !== null) {
             consequent = [break_];
           }
         } else {
           consequent = this.traverseBlock(
-            this.cx.ir.blocks.get(terminal.consequent)!
+            this.cx.ir.blocks.get(terminal.consequent)!,
           );
         }
 
@@ -625,14 +619,14 @@ class Driver {
           });
         } else {
           alternate = this.traverseBlock(
-            this.cx.ir.blocks.get(terminal.alternate)!
+            this.cx.ir.blocks.get(terminal.alternate)!,
           );
         }
 
         blockValue.push({
-          kind: "terminal",
+          kind: 'terminal',
           terminal: {
-            kind: "if",
+            kind: 'if',
             loc: terminal.loc,
             test: terminal.test,
             consequent: consequent ?? this.emptyBlock(),
@@ -644,14 +638,14 @@ class Driver {
 
         break;
       }
-      case "label": {
+      case 'label': {
         const fallthroughId =
           this.cx.reachable(terminal.fallthrough) &&
           !this.cx.isScheduled(terminal.fallthrough)
             ? terminal.fallthrough
             : null;
         if (fallthroughId !== null) {
-          const scheduleId = this.cx.schedule(fallthroughId, "if");
+          const scheduleId = this.cx.schedule(fallthroughId, 'if');
           scheduleIds.push(scheduleId);
         }
 
@@ -667,17 +661,15 @@ class Driver {
 
         this.cx.unscheduleAll(scheduleIds);
         blockValue.push({
-          kind: "terminal",
+          kind: 'terminal',
           terminal: {
-            kind: "label",
+            kind: 'label',
             loc: terminal.loc,
             block,
             id: terminal.id,
           },
           label:
-            fallthroughId == null
-              ? null
-              : { id: fallthroughId, implicit: false },
+            fallthroughId == null ? null : {id: fallthroughId, implicit: false},
         });
         if (fallthroughId !== null) {
           this.visitBlock(this.cx.ir.blocks.get(fallthroughId)!, blockValue);
@@ -685,24 +677,24 @@ class Driver {
 
         break;
       }
-      case "sequence":
-      case "optional":
-      case "ternary":
-      case "logical": {
+      case 'sequence':
+      case 'optional':
+      case 'ternary':
+      case 'logical': {
         const fallthroughId =
           terminal.fallthrough !== null &&
           !this.cx.isScheduled(terminal.fallthrough)
             ? terminal.fallthrough
             : null;
         if (fallthroughId !== null) {
-          const scheduleId = this.cx.schedule(fallthroughId, "if");
+          const scheduleId = this.cx.schedule(fallthroughId, 'if');
           scheduleIds.push(scheduleId);
         }
 
-        const { place, value } = this.visitValueBlockTerminal(terminal);
+        const {place, value} = this.visitValueBlockTerminal(terminal);
         this.cx.unscheduleAll(scheduleIds);
         blockValue.push({
-          kind: "instruction",
+          kind: 'instruction',
           instruction: {
             id: terminal.id,
             lvalue: place,
@@ -716,13 +708,13 @@ class Driver {
         }
         break;
       }
-      case "goto": {
+      case 'goto': {
         switch (terminal.variant) {
           case GotoVariant.Break: {
             const break_ = this.visitBreak(
               terminal.block,
               terminal.id,
-              terminal.loc
+              terminal.loc,
             );
             if (break_ !== null) {
               blockValue.push(break_);
@@ -733,7 +725,7 @@ class Driver {
             const continue_ = this.visitContinue(
               terminal.block,
               terminal.id,
-              terminal.loc
+              terminal.loc,
             );
             if (continue_ !== null) {
               blockValue.push(continue_);
@@ -746,13 +738,13 @@ class Driver {
           default: {
             assertExhaustive(
               terminal.variant,
-              `Unexpected goto variant \`${terminal.variant}\``
+              `Unexpected goto variant \`${terminal.variant}\``,
             );
           }
         }
         break;
       }
-      case "maybe-throw": {
+      case 'maybe-throw': {
         /*
          * ReactiveFunction does not explicit model maybe-throw semantics,
          * so these terminals flatten away
@@ -760,39 +752,37 @@ class Driver {
         if (!this.cx.isScheduled(terminal.continuation)) {
           this.visitBlock(
             this.cx.ir.blocks.get(terminal.continuation)!,
-            blockValue
+            blockValue,
           );
         }
         break;
       }
-      case "try": {
+      case 'try': {
         const fallthroughId =
           this.cx.reachable(terminal.fallthrough) &&
           !this.cx.isScheduled(terminal.fallthrough)
             ? terminal.fallthrough
             : null;
         if (fallthroughId !== null) {
-          const scheduleId = this.cx.schedule(fallthroughId, "if");
+          const scheduleId = this.cx.schedule(fallthroughId, 'if');
           scheduleIds.push(scheduleId);
         }
         this.cx.scheduleCatchHandler(terminal.handler);
 
         const block = this.traverseBlock(
-          this.cx.ir.blocks.get(terminal.block)!
+          this.cx.ir.blocks.get(terminal.block)!,
         );
         const handler = this.traverseBlock(
-          this.cx.ir.blocks.get(terminal.handler)!
+          this.cx.ir.blocks.get(terminal.handler)!,
         );
 
         this.cx.unscheduleAll(scheduleIds);
         blockValue.push({
-          kind: "terminal",
+          kind: 'terminal',
           label:
-            fallthroughId == null
-              ? null
-              : { id: fallthroughId, implicit: false },
+            fallthroughId == null ? null : {id: fallthroughId, implicit: false},
           terminal: {
-            kind: "try",
+            kind: 'try',
             loc: terminal.loc,
             block,
             handlerBinding: terminal.handlerBinding,
@@ -806,13 +796,13 @@ class Driver {
         }
         break;
       }
-      case "pruned-scope":
-      case "scope": {
+      case 'pruned-scope':
+      case 'scope': {
         const fallthroughId = !this.cx.isScheduled(terminal.fallthrough)
           ? terminal.fallthrough
           : null;
         if (fallthroughId !== null) {
-          const scheduleId = this.cx.schedule(fallthroughId, "if");
+          const scheduleId = this.cx.schedule(fallthroughId, 'if');
           scheduleIds.push(scheduleId);
           this.cx.scopeFallthroughs.add(fallthroughId);
         }
@@ -839,37 +829,37 @@ class Driver {
 
         break;
       }
-      case "unreachable": {
+      case 'unreachable': {
         // noop
         break;
       }
-      case "unsupported": {
+      case 'unsupported': {
         CompilerError.invariant(false, {
-          reason: "Unexpected unsupported terminal",
+          reason: 'Unexpected unsupported terminal',
           description: null,
           loc: terminal.loc,
           suggestions: null,
         });
       }
       default: {
-        assertExhaustive(terminal, "Unexpected terminal");
+        assertExhaustive(terminal, 'Unexpected terminal');
       }
     }
   }
 
   visitValueBlock(
     id: BlockId,
-    loc: SourceLocation
-  ): { block: BlockId; value: ReactiveValue; place: Place; id: InstructionId } {
+    loc: SourceLocation,
+  ): {block: BlockId; value: ReactiveValue; place: Place; id: InstructionId} {
     const defaultBlock = this.cx.ir.blocks.get(id)!;
-    if (defaultBlock.terminal.kind === "branch") {
+    if (defaultBlock.terminal.kind === 'branch') {
       const instructions = defaultBlock.instructions;
       if (instructions.length === 0) {
         return {
           block: defaultBlock.id,
           place: defaultBlock.terminal.test,
           value: {
-            kind: "LoadLocal",
+            kind: 'LoadLocal',
             place: defaultBlock.terminal.test,
             loc: defaultBlock.terminal.test.loc,
           },
@@ -882,11 +872,11 @@ class Driver {
             defaultBlock.terminal.test.identifier.id,
           {
             reason:
-              "Expected branch block to end in an instruction that sets the test value",
+              'Expected branch block to end in an instruction that sets the test value',
             description: null,
             loc: instr.lvalue.loc,
             suggestions: null,
-          }
+          },
         );
         return {
           block: defaultBlock.id,
@@ -897,7 +887,7 @@ class Driver {
       } else {
         const instr = defaultBlock.instructions.at(-1)!;
         const sequence: ReactiveSequenceValue = {
-          kind: "SequenceExpression",
+          kind: 'SequenceExpression',
           instructions: defaultBlock.instructions.slice(0, -1),
           id: instr.id,
           value: instr.value,
@@ -910,11 +900,11 @@ class Driver {
           id: defaultBlock.terminal.id,
         };
       }
-    } else if (defaultBlock.terminal.kind === "goto") {
+    } else if (defaultBlock.terminal.kind === 'goto') {
       const instructions = defaultBlock.instructions;
       if (instructions.length === 0) {
         CompilerError.invariant(false, {
-          reason: "Expected goto value block to have at least one instruction",
+          reason: 'Expected goto value block to have at least one instruction',
           description: null,
           loc: null,
           suggestions: null,
@@ -933,12 +923,12 @@ class Driver {
            * StoreLocal for temporaries — any named/promoted values must be used
            * elsewhere and aren't safe to prune.
            */
-          value.kind === "StoreLocal" &&
+          value.kind === 'StoreLocal' &&
           value.lvalue.place.identifier.name === null
         ) {
           place = value.lvalue.place;
           value = {
-            kind: "LoadLocal",
+            kind: 'LoadLocal',
             place: value.value,
             loc: value.value.loc,
           };
@@ -963,18 +953,18 @@ class Driver {
            * StoreLocal for temporaries — any named/promoted values must be used
            * elsewhere and aren't safe to prune.
            */
-          value.kind === "StoreLocal" &&
+          value.kind === 'StoreLocal' &&
           value.lvalue.place.identifier.name === null
         ) {
           place = value.lvalue.place;
           value = {
-            kind: "LoadLocal",
+            kind: 'LoadLocal',
             place: value.value,
             loc: value.value.loc,
           };
         }
         const sequence: ReactiveSequenceValue = {
-          kind: "SequenceExpression",
+          kind: 'SequenceExpression',
           instructions: defaultBlock.instructions.slice(0, -1),
           id: instr.id,
           value,
@@ -997,7 +987,7 @@ class Driver {
       const final = this.visitValueBlock(init.fallthrough, loc);
       // Stitch the two together...
       const sequence: ReactiveSequenceValue = {
-        kind: "SequenceExpression",
+        kind: 'SequenceExpression',
         instructions: [
           ...defaultBlock.instructions,
           {
@@ -1027,7 +1017,7 @@ class Driver {
     id: InstructionId;
   } {
     switch (terminal.kind) {
-      case "sequence": {
+      case 'sequence': {
         const block = this.visitValueBlock(terminal.block, terminal.loc);
         return {
           value: block.value,
@@ -1036,10 +1026,10 @@ class Driver {
           id: terminal.id,
         };
       }
-      case "optional": {
+      case 'optional': {
         const test = this.visitValueBlock(terminal.test, terminal.loc);
         const testBlock = this.cx.ir.blocks.get(test.block)!;
-        if (testBlock.terminal.kind !== "branch") {
+        if (testBlock.terminal.kind !== 'branch') {
           CompilerError.throwTodo({
             reason: `Unexpected terminal kind \`${testBlock.terminal.kind}\` for optional test block`,
             description: null,
@@ -1049,10 +1039,10 @@ class Driver {
         }
         const consequent = this.visitValueBlock(
           testBlock.terminal.consequent,
-          terminal.loc
+          terminal.loc,
         );
         const call: ReactiveSequenceValue = {
-          kind: "SequenceExpression",
+          kind: 'SequenceExpression',
           instructions: [
             {
               id: test.id,
@@ -1066,9 +1056,9 @@ class Driver {
           loc: terminal.loc,
         };
         return {
-          place: { ...consequent.place },
+          place: {...consequent.place},
           value: {
-            kind: "OptionalExpression",
+            kind: 'OptionalExpression',
             optional: terminal.optional,
             value: call,
             id: terminal.id,
@@ -1078,10 +1068,10 @@ class Driver {
           id: terminal.id,
         };
       }
-      case "logical": {
+      case 'logical': {
         const test = this.visitValueBlock(terminal.test, terminal.loc);
         const testBlock = this.cx.ir.blocks.get(test.block)!;
-        if (testBlock.terminal.kind !== "branch") {
+        if (testBlock.terminal.kind !== 'branch') {
           CompilerError.throwTodo({
             reason: `Unexpected terminal kind \`${testBlock.terminal.kind}\` for logical test block`,
             description: null,
@@ -1092,10 +1082,10 @@ class Driver {
 
         const leftFinal = this.visitValueBlock(
           testBlock.terminal.consequent,
-          terminal.loc
+          terminal.loc,
         );
         const left: ReactiveSequenceValue = {
-          kind: "SequenceExpression",
+          kind: 'SequenceExpression',
           instructions: [
             {
               id: test.id,
@@ -1110,26 +1100,26 @@ class Driver {
         };
         const right = this.visitValueBlock(
           testBlock.terminal.alternate,
-          terminal.loc
+          terminal.loc,
         );
         const value: ReactiveLogicalValue = {
-          kind: "LogicalExpression",
+          kind: 'LogicalExpression',
           operator: terminal.operator,
           left: left,
           right: right.value,
           loc: terminal.loc,
         };
         return {
-          place: { ...leftFinal.place },
+          place: {...leftFinal.place},
           value,
           fallthrough: terminal.fallthrough,
           id: terminal.id,
         };
       }
-      case "ternary": {
+      case 'ternary': {
         const test = this.visitValueBlock(terminal.test, terminal.loc);
         const testBlock = this.cx.ir.blocks.get(test.block)!;
-        if (testBlock.terminal.kind !== "branch") {
+        if (testBlock.terminal.kind !== 'branch') {
           CompilerError.throwTodo({
             reason: `Unexpected terminal kind \`${testBlock.terminal.kind}\` for ternary test block`,
             description: null,
@@ -1139,14 +1129,14 @@ class Driver {
         }
         const consequent = this.visitValueBlock(
           testBlock.terminal.consequent,
-          terminal.loc
+          terminal.loc,
         );
         const alternate = this.visitValueBlock(
           testBlock.terminal.alternate,
-          terminal.loc
+          terminal.loc,
         );
         const value: ReactiveTernaryValue = {
-          kind: "ConditionalExpression",
+          kind: 'ConditionalExpression',
           test: test.value,
           consequent: consequent.value,
           alternate: alternate.value,
@@ -1154,13 +1144,13 @@ class Driver {
         };
 
         return {
-          place: { ...consequent.place },
+          place: {...consequent.place},
           value,
           fallthrough: terminal.fallthrough,
           id: terminal.id,
         };
       }
-      case "maybe-throw": {
+      case 'maybe-throw': {
         CompilerError.throwTodo({
           reason: `Support value blocks (conditional, logical, optional chaining, etc) within a try/catch statement`,
           description: null,
@@ -1168,7 +1158,7 @@ class Driver {
           suggestions: null,
         });
       }
-      case "label": {
+      case 'label': {
         CompilerError.throwTodo({
           reason: `Support labeled statements combined with value blocks (conditional, logical, optional chaining, etc)`,
           description: null,
@@ -1194,28 +1184,28 @@ class Driver {
   visitBreak(
     block: BlockId,
     id: InstructionId,
-    loc: SourceLocation
+    loc: SourceLocation,
   ): ReactiveTerminalStatement<ReactiveBreakTerminal> | null {
     const target = this.cx.getBreakTarget(block);
     if (target === null) {
       CompilerError.invariant(false, {
-        reason: "Expected a break target",
+        reason: 'Expected a break target',
         description: null,
         loc: null,
         suggestions: null,
       });
     }
     if (this.cx.scopeFallthroughs.has(target.block)) {
-      CompilerError.invariant(target.type === "implicit", {
-        reason: "Expected reactive scope to implicitly break to fallthrough",
+      CompilerError.invariant(target.type === 'implicit', {
+        reason: 'Expected reactive scope to implicitly break to fallthrough',
         loc,
       });
       return null;
     }
     return {
-      kind: "terminal",
+      kind: 'terminal',
       terminal: {
-        kind: "break",
+        kind: 'break',
         loc,
         target: target.block,
         id,
@@ -1228,7 +1218,7 @@ class Driver {
   visitContinue(
     block: BlockId,
     id: InstructionId,
-    loc: SourceLocation
+    loc: SourceLocation,
   ): ReactiveTerminalStatement<ReactiveContinueTerminal> {
     const target = this.cx.getContinueTarget(block);
     CompilerError.invariant(target !== null, {
@@ -1239,9 +1229,9 @@ class Driver {
     });
 
     return {
-      kind: "terminal",
+      kind: 'terminal',
       terminal: {
-        kind: "continue",
+        kind: 'continue',
         loc,
         target: target.block,
         id,
@@ -1297,14 +1287,14 @@ class Context {
 
   reachable(id: BlockId): boolean {
     const block = this.ir.blocks.get(id)!;
-    return block.terminal.kind !== "unreachable";
+    return block.terminal.kind !== 'unreachable';
   }
 
   /*
    * Record that the given block will be emitted (eg by the codegen of a parent node)
    * so that child nodes can avoid re-emitting it.
    */
-  schedule(block: BlockId, type: "if" | "switch" | "case"): number {
+  schedule(block: BlockId, type: 'if' | 'switch' | 'case'): number {
     const id = this.#nextScheduleId++;
     CompilerError.invariant(!this.#scheduled.has(block), {
       reason: `Break block is already scheduled: bb${block}`,
@@ -1313,14 +1303,14 @@ class Context {
       suggestions: null,
     });
     this.#scheduled.add(block);
-    this.#controlFlowStack.push({ block, id, type });
+    this.#controlFlowStack.push({block, id, type});
     return id;
   }
 
   scheduleLoop(
     fallthroughBlock: BlockId,
     continueBlock: BlockId,
-    loopBlock: BlockId | null
+    loopBlock: BlockId | null,
   ): number {
     const id = this.#nextScheduleId++;
     const ownsBlock = !this.#scheduled.has(fallthroughBlock);
@@ -1342,7 +1332,7 @@ class Context {
       block: fallthroughBlock,
       ownsBlock,
       id,
-      type: "loop",
+      type: 'loop',
       continueBlock,
       loopBlock,
       ownsLoop,
@@ -1354,15 +1344,15 @@ class Context {
   unschedule(scheduleId: number): void {
     const last = this.#controlFlowStack.pop();
     CompilerError.invariant(last !== undefined && last.id === scheduleId, {
-      reason: "Can only unschedule the last target",
+      reason: 'Can only unschedule the last target',
       description: null,
       loc: null,
       suggestions: null,
     });
-    if (last.type !== "loop" || last.ownsBlock !== null) {
+    if (last.type !== 'loop' || last.ownsBlock !== null) {
       this.#scheduled.delete(last.block);
     }
-    if (last.type === "loop") {
+    if (last.type === 'loop') {
       this.#scheduled.delete(last.continueBlock);
       if (last.ownsLoop && last.loopBlock !== null) {
         this.#scheduled.delete(last.loopBlock);
@@ -1404,32 +1394,32 @@ class Context {
       const target = this.#controlFlowStack[i]!;
       if (target.block === block) {
         let type: ReactiveTerminalTargetKind;
-        if (target.type === "loop") {
+        if (target.type === 'loop') {
           /*
            * breaking out of a loop requires an explicit break,
            * but only requires a label if breaking past the innermost loop.
            */
-          type = hasPrecedingLoop ? "labeled" : "unlabeled";
+          type = hasPrecedingLoop ? 'labeled' : 'unlabeled';
         } else if (i === this.#controlFlowStack.length - 1) {
           /*
            * breaking to the last break point, which is where control will transfer
            * implicitly
            */
-          type = "implicit";
+          type = 'implicit';
         } else {
           // breaking somewhere else requires an explicit break
-          type = "labeled";
+          type = 'labeled';
         }
         return {
           block: target.block,
           type,
         };
       }
-      hasPrecedingLoop ||= target.type === "loop";
+      hasPrecedingLoop ||= target.type === 'loop';
     }
 
     CompilerError.invariant(false, {
-      reason: "Expected a break target",
+      reason: 'Expected a break target',
       description: null,
       loc: null,
       suggestions: null,
@@ -1447,53 +1437,53 @@ class Context {
    * The returned 'block' value should be used as the label if necessary.
    */
   getContinueTarget(
-    block: BlockId
-  ): { block: BlockId; type: ReactiveTerminalTargetKind } | null {
+    block: BlockId,
+  ): {block: BlockId; type: ReactiveTerminalTargetKind} | null {
     let hasPrecedingLoop = false;
     for (let i = this.#controlFlowStack.length - 1; i >= 0; i--) {
       const target = this.#controlFlowStack[i]!;
-      if (target.type == "loop" && target.continueBlock === block) {
+      if (target.type == 'loop' && target.continueBlock === block) {
         let type: ReactiveTerminalTargetKind;
         if (hasPrecedingLoop) {
           /*
            * continuing to a loop that is not the innermost loop always requires
            * a label
            */
-          type = "labeled";
+          type = 'labeled';
         } else if (i === this.#controlFlowStack.length - 1) {
           /*
            * continuing to the last break point, which is where control will
            * transfer to naturally
            */
-          type = "implicit";
+          type = 'implicit';
         } else {
           /*
            * the continue is inside some conditional logic, requires an explicit
            * continue
            */
-          type = "unlabeled";
+          type = 'unlabeled';
         }
         return {
           block: target.block,
           type,
         };
       }
-      hasPrecedingLoop ||= target.type === "loop";
+      hasPrecedingLoop ||= target.type === 'loop';
     }
     return null;
   }
 
   debugBreakTargets(): Array<ControlFlowTarget> {
-    return this.#controlFlowStack.map((target) => ({ ...target }));
+    return this.#controlFlowStack.map(target => ({...target}));
   }
 }
 
 type ControlFlowTarget =
-  | { type: "if"; block: BlockId; id: number }
-  | { type: "switch"; block: BlockId; id: number }
-  | { type: "case"; block: BlockId; id: number }
+  | {type: 'if'; block: BlockId; id: number}
+  | {type: 'switch'; block: BlockId; id: number}
+  | {type: 'case'; block: BlockId; id: number}
   | {
-      type: "loop";
+      type: 'loop';
       block: BlockId;
       ownsBlock: boolean;
       continueBlock: BlockId;

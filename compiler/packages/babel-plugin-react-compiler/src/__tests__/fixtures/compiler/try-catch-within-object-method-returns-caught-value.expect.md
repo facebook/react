@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { throwInput } from "shared-runtime";
+import {throwInput} from 'shared-runtime';
 
 function Component(props) {
   const object = {
@@ -19,7 +19,7 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: 42 }],
+  params: [{value: 42}],
 };
 
 ```
@@ -33,7 +33,7 @@ import { throwInput } from "shared-runtime";
 function Component(props) {
   const $ = _c(2);
   let t0;
-  if ($[0] !== props.value) {
+  if ($[0] !== props) {
     const object = {
       foo() {
         try {
@@ -46,7 +46,7 @@ function Component(props) {
     };
 
     t0 = object.foo();
-    $[0] = props.value;
+    $[0] = props;
     $[1] = t0;
   } else {
     t0 = $[1];

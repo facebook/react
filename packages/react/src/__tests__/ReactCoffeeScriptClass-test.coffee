@@ -254,7 +254,12 @@ describe 'ReactCoffeeScriptClass', ->
         render: ->
           React.createElement Foo
 
-      test React.createElement(Outer), 'SPAN', 'foo'
+      expect(->
+        test React.createElement(Outer), 'SPAN', 'foo'
+      ).toErrorDev([
+        'Outer uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+        'Foo uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+      ])
 
   it 'renders only once when setting state in componentWillMount', ->
     renderCount = 0
@@ -411,7 +416,6 @@ describe 'ReactCoffeeScriptClass', ->
         constructor: ->
           @contextTypes = {}
           @contextType = {}
-          @propTypes = {}
 
         getInitialState: ->
           getInitialStateWasCalled = true
@@ -431,7 +435,6 @@ describe 'ReactCoffeeScriptClass', ->
       ).toErrorDev([
         'getInitialState was defined on Foo, a plain JavaScript class.',
         'getDefaultProps was defined on Foo, a plain JavaScript class.',
-        'propTypes was defined as an instance property on Foo.',
         'contextTypes was defined as an instance property on Foo.',
         'contextType was defined as an instance property on Foo.',
       ])
@@ -539,27 +542,13 @@ describe 'ReactCoffeeScriptClass', ->
         render: ->
           React.createElement Bar
 
-      test React.createElement(Foo), 'DIV', 'bar-through-context'
-
-  if !featureFlags.disableStringRefs
-    it 'supports string refs', ->
-      class Foo extends React.Component
-        render: ->
-          React.createElement(InnerComponent,
-            name: 'foo'
-            ref: 'inner'
-          )
-
-      ref = React.createRef()
       expect(->
-        test(React.createElement(Foo, ref: ref), 'DIV', 'foo')
-      ).toErrorDev([
-        'Component "Foo" contains the string ref "inner". ' +
-          'Support for string refs will be removed in a future major release. ' +
-          'We recommend using useRef() or createRef() instead. ' +
-          'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
-          '    in _Class (at **)'
-      ]);
-      expect(ref.current.refs.inner.getName()).toBe 'foo'
+        test React.createElement(Foo), 'DIV', 'bar-through-context'
+      ).toErrorDev(
+        [
+          'Foo uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+          'Bar uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+        ],
+      )
 
   undefined

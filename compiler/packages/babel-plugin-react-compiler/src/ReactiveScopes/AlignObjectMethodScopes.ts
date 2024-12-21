@@ -5,16 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "..";
+import {CompilerError} from '..';
 import {
   GeneratedSource,
   HIRFunction,
   Identifier,
   ReactiveScope,
   makeInstructionId,
-} from "../HIR";
-import { eachInstructionValueOperand } from "../HIR/visitors";
-import DisjointSet from "../Utils/DisjointSet";
+} from '../HIR';
+import {eachInstructionValueOperand} from '../HIR/visitors';
+import DisjointSet from '../Utils/DisjointSet';
 
 /**
  * Align scopes of object method values to that of their enclosing object expressions.
@@ -27,10 +27,10 @@ function findScopesToMerge(fn: HIRFunction): DisjointSet<ReactiveScope> {
   const mergeScopesBuilder = new DisjointSet<ReactiveScope>();
 
   for (const [_, block] of fn.body.blocks) {
-    for (const { lvalue, value } of block.instructions) {
-      if (value.kind === "ObjectMethod") {
+    for (const {lvalue, value} of block.instructions) {
+      if (value.kind === 'ObjectMethod') {
         objectMethodDecls.add(lvalue.identifier);
-      } else if (value.kind === "ObjectExpression") {
+      } else if (value.kind === 'ObjectExpression') {
         for (const operand of eachInstructionValueOperand(value)) {
           if (objectMethodDecls.has(operand.identifier)) {
             const operandScope = operand.identifier.scope;
@@ -40,10 +40,10 @@ function findScopesToMerge(fn: HIRFunction): DisjointSet<ReactiveScope> {
               operandScope != null && lvalueScope != null,
               {
                 reason:
-                  "Internal error: Expected all ObjectExpressions and ObjectMethods to have non-null scope.",
+                  'Internal error: Expected all ObjectExpressions and ObjectMethods to have non-null scope.',
                 suggestions: null,
                 loc: GeneratedSource,
-              }
+              },
             );
             mergeScopesBuilder.union([operandScope, lvalueScope]);
           }
@@ -57,10 +57,10 @@ function findScopesToMerge(fn: HIRFunction): DisjointSet<ReactiveScope> {
 export function alignObjectMethodScopes(fn: HIRFunction): void {
   // Handle inner functions: we assume that Scopes are disjoint across functions
   for (const [_, block] of fn.body.blocks) {
-    for (const { value } of block.instructions) {
+    for (const {value} of block.instructions) {
       if (
-        value.kind === "ObjectMethod" ||
-        value.kind === "FunctionExpression"
+        value.kind === 'ObjectMethod' ||
+        value.kind === 'FunctionExpression'
       ) {
         alignObjectMethodScopes(value.loweredFunc.func);
       }
@@ -74,10 +74,10 @@ export function alignObjectMethodScopes(fn: HIRFunction): void {
   for (const [scope, root] of scopeGroupsMap) {
     if (scope !== root) {
       root.range.start = makeInstructionId(
-        Math.min(scope.range.start, root.range.start)
+        Math.min(scope.range.start, root.range.start),
       );
       root.range.end = makeInstructionId(
-        Math.max(scope.range.end, root.range.end)
+        Math.max(scope.range.end, root.range.end),
       );
     }
   }
@@ -87,7 +87,7 @@ export function alignObjectMethodScopes(fn: HIRFunction): void {
    */
   for (const [_, block] of fn.body.blocks) {
     for (const {
-      lvalue: { identifier },
+      lvalue: {identifier},
     } of block.instructions) {
       if (identifier.scope != null) {
         const root = scopeGroupsMap.get(identifier.scope);

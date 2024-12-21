@@ -1,8 +1,8 @@
-function Component(foo, ...{ bar }) {
+function Component(foo, ...{bar}) {
   return [foo, bar];
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: ["foo", { bar: "bar" }],
+  params: ['foo', {bar: 'bar'}],
 };

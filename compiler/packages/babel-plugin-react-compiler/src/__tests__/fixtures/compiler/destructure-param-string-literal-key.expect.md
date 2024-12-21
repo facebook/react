@@ -2,13 +2,13 @@
 ## Input
 
 ```javascript
-function foo({ data: dataTestID }) {
+function foo({data: dataTestID}) {
   return dataTestID;
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: foo,
-  params: [{ data: {} }],
+  params: [{data: {}}],
   isComponent: false,
 };
 

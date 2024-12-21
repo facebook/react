@@ -2,16 +2,16 @@
 ## Input
 
 ```javascript
-import { useMemo } from "react";
-import { Stringify } from "shared-runtime";
+import {useMemo} from 'react';
+import {Stringify} from 'shared-runtime';
 
-function Foo({ arr1, arr2, foo }) {
+function Foo({arr1, arr2, foo}) {
   const x = [arr1];
 
   let y = [];
 
   const val1 = useMemo(() => {
-    return { x: 2 };
+    return {x: 2};
   }, []);
 
   const val2 = useMemo(() => {
@@ -23,10 +23,10 @@ function Foo({ arr1, arr2, foo }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Foo,
-  params: [{ arr1: [1, 2], arr2: [3, 4], foo: true }],
+  params: [{arr1: [1, 2], arr2: [3, 4], foo: true}],
   sequentialRenders: [
-    { arr1: [1, 2], arr2: [3, 4], foo: true },
-    { arr1: [1, 2], arr2: [3, 4], foo: false },
+    {arr1: [1, 2], arr2: [3, 4], foo: true},
+    {arr1: [1, 2], arr2: [3, 4], foo: false},
   ],
 };
 
@@ -44,7 +44,7 @@ function Foo(t0) {
   const { arr1, arr2, foo } = t0;
   let t1;
   let val1;
-  if ($[0] !== arr1 || $[1] !== foo || $[2] !== arr2) {
+  if ($[0] !== arr1 || $[1] !== arr2 || $[2] !== foo) {
     const x = [arr1];
 
     let y;
@@ -63,8 +63,8 @@ function Foo(t0) {
     foo ? (y = x.concat(arr2)) : y;
     t1 = (() => [y])();
     $[0] = arr1;
-    $[1] = foo;
-    $[2] = arr2;
+    $[1] = arr2;
+    $[2] = foo;
     $[3] = t1;
     $[4] = val1;
   } else {

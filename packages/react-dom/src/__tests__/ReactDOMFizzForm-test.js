@@ -40,12 +40,12 @@ describe('ReactDOMFizzForm', () => {
     act = require('internal-test-utils').act;
     container = document.createElement('div');
     document.body.appendChild(container);
-    if (__VARIANT__) {
-      // Remove after API is deleted.
-      useActionState = require('react-dom').useFormState;
-    } else {
-      useActionState = require('react').useActionState;
-    }
+    // TODO: Test the old api but it warns so needs warnings to be asserted.
+    // if (__VARIANT__) {
+    // Remove after API is deleted.
+    // useActionState = require('react-dom').useFormState;
+    // }
+    useActionState = require('react').useActionState;
   });
 
   afterEach(() => {
@@ -398,7 +398,6 @@ describe('ReactDOMFizzForm', () => {
     expect(buttonRef.current.hasAttribute('formTarget')).toBe(false);
   });
 
-  // @gate enableAsyncActions
   it('useFormStatus is not pending during server render', async () => {
     function App() {
       const {pending} = useFormStatus();
@@ -488,7 +487,6 @@ describe('ReactDOMFizzForm', () => {
     expect(rootActionCalled).toBe(false);
   });
 
-  // @gate enableAsyncActions
   it('useOptimistic returns passthrough value', async () => {
     function App() {
       const [optimisticState] = useOptimistic('hi');
@@ -507,7 +505,6 @@ describe('ReactDOMFizzForm', () => {
     expect(container.textContent).toBe('hi');
   });
 
-  // @gate enableAsyncActions
   it('useActionState returns initial state', async () => {
     async function action(state) {
       return state;

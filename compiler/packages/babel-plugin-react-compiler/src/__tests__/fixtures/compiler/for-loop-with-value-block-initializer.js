@@ -14,8 +14,8 @@ export const FIXTURE_ENTRYPOINT = {
     {
       start: null,
       items: [
-        { id: 0, value: "zero" },
-        { id: 1, value: "one" },
+        {id: 0, value: 'zero'},
+        {id: 1, value: 'one'},
       ],
     },
   ],
@@ -23,31 +23,31 @@ export const FIXTURE_ENTRYPOINT = {
     {
       start: 1,
       items: [
-        { id: 0, value: "zero" },
-        { id: 1, value: "one" },
+        {id: 0, value: 'zero'},
+        {id: 1, value: 'one'},
       ],
     },
     {
       start: 2,
       items: [
-        { id: 0, value: "zero" },
-        { id: 1, value: "one" },
+        {id: 0, value: 'zero'},
+        {id: 1, value: 'one'},
       ],
     },
     {
       start: 0,
       items: [
-        { id: 0, value: "zero" },
-        { id: 1, value: "one" },
-        { id: 2, value: "two" },
+        {id: 0, value: 'zero'},
+        {id: 1, value: 'one'},
+        {id: 2, value: 'two'},
       ],
     },
     {
       start: 1,
       items: [
-        { id: 0, value: "zero" },
-        { id: 1, value: "one" },
-        { id: 2, value: "two" },
+        {id: 0, value: 'zero'},
+        {id: 1, value: 'one'},
+        {id: 2, value: 'two'},
       ],
     },
   ],

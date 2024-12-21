@@ -3,9 +3,9 @@
 
 ```javascript
 // @validatePreserveExistingMemoizationGuarantees
-import { useMemo } from "react";
+import {useMemo} from 'react';
 
-function Component({ propA }) {
+function Component({propA}) {
   return useMemo(() => {
     return propA.x();
   }, [propA.x]);
@@ -18,7 +18,7 @@ function Component({ propA }) {
 
 ```
   3 |
-  4 | function Component({ propA }) {
+  4 | function Component({propA}) {
 > 5 |   return useMemo(() => {
     |                  ^^^^^^^
 > 6 |     return propA.x();

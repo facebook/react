@@ -3,11 +3,11 @@
 
 ```javascript
 function Component() {
-  "use strict";
+  'use strict';
   let [count, setCount] = React.useState(0);
   const update = () => {
-    "worklet";
-    setCount((count) => count + 1);
+    'worklet';
+    setCount(count => count + 1);
   };
   return <button onClick={update}>{count}</button>;
 }
@@ -28,7 +28,7 @@ function Component() {
     t0 = () => {
       "worklet";
 
-      setCount((count_0) => count_0 + 1);
+      setCount(_temp);
     };
     $[0] = t0;
   } else {
@@ -44,6 +44,9 @@ function Component() {
     t1 = $[2];
   }
   return t1;
+}
+function _temp(count_0) {
+  return count_0 + 1;
 }
 
 ```

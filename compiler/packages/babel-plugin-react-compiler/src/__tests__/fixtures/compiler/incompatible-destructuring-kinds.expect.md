@@ -2,12 +2,12 @@
 ## Input
 
 ```javascript
-import { useMemo } from "react";
-import { Stringify } from "shared-runtime";
+import {useMemo} from 'react';
+import {Stringify} from 'shared-runtime';
 
 function Component({}) {
-  let a = "a";
-  let b = "";
+  let a = 'a';
+  let b = '';
   [a, b] = [null, null];
   // NOTE: reference `a` in a callback to force a context variable
   return <Stringify a={a} b={b} onClick={() => a} />;
@@ -29,22 +29,22 @@ import { Stringify } from "shared-runtime";
 
 function Component(t0) {
   const $ = _c(4);
-  let t1;
   let a;
   let b;
+  let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     a = "a";
 
     const [t2, t3] = [null, null];
     t1 = t3;
     a = t2;
-    $[0] = t1;
-    $[1] = a;
-    $[2] = b;
+    $[0] = a;
+    $[1] = b;
+    $[2] = t1;
   } else {
-    t1 = $[0];
-    a = $[1];
-    b = $[2];
+    a = $[0];
+    b = $[1];
+    t1 = $[2];
   }
   b = t1;
   let t2;

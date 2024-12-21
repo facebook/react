@@ -3,13 +3,8 @@
 
 ```javascript
 // @enablePreserveExistingMemoizationGuarantees
-import { useMemo } from "react";
-import {
-  identity,
-  makeObject_Primitives,
-  mutate,
-  useHook,
-} from "shared-runtime";
+import {useMemo} from 'react';
+import {identity, makeObject_Primitives, mutate, useHook} from 'shared-runtime';
 
 function Component(props) {
   // With the feature enabled these variables are inferred as frozen as of
@@ -38,7 +33,7 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: 42 }],
+  params: [{value: 42}],
 };
 
 ```

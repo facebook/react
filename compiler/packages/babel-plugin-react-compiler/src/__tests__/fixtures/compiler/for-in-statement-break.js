@@ -1,8 +1,8 @@
 function Component(props) {
   let x;
-  const object = { ...props.value };
+  const object = {...props.value};
   for (const y in object) {
-    if (y === "break") {
+    if (y === 'break') {
       break;
     }
     x = object[y];
@@ -13,5 +13,5 @@ function Component(props) {
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   // should return 'a'
-  params: [{ a: "a", break: null, c: "C!" }],
+  params: [{a: 'a', break: null, c: 'C!'}],
 };

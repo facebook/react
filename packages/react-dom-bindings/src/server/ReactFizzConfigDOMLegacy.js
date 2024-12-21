@@ -142,8 +142,6 @@ export {
   makeId,
   pushStartInstance,
   pushEndInstance,
-  pushStartCompletedSuspenseBoundary,
-  pushEndCompletedSuspenseBoundary,
   pushFormStateMarkerIsMatching,
   pushFormStateMarkerIsNotMatching,
   writeStartSegment,
@@ -166,6 +164,7 @@ export {
   resetResumableState,
   completeResumableState,
   emitEarlyPreloads,
+  supportsClientAPIs,
 } from './ReactFizzConfigDOM';
 
 import escapeTextForBrowser from './escapeTextForBrowser';

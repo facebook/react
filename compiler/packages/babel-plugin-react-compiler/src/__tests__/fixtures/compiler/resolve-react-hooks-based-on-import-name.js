@@ -1,10 +1,10 @@
-import { useState as useReactState } from "react";
+import {useState as useReactState} from 'react';
 
 function Component() {
   const [state, setState] = useReactState(0);
 
   const onClick = () => {
-    setState((s) => s + 1);
+    setState(s => s + 1);
   };
 
   return (

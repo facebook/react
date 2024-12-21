@@ -80,9 +80,7 @@ export function InspectedElementHooksTree({
     return null;
   } else {
     return (
-      <div
-        className={styles.HooksTreeView}
-        data-testname="InspectedElementHooksTree">
+      <div data-testname="InspectedElementHooksTree">
         <div className={styles.HeaderRow}>
           <div className={styles.Header}>hooks</div>
           {typeof hookNamesModuleLoader === 'function' &&

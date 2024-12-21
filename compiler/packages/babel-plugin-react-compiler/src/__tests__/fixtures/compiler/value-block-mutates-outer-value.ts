@@ -1,4 +1,4 @@
-import { makeArray, useHook } from "shared-runtime";
+import {makeArray, useHook} from 'shared-runtime';
 
 /**
  * Here, the cond ? [...] : defaultList value block produces two
@@ -8,13 +8,13 @@ import { makeArray, useHook } from "shared-runtime";
  * The same value block also mutates customList, so it must be
  * merged with the scope producing customList
  */
-function Foo({ defaultList, cond }) {
+function Foo({defaultList, cond}) {
   const comparator = (a, b) => a - b;
   useHook();
   const customList = makeArray(1, 5, 2);
   useHook();
   const result = cond
-    ? [...customList.sort(comparator), { text: ["text"] }]
+    ? [...customList.sort(comparator), {text: ['text']}]
     : defaultList;
 
   return result;
@@ -22,5 +22,5 @@ function Foo({ defaultList, cond }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Foo,
-  params: [{ defaultList: [2, 4], cond: true }],
+  params: [{defaultList: [2, 4], cond: true}],
 };

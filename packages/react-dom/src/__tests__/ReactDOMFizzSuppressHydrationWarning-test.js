@@ -135,8 +135,8 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     return children.length === 0
       ? undefined
       : children.length === 1
-      ? children[0]
-      : children;
+        ? children[0]
+        : children;
   }
 
   it('suppresses but does not fix text mismatches with suppressHydrationWarning', async () => {

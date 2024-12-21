@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { visitReactiveFunction } from ".";
-import { Effect } from "..";
+import {visitReactiveFunction} from '.';
+import {Effect} from '..';
 import {
   Environment,
   GeneratedSource,
@@ -18,14 +18,12 @@ import {
   ReactiveTerminalStatement,
   makeInstructionId,
   promoteTemporary,
-} from "../HIR";
-import { createTemporaryPlace } from "../HIR/HIRBuilder";
-import { EARLY_RETURN_SENTINEL } from "./CodegenReactiveFunction";
-import { ReactiveFunctionTransform, Transformed } from "./visitors";
+} from '../HIR';
+import {createTemporaryPlace} from '../HIR/HIRBuilder';
+import {EARLY_RETURN_SENTINEL} from './CodegenReactiveFunction';
+import {ReactiveFunctionTransform, Transformed} from './visitors';
 
 /**
- * TODO: Actualy propagate early return information, for now we throw a Todo bailout.
- *
  * This pass ensures that reactive blocks honor the control flow behavior of the
  * original code including early return semantics. Specifically, if a reactive
  * scope early returned during the previous execution and the inputs to that block
@@ -121,7 +119,7 @@ type State = {
    * Store early return information to bubble it back up to the outermost
    * reactive scope
    */
-  earlyReturnValue: ReactiveScope["earlyReturnValue"];
+  earlyReturnValue: ReactiveScope['earlyReturnValue'];
 };
 
 class Transform extends ReactiveFunctionTransform<State> {
@@ -133,8 +131,16 @@ class Transform extends ReactiveFunctionTransform<State> {
 
   override visitScope(
     scopeBlock: ReactiveScopeBlock,
-    parentState: State
+    parentState: State,
   ): void {
+    /**
+     * Exit early if an earlier pass has already created an early return,
+     * which may happen in alternate compiler configurations.
+     */
+    if (scopeBlock.scope.earlyReturnValue !== null) {
+      return;
+    }
+
     const innerState: State = {
       withinReactiveScope: true,
       earlyReturnValue: parentState.earlyReturnValue,
@@ -159,56 +165,56 @@ class Transform extends ReactiveFunctionTransform<State> {
         const argTemp = createTemporaryPlace(this.env, loc);
         scopeBlock.instructions = [
           {
-            kind: "instruction",
+            kind: 'instruction',
             instruction: {
               id: makeInstructionId(0),
               loc,
-              lvalue: { ...symbolTemp },
+              lvalue: {...symbolTemp},
               value: {
-                kind: "LoadGlobal",
+                kind: 'LoadGlobal',
                 binding: {
-                  kind: "Global",
-                  name: "Symbol",
+                  kind: 'Global',
+                  name: 'Symbol',
                 },
                 loc,
               },
             },
           },
           {
-            kind: "instruction",
+            kind: 'instruction',
             instruction: {
               id: makeInstructionId(0),
               loc,
-              lvalue: { ...forTemp },
+              lvalue: {...forTemp},
               value: {
-                kind: "PropertyLoad",
-                object: { ...symbolTemp },
-                property: "for",
+                kind: 'PropertyLoad',
+                object: {...symbolTemp},
+                property: 'for',
                 loc,
               },
             },
           },
           {
-            kind: "instruction",
+            kind: 'instruction',
             instruction: {
               id: makeInstructionId(0),
               loc,
-              lvalue: { ...argTemp },
+              lvalue: {...argTemp},
               value: {
-                kind: "Primitive",
+                kind: 'Primitive',
                 value: EARLY_RETURN_SENTINEL,
                 loc,
               },
             },
           },
           {
-            kind: "instruction",
+            kind: 'instruction',
             instruction: {
               id: makeInstructionId(0),
               loc,
-              lvalue: { ...sentinelTemp },
+              lvalue: {...sentinelTemp},
               value: {
-                kind: "MethodCall",
+                kind: 'MethodCall',
                 receiver: symbolTemp,
                 property: forTemp,
                 args: [argTemp],
@@ -217,37 +223,37 @@ class Transform extends ReactiveFunctionTransform<State> {
             },
           },
           {
-            kind: "instruction",
+            kind: 'instruction',
             instruction: {
               id: makeInstructionId(0),
               loc,
               lvalue: null,
               value: {
-                kind: "StoreLocal",
+                kind: 'StoreLocal',
                 loc,
                 type: null,
                 lvalue: {
                   kind: InstructionKind.Let,
                   place: {
-                    kind: "Identifier",
+                    kind: 'Identifier',
                     effect: Effect.ConditionallyMutate,
                     loc,
                     reactive: true,
                     identifier: earlyReturnValue.value,
                   },
                 },
-                value: { ...sentinelTemp },
+                value: {...sentinelTemp},
               },
             },
           },
           {
-            kind: "terminal",
+            kind: 'terminal',
             label: {
               id: earlyReturnValue.label,
               implicit: false,
             },
             terminal: {
-              kind: "label",
+              kind: 'label',
               id: makeInstructionId(0),
               loc: GeneratedSource,
               block: instructions,
@@ -266,11 +272,11 @@ class Transform extends ReactiveFunctionTransform<State> {
 
   override transformTerminal(
     stmt: ReactiveTerminalStatement,
-    state: State
+    state: State,
   ): Transformed<ReactiveStatement> {
-    if (state.withinReactiveScope && stmt.terminal.kind === "return") {
+    if (state.withinReactiveScope && stmt.terminal.kind === 'return') {
       const loc = stmt.terminal.value.loc;
-      let earlyReturnValue: ReactiveScope["earlyReturnValue"];
+      let earlyReturnValue: ReactiveScope['earlyReturnValue'];
       if (state.earlyReturnValue !== null) {
         earlyReturnValue = state.earlyReturnValue;
       } else {
@@ -284,22 +290,22 @@ class Transform extends ReactiveFunctionTransform<State> {
       }
       state.earlyReturnValue = earlyReturnValue;
       return {
-        kind: "replace-many",
+        kind: 'replace-many',
         value: [
           {
-            kind: "instruction",
+            kind: 'instruction',
             instruction: {
               id: makeInstructionId(0),
               loc,
               lvalue: null,
               value: {
-                kind: "StoreLocal",
+                kind: 'StoreLocal',
                 loc,
                 type: null,
                 lvalue: {
                   kind: InstructionKind.Reassign,
                   place: {
-                    kind: "Identifier",
+                    kind: 'Identifier',
                     identifier: earlyReturnValue.value,
                     effect: Effect.Capture,
                     loc,
@@ -311,13 +317,13 @@ class Transform extends ReactiveFunctionTransform<State> {
             },
           },
           {
-            kind: "terminal",
+            kind: 'terminal',
             label: null,
             terminal: {
-              kind: "break",
+              kind: 'break',
               id: makeInstructionId(0),
               loc,
-              targetKind: "labeled",
+              targetKind: 'labeled',
               target: earlyReturnValue.label,
             },
           },
@@ -325,6 +331,6 @@ class Transform extends ReactiveFunctionTransform<State> {
       };
     }
     this.traverseTerminal(stmt, state);
-    return { kind: "keep" };
+    return {kind: 'keep'};
   }
 }

@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-function Component({ a: a, b: [b], c: { c } }) {
+function Component({a: a, b: [b], c: {c}}) {
   let d = a++;
   let e = ++a;
   let f = b--;
@@ -14,7 +14,7 @@ function Component({ a: a, b: [b], c: { c } }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ a: 2, b: [3], c: { c: 4 } }],
+  params: [{a: 2, b: [3], c: {c: 4}}],
   isComponent: false,
 };
 

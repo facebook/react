@@ -2,12 +2,12 @@
 ## Input
 
 ```javascript
-import { identity } from "shared-runtime";
+import {identity} from 'shared-runtime';
 
 const SCALE = 2;
 
 function Component(props) {
-  const { key } = props;
+  const {key} = props;
   const context = {
     [key]: identity([props.value, SCALE]),
   };
@@ -16,7 +16,7 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ key: "Sathya", value: "Compiler" }],
+  params: [{key: 'Sathya', value: 'Compiler'}],
 };
 
 ```

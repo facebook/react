@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { invoke } from "shared-runtime";
+import {invoke} from 'shared-runtime';
 
 function useFoo() {
   const x = {};

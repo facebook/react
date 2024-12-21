@@ -2,11 +2,11 @@
 ## Input
 
 ```javascript
-import { useMemo } from "react";
+import {useMemo} from 'react';
 
-const someGlobal = { value: 0 };
+const someGlobal = {value: 0};
 
-function Component({ value }) {
+function Component({value}) {
   const onClick = () => {
     someGlobal.value = value;
   };
@@ -17,13 +17,13 @@ function Component({ value }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: 0 }],
+  params: [{value: 0}],
   sequentialRenders: [
-    { value: 1 },
-    { value: 1 },
-    { value: 42 },
-    { value: 42 },
-    { value: 0 },
+    {value: 1},
+    {value: 1},
+    {value: 42},
+    {value: 42},
+    {value: 0},
   ],
 };
 

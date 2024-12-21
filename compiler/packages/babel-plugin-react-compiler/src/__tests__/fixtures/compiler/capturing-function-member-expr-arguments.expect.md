@@ -4,7 +4,7 @@
 ```javascript
 function Foo(props) {
   const onFoo = useCallback(
-    (reason) => {
+    reason => {
       log(props.router.location);
     },
     [props.router.location]

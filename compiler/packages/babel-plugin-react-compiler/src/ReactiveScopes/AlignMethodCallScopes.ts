@@ -10,8 +10,8 @@ import {
   IdentifierId,
   ReactiveScope,
   makeInstructionId,
-} from "../HIR";
-import DisjointSet from "../Utils/DisjointSet";
+} from '../HIR';
+import DisjointSet from '../Utils/DisjointSet';
 
 /**
  * Ensures that method call instructions have scopes such that either:
@@ -24,8 +24,8 @@ export function alignMethodCallScopes(fn: HIRFunction): void {
 
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
-      const { lvalue, value } = instr;
-      if (value.kind === "MethodCall") {
+      const {lvalue, value} = instr;
+      if (value.kind === 'MethodCall') {
         const lvalueScope = lvalue.identifier.scope;
         const propertyScope = value.property.identifier.scope;
         if (lvalueScope !== null) {
@@ -44,8 +44,8 @@ export function alignMethodCallScopes(fn: HIRFunction): void {
           scopeMapping.set(value.property.identifier.id, null);
         }
       } else if (
-        value.kind === "FunctionExpression" ||
-        value.kind === "ObjectMethod"
+        value.kind === 'FunctionExpression' ||
+        value.kind === 'ObjectMethod'
       ) {
         alignMethodCallScopes(value.loweredFunc.func);
       }
@@ -57,10 +57,10 @@ export function alignMethodCallScopes(fn: HIRFunction): void {
       return;
     }
     root.range.start = makeInstructionId(
-      Math.min(scope.range.start, root.range.start)
+      Math.min(scope.range.start, root.range.start),
     );
     root.range.end = makeInstructionId(
-      Math.max(scope.range.end, root.range.end)
+      Math.max(scope.range.end, root.range.end),
     );
   });
 

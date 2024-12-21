@@ -30,10 +30,6 @@ import {
   createTemporaryReference,
   registerTemporaryReference,
 } from './ReactFlightServerTemporaryReferences';
-import {
-  enableBinaryFlight,
-  enableFlightReadableStream,
-} from 'shared/ReactFeatureFlags';
 import {ASYNC_ITERATOR} from 'shared/ReactSymbols';
 
 import hasOwnProperty from 'shared/hasOwnProperty';
@@ -173,6 +169,8 @@ export type Response = {
   _prefix: string,
   _formData: FormData,
   _chunks: Map<number, SomeChunk<any>>,
+  _closed: boolean,
+  _closedReason: mixed,
   _temporaryReferences: void | TemporaryReferenceSet,
 };
 
@@ -233,14 +231,12 @@ function wakeChunkIfInitialized<T>(
 
 function triggerErrorOnChunk<T>(chunk: SomeChunk<T>, error: mixed): void {
   if (chunk.status !== PENDING && chunk.status !== BLOCKED) {
-    if (enableFlightReadableStream) {
-      // If we get more data to an already resolved ID, we assume that it's
-      // a stream chunk since any other row shouldn't have more than one entry.
-      const streamChunk: InitializedStreamChunk<any> = (chunk: any);
-      const controller = streamChunk.reason;
-      // $FlowFixMe[incompatible-call]: The error method should accept mixed.
-      controller.error(error);
-    }
+    // If we get more data to an already resolved ID, we assume that it's
+    // a stream chunk since any other row shouldn't have more than one entry.
+    const streamChunk: InitializedStreamChunk<any> = (chunk: any);
+    const controller = streamChunk.reason;
+    // $FlowFixMe[incompatible-call]: The error method should accept mixed.
+    controller.error(error);
     return;
   }
   const listeners = chunk.reason;
@@ -261,22 +257,28 @@ function createResolvedModelChunk<T>(
   return new Chunk(RESOLVED_MODEL, value, id, response);
 }
 
+function createErroredChunk<T>(
+  response: Response,
+  reason: mixed,
+): ErroredChunk<T> {
+  // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
+  return new Chunk(ERRORED, null, reason, response);
+}
+
 function resolveModelChunk<T>(
   chunk: SomeChunk<T>,
   value: string,
   id: number,
 ): void {
   if (chunk.status !== PENDING) {
-    if (enableFlightReadableStream) {
-      // If we get more data to an already resolved ID, we assume that it's
-      // a stream chunk since any other row shouldn't have more than one entry.
-      const streamChunk: InitializedStreamChunk<any> = (chunk: any);
-      const controller = streamChunk.reason;
-      if (value[0] === 'C') {
-        controller.close(value === 'C' ? '"$undefined"' : value.slice(1));
-      } else {
-        controller.enqueueModel(value);
-      }
+    // If we get more data to an already resolved ID, we assume that it's
+    // a stream chunk since any other row shouldn't have more than one entry.
+    const streamChunk: InitializedStreamChunk<any> = (chunk: any);
+    const controller = streamChunk.reason;
+    if (value[0] === 'C') {
+      controller.close(value === 'C' ? '"$undefined"' : value.slice(1));
+    } else {
+      controller.enqueueModel(value);
     }
     return;
   }
@@ -501,6 +503,8 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
 // Report that any missing chunks in the model is now going to throw this
 // error upon read. Also notify any pending promises.
 export function reportGlobalError(response: Response, error: Error): void {
+  response._closed = true;
+  response._closedReason = error;
   response._chunks.forEach(chunk => {
     // If this chunk was already resolved or errored, it won't
     // trigger an error but if it wasn't then we need to
@@ -522,6 +526,10 @@ function getChunk(response: Response, id: number): SomeChunk<any> {
     if (backingEntry != null) {
       // We assume that this is a string entry for now.
       chunk = createResolvedModelChunk(response, (backingEntry: any), id);
+    } else if (response._closed) {
+      // We have already errored the response and we're not going to get
+      // anything more streaming in so this will immediately error.
+      chunk = createErroredChunk(response, response._closedReason);
     } else {
       // We're still waiting on this entry to stream in.
       chunk = createPendingChunk(response);
@@ -978,6 +986,7 @@ function parseModelString(
         // $FlowFixMe[prop-missing] FormData has forEach on it.
         backingFormData.forEach((entry: File | string, entryKey: string) => {
           if (entryKey.startsWith(formPrefix)) {
+            // $FlowFixMe[incompatible-call]
             data.append(entryKey.slice(formPrefix.length), entry);
           }
         });
@@ -1018,70 +1027,58 @@ function parseModelString(
         return BigInt(value.slice(2));
       }
     }
-    if (enableBinaryFlight) {
-      switch (value[1]) {
-        case 'A':
-          return parseTypedArray(response, value, ArrayBuffer, 1, obj, key);
-        case 'O':
-          return parseTypedArray(response, value, Int8Array, 1, obj, key);
-        case 'o':
-          return parseTypedArray(response, value, Uint8Array, 1, obj, key);
-        case 'U':
-          return parseTypedArray(
-            response,
-            value,
-            Uint8ClampedArray,
-            1,
-            obj,
-            key,
-          );
-        case 'S':
-          return parseTypedArray(response, value, Int16Array, 2, obj, key);
-        case 's':
-          return parseTypedArray(response, value, Uint16Array, 2, obj, key);
-        case 'L':
-          return parseTypedArray(response, value, Int32Array, 4, obj, key);
-        case 'l':
-          return parseTypedArray(response, value, Uint32Array, 4, obj, key);
-        case 'G':
-          return parseTypedArray(response, value, Float32Array, 4, obj, key);
-        case 'g':
-          return parseTypedArray(response, value, Float64Array, 8, obj, key);
-        case 'M':
-          return parseTypedArray(response, value, BigInt64Array, 8, obj, key);
-        case 'm':
-          return parseTypedArray(response, value, BigUint64Array, 8, obj, key);
-        case 'V':
-          return parseTypedArray(response, value, DataView, 1, obj, key);
-        case 'B': {
-          // Blob
-          const id = parseInt(value.slice(2), 16);
-          const prefix = response._prefix;
-          const blobKey = prefix + id;
-          // We should have this backingEntry in the store already because we emitted
-          // it before referencing it. It should be a Blob.
-          const backingEntry: Blob = (response._formData.get(blobKey): any);
-          return backingEntry;
-        }
+    switch (value[1]) {
+      case 'A':
+        return parseTypedArray(response, value, ArrayBuffer, 1, obj, key);
+      case 'O':
+        return parseTypedArray(response, value, Int8Array, 1, obj, key);
+      case 'o':
+        return parseTypedArray(response, value, Uint8Array, 1, obj, key);
+      case 'U':
+        return parseTypedArray(response, value, Uint8ClampedArray, 1, obj, key);
+      case 'S':
+        return parseTypedArray(response, value, Int16Array, 2, obj, key);
+      case 's':
+        return parseTypedArray(response, value, Uint16Array, 2, obj, key);
+      case 'L':
+        return parseTypedArray(response, value, Int32Array, 4, obj, key);
+      case 'l':
+        return parseTypedArray(response, value, Uint32Array, 4, obj, key);
+      case 'G':
+        return parseTypedArray(response, value, Float32Array, 4, obj, key);
+      case 'g':
+        return parseTypedArray(response, value, Float64Array, 8, obj, key);
+      case 'M':
+        return parseTypedArray(response, value, BigInt64Array, 8, obj, key);
+      case 'm':
+        return parseTypedArray(response, value, BigUint64Array, 8, obj, key);
+      case 'V':
+        return parseTypedArray(response, value, DataView, 1, obj, key);
+      case 'B': {
+        // Blob
+        const id = parseInt(value.slice(2), 16);
+        const prefix = response._prefix;
+        const blobKey = prefix + id;
+        // We should have this backingEntry in the store already because we emitted
+        // it before referencing it. It should be a Blob.
+        const backingEntry: Blob = (response._formData.get(blobKey): any);
+        return backingEntry;
       }
     }
-    if (enableFlightReadableStream) {
-      switch (value[1]) {
-        case 'R': {
-          return parseReadableStream(response, value, undefined, obj, key);
-        }
-        case 'r': {
-          return parseReadableStream(response, value, 'bytes', obj, key);
-        }
-        case 'X': {
-          return parseAsyncIterable(response, value, false, obj, key);
-        }
-        case 'x': {
-          return parseAsyncIterable(response, value, true, obj, key);
-        }
+    switch (value[1]) {
+      case 'R': {
+        return parseReadableStream(response, value, undefined, obj, key);
+      }
+      case 'r': {
+        return parseReadableStream(response, value, 'bytes', obj, key);
+      }
+      case 'X': {
+        return parseAsyncIterable(response, value, false, obj, key);
+      }
+      case 'x': {
+        return parseAsyncIterable(response, value, true, obj, key);
       }
     }
-
     // We assume that anything else is a reference ID.
     const ref = value.slice(1);
     return getOutlinedModel(response, ref, obj, key, createModel);
@@ -1101,6 +1098,8 @@ export function createResponse(
     _prefix: formFieldPrefix,
     _formData: backingFormData,
     _chunks: chunks,
+    _closed: false,
+    _closedReason: null,
     _temporaryReferences: temporaryReferences,
   };
   return response;

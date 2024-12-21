@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { CONST_STRING0 } from "shared-runtime";
+import {CONST_STRING0} from 'shared-runtime';
 
 function useHook(cond) {
   const log = [];

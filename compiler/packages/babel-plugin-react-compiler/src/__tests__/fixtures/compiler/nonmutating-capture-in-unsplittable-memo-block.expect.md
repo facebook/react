@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { identity, mutate } from "shared-runtime";
+import {identity, mutate} from 'shared-runtime';
 
 /**
  * Currently, InferReactiveScopeVariables do not ensure that maybe-aliased
@@ -22,25 +22,25 @@ import { identity, mutate } from "shared-runtime";
  * that all aliases refer to the same value.
  *
  */
-function useFoo({ a, b }) {
-  const x = { a };
+function useFoo({a, b}) {
+  const x = {a};
   const y = {};
   mutate(x);
   const z = [identity(y), b];
   mutate(y);
 
   if (z[0] !== y) {
-    throw new Error("oh no!");
+    throw new Error('oh no!');
   }
   return z;
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useFoo,
-  params: [{ a: 2, b: 3 }],
+  params: [{a: 2, b: 3}],
   sequentialRenders: [
-    { a: 2, b: 3 },
-    { a: 4, b: 3 },
+    {a: 2, b: 3},
+    {a: 4, b: 3},
   ],
 };
 
@@ -73,8 +73,8 @@ import { identity, mutate } from "shared-runtime";
 function useFoo(t0) {
   const $ = _c(4);
   const { a, b } = t0;
-  let z;
   let y;
+  let z;
   if ($[0] !== a || $[1] !== b) {
     const x = { a };
     y = {};
@@ -83,11 +83,11 @@ function useFoo(t0) {
     mutate(y);
     $[0] = a;
     $[1] = b;
-    $[2] = z;
-    $[3] = y;
+    $[2] = y;
+    $[3] = z;
   } else {
-    z = $[2];
-    y = $[3];
+    y = $[2];
+    z = $[3];
   }
   if (z[0] !== y) {
     throw new Error("oh no!");

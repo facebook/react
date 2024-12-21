@@ -3,8 +3,8 @@
 
 ```javascript
 // @compilationMode(infer) @enableResetCacheOnSourceFileChanges
-import { useEffect, useMemo, useState } from "react";
-import { ValidateMemoization } from "shared-runtime";
+import {useEffect, useMemo, useState} from 'react';
+import {ValidateMemoization} from 'shared-runtime';
 
 let pretendConst = 0;
 
@@ -30,7 +30,7 @@ function Component() {
   // as if value was reactive. However, we don't want to actually treat globals as
   // reactive (though that would be trivial) since it could change compilation too much
   // btw dev and prod. Instead, we should reset the cache via a secondary mechanism.
-  const value = useMemo(() => [{ pretendConst }], [pretendConst]);
+  const value = useMemo(() => [{pretendConst}], [pretendConst]);
 
   return <ValidateMemoization inputs={[pretendConst]} output={value} />;
 }
@@ -61,45 +61,39 @@ function unsafeUpdateConst() {
 }
 
 function Component() {
-  const $ = _c(4);
+  const $ = _c(3);
   if (
-    $[0] !== "4bf230b116dd95f382060ad17350e116395e41ed757e51fd074ea0b4ed281272"
+    $[0] !== "8d7015668f857996c3d895a7a90e3e16b8a791d5b9cd13f2c76e1c254aeedebb"
   ) {
-    for (let $i = 0; $i < 4; $i += 1) {
+    for (let $i = 0; $i < 3; $i += 1) {
       $[$i] = Symbol.for("react.memo_cache_sentinel");
     }
-    $[0] = "4bf230b116dd95f382060ad17350e116395e41ed757e51fd074ea0b4ed281272";
+    $[0] = "8d7015668f857996c3d895a7a90e3e16b8a791d5b9cd13f2c76e1c254aeedebb";
   }
-  let t0;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = () => {
-      unsafeResetConst();
-    };
-    $[1] = t0;
-  } else {
-    t0 = $[1];
-  }
-  useState(t0);
+  useState(_temp);
 
   unsafeUpdateConst();
+  let t0;
   let t1;
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = [{ pretendConst }];
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
+  t0 = t1;
+  const value = t0;
   let t2;
   if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-    t2 = [{ pretendConst }];
+    t2 = <ValidateMemoization inputs={[pretendConst]} output={value} />;
     $[2] = t2;
   } else {
     t2 = $[2];
   }
-  t1 = t2;
-  const value = t1;
-  let t3;
-  if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
-    t3 = <ValidateMemoization inputs={[pretendConst]} output={value} />;
-    $[3] = t3;
-  } else {
-    t3 = $[3];
-  }
-  return t3;
+  return t2;
+}
+function _temp() {
+  unsafeResetConst();
 }
 
 export const FIXTURE_ENTRYPOINT = {

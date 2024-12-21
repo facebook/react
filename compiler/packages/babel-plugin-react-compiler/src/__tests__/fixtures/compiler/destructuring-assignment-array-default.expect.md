@@ -5,7 +5,7 @@
 function Component(props) {
   let x;
   if (props.cond) {
-    [[x] = ["default"]] = props.y;
+    [[x] = ['default']] = props.y;
   } else {
     x = props.fallback;
   }
@@ -14,8 +14,8 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: ['TodoAdd'],
+  isComponent: 'TodoAdd',
 };
 
 ```

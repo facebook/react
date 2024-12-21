@@ -1,4 +1,4 @@
-import { identity, mutate, mutateAndReturnNewValue } from "shared-runtime";
+import {identity, mutate, mutateAndReturnNewValue} from 'shared-runtime';
 
 function Component(props) {
   const key = {};
@@ -12,5 +12,5 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: 42 }],
+  params: [{value: 42}],
 };

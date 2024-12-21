@@ -1,6 +1,6 @@
 // @compilationMode(infer) @enableResetCacheOnSourceFileChanges
-import { useEffect, useMemo, useState } from "react";
-import { ValidateMemoization } from "shared-runtime";
+import {useEffect, useMemo, useState} from 'react';
+import {ValidateMemoization} from 'shared-runtime';
 
 let pretendConst = 0;
 
@@ -26,7 +26,7 @@ function Component() {
   // as if value was reactive. However, we don't want to actually treat globals as
   // reactive (though that would be trivial) since it could change compilation too much
   // btw dev and prod. Instead, we should reset the cache via a secondary mechanism.
-  const value = useMemo(() => [{ pretendConst }], [pretendConst]);
+  const value = useMemo(() => [{pretendConst}], [pretendConst]);
 
   return <ValidateMemoization inputs={[pretendConst]} output={value} />;
 }

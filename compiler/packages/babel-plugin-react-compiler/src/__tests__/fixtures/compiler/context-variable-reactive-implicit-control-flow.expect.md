@@ -2,12 +2,12 @@
 ## Input
 
 ```javascript
-import { conditionalInvoke } from "shared-runtime";
+import {conditionalInvoke} from 'shared-runtime';
 
 // same as context-variable-reactive-explicit-control-flow.js, but make
 // the control flow implicit
 
-function Component({ shouldReassign }) {
+function Component({shouldReassign}) {
   let x = null;
   const reassign = () => {
     x = 2;
@@ -18,8 +18,8 @@ function Component({ shouldReassign }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ shouldReassign: true }],
-  sequentialRenders: [{ shouldReassign: false }, { shouldReassign: true }],
+  params: [{shouldReassign: true}],
+  sequentialRenders: [{shouldReassign: false}, {shouldReassign: true}],
 };
 
 ```

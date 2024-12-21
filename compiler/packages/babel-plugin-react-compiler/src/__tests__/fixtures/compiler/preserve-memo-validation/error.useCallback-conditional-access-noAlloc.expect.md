@@ -3,9 +3,9 @@
 
 ```javascript
 // @validatePreserveExistingMemoizationGuarantees
-import { useCallback } from "react";
+import {useCallback} from 'react';
 
-function Component({ propA, propB }) {
+function Component({propA, propB}) {
   return useCallback(() => {
     return {
       value: propB?.x.y,
@@ -16,7 +16,7 @@ function Component({ propA, propB }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ propA: 2, propB: { x: { y: [] } } }],
+  params: [{propA: 2, propB: {x: {y: []}}}],
 };
 
 ```
@@ -26,7 +26,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
    3 |
-   4 | function Component({ propA, propB }) {
+   4 | function Component({propA, propB}) {
 >  5 |   return useCallback(() => {
      |                      ^^^^^^^
 >  6 |     return {

@@ -1,4 +1,4 @@
-import { makeObject_Primitives, mutate } from "shared-runtime";
+import {makeObject_Primitives, mutate} from 'shared-runtime';
 
 function Component() {
   // a's mutable range should be the same as x's mutable range,

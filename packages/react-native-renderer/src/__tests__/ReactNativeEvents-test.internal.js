@@ -18,6 +18,7 @@ let ReactNative;
 let ResponderEventPlugin;
 let UIManager;
 let createReactNativeComponentClass;
+let assertConsoleErrorDev;
 
 // Parallels requireNativeComponent() in that it lazily constructs a view config,
 // And registers view manager event types with ReactNativeViewConfigRegistry.
@@ -69,6 +70,7 @@ beforeEach(() => {
     require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface').RCTEventEmitter;
   React = require('react');
   act = require('internal-test-utils').act;
+  assertConsoleErrorDev = require('internal-test-utils').assertConsoleErrorDev;
   ReactNative = require('react-native-renderer');
   ResponderEventPlugin =
     require('react-native-renderer/src/legacy-events/ResponderEventPlugin').default;
@@ -248,6 +250,12 @@ test('handles events on text nodes', () => {
     </ContextHack>,
     1,
   );
+  assertConsoleErrorDev([
+    'ContextHack uses the legacy childContextTypes API which will soon be removed. ' +
+      'Use React.createContext() instead. ' +
+      '(https://react.dev/link/legacy-context)' +
+      '\n    in ContextHack (at **)',
+  ]);
 
   expect(UIManager.createView).toHaveBeenCalledTimes(5);
 

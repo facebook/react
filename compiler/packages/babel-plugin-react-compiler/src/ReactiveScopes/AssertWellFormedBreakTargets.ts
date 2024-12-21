@@ -5,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "..";
-import { BlockId, ReactiveFunction, ReactiveTerminalStatement } from "../HIR";
-import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
+import {CompilerError} from '..';
+import {BlockId, ReactiveFunction, ReactiveTerminalStatement} from '../HIR';
+import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
 
 /**
  * Assert that all break/continue targets reference existent labels.
@@ -19,15 +19,15 @@ export function assertWellFormedBreakTargets(fn: ReactiveFunction): void {
 class Visitor extends ReactiveFunctionVisitor<Set<BlockId>> {
   override visitTerminal(
     stmt: ReactiveTerminalStatement,
-    seenLabels: Set<BlockId>
+    seenLabels: Set<BlockId>,
   ): void {
     if (stmt.label != null) {
       seenLabels.add(stmt.label.id);
     }
     const terminal = stmt.terminal;
-    if (terminal.kind === "break" || terminal.kind === "continue") {
+    if (terminal.kind === 'break' || terminal.kind === 'continue') {
       CompilerError.invariant(seenLabels.has(terminal.target), {
-        reason: "Unexpected break to invalid label",
+        reason: 'Unexpected break to invalid label',
         loc: stmt.terminal.loc,
       });
     }

@@ -5,7 +5,7 @@
 function Foo(props) {
   return (
     <>
-      Hello {props.greeting}{" "}
+      Hello {props.greeting}{' '}
       <div>
         <>Text</>
       </div>
@@ -15,8 +15,8 @@ function Foo(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Foo,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: ['TodoAdd'],
+  isComponent: 'TodoAdd',
 };
 
 ```

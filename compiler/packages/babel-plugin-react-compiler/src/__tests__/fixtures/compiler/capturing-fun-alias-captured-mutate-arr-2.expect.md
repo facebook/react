@@ -3,8 +3,8 @@
 
 ```javascript
 function component(foo, bar) {
-  let x = { foo };
-  let y = { bar };
+  let x = {foo};
+  let y = {bar};
   const f0 = function () {
     let a = [y];
     let b = x;
@@ -24,7 +24,7 @@ import { c as _c } from "react/compiler-runtime";
 function component(foo, bar) {
   const $ = _c(3);
   let x;
-  if ($[0] !== foo || $[1] !== bar) {
+  if ($[0] !== bar || $[1] !== foo) {
     x = { foo };
     const y = { bar };
     const f0 = function () {
@@ -35,8 +35,8 @@ function component(foo, bar) {
 
     f0();
     mutate(y);
-    $[0] = foo;
-    $[1] = bar;
+    $[0] = bar;
+    $[1] = foo;
     $[2] = x;
   } else {
     x = $[2];

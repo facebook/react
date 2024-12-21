@@ -5,11 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Effect, ValueKind, ValueReason } from "./HIR";
+import {Effect, ValueKind, ValueReason} from './HIR';
 import {
   BUILTIN_SHAPES,
   BuiltInArrayId,
+  BuiltInFireId,
+  BuiltInMixedReadonlyId,
   BuiltInUseActionStateId,
+  BuiltInUseContextHookId,
   BuiltInUseEffectHookId,
   BuiltInUseInsertionEffectHookId,
   BuiltInUseLayoutEffectHookId,
@@ -17,12 +20,17 @@ import {
   BuiltInUseReducerId,
   BuiltInUseRefId,
   BuiltInUseStateId,
+  BuiltInUseTransitionId,
   ShapeRegistry,
   addFunction,
   addHook,
   addObject,
-} from "./ObjectShape";
-import { BuiltInType, PolyType } from "./Types";
+} from './ObjectShape';
+import {BuiltInType, ObjectType, PolyType} from './Types';
+import {TypeConfig} from './TypeSchema';
+import {assertExhaustive} from '../Utils/utils';
+import {isHookName} from './Environment';
+import {CompilerError, SourceLocation} from '..';
 
 /*
  * This file exports types and defaults for JavaScript global objects.
@@ -37,59 +45,74 @@ export const DEFAULT_SHAPES: ShapeRegistry = new Map(BUILTIN_SHAPES);
 
 // Hack until we add ObjectShapes for all globals
 const UNTYPED_GLOBALS: Set<string> = new Set([
-  "String",
-  "Object",
-  "Function",
-  "Number",
-  "RegExp",
-  "Date",
-  "Error",
-  "Function",
-  "TypeError",
-  "RangeError",
-  "ReferenceError",
-  "SyntaxError",
-  "URIError",
-  "EvalError",
-  "Boolean",
-  "DataView",
-  "Float32Array",
-  "Float64Array",
-  "Int8Array",
-  "Int16Array",
-  "Int32Array",
-  "Map",
-  "Set",
-  "WeakMap",
-  "Uint8Array",
-  "Uint8ClampedArray",
-  "Uint16Array",
-  "Uint32Array",
-  "ArrayBuffer",
-  "JSON",
-  "parseFloat",
-  "parseInt",
-  "console",
-  "isNaN",
-  "eval",
-  "isFinite",
-  "encodeURI",
-  "decodeURI",
-  "encodeURIComponent",
-  "decodeURIComponent",
+  'String',
+  'Object',
+  'Function',
+  'Number',
+  'RegExp',
+  'Date',
+  'Error',
+  'Function',
+  'TypeError',
+  'RangeError',
+  'ReferenceError',
+  'SyntaxError',
+  'URIError',
+  'EvalError',
+  'Boolean',
+  'DataView',
+  'Float32Array',
+  'Float64Array',
+  'Int8Array',
+  'Int16Array',
+  'Int32Array',
+  'Map',
+  'Set',
+  'WeakMap',
+  'Uint8Array',
+  'Uint8ClampedArray',
+  'Uint16Array',
+  'Uint32Array',
+  'ArrayBuffer',
+  'JSON',
+  'parseFloat',
+  'parseInt',
+  'console',
+  'isNaN',
+  'eval',
+  'isFinite',
+  'encodeURI',
+  'decodeURI',
+  'encodeURIComponent',
+  'decodeURIComponent',
 ]);
 
 const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
   [
-    "Array",
-    addObject(DEFAULT_SHAPES, "Array", [
+    'Object',
+    addObject(DEFAULT_SHAPES, 'Object', [
       [
-        "isArray",
+        'keys',
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [Effect.Read],
+          restParam: null,
+          returnType: {kind: 'Object', shapeId: BuiltInArrayId},
+          calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Mutable,
+        }),
+      ],
+    ]),
+  ],
+  [
+    'Array',
+    addObject(DEFAULT_SHAPES, 'Array', [
+      [
+        'isArray',
         // Array.isArray(value)
         addFunction(DEFAULT_SHAPES, [], {
           positionalParams: [Effect.Read],
           restParam: null,
-          returnType: { kind: "Primitive" },
+          returnType: {kind: 'Primitive'},
           calleeEffect: Effect.Read,
           returnValueKind: ValueKind.Primitive,
         }),
@@ -106,12 +129,12 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
        *    function)
        */
       [
-        "of",
+        'of',
         // Array.of(element0, ..., elementN)
         addFunction(DEFAULT_SHAPES, [], {
           positionalParams: [],
           restParam: Effect.Read,
-          returnType: { kind: "Object", shapeId: BuiltInArrayId },
+          returnType: {kind: 'Object', shapeId: BuiltInArrayId},
           calleeEffect: Effect.Read,
           returnValueKind: ValueKind.Mutable,
         }),
@@ -119,85 +142,136 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
     ]),
   ],
   [
-    "Math",
-    addObject(DEFAULT_SHAPES, "Math", [
+    'Math',
+    addObject(DEFAULT_SHAPES, 'Math', [
       // Static properties (TODO)
-      ["PI", { kind: "Primitive" }],
+      ['PI', {kind: 'Primitive'}],
       // Static methods (TODO)
       [
-        "max",
+        'max',
         // Math.max(value0, ..., valueN)
         addFunction(DEFAULT_SHAPES, [], {
           positionalParams: [],
           restParam: Effect.Read,
-          returnType: { kind: "Primitive" },
+          returnType: {kind: 'Primitive'},
+          calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Primitive,
+        }),
+      ],
+      [
+        'min',
+        // Math.min(value0, ..., valueN)
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [],
+          restParam: Effect.Read,
+          returnType: {kind: 'Primitive'},
+          calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Primitive,
+        }),
+      ],
+      [
+        'trunc',
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [],
+          restParam: Effect.Read,
+          returnType: {kind: 'Primitive'},
+          calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Primitive,
+        }),
+      ],
+      [
+        'ceil',
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [],
+          restParam: Effect.Read,
+          returnType: {kind: 'Primitive'},
+          calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Primitive,
+        }),
+      ],
+      [
+        'floor',
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [],
+          restParam: Effect.Read,
+          returnType: {kind: 'Primitive'},
+          calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Primitive,
+        }),
+      ],
+      [
+        'pow',
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [],
+          restParam: Effect.Read,
+          returnType: {kind: 'Primitive'},
           calleeEffect: Effect.Read,
           returnValueKind: ValueKind.Primitive,
         }),
       ],
     ]),
   ],
-  ["Infinity", { kind: "Primitive" }],
-  ["NaN", { kind: "Primitive" }],
+  ['Infinity', {kind: 'Primitive'}],
+  ['NaN', {kind: 'Primitive'}],
   [
-    "console",
-    addObject(DEFAULT_SHAPES, "console", [
+    'console',
+    addObject(DEFAULT_SHAPES, 'console', [
       [
-        "error",
+        'error',
         addFunction(DEFAULT_SHAPES, [], {
           positionalParams: [],
           restParam: Effect.Read,
-          returnType: { kind: "Primitive" },
+          returnType: {kind: 'Primitive'},
           calleeEffect: Effect.Read,
           returnValueKind: ValueKind.Primitive,
         }),
       ],
       [
-        "info",
+        'info',
         addFunction(DEFAULT_SHAPES, [], {
           positionalParams: [],
           restParam: Effect.Read,
-          returnType: { kind: "Primitive" },
+          returnType: {kind: 'Primitive'},
           calleeEffect: Effect.Read,
           returnValueKind: ValueKind.Primitive,
         }),
       ],
       [
-        "log",
+        'log',
         addFunction(DEFAULT_SHAPES, [], {
           positionalParams: [],
           restParam: Effect.Read,
-          returnType: { kind: "Primitive" },
+          returnType: {kind: 'Primitive'},
           calleeEffect: Effect.Read,
           returnValueKind: ValueKind.Primitive,
         }),
       ],
       [
-        "table",
+        'table',
         addFunction(DEFAULT_SHAPES, [], {
           positionalParams: [],
           restParam: Effect.Read,
-          returnType: { kind: "Primitive" },
+          returnType: {kind: 'Primitive'},
           calleeEffect: Effect.Read,
           returnValueKind: ValueKind.Primitive,
         }),
       ],
       [
-        "trace",
+        'trace',
         addFunction(DEFAULT_SHAPES, [], {
           positionalParams: [],
           restParam: Effect.Read,
-          returnType: { kind: "Primitive" },
+          returnType: {kind: 'Primitive'},
           calleeEffect: Effect.Read,
           returnValueKind: ValueKind.Primitive,
         }),
       ],
       [
-        "warn",
+        'warn',
         addFunction(DEFAULT_SHAPES, [], {
           positionalParams: [],
           restParam: Effect.Read,
-          returnType: { kind: "Primitive" },
+          returnType: {kind: 'Primitive'},
           calleeEffect: Effect.Read,
           returnValueKind: ValueKind.Primitive,
         }),
@@ -205,31 +279,31 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
     ]),
   ],
   [
-    "Boolean",
+    'Boolean',
     addFunction(DEFAULT_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.Read,
-      returnType: { kind: "Primitive" },
+      returnType: {kind: 'Primitive'},
       calleeEffect: Effect.Read,
       returnValueKind: ValueKind.Primitive,
     }),
   ],
   [
-    "Number",
+    'Number',
     addFunction(DEFAULT_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.Read,
-      returnType: { kind: "Primitive" },
+      returnType: {kind: 'Primitive'},
       calleeEffect: Effect.Read,
       returnValueKind: ValueKind.Primitive,
     }),
   ],
   [
-    "String",
+    'String',
     addFunction(DEFAULT_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.Read,
-      returnType: { kind: "Primitive" },
+      returnType: {kind: 'Primitive'},
       calleeEffect: Effect.Read,
       returnValueKind: ValueKind.Primitive,
     }),
@@ -244,179 +318,220 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
  */
 const REACT_APIS: Array<[string, BuiltInType]> = [
   [
-    "useContext",
-    addHook(DEFAULT_SHAPES, {
-      positionalParams: [],
-      restParam: Effect.Read,
-      returnType: { kind: "Poly" },
-      calleeEffect: Effect.Read,
-      hookKind: "useContext",
-      returnValueKind: ValueKind.Frozen,
-      returnValueReason: ValueReason.Context,
-    }),
+    'useContext',
+    addHook(
+      DEFAULT_SHAPES,
+      {
+        positionalParams: [],
+        restParam: Effect.Read,
+        returnType: {kind: 'Poly'},
+        calleeEffect: Effect.Read,
+        hookKind: 'useContext',
+        returnValueKind: ValueKind.Frozen,
+        returnValueReason: ValueReason.Context,
+      },
+      BuiltInUseContextHookId,
+    ),
   ],
   [
-    "useState",
+    'useState',
     addHook(DEFAULT_SHAPES, {
       positionalParams: [],
       restParam: Effect.Freeze,
-      returnType: { kind: "Object", shapeId: BuiltInUseStateId },
+      returnType: {kind: 'Object', shapeId: BuiltInUseStateId},
       calleeEffect: Effect.Read,
-      hookKind: "useState",
-      returnValueKind: ValueKind.Frozen,
-      returnValueReason: ValueReason.State,
-    }),
-  ],
-  [
-    "useActionState",
-    addHook(DEFAULT_SHAPES, {
-      positionalParams: [],
-      restParam: Effect.Freeze,
-      returnType: { kind: "Object", shapeId: BuiltInUseActionStateId },
-      calleeEffect: Effect.Read,
-      hookKind: "useActionState",
+      hookKind: 'useState',
       returnValueKind: ValueKind.Frozen,
       returnValueReason: ValueReason.State,
     }),
   ],
   [
-    "useReducer",
+    'useActionState',
     addHook(DEFAULT_SHAPES, {
       positionalParams: [],
       restParam: Effect.Freeze,
-      returnType: { kind: "Object", shapeId: BuiltInUseReducerId },
+      returnType: {kind: 'Object', shapeId: BuiltInUseActionStateId},
       calleeEffect: Effect.Read,
-      hookKind: "useReducer",
+      hookKind: 'useActionState',
+      returnValueKind: ValueKind.Frozen,
+      returnValueReason: ValueReason.State,
+    }),
+  ],
+  [
+    'useReducer',
+    addHook(DEFAULT_SHAPES, {
+      positionalParams: [],
+      restParam: Effect.Freeze,
+      returnType: {kind: 'Object', shapeId: BuiltInUseReducerId},
+      calleeEffect: Effect.Read,
+      hookKind: 'useReducer',
       returnValueKind: ValueKind.Frozen,
       returnValueReason: ValueReason.ReducerState,
     }),
   ],
   [
-    "useRef",
+    'useRef',
     addHook(DEFAULT_SHAPES, {
       positionalParams: [],
       restParam: Effect.Capture,
-      returnType: { kind: "Object", shapeId: BuiltInUseRefId },
+      returnType: {kind: 'Object', shapeId: BuiltInUseRefId},
       calleeEffect: Effect.Read,
-      hookKind: "useRef",
+      hookKind: 'useRef',
       returnValueKind: ValueKind.Mutable,
     }),
   ],
   [
-    "useMemo",
+    'useImperativeHandle',
     addHook(DEFAULT_SHAPES, {
       positionalParams: [],
       restParam: Effect.Freeze,
-      returnType: { kind: "Poly" },
+      returnType: {kind: 'Primitive'},
       calleeEffect: Effect.Read,
-      hookKind: "useMemo",
+      hookKind: 'useImperativeHandle',
       returnValueKind: ValueKind.Frozen,
     }),
   ],
   [
-    "useCallback",
+    'useMemo',
     addHook(DEFAULT_SHAPES, {
       positionalParams: [],
       restParam: Effect.Freeze,
-      returnType: { kind: "Poly" },
+      returnType: {kind: 'Poly'},
       calleeEffect: Effect.Read,
-      hookKind: "useCallback",
+      hookKind: 'useMemo',
       returnValueKind: ValueKind.Frozen,
     }),
   ],
   [
-    "useEffect",
+    'useCallback',
+    addHook(DEFAULT_SHAPES, {
+      positionalParams: [],
+      restParam: Effect.Freeze,
+      returnType: {kind: 'Poly'},
+      calleeEffect: Effect.Read,
+      hookKind: 'useCallback',
+      returnValueKind: ValueKind.Frozen,
+    }),
+  ],
+  [
+    'useEffect',
     addHook(
       DEFAULT_SHAPES,
       {
         positionalParams: [],
         restParam: Effect.Freeze,
-        returnType: { kind: "Primitive" },
+        returnType: {kind: 'Primitive'},
         calleeEffect: Effect.Read,
-        hookKind: "useEffect",
+        hookKind: 'useEffect',
         returnValueKind: ValueKind.Frozen,
       },
-      BuiltInUseEffectHookId
+      BuiltInUseEffectHookId,
     ),
   ],
   [
-    "useLayoutEffect",
+    'useLayoutEffect',
     addHook(
       DEFAULT_SHAPES,
       {
         positionalParams: [],
         restParam: Effect.Freeze,
-        returnType: { kind: "Poly" },
+        returnType: {kind: 'Poly'},
         calleeEffect: Effect.Read,
-        hookKind: "useLayoutEffect",
+        hookKind: 'useLayoutEffect',
         returnValueKind: ValueKind.Frozen,
       },
-      BuiltInUseLayoutEffectHookId
+      BuiltInUseLayoutEffectHookId,
     ),
   ],
   [
-    "useInsertionEffect",
+    'useInsertionEffect',
     addHook(
       DEFAULT_SHAPES,
       {
         positionalParams: [],
         restParam: Effect.Freeze,
-        returnType: { kind: "Poly" },
+        returnType: {kind: 'Poly'},
         calleeEffect: Effect.Read,
-        hookKind: "useLayoutEffect",
+        hookKind: 'useInsertionEffect',
         returnValueKind: ValueKind.Frozen,
       },
-      BuiltInUseInsertionEffectHookId
+      BuiltInUseInsertionEffectHookId,
     ),
   ],
   [
-    "use",
+    'useTransition',
+    addHook(DEFAULT_SHAPES, {
+      positionalParams: [],
+      restParam: null,
+      returnType: {kind: 'Object', shapeId: BuiltInUseTransitionId},
+      calleeEffect: Effect.Read,
+      hookKind: 'useTransition',
+      returnValueKind: ValueKind.Frozen,
+    }),
+  ],
+  [
+    'use',
     addFunction(
       DEFAULT_SHAPES,
       [],
       {
         positionalParams: [],
         restParam: Effect.Freeze,
-        returnType: { kind: "Poly" },
+        returnType: {kind: 'Poly'},
         calleeEffect: Effect.Read,
         returnValueKind: ValueKind.Frozen,
       },
-      BuiltInUseOperatorId
+      BuiltInUseOperatorId,
+    ),
+  ],
+  [
+    'fire',
+    addFunction(
+      DEFAULT_SHAPES,
+      [],
+      {
+        positionalParams: [],
+        restParam: null,
+        returnType: {kind: 'Primitive'},
+        calleeEffect: Effect.Read,
+        returnValueKind: ValueKind.Frozen,
+      },
+      BuiltInFireId,
     ),
   ],
 ];
 
 TYPED_GLOBALS.push(
   [
-    "React",
+    'React',
     addObject(DEFAULT_SHAPES, null, [
       ...REACT_APIS,
       [
-        "createElement",
+        'createElement',
         addFunction(DEFAULT_SHAPES, [], {
           positionalParams: [],
           restParam: Effect.Freeze,
-          returnType: { kind: "Poly" },
+          returnType: {kind: 'Poly'},
           calleeEffect: Effect.Read,
           returnValueKind: ValueKind.Frozen,
         }),
       ],
       [
-        "cloneElement",
+        'cloneElement',
         addFunction(DEFAULT_SHAPES, [], {
           positionalParams: [],
           restParam: Effect.Freeze,
-          returnType: { kind: "Poly" },
+          returnType: {kind: 'Poly'},
           calleeEffect: Effect.Read,
           returnValueKind: ValueKind.Frozen,
         }),
       ],
       [
-        "createRef",
+        'createRef',
         addFunction(DEFAULT_SHAPES, [], {
           positionalParams: [],
           restParam: Effect.Capture, // createRef takes no paramters
-          returnType: { kind: "Object", shapeId: BuiltInUseRefId },
+          returnType: {kind: 'Object', shapeId: BuiltInUseRefId},
           calleeEffect: Effect.Read,
           returnValueKind: ValueKind.Mutable,
         }),
@@ -424,15 +539,15 @@ TYPED_GLOBALS.push(
     ]),
   ],
   [
-    "_jsx",
+    '_jsx',
     addFunction(DEFAULT_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.Freeze,
-      returnType: { kind: "Poly" },
+      returnType: {kind: 'Poly'},
       calleeEffect: Effect.Read,
       returnValueKind: ValueKind.Frozen,
     }),
-  ]
+  ],
 );
 
 export type Global = BuiltInType | PolyType;
@@ -442,7 +557,7 @@ export const DEFAULT_GLOBALS: GlobalRegistry = new Map(REACT_APIS);
 // Hack until we add ObjectShapes for all globals
 for (const name of UNTYPED_GLOBALS) {
   DEFAULT_GLOBALS.set(name, {
-    kind: "Poly",
+    kind: 'Poly',
   });
 }
 
@@ -450,81 +565,193 @@ for (const [name, type_] of TYPED_GLOBALS) {
   DEFAULT_GLOBALS.set(name, type_);
 }
 
-// Recursive global type
+// Recursive global types
 DEFAULT_GLOBALS.set(
-  "globalThis",
-  addObject(DEFAULT_SHAPES, "globalThis", TYPED_GLOBALS)
+  'globalThis',
+  addObject(DEFAULT_SHAPES, 'globalThis', TYPED_GLOBALS),
+);
+DEFAULT_GLOBALS.set(
+  'global',
+  addObject(DEFAULT_SHAPES, 'global', TYPED_GLOBALS),
 );
 
-export function installReAnimatedTypes(
+export function installTypeConfig(
   globals: GlobalRegistry,
-  registry: ShapeRegistry
-): void {
+  shapes: ShapeRegistry,
+  typeConfig: TypeConfig,
+  moduleName: string,
+  loc: SourceLocation,
+): Global {
+  switch (typeConfig.kind) {
+    case 'type': {
+      switch (typeConfig.name) {
+        case 'Array': {
+          return {kind: 'Object', shapeId: BuiltInArrayId};
+        }
+        case 'MixedReadonly': {
+          return {kind: 'Object', shapeId: BuiltInMixedReadonlyId};
+        }
+        case 'Primitive': {
+          return {kind: 'Primitive'};
+        }
+        case 'Ref': {
+          return {kind: 'Object', shapeId: BuiltInUseRefId};
+        }
+        case 'Any': {
+          return {kind: 'Poly'};
+        }
+        default: {
+          assertExhaustive(
+            typeConfig.name,
+            `Unexpected type '${(typeConfig as any).name}'`,
+          );
+        }
+      }
+    }
+    case 'function': {
+      return addFunction(shapes, [], {
+        positionalParams: typeConfig.positionalParams,
+        restParam: typeConfig.restParam,
+        calleeEffect: typeConfig.calleeEffect,
+        returnType: installTypeConfig(
+          globals,
+          shapes,
+          typeConfig.returnType,
+          moduleName,
+          loc,
+        ),
+        returnValueKind: typeConfig.returnValueKind,
+        noAlias: typeConfig.noAlias === true,
+        mutableOnlyIfOperandsAreMutable:
+          typeConfig.mutableOnlyIfOperandsAreMutable === true,
+      });
+    }
+    case 'hook': {
+      return addHook(shapes, {
+        hookKind: 'Custom',
+        positionalParams: typeConfig.positionalParams ?? [],
+        restParam: typeConfig.restParam ?? Effect.Freeze,
+        calleeEffect: Effect.Read,
+        returnType: installTypeConfig(
+          globals,
+          shapes,
+          typeConfig.returnType,
+          moduleName,
+          loc,
+        ),
+        returnValueKind: typeConfig.returnValueKind ?? ValueKind.Frozen,
+        noAlias: typeConfig.noAlias === true,
+      });
+    }
+    case 'object': {
+      return addObject(
+        shapes,
+        null,
+        Object.entries(typeConfig.properties ?? {}).map(([key, value]) => {
+          const type = installTypeConfig(
+            globals,
+            shapes,
+            value,
+            moduleName,
+            loc,
+          );
+          const expectHook = isHookName(key);
+          let isHook = false;
+          if (type.kind === 'Function' && type.shapeId !== null) {
+            const functionType = shapes.get(type.shapeId);
+            if (functionType?.functionType?.hookKind !== null) {
+              isHook = true;
+            }
+          }
+          if (expectHook !== isHook) {
+            CompilerError.throwInvalidConfig({
+              reason: `Invalid type configuration for module`,
+              description: `Expected type for object property '${key}' from module '${moduleName}' ${expectHook ? 'to be a hook' : 'not to be a hook'} based on the property name`,
+              loc,
+            });
+          }
+          return [key, type];
+        }),
+      );
+    }
+    default: {
+      assertExhaustive(
+        typeConfig,
+        `Unexpected type kind '${(typeConfig as any).kind}'`,
+      );
+    }
+  }
+}
+
+export function getReanimatedModuleType(registry: ShapeRegistry): ObjectType {
   // hooks that freeze args and return frozen value
   const frozenHooks = [
-    "useFrameCallback",
-    "useAnimatedStyle",
-    "useAnimatedProps",
-    "useAnimatedScrollHandler",
-    "useAnimatedReaction",
-    "useWorkletCallback",
+    'useFrameCallback',
+    'useAnimatedStyle',
+    'useAnimatedProps',
+    'useAnimatedScrollHandler',
+    'useAnimatedReaction',
+    'useWorkletCallback',
   ];
+  const reanimatedType: Array<[string, BuiltInType]> = [];
   for (const hook of frozenHooks) {
-    globals.set(
+    reanimatedType.push([
       hook,
       addHook(registry, {
         positionalParams: [],
         restParam: Effect.Freeze,
-        returnType: { kind: "Poly" },
+        returnType: {kind: 'Poly'},
         returnValueKind: ValueKind.Frozen,
         noAlias: true,
         calleeEffect: Effect.Read,
-        hookKind: "Custom",
-      })
-    );
+        hookKind: 'Custom',
+      }),
+    ]);
   }
 
   /**
    * hooks that return a mutable value. ideally these should be modelled as a
    * ref, but this works for now.
    */
-  const mutableHooks = ["useSharedValue", "useDerivedValue"];
+  const mutableHooks = ['useSharedValue', 'useDerivedValue'];
   for (const hook of mutableHooks) {
-    globals.set(
+    reanimatedType.push([
       hook,
       addHook(registry, {
         positionalParams: [],
         restParam: Effect.Freeze,
-        returnType: { kind: "Poly" },
+        returnType: {kind: 'Poly'},
         returnValueKind: ValueKind.Mutable,
         noAlias: true,
         calleeEffect: Effect.Read,
-        hookKind: "Custom",
-      })
-    );
+        hookKind: 'Custom',
+      }),
+    ]);
   }
 
   // functions that return mutable value
   const funcs = [
-    "withTiming",
-    "withSpring",
-    "createAnimatedPropAdapter",
-    "withDecay",
-    "withRepeat",
-    "runOnUI",
-    "executeOnUIRuntimeSync",
+    'withTiming',
+    'withSpring',
+    'createAnimatedPropAdapter',
+    'withDecay',
+    'withRepeat',
+    'runOnUI',
+    'executeOnUIRuntimeSync',
   ];
   for (const fn of funcs) {
-    globals.set(
+    reanimatedType.push([
       fn,
       addFunction(registry, [], {
         positionalParams: [],
         restParam: Effect.Read,
-        returnType: { kind: "Poly" },
+        returnType: {kind: 'Poly'},
         calleeEffect: Effect.Read,
         returnValueKind: ValueKind.Mutable,
         noAlias: true,
-      })
-    );
+      }),
+    ]);
   }
+
+  return addObject(registry, null, reanimatedType);
 }

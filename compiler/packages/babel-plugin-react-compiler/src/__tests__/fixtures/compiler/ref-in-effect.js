@@ -1,6 +1,6 @@
 function Component(props) {
   const ref = useRef(null);
-  const onChange = (e) => {
+  const onChange = e => {
     const newValue = e.target.value ?? ref.current;
     ref.current = newValue;
   };

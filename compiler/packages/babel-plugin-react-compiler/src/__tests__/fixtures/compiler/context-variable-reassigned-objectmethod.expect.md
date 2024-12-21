@@ -2,9 +2,9 @@
 ## Input
 
 ```javascript
-import { invoke } from "shared-runtime";
+import {invoke} from 'shared-runtime';
 
-function Component({ cond }) {
+function Component({cond}) {
   let x = 2;
   const obj = {
     method(cond) {
@@ -19,7 +19,7 @@ function Component({ cond }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ cond: true }],
+  params: [{cond: true}],
 };
 
 ```

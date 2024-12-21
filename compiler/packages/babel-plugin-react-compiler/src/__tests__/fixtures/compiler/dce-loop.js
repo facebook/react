@@ -10,6 +10,6 @@ function foo(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: foo,
-  params: [{ max: 10 }],
+  params: [{max: 10}],
   isComponent: false,
 };

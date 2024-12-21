@@ -11,16 +11,17 @@ import {
   Identifier,
   InstructionId,
   InstructionKind,
+  isRefOrRefValue,
   makeInstructionId,
   Place,
-} from "../HIR/HIR";
-import { printPlace } from "../HIR/PrintHIR";
+} from '../HIR/HIR';
+import {printPlace} from '../HIR/PrintHIR';
 import {
   eachInstructionLValue,
   eachInstructionOperand,
   eachTerminalOperand,
-} from "../HIR/visitors";
-import { assertExhaustive } from "../Utils/utils";
+} from '../HIR/visitors';
+import {assertExhaustive} from '../Utils/utils';
 
 /*
  * For each usage of a value in the given function, determines if the usage
@@ -66,13 +67,15 @@ import { assertExhaustive } from "../Utils/utils";
  */
 
 function infer(place: Place, instrId: InstructionId): void {
-  place.identifier.mutableRange.end = makeInstructionId(instrId + 1);
+  if (!isRefOrRefValue(place.identifier)) {
+    place.identifier.mutableRange.end = makeInstructionId(instrId + 1);
+  }
 }
 
 function inferPlace(
   place: Place,
   instrId: InstructionId,
-  inferMutableRangeForStores: boolean
+  inferMutableRangeForStores: boolean,
 ): void {
   switch (place.effect) {
     case Effect.Unknown: {
@@ -99,7 +102,7 @@ function inferPlace(
 
 export function inferMutableLifetimes(
   func: HIRFunction,
-  inferMutableRangeForStores: boolean
+  inferMutableRangeForStores: boolean,
 ): void {
   /*
    * Context variables only appear to mutate where they are assigned, but we need
@@ -113,19 +116,23 @@ export function inferMutableLifetimes(
   for (const [_, block] of func.body.blocks) {
     for (const phi of block.phis) {
       const isPhiMutatedAfterCreation: boolean =
-        phi.id.mutableRange.end >
+        phi.place.identifier.mutableRange.end >
         (block.instructions.at(0)?.id ?? block.terminal.id);
       if (
         inferMutableRangeForStores &&
         isPhiMutatedAfterCreation &&
-        phi.id.mutableRange.start === 0
+        phi.place.identifier.mutableRange.start === 0
       ) {
         for (const [, operand] of phi.operands) {
-          if (phi.id.mutableRange.start === 0) {
-            phi.id.mutableRange.start = operand.mutableRange.start;
+          if (phi.place.identifier.mutableRange.start === 0) {
+            phi.place.identifier.mutableRange.start =
+              operand.identifier.mutableRange.start;
           } else {
-            phi.id.mutableRange.start = makeInstructionId(
-              Math.min(phi.id.mutableRange.start, operand.mutableRange.start)
+            phi.place.identifier.mutableRange.start = makeInstructionId(
+              Math.min(
+                phi.place.identifier.mutableRange.start,
+                operand.identifier.mutableRange.start,
+              ),
             );
           }
         }
@@ -153,25 +160,28 @@ export function inferMutableLifetimes(
       }
 
       if (
-        instr.value.kind === "DeclareContext" ||
-        (instr.value.kind === "StoreContext" &&
+        instr.value.kind === 'DeclareContext' ||
+        (instr.value.kind === 'StoreContext' &&
           instr.value.lvalue.kind !== InstructionKind.Reassign)
       ) {
         // Save declarations of context variables
         contextVariableDeclarationInstructions.set(
           instr.value.lvalue.place.identifier,
-          instr.id
+          instr.id,
         );
-      } else if (instr.value.kind === "StoreContext") {
+      } else if (instr.value.kind === 'StoreContext') {
         /*
          * Else this is a reassignment, extend the range from the declaration (if present).
          * Note that declarations may not be present for context variables that are reassigned
          * within a function expression before (or without) a read of the same variable
          */
         const declaration = contextVariableDeclarationInstructions.get(
-          instr.value.lvalue.place.identifier
+          instr.value.lvalue.place.identifier,
         );
-        if (declaration != null) {
+        if (
+          declaration != null &&
+          !isRefOrRefValue(instr.value.lvalue.place.identifier)
+        ) {
           const range = instr.value.lvalue.place.identifier.mutableRange;
           if (range.start === 0) {
             range.start = declaration;
