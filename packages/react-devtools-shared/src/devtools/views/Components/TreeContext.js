@@ -39,7 +39,7 @@ import {
   startTransition,
 } from 'react';
 import {createRegExp} from '../utils';
-import {BridgeContext, StoreContext} from '../context';
+import {StoreContext} from '../context';
 import Store from '../../store';
 
 import type {Element} from 'react-devtools-shared/src/frontend/types';
@@ -836,7 +836,6 @@ function TreeContextController({
   defaultSelectedElementID,
   defaultSelectedElementIndex,
 }: Props): React.Node {
-  const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
   const initialRevision = useMemo(() => store.revision, [store]);
@@ -899,9 +898,15 @@ function TreeContextController({
     numElements: store.numElements,
     ownerSubtreeLeafElementID: null,
     selectedElementID:
-      defaultSelectedElementID == null ? null : defaultSelectedElementID,
+      defaultSelectedElementID != null
+        ? defaultSelectedElementID
+        : store.lastSelectedHostInstanceElementId,
     selectedElementIndex:
-      defaultSelectedElementIndex == null ? null : defaultSelectedElementIndex,
+      defaultSelectedElementIndex != null
+        ? defaultSelectedElementIndex
+        : store.lastSelectedHostInstanceElementId
+          ? store.getIndexOfElementID(store.lastSelectedHostInstanceElementId)
+          : null,
 
     // Search
     searchIndex: null,
@@ -914,7 +919,9 @@ function TreeContextController({
 
     // Inspection element panel
     inspectedElementID:
-      defaultInspectedElementID == null ? null : defaultInspectedElementID,
+      defaultInspectedElementID != null
+        ? defaultInspectedElementID
+        : store.lastSelectedHostInstanceElementId,
   });
 
   const dispatchWrapper = useCallback(
@@ -929,11 +936,12 @@ function TreeContextController({
 
   // Listen for host element selections.
   useEffect(() => {
-    const handleSelectElement = (id: number) =>
+    const handler = (id: Element['id']) =>
       dispatchWrapper({type: 'SELECT_ELEMENT_BY_ID', payload: id});
-    bridge.addListener('selectElement', handleSelectElement);
-    return () => bridge.removeListener('selectElement', handleSelectElement);
-  }, [bridge, dispatchWrapper]);
+
+    store.addListener('hostInstanceSelected', handler);
+    return () => store.removeListener('hostInstanceSelected', handler);
+  }, [store, dispatchWrapper]);
 
   // If a newly-selected search result or inspection selection is inside of a collapsed subtree, auto expand it.
   // This needs to be a layout effect to avoid temporarily flashing an incorrect selection.
