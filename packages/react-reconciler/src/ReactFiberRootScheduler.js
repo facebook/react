@@ -18,6 +18,9 @@ import {
   disableSchedulerTimeoutInWorkLoop,
   enableProfilerTimer,
   enableProfilerNestedUpdatePhase,
+  enableComponentPerformanceTrack,
+  enableSiblingPrerendering,
+  enableYieldingBeforePassive,
 } from 'shared/ReactFeatureFlags';
 import {
   NoLane,
@@ -29,6 +32,7 @@ import {
   markStarvedLanesAsExpired,
   claimNextTransitionLane,
   getNextLanesToFlushSync,
+  checkIfRootIsPrerendering,
 } from './ReactFiberLane';
 import {
   CommitContext,
@@ -38,6 +42,8 @@ import {
   getExecutionContext,
   getWorkInProgressRoot,
   getWorkInProgressRootRenderLanes,
+  getRootWithPendingPassiveEffects,
+  getPendingPassiveEffectsLanes,
   isWorkLoopSuspendedOnData,
   performWorkOnRoot,
 } from './ReactFiberWorkLoop';
@@ -62,6 +68,7 @@ import {
   supportsMicrotasks,
   scheduleMicrotask,
   shouldAttemptEagerTransition,
+  trackSchedulerEvent,
 } from './ReactFiberConfig';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -206,7 +213,10 @@ function flushSyncWorkAcrossRoots_impl(
               ? workInProgressRootRenderLanes
               : NoLanes,
           );
-          if (includesSyncLane(nextLanes)) {
+          if (
+            includesSyncLane(nextLanes) &&
+            !checkIfRootIsPrerendering(root, nextLanes)
+          ) {
             // This root has pending sync work. Flush it now.
             didPerformSomeWork = true;
             performSyncWorkOnRoot(root, nextLanes);
@@ -220,6 +230,12 @@ function flushSyncWorkAcrossRoots_impl(
 }
 
 function processRootScheduleInMicrotask() {
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // Track the currently executing event if there is one so we can ignore this
+    // event when logging events.
+    trackSchedulerEvent();
+  }
+
   // This function is always called inside a microtask. It should never be
   // called synchronously.
   didScheduleMicrotask = false;
@@ -311,12 +327,21 @@ function scheduleTaskForRootDuringMicrotask(
   markStarvedLanesAsExpired(root, currentTime);
 
   // Determine the next lanes to work on, and their priority.
+  const rootWithPendingPassiveEffects = getRootWithPendingPassiveEffects();
+  const pendingPassiveEffectsLanes = getPendingPassiveEffectsLanes();
   const workInProgressRoot = getWorkInProgressRoot();
   const workInProgressRootRenderLanes = getWorkInProgressRootRenderLanes();
-  const nextLanes = getNextLanes(
-    root,
-    root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes,
-  );
+  const nextLanes =
+    enableYieldingBeforePassive && root === rootWithPendingPassiveEffects
+      ? // This will schedule the callback at the priority of the lane but we used to
+        // always schedule it at NormalPriority. Discrete will flush it sync anyway.
+        // So the only difference is Idle and it doesn't seem necessarily right for that
+        // to get upgraded beyond something important just because we're past commit.
+        pendingPassiveEffectsLanes
+      : getNextLanes(
+          root,
+          root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes,
+        );
 
   const existingCallbackNode = root.callbackNode;
   if (
@@ -341,7 +366,13 @@ function scheduleTaskForRootDuringMicrotask(
   }
 
   // Schedule a new callback in the host environment.
-  if (includesSyncLane(nextLanes)) {
+  if (
+    includesSyncLane(nextLanes) &&
+    // If we're prerendering, then we should use the concurrent work loop
+    // even if the lanes are synchronous, so that prerendering never blocks
+    // the main thread.
+    !(enableSiblingPrerendering && checkIfRootIsPrerendering(root, nextLanes))
+  ) {
     // Synchronous work is always flushed at the end of the microtask, so we
     // don't need to schedule an additional task.
     if (existingCallbackNode !== null) {
@@ -375,9 +406,10 @@ function scheduleTaskForRootDuringMicrotask(
 
     let schedulerPriorityLevel;
     switch (lanesToEventPriority(nextLanes)) {
+      // Scheduler does have an "ImmediatePriority", but now that we use
+      // microtasks for sync work we no longer use that. Any sync work that
+      // reaches this path is meant to be time sliced.
       case DiscreteEventPriority:
-        schedulerPriorityLevel = ImmediateSchedulerPriority;
-        break;
       case ContinuousEventPriority:
         schedulerPriorityLevel = UserBlockingSchedulerPriority;
         break;
@@ -414,6 +446,12 @@ function performWorkOnRootViaSchedulerTask(
 
   if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
     resetNestedUpdateFlag();
+  }
+
+  if (enableProfilerTimer && enableComponentPerformanceTrack) {
+    // Track the currently executing event if there is one so we can ignore this
+    // event when logging events.
+    trackSchedulerEvent();
   }
 
   // Flush any pending passive effects before deciding which lanes to work on,
@@ -470,7 +508,7 @@ function performWorkOnRootViaSchedulerTask(
   // only safe to do because we know we're at the end of the browser task.
   // So although it's not an actual microtask, it might as well be.
   scheduleTaskForRootDuringMicrotask(root, now());
-  if (root.callbackNode === originalCallbackNode) {
+  if (root.callbackNode != null && root.callbackNode === originalCallbackNode) {
     // The task node scheduled for this root is the same one that's
     // currently executed. Need to return a continuation.
     return performWorkOnRootViaSchedulerTask.bind(null, root);

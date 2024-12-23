@@ -897,6 +897,14 @@ export function printSourceLocation(loc: SourceLocation): string {
   }
 }
 
+export function printSourceLocationLine(loc: SourceLocation): string {
+  if (typeof loc === 'symbol') {
+    return 'generated';
+  } else {
+    return `${loc.start.line}:${loc.end.line}`;
+  }
+}
+
 export function printAliases(aliases: DisjointSet<Identifier>): string {
   const aliasSets = aliases.buildSets();
 

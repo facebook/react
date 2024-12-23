@@ -168,11 +168,19 @@ const EnvironmentConfigSchema = z.object({
   customMacros: z.nullable(z.array(MacroSchema)).default(null),
 
   /**
-   * Enable a check that resets the memoization cache when the source code of the file changes.
-   * This is intended to support hot module reloading (HMR), where the same runtime component
-   * instance will be reused across different versions of the component source.
+   * Enable a check that resets the memoization cache when the source code of
+   * the file changes. This is intended to support hot module reloading (HMR),
+   * where the same runtime component instance will be reused across different
+   * versions of the component source.
+   *
+   * When set to
+   * - true:  code for HMR support is always generated, regardless of NODE_ENV
+   *          or `globalThis.__DEV__`
+   * - false: code for HMR support is not generated
+   * - null:  (default) code for HMR support is conditionally generated dependent
+   *          on `NODE_ENV` and `globalThis.__DEV__` at the time of compilation.
    */
-  enableResetCacheOnSourceFileChanges: z.boolean().default(false),
+  enableResetCacheOnSourceFileChanges: z.nullable(z.boolean()).default(null),
 
   /**
    * Enable using information from existing useMemo/useCallback to understand when a value is done
@@ -230,6 +238,54 @@ const EnvironmentConfigSchema = z.object({
    * enables trusting user type annotations.
    */
   enableUseTypeAnnotations: z.boolean().default(false),
+
+  enableFunctionDependencyRewrite: z.boolean().default(true),
+
+  /**
+   * Enables inference of optional dependency chains. Without this flag
+   * a property chain such as `props?.items?.foo` will infer as a dep on
+   * just `props`. With this flag enabled, we'll infer that full path as
+   * the dependency.
+   */
+  enableOptionalDependencies: z.boolean().default(true),
+
+  enableFire: z.boolean().default(false),
+
+  /**
+   * Enables inference and auto-insertion of effect dependencies. Takes in an array of
+   * configurable module and import pairs to allow for user-land experimentation. For example,
+   * [
+   *   {
+   *     module: 'react',
+   *     imported: 'useEffect',
+   *     numRequiredArgs: 1,
+   *   },{
+   *     module: 'MyExperimentalEffectHooks',
+   *     imported: 'useExperimentalEffect',
+   *     numRequiredArgs: 2,
+   *   },
+   * ]
+   * would insert dependencies for calls of `useEffect` imported from `react` and calls of
+   * useExperimentalEffect` from `MyExperimentalEffectHooks`.
+   *
+   * `numRequiredArgs` tells the compiler the amount of arguments required to append a dependency
+   *  array to the end of the call. With the configuration above, we'd insert dependencies for
+   *  `useEffect` if it is only given a single argument and it would be appended to the argument list.
+   *
+   * numRequiredArgs must always be greater than 0, otherwise there is no function to analyze for dependencies
+   *
+   * Still experimental.
+   */
+  inferEffectDependencies: z
+    .nullable(
+      z.array(
+        z.object({
+          function: ExternalFunctionSchema,
+          numRequiredArgs: z.number(),
+        }),
+      ),
+    )
+    .default(null),
 
   /**
    * Enables inlining ReactElement object literals in place of JSX
@@ -599,6 +655,29 @@ const testComplexConfigDefaults: PartialEnvironmentConfig = {
     source: 'react-compiler-runtime',
     importSpecifierName: 'useContext_withSelector',
   },
+  inferEffectDependencies: [
+    {
+      function: {
+        source: 'react',
+        importSpecifierName: 'useEffect',
+      },
+      numRequiredArgs: 1,
+    },
+    {
+      function: {
+        source: 'shared-runtime',
+        importSpecifierName: 'useSpecialEffect',
+      },
+      numRequiredArgs: 2,
+    },
+    {
+      function: {
+        source: 'useEffectWrapper',
+        importSpecifierName: 'default',
+      },
+      numRequiredArgs: 1,
+    },
+  ],
 };
 
 /**
@@ -639,7 +718,10 @@ export function parseConfigPragmaForTests(pragma: string): EnvironmentConfig {
       continue;
     }
 
-    if (typeof defaultConfig[key as keyof EnvironmentConfig] !== 'boolean') {
+    if (
+      key !== 'enableResetCacheOnSourceFileChanges' &&
+      typeof defaultConfig[key as keyof EnvironmentConfig] !== 'boolean'
+    ) {
       // skip parsing non-boolean properties
       continue;
     }
@@ -649,9 +731,15 @@ export function parseConfigPragmaForTests(pragma: string): EnvironmentConfig {
       maybeConfig[key] = false;
     }
   }
-
   const config = EnvironmentConfigSchema.safeParse(maybeConfig);
   if (config.success) {
+    /**
+     * Unless explicitly enabled, do not insert HMR handling code
+     * in test fixtures or playground to reduce visual noise.
+     */
+    if (config.data.enableResetCacheOnSourceFileChanges == null) {
+      config.data.enableResetCacheOnSourceFileChanges = false;
+    }
     return config.data;
   }
   CompilerError.invariant(false, {
@@ -699,6 +787,7 @@ export class Environment {
   fnType: ReactFunctionType;
   useMemoCacheIdentifier: string;
   hasLoweredContextAccess: boolean;
+  hasFireRewrite: boolean;
 
   #contextIdentifiers: Set<t.Identifier>;
   #hoistedIdentifiers: Set<t.Identifier>;
@@ -723,6 +812,7 @@ export class Environment {
     this.#shapes = new Map(DEFAULT_SHAPES);
     this.#globals = new Map(DEFAULT_GLOBALS);
     this.hasLoweredContextAccess = false;
+    this.hasFireRewrite = false;
 
     if (
       config.disableMemoizationForDebugging &&
@@ -1085,3 +1175,5 @@ export function tryParseExternalFunction(
     suggestions: null,
   });
 }
+
+export const DEFAULT_EXPORT = 'default';

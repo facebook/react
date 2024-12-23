@@ -420,6 +420,10 @@ describe('ReactDeferredValue', () => {
         // The initial value suspended, so we attempt the final value, which
         // also suspends.
         'Suspend! [Final]',
+
+        ...(gate('enableSiblingPrerendering')
+          ? ['Suspend! [Loading...]', 'Suspend! [Final]']
+          : []),
       ]);
       expect(root).toMatchRenderedOutput(null);
 
@@ -459,6 +463,10 @@ describe('ReactDeferredValue', () => {
         // The initial value suspended, so we attempt the final value, which
         // also suspends.
         'Suspend! [Final]',
+
+        ...(gate('enableSiblingPrerendering')
+          ? ['Suspend! [Loading...]', 'Suspend! [Final]']
+          : []),
       ]);
       expect(root).toMatchRenderedOutput(null);
 
@@ -533,6 +541,10 @@ describe('ReactDeferredValue', () => {
         // The initial value suspended, so we attempt the final value, which
         // also suspends.
         'Suspend! [Final]',
+
+        ...(gate('enableSiblingPrerendering')
+          ? ['Suspend! [Loading...]', 'Suspend! [Final]']
+          : []),
       ]);
       expect(root).toMatchRenderedOutput(null);
 
@@ -741,6 +753,10 @@ describe('ReactDeferredValue', () => {
       revealContent();
       // Because the preview state was already prerendered, we can reveal it
       // without any addditional work.
+      if (gate(flags => flags.enableYieldingBeforePassive)) {
+        // Passive effects.
+        await waitForPaint([]);
+      }
       await waitForPaint([]);
       expect(root).toMatchRenderedOutput(<div>Preview [B]</div>);
     });

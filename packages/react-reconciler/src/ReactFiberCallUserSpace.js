@@ -14,6 +14,11 @@ import type {CapturedValue} from './ReactCapturedValue';
 
 import {isRendering, setIsRendering} from './ReactCurrentFiber';
 import {captureCommitPhaseError} from './ReactFiberWorkLoop';
+import {
+  ResourceEffectIdentityKind,
+  ResourceEffectUpdateKind,
+} from './ReactFiberHooks';
+import {enableUseResourceEffectHook} from 'shared/ReactFeatureFlags';
 
 // These indirections exists so we can exclude its stack frame in DEV (and anything below it).
 // TODO: Consider marking the whole bundle instead of these boundaries.
@@ -176,12 +181,54 @@ export const callComponentWillUnmountInDEV: (
   : (null: any);
 
 const callCreate = {
-  'react-stack-bottom-frame': function (effect: Effect): (() => void) | void {
-    const create = effect.create;
-    const inst = effect.inst;
-    const destroy = create();
-    inst.destroy = destroy;
-    return destroy;
+  'react-stack-bottom-frame': function (
+    effect: Effect,
+  ): (() => void) | mixed | void {
+    if (!enableUseResourceEffectHook) {
+      if (effect.resourceKind != null) {
+        if (__DEV__) {
+          console.error(
+            'Expected only SimpleEffects when enableUseResourceEffectHook is disabled, ' +
+              'got %s',
+            effect.resourceKind,
+          );
+        }
+      }
+      const create = effect.create;
+      const inst = effect.inst;
+      // $FlowFixMe[not-a-function] (@poteto)
+      const destroy = create();
+      // $FlowFixMe[incompatible-type] (@poteto)
+      inst.destroy = destroy;
+      return destroy;
+    } else {
+      if (effect.resourceKind == null) {
+        const create = effect.create;
+        const inst = effect.inst;
+        const destroy = create();
+        inst.destroy = destroy;
+        return destroy;
+      }
+      switch (effect.resourceKind) {
+        case ResourceEffectIdentityKind: {
+          return effect.create();
+        }
+        case ResourceEffectUpdateKind: {
+          if (typeof effect.update === 'function') {
+            effect.update(effect.inst.resource);
+          }
+          break;
+        }
+        default: {
+          if (__DEV__) {
+            console.error(
+              'Unhandled Effect kind %s. This is a bug in React.',
+              effect.kind,
+            );
+          }
+        }
+      }
+    }
   },
 };
 

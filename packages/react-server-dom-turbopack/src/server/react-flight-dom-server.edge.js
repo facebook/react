@@ -9,8 +9,9 @@
 
 export {
   renderToReadableStream,
-  prerender,
+  prerender as unstable_prerender,
   decodeReply,
+  decodeReplyFromAsyncIterable,
   decodeAction,
   decodeFormState,
   registerServerReference,

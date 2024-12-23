@@ -16,7 +16,7 @@ function component() {
 import { c as _c } from "react/compiler-runtime";
 function component() {
   const $ = _c(1);
-  const [x, setX] = useState(0);
+  const [, setX] = useState(0);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     const handler = (v) => setX(v);

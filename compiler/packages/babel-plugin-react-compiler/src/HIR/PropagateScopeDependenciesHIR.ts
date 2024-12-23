@@ -17,6 +17,11 @@ import {
   areEqualPaths,
   IdentifierId,
   Terminal,
+  InstructionValue,
+  LoadContext,
+  TInstruction,
+  FunctionExpression,
+  ObjectMethod,
 } from './HIR';
 import {
   collectHoistablePropertyLoads,
@@ -223,11 +228,25 @@ export function collectTemporariesSidemap(
     fn,
     usedOutsideDeclaringScope,
     temporaries,
-    false,
+    null,
   );
   return temporaries;
 }
 
+function isLoadContextMutable(
+  instrValue: InstructionValue,
+  id: InstructionId,
+): instrValue is LoadContext {
+  if (instrValue.kind === 'LoadContext') {
+    CompilerError.invariant(instrValue.place.identifier.scope != null, {
+      reason:
+        '[PropagateScopeDependencies] Expected all context variables to be assigned a scope',
+      loc: instrValue.loc,
+    });
+    return id >= instrValue.place.identifier.scope.range.end;
+  }
+  return false;
+}
 /**
  * Recursive collect a sidemap of all `LoadLocal` and `PropertyLoads` with a
  * function and all nested functions.
@@ -239,17 +258,21 @@ function collectTemporariesSidemapImpl(
   fn: HIRFunction,
   usedOutsideDeclaringScope: ReadonlySet<DeclarationId>,
   temporaries: Map<IdentifierId, ReactiveScopeDependency>,
-  isInnerFn: boolean,
+  innerFnContext: {instrId: InstructionId} | null,
 ): void {
   for (const [_, block] of fn.body.blocks) {
-    for (const instr of block.instructions) {
-      const {value, lvalue} = instr;
+    for (const {value, lvalue, id: origInstrId} of block.instructions) {
+      const instrId =
+        innerFnContext != null ? innerFnContext.instrId : origInstrId;
       const usedOutside = usedOutsideDeclaringScope.has(
         lvalue.identifier.declarationId,
       );
 
       if (value.kind === 'PropertyLoad' && !usedOutside) {
-        if (!isInnerFn || temporaries.has(value.object.identifier.id)) {
+        if (
+          innerFnContext == null ||
+          temporaries.has(value.object.identifier.id)
+        ) {
           /**
            * All dependencies of a inner / nested function must have a base
            * identifier from the outermost component / hook. This is because the
@@ -265,13 +288,13 @@ function collectTemporariesSidemapImpl(
           temporaries.set(lvalue.identifier.id, property);
         }
       } else if (
-        value.kind === 'LoadLocal' &&
+        (value.kind === 'LoadLocal' || isLoadContextMutable(value, instrId)) &&
         lvalue.identifier.name == null &&
         value.place.identifier.name !== null &&
         !usedOutside
       ) {
         if (
-          !isInnerFn ||
+          innerFnContext == null ||
           fn.context.some(
             context => context.identifier.id === value.place.identifier.id,
           )
@@ -289,7 +312,7 @@ function collectTemporariesSidemapImpl(
           value.loweredFunc.func,
           usedOutsideDeclaringScope,
           temporaries,
-          true,
+          innerFnContext ?? {instrId},
         );
       }
     }
@@ -358,19 +381,22 @@ class Context {
 
   #temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>;
   #temporariesUsedOutsideScope: ReadonlySet<DeclarationId>;
+  #processedInstrsInOptional: ReadonlySet<Instruction | Terminal>;
 
   /**
    * Tracks the traversal state. See Context.declare for explanation of why this
    * is needed.
    */
-  inInnerFn: boolean = false;
+  #innerFnContext: {outerInstrId: InstructionId} | null = null;
 
   constructor(
     temporariesUsedOutsideScope: ReadonlySet<DeclarationId>,
     temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
+    processedInstrsInOptional: ReadonlySet<Instruction | Terminal>,
   ) {
     this.#temporariesUsedOutsideScope = temporariesUsedOutsideScope;
     this.#temporaries = temporaries;
+    this.#processedInstrsInOptional = processedInstrsInOptional;
   }
 
   enterScope(scope: ReactiveScope): void {
@@ -431,7 +457,7 @@ class Context {
    *     by root identifier mutable ranges).
    */
   declare(identifier: Identifier, decl: Decl): void {
-    if (this.inInnerFn) return;
+    if (this.#innerFnContext != null) return;
     if (!this.#declarations.has(identifier.declarationId)) {
       this.#declarations.set(identifier.declarationId, decl);
     }
@@ -440,14 +466,6 @@ class Context {
 
   // Checks if identifier is a valid dependency in the current scope
   #checkValidDependency(maybeDependency: ReactiveScopeDependency): boolean {
-    // ref.current access is not a valid dep
-    if (
-      isUseRefType(maybeDependency.identifier) &&
-      maybeDependency.path.at(0)?.property === 'current'
-    ) {
-      return false;
-    }
-
     // ref value is not a valid dep
     if (isRefValueType(maybeDependency.identifier)) {
       return false;
@@ -549,6 +567,16 @@ class Context {
       });
     }
 
+    // ref.current access is not a valid dep
+    if (
+      isUseRefType(maybeDependency.identifier) &&
+      maybeDependency.path.at(0)?.property === 'current'
+    ) {
+      maybeDependency = {
+        identifier: maybeDependency.identifier,
+        path: [],
+      };
+    }
     if (this.#checkValidDependency(maybeDependency)) {
       this.#dependencies.value!.push(maybeDependency);
     }
@@ -572,22 +600,52 @@ class Context {
       currentScope.reassignments.add(place.identifier);
     }
   }
+  enterInnerFn<T>(
+    innerFn: TInstruction<FunctionExpression> | TInstruction<ObjectMethod>,
+    cb: () => T,
+  ): T {
+    const prevContext = this.#innerFnContext;
+    this.#innerFnContext = this.#innerFnContext ?? {outerInstrId: innerFn.id};
+    const result = cb();
+    this.#innerFnContext = prevContext;
+    return result;
+  }
+
+  /**
+   * Skip dependencies that are subexpressions of other dependencies. e.g. if a
+   * dependency is tracked in the temporaries sidemap, it can be added at
+   * site-of-use
+   */
+  isDeferredDependency(
+    instr:
+      | {kind: HIRValue.Instruction; value: Instruction}
+      | {kind: HIRValue.Terminal; value: Terminal},
+  ): boolean {
+    return (
+      this.#processedInstrsInOptional.has(instr.value) ||
+      (instr.kind === HIRValue.Instruction &&
+        this.#temporaries.has(instr.value.lvalue.identifier.id))
+    );
+  }
+}
+enum HIRValue {
+  Instruction = 1,
+  Terminal,
 }
 
 function handleInstruction(instr: Instruction, context: Context): void {
   const {id, value, lvalue} = instr;
-  if (value.kind === 'LoadLocal') {
-    if (
-      value.place.identifier.name === null ||
-      lvalue.identifier.name !== null ||
-      context.isUsedOutsideDeclaringScope(lvalue)
-    ) {
-      context.visitOperand(value.place);
-    }
-  } else if (value.kind === 'PropertyLoad') {
-    if (context.isUsedOutsideDeclaringScope(lvalue)) {
-      context.visitProperty(value.object, value.property, false);
-    }
+  context.declare(lvalue.identifier, {
+    id,
+    scope: context.currentScope,
+  });
+  if (
+    context.isDeferredDependency({kind: HIRValue.Instruction, value: instr})
+  ) {
+    return;
+  }
+  if (value.kind === 'PropertyLoad') {
+    context.visitProperty(value.object, value.property, false);
   } else if (value.kind === 'StoreLocal') {
     context.visitOperand(value.value);
     if (value.lvalue.kind === InstructionKind.Reassign) {
@@ -630,11 +688,6 @@ function handleInstruction(instr: Instruction, context: Context): void {
       context.visitOperand(operand);
     }
   }
-
-  context.declare(lvalue.identifier, {
-    id,
-    scope: context.currentScope,
-  });
 }
 
 function collectDependencies(
@@ -643,7 +696,11 @@ function collectDependencies(
   temporaries: ReadonlyMap<IdentifierId, ReactiveScopeDependency>,
   processedInstrsInOptional: ReadonlySet<Instruction | Terminal>,
 ): Map<ReactiveScope, Array<ReactiveScopeDependency>> {
-  const context = new Context(usedOutsideDeclaringScope, temporaries);
+  const context = new Context(
+    usedOutsideDeclaringScope,
+    temporaries,
+    processedInstrsInOptional,
+  );
 
   for (const param of fn.params) {
     if (param.kind === 'Identifier') {
@@ -661,35 +718,64 @@ function collectDependencies(
 
   const scopeTraversal = new ScopeBlockTraversal();
 
-  for (const [blockId, block] of fn.body.blocks) {
-    scopeTraversal.recordScopes(block);
-    const scopeBlockInfo = scopeTraversal.blockInfos.get(blockId);
-    if (scopeBlockInfo?.kind === 'begin') {
-      context.enterScope(scopeBlockInfo.scope);
-    } else if (scopeBlockInfo?.kind === 'end') {
-      context.exitScope(scopeBlockInfo.scope, scopeBlockInfo?.pruned);
-    }
+  const handleFunction = (fn: HIRFunction): void => {
+    for (const [blockId, block] of fn.body.blocks) {
+      scopeTraversal.recordScopes(block);
+      const scopeBlockInfo = scopeTraversal.blockInfos.get(blockId);
+      if (scopeBlockInfo?.kind === 'begin') {
+        context.enterScope(scopeBlockInfo.scope);
+      } else if (scopeBlockInfo?.kind === 'end') {
+        context.exitScope(scopeBlockInfo.scope, scopeBlockInfo.pruned);
+      }
+      // Record referenced optional chains in phis
+      for (const phi of block.phis) {
+        for (const operand of phi.operands) {
+          const maybeOptionalChain = temporaries.get(operand[1].identifier.id);
+          if (maybeOptionalChain) {
+            context.visitDependency(maybeOptionalChain);
+          }
+        }
+      }
+      for (const instr of block.instructions) {
+        if (
+          fn.env.config.enableFunctionDependencyRewrite &&
+          (instr.value.kind === 'FunctionExpression' ||
+            instr.value.kind === 'ObjectMethod')
+        ) {
+          context.declare(instr.lvalue.identifier, {
+            id: instr.id,
+            scope: context.currentScope,
+          });
+          /**
+           * Recursively visit the inner function to extract dependencies there
+           */
+          const innerFn = instr.value.loweredFunc.func;
+          context.enterInnerFn(
+            instr as
+              | TInstruction<FunctionExpression>
+              | TInstruction<ObjectMethod>,
+            () => {
+              handleFunction(innerFn);
+            },
+          );
+        } else {
+          handleInstruction(instr, context);
+        }
+      }
 
-    // Record referenced optional chains in phis
-    for (const phi of block.phis) {
-      for (const operand of phi.operands) {
-        const maybeOptionalChain = temporaries.get(operand[1].identifier.id);
-        if (maybeOptionalChain) {
-          context.visitDependency(maybeOptionalChain);
+      if (
+        !context.isDeferredDependency({
+          kind: HIRValue.Terminal,
+          value: block.terminal,
+        })
+      ) {
+        for (const place of eachTerminalOperand(block.terminal)) {
+          context.visitOperand(place);
         }
       }
     }
-    for (const instr of block.instructions) {
-      if (!processedInstrsInOptional.has(instr)) {
-        handleInstruction(instr, context);
-      }
-    }
+  };
 
-    if (!processedInstrsInOptional.has(block.terminal)) {
-      for (const place of eachTerminalOperand(block.terminal)) {
-        context.visitOperand(place);
-      }
-    }
-  }
+  handleFunction(fn);
   return context.deps;
 }

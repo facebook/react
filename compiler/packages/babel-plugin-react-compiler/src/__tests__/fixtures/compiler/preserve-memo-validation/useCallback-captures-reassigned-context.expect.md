@@ -45,18 +45,16 @@ function Foo(props) {
   } else {
     x = $[1];
   }
-
-  const t0 = x;
-  let t1;
-  if ($[2] !== t0) {
-    t1 = () => [x];
-    $[2] = t0;
-    $[3] = t1;
+  let t0;
+  if ($[2] !== x) {
+    t0 = () => [x];
+    $[2] = x;
+    $[3] = t0;
   } else {
-    t1 = $[3];
+    t0 = $[3];
   }
   x;
-  const cb = t1;
+  const cb = t0;
   return cb;
 }
 

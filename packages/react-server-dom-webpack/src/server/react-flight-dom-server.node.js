@@ -9,7 +9,7 @@
 
 export {
   renderToPipeableStream,
-  prerenderToNodeStream,
+  prerenderToNodeStream as unstable_prerenderToNodeStream,
   decodeReplyFromBusboy,
   decodeReply,
   decodeAction,

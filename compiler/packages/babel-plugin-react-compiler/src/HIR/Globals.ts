@@ -9,6 +9,7 @@ import {Effect, ValueKind, ValueReason} from './HIR';
 import {
   BUILTIN_SHAPES,
   BuiltInArrayId,
+  BuiltInFireId,
   BuiltInMixedReadonlyId,
   BuiltInUseActionStateId,
   BuiltInUseContextHookId,
@@ -87,6 +88,21 @@ const UNTYPED_GLOBALS: Set<string> = new Set([
 ]);
 
 const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
+  [
+    'Object',
+    addObject(DEFAULT_SHAPES, 'Object', [
+      [
+        'keys',
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [Effect.Read],
+          restParam: null,
+          returnType: {kind: 'Object', shapeId: BuiltInArrayId},
+          calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Mutable,
+        }),
+      ],
+    ]),
+  ],
   [
     'Array',
     addObject(DEFAULT_SHAPES, 'Array', [
@@ -466,6 +482,21 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
         returnValueKind: ValueKind.Frozen,
       },
       BuiltInUseOperatorId,
+    ),
+  ],
+  [
+    'fire',
+    addFunction(
+      DEFAULT_SHAPES,
+      [],
+      {
+        positionalParams: [],
+        restParam: null,
+        returnType: {kind: 'Primitive'},
+        calleeEffect: Effect.Read,
+        returnValueKind: ValueKind.Frozen,
+      },
+      BuiltInFireId,
     ),
   ],
 ];

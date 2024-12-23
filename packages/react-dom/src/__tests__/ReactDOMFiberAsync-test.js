@@ -744,7 +744,7 @@ describe('ReactDOMFiberAsync', () => {
       // Because it suspended, it remains on the current path
       expect(div.textContent).toBe('/path/a');
     });
-    assertLog([]);
+    assertLog(gate('enableSiblingPrerendering') ? ['Suspend! [/path/b]'] : []);
 
     await act(async () => {
       resolvePromise();

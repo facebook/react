@@ -39,7 +39,7 @@ function Component() {
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @enableAssumeHooksFollowRulesOfReact @enableTransitivelyFreezeFunctionExpressions
 function Component() {
-  const $ = _c(8);
+  const $ = _c(7);
   const items = useItems();
   let t0;
   let t1;
@@ -47,35 +47,25 @@ function Component() {
   if ($[0] !== items) {
     t2 = Symbol.for("react.early_return_sentinel");
     bb0: {
-      let t3;
-      if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
-        t3 = (t4) => {
-          const [item] = t4;
-          return item.name != null;
-        };
-        $[4] = t3;
-      } else {
-        t3 = $[4];
-      }
-      t0 = items.filter(t3);
+      t0 = items.filter(_temp);
       const filteredItems = t0;
       if (filteredItems.length === 0) {
-        let t4;
-        if ($[5] === Symbol.for("react.memo_cache_sentinel")) {
-          t4 = (
+        let t3;
+        if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
+          t3 = (
             <div>
               <span />
             </div>
           );
-          $[5] = t4;
+          $[4] = t3;
         } else {
-          t4 = $[5];
+          t3 = $[4];
         }
-        t2 = t4;
+        t2 = t3;
         break bb0;
       }
 
-      t1 = filteredItems.map(_temp);
+      t1 = filteredItems.map(_temp2);
     }
     $[0] = items;
     $[1] = t1;
@@ -90,18 +80,22 @@ function Component() {
     return t2;
   }
   let t3;
-  if ($[6] !== t1) {
+  if ($[5] !== t1) {
     t3 = <>{t1}</>;
-    $[6] = t1;
-    $[7] = t3;
+    $[5] = t1;
+    $[6] = t3;
   } else {
-    t3 = $[7];
+    t3 = $[6];
   }
   return t3;
 }
-function _temp(t0) {
+function _temp2(t0) {
   const [item_0] = t0;
   return <Stringify item={item_0} />;
+}
+function _temp(t0) {
+  const [item] = t0;
+  return item.name != null;
 }
 
 ```
