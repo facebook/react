@@ -15,13 +15,14 @@ describe('InvalidEventListeners', () => {
   let React;
   let ReactDOMClient;
   let act;
+  let assertConsoleErrorDev;
   let container;
 
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
     ReactDOMClient = require('react-dom/client');
-    act = require('internal-test-utils').act;
+    ({act, assertConsoleErrorDev} = require('internal-test-utils'));
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -34,13 +35,13 @@ describe('InvalidEventListeners', () => {
 
   it('should prevent non-function listeners, at dispatch', async () => {
     const root = ReactDOMClient.createRoot(container);
-    await expect(async () => {
-      await act(() => {
-        root.render(<div onClick="not a function" />);
-      });
-    }).toErrorDev(
-      'Expected `onClick` listener to be a function, instead got a value of `string` type.',
-    );
+    await act(() => {
+      root.render(<div onClick="not a function" />);
+    });
+    assertConsoleErrorDev([
+      'Expected `onClick` listener to be a function, instead got a value of `string` type.\n' +
+        '    in div (at **)',
+    ]);
     const node = container.firstChild;
 
     console.error = jest.fn();

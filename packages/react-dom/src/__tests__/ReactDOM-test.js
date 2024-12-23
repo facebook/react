@@ -14,7 +14,7 @@ let ReactDOM;
 let findDOMNode;
 let ReactDOMClient;
 let ReactDOMServer;
-
+let assertConsoleErrorDev;
 let act;
 
 describe('ReactDOM', () => {
@@ -28,7 +28,7 @@ describe('ReactDOM', () => {
       ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE
         .findDOMNode;
 
-    act = require('internal-test-utils').act;
+    ({act, assertConsoleErrorDev} = require('internal-test-utils'));
   });
 
   it('should bubble onSubmit', async () => {
@@ -188,15 +188,14 @@ describe('ReactDOM', () => {
 
     const myDiv = document.createElement('div');
     await expect(async () => {
-      await expect(async () => {
-        await act(() => {
-          ReactDOM.render(<A />, myDiv, 'no');
-        });
-      }).rejects.toThrowError(
-        'Invalid argument passed as callback. Expected a function. Instead ' +
-          'received: no',
-      );
-    }).toErrorDev(
+      await act(() => {
+        ReactDOM.render(<A />, myDiv, 'no');
+      });
+    }).rejects.toThrowError(
+      'Invalid argument passed as callback. Expected a function. Instead ' +
+        'received: no',
+    );
+    assertConsoleErrorDev(
       [
         'Expected the last optional `callback` argument to be a function. Instead received: no.',
         'Expected the last optional `callback` argument to be a function. Instead received: no.',
@@ -205,15 +204,14 @@ describe('ReactDOM', () => {
     );
 
     await expect(async () => {
-      await expect(async () => {
-        await act(() => {
-          ReactDOM.render(<A />, myDiv, {foo: 'bar'});
-        });
-      }).rejects.toThrowError(
-        'Invalid argument passed as callback. Expected a function. Instead ' +
-          'received: [object Object]',
-      );
-    }).toErrorDev(
+      await act(() => {
+        ReactDOM.render(<A />, myDiv, {foo: 'bar'});
+      });
+    }).rejects.toThrowError(
+      'Invalid argument passed as callback. Expected a function. Instead ' +
+        'received: [object Object]',
+    );
+    assertConsoleErrorDev(
       [
         "Expected the last optional `callback` argument to be a function. Instead received: { foo: 'bar' }",
         "Expected the last optional `callback` argument to be a function. Instead received: { foo: 'bar' }.",
@@ -222,15 +220,14 @@ describe('ReactDOM', () => {
     );
 
     await expect(async () => {
-      await expect(async () => {
-        await act(() => {
-          ReactDOM.render(<A />, myDiv, new Foo());
-        });
-      }).rejects.toThrowError(
-        'Invalid argument passed as callback. Expected a function. Instead ' +
-          'received: [object Object]',
-      );
-    }).toErrorDev(
+      await act(() => {
+        ReactDOM.render(<A />, myDiv, new Foo());
+      });
+    }).rejects.toThrowError(
+      'Invalid argument passed as callback. Expected a function. Instead ' +
+        'received: [object Object]',
+    );
+    assertConsoleErrorDev(
       [
         'Expected the last optional `callback` argument to be a function. Instead received: Foo { a: 1, b: 2 }.',
         'Expected the last optional `callback` argument to be a function. Instead received: Foo { a: 1, b: 2 }.',
@@ -257,15 +254,14 @@ describe('ReactDOM', () => {
     const myDiv = document.createElement('div');
     ReactDOM.render(<A />, myDiv);
     await expect(async () => {
-      await expect(async () => {
-        await act(() => {
-          ReactDOM.render(<A />, myDiv, 'no');
-        });
-      }).rejects.toThrowError(
-        'Invalid argument passed as callback. Expected a function. Instead ' +
-          'received: no',
-      );
-    }).toErrorDev(
+      await act(() => {
+        ReactDOM.render(<A />, myDiv, 'no');
+      });
+    }).rejects.toThrowError(
+      'Invalid argument passed as callback. Expected a function. Instead ' +
+        'received: no',
+    );
+    assertConsoleErrorDev(
       [
         'Expected the last optional `callback` argument to be a function. Instead received: no.',
         'Expected the last optional `callback` argument to be a function. Instead received: no.',
@@ -275,15 +271,14 @@ describe('ReactDOM', () => {
 
     ReactDOM.render(<A />, myDiv); // Re-mount
     await expect(async () => {
-      await expect(async () => {
-        await act(() => {
-          ReactDOM.render(<A />, myDiv, {foo: 'bar'});
-        });
-      }).rejects.toThrowError(
-        'Invalid argument passed as callback. Expected a function. Instead ' +
-          'received: [object Object]',
-      );
-    }).toErrorDev(
+      await act(() => {
+        ReactDOM.render(<A />, myDiv, {foo: 'bar'});
+      });
+    }).rejects.toThrowError(
+      'Invalid argument passed as callback. Expected a function. Instead ' +
+        'received: [object Object]',
+    );
+    assertConsoleErrorDev(
       [
         "Expected the last optional `callback` argument to be a function. Instead received: { foo: 'bar' }.",
         "Expected the last optional `callback` argument to be a function. Instead received: { foo: 'bar' }.",
@@ -293,15 +288,14 @@ describe('ReactDOM', () => {
 
     ReactDOM.render(<A />, myDiv); // Re-mount
     await expect(async () => {
-      await expect(async () => {
-        await act(() => {
-          ReactDOM.render(<A />, myDiv, new Foo());
-        });
-      }).rejects.toThrowError(
-        'Invalid argument passed as callback. Expected a function. Instead ' +
-          'received: [object Object]',
-      );
-    }).toErrorDev(
+      await act(() => {
+        ReactDOM.render(<A />, myDiv, new Foo());
+      });
+    }).rejects.toThrowError(
+      'Invalid argument passed as callback. Expected a function. Instead ' +
+        'received: [object Object]',
+    );
+    assertConsoleErrorDev(
       [
         'Expected the last optional `callback` argument to be a function. Instead received: Foo { a: 1, b: 2 }.',
         'Expected the last optional `callback` argument to be a function. Instead received: Foo { a: 1, b: 2 }.',
@@ -544,11 +538,10 @@ describe('ReactDOM', () => {
     }
 
     const root = ReactDOMClient.createRoot(document.createElement('div'));
-    await expect(async () => {
-      await act(() => {
-        root.render(<App />);
-      });
-    }).toErrorDev([
+    await act(() => {
+      root.render(<App />);
+    });
+    assertConsoleErrorDev([
       // ReactDOM(App > div > span)
       'Invalid ARIA attribute `ariaTypo`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
         '    in span (at **)\n' +

@@ -87,7 +87,7 @@ module.exports = function (initModules) {
       console.error.mockClear();
     } else {
       // TODO: Rewrite tests that use this helper to enumerate expected errors.
-      // This will enable the helper to use the .toErrorDev() matcher instead of spying.
+      // This will enable the helper to use the assertConsoleErrorDev instead of spying.
       spyOnDev(console, 'error').mockImplementation(() => {});
     }
 

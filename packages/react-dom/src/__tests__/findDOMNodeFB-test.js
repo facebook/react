@@ -12,6 +12,8 @@
 const React = require('react');
 const ReactDOM = require('react-dom');
 const StrictMode = React.StrictMode;
+const assertConsoleErrorDev =
+  require('internal-test-utils').assertConsoleErrorDev;
 
 describe('findDOMNode', () => {
   // @gate www && classic
@@ -128,8 +130,8 @@ describe('findDOMNode', () => {
       container,
     );
 
-    let match;
-    expect(() => (match = ReactDOM.findDOMNode(parent))).toErrorDev([
+    const match = ReactDOM.findDOMNode(parent);
+    assertConsoleErrorDev([
       'findDOMNode is deprecated in StrictMode. ' +
         'findDOMNode was passed an instance of ContainsStrictModeChild which renders StrictMode children. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
@@ -161,8 +163,8 @@ describe('findDOMNode', () => {
       container,
     );
 
-    let match;
-    expect(() => (match = ReactDOM.findDOMNode(parent))).toErrorDev([
+    const match = ReactDOM.findDOMNode(parent);
+    assertConsoleErrorDev([
       'findDOMNode is deprecated in StrictMode. ' +
         'findDOMNode was passed an instance of IsInStrictMode which is inside StrictMode. ' +
         'Instead, add a ref directly to the element you want to reference. ' +

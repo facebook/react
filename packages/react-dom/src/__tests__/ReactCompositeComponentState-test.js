@@ -17,13 +17,14 @@ let Scheduler;
 let assertLog;
 let TestComponent;
 let testComponentInstance;
+let assertConsoleErrorDev;
 
 describe('ReactCompositeComponent-state', () => {
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
-    act = require('internal-test-utils').act;
+    ({act, assertConsoleErrorDev} = require('internal-test-utils'));
     Scheduler = require('scheduler');
 
     const InternalTestUtils = require('internal-test-utils');
@@ -469,15 +470,15 @@ describe('ReactCompositeComponent-state', () => {
       root.render(<Test />);
     });
     // Update
-    expect(() => {
-      ReactDOM.flushSync(() => {
-        root.render(<Test />);
-      });
-    }).toErrorDev(
+    ReactDOM.flushSync(() => {
+      root.render(<Test />);
+    });
+    assertConsoleErrorDev([
       'Test.componentWillReceiveProps(): Assigning directly to ' +
         "this.state is deprecated (except inside a component's constructor). " +
-        'Use setState instead.',
-    );
+        'Use setState instead.\n' +
+        '    in Test (at **)',
+    ]);
 
     assertLog([
       'render -- step: 1, extra: true',
@@ -518,15 +519,15 @@ describe('ReactCompositeComponent-state', () => {
     // Mount
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    expect(() => {
-      ReactDOM.flushSync(() => {
-        root.render(<Test />);
-      });
-    }).toErrorDev(
+    ReactDOM.flushSync(() => {
+      root.render(<Test />);
+    });
+    assertConsoleErrorDev([
       'Test.componentWillMount(): Assigning directly to ' +
         "this.state is deprecated (except inside a component's constructor). " +
-        'Use setState instead.',
-    );
+        'Use setState instead.\n' +
+        '    in Test (at **)',
+    ]);
 
     assertLog([
       'render -- step: 3, extra: false',
@@ -566,13 +567,16 @@ describe('ReactCompositeComponent-state', () => {
     });
     expect(el.textContent).toBe('A');
 
-    expect(() => {
-      ReactDOM.flushSync(() => {
-        root.render(<B />);
-      });
-    }).toErrorDev(
-      "Can't perform a React state update on a component that hasn't mounted yet",
-    );
+    ReactDOM.flushSync(() => {
+      root.render(<B />);
+    });
+    assertConsoleErrorDev([
+      "Can't perform a React state update on a component that hasn't mounted yet. " +
+        'This indicates that you have a side-effect in your render function that ' +
+        'asynchronously later calls tries to update the component. ' +
+        'Move this work to useEffect instead.\n' +
+        '    in B (at **)',
+    ]);
   });
 
   // @gate !disableLegacyMode
