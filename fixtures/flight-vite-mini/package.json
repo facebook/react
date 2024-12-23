@@ -1,0 +1,27 @@
+{
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"build-deps": "rm -rf node_modules/{react,react-dom/react-server-dom-vite} && cd ../.. && RELEASE_CHANNEL=experimental node ./scripts/rollup/build.js react/index,react/jsx,react.react-server,react-jsx-runtime.react-server,react-jsx-dev-runtime.react-server,react-dom/index,react-dom/client,react-dom/server,react-dom.react-server,react-dom-server.node,react-dom-server-legacy.node,scheduler,react-server-dom-vite/ --type=NODE_DEV,NODE_PROD && cp -r ./build/node_modules/* ./fixtures/flight-vite-mini/node_modules/",
+		"dev": "vite dev",
+		"build": "vite build --app",
+		"preview": "vite preview",
+		"format": "npx biome format --write",
+		"test-e2e": "playwright test",
+		"test-e2e-preview": "E2E_PREVIEW=1 playwright test"
+	},
+	"dependencies": {
+		"react-server-dom-vite": "npm:@jacob-ebey/react-server-dom-vite@19.0.0-experimental.14",
+		"react": "^19.0.0",
+		"react-dom": "^19.0.0"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.4",
+		"@playwright/test": "^1.49.0",
+		"@types/node": "^22.0.0",
+		"@types/react": "^19.0.1",
+		"@types/react-dom": "^19.0.1",
+		"@vitejs/plugin-react": "^4.3.4",
+		"vite": "^6.0.3"
+	}
+}
