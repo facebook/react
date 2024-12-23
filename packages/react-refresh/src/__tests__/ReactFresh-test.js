@@ -699,6 +699,163 @@ describe('ReactFresh', () => {
     }
   });
 
+  it('can remount when change function to memo', async () => {
+    if (__DEV__) {
+      await act(async () => {
+        await render(() => {
+          function Test() {
+            return <p>hi test</p>;
+          }
+          $RefreshReg$(Test, 'Test');
+          return Test;
+        });
+      });
+
+      // Check the initial render
+      const el = container.firstChild;
+      expect(el.textContent).toBe('hi test');
+
+      // Patch to change function to memo
+      await act(async () => {
+        await patch(() => {
+          function Test2() {
+            return <p>hi memo</p>;
+          }
+          const Test = React.memo(Test2);
+          $RefreshReg$(Test2, 'Test2');
+          $RefreshReg$(Test, 'Test');
+          return Test;
+        });
+      });
+
+      // Check remount
+      expect(container.firstChild).not.toBe(el);
+      const nextEl = container.firstChild;
+      expect(nextEl.textContent).toBe('hi memo');
+
+      // Patch back to original function
+      await act(async () => {
+        await patch(() => {
+          function Test() {
+            return <p>hi test</p>;
+          }
+          $RefreshReg$(Test, 'Test');
+          return Test;
+        });
+      });
+
+      // Check final remount
+      expect(container.firstChild).not.toBe(nextEl);
+      const newEl = container.firstChild;
+      expect(newEl.textContent).toBe('hi test');
+    }
+  });
+
+  it('can remount when change memo to forwardRef', async () => {
+    if (__DEV__) {
+      await act(async () => {
+        await render(() => {
+          function Test2() {
+            return <p>hi memo</p>;
+          }
+          const Test = React.memo(Test2);
+          $RefreshReg$(Test2, 'Test2');
+          $RefreshReg$(Test, 'Test');
+          return Test;
+        });
+      });
+      // Check the initial render
+      const el = container.firstChild;
+      expect(el.textContent).toBe('hi memo');
+
+      // Patch to change memo to forwardRef
+      await act(async () => {
+        await patch(() => {
+          function Test2() {
+            return <p>hi forwardRef</p>;
+          }
+          const Test = React.forwardRef(Test2);
+          $RefreshReg$(Test2, 'Test2');
+          $RefreshReg$(Test, 'Test');
+          return Test;
+        });
+      });
+      // Check remount
+      expect(container.firstChild).not.toBe(el);
+      const nextEl = container.firstChild;
+      expect(nextEl.textContent).toBe('hi forwardRef');
+
+      // Patch back to memo
+      await act(async () => {
+        await patch(() => {
+          function Test2() {
+            return <p>hi memo</p>;
+          }
+          const Test = React.memo(Test2);
+          $RefreshReg$(Test2, 'Test2');
+          $RefreshReg$(Test, 'Test');
+          return Test;
+        });
+      });
+      // Check final remount
+      expect(container.firstChild).not.toBe(nextEl);
+      const newEl = container.firstChild;
+      expect(newEl.textContent).toBe('hi memo');
+    }
+  });
+
+  it('can remount when change function to forwardRef', async () => {
+    if (__DEV__) {
+      await act(async () => {
+        await render(() => {
+          function Test() {
+            return <p>hi test</p>;
+          }
+          $RefreshReg$(Test, 'Test');
+          return Test;
+        });
+      });
+
+      // Check the initial render
+      const el = container.firstChild;
+      expect(el.textContent).toBe('hi test');
+
+      // Patch to change function to forwardRef
+      await act(async () => {
+        await patch(() => {
+          function Test2() {
+            return <p>hi forwardRef</p>;
+          }
+          const Test = React.forwardRef(Test2);
+          $RefreshReg$(Test2, 'Test2');
+          $RefreshReg$(Test, 'Test');
+          return Test;
+        });
+      });
+
+      // Check remount
+      expect(container.firstChild).not.toBe(el);
+      const nextEl = container.firstChild;
+      expect(nextEl.textContent).toBe('hi forwardRef');
+
+      // Patch back to a new function
+      await act(async () => {
+        await patch(() => {
+          function Test() {
+            return <p>hi test1</p>;
+          }
+          $RefreshReg$(Test, 'Test');
+          return Test;
+        });
+      });
+
+      // Check final remount
+      expect(container.firstChild).not.toBe(nextEl);
+      const newEl = container.firstChild;
+      expect(newEl.textContent).toBe('hi test1');
+    }
+  });
+
   it('can update simple memo function in isolation', async () => {
     if (__DEV__) {
       await render(() => {
