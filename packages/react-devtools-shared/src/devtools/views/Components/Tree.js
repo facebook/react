@@ -54,8 +54,8 @@ export default function Tree(): React.Node {
     ownerID,
     searchIndex,
     searchResults,
-    selectedElementID,
-    selectedElementIndex,
+    inspectedElementID,
+    inspectedElementIndex,
   } = useContext(TreeStateContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
@@ -84,11 +84,11 @@ export default function Tree(): React.Node {
   // Using a callback ref accounts for this case...
   const listCallbackRef = useCallback(
     (list: $FlowFixMe) => {
-      if (list != null && selectedElementIndex !== null) {
-        list.scrollToItem(selectedElementIndex, 'smart');
+      if (list != null && inspectedElementIndex !== null) {
+        list.scrollToItem(inspectedElementIndex, 'smart');
       }
     },
-    [selectedElementIndex],
+    [inspectedElementIndex],
   );
 
   // Picking an element in the inspector should put focus into the tree.
@@ -133,8 +133,8 @@ export default function Tree(): React.Node {
         case 'ArrowLeft':
           event.preventDefault();
           element =
-            selectedElementID !== null
-              ? store.getElementByID(selectedElementID)
+            inspectedElementID !== null
+              ? store.getElementByID(inspectedElementID)
               : null;
           if (element !== null) {
             if (event.altKey) {
@@ -153,8 +153,8 @@ export default function Tree(): React.Node {
         case 'ArrowRight':
           event.preventDefault();
           element =
-            selectedElementID !== null
-              ? store.getElementByID(selectedElementID)
+            inspectedElementID !== null
+              ? store.getElementByID(inspectedElementID)
               : null;
           if (element !== null) {
             if (event.altKey) {
@@ -202,7 +202,7 @@ export default function Tree(): React.Node {
     return () => {
       container.removeEventListener('keydown', handleKeyDown);
     };
-  }, [dispatch, selectedElementID, store]);
+  }, [dispatch, inspectedElementID, store]);
 
   // Focus management.
   const handleBlur = useCallback(() => setTreeFocused(false), []);
@@ -213,15 +213,15 @@ export default function Tree(): React.Node {
       switch (event.key) {
         case 'Enter':
         case ' ':
-          if (selectedElementID !== null) {
-            dispatch({type: 'SELECT_OWNER', payload: selectedElementID});
+          if (inspectedElementID !== null) {
+            dispatch({type: 'SELECT_OWNER', payload: inspectedElementID});
           }
           break;
         default:
           break;
       }
     },
-    [dispatch, selectedElementID],
+    [dispatch, inspectedElementID],
   );
 
   // If we switch the selected element while using the keyboard,
@@ -238,8 +238,8 @@ export default function Tree(): React.Node {
       didSelectNewSearchResult = true;
     }
     if (isNavigatingWithKeyboard || didSelectNewSearchResult) {
-      if (selectedElementID !== null) {
-        highlightHostInstance(selectedElementID);
+      if (inspectedElementID !== null) {
+        highlightHostInstance(inspectedElementID);
       } else {
         clearHighlightHostInstance();
       }
@@ -250,7 +250,7 @@ export default function Tree(): React.Node {
     highlightHostInstance,
     searchIndex,
     searchResults,
-    selectedElementID,
+    inspectedElementID,
   ]);
 
   // Highlight last hovered element.
