@@ -29,14 +29,12 @@ import type {ReactContext} from 'shared/ReactTypes';
 import * as React from 'react';
 import {
   createContext,
-  useCallback,
   useContext,
   useEffect,
   useLayoutEffect,
   useMemo,
   useReducer,
   useRef,
-  startTransition,
 } from 'react';
 import {createRegExp} from '../utils';
 import {StoreContext} from '../context';
@@ -48,8 +46,6 @@ export type StateContext = {
   // Tree
   numElements: number,
   ownerSubtreeLeafElementID: number | null,
-  selectedElementID: number | null,
-  selectedElementIndex: number | null,
 
   // Search
   searchIndex: number | null,
@@ -62,6 +58,7 @@ export type StateContext = {
 
   // Inspection element panel
   inspectedElementID: number | null,
+  inspectedElementIndex: number | null,
 };
 
 type ACTION_GO_TO_NEXT_SEARCH_RESULT = {
@@ -123,9 +120,6 @@ type ACTION_SET_SEARCH_TEXT = {
   type: 'SET_SEARCH_TEXT',
   payload: string,
 };
-type ACTION_UPDATE_INSPECTED_ELEMENT_ID = {
-  type: 'UPDATE_INSPECTED_ELEMENT_ID',
-};
 
 type Action =
   | ACTION_GO_TO_NEXT_SEARCH_RESULT
@@ -145,8 +139,7 @@ type Action =
   | ACTION_SELECT_PREVIOUS_SIBLING_IN_TREE
   | ACTION_SELECT_OWNER_LIST_NEXT_ELEMENT_IN_TREE
   | ACTION_SELECT_OWNER_LIST_PREVIOUS_ELEMENT_IN_TREE
-  | ACTION_SET_SEARCH_TEXT
-  | ACTION_UPDATE_INSPECTED_ELEMENT_ID;
+  | ACTION_SET_SEARCH_TEXT;
 
 export type DispatcherContext = (action: Action) => void;
 
@@ -162,8 +155,6 @@ type State = {
   // Tree
   numElements: number,
   ownerSubtreeLeafElementID: number | null,
-  selectedElementID: number | null,
-  selectedElementIndex: number | null,
 
   // Search
   searchIndex: number | null,
@@ -176,14 +167,15 @@ type State = {
 
   // Inspection element panel
   inspectedElementID: number | null,
+  inspectedElementIndex: number | null,
 };
 
 function reduceTreeState(store: Store, state: State, action: Action): State {
   let {
     numElements,
     ownerSubtreeLeafElementID,
-    selectedElementIndex,
-    selectedElementID,
+    inspectedElementID,
+    inspectedElementIndex,
   } = state;
   const ownerID = state.ownerID;
 
@@ -201,34 +193,33 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
         // We deduce the parent-child mapping from removedIDs (id -> parentID)
         // because by now it's too late to read them from the store.
         while (
-          selectedElementID !== null &&
-          removedIDs.has(selectedElementID)
+          inspectedElementID !== null &&
+          removedIDs.has(inspectedElementID)
         ) {
-          selectedElementID = ((removedIDs.get(
-            selectedElementID,
-          ): any): number);
+          // $FlowExpectedError[incompatible-type]
+          inspectedElementID = removedIDs.get(inspectedElementID);
         }
-        if (selectedElementID === 0) {
+        if (inspectedElementID === 0) {
           // The whole root was removed.
-          selectedElementIndex = null;
+          inspectedElementIndex = null;
         }
         break;
       case 'SELECT_CHILD_ELEMENT_IN_TREE':
         ownerSubtreeLeafElementID = null;
 
-        if (selectedElementIndex !== null) {
-          const selectedElement = store.getElementAtIndex(
-            ((selectedElementIndex: any): number),
+        if (inspectedElementIndex !== null) {
+          const inspectedElement = store.getElementAtIndex(
+            inspectedElementIndex,
           );
           if (
-            selectedElement !== null &&
-            selectedElement.children.length > 0 &&
-            !selectedElement.isCollapsed
+            inspectedElement !== null &&
+            inspectedElement.children.length > 0 &&
+            !inspectedElement.isCollapsed
           ) {
-            const firstChildID = selectedElement.children[0];
+            const firstChildID = inspectedElement.children[0];
             const firstChildIndex = store.getIndexOfElementID(firstChildID);
             if (firstChildIndex !== null) {
-              selectedElementIndex = firstChildIndex;
+              inspectedElementIndex = firstChildIndex;
             }
           }
         }
@@ -236,7 +227,8 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
       case 'SELECT_ELEMENT_AT_INDEX':
         ownerSubtreeLeafElementID = null;
 
-        selectedElementIndex = (action: ACTION_SELECT_ELEMENT_AT_INDEX).payload;
+        inspectedElementIndex = (action: ACTION_SELECT_ELEMENT_AT_INDEX)
+          .payload;
         break;
       case 'SELECT_ELEMENT_BY_ID':
         ownerSubtreeLeafElementID = null;
@@ -245,30 +237,30 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
         // It might also cause problems if the specified element was inside of a (not yet expanded) subtree.
         lookupIDForIndex = false;
 
-        selectedElementID = (action: ACTION_SELECT_ELEMENT_BY_ID).payload;
-        selectedElementIndex =
-          selectedElementID === null
+        inspectedElementID = (action: ACTION_SELECT_ELEMENT_BY_ID).payload;
+        inspectedElementIndex =
+          inspectedElementID === null
             ? null
-            : store.getIndexOfElementID(selectedElementID);
+            : store.getIndexOfElementID(inspectedElementID);
         break;
       case 'SELECT_NEXT_ELEMENT_IN_TREE':
         ownerSubtreeLeafElementID = null;
 
         if (
-          selectedElementIndex === null ||
-          selectedElementIndex + 1 >= numElements
+          inspectedElementIndex === null ||
+          inspectedElementIndex + 1 >= numElements
         ) {
-          selectedElementIndex = 0;
+          inspectedElementIndex = 0;
         } else {
-          selectedElementIndex++;
+          inspectedElementIndex++;
         }
         break;
       case 'SELECT_NEXT_SIBLING_IN_TREE':
         ownerSubtreeLeafElementID = null;
 
-        if (selectedElementIndex !== null) {
+        if (inspectedElementIndex !== null) {
           const selectedElement = store.getElementAtIndex(
-            ((selectedElementIndex: any): number),
+            ((inspectedElementIndex: any): number),
           );
           if (selectedElement !== null && selectedElement.parentID !== 0) {
             const parent = store.getElementByID(selectedElement.parentID);
@@ -279,23 +271,23 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
                 selectedChildIndex < children.length - 1
                   ? children[selectedChildIndex + 1]
                   : children[0];
-              selectedElementIndex = store.getIndexOfElementID(nextChildID);
+              inspectedElementIndex = store.getIndexOfElementID(nextChildID);
             }
           }
         }
         break;
       case 'SELECT_OWNER_LIST_NEXT_ELEMENT_IN_TREE':
-        if (selectedElementIndex !== null) {
+        if (inspectedElementIndex !== null) {
           if (
             ownerSubtreeLeafElementID !== null &&
-            ownerSubtreeLeafElementID !== selectedElementID
+            ownerSubtreeLeafElementID !== inspectedElementID
           ) {
             const leafElement = store.getElementByID(ownerSubtreeLeafElementID);
             if (leafElement !== null) {
               let currentElement: null | Element = leafElement;
               while (currentElement !== null) {
-                if (currentElement.ownerID === selectedElementID) {
-                  selectedElementIndex = store.getIndexOfElementID(
+                if (currentElement.ownerID === inspectedElementID) {
+                  inspectedElementIndex = store.getIndexOfElementID(
                     currentElement.id,
                   );
                   break;
@@ -308,23 +300,23 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
         }
         break;
       case 'SELECT_OWNER_LIST_PREVIOUS_ELEMENT_IN_TREE':
-        if (selectedElementIndex !== null) {
+        if (inspectedElementIndex !== null) {
           if (ownerSubtreeLeafElementID === null) {
             // If this is the first time we're stepping through the owners tree,
             // pin the current component as the owners list leaf.
             // This will enable us to step back down to this component.
-            ownerSubtreeLeafElementID = selectedElementID;
+            ownerSubtreeLeafElementID = inspectedElementID;
           }
 
           const selectedElement = store.getElementAtIndex(
-            ((selectedElementIndex: any): number),
+            ((inspectedElementIndex: any): number),
           );
           if (selectedElement !== null && selectedElement.ownerID !== 0) {
             const ownerIndex = store.getIndexOfElementID(
               selectedElement.ownerID,
             );
             if (ownerIndex !== null) {
-              selectedElementIndex = ownerIndex;
+              inspectedElementIndex = ownerIndex;
             }
           }
         }
@@ -332,16 +324,16 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
       case 'SELECT_PARENT_ELEMENT_IN_TREE':
         ownerSubtreeLeafElementID = null;
 
-        if (selectedElementIndex !== null) {
+        if (inspectedElementIndex !== null) {
           const selectedElement = store.getElementAtIndex(
-            ((selectedElementIndex: any): number),
+            ((inspectedElementIndex: any): number),
           );
           if (selectedElement !== null && selectedElement.parentID !== 0) {
             const parentIndex = store.getIndexOfElementID(
               selectedElement.parentID,
             );
             if (parentIndex !== null) {
-              selectedElementIndex = parentIndex;
+              inspectedElementIndex = parentIndex;
             }
           }
         }
@@ -349,18 +341,18 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
       case 'SELECT_PREVIOUS_ELEMENT_IN_TREE':
         ownerSubtreeLeafElementID = null;
 
-        if (selectedElementIndex === null || selectedElementIndex === 0) {
-          selectedElementIndex = numElements - 1;
+        if (inspectedElementIndex === null || inspectedElementIndex === 0) {
+          inspectedElementIndex = numElements - 1;
         } else {
-          selectedElementIndex--;
+          inspectedElementIndex--;
         }
         break;
       case 'SELECT_PREVIOUS_SIBLING_IN_TREE':
         ownerSubtreeLeafElementID = null;
 
-        if (selectedElementIndex !== null) {
+        if (inspectedElementIndex !== null) {
           const selectedElement = store.getElementAtIndex(
-            ((selectedElementIndex: any): number),
+            ((inspectedElementIndex: any): number),
           );
           if (selectedElement !== null && selectedElement.parentID !== 0) {
             const parent = store.getElementByID(selectedElement.parentID);
@@ -371,7 +363,7 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
                 selectedChildIndex > 0
                   ? children[selectedChildIndex - 1]
                   : children[children.length - 1];
-              selectedElementIndex = store.getIndexOfElementID(nextChildID);
+              inspectedElementIndex = store.getIndexOfElementID(nextChildID);
             }
           }
         }
@@ -384,7 +376,7 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
         }
 
         let flatIndex = 0;
-        if (selectedElementIndex !== null) {
+        if (inspectedElementIndex !== null) {
           // Resume from the current position in the list.
           // Otherwise step to the previous item, relative to the current selection.
           for (
@@ -393,7 +385,7 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
             i--
           ) {
             const {index} = elementIndicesWithErrorsOrWarnings[i];
-            if (index >= selectedElementIndex) {
+            if (index >= inspectedElementIndex) {
               flatIndex = i;
             } else {
               break;
@@ -407,12 +399,12 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
             elementIndicesWithErrorsOrWarnings[
               elementIndicesWithErrorsOrWarnings.length - 1
             ];
-          selectedElementID = prevEntry.id;
-          selectedElementIndex = prevEntry.index;
+          inspectedElementID = prevEntry.id;
+          inspectedElementIndex = prevEntry.index;
         } else {
           prevEntry = elementIndicesWithErrorsOrWarnings[flatIndex - 1];
-          selectedElementID = prevEntry.id;
-          selectedElementIndex = prevEntry.index;
+          inspectedElementID = prevEntry.id;
+          inspectedElementIndex = prevEntry.index;
         }
 
         lookupIDForIndex = false;
@@ -426,12 +418,12 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
         }
 
         let flatIndex = -1;
-        if (selectedElementIndex !== null) {
+        if (inspectedElementIndex !== null) {
           // Resume from the current position in the list.
           // Otherwise step to the next item, relative to the current selection.
           for (let i = 0; i < elementIndicesWithErrorsOrWarnings.length; i++) {
             const {index} = elementIndicesWithErrorsOrWarnings[i];
-            if (index <= selectedElementIndex) {
+            if (index <= inspectedElementIndex) {
               flatIndex = i;
             } else {
               break;
@@ -442,12 +434,12 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
         let nextEntry;
         if (flatIndex >= elementIndicesWithErrorsOrWarnings.length - 1) {
           nextEntry = elementIndicesWithErrorsOrWarnings[0];
-          selectedElementID = nextEntry.id;
-          selectedElementIndex = nextEntry.index;
+          inspectedElementID = nextEntry.id;
+          inspectedElementIndex = nextEntry.index;
         } else {
           nextEntry = elementIndicesWithErrorsOrWarnings[flatIndex + 1];
-          selectedElementID = nextEntry.id;
-          selectedElementIndex = nextEntry.index;
+          inspectedElementID = nextEntry.id;
+          inspectedElementIndex = nextEntry.index;
         }
 
         lookupIDForIndex = false;
@@ -460,12 +452,15 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
   }
 
   // Keep selected item ID and index in sync.
-  if (lookupIDForIndex && selectedElementIndex !== state.selectedElementIndex) {
-    if (selectedElementIndex === null) {
-      selectedElementID = null;
+  if (
+    lookupIDForIndex &&
+    inspectedElementIndex !== state.inspectedElementIndex
+  ) {
+    if (inspectedElementIndex === null) {
+      inspectedElementID = null;
     } else {
-      selectedElementID = store.getElementIDAtIndex(
-        ((selectedElementIndex: any): number),
+      inspectedElementID = store.getElementIDAtIndex(
+        ((inspectedElementIndex: any): number),
       );
     }
   }
@@ -475,8 +470,8 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
 
     numElements,
     ownerSubtreeLeafElementID,
-    selectedElementIndex,
-    selectedElementID,
+    inspectedElementIndex,
+    inspectedElementID,
   };
 }
 
@@ -485,8 +480,8 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
     searchIndex,
     searchResults,
     searchText,
-    selectedElementID,
-    selectedElementIndex,
+    inspectedElementID,
+    inspectedElementIndex,
   } = state;
   const ownerID = state.ownerID;
 
@@ -594,11 +589,11 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
           });
           if (searchResults.length > 0) {
             if (prevSearchIndex === null) {
-              if (selectedElementIndex !== null) {
+              if (inspectedElementIndex !== null) {
                 searchIndex = getNearestResultIndex(
                   store,
                   searchResults,
-                  selectedElementIndex,
+                  inspectedElementIndex,
                 );
               } else {
                 searchIndex = 0;
@@ -619,7 +614,7 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
   }
 
   if (searchText !== prevSearchText) {
-    const newSearchIndex = searchResults.indexOf(selectedElementID);
+    const newSearchIndex = searchResults.indexOf(inspectedElementID);
     if (newSearchIndex === -1) {
       // Only move the selection if the new query
       // doesn't match the current selection anymore.
@@ -631,17 +626,17 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
     }
   }
   if (didRequestSearch && searchIndex !== null) {
-    selectedElementID = ((searchResults[searchIndex]: any): number);
-    selectedElementIndex = store.getIndexOfElementID(
-      ((selectedElementID: any): number),
+    inspectedElementID = ((searchResults[searchIndex]: any): number);
+    inspectedElementIndex = store.getIndexOfElementID(
+      ((inspectedElementID: any): number),
     );
   }
 
   return {
     ...state,
 
-    selectedElementID,
-    selectedElementIndex,
+    inspectedElementID,
+    inspectedElementIndex,
 
     searchIndex,
     searchResults,
@@ -652,14 +647,14 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
 function reduceOwnersState(store: Store, state: State, action: Action): State {
   let {
     numElements,
-    selectedElementID,
-    selectedElementIndex,
     ownerID,
     ownerFlatTree,
+    inspectedElementID,
+    inspectedElementIndex,
   } = state;
   const {searchIndex, searchResults, searchText} = state;
 
-  let prevSelectedElementIndex = selectedElementIndex;
+  let prevInspectedElementIndex = inspectedElementIndex;
 
   switch (action.type) {
     case 'HANDLE_STORE_MUTATION':
@@ -667,75 +662,76 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
         if (!store.containsElement(ownerID)) {
           ownerID = null;
           ownerFlatTree = null;
-          selectedElementID = null;
+          prevInspectedElementIndex = null;
         } else {
           ownerFlatTree = store.getOwnersListForElement(ownerID);
-          if (selectedElementID !== null) {
+          if (inspectedElementID !== null) {
             // Mutation might have caused the index of this ID to shift.
-            selectedElementIndex = ownerFlatTree.findIndex(
-              element => element.id === selectedElementID,
+            prevInspectedElementIndex = ownerFlatTree.findIndex(
+              element => element.id === inspectedElementID,
             );
           }
         }
       } else {
-        if (selectedElementID !== null) {
+        if (inspectedElementID !== null) {
           // Mutation might have caused the index of this ID to shift.
-          selectedElementIndex = store.getIndexOfElementID(selectedElementID);
+          inspectedElementIndex = store.getIndexOfElementID(inspectedElementID);
         }
       }
-      if (selectedElementIndex === -1) {
+      if (inspectedElementIndex === -1) {
         // If we couldn't find this ID after mutation, unselect it.
-        selectedElementIndex = null;
-        selectedElementID = null;
+        inspectedElementIndex = null;
+        inspectedElementID = null;
       }
       break;
     case 'RESET_OWNER_STACK':
       ownerID = null;
       ownerFlatTree = null;
-      selectedElementIndex =
-        selectedElementID !== null
-          ? store.getIndexOfElementID(selectedElementID)
+      inspectedElementIndex =
+        inspectedElementID !== null
+          ? store.getIndexOfElementID(inspectedElementID)
           : null;
       break;
     case 'SELECT_ELEMENT_AT_INDEX':
       if (ownerFlatTree !== null) {
-        selectedElementIndex = (action: ACTION_SELECT_ELEMENT_AT_INDEX).payload;
+        inspectedElementIndex = (action: ACTION_SELECT_ELEMENT_AT_INDEX)
+          .payload;
       }
       break;
     case 'SELECT_ELEMENT_BY_ID':
       if (ownerFlatTree !== null) {
         const payload = (action: ACTION_SELECT_ELEMENT_BY_ID).payload;
         if (payload === null) {
-          selectedElementIndex = null;
+          inspectedElementIndex = null;
         } else {
-          selectedElementIndex = ownerFlatTree.findIndex(
+          inspectedElementIndex = ownerFlatTree.findIndex(
             element => element.id === payload,
           );
 
           // If the selected element is outside of the current owners list,
           // exit the list and select the element in the main tree.
           // This supports features like toggling Suspense.
-          if (selectedElementIndex !== null && selectedElementIndex < 0) {
+          if (inspectedElementIndex !== null && inspectedElementIndex < 0) {
             ownerID = null;
             ownerFlatTree = null;
-            selectedElementIndex = store.getIndexOfElementID(payload);
+            inspectedElementIndex = store.getIndexOfElementID(payload);
           }
         }
       }
       break;
     case 'SELECT_NEXT_ELEMENT_IN_TREE':
       if (ownerFlatTree !== null && ownerFlatTree.length > 0) {
-        if (selectedElementIndex === null) {
-          selectedElementIndex = 0;
-        } else if (selectedElementIndex + 1 < ownerFlatTree.length) {
-          selectedElementIndex++;
+        if (inspectedElementIndex === null) {
+          inspectedElementIndex = 0;
+        } else if (inspectedElementIndex + 1 < ownerFlatTree.length) {
+          inspectedElementIndex++;
         }
       }
       break;
     case 'SELECT_PREVIOUS_ELEMENT_IN_TREE':
       if (ownerFlatTree !== null && ownerFlatTree.length > 0) {
-        if (selectedElementIndex !== null && selectedElementIndex > 0) {
-          selectedElementIndex--;
+        if (inspectedElementIndex !== null && inspectedElementIndex > 0) {
+          inspectedElementIndex--;
         }
       }
       break;
@@ -747,8 +743,8 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
         ownerFlatTree = store.getOwnersListForElement(ownerID);
 
         // Always force reset selection to be the top of the new owner tree.
-        selectedElementIndex = 0;
-        prevSelectedElementIndex = null;
+        inspectedElementIndex = 0;
+        prevInspectedElementIndex = null;
       }
       break;
     default:
@@ -769,12 +765,12 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
   }
 
   // Keep selected item ID and index in sync.
-  if (selectedElementIndex !== prevSelectedElementIndex) {
-    if (selectedElementIndex === null) {
-      selectedElementID = null;
+  if (inspectedElementIndex !== prevInspectedElementIndex) {
+    if (inspectedElementIndex === null) {
+      inspectedElementID = null;
     } else {
       if (ownerFlatTree !== null) {
-        selectedElementID = ownerFlatTree[selectedElementIndex].id;
+        inspectedElementID = ownerFlatTree[inspectedElementIndex].id;
       }
     }
   }
@@ -783,8 +779,6 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
     ...state,
 
     numElements,
-    selectedElementID,
-    selectedElementIndex,
 
     searchIndex,
     searchResults,
@@ -792,49 +786,27 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
 
     ownerID,
     ownerFlatTree,
+
+    inspectedElementID,
+    inspectedElementIndex,
   };
-}
-
-function reduceSuspenseState(
-  store: Store,
-  state: State,
-  action: Action,
-): State {
-  const {type} = action;
-  switch (type) {
-    case 'UPDATE_INSPECTED_ELEMENT_ID':
-      if (state.inspectedElementID !== state.selectedElementID) {
-        return {
-          ...state,
-          inspectedElementID: state.selectedElementID,
-        };
-      }
-      break;
-    default:
-      break;
-  }
-
-  // React can bailout of no-op updates.
-  return state;
 }
 
 type Props = {
   children: React$Node,
 
   // Used for automated testing
-  defaultInspectedElementID?: ?number,
   defaultOwnerID?: ?number,
-  defaultSelectedElementID?: ?number,
-  defaultSelectedElementIndex?: ?number,
+  defaultInspectedElementID?: ?number,
+  defaultInspectedElementIndex?: ?number,
 };
 
 // TODO Remove TreeContextController wrapper element once global Context.write API exists.
 function TreeContextController({
   children,
-  defaultInspectedElementID,
   defaultOwnerID,
-  defaultSelectedElementID,
-  defaultSelectedElementIndex,
+  defaultInspectedElementID,
+  defaultInspectedElementIndex,
 }: Props): React.Node {
   const store = useContext(StoreContext);
 
@@ -865,23 +837,22 @@ function TreeContextController({
           case 'SELECT_PREVIOUS_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE':
           case 'SELECT_PREVIOUS_SIBLING_IN_TREE':
           case 'SELECT_OWNER':
-          case 'UPDATE_INSPECTED_ELEMENT_ID':
           case 'SET_SEARCH_TEXT':
             state = reduceTreeState(store, state, action);
             state = reduceSearchState(store, state, action);
             state = reduceOwnersState(store, state, action);
-            state = reduceSuspenseState(store, state, action);
 
+            // TODO(hoxyq): review
             // If the selected ID is in a collapsed subtree, reset the selected index to null.
             // We'll know the correct index after the layout effect will toggle the tree,
             // and the store tree is mutated to account for that.
             if (
-              state.selectedElementID !== null &&
-              store.isInsideCollapsedSubTree(state.selectedElementID)
+              state.inspectedElementID !== null &&
+              store.isInsideCollapsedSubTree(state.inspectedElementID)
             ) {
               return {
                 ...state,
-                selectedElementIndex: null,
+                inspectedElementIndex: null,
               };
             }
 
@@ -897,16 +868,6 @@ function TreeContextController({
     // Tree
     numElements: store.numElements,
     ownerSubtreeLeafElementID: null,
-    selectedElementID:
-      defaultSelectedElementID != null
-        ? defaultSelectedElementID
-        : store.lastSelectedHostInstanceElementId,
-    selectedElementIndex:
-      defaultSelectedElementIndex != null
-        ? defaultSelectedElementIndex
-        : store.lastSelectedHostInstanceElementId
-          ? store.getIndexOfElementID(store.lastSelectedHostInstanceElementId)
-          : null,
 
     // Search
     searchIndex: null,
@@ -922,42 +883,38 @@ function TreeContextController({
       defaultInspectedElementID != null
         ? defaultInspectedElementID
         : store.lastSelectedHostInstanceElementId,
+    inspectedElementIndex:
+      defaultInspectedElementIndex != null
+        ? defaultInspectedElementIndex
+        : store.lastSelectedHostInstanceElementId
+          ? store.getIndexOfElementID(store.lastSelectedHostInstanceElementId)
+          : null,
   });
-
-  const dispatchWrapper = useCallback(
-    (action: Action) => {
-      dispatch(action);
-      startTransition(() => {
-        dispatch({type: 'UPDATE_INSPECTED_ELEMENT_ID'});
-      });
-    },
-    [dispatch],
-  );
 
   // Listen for host element selections.
   useEffect(() => {
     const handler = (id: Element['id']) =>
-      dispatchWrapper({type: 'SELECT_ELEMENT_BY_ID', payload: id});
+      dispatch({type: 'SELECT_ELEMENT_BY_ID', payload: id});
 
     store.addListener('hostInstanceSelected', handler);
     return () => store.removeListener('hostInstanceSelected', handler);
-  }, [store, dispatchWrapper]);
+  }, [store, dispatch]);
 
   // If a newly-selected search result or inspection selection is inside of a collapsed subtree, auto expand it.
   // This needs to be a layout effect to avoid temporarily flashing an incorrect selection.
-  const prevSelectedElementID = useRef<number | null>(null);
+  const prevInspectedElementID = useRef<number | null>(null);
   useLayoutEffect(() => {
-    if (state.selectedElementID !== prevSelectedElementID.current) {
-      prevSelectedElementID.current = state.selectedElementID;
+    if (state.inspectedElementID !== prevInspectedElementID.current) {
+      prevInspectedElementID.current = state.inspectedElementID;
 
-      if (state.selectedElementID !== null) {
-        const element = store.getElementByID(state.selectedElementID);
+      if (state.inspectedElementID !== null) {
+        const element = store.getElementByID(state.inspectedElementID);
         if (element !== null && element.parentID > 0) {
           store.toggleIsCollapsed(element.parentID, false);
         }
       }
     }
-  }, [state.selectedElementID, store]);
+  }, [state.inspectedElementID, store]);
 
   // Mutations to the underlying tree may impact this context (e.g. search results, selection state).
   useEffect(() => {
@@ -965,7 +922,7 @@ function TreeContextController({
       Array<number>,
       Map<number, number>,
     ]) => {
-      dispatchWrapper({
+      dispatch({
         type: 'HANDLE_STORE_MUTATION',
         payload: [addedElementIDs, removedElementIDs],
       });
@@ -976,20 +933,19 @@ function TreeContextController({
       // At the moment, we can treat this as a mutation.
       // We don't know which Elements were newly added/removed, but that should be okay in this case.
       // It would only impact the search state, which is unlikely to exist yet at this point.
-      dispatchWrapper({
+      dispatch({
         type: 'HANDLE_STORE_MUTATION',
         payload: [[], new Map()],
       });
     }
 
     store.addListener('mutated', handleStoreMutated);
-
     return () => store.removeListener('mutated', handleStoreMutated);
-  }, [dispatchWrapper, initialRevision, store]);
+  }, [dispatch, initialRevision, store]);
 
   return (
     <TreeStateContext.Provider value={state}>
-      <TreeDispatcherContext.Provider value={dispatchWrapper}>
+      <TreeDispatcherContext.Provider value={dispatch}>
         {children}
       </TreeDispatcherContext.Provider>
     </TreeStateContext.Provider>
@@ -1028,11 +984,11 @@ function recursivelySearchTree(
 function getNearestResultIndex(
   store: Store,
   searchResults: Array<number>,
-  selectedElementIndex: number,
+  inspectedElementIndex: number,
 ): number {
   const index = searchResults.findIndex(id => {
     const innerIndex = store.getIndexOfElementID(id);
-    return innerIndex !== null && innerIndex >= selectedElementIndex;
+    return innerIndex !== null && innerIndex >= inspectedElementIndex;
   });
 
   return index === -1 ? 0 : index;
