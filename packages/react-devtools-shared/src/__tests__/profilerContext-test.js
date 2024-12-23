@@ -69,14 +69,14 @@ describe('ProfilerContext', () => {
 
   const Contexts = ({
     children = null,
-    defaultSelectedElementID = null,
-    defaultSelectedElementIndex = null,
+    defaultInspectedElementID = null,
+    defaultInspectedElementIndex = null,
   }: any) => (
     <BridgeContext.Provider value={bridge}>
       <StoreContext.Provider value={store}>
         <TreeContextController
-          defaultSelectedElementID={defaultSelectedElementID}
-          defaultSelectedElementIndex={defaultSelectedElementIndex}>
+          defaultInspectedElementID={defaultInspectedElementID}
+          defaultInspectedElementIndex={defaultInspectedElementIndex}>
           <ProfilerContextController>{children}</ProfilerContextController>
         </TreeContextController>
       </StoreContext.Provider>
@@ -225,8 +225,8 @@ describe('ProfilerContext', () => {
     await utils.actAsync(() =>
       TestRenderer.create(
         <Contexts
-          defaultSelectedElementID={store.getElementIDAtIndex(3)}
-          defaultSelectedElementIndex={3}>
+          defaultInspectedElementID={store.getElementIDAtIndex(3)}
+          defaultInspectedElementIndex={3}>
           <ContextReader />
         </Contexts>,
       ),
@@ -276,8 +276,8 @@ describe('ProfilerContext', () => {
     await utils.actAsync(() =>
       TestRenderer.create(
         <Contexts
-          defaultSelectedElementID={store.getElementIDAtIndex(3)}
-          defaultSelectedElementIndex={3}>
+          defaultInspectedElementID={store.getElementIDAtIndex(3)}
+          defaultInspectedElementIndex={3}>
           <ContextReader />
         </Contexts>,
       ),
@@ -323,8 +323,8 @@ describe('ProfilerContext', () => {
     await utils.actAsync(() =>
       TestRenderer.create(
         <Contexts
-          defaultSelectedElementID={store.getElementIDAtIndex(3)}
-          defaultSelectedElementIndex={3}>
+          defaultInspectedElementID={store.getElementIDAtIndex(3)}
+          defaultInspectedElementIndex={3}>
           <ContextReader />
         </Contexts>,
       ),
@@ -374,8 +374,8 @@ describe('ProfilerContext', () => {
     await utils.actAsync(() =>
       TestRenderer.create(
         <Contexts
-          defaultSelectedElementID={store.getElementIDAtIndex(3)}
-          defaultSelectedElementIndex={3}>
+          defaultInspectedElementID={store.getElementIDAtIndex(3)}
+          defaultInspectedElementIndex={3}>
           <ContextReader />
         </Contexts>,
       ),
@@ -415,11 +415,12 @@ describe('ProfilerContext', () => {
 
     let context: Context = ((null: any): Context);
     let dispatch: DispatcherContext = ((null: any): DispatcherContext);
-    let selectedElementID = null;
+    let inspectedElementID = null;
     function ContextReader() {
       context = React.useContext(ProfilerContext);
       dispatch = React.useContext(TreeDispatcherContext);
-      selectedElementID = React.useContext(TreeStateContext).selectedElementID;
+      inspectedElementID =
+        React.useContext(TreeStateContext).inspectedElementID;
       return null;
     }
 
@@ -428,13 +429,15 @@ describe('ProfilerContext', () => {
     // Select an element within the second root.
     await utils.actAsync(() =>
       TestRenderer.create(
-        <Contexts defaultSelectedElementID={id} defaultSelectedElementIndex={3}>
+        <Contexts
+          defaultInspectedElementID={id}
+          defaultInspectedElementIndex={3}>
           <ContextReader />
         </Contexts>,
       ),
     );
 
-    expect(selectedElementID).toBe(id);
+    expect(inspectedElementID).toBe(id);
 
     // Profile and record more updates to both roots
     await utils.actAsync(() => store.profilerStore.startProfiling());
@@ -448,7 +451,7 @@ describe('ProfilerContext', () => {
     utils.act(() => dispatch({type: 'SELECT_ELEMENT_AT_INDEX', payload: 0}));
 
     // Verify that the initial Profiler root selection is maintained.
-    expect(selectedElementID).toBe(otherID);
+    expect(inspectedElementID).toBe(otherID);
     expect(context).not.toBeNull();
     expect(context.rootID).toBe(store.getRootIDForElement(id));
   });
@@ -484,11 +487,12 @@ describe('ProfilerContext', () => {
 
     let context: Context = ((null: any): Context);
     let dispatch: DispatcherContext = ((null: any): DispatcherContext);
-    let selectedElementID = null;
+    let inspectedElementID = null;
     function ContextReader() {
       context = React.useContext(ProfilerContext);
       dispatch = React.useContext(TreeDispatcherContext);
-      selectedElementID = React.useContext(TreeStateContext).selectedElementID;
+      inspectedElementID =
+        React.useContext(TreeStateContext).inspectedElementID;
       return null;
     }
 
@@ -497,13 +501,15 @@ describe('ProfilerContext', () => {
     // Select an element within the second root.
     await utils.actAsync(() =>
       TestRenderer.create(
-        <Contexts defaultSelectedElementID={id} defaultSelectedElementIndex={3}>
+        <Contexts
+          defaultInspectedElementID={id}
+          defaultInspectedElementIndex={3}>
           <ContextReader />
         </Contexts>,
       ),
     );
 
-    expect(selectedElementID).toBe(id);
+    expect(inspectedElementID).toBe(id);
 
     // Profile and record more updates to both roots
     await utils.actAsync(() => store.profilerStore.startProfiling());
@@ -517,7 +523,7 @@ describe('ProfilerContext', () => {
     utils.act(() => dispatch({type: 'SELECT_ELEMENT_AT_INDEX', payload: 0}));
 
     // Verify that the initial Profiler root selection is maintained.
-    expect(selectedElementID).toBe(otherID);
+    expect(inspectedElementID).toBe(otherID);
     expect(context).not.toBeNull();
     expect(context.rootID).toBe(store.getRootIDForElement(id));
   });
@@ -553,10 +559,11 @@ describe('ProfilerContext', () => {
     `);
 
     let context: Context = ((null: any): Context);
-    let selectedElementID = null;
+    let inspectedElementID = null;
     function ContextReader() {
       context = React.useContext(ProfilerContext);
-      selectedElementID = React.useContext(TreeStateContext).selectedElementID;
+      inspectedElementID =
+        React.useContext(TreeStateContext).inspectedElementID;
       return null;
     }
 
@@ -567,14 +574,14 @@ describe('ProfilerContext', () => {
         </Contexts>,
       ),
     );
-    expect(selectedElementID).toBeNull();
+    expect(inspectedElementID).toBeNull();
 
     // Select an element in the Profiler tab and verify that the selection is synced to the Components tab.
     await utils.actAsync(() => context.selectFiber(parentID, 'Parent'));
-    expect(selectedElementID).toBe(parentID);
+    expect(inspectedElementID).toBe(parentID);
 
     // Select an unmounted element and verify no Components tab selection doesn't change.
     await utils.actAsync(() => context.selectFiber(childID, 'Child'));
-    expect(selectedElementID).toBe(parentID);
+    expect(inspectedElementID).toBe(parentID);
   });
 });
