@@ -648,6 +648,7 @@ export function installHook(
     checkDCE,
     onCommitFiberUnmount,
     onCommitFiberRoot,
+    // React v18.0+
     onPostCommitFiberRoot,
     setStrictMode,
 
