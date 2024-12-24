@@ -30,6 +30,8 @@ import {
   enableComponentPerformanceTrack,
 } from 'shared/ReactFeatureFlags';
 
+import {isAlreadyRendering} from './ReactFiberWorkLoop';
+
 // Intentionally not named imports because Rollup would use dynamic dispatch for
 // CommonJS interop named imports.
 import * as Scheduler from 'scheduler';
@@ -50,6 +52,7 @@ export let blockingUpdateTime: number = -1.1; // First sync setState scheduled.
 export let blockingEventTime: number = -1.1; // Event timeStamp of the first setState.
 export let blockingEventType: null | string = null; // Event type of the first setState.
 export let blockingEventIsRepeat: boolean = false;
+export let blockingSpawnedUpdate: boolean = false;
 export let blockingSuspendedTime: number = -1.1;
 // TODO: This should really be one per Transition lane.
 export let transitionClampTime: number = -0;
@@ -78,6 +81,9 @@ export function startUpdateTimerByLane(lane: Lane): void {
   if (isSyncLane(lane) || isBlockingLane(lane)) {
     if (blockingUpdateTime < 0) {
       blockingUpdateTime = now();
+      if (isAlreadyRendering()) {
+        blockingSpawnedUpdate = true;
+      }
       const newEventTime = resolveEventTimeStamp();
       const newEventType = resolveEventType();
       if (
@@ -85,6 +91,11 @@ export function startUpdateTimerByLane(lane: Lane): void {
         newEventType !== blockingEventType
       ) {
         blockingEventIsRepeat = false;
+      } else if (newEventType !== null) {
+        // If this is a second update in the same event, we treat it as a spawned update.
+        // This might be a microtask spawned from useEffect, multiple flushSync or
+        // a setState in a microtask spawned after the first setState. Regardless it's bad.
+        blockingSpawnedUpdate = true;
       }
       blockingEventTime = newEventTime;
       blockingEventType = newEventType;
@@ -141,6 +152,7 @@ export function clearBlockingTimers(): void {
   blockingUpdateTime = -1.1;
   blockingSuspendedTime = -1.1;
   blockingEventIsRepeat = true;
+  blockingSpawnedUpdate = false;
 }
 
 export function startAsyncTransitionTimer(): void {
