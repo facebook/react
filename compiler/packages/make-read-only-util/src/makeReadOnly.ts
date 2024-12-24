@@ -29,7 +29,7 @@ type SavedEntry = {
   getter: () => unknown;
 };
 type SavedROObject = Map<string, SavedEntry>;
-type SavedROObjects = WeakMap<Object, SavedROObject>;
+type SavedROObjects = WeakMap<object, SavedROObject>;
 
 // Utility functions
 function isWriteable(desc: PropertyDescriptor) {
