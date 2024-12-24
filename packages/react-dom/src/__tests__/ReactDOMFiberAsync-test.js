@@ -19,6 +19,7 @@ let waitForAll;
 let waitFor;
 let waitForMicrotasks;
 let assertLog;
+let assertConsoleErrorDev;
 
 const setUntrackedInputValue = Object.getOwnPropertyDescriptor(
   HTMLInputElement.prototype,
@@ -34,6 +35,8 @@ describe('ReactDOMFiberAsync', () => {
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     act = require('internal-test-utils').act;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
     Scheduler = require('scheduler');
 
     const InternalTestUtils = require('internal-test-utils');
@@ -176,11 +179,15 @@ describe('ReactDOMFiberAsync', () => {
       root.render(<Component />);
     });
     // Update
-    expect(() => {
-      ReactDOM.flushSync(() => {
-        root.render(<Component />);
-      });
-    }).toErrorDev('flushSync was called from inside a lifecycle method');
+    ReactDOM.flushSync(() => {
+      root.render(<Component />);
+    });
+    assertConsoleErrorDev([
+      'flushSync was called from inside a lifecycle method. ' +
+        'React cannot flush when React is already rendering. ' +
+        'Consider moving this call to a scheduler task or micro task.\n' +
+        '    in Component (at **)',
+    ]);
   });
 
   describe('concurrent mode', () => {
