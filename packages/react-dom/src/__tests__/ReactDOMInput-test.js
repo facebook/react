@@ -1013,16 +1013,7 @@ describe('ReactDOMInput', () => {
       dispatchEventOnNode(node, 'input');
     });
 
-    if (disableInputAttributeSyncing) {
-      expect(node.value).toBe('0.0');
-      expect(node.hasAttribute('value')).toBe(false);
-    } else {
-      dispatchEventOnNode(node, 'blur');
-      dispatchEventOnNode(node, 'focusout');
-
-      expect(node.value).toBe('0.0');
-      expect(node.getAttribute('value')).toBe('0.0');
-    }
+    expect(node.value).toBe('0.0');
   });
 
   it('should properly transition from an empty value to 0', async () => {
@@ -2650,30 +2641,7 @@ describe('ReactDOMInput', () => {
       }
     });
 
-    it('sets the value attribute on number inputs on blur', async () => {
-      const Input = getTestInput();
-      await act(() => {
-        root.render(<Input type="number" value="1" />);
-      });
-      const node = container.firstChild;
-      expect(isValueDirty(node)).toBe(true);
-
-      node.focus();
-      setUntrackedValue.call(node, '2');
-      dispatchEventOnNode(node, 'input');
-      node.blur();
-
-      expect(isValueDirty(node)).toBe(true);
-      if (disableInputAttributeSyncing) {
-        expect(node.value).toBe('2');
-        expect(node.hasAttribute('value')).toBe(false);
-      } else {
-        expect(node.value).toBe('2');
-        expect(node.getAttribute('value')).toBe('2');
-      }
-    });
-
-    it('an uncontrolled number input will not update the value attribute on blur', async () => {
+    it('an uncontrolled number input will not update the value attribute', async () => {
       await act(() => {
         root.render(<input type="number" defaultValue="1" />);
       });
@@ -2684,10 +2652,8 @@ describe('ReactDOMInput', () => {
         expect(isValueDirty(node)).toBe(true);
       }
 
-      node.focus();
       setUntrackedValue.call(node, 4);
       dispatchEventOnNode(node, 'input');
-      node.blur();
 
       expect(isValueDirty(node)).toBe(true);
       expect(node.getAttribute('value')).toBe('1');
