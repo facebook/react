@@ -66,57 +66,54 @@ module.exports = {
     if (filePath.match(/\.json$/)) {
       return {code: src};
     }
-    if (!filePath.match(/\/third_party\//)) {
-      // for test files, we also apply the async-await transform, but we want to
-      // make sure we don't accidentally apply that transform to product code.
-      const isTestFile = !!filePath.match(/\/__tests__\//);
-      const isInDevToolsPackages = !!filePath.match(
-        /\/packages\/react-devtools.*\//
-      );
-      const plugins = [].concat(babelOptions.plugins);
-      if (isTestFile && isInDevToolsPackages) {
-        plugins.push(pathToTransformReactVersionPragma);
-      }
-
-      // This is only for React DevTools tests with React 16.x
-      // `react/jsx-dev-runtime` and `react/jsx-runtime` are included in the package starting from v17
-      if (semver.gte(ReactVersionTestingAgainst, '17.0.0')) {
-        plugins.push([
-          process.env.NODE_ENV === 'development'
-            ? require.resolve('@babel/plugin-transform-react-jsx-development')
-            : require.resolve('@babel/plugin-transform-react-jsx'),
-          // The "automatic" runtime corresponds to react/jsx-runtime. "classic"
-          // would be React.createElement.
-          {runtime: 'automatic'},
-        ]);
-      } else {
-        plugins.push(
-          require.resolve('@babel/plugin-transform-react-jsx'),
-          require.resolve('@babel/plugin-transform-react-jsx-source')
-        );
-      }
-
-      plugins.push(pathToTransformLazyJSXImport);
-
-      let sourceAst = hermesParser.parse(src, {babel: true});
-      return {
-        code: babel.transformFromAstSync(
-          sourceAst,
-          src,
-          Object.assign(
-            {filename: path.relative(process.cwd(), filePath)},
-            babelOptions,
-            {
-              plugins,
-              sourceMaps: process.env.JEST_ENABLE_SOURCE_MAPS
-                ? process.env.JEST_ENABLE_SOURCE_MAPS
-                : false,
-            }
-          )
-        ).code,
-      };
+    // for test files, we also apply the async-await transform, but we want to
+    // make sure we don't accidentally apply that transform to product code.
+    const isTestFile = !!filePath.match(/\/__tests__\//);
+    const isInDevToolsPackages = !!filePath.match(
+      /\/packages\/react-devtools.*\//
+    );
+    const plugins = [].concat(babelOptions.plugins);
+    if (isTestFile && isInDevToolsPackages) {
+      plugins.push(pathToTransformReactVersionPragma);
     }
-    return {code: src};
+
+    // This is only for React DevTools tests with React 16.x
+    // `react/jsx-dev-runtime` and `react/jsx-runtime` are included in the package starting from v17
+    if (semver.gte(ReactVersionTestingAgainst, '17.0.0')) {
+      plugins.push([
+        process.env.NODE_ENV === 'development'
+          ? require.resolve('@babel/plugin-transform-react-jsx-development')
+          : require.resolve('@babel/plugin-transform-react-jsx'),
+        // The "automatic" runtime corresponds to react/jsx-runtime. "classic"
+        // would be React.createElement.
+        {runtime: 'automatic'},
+      ]);
+    } else {
+      plugins.push(
+        require.resolve('@babel/plugin-transform-react-jsx'),
+        require.resolve('@babel/plugin-transform-react-jsx-source')
+      );
+    }
+
+    plugins.push(pathToTransformLazyJSXImport);
+
+    let sourceAst = hermesParser.parse(src, {babel: true});
+    return {
+      code: babel.transformFromAstSync(
+        sourceAst,
+        src,
+        Object.assign(
+          {filename: path.relative(process.cwd(), filePath)},
+          babelOptions,
+          {
+            plugins,
+            sourceMaps: process.env.JEST_ENABLE_SOURCE_MAPS
+              ? process.env.JEST_ENABLE_SOURCE_MAPS
+              : false,
+          }
+        )
+      ).code,
+    };
   },
 
   getCacheKey: createCacheKeyFunction(
