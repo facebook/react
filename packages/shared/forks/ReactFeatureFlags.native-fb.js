@@ -81,6 +81,7 @@ export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
 export const enableHydrationLaneScheduling = true;
 export const enableYieldingBeforePassive = false;
+export const enableThrottledScheduling = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

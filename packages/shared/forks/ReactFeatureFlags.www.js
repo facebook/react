@@ -58,6 +58,8 @@ export const enableLegacyFBSupport = true;
 
 export const enableYieldingBeforePassive = false;
 
+export const enableThrottledScheduling = false;
+
 export const enableHydrationLaneScheduling = true;
 
 export const enableComponentPerformanceTrack = false;
