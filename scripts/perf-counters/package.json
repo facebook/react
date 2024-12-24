@@ -4,6 +4,11 @@
   "description": "Lightweight bindings to Linux perf event counters.",
   "main": "index.js",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
+    "directory": "scripts/perf-counters"
+  },
   "dependencies": {
     "bindings": "^1.2.1"
   }
