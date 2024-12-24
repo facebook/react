@@ -61,7 +61,6 @@ export const passChildrenWhenCloningPersistedNodes = false;
 export const enablePersistedModeClonedFlag = false;
 export const disableClientCache = true;
 
-export const enableServerComponentLogs = true;
 export const enableInfiniteRenderLoopDetection = false;
 
 export const renameElementSymbol = true;
