@@ -110,7 +110,7 @@ async function downloadRegressionBuild() {
     );
   }
 
-  if (semver.gte(reactVersion, '18.2.0') && semver.lt(reactVersion, '19')) {
+  if (semver.gte(reactVersion, '18.2.0') && semver.lt(reactVersion, '19.0.0')) {
     console.log(chalk.white(`Downloading react-compiler-runtime\n`));
     await exec(
       `npm install --prefix ${REGRESSION_FOLDER} react-compiler-runtime`
