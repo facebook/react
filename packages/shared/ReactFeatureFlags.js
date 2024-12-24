@@ -94,6 +94,8 @@ export const enablePostpone = __EXPERIMENTAL__;
 
 export const enableHalt = __EXPERIMENTAL__;
 
+export const enableViewTransition = __EXPERIMENTAL__;
+
 /**
  * Switches the Fabric API from doing layout in commit work instead of complete work.
  */
