@@ -3001,28 +3001,28 @@ describe('ReactDOMComponent', () => {
           'All React events are normalized to bubble, so onFocusIn and onFocusOut are not needed/supported by React.\n' +
           '    in div (at **)',
       ]);
-      ReactDOMServer.renderToString(<div onFocusOut={() => {}} />),
-        assertConsoleErrorDev([
-          'React uses onFocus and onBlur instead of onFocusIn and onFocusOut. ' +
-            'All React events are normalized to bubble, so onFocusIn and onFocusOut are not needed/supported by React.\n' +
-            '    in div (at **)',
-        ]);
+      ReactDOMServer.renderToString(<div onFocusOut={() => {}} />);
+      assertConsoleErrorDev([
+        'React uses onFocus and onBlur instead of onFocusIn and onFocusOut. ' +
+          'All React events are normalized to bubble, so onFocusIn and onFocusOut are not needed/supported by React.\n' +
+          '    in div (at **)',
+      ]);
     });
 
     it('should warn about props that are no longer supported without case sensitivity (ssr)', () => {
       ReactDOMServer.renderToString(<div />);
-      ReactDOMServer.renderToString(<div onfocusin={() => {}} />),
-        assertConsoleErrorDev([
-          'React uses onFocus and onBlur instead of onFocusIn and onFocusOut. ' +
-            'All React events are normalized to bubble, so onFocusIn and onFocusOut are not needed/supported by React.\n' +
-            '    in div (at **)',
-        ]);
-      ReactDOMServer.renderToString(<div onfocusout={() => {}} />),
-        assertConsoleErrorDev([
-          'React uses onFocus and onBlur instead of onFocusIn and onFocusOut. ' +
-            'All React events are normalized to bubble, so onFocusIn and onFocusOut are not needed/supported by React.\n' +
-            '    in div (at **)',
-        ]);
+      ReactDOMServer.renderToString(<div onfocusin={() => {}} />);
+      assertConsoleErrorDev([
+        'React uses onFocus and onBlur instead of onFocusIn and onFocusOut. ' +
+          'All React events are normalized to bubble, so onFocusIn and onFocusOut are not needed/supported by React.\n' +
+          '    in div (at **)',
+      ]);
+      ReactDOMServer.renderToString(<div onfocusout={() => {}} />);
+      assertConsoleErrorDev([
+        'React uses onFocus and onBlur instead of onFocusIn and onFocusOut. ' +
+          'All React events are normalized to bubble, so onFocusIn and onFocusOut are not needed/supported by React.\n' +
+          '    in div (at **)',
+      ]);
     });
 
     it('gives source code refs for unknown prop warning', async () => {
