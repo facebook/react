@@ -12,6 +12,7 @@
 
 let React;
 let ReactNoopServer;
+let sha256;
 
 describe('ReactServer', () => {
   beforeEach(() => {
@@ -19,6 +20,7 @@ describe('ReactServer', () => {
 
     React = require('react');
     ReactNoopServer = require('react-noop-renderer/server');
+    sha256 = require('../ReactServerStreamConfigNode.js')
   });
 
   function div(...children) {
@@ -31,5 +33,11 @@ describe('ReactServer', () => {
   it('can call render', () => {
     const result = ReactNoopServer.render(<div>hello world</div>);
     expect(result.root).toEqual(div('hello world'));
+  });
+
+  it('correctly computes sha256', () =>{
+    const expectedOutput = 'b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9';
+    const hash = sha256.createFastHash('hello world');
+    expect(hash).toBe(expectedOutput);
   });
 });
