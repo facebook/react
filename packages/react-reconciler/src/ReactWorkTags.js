@@ -37,7 +37,8 @@ export type WorkTag =
   | 26
   | 27
   | 28
-  | 29;
+  | 29
+  | 30;
 
 export const FunctionComponent = 0;
 export const ClassComponent = 1;
@@ -67,3 +68,4 @@ export const HostHoistable = 26;
 export const HostSingleton = 27;
 export const IncompleteFunctionComponent = 28;
 export const Throw = 29;
+export const ViewTransitionComponent = 30;

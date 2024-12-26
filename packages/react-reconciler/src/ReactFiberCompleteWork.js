@@ -42,6 +42,7 @@ import {
   passChildrenWhenCloningPersistedNodes,
   disableLegacyMode,
   enableSiblingPrerendering,
+  enableViewTransition,
 } from 'shared/ReactFeatureFlags';
 
 import {now} from './Scheduler';
@@ -74,6 +75,7 @@ import {
   CacheComponent,
   TracingMarkerComponent,
   Throw,
+  ViewTransitionComponent,
 } from './ReactWorkTags';
 import {NoMode, ConcurrentMode, ProfileMode} from './ReactTypeOfMode';
 import {
@@ -1828,6 +1830,12 @@ function completeWork(
         if (instance !== null) {
           popMarkerInstance(workInProgress);
         }
+        bubbleProperties(workInProgress);
+      }
+      return null;
+    }
+    case ViewTransitionComponent: {
+      if (enableViewTransition) {
         bubbleProperties(workInProgress);
       }
       return null;
