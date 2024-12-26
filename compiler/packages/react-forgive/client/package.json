@@ -11,7 +11,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/facebook/react.git",
-    "directory": "compiler/packages/react-forgive-client"
+    "directory": "compiler/packages/react-forgive"
   },
   "dependencies": {
     "vscode-languageclient": "^9.0.1"
