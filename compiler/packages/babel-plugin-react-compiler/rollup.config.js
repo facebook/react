@@ -15,7 +15,7 @@ import terser from '@rollup/plugin-terser';
 import prettier from 'rollup-plugin-prettier';
 import banner2 from 'rollup-plugin-banner2';
 
-const NO_INLINE = new Set(['@babel/types']);
+const NO_INLINE = new Set([]);
 
 const DEV_ROLLUP_CONFIG = {
   input: 'src/index.ts',
