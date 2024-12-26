@@ -42,6 +42,7 @@
     "babel-jest": "^29.0.3",
     "babel-plugin-fbt": "^1.0.0",
     "babel-plugin-fbt-runtime": "^1.0.0",
+    "cosmiconfig": "^9.0.0",
     "eslint": "^8.57.1",
     "invariant": "^2.2.4",
     "jest": "^29.0.3",
