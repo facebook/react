@@ -17,7 +17,10 @@ import type {
 } from './ReactFiberConfig';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
-import {SyncLane} from './ReactFiberLane';
+import {
+  includesOnlyViewTransitionEligibleLanes,
+  SyncLane,
+} from './ReactFiberLane';
 import type {SuspenseState, RetryQueue} from './ReactFiberSuspenseComponent';
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
@@ -52,6 +55,7 @@ import {
   enableLegacyHidden,
   disableLegacyMode,
   enableComponentPerformanceTrack,
+  enableViewTransition,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -75,6 +79,7 @@ import {
   LegacyHiddenComponent,
   CacheComponent,
   TracingMarkerComponent,
+  ViewTransitionComponent,
 } from './ReactWorkTags';
 import {
   NoFlags,
@@ -88,6 +93,7 @@ import {
   Hydrating,
   Passive,
   BeforeMutationMask,
+  BeforeMutationTransitionMask,
   MutationMask,
   LayoutMask,
   PassiveMask,
@@ -99,6 +105,7 @@ import {
   PerformedWork,
   ForceClientRender,
   DidCapture,
+  ViewTransitionStatic,
 } from './ReactFiberFlags';
 import {
   commitStartTime,
@@ -241,51 +248,63 @@ export let shouldFireAfterActiveInstanceBlur: boolean = false;
 export function commitBeforeMutationEffects(
   root: FiberRoot,
   firstChild: Fiber,
+  committedLanes: Lanes,
 ): void {
   focusedInstanceHandle = prepareForCommit(root.containerInfo);
   shouldFireAfterActiveInstanceBlur = false;
 
+  const isViewTransitionEligible =
+    enableViewTransition &&
+    includesOnlyViewTransitionEligibleLanes(committedLanes);
+
   nextEffect = firstChild;
-  commitBeforeMutationEffects_begin();
+  commitBeforeMutationEffects_begin(isViewTransitionEligible);
 
   // We no longer need to track the active instance fiber
   focusedInstanceHandle = null;
 }
 
-function commitBeforeMutationEffects_begin() {
+function commitBeforeMutationEffects_begin(isViewTransitionEligible: boolean) {
+  // If this commit is eligible for a View Transition we look into all mutated subtrees.
+  // TODO: We could optimize this by marking these with the Snapshot subtree flag in the render phase.
+  const subtreeMask = isViewTransitionEligible
+    ? BeforeMutationTransitionMask
+    : BeforeMutationMask;
   while (nextEffect !== null) {
     const fiber = nextEffect;
 
     // This phase is only used for beforeActiveInstanceBlur.
     // Let's skip the whole loop if it's off.
-    if (enableCreateEventHandleAPI) {
+    if (enableCreateEventHandleAPI || isViewTransitionEligible) {
       // TODO: Should wrap this in flags check, too, as optimization
       const deletions = fiber.deletions;
       if (deletions !== null) {
         for (let i = 0; i < deletions.length; i++) {
           const deletion = deletions[i];
-          commitBeforeMutationEffectsDeletion(deletion);
+          commitBeforeMutationEffectsDeletion(
+            deletion,
+            isViewTransitionEligible,
+          );
         }
       }
     }
 
     const child = fiber.child;
-    if (
-      (fiber.subtreeFlags & BeforeMutationMask) !== NoFlags &&
-      child !== null
-    ) {
+    if ((fiber.subtreeFlags & subtreeMask) !== NoFlags && child !== null) {
       child.return = fiber;
       nextEffect = child;
     } else {
-      commitBeforeMutationEffects_complete();
+      commitBeforeMutationEffects_complete(isViewTransitionEligible);
     }
   }
 }
 
-function commitBeforeMutationEffects_complete() {
+function commitBeforeMutationEffects_complete(
+  isViewTransitionEligible: boolean,
+) {
   while (nextEffect !== null) {
     const fiber = nextEffect;
-    commitBeforeMutationEffectsOnFiber(fiber);
+    commitBeforeMutationEffectsOnFiber(fiber, isViewTransitionEligible);
 
     const sibling = fiber.sibling;
     if (sibling !== null) {
@@ -298,7 +317,10 @@ function commitBeforeMutationEffects_complete() {
   }
 }
 
-function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
+function commitBeforeMutationEffectsOnFiber(
+  finishedWork: Fiber,
+  isViewTransitionEligible: boolean,
+) {
   const current = finishedWork.alternate;
   const flags = finishedWork.flags;
 
@@ -316,6 +338,15 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
         beforeActiveInstanceBlur(finishedWork);
       }
     }
+  }
+
+  if (
+    enableViewTransition &&
+    isViewTransitionEligible &&
+    current === null &&
+    (finishedWork.flags & Placement) !== NoFlags
+  ) {
+    commitEnterViewTransitions(finishedWork);
   }
 
   switch (finishedWork.tag) {
@@ -365,6 +396,29 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
     case IncompleteClassComponent:
       // Nothing to do for these component types
       break;
+    case ViewTransitionComponent:
+      if (enableViewTransition) {
+        if (isViewTransitionEligible) {
+          if (current === null) {
+            // This is a new mount. We should have handled this as part of the
+            // Placement effect or it is deeper inside a entering transition.
+          } else if (
+            (finishedWork.subtreeFlags &
+              (Placement |
+                Update |
+                ChildDeletion |
+                ContentReset |
+                Visibility)) !==
+            NoFlags
+          ) {
+            // Something mutated within this subtree. This might need to cause
+            // a cross-fade of this parent.
+            commitUpdateViewTransition(finishedWork);
+          }
+        }
+        break;
+      }
+    // Fallthrough
     default: {
       if ((flags & Snapshot) !== NoFlags) {
         throw new Error(
@@ -376,7 +430,10 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
   }
 }
 
-function commitBeforeMutationEffectsDeletion(deletion: Fiber) {
+function commitBeforeMutationEffectsDeletion(
+  deletion: Fiber,
+  isViewTransitionEligible: boolean,
+) {
   if (enableCreateEventHandleAPI) {
     // TODO (effects) It would be nice to avoid calling doesFiberContain()
     // Maybe we can repurpose one of the subtreeFlags positions for this instead?
@@ -387,6 +444,37 @@ function commitBeforeMutationEffectsDeletion(deletion: Fiber) {
       beforeActiveInstanceBlur(deletion);
     }
   }
+  if (isViewTransitionEligible) {
+    commitExitViewTransitions(deletion);
+  }
+}
+
+function commitEnterViewTransitions(placement: Fiber): void {
+  if (placement.tag === ViewTransitionComponent) {
+    // TODO
+  } else if ((placement.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
+    let child = placement.child;
+    while (child !== null) {
+      commitEnterViewTransitions(child);
+      child = child.sibling;
+    }
+  }
+}
+
+function commitExitViewTransitions(deletion: Fiber): void {
+  if (deletion.tag === ViewTransitionComponent) {
+    // TODO
+  } else if ((deletion.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
+    let child = deletion.child;
+    while (child !== null) {
+      commitExitViewTransitions(child);
+      child = child.sibling;
+    }
+  }
+}
+
+function commitUpdateViewTransition(finishedWork: Fiber): void {
+  // TODO
 }
 
 function commitLayoutEffectOnFiber(
