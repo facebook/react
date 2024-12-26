@@ -28,7 +28,11 @@ import type {
   OffscreenQueue,
   OffscreenInstance,
 } from './ReactFiberActivityComponent';
-import type {ViewTransitionProps} from './ReactFiberViewTransitionComponent';
+import type {
+  ViewTransitionProps,
+  ViewTransitionInstance,
+} from './ReactFiberViewTransitionComponent';
+import {assignViewTransitionAutoName} from './ReactFiberViewTransitionComponent';
 import {OffscreenDetached} from './ReactFiberActivityComponent';
 import type {
   Cache,
@@ -3240,6 +3244,13 @@ function updateViewTransition(
   renderLanes: Lanes,
 ) {
   const pendingProps: ViewTransitionProps = workInProgress.pendingProps;
+  const instance: ViewTransitionInstance = workInProgress.stateNode;
+  // Assign an auto generated name using the useId algorthim if an explicit one is not provided.
+  // We don't need the name yet but we do it here to allow hydration state to be used.
+  // We might end up needing these to line up if we want to Transition from dehydrated fallback
+  // to client rendered content. If we don't end up using that we could just assign an incremeting
+  // counter in the commit phase instead.
+  assignViewTransitionAutoName(pendingProps, instance);
   const nextChildren = pendingProps.children;
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
