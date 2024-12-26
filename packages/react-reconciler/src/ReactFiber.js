@@ -19,6 +19,10 @@ import type {
   OffscreenProps,
   OffscreenInstance,
 } from './ReactFiberActivityComponent';
+import type {
+  ViewTransitionProps,
+  ViewTransitionInstance,
+} from './ReactFiberViewTransitionComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 
 import {
@@ -67,6 +71,7 @@ import {
   LegacyHiddenComponent,
   TracingMarkerComponent,
   Throw,
+  ViewTransitionComponent,
 } from './ReactWorkTags';
 import {OffscreenVisible} from './ReactFiberActivityComponent';
 import {getComponentNameFromOwner} from 'react-reconciler/src/getComponentNameFromFiber';
@@ -621,12 +626,7 @@ export function createFiberFromTypeAndProps(
       // Fall through
       case REACT_VIEW_TRANSITION_TYPE:
         if (enableViewTransition) {
-          return createFiberFromFragment(
-            pendingProps.children,
-            mode,
-            lanes,
-            key,
-          );
+          return createFiberFromViewTransition(pendingProps, mode, lanes, key);
         }
       // Fall through
       case REACT_SCOPE_TYPE:
@@ -872,6 +872,20 @@ export function createFiberFromOffscreen(
     attach: () => attachOffscreenInstance(primaryChildInstance),
   };
   fiber.stateNode = primaryChildInstance;
+  return fiber;
+}
+
+export function createFiberFromViewTransition(
+  pendingProps: ViewTransitionProps,
+  mode: TypeOfMode,
+  lanes: Lanes,
+  key: null | string,
+): Fiber {
+  const fiber = createFiber(ViewTransitionComponent, pendingProps, key, mode);
+  fiber.elementType = REACT_VIEW_TRANSITION_TYPE;
+  fiber.lanes = lanes;
+  const instance: ViewTransitionInstance = {};
+  fiber.stateNode = instance;
   return fiber;
 }
 

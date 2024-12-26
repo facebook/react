@@ -28,6 +28,7 @@ import type {
   OffscreenQueue,
   OffscreenInstance,
 } from './ReactFiberActivityComponent';
+import type {ViewTransitionProps} from './ReactFiberViewTransitionComponent';
 import {OffscreenDetached} from './ReactFiberActivityComponent';
 import type {
   Cache,
@@ -71,6 +72,7 @@ import {
   CacheComponent,
   TracingMarkerComponent,
   Throw,
+  ViewTransitionComponent,
 } from './ReactWorkTags';
 import {
   NoFlags,
@@ -107,6 +109,7 @@ import {
   disableDefaultPropsExceptForClasses,
   enableOwnerStacks,
   enableHydrationLaneScheduling,
+  enableViewTransition,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
@@ -3231,6 +3234,17 @@ function updateSuspenseListComponent(
   return workInProgress.child;
 }
 
+function updateViewTransition(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderLanes: Lanes,
+) {
+  const pendingProps: ViewTransitionProps = workInProgress.pendingProps;
+  const nextChildren = pendingProps.children;
+  reconcileChildren(current, workInProgress, nextChildren, renderLanes);
+  return workInProgress.child;
+}
+
 function updatePortalComponent(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -4012,6 +4026,12 @@ function beginWork(
           workInProgress,
           renderLanes,
         );
+      }
+      break;
+    }
+    case ViewTransitionComponent: {
+      if (enableViewTransition) {
+        return updateViewTransition(current, workInProgress, renderLanes);
       }
       break;
     }
