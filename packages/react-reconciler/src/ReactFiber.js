@@ -37,6 +37,7 @@ import {
   disableLegacyMode,
   enableObjectFiber,
   enableOwnerStacks,
+  enableViewTransition,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot} from './ReactRootTags';
@@ -101,6 +102,7 @@ import {
   REACT_LEGACY_HIDDEN_TYPE,
   REACT_TRACING_MARKER_TYPE,
   REACT_ELEMENT_TYPE,
+  REACT_VIEW_TRANSITION_TYPE,
 } from 'shared/ReactSymbols';
 import {TransitionTracingMarker} from './ReactFiberTracingMarkerComponent';
 import {
@@ -615,6 +617,16 @@ export function createFiberFromTypeAndProps(
       case REACT_LEGACY_HIDDEN_TYPE:
         if (enableLegacyHidden) {
           return createFiberFromLegacyHidden(pendingProps, mode, lanes, key);
+        }
+      // Fall through
+      case REACT_VIEW_TRANSITION_TYPE:
+        if (enableViewTransition) {
+          return createFiberFromFragment(
+            pendingProps.children,
+            mode,
+            lanes,
+            key,
+          );
         }
       // Fall through
       case REACT_SCOPE_TYPE:

@@ -32,6 +32,7 @@ export {
   unstable_postpone,
   unstable_getCacheForType,
   unstable_SuspenseList,
+  unstable_ViewTransition,
   unstable_useCacheRefresh,
   useId,
   useCallback,
