@@ -3359,7 +3359,7 @@ function commitRoot(
       // The first phase a "before mutation" phase. We use this phase to read the
       // state of the host tree right before we mutate it. This is where
       // getSnapshotBeforeUpdate is called.
-      commitBeforeMutationEffects(root, finishedWork);
+      commitBeforeMutationEffects(root, finishedWork, lanes);
     } finally {
       // Reset the priority to the previous non-sync value.
       executionContext = prevExecutionContext;
