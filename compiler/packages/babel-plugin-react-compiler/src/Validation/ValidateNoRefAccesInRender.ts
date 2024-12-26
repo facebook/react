@@ -305,6 +305,14 @@ function validateNoRefAccessInRenderImpl(
             );
             break;
           }
+          case 'TypeCastExpression': {
+            env.set(
+              instr.lvalue.identifier.id,
+              env.get(instr.value.value.identifier.id) ??
+                refTypeOfType(instr.lvalue),
+            );
+            break;
+          }
           case 'LoadContext':
           case 'LoadLocal': {
             env.set(

@@ -1,0 +1,58 @@
+{
+  "name": "react-forgive",
+  "displayName": "React Analyzer",
+  "description": "React LSP",
+  "license": "MIT",
+  "version": "0.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/react.git",
+    "directory": "compiler/packages/react-forgive"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "keywords": [
+    "react",
+    "react analyzer",
+    "react compiler"
+  ],
+  "publisher": "Meta",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "activationEvents": [
+    "onLanguage:javascriptreact",
+    "onLanguage:typescriptreact"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "react-forgive.toggleAll",
+        "title": "React Analyzer: Toggle on/off"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "rimraf dist && concurrently -n server,client \"yarn run esbuild:server --sourcemap\" \"yarn run esbuild:client --sourcemap\"",
+    "dev": "yarn run package && yarn run install-ext",
+    "esbuild:client": "esbuild ./client/src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node",
+    "esbuild:server": "esbuild ./server/src/index.ts --bundle --outfile=dist/server.js --external:vscode --format=cjs --platform=node",
+    "install-ext": "code --install-extension react-forgive-0.0.0.vsix",
+    "lint": "eslint src --ext ts",
+    "package": "rm -f react-forgive-0.0.0.vsix && vsce package --yarn",
+    "postinstall": "cd client && yarn install && cd ../server && yarn install && cd ..",
+    "pretest": "yarn run compile && yarn run lint",
+    "test": "vscode-test",
+    "vscode:prepublish": "yarn run compile",
+    "watch": "concurrently --kill-others -n server,client \"run esbuild:server --sourcemap --watch\" \"run esbuild:client --sourcemap --watch\""
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.13.0",
+    "@types/node": "^20",
+    "esbuild": "^0.24.0",
+    "eslint": "^9.13.0",
+    "typescript-eslint": "^8.16.0"
+  }
+}

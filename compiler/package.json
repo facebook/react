@@ -26,11 +26,11 @@
     "react-is": "0.0.0-experimental-4beb1fd8-20241118"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-commonjs": "^28.0.2",
     "@rollup/plugin-json": "^6.1.0",
-    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-node-resolve": "^16.0.0",
     "@rollup/plugin-terser": "^0.4.4",
-    "@rollup/plugin-typescript": "^11.1.6",
+    "@rollup/plugin-typescript": "^12.1.2",
     "@tsconfig/strictest": "^2.0.5",
     "concurrently": "^7.4.0",
     "folder-hash": "^4.0.4",

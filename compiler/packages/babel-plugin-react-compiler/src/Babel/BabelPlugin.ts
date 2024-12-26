@@ -6,7 +6,12 @@
  */
 
 import type * as BabelCore from '@babel/core';
-import {compileProgram, parsePluginOptions} from '../Entrypoint';
+import {
+  compileProgram,
+  findReactConfig,
+  parsePluginOptions,
+  type PluginOptions,
+} from '../Entrypoint';
 import {
   injectReanimatedFlag,
   pipelineUsesReanimatedPlugin,
@@ -29,7 +34,18 @@ export default function BabelPluginReactCompiler(
        * want Forget to run true to source as possible.
        */
       Program(prog, pass): void {
-        let opts = parsePluginOptions(pass.opts);
+        const reactConfig = findReactConfig();
+        let opts: PluginOptions | null = null;
+        if (reactConfig != null) {
+          opts = parsePluginOptions(reactConfig.config);
+          if (pass.opts != null) {
+            console.warn(
+              `Duplicate React Compiler config found, defaulting to reactrc found in: ${reactConfig.filepath}`,
+            );
+          }
+        } else {
+          opts = parsePluginOptions(pass.opts);
+        }
         const isDev =
           (typeof __DEV__ !== 'undefined' && __DEV__ === true) ||
           process.env['NODE_ENV'] === 'development';
