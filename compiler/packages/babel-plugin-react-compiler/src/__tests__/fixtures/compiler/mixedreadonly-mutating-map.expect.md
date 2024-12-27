@@ -36,6 +36,9 @@ import {
 function Component({extraJsx}) {
   const x = makeArray();
   const items = useFragment();
+  // This closure has the following effects that must be replayed:
+  //   - MaybeFreeze / Capture of `items`
+  //   - ConditionalMutate of x
   const jsx = items.a.map((item, i) => {
     arrayPush(x, 2);
     return <Stringify item={item} key={i} />;
@@ -97,60 +100,47 @@ import {
  */
 
 function Component(t0) {
-  const $ = _c(9);
+  const $ = _c(6);
   const { extraJsx } = t0;
-  let t1;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = makeArray();
-    $[0] = t1;
-  } else {
-    t1 = $[0];
-  }
-  const x = t1;
+  const x = makeArray();
   const items = useFragment();
-  let jsx;
-  if ($[1] !== extraJsx || $[2] !== items.a) {
-    jsx = items.a.map((item, i) => {
-      arrayPush(x, 2);
-      return <Stringify item={item} key={i} />;
-    });
-    const offset = jsx.length;
-    for (let i_0 = 0; i_0 < extraJsx; i_0++) {
-      jsx.push(<Stringify item={0} key={i_0 + offset} />);
-    }
-    $[1] = extraJsx;
-    $[2] = items.a;
-    $[3] = jsx;
-  } else {
-    jsx = $[3];
+
+  const jsx = items.a.map((item, i) => {
+    arrayPush(x, 2);
+    return <Stringify item={item} key={i} />;
+  });
+  const offset = jsx.length;
+  for (let i_0 = 0; i_0 < extraJsx; i_0++) {
+    jsx.push(<Stringify item={0} key={i_0 + offset} />);
   }
 
   const count = jsx.length;
   identity(count);
-  let t2;
-  if ($[4] !== count) {
-    t2 = <Stringify x={x} count={count} />;
-    $[4] = count;
-    $[5] = t2;
+  let t1;
+  if ($[0] !== count || $[1] !== x) {
+    t1 = <Stringify x={x} count={count} />;
+    $[0] = count;
+    $[1] = x;
+    $[2] = t1;
   } else {
-    t2 = $[5];
+    t1 = $[2];
   }
-  const t3 = jsx[0];
-  let t4;
-  if ($[6] !== t2 || $[7] !== t3) {
-    t4 = (
+  const t2 = jsx[0];
+  let t3;
+  if ($[3] !== t1 || $[4] !== t2) {
+    t3 = (
       <>
+        {t1}
         {t2}
-        {t3}
       </>
     );
-    $[6] = t2;
-    $[7] = t3;
-    $[8] = t4;
+    $[3] = t1;
+    $[4] = t2;
+    $[5] = t3;
   } else {
-    t4 = $[8];
+    t3 = $[5];
   }
-  return t4;
+  return t3;
 }
 
 export const FIXTURE_ENTRYPOINT = {
@@ -161,3 +151,6 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
       
+### Eval output
+(kind: ok) <div>{"x":[2,2,2],"count":3}</div><div>{"item":1}</div>
+<div>{"x":[2,2,2],"count":4}</div><div>{"item":1}</div>
