@@ -463,6 +463,27 @@ export function restoreViewTransitionName(instance, props) {
   // Noop
 }
 
+export type InstanceMeasurement = null;
+
+export function measureInstance(instance) {
+  return null;
+}
+
+export function isInstanceInViewport(instance, measurement): boolean {
+  return true;
+}
+
+export function hasInstanceChanged(oldMeasurement, newMeasurement): boolean {
+  return false;
+}
+
+export function hasInstanceAffectedParent(
+  oldMeasurement,
+  newMeasurement,
+): boolean {
+  return false;
+}
+
 export function clearContainer(container) {
   // TODO Implement this
 }

@@ -154,6 +154,7 @@ export type EventTargetChildElement = {
   },
   ...
 };
+
 export type Container =
   | interface extends Element {_reactRootContainer?: FiberRoot}
   | interface extends Document {_reactRootContainer?: FiberRoot}
@@ -1013,6 +1014,86 @@ export function restoreViewTransitionName(
       : // The value would've errored already if it wasn't safe.
         // eslint-disable-next-line react-internal/safe-string-coercion
         ('' + viewTransitionName).trim();
+}
+
+export type InstanceMeasurement = {
+  rect: ClientRect | DOMRect,
+  abs: boolean, // is absolutely positioned
+  clip: boolean, // is a clipping parent
+};
+
+export function measureInstance(instance: Instance): InstanceMeasurement {
+  const computedStyle = getComputedStyle(instance);
+  return {
+    rect: instance.getBoundingClientRect(),
+    // Absolutely positioned instances don't contribute their size to the parent.
+    abs:
+      computedStyle.position === 'absolute' ||
+      computedStyle.position === 'fixed',
+    clip:
+      // If a ViewTransition boundary acts as a clipping parent group we should
+      // always mark it to animate if its children do so that we can clip them.
+      // This doesn't actually have any effect yet until browsers implement
+      // layered capture and nested view transitions.
+      computedStyle.clipPath !== 'none' ||
+      computedStyle.overflow !== 'visible' ||
+      computedStyle.filter !== 'none' ||
+      computedStyle.mask !== 'none' ||
+      computedStyle.mask !== 'none' ||
+      computedStyle.borderRadius !== '0px',
+  };
+}
+
+export function isInstanceInViewport(
+  instance: Instance,
+  measurement: InstanceMeasurement,
+): boolean {
+  const ownerWindow = instance.ownerDocument.defaultView;
+  const rect = measurement.rect;
+  return (
+    rect.bottom >= 0 &&
+    rect.right >= 0 &&
+    rect.top <= ownerWindow.innerHeight &&
+    rect.left <= ownerWindow.innerWidth
+  );
+}
+
+export function hasInstanceChanged(
+  oldMeasurement: InstanceMeasurement,
+  newMeasurement: InstanceMeasurement,
+): boolean {
+  // Note: This is not guaranteed from the same instance in the case that the Instance of the
+  // ViewTransition swaps out but it's still the same ViewTransition instance.
+  if (newMeasurement.clip) {
+    // If we're a clipping parent, we always animate if any of our children do so that we can clip
+    // them. This doesn't yet until browsers implement layered capture and nested view transitions.
+    return true;
+  }
+  const oldRect = oldMeasurement.rect;
+  const newRect = newMeasurement.rect;
+  return (
+    oldRect.y !== newRect.y ||
+    oldRect.x !== newRect.x ||
+    oldRect.height !== newRect.height ||
+    oldRect.width !== newRect.width
+  );
+}
+
+export function hasInstanceAffectedParent(
+  oldMeasurement: InstanceMeasurement,
+  newMeasurement: InstanceMeasurement,
+): boolean {
+  // Note: This is not guaranteed from the same instance in the case that the Instance of the
+  // ViewTransition swaps out but it's still the same ViewTransition instance.
+  // If the instance has resized, it might have affected the parent layout.
+  if (newMeasurement.abs) {
+    // Absolutely positioned elements don't affect the parent layout, unless they
+    // previously were not absolutely positioned.
+    return !oldMeasurement.abs;
+  }
+  const oldRect = oldMeasurement.rect;
+  const newRect = newMeasurement.rect;
+  return oldRect.height !== newRect.height || oldRect.width !== newRect.width;
 }
 
 export function clearContainer(container: Container): void {

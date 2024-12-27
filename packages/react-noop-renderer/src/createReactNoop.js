@@ -81,6 +81,7 @@ type CreateRootOptions = {
   onCaughtError?: (error: mixed, errorInfo: {componentStack: string}) => void,
   ...
 };
+type InstanceMeasurement = null;
 
 type SuspenseyCommitSubscription = {
   pendingCount: number,
@@ -734,6 +735,31 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         applyViewTransitionName(instance: Instance, name: string): void {},
 
         restoreViewTransitionName(instance: Instance, props: Props): void {},
+
+        measureInstance(instance: Instance): InstanceMeasurement {
+          return null;
+        },
+
+        isInstanceInViewport(
+          instance: Instance,
+          measurement: InstanceMeasurement,
+        ): boolean {
+          return true;
+        },
+
+        hasInstanceChanged(
+          oldMeasurement: InstanceMeasurement,
+          newMeasurement: InstanceMeasurement,
+        ): boolean {
+          return false;
+        },
+
+        hasInstanceAffectedParent(
+          oldMeasurement: InstanceMeasurement,
+          newMeasurement: InstanceMeasurement,
+        ): boolean {
+          return false;
+        },
 
         resetTextContent(instance: Instance): void {
           instance.text = null;
