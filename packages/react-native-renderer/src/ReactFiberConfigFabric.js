@@ -31,6 +31,7 @@ import {
   createPublicTextInstance,
   type PublicInstance as ReactNativePublicInstance,
   type PublicTextInstance,
+  type PublicRootInstance,
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 const {
@@ -108,7 +109,10 @@ export type TextInstance = {
 };
 export type HydratableInstance = Instance | TextInstance;
 export type PublicInstance = ReactNativePublicInstance;
-export type Container = number;
+export type Container = {
+  containerTag: number,
+  publicInstance: PublicRootInstance | null,
+};
 export type ChildSet = Object | Array<Node>;
 export type HostContext = $ReadOnly<{
   isInAParentText: boolean,
@@ -180,7 +184,7 @@ export function createInstance(
   const node = createNode(
     tag, // reactTag
     viewConfig.uiViewClassName, // viewName
-    rootContainerInstance, // rootTag
+    rootContainerInstance.containerTag, // rootTag
     updatePayload, // props
     internalInstanceHandle, // internalInstanceHandle
   );
@@ -189,6 +193,7 @@ export function createInstance(
     tag,
     viewConfig,
     internalInstanceHandle,
+    rootContainerInstance.publicInstance,
   );
 
   return {
@@ -221,7 +226,7 @@ export function createTextInstance(
   const node = createNode(
     tag, // reactTag
     'RCTRawText', // viewName
-    rootContainerInstance, // rootTag
+    rootContainerInstance.containerTag, // rootTag
     {text: text}, // props
     internalInstanceHandle, // instance handle
   );
@@ -501,7 +506,7 @@ export function finalizeContainerChildren(
   newChildren: ChildSet,
 ): void {
   if (!enableFabricCompleteRootInCommitPhase) {
-    completeRoot(container, newChildren);
+    completeRoot(container.containerTag, newChildren);
   }
 }
 
@@ -511,7 +516,7 @@ export function replaceContainerChildren(
 ): void {
   // Noop - children will be replaced in finalizeContainerChildren
   if (enableFabricCompleteRootInCommitPhase) {
-    completeRoot(container, newChildren);
+    completeRoot(container.containerTag, newChildren);
   }
 }
 
