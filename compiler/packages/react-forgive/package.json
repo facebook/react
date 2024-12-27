@@ -36,10 +36,8 @@
   },
   "scripts": {
     "build": "yarn run compile",
-    "compile": "rimraf dist && concurrently -n server,client \"yarn run esbuild:server --sourcemap\" \"yarn run esbuild:client --sourcemap\"",
+    "compile": "rimraf dist && concurrently -n server,client \"scripts/build.mjs -t server\" \"scripts/build.mjs -t client\"",
     "dev": "yarn run package && yarn run install-ext",
-    "esbuild:client": "esbuild ./client/src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node",
-    "esbuild:server": "esbuild ./server/src/index.ts --bundle --outfile=dist/server.js --external:vscode --format=cjs --platform=node",
     "install-ext": "code --install-extension react-forgive-0.0.0.vsix",
     "lint": "echo 'no tests'",
     "package": "rm -f react-forgive-0.0.0.vsix && vsce package --yarn",
@@ -47,7 +45,7 @@
     "pretest": "yarn run compile && yarn run lint",
     "test": "vscode-test",
     "vscode:prepublish": "yarn run compile",
-    "watch": "concurrently --kill-others -n server,client \"run esbuild:server --sourcemap --watch\" \"run esbuild:client --sourcemap --watch\""
+    "watch": "scripts/build.mjs --watch"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",
@@ -59,6 +57,7 @@
     "esbuild": "^0.24.0",
     "eslint": "^9.13.0",
     "mocha": "^11.0.1",
-    "typescript-eslint": "^8.16.0"
+    "typescript-eslint": "^8.16.0",
+    "yargs": "^17.7.2"
   }
 }
