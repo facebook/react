@@ -14,6 +14,7 @@ import type {
   Container,
   HoistableRoot,
   FormInstance,
+  InstanceMeasurement,
 } from './ReactFiberConfig';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
@@ -158,6 +159,7 @@ import {
   registerSuspenseInstanceRetry,
   applyViewTransitionName,
   restoreViewTransitionName,
+  measureInstance,
 } from './ReactFiberConfig';
 import {
   captureCommitPhaseError,
@@ -505,6 +507,7 @@ let viewTransitionHostInstanceIdx = 0;
 function applyViewTransitionToHostInstances(
   child: null | Fiber,
   name: string,
+  collectMeasurements: null | Array<InstanceMeasurement>,
   stopAtNestedViewTransitions: boolean,
 ): void {
   if (!supportsMutation) {
@@ -513,6 +516,9 @@ function applyViewTransitionToHostInstances(
   while (child !== null) {
     if (child.tag === HostComponent) {
       const instance: Instance = child.stateNode;
+      if (collectMeasurements !== null) {
+        collectMeasurements.push(measureInstance(instance));
+      }
       applyViewTransitionName(
         instance,
         viewTransitionHostInstanceIdx === 0
@@ -537,6 +543,7 @@ function applyViewTransitionToHostInstances(
       applyViewTransitionToHostInstances(
         child.child,
         name,
+        collectMeasurements,
         stopAtNestedViewTransitions,
       );
     }
@@ -583,7 +590,7 @@ function commitEnterViewTransitions(placement: Fiber): void {
       placement.stateNode,
     );
     viewTransitionHostInstanceIdx = 0;
-    applyViewTransitionToHostInstances(placement.child, name, false);
+    applyViewTransitionToHostInstances(placement.child, name, null, false);
   } else if ((placement.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
     let child = placement.child;
     while (child !== null) {
@@ -600,7 +607,7 @@ function commitExitViewTransitions(deletion: Fiber): void {
       deletion.stateNode,
     );
     viewTransitionHostInstanceIdx = 0;
-    applyViewTransitionToHostInstances(deletion.child, name, false);
+    applyViewTransitionToHostInstances(deletion.child, name, null, false);
   } else if ((deletion.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
     let child = deletion.child;
     while (child !== null) {
@@ -629,7 +636,12 @@ function commitUpdateViewTransition(fiber: Fiber): void {
   // each child needs its own ViewTransition.
   const name = getViewTransitionName(fiber.memoizedProps, fiber.stateNode);
   viewTransitionHostInstanceIdx = 0;
-  applyViewTransitionToHostInstances(fiber.child, name, true);
+  applyViewTransitionToHostInstances(
+    fiber.child,
+    name,
+    (fiber.memoizedState = []),
+    true,
+  );
 }
 
 function commitNestedViewTransitions(changedParent: Fiber): void {
@@ -640,7 +652,12 @@ function commitNestedViewTransitions(changedParent: Fiber): void {
       // was an update through this component then the inner one wins.
       const name = getViewTransitionName(child.memoizedProps, child.stateNode);
       viewTransitionHostInstanceIdx = 0;
-      applyViewTransitionToHostInstances(child.child, name, false);
+      applyViewTransitionToHostInstances(
+        child.child,
+        name,
+        (child.memoizedState = []),
+        false,
+      );
     } else if ((child.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
       commitNestedViewTransitions(child);
     }
@@ -676,6 +693,7 @@ function restoreUpdateViewTransition(
   current: Fiber,
   finishedWork: Fiber,
 ): void {
+  finishedWork.memoizedState = null;
   restoreViewTransitionOnHostInstances(current.child, true);
   restoreViewTransitionOnHostInstances(finishedWork.child, true);
 }
@@ -684,6 +702,7 @@ function restoreNestedViewTransitions(changedParent: Fiber): void {
   let child = changedParent.child;
   while (child !== null) {
     if (child.tag === ViewTransitionComponent) {
+      child.memoizedState = null;
       restoreViewTransitionOnHostInstances(child.child, false);
     } else if ((child.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
       restoreNestedViewTransitions(child);
