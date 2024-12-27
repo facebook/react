@@ -120,7 +120,12 @@ export type Props = {
   hidden?: boolean,
   suppressHydrationWarning?: boolean,
   dangerouslySetInnerHTML?: mixed,
-  style?: {display?: string, ...},
+  style?: {
+    display?: string,
+    viewTransitionName?: string,
+    'view-transition-name'?: string,
+    ...
+  },
   bottom?: null | number,
   left?: null | number,
   right?: null | number,
@@ -976,6 +981,38 @@ export function unhideTextInstance(
   text: string,
 ): void {
   textInstance.nodeValue = text;
+}
+
+export function applyViewTransitionName(
+  instance: Instance,
+  name: string,
+): void {
+  instance = ((instance: any): HTMLElement);
+  // $FlowFixMe[prop-missing]
+  instance.style.viewTransitionName = name;
+}
+
+export function restoreViewTransitionName(
+  instance: Instance,
+  props: Props,
+): void {
+  instance = ((instance: any): HTMLElement);
+  const styleProp = props[STYLE];
+  const viewTransitionName =
+    styleProp !== undefined && styleProp !== null
+      ? styleProp.hasOwnProperty('viewTransitionName')
+        ? styleProp.viewTransitionName
+        : styleProp.hasOwnProperty('view-transition-name')
+          ? styleProp['view-transition-name']
+          : null
+      : null;
+  // $FlowFixMe[prop-missing]
+  instance.style.viewTransitionName =
+    viewTransitionName == null || typeof viewTransitionName === 'boolean'
+      ? ''
+      : // The value would've errored already if it wasn't safe.
+        // eslint-disable-next-line react-internal/safe-string-coercion
+        ('' + viewTransitionName).trim();
 }
 
 export function clearContainer(container: Container): void {

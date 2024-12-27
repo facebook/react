@@ -35,3 +35,5 @@ export const hideTextInstance = shim;
 export const unhideInstance = shim;
 export const unhideTextInstance = shim;
 export const clearContainer = shim;
+export const applyViewTransitionName = shim;
+export const restoreViewTransitionName = shim;

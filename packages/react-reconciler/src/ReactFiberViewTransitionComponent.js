@@ -59,3 +59,14 @@ export function assignViewTransitionAutoName(
   instance.autoName = name;
   return name;
 }
+
+export function getViewTransitionName(
+  props: ViewTransitionProps,
+  instance: ViewTransitionInstance,
+): string {
+  if (props.name != null) {
+    return props.name;
+  }
+  // We should have assigned a name by now.
+  return (instance.autoName: any);
+}

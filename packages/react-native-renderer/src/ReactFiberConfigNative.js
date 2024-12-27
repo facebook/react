@@ -522,6 +522,20 @@ export function unhideInstance(instance: Instance, props: Props): void {
   );
 }
 
+export function applyViewTransitionName(
+  instance: Instance,
+  name: string,
+): void {
+  // Not yet implemented
+}
+
+export function restoreViewTransitionName(
+  instance: Instance,
+  props: Props,
+): void {
+  // Not yet implemented
+}
+
 export function clearContainer(container: Container): void {
   // TODO Implement this for React Native
   // UIManager does not expose a "remove all" type method.

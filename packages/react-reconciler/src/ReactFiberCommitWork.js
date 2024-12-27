@@ -155,6 +155,7 @@ import {
   suspendResource,
   resetFormInstance,
   registerSuspenseInstanceRetry,
+  applyViewTransitionName,
 } from './ReactFiberConfig';
 import {
   captureCommitPhaseError,
@@ -184,6 +185,7 @@ import {
   OffscreenDetached,
   OffscreenPassiveEffectsConnected,
 } from './ReactFiberActivityComponent';
+import {getViewTransitionName} from './ReactFiberViewTransitionComponent';
 import {
   TransitionRoot,
   TransitionTracingMarker,
@@ -289,6 +291,19 @@ function commitBeforeMutationEffects_begin(isViewTransitionEligible: boolean) {
       }
     }
 
+    if (
+      enableViewTransition &&
+      fiber.alternate === null &&
+      (fiber.flags & Placement) !== NoFlags
+    ) {
+      // Skip before mutation effects of the children because we don't want
+      // to trigger updates of any nested view transitions and we shouldn't
+      // have any other before mutation effects since snapshot effects are
+      // only applied to updates. TODO: Model this using only flags.
+      commitBeforeMutationEffects_complete(isViewTransitionEligible);
+      continue;
+    }
+
     // TODO: This should really unify with the switch in commitBeforeMutationEffectsOnFiber recursively.
     if (enableViewTransition && fiber.tag === OffscreenComponent) {
       const isModernRoot =
@@ -310,11 +325,10 @@ function commitBeforeMutationEffects_begin(isViewTransitionEligible: boolean) {
           continue;
         } else if (current !== null && current.memoizedState !== null) {
           // Was previously mounted as hidden but is now visible.
-          commitEnterViewTransitions(current);
           // Skip before mutation effects of the children because we don't want
           // to trigger updates of any nested view transitions and we shouldn't
           // have any other before mutation effects since snapshot effects are
-          // only applied to updates.
+          // only applied to updates. TODO: Model this using only flags.
           commitBeforeMutationEffects_complete(isViewTransitionEligible);
           continue;
         }
@@ -326,6 +340,13 @@ function commitBeforeMutationEffects_begin(isViewTransitionEligible: boolean) {
       child.return = fiber;
       nextEffect = child;
     } else {
+      if (isViewTransitionEligible) {
+        // We are inside an updated subtree. Any mutations that affected the
+        // parent HostInstance's layout or set of children (such as reorders)
+        // might have also affected the positioning or size of the inner
+        // ViewTransitions. Therefore we need to find them inside.
+        commitNestedViewTransitions(fiber);
+      }
       commitBeforeMutationEffects_complete(isViewTransitionEligible);
     }
   }
@@ -370,15 +391,6 @@ function commitBeforeMutationEffectsOnFiber(
         beforeActiveInstanceBlur(finishedWork);
       }
     }
-  }
-
-  if (
-    enableViewTransition &&
-    isViewTransitionEligible &&
-    current === null &&
-    (finishedWork.flags & Placement) !== NoFlags
-  ) {
-    commitEnterViewTransitions(finishedWork);
   }
 
   switch (finishedWork.tag) {
@@ -444,8 +456,13 @@ function commitBeforeMutationEffectsOnFiber(
             NoFlags
           ) {
             // Something mutated within this subtree. This might need to cause
-            // a cross-fade of this parent.
-            commitUpdateViewTransition(finishedWork);
+            // a cross-fade of this parent. We first assign old names to the
+            // previous tree in the before mutation phase in case we need to.
+            // TODO: This walks the tree that we might continue walking anyway.
+            // We should just stash the parent ViewTransitionComponent and continue
+            // walking the tree until we find HostComponent but to do that we need
+            // to use a stack which requires refactoring this phase.
+            commitUpdateViewTransition(current);
           }
         }
         break;
@@ -481,9 +498,58 @@ function commitBeforeMutationEffectsDeletion(
   }
 }
 
+let viewTransitionHostInstanceIdx = 0;
+
+function applyViewTransitionToHostInstances(
+  child: null | Fiber,
+  name: string,
+  stopAtNestedViewTransitions: boolean,
+): void {
+  if (!supportsMutation) {
+    return;
+  }
+  while (child !== null) {
+    if (child.tag === HostComponent) {
+      const instance: Instance = child.stateNode;
+      applyViewTransitionName(
+        instance,
+        viewTransitionHostInstanceIdx === 0
+          ? name
+          : // If we have multiple Host Instances below, we add a suffix to the name to give
+            // each one a unique name.
+            name + '_' + viewTransitionHostInstanceIdx,
+      );
+      viewTransitionHostInstanceIdx++;
+    } else if (
+      child.tag === OffscreenComponent &&
+      child.memoizedState !== null
+    ) {
+      // Skip any hidden subtrees. They were or are effectively not there.
+    } else if (
+      child.tag === ViewTransitionComponent &&
+      stopAtNestedViewTransitions
+    ) {
+      // Skip any nested view transitions for updates since in that case the
+      // inner most one is the one that handles the update.
+    } else {
+      applyViewTransitionToHostInstances(
+        child.child,
+        name,
+        stopAtNestedViewTransitions,
+      );
+    }
+    child = child.sibling;
+  }
+}
+
 function commitEnterViewTransitions(placement: Fiber): void {
   if (placement.tag === ViewTransitionComponent) {
-    // TODO
+    const name = getViewTransitionName(
+      placement.memoizedProps,
+      placement.stateNode,
+    );
+    viewTransitionHostInstanceIdx = 0;
+    applyViewTransitionToHostInstances(placement.child, name, false);
   } else if ((placement.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
     let child = placement.child;
     while (child !== null) {
@@ -495,7 +561,12 @@ function commitEnterViewTransitions(placement: Fiber): void {
 
 function commitExitViewTransitions(deletion: Fiber): void {
   if (deletion.tag === ViewTransitionComponent) {
-    // TODO
+    const name = getViewTransitionName(
+      deletion.memoizedProps,
+      deletion.stateNode,
+    );
+    viewTransitionHostInstanceIdx = 0;
+    applyViewTransitionToHostInstances(deletion.child, name, false);
   } else if ((deletion.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
     let child = deletion.child;
     while (child !== null) {
@@ -505,8 +576,42 @@ function commitExitViewTransitions(deletion: Fiber): void {
   }
 }
 
-function commitUpdateViewTransition(finishedWork: Fiber): void {
-  // TODO
+function commitUpdateViewTransition(fiber: Fiber): void {
+  // The way we deal with multiple HostInstances as children of a View Transition in an
+  // update can get tricky. The important bit is that if you swap out n HostInstances
+  // from n HostInstances then they match up in order. Similarly, if you don't swap
+  // any HostInstances each instance just transitions as is.
+  //
+  // We call this function twice. First we apply the view transition names on the
+  // "current" tree in the snapshot phase. Then in the mutation phase we apply view
+  // transition names to the "finishedWork" tree.
+  //
+  // This means that if there were insertions or deletions before an updated Instance
+  // that same Instance might get different names in the "old" and the "new" state.
+  // For example if you swap two HostInstances inside a ViewTransition they don't
+  // animate to swap position but rather cross-fade into the other instance. This might
+  // be unexpected but it is in line with the semantics that the ViewTransition is its
+  // own layer that cross-fades its content when it updates. If you want to reorder then
+  // each child needs its own ViewTransition.
+  const name = getViewTransitionName(fiber.memoizedProps, fiber.stateNode);
+  viewTransitionHostInstanceIdx = 0;
+  applyViewTransitionToHostInstances(fiber.child, name, true);
+}
+
+function commitNestedViewTransitions(changedParent: Fiber): void {
+  let child = changedParent.child;
+  while (child !== null) {
+    if (child.tag === ViewTransitionComponent) {
+      // In this case the outer ViewTransition component wins but if there
+      // was an update through this component then the inner one wins.
+      const name = getViewTransitionName(child.memoizedProps, child.stateNode);
+      viewTransitionHostInstanceIdx = 0;
+      applyViewTransitionToHostInstances(child.child, name, false);
+    } else if ((child.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
+      commitNestedViewTransitions(child);
+    }
+    child = child.sibling;
+  }
 }
 
 function commitLayoutEffectOnFiber(
@@ -1763,7 +1868,7 @@ function commitMutationEffectsOnFiber(
     case MemoComponent:
     case SimpleMemoComponent: {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-      commitReconciliationEffects(finishedWork);
+      commitReconciliationEffects(finishedWork, lanes);
 
       if (flags & Update) {
         commitHookEffectListUnmount(
@@ -1783,7 +1888,7 @@ function commitMutationEffectsOnFiber(
     }
     case ClassComponent: {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-      commitReconciliationEffects(finishedWork);
+      commitReconciliationEffects(finishedWork, lanes);
 
       if (flags & Ref) {
         if (!offscreenSubtreeWasHidden && current !== null) {
@@ -1806,7 +1911,7 @@ function commitMutationEffectsOnFiber(
         // null while we are processing mutation effects
         const hoistableRoot: HoistableRoot = (currentHoistableRoot: any);
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-        commitReconciliationEffects(finishedWork);
+        commitReconciliationEffects(finishedWork, lanes);
 
         if (flags & Ref) {
           if (!offscreenSubtreeWasHidden && current !== null) {
@@ -1891,7 +1996,7 @@ function commitMutationEffectsOnFiber(
     }
     case HostComponent: {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-      commitReconciliationEffects(finishedWork);
+      commitReconciliationEffects(finishedWork, lanes);
 
       if (flags & Ref) {
         if (!offscreenSubtreeWasHidden && current !== null) {
@@ -1941,7 +2046,7 @@ function commitMutationEffectsOnFiber(
     }
     case HostText: {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-      commitReconciliationEffects(finishedWork);
+      commitReconciliationEffects(finishedWork, lanes);
 
       if (flags & Update) {
         if (supportsMutation) {
@@ -1976,10 +2081,10 @@ function commitMutationEffectsOnFiber(
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
         currentHoistableRoot = previousHoistableRoot;
 
-        commitReconciliationEffects(finishedWork);
+        commitReconciliationEffects(finishedWork, lanes);
       } else {
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-        commitReconciliationEffects(finishedWork);
+        commitReconciliationEffects(finishedWork, lanes);
       }
 
       if (flags & Update) {
@@ -2023,11 +2128,11 @@ function commitMutationEffectsOnFiber(
           finishedWork.stateNode.containerInfo,
         );
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-        commitReconciliationEffects(finishedWork);
+        commitReconciliationEffects(finishedWork, lanes);
         currentHoistableRoot = previousHoistableRoot;
       } else {
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-        commitReconciliationEffects(finishedWork);
+        commitReconciliationEffects(finishedWork, lanes);
       }
 
       if (flags & Update) {
@@ -2045,7 +2150,7 @@ function commitMutationEffectsOnFiber(
       const prevEffectDuration = pushNestedEffectDurations();
 
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-      commitReconciliationEffects(finishedWork);
+      commitReconciliationEffects(finishedWork, lanes);
 
       if (enableProfilerTimer && enableProfilerCommitHooks) {
         const profilerInstance = finishedWork.stateNode;
@@ -2058,7 +2163,7 @@ function commitMutationEffectsOnFiber(
     }
     case SuspenseComponent: {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-      commitReconciliationEffects(finishedWork);
+      commitReconciliationEffects(finishedWork, lanes);
 
       // TODO: We should mark a flag on the Suspense fiber itself, rather than
       // relying on the Offscreen fiber having a flag also being marked. The
@@ -2134,7 +2239,7 @@ function commitMutationEffectsOnFiber(
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       }
 
-      commitReconciliationEffects(finishedWork);
+      commitReconciliationEffects(finishedWork, lanes);
 
       const offscreenInstance: OffscreenInstance = finishedWork.stateNode;
 
@@ -2175,7 +2280,12 @@ function commitMutationEffectsOnFiber(
           }
         } else {
           if (wasHidden) {
-            // TODO: Move re-appear call here for symmetry?
+            const isViewTransitionEligible =
+              enableViewTransition &&
+              includesOnlyViewTransitionEligibleLanes(lanes);
+            if (isViewTransitionEligible) {
+              commitEnterViewTransitions(finishedWork);
+            }
           }
         }
 
@@ -2203,7 +2313,7 @@ function commitMutationEffectsOnFiber(
     }
     case SuspenseListComponent: {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-      commitReconciliationEffects(finishedWork);
+      commitReconciliationEffects(finishedWork, lanes);
 
       if (flags & Update) {
         const retryQueue: Set<Wakeable> | null =
@@ -2215,10 +2325,43 @@ function commitMutationEffectsOnFiber(
       }
       break;
     }
+    case ViewTransitionComponent:
+      if (enableViewTransition) {
+        recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+        commitReconciliationEffects(finishedWork, lanes);
+        const isViewTransitionEligible =
+          enableViewTransition &&
+          includesOnlyViewTransitionEligibleLanes(lanes);
+        if (isViewTransitionEligible) {
+          if (current === null) {
+            // This is a new mount. We should have handled this as part of the
+            // Placement effect or it is deeper inside a entering transition.
+          } else if (
+            (finishedWork.subtreeFlags &
+              (Placement |
+                Update |
+                ChildDeletion |
+                ContentReset |
+                Visibility)) !==
+            NoFlags
+          ) {
+            // Something might have mutationed within this subtree. This might need to
+            // cause a cross-fade of this parent. We have already applied names to
+            // the previous tree in the before mutation phase. We need to apply names
+            // to the new tree in the mutation phase.
+            // TODO: This walks the tree that we might continue walking anyway.
+            // This is just to align with the BeforeMutationPhase which isn't
+            // using a stack.
+            commitUpdateViewTransition(finishedWork);
+          }
+        }
+        break;
+      }
+    // Fallthrough
     case ScopeComponent: {
       if (enableScopeAPI) {
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-        commitReconciliationEffects(finishedWork);
+        commitReconciliationEffects(finishedWork, lanes);
 
         // TODO: This is a temporary solution that allowed us to transition away
         // from React Flare on www.
@@ -2239,7 +2382,7 @@ function commitMutationEffectsOnFiber(
     }
     default: {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-      commitReconciliationEffects(finishedWork);
+      commitReconciliationEffects(finishedWork, lanes);
 
       break;
     }
@@ -2267,12 +2410,25 @@ function commitMutationEffectsOnFiber(
   popComponentEffectErrors(prevEffectErrors);
 }
 
-function commitReconciliationEffects(finishedWork: Fiber) {
+function commitReconciliationEffects(
+  finishedWork: Fiber,
+  committedLanes: Lanes,
+) {
   // Placement effects (insertions, reorders) can be scheduled on any fiber
   // type. They needs to happen after the children effects have fired, but
   // before the effects on this fiber have fired.
   const flags = finishedWork.flags;
   if (flags & Placement) {
+    const isViewTransitionEligible =
+      enableViewTransition &&
+      includesOnlyViewTransitionEligibleLanes(committedLanes);
+    if (isViewTransitionEligible) {
+      // The first ViewTransition inside the Placement runs an enter transition
+      // but other nested ones don't.
+      // TODO: This shares the same traveral as commitHostPlacement below so it
+      // could be optimized to share the same pass.
+      commitEnterViewTransitions(finishedWork);
+    }
     commitHostPlacement(finishedWork);
     // Clear the "placement" from effect tag so that we know that this is
     // inserted, before any life-cycles like componentDidMount gets called.

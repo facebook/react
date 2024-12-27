@@ -128,6 +128,8 @@ export const hideInstance = $$$config.hideInstance;
 export const hideTextInstance = $$$config.hideTextInstance;
 export const unhideInstance = $$$config.unhideInstance;
 export const unhideTextInstance = $$$config.unhideTextInstance;
+export const applyViewTransitionName = $$$config.applyViewTransitionName;
+export const restoreViewTransitionName = $$$config.restoreViewTransitionName;
 export const clearContainer = $$$config.clearContainer;
 
 // -------------------
