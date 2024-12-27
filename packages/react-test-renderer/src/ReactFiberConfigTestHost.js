@@ -305,6 +305,20 @@ export function unhideTextInstance(
   textInstance.isHidden = false;
 }
 
+export function applyViewTransitionName(
+  instance: Instance,
+  name: string,
+): void {
+  // Noop
+}
+
+export function restoreViewTransitionName(
+  instance: Instance,
+  props: Props,
+): void {
+  // Noop
+}
+
 export function getInstanceFromNode(mockNode: Object): Object | null {
   const instance = nodeToInstanceMap.get(mockNode);
   if (instance !== undefined) {

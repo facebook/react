@@ -455,6 +455,14 @@ export function unhideTextInstance(textInstance, text): void {
   // Noop
 }
 
+export function applyViewTransitionName(instance, name) {
+  // Noop
+}
+
+export function restoreViewTransitionName(instance, props) {
+  // Noop
+}
+
 export function clearContainer(container) {
   // TODO Implement this
 }
