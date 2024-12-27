@@ -16,6 +16,7 @@ import {
 import {hasOwnProperty} from '../Utils/utils';
 import {fromZodError} from 'zod-validation-error';
 import {CompilerPipelineValue} from './Pipeline';
+import {type CosmiconfigResult, cosmiconfigSync} from 'cosmiconfig';
 
 const PanicThresholdOptionsSchema = z.enum([
   /*
@@ -285,4 +286,12 @@ export function parseTargetConfig(value: unknown): CompilerReactTarget {
 
 function isCompilerFlag(s: string): s is keyof PluginOptions {
   return hasOwnProperty(defaultOptions, s);
+}
+
+export function findReactConfig(): CosmiconfigResult {
+  const explorerSync = cosmiconfigSync('react', {
+    searchStrategy: 'project',
+    cache: true,
+  });
+  return explorerSync.search();
 }
