@@ -3309,38 +3309,53 @@ function commitRoot(
     }
   }
 
+  // The commit phase is broken into several sub-phases. We do a separate pass
+  // of the effect list for each phase: all mutation effects come before all
+  // layout effects, and so on.
+
   // Check if there are any effects in the whole tree.
   // TODO: This is left over from the effect list implementation, where we had
   // to check for the existence of `firstEffect` to satisfy Flow. I think the
   // only other reason this optimization exists is because it affects profiling.
   // Reconsider whether this is necessary.
-  const subtreeHasEffects =
-    (finishedWork.subtreeFlags &
-      (BeforeMutationMask | MutationMask | LayoutMask | PassiveMask)) !==
+  const subtreeHasBeforeMutationEffects =
+    (finishedWork.subtreeFlags & (BeforeMutationMask | MutationMask)) !==
     NoFlags;
-  const rootHasEffect =
-    (finishedWork.flags &
-      (BeforeMutationMask | MutationMask | LayoutMask | PassiveMask)) !==
-    NoFlags;
+  const rootHasBeforeMutationEffect =
+    (finishedWork.flags & (BeforeMutationMask | MutationMask)) !== NoFlags;
 
-  if (subtreeHasEffects || rootHasEffect) {
+  if (subtreeHasBeforeMutationEffects || rootHasBeforeMutationEffect) {
     const prevTransition = ReactSharedInternals.T;
     ReactSharedInternals.T = null;
     const previousPriority = getCurrentUpdatePriority();
     setCurrentUpdatePriority(DiscreteEventPriority);
     const prevExecutionContext = executionContext;
     executionContext |= CommitContext;
-
     try {
-      // The commit phase is broken into several sub-phases. We do a separate pass
-      // of the effect list for each phase: all mutation effects come before all
-      // layout effects, and so on.
-
       // The first phase a "before mutation" phase. We use this phase to read the
       // state of the host tree right before we mutate it. This is where
       // getSnapshotBeforeUpdate is called.
       commitBeforeMutationEffects(root, finishedWork);
+    } finally {
+      // Reset the priority to the previous non-sync value.
+      executionContext = prevExecutionContext;
+      setCurrentUpdatePriority(previousPriority);
+      ReactSharedInternals.T = prevTransition;
+    }
+  }
 
+  const subtreeMutationHasEffects =
+    (finishedWork.subtreeFlags & MutationMask) !== NoFlags;
+  const rootMutationHasEffect = (finishedWork.flags & MutationMask) !== NoFlags;
+
+  if (subtreeMutationHasEffects || rootMutationHasEffect) {
+    const prevTransition = ReactSharedInternals.T;
+    ReactSharedInternals.T = null;
+    const previousPriority = getCurrentUpdatePriority();
+    setCurrentUpdatePriority(DiscreteEventPriority);
+    const prevExecutionContext = executionContext;
+    executionContext |= CommitContext;
+    try {
       // The next phase is the mutation phase, where we mutate the host tree.
       commitMutationEffects(root, finishedWork, lanes);
 
@@ -3350,13 +3365,32 @@ function commitRoot(
         }
       }
       resetAfterCommit(root.containerInfo);
+    } finally {
+      // Reset the priority to the previous non-sync value.
+      executionContext = prevExecutionContext;
+      setCurrentUpdatePriority(previousPriority);
+      ReactSharedInternals.T = prevTransition;
+    }
+  }
 
-      // The work-in-progress tree is now the current tree. This must come after
-      // the mutation phase, so that the previous tree is still current during
-      // componentWillUnmount, but before the layout phase, so that the finished
-      // work is current during componentDidMount/Update.
-      root.current = finishedWork;
+  // The work-in-progress tree is now the current tree. This must come after
+  // the mutation phase, so that the previous tree is still current during
+  // componentWillUnmount, but before the layout phase, so that the finished
+  // work is current during componentDidMount/Update.
+  root.current = finishedWork;
 
+  const subtreeHasLayoutEffects =
+    (finishedWork.subtreeFlags & LayoutMask) !== NoFlags;
+  const rootHasLayoutEffect = (finishedWork.flags & LayoutMask) !== NoFlags;
+
+  if (subtreeHasLayoutEffects || rootHasLayoutEffect) {
+    const prevTransition = ReactSharedInternals.T;
+    ReactSharedInternals.T = null;
+    const previousPriority = getCurrentUpdatePriority();
+    setCurrentUpdatePriority(DiscreteEventPriority);
+    const prevExecutionContext = executionContext;
+    executionContext |= CommitContext;
+    try {
       // The next phase is the layout phase, where we call effects that read
       // the host tree after it's been mutated. The idiomatic use case for this is
       // layout, but class component lifecycles also fire here for legacy reasons.
@@ -3367,21 +3401,17 @@ function commitRoot(
       if (enableSchedulingProfiler) {
         markLayoutEffectsStopped();
       }
-
-      // Tell Scheduler to yield at the end of the frame, so the browser has an
-      // opportunity to paint.
-      requestPaint();
     } finally {
-      executionContext = prevExecutionContext;
-
       // Reset the priority to the previous non-sync value.
+      executionContext = prevExecutionContext;
       setCurrentUpdatePriority(previousPriority);
       ReactSharedInternals.T = prevTransition;
     }
-  } else {
-    // No effects.
-    root.current = finishedWork;
   }
+
+  // Tell Scheduler to yield at the end of the frame, so the browser has an
+  // opportunity to paint.
+  requestPaint();
 
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     recordCommitEndTime();
