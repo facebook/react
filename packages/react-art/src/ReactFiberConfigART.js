@@ -484,6 +484,10 @@ export function hasInstanceAffectedParent(
   return false;
 }
 
+export function startViewTransition() {
+  return false;
+}
+
 export function clearContainer(container) {
   // TODO Implement this
 }

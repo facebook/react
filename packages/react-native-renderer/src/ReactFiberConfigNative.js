@@ -564,6 +564,15 @@ export function hasInstanceAffectedParent(
   return false;
 }
 
+export function startViewTransition(
+  rootContainer: Container,
+  mutationCallback: () => void,
+  layoutCallback: () => void,
+  passiveCallback: () => mixed,
+): boolean {
+  return false;
+}
+
 export function clearContainer(container: Container): void {
   // TODO Implement this for React Native
   // UIManager does not expose a "remove all" type method.

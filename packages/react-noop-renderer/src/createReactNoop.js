@@ -761,6 +761,15 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           return false;
         },
 
+        startViewTransition(
+          rootContainer: Container,
+          mutationCallback: () => void,
+          layoutCallback: () => void,
+          passiveCallback: () => mixed,
+        ): boolean {
+          return false;
+        },
+
         resetTextContent(instance: Instance): void {
           instance.text = null;
         },

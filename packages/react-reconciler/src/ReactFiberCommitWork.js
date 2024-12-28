@@ -251,6 +251,8 @@ let inProgressRoot: FiberRoot | null = null;
 let focusedInstanceHandle: null | Fiber = null;
 export let shouldFireAfterActiveInstanceBlur: boolean = false;
 
+export let shouldStartViewTransition: boolean = false;
+
 export function commitBeforeMutationEffects(
   root: FiberRoot,
   firstChild: Fiber,
@@ -258,6 +260,7 @@ export function commitBeforeMutationEffects(
 ): void {
   focusedInstanceHandle = prepareForCommit(root.containerInfo);
   shouldFireAfterActiveInstanceBlur = false;
+  shouldStartViewTransition = false;
 
   const isViewTransitionEligible =
     enableViewTransition &&
@@ -515,6 +518,7 @@ function applyViewTransitionToHostInstances(
   }
   while (child !== null) {
     if (child.tag === HostComponent) {
+      shouldStartViewTransition = true;
       const instance: Instance = child.stateNode;
       if (collectMeasurements !== null) {
         collectMeasurements.push(measureInstance(instance));

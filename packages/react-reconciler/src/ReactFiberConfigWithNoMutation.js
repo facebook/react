@@ -42,3 +42,4 @@ export const measureInstance = shim;
 export const isInstanceInViewport = shim;
 export const hasInstanceChanged = shim;
 export const hasInstanceAffectedParent = shim;
+export const startViewTransition = shim;

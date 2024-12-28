@@ -346,6 +346,15 @@ export function hasInstanceAffectedParent(
   return false;
 }
 
+export function startViewTransition(
+  rootContainer: Container,
+  mutationCallback: () => void,
+  layoutCallback: () => void,
+  passiveCallback: () => mixed,
+): boolean {
+  return false;
+}
+
 export function getInstanceFromNode(mockNode: Object): Object | null {
   const instance = nodeToInstanceMap.get(mockNode);
   if (instance !== undefined) {
