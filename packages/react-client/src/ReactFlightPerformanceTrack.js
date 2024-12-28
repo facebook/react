@@ -102,6 +102,49 @@ export function logComponentRender(
   }
 }
 
+export function logComponentErrored(
+  componentInfo: ReactComponentInfo,
+  trackIdx: number,
+  startTime: number,
+  endTime: number,
+  childrenEndTime: number,
+  rootEnv: string,
+  error: mixed,
+): void {
+  if (supportsUserTiming) {
+    const properties = [];
+    if (__DEV__) {
+      const message =
+        typeof error === 'object' &&
+        error !== null &&
+        typeof error.message === 'string'
+          ? // eslint-disable-next-line react-internal/safe-string-coercion
+            String(error.message)
+          : // eslint-disable-next-line react-internal/safe-string-coercion
+            String(error);
+      properties.push(['Error', message]);
+    }
+    const env = componentInfo.env;
+    const name = componentInfo.name;
+    const isPrimaryEnv = env === rootEnv;
+    const entryName =
+      isPrimaryEnv || env === undefined ? name : name + ' [' + env + ']';
+    performance.measure(entryName, {
+      start: startTime < 0 ? 0 : startTime,
+      end: childrenEndTime,
+      detail: {
+        devtools: {
+          color: 'error',
+          track: trackNames[trackIdx],
+          trackGroup: COMPONENTS_TRACK,
+          tooltipText: entryName + ' Errored',
+          properties,
+        },
+      },
+    });
+  }
+}
+
 export function logDedupedComponentRender(
   componentInfo: ReactComponentInfo,
   trackIdx: number,
