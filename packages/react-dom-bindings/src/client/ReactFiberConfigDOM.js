@@ -1096,6 +1096,27 @@ export function hasInstanceAffectedParent(
   return oldRect.height !== newRect.height || oldRect.width !== newRect.width;
 }
 
+export function startViewTransition(
+  rootContainer: Container,
+  mutationCallback: () => void,
+  layoutCallback: () => void,
+  passiveCallback: () => mixed,
+): boolean {
+  const ownerDocument =
+    rootContainer.nodeType === DOCUMENT_NODE
+      ? rootContainer
+      : rootContainer.ownerDocument;
+  // $FlowFixMe[prop-missing]
+  if (typeof ownerDocument.startViewTransition !== 'function') {
+    return false;
+  }
+  // $FlowFixMe[incompatible-use]
+  const transition = ownerDocument.startViewTransition(mutationCallback);
+  transition.ready.then(layoutCallback, layoutCallback);
+  transition.finished.then(passiveCallback);
+  return true;
+}
+
 export function clearContainer(container: Container): void {
   const nodeType = container.nodeType;
   if (nodeType === DOCUMENT_NODE) {

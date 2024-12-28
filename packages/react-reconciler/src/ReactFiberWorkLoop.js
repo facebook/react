@@ -92,6 +92,7 @@ import {
   getCurrentUpdatePriority,
   resolveUpdatePriority,
   trackSchedulerEvent,
+  startViewTransition,
 } from './ReactFiberConfig';
 
 import {createWorkInProgress, resetWorkInProgress} from './ReactFiber';
@@ -214,6 +215,7 @@ import {
   invokeLayoutEffectUnmountInDEV,
   invokePassiveEffectUnmountInDEV,
   accumulateSuspenseyCommit,
+  shouldStartViewTransition,
 } from './ReactFiberCommitWork';
 import {enqueueUpdate} from './ReactFiberClassUpdateQueue';
 import {resetContextDependencies} from './ReactFiberNewContext';
@@ -3375,8 +3377,23 @@ function commitRoot(
     }
   }
   pendingEffectsStatus = PENDING_MUTATION_PHASE;
-  flushMutationEffects();
-  flushLayoutEffects();
+  const startedViewTransition =
+    enableViewTransition &&
+    shouldStartViewTransition &&
+    startViewTransition(
+      root.containerInfo,
+      flushMutationEffects,
+      flushLayoutEffects,
+      // TODO: This flushes passive effects at the end of the transition but
+      // we also schedule work to flush them separately which we really shouldn't.
+      // We use flushPendingEffects instead of
+      flushPassiveEffects,
+    );
+  if (!startedViewTransition) {
+    // Flush synchronously.
+    flushMutationEffects();
+    flushLayoutEffects();
+  }
 }
 
 function flushMutationEffects(): void {

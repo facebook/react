@@ -135,6 +135,7 @@ export const measureInstance = $$$config.measureInstance;
 export const isInstanceInViewport = $$$config.isInstanceInViewport;
 export const hasInstanceChanged = $$$config.hasInstanceChanged;
 export const hasInstanceAffectedParent = $$$config.hasInstanceAffectedParent;
+export const startViewTransition = $$$config.startViewTransition;
 export const clearContainer = $$$config.clearContainer;
 
 // -------------------
