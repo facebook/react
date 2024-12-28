@@ -32,7 +32,6 @@ import {
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {clz32} from './clz32';
 import {LegacyRoot} from './ReactRootTags';
-import {noTimeout} from './ReactFiberConfig';
 
 // Lane values below should be kept in sync with getLabelForLane(), used by react-devtools-timeline.
 // If those values are changed that package should be rebuilt and redeployed.
@@ -222,7 +221,11 @@ function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
   }
 }
 
-export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
+export function getNextLanes(
+  root: FiberRoot,
+  wipLanes: Lanes,
+  rootHasPendingCommit: boolean,
+): Lanes {
   // Early bailout if there's no pending work left.
   const pendingLanes = root.pendingLanes;
   if (pendingLanes === NoLanes) {
@@ -247,16 +250,6 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
   // a brief amount of time (i.e. below the "Just Noticeable Difference"
   // threshold).
   //
-  // TODO: cancelPendingCommit is also set when a Suspensey resource, like CSS or
-  // images, suspends during the commit phase. These are also expected to resolve
-  // quickly, because of preloading, but theoretically they could block forever
-  // like in a normal "suspend indefinitely" scenario. In the future, we should
-  // consider only blocking for up to some time limit before discarding the
-  // commit in favor of prerendering. If we do discard a pending commit, then
-  // the commit phase callback should act as a ping to try the original
-  // render again.
-  const rootHasPendingCommit =
-    root.cancelPendingCommit !== null || root.timeoutHandle !== noTimeout;
 
   // Do not work on any idle work until all the non-idle work has finished,
   // even if the work is suspended.

@@ -1277,7 +1277,7 @@ function finishConcurrentRender(
           didAttemptEntireTree,
         );
 
-        const nextLanes = getNextLanes(root, NoLanes);
+        const nextLanes = getNextLanes(root, NoLanes, true);
         if (nextLanes !== NoLanes) {
           // There's additional work we can do on this root. We might as well
           // attempt to work on that while we're suspended.

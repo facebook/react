@@ -69,6 +69,7 @@ import {
   scheduleMicrotask,
   shouldAttemptEagerTransition,
   trackSchedulerEvent,
+  noTimeout,
 } from './ReactFiberConfig';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -207,11 +208,15 @@ function flushSyncWorkAcrossRoots_impl(
           const workInProgressRoot = getWorkInProgressRoot();
           const workInProgressRootRenderLanes =
             getWorkInProgressRootRenderLanes();
+          const rootHasPendingCommit =
+            root.cancelPendingCommit !== null ||
+            root.timeoutHandle !== noTimeout;
           const nextLanes = getNextLanes(
             root,
             root === workInProgressRoot
               ? workInProgressRootRenderLanes
               : NoLanes,
+            rootHasPendingCommit,
           );
           if (
             includesSyncLane(nextLanes) &&
@@ -335,6 +340,8 @@ function scheduleTaskForRootDuringMicrotask(
   const pendingPassiveEffectsLanes = getPendingPassiveEffectsLanes();
   const workInProgressRoot = getWorkInProgressRoot();
   const workInProgressRootRenderLanes = getWorkInProgressRootRenderLanes();
+  const rootHasPendingCommit =
+    root.cancelPendingCommit !== null || root.timeoutHandle !== noTimeout;
   const nextLanes =
     enableYieldingBeforePassive && root === rootWithPendingPassiveEffects
       ? // This will schedule the callback at the priority of the lane but we used to
@@ -345,6 +352,7 @@ function scheduleTaskForRootDuringMicrotask(
       : getNextLanes(
           root,
           root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes,
+          rootHasPendingCommit,
         );
 
   const existingCallbackNode = root.callbackNode;
@@ -488,9 +496,12 @@ function performWorkOnRootViaSchedulerTask(
   // it's available).
   const workInProgressRoot = getWorkInProgressRoot();
   const workInProgressRootRenderLanes = getWorkInProgressRootRenderLanes();
+  const rootHasPendingCommit =
+    root.cancelPendingCommit !== null || root.timeoutHandle !== noTimeout;
   const lanes = getNextLanes(
     root,
     root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes,
+    rootHasPendingCommit,
   );
   if (lanes === NoLanes) {
     // No more work on this root.
