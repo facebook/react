@@ -14,7 +14,6 @@ import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
-import type {EventPriority} from './ReactEventPriorities';
 import type {
   PendingTransitionCallbacks,
   PendingBoundaries,
@@ -3139,48 +3138,7 @@ function commitRoot(
   suspendedCommitReason: SuspendedCommitReason, // Profiling-only
   completedRenderStartTime: number, // Profiling-only
   completedRenderEndTime: number, // Profiling-only
-) {
-  // TODO: This no longer makes any sense. We already wrap the mutation and
-  // layout phases. Should be able to remove.
-  const prevTransition = ReactSharedInternals.T;
-  const previousUpdateLanePriority = getCurrentUpdatePriority();
-  try {
-    setCurrentUpdatePriority(DiscreteEventPriority);
-    ReactSharedInternals.T = null;
-    commitRootImpl(
-      root,
-      recoverableErrors,
-      transitions,
-      didIncludeRenderPhaseUpdate,
-      previousUpdateLanePriority,
-      spawnedLane,
-      updatedLanes,
-      suspendedRetryLanes,
-      exitStatus,
-      suspendedCommitReason,
-      completedRenderStartTime,
-      completedRenderEndTime,
-    );
-  } finally {
-    ReactSharedInternals.T = prevTransition;
-    setCurrentUpdatePriority(previousUpdateLanePriority);
-  }
-}
-
-function commitRootImpl(
-  root: FiberRoot,
-  recoverableErrors: null | Array<CapturedValue<mixed>>,
-  transitions: Array<Transition> | null,
-  didIncludeRenderPhaseUpdate: boolean,
-  renderPriorityLevel: EventPriority,
-  spawnedLane: Lane,
-  updatedLanes: Lanes,
-  suspendedRetryLanes: Lanes,
-  exitStatus: RootExitStatus, // Profiling-only
-  suspendedCommitReason: SuspendedCommitReason, // Profiling-only
-  completedRenderStartTime: number, // Profiling-only
-  completedRenderEndTime: number, // Profiling-only
-) {
+): void {
   do {
     // `flushPassiveEffects` will call `flushSyncUpdateQueue` at the end, which
     // means `flushPassiveEffects` will sometimes result in additional
@@ -3234,7 +3192,7 @@ function commitRootImpl(
     if (enableSchedulingProfiler) {
       markCommitStopped();
     }
-    return null;
+    return;
   } else {
     if (__DEV__) {
       if (lanes === NoLanes) {
@@ -3374,55 +3332,56 @@ function commitRootImpl(
     ReactSharedInternals.T = null;
     const previousPriority = getCurrentUpdatePriority();
     setCurrentUpdatePriority(DiscreteEventPriority);
-
     const prevExecutionContext = executionContext;
     executionContext |= CommitContext;
 
-    // The commit phase is broken into several sub-phases. We do a separate pass
-    // of the effect list for each phase: all mutation effects come before all
-    // layout effects, and so on.
+    try {
+      // The commit phase is broken into several sub-phases. We do a separate pass
+      // of the effect list for each phase: all mutation effects come before all
+      // layout effects, and so on.
 
-    // The first phase a "before mutation" phase. We use this phase to read the
-    // state of the host tree right before we mutate it. This is where
-    // getSnapshotBeforeUpdate is called.
-    commitBeforeMutationEffects(root, finishedWork);
+      // The first phase a "before mutation" phase. We use this phase to read the
+      // state of the host tree right before we mutate it. This is where
+      // getSnapshotBeforeUpdate is called.
+      commitBeforeMutationEffects(root, finishedWork);
 
-    // The next phase is the mutation phase, where we mutate the host tree.
-    commitMutationEffects(root, finishedWork, lanes);
+      // The next phase is the mutation phase, where we mutate the host tree.
+      commitMutationEffects(root, finishedWork, lanes);
 
-    if (enableCreateEventHandleAPI) {
-      if (shouldFireAfterActiveInstanceBlur) {
-        afterActiveInstanceBlur();
+      if (enableCreateEventHandleAPI) {
+        if (shouldFireAfterActiveInstanceBlur) {
+          afterActiveInstanceBlur();
+        }
       }
+      resetAfterCommit(root.containerInfo);
+
+      // The work-in-progress tree is now the current tree. This must come after
+      // the mutation phase, so that the previous tree is still current during
+      // componentWillUnmount, but before the layout phase, so that the finished
+      // work is current during componentDidMount/Update.
+      root.current = finishedWork;
+
+      // The next phase is the layout phase, where we call effects that read
+      // the host tree after it's been mutated. The idiomatic use case for this is
+      // layout, but class component lifecycles also fire here for legacy reasons.
+      if (enableSchedulingProfiler) {
+        markLayoutEffectsStarted(lanes);
+      }
+      commitLayoutEffects(finishedWork, root, lanes);
+      if (enableSchedulingProfiler) {
+        markLayoutEffectsStopped();
+      }
+
+      // Tell Scheduler to yield at the end of the frame, so the browser has an
+      // opportunity to paint.
+      requestPaint();
+    } finally {
+      executionContext = prevExecutionContext;
+
+      // Reset the priority to the previous non-sync value.
+      setCurrentUpdatePriority(previousPriority);
+      ReactSharedInternals.T = prevTransition;
     }
-    resetAfterCommit(root.containerInfo);
-
-    // The work-in-progress tree is now the current tree. This must come after
-    // the mutation phase, so that the previous tree is still current during
-    // componentWillUnmount, but before the layout phase, so that the finished
-    // work is current during componentDidMount/Update.
-    root.current = finishedWork;
-
-    // The next phase is the layout phase, where we call effects that read
-    // the host tree after it's been mutated. The idiomatic use case for this is
-    // layout, but class component lifecycles also fire here for legacy reasons.
-    if (enableSchedulingProfiler) {
-      markLayoutEffectsStarted(lanes);
-    }
-    commitLayoutEffects(finishedWork, root, lanes);
-    if (enableSchedulingProfiler) {
-      markLayoutEffectsStopped();
-    }
-
-    // Tell Scheduler to yield at the end of the frame, so the browser has an
-    // opportunity to paint.
-    requestPaint();
-
-    executionContext = prevExecutionContext;
-
-    // Reset the priority to the previous non-sync value.
-    setCurrentUpdatePriority(previousPriority);
-    ReactSharedInternals.T = prevTransition;
   } else {
     // No effects.
     root.current = finishedWork;
@@ -3482,7 +3441,7 @@ function commitRootImpl(
     }
   }
 
-  onCommitRootDevTools(finishedWork.stateNode, renderPriorityLevel);
+  onCommitRootDevTools(finishedWork.stateNode, getCurrentUpdatePriority());
 
   if (enableUpdaterTracking) {
     if (isDevToolsPresent) {
@@ -3495,22 +3454,31 @@ function commitRootImpl(
   }
 
   if (recoverableErrors !== null) {
-    // There were errors during this render, but recovered from them without
-    // needing to surface it to the UI. We log them here.
-    const onRecoverableError = root.onRecoverableError;
-    for (let i = 0; i < recoverableErrors.length; i++) {
-      const recoverableError = recoverableErrors[i];
-      const errorInfo = makeErrorInfo(recoverableError.stack);
-      if (__DEV__) {
-        runWithFiberInDEV(
-          recoverableError.source,
-          onRecoverableError,
-          recoverableError.value,
-          errorInfo,
-        );
-      } else {
-        onRecoverableError(recoverableError.value, errorInfo);
+    const prevTransition = ReactSharedInternals.T;
+    const previousUpdateLanePriority = getCurrentUpdatePriority();
+    setCurrentUpdatePriority(DiscreteEventPriority);
+    ReactSharedInternals.T = null;
+    try {
+      // There were errors during this render, but recovered from them without
+      // needing to surface it to the UI. We log them here.
+      const onRecoverableError = root.onRecoverableError;
+      for (let i = 0; i < recoverableErrors.length; i++) {
+        const recoverableError = recoverableErrors[i];
+        const errorInfo = makeErrorInfo(recoverableError.stack);
+        if (__DEV__) {
+          runWithFiberInDEV(
+            recoverableError.source,
+            onRecoverableError,
+            recoverableError.value,
+            errorInfo,
+          );
+        } else {
+          onRecoverableError(recoverableError.value, errorInfo);
+        }
       }
+    } finally {
+      ReactSharedInternals.T = prevTransition;
+      setCurrentUpdatePriority(previousUpdateLanePriority);
     }
   }
 
@@ -3610,8 +3578,6 @@ function commitRootImpl(
       });
     }
   }
-
-  return null;
 }
 
 function makeErrorInfo(componentStack: ?string) {
