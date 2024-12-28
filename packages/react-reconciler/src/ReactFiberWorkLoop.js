@@ -1239,16 +1239,12 @@ function finishConcurrentRender(
     }
   }
 
-  // Only set these if we have a complete tree that is ready to be committed.
-  // We use these fields to determine later whether or not the work should be
-  // discarded for a fresh render attempt.
-  root.finishedWork = finishedWork;
-  root.finishedLanes = lanes;
-
   if (shouldForceFlushFallbacksInDEV()) {
     // We're inside an `act` scope. Commit immediately.
     commitRoot(
       root,
+      finishedWork,
+      lanes,
       workInProgressRootRecoverableErrors,
       workInProgressTransitions,
       workInProgressRootDidIncludeRecursiveRenderUpdate,
@@ -1384,6 +1380,8 @@ function commitRootWhenReady(
         commitRoot.bind(
           null,
           root,
+          finishedWork,
+          lanes,
           recoverableErrors,
           transitions,
           didIncludeRenderPhaseUpdate,
@@ -1405,6 +1403,8 @@ function commitRootWhenReady(
   // Otherwise, commit immediately.;
   commitRoot(
     root,
+    finishedWork,
+    lanes,
     recoverableErrors,
     transitions,
     didIncludeRenderPhaseUpdate,
@@ -1841,9 +1841,6 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
       clearTransitionTimers();
     }
   }
-
-  root.finishedWork = null;
-  root.finishedLanes = NoLanes;
 
   const timeoutHandle = root.timeoutHandle;
   if (timeoutHandle !== noTimeout) {
@@ -3128,6 +3125,8 @@ const THROTTLED_COMMIT = 2;
 
 function commitRoot(
   root: FiberRoot,
+  finishedWork: null | Fiber,
+  lanes: Lanes,
   recoverableErrors: null | Array<CapturedValue<mixed>>,
   transitions: Array<Transition> | null,
   didIncludeRenderPhaseUpdate: boolean,
@@ -3153,9 +3152,6 @@ function commitRoot(
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     throw new Error('Should not already be working.');
   }
-
-  const finishedWork = root.finishedWork;
-  const lanes = root.finishedLanes;
 
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     // Log the previous render phase once we commit. I.e. we weren't interrupted.
@@ -3197,14 +3193,12 @@ function commitRoot(
     if (__DEV__) {
       if (lanes === NoLanes) {
         console.error(
-          'root.finishedLanes should not be empty during a commit. This is a ' +
+          'finishedLanes should not be empty during a commit. This is a ' +
             'bug in React.',
         );
       }
     }
   }
-  root.finishedWork = null;
-  root.finishedLanes = NoLanes;
 
   if (finishedWork === root.current) {
     throw new Error(
