@@ -3248,7 +3248,6 @@ function commitRoot(
   // might get scheduled in the commit phase. (See #16714.)
   // TODO: Delete all other places that schedule the passive effect callback
   // They're redundant.
-  let rootDoesHavePassiveEffects: boolean = false;
   if (
     // If this subtree rendered with profiling this commit, we need to visit it to log it.
     (enableProfilerTimer &&
@@ -3257,7 +3256,6 @@ function commitRoot(
     (finishedWork.subtreeFlags & PassiveMask) !== NoFlags ||
     (finishedWork.flags & PassiveMask) !== NoFlags
   ) {
-    rootDoesHavePassiveEffects = true;
     pendingPassiveEffectsRemainingLanes = remainingLanes;
     pendingPassiveEffectsRenderEndTime = completedRenderEndTime;
     // workInProgressTransitions might be overwritten, so we want
@@ -3343,7 +3341,23 @@ function commitRoot(
       ReactSharedInternals.T = prevTransition;
     }
   }
+  flushMutationEffects(root, finishedWork, lanes);
+  flushLayoutEffects(
+    root,
+    finishedWork,
+    lanes,
+    recoverableErrors,
+    didIncludeRenderPhaseUpdate,
+    suspendedCommitReason,
+    completedRenderEndTime,
+  );
+}
 
+function flushMutationEffects(
+  root: FiberRoot,
+  finishedWork: Fiber,
+  lanes: Lanes,
+): void {
   const subtreeMutationHasEffects =
     (finishedWork.subtreeFlags & MutationMask) !== NoFlags;
   const rootMutationHasEffect = (finishedWork.flags & MutationMask) !== NoFlags;
@@ -3378,7 +3392,17 @@ function commitRoot(
   // componentWillUnmount, but before the layout phase, so that the finished
   // work is current during componentDidMount/Update.
   root.current = finishedWork;
+}
 
+function flushLayoutEffects(
+  root: FiberRoot,
+  finishedWork: Fiber,
+  lanes: Lanes,
+  recoverableErrors: null | Array<CapturedValue<mixed>>,
+  didIncludeRenderPhaseUpdate: boolean,
+  suspendedCommitReason: SuspendedCommitReason, // Profiling-only
+  completedRenderEndTime: number, // Profiling-only
+): void {
   const subtreeHasLayoutEffects =
     (finishedWork.subtreeFlags & LayoutMask) !== NoFlags;
   const rootHasLayoutEffect = (finishedWork.flags & LayoutMask) !== NoFlags;
@@ -3424,18 +3448,22 @@ function commitRoot(
     );
   }
 
-  const rootDidHavePassiveEffects = rootDoesHavePassiveEffects;
+  const rootDidHavePassiveEffects = // If this subtree rendered with profiling this commit, we need to visit it to log it.
+    (enableProfilerTimer &&
+      enableComponentPerformanceTrack &&
+      finishedWork.actualDuration !== 0) ||
+    (finishedWork.subtreeFlags & PassiveMask) !== NoFlags ||
+    (finishedWork.flags & PassiveMask) !== NoFlags;
 
-  if (rootDoesHavePassiveEffects) {
+  if (rootDidHavePassiveEffects) {
     // This commit has passive effects. Stash a reference to them. But don't
     // schedule a callback until after flushing layout work.
-    rootDoesHavePassiveEffects = false;
     rootWithPendingPassiveEffects = root;
     pendingPassiveEffectsLanes = lanes;
   } else {
     // There were no passive effects, so we can immediately release the cache
     // pool for this render.
-    releaseRootPooledCache(root, remainingLanes);
+    releaseRootPooledCache(root, root.pendingLanes);
     if (__DEV__) {
       nestedPassiveUpdateCount = 0;
       rootWithPassiveNestedUpdates = null;
@@ -3443,7 +3471,7 @@ function commitRoot(
   }
 
   // Read this again, since an effect might have updated it
-  remainingLanes = root.pendingLanes;
+  let remainingLanes = root.pendingLanes;
 
   // Check if there's remaining work on this root
   // TODO: This is part of the `componentDidCatch` implementation. Its purpose
