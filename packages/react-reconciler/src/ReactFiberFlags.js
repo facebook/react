@@ -114,6 +114,10 @@ export const LayoutMask = Update | Callback | Ref | Visibility;
 // TODO: Split into PassiveMountMask and PassiveUnmountMask
 export const PassiveMask = Passive | Visibility | ChildDeletion;
 
+// For View Transitions we need to visit anything we visited in the snapshot phase to
+// restore the view-transition-name after committing the transition.
+export const PassiveTransitionMask: number = PassiveMask | Update | Placement;
+
 // Union of tags that don't get reset on clones.
 // This allows certain concepts to persist without recalculating them,
 // e.g. whether a subtree contains passive effects or portals.

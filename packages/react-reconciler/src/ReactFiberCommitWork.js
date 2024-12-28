@@ -97,6 +97,7 @@ import {
   MutationMask,
   LayoutMask,
   PassiveMask,
+  PassiveTransitionMask,
   Visibility,
   ShouldSuspendCommit,
   MaySuspendCommit,
@@ -156,6 +157,7 @@ import {
   resetFormInstance,
   registerSuspenseInstanceRetry,
   applyViewTransitionName,
+  restoreViewTransitionName,
 } from './ReactFiberConfig';
 import {
   captureCommitPhaseError,
@@ -542,6 +544,38 @@ function applyViewTransitionToHostInstances(
   }
 }
 
+function restoreViewTransitionOnHostInstances(
+  child: null | Fiber,
+  stopAtNestedViewTransitions: boolean,
+): void {
+  if (!supportsMutation) {
+    return;
+  }
+  while (child !== null) {
+    if (child.tag === HostComponent) {
+      const instance: Instance = child.stateNode;
+      restoreViewTransitionName(instance, child.memoizedProps);
+    } else if (
+      child.tag === OffscreenComponent &&
+      child.memoizedState !== null
+    ) {
+      // Skip any hidden subtrees. They were or are effectively not there.
+    } else if (
+      child.tag === ViewTransitionComponent &&
+      stopAtNestedViewTransitions
+    ) {
+      // Skip any nested view transitions for updates since in that case the
+      // inner most one is the one that handles the update.
+    } else {
+      restoreViewTransitionOnHostInstances(
+        child.child,
+        stopAtNestedViewTransitions,
+      );
+    }
+    child = child.sibling;
+  }
+}
+
 function commitEnterViewTransitions(placement: Fiber): void {
   if (placement.tag === ViewTransitionComponent) {
     const name = getViewTransitionName(
@@ -609,6 +643,50 @@ function commitNestedViewTransitions(changedParent: Fiber): void {
       applyViewTransitionToHostInstances(child.child, name, false);
     } else if ((child.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
       commitNestedViewTransitions(child);
+    }
+    child = child.sibling;
+  }
+}
+
+function restoreEnterViewTransitions(placement: Fiber): void {
+  if (placement.tag === ViewTransitionComponent) {
+    restoreViewTransitionOnHostInstances(placement.child, false);
+  } else if ((placement.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
+    let child = placement.child;
+    while (child !== null) {
+      restoreEnterViewTransitions(child);
+      child = child.sibling;
+    }
+  }
+}
+
+function restoreExitViewTransitions(deletion: Fiber): void {
+  if (deletion.tag === ViewTransitionComponent) {
+    restoreViewTransitionOnHostInstances(deletion.child, false);
+  } else if ((deletion.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
+    let child = deletion.child;
+    while (child !== null) {
+      restoreExitViewTransitions(child);
+      child = child.sibling;
+    }
+  }
+}
+
+function restoreUpdateViewTransition(
+  current: Fiber,
+  finishedWork: Fiber,
+): void {
+  restoreViewTransitionOnHostInstances(current.child, true);
+  restoreViewTransitionOnHostInstances(finishedWork.child, true);
+}
+
+function restoreNestedViewTransitions(changedParent: Fiber): void {
+  let child = changedParent.child;
+  while (child !== null) {
+    if (child.tag === ViewTransitionComponent) {
+      restoreViewTransitionOnHostInstances(child.child, false);
+    } else if ((child.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
+      restoreNestedViewTransitions(child);
     }
     child = child.sibling;
   }
@@ -2939,8 +3017,15 @@ function recursivelyTraversePassiveMountEffects(
   committedTransitions: Array<Transition> | null,
   endTime: number, // Profiling-only. The start time of the next Fiber or root completion.
 ) {
+  const isViewTransitionEligible =
+    enableViewTransition &&
+    includesOnlyViewTransitionEligibleLanes(committedLanes);
+  // TODO: We could optimize this by marking these with the Passive subtree flag in the render phase.
+  const subtreeMask = isViewTransitionEligible
+    ? PassiveTransitionMask
+    : PassiveMask;
   if (
-    parentFiber.subtreeFlags & PassiveMask ||
+    parentFiber.subtreeFlags & subtreeMask ||
     // If this subtree rendered with profiling this commit, we need to visit it to log it.
     (enableProfilerTimer &&
       enableComponentPerformanceTrack &&
@@ -2973,6 +3058,12 @@ function recursivelyTraversePassiveMountEffects(
         child = child.sibling;
       }
     }
+  } else if (isViewTransitionEligible) {
+    // We are inside an updated subtree. Any mutations that affected the
+    // parent HostInstance's layout or set of children (such as reorders)
+    // might have also affected the positioning or size of the inner
+    // ViewTransitions. Therefore we need to restore those too.
+    restoreNestedViewTransitions(parentFiber);
   }
 }
 
@@ -2987,6 +3078,45 @@ function commitPassiveMountOnFiber(
 ): void {
   const prevEffectStart = pushComponentEffectStart();
   const prevEffectErrors = pushComponentEffectErrors();
+
+  // If this component rendered in Profiling mode (DEV or in Profiler component) then log its
+  // render time. We do this after the fact in the passive effect to avoid the overhead of this
+  // getting in the way of the render characteristics and avoid the overhead of unwinding
+  // uncommitted renders.
+  if (
+    enableProfilerTimer &&
+    enableComponentPerformanceTrack &&
+    (finishedWork.mode & ProfileMode) !== NoMode &&
+    ((finishedWork.actualStartTime: any): number) > 0 &&
+    (finishedWork.flags & PerformedWork) !== NoFlags
+  ) {
+    logComponentRender(
+      finishedWork,
+      ((finishedWork.actualStartTime: any): number),
+      endTime,
+      inHydratedSubtree,
+    );
+  }
+
+  const isViewTransitionEligible = enableViewTransition
+    ? includesOnlyViewTransitionEligibleLanes(committedLanes)
+    : false;
+
+  if (
+    isViewTransitionEligible &&
+    finishedWork.alternate === null &&
+    // We can't use the Placement flag here because it gets reset earlier. Instead,
+    // we check if this is the root of the insertion by checking if the parent
+    // was previous existing.
+    finishedWork.return !== null &&
+    finishedWork.return.alternate !== null
+  ) {
+    // This was a new mount. This means we could've triggered an enter animation on
+    // the content. Restore the view transitions if there were any assigned in the
+    // snapshot phase.
+    restoreEnterViewTransitions(finishedWork);
+  }
+
   // When updating this function, also update reconnectPassiveEffects, which does
   // most of the same things when an offscreen tree goes from hidden -> visible,
   // or when toggling effects inside a hidden tree.
@@ -3265,11 +3395,22 @@ function commitPassiveMountOnFiber(
     case OffscreenComponent: {
       // TODO: Pass `current` as argument to this function
       const instance: OffscreenInstance = finishedWork.stateNode;
+      const current = finishedWork.alternate;
       const nextState: OffscreenState | null = finishedWork.memoizedState;
 
       const isHidden = nextState !== null;
 
       if (isHidden) {
+        if (
+          isViewTransitionEligible &&
+          current !== null &&
+          current.memoizedState === null
+        ) {
+          // Content is now hidden but wasn't before. This means we could've
+          // triggered an exit animation on the content. Restore the view
+          // transitions if there were any assigned in the snapshot phase.
+          restoreExitViewTransitions(current);
+        }
         if (instance._visibility & OffscreenPassiveEffectsConnected) {
           // The effects are currently connected. Update them.
           recursivelyTraversePassiveMountEffects(
@@ -3307,6 +3448,16 @@ function commitPassiveMountOnFiber(
         }
       } else {
         // Tree is visible
+        if (
+          isViewTransitionEligible &&
+          current !== null &&
+          current.memoizedState !== null
+        ) {
+          // Content is now visible but wasn't before. This means we could've
+          // triggered an enter animation on the content. Restore the view
+          // transitions if there were any assigned in the snapshot phase.
+          restoreEnterViewTransitions(finishedWork);
+        }
         if (instance._visibility & OffscreenPassiveEffectsConnected) {
           // The effects are currently connected. Update them.
           recursivelyTraversePassiveMountEffects(
@@ -3336,7 +3487,6 @@ function commitPassiveMountOnFiber(
       }
 
       if (flags & Passive) {
-        const current = finishedWork.alternate;
         commitOffscreenPassiveMountEffects(current, finishedWork, instance);
       }
       break;
@@ -3355,6 +3505,39 @@ function commitPassiveMountOnFiber(
         commitCachePassiveMountEffect(current, finishedWork);
       }
       break;
+    }
+    case ViewTransitionComponent: {
+      if (enableViewTransition) {
+        if (isViewTransitionEligible) {
+          const current = finishedWork.alternate;
+          if (current === null) {
+            // This is a new mount. We should have handled this as part of the
+            // Placement effect or it is deeper inside a entering transition.
+          } else if (
+            (finishedWork.subtreeFlags &
+              (Placement |
+                Update |
+                ChildDeletion |
+                ContentReset |
+                Visibility)) !==
+            NoFlags
+          ) {
+            // Something mutated within this subtree. This might have caused
+            // something to cross-fade if we didn't already cancel it.
+            // If not, restore it.
+            restoreUpdateViewTransition(current, finishedWork);
+          }
+        }
+        recursivelyTraversePassiveMountEffects(
+          finishedRoot,
+          finishedWork,
+          committedLanes,
+          committedTransitions,
+          endTime,
+        );
+        break;
+      }
+      // Fallthrough
     }
     case TracingMarkerComponent: {
       if (enableTransitionTracing) {
