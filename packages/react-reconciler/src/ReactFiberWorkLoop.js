@@ -1347,6 +1347,8 @@ function commitRootWhenReady(
   completedRenderStartTime: number, // Profiling-only
   completedRenderEndTime: number, // Profiling-only
 ) {
+  root.timeoutHandle = noTimeout;
+
   // TODO: Combine retry throttling with Suspensey commits. Right now they run
   // one after the other.
   const BothVisibilityAndMaySuspendCommit = Visibility | MaySuspendCommit;
@@ -3138,6 +3140,8 @@ function commitRoot(
   completedRenderStartTime: number, // Profiling-only
   completedRenderEndTime: number, // Profiling-only
 ): void {
+  root.cancelPendingCommit = null;
+
   do {
     // `flushPassiveEffects` will call `flushSyncUpdateQueue` at the end, which
     // means `flushPassiveEffects` will sometimes result in additional
@@ -3271,7 +3275,6 @@ function commitRoot(
       // So we can clear these now to allow a new callback to be scheduled.
       root.callbackNode = null;
       root.callbackPriority = NoLane;
-      root.cancelPendingCommit = null;
       scheduleCallback(NormalSchedulerPriority, () => {
         if (enableProfilerTimer && enableComponentPerformanceTrack) {
           // Track the currently executing event if there is one so we can ignore this
@@ -3290,7 +3293,6 @@ function commitRoot(
     // so we can clear the callback now.
     root.callbackNode = null;
     root.callbackPriority = NoLane;
-    root.cancelPendingCommit = null;
   }
 
   if (enableProfilerTimer) {
@@ -3666,7 +3668,6 @@ function flushPassiveEffectsImpl(wasDelayedCommit: void | boolean) {
     // We've finished our work for this render pass.
     root.callbackNode = null;
     root.callbackPriority = NoLane;
-    root.cancelPendingCommit = null;
   }
 
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
