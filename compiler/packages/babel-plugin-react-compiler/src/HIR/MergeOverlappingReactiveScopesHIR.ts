@@ -248,13 +248,21 @@ function visitPlace(
   id: InstructionId,
   place: Place,
   {activeScopes, joined}: TraversalState,
+  isFnExpr: boolean,
 ): void {
+  // Here, behavior differs:
+  // With LoweredFunction.dependencies, we never infer functions as mutating primitives
+  //  as the layer of indirection (LoadLocal etc) ensures we don't treat this as a write
+  // We make the same "hack" in InferReactiveScopeVariables
   /**
    * If an instruction mutates an outer scope, flatten all scopes from the top
    * of the stack to the mutated outer scope.
    */
   const placeScope = getPlaceScope(id, place);
   if (placeScope != null && isMutable({id} as any, place)) {
+    if (isFnExpr && place.identifier.type.kind === 'Primitive') {
+      return;
+    }
     const placeScopeIdx = activeScopes.indexOf(placeScope);
     if (placeScopeIdx !== -1 && placeScopeIdx !== activeScopes.length - 1) {
       joined.union([placeScope, ...activeScopes.slice(placeScopeIdx + 1)]);
@@ -275,15 +283,21 @@ function getOverlappingReactiveScopes(
     for (const instr of block.instructions) {
       visitInstructionId(instr.id, context, state);
       for (const place of eachInstructionOperand(instr)) {
-        visitPlace(instr.id, place, state);
+        visitPlace(
+          instr.id,
+          place,
+          state,
+          instr.value.kind === 'FunctionExpression' ||
+            instr.value.kind === 'ObjectMethod',
+        );
       }
       for (const place of eachInstructionLValue(instr)) {
-        visitPlace(instr.id, place, state);
+        visitPlace(instr.id, place, state, false);
       }
     }
     visitInstructionId(block.terminal.id, context, state);
     for (const place of eachTerminalOperand(block.terminal)) {
-      visitPlace(block.terminal.id, place, state);
+      visitPlace(block.terminal.id, place, state, false);
     }
   }
 
