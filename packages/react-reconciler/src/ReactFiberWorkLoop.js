@@ -3441,7 +3441,8 @@ function commitRoot(
     }
   }
 
-  onCommitRootDevTools(finishedWork.stateNode, getCurrentUpdatePriority());
+  const renderPriority = lanesToEventPriority(lanes);
+  onCommitRootDevTools(finishedWork.stateNode, renderPriority);
 
   if (enableUpdaterTracking) {
     if (isDevToolsPresent) {
