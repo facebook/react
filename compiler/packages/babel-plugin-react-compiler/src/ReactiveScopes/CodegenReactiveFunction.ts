@@ -34,6 +34,7 @@ import {
   ReactiveInstruction,
   ReactiveScope,
   ReactiveScopeBlock,
+  ReactiveScopeDeclaration,
   ReactiveScopeDependency,
   ReactiveTerminal,
   ReactiveValue,
@@ -102,6 +103,11 @@ export type CodegenFunction = {
    * This is true if the compiler has the lowered useContext calls.
    */
   hasLoweredContextAccess: boolean;
+
+  /**
+   * This is true if the compiler has compiled a fire to a useFire call
+   */
+  hasFireRewrite: boolean;
 };
 
 export function codegenFunction(
@@ -354,6 +360,7 @@ function codegenReactiveFunction(
     prunedMemoValues: countMemoBlockVisitor.prunedMemoValues,
     outlined: [],
     hasLoweredContextAccess: fn.env.hasLoweredContextAccess,
+    hasFireRewrite: fn.env.hasFireRewrite,
   });
 }
 
@@ -572,7 +579,8 @@ function codegenReactiveScope(
   const changeExpressions: Array<t.Expression> = [];
   const changeExpressionComments: Array<string> = [];
   const outputComments: Array<string> = [];
-  for (const dep of scope.dependencies) {
+
+  for (const dep of [...scope.dependencies].sort(compareScopeDependency)) {
     const index = cx.nextCacheIndex;
     changeExpressionComments.push(printDependencyComment(dep));
     const comparison = t.binaryExpression(
@@ -615,7 +623,10 @@ function codegenReactiveScope(
     );
   }
   let firstOutputIndex: number | null = null;
-  for (const [, {identifier}] of scope.declarations) {
+
+  for (const [, {identifier}] of [...scope.declarations].sort(([, a], [, b]) =>
+    compareScopeDeclaration(a, b),
+  )) {
     const index = cx.nextCacheIndex;
     if (firstOutputIndex === null) {
       firstOutputIndex = index;
@@ -1349,20 +1360,6 @@ function codegenForInit(
   init: ReactiveValue,
 ): t.Expression | t.VariableDeclaration | null {
   if (init.kind === 'SequenceExpression') {
-    for (const instr of init.instructions) {
-      if (instr.value.kind === 'DeclareContext') {
-        CompilerError.throwTodo({
-          reason: `Support for loops where the index variable is a context variable`,
-          loc: instr.loc,
-          description:
-            instr.value.lvalue.place.identifier.name != null
-              ? `\`${instr.value.lvalue.place.identifier.name.value}\` is a context variable`
-              : null,
-          suggestions: null,
-        });
-      }
-    }
-
     const body = codegenBlock(
       cx,
       init.instructions.map(instruction => ({
@@ -1373,20 +1370,33 @@ function codegenForInit(
     const declarators: Array<t.VariableDeclarator> = [];
     let kind: 'let' | 'const' = 'const';
     body.forEach(instr => {
-      CompilerError.invariant(
-        instr.type === 'VariableDeclaration' &&
-          (instr.kind === 'let' || instr.kind === 'const'),
-        {
-          reason: 'Expected a variable declaration',
-          loc: init.loc,
-          description: `Got ${instr.type}`,
-          suggestions: null,
-        },
-      );
-      if (instr.kind === 'let') {
-        kind = 'let';
+      let top: undefined | t.VariableDeclarator = undefined;
+      if (
+        instr.type === 'ExpressionStatement' &&
+        instr.expression.type === 'AssignmentExpression' &&
+        instr.expression.operator === '=' &&
+        instr.expression.left.type === 'Identifier' &&
+        (top = declarators.at(-1))?.id.type === 'Identifier' &&
+        top?.id.name === instr.expression.left.name &&
+        top?.init == null
+      ) {
+        top.init = instr.expression.right;
+      } else {
+        CompilerError.invariant(
+          instr.type === 'VariableDeclaration' &&
+            (instr.kind === 'let' || instr.kind === 'const'),
+          {
+            reason: 'Expected a variable declaration',
+            loc: init.loc,
+            description: `Got ${instr.type}`,
+            suggestions: null,
+          },
+        );
+        if (instr.kind === 'let') {
+          kind = 'let';
+        }
+        declarators.push(...instr.declarations);
       }
-      declarators.push(...instr.declarations);
     });
     CompilerError.invariant(declarators.length > 0, {
       reason: 'Expected a variable declaration',
@@ -2565,4 +2575,46 @@ function convertIdentifier(identifier: Identifier): t.Identifier {
     },
   );
   return t.identifier(identifier.name.value);
+}
+
+function compareScopeDependency(
+  a: ReactiveScopeDependency,
+  b: ReactiveScopeDependency,
+): number {
+  CompilerError.invariant(
+    a.identifier.name?.kind === 'named' && b.identifier.name?.kind === 'named',
+    {
+      reason: '[Codegen] Expected named identifier for dependency',
+      loc: a.identifier.loc,
+    },
+  );
+  const aName = [
+    a.identifier.name.value,
+    ...a.path.map(entry => `${entry.optional ? '?' : ''}${entry.property}`),
+  ].join('.');
+  const bName = [
+    b.identifier.name.value,
+    ...b.path.map(entry => `${entry.optional ? '?' : ''}${entry.property}`),
+  ].join('.');
+  if (aName < bName) return -1;
+  else if (aName > bName) return 1;
+  else return 0;
+}
+
+function compareScopeDeclaration(
+  a: ReactiveScopeDeclaration,
+  b: ReactiveScopeDeclaration,
+): number {
+  CompilerError.invariant(
+    a.identifier.name?.kind === 'named' && b.identifier.name?.kind === 'named',
+    {
+      reason: '[Codegen] Expected named identifier for declaration',
+      loc: a.identifier.loc,
+    },
+  );
+  const aName = a.identifier.name.value;
+  const bName = b.identifier.name.value;
+  if (aName < bName) return -1;
+  else if (aName > bName) return 1;
+  else return 0;
 }

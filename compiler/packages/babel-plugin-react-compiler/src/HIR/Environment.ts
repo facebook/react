@@ -55,6 +55,7 @@ export const ReactElementSymbolSchema = z.object({
     z.literal('react.element'),
     z.literal('react.transitional.element'),
   ]),
+  globalDevVar: z.string(),
 });
 
 export const ExternalFunctionSchema = z.object({
@@ -68,8 +69,8 @@ export const ExternalFunctionSchema = z.object({
 export const InstrumentationSchema = z
   .object({
     fn: ExternalFunctionSchema,
-    gating: ExternalFunctionSchema.nullish(),
-    globalGating: z.string().nullish(),
+    gating: ExternalFunctionSchema.nullable(),
+    globalGating: z.string().nullable(),
   })
   .refine(
     opts => opts.gating != null || opts.globalGating != null,
@@ -146,7 +147,7 @@ export type Hook = z.infer<typeof HookSchema>;
  */
 
 const EnvironmentConfigSchema = z.object({
-  customHooks: z.map(z.string(), HookSchema).optional().default(new Map()),
+  customHooks: z.map(z.string(), HookSchema).default(new Map()),
 
   /**
    * A function that, given the name of a module, can optionally return a description
@@ -167,11 +168,19 @@ const EnvironmentConfigSchema = z.object({
   customMacros: z.nullable(z.array(MacroSchema)).default(null),
 
   /**
-   * Enable a check that resets the memoization cache when the source code of the file changes.
-   * This is intended to support hot module reloading (HMR), where the same runtime component
-   * instance will be reused across different versions of the component source.
+   * Enable a check that resets the memoization cache when the source code of
+   * the file changes. This is intended to support hot module reloading (HMR),
+   * where the same runtime component instance will be reused across different
+   * versions of the component source.
+   *
+   * When set to
+   * - true:  code for HMR support is always generated, regardless of NODE_ENV
+   *          or `globalThis.__DEV__`
+   * - false: code for HMR support is not generated
+   * - null:  (default) code for HMR support is conditionally generated dependent
+   *          on `NODE_ENV` and `globalThis.__DEV__` at the time of compilation.
    */
-  enableResetCacheOnSourceFileChanges: z.boolean().default(false),
+  enableResetCacheOnSourceFileChanges: z.nullable(z.boolean()).default(null),
 
   /**
    * Enable using information from existing useMemo/useCallback to understand when a value is done
@@ -230,7 +239,7 @@ const EnvironmentConfigSchema = z.object({
    */
   enableUseTypeAnnotations: z.boolean().default(false),
 
-  enablePropagateDepsInHIR: z.boolean().default(false),
+  enableFunctionDependencyRewrite: z.boolean().default(true),
 
   /**
    * Enables inference of optional dependency chains. Without this flag
@@ -240,6 +249,44 @@ const EnvironmentConfigSchema = z.object({
    */
   enableOptionalDependencies: z.boolean().default(true),
 
+  enableFire: z.boolean().default(false),
+
+  /**
+   * Enables inference and auto-insertion of effect dependencies. Takes in an array of
+   * configurable module and import pairs to allow for user-land experimentation. For example,
+   * [
+   *   {
+   *     module: 'react',
+   *     imported: 'useEffect',
+   *     numRequiredArgs: 1,
+   *   },{
+   *     module: 'MyExperimentalEffectHooks',
+   *     imported: 'useExperimentalEffect',
+   *     numRequiredArgs: 2,
+   *   },
+   * ]
+   * would insert dependencies for calls of `useEffect` imported from `react` and calls of
+   * useExperimentalEffect` from `MyExperimentalEffectHooks`.
+   *
+   * `numRequiredArgs` tells the compiler the amount of arguments required to append a dependency
+   *  array to the end of the call. With the configuration above, we'd insert dependencies for
+   *  `useEffect` if it is only given a single argument and it would be appended to the argument list.
+   *
+   * numRequiredArgs must always be greater than 0, otherwise there is no function to analyze for dependencies
+   *
+   * Still experimental.
+   */
+  inferEffectDependencies: z
+    .nullable(
+      z.array(
+        z.object({
+          function: ExternalFunctionSchema,
+          numRequiredArgs: z.number(),
+        }),
+      ),
+    )
+    .default(null),
+
   /**
    * Enables inlining ReactElement object literals in place of JSX
    * An alternative to the standard JSX transform which replaces JSX with React's jsxProd() runtime
@@ -247,7 +294,7 @@ const EnvironmentConfigSchema = z.object({
    *
    * The symbol configuration is set for backwards compatability with pre-React 19 transforms
    */
-  inlineJsxTransform: ReactElementSymbolSchema.nullish(),
+  inlineJsxTransform: ReactElementSymbolSchema.nullable().default(null),
 
   /*
    * Enable validation of hooks to partially check that the component honors the rules of hooks.
@@ -338,9 +385,9 @@ const EnvironmentConfigSchema = z.object({
    *     }
    *   }
    */
-  enableEmitFreeze: ExternalFunctionSchema.nullish(),
+  enableEmitFreeze: ExternalFunctionSchema.nullable().default(null),
 
-  enableEmitHookGuards: ExternalFunctionSchema.nullish(),
+  enableEmitHookGuards: ExternalFunctionSchema.nullable().default(null),
 
   /**
    * Enable instruction reordering. See InstructionReordering.ts for the details
@@ -424,7 +471,7 @@ const EnvironmentConfigSchema = z.object({
    *   }
    *
    */
-  enableEmitInstrumentForget: InstrumentationSchema.nullish(),
+  enableEmitInstrumentForget: InstrumentationSchema.nullable().default(null),
 
   // Enable validation of mutable ranges
   assertValidMutableRanges: z.boolean().default(false),
@@ -463,8 +510,6 @@ const EnvironmentConfigSchema = z.object({
    */
   throwUnknownException__testonly: z.boolean().default(false),
 
-  enableSharedRuntime__testonly: z.boolean().default(false),
-
   /**
    * Enables deps of a function epxression to be treated as conditional. This
    * makes sure we don't load a dep when it's a property (to check if it has
@@ -502,7 +547,8 @@ const EnvironmentConfigSchema = z.object({
    * computed one. This detects cases where rules of react violations may cause the
    * compiled code to behave differently than the original.
    */
-  enableChangeDetectionForDebugging: ExternalFunctionSchema.nullish(),
+  enableChangeDetectionForDebugging:
+    ExternalFunctionSchema.nullable().default(null),
 
   /**
    * The react native re-animated library uses custom Babel transforms that
@@ -542,7 +588,7 @@ const EnvironmentConfigSchema = z.object({
    *
    * Here the variables `ref` and `myRef` will be typed as Refs.
    */
-  enableTreatRefLikeIdentifiersAsRefs: z.boolean().nullable().default(false),
+  enableTreatRefLikeIdentifiersAsRefs: z.boolean().default(false),
 
   /*
    * If specified a value, the compiler lowers any calls to `useContext` to use
@@ -564,12 +610,80 @@ const EnvironmentConfigSchema = z.object({
    * const {foo, bar} = useCompiledContext(MyContext, (c) => [c.foo, c.bar]);
    * ```
    */
-  lowerContextAccess: ExternalFunctionSchema.nullish(),
+  lowerContextAccess: ExternalFunctionSchema.nullable().default(null),
 });
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;
 
-export function parseConfigPragma(pragma: string): EnvironmentConfig {
+/**
+ * For test fixtures and playground only.
+ *
+ * Pragmas are straightforward to parse for boolean options (`:true` and
+ * `:false`). These are 'enabled' config values for non-boolean configs (i.e.
+ * what is used when parsing `:true`).
+ */
+const testComplexConfigDefaults: PartialEnvironmentConfig = {
+  validateNoCapitalizedCalls: [],
+  enableChangeDetectionForDebugging: {
+    source: 'react-compiler-runtime',
+    importSpecifierName: '$structuralCheck',
+  },
+  enableEmitFreeze: {
+    source: 'react-compiler-runtime',
+    importSpecifierName: 'makeReadOnly',
+  },
+  enableEmitInstrumentForget: {
+    fn: {
+      source: 'react-compiler-runtime',
+      importSpecifierName: 'useRenderCounter',
+    },
+    gating: {
+      source: 'react-compiler-runtime',
+      importSpecifierName: 'shouldInstrument',
+    },
+    globalGating: '__DEV__',
+  },
+  enableEmitHookGuards: {
+    source: 'react-compiler-runtime',
+    importSpecifierName: '$dispatcherGuard',
+  },
+  inlineJsxTransform: {
+    elementSymbol: 'react.transitional.element',
+    globalDevVar: 'DEV',
+  },
+  lowerContextAccess: {
+    source: 'react-compiler-runtime',
+    importSpecifierName: 'useContext_withSelector',
+  },
+  inferEffectDependencies: [
+    {
+      function: {
+        source: 'react',
+        importSpecifierName: 'useEffect',
+      },
+      numRequiredArgs: 1,
+    },
+    {
+      function: {
+        source: 'shared-runtime',
+        importSpecifierName: 'useSpecialEffect',
+      },
+      numRequiredArgs: 2,
+    },
+    {
+      function: {
+        source: 'useEffectWrapper',
+        importSpecifierName: 'default',
+      },
+      numRequiredArgs: 1,
+    },
+  ],
+};
+
+/**
+ * For snap test fixtures and playground only.
+ */
+export function parseConfigPragmaForTests(pragma: string): EnvironmentConfig {
   const maybeConfig: any = {};
   // Get the defaults to programmatically check for boolean properties
   const defaultConfig = EnvironmentConfigSchema.parse({});
@@ -579,21 +693,12 @@ export function parseConfigPragma(pragma: string): EnvironmentConfig {
       continue;
     }
     const keyVal = token.slice(1);
-    let [key, val]: any = keyVal.split(':');
+    let [key, val = undefined] = keyVal.split(':');
+    const isSet = val === undefined || val === 'true';
 
-    if (key === 'validateNoCapitalizedCalls') {
-      maybeConfig[key] = [];
-      continue;
-    }
-
-    if (
-      key === 'enableChangeDetectionForDebugging' &&
-      (val === undefined || val === 'true')
-    ) {
-      maybeConfig[key] = {
-        source: 'react-compiler-runtime',
-        importSpecifierName: '$structuralCheck',
-      };
+    if (isSet && key in testComplexConfigDefaults) {
+      maybeConfig[key] =
+        testComplexConfigDefaults[key as keyof PartialEnvironmentConfig];
       continue;
     }
 
@@ -608,26 +713,33 @@ export function parseConfigPragma(pragma: string): EnvironmentConfig {
             props.push({type: 'name', name: elt});
           }
         }
-        console.log([valSplit[0], props.map(x => x.name ?? '*').join('.')]);
         maybeConfig[key] = [[valSplit[0], props]];
       }
       continue;
     }
 
-    if (typeof defaultConfig[key as keyof EnvironmentConfig] !== 'boolean') {
+    if (
+      key !== 'enableResetCacheOnSourceFileChanges' &&
+      typeof defaultConfig[key as keyof EnvironmentConfig] !== 'boolean'
+    ) {
       // skip parsing non-boolean properties
       continue;
     }
     if (val === undefined || val === 'true') {
-      val = true;
+      maybeConfig[key] = true;
     } else {
-      val = false;
+      maybeConfig[key] = false;
     }
-    maybeConfig[key] = val;
   }
-
   const config = EnvironmentConfigSchema.safeParse(maybeConfig);
   if (config.success) {
+    /**
+     * Unless explicitly enabled, do not insert HMR handling code
+     * in test fixtures or playground to reduce visual noise.
+     */
+    if (config.data.enableResetCacheOnSourceFileChanges == null) {
+      config.data.enableResetCacheOnSourceFileChanges = false;
+    }
     return config.data;
   }
   CompilerError.invariant(false, {
@@ -675,6 +787,7 @@ export class Environment {
   fnType: ReactFunctionType;
   useMemoCacheIdentifier: string;
   hasLoweredContextAccess: boolean;
+  hasFireRewrite: boolean;
 
   #contextIdentifiers: Set<t.Identifier>;
   #hoistedIdentifiers: Set<t.Identifier>;
@@ -699,6 +812,7 @@ export class Environment {
     this.#shapes = new Map(DEFAULT_SHAPES);
     this.#globals = new Map(DEFAULT_GLOBALS);
     this.hasLoweredContextAccess = false;
+    this.hasFireRewrite = false;
 
     if (
       config.disableMemoizationForDebugging &&
@@ -852,7 +966,9 @@ export class Environment {
            */
           return (
             this.#globals.get(binding.imported) ??
-            (isHookName(binding.imported) ? this.#getCustomHookType() : null)
+            (isHookName(binding.imported) || isHookName(binding.name)
+              ? this.#getCustomHookType()
+              : null)
           );
         } else {
           const moduleType = this.#resolveModuleType(binding.module, loc);
@@ -1059,3 +1175,5 @@ export function tryParseExternalFunction(
     suggestions: null,
   });
 }
+
+export const DEFAULT_EXPORT = 'default';

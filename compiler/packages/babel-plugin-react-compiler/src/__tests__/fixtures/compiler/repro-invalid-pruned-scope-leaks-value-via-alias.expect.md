@@ -66,10 +66,10 @@ function MyApp(t0) {
   const z = makeObject_Primitives();
   const x = useIdentity(2);
   let t1;
-  if ($[0] !== x || $[1] !== count) {
+  if ($[0] !== count || $[1] !== x) {
     t1 = sum(x, count);
-    $[0] = x;
-    $[1] = count;
+    $[0] = count;
+    $[1] = x;
     $[2] = t1;
   } else {
     t1 = $[2];

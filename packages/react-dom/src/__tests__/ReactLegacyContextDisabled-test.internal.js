@@ -233,15 +233,7 @@ describe('ReactLegacyContextDisabled', () => {
       );
     });
     expect(container.textContent).toBe('bbb');
-    if (gate(flags => flags.enableLazyContextPropagation)) {
-      // In the lazy propagation implementation, we don't check if context
-      // changed until after shouldComponentUpdate is run.
-      expect(lifecycleContextLog).toEqual(['b', 'b', 'b']);
-    } else {
-      // In the eager implementation, a dirty flag was set when the parent
-      // changed, so we skipped sCU.
-      expect(lifecycleContextLog).toEqual(['b', 'b']);
-    }
+    expect(lifecycleContextLog).toEqual(['b', 'b', 'b']);
     root.unmount();
   });
 });

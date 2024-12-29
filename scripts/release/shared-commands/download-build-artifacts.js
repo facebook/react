@@ -3,7 +3,7 @@
 const {join} = require('path');
 const theme = require('../theme');
 const {exec} = require('child-process-promise');
-const {existsSync} = require('fs');
+const {existsSync, readFileSync} = require('fs');
 const {logPromise} = require('../utils');
 
 if (process.env.GH_TOKEN == null) {
@@ -39,18 +39,11 @@ function getWorkflowId() {
 
 async function getWorkflowRun(commit) {
   const res = await exec(
-    `curl -L ${GITHUB_HEADERS} https://api.github.com/repos/${OWNER}/${REPO}/actions/workflows/${getWorkflowId()}/runs?head_sha=${commit}&branch=main&exclude_pull_requests=true`
+    `curl -L ${GITHUB_HEADERS} https://api.github.com/repos/${OWNER}/${REPO}/actions/workflows/${getWorkflowId()}/runs?head_sha=${commit}`
   );
 
   const json = JSON.parse(res.stdout);
-  let workflowRun;
-  if (json.total_count === 1) {
-    workflowRun = json.workflow_runs[0];
-  } else {
-    workflowRun = json.workflow_runs.find(
-      run => run.head_sha === commit && run.head_branch === 'main'
-    );
-  }
+  const workflowRun = json.workflow_runs.find(run => run.head_sha === commit);
 
   if (workflowRun == null || workflowRun.id == null) {
     console.log(
@@ -68,14 +61,9 @@ async function getArtifact(workflowRunId, artifactName) {
   );
 
   const json = JSON.parse(res.stdout);
-  let artifact;
-  if (json.total_count === 1) {
-    artifact = json.artifacts[0];
-  } else {
-    artifact = json.artifacts.find(
-      _artifact => _artifact.name === artifactName
-    );
-  }
+  const artifact = json.artifacts.find(
+    _artifact => _artifact.name === artifactName
+  );
 
   if (artifact == null) {
     console.log(
@@ -87,7 +75,7 @@ async function getArtifact(workflowRunId, artifactName) {
   return artifact;
 }
 
-async function processArtifact(artifact, releaseChannel) {
+async function processArtifact(artifact, commit, releaseChannel) {
   // Download and extract artifact
   const cwd = join(__dirname, '..', '..', '..');
   await exec(`rm -rf ./build`, {cwd});
@@ -124,6 +112,17 @@ async function processArtifact(artifact, releaseChannel) {
   await exec(`cp -r ./build/${sourceDir} ./build/node_modules`, {
     cwd,
   });
+
+  // Validate artifact
+  const buildSha = readFileSync('./build/COMMIT_SHA', 'utf8').replace(
+    /[\u0000-\u001F\u007F-\u009F]/g,
+    ''
+  );
+  if (buildSha !== commit) {
+    throw new Error(
+      `Requested commit sha does not match downloaded artifact. Expected: ${commit}, got: ${buildSha}`
+    );
+  }
 }
 
 async function downloadArtifactsFromGitHub(commit, releaseChannel) {
@@ -148,7 +147,7 @@ async function downloadArtifactsFromGitHub(commit, releaseChannel) {
               workflowRun.id,
               'artifacts_combined'
             );
-            await processArtifact(artifact, releaseChannel);
+            await processArtifact(artifact, commit, releaseChannel);
             return;
           } else {
             console.log(

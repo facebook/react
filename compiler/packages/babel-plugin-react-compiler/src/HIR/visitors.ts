@@ -1215,9 +1215,17 @@ export class ScopeBlockTraversal {
     }
   }
 
+  /**
+   * @returns if the given scope is currently 'active', i.e. if the scope start
+   * block but not the scope fallthrough has been recorded.
+   */
   isScopeActive(scopeId: ScopeId): boolean {
     return this.#activeScopes.indexOf(scopeId) !== -1;
   }
+
+  /**
+   * The current, innermost active scope.
+   */
   get currentScope(): ScopeId | null {
     return this.#activeScopes.at(-1) ?? null;
   }

@@ -33,6 +33,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ansi-escapes@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "ansi-escapes@npm:2.0.0"
+  checksum: 10c0/e7ecfceb220167e7745ccd0f37a74be4ff5de2b03ab7832a9a2b0bb6bfe8b4c63f6fe18672f122c9f3c1a928ac44c9d1fa8c2d6665dbe56b67682607203d2be8
+  languageName: node
+  linkType: hard
+
 "ansi-escapes@npm:^3.0.0":
   version: 3.1.0
   resolution: "ansi-escapes@npm:3.1.0"
@@ -44,6 +51,15 @@ __metadata:
   version: 3.0.0
   resolution: "ansi-regex@npm:3.0.0"
   checksum: 10c0/c6a2b226d009965decc65d330b953290039f0f2b31d200516a9a79b6010f5f8f9d6acbaa0917d925c578df0c0feaddcb56569aad05776f99e2918116d4233121
+  languageName: node
+  linkType: hard
+
+"ansi-styles@npm:^3.1.0":
+  version: 3.2.0
+  resolution: "ansi-styles@npm:3.2.0"
+  dependencies:
+    color-convert: "npm:^1.9.0"
+  checksum: 10c0/d9bba9502d1dea5a4d2b4e919c99fd429d75f41f7a5b987ef88e62f55fb2259f58168a902a95b6f174d8f70d55313b3331f738fb230721d7881b815a7bb6d505
   languageName: node
   linkType: hard
 
@@ -112,7 +128,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chalk@npm:^2.1.0, chalk@npm:^2.4.1":
+"chalk@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "chalk@npm:2.1.0"
+  dependencies:
+    ansi-styles: "npm:^3.1.0"
+    escape-string-regexp: "npm:^1.0.5"
+    supports-color: "npm:^4.0.0"
+  checksum: 10c0/53d5290971fa6868c90c79f747d97420395544fff6ee06e41bd853c76bb96ad4f2a61ed01adbe81adc4f3880fc38f1f76e4e3bc051682406a5a30aebfd6ec5ac
+  languageName: node
+  linkType: hard
+
+"chalk@npm:^2.4.1":
   version: 2.4.1
   resolution: "chalk@npm:2.4.1"
   dependencies:
@@ -150,7 +177,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cli-spinners@npm:^1.1.0, cli-spinners@npm:^1.3.1":
+"cli-spinners@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "cli-spinners@npm:1.1.0"
+  checksum: 10c0/81728f9f4943e7107a7d6a482d39502cbbd4c3c0536518fe89a0918d074d7fd44e35eb6cb9634404341c38cd1cecbbfa5d74ce65ff660fcf5c810a0ce872ecf8
+  languageName: node
+  linkType: hard
+
+"cli-spinners@npm:^1.3.1":
   version: 1.3.1
   resolution: "cli-spinners@npm:1.3.1"
   checksum: 10c0/4211cbf342f42279c0896c98de8857cc4231a2a2521f726950a94ce78deac62e5d976102deed594c9ca6a0dc02ac2eef7806c5d866c3695d75993a3f27dc8bd4
@@ -510,10 +544,24 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graceful-fs@npm:^4.1.2, graceful-fs@npm:^4.1.6, graceful-fs@npm:~4.1.11":
+"graceful-fs@npm:^4.1.2, graceful-fs@npm:^4.1.6":
+  version: 4.1.11
+  resolution: "graceful-fs@npm:4.1.11"
+  checksum: 10c0/269e09e44d18b222e423ceefe9104403dd44bf3c63bf2174dd2b3c81f6a9aa318cd6921670fab40631e102269b9b15a87d88ee44fb5f32303d94cb45921bd3c9
+  languageName: node
+  linkType: hard
+
+"graceful-fs@npm:~4.1.11":
   version: 4.1.15
   resolution: "graceful-fs@npm:4.1.15"
   checksum: 10c0/3f6a67b5d77b04ecf1eecd2fd82c51b64d073db1a7f3144fca70bcbf272a49908cd9b46994e07bb35d6bdbbe6a1cab8b53161fdedbce17e8ff699c03a434f62d
+  languageName: node
+  linkType: hard
+
+"has-flag@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "has-flag@npm:2.0.0"
+  checksum: 10c0/5e1f136c7f801c2719048bedfabcf834a1ed46276cd4c98c6fcddb89a482f5d6a16df0771a38805cfc2d9010b4de157909e1a71b708e1d339b6e311041bde9b4
   languageName: node
   linkType: hard
 
@@ -617,7 +665,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"log-update@npm:^2.1.0, log-update@npm:^2.3.0":
+"log-update@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "log-update@npm:2.1.0"
+  dependencies:
+    ansi-escapes: "npm:^2.0.0"
+    cli-cursor: "npm:^2.0.0"
+    wrap-ansi: "npm:^3.0.1"
+  checksum: 10c0/6dc12c500b6f6dd7553471bb2cc2581fb27a46ee19f8dee4c4b5a7f5f16a7a3743b6c1793dafcbbf07276ddf2350f1f65a99e933d415521d85cffdf8f202c413
+  languageName: node
+  linkType: hard
+
+"log-update@npm:^2.3.0":
   version: 2.3.0
   resolution: "log-update@npm:2.3.0"
   dependencies:
@@ -1103,6 +1162,15 @@ __metadata:
   dependencies:
     ansi-regex: "npm:^3.0.0"
   checksum: 10c0/d75d9681e0637ea316ddbd7d4d3be010b1895a17e885155e0ed6a39755ae0fd7ef46e14b22162e66a62db122d3a98ab7917794e255532ab461bb0a04feb03e7d
+  languageName: node
+  linkType: hard
+
+"supports-color@npm:^4.0.0":
+  version: 4.4.0
+  resolution: "supports-color@npm:4.4.0"
+  dependencies:
+    has-flag: "npm:^2.0.0"
+  checksum: 10c0/6f8f5ea9592029f336c2f32767dd57e400dc632703c77f7b981e52bd38469a738ede2abe0c30767bc1ea82868749b03b9ce81b637b4e6919c3dcd15608ec7ced
   languageName: node
   linkType: hard
 

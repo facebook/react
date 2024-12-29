@@ -9,6 +9,7 @@ if (process.env.NODE_ENV === 'production') {
 
 exports.renderToReadableStream = s.renderToReadableStream;
 exports.decodeReply = s.decodeReply;
+exports.decodeReplyFromAsyncIterable = s.decodeReplyFromAsyncIterable;
 exports.decodeAction = s.decodeAction;
 exports.decodeFormState = s.decodeFormState;
 exports.registerServerReference = s.registerServerReference;

@@ -234,13 +234,5 @@ export function unstable_wrapCallback<T>(callback: () => T): () => T {
 
 export function unstable_forceFrameRate() {}
 
-export function unstable_pauseExecution() {}
-
-export function unstable_continueExecution() {}
-
-export function unstable_getFirstCallbackNode(): null {
-  return null;
-}
-
 // Currently no profiling build
 export const unstable_Profiling = null;

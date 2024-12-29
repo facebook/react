@@ -41,10 +41,10 @@ function Component(props) {
   }
   const sameName = t1;
   let t2;
-  if ($[2] !== sameName || $[3] !== renamed) {
+  if ($[2] !== renamed || $[3] !== sameName) {
     t2 = [sameName, renamed];
-    $[2] = sameName;
-    $[3] = renamed;
+    $[2] = renamed;
+    $[3] = sameName;
     $[4] = t2;
   } else {
     t2 = $[4];

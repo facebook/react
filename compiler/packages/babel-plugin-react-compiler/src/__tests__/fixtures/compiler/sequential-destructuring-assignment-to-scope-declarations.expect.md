@@ -43,9 +43,9 @@ import { identity } from "shared-runtime";
 
 function Component(statusName) {
   const $ = _c(12);
-  let text;
   let t0;
   let t1;
+  let text;
   if ($[0] !== statusName) {
     const { status, text: t2 } = foo(statusName);
     text = t2;
@@ -54,13 +54,13 @@ function Component(statusName) {
     t1 = identity(bg);
     t0 = identity(color);
     $[0] = statusName;
-    $[1] = text;
-    $[2] = t0;
-    $[3] = t1;
+    $[1] = t0;
+    $[2] = t1;
+    $[3] = text;
   } else {
-    text = $[1];
-    t0 = $[2];
-    t1 = $[3];
+    t0 = $[1];
+    t1 = $[2];
+    text = $[3];
   }
   let t2;
   if ($[4] !== text) {

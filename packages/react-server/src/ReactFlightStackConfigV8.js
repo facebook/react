@@ -9,18 +9,7 @@
 
 import type {ReactStackTrace} from 'shared/ReactTypes';
 
-function prepareStackTrace(
-  error: Error,
-  structuredStackTrace: CallSite[],
-): string {
-  const name = error.name || 'Error';
-  const message = error.message || '';
-  let stack = name + ': ' + message;
-  for (let i = 0; i < structuredStackTrace.length; i++) {
-    stack += '\n    at ' + structuredStackTrace[i].toString();
-  }
-  return stack;
-}
+import DefaultPrepareStackTrace from 'shared/DefaultPrepareStackTrace';
 
 function getStack(error: Error): string {
   // We override Error.prepareStackTrace with our own version that normalizes
@@ -30,7 +19,7 @@ function getStack(error: Error): string {
   // eagerly on the server. If the stack has already been read, then we might
   // not get a normalized stack and it might still have been source mapped.
   const previousPrepare = Error.prepareStackTrace;
-  Error.prepareStackTrace = prepareStackTrace;
+  Error.prepareStackTrace = DefaultPrepareStackTrace;
   try {
     // eslint-disable-next-line react-internal/safe-string-coercion
     return String(error.stack);

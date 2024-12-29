@@ -73,6 +73,7 @@ export const getInstanceFromScope = $$$config.getInstanceFromScope;
 export const setCurrentUpdatePriority = $$$config.setCurrentUpdatePriority;
 export const getCurrentUpdatePriority = $$$config.getCurrentUpdatePriority;
 export const resolveUpdatePriority = $$$config.resolveUpdatePriority;
+export const trackSchedulerEvent = $$$config.trackSchedulerEvent;
 export const resolveEventType = $$$config.resolveEventType;
 export const resolveEventTimeStamp = $$$config.resolveEventTimeStamp;
 export const shouldAttemptEagerTransition =

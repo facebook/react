@@ -77,15 +77,15 @@ function Component() {
   const map = t3;
   const index = filtered.findIndex(_temp3);
   let t5;
-  if ($[8] !== map || $[9] !== index) {
+  if ($[8] !== index || $[9] !== map) {
     t5 = (
       <div>
         {map}
         {index}
       </div>
     );
-    $[8] = map;
-    $[9] = index;
+    $[8] = index;
+    $[9] = map;
     $[10] = t5;
   } else {
     t5 = $[10];

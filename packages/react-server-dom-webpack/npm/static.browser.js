@@ -7,6 +7,6 @@ if (process.env.NODE_ENV === 'production') {
   s = require('./cjs/react-server-dom-webpack-server.browser.development.js');
 }
 
-if (s.prerender) {
-  exports.prerender = s.prerender;
+if (s.unstable_prerender) {
+  exports.unstable_prerender = s.unstable_prerender;
 }

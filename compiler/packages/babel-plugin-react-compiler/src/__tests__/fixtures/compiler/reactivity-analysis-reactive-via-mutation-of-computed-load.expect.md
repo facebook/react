@@ -20,11 +20,11 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(8);
   let items;
-  if ($[0] !== props.key || $[1] !== props.a) {
+  if ($[0] !== props.a || $[1] !== props.key) {
     items = bar();
     mutate(items[props.key], props.a);
-    $[0] = props.key;
-    $[1] = props.a;
+    $[0] = props.a;
+    $[1] = props.key;
     $[2] = items;
   } else {
     items = $[2];
@@ -41,10 +41,10 @@ function Component(props) {
   }
   const count = t1;
   let t2;
-  if ($[5] !== items || $[6] !== count) {
+  if ($[5] !== count || $[6] !== items) {
     t2 = { items, count };
-    $[5] = items;
-    $[6] = count;
+    $[5] = count;
+    $[6] = items;
     $[7] = t2;
   } else {
     t2 = $[7];

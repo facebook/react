@@ -14,7 +14,7 @@ import fbt from 'fbt';
 function Foo(props) {
   return (
     <fbt desc={'Dialog to show to user'}>
-      <span>
+      <span key={props.name}>
         <fbt:param name="user name really long description for prettier">
           {props.name}
         </fbt:param>
@@ -53,7 +53,7 @@ function Foo(props) {
       [
         fbt._implicitParam(
           "=m0",
-          <span>
+          <span key={props.name}>
             {fbt._(
               "{user name really long description for prettier} !",
               [

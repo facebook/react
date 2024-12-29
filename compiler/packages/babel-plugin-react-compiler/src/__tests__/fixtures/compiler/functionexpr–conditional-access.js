@@ -1,4 +1,4 @@
-// @enableTreatFunctionDepsAsConditional @enablePropagateDepsInHIR:false
+// @enableTreatFunctionDepsAsConditional
 function Component(props) {
   function getLength() {
     return props.bar.length;

@@ -6,7 +6,7 @@ on:
   pull_request:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true
 
 env:
@@ -31,6 +31,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: shared-lint-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+      - name: Ensure clean build directory
+        run: rm -rf build
       - run: yarn
       - run: yarn prettier-check
 
@@ -50,6 +52,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: shared-lint-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+      - name: Ensure clean build directory
+        run: rm -rf build
       - run: yarn
       - run: node ./scripts/tasks/eslint
 
@@ -69,6 +73,8 @@ jobs:
         with:
           path: "**/node_modules"
           key: shared-lint-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+      - name: Ensure clean build directory
+        run: rm -rf build
       - run: yarn
       - run: ./scripts/ci/check_license.sh
 
@@ -88,5 +94,7 @@ jobs:
         with:
           path: "**/node_modules"
           key: shared-lint-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+      - name: Ensure clean build directory
+        run: rm -rf build
       - run: yarn
       - run: ./scripts/ci/test_print_warnings.sh

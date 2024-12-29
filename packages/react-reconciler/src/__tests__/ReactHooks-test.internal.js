@@ -13,7 +13,6 @@
 'use strict';
 
 let React;
-let ReactFeatureFlags;
 let ReactTestRenderer;
 let Scheduler;
 let ReactDOMServer;
@@ -26,8 +25,6 @@ let waitForThrow;
 describe('ReactHooks', () => {
   beforeEach(() => {
     jest.resetModules();
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
@@ -1240,8 +1237,6 @@ describe('ReactHooks', () => {
   });
 
   it('double-invokes components with Hooks in Strict Mode', async () => {
-    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = true;
-
     const {useState, StrictMode} = React;
     let renderCount = 0;
 
@@ -1459,7 +1454,6 @@ describe('ReactHooks', () => {
   });
 
   it('double-invokes useMemo in DEV StrictMode despite []', async () => {
-    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = true;
     const {useMemo, StrictMode} = React;
 
     let useMemoCount = 0;

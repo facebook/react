@@ -840,6 +840,11 @@ export type LoadLocal = {
   place: Place;
   loc: SourceLocation;
 };
+export type LoadContext = {
+  kind: 'LoadContext';
+  place: Place;
+  loc: SourceLocation;
+};
 
 /*
  * The value of a given instruction. Note that values are not recursive: complex
@@ -852,11 +857,7 @@ export type LoadLocal = {
 
 export type InstructionValue =
   | LoadLocal
-  | {
-      kind: 'LoadContext';
-      place: Place;
-      loc: SourceLocation;
-    }
+  | LoadContext
   | {
       kind: 'DeclareLocal';
       lvalue: LValue;
@@ -1240,6 +1241,17 @@ export function makeTemporaryIdentifier(
     scope: null,
     type: makeType(),
     loc,
+  };
+}
+
+export function forkTemporaryIdentifier(
+  id: IdentifierId,
+  source: Identifier,
+): Identifier {
+  return {
+    ...source,
+    mutableRange: {start: makeInstructionId(0), end: makeInstructionId(0)},
+    id,
   };
 }
 
@@ -1631,6 +1643,10 @@ export function isPrimitiveType(id: Identifier): boolean {
 
 export function isArrayType(id: Identifier): boolean {
   return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInArray';
+}
+
+export function isPropsType(id: Identifier): boolean {
+  return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInProps';
 }
 
 export function isRefValueType(id: Identifier): boolean {

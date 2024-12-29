@@ -449,7 +449,6 @@ describe('ReactFlightDOMReply', () => {
     expect(response.obj).toBe(obj);
   });
 
-  // @gate enableFlightReadableStream
   it('should supports streaming ReadableStream with objects', async () => {
     let controller1;
     let controller2;
@@ -511,7 +510,6 @@ describe('ReactFlightDOMReply', () => {
     });
   });
 
-  // @gate enableFlightReadableStream
   it('should supports streaming AsyncIterables with objects', async () => {
     let resolve;
     const wait = new Promise(r => (resolve = r));

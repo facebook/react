@@ -210,12 +210,30 @@ function process(
   return {instrs: newInstrs, fn: outlinedFn};
 }
 
+type OutlinedJsxAttribute = {
+  originalName: string;
+  newName: string;
+  place: Place;
+};
+
 function collectProps(
   instructions: Array<JsxInstruction>,
-): Array<JsxAttribute> | null {
-  const attributes: Array<JsxAttribute> = [];
+): Array<OutlinedJsxAttribute> | null {
+  let id = 1;
+
+  function generateName(oldName: string): string {
+    let newName = oldName;
+    while (seen.has(newName)) {
+      newName = `${oldName}${id++}`;
+    }
+    seen.add(newName);
+    return newName;
+  }
+
+  const attributes: Array<OutlinedJsxAttribute> = [];
   const jsxIds = new Set(instructions.map(i => i.lvalue.identifier.id));
   const seen: Set<string> = new Set();
+
   for (const instr of instructions) {
     const {value} = instr;
 
@@ -224,26 +242,30 @@ function collectProps(
         return null;
       }
 
-      /*
-       * TODO(gsn): Handle attributes that have same value across
-       * the outlined jsx instructions.
-       */
-      if (seen.has(at.name)) {
-        return null;
-      }
-
       if (at.kind === 'JsxAttribute') {
-        seen.add(at.name);
-        attributes.push(at);
+        const newName = generateName(at.name);
+        attributes.push({
+          originalName: at.name,
+          newName,
+          place: at.place,
+        });
       }
     }
 
-    // TODO(gsn): Add support for children that are not jsx expressions
-    if (
-      value.children &&
-      value.children.some(child => !jsxIds.has(child.identifier.id))
-    ) {
-      return null;
+    if (value.children) {
+      for (const child of value.children) {
+        if (jsxIds.has(child.identifier.id)) {
+          continue;
+        }
+
+        promoteTemporary(child.identifier);
+        const newName = generateName('t');
+        attributes.push({
+          originalName: child.identifier.name!.value,
+          newName: newName,
+          place: child,
+        });
+      }
     }
   }
   return attributes;
@@ -252,9 +274,15 @@ function collectProps(
 function emitOutlinedJsx(
   env: Environment,
   instructions: Array<Instruction>,
-  props: Array<JsxAttribute>,
+  outlinedProps: Array<OutlinedJsxAttribute>,
   outlinedTag: string,
 ): Array<Instruction> {
+  const props: Array<JsxAttribute> = outlinedProps.map(p => ({
+    kind: 'JsxAttribute',
+    name: p.newName,
+    place: p.place,
+  }));
+
   const loadJsx: Instruction = {
     id: makeInstructionId(0),
     loc: GeneratedSource,
@@ -290,7 +318,7 @@ function emitOutlinedJsx(
 function emitOutlinedFn(
   env: Environment,
   jsx: Array<JsxInstruction>,
-  oldProps: Array<JsxAttribute>,
+  oldProps: Array<OutlinedJsxAttribute>,
   globals: LoadGlobalMap,
 ): HIRFunction | null {
   const instructions: Array<Instruction> = [];
@@ -299,9 +327,11 @@ function emitOutlinedFn(
   const propsObj: Place = createTemporaryPlace(env, GeneratedSource);
   promoteTemporary(propsObj.identifier);
 
-  const destructurePropsInstr = emitDestructureProps(env, propsObj, [
-    ...oldToNewProps.values(),
-  ]);
+  const destructurePropsInstr = emitDestructureProps(
+    env,
+    propsObj,
+    oldToNewProps,
+  );
   instructions.push(destructurePropsInstr);
 
   const updatedJsxInstructions = emitUpdatedJsx(jsx, oldToNewProps);
@@ -368,9 +398,10 @@ function emitLoadGlobals(
 
 function emitUpdatedJsx(
   jsx: Array<JsxInstruction>,
-  oldToNewProps: Map<IdentifierId, ObjectProperty>,
+  oldToNewProps: Map<IdentifierId, OutlinedJsxAttribute>,
 ): Array<JsxInstruction> {
   const newInstrs: Array<JsxInstruction> = [];
+  const jsxIds = new Set(jsx.map(i => i.lvalue.identifier.id));
 
   for (const instr of jsx) {
     const {value} = instr;
@@ -390,9 +421,28 @@ function emitUpdatedJsx(
         `Expected a new property for ${printIdentifier(prop.place.identifier)}`,
       );
       newProps.push({
-        ...prop,
+        kind: 'JsxAttribute',
+        name: newProp.originalName,
         place: newProp.place,
       });
+    }
+
+    let newChildren: Array<Place> | null = null;
+    if (value.children) {
+      newChildren = [];
+      for (const child of value.children) {
+        if (jsxIds.has(child.identifier.id)) {
+          newChildren.push({...child});
+          continue;
+        }
+
+        const newChild = oldToNewProps.get(child.identifier.id);
+        invariant(
+          newChild !== undefined,
+          `Expected a new prop for ${printIdentifier(child.identifier)}`,
+        );
+        newChildren.push({...newChild.place});
+      }
     }
 
     newInstrs.push({
@@ -400,6 +450,7 @@ function emitUpdatedJsx(
       value: {
         ...value,
         props: newProps,
+        children: newChildren,
       },
     });
   }
@@ -409,31 +460,21 @@ function emitUpdatedJsx(
 
 function createOldToNewPropsMapping(
   env: Environment,
-  oldProps: Array<JsxAttribute>,
-): Map<IdentifierId, ObjectProperty> {
+  oldProps: Array<OutlinedJsxAttribute>,
+): Map<IdentifierId, OutlinedJsxAttribute> {
   const oldToNewProps = new Map();
 
   for (const oldProp of oldProps) {
-    invariant(
-      oldProp.kind === 'JsxAttribute',
-      `Expected only attributes but found ${oldProp.kind}`,
-    );
-
     // Do not read key prop in the outlined component
-    if (oldProp.name === 'key') {
+    if (oldProp.originalName === 'key') {
       continue;
     }
 
-    const newProp: ObjectProperty = {
-      kind: 'ObjectProperty',
-      key: {
-        kind: 'string',
-        name: oldProp.name,
-      },
-      type: 'property',
+    const newProp: OutlinedJsxAttribute = {
+      ...oldProp,
       place: createTemporaryPlace(env, GeneratedSource),
     };
-    newProp.place.identifier.name = makeIdentifierName(oldProp.name);
+    newProp.place.identifier.name = makeIdentifierName(oldProp.newName);
     oldToNewProps.set(oldProp.place.identifier.id, newProp);
   }
 
@@ -443,8 +484,21 @@ function createOldToNewPropsMapping(
 function emitDestructureProps(
   env: Environment,
   propsObj: Place,
-  properties: Array<ObjectProperty>,
+  oldToNewProps: Map<IdentifierId, OutlinedJsxAttribute>,
 ): Instruction {
+  const properties: Array<ObjectProperty> = [];
+  for (const [_, prop] of oldToNewProps) {
+    properties.push({
+      kind: 'ObjectProperty',
+      key: {
+        kind: 'string',
+        name: prop.newName,
+      },
+      type: 'property',
+      place: prop.place,
+    });
+  }
+
   const destructurePropsInstr: Instruction = {
     id: makeInstructionId(0),
     lvalue: createTemporaryPlace(env, GeneratedSource),

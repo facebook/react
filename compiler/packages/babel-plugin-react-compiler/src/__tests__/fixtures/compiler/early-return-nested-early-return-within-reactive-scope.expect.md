@@ -31,9 +31,9 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = _c(5);
+  const $ = _c(7);
   let t0;
-  if ($[0] !== props) {
+  if ($[0] !== props.a || $[1] !== props.b || $[2] !== props.cond) {
     t0 = Symbol.for("react.early_return_sentinel");
     bb0: {
       const x = [];
@@ -41,12 +41,12 @@ function Component(props) {
         x.push(props.a);
         if (props.b) {
           let t1;
-          if ($[2] !== props.b) {
+          if ($[4] !== props.b) {
             t1 = [props.b];
-            $[2] = props.b;
-            $[3] = t1;
+            $[4] = props.b;
+            $[5] = t1;
           } else {
-            t1 = $[3];
+            t1 = $[5];
           }
           const y = t1;
           x.push(y);
@@ -58,20 +58,22 @@ function Component(props) {
         break bb0;
       } else {
         let t1;
-        if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
+        if ($[6] === Symbol.for("react.memo_cache_sentinel")) {
           t1 = foo();
-          $[4] = t1;
+          $[6] = t1;
         } else {
-          t1 = $[4];
+          t1 = $[6];
         }
         t0 = t1;
         break bb0;
       }
     }
-    $[0] = props;
-    $[1] = t0;
+    $[0] = props.a;
+    $[1] = props.b;
+    $[2] = props.cond;
+    $[3] = t0;
   } else {
-    t0 = $[1];
+    t0 = $[3];
   }
   if (t0 !== Symbol.for("react.early_return_sentinel")) {
     return t0;

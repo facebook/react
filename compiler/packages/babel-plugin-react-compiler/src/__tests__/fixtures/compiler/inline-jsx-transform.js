@@ -1,4 +1,4 @@
-// @enableInlineJsxTransform
+// @inlineJsxTransform
 
 function Parent({children, a: _a, b: _b, c: _c, ref}) {
   return <div ref={ref}>{children}</div>;
@@ -46,6 +46,26 @@ function PropsSpread() {
   );
 }
 
+function ConditionalJsx({shouldWrap}) {
+  let content = <div>Hello</div>;
+
+  if (shouldWrap) {
+    content = <Parent>{content}</Parent>;
+  }
+
+  return content;
+}
+
+function ComponentWithSpreadPropsAndRef({ref, ...other}) {
+  return <Foo ref={ref} {...other} />;
+}
+
+// TODO: Support value blocks
+function TernaryJsx({cond}) {
+  return cond ? <div /> : null;
+}
+
+global.DEV = true;
 export const FIXTURE_ENTRYPOINT = {
   fn: ParentAndChildren,
   params: [{foo: 'abc'}],

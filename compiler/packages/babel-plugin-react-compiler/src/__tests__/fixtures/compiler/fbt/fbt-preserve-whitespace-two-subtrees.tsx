@@ -4,13 +4,13 @@ function Foo({name1, name2}) {
   return (
     <fbt desc="Text that is displayed when two people accepts the user's pull request.">
       <fbt:param name="user1">
-        <span>
+        <span key={name1}>
           <b>{name1}</b>
         </span>
       </fbt:param>
       and
       <fbt:param name="user2">
-        <span>
+        <span key={name2}>
           <b>{name2}</b>
         </span>
       </fbt:param>

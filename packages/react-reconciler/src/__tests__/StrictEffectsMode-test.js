@@ -945,34 +945,25 @@ describe('StrictEffectsMode', () => {
       shouldSuspend = false;
     });
 
-    if (gate(flags => flags.useModernStrictMode)) {
-      expect(log).toEqual([
-        'Child rendered',
-        'Child rendered',
-        // !!! Committed, destroy and create effect.
-        // !!! The other effect is not destroyed and created
-        // !!! because the dep didn't change
-        'Child dep destroy',
-        'Child dep create',
+    expect(log).toEqual([
+      'Child rendered',
+      'Child rendered',
+      // !!! Committed, destroy and create effect.
+      // !!! The other effect is not destroyed and created
+      // !!! because the dep didn't change
+      'Child dep destroy',
+      'Child dep create',
 
-        // Double invoke both effects
-        'Child destroy',
-        'Child dep destroy',
-        'Child create',
-        'Child dep create',
-        // Fires setState
-        '-----------------------after setState',
-        'Child rendered',
-        'Child rendered',
-        'Child dep create',
-      ]);
-    } else {
-      expect(log).toEqual([
-        'Child rendered',
-        'Child rendered',
-        'Child dep destroy',
-        'Child dep create',
-      ]);
-    }
+      // Double invoke both effects
+      'Child destroy',
+      'Child dep destroy',
+      'Child create',
+      'Child dep create',
+      // Fires setState
+      '-----------------------after setState',
+      'Child rendered',
+      'Child rendered',
+      'Child dep create',
+    ]);
   });
 });
