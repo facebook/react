@@ -2,7 +2,6 @@
   "name": "react-release-script",
   "version": "0.0.0",
   "private": true,
-  "scripts": {},
   "license": "MIT",
   "dependencies": {
     "chalk": "^2.1.0",

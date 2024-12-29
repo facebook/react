@@ -64,6 +64,7 @@ jobs:
         run: |
           echo "www_branch_count=$(git ls-remote --heads origin "refs/heads/meta-www" | wc -l)" >> "$GITHUB_OUTPUT"
           echo "fbsource_branch_count=$(git ls-remote --heads origin "refs/heads/meta-fbsource" | wc -l)" >> "$GITHUB_OUTPUT"
+      - run: corepack enable
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
@@ -77,9 +78,9 @@ jobs:
           key: runtime-release-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'scripts/release/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
-      - run: yarn install --frozen-lockfile
+      - run: yarn
         name: yarn install (react)
-      - run: yarn install --frozen-lockfile
+      - run: yarn
         name: yarn install (scripts/release)
         working-directory: scripts/release
       - name: Download artifacts for base revision

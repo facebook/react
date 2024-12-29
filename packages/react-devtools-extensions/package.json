@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "cross-env NODE_ENV=production yarn run build:chrome && yarn run build:firefox && yarn run build:edge",
-    "build:local": "cross-env NODE_ENV=development yarn run build:chrome:local && yarn run build:firefox:local && yarn run build:edge:local",
+    "build": "cross-env NODE_ENV=production yarn build:chrome && yarn build:firefox && yarn build:edge",
+    "build:local": "cross-env NODE_ENV=development yarn build:chrome:local && yarn build:firefox:local && yarn build:edge:local",
     "build:chrome": "cross-env NODE_ENV=production node ./chrome/build",
     "build:chrome:fb": "cross-env NODE_ENV=production FEATURE_FLAG_TARGET=extension-fb node ./chrome/build --crx",
     "build:chrome:local": "cross-env NODE_ENV=development node ./chrome/build",
@@ -37,6 +37,7 @@
     "chalk": "^4.1.1",
     "child-process-promise": "^2.2.1",
     "chrome-launch": "^1.1.4",
+    "cross-env": "^7.0.3",
     "crx": "^5.0.0",
     "css-loader": "^1.0.1",
     "file-loader": "^6.1.0",

@@ -102,9 +102,9 @@ async function publishToNPM() {
 
     if (DRY_RUN) {
       console.log(`Publishing package ${chalk.bold(npmPackage)}`);
-      console.log(chalk.dim(`  npm publish --otp=${otp}`));
+      console.log(chalk.dim(`  yarn npm publish --otp=${otp}`));
     } else {
-      const publishPromise = exec(`npm publish --otp=${otp}`, {
+      const publishPromise = exec(`yarn npm publish --otp=${otp}`, {
         cwd: packagePath,
       });
 

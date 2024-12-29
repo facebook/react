@@ -4,23 +4,16 @@ set -e
 
 mkdir -p build/devtools
 
-cd packages/react-devtools
-npm pack
-mv ./react-devtools*.tgz ../../build/devtools/
+yarn workspace react-devtools pack --out ../../build/devtools/react-devtools.tgz
 
-cd ../react-devtools-core
-npm pack
-mv ./react-devtools-core*.tgz ../../build/devtools/
+yarn workspace react-devtools-core pack --out ../../build/devtools/react-devtools-core.tgz
 
-cd ../react-devtools-inline
-npm pack
-mv ./react-devtools-inline*.tgz ../../build/devtools/
+yarn workspace react-devtools-inline pack --out ../../build/devtools/react-devtools-inline.tgz
 
-cd ../react-devtools-extensions
-yarn build
-mv ./chrome/build/ReactDevTools.zip ../../build/devtools/chrome-extension.zip
-mv ./firefox/build/ReactDevTools.zip ../../build/devtools/firefox-extension.zip
+yarn workspace react-devtools-extensions build
+mv packages/react-devtools-extensions/chrome/build/ReactDevTools.zip build/devtools/chrome-extension.zip
+mv packages/react-devtools-extensions/firefox/build/ReactDevTools.zip build/devtools/firefox-extension.zip
 
 # Compress all DevTools artifacts into a single tarball for easy download
-cd ../../build/devtools
+cd build/devtools
 tar -zcvf ../devtools.tgz .

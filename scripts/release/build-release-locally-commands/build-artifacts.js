@@ -12,7 +12,7 @@ const run = async ({cwd, dry, tempDirectory}) => {
     cwd: tempDirectory,
   };
 
-  await exec('yarn install', defaultOptions);
+  await exec('yarn', defaultOptions);
   await exec('yarn build -- --extract-errors', defaultOptions);
 
   const tempNodeModulesPath = join(tempDirectory, 'build', 'node_modules');

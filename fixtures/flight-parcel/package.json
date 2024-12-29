@@ -30,9 +30,9 @@
   "dependencies": {
     "@parcel/config-default": "2.0.0-dev.1789",
     "@parcel/runtime-rsc": "2.13.3-dev.3412",
-    "@types/parcel-env": "^0.0.6",
     "@types/express": "*",
     "@types/node": "^22.10.1",
+    "@types/parcel-env": "^0.0.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "concurrently": "^7.3.0",

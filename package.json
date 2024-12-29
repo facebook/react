@@ -104,7 +104,7 @@
     "yargs": "^15.3.1"
   },
   "devEngines": {
-    "node": "16.x || 18.x || 20.x || 22.x"
+    "node": "18.x || 20.x || 22.x"
   },
   "jest": {
     "testRegex": "/scripts/jest/dont-run-jest-directly\\.js$"
@@ -141,8 +141,7 @@
     "flags": "node ./scripts/flags/flags.js"
   },
   "resolutions": {
-    "react-is": "npm:react-is",
     "jsdom": "22.1.0"
   },
-  "packageManager": "yarn@1.22.22"
+  "packageManager": "yarn@4.5.3"
 }

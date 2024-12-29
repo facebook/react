@@ -55,8 +55,6 @@
     "rimraf": "^3.0.2"
   },
   "resolutions": {
-    "./**/@babel/parser": "7.7.4",
-    "./**/@babel/types": "7.7.4",
     "@babel/preset-flow": "7.22.5"
   }
 }

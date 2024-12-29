@@ -16,12 +16,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4.1.0
+    - run: corepack enable
     - uses: actions/setup-node@v4
       with:
         node-version-file: '.nvmrc'
         cache: 'yarn'
     - name: Install dependencies
-      run: yarn install --frozen-lockfile
+      run: yarn
       env:
         ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
       shell: bash

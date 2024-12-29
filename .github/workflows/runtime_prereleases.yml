@@ -30,6 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - run: corepack enable
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
@@ -43,8 +44,8 @@ jobs:
           key: runtime-release-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'scripts/release/yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
-      - run: yarn install --frozen-lockfile
-      - run: yarn install --frozen-lockfile
+      - run: yarn
+      - run: yarn
         working-directory: scripts/release
       - run: |
           scripts/release/prepare-release-from-ci.js --skipTests -r ${{ inputs.release_channel }} --commit=${{ inputs.commit_sha }}

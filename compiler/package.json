@@ -46,5 +46,7 @@
     "wait-on": "^7.2.0",
     "yargs": "^17.7.2"
   },
-  "packageManager": "yarn@1.22.22"
+  "resolutions": {
+    "react-is": "19.0.0-beta-b498834eab-20240506"
+  }
 }
