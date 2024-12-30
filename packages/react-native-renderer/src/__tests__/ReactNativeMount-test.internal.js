@@ -18,6 +18,7 @@ let UIManager;
 let TextInputState;
 let ReactNativePrivateInterface;
 let act;
+let assertConsoleErrorDev;
 
 const DISPATCH_COMMAND_REQUIRES_HOST_COMPONENT =
   "dispatchCommand was called with a ref that isn't a " +
@@ -32,7 +33,7 @@ describe('ReactNative', () => {
     jest.resetModules();
 
     React = require('react');
-    act = require('internal-test-utils').act;
+    ({act, assertConsoleErrorDev} = require('internal-test-utils'));
     StrictMode = React.StrictMode;
     ReactNative = require('react-native-renderer');
     ReactNativePrivateInterface = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface');
@@ -158,9 +159,8 @@ describe('ReactNative', () => {
     );
 
     expect(UIManager.dispatchViewManagerCommand).not.toBeCalled();
-    expect(() => {
-      ReactNative.dispatchCommand(viewRef, 'updateCommand', [10, 20]);
-    }).toErrorDev([DISPATCH_COMMAND_REQUIRES_HOST_COMPONENT], {
+    ReactNative.dispatchCommand(viewRef, 'updateCommand', [10, 20]);
+    assertConsoleErrorDev([DISPATCH_COMMAND_REQUIRES_HOST_COMPONENT], {
       withoutStack: true,
     });
 
@@ -219,9 +219,8 @@ describe('ReactNative', () => {
     );
 
     expect(UIManager.sendAccessibilityEvent).not.toBeCalled();
-    expect(() => {
-      ReactNative.sendAccessibilityEvent(viewRef, 'updateCommand', [10, 20]);
-    }).toErrorDev([SEND_ACCESSIBILITY_EVENT_REQUIRES_HOST_COMPONENT], {
+    ReactNative.sendAccessibilityEvent(viewRef, 'updateCommand', [10, 20]);
+    assertConsoleErrorDev([SEND_ACCESSIBILITY_EVENT_REQUIRES_HOST_COMPONENT], {
       withoutStack: true,
     });
 
@@ -614,10 +613,8 @@ describe('ReactNative', () => {
 
     ReactNative.render(<ContainsStrictModeChild ref={n => (parent = n)} />, 11);
 
-    let match;
-    expect(
-      () => (match = ReactNative.findHostInstance_DEPRECATED(parent)),
-    ).toErrorDev([
+    const match = ReactNative.findHostInstance_DEPRECATED(parent);
+    assertConsoleErrorDev([
       'findHostInstance_DEPRECATED is deprecated in StrictMode. ' +
         'findHostInstance_DEPRECATED was passed an instance of ContainsStrictModeChild which renders StrictMode children. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
@@ -652,10 +649,8 @@ describe('ReactNative', () => {
       11,
     );
 
-    let match;
-    expect(
-      () => (match = ReactNative.findHostInstance_DEPRECATED(parent)),
-    ).toErrorDev([
+    const match = ReactNative.findHostInstance_DEPRECATED(parent);
+    assertConsoleErrorDev([
       'findHostInstance_DEPRECATED is deprecated in StrictMode. ' +
         'findHostInstance_DEPRECATED was passed an instance of IsInStrictMode which is inside StrictMode. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
@@ -689,8 +684,8 @@ describe('ReactNative', () => {
 
     ReactNative.render(<ContainsStrictModeChild ref={n => (parent = n)} />, 11);
 
-    let match;
-    expect(() => (match = ReactNative.findNodeHandle(parent))).toErrorDev([
+    const match = ReactNative.findNodeHandle(parent);
+    assertConsoleErrorDev([
       'findNodeHandle is deprecated in StrictMode. ' +
         'findNodeHandle was passed an instance of ContainsStrictModeChild which renders StrictMode children. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
@@ -725,8 +720,8 @@ describe('ReactNative', () => {
       11,
     );
 
-    let match;
-    expect(() => (match = ReactNative.findNodeHandle(parent))).toErrorDev([
+    const match = ReactNative.findNodeHandle(parent);
+    assertConsoleErrorDev([
       'findNodeHandle is deprecated in StrictMode. ' +
         'findNodeHandle was passed an instance of IsInStrictMode which is inside StrictMode. ' +
         'Instead, add a ref directly to the element you want to reference. ' +

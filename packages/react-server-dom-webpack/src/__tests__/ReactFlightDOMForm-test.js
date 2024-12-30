@@ -50,6 +50,7 @@ let ReactServerDOMClient;
 let ReactDOMClient;
 let useActionState;
 let act;
+let assertConsoleErrorDev;
 
 describe('ReactFlightDOMForm', () => {
   beforeEach(() => {
@@ -72,6 +73,8 @@ describe('ReactFlightDOMForm', () => {
     ReactDOMServer = require('react-dom/server.edge');
     ReactDOMClient = require('react-dom/client');
     act = React.act;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
 
     // TODO: Test the old api but it warns so needs warnings to be asserted.
     // if (__VARIANT__) {
@@ -959,12 +962,13 @@ describe('ReactFlightDOMForm', () => {
       await readIntoContainer(postbackSsrStream);
     }
 
-    await expect(submitTheForm).toErrorDev(
+    await submitTheForm();
+    assertConsoleErrorDev([
       'Failed to serialize an action for progressive enhancement:\n' +
         'Error: React Element cannot be passed to Server Functions from the Client without a temporary reference set. Pass a TemporaryReferenceSet to the options.\n' +
         '  [<div/>]\n' +
         '   ^^^^^^',
-    );
+    ]);
 
     // The error message was returned as JSX.
     const form2 = container.getElementsByTagName('form')[0];
@@ -1035,10 +1039,11 @@ describe('ReactFlightDOMForm', () => {
       await readIntoContainer(postbackSsrStream);
     }
 
-    await expect(submitTheForm).toErrorDev(
+    await submitTheForm();
+    assertConsoleErrorDev([
       'Failed to serialize an action for progressive enhancement:\n' +
         'Error: File/Blob fields are not yet supported in progressive forms. Will fallback to client hydration.',
-    );
+    ]);
 
     expect(blob instanceof Blob).toBe(true);
     expect(blob.size).toBe(2);

@@ -23,6 +23,7 @@ import type {
 } from './ReactFiberTracingMarkerComponent';
 import type {OffscreenInstance} from './ReactFiberActivityComponent';
 import type {Resource} from './ReactFiberConfig';
+import type {RootState} from './ReactFiberRoot';
 
 import {
   enableCreateEventHandleAPI,
@@ -32,7 +33,6 @@ import {
   enableSchedulingProfiler,
   enableUpdaterTracking,
   enableTransitionTracing,
-  useModernStrictMode,
   disableLegacyContext,
   alwaysThrottleRetries,
   enableInfiniteRenderLoopDetection,
@@ -40,6 +40,7 @@ import {
   disableDefaultPropsExceptForClasses,
   enableSiblingPrerendering,
   enableComponentPerformanceTrack,
+  enableYieldingBeforePassive,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import is from 'shared/objectIs';
@@ -59,6 +60,7 @@ import {
   logRenderPhase,
   logInterruptedRenderPhase,
   logSuspendedRenderPhase,
+  logRecoveredRenderPhase,
   logErroredRenderPhase,
   logInconsistentRender,
   logSuspendedWithDelayPhase,
@@ -610,7 +612,6 @@ export function getRenderTargetTime(): number {
 
 let legacyErrorBoundariesThatAlreadyFailed: Set<mixed> | null = null;
 
-let rootDoesHavePassiveEffects: boolean = false;
 let rootWithPendingPassiveEffects: FiberRoot | null = null;
 let pendingPassiveEffectsLanes: Lanes = NoLanes;
 let pendingPassiveEffectsRemainingLanes: Lanes = NoLanes;
@@ -636,6 +637,14 @@ export function getWorkInProgressRoot(): FiberRoot | null {
 
 export function getWorkInProgressRootRenderLanes(): Lanes {
   return workInProgressRootRenderLanes;
+}
+
+export function getRootWithPendingPassiveEffects(): FiberRoot | null {
+  return rootWithPendingPassiveEffects;
+}
+
+export function getPendingPassiveEffectsLanes(): Lanes {
+  return pendingPassiveEffectsLanes;
 }
 
 export function isWorkLoopSuspendedOnData(): boolean {
@@ -3176,6 +3185,19 @@ function commitRootImpl(
         completedRenderEndTime,
         lanes,
       );
+    } else if (recoverableErrors !== null) {
+      const hydrationFailed =
+        finishedWork !== null &&
+        finishedWork.alternate !== null &&
+        (finishedWork.alternate.memoizedState: RootState).isDehydrated &&
+        (finishedWork.flags & ForceClientRender) !== NoFlags;
+      logRecoveredRenderPhase(
+        completedRenderStartTime,
+        completedRenderEndTime,
+        lanes,
+        recoverableErrors,
+        hydrationFailed,
+      );
     } else {
       logRenderPhase(completedRenderStartTime, completedRenderEndTime, lanes);
     }
@@ -3209,12 +3231,6 @@ function commitRootImpl(
         'a bug in React. Please file an issue.',
     );
   }
-
-  // commitRoot never returns a continuation; it always finishes synchronously.
-  // So we can clear these now to allow a new callback to be scheduled.
-  root.callbackNode = null;
-  root.callbackPriority = NoLane;
-  root.cancelPendingCommit = null;
 
   // Check which lanes no longer have any work scheduled on them, and mark
   // those as finished.
@@ -3253,6 +3269,7 @@ function commitRootImpl(
   // might get scheduled in the commit phase. (See #16714.)
   // TODO: Delete all other places that schedule the passive effect callback
   // They're redundant.
+  let rootDoesHavePassiveEffects: boolean = false;
   if (
     // If this subtree rendered with profiling this commit, we need to visit it to log it.
     (enableProfilerTimer &&
@@ -3261,17 +3278,25 @@ function commitRootImpl(
     (finishedWork.subtreeFlags & PassiveMask) !== NoFlags ||
     (finishedWork.flags & PassiveMask) !== NoFlags
   ) {
-    if (!rootDoesHavePassiveEffects) {
-      rootDoesHavePassiveEffects = true;
-      pendingPassiveEffectsRemainingLanes = remainingLanes;
-      pendingPassiveEffectsRenderEndTime = completedRenderEndTime;
-      // workInProgressTransitions might be overwritten, so we want
-      // to store it in pendingPassiveTransitions until they get processed
-      // We need to pass this through as an argument to commitRoot
-      // because workInProgressTransitions might have changed between
-      // the previous render and commit if we throttle the commit
-      // with setTimeout
-      pendingPassiveTransitions = transitions;
+    rootDoesHavePassiveEffects = true;
+    pendingPassiveEffectsRemainingLanes = remainingLanes;
+    pendingPassiveEffectsRenderEndTime = completedRenderEndTime;
+    // workInProgressTransitions might be overwritten, so we want
+    // to store it in pendingPassiveTransitions until they get processed
+    // We need to pass this through as an argument to commitRoot
+    // because workInProgressTransitions might have changed between
+    // the previous render and commit if we throttle the commit
+    // with setTimeout
+    pendingPassiveTransitions = transitions;
+    if (enableYieldingBeforePassive) {
+      // We don't schedule a separate task for flushing passive effects.
+      // Instead, we just rely on ensureRootIsScheduled below to schedule
+      // a callback for us to flush the passive effects.
+    } else {
+      // So we can clear these now to allow a new callback to be scheduled.
+      root.callbackNode = null;
+      root.callbackPriority = NoLane;
+      root.cancelPendingCommit = null;
       scheduleCallback(NormalSchedulerPriority, () => {
         if (enableProfilerTimer && enableComponentPerformanceTrack) {
           // Track the currently executing event if there is one so we can ignore this
@@ -3285,6 +3310,12 @@ function commitRootImpl(
         return null;
       });
     }
+  } else {
+    // If we don't have passive effects, we're not going to need to perform more work
+    // so we can clear the callback now.
+    root.callbackNode = null;
+    root.callbackPriority = NoLane;
+    root.cancelPendingCommit = null;
   }
 
   if (enableProfilerTimer) {
@@ -3441,10 +3472,6 @@ function commitRootImpl(
     onCommitRootTestSelector();
   }
 
-  // Always call this before exiting `commitRoot`, to ensure that any
-  // additional work on this root is scheduled.
-  ensureRootIsScheduled(root);
-
   if (recoverableErrors !== null) {
     // There were errors during this render, but recovered from them without
     // needing to surface it to the UI. We log them here.
@@ -3479,6 +3506,10 @@ function commitRootImpl(
   ) {
     flushPassiveEffects();
   }
+
+  // Always call this before exiting `commitRoot`, to ensure that any
+  // additional work on this root is scheduled.
+  ensureRootIsScheduled(root);
 
   // Read this again, since a passive effect might have updated it
   remainingLanes = root.pendingLanes;
@@ -3648,6 +3679,13 @@ function flushPassiveEffectsImpl(wasDelayedCommit: void | boolean) {
   // because it's only used for profiling), but it's a refactor hazard.
   pendingPassiveEffectsLanes = NoLanes;
 
+  if (enableYieldingBeforePassive) {
+    // We've finished our work for this render pass.
+    root.callbackNode = null;
+    root.callbackPriority = NoLane;
+    root.cancelPendingCommit = null;
+  }
+
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     throw new Error('Cannot flush passive effects while already rendering.');
   }
@@ -3743,6 +3781,14 @@ function flushPassiveEffectsImpl(wasDelayedCommit: void | boolean) {
     }
     isFlushingPassiveEffects = false;
     didScheduleUpdateDuringPassiveEffects = false;
+  }
+
+  if (enableYieldingBeforePassive) {
+    // Next, we reschedule any remaining work in a new task since it's a new
+    // sequence of work. We wait until the end to do this in case the passive
+    // effect schedules higher priority work than we had remaining. That way
+    // we don't schedule an early callback that gets cancelled anyway.
+    ensureRootIsScheduled(root);
   }
 
   // TODO: Move to commitPassiveMountEffects
@@ -4107,7 +4153,7 @@ function doubleInvokeEffectsOnFiber(
     }
     reappearLayoutEffects(root, fiber.alternate, fiber, false);
     if (shouldDoubleInvokePassiveEffects) {
-      reconnectPassiveEffects(root, fiber, NoLanes, null, false);
+      reconnectPassiveEffects(root, fiber, NoLanes, null, false, 0);
     }
   } finally {
     setIsStrictModeForDevtools(false);
@@ -4173,7 +4219,7 @@ function commitDoubleInvokeEffectsInDEV(
   hasPassiveEffects: boolean,
 ) {
   if (__DEV__) {
-    if (useModernStrictMode && (disableLegacyMode || root.tag !== LegacyRoot)) {
+    if (disableLegacyMode || root.tag !== LegacyRoot) {
       let doubleInvokeEffects = true;
 
       if (

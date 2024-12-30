@@ -35,11 +35,6 @@ describe('ReactLazyContextPropagation', () => {
     seededCache = null;
   });
 
-  // NOTE: These tests are not specific to the lazy propagation (as opposed to
-  // eager propagation). The behavior should be the same in both
-  // implementations. These are tests that are more relevant to the lazy
-  // propagation implementation, though.
-
   function createTextCache() {
     if (seededCache !== null) {
       // Trick to seed a cache before it exists.

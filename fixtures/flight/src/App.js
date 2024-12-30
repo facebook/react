@@ -27,7 +27,8 @@ function Foo({children}) {
   return <div>{children}</div>;
 }
 
-function Bar({children}) {
+async function Bar({children}) {
+  await new Promise(resolve => setTimeout(() => resolve('deferred text'), 10));
   return <div>{children}</div>;
 }
 
@@ -81,7 +82,7 @@ export default async function App({prerender}) {
           <Client />
           <Note />
           <Foo>{dedupedChild}</Foo>
-          <Bar>{dedupedChild}</Bar>
+          <Bar>{Promise.resolve([dedupedChild])}</Bar>
         </Container>
       </body>
     </html>

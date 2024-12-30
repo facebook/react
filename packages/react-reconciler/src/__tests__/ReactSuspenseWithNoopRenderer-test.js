@@ -1901,6 +1901,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       // be throttled because the fallback would have appeared too recently.
       Scheduler.unstable_advanceTime(10000);
       jest.advanceTimersByTime(10000);
+      if (gate(flags => flags.enableYieldingBeforePassive)) {
+        // Passive effects.
+        await waitForPaint([]);
+      }
       await waitForPaint(['A']);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
