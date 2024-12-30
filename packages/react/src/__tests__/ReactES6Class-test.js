@@ -14,6 +14,7 @@ let React;
 let ReactDOM;
 let ReactDOMClient;
 let assertConsoleErrorDev;
+let assertConsoleWarnDev;
 
 describe('ReactES6Class', () => {
   let container;
@@ -31,7 +32,10 @@ describe('ReactES6Class', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
-    ({assertConsoleErrorDev} = require('internal-test-utils'));
+    ({
+      assertConsoleErrorDev,
+      assertConsoleWarnDev,
+    } = require('internal-test-utils'));
     container = document.createElement('div');
     root = ReactDOMClient.createRoot(container);
     attachedListener = null;
@@ -69,14 +73,15 @@ describe('ReactES6Class', () => {
     }
     window.addEventListener('error', errorHandler);
     try {
-      expect(() => {
-        ReactDOM.flushSync(() => root.render(<Foo />));
-      }).toErrorDev([
+      ReactDOM.flushSync(() => root.render(<Foo />));
+      assertConsoleErrorDev([
         // A failed component renders twice in DEV in concurrent mode
         'No `render` method found on the Foo instance: ' +
-          'you may have forgotten to define `render`.',
+          'you may have forgotten to define `render`.\n' +
+          '    in Foo (at **)',
         'No `render` method found on the Foo instance: ' +
-          'you may have forgotten to define `render`.',
+          'you may have forgotten to define `render`.\n' +
+          '    in Foo (at **)',
       ]);
     } finally {
       window.removeEventListener('error', errorHandler);
@@ -158,12 +163,12 @@ describe('ReactES6Class', () => {
         return <div />;
       }
     }
-    expect(() => {
-      ReactDOM.flushSync(() => root.render(<Foo foo="foo" />));
-    }).toErrorDev(
+    ReactDOM.flushSync(() => root.render(<Foo foo="foo" />));
+    assertConsoleErrorDev([
       'Foo: getDerivedStateFromProps() is defined as an instance method ' +
-        'and will be ignored. Instead, declare it as a static method.',
-    );
+        'and will be ignored. Instead, declare it as a static method.\n' +
+        '    in Foo (at **)',
+    ]);
   });
 
   it('warns if getDerivedStateFromError is not static', () => {
@@ -175,12 +180,12 @@ describe('ReactES6Class', () => {
         return <div />;
       }
     }
-    expect(() => {
-      ReactDOM.flushSync(() => root.render(<Foo foo="foo" />));
-    }).toErrorDev(
+    ReactDOM.flushSync(() => root.render(<Foo foo="foo" />));
+    assertConsoleErrorDev([
       'Foo: getDerivedStateFromError() is defined as an instance method ' +
-        'and will be ignored. Instead, declare it as a static method.',
-    );
+        'and will be ignored. Instead, declare it as a static method.\n' +
+        '    in Foo (at **)',
+    ]);
   });
 
   it('warns if getSnapshotBeforeUpdate is static', () => {
@@ -190,12 +195,12 @@ describe('ReactES6Class', () => {
         return <div />;
       }
     }
-    expect(() => {
-      ReactDOM.flushSync(() => root.render(<Foo foo="foo" />));
-    }).toErrorDev(
+    ReactDOM.flushSync(() => root.render(<Foo foo="foo" />));
+    assertConsoleErrorDev([
       'Foo: getSnapshotBeforeUpdate() is defined as a static method ' +
-        'and will be ignored. Instead, declare it as an instance method.',
-    );
+        'and will be ignored. Instead, declare it as an instance method.\n' +
+        '    in Foo (at **)',
+    ]);
   });
 
   it('warns if state not initialized before static getDerivedStateFromProps', () => {
@@ -210,14 +215,14 @@ describe('ReactES6Class', () => {
         return <div className={`${this.state.foo} ${this.state.bar}`} />;
       }
     }
-    expect(() => {
-      ReactDOM.flushSync(() => root.render(<Foo foo="foo" />));
-    }).toErrorDev(
+    ReactDOM.flushSync(() => root.render(<Foo foo="foo" />));
+    assertConsoleErrorDev([
       '`Foo` uses `getDerivedStateFromProps` but its initial state is ' +
         'undefined. This is not recommended. Instead, define the initial state by ' +
         'assigning an object to `this.state` in the constructor of `Foo`. ' +
-        'This ensures that `getDerivedStateFromProps` arguments have a consistent shape.',
-    );
+        'This ensures that `getDerivedStateFromProps` arguments have a consistent shape.\n' +
+        '    in Foo (at **)',
+    ]);
   });
 
   it('updates initial state with values returned by static getDerivedStateFromProps', () => {
@@ -266,11 +271,13 @@ describe('ReactES6Class', () => {
           super(props, context);
           this.state = {tag: context.tag, className: this.context.className};
         }
+
         render() {
           const Tag = this.state.tag;
           return <Tag className={this.state.className} />;
         }
       }
+
       Foo.contextTypes = {
         tag: PropTypes.string,
         className: PropTypes.string,
@@ -280,10 +287,12 @@ describe('ReactES6Class', () => {
         getChildContext() {
           return {tag: 'span', className: 'foo'};
         }
+
         render() {
           return <Foo />;
         }
       }
+
       Outer.childContextTypes = {
         tag: PropTypes.string,
         className: PropTypes.string,
@@ -291,8 +300,15 @@ describe('ReactES6Class', () => {
       runTest(<Outer />, 'SPAN', 'foo');
 
       assertConsoleErrorDev([
-        'Outer uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
-        'Foo uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+        'Outer uses the legacy childContextTypes API which will soon be removed. ' +
+          'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+          '    in Outer (at **)',
+        'Foo uses the legacy contextTypes API which will soon be removed. ' +
+          'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+          (gate(flags => flags.enableOwnerStacks)
+            ? ''
+            : '    in Foo (at **)\n') +
+          '    in Outer (at **)',
       ]);
     });
   }
@@ -327,9 +343,10 @@ describe('ReactES6Class', () => {
           return <span />;
         }
       }
-      expect(() => runTest(<Foo />, 'SPAN', '')).toErrorDev(
-        'Foo.state: must be set to an object or null',
-      );
+      runTest(<Foo />, 'SPAN', '');
+      assertConsoleErrorDev([
+        'Foo.state: must be set to an object or null\n    in Foo (at **)',
+      ]);
     });
   });
 
@@ -480,11 +497,22 @@ describe('ReactES6Class', () => {
         }
       }
 
-      expect(() => runTest(<Foo />, 'SPAN', 'foo')).toErrorDev([
-        'getInitialState was defined on Foo, a plain JavaScript class.',
-        'getDefaultProps was defined on Foo, a plain JavaScript class.',
-        'contextType was defined as an instance property on Foo.',
-        'contextTypes was defined as an instance property on Foo.',
+      runTest(<Foo />, 'SPAN', 'foo');
+      assertConsoleErrorDev([
+        'getInitialState was defined on Foo, a plain JavaScript class. ' +
+          'This is only supported for classes created using React.createClass. ' +
+          'Did you mean to define a state property instead?\n' +
+          '    in Foo (at **)',
+        'getDefaultProps was defined on Foo, a plain JavaScript class. ' +
+          'This is only supported for classes created using React.createClass. ' +
+          'Use a static property to define defaultProps instead.\n' +
+          '    in Foo (at **)',
+        'contextType was defined as an instance property on Foo. ' +
+          'Use a static property to define contextType instead.\n' +
+          '    in Foo (at **)',
+        'contextTypes was defined as an instance property on Foo. ' +
+          'Use a static property to define contextTypes instead.\n' +
+          '    in Foo (at **)',
       ]);
       expect(getInitialStateWasCalled).toBe(false);
       expect(getDefaultPropsWasCalled).toBe(false);
@@ -514,11 +542,13 @@ describe('ReactES6Class', () => {
       }
     }
 
-    expect(() => runTest(<NamedComponent />, 'SPAN', 'foo')).toErrorDev(
+    runTest(<NamedComponent />, 'SPAN', 'foo');
+    assertConsoleErrorDev([
       'NamedComponent has a method called componentShouldUpdate(). Did you ' +
         'mean shouldComponentUpdate()? The name is phrased as a question ' +
-        'because the function is expected to return a value.',
-    );
+        'because the function is expected to return a value.\n' +
+        '    in NamedComponent (at **)',
+    ]);
   });
 
   it('should warn when misspelling componentWillReceiveProps', () => {
@@ -531,10 +561,12 @@ describe('ReactES6Class', () => {
       }
     }
 
-    expect(() => runTest(<NamedComponent />, 'SPAN', 'foo')).toErrorDev(
+    runTest(<NamedComponent />, 'SPAN', 'foo');
+    assertConsoleErrorDev([
       'NamedComponent has a method called componentWillRecieveProps(). Did ' +
-        'you mean componentWillReceiveProps()?',
-    );
+        'you mean componentWillReceiveProps()?\n' +
+        '     in NamedComponent (at **)',
+    ]);
   });
 
   it('should warn when misspelling UNSAFE_componentWillReceiveProps', () => {
@@ -547,23 +579,33 @@ describe('ReactES6Class', () => {
       }
     }
 
-    expect(() => runTest(<NamedComponent />, 'SPAN', 'foo')).toErrorDev(
+    runTest(<NamedComponent />, 'SPAN', 'foo');
+    assertConsoleErrorDev([
       'NamedComponent has a method called UNSAFE_componentWillRecieveProps(). ' +
-        'Did you mean UNSAFE_componentWillReceiveProps()?',
-    );
+        'Did you mean UNSAFE_componentWillReceiveProps()?\n' +
+        '    in NamedComponent (at **)',
+    ]);
   });
 
   it('should throw AND warn when trying to access classic APIs', () => {
     const ref = React.createRef();
     runTest(<Inner name="foo" ref={ref} />, 'DIV', 'foo');
-    expect(() =>
-      expect(() => ref.current.replaceState({})).toThrow(),
-    ).toWarnDev(
-      'replaceState(...) is deprecated in plain JavaScript React classes',
+
+    expect(() => ref.current.replaceState({})).toThrow();
+    assertConsoleWarnDev(
+      [
+        'replaceState(...) is deprecated in plain JavaScript React classes. ' +
+          'Refactor your code to use setState instead (see https://github.com/facebook/react/issues/3236).',
+      ],
       {withoutStack: true},
     );
-    expect(() => expect(() => ref.current.isMounted()).toThrow()).toWarnDev(
-      'isMounted(...) is deprecated in plain JavaScript React classes',
+    expect(() => ref.current.isMounted()).toThrow();
+    assertConsoleWarnDev(
+      [
+        'isMounted(...) is deprecated in plain JavaScript React classes. ' +
+          'Instead, make sure to clean up subscriptions and pending requests in ' +
+          'componentWillUnmount to prevent memory leaks.',
+      ],
       {withoutStack: true},
     );
   });
@@ -575,20 +617,31 @@ describe('ReactES6Class', () => {
           return <div className={this.context.bar} />;
         }
       }
+
       Bar.contextTypes = {bar: PropTypes.string};
+
       class Foo extends React.Component {
         getChildContext() {
           return {bar: 'bar-through-context'};
         }
+
         render() {
           return <Bar />;
         }
       }
+
       Foo.childContextTypes = {bar: PropTypes.string};
       runTest(<Foo />, 'DIV', 'bar-through-context');
       assertConsoleErrorDev([
-        'Foo uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
-        'Bar uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+        'Foo uses the legacy childContextTypes API which will soon be removed. ' +
+          'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+          '    in Foo (at **)',
+        'Bar uses the legacy contextTypes API which will soon be removed. ' +
+          'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+          (gate(flags => flags.enableOwnerStacks)
+            ? ''
+            : '    in Bar (at **)\n') +
+          '    in Foo (at **)',
       ]);
     });
   }

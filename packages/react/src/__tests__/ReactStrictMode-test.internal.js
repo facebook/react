@@ -179,6 +179,40 @@ describe('ReactStrictMode', () => {
           'B: useEffect mount',
         ]);
       });
+
+      it('should support nested strict mode on initial mount', async () => {
+        function Wrapper({children}) {
+          return children;
+        }
+        await act(() => {
+          const container = document.createElement('div');
+          const root = ReactDOMClient.createRoot(container);
+          root.render(
+            <Wrapper>
+              <Component label="A" />
+              <React.StrictMode>
+                <Component label="B" />,
+              </React.StrictMode>
+              ,
+            </Wrapper>,
+          );
+        });
+
+        expect(log).toEqual([
+          'A: render',
+          'B: render',
+          'B: render',
+          'A: useLayoutEffect mount',
+          'B: useLayoutEffect mount',
+          'A: useEffect mount',
+          'B: useEffect mount',
+          // TODO: this is currently broken
+          // 'B: useLayoutEffect unmount',
+          // 'B: useEffect unmount',
+          // 'B: useLayoutEffect mount',
+          // 'B: useEffect mount',
+        ]);
+      });
     }
   });
 });

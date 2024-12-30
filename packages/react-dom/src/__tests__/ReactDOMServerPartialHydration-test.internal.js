@@ -3743,6 +3743,10 @@ describe('ReactDOMServerPartialHydration', () => {
     await waitForPaint(['App']);
     expect(visibleRef.current).toBe(visibleSpan);
 
+    if (gate(flags => flags.enableYieldingBeforePassive)) {
+      // Passive effects.
+      await waitForPaint([]);
+    }
     // Subsequently, the hidden child is prerendered on the client
     await waitForPaint(['HiddenChild']);
     expect(container).toMatchInlineSnapshot(`

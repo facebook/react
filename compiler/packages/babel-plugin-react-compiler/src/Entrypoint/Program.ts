@@ -564,6 +564,14 @@ export function compileProgram(
     if (environment.enableChangeDetectionForDebugging != null) {
       externalFunctions.push(environment.enableChangeDetectionForDebugging);
     }
+
+    const hasFireRewrite = compiledFns.some(c => c.compiledFn.hasFireRewrite);
+    if (environment.enableFire && hasFireRewrite) {
+      externalFunctions.push({
+        source: getReactCompilerRuntimeModule(pass.opts),
+        importSpecifierName: 'useFire',
+      });
+    }
   } catch (err) {
     handleError(err, pass, null);
     return;

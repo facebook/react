@@ -103,6 +103,11 @@ export type CodegenFunction = {
    * This is true if the compiler has the lowered useContext calls.
    */
   hasLoweredContextAccess: boolean;
+
+  /**
+   * This is true if the compiler has compiled a fire to a useFire call
+   */
+  hasFireRewrite: boolean;
 };
 
 export function codegenFunction(
@@ -355,6 +360,7 @@ function codegenReactiveFunction(
     prunedMemoValues: countMemoBlockVisitor.prunedMemoValues,
     outlined: [],
     hasLoweredContextAccess: fn.env.hasLoweredContextAccess,
+    hasFireRewrite: fn.env.hasFireRewrite,
   });
 }
 

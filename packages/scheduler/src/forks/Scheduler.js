@@ -12,12 +12,13 @@
 import type {PriorityLevel} from '../SchedulerPriorities';
 
 import {
-  enableSchedulerDebugging,
   enableProfiling,
   frameYieldMs,
   userBlockingPriorityTimeout,
   lowPriorityTimeout,
   normalPriorityTimeout,
+  enableRequestPaint,
+  enableAlwaysYieldScheduler,
 } from '../SchedulerFeatureFlags';
 
 import {push, pop, peek} from '../SchedulerMinHeap';
@@ -80,9 +81,6 @@ var timerQueue: Array<Task> = [];
 
 // Incrementing id counter. Used to maintain insertion order.
 var taskIdCounter = 1;
-
-// Pausing the scheduler is useful for debugging.
-var isSchedulerPaused = false;
 
 var currentTask = null;
 var currentPriorityLevel = NormalPriority;
@@ -191,13 +189,12 @@ function workLoop(initialTime: number) {
   let currentTime = initialTime;
   advanceTimers(currentTime);
   currentTask = peek(taskQueue);
-  while (
-    currentTask !== null &&
-    !(enableSchedulerDebugging && isSchedulerPaused)
-  ) {
-    if (currentTask.expirationTime > currentTime && shouldYieldToHost()) {
-      // This currentTask hasn't expired, and we've reached the deadline.
-      break;
+  while (currentTask !== null) {
+    if (!enableAlwaysYieldScheduler) {
+      if (currentTask.expirationTime > currentTime && shouldYieldToHost()) {
+        // This currentTask hasn't expired, and we've reached the deadline.
+        break;
+      }
     }
     // $FlowFixMe[incompatible-use] found when upgrading Flow
     const callback = currentTask.callback;
@@ -241,6 +238,12 @@ function workLoop(initialTime: number) {
       pop(taskQueue);
     }
     currentTask = peek(taskQueue);
+    if (enableAlwaysYieldScheduler) {
+      if (currentTask === null || currentTask.expirationTime > currentTime) {
+        // This currentTask hasn't expired we yield to the browser task.
+        break;
+      }
+    }
   }
   // Return whether there's additional work
   if (currentTask !== null) {
@@ -412,22 +415,6 @@ function unstable_scheduleCallback(
   return newTask;
 }
 
-function unstable_pauseExecution() {
-  isSchedulerPaused = true;
-}
-
-function unstable_continueExecution() {
-  isSchedulerPaused = false;
-  if (!isHostCallbackScheduled && !isPerformingWork) {
-    isHostCallbackScheduled = true;
-    requestHostCallback();
-  }
-}
-
-function unstable_getFirstCallbackNode(): Task | null {
-  return peek(taskQueue);
-}
-
 function unstable_cancelCallback(task: Task) {
   if (enableProfiling) {
     if (task.isQueued) {
@@ -458,7 +445,7 @@ let frameInterval = frameYieldMs;
 let startTime = -1;
 
 function shouldYieldToHost(): boolean {
-  if (needsPaint) {
+  if (!enableAlwaysYieldScheduler && enableRequestPaint && needsPaint) {
     // Yield now.
     return true;
   }
@@ -473,7 +460,9 @@ function shouldYieldToHost(): boolean {
 }
 
 function requestPaint() {
-  needsPaint = true;
+  if (enableRequestPaint) {
+    needsPaint = true;
+  }
 }
 
 function forceFrameRate(fps: number) {
@@ -494,7 +483,9 @@ function forceFrameRate(fps: number) {
 }
 
 const performWorkUntilDeadline = () => {
-  needsPaint = false;
+  if (enableRequestPaint) {
+    needsPaint = false;
+  }
   if (isMessageLoopRunning) {
     const currentTime = getCurrentTime();
     // Keep track of the start time so we can measure how long the main thread
@@ -592,9 +583,6 @@ export {
   unstable_getCurrentPriorityLevel,
   shouldYieldToHost as unstable_shouldYield,
   requestPaint as unstable_requestPaint,
-  unstable_continueExecution,
-  unstable_pauseExecution,
-  unstable_getFirstCallbackNode,
   getCurrentTime as unstable_now,
   forceFrameRate as unstable_forceFrameRate,
 };

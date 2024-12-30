@@ -233,8 +233,28 @@ describe('ReactLazy', () => {
     expect(error.message).toMatch('Element type is invalid');
     assertLog(['Loading...']);
     assertConsoleErrorDev([
-      'Expected the result of a dynamic import() call',
-      'Expected the result of a dynamic import() call',
+      'lazy: Expected the result of a dynamic import() call. ' +
+        'Instead received: function Text(props) {\n' +
+        '    Scheduler.log(props.text);\n' +
+        '    return props.text;\n' +
+        '  }\n\n' +
+        'Your code should look like: \n  ' +
+        "const MyComponent = lazy(() => import('./MyComponent'))\n" +
+        (gate('enableOwnerStacks')
+          ? ''
+          : '    in Lazy (at **)\n' + '    in Suspense (at **)\n') +
+        '    in App (at **)',
+      'lazy: Expected the result of a dynamic import() call. ' +
+        'Instead received: function Text(props) {\n' +
+        '    Scheduler.log(props.text);\n' +
+        '    return props.text;\n' +
+        '  }\n\n' +
+        'Your code should look like: \n  ' +
+        "const MyComponent = lazy(() => import('./MyComponent'))\n" +
+        (gate('enableOwnerStacks')
+          ? ''
+          : '    in Lazy (at **)\n' + '    in Suspense (at **)\n') +
+        '    in App (at **)',
     ]);
     expect(root).not.toMatchRenderedOutput('Hi');
   });
@@ -852,19 +872,21 @@ describe('ReactLazy', () => {
     expect(root).not.toMatchRenderedOutput('22');
 
     // Mount
-    await expect(async () => {
-      await act(() => resolveFakeImport(Add));
-    }).toErrorDev(
-      shouldWarnAboutFunctionDefaultProps
-        ? [
-            'Add: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
-          ]
-        : shouldWarnAboutMemoDefaultProps
-          ? [
-              'Add: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
-            ]
-          : [],
-    );
+    await act(() => resolveFakeImport(Add));
+
+    if (shouldWarnAboutFunctionDefaultProps) {
+      assertConsoleErrorDev([
+        'Add: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.\n' +
+          '    in Add (at **)\n' +
+          '    in Suspense (at **)',
+      ]);
+    } else if (shouldWarnAboutMemoDefaultProps) {
+      assertConsoleErrorDev([
+        'Add: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.\n' +
+          '    in Suspense (at **)',
+      ]);
+    }
+
     expect(root).toMatchRenderedOutput('22');
 
     // Update
