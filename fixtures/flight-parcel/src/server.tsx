@@ -15,8 +15,8 @@ import {injectRSCPayload} from 'rsc-html-stream/server';
 
 // Client dependencies, used for SSR.
 // These must run in the same environment as client components (e.g. same instance of React).
-import {createFromReadableStream} from 'react-server-dom-parcel/client' with {env: 'react-client'};
-import {renderToReadableStream as renderHTMLToReadableStream} from 'react-dom/server' with {env: 'react-client'};
+import {createFromReadableStream} from 'react-server-dom-parcel/client.edge' with {env: 'react-client'};
+import {renderToReadableStream as renderHTMLToReadableStream} from 'react-dom/server.edge' with {env: 'react-client'};
 import ReactClient, {ReactElement} from 'react' with {env: 'react-client'};
 
 // Page components. These must have "use server-entry" so they are treated as code splitting entry points.
@@ -66,8 +66,9 @@ async function render(
 
     // Use client react to render the RSC payload to HTML.
     let [s1, s2] = stream.tee();
-    let data = createFromReadableStream<ReactElement>(s1);
+    let data: Promise<ReactElement>;
     function Content() {
+      data ??= createFromReadableStream<ReactElement>(s1);
       return ReactClient.use(data);
     }
 
