@@ -82,6 +82,10 @@ function constantPropagationImpl(fn: HIRFunction, constants: Constants): void {
         for (const [predecessor] of phi.operands) {
           if (!block.preds.has(predecessor)) {
             phi.operands.delete(predecessor);
+            //We need to remove phi node with empty operands
+            if(phi.operands.size == 0){
+              block.phis.delete(phi)
+            }
           }
         }
       }
