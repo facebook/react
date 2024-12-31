@@ -557,17 +557,18 @@ function requestHostTimeout(
   callback: (currentTime: number) => void,
   ms: number,
 ) {
-  // $FlowFixMe[not-a-function] nullable value
-  taskTimeoutID = localSetTimeout(() => {
+  // Use queueMicrotask instead of setTimeout
+  queueMicrotask(() => {
     callback(getCurrentTime());
-  }, ms);
+  });
 }
 
 function cancelHostTimeout() {
-  // $FlowFixMe[not-a-function] nullable value
+  // No significant change needed here
   localClearTimeout(taskTimeoutID);
   taskTimeoutID = ((-1: any): TimeoutID);
 }
+
 
 export {
   ImmediatePriority as unstable_ImmediatePriority,
