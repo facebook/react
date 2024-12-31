@@ -231,6 +231,11 @@ import {
   commitHostRemoveChild,
   commitHostSingleton,
 } from './ReactFiberCommitHostEffects';
+import {
+  viewTransitionMutationContext,
+  pushMutationContext,
+  popMutationContext,
+} from './ReactFiberMutationTracking';
 
 // Used during the commit phase to track the state of the Offscreen component stack.
 // Allows us to avoid traversing the return path to find the nearest Offscreen ancestor.
@@ -2428,6 +2433,7 @@ function commitMutationEffectsOnFiber(
     }
     case ViewTransitionComponent:
       if (enableViewTransition) {
+        const prevMutationContext = pushMutationContext();
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
         commitReconciliationEffects(finishedWork, lanes);
         const isViewTransitionEligible =
@@ -2454,8 +2460,16 @@ function commitMutationEffectsOnFiber(
             // This is just to align with the BeforeMutationPhase which isn't
             // using a stack.
             commitUpdateViewTransition(finishedWork);
+            if (viewTransitionMutationContext) {
+              // Something mutated in this tree so we need to animate this regardless
+              // what the measurements say. We use the Update flag to track this.
+              // If diffing was done in the render phase, like we used, this could have
+              // been done in the render already.
+              finishedWork.flags |= Update;
+            }
           }
         }
+        popMutationContext(prevMutationContext);
         break;
       }
     // Fallthrough

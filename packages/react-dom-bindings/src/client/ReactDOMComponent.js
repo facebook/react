@@ -63,6 +63,8 @@ import {validateProperties as validateInputProperties} from '../shared/ReactDOMN
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
 import sanitizeURL from '../shared/sanitizeURL';
 
+import {trackHostMutation} from 'react-reconciler/src/ReactFiberMutationTracking';
+
 import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
 import {
   mediaEventTypes,
@@ -363,6 +365,8 @@ function setProp(
           // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
           setTextContent(domElement, '' + value);
         }
+      } else {
+        return;
       }
       break;
     }
@@ -386,7 +390,7 @@ function setProp(
     }
     case 'style': {
       setValueForStyles(domElement, value, prevValue);
-      break;
+      return;
     }
     // These attributes accept URLs. These must not allow javascript: URLS.
     case 'data':
@@ -524,7 +528,7 @@ function setProp(
         }
         trapClickOnNonInteractiveElement(((domElement: any): HTMLElement));
       }
-      break;
+      return;
     }
     case 'onScroll': {
       if (value != null) {
@@ -533,7 +537,7 @@ function setProp(
         }
         listenToNonDelegatedEvent('scroll', domElement);
       }
-      break;
+      return;
     }
     case 'onScrollEnd': {
       if (value != null) {
@@ -542,7 +546,7 @@ function setProp(
         }
         listenToNonDelegatedEvent('scrollend', domElement);
       }
-      break;
+      return;
     }
     case 'dangerouslySetInnerHTML': {
       if (value != null) {
@@ -849,7 +853,7 @@ function setProp(
     }
     case 'innerText':
     case 'textContent':
-      break;
+      return;
     case 'popoverTarget':
       if (__DEV__) {
         if (
@@ -879,12 +883,16 @@ function setProp(
         ) {
           warnForInvalidEventListener(key, value);
         }
+        // Updating events doesn't affect the visuals.
+        return;
       } else {
         const attributeName = getAttributeAlias(key);
         setValueForAttribute(domElement, attributeName, value);
       }
     }
   }
+  // To avoid marking things as host mutations we do early returns above.
+  trackHostMutation();
 }
 
 function setPropOnCustomElement(
@@ -898,7 +906,7 @@ function setPropOnCustomElement(
   switch (key) {
     case 'style': {
       setValueForStyles(domElement, value, prevValue);
-      break;
+      return;
     }
     case 'dangerouslySetInnerHTML': {
       if (value != null) {
@@ -927,6 +935,8 @@ function setPropOnCustomElement(
       } else if (typeof value === 'number' || typeof value === 'bigint') {
         // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
         setTextContent(domElement, '' + value);
+      } else {
+        return;
       }
       break;
     }
@@ -937,7 +947,7 @@ function setPropOnCustomElement(
         }
         listenToNonDelegatedEvent('scroll', domElement);
       }
-      break;
+      return;
     }
     case 'onScrollEnd': {
       if (value != null) {
@@ -946,7 +956,7 @@ function setPropOnCustomElement(
         }
         listenToNonDelegatedEvent('scrollend', domElement);
       }
-      break;
+      return;
     }
     case 'onClick': {
       // TODO: This cast may not be sound for SVG, MathML or custom elements.
@@ -956,29 +966,34 @@ function setPropOnCustomElement(
         }
         trapClickOnNonInteractiveElement(((domElement: any): HTMLElement));
       }
-      break;
+      return;
     }
     case 'suppressContentEditableWarning':
     case 'suppressHydrationWarning':
     case 'innerHTML':
     case 'ref': {
       // Noop
-      break;
+      return;
     }
     case 'innerText': // Properties
     case 'textContent':
-      break;
+      return;
     // Fall through
     default: {
       if (registrationNameDependencies.hasOwnProperty(key)) {
         if (__DEV__ && value != null && typeof value !== 'function') {
           warnForInvalidEventListener(key, value);
         }
+        return;
       } else {
         setValueForPropertyOnCustomComponent(domElement, key, value);
+        // We track mutations inside this call.
+        return;
       }
     }
   }
+  // To avoid marking things as host mutations we do early returns above.
+  trackHostMutation();
 }
 
 export function setInitialProperties(
@@ -1430,26 +1445,44 @@ export function updateProperties(
         ) {
           switch (propKey) {
             case 'type': {
+              if (nextProp !== lastProp) {
+                trackHostMutation();
+              }
               type = nextProp;
               break;
             }
             case 'name': {
+              if (nextProp !== lastProp) {
+                trackHostMutation();
+              }
               name = nextProp;
               break;
             }
             case 'checked': {
+              if (nextProp !== lastProp) {
+                trackHostMutation();
+              }
               checked = nextProp;
               break;
             }
             case 'defaultChecked': {
+              if (nextProp !== lastProp) {
+                trackHostMutation();
+              }
               defaultChecked = nextProp;
               break;
             }
             case 'value': {
+              if (nextProp !== lastProp) {
+                trackHostMutation();
+              }
               value = nextProp;
               break;
             }
             case 'defaultValue': {
+              if (nextProp !== lastProp) {
+                trackHostMutation();
+              }
               defaultValue = nextProp;
               break;
             }
@@ -1553,8 +1586,9 @@ export function updateProperties(
             }
             // Fallthrough
             default: {
-              if (!nextProps.hasOwnProperty(propKey))
+              if (!nextProps.hasOwnProperty(propKey)) {
                 setProp(domElement, tag, propKey, null, nextProps, lastProp);
+              }
             }
           }
         }
@@ -1568,15 +1602,24 @@ export function updateProperties(
         ) {
           switch (propKey) {
             case 'value': {
+              if (nextProp !== lastProp) {
+                trackHostMutation();
+              }
               value = nextProp;
               // This is handled by updateSelect below.
               break;
             }
             case 'defaultValue': {
+              if (nextProp !== lastProp) {
+                trackHostMutation();
+              }
               defaultValue = nextProp;
               break;
             }
             case 'multiple': {
+              if (nextProp !== lastProp) {
+                trackHostMutation();
+              }
               multiple = nextProp;
               // TODO: Just move the special case in here from setProp.
             }
@@ -1635,11 +1678,17 @@ export function updateProperties(
         ) {
           switch (propKey) {
             case 'value': {
+              if (nextProp !== lastProp) {
+                trackHostMutation();
+              }
               value = nextProp;
               // This is handled by updateTextarea below.
               break;
             }
             case 'defaultValue': {
+              if (nextProp !== lastProp) {
+                trackHostMutation();
+              }
               defaultValue = nextProp;
               break;
             }
@@ -1703,6 +1752,9 @@ export function updateProperties(
         ) {
           switch (propKey) {
             case 'selected': {
+              if (nextProp !== lastProp) {
+                trackHostMutation();
+              }
               // TODO: Remove support for selected on option.
               (domElement: any).selected =
                 nextProp &&
