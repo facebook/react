@@ -1099,6 +1099,7 @@ export function hasInstanceAffectedParent(
 export function startViewTransition(
   rootContainer: Container,
   mutationCallback: () => void,
+  afterMutationCallback: () => void,
   layoutCallback: () => void,
   passiveCallback: () => mixed,
 ): boolean {
@@ -1111,7 +1112,11 @@ export function startViewTransition(
     return false;
   }
   // $FlowFixMe[incompatible-use]
-  const transition = ownerDocument.startViewTransition(mutationCallback);
+  const transition = ownerDocument.startViewTransition(() => {
+    mutationCallback();
+    // TODO: Wait for fonts.
+    afterMutationCallback();
+  });
   transition.ready.then(layoutCallback, layoutCallback);
   transition.finished.then(passiveCallback);
   return true;

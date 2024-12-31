@@ -2574,6 +2574,119 @@ function resetFormOnFiber(fiber: Fiber) {
   }
 }
 
+export function commitAfterMutationEffects(
+  root: FiberRoot,
+  finishedWork: Fiber,
+  committedLanes: Lanes,
+): void {
+  if (!enableViewTransition) {
+    // This phase is only used for view transitions.
+    return;
+  }
+  commitAfterMutationEffectsOnFiber(finishedWork, root, committedLanes);
+}
+
+function recursivelyTraverseAfterMutationEffects(
+  root: FiberRoot,
+  parentFiber: Fiber,
+  lanes: Lanes,
+) {
+  // We need to visit the same nodes that we visited in the before mutation phase.
+  if (parentFiber.subtreeFlags & BeforeMutationTransitionMask) {
+    let child = parentFiber.child;
+    while (child !== null) {
+      commitAfterMutationEffectsOnFiber(child, root, lanes);
+      child = child.sibling;
+    }
+  } else {
+    // TODO: Visit nested ViewTransitions.
+  }
+}
+
+function commitAfterMutationEffectsOnFiber(
+  finishedWork: Fiber,
+  root: FiberRoot,
+  lanes: Lanes,
+) {
+  switch (finishedWork.tag) {
+    case HostRoot: {
+      recursivelyTraverseAfterMutationEffects(root, finishedWork, lanes);
+      // TODO: Reset the document transition if not needed.
+      break;
+    }
+    case HostComponent: {
+      recursivelyTraverseAfterMutationEffects(root, finishedWork, lanes);
+      break;
+    }
+    case OffscreenComponent: {
+      const current = finishedWork.alternate;
+      const isModernRoot =
+        disableLegacyMode || (finishedWork.mode & ConcurrentMode) !== NoMode;
+      if (isModernRoot) {
+        const isHidden = finishedWork.memoizedState !== null;
+        if (isHidden) {
+          // The Offscreen tree is hidden. Skip over its after mutation effects.
+        } else {
+          // The Offscreen tree is visible.
+          const wasHidden = current !== null && current.memoizedState !== null;
+          if (wasHidden) {
+            // If it was previous hidden then the children are treated as enter
+            // not updates so we don't need to visit these children.
+          } else {
+            recursivelyTraverseAfterMutationEffects(root, finishedWork, lanes);
+          }
+        }
+      } else {
+        recursivelyTraverseAfterMutationEffects(root, finishedWork, lanes);
+      }
+      break;
+    }
+    case ViewTransitionComponent: {
+      const current = finishedWork.alternate;
+      if (current === null) {
+        // This is a new mount. We should have handled this as part of the
+        // Placement effect or it is deeper inside a entering transition.
+      } else if (
+        (finishedWork.subtreeFlags &
+          (Placement | Update | ChildDeletion | ContentReset | Visibility)) !==
+        NoFlags
+      ) {
+        const prevContextChanged = viewTransitionContextChanged;
+        viewTransitionContextChanged = false;
+        recursivelyTraverseAfterMutationEffects(root, finishedWork, lanes);
+
+        // TODO: Measure the new tree.
+        const updatedSelf = false;
+        const updatedParent = false;
+
+        if ((finishedWork.flags & Update) !== NoFlags) {
+          // This was updated by mutations so we know we have to update this one.
+        } else if (updatedSelf || viewTransitionContextChanged) {
+          // This was updated by change in layout.
+          finishedWork.flags |= Update;
+        } else {
+          // This ViewTransition boundary was unchanged. We can cancel its transition.
+          // TODO: Restore view-transition-name and cancel the old animation.
+        }
+
+        if (updatedParent) {
+          // This boundary changed size in a way that may have caused its parent to
+          // relayout. We need to bubble this information up to the parent.
+          viewTransitionContextChanged = true;
+        } else {
+          // Otherwise, we restore it to whatever the parent had found so far.
+          viewTransitionContextChanged = prevContextChanged;
+        }
+      }
+      break;
+    }
+    default: {
+      recursivelyTraverseAfterMutationEffects(root, finishedWork, lanes);
+      break;
+    }
+  }
+}
+
 export function commitLayoutEffects(
   finishedWork: Fiber,
   root: FiberRoot,

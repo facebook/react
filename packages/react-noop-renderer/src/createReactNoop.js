@@ -764,6 +764,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         startViewTransition(
           rootContainer: Container,
           mutationCallback: () => void,
+          afterMutationCallback: () => void,
           layoutCallback: () => void,
           passiveCallback: () => mixed,
         ): boolean {
