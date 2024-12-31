@@ -202,6 +202,7 @@ import {
 import {
   commitBeforeMutationEffects,
   shouldFireAfterActiveInstanceBlur,
+  commitAfterMutationEffects,
   commitLayoutEffects,
   commitMutationEffects,
   commitPassiveMountEffects,
@@ -628,9 +629,10 @@ const THROTTLED_COMMIT = 2;
 
 const NO_PENDING_EFFECTS = 0;
 const PENDING_MUTATION_PHASE = 1;
-const PENDING_LAYOUT_PHASE = 2;
-const PENDING_PASSIVE_PHASE = 3;
-let pendingEffectsStatus: 0 | 1 | 2 | 3 = 0;
+const PENDING_AFTER_MUTATION_PHASE = 2;
+const PENDING_LAYOUT_PHASE = 3;
+const PENDING_PASSIVE_PHASE = 4;
+let pendingEffectsStatus: 0 | 1 | 2 | 3 | 4 = 0;
 let pendingEffectsRoot: FiberRoot = (null: any);
 let pendingFinishedWork: Fiber = (null: any);
 let pendingEffectsLanes: Lanes = NoLanes;
@@ -3383,6 +3385,7 @@ function commitRoot(
     startViewTransition(
       root.containerInfo,
       flushMutationEffects,
+      flushAfterMutationEffects,
       flushLayoutEffects,
       // TODO: This flushes passive effects at the end of the transition but
       // we also schedule work to flush them separately which we really shouldn't.
@@ -3392,8 +3395,22 @@ function commitRoot(
   if (!startedViewTransition) {
     // Flush synchronously.
     flushMutationEffects();
+    // Skip flushAfterMutationEffects
+    pendingEffectsStatus = PENDING_LAYOUT_PHASE;
     flushLayoutEffects();
   }
+}
+
+function flushAfterMutationEffects(): void {
+  if (pendingEffectsStatus !== PENDING_AFTER_MUTATION_PHASE) {
+    return;
+  }
+  pendingEffectsStatus = NO_PENDING_EFFECTS;
+  const root = pendingEffectsRoot;
+  const finishedWork = pendingFinishedWork;
+  const lanes = pendingEffectsLanes;
+  commitAfterMutationEffects(root, finishedWork, lanes);
+  pendingEffectsStatus = PENDING_LAYOUT_PHASE;
 }
 
 function flushMutationEffects(): void {
@@ -3439,7 +3456,7 @@ function flushMutationEffects(): void {
   // componentWillUnmount, but before the layout phase, so that the finished
   // work is current during componentDidMount/Update.
   root.current = finishedWork;
-  pendingEffectsStatus = PENDING_LAYOUT_PHASE;
+  pendingEffectsStatus = PENDING_AFTER_MUTATION_PHASE;
 }
 
 function flushLayoutEffects(): void {
@@ -3726,6 +3743,7 @@ export function flushPendingEffects(wasDelayedCommit?: boolean): boolean {
   // Returns whether passive effects were flushed.
   flushMutationEffects();
   flushLayoutEffects();
+  flushAfterMutationEffects();
   return flushPassiveEffects(wasDelayedCommit);
 }
 
