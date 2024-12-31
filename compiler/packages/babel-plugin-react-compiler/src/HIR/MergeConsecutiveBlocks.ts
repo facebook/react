@@ -101,8 +101,19 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
 
     predecessor.instructions.push(...block.instructions);
     predecessor.terminal = block.terminal;
+    const needMergeBlockId = block.id;
     merged.merge(block.id, predecessorId);
     fn.body.blocks.delete(block.id);
+    //after merge the block, the phi node of the sucessor need to fix.
+    for(const [,block] of fn.body.blocks){
+      if(!block.preds.has(needMergeBlockId) || block.phis.size == 0) continue;
+      for(const phi of block.phis){
+        const place = phi.operands.get(needMergeBlockId);
+        if(!place) continue;
+        phi.operands.delete(needMergeBlockId);
+        phi.operands.set(predecessorId, place)
+      }
+    }
   }
   markPredecessors(fn.body);
   for (const [, {terminal}] of fn.body.blocks) {
