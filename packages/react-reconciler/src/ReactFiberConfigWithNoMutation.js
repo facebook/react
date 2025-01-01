@@ -37,6 +37,7 @@ export const unhideTextInstance = shim;
 export const clearContainer = shim;
 export const applyViewTransitionName = shim;
 export const restoreViewTransitionName = shim;
+export const cancelViewTransitionName = shim;
 export type InstanceMeasurement = null;
 export const measureInstance = shim;
 export const isInstanceInViewport = shim;

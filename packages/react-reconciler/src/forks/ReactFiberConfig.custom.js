@@ -131,6 +131,7 @@ export const unhideInstance = $$$config.unhideInstance;
 export const unhideTextInstance = $$$config.unhideTextInstance;
 export const applyViewTransitionName = $$$config.applyViewTransitionName;
 export const restoreViewTransitionName = $$$config.restoreViewTransitionName;
+export const cancelViewTransitionName = $$$config.cancelViewTransitionName;
 export const measureInstance = $$$config.measureInstance;
 export const isInstanceInViewport = $$$config.isInstanceInViewport;
 export const hasInstanceChanged = $$$config.hasInstanceChanged;

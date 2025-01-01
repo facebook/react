@@ -46,6 +46,7 @@ export const ScheduleRetry = StoreConsistency;
 export const ShouldSuspendCommit = Visibility;
 export const DidDefer = ContentReset;
 export const FormReset = Snapshot;
+export const AffectedParentLayout = ContentReset;
 
 export const LifecycleEffectMask =
   Passive | Update | Callback | Ref | Snapshot | StoreConsistency;

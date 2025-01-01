@@ -15,6 +15,7 @@ import type {
   HoistableRoot,
   FormInstance,
   InstanceMeasurement,
+  Props,
 } from './ReactFiberConfig';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
@@ -108,6 +109,7 @@ import {
   ForceClientRender,
   DidCapture,
   ViewTransitionStatic,
+  AffectedParentLayout,
 } from './ReactFiberFlags';
 import {
   commitStartTime,
@@ -159,7 +161,10 @@ import {
   registerSuspenseInstanceRetry,
   applyViewTransitionName,
   restoreViewTransitionName,
+  cancelViewTransitionName,
   measureInstance,
+  hasInstanceChanged,
+  hasInstanceAffectedParent,
 } from './ReactFiberConfig';
 import {
   captureCommitPhaseError,
@@ -257,6 +262,14 @@ let focusedInstanceHandle: null | Fiber = null;
 export let shouldFireAfterActiveInstanceBlur: boolean = false;
 
 export let shouldStartViewTransition: boolean = false;
+
+// Used during the commit phase to track whether a parent ViewTransition component
+// might have been affected by any mutations / relayouts below.
+let viewTransitionContextChanged: boolean = false;
+// We can't cancel view transition children until we know that their parent also
+// don't need to transition.
+let viewTransitionCancelableChildren: null | Array<Instance | string | Props> =
+  null; // tupled array where each entry is [instance: Instance, oldName: string, props: Props]
 
 export function commitBeforeMutationEffects(
   root: FiberRoot,
@@ -715,6 +728,130 @@ function restoreNestedViewTransitions(changedParent: Fiber): void {
       restoreViewTransitionOnHostInstances(child.child, false);
     } else if ((child.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
       restoreNestedViewTransitions(child);
+    }
+    child = child.sibling;
+  }
+}
+
+function measureViewTransitionHostInstances(
+  currentViewTransition: Fiber,
+  parentViewTransition: Fiber,
+  child: null | Fiber,
+  previousMeasurements: null | Array<InstanceMeasurement>,
+  stopAtNestedViewTransitions: boolean,
+): void {
+  if (!supportsMutation) {
+    return;
+  }
+  while (child !== null) {
+    if (child.tag === HostComponent) {
+      const instance: Instance = child.stateNode;
+      if (
+        previousMeasurements !== null &&
+        viewTransitionHostInstanceIdx < previousMeasurements.length
+      ) {
+        // The previous measurement of the Instance in this location within the ViewTransition.
+        // Note that this might not be the same exact Instance if the Instances within the
+        // ViewTransition changed.
+        const previousMeasurement =
+          previousMeasurements[viewTransitionHostInstanceIdx];
+        const nextMeasurement = measureInstance(instance);
+        if (
+          (parentViewTransition.flags & Update) === NoFlags &&
+          !hasInstanceChanged(previousMeasurement, nextMeasurement)
+        ) {
+          // It turns out that we had no other deeper mutations, the child transitions didn't
+          // affect the parent layout and this instance hasn't changed size. So we can skip
+          // animating it. However, in the current model this only works if the parent also
+          // doesn't animate. So we have to queue these and wait until we complete the parent
+          // to cancel them.
+          const oldName = getViewTransitionName(currentViewTransition.memoizedProps, currentViewTransition.stateNode);
+          if (viewTransitionCancelableChildren === null) {
+            viewTransitionCancelableChildren = [];
+          }
+          viewTransitionCancelableChildren.push(
+            instance,
+            oldName,
+            child.memoizedProps,
+          );
+        } else {
+          parentViewTransition.flags |= Update;
+        }
+        if (hasInstanceAffectedParent(previousMeasurement, nextMeasurement)) {
+          // If this instance size within its parent has changed it might have caused the
+          // parent to relayout which needs a cross fade.
+          parentViewTransition.flags |= AffectedParentLayout;
+        }
+      }
+      viewTransitionHostInstanceIdx++;
+    } else if (
+      child.tag === OffscreenComponent &&
+      child.memoizedState !== null
+    ) {
+      // Skip any hidden subtrees. They were or are effectively not there.
+    } else if (
+      child.tag === ViewTransitionComponent &&
+      stopAtNestedViewTransitions
+    ) {
+      // Skip any nested view transitions for updates since in that case the
+      // inner most one is the one that handles the update.
+      // If this inner boundary resized we need to bubble that information up.
+      parentViewTransition.flags |= child.flags & AffectedParentLayout;
+    } else {
+      measureViewTransitionHostInstances(
+        currentViewTransition,
+        parentViewTransition,
+        child.child,
+        previousMeasurements,
+        stopAtNestedViewTransitions,
+      );
+    }
+    child = child.sibling;
+  }
+}
+
+function measureUpdateViewTransition(
+  current: Fiber,
+  finishedWork: Fiber,
+): void {
+  // If nothing changed due to a mutation, or children changing size
+  // and the measurements end up unchanged, we should restore it to not animate.
+  viewTransitionHostInstanceIdx = 0;
+  const previousMeasurements = finishedWork.memoizedState;
+  measureViewTransitionHostInstances(
+    current,
+    finishedWork,
+    finishedWork.child,
+    previousMeasurements,
+    true,
+  );
+  const previousCount =
+    previousMeasurements === null ? 0 : previousMeasurements.length;
+  if (viewTransitionHostInstanceIdx !== previousCount) {
+    // If we found a different number of child DOM nodes we need to assume that
+    // the parent layout may have changed as a result. This is not necessarily
+    // true if those nodes were absolutely positioned.
+    finishedWork.flags |= AffectedParentLayout;
+  }
+}
+
+function measureNestedViewTransitions(changedParent: Fiber): void {
+  let child = changedParent.child;
+  while (child !== null) {
+    if (child.tag === ViewTransitionComponent) {
+      const current = child.alternate;
+      if (current !== null) {
+        viewTransitionHostInstanceIdx = 0;
+        measureViewTransitionHostInstances(
+          current,
+          child,
+          child.child,
+          child.memoizedState,
+          false,
+        );
+      }
+    } else if ((child.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
+      measureNestedViewTransitions(child);
     }
     child = child.sibling;
   }
@@ -2599,7 +2736,15 @@ function recursivelyTraverseAfterMutationEffects(
       child = child.sibling;
     }
   } else {
-    // TODO: Visit nested ViewTransitions.
+    // Nothing has changed in this subtree, but the parent may have still affected
+    // its size and position. We need to measure this and if not, restore it to
+    // not animate.
+    measureNestedViewTransitions(parentFiber);
+    if ((parentFiber.flags & AffectedParentLayout) !== NoFlags) {
+      // This boundary changed size in a way that may have caused its parent to
+      // relayout. We need to bubble this information up to the parent.
+      viewTransitionContextChanged = true;
+    }
   }
 }
 
@@ -2610,8 +2755,26 @@ function commitAfterMutationEffectsOnFiber(
 ) {
   switch (finishedWork.tag) {
     case HostRoot: {
+      viewTransitionContextChanged = false;
+      viewTransitionCancelableChildren = null;
       recursivelyTraverseAfterMutationEffects(root, finishedWork, lanes);
-      // TODO: Reset the document transition if not needed.
+      if (!viewTransitionContextChanged) {
+        // If we didn't leak any resizing out to the root, we don't have to transition
+        // the root itself. This means that we can now safely cancel any cancellations
+        // that bubbled all the way up.
+        const cancelableChildren = viewTransitionCancelableChildren;
+        viewTransitionCancelableChildren = null;
+        if (cancelableChildren !== null) {
+          for (let i = 0; i < cancelableChildren.length; i += 3) {
+            cancelViewTransitionName(
+              ((cancelableChildren[i]: any): Instance),
+              ((cancelableChildren[i + 1]: any): string),
+              ((cancelableChildren[i + 2]: any): Props),
+            );
+          }
+        }
+        // TODO: Reset the document transition if not needed.
+      }
       break;
     }
     case HostComponent: {
@@ -2652,24 +2815,37 @@ function commitAfterMutationEffectsOnFiber(
         NoFlags
       ) {
         const prevContextChanged = viewTransitionContextChanged;
+        const prevCancelableChildren = viewTransitionCancelableChildren;
         viewTransitionContextChanged = false;
+        viewTransitionCancelableChildren = null;
         recursivelyTraverseAfterMutationEffects(root, finishedWork, lanes);
 
-        // TODO: Measure the new tree.
-        const updatedSelf = false;
-        const updatedParent = false;
-
-        if ((finishedWork.flags & Update) !== NoFlags) {
-          // This was updated by mutations so we know we have to update this one.
-        } else if (updatedSelf || viewTransitionContextChanged) {
-          // This was updated by change in layout.
+        if (viewTransitionContextChanged) {
           finishedWork.flags |= Update;
-        } else {
-          // This ViewTransition boundary was unchanged. We can cancel its transition.
-          // TODO: Restore view-transition-name and cancel the old animation.
         }
 
-        if (updatedParent) {
+        measureUpdateViewTransition(current, finishedWork);
+
+        if ((finishedWork.flags & Update) === NoFlags) {
+          // If this boundary didn't update, then we may be able to cancel its children.
+          // We bubble them up to the parent set to be determined later if we can cancel.
+          if (prevCancelableChildren === null) {
+            // Bubbling up this whole set to the parent.
+          } else {
+            // Merge with parent set.
+            // $FlowFixMe[method-unbinding]
+            prevCancelableChildren.push.apply(
+              prevCancelableChildren,
+              viewTransitionCancelableChildren,
+            );
+            viewTransitionCancelableChildren = prevCancelableChildren;
+          }
+        } else {
+          // If this boundary did update, we cannot cancel its children so those are dropped.
+          viewTransitionCancelableChildren = prevCancelableChildren;
+        }
+
+        if ((finishedWork.flags & AffectedParentLayout) !== NoFlags) {
           // This boundary changed size in a way that may have caused its parent to
           // relayout. We need to bubble this information up to the parent.
           viewTransitionContextChanged = true;

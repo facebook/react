@@ -736,6 +736,12 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
         restoreViewTransitionName(instance: Instance, props: Props): void {},
 
+        cancelViewTransitionName(
+          instance: Instance,
+          name: string,
+          props: Props,
+        ): void {},
+
         measureInstance(instance: Instance): InstanceMeasurement {
           return null;
         },
