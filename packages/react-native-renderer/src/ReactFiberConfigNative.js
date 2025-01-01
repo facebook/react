@@ -536,6 +536,14 @@ export function restoreViewTransitionName(
   // Not yet implemented
 }
 
+export function cancelViewTransitionName(
+  instance: Instance,
+  name: string,
+  props: Props,
+): void {
+  // Not yet implemented
+}
+
 export type InstanceMeasurement = null;
 
 export function measureInstance(instance: Instance): InstanceMeasurement {

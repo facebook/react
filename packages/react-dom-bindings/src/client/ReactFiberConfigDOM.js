@@ -1016,6 +1016,31 @@ export function restoreViewTransitionName(
         ('' + viewTransitionName).trim();
 }
 
+export function cancelViewTransitionName(
+  instance: Instance,
+  oldName: string,
+  props: Props,
+): void {
+  // To cancel the "new" state and paint this instance as part of the parent, all we have to do
+  // is remove the view-transition-name before we exit startViewTransition.
+  restoreViewTransitionName(instance, props);
+  // There isn't a way to cancel an "old" state but what we can do is hide it by animating it.
+  // Since it is already removed from the old state of the parent, this technique only works
+  // if the parent also isn't transitioning. Therefore we should only cancel the root most
+  // ViewTransitions.
+  const documentElement = instance.ownerDocument.documentElement;
+  if (documentElement !== null) {
+    documentElement.animate(
+      {opacity: [0, 0]},
+      {
+        duration: 0,
+        fill: 'forwards',
+        pseudoElement: '::view-transition-group(' + oldName + ')',
+      },
+    );
+  }
+}
+
 export type InstanceMeasurement = {
   rect: ClientRect | DOMRect,
   abs: boolean, // is absolutely positioned

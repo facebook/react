@@ -463,6 +463,10 @@ export function restoreViewTransitionName(instance, props) {
   // Noop
 }
 
+export function cancelViewTransitionName(instance, name, props) {
+  // Noop
+}
+
 export type InstanceMeasurement = null;
 
 export function measureInstance(instance) {
