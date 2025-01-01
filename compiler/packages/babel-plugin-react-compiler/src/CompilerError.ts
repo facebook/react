@@ -36,6 +36,10 @@ export enum ErrorSeverity {
    * the compiler.
    */
   Invariant = 'Invariant',
+  /**
+   * A new type of error for demonstration purposes.
+   */
+  NewErrorType = 'NewErrorType',
 }
 
 export enum CompilerSuggestionOperation {
@@ -179,6 +183,19 @@ export class CompilerError extends Error {
     throw errors;
   }
 
+  static throwNewErrorType(
+    options: Omit<CompilerErrorDetailOptions, 'severity'>,
+  ): never {
+    const errors = new CompilerError();
+    errors.pushErrorDetail(
+      new CompilerErrorDetail({
+        ...options,
+        severity: ErrorSeverity.NewErrorType,
+      }),
+    );
+    throw errors;
+  }
+
   static throw(options: CompilerErrorDetailOptions): never {
     const errors = new CompilerError();
     errors.pushErrorDetail(new CompilerErrorDetail(options));
@@ -232,6 +249,7 @@ export class CompilerError extends Error {
         case ErrorSeverity.InvalidJS:
         case ErrorSeverity.InvalidReact:
         case ErrorSeverity.InvalidConfig:
+        case ErrorSeverity.NewErrorType:
           return true;
         case ErrorSeverity.CannotPreserveMemoization:
         case ErrorSeverity.Todo:
