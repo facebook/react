@@ -104,6 +104,17 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
     merged.merge(block.id, predecessorId);
     fn.body.blocks.delete(block.id);
   }
+  for (const [, block] of fn.body.blocks) {
+    for (const phi of block.phis) {
+      for (const [predecessorId, operand] of phi.operands) {
+        const mapped = merged.get(predecessorId);
+        if (mapped !== predecessorId) {
+          phi.operands.delete(predecessorId);
+          phi.operands.set(mapped, operand);
+        }
+      }
+    }
+  }
   markPredecessors(fn.body);
   for (const [, {terminal}] of fn.body.blocks) {
     if (terminalHasFallthrough(terminal)) {
