@@ -29,6 +29,7 @@ const DEV_ROLLUP_CONFIG = {
     file: 'dist/index.js',
     format: 'cjs',
     sourcemap: false,
+    inlineDynamicImports: true,
   },
   treeshake: {
     moduleSideEffects: false,

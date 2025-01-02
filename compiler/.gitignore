@@ -22,3 +22,7 @@ dist
 testfilter.txt
 
 bundle-oss.sh
+
+# forgive
+*.vsix
+.vscode-test
