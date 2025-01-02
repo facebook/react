@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<5a9efa6679c293785a4471b9e4b92995>>
+ * @generated SignedSource<<07a89024be5e19bbbbde81939f947916>>
  */
 
 "use strict";
@@ -2570,8 +2570,7 @@ function ensureRootIsScheduled(root) {
       : (lastScheduledRoot = lastScheduledRoot.next = root));
   mightHavePendingSyncWork = !0;
   didScheduleMicrotask ||
-    ((didScheduleMicrotask = !0),
-    scheduleImmediateTask(processRootScheduleInMicrotask));
+    ((didScheduleMicrotask = !0), scheduleImmediateRootScheduleTask());
 }
 function flushSyncWorkAcrossRoots_impl(syncTransitionLanes, onlyLegacy) {
   if (!isFlushingWork && mightHavePendingSyncWork) {
@@ -2615,6 +2614,9 @@ function flushSyncWorkAcrossRoots_impl(syncTransitionLanes, onlyLegacy) {
     } while (didPerformSomeWork);
     isFlushingWork = !1;
   }
+}
+function processRootScheduleInImmediateTask() {
+  processRootScheduleInMicrotask();
 }
 function processRootScheduleInMicrotask() {
   mightHavePendingSyncWork = didScheduleMicrotask = !1;
@@ -2731,14 +2733,17 @@ function performSyncWorkOnRoot(root, lanes) {
   nestedUpdateScheduled = !1;
   performWorkOnRoot(root, lanes, !0);
 }
-function scheduleImmediateTask(cb) {
+function scheduleImmediateRootScheduleTask() {
   supportsMicrotasks
     ? scheduleMicrotask(function () {
         0 !== (executionContext & 6)
-          ? scheduleCallback$3(ImmediatePriority, cb)
-          : cb();
+          ? scheduleCallback$3(
+              ImmediatePriority,
+              processRootScheduleInImmediateTask
+            )
+          : processRootScheduleInMicrotask();
       })
-    : scheduleCallback$3(ImmediatePriority, cb);
+    : scheduleCallback$3(ImmediatePriority, processRootScheduleInImmediateTask);
 }
 function requestTransitionLane() {
   0 === currentEventTransitionLane &&
@@ -11774,10 +11779,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1303 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-fe21c947-20250102",
+    version: "19.1.0-native-fb-1e9eb95d-20250102",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-fe21c947-20250102"
+    reconcilerVersion: "19.1.0-native-fb-1e9eb95d-20250102"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1303.rendererConfig = extraDevToolsConfig);

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ce331800debd4cccf8ee02aee83ef1d7>>
+ * @generated SignedSource<<bba45fef0b21b0c779f83cf42d706314>>
  */
 
 "use strict";
@@ -2056,11 +2056,9 @@ __DEV__ &&
       mightHavePendingSyncWork = !0;
       null !== ReactSharedInternals.actQueue
         ? didScheduleMicrotask_act ||
-          ((didScheduleMicrotask_act = !0),
-          scheduleImmediateTask(processRootScheduleInMicrotask))
+          ((didScheduleMicrotask_act = !0), scheduleImmediateRootScheduleTask())
         : didScheduleMicrotask ||
-          ((didScheduleMicrotask = !0),
-          scheduleImmediateTask(processRootScheduleInMicrotask));
+          ((didScheduleMicrotask = !0), scheduleImmediateRootScheduleTask());
       ReactSharedInternals.isBatchingLegacy &&
         0 === root.tag &&
         (ReactSharedInternals.didScheduleLegacyUpdate = !0);
@@ -2106,6 +2104,9 @@ __DEV__ &&
         } while (didPerformSomeWork);
         isFlushingWork = !1;
       }
+    }
+    function processRootScheduleInImmediateTask() {
+      processRootScheduleInMicrotask();
     }
     function processRootScheduleInMicrotask() {
       mightHavePendingSyncWork =
@@ -2241,13 +2242,13 @@ __DEV__ &&
         null !== callbackNode &&
         cancelCallback$1(callbackNode);
     }
-    function scheduleImmediateTask(cb) {
+    function scheduleImmediateRootScheduleTask() {
       null !== ReactSharedInternals.actQueue &&
         ReactSharedInternals.actQueue.push(function () {
-          cb();
+          processRootScheduleInMicrotask();
           return null;
         });
-      scheduleCallback$3(ImmediatePriority, cb);
+      scheduleCallback$3(ImmediatePriority, processRootScheduleInImmediateTask);
     }
     function requestTransitionLane() {
       0 === currentEventTransitionLane &&
@@ -15581,10 +15582,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-fe21c947-20250102",
+        version: "19.1.0-native-fb-1e9eb95d-20250102",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-fe21c947-20250102"
+        reconcilerVersion: "19.1.0-native-fb-1e9eb95d-20250102"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15729,5 +15730,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.1.0-native-fb-fe21c947-20250102";
+    exports.version = "19.1.0-native-fb-1e9eb95d-20250102";
   })();

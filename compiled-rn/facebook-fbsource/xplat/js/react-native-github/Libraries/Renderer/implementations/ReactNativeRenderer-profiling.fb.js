@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8080a3f62bcd4c78a7b04ba11a1a7cb3>>
+ * @generated SignedSource<<147a51f0531cdd8b58298e819fd00f1c>>
  */
 
 "use strict";
@@ -2875,7 +2875,7 @@ function ensureRootIsScheduled(root) {
   mightHavePendingSyncWork = !0;
   didScheduleMicrotask ||
     ((didScheduleMicrotask = !0),
-    scheduleCallback$3(ImmediatePriority, processRootScheduleInMicrotask));
+    scheduleCallback$3(ImmediatePriority, processRootScheduleInImmediateTask));
 }
 function flushSyncWorkAcrossRoots_impl(syncTransitionLanes, onlyLegacy) {
   if (!isFlushingWork && mightHavePendingSyncWork) {
@@ -2920,7 +2920,7 @@ function flushSyncWorkAcrossRoots_impl(syncTransitionLanes, onlyLegacy) {
     isFlushingWork = !1;
   }
 }
-function processRootScheduleInMicrotask() {
+function processRootScheduleInImmediateTask() {
   mightHavePendingSyncWork = didScheduleMicrotask = !1;
   0 !== currentEventTransitionLane && (currentEventTransitionLane = 0);
   for (
@@ -11905,11 +11905,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.1.0-native-fb-fe21c947-20250102" !== isomorphicReactPackageVersion)
+if ("19.1.0-native-fb-1e9eb95d-20250102" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.1.0-native-fb-fe21c947-20250102\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.1.0-native-fb-1e9eb95d-20250102\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11956,16 +11956,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1369 = {
+  internals$jscomp$inline_1375 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-fe21c947-20250102",
+    version: "19.1.0-native-fb-1e9eb95d-20250102",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-fe21c947-20250102"
+    reconcilerVersion: "19.1.0-native-fb-1e9eb95d-20250102"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1369.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1369.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1375.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1375.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$159 = 0;
     31 > index$159;
@@ -11977,20 +11977,20 @@ internals$jscomp$inline_1369.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1369.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1375.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1672 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1678 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1672.isDisabled &&
-    hook$jscomp$inline_1672.supportsFiber
+    !hook$jscomp$inline_1678.isDisabled &&
+    hook$jscomp$inline_1678.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1672.inject(
-        internals$jscomp$inline_1369
+      (rendererID = hook$jscomp$inline_1678.inject(
+        internals$jscomp$inline_1375
       )),
-        (injectedHook = hook$jscomp$inline_1672);
+        (injectedHook = hook$jscomp$inline_1678);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b95cce5ea3bdd0091b3e5c4c3b626bb4>>
+ * @generated SignedSource<<202ed9ba565483383e868612d7aff2f8>>
  */
 
 "use strict";
@@ -1170,7 +1170,7 @@ function ensureRootIsScheduled(root) {
   mightHavePendingSyncWork = !0;
   didScheduleMicrotask ||
     ((didScheduleMicrotask = !0),
-    scheduleCallback$3(ImmediatePriority, processRootScheduleInMicrotask));
+    scheduleCallback$3(ImmediatePriority, processRootScheduleInImmediateTask));
 }
 function flushSyncWorkAcrossRoots_impl(syncTransitionLanes, onlyLegacy) {
   if (!isFlushingWork && mightHavePendingSyncWork) {
@@ -1215,7 +1215,7 @@ function flushSyncWorkAcrossRoots_impl(syncTransitionLanes, onlyLegacy) {
     isFlushingWork = !1;
   }
 }
-function processRootScheduleInMicrotask() {
+function processRootScheduleInImmediateTask() {
   mightHavePendingSyncWork = didScheduleMicrotask = !1;
   0 !== currentEventTransitionLane && (currentEventTransitionLane = 0);
   for (
@@ -1275,36 +1275,39 @@ function scheduleTaskForRootDuringMicrotask(root, currentTime) {
       (root.callbackPriority = 0)
     );
   if (
-    0 === (suspendedLanes & 3) ||
-    checkIfRootIsPrerendering(root, suspendedLanes)
-  ) {
-    currentTime = suspendedLanes & -suspendedLanes;
-    if (currentTime === root.callbackPriority) return currentTime;
-    null !== pingedLanes && cancelCallback$1(pingedLanes);
-    switch (lanesToEventPriority(suspendedLanes)) {
-      case 2:
-      case 8:
-        suspendedLanes = UserBlockingPriority;
-        break;
-      case 32:
-        suspendedLanes = NormalPriority$1;
-        break;
-      case 268435456:
-        suspendedLanes = IdlePriority;
-        break;
-      default:
-        suspendedLanes = NormalPriority$1;
-    }
-    pingedLanes = performWorkOnRootViaSchedulerTask.bind(null, root);
-    suspendedLanes = scheduleCallback$3(suspendedLanes, pingedLanes);
-    root.callbackPriority = currentTime;
-    root.callbackNode = suspendedLanes;
-    return currentTime;
+    0 !== (suspendedLanes & 3) &&
+    !checkIfRootIsPrerendering(root, suspendedLanes)
+  )
+    return (
+      null !== pingedLanes &&
+        null !== pingedLanes &&
+        cancelCallback$1(pingedLanes),
+      (root.callbackPriority = 2),
+      (root.callbackNode = null),
+      2
+    );
+  currentTime = suspendedLanes & -suspendedLanes;
+  if (currentTime === root.callbackPriority) return currentTime;
+  null !== pingedLanes && cancelCallback$1(pingedLanes);
+  switch (lanesToEventPriority(suspendedLanes)) {
+    case 2:
+    case 8:
+      suspendedLanes = UserBlockingPriority;
+      break;
+    case 32:
+      suspendedLanes = NormalPriority$1;
+      break;
+    case 268435456:
+      suspendedLanes = IdlePriority;
+      break;
+    default:
+      suspendedLanes = NormalPriority$1;
   }
-  null !== pingedLanes && null !== pingedLanes && cancelCallback$1(pingedLanes);
-  root.callbackPriority = 2;
-  root.callbackNode = null;
-  return 2;
+  pingedLanes = performWorkOnRootViaSchedulerTask.bind(null, root);
+  suspendedLanes = scheduleCallback$3(suspendedLanes, pingedLanes);
+  root.callbackPriority = currentTime;
+  root.callbackNode = suspendedLanes;
+  return currentTime;
 }
 function performWorkOnRootViaSchedulerTask(root, didTimeout) {
   var originalCallbackNode = root.callbackNode;
@@ -9769,24 +9772,24 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var internals$jscomp$inline_1389 = {
+var internals$jscomp$inline_1395 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-fe21c947-20250102",
+  version: "19.1.0-native-fb-1e9eb95d-20250102",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-fe21c947-20250102"
+  reconcilerVersion: "19.1.0-native-fb-1e9eb95d-20250102"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1390 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1396 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1390.isDisabled &&
-    hook$jscomp$inline_1390.supportsFiber
+    !hook$jscomp$inline_1396.isDisabled &&
+    hook$jscomp$inline_1396.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1390.inject(
-        internals$jscomp$inline_1389
+      (rendererID = hook$jscomp$inline_1396.inject(
+        internals$jscomp$inline_1395
       )),
-        (injectedHook = hook$jscomp$inline_1390);
+        (injectedHook = hook$jscomp$inline_1396);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
@@ -9910,4 +9913,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.1.0-native-fb-fe21c947-20250102";
+exports.version = "19.1.0-native-fb-1e9eb95d-20250102";

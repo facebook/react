@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<dbc2c81ac1d7d782c6891f1c81cbcf8f>>
+ * @generated SignedSource<<6f78761dd26a64df0e1a514ff908d403>>
  */
 
 "use strict";
@@ -2990,11 +2990,9 @@ __DEV__ &&
       mightHavePendingSyncWork = !0;
       null !== ReactSharedInternals.actQueue
         ? didScheduleMicrotask_act ||
-          ((didScheduleMicrotask_act = !0),
-          scheduleImmediateTask(processRootScheduleInMicrotask))
+          ((didScheduleMicrotask_act = !0), scheduleImmediateRootScheduleTask())
         : didScheduleMicrotask ||
-          ((didScheduleMicrotask = !0),
-          scheduleImmediateTask(processRootScheduleInMicrotask));
+          ((didScheduleMicrotask = !0), scheduleImmediateRootScheduleTask());
       ReactSharedInternals.isBatchingLegacy &&
         0 === root.tag &&
         (ReactSharedInternals.didScheduleLegacyUpdate = !0);
@@ -3040,6 +3038,9 @@ __DEV__ &&
         } while (didPerformSomeWork);
         isFlushingWork = !1;
       }
+    }
+    function processRootScheduleInImmediateTask() {
+      processRootScheduleInMicrotask();
     }
     function processRootScheduleInMicrotask() {
       mightHavePendingSyncWork =
@@ -3176,19 +3177,25 @@ __DEV__ &&
         null !== callbackNode &&
         cancelCallback$1(callbackNode);
     }
-    function scheduleImmediateTask(cb) {
+    function scheduleImmediateRootScheduleTask() {
       null !== ReactSharedInternals.actQueue &&
         ReactSharedInternals.actQueue.push(function () {
-          cb();
+          processRootScheduleInMicrotask();
           return null;
         });
       supportsMicrotasks
         ? scheduleMicrotask(function () {
             (executionContext & (RenderContext | CommitContext)) !== NoContext
-              ? scheduleCallback$3(ImmediatePriority, cb)
-              : cb();
+              ? scheduleCallback$3(
+                  ImmediatePriority,
+                  processRootScheduleInImmediateTask
+                )
+              : processRootScheduleInMicrotask();
           })
-        : scheduleCallback$3(ImmediatePriority, cb);
+        : scheduleCallback$3(
+            ImmediatePriority,
+            processRootScheduleInImmediateTask
+          );
     }
     function requestTransitionLane() {
       0 === currentEventTransitionLane &&
@@ -17454,10 +17461,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-fe21c947-20250102",
+        version: "19.1.0-native-fb-1e9eb95d-20250102",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-fe21c947-20250102"
+        reconcilerVersion: "19.1.0-native-fb-1e9eb95d-20250102"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

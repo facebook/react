@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<43983400eae098a271bfbb68d0221b36>>
+ * @generated SignedSource<<9621cf3ac6e6310fbade5dda88fb09bd>>
  */
 
 "use strict";
@@ -3225,11 +3225,9 @@ __DEV__ &&
       mightHavePendingSyncWork = !0;
       null !== ReactSharedInternals.actQueue
         ? didScheduleMicrotask_act ||
-          ((didScheduleMicrotask_act = !0),
-          scheduleImmediateTask(processRootScheduleInMicrotask))
+          ((didScheduleMicrotask_act = !0), scheduleImmediateRootScheduleTask())
         : didScheduleMicrotask ||
-          ((didScheduleMicrotask = !0),
-          scheduleImmediateTask(processRootScheduleInMicrotask));
+          ((didScheduleMicrotask = !0), scheduleImmediateRootScheduleTask());
       ReactSharedInternals.isBatchingLegacy &&
         0 === root.tag &&
         (ReactSharedInternals.didScheduleLegacyUpdate = !0);
@@ -3275,6 +3273,9 @@ __DEV__ &&
         } while (didPerformSomeWork);
         isFlushingWork = !1;
       }
+    }
+    function processRootScheduleInImmediateTask() {
+      processRootScheduleInMicrotask();
     }
     function processRootScheduleInMicrotask() {
       mightHavePendingSyncWork =
@@ -3411,13 +3412,13 @@ __DEV__ &&
         null !== callbackNode &&
         cancelCallback$1(callbackNode);
     }
-    function scheduleImmediateTask(cb) {
+    function scheduleImmediateRootScheduleTask() {
       null !== ReactSharedInternals.actQueue &&
         ReactSharedInternals.actQueue.push(function () {
-          cb();
+          processRootScheduleInMicrotask();
           return null;
         });
-      scheduleCallback$3(ImmediatePriority, cb);
+      scheduleCallback$3(ImmediatePriority, processRootScheduleInImmediateTask);
     }
     function requestTransitionLane() {
       0 === currentEventTransitionLane &&
@@ -17677,11 +17678,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.1.0-native-fb-fe21c947-20250102" !== isomorphicReactPackageVersion)
+    if ("19.1.0-native-fb-1e9eb95d-20250102" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.1.0-native-fb-fe21c947-20250102\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.1.0-native-fb-1e9eb95d-20250102\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17707,10 +17708,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-fe21c947-20250102",
+        version: "19.1.0-native-fb-1e9eb95d-20250102",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-fe21c947-20250102"
+        reconcilerVersion: "19.1.0-native-fb-1e9eb95d-20250102"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
