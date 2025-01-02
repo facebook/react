@@ -162,6 +162,8 @@ import {
   applyViewTransitionName,
   restoreViewTransitionName,
   cancelViewTransitionName,
+  cancelRootViewTransitionName,
+  restoreRootViewTransitionName,
   measureInstance,
   hasInstanceChanged,
   hasInstanceAffectedParent,
@@ -2773,7 +2775,8 @@ function commitAfterMutationEffectsOnFiber(
             );
           }
         }
-        // TODO: Reset the document transition if not needed.
+        // We also cancel the root itself.
+        cancelRootViewTransitionName(root.containerInfo);
       }
       break;
     }
@@ -3547,6 +3550,12 @@ function commitPassiveMountOnFiber(
 
       if (enableProfilerTimer && enableComponentPerformanceTrack) {
         inHydratedSubtree = wasInHydratedSubtree;
+      }
+
+      if (isViewTransitionEligible) {
+        if (supportsMutation) {
+          restoreRootViewTransitionName(finishedRoot.containerInfo);
+        }
       }
 
       if (flags & Passive) {

@@ -1031,13 +1031,66 @@ export function cancelViewTransitionName(
   const documentElement = instance.ownerDocument.documentElement;
   if (documentElement !== null) {
     documentElement.animate(
-      {opacity: [0, 0]},
+      {opacity: [0, 0], pointerEvents: ['none', 'none']},
       {
         duration: 0,
         fill: 'forwards',
         pseudoElement: '::view-transition-group(' + oldName + ')',
       },
     );
+  }
+}
+
+export function cancelRootViewTransitionName(rootContainer: Container): void {
+  const documentElement: null | HTMLElement =
+    rootContainer.nodeType === DOCUMENT_NODE
+      ? (rootContainer: any).documentElement
+      : rootContainer.ownerDocument.documentElement;
+  if (
+    documentElement !== null &&
+    // $FlowFixMe[prop-missing]
+    documentElement.style.viewTransitionName === ''
+  ) {
+    // $FlowFixMe[prop-missing]
+    documentElement.style.viewTransitionName = 'none';
+    documentElement.animate(
+      {opacity: [0, 0], pointerEvents: ['none', 'none']},
+      {
+        duration: 0,
+        fill: 'forwards',
+        pseudoElement: '::view-transition-group(root)',
+      },
+    );
+    // By default the root ::view-transition selector captures all pointer events,
+    // which means nothing gets interactive. We want to let whatever is not animating
+    // remain interactive during the transition. To do that, we set the size to nothing
+    // so that the transition doesn't capture any clicks. We don't set pointer-events
+    // on this one as that would apply to all running transitions. This lets animations
+    // that are running to block clicks so that they don't end up incorrectly hitting
+    // whatever is below the animation.
+    documentElement.animate(
+      {width: [0, 0], height: [0, 0]},
+      {
+        duration: 0,
+        fill: 'forwards',
+        pseudoElement: '::view-transition',
+      },
+    );
+  }
+}
+
+export function restoreRootViewTransitionName(rootContainer: Container): void {
+  const documentElement: null | HTMLElement =
+    rootContainer.nodeType === DOCUMENT_NODE
+      ? (rootContainer: any).documentElement
+      : rootContainer.ownerDocument.documentElement;
+  if (
+    documentElement !== null &&
+    // $FlowFixMe[prop-missing]
+    documentElement.style.viewTransitionName === 'none'
+  ) {
+    // $FlowFixMe[prop-missing]
+    documentElement.style.viewTransitionName = '';
   }
 }
 
