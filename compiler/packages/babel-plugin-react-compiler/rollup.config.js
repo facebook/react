@@ -24,6 +24,7 @@ const DEV_ROLLUP_CONFIG = {
     format: 'cjs',
     sourcemap: false,
     exports: 'named',
+    inlineDynamicImports: true,
   },
   plugins: [
     typescript({
