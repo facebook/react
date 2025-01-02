@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6d37a75da51449069beb6ffcb2f943e8>>
+ * @generated SignedSource<<e3a27af4207be49ebe3c5984d420fd3b>>
  */
 
 /*
@@ -8384,7 +8384,7 @@ function commitBeforeMutationEffects(root, firstChild) {
     if (
       ((firstChild = nextEffect),
       (root = firstChild.child),
-      0 !== (firstChild.subtreeFlags & 1028) && null !== root)
+      0 !== (firstChild.subtreeFlags & 1024) && null !== root)
     )
       (root.return = firstChild), (nextEffect = root);
     else
@@ -15916,14 +15916,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1728 = React.version;
 if (
-  "19.1.0-native-fb-0de1233f-20250102" !==
+  "19.1.0-native-fb-6ca7fbe8-20250102" !==
   isomorphicReactPackageVersion$jscomp$inline_1728
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1728,
-      "19.1.0-native-fb-0de1233f-20250102"
+      "19.1.0-native-fb-6ca7fbe8-20250102"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -15945,10 +15945,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2188 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-0de1233f-20250102",
+  version: "19.1.0-native-fb-6ca7fbe8-20250102",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-0de1233f-20250102"
+  reconcilerVersion: "19.1.0-native-fb-6ca7fbe8-20250102"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2189 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16208,4 +16208,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-native-fb-0de1233f-20250102";
+exports.version = "19.1.0-native-fb-6ca7fbe8-20250102";

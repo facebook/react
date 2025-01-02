@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c14429cd590875303100b804355e2770>>
+ * @generated SignedSource<<bb02c0e25e5696aae38922be711230b8>>
  */
 
 "use strict";
@@ -10576,7 +10576,7 @@ __DEV__ &&
         if (
           ((root = nextEffect),
           (firstChild = root.child),
-          0 !== (root.subtreeFlags & 1028) && null !== firstChild)
+          0 !== (root.subtreeFlags & 1024) && null !== firstChild)
         )
           (firstChild.return = root), (nextEffect = firstChild);
         else
@@ -17469,10 +17469,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-0de1233f-20250102",
+        version: "19.1.0-native-fb-6ca7fbe8-20250102",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-0de1233f-20250102"
+        reconcilerVersion: "19.1.0-native-fb-6ca7fbe8-20250102"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

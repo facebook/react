@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c0204d09feb3355565b8f865fe8bd4a1>>
+ * @generated SignedSource<<0cbfeccda70fd3a44da65fa3ae39ecc2>>
  */
 
 "use strict";
@@ -8140,7 +8140,7 @@ function commitBeforeMutationEffects(root, firstChild) {
     if (
       ((root = nextEffect),
       (firstChild = root.child),
-      0 !== (root.subtreeFlags & 1028) && null !== firstChild)
+      0 !== (root.subtreeFlags & 1024) && null !== firstChild)
     )
       (firstChild.return = root), (nextEffect = firstChild);
     else
@@ -11130,10 +11130,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1215 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-0de1233f-20250102",
+    version: "19.1.0-native-fb-6ca7fbe8-20250102",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-0de1233f-20250102"
+    reconcilerVersion: "19.1.0-native-fb-6ca7fbe8-20250102"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1215.rendererConfig = extraDevToolsConfig);
