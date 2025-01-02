@@ -1195,7 +1195,7 @@ function ensureRootIsScheduled(root) {
   mightHavePendingSyncWork = !0;
   didScheduleMicrotask ||
     ((didScheduleMicrotask = !0),
-    scheduleCallback$3(ImmediatePriority, processRootScheduleInMicrotask));
+    scheduleCallback$3(ImmediatePriority, processRootScheduleInImmediateTask));
   enableDeferRootSchedulingToMicrotask ||
     scheduleTaskForRootDuringMicrotask(root, now());
 }
@@ -1242,7 +1242,7 @@ function flushSyncWorkAcrossRoots_impl(syncTransitionLanes, onlyLegacy) {
     isFlushingWork = !1;
   }
 }
-function processRootScheduleInMicrotask() {
+function processRootScheduleInImmediateTask() {
   mightHavePendingSyncWork = didScheduleMicrotask = !1;
   0 !== currentEventTransitionLane && (currentEventTransitionLane = 0);
   for (
@@ -10493,24 +10493,24 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component);
-var internals$jscomp$inline_1480 = {
+var internals$jscomp$inline_1486 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-fe21c947-20250102",
+  version: "19.1.0-www-modern-1e9eb95d-20250102",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-fe21c947-20250102"
+  reconcilerVersion: "19.1.0-www-modern-1e9eb95d-20250102"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1481 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1487 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1481.isDisabled &&
-    hook$jscomp$inline_1481.supportsFiber
+    !hook$jscomp$inline_1487.isDisabled &&
+    hook$jscomp$inline_1487.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1481.inject(
-        internals$jscomp$inline_1480
+      (rendererID = hook$jscomp$inline_1487.inject(
+        internals$jscomp$inline_1486
       )),
-        (injectedHook = hook$jscomp$inline_1481);
+        (injectedHook = hook$jscomp$inline_1487);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
@@ -10524,4 +10524,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.1.0-www-modern-fe21c947-20250102";
+exports.version = "19.1.0-www-modern-1e9eb95d-20250102";
