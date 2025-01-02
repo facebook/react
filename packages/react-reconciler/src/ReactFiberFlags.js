@@ -67,10 +67,17 @@ export const Forked = /*                       */ 0b0000000000100000000000000000
 // This enables us to defer more work in the unmount case,
 // since we can defer traversing the tree during layout to look for Passive effects,
 // and instead rely on the static flag as a signal that there may be cleanup work.
+export const SnapshotStatic = /*               */ 0b0000000001000000000000000000000;
 export const LayoutStatic = /*                 */ 0b0000000010000000000000000000000;
 export const RefStatic = LayoutStatic;
 export const PassiveStatic = /*                */ 0b0000000100000000000000000000000;
 export const MaySuspendCommit = /*             */ 0b0000001000000000000000000000000;
+// ViewTransitionNamedStatic tracks explicitly name ViewTransition components deeply
+// that might need to be visited during clean up. This is similar to SnapshotStatic
+// if there was any other use for it.
+export const ViewTransitionNamedStatic = /*    */ SnapshotStatic;
+// ViewTransitionStatic tracks whether there are an ViewTransition components from
+// the nearest HostComponent down. It resets at every HostComponent level.
 export const ViewTransitionStatic = /*         */ 0b0000010000000000000000000000000;
 
 // Flag used to identify newly inserted fibers. It isn't reset after commit unlike `Placement`.
@@ -127,4 +134,5 @@ export const StaticMask =
   PassiveStatic |
   RefStatic |
   MaySuspendCommit |
-  ViewTransitionStatic;
+  ViewTransitionStatic |
+  ViewTransitionNamedStatic;
