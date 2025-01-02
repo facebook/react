@@ -69,6 +69,7 @@ import {
   scheduleMicrotask,
   shouldAttemptEagerTransition,
   trackSchedulerEvent,
+  noTimeout,
 } from './ReactFiberConfig';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -128,12 +129,12 @@ export function ensureRootIsScheduled(root: FiberRoot): void {
     // We're inside an `act` scope.
     if (!didScheduleMicrotask_act) {
       didScheduleMicrotask_act = true;
-      scheduleImmediateTask(processRootScheduleInMicrotask);
+      scheduleImmediateRootScheduleTask();
     }
   } else {
     if (!didScheduleMicrotask) {
       didScheduleMicrotask = true;
-      scheduleImmediateTask(processRootScheduleInMicrotask);
+      scheduleImmediateRootScheduleTask();
     }
   }
 
@@ -207,11 +208,15 @@ function flushSyncWorkAcrossRoots_impl(
           const workInProgressRoot = getWorkInProgressRoot();
           const workInProgressRootRenderLanes =
             getWorkInProgressRootRenderLanes();
+          const rootHasPendingCommit =
+            root.cancelPendingCommit !== null ||
+            root.timeoutHandle !== noTimeout;
           const nextLanes = getNextLanes(
             root,
             root === workInProgressRoot
               ? workInProgressRootRenderLanes
               : NoLanes,
+            rootHasPendingCommit,
           );
           if (
             includesSyncLane(nextLanes) &&
@@ -229,13 +234,17 @@ function flushSyncWorkAcrossRoots_impl(
   isFlushingWork = false;
 }
 
-function processRootScheduleInMicrotask() {
+function processRootScheduleInImmediateTask() {
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     // Track the currently executing event if there is one so we can ignore this
     // event when logging events.
     trackSchedulerEvent();
   }
 
+  processRootScheduleInMicrotask();
+}
+
+function processRootScheduleInMicrotask() {
   // This function is always called inside a microtask. It should never be
   // called synchronously.
   didScheduleMicrotask = false;
@@ -331,6 +340,8 @@ function scheduleTaskForRootDuringMicrotask(
   const pendingPassiveEffectsLanes = getPendingPassiveEffectsLanes();
   const workInProgressRoot = getWorkInProgressRoot();
   const workInProgressRootRenderLanes = getWorkInProgressRootRenderLanes();
+  const rootHasPendingCommit =
+    root.cancelPendingCommit !== null || root.timeoutHandle !== noTimeout;
   const nextLanes =
     enableYieldingBeforePassive && root === rootWithPendingPassiveEffects
       ? // This will schedule the callback at the priority of the lane but we used to
@@ -341,6 +352,7 @@ function scheduleTaskForRootDuringMicrotask(
       : getNextLanes(
           root,
           root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes,
+          rootHasPendingCommit,
         );
 
   const existingCallbackNode = root.callbackNode;
@@ -484,9 +496,12 @@ function performWorkOnRootViaSchedulerTask(
   // it's available).
   const workInProgressRoot = getWorkInProgressRoot();
   const workInProgressRootRenderLanes = getWorkInProgressRootRenderLanes();
+  const rootHasPendingCommit =
+    root.cancelPendingCommit !== null || root.timeoutHandle !== noTimeout;
   const lanes = getNextLanes(
     root,
     root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes,
+    rootHasPendingCommit,
   );
   if (lanes === NoLanes) {
     // No more work on this root.
@@ -558,7 +573,7 @@ function cancelCallback(callbackNode: mixed) {
   }
 }
 
-function scheduleImmediateTask(cb: () => mixed) {
+function scheduleImmediateRootScheduleTask() {
   if (__DEV__ && ReactSharedInternals.actQueue !== null) {
     // Special case: Inside an `act` scope, we push microtasks to the fake `act`
     // callback queue. This is because we currently support calling `act`
@@ -566,7 +581,7 @@ function scheduleImmediateTask(cb: () => mixed) {
     // that you always await the result so that the microtasks have a chance to
     // run. But it hasn't happened yet.
     ReactSharedInternals.actQueue.push(() => {
-      cb();
+      processRootScheduleInMicrotask();
       return null;
     });
   }
@@ -588,14 +603,20 @@ function scheduleImmediateTask(cb: () => mixed) {
         // wrong semantically but it prevents an infinite loop. The bug is
         // Safari's, not ours, so we just do our best to not crash even though
         // the behavior isn't completely correct.
-        Scheduler_scheduleCallback(ImmediateSchedulerPriority, cb);
+        Scheduler_scheduleCallback(
+          ImmediateSchedulerPriority,
+          processRootScheduleInImmediateTask,
+        );
         return;
       }
-      cb();
+      processRootScheduleInMicrotask();
     });
   } else {
     // If microtasks are not supported, use Scheduler.
-    Scheduler_scheduleCallback(ImmediateSchedulerPriority, cb);
+    Scheduler_scheduleCallback(
+      ImmediateSchedulerPriority,
+      processRootScheduleInImmediateTask,
+    );
   }
 }
 

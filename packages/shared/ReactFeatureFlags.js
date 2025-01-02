@@ -81,6 +81,9 @@ export const enableLegacyFBSupport = false;
 // Fix gated tests that fail with this flag enabled before turning it back on.
 export const enableYieldingBeforePassive = false;
 
+// Experiment to intentionally yield less to block high framerate animations.
+export const enableThrottledScheduling = false;
+
 export const enableLegacyCache = __EXPERIMENTAL__;
 
 export const enableAsyncIterableChildren = __EXPERIMENTAL__;

@@ -12,6 +12,7 @@ import type {Thenable} from 'shared/ReactTypes';
 import type {ImportMetadata} from '../shared/ReactFlightImportMetadata';
 
 import {ID, NAME, BUNDLES} from '../shared/ReactFlightImportMetadata';
+import {prepareDestinationWithChunks} from 'react-client/src/ReactFlightClientConfig';
 
 export type ServerManifest = {
   [string]: Array<string>,
@@ -24,21 +25,14 @@ export type ServerReferenceId = string;
 export opaque type ClientReferenceMetadata = ImportMetadata;
 
 // eslint-disable-next-line no-unused-vars
-export opaque type ClientReference<T> = {
-  // Module id.
-  id: string,
-  // Export name.
-  name: string,
-  // List of bundle URLs, relative to the distDir.
-  bundles: Array<string>,
-};
+export opaque type ClientReference<T> = ImportMetadata;
 
 export function prepareDestinationForModule(
   moduleLoading: ModuleLoading,
   nonce: ?string,
   metadata: ClientReferenceMetadata,
 ) {
-  return;
+  prepareDestinationWithChunks(moduleLoading, metadata[BUNDLES], nonce);
 }
 
 export function resolveClientReference<T>(
@@ -46,11 +40,7 @@ export function resolveClientReference<T>(
   metadata: ClientReferenceMetadata,
 ): ClientReference<T> {
   // Reference is already resolved during the build.
-  return {
-    id: metadata[ID],
-    name: metadata[NAME],
-    bundles: metadata[BUNDLES],
-  };
+  return metadata;
 }
 
 export function resolveServerReference<T>(
@@ -64,20 +54,19 @@ export function resolveServerReference<T>(
   if (!bundles) {
     throw new Error('Invalid server action: ' + ref);
   }
-  return {
-    id,
-    name,
-    bundles,
-  };
+  return [id, name, bundles];
 }
 
 export function preloadModule<T>(
   metadata: ClientReference<T>,
 ): null | Thenable<any> {
-  return Promise.all(metadata.bundles.map(url => parcelRequire.load(url)));
+  if (metadata[BUNDLES].length === 0) {
+    return null;
+  }
+  return Promise.all(metadata[BUNDLES].map(url => parcelRequire.load(url)));
 }
 
 export function requireModule<T>(metadata: ClientReference<T>): T {
-  const moduleExports = parcelRequire(metadata.id);
-  return moduleExports[metadata.name];
+  const moduleExports = parcelRequire(metadata[ID]);
+  return moduleExports[metadata[NAME]];
 }
