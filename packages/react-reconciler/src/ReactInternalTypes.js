@@ -220,8 +220,6 @@ type BaseFiberRootProperties = {
 
   pingCache: WeakMap<Wakeable, Set<mixed>> | Map<Wakeable, Set<mixed>> | null,
 
-  // A finished work-in-progress HostRoot that's ready to be committed.
-  finishedWork: Fiber | null,
   // Timeout handle returned by setTimeout. Used to cancel a pending timeout, if
   // it's superseded by a new one.
   timeoutHandle: TimeoutHandle | NoTimeout,
@@ -251,8 +249,6 @@ type BaseFiberRootProperties = {
   expiredLanes: Lanes,
   errorRecoveryDisabledLanes: Lanes,
   shellSuspendCounter: number,
-
-  finishedLanes: Lanes,
 
   entangledLanes: Lanes,
   entanglements: LaneMap<Lanes>,
