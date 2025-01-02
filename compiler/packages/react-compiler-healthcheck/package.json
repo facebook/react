@@ -6,8 +6,9 @@
     "react-compiler-healthcheck": "dist/index.js"
   },
   "scripts": {
-    "build": "rimraf dist && rollup --config --bundleConfigAsCjs",
-    "test": "echo 'no tests'"
+    "build": "rimraf dist && scripts/build.js",
+    "test": "echo 'no tests'",
+    "watch": "scripts/build.js --watch"
   },
   "dependencies": {
     "@babel/core": "^7.24.4",
