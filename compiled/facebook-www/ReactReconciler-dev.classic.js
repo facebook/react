@@ -998,14 +998,13 @@ __DEV__ &&
           );
       }
     }
-    function getNextLanes(root, wipLanes) {
+    function getNextLanes(root, wipLanes, rootHasPendingCommit) {
       var pendingLanes = root.pendingLanes;
       if (0 === pendingLanes) return 0;
       var nextLanes = 0,
         suspendedLanes = root.suspendedLanes,
-        pingedLanes = root.pingedLanes,
-        warmLanes = root.warmLanes;
-      root = 0 !== root.finishedLanes;
+        pingedLanes = root.pingedLanes;
+      root = root.warmLanes;
       var nonIdlePendingLanes = pendingLanes & 134217727;
       0 !== nonIdlePendingLanes
         ? ((pendingLanes = nonIdlePendingLanes & ~suspendedLanes),
@@ -1015,29 +1014,30 @@ __DEV__ &&
               0 !== pingedLanes
                 ? (nextLanes = getHighestPriorityLanes(pingedLanes))
                 : enableSiblingPrerendering &&
-                  !root &&
-                  ((warmLanes = nonIdlePendingLanes & ~warmLanes),
-                  0 !== warmLanes &&
-                    (nextLanes = getHighestPriorityLanes(warmLanes)))))
+                  !rootHasPendingCommit &&
+                  ((rootHasPendingCommit = nonIdlePendingLanes & ~root),
+                  0 !== rootHasPendingCommit &&
+                    (nextLanes =
+                      getHighestPriorityLanes(rootHasPendingCommit)))))
         : ((nonIdlePendingLanes = pendingLanes & ~suspendedLanes),
           0 !== nonIdlePendingLanes
             ? (nextLanes = getHighestPriorityLanes(nonIdlePendingLanes))
             : 0 !== pingedLanes
               ? (nextLanes = getHighestPriorityLanes(pingedLanes))
               : enableSiblingPrerendering &&
-                !root &&
-                ((warmLanes = pendingLanes & ~warmLanes),
-                0 !== warmLanes &&
-                  (nextLanes = getHighestPriorityLanes(warmLanes))));
+                !rootHasPendingCommit &&
+                ((rootHasPendingCommit = pendingLanes & ~root),
+                0 !== rootHasPendingCommit &&
+                  (nextLanes = getHighestPriorityLanes(rootHasPendingCommit))));
       return 0 === nextLanes
         ? 0
         : 0 !== wipLanes &&
             wipLanes !== nextLanes &&
             0 === (wipLanes & suspendedLanes) &&
             ((suspendedLanes = nextLanes & -nextLanes),
-            (warmLanes = wipLanes & -wipLanes),
-            suspendedLanes >= warmLanes ||
-              (32 === suspendedLanes && 0 !== (warmLanes & 4194176)))
+            (rootHasPendingCommit = wipLanes & -wipLanes),
+            suspendedLanes >= rootHasPendingCommit ||
+              (32 === suspendedLanes && 0 !== (rootHasPendingCommit & 4194176)))
           ? wipLanes
           : nextLanes;
     }
@@ -2501,7 +2501,9 @@ __DEV__ &&
                 (nextLanes = workInProgressRootRenderLanes),
                   (nextLanes = getNextLanes(
                     root,
-                    root === workInProgressRoot ? nextLanes : 0
+                    root === workInProgressRoot ? nextLanes : 0,
+                    null !== root.cancelPendingCommit ||
+                      root.timeoutHandle !== noTimeout
                   )),
                   0 === (nextLanes & 3) ||
                     checkIfRootIsPrerendering(root, nextLanes) ||
@@ -2570,7 +2572,8 @@ __DEV__ &&
       suspendedLanes = workInProgressRootRenderLanes;
       suspendedLanes = getNextLanes(
         root,
-        root === currentTime ? suspendedLanes : 0
+        root === currentTime ? suspendedLanes : 0,
+        null !== root.cancelPendingCommit || root.timeoutHandle !== noTimeout
       );
       pingedLanes = root.callbackNode;
       if (
@@ -2635,7 +2638,10 @@ __DEV__ &&
         workInProgressRootRenderLanes;
       workInProgressRootRenderLanes$jscomp$0 = getNextLanes(
         root,
-        root === workInProgressRoot ? workInProgressRootRenderLanes$jscomp$0 : 0
+        root === workInProgressRoot
+          ? workInProgressRootRenderLanes$jscomp$0
+          : 0,
+        null !== root.cancelPendingCommit || root.timeoutHandle !== noTimeout
       );
       if (0 === workInProgressRootRenderLanes$jscomp$0) return null;
       performWorkOnRoot(
@@ -12091,12 +12097,6 @@ __DEV__ &&
         }
       });
     }
-    function commitMutationEffects(root, finishedWork, committedLanes) {
-      inProgressLanes = committedLanes;
-      inProgressRoot = root;
-      commitMutationEffectsOnFiber(finishedWork, root);
-      inProgressRoot = inProgressLanes = null;
-    }
     function recursivelyTraverseMutationEffects(root$jscomp$0, parentFiber) {
       var deletions = parentFiber.deletions;
       if (null !== deletions)
@@ -14004,21 +14004,17 @@ __DEV__ &&
               default:
                 throw Error("Unknown root exit status.");
             }
-            shouldTimeSlice.finishedWork = forceSync;
-            shouldTimeSlice.finishedLanes = lanes;
             if (null !== ReactSharedInternals.actQueue)
               commitRoot(
                 shouldTimeSlice,
+                forceSync,
+                lanes,
                 workInProgressRootRecoverableErrors,
                 workInProgressTransitions,
                 workInProgressRootDidIncludeRecursiveRenderUpdate,
                 workInProgressDeferredLane,
                 workInProgressRootInterleavedUpdatedLanes,
-                workInProgressSuspendedRetryLanes,
-                exitStatus,
-                IMMEDIATE_COMMIT,
-                -0,
-                0
+                workInProgressSuspendedRetryLanes
               );
             else {
               if (
@@ -14036,7 +14032,7 @@ __DEV__ &&
                   workInProgressDeferredLane,
                   !workInProgressRootDidSkipSuspendedSiblings
                 );
-                if (0 !== getNextLanes(shouldTimeSlice, 0)) break a;
+                if (0 !== getNextLanes(shouldTimeSlice, 0, !0)) break a;
                 shouldTimeSlice.timeoutHandle = scheduleTimeout(
                   commitRootWhenReady.bind(
                     null,
@@ -14098,18 +14094,24 @@ __DEV__ &&
       completedRenderStartTime,
       completedRenderEndTime
     ) {
-      var subtreeFlags = finishedWork.subtreeFlags;
-      if (subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408))
+      root.timeoutHandle = noTimeout;
+      suspendedCommitReason = finishedWork.subtreeFlags;
+      if (
+        suspendedCommitReason & 8192 ||
+        16785408 === (suspendedCommitReason & 16785408)
+      )
         if (
           (startSuspendingCommit(),
           accumulateSuspenseyCommitOnFiber(finishedWork),
-          (finishedWork = waitForCommitToBeReady()),
-          null !== finishedWork)
+          (suspendedCommitReason = waitForCommitToBeReady()),
+          null !== suspendedCommitReason)
         ) {
-          root.cancelPendingCommit = finishedWork(
+          root.cancelPendingCommit = suspendedCommitReason(
             commitRoot.bind(
               null,
               root,
+              finishedWork,
+              lanes,
               recoverableErrors,
               transitions,
               didIncludeRenderPhaseUpdate,
@@ -14132,16 +14134,14 @@ __DEV__ &&
         }
       commitRoot(
         root,
+        finishedWork,
+        lanes,
         recoverableErrors,
         transitions,
         didIncludeRenderPhaseUpdate,
         spawnedLane,
         updatedLanes,
-        suspendedRetryLanes,
-        exitStatus,
-        suspendedCommitReason,
-        completedRenderStartTime,
-        completedRenderEndTime
+        suspendedRetryLanes
       );
     }
     function isRenderConsistentWithExternalStores(finishedWork) {
@@ -14237,8 +14237,6 @@ __DEV__ &&
       }
     }
     function prepareFreshStack(root, lanes) {
-      root.finishedWork = null;
-      root.finishedLanes = 0;
       var timeoutHandle = root.timeoutHandle;
       timeoutHandle !== noTimeout &&
         ((root.timeoutHandle = noTimeout), cancelTimeout(timeoutHandle));
@@ -14880,171 +14878,197 @@ __DEV__ &&
     }
     function commitRoot(
       root,
+      finishedWork,
+      lanes,
       recoverableErrors,
       transitions,
       didIncludeRenderPhaseUpdate,
-      spawnedLane,
-      updatedLanes,
-      suspendedRetryLanes,
-      exitStatus,
-      suspendedCommitReason,
-      completedRenderStartTime,
-      completedRenderEndTime
-    ) {
-      var prevTransition = ReactSharedInternals.T,
-        previousUpdateLanePriority = getCurrentUpdatePriority();
-      try {
-        setCurrentUpdatePriority(2),
-          (ReactSharedInternals.T = null),
-          commitRootImpl(
-            root,
-            recoverableErrors,
-            transitions,
-            didIncludeRenderPhaseUpdate,
-            previousUpdateLanePriority,
-            spawnedLane,
-            updatedLanes,
-            suspendedRetryLanes,
-            exitStatus,
-            suspendedCommitReason,
-            completedRenderStartTime,
-            completedRenderEndTime
-          );
-      } finally {
-        (ReactSharedInternals.T = prevTransition),
-          setCurrentUpdatePriority(previousUpdateLanePriority);
-      }
-    }
-    function commitRootImpl(
-      root,
-      recoverableErrors,
-      transitions,
-      didIncludeRenderPhaseUpdate,
-      renderPriorityLevel,
       spawnedLane,
       updatedLanes,
       suspendedRetryLanes
     ) {
+      root.cancelPendingCommit = null;
       do flushPassiveEffects();
       while (null !== rootWithPendingPassiveEffects);
       ReactStrictModeWarnings.flushLegacyContextWarning();
       ReactStrictModeWarnings.flushPendingUnsafeLifecycleWarnings();
       if ((executionContext & (RenderContext | CommitContext)) !== NoContext)
         throw Error("Should not already be working.");
-      var finishedWork = root.finishedWork,
-        lanes = root.finishedLanes;
       enableSchedulingProfiler &&
         enableSchedulingProfiler &&
         null !== injectedProfilingHooks &&
         "function" === typeof injectedProfilingHooks.markCommitStarted &&
         injectedProfilingHooks.markCommitStarted(lanes);
       if (null === finishedWork)
-        return enableSchedulingProfiler && markCommitStopped(), null;
-      0 === lanes &&
-        error$jscomp$0(
-          "root.finishedLanes should not be empty during a commit. This is a bug in React."
+        enableSchedulingProfiler && markCommitStopped();
+      else {
+        0 === lanes &&
+          error$jscomp$0(
+            "finishedLanes should not be empty during a commit. This is a bug in React."
+          );
+        if (finishedWork === root.current)
+          throw Error(
+            "Cannot commit the same tree as before. This error is likely caused by a bug in React. Please file an issue."
+          );
+        var remainingLanes = finishedWork.lanes | finishedWork.childLanes;
+        remainingLanes |= concurrentlyUpdatedLanes;
+        markRootFinished(
+          root,
+          lanes,
+          remainingLanes,
+          spawnedLane,
+          updatedLanes,
+          suspendedRetryLanes
         );
-      root.finishedWork = null;
-      root.finishedLanes = 0;
-      if (finishedWork === root.current)
-        throw Error(
-          "Cannot commit the same tree as before. This error is likely caused by a bug in React. Please file an issue."
+        didIncludeCommitPhaseUpdate = !1;
+        root === workInProgressRoot &&
+          ((workInProgress = workInProgressRoot = null),
+          (workInProgressRootRenderLanes = 0));
+        0 !== (finishedWork.subtreeFlags & 10256) ||
+        0 !== (finishedWork.flags & 10256)
+          ? ((pendingPassiveEffectsRemainingLanes = remainingLanes),
+            (pendingPassiveTransitions = transitions),
+            (root.callbackNode = null),
+            (root.callbackPriority = 0),
+            scheduleCallback(NormalPriority$1, function () {
+              flushPassiveEffects(!0);
+              return null;
+            }))
+          : ((root.callbackNode = null), (root.callbackPriority = 0));
+        commitStartTime = now();
+        transitions = 0 !== (finishedWork.flags & 13878);
+        if (0 !== (finishedWork.subtreeFlags & 13878) || transitions) {
+          transitions = ReactSharedInternals.T;
+          ReactSharedInternals.T = null;
+          spawnedLane = getCurrentUpdatePriority();
+          setCurrentUpdatePriority(2);
+          updatedLanes = executionContext;
+          executionContext |= CommitContext;
+          try {
+            commitBeforeMutationEffects(root, finishedWork);
+          } finally {
+            (executionContext = updatedLanes),
+              setCurrentUpdatePriority(spawnedLane),
+              (ReactSharedInternals.T = transitions);
+          }
+        }
+        flushMutationEffects(root, finishedWork, lanes);
+        flushLayoutEffects(
+          root,
+          finishedWork,
+          lanes,
+          recoverableErrors,
+          didIncludeRenderPhaseUpdate
         );
-      var remainingLanes = finishedWork.lanes | finishedWork.childLanes;
-      remainingLanes |= concurrentlyUpdatedLanes;
-      markRootFinished(
-        root,
-        lanes,
-        remainingLanes,
-        spawnedLane,
-        updatedLanes,
-        suspendedRetryLanes
-      );
-      didIncludeCommitPhaseUpdate = !1;
-      root === workInProgressRoot &&
-        ((workInProgress = workInProgressRoot = null),
-        (workInProgressRootRenderLanes = 0));
-      spawnedLane = !1;
-      0 !== (finishedWork.subtreeFlags & 10256) ||
-      0 !== (finishedWork.flags & 10256)
-        ? ((spawnedLane = !0),
-          (pendingPassiveEffectsRemainingLanes = remainingLanes),
-          (pendingPassiveTransitions = transitions),
-          (root.callbackNode = null),
-          (root.callbackPriority = 0),
-          (root.cancelPendingCommit = null),
-          scheduleCallback(NormalPriority$1, function () {
-            flushPassiveEffects(!0);
-            return null;
-          }))
-        : ((root.callbackNode = null),
-          (root.callbackPriority = 0),
-          (root.cancelPendingCommit = null));
-      commitStartTime = now();
-      transitions = 0 !== (finishedWork.flags & 15990);
-      0 !== (finishedWork.subtreeFlags & 15990) || transitions
-        ? ((transitions = ReactSharedInternals.T),
-          (ReactSharedInternals.T = null),
-          (updatedLanes = getCurrentUpdatePriority()),
-          setCurrentUpdatePriority(2),
-          (suspendedRetryLanes = executionContext),
-          (executionContext |= CommitContext),
-          commitBeforeMutationEffects(root, finishedWork),
-          commitMutationEffects(root, finishedWork, lanes),
-          shouldFireAfterActiveInstanceBlur && afterActiveInstanceBlur(),
-          resetAfterCommit(root.containerInfo),
-          (root.current = finishedWork),
+      }
+    }
+    function flushMutationEffects(root, finishedWork, lanes) {
+      var rootMutationHasEffect = 0 !== (finishedWork.flags & 13878);
+      if (0 !== (finishedWork.subtreeFlags & 13878) || rootMutationHasEffect) {
+        rootMutationHasEffect = ReactSharedInternals.T;
+        ReactSharedInternals.T = null;
+        var previousPriority = getCurrentUpdatePriority();
+        setCurrentUpdatePriority(2);
+        var prevExecutionContext = executionContext;
+        executionContext |= CommitContext;
+        try {
+          (inProgressLanes = lanes),
+            (inProgressRoot = root),
+            commitMutationEffectsOnFiber(finishedWork, root),
+            (inProgressRoot = inProgressLanes = null),
+            shouldFireAfterActiveInstanceBlur && afterActiveInstanceBlur(),
+            resetAfterCommit(root.containerInfo);
+        } finally {
+          (executionContext = prevExecutionContext),
+            setCurrentUpdatePriority(previousPriority),
+            (ReactSharedInternals.T = rootMutationHasEffect);
+        }
+      }
+      root.current = finishedWork;
+    }
+    function flushLayoutEffects(
+      root,
+      finishedWork,
+      lanes,
+      recoverableErrors,
+      didIncludeRenderPhaseUpdate
+    ) {
+      var rootHasLayoutEffect = 0 !== (finishedWork.flags & 8772);
+      if (0 !== (finishedWork.subtreeFlags & 8772) || rootHasLayoutEffect) {
+        rootHasLayoutEffect = ReactSharedInternals.T;
+        ReactSharedInternals.T = null;
+        var previousPriority = getCurrentUpdatePriority();
+        setCurrentUpdatePriority(2);
+        var prevExecutionContext = executionContext;
+        executionContext |= CommitContext;
+        try {
           enableSchedulingProfiler &&
             enableSchedulingProfiler &&
             null !== injectedProfilingHooks &&
             "function" ===
               typeof injectedProfilingHooks.markLayoutEffectsStarted &&
             injectedProfilingHooks.markLayoutEffectsStarted(lanes),
-          commitLayoutEffects(finishedWork, root, lanes),
-          enableSchedulingProfiler &&
+            commitLayoutEffects(finishedWork, root, lanes),
             enableSchedulingProfiler &&
-            null !== injectedProfilingHooks &&
-            "function" ===
-              typeof injectedProfilingHooks.markLayoutEffectsStopped &&
-            injectedProfilingHooks.markLayoutEffectsStopped(),
-          requestPaint(),
-          (executionContext = suspendedRetryLanes),
-          setCurrentUpdatePriority(updatedLanes),
-          (ReactSharedInternals.T = transitions))
-        : (root.current = finishedWork);
-      (transitions = spawnedLane)
-        ? ((spawnedLane = !1),
-          (rootWithPendingPassiveEffects = root),
+              enableSchedulingProfiler &&
+              null !== injectedProfilingHooks &&
+              "function" ===
+                typeof injectedProfilingHooks.markLayoutEffectsStopped &&
+              injectedProfilingHooks.markLayoutEffectsStopped();
+        } finally {
+          (executionContext = prevExecutionContext),
+            setCurrentUpdatePriority(previousPriority),
+            (ReactSharedInternals.T = rootHasLayoutEffect);
+        }
+      }
+      requestPaint();
+      (rootHasLayoutEffect =
+        0 !== (finishedWork.subtreeFlags & 10256) ||
+        0 !== (finishedWork.flags & 10256))
+        ? ((rootWithPendingPassiveEffects = root),
           (pendingPassiveEffectsLanes = lanes))
-        : (releaseRootPooledCache(root, remainingLanes),
+        : (releaseRootPooledCache(root, root.pendingLanes),
           (nestedPassiveUpdateCount = 0),
           (rootWithPassiveNestedUpdates = null));
-      remainingLanes = root.pendingLanes;
-      0 === remainingLanes && (legacyErrorBoundariesThatAlreadyFailed = null);
-      transitions || commitDoubleInvokeEffectsInDEV(root);
-      onCommitRoot$1(finishedWork.stateNode, renderPriorityLevel);
+      previousPriority = root.pendingLanes;
+      0 === previousPriority && (legacyErrorBoundariesThatAlreadyFailed = null);
+      rootHasLayoutEffect || commitDoubleInvokeEffectsInDEV(root);
+      rootHasLayoutEffect = lanesToEventPriority(lanes);
+      onCommitRoot$1(finishedWork.stateNode, rootHasLayoutEffect);
       isDevToolsPresent && root.memoizedUpdaters.clear();
       onCommitRoot();
-      if (null !== recoverableErrors)
-        for (
-          renderPriorityLevel = root.onRecoverableError, finishedWork = 0;
-          finishedWork < recoverableErrors.length;
-          finishedWork++
-        )
-          (remainingLanes = recoverableErrors[finishedWork]),
-            (spawnedLane = makeErrorInfo(remainingLanes.stack)),
+      if (null !== recoverableErrors) {
+        finishedWork = ReactSharedInternals.T;
+        rootHasLayoutEffect = getCurrentUpdatePriority();
+        setCurrentUpdatePriority(2);
+        ReactSharedInternals.T = null;
+        try {
+          var onRecoverableError = root.onRecoverableError;
+          for (
+            previousPriority = 0;
+            previousPriority < recoverableErrors.length;
+            previousPriority++
+          ) {
+            var recoverableError = recoverableErrors[previousPriority],
+              errorInfo = makeErrorInfo(recoverableError.stack);
             runWithFiberInDEV(
-              remainingLanes.source,
-              renderPriorityLevel,
-              remainingLanes.value,
-              spawnedLane
+              recoverableError.source,
+              onRecoverableError,
+              recoverableError.value,
+              errorInfo
             );
+          }
+        } finally {
+          (ReactSharedInternals.T = finishedWork),
+            setCurrentUpdatePriority(rootHasLayoutEffect);
+        }
+      }
       0 !== (pendingPassiveEffectsLanes & 3) && flushPassiveEffects();
       ensureRootIsScheduled(root);
-      remainingLanes = root.pendingLanes;
+      previousPriority = root.pendingLanes;
       (enableInfiniteRenderLoopDetection &&
         (didIncludeRenderPhaseUpdate || didIncludeCommitPhaseUpdate)) ||
-      (0 !== (lanes & 4194218) && 0 !== (remainingLanes & 42))
+      (0 !== (lanes & 4194218) && 0 !== (previousPriority & 42))
         ? ((nestedUpdateScheduled = !0),
           root === rootWithNestedUpdates
             ? nestedUpdateCount++
@@ -15070,7 +15094,6 @@ __DEV__ &&
               : (currentEndTime = endTime);
           });
       }
-      return null;
     }
     function makeErrorInfo(componentStack) {
       componentStack = { componentStack: componentStack };
@@ -16031,11 +16054,7 @@ __DEV__ &&
     ) {
       this.tag = 1;
       this.containerInfo = containerInfo;
-      this.finishedWork =
-        this.pingCache =
-        this.current =
-        this.pendingChildren =
-          null;
+      this.pingCache = this.current = this.pendingChildren = null;
       this.timeoutHandle = noTimeout;
       this.callbackNode =
         this.next =
@@ -16048,7 +16067,6 @@ __DEV__ &&
       this.entangledLanes =
         this.shellSuspendCounter =
         this.errorRecoveryDisabledLanes =
-        this.finishedLanes =
         this.expiredLanes =
         this.warmLanes =
         this.pingedLanes =
@@ -19059,7 +19077,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-classic-d8b903f4-20250102"
+        reconcilerVersion: "19.1.0-www-classic-c81312e3-20250102"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

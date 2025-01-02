@@ -481,14 +481,13 @@ module.exports = function ($$$config) {
         return lanes;
     }
   }
-  function getNextLanes(root, wipLanes) {
+  function getNextLanes(root, wipLanes, rootHasPendingCommit) {
     var pendingLanes = root.pendingLanes;
     if (0 === pendingLanes) return 0;
     var nextLanes = 0,
       suspendedLanes = root.suspendedLanes,
-      pingedLanes = root.pingedLanes,
-      warmLanes = root.warmLanes;
-    root = 0 !== root.finishedLanes;
+      pingedLanes = root.pingedLanes;
+    root = root.warmLanes;
     var nonIdlePendingLanes = pendingLanes & 134217727;
     0 !== nonIdlePendingLanes
       ? ((pendingLanes = nonIdlePendingLanes & ~suspendedLanes),
@@ -498,29 +497,29 @@ module.exports = function ($$$config) {
             0 !== pingedLanes
               ? (nextLanes = getHighestPriorityLanes(pingedLanes))
               : enableSiblingPrerendering &&
-                !root &&
-                ((warmLanes = nonIdlePendingLanes & ~warmLanes),
-                0 !== warmLanes &&
-                  (nextLanes = getHighestPriorityLanes(warmLanes)))))
+                !rootHasPendingCommit &&
+                ((rootHasPendingCommit = nonIdlePendingLanes & ~root),
+                0 !== rootHasPendingCommit &&
+                  (nextLanes = getHighestPriorityLanes(rootHasPendingCommit)))))
       : ((nonIdlePendingLanes = pendingLanes & ~suspendedLanes),
         0 !== nonIdlePendingLanes
           ? (nextLanes = getHighestPriorityLanes(nonIdlePendingLanes))
           : 0 !== pingedLanes
             ? (nextLanes = getHighestPriorityLanes(pingedLanes))
             : enableSiblingPrerendering &&
-              !root &&
-              ((warmLanes = pendingLanes & ~warmLanes),
-              0 !== warmLanes &&
-                (nextLanes = getHighestPriorityLanes(warmLanes))));
+              !rootHasPendingCommit &&
+              ((rootHasPendingCommit = pendingLanes & ~root),
+              0 !== rootHasPendingCommit &&
+                (nextLanes = getHighestPriorityLanes(rootHasPendingCommit))));
     return 0 === nextLanes
       ? 0
       : 0 !== wipLanes &&
           wipLanes !== nextLanes &&
           0 === (wipLanes & suspendedLanes) &&
           ((suspendedLanes = nextLanes & -nextLanes),
-          (warmLanes = wipLanes & -wipLanes),
-          suspendedLanes >= warmLanes ||
-            (32 === suspendedLanes && 0 !== (warmLanes & 4194176)))
+          (rootHasPendingCommit = wipLanes & -wipLanes),
+          suspendedLanes >= rootHasPendingCommit ||
+            (32 === suspendedLanes && 0 !== (rootHasPendingCommit & 4194176)))
         ? wipLanes
         : nextLanes;
   }
@@ -1177,7 +1176,9 @@ module.exports = function ($$$config) {
               (JSCompiler_inline_result = workInProgressRootRenderLanes),
                 (JSCompiler_inline_result = getNextLanes(
                   root,
-                  root === workInProgressRoot ? JSCompiler_inline_result : 0
+                  root === workInProgressRoot ? JSCompiler_inline_result : 0,
+                  null !== root.cancelPendingCommit ||
+                    root.timeoutHandle !== noTimeout
                 )),
                 0 === (JSCompiler_inline_result & 3) ||
                   checkIfRootIsPrerendering(root, JSCompiler_inline_result) ||
@@ -1243,7 +1244,8 @@ module.exports = function ($$$config) {
     suspendedLanes = workInProgressRootRenderLanes;
     suspendedLanes = getNextLanes(
       root,
-      root === currentTime ? suspendedLanes : 0
+      root === currentTime ? suspendedLanes : 0,
+      null !== root.cancelPendingCommit || root.timeoutHandle !== noTimeout
     );
     pingedLanes = root.callbackNode;
     if (
@@ -1302,7 +1304,8 @@ module.exports = function ($$$config) {
     var workInProgressRootRenderLanes$jscomp$0 = workInProgressRootRenderLanes;
     workInProgressRootRenderLanes$jscomp$0 = getNextLanes(
       root,
-      root === workInProgressRoot ? workInProgressRootRenderLanes$jscomp$0 : 0
+      root === workInProgressRoot ? workInProgressRootRenderLanes$jscomp$0 : 0,
+      null !== root.cancelPendingCommit || root.timeoutHandle !== noTimeout
     );
     if (0 === workInProgressRootRenderLanes$jscomp$0) return null;
     performWorkOnRoot(
@@ -7417,94 +7420,93 @@ module.exports = function ($$$config) {
       captureCommitPhaseError(finishedWork, finishedWork.return, error);
     }
   }
-  function commitBeforeMutationEffects_begin() {
-    for (; null !== nextEffect; ) {
-      var fiber = nextEffect,
-        deletions = fiber.deletions;
-      if (null !== deletions)
-        for (var i = 0; i < deletions.length; i++) {
-          var deletion = deletions[i];
+  function commitBeforeMutationEffects(root, firstChild) {
+    focusedInstanceHandle = prepareForCommit(root.containerInfo);
+    shouldFireAfterActiveInstanceBlur = !1;
+    for (nextEffect = firstChild; null !== nextEffect; ) {
+      root = nextEffect;
+      firstChild = root.deletions;
+      if (null !== firstChild)
+        for (var i = 0; i < firstChild.length; i++) {
+          var deletion = firstChild[i];
           doesFiberContain(deletion, focusedInstanceHandle) &&
             ((shouldFireAfterActiveInstanceBlur = !0),
             beforeActiveInstanceBlur(deletion));
         }
-      deletions = fiber.child;
-      if (0 !== (fiber.subtreeFlags & 9236) && null !== deletions)
-        (deletions.return = fiber), (nextEffect = deletions);
+      firstChild = root.child;
+      if (0 !== (root.subtreeFlags & 9236) && null !== firstChild)
+        (firstChild.return = root), (nextEffect = firstChild);
       else
-        a: for (; null !== nextEffect; ) {
-          fiber = nextEffect;
-          deletions = void 0;
-          var JSCompiler_temp;
-          i = fiber;
-          deletion = i.alternate;
-          var flags = i.flags;
+        for (; null !== nextEffect; ) {
+          root = nextEffect;
+          firstChild = root.alternate;
+          i = root.flags;
           if (
-            !shouldFireAfterActiveInstanceBlur &&
-            null !== focusedInstanceHandle
+            (deletion =
+              !shouldFireAfterActiveInstanceBlur &&
+              null !== focusedInstanceHandle)
           ) {
-            if ((JSCompiler_temp = 13 === i.tag))
-              b: {
+            if ((deletion = 13 === root.tag))
+              a: {
                 if (
-                  null !== deletion &&
-                  ((JSCompiler_temp = deletion.memoizedState),
-                  null === JSCompiler_temp ||
-                    null !== JSCompiler_temp.dehydrated)
+                  null !== firstChild &&
+                  ((deletion = firstChild.memoizedState),
+                  null === deletion || null !== deletion.dehydrated)
                 ) {
-                  JSCompiler_temp = i.memoizedState;
-                  JSCompiler_temp =
-                    null !== JSCompiler_temp &&
-                    null === JSCompiler_temp.dehydrated;
-                  break b;
+                  deletion = root.memoizedState;
+                  deletion = null !== deletion && null === deletion.dehydrated;
+                  break a;
                 }
-                JSCompiler_temp = !1;
+                deletion = !1;
               }
-            JSCompiler_temp &&
-              doesFiberContain(i, focusedInstanceHandle) &&
-              ((shouldFireAfterActiveInstanceBlur = !0),
-              beforeActiveInstanceBlur(i));
+            deletion =
+              deletion && doesFiberContain(root, focusedInstanceHandle);
           }
-          switch (i.tag) {
+          deletion &&
+            ((shouldFireAfterActiveInstanceBlur = !0),
+            beforeActiveInstanceBlur(root));
+          switch (root.tag) {
             case 0:
               if (
-                0 !== (flags & 4) &&
-                ((deletions = i.updateQueue),
-                (deletions = null !== deletions ? deletions.events : null),
-                null !== deletions)
+                0 !== (i & 4) &&
+                ((firstChild = root.updateQueue),
+                (firstChild = null !== firstChild ? firstChild.events : null),
+                null !== firstChild)
               )
-                for (i = 0; i < deletions.length; i++)
-                  (deletion = deletions[i]),
+                for (i = 0; i < firstChild.length; i++)
+                  (deletion = firstChild[i]),
                     (deletion.ref.impl = deletion.nextImpl);
               break;
             case 11:
             case 15:
               break;
             case 1:
-              if (0 !== (flags & 1024) && null !== deletion) {
-                flags = deletion.memoizedProps;
-                deletion = deletion.memoizedState;
-                JSCompiler_temp = i.stateNode;
+              if (0 !== (i & 1024) && null !== firstChild) {
+                i = void 0;
+                deletion = root;
+                var prevProps = firstChild.memoizedProps;
+                firstChild = firstChild.memoizedState;
+                var instance = deletion.stateNode;
                 try {
                   var resolvedPrevProps = resolveClassComponentProps(
-                    i.type,
-                    flags,
-                    i.elementType === i.type
+                    deletion.type,
+                    prevProps,
+                    deletion.elementType === deletion.type
                   );
-                  deletions = JSCompiler_temp.getSnapshotBeforeUpdate(
+                  i = instance.getSnapshotBeforeUpdate(
                     resolvedPrevProps,
-                    deletion
+                    firstChild
                   );
-                  JSCompiler_temp.__reactInternalSnapshotBeforeUpdate =
-                    deletions;
+                  instance.__reactInternalSnapshotBeforeUpdate = i;
                 } catch (error) {
-                  captureCommitPhaseError(i, i.return, error);
+                  captureCommitPhaseError(deletion, deletion.return, error);
                 }
               }
               break;
             case 3:
-              0 !== (flags & 1024) &&
+              0 !== (i & 1024) &&
                 supportsMutation &&
-                clearContainer(i.stateNode.containerInfo);
+                clearContainer(root.stateNode.containerInfo);
               break;
             case 5:
             case 26:
@@ -7514,18 +7516,18 @@ module.exports = function ($$$config) {
             case 17:
               break;
             default:
-              if (0 !== (flags & 1024))
-                throw Error(formatProdErrorMessage(163));
+              if (0 !== (i & 1024)) throw Error(formatProdErrorMessage(163));
           }
-          deletions = fiber.sibling;
-          if (null !== deletions) {
-            deletions.return = fiber.return;
-            nextEffect = deletions;
-            break a;
+          firstChild = root.sibling;
+          if (null !== firstChild) {
+            firstChild.return = root.return;
+            nextEffect = firstChild;
+            break;
           }
-          nextEffect = fiber.return;
+          nextEffect = root.return;
         }
     }
+    focusedInstanceHandle = null;
   }
   function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
     var flags = finishedWork.flags;
@@ -9837,8 +9839,6 @@ module.exports = function ($$$config) {
             default:
               throw Error(formatProdErrorMessage(329));
           }
-          shouldTimeSlice.finishedWork = forceSync;
-          shouldTimeSlice.finishedLanes = lanes;
           if (
             (lanes & 62914560) === lanes &&
             (alwaysThrottleRetries || 3 === renderWasConcurrent) &&
@@ -9851,7 +9851,7 @@ module.exports = function ($$$config) {
               workInProgressDeferredLane,
               !workInProgressRootDidSkipSuspendedSiblings
             );
-            if (0 !== getNextLanes(shouldTimeSlice, 0)) break a;
+            if (0 !== getNextLanes(shouldTimeSlice, 0, !0)) break a;
             shouldTimeSlice.timeoutHandle = scheduleTimeout(
               commitRootWhenReady.bind(
                 null,
@@ -9912,18 +9912,24 @@ module.exports = function ($$$config) {
     completedRenderStartTime,
     completedRenderEndTime
   ) {
-    var subtreeFlags = finishedWork.subtreeFlags;
-    if (subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408))
+    root.timeoutHandle = noTimeout;
+    suspendedCommitReason = finishedWork.subtreeFlags;
+    if (
+      suspendedCommitReason & 8192 ||
+      16785408 === (suspendedCommitReason & 16785408)
+    )
       if (
         (startSuspendingCommit(),
         accumulateSuspenseyCommitOnFiber(finishedWork),
-        (finishedWork = waitForCommitToBeReady()),
-        null !== finishedWork)
+        (suspendedCommitReason = waitForCommitToBeReady()),
+        null !== suspendedCommitReason)
       ) {
-        root.cancelPendingCommit = finishedWork(
+        root.cancelPendingCommit = suspendedCommitReason(
           commitRoot.bind(
             null,
             root,
+            finishedWork,
+            lanes,
             recoverableErrors,
             transitions,
             didIncludeRenderPhaseUpdate,
@@ -9941,16 +9947,14 @@ module.exports = function ($$$config) {
       }
     commitRoot(
       root,
+      finishedWork,
+      lanes,
       recoverableErrors,
       transitions,
       didIncludeRenderPhaseUpdate,
       spawnedLane,
       updatedLanes,
-      suspendedRetryLanes,
-      exitStatus,
-      suspendedCommitReason,
-      completedRenderStartTime,
-      completedRenderEndTime
+      suspendedRetryLanes
     );
   }
   function isRenderConsistentWithExternalStores(finishedWork) {
@@ -10043,8 +10047,6 @@ module.exports = function ($$$config) {
     }
   }
   function prepareFreshStack(root, lanes) {
-    root.finishedWork = null;
-    root.finishedLanes = 0;
     var timeoutHandle = root.timeoutHandle;
     timeoutHandle !== noTimeout &&
       ((root.timeoutHandle = noTimeout), cancelTimeout(timeoutHandle));
@@ -10533,137 +10535,156 @@ module.exports = function ($$$config) {
   }
   function commitRoot(
     root,
+    finishedWork,
+    lanes,
     recoverableErrors,
     transitions,
     didIncludeRenderPhaseUpdate,
-    spawnedLane,
-    updatedLanes,
-    suspendedRetryLanes,
-    exitStatus,
-    suspendedCommitReason,
-    completedRenderStartTime,
-    completedRenderEndTime
-  ) {
-    var prevTransition = ReactSharedInternals.T,
-      previousUpdateLanePriority = getCurrentUpdatePriority();
-    try {
-      setCurrentUpdatePriority(2),
-        (ReactSharedInternals.T = null),
-        commitRootImpl(
-          root,
-          recoverableErrors,
-          transitions,
-          didIncludeRenderPhaseUpdate,
-          previousUpdateLanePriority,
-          spawnedLane,
-          updatedLanes,
-          suspendedRetryLanes,
-          exitStatus,
-          suspendedCommitReason,
-          completedRenderStartTime,
-          completedRenderEndTime
-        );
-    } finally {
-      (ReactSharedInternals.T = prevTransition),
-        setCurrentUpdatePriority(previousUpdateLanePriority);
-    }
-  }
-  function commitRootImpl(
-    root,
-    recoverableErrors,
-    transitions,
-    didIncludeRenderPhaseUpdate,
-    renderPriorityLevel,
     spawnedLane,
     updatedLanes,
     suspendedRetryLanes
   ) {
+    root.cancelPendingCommit = null;
     do flushPassiveEffects();
     while (null !== rootWithPendingPassiveEffects);
     if (0 !== (executionContext & 6)) throw Error(formatProdErrorMessage(327));
-    var finishedWork = root.finishedWork,
-      lanes = root.finishedLanes;
-    if (null === finishedWork) return null;
-    root.finishedWork = null;
-    root.finishedLanes = 0;
-    if (finishedWork === root.current) throw Error(formatProdErrorMessage(177));
-    var remainingLanes = finishedWork.lanes | finishedWork.childLanes;
-    remainingLanes |= concurrentlyUpdatedLanes;
-    markRootFinished(
-      root,
-      lanes,
-      remainingLanes,
-      spawnedLane,
-      updatedLanes,
-      suspendedRetryLanes
-    );
-    didIncludeCommitPhaseUpdate = !1;
-    root === workInProgressRoot &&
-      ((workInProgress = workInProgressRoot = null),
-      (workInProgressRootRenderLanes = 0));
-    spawnedLane = !1;
+    if (null !== finishedWork) {
+      if (finishedWork === root.current)
+        throw Error(formatProdErrorMessage(177));
+      var remainingLanes = finishedWork.lanes | finishedWork.childLanes;
+      remainingLanes |= concurrentlyUpdatedLanes;
+      markRootFinished(
+        root,
+        lanes,
+        remainingLanes,
+        spawnedLane,
+        updatedLanes,
+        suspendedRetryLanes
+      );
+      didIncludeCommitPhaseUpdate = !1;
+      root === workInProgressRoot &&
+        ((workInProgress = workInProgressRoot = null),
+        (workInProgressRootRenderLanes = 0));
+      0 !== (finishedWork.subtreeFlags & 10256) ||
+      0 !== (finishedWork.flags & 10256)
+        ? ((pendingPassiveEffectsRemainingLanes = remainingLanes),
+          (pendingPassiveTransitions = transitions),
+          (root.callbackNode = null),
+          (root.callbackPriority = 0),
+          scheduleCallback(NormalPriority$1, function () {
+            flushPassiveEffects(!0);
+            return null;
+          }))
+        : ((root.callbackNode = null), (root.callbackPriority = 0));
+      transitions = 0 !== (finishedWork.flags & 13878);
+      if (0 !== (finishedWork.subtreeFlags & 13878) || transitions) {
+        transitions = ReactSharedInternals.T;
+        ReactSharedInternals.T = null;
+        spawnedLane = getCurrentUpdatePriority();
+        setCurrentUpdatePriority(2);
+        updatedLanes = executionContext;
+        executionContext |= 4;
+        try {
+          commitBeforeMutationEffects(root, finishedWork);
+        } finally {
+          (executionContext = updatedLanes),
+            setCurrentUpdatePriority(spawnedLane),
+            (ReactSharedInternals.T = transitions);
+        }
+      }
+      flushMutationEffects(root, finishedWork, lanes);
+      flushLayoutEffects(
+        root,
+        finishedWork,
+        lanes,
+        recoverableErrors,
+        didIncludeRenderPhaseUpdate
+      );
+    }
+  }
+  function flushMutationEffects(root, finishedWork) {
+    var rootMutationHasEffect = 0 !== (finishedWork.flags & 13878);
+    if (0 !== (finishedWork.subtreeFlags & 13878) || rootMutationHasEffect) {
+      rootMutationHasEffect = ReactSharedInternals.T;
+      ReactSharedInternals.T = null;
+      var previousPriority = getCurrentUpdatePriority();
+      setCurrentUpdatePriority(2);
+      var prevExecutionContext = executionContext;
+      executionContext |= 4;
+      try {
+        commitMutationEffectsOnFiber(finishedWork, root),
+          shouldFireAfterActiveInstanceBlur && afterActiveInstanceBlur(),
+          resetAfterCommit(root.containerInfo);
+      } finally {
+        (executionContext = prevExecutionContext),
+          setCurrentUpdatePriority(previousPriority),
+          (ReactSharedInternals.T = rootMutationHasEffect);
+      }
+    }
+    root.current = finishedWork;
+  }
+  function flushLayoutEffects(
+    root,
+    finishedWork,
+    lanes,
+    recoverableErrors,
+    didIncludeRenderPhaseUpdate
+  ) {
+    var rootHasLayoutEffect = 0 !== (finishedWork.flags & 8772);
+    if (0 !== (finishedWork.subtreeFlags & 8772) || rootHasLayoutEffect) {
+      rootHasLayoutEffect = ReactSharedInternals.T;
+      ReactSharedInternals.T = null;
+      var previousPriority = getCurrentUpdatePriority();
+      setCurrentUpdatePriority(2);
+      var prevExecutionContext = executionContext;
+      executionContext |= 4;
+      try {
+        commitLayoutEffectOnFiber(root, finishedWork.alternate, finishedWork);
+      } finally {
+        (executionContext = prevExecutionContext),
+          setCurrentUpdatePriority(previousPriority),
+          (ReactSharedInternals.T = rootHasLayoutEffect);
+      }
+    }
+    requestPaint();
     0 !== (finishedWork.subtreeFlags & 10256) ||
     0 !== (finishedWork.flags & 10256)
-      ? ((spawnedLane = !0),
-        (pendingPassiveEffectsRemainingLanes = remainingLanes),
-        (pendingPassiveTransitions = transitions),
-        (root.callbackNode = null),
-        (root.callbackPriority = 0),
-        (root.cancelPendingCommit = null),
-        scheduleCallback(NormalPriority$1, function () {
-          flushPassiveEffects(!0);
-          return null;
-        }))
-      : ((root.callbackNode = null),
-        (root.callbackPriority = 0),
-        (root.cancelPendingCommit = null));
-    transitions = 0 !== (finishedWork.flags & 15990);
-    0 !== (finishedWork.subtreeFlags & 15990) || transitions
-      ? ((transitions = ReactSharedInternals.T),
-        (ReactSharedInternals.T = null),
-        (updatedLanes = getCurrentUpdatePriority()),
-        setCurrentUpdatePriority(2),
-        (suspendedRetryLanes = executionContext),
-        (executionContext |= 4),
-        (focusedInstanceHandle = prepareForCommit(root.containerInfo)),
-        (shouldFireAfterActiveInstanceBlur = !1),
-        (nextEffect = finishedWork),
-        commitBeforeMutationEffects_begin(),
-        (focusedInstanceHandle = null),
-        commitMutationEffectsOnFiber(finishedWork, root),
-        shouldFireAfterActiveInstanceBlur && afterActiveInstanceBlur(),
-        resetAfterCommit(root.containerInfo),
-        (root.current = finishedWork),
-        commitLayoutEffectOnFiber(root, finishedWork.alternate, finishedWork),
-        requestPaint(),
-        (executionContext = suspendedRetryLanes),
-        setCurrentUpdatePriority(updatedLanes),
-        (ReactSharedInternals.T = transitions))
-      : (root.current = finishedWork);
-    spawnedLane
-      ? ((spawnedLane = !1),
-        (rootWithPendingPassiveEffects = root),
+      ? ((rootWithPendingPassiveEffects = root),
         (pendingPassiveEffectsLanes = lanes))
-      : releaseRootPooledCache(root, remainingLanes);
-    remainingLanes = root.pendingLanes;
-    0 === remainingLanes && (legacyErrorBoundariesThatAlreadyFailed = null);
-    onCommitRoot(finishedWork.stateNode, renderPriorityLevel);
-    if (null !== recoverableErrors)
-      for (
-        renderPriorityLevel = root.onRecoverableError, finishedWork = 0;
-        finishedWork < recoverableErrors.length;
-        finishedWork++
-      )
-        (remainingLanes = recoverableErrors[finishedWork]),
-          renderPriorityLevel(remainingLanes.value, {
-            componentStack: remainingLanes.stack
+      : releaseRootPooledCache(root, root.pendingLanes);
+    rootHasLayoutEffect = root.pendingLanes;
+    0 === rootHasLayoutEffect &&
+      (legacyErrorBoundariesThatAlreadyFailed = null);
+    rootHasLayoutEffect = lanesToEventPriority(lanes);
+    onCommitRoot(finishedWork.stateNode, rootHasLayoutEffect);
+    if (null !== recoverableErrors) {
+      finishedWork = ReactSharedInternals.T;
+      rootHasLayoutEffect = getCurrentUpdatePriority();
+      setCurrentUpdatePriority(2);
+      ReactSharedInternals.T = null;
+      try {
+        var onRecoverableError = root.onRecoverableError;
+        for (
+          previousPriority = 0;
+          previousPriority < recoverableErrors.length;
+          previousPriority++
+        ) {
+          var recoverableError = recoverableErrors[previousPriority];
+          onRecoverableError(recoverableError.value, {
+            componentStack: recoverableError.stack
           });
+        }
+      } finally {
+        (ReactSharedInternals.T = finishedWork),
+          setCurrentUpdatePriority(rootHasLayoutEffect);
+      }
+    }
     0 !== (pendingPassiveEffectsLanes & 3) && flushPassiveEffects();
     ensureRootIsScheduled(root);
-    remainingLanes = root.pendingLanes;
+    rootHasLayoutEffect = root.pendingLanes;
     (enableInfiniteRenderLoopDetection &&
       (didIncludeRenderPhaseUpdate || didIncludeCommitPhaseUpdate)) ||
-    (0 !== (lanes & 4194218) && 0 !== (remainingLanes & 42))
+    (0 !== (lanes & 4194218) && 0 !== (rootHasLayoutEffect & 42))
       ? root === rootWithNestedUpdates
         ? nestedUpdateCount++
         : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root))
@@ -10687,7 +10708,6 @@ module.exports = function ($$$config) {
             : (currentEndTime = endTime);
         });
     }
-    return null;
   }
   function releaseRootPooledCache(root, remainingLanes) {
     0 === (root.pooledCacheLanes &= remainingLanes) &&
@@ -11241,11 +11261,7 @@ module.exports = function ($$$config) {
   ) {
     this.tag = 1;
     this.containerInfo = containerInfo;
-    this.finishedWork =
-      this.pingCache =
-      this.current =
-      this.pendingChildren =
-        null;
+    this.pingCache = this.current = this.pendingChildren = null;
     this.timeoutHandle = noTimeout;
     this.callbackNode =
       this.next =
@@ -11258,7 +11274,6 @@ module.exports = function ($$$config) {
     this.entangledLanes =
       this.shellSuspendCounter =
       this.errorRecoveryDisabledLanes =
-      this.finishedLanes =
       this.expiredLanes =
       this.warmLanes =
       this.pingedLanes =
@@ -12540,7 +12555,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-modern-d8b903f4-20250102"
+      reconcilerVersion: "19.1.0-www-modern-c81312e3-20250102"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
