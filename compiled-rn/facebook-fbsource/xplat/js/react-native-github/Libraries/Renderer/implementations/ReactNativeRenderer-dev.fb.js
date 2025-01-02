@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9621cf3ac6e6310fbade5dda88fb09bd>>
+ * @generated SignedSource<<082538f46ed159ede60587a31ebe1ce8>>
  */
 
 "use strict";
@@ -11840,6 +11840,14 @@ __DEV__ &&
           flags & 2048 &&
             commitHookPassiveMountEffects(finishedWork, Passive | HasEffect);
           break;
+        case 1:
+          recursivelyTraversePassiveMountEffects(
+            finishedRoot,
+            finishedWork,
+            committedLanes,
+            committedTransitions
+          );
+          break;
         case 3:
           var prevEffectDuration = pushNestedEffectDurations();
           recursivelyTraversePassiveMountEffects(
@@ -17678,11 +17686,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.1.0-native-fb-1e9eb95d-20250102" !== isomorphicReactPackageVersion)
+    if ("19.1.0-native-fb-0de1233f-20250102" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.1.0-native-fb-1e9eb95d-20250102\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.1.0-native-fb-0de1233f-20250102\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17708,10 +17716,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-1e9eb95d-20250102",
+        version: "19.1.0-native-fb-0de1233f-20250102",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-1e9eb95d-20250102"
+        reconcilerVersion: "19.1.0-native-fb-0de1233f-20250102"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

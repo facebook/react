@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<07a89024be5e19bbbbde81939f947916>>
+ * @generated SignedSource<<a46a853d125e49ee2dc96219ea73d8d4>>
  */
 
 "use strict";
@@ -9387,6 +9387,14 @@ function commitPassiveMountOnFiber(
       );
       flags & 2048 && commitHookPassiveMountEffects(finishedWork, 9);
       break;
+    case 1:
+      recursivelyTraversePassiveMountEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        committedTransitions
+      );
+      break;
     case 3:
       var prevEffectDuration = pushNestedEffectDurations();
       recursivelyTraversePassiveMountEffects(
@@ -11779,10 +11787,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1303 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-1e9eb95d-20250102",
+    version: "19.1.0-native-fb-0de1233f-20250102",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-1e9eb95d-20250102"
+    reconcilerVersion: "19.1.0-native-fb-0de1233f-20250102"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1303.rendererConfig = extraDevToolsConfig);

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<202ed9ba565483383e868612d7aff2f8>>
+ * @generated SignedSource<<8a36044b1c502e582196d7022d404614>>
  */
 
 "use strict";
@@ -7568,6 +7568,14 @@ function commitPassiveMountOnFiber(
       );
       flags & 2048 && commitHookEffectListMount(9, finishedWork);
       break;
+    case 1:
+      recursivelyTraversePassiveMountEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        committedTransitions
+      );
+      break;
     case 3:
       recursivelyTraversePassiveMountEffects(
         finishedRoot,
@@ -9774,10 +9782,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1395 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-1e9eb95d-20250102",
+  version: "19.1.0-native-fb-0de1233f-20250102",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-1e9eb95d-20250102"
+  reconcilerVersion: "19.1.0-native-fb-0de1233f-20250102"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1396 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -9913,4 +9921,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.1.0-native-fb-1e9eb95d-20250102";
+exports.version = "19.1.0-native-fb-0de1233f-20250102";

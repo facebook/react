@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<86abef66b583153759993348c91986c1>>
+ * @generated SignedSource<<d71770dc72576992d5ed414e47a870b6>>
  */
 
 "use strict";
@@ -8023,6 +8023,14 @@ function commitPassiveMountOnFiber(
       );
       flags & 2048 && commitHookPassiveMountEffects(finishedWork, 9);
       break;
+    case 1:
+      recursivelyTraversePassiveMountEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        committedTransitions
+      );
+      break;
     case 3:
       var prevEffectDuration = pushNestedEffectDurations();
       recursivelyTraversePassiveMountEffects(
@@ -10343,10 +10351,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1205 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-1e9eb95d-20250102",
+  version: "19.1.0-native-fb-0de1233f-20250102",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-1e9eb95d-20250102",
+  reconcilerVersion: "19.1.0-native-fb-0de1233f-20250102",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$147 = 0;
@@ -10497,4 +10505,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.1.0-native-fb-1e9eb95d-20250102";
+exports.version = "19.1.0-native-fb-0de1233f-20250102";

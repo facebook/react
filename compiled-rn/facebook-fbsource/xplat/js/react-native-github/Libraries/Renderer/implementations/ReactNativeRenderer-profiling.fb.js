@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<147a51f0531cdd8b58298e819fd00f1c>>
+ * @generated SignedSource<<acc24c63d077d9351ffefbe37829e1fb>>
  */
 
 "use strict";
@@ -9813,6 +9813,14 @@ function commitPassiveMountOnFiber(
       );
       flags & 2048 && commitHookPassiveMountEffects(finishedWork, 9);
       break;
+    case 1:
+      recursivelyTraversePassiveMountEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        committedTransitions
+      );
+      break;
     case 3:
       var prevEffectDuration = pushNestedEffectDurations();
       recursivelyTraversePassiveMountEffects(
@@ -11905,11 +11913,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.1.0-native-fb-1e9eb95d-20250102" !== isomorphicReactPackageVersion)
+if ("19.1.0-native-fb-0de1233f-20250102" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.1.0-native-fb-1e9eb95d-20250102\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.1.0-native-fb-0de1233f-20250102\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11958,10 +11966,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1375 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-1e9eb95d-20250102",
+    version: "19.1.0-native-fb-0de1233f-20250102",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-1e9eb95d-20250102"
+    reconcilerVersion: "19.1.0-native-fb-0de1233f-20250102"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1375.rendererConfig = extraDevToolsConfig);

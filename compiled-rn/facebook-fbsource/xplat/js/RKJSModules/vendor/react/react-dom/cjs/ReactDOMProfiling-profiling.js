@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<588e74660dc4fc481e1af087b68ee058>>
+ * @generated SignedSource<<c214cb028665c166dcee24352e0a24b3>>
  */
 
 /*
@@ -10047,6 +10047,14 @@ function commitPassiveMountOnFiber(
       );
       flags & 2048 && commitHookPassiveMountEffects(finishedWork, 9);
       break;
+    case 1:
+      recursivelyTraversePassiveMountEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        committedTransitions
+      );
+      break;
     case 3:
       var prevEffectDuration = pushNestedEffectDurations();
       recursivelyTraversePassiveMountEffects(
@@ -16565,14 +16573,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1818 = React.version;
 if (
-  "19.1.0-native-fb-1e9eb95d-20250102" !==
+  "19.1.0-native-fb-0de1233f-20250102" !==
   isomorphicReactPackageVersion$jscomp$inline_1818
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1818,
-      "19.1.0-native-fb-1e9eb95d-20250102"
+      "19.1.0-native-fb-0de1233f-20250102"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16594,10 +16602,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_1825 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-1e9eb95d-20250102",
+  version: "19.1.0-native-fb-0de1233f-20250102",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-1e9eb95d-20250102",
+  reconcilerVersion: "19.1.0-native-fb-0de1233f-20250102",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$293 = 0;
@@ -16872,7 +16880,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-native-fb-1e9eb95d-20250102";
+exports.version = "19.1.0-native-fb-0de1233f-20250102";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

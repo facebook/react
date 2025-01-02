@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bba45fef0b21b0c779f83cf42d706314>>
+ * @generated SignedSource<<42cc2c850c3bebea5d8f9ca80c22c5c2>>
  */
 
 "use strict";
@@ -10508,6 +10508,14 @@ __DEV__ &&
           flags & 2048 &&
             commitHookPassiveMountEffects(finishedWork, Passive | HasEffect);
           break;
+        case 1:
+          recursivelyTraversePassiveMountEffects(
+            finishedRoot,
+            finishedWork,
+            committedLanes,
+            committedTransitions
+          );
+          break;
         case 3:
           var prevEffectDuration = pushNestedEffectDurations();
           recursivelyTraversePassiveMountEffects(
@@ -15582,10 +15590,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-1e9eb95d-20250102",
+        version: "19.1.0-native-fb-0de1233f-20250102",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-1e9eb95d-20250102"
+        reconcilerVersion: "19.1.0-native-fb-0de1233f-20250102"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15730,5 +15738,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.1.0-native-fb-1e9eb95d-20250102";
+    exports.version = "19.1.0-native-fb-0de1233f-20250102";
   })();

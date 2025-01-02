@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6f78761dd26a64df0e1a514ff908d403>>
+ * @generated SignedSource<<c14429cd590875303100b804355e2770>>
  */
 
 "use strict";
@@ -11493,6 +11493,14 @@ __DEV__ &&
           flags & 2048 &&
             commitHookPassiveMountEffects(finishedWork, Passive | HasEffect);
           break;
+        case 1:
+          recursivelyTraversePassiveMountEffects(
+            finishedRoot,
+            finishedWork,
+            committedLanes,
+            committedTransitions
+          );
+          break;
         case 3:
           var prevEffectDuration = pushNestedEffectDurations();
           recursivelyTraversePassiveMountEffects(
@@ -17461,10 +17469,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-1e9eb95d-20250102",
+        version: "19.1.0-native-fb-0de1233f-20250102",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-1e9eb95d-20250102"
+        reconcilerVersion: "19.1.0-native-fb-0de1233f-20250102"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
