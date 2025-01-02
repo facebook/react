@@ -167,6 +167,7 @@ import {
   measureInstance,
   hasInstanceChanged,
   hasInstanceAffectedParent,
+  wasInstanceInViewport,
 } from './ReactFiberConfig';
 import {
   captureCommitPhaseError,
@@ -741,10 +742,11 @@ function measureViewTransitionHostInstances(
   child: null | Fiber,
   previousMeasurements: null | Array<InstanceMeasurement>,
   stopAtNestedViewTransitions: boolean,
-): void {
+): boolean {
   if (!supportsMutation) {
-    return;
+    return true;
   }
+  let inViewport = false;
   while (child !== null) {
     if (child.tag === HostComponent) {
       const instance: Instance = child.stateNode;
@@ -759,27 +761,17 @@ function measureViewTransitionHostInstances(
           previousMeasurements[viewTransitionHostInstanceIdx];
         const nextMeasurement = measureInstance(instance);
         if (
-          (parentViewTransition.flags & Update) === NoFlags &&
-          !hasInstanceChanged(previousMeasurement, nextMeasurement)
+          wasInstanceInViewport(previousMeasurement) ||
+          wasInstanceInViewport(nextMeasurement)
         ) {
-          // It turns out that we had no other deeper mutations, the child transitions didn't
-          // affect the parent layout and this instance hasn't changed size. So we can skip
-          // animating it. However, in the current model this only works if the parent also
-          // doesn't animate. So we have to queue these and wait until we complete the parent
-          // to cancel them.
-          const oldName = getViewTransitionName(
-            currentViewTransition.memoizedProps,
-            currentViewTransition.stateNode,
-          );
-          if (viewTransitionCancelableChildren === null) {
-            viewTransitionCancelableChildren = [];
-          }
-          viewTransitionCancelableChildren.push(
-            instance,
-            oldName,
-            child.memoizedProps,
-          );
-        } else {
+          // If either the old or new state was within the viewport we have to animate this.
+          // But if it turns out that none of them were we'll be able to skip it.
+          inViewport = true;
+        }
+        if (
+          (parentViewTransition.flags & Update) === NoFlags &&
+          hasInstanceChanged(previousMeasurement, nextMeasurement)
+        ) {
           parentViewTransition.flags |= Update;
         }
         if (hasInstanceAffectedParent(previousMeasurement, nextMeasurement)) {
@@ -787,6 +779,29 @@ function measureViewTransitionHostInstances(
           // parent to relayout which needs a cross fade.
           parentViewTransition.flags |= AffectedParentLayout;
         }
+      } else {
+        // If there was an insertion of extra nodes, we have to assume they affected the parent.
+        // It should have already been marked as an Update due to the mutation.
+        parentViewTransition.flags |= AffectedParentLayout;
+      }
+      if (!inViewport || (parentViewTransition.flags & Update) === NoFlags) {
+        // It turns out that we had no other deeper mutations, the child transitions didn't
+        // affect the parent layout and this instance hasn't changed size. So we can skip
+        // animating it. However, in the current model this only works if the parent also
+        // doesn't animate. So we have to queue these and wait until we complete the parent
+        // to cancel them.
+        const oldName = getViewTransitionName(
+          currentViewTransition.memoizedProps,
+          currentViewTransition.stateNode,
+        );
+        if (viewTransitionCancelableChildren === null) {
+          viewTransitionCancelableChildren = [];
+        }
+        viewTransitionCancelableChildren.push(
+          instance,
+          oldName,
+          child.memoizedProps,
+        );
       }
       viewTransitionHostInstanceIdx++;
     } else if (
@@ -803,27 +818,32 @@ function measureViewTransitionHostInstances(
       // If this inner boundary resized we need to bubble that information up.
       parentViewTransition.flags |= child.flags & AffectedParentLayout;
     } else {
-      measureViewTransitionHostInstances(
-        currentViewTransition,
-        parentViewTransition,
-        child.child,
-        previousMeasurements,
-        stopAtNestedViewTransitions,
-      );
+      if (
+        measureViewTransitionHostInstances(
+          currentViewTransition,
+          parentViewTransition,
+          child.child,
+          previousMeasurements,
+          stopAtNestedViewTransitions,
+        )
+      ) {
+        inViewport = true;
+      }
     }
     child = child.sibling;
   }
+  return inViewport;
 }
 
 function measureUpdateViewTransition(
   current: Fiber,
   finishedWork: Fiber,
-): void {
+): boolean {
   // If nothing changed due to a mutation, or children changing size
   // and the measurements end up unchanged, we should restore it to not animate.
   viewTransitionHostInstanceIdx = 0;
   const previousMeasurements = finishedWork.memoizedState;
-  measureViewTransitionHostInstances(
+  const inViewport = measureViewTransitionHostInstances(
     current,
     finishedWork,
     finishedWork.child,
@@ -838,6 +858,7 @@ function measureUpdateViewTransition(
     // true if those nodes were absolutely positioned.
     finishedWork.flags |= AffectedParentLayout;
   }
+  return inViewport;
 }
 
 function measureNestedViewTransitions(changedParent: Fiber): void {
@@ -2830,11 +2851,13 @@ function commitAfterMutationEffectsOnFiber(
           finishedWork.flags |= Update;
         }
 
-        measureUpdateViewTransition(current, finishedWork);
+        const inViewPort = measureUpdateViewTransition(current, finishedWork);
 
-        if ((finishedWork.flags & Update) === NoFlags) {
+        if ((finishedWork.flags & Update) === NoFlags || !inViewPort) {
           // If this boundary didn't update, then we may be able to cancel its children.
           // We bubble them up to the parent set to be determined later if we can cancel.
+          // Similarly, if old and new state was outside the viewport, we can skip it
+          // even if it did update.
           if (prevCancelableChildren === null) {
             // Bubbling up this whole set to the parent.
           } else {
