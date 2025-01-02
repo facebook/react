@@ -23,8 +23,14 @@ defaults:
 
 jobs:
   playground:
-    name: Test playground
+    name: yarn test (Shard ${{ matrix.shard }})
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        shard:
+          - 1/3
+          - 2/3
+          - 3/3
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -44,7 +50,7 @@ jobs:
       - name: yarn install playground
         run: yarn install --frozen-lockfile
       - run: npx playwright install --with-deps chromium
-      - run: CI=true yarn test
+      - run: CI=true yarn test --shard=${{ matrix.shard }}
       - run: ls -R test-results
         if: '!cancelled()'
       - name: Archive test results
