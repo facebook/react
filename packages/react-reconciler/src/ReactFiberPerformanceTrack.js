@@ -242,7 +242,7 @@ function logComponentEffectErrored(
         devtools: {
           color: 'error',
           track: COMPONENTS_TRACK,
-          tooltipText: 'A life cycle or effect errored',
+          tooltipText: 'A lifecycle or effect errored',
           properties,
         },
       },
