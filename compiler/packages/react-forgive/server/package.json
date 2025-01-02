@@ -1,0 +1,20 @@
+{
+  "private": "true",
+  "name": "react-forgive-server",
+  "version": "0.0.0",
+  "description": "Experimental LSP server",
+  "license": "MIT",
+  "scripts": {
+    "build": "echo 'no build'",
+    "test": "echo 'no tests'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/react.git",
+    "directory": "compiler/packages/react-forgive-server"
+  },
+  "dependencies": {
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.12"
+  }
+}

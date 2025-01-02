@@ -1,0 +1,13 @@
+{
+  "extends": "@tsconfig/strictest/tsconfig.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "outDir": "dist",
+    "jsx": "react-jsxdev",
+    "lib": ["ES2020"],
+    "target": "ES2020",
+  },
+  "exclude": ["node_modules", ".vscode-test"],
+  "include": ["src/**/*.ts"],
+}
