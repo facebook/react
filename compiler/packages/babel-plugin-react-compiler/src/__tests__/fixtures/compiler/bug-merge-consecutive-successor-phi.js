@@ -11,7 +11,7 @@ function component() {
     v3 = v4;
   }
   v4 = v3;
-  return [acc,v3,v4];
+  return [acc, v3, v4];
 }
 
 export const FIXTURE_ENTRYPOINT = {
