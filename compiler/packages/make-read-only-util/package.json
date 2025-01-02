@@ -1,12 +1,14 @@
 {
   "name": "make-read-only-util",
   "version": "0.0.1",
+  "license": "MIT",
   "files": [
     "src"
   ],
   "scripts": {
-    "build": "tsc",
-    "test": "jest src"
+    "build": "rimraf dist && scripts/build.js",
+    "test": "jest src",
+    "watch": "scripts/build.js --watch"
   },
   "dependencies": {
     "invariant": "^2.2.4",
