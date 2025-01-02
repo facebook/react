@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<4273966f0093cb177109ee9341ae16bb>>
+ * @generated SignedSource<<20e2eb25c216d123abccc5325265e82c>>
  */
 
 "use strict";
@@ -8758,45 +8758,42 @@ var offscreenSubtreeIsHidden = !1,
   PossiblyWeakSet = "function" === typeof WeakSet ? WeakSet : Set,
   nextEffect = null,
   inProgressLanes = null,
-  inProgressRoot = null,
-  shouldFireAfterActiveInstanceBlur = !1;
-function commitBeforeMutationEffects(root, firstChild) {
-  for (nextEffect = firstChild; null !== nextEffect; )
-    if (
-      ((root = nextEffect),
-      (firstChild = root.child),
-      0 !== (root.subtreeFlags & 1024) && null !== firstChild)
-    )
-      (firstChild.return = root), (nextEffect = firstChild);
+  inProgressRoot = null;
+function commitBeforeMutationEffects_begin() {
+  for (; null !== nextEffect; ) {
+    var fiber = nextEffect,
+      child = fiber.child;
+    if (0 !== (fiber.subtreeFlags & 1024) && null !== child)
+      (child.return = fiber), (nextEffect = child);
     else
-      for (; null !== nextEffect; ) {
-        root = nextEffect;
-        var current = root.alternate;
-        firstChild = root.flags;
-        switch (root.tag) {
+      a: for (; null !== nextEffect; ) {
+        fiber = nextEffect;
+        child = void 0;
+        var finishedWork = fiber,
+          current = finishedWork.alternate,
+          flags = finishedWork.flags;
+        switch (finishedWork.tag) {
           case 0:
             break;
           case 11:
           case 15:
             break;
           case 1:
-            if (0 !== (firstChild & 1024) && null !== current) {
-              firstChild = void 0;
-              var finishedWork = root,
-                prevProps = current.memoizedProps;
+            if (0 !== (flags & 1024) && null !== current) {
+              flags = current.memoizedProps;
               current = current.memoizedState;
               var instance = finishedWork.stateNode;
               try {
                 var resolvedPrevProps = resolveClassComponentProps(
                   finishedWork.type,
-                  prevProps,
+                  flags,
                   finishedWork.elementType === finishedWork.type
                 );
-                firstChild = instance.getSnapshotBeforeUpdate(
+                child = instance.getSnapshotBeforeUpdate(
                   resolvedPrevProps,
                   current
                 );
-                instance.__reactInternalSnapshotBeforeUpdate = firstChild;
+                instance.__reactInternalSnapshotBeforeUpdate = child;
               } catch (error) {
                 captureCommitPhaseError(
                   finishedWork,
@@ -8816,22 +8813,20 @@ function commitBeforeMutationEffects(root, firstChild) {
           case 17:
             break;
           default:
-            if (0 !== (firstChild & 1024))
+            if (0 !== (flags & 1024))
               throw Error(
                 "This unit of work tag should not have side-effects. This error is likely caused by a bug in React. Please file an issue."
               );
         }
-        firstChild = root.sibling;
-        if (null !== firstChild) {
-          firstChild.return = root.return;
-          nextEffect = firstChild;
-          break;
+        child = fiber.sibling;
+        if (null !== child) {
+          child.return = fiber.return;
+          nextEffect = child;
+          break a;
         }
-        nextEffect = root.return;
+        nextEffect = fiber.return;
       }
-  resolvedPrevProps = shouldFireAfterActiveInstanceBlur;
-  shouldFireAfterActiveInstanceBlur = !1;
-  return resolvedPrevProps;
+  }
 }
 function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
   var flags = finishedWork.flags;
@@ -11238,7 +11233,8 @@ function commitRootImpl(
       (currentUpdatePriority = 2),
       (suspendedRetryLanes = executionContext),
       (executionContext |= 4),
-      commitBeforeMutationEffects(root, finishedWork),
+      (nextEffect = finishedWork),
+      commitBeforeMutationEffects_begin(),
       commitMutationEffects(root, finishedWork, didIncludeRenderPhaseUpdate),
       (root.current = finishedWork),
       null !== injectedProfilingHooks &&
@@ -11913,11 +11909,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.1.0-native-fb-6ca7fbe8-20250102" !== isomorphicReactPackageVersion)
+if ("19.1.0-native-fb-d8b903f4-20250102" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.1.0-native-fb-6ca7fbe8-20250102\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.1.0-native-fb-d8b903f4-20250102\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11964,16 +11960,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1375 = {
+  internals$jscomp$inline_1383 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-6ca7fbe8-20250102",
+    version: "19.1.0-native-fb-d8b903f4-20250102",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-6ca7fbe8-20250102"
+    reconcilerVersion: "19.1.0-native-fb-d8b903f4-20250102"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1375.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1375.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1383.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1383.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$159 = 0;
     31 > index$159;
@@ -11985,20 +11981,20 @@ internals$jscomp$inline_1375.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1375.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1383.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1678 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1691 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1678.isDisabled &&
-    hook$jscomp$inline_1678.supportsFiber
+    !hook$jscomp$inline_1691.isDisabled &&
+    hook$jscomp$inline_1691.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1678.inject(
-        internals$jscomp$inline_1375
+      (rendererID = hook$jscomp$inline_1691.inject(
+        internals$jscomp$inline_1383
       )),
-        (injectedHook = hook$jscomp$inline_1678);
+        (injectedHook = hook$jscomp$inline_1691);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

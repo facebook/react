@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<dbeba7d344c7110bfa3a8e8d5ec927ba>>
+ * @generated SignedSource<<5a40622e394c94757c2fd1f3565494f1>>
  */
 
 /*
@@ -8669,141 +8669,68 @@ var offscreenSubtreeIsHidden = !1,
   PossiblyWeakSet = "function" === typeof WeakSet ? WeakSet : Set,
   nextEffect = null,
   inProgressLanes = null,
-  inProgressRoot = null,
-  shouldFireAfterActiveInstanceBlur = !1;
-function commitBeforeMutationEffects(root, firstChild) {
-  root = root.containerInfo;
-  eventsEnabled = _enabled;
-  root = getActiveElementDeep(root);
-  if (hasSelectionCapabilities(root)) {
-    if ("selectionStart" in root)
-      var JSCompiler_temp = {
-        start: root.selectionStart,
-        end: root.selectionEnd
-      };
+  inProgressRoot = null;
+function commitBeforeMutationEffects_begin() {
+  for (; null !== nextEffect; ) {
+    var fiber = nextEffect,
+      child = fiber.child;
+    if (0 !== (fiber.subtreeFlags & 1024) && null !== child)
+      (child.return = fiber), (nextEffect = child);
     else
-      a: {
-        JSCompiler_temp =
-          ((JSCompiler_temp = root.ownerDocument) &&
-            JSCompiler_temp.defaultView) ||
-          window;
-        var selection =
-          JSCompiler_temp.getSelection && JSCompiler_temp.getSelection();
-        if (selection && 0 !== selection.rangeCount) {
-          JSCompiler_temp = selection.anchorNode;
-          var anchorOffset = selection.anchorOffset,
-            focusNode = selection.focusNode;
-          selection = selection.focusOffset;
-          try {
-            JSCompiler_temp.nodeType, focusNode.nodeType;
-          } catch (e$22) {
-            JSCompiler_temp = null;
-            break a;
-          }
-          var length = 0,
-            start = -1,
-            end = -1,
-            indexWithinAnchor = 0,
-            indexWithinFocus = 0,
-            node = root,
-            parentNode = null;
-          b: for (;;) {
-            for (var next; ; ) {
-              node !== JSCompiler_temp ||
-                (0 !== anchorOffset && 3 !== node.nodeType) ||
-                (start = length + anchorOffset);
-              node !== focusNode ||
-                (0 !== selection && 3 !== node.nodeType) ||
-                (end = length + selection);
-              3 === node.nodeType && (length += node.nodeValue.length);
-              if (null === (next = node.firstChild)) break;
-              parentNode = node;
-              node = next;
-            }
-            for (;;) {
-              if (node === root) break b;
-              parentNode === JSCompiler_temp &&
-                ++indexWithinAnchor === anchorOffset &&
-                (start = length);
-              parentNode === focusNode &&
-                ++indexWithinFocus === selection &&
-                (end = length);
-              if (null !== (next = node.nextSibling)) break;
-              node = parentNode;
-              parentNode = node.parentNode;
-            }
-            node = next;
-          }
-          JSCompiler_temp =
-            -1 === start || -1 === end ? null : { start: start, end: end };
-        } else JSCompiler_temp = null;
-      }
-    JSCompiler_temp = JSCompiler_temp || { start: 0, end: 0 };
-  } else JSCompiler_temp = null;
-  selectionInformation = { focusedElem: root, selectionRange: JSCompiler_temp };
-  _enabled = !1;
-  for (nextEffect = firstChild; null !== nextEffect; )
-    if (
-      ((firstChild = nextEffect),
-      (root = firstChild.child),
-      0 !== (firstChild.subtreeFlags & 1024) && null !== root)
-    )
-      (root.return = firstChild), (nextEffect = root);
-    else
-      for (; null !== nextEffect; ) {
-        firstChild = nextEffect;
-        focusNode = firstChild.alternate;
-        root = firstChild.flags;
-        switch (firstChild.tag) {
+      a: for (; null !== nextEffect; ) {
+        fiber = nextEffect;
+        child = void 0;
+        var finishedWork = fiber,
+          current = finishedWork.alternate,
+          flags = finishedWork.flags;
+        switch (finishedWork.tag) {
           case 0:
             break;
           case 11:
           case 15:
             break;
           case 1:
-            if (0 !== (root & 1024) && null !== focusNode) {
-              root = void 0;
-              JSCompiler_temp = firstChild;
-              anchorOffset = focusNode.memoizedProps;
-              focusNode = focusNode.memoizedState;
-              selection = JSCompiler_temp.stateNode;
+            if (0 !== (flags & 1024) && null !== current) {
+              flags = current.memoizedProps;
+              current = current.memoizedState;
+              var instance = finishedWork.stateNode;
               try {
                 var resolvedPrevProps = resolveClassComponentProps(
-                  JSCompiler_temp.type,
-                  anchorOffset,
-                  JSCompiler_temp.elementType === JSCompiler_temp.type
+                  finishedWork.type,
+                  flags,
+                  finishedWork.elementType === finishedWork.type
                 );
-                root = selection.getSnapshotBeforeUpdate(
+                child = instance.getSnapshotBeforeUpdate(
                   resolvedPrevProps,
-                  focusNode
+                  current
                 );
-                selection.__reactInternalSnapshotBeforeUpdate = root;
+                instance.__reactInternalSnapshotBeforeUpdate = child;
               } catch (error) {
                 captureCommitPhaseError(
-                  JSCompiler_temp,
-                  JSCompiler_temp.return,
+                  finishedWork,
+                  finishedWork.return,
                   error
                 );
               }
             }
             break;
           case 3:
-            if (0 !== (root & 1024))
-              if (
-                ((root = firstChild.stateNode.containerInfo),
-                (JSCompiler_temp = root.nodeType),
-                9 === JSCompiler_temp)
+            if (0 !== (flags & 1024))
+              b: if (
+                ((child = finishedWork.stateNode.containerInfo),
+                (finishedWork = child.nodeType),
+                9 === finishedWork)
               )
-                clearContainerSparingly(root);
-              else if (1 === JSCompiler_temp)
-                switch (root.nodeName) {
+                clearContainerSparingly(child);
+              else if (1 === finishedWork)
+                switch (child.nodeName) {
                   case "HEAD":
                   case "HTML":
                   case "BODY":
-                    clearContainerSparingly(root);
-                    break;
+                    clearContainerSparingly(child);
+                    break b;
                   default:
-                    root.textContent = "";
+                    child.textContent = "";
                 }
             break;
           case 5:
@@ -8814,19 +8741,17 @@ function commitBeforeMutationEffects(root, firstChild) {
           case 17:
             break;
           default:
-            if (0 !== (root & 1024)) throw Error(formatProdErrorMessage(163));
+            if (0 !== (flags & 1024)) throw Error(formatProdErrorMessage(163));
         }
-        root = firstChild.sibling;
-        if (null !== root) {
-          root.return = firstChild.return;
-          nextEffect = root;
-          break;
+        child = fiber.sibling;
+        if (null !== child) {
+          child.return = fiber.return;
+          nextEffect = child;
+          break a;
         }
-        nextEffect = firstChild.return;
+        nextEffect = fiber.return;
       }
-  resolvedPrevProps = shouldFireAfterActiveInstanceBlur;
-  shouldFireAfterActiveInstanceBlur = !1;
-  return resolvedPrevProps;
+  }
 }
 function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
   var flags = finishedWork.flags;
@@ -12508,7 +12433,9 @@ function commitRootImpl(
       (ReactDOMSharedInternals.p = 2),
       (suspendedRetryLanes = executionContext),
       (executionContext |= 4),
-      commitBeforeMutationEffects(root, finishedWork),
+      prepareForCommit(root.containerInfo),
+      (nextEffect = finishedWork),
+      commitBeforeMutationEffects_begin(),
       commitMutationEffects(root, finishedWork, didIncludeRenderPhaseUpdate),
       restoreSelection(selectionInformation, root.containerInfo),
       (_enabled = !!eventsEnabled),
@@ -13042,20 +12969,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1572 = 0;
-  i$jscomp$inline_1572 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1572++
+  var i$jscomp$inline_1579 = 0;
+  i$jscomp$inline_1579 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1579++
 ) {
-  var eventName$jscomp$inline_1573 =
-      simpleEventPluginEvents[i$jscomp$inline_1572],
-    domEventName$jscomp$inline_1574 =
-      eventName$jscomp$inline_1573.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1575 =
-      eventName$jscomp$inline_1573[0].toUpperCase() +
-      eventName$jscomp$inline_1573.slice(1);
+  var eventName$jscomp$inline_1580 =
+      simpleEventPluginEvents[i$jscomp$inline_1579],
+    domEventName$jscomp$inline_1581 =
+      eventName$jscomp$inline_1580.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1582 =
+      eventName$jscomp$inline_1580[0].toUpperCase() +
+      eventName$jscomp$inline_1580.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1574,
-    "on" + capitalizedEvent$jscomp$inline_1575
+    domEventName$jscomp$inline_1581,
+    "on" + capitalizedEvent$jscomp$inline_1582
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -14782,6 +14709,81 @@ function getChildHostContextProd(parentNamespace, type) {
   return 1 === parentNamespace && "foreignObject" === type
     ? 0
     : parentNamespace;
+}
+function prepareForCommit(containerInfo) {
+  eventsEnabled = _enabled;
+  containerInfo = getActiveElementDeep(containerInfo);
+  if (hasSelectionCapabilities(containerInfo)) {
+    if ("selectionStart" in containerInfo)
+      var JSCompiler_temp = {
+        start: containerInfo.selectionStart,
+        end: containerInfo.selectionEnd
+      };
+    else
+      a: {
+        JSCompiler_temp =
+          ((JSCompiler_temp = containerInfo.ownerDocument) &&
+            JSCompiler_temp.defaultView) ||
+          window;
+        var selection =
+          JSCompiler_temp.getSelection && JSCompiler_temp.getSelection();
+        if (selection && 0 !== selection.rangeCount) {
+          JSCompiler_temp = selection.anchorNode;
+          var anchorOffset = selection.anchorOffset,
+            focusNode = selection.focusNode;
+          selection = selection.focusOffset;
+          try {
+            JSCompiler_temp.nodeType, focusNode.nodeType;
+          } catch (e$22) {
+            JSCompiler_temp = null;
+            break a;
+          }
+          var length = 0,
+            start = -1,
+            end = -1,
+            indexWithinAnchor = 0,
+            indexWithinFocus = 0,
+            node = containerInfo,
+            parentNode = null;
+          b: for (;;) {
+            for (var next; ; ) {
+              node !== JSCompiler_temp ||
+                (0 !== anchorOffset && 3 !== node.nodeType) ||
+                (start = length + anchorOffset);
+              node !== focusNode ||
+                (0 !== selection && 3 !== node.nodeType) ||
+                (end = length + selection);
+              3 === node.nodeType && (length += node.nodeValue.length);
+              if (null === (next = node.firstChild)) break;
+              parentNode = node;
+              node = next;
+            }
+            for (;;) {
+              if (node === containerInfo) break b;
+              parentNode === JSCompiler_temp &&
+                ++indexWithinAnchor === anchorOffset &&
+                (start = length);
+              parentNode === focusNode &&
+                ++indexWithinFocus === selection &&
+                (end = length);
+              if (null !== (next = node.nextSibling)) break;
+              node = parentNode;
+              parentNode = node.parentNode;
+            }
+            node = next;
+          }
+          JSCompiler_temp =
+            -1 === start || -1 === end ? null : { start: start, end: end };
+        } else JSCompiler_temp = null;
+      }
+    JSCompiler_temp = JSCompiler_temp || { start: 0, end: 0 };
+  } else JSCompiler_temp = null;
+  selectionInformation = {
+    focusedElem: containerInfo,
+    selectionRange: JSCompiler_temp
+  };
+  _enabled = !1;
+  return null;
 }
 function shouldSetTextContent(type, props) {
   return (
@@ -16556,16 +16558,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_1817 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1827 = React.version;
 if (
-  "19.1.0-native-fb-6ca7fbe8-20250102" !==
-  isomorphicReactPackageVersion$jscomp$inline_1817
+  "19.1.0-native-fb-d8b903f4-20250102" !==
+  isomorphicReactPackageVersion$jscomp$inline_1827
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1817,
-      "19.1.0-native-fb-6ca7fbe8-20250102"
+      isomorphicReactPackageVersion$jscomp$inline_1827,
+      "19.1.0-native-fb-d8b903f4-20250102"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16585,12 +16587,12 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_1824 = {
+var internals$jscomp$inline_1834 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-6ca7fbe8-20250102",
+  version: "19.1.0-native-fb-d8b903f4-20250102",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-6ca7fbe8-20250102",
+  reconcilerVersion: "19.1.0-native-fb-d8b903f4-20250102",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$293 = 0;
@@ -16608,16 +16610,16 @@ var internals$jscomp$inline_1824 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2237 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2250 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2237.isDisabled &&
-    hook$jscomp$inline_2237.supportsFiber
+    !hook$jscomp$inline_2250.isDisabled &&
+    hook$jscomp$inline_2250.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2237.inject(
-        internals$jscomp$inline_1824
+      (rendererID = hook$jscomp$inline_2250.inject(
+        internals$jscomp$inline_1834
       )),
-        (injectedHook = hook$jscomp$inline_2237);
+        (injectedHook = hook$jscomp$inline_2250);
     } catch (err) {}
 }
 exports.createRoot = function (container, options) {
@@ -16711,4 +16713,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.1.0-native-fb-6ca7fbe8-20250102";
+exports.version = "19.1.0-native-fb-d8b903f4-20250102";

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c77b195c736bbeccd3822e66e1d670bd>>
+ * @generated SignedSource<<12688e58634442d5ebafd6664565ef2f>>
  */
 
 "use strict";
@@ -8331,45 +8331,42 @@ function insertOrAppendPlacementNode(node, before, parent) {
 var offscreenSubtreeIsHidden = !1,
   offscreenSubtreeWasHidden = !1,
   PossiblyWeakSet = "function" === typeof WeakSet ? WeakSet : Set,
-  nextEffect = null,
-  shouldFireAfterActiveInstanceBlur = !1;
-function commitBeforeMutationEffects(root, firstChild) {
-  for (nextEffect = firstChild; null !== nextEffect; )
-    if (
-      ((root = nextEffect),
-      (firstChild = root.child),
-      0 !== (root.subtreeFlags & 1024) && null !== firstChild)
-    )
-      (firstChild.return = root), (nextEffect = firstChild);
+  nextEffect = null;
+function commitBeforeMutationEffects_begin() {
+  for (; null !== nextEffect; ) {
+    var fiber = nextEffect,
+      child = fiber.child;
+    if (0 !== (fiber.subtreeFlags & 1024) && null !== child)
+      (child.return = fiber), (nextEffect = child);
     else
-      for (; null !== nextEffect; ) {
-        root = nextEffect;
-        var current = root.alternate;
-        firstChild = root.flags;
-        switch (root.tag) {
+      a: for (; null !== nextEffect; ) {
+        fiber = nextEffect;
+        child = void 0;
+        var finishedWork = fiber,
+          current = finishedWork.alternate,
+          flags = finishedWork.flags;
+        switch (finishedWork.tag) {
           case 0:
             break;
           case 11:
           case 15:
             break;
           case 1:
-            if (0 !== (firstChild & 1024) && null !== current) {
-              firstChild = void 0;
-              var finishedWork = root,
-                prevProps = current.memoizedProps;
+            if (0 !== (flags & 1024) && null !== current) {
+              flags = current.memoizedProps;
               current = current.memoizedState;
               var instance = finishedWork.stateNode;
               try {
                 var resolvedPrevProps = resolveClassComponentProps(
                   finishedWork.type,
-                  prevProps,
+                  flags,
                   finishedWork.elementType === finishedWork.type
                 );
-                firstChild = instance.getSnapshotBeforeUpdate(
+                child = instance.getSnapshotBeforeUpdate(
                   resolvedPrevProps,
                   current
                 );
-                instance.__reactInternalSnapshotBeforeUpdate = firstChild;
+                instance.__reactInternalSnapshotBeforeUpdate = child;
               } catch (error) {
                 captureCommitPhaseError(
                   finishedWork,
@@ -8389,22 +8386,20 @@ function commitBeforeMutationEffects(root, firstChild) {
           case 17:
             break;
           default:
-            if (0 !== (firstChild & 1024))
+            if (0 !== (flags & 1024))
               throw Error(
                 "This unit of work tag should not have side-effects. This error is likely caused by a bug in React. Please file an issue."
               );
         }
-        firstChild = root.sibling;
-        if (null !== firstChild) {
-          firstChild.return = root.return;
-          nextEffect = firstChild;
-          break;
+        child = fiber.sibling;
+        if (null !== child) {
+          child.return = fiber.return;
+          nextEffect = child;
+          break a;
         }
-        nextEffect = root.return;
+        nextEffect = fiber.return;
       }
-  resolvedPrevProps = shouldFireAfterActiveInstanceBlur;
-  shouldFireAfterActiveInstanceBlur = !1;
-  return resolvedPrevProps;
+  }
 }
 function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
   var flags = finishedWork.flags;
@@ -10634,7 +10629,8 @@ function commitRootImpl(
       (currentUpdatePriority = 2),
       (suspendedRetryLanes = executionContext),
       (executionContext |= 4),
-      commitBeforeMutationEffects(root, finishedWork),
+      (nextEffect = finishedWork),
+      commitBeforeMutationEffects_begin(),
       commitMutationEffectsOnFiber(finishedWork, root),
       (root.current = finishedWork),
       commitLayoutEffectOnFiber(root, finishedWork.alternate, finishedWork),
@@ -11257,11 +11253,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.1.0-native-fb-6ca7fbe8-20250102" !== isomorphicReactPackageVersion)
+if ("19.1.0-native-fb-d8b903f4-20250102" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.1.0-native-fb-6ca7fbe8-20250102\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.1.0-native-fb-d8b903f4-20250102\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11308,26 +11304,26 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1287 = {
+  internals$jscomp$inline_1295 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-6ca7fbe8-20250102",
+    version: "19.1.0-native-fb-d8b903f4-20250102",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-6ca7fbe8-20250102"
+    reconcilerVersion: "19.1.0-native-fb-d8b903f4-20250102"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1287.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1295.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1627 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1640 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1627.isDisabled &&
-    hook$jscomp$inline_1627.supportsFiber
+    !hook$jscomp$inline_1640.isDisabled &&
+    hook$jscomp$inline_1640.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1627.inject(
-        internals$jscomp$inline_1287
+      (rendererID = hook$jscomp$inline_1640.inject(
+        internals$jscomp$inline_1295
       )),
-        (injectedHook = hook$jscomp$inline_1627);
+        (injectedHook = hook$jscomp$inline_1640);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

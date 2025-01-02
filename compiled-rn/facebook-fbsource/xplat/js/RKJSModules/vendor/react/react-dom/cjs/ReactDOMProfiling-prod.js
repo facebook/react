@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e3a27af4207be49ebe3c5984d420fd3b>>
+ * @generated SignedSource<<6b4c3f237b1d94f57b4012267b4ca061>>
  */
 
 /*
@@ -8307,141 +8307,68 @@ var offscreenSubtreeIsHidden = !1,
   offscreenSubtreeWasHidden = !1,
   needsFormReset = !1,
   PossiblyWeakSet = "function" === typeof WeakSet ? WeakSet : Set,
-  nextEffect = null,
-  shouldFireAfterActiveInstanceBlur = !1;
-function commitBeforeMutationEffects(root, firstChild) {
-  root = root.containerInfo;
-  eventsEnabled = _enabled;
-  root = getActiveElementDeep(root);
-  if (hasSelectionCapabilities(root)) {
-    if ("selectionStart" in root)
-      var JSCompiler_temp = {
-        start: root.selectionStart,
-        end: root.selectionEnd
-      };
+  nextEffect = null;
+function commitBeforeMutationEffects_begin() {
+  for (; null !== nextEffect; ) {
+    var fiber = nextEffect,
+      child = fiber.child;
+    if (0 !== (fiber.subtreeFlags & 1024) && null !== child)
+      (child.return = fiber), (nextEffect = child);
     else
-      a: {
-        JSCompiler_temp =
-          ((JSCompiler_temp = root.ownerDocument) &&
-            JSCompiler_temp.defaultView) ||
-          window;
-        var selection =
-          JSCompiler_temp.getSelection && JSCompiler_temp.getSelection();
-        if (selection && 0 !== selection.rangeCount) {
-          JSCompiler_temp = selection.anchorNode;
-          var anchorOffset = selection.anchorOffset,
-            focusNode = selection.focusNode;
-          selection = selection.focusOffset;
-          try {
-            JSCompiler_temp.nodeType, focusNode.nodeType;
-          } catch (e$20) {
-            JSCompiler_temp = null;
-            break a;
-          }
-          var length = 0,
-            start = -1,
-            end = -1,
-            indexWithinAnchor = 0,
-            indexWithinFocus = 0,
-            node = root,
-            parentNode = null;
-          b: for (;;) {
-            for (var next; ; ) {
-              node !== JSCompiler_temp ||
-                (0 !== anchorOffset && 3 !== node.nodeType) ||
-                (start = length + anchorOffset);
-              node !== focusNode ||
-                (0 !== selection && 3 !== node.nodeType) ||
-                (end = length + selection);
-              3 === node.nodeType && (length += node.nodeValue.length);
-              if (null === (next = node.firstChild)) break;
-              parentNode = node;
-              node = next;
-            }
-            for (;;) {
-              if (node === root) break b;
-              parentNode === JSCompiler_temp &&
-                ++indexWithinAnchor === anchorOffset &&
-                (start = length);
-              parentNode === focusNode &&
-                ++indexWithinFocus === selection &&
-                (end = length);
-              if (null !== (next = node.nextSibling)) break;
-              node = parentNode;
-              parentNode = node.parentNode;
-            }
-            node = next;
-          }
-          JSCompiler_temp =
-            -1 === start || -1 === end ? null : { start: start, end: end };
-        } else JSCompiler_temp = null;
-      }
-    JSCompiler_temp = JSCompiler_temp || { start: 0, end: 0 };
-  } else JSCompiler_temp = null;
-  selectionInformation = { focusedElem: root, selectionRange: JSCompiler_temp };
-  _enabled = !1;
-  for (nextEffect = firstChild; null !== nextEffect; )
-    if (
-      ((firstChild = nextEffect),
-      (root = firstChild.child),
-      0 !== (firstChild.subtreeFlags & 1024) && null !== root)
-    )
-      (root.return = firstChild), (nextEffect = root);
-    else
-      for (; null !== nextEffect; ) {
-        firstChild = nextEffect;
-        focusNode = firstChild.alternate;
-        root = firstChild.flags;
-        switch (firstChild.tag) {
+      a: for (; null !== nextEffect; ) {
+        fiber = nextEffect;
+        child = void 0;
+        var finishedWork = fiber,
+          current = finishedWork.alternate,
+          flags = finishedWork.flags;
+        switch (finishedWork.tag) {
           case 0:
             break;
           case 11:
           case 15:
             break;
           case 1:
-            if (0 !== (root & 1024) && null !== focusNode) {
-              root = void 0;
-              JSCompiler_temp = firstChild;
-              anchorOffset = focusNode.memoizedProps;
-              focusNode = focusNode.memoizedState;
-              selection = JSCompiler_temp.stateNode;
+            if (0 !== (flags & 1024) && null !== current) {
+              flags = current.memoizedProps;
+              current = current.memoizedState;
+              var instance = finishedWork.stateNode;
               try {
                 var resolvedPrevProps = resolveClassComponentProps(
-                  JSCompiler_temp.type,
-                  anchorOffset,
-                  JSCompiler_temp.elementType === JSCompiler_temp.type
+                  finishedWork.type,
+                  flags,
+                  finishedWork.elementType === finishedWork.type
                 );
-                root = selection.getSnapshotBeforeUpdate(
+                child = instance.getSnapshotBeforeUpdate(
                   resolvedPrevProps,
-                  focusNode
+                  current
                 );
-                selection.__reactInternalSnapshotBeforeUpdate = root;
+                instance.__reactInternalSnapshotBeforeUpdate = child;
               } catch (error) {
                 captureCommitPhaseError(
-                  JSCompiler_temp,
-                  JSCompiler_temp.return,
+                  finishedWork,
+                  finishedWork.return,
                   error
                 );
               }
             }
             break;
           case 3:
-            if (0 !== (root & 1024))
-              if (
-                ((root = firstChild.stateNode.containerInfo),
-                (JSCompiler_temp = root.nodeType),
-                9 === JSCompiler_temp)
+            if (0 !== (flags & 1024))
+              b: if (
+                ((child = finishedWork.stateNode.containerInfo),
+                (finishedWork = child.nodeType),
+                9 === finishedWork)
               )
-                clearContainerSparingly(root);
-              else if (1 === JSCompiler_temp)
-                switch (root.nodeName) {
+                clearContainerSparingly(child);
+              else if (1 === finishedWork)
+                switch (child.nodeName) {
                   case "HEAD":
                   case "HTML":
                   case "BODY":
-                    clearContainerSparingly(root);
-                    break;
+                    clearContainerSparingly(child);
+                    break b;
                   default:
-                    root.textContent = "";
+                    child.textContent = "";
                 }
             break;
           case 5:
@@ -8452,19 +8379,17 @@ function commitBeforeMutationEffects(root, firstChild) {
           case 17:
             break;
           default:
-            if (0 !== (root & 1024)) throw Error(formatProdErrorMessage(163));
+            if (0 !== (flags & 1024)) throw Error(formatProdErrorMessage(163));
         }
-        root = firstChild.sibling;
-        if (null !== root) {
-          root.return = firstChild.return;
-          nextEffect = root;
-          break;
+        child = fiber.sibling;
+        if (null !== child) {
+          child.return = fiber.return;
+          nextEffect = child;
+          break a;
         }
-        nextEffect = firstChild.return;
+        nextEffect = fiber.return;
       }
-  resolvedPrevProps = shouldFireAfterActiveInstanceBlur;
-  shouldFireAfterActiveInstanceBlur = !1;
-  return resolvedPrevProps;
+  }
 }
 function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
   var flags = finishedWork.flags;
@@ -11895,7 +11820,9 @@ function commitRootImpl(
       (ReactDOMSharedInternals.p = 2),
       (suspendedRetryLanes = executionContext),
       (executionContext |= 4),
-      commitBeforeMutationEffects(root, finishedWork),
+      prepareForCommit(root.containerInfo),
+      (nextEffect = finishedWork),
+      commitBeforeMutationEffects_begin(),
       commitMutationEffectsOnFiber(finishedWork, root),
       restoreSelection(selectionInformation, root.containerInfo),
       (_enabled = !!eventsEnabled),
@@ -12397,20 +12324,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1485 = 0;
-  i$jscomp$inline_1485 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1485++
+  var i$jscomp$inline_1492 = 0;
+  i$jscomp$inline_1492 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1492++
 ) {
-  var eventName$jscomp$inline_1486 =
-      simpleEventPluginEvents[i$jscomp$inline_1485],
-    domEventName$jscomp$inline_1487 =
-      eventName$jscomp$inline_1486.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1488 =
-      eventName$jscomp$inline_1486[0].toUpperCase() +
-      eventName$jscomp$inline_1486.slice(1);
+  var eventName$jscomp$inline_1493 =
+      simpleEventPluginEvents[i$jscomp$inline_1492],
+    domEventName$jscomp$inline_1494 =
+      eventName$jscomp$inline_1493.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1495 =
+      eventName$jscomp$inline_1493[0].toUpperCase() +
+      eventName$jscomp$inline_1493.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1487,
-    "on" + capitalizedEvent$jscomp$inline_1488
+    domEventName$jscomp$inline_1494,
+    "on" + capitalizedEvent$jscomp$inline_1495
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -14137,6 +14064,81 @@ function getChildHostContextProd(parentNamespace, type) {
   return 1 === parentNamespace && "foreignObject" === type
     ? 0
     : parentNamespace;
+}
+function prepareForCommit(containerInfo) {
+  eventsEnabled = _enabled;
+  containerInfo = getActiveElementDeep(containerInfo);
+  if (hasSelectionCapabilities(containerInfo)) {
+    if ("selectionStart" in containerInfo)
+      var JSCompiler_temp = {
+        start: containerInfo.selectionStart,
+        end: containerInfo.selectionEnd
+      };
+    else
+      a: {
+        JSCompiler_temp =
+          ((JSCompiler_temp = containerInfo.ownerDocument) &&
+            JSCompiler_temp.defaultView) ||
+          window;
+        var selection =
+          JSCompiler_temp.getSelection && JSCompiler_temp.getSelection();
+        if (selection && 0 !== selection.rangeCount) {
+          JSCompiler_temp = selection.anchorNode;
+          var anchorOffset = selection.anchorOffset,
+            focusNode = selection.focusNode;
+          selection = selection.focusOffset;
+          try {
+            JSCompiler_temp.nodeType, focusNode.nodeType;
+          } catch (e$20) {
+            JSCompiler_temp = null;
+            break a;
+          }
+          var length = 0,
+            start = -1,
+            end = -1,
+            indexWithinAnchor = 0,
+            indexWithinFocus = 0,
+            node = containerInfo,
+            parentNode = null;
+          b: for (;;) {
+            for (var next; ; ) {
+              node !== JSCompiler_temp ||
+                (0 !== anchorOffset && 3 !== node.nodeType) ||
+                (start = length + anchorOffset);
+              node !== focusNode ||
+                (0 !== selection && 3 !== node.nodeType) ||
+                (end = length + selection);
+              3 === node.nodeType && (length += node.nodeValue.length);
+              if (null === (next = node.firstChild)) break;
+              parentNode = node;
+              node = next;
+            }
+            for (;;) {
+              if (node === containerInfo) break b;
+              parentNode === JSCompiler_temp &&
+                ++indexWithinAnchor === anchorOffset &&
+                (start = length);
+              parentNode === focusNode &&
+                ++indexWithinFocus === selection &&
+                (end = length);
+              if (null !== (next = node.nextSibling)) break;
+              node = parentNode;
+              parentNode = node.parentNode;
+            }
+            node = next;
+          }
+          JSCompiler_temp =
+            -1 === start || -1 === end ? null : { start: start, end: end };
+        } else JSCompiler_temp = null;
+      }
+    JSCompiler_temp = JSCompiler_temp || { start: 0, end: 0 };
+  } else JSCompiler_temp = null;
+  selectionInformation = {
+    focusedElem: containerInfo,
+    selectionRange: JSCompiler_temp
+  };
+  _enabled = !1;
+  return null;
 }
 function shouldSetTextContent(type, props) {
   return (
@@ -15914,16 +15916,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_1728 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1738 = React.version;
 if (
-  "19.1.0-native-fb-6ca7fbe8-20250102" !==
-  isomorphicReactPackageVersion$jscomp$inline_1728
+  "19.1.0-native-fb-d8b903f4-20250102" !==
+  isomorphicReactPackageVersion$jscomp$inline_1738
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1728,
-      "19.1.0-native-fb-6ca7fbe8-20250102"
+      isomorphicReactPackageVersion$jscomp$inline_1738,
+      "19.1.0-native-fb-d8b903f4-20250102"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -15943,24 +15945,24 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_2188 = {
+var internals$jscomp$inline_2201 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-6ca7fbe8-20250102",
+  version: "19.1.0-native-fb-d8b903f4-20250102",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-6ca7fbe8-20250102"
+  reconcilerVersion: "19.1.0-native-fb-d8b903f4-20250102"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2189 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2202 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2189.isDisabled &&
-    hook$jscomp$inline_2189.supportsFiber
+    !hook$jscomp$inline_2202.isDisabled &&
+    hook$jscomp$inline_2202.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2189.inject(
-        internals$jscomp$inline_2188
+      (rendererID = hook$jscomp$inline_2202.inject(
+        internals$jscomp$inline_2201
       )),
-        (injectedHook = hook$jscomp$inline_2189);
+        (injectedHook = hook$jscomp$inline_2202);
     } catch (err) {}
 }
 function noop() {}
@@ -16208,4 +16210,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-native-fb-6ca7fbe8-20250102";
+exports.version = "19.1.0-native-fb-d8b903f4-20250102";

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bb02c0e25e5696aae38922be711230b8>>
+ * @generated SignedSource<<cdf69204826bfc252de155734eecab7d>>
  */
 
 "use strict";
@@ -10571,20 +10571,18 @@ __DEV__ &&
         captureCommitPhaseError(finishedWork, finishedWork.return, error$26);
       }
     }
-    function commitBeforeMutationEffects(root, firstChild) {
-      for (nextEffect = firstChild; null !== nextEffect; )
-        if (
-          ((root = nextEffect),
-          (firstChild = root.child),
-          0 !== (root.subtreeFlags & 1024) && null !== firstChild)
-        )
-          (firstChild.return = root), (nextEffect = firstChild);
+    function commitBeforeMutationEffects_begin() {
+      for (; null !== nextEffect; ) {
+        var fiber = nextEffect,
+          child = fiber.child;
+        if (0 !== (fiber.subtreeFlags & 1024) && null !== child)
+          (child.return = fiber), (nextEffect = child);
         else
-          for (; null !== nextEffect; ) {
-            root = nextEffect;
-            firstChild = root.alternate;
-            var flags = root.flags;
-            switch (root.tag) {
+          a: for (; null !== nextEffect; ) {
+            fiber = nextEffect;
+            child = fiber.alternate;
+            var flags = fiber.flags;
+            switch (fiber.tag) {
               case 0:
                 break;
               case 11:
@@ -10592,8 +10590,8 @@ __DEV__ &&
                 break;
               case 1:
                 0 !== (flags & 1024) &&
-                  null !== firstChild &&
-                  commitClassSnapshot(root, firstChild);
+                  null !== child &&
+                  commitClassSnapshot(fiber, child);
                 break;
               case 3:
                 break;
@@ -10610,17 +10608,15 @@ __DEV__ &&
                     "This unit of work tag should not have side-effects. This error is likely caused by a bug in React. Please file an issue."
                   );
             }
-            firstChild = root.sibling;
-            if (null !== firstChild) {
-              firstChild.return = root.return;
-              nextEffect = firstChild;
-              break;
+            child = fiber.sibling;
+            if (null !== child) {
+              child.return = fiber.return;
+              nextEffect = child;
+              break a;
             }
-            nextEffect = root.return;
+            nextEffect = fiber.return;
           }
-      root = shouldFireAfterActiveInstanceBlur;
-      shouldFireAfterActiveInstanceBlur = !1;
-      return root;
+      }
     }
     function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
       var flags = finishedWork.flags;
@@ -13131,7 +13127,8 @@ __DEV__ &&
           (currentUpdatePriority = DiscreteEventPriority),
           (suspendedRetryLanes = executionContext),
           (executionContext |= CommitContext),
-          commitBeforeMutationEffects(root, finishedWork),
+          (nextEffect = finishedWork),
+          commitBeforeMutationEffects_begin(),
           commitMutationEffects(
             root,
             finishedWork,
@@ -17079,7 +17076,6 @@ __DEV__ &&
       nextEffect = null,
       inProgressLanes = null,
       inProgressRoot = null,
-      shouldFireAfterActiveInstanceBlur = !1,
       suspenseyCommitFlag = 8192,
       DefaultAsyncDispatcher = {
         getCacheForType: function (resourceType) {
@@ -17469,10 +17465,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-6ca7fbe8-20250102",
+        version: "19.1.0-native-fb-d8b903f4-20250102",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-6ca7fbe8-20250102"
+        reconcilerVersion: "19.1.0-native-fb-d8b903f4-20250102"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

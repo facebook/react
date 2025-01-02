@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ec561893f79d8ef44e4b7c1aaf14c9b6>>
+ * @generated SignedSource<<6cf7f2e3d47d49f7b6aa1c75d343b8fe>>
  */
 
 "use strict";
@@ -9452,20 +9452,18 @@ __DEV__ &&
           );
       }
     }
-    function commitBeforeMutationEffects(root, firstChild) {
-      for (nextEffect = firstChild; null !== nextEffect; )
-        if (
-          ((root = nextEffect),
-          (firstChild = root.child),
-          0 !== (root.subtreeFlags & 1024) && null !== firstChild)
-        )
-          (firstChild.return = root), (nextEffect = firstChild);
+    function commitBeforeMutationEffects_begin() {
+      for (; null !== nextEffect; ) {
+        var fiber = nextEffect,
+          child = fiber.child;
+        if (0 !== (fiber.subtreeFlags & 1024) && null !== child)
+          (child.return = fiber), (nextEffect = child);
         else
-          for (; null !== nextEffect; ) {
-            firstChild = root = nextEffect;
-            var current = firstChild.alternate,
-              flags = firstChild.flags;
-            switch (firstChild.tag) {
+          a: for (; null !== nextEffect; ) {
+            child = fiber = nextEffect;
+            var current = child.alternate,
+              flags = child.flags;
+            switch (child.tag) {
               case 0:
                 break;
               case 11:
@@ -9474,11 +9472,11 @@ __DEV__ &&
               case 1:
                 0 !== (flags & 1024) &&
                   null !== current &&
-                  commitClassSnapshot(firstChild, current);
+                  commitClassSnapshot(child, current);
                 break;
               case 3:
                 0 !== (flags & 1024) &&
-                  firstChild.stateNode.containerInfo.children.splice(0);
+                  child.stateNode.containerInfo.children.splice(0);
                 break;
               case 5:
               case 26:
@@ -9493,17 +9491,15 @@ __DEV__ &&
                     "This unit of work tag should not have side-effects. This error is likely caused by a bug in React. Please file an issue."
                   );
             }
-            firstChild = root.sibling;
-            if (null !== firstChild) {
-              firstChild.return = root.return;
-              nextEffect = firstChild;
-              break;
+            child = fiber.sibling;
+            if (null !== child) {
+              child.return = fiber.return;
+              nextEffect = child;
+              break a;
             }
-            nextEffect = root.return;
+            nextEffect = fiber.return;
           }
-      root = shouldFireAfterActiveInstanceBlur;
-      shouldFireAfterActiveInstanceBlur = !1;
-      return root;
+      }
     }
     function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
       var flags = finishedWork.flags;
@@ -12124,7 +12120,8 @@ __DEV__ &&
           (currentUpdatePriority = DiscreteEventPriority),
           (suspendedRetryLanes = executionContext),
           (executionContext |= CommitContext),
-          commitBeforeMutationEffects(root, finishedWork),
+          (nextEffect = finishedWork),
+          commitBeforeMutationEffects_begin(),
           commitMutationEffectsOnFiber(finishedWork, root),
           (root.current = finishedWork),
           null !== injectedProfilingHooks &&
@@ -15287,7 +15284,6 @@ __DEV__ &&
       offscreenSubtreeWasHidden = !1,
       PossiblyWeakSet = "function" === typeof WeakSet ? WeakSet : Set,
       nextEffect = null,
-      shouldFireAfterActiveInstanceBlur = !1,
       hostParent = null,
       hostParentIsContainer = !1,
       suspenseyCommitFlag = 8192,
@@ -15590,10 +15586,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-6ca7fbe8-20250102",
+        version: "19.1.0-native-fb-d8b903f4-20250102",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-6ca7fbe8-20250102"
+        reconcilerVersion: "19.1.0-native-fb-d8b903f4-20250102"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15738,5 +15734,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.1.0-native-fb-6ca7fbe8-20250102";
+    exports.version = "19.1.0-native-fb-d8b903f4-20250102";
   })();

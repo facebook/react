@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<807bfd6eaf8d72b8a5eaaf39585daa8b>>
+ * @generated SignedSource<<e7b529ac4e952f6417a3e42411e83643>>
  */
 
 /*
@@ -12173,9 +12173,6 @@ __DEV__ &&
             }
             nextEffect = firstChild.return;
           }
-      firstChild = shouldFireAfterActiveInstanceBlur;
-      shouldFireAfterActiveInstanceBlur = !1;
-      return firstChild;
     }
     function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
       var flags = finishedWork.flags;
@@ -25252,7 +25249,6 @@ __DEV__ &&
       nextEffect = null,
       inProgressLanes = null,
       inProgressRoot = null,
-      shouldFireAfterActiveInstanceBlur = !1,
       hostParent = null,
       hostParentIsContainer = !1,
       currentHoistableRoot = null,
@@ -25887,11 +25883,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.1.0-native-fb-6ca7fbe8-20250102" !== isomorphicReactPackageVersion)
+      if ("19.1.0-native-fb-d8b903f4-20250102" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.1.0-native-fb-6ca7fbe8-20250102\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.1.0-native-fb-d8b903f4-20250102\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -25928,10 +25924,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.1.0-native-fb-6ca7fbe8-20250102",
+          version: "19.1.0-native-fb-d8b903f4-20250102",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.1.0-native-fb-6ca7fbe8-20250102"
+          reconcilerVersion: "19.1.0-native-fb-d8b903f4-20250102"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -26077,5 +26073,5 @@ __DEV__ &&
       listenToAllSupportedEvents(container);
       return new ReactDOMHydrationRoot(initialChildren);
     };
-    exports.version = "19.1.0-native-fb-6ca7fbe8-20250102";
+    exports.version = "19.1.0-native-fb-d8b903f4-20250102";
   })();

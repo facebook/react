@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9c45b1075ae9cc4610aa78a44c59b986>>
+ * @generated SignedSource<<d3c6eef0534fb170648a9b594324f152>>
  */
 
 "use strict";
@@ -7080,45 +7080,42 @@ function insertOrAppendPlacementNode(node, before, parent) {
 var offscreenSubtreeIsHidden = !1,
   offscreenSubtreeWasHidden = !1,
   PossiblyWeakSet = "function" === typeof WeakSet ? WeakSet : Set,
-  nextEffect = null,
-  shouldFireAfterActiveInstanceBlur = !1;
-function commitBeforeMutationEffects(root, firstChild) {
-  for (nextEffect = firstChild; null !== nextEffect; )
-    if (
-      ((root = nextEffect),
-      (firstChild = root.child),
-      0 !== (root.subtreeFlags & 1024) && null !== firstChild)
-    )
-      (firstChild.return = root), (nextEffect = firstChild);
+  nextEffect = null;
+function commitBeforeMutationEffects_begin() {
+  for (; null !== nextEffect; ) {
+    var fiber = nextEffect,
+      child = fiber.child;
+    if (0 !== (fiber.subtreeFlags & 1024) && null !== child)
+      (child.return = fiber), (nextEffect = child);
     else
-      for (; null !== nextEffect; ) {
-        root = nextEffect;
-        var current = root.alternate;
-        firstChild = root.flags;
-        switch (root.tag) {
+      a: for (; null !== nextEffect; ) {
+        fiber = nextEffect;
+        child = void 0;
+        var finishedWork = fiber,
+          current = finishedWork.alternate,
+          flags = finishedWork.flags;
+        switch (finishedWork.tag) {
           case 0:
             break;
           case 11:
           case 15:
             break;
           case 1:
-            if (0 !== (firstChild & 1024) && null !== current) {
-              firstChild = void 0;
-              var finishedWork = root,
-                prevProps = current.memoizedProps;
+            if (0 !== (flags & 1024) && null !== current) {
+              flags = current.memoizedProps;
               current = current.memoizedState;
               var instance = finishedWork.stateNode;
               try {
                 var resolvedPrevProps = resolveClassComponentProps(
                   finishedWork.type,
-                  prevProps,
+                  flags,
                   finishedWork.elementType === finishedWork.type
                 );
-                firstChild = instance.getSnapshotBeforeUpdate(
+                child = instance.getSnapshotBeforeUpdate(
                   resolvedPrevProps,
                   current
                 );
-                instance.__reactInternalSnapshotBeforeUpdate = firstChild;
+                instance.__reactInternalSnapshotBeforeUpdate = child;
               } catch (error) {
                 captureCommitPhaseError(
                   finishedWork,
@@ -7129,8 +7126,8 @@ function commitBeforeMutationEffects(root, firstChild) {
             }
             break;
           case 3:
-            0 !== (firstChild & 1024) &&
-              root.stateNode.containerInfo.children.splice(0);
+            0 !== (flags & 1024) &&
+              finishedWork.stateNode.containerInfo.children.splice(0);
             break;
           case 5:
           case 26:
@@ -7140,22 +7137,20 @@ function commitBeforeMutationEffects(root, firstChild) {
           case 17:
             break;
           default:
-            if (0 !== (firstChild & 1024))
+            if (0 !== (flags & 1024))
               throw Error(
                 "This unit of work tag should not have side-effects. This error is likely caused by a bug in React. Please file an issue."
               );
         }
-        firstChild = root.sibling;
-        if (null !== firstChild) {
-          firstChild.return = root.return;
-          nextEffect = firstChild;
-          break;
+        child = fiber.sibling;
+        if (null !== child) {
+          child.return = fiber.return;
+          nextEffect = child;
+          break a;
         }
-        nextEffect = root.return;
+        nextEffect = fiber.return;
       }
-  resolvedPrevProps = shouldFireAfterActiveInstanceBlur;
-  shouldFireAfterActiveInstanceBlur = !1;
-  return resolvedPrevProps;
+  }
 }
 function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
   var flags = finishedWork.flags;
@@ -9415,7 +9410,8 @@ function commitRootImpl(
       (currentUpdatePriority = 2),
       (suspendedRetryLanes = executionContext),
       (executionContext |= 4),
-      commitBeforeMutationEffects(root, finishedWork),
+      (nextEffect = finishedWork),
+      commitBeforeMutationEffects_begin(),
       commitMutationEffectsOnFiber(finishedWork, root),
       (root.current = finishedWork),
       null !== injectedProfilingHooks &&
@@ -10349,12 +10345,12 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var internals$jscomp$inline_1205 = {
+var internals$jscomp$inline_1214 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-6ca7fbe8-20250102",
+  version: "19.1.0-native-fb-d8b903f4-20250102",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-6ca7fbe8-20250102",
+  reconcilerVersion: "19.1.0-native-fb-d8b903f4-20250102",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$147 = 0;
@@ -10372,16 +10368,16 @@ var internals$jscomp$inline_1205 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1452 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1466 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1452.isDisabled &&
-    hook$jscomp$inline_1452.supportsFiber
+    !hook$jscomp$inline_1466.isDisabled &&
+    hook$jscomp$inline_1466.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1452.inject(
-        internals$jscomp$inline_1205
+      (rendererID = hook$jscomp$inline_1466.inject(
+        internals$jscomp$inline_1214
       )),
-        (injectedHook = hook$jscomp$inline_1452);
+        (injectedHook = hook$jscomp$inline_1466);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
@@ -10505,4 +10501,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.1.0-native-fb-6ca7fbe8-20250102";
+exports.version = "19.1.0-native-fb-d8b903f4-20250102";
