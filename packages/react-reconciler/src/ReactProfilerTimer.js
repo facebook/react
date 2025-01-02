@@ -12,6 +12,9 @@ import type {Fiber} from './ReactInternalTypes';
 import type {SuspendedReason} from './ReactFiberWorkLoop';
 
 import type {Lane, Lanes} from './ReactFiberLane';
+
+import type {CapturedValue} from './ReactCapturedValue';
+
 import {
   isTransitionLane,
   isBlockingLane,
@@ -41,11 +44,13 @@ const {unstable_now: now} = Scheduler;
 export let renderStartTime: number = -0;
 export let commitStartTime: number = -0;
 export let commitEndTime: number = -0;
+export let commitErrors: null | Array<CapturedValue<mixed>> = null;
 export let profilerStartTime: number = -1.1;
 export let profilerEffectDuration: number = -0;
 export let componentEffectDuration: number = -0;
 export let componentEffectStartTime: number = -1.1;
 export let componentEffectEndTime: number = -1.1;
+export let componentEffectErrors: null | Array<CapturedValue<mixed>> = null;
 
 export let blockingClampTime: number = -0;
 export let blockingUpdateTime: number = -1.1; // First sync setState scheduled.
@@ -282,6 +287,26 @@ export function popComponentEffectStart(prevEffectStart: number): void {
   }
 }
 
+export function pushComponentEffectErrors(): null | Array<
+  CapturedValue<mixed>,
+> {
+  if (!enableProfilerTimer || !enableProfilerCommitHooks) {
+    return null;
+  }
+  const prevErrors = componentEffectErrors;
+  componentEffectErrors = null;
+  return prevErrors;
+}
+
+export function popComponentEffectErrors(
+  prevErrors: null | Array<CapturedValue<mixed>>,
+): void {
+  if (!enableProfilerTimer || !enableProfilerCommitHooks) {
+    return;
+  }
+  componentEffectErrors = prevErrors;
+}
+
 /**
  * Tracks whether the current update was a nested/cascading update (scheduled from a layout effect).
  *
@@ -414,6 +439,24 @@ export function recordEffectDuration(fiber: Fiber): void {
     // Keep track of the last end time of the effects.
     componentEffectEndTime = endTime;
   }
+}
+
+export function recordEffectError(errorInfo: CapturedValue<mixed>): void {
+  if (!enableProfilerTimer || !enableProfilerCommitHooks) {
+    return;
+  }
+  if (componentEffectErrors === null) {
+    componentEffectErrors = [];
+  }
+  componentEffectErrors.push(errorInfo);
+  if (commitErrors === null) {
+    commitErrors = [];
+  }
+  commitErrors.push(errorInfo);
+}
+
+export function resetCommitErrors(): void {
+  commitErrors = null;
 }
 
 export function startEffectTimer(): void {
