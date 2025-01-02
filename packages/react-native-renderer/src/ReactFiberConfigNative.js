@@ -544,6 +544,14 @@ export function cancelViewTransitionName(
   // Not yet implemented
 }
 
+export function cancelRootViewTransitionName(rootContainer: Container): void {
+  // Not yet implemented
+}
+
+export function restoreRootViewTransitionName(rootContainer: Container): void {
+  // Not yet implemented
+}
+
 export type InstanceMeasurement = null;
 
 export function measureInstance(instance: Instance): InstanceMeasurement {

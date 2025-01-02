@@ -742,6 +742,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           props: Props,
         ): void {},
 
+        cancelRootViewTransitionName(rootContainer: Container): void {},
+
+        restoreRootViewTransitionName(rootContainer: Container): void {},
+
         measureInstance(instance: Instance): InstanceMeasurement {
           return null;
         },

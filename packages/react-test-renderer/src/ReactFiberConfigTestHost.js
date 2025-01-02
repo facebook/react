@@ -327,6 +327,14 @@ export function cancelViewTransitionName(
   // Noop
 }
 
+export function cancelRootViewTransitionName(rootContainer: Container): void {
+  // Noop
+}
+
+export function restoreRootViewTransitionName(rootContainer: Container): void {
+  // Noop
+}
+
 export type InstanceMeasurement = null;
 
 export function measureInstance(instance: Instance): InstanceMeasurement {

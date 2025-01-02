@@ -467,6 +467,14 @@ export function cancelViewTransitionName(instance, name, props) {
   // Noop
 }
 
+export function cancelRootViewTransitionName(rootContainer) {
+  // Noop
+}
+
+export function restoreRootViewTransitionName(rootContainer) {
+  // Noop
+}
+
 export type InstanceMeasurement = null;
 
 export function measureInstance(instance) {
