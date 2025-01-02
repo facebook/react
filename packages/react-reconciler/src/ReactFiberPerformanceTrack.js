@@ -276,11 +276,15 @@ export function logBlockingStart(
   eventTime: number,
   eventType: null | string,
   eventIsRepeat: boolean,
+  isSpawnedUpdate: boolean,
   renderStartTime: number,
   lanes: Lanes,
 ): void {
   if (supportsUserTiming) {
     reusableLaneDevToolDetails.track = 'Blocking';
+    // If a blocking update was spawned within render or an effect, that's considered a cascading render.
+    // If you have a second blocking update within the same event, that suggests multiple flushSync or
+    // setState in a microtask which is also considered a cascade.
     if (eventTime > 0 && eventType !== null) {
       // Log the time from the event timeStamp until we called setState.
       reusableLaneDevToolDetails.color = eventIsRepeat
@@ -295,14 +299,17 @@ export function logBlockingStart(
     }
     if (updateTime > 0) {
       // Log the time from when we called setState until we started rendering.
-      reusableLaneDevToolDetails.color = includesOnlyHydrationOrOffscreenLanes(
-        lanes,
-      )
-        ? 'tertiary-light'
-        : 'primary-light';
+      reusableLaneDevToolDetails.color = isSpawnedUpdate
+        ? 'error'
+        : includesOnlyHydrationOrOffscreenLanes(lanes)
+          ? 'tertiary-light'
+          : 'primary-light';
       reusableLaneOptions.start = updateTime;
       reusableLaneOptions.end = renderStartTime;
-      performance.measure('Blocked', reusableLaneOptions);
+      performance.measure(
+        isSpawnedUpdate ? 'Cascade' : 'Blocked',
+        reusableLaneOptions,
+      );
     }
   }
 }

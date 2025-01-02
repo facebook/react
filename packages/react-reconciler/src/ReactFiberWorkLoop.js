@@ -236,6 +236,7 @@ import {
   blockingEventTime,
   blockingEventType,
   blockingEventIsRepeat,
+  blockingSpawnedUpdate,
   blockingSuspendedTime,
   transitionClampTime,
   transitionStartTime,
@@ -1664,11 +1665,8 @@ export function flushSyncWork(): boolean {
 
 export function isAlreadyRendering(): boolean {
   // Used by the renderer to print a warning if certain APIs are called from
-  // the wrong context.
-  return (
-    __DEV__ &&
-    (executionContext & (RenderContext | CommitContext)) !== NoContext
-  );
+  // the wrong context, and for profiling warnings.
+  return (executionContext & (RenderContext | CommitContext)) !== NoContext;
 }
 
 export function isInvalidExecutionContextForEventFunction(): boolean {
@@ -1797,6 +1795,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
         clampedEventTime,
         blockingEventType,
         blockingEventIsRepeat,
+        blockingSpawnedUpdate,
         renderStartTime,
         lanes,
       );
