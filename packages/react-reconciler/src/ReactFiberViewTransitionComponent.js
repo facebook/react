@@ -31,9 +31,6 @@ export function assignViewTransitionAutoName(
   props: ViewTransitionProps,
   instance: ViewTransitionInstance,
 ): string {
-  if (props.name != null && props.name !== 'auto') {
-    return props.name;
-  }
   if (instance.autoName !== null) {
     return instance.autoName;
   }
