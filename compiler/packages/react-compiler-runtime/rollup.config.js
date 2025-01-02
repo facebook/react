@@ -21,6 +21,7 @@ const PROD_ROLLUP_CONFIG = {
     file: 'dist/index.js',
     format: 'cjs',
     sourcemap: true,
+    inlineDynamicImports: true,
   },
   plugins: [
     typescript({
