@@ -9,14 +9,15 @@
     "!*.tsbuildinfo"
   ],
   "scripts": {
-    "build": "rimraf dist && rollup --config --bundleConfigAsCjs",
+    "build": "rimraf dist && scripts/build.js",
     "test": "./scripts/link-react-compiler-runtime.sh && yarn snap:ci",
     "jest": "yarn build && ts-node node_modules/.bin/jest",
     "snap": "node ../snap/dist/main.js",
     "snap:build": "yarn workspace snap run build",
     "snap:ci": "yarn snap:build && yarn snap",
     "ts:analyze-trace": "scripts/ts-analyze-trace.sh",
-    "lint": "yarn eslint src"
+    "lint": "yarn eslint src",
+    "watch": "scripts/build.js --watch"
   },
   "dependencies": {
     "@babel/types": "^7.19.0"
