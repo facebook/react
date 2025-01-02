@@ -767,7 +767,10 @@ function measureViewTransitionHostInstances(
           // animating it. However, in the current model this only works if the parent also
           // doesn't animate. So we have to queue these and wait until we complete the parent
           // to cancel them.
-          const oldName = getViewTransitionName(currentViewTransition.memoizedProps, currentViewTransition.stateNode);
+          const oldName = getViewTransitionName(
+            currentViewTransition.memoizedProps,
+            currentViewTransition.stateNode,
+          );
           if (viewTransitionCancelableChildren === null) {
             viewTransitionCancelableChildren = [];
           }

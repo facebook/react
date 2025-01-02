@@ -750,10 +750,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           return null;
         },
 
-        isInstanceInViewport(
-          instance: Instance,
-          measurement: InstanceMeasurement,
-        ): boolean {
+        wasInstanceInViewport(measurement: InstanceMeasurement): boolean {
           return true;
         },
 
