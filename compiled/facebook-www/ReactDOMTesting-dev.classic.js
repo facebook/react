@@ -13008,6 +13008,7 @@ __DEV__ &&
         (root = getClosestInstanceFromNode(JSCompiler_temp));
       _enabled = !1;
       focusedInstanceHandle = root;
+      shouldFireAfterActiveInstanceBlur = !1;
       for (nextEffect = firstChild; null !== nextEffect; ) {
         firstChild = nextEffect;
         root = firstChild.deletions;
@@ -13119,10 +13120,7 @@ __DEV__ &&
             nextEffect = firstChild.return;
           }
       }
-      firstChild = shouldFireAfterActiveInstanceBlur;
-      shouldFireAfterActiveInstanceBlur = !1;
       focusedInstanceHandle = null;
-      return firstChild;
     }
     function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
       var flags = finishedWork.flags;
@@ -16843,44 +16841,41 @@ __DEV__ &&
           (root.cancelPendingCommit = null));
       commitStartTime = now();
       transitions = 0 !== (finishedWork.flags & 15990);
-      if (0 !== (finishedWork.subtreeFlags & 15990) || transitions) {
-        transitions = ReactSharedInternals.T;
-        ReactSharedInternals.T = null;
-        updatedLanes = Internals.p;
-        Internals.p = DiscreteEventPriority;
-        suspendedRetryLanes = executionContext;
-        executionContext |= CommitContext;
-        var shouldFireAfterActiveInstanceBlur = commitBeforeMutationEffects(
-          root,
-          finishedWork
-        );
-        commitMutationEffects(root, finishedWork, lanes);
-        shouldFireAfterActiveInstanceBlur &&
-          ((_enabled = !0),
-          dispatchAfterDetachedBlur(selectionInformation.focusedElem),
-          (_enabled = !1));
-        restoreSelection(selectionInformation, root.containerInfo);
-        _enabled = !!eventsEnabled;
-        selectionInformation = eventsEnabled = null;
-        root.current = finishedWork;
-        enableSchedulingProfiler &&
+      0 !== (finishedWork.subtreeFlags & 15990) || transitions
+        ? ((transitions = ReactSharedInternals.T),
+          (ReactSharedInternals.T = null),
+          (updatedLanes = Internals.p),
+          (Internals.p = DiscreteEventPriority),
+          (suspendedRetryLanes = executionContext),
+          (executionContext |= CommitContext),
+          commitBeforeMutationEffects(root, finishedWork),
+          commitMutationEffects(root, finishedWork, lanes),
+          shouldFireAfterActiveInstanceBlur &&
+            ((_enabled = !0),
+            dispatchAfterDetachedBlur(selectionInformation.focusedElem),
+            (_enabled = !1)),
+          restoreSelection(selectionInformation, root.containerInfo),
+          (_enabled = !!eventsEnabled),
+          (selectionInformation = eventsEnabled = null),
+          (root.current = finishedWork),
           enableSchedulingProfiler &&
-          null !== injectedProfilingHooks &&
-          "function" ===
-            typeof injectedProfilingHooks.markLayoutEffectsStarted &&
-          injectedProfilingHooks.markLayoutEffectsStarted(lanes);
-        commitLayoutEffects(finishedWork, root, lanes);
-        enableSchedulingProfiler &&
+            enableSchedulingProfiler &&
+            null !== injectedProfilingHooks &&
+            "function" ===
+              typeof injectedProfilingHooks.markLayoutEffectsStarted &&
+            injectedProfilingHooks.markLayoutEffectsStarted(lanes),
+          commitLayoutEffects(finishedWork, root, lanes),
           enableSchedulingProfiler &&
-          null !== injectedProfilingHooks &&
-          "function" ===
-            typeof injectedProfilingHooks.markLayoutEffectsStopped &&
-          injectedProfilingHooks.markLayoutEffectsStopped();
-        requestPaint();
-        executionContext = suspendedRetryLanes;
-        Internals.p = updatedLanes;
-        ReactSharedInternals.T = transitions;
-      } else root.current = finishedWork;
+            enableSchedulingProfiler &&
+            null !== injectedProfilingHooks &&
+            "function" ===
+              typeof injectedProfilingHooks.markLayoutEffectsStopped &&
+            injectedProfilingHooks.markLayoutEffectsStopped(),
+          requestPaint(),
+          (executionContext = suspendedRetryLanes),
+          (Internals.p = updatedLanes),
+          (ReactSharedInternals.T = transitions))
+        : (root.current = finishedWork);
       (transitions = spawnedLane)
         ? ((spawnedLane = !1),
           (rootWithPendingPassiveEffects = root),
@@ -27720,11 +27715,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.1.0-www-classic-6ca7fbe8-20250102" !== isomorphicReactPackageVersion)
+      if ("19.1.0-www-classic-d8b903f4-20250102" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.1.0-www-classic-6ca7fbe8-20250102\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.1.0-www-classic-d8b903f4-20250102\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -27767,10 +27762,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.1.0-www-classic-6ca7fbe8-20250102",
+          version: "19.1.0-www-classic-d8b903f4-20250102",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.1.0-www-classic-6ca7fbe8-20250102"
+          reconcilerVersion: "19.1.0-www-classic-d8b903f4-20250102"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -28534,5 +28529,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.1.0-www-classic-6ca7fbe8-20250102";
+    exports.version = "19.1.0-www-classic-d8b903f4-20250102";
   })();

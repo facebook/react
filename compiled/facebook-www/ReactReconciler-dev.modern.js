@@ -11063,6 +11063,7 @@ __DEV__ &&
     }
     function commitBeforeMutationEffects(root, firstChild) {
       focusedInstanceHandle = prepareForCommit(root.containerInfo);
+      shouldFireAfterActiveInstanceBlur = !1;
       for (nextEffect = firstChild; null !== nextEffect; ) {
         root = nextEffect;
         firstChild = root.deletions;
@@ -11157,10 +11158,7 @@ __DEV__ &&
             nextEffect = root.return;
           }
       }
-      root = shouldFireAfterActiveInstanceBlur;
-      shouldFireAfterActiveInstanceBlur = !1;
       focusedInstanceHandle = null;
-      return root;
     }
     function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
       var flags = finishedWork.flags;
@@ -14798,39 +14796,36 @@ __DEV__ &&
           (root.cancelPendingCommit = null));
       commitStartTime = now();
       transitions = 0 !== (finishedWork.flags & 15990);
-      if (0 !== (finishedWork.subtreeFlags & 15990) || transitions) {
-        transitions = ReactSharedInternals.T;
-        ReactSharedInternals.T = null;
-        updatedLanes = getCurrentUpdatePriority();
-        setCurrentUpdatePriority(2);
-        suspendedRetryLanes = executionContext;
-        executionContext |= CommitContext;
-        var shouldFireAfterActiveInstanceBlur = commitBeforeMutationEffects(
-          root,
-          finishedWork
-        );
-        commitMutationEffects(root, finishedWork, lanes);
-        shouldFireAfterActiveInstanceBlur && afterActiveInstanceBlur();
-        resetAfterCommit(root.containerInfo);
-        root.current = finishedWork;
-        enableSchedulingProfiler &&
+      0 !== (finishedWork.subtreeFlags & 15990) || transitions
+        ? ((transitions = ReactSharedInternals.T),
+          (ReactSharedInternals.T = null),
+          (updatedLanes = getCurrentUpdatePriority()),
+          setCurrentUpdatePriority(2),
+          (suspendedRetryLanes = executionContext),
+          (executionContext |= CommitContext),
+          commitBeforeMutationEffects(root, finishedWork),
+          commitMutationEffects(root, finishedWork, lanes),
+          shouldFireAfterActiveInstanceBlur && afterActiveInstanceBlur(),
+          resetAfterCommit(root.containerInfo),
+          (root.current = finishedWork),
           enableSchedulingProfiler &&
-          null !== injectedProfilingHooks &&
-          "function" ===
-            typeof injectedProfilingHooks.markLayoutEffectsStarted &&
-          injectedProfilingHooks.markLayoutEffectsStarted(lanes);
-        commitLayoutEffects(finishedWork, root, lanes);
-        enableSchedulingProfiler &&
+            enableSchedulingProfiler &&
+            null !== injectedProfilingHooks &&
+            "function" ===
+              typeof injectedProfilingHooks.markLayoutEffectsStarted &&
+            injectedProfilingHooks.markLayoutEffectsStarted(lanes),
+          commitLayoutEffects(finishedWork, root, lanes),
           enableSchedulingProfiler &&
-          null !== injectedProfilingHooks &&
-          "function" ===
-            typeof injectedProfilingHooks.markLayoutEffectsStopped &&
-          injectedProfilingHooks.markLayoutEffectsStopped();
-        requestPaint();
-        executionContext = suspendedRetryLanes;
-        setCurrentUpdatePriority(updatedLanes);
-        ReactSharedInternals.T = transitions;
-      } else root.current = finishedWork;
+            enableSchedulingProfiler &&
+            null !== injectedProfilingHooks &&
+            "function" ===
+              typeof injectedProfilingHooks.markLayoutEffectsStopped &&
+            injectedProfilingHooks.markLayoutEffectsStopped(),
+          requestPaint(),
+          (executionContext = suspendedRetryLanes),
+          setCurrentUpdatePriority(updatedLanes),
+          (ReactSharedInternals.T = transitions))
+        : (root.current = finishedWork);
       (transitions = spawnedLane)
         ? ((spawnedLane = !1),
           (rootWithPendingPassiveEffects = root),
@@ -18838,7 +18833,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-modern-6ca7fbe8-20250102"
+        reconcilerVersion: "19.1.0-www-modern-d8b903f4-20250102"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

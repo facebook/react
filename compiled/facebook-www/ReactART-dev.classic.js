@@ -712,18 +712,6 @@ __DEV__ &&
         null === memoizedState.dehydrated
       );
     }
-    function doesFiberContain(parentFiber, childFiber) {
-      for (
-        var parentFiberAlternate = parentFiber.alternate;
-        null !== childFiber;
-
-      ) {
-        if (childFiber === parentFiber || childFiber === parentFiberAlternate)
-          return !0;
-        childFiber = childFiber.return;
-      }
-      return !1;
-    }
     function childrenAsString(children) {
       return children
         ? "string" === typeof children
@@ -10206,66 +10194,35 @@ __DEV__ &&
           );
       }
     }
-    function commitBeforeMutationEffects(root, firstChild) {
-      focusedInstanceHandle = null;
-      for (nextEffect = firstChild; null !== nextEffect; ) {
-        root = nextEffect;
-        firstChild = root.deletions;
-        if (null !== firstChild)
-          for (var i = 0; i < firstChild.length; i++)
-            doesFiberContain(firstChild[i], focusedInstanceHandle) &&
-              (shouldFireAfterActiveInstanceBlur = !0);
-        firstChild = root.child;
-        if (0 !== (root.subtreeFlags & 9236) && null !== firstChild)
-          (firstChild.return = root), (nextEffect = firstChild);
+    function commitBeforeMutationEffects_begin() {
+      for (; null !== nextEffect; ) {
+        var fiber = nextEffect,
+          child = fiber.child;
+        if (0 !== (fiber.subtreeFlags & 9236) && null !== child)
+          (child.return = fiber), (nextEffect = child);
         else
-          for (; null !== nextEffect; ) {
-            firstChild = root = nextEffect;
-            i = firstChild.alternate;
-            var flags = firstChild.flags;
-            if (
-              !shouldFireAfterActiveInstanceBlur &&
-              null !== focusedInstanceHandle
-            ) {
-              var JSCompiler_temp;
-              if ((JSCompiler_temp = 13 === firstChild.tag))
-                a: {
-                  if (
-                    null !== i &&
-                    ((JSCompiler_temp = i.memoizedState),
-                    null === JSCompiler_temp ||
-                      null !== JSCompiler_temp.dehydrated)
-                  ) {
-                    JSCompiler_temp = firstChild.memoizedState;
-                    JSCompiler_temp =
-                      null !== JSCompiler_temp &&
-                      null === JSCompiler_temp.dehydrated;
-                    break a;
-                  }
-                  JSCompiler_temp = !1;
-                }
-              JSCompiler_temp &&
-                doesFiberContain(firstChild, focusedInstanceHandle) &&
-                (shouldFireAfterActiveInstanceBlur = !0);
-            }
-            switch (firstChild.tag) {
+          a: for (; null !== nextEffect; ) {
+            child = fiber = nextEffect;
+            var current = child.alternate,
+              flags = child.flags;
+            switch (child.tag) {
               case 0:
                 if (
                   0 !== (flags & 4) &&
-                  ((firstChild = firstChild.updateQueue),
-                  (firstChild = null !== firstChild ? firstChild.events : null),
-                  null !== firstChild)
+                  ((child = child.updateQueue),
+                  (child = null !== child ? child.events : null),
+                  null !== child)
                 )
-                  for (i = 0; i < firstChild.length; i++)
-                    (flags = firstChild[i]), (flags.ref.impl = flags.nextImpl);
+                  for (current = 0; current < child.length; current++)
+                    (flags = child[current]), (flags.ref.impl = flags.nextImpl);
                 break;
               case 11:
               case 15:
                 break;
               case 1:
                 0 !== (flags & 1024) &&
-                  null !== i &&
-                  commitClassSnapshot(firstChild, i);
+                  null !== current &&
+                  commitClassSnapshot(child, current);
                 break;
               case 3:
                 break;
@@ -10282,19 +10239,15 @@ __DEV__ &&
                     "This unit of work tag should not have side-effects. This error is likely caused by a bug in React. Please file an issue."
                   );
             }
-            firstChild = root.sibling;
-            if (null !== firstChild) {
-              firstChild.return = root.return;
-              nextEffect = firstChild;
-              break;
+            child = fiber.sibling;
+            if (null !== child) {
+              child.return = fiber.return;
+              nextEffect = child;
+              break a;
             }
-            nextEffect = root.return;
+            nextEffect = fiber.return;
           }
       }
-      root = shouldFireAfterActiveInstanceBlur;
-      shouldFireAfterActiveInstanceBlur = !1;
-      focusedInstanceHandle = null;
-      return root;
     }
     function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
       var flags = finishedWork.flags;
@@ -13455,7 +13408,8 @@ __DEV__ &&
           (currentUpdatePriority = DiscreteEventPriority),
           (suspendedRetryLanes = executionContext),
           (executionContext |= CommitContext),
-          commitBeforeMutationEffects(root, finishedWork),
+          (nextEffect = finishedWork),
+          commitBeforeMutationEffects_begin(),
           commitMutationEffects(root, finishedWork, lanes),
           (root.current = finishedWork),
           enableSchedulingProfiler &&
@@ -16590,8 +16544,6 @@ __DEV__ &&
       nextEffect = null,
       inProgressLanes = null,
       inProgressRoot = null,
-      focusedInstanceHandle = null,
-      shouldFireAfterActiveInstanceBlur = !1,
       hostParent = null,
       hostParentIsContainer = !1,
       suspenseyCommitFlag = 8192,
@@ -16903,10 +16855,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-classic-6ca7fbe8-20250102",
+        version: "19.1.0-www-classic-d8b903f4-20250102",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-classic-6ca7fbe8-20250102"
+        reconcilerVersion: "19.1.0-www-classic-d8b903f4-20250102"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -16940,7 +16892,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.1.0-www-classic-6ca7fbe8-20250102";
+    exports.version = "19.1.0-www-classic-d8b903f4-20250102";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

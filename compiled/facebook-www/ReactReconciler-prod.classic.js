@@ -7655,92 +7655,94 @@ module.exports = function ($$$config) {
       captureCommitPhaseError(finishedWork, finishedWork.return, error);
     }
   }
-  function commitBeforeMutationEffects(root, firstChild) {
-    focusedInstanceHandle = prepareForCommit(root.containerInfo);
-    for (nextEffect = firstChild; null !== nextEffect; ) {
-      root = nextEffect;
-      firstChild = root.deletions;
-      if (null !== firstChild)
-        for (var i = 0; i < firstChild.length; i++) {
-          var deletion = firstChild[i];
+  function commitBeforeMutationEffects_begin() {
+    for (; null !== nextEffect; ) {
+      var fiber = nextEffect,
+        deletions = fiber.deletions;
+      if (null !== deletions)
+        for (var i = 0; i < deletions.length; i++) {
+          var deletion = deletions[i];
           doesFiberContain(deletion, focusedInstanceHandle) &&
             ((shouldFireAfterActiveInstanceBlur = !0),
             beforeActiveInstanceBlur(deletion));
         }
-      firstChild = root.child;
-      if (0 !== (root.subtreeFlags & 9236) && null !== firstChild)
-        (firstChild.return = root), (nextEffect = firstChild);
+      deletions = fiber.child;
+      if (0 !== (fiber.subtreeFlags & 9236) && null !== deletions)
+        (deletions.return = fiber), (nextEffect = deletions);
       else
-        for (; null !== nextEffect; ) {
-          root = nextEffect;
-          firstChild = root.alternate;
-          i = root.flags;
+        a: for (; null !== nextEffect; ) {
+          fiber = nextEffect;
+          deletions = void 0;
+          var JSCompiler_temp;
+          i = fiber;
+          deletion = i.alternate;
+          var flags = i.flags;
           if (
-            (deletion =
-              !shouldFireAfterActiveInstanceBlur &&
-              null !== focusedInstanceHandle)
+            !shouldFireAfterActiveInstanceBlur &&
+            null !== focusedInstanceHandle
           ) {
-            if ((deletion = 13 === root.tag))
-              a: {
+            if ((JSCompiler_temp = 13 === i.tag))
+              b: {
                 if (
-                  null !== firstChild &&
-                  ((deletion = firstChild.memoizedState),
-                  null === deletion || null !== deletion.dehydrated)
+                  null !== deletion &&
+                  ((JSCompiler_temp = deletion.memoizedState),
+                  null === JSCompiler_temp ||
+                    null !== JSCompiler_temp.dehydrated)
                 ) {
-                  deletion = root.memoizedState;
-                  deletion = null !== deletion && null === deletion.dehydrated;
-                  break a;
+                  JSCompiler_temp = i.memoizedState;
+                  JSCompiler_temp =
+                    null !== JSCompiler_temp &&
+                    null === JSCompiler_temp.dehydrated;
+                  break b;
                 }
-                deletion = !1;
+                JSCompiler_temp = !1;
               }
-            deletion =
-              deletion && doesFiberContain(root, focusedInstanceHandle);
+            JSCompiler_temp &&
+              doesFiberContain(i, focusedInstanceHandle) &&
+              ((shouldFireAfterActiveInstanceBlur = !0),
+              beforeActiveInstanceBlur(i));
           }
-          deletion &&
-            ((shouldFireAfterActiveInstanceBlur = !0),
-            beforeActiveInstanceBlur(root));
-          switch (root.tag) {
+          switch (i.tag) {
             case 0:
               if (
-                0 !== (i & 4) &&
-                ((firstChild = root.updateQueue),
-                (firstChild = null !== firstChild ? firstChild.events : null),
-                null !== firstChild)
+                0 !== (flags & 4) &&
+                ((deletions = i.updateQueue),
+                (deletions = null !== deletions ? deletions.events : null),
+                null !== deletions)
               )
-                for (i = 0; i < firstChild.length; i++)
-                  (deletion = firstChild[i]),
+                for (i = 0; i < deletions.length; i++)
+                  (deletion = deletions[i]),
                     (deletion.ref.impl = deletion.nextImpl);
               break;
             case 11:
             case 15:
               break;
             case 1:
-              if (0 !== (i & 1024) && null !== firstChild) {
-                i = void 0;
-                deletion = root;
-                var prevProps = firstChild.memoizedProps;
-                firstChild = firstChild.memoizedState;
-                var instance = deletion.stateNode;
+              if (0 !== (flags & 1024) && null !== deletion) {
+                flags = deletion.memoizedProps;
+                deletion = deletion.memoizedState;
+                JSCompiler_temp = i.stateNode;
                 try {
                   var resolvedPrevProps = resolveClassComponentProps(
-                    deletion.type,
-                    prevProps,
-                    deletion.elementType === deletion.type
+                    i.type,
+                    flags,
+                    i.elementType === i.type
                   );
-                  i = instance.getSnapshotBeforeUpdate(
+                  deletions = JSCompiler_temp.getSnapshotBeforeUpdate(
                     resolvedPrevProps,
-                    firstChild
+                    deletion
                   );
-                  instance.__reactInternalSnapshotBeforeUpdate = i;
+                  JSCompiler_temp.__reactInternalSnapshotBeforeUpdate =
+                    deletions;
                 } catch (error) {
-                  captureCommitPhaseError(deletion, deletion.return, error);
+                  captureCommitPhaseError(i, i.return, error);
                 }
               }
               break;
             case 3:
-              0 !== (i & 1024) &&
+              0 !== (flags & 1024) &&
                 supportsMutation &&
-                clearContainer(root.stateNode.containerInfo);
+                clearContainer(i.stateNode.containerInfo);
               break;
             case 5:
             case 26:
@@ -7750,21 +7752,18 @@ module.exports = function ($$$config) {
             case 17:
               break;
             default:
-              if (0 !== (i & 1024)) throw Error(formatProdErrorMessage(163));
+              if (0 !== (flags & 1024))
+                throw Error(formatProdErrorMessage(163));
           }
-          firstChild = root.sibling;
-          if (null !== firstChild) {
-            firstChild.return = root.return;
-            nextEffect = firstChild;
-            break;
+          deletions = fiber.sibling;
+          if (null !== deletions) {
+            deletions.return = fiber.return;
+            nextEffect = deletions;
+            break a;
           }
-          nextEffect = root.return;
+          nextEffect = fiber.return;
         }
     }
-    resolvedPrevProps = shouldFireAfterActiveInstanceBlur;
-    shouldFireAfterActiveInstanceBlur = !1;
-    focusedInstanceHandle = null;
-    return resolvedPrevProps;
   }
   function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
     var flags = finishedWork.flags;
@@ -10861,27 +10860,28 @@ module.exports = function ($$$config) {
         (root.callbackPriority = 0),
         (root.cancelPendingCommit = null));
     transitions = 0 !== (finishedWork.flags & 15990);
-    if (0 !== (finishedWork.subtreeFlags & 15990) || transitions) {
-      transitions = ReactSharedInternals.T;
-      ReactSharedInternals.T = null;
-      updatedLanes = getCurrentUpdatePriority();
-      setCurrentUpdatePriority(2);
-      suspendedRetryLanes = executionContext;
-      executionContext |= 4;
-      var shouldFireAfterActiveInstanceBlur$180 = commitBeforeMutationEffects(
-        root,
-        finishedWork
-      );
-      commitMutationEffectsOnFiber(finishedWork, root);
-      shouldFireAfterActiveInstanceBlur$180 && afterActiveInstanceBlur();
-      resetAfterCommit(root.containerInfo);
-      root.current = finishedWork;
-      commitLayoutEffectOnFiber(root, finishedWork.alternate, finishedWork);
-      requestPaint();
-      executionContext = suspendedRetryLanes;
-      setCurrentUpdatePriority(updatedLanes);
-      ReactSharedInternals.T = transitions;
-    } else root.current = finishedWork;
+    0 !== (finishedWork.subtreeFlags & 15990) || transitions
+      ? ((transitions = ReactSharedInternals.T),
+        (ReactSharedInternals.T = null),
+        (updatedLanes = getCurrentUpdatePriority()),
+        setCurrentUpdatePriority(2),
+        (suspendedRetryLanes = executionContext),
+        (executionContext |= 4),
+        (focusedInstanceHandle = prepareForCommit(root.containerInfo)),
+        (shouldFireAfterActiveInstanceBlur = !1),
+        (nextEffect = finishedWork),
+        commitBeforeMutationEffects_begin(),
+        (focusedInstanceHandle = null),
+        commitMutationEffectsOnFiber(finishedWork, root),
+        shouldFireAfterActiveInstanceBlur && afterActiveInstanceBlur(),
+        resetAfterCommit(root.containerInfo),
+        (root.current = finishedWork),
+        commitLayoutEffectOnFiber(root, finishedWork.alternate, finishedWork),
+        requestPaint(),
+        (executionContext = suspendedRetryLanes),
+        setCurrentUpdatePriority(updatedLanes),
+        (ReactSharedInternals.T = transitions))
+      : (root.current = finishedWork);
     spawnedLane
       ? ((spawnedLane = !1),
         (rootWithPendingPassiveEffects = root),
@@ -12821,7 +12821,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-classic-6ca7fbe8-20250102"
+      reconcilerVersion: "19.1.0-www-classic-d8b903f4-20250102"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
