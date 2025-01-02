@@ -10558,6 +10558,14 @@ function commitPassiveMountOnFiber(
       );
       flags & 2048 && commitHookPassiveMountEffects(finishedWork, 9);
       break;
+    case 1:
+      recursivelyTraversePassiveMountEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        committedTransitions
+      );
+      break;
     case 3:
       var prevEffectDuration = pushNestedEffectDurations();
       recursivelyTraversePassiveMountEffects(
@@ -17668,14 +17676,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1853 = React.version;
 if (
-  "19.1.0-www-modern-1e9eb95d-20250102" !==
+  "19.1.0-www-modern-0de1233f-20250102" !==
   isomorphicReactPackageVersion$jscomp$inline_1853
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1853,
-      "19.1.0-www-modern-1e9eb95d-20250102"
+      "19.1.0-www-modern-0de1233f-20250102"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17693,10 +17701,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_1855 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-1e9eb95d-20250102",
+  version: "19.1.0-www-modern-0de1233f-20250102",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-1e9eb95d-20250102"
+  reconcilerVersion: "19.1.0-www-modern-0de1233f-20250102"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_1855.getLaneLabelMap = getLaneLabelMap),
@@ -18064,7 +18072,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-modern-1e9eb95d-20250102";
+exports.version = "19.1.0-www-modern-0de1233f-20250102";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

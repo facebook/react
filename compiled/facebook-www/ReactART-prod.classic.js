@@ -8449,6 +8449,14 @@ function commitPassiveMountOnFiber(
       );
       flags & 2048 && commitHookEffectListMount(9, finishedWork);
       break;
+    case 1:
+      recursivelyTraversePassiveMountEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        committedTransitions
+      );
+      break;
     case 3:
       recursivelyTraversePassiveMountEffects(
         finishedRoot,
@@ -10779,10 +10787,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1507 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-1e9eb95d-20250102",
+  version: "19.1.0-www-classic-0de1233f-20250102",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-1e9eb95d-20250102"
+  reconcilerVersion: "19.1.0-www-classic-0de1233f-20250102"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1508 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -10808,4 +10816,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.1.0-www-classic-1e9eb95d-20250102";
+exports.version = "19.1.0-www-classic-0de1233f-20250102";
