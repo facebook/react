@@ -10315,7 +10315,7 @@ module.exports = function ($$$config) {
               throw Error(formatProdErrorMessage(462));
           }
         }
-        workLoopConcurrent();
+        workLoopConcurrentByScheduler();
         break;
       } catch (thrownValue$176) {
         handleThrow(root, thrownValue$176);
@@ -10331,7 +10331,7 @@ module.exports = function ($$$config) {
     finishQueueingConcurrentUpdates();
     return workInProgressRootExitStatus;
   }
-  function workLoopConcurrent() {
+  function workLoopConcurrentByScheduler() {
     for (; null !== workInProgress && !shouldYield(); )
       performUnitOfWork(workInProgress);
   }
@@ -12524,7 +12524,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-modern-de82912e-20241220"
+      reconcilerVersion: "19.1.0-www-modern-fe21c947-20250102"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

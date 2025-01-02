@@ -9739,7 +9739,7 @@ function renderRootConcurrent(root, lanes) {
             throw Error(formatProdErrorMessage(462));
         }
       }
-      workLoopConcurrent();
+      workLoopConcurrentByScheduler();
       break;
     } catch (thrownValue$139) {
       handleThrow(root, thrownValue$139);
@@ -9755,7 +9755,7 @@ function renderRootConcurrent(root, lanes) {
   finishQueueingConcurrentUpdates();
   return workInProgressRootExitStatus;
 }
-function workLoopConcurrent() {
+function workLoopConcurrentByScheduler() {
   for (; null !== workInProgress && !shouldYield(); )
     performUnitOfWork(workInProgress);
 }
@@ -10779,10 +10779,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1501 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-de82912e-20241220",
+  version: "19.1.0-www-classic-fe21c947-20250102",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-de82912e-20241220"
+  reconcilerVersion: "19.1.0-www-classic-fe21c947-20250102"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1502 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -10808,4 +10808,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.1.0-www-classic-de82912e-20241220";
+exports.version = "19.1.0-www-classic-fe21c947-20250102";
