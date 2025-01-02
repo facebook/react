@@ -236,23 +236,20 @@ let inProgressLanes: Lanes | null = null;
 let inProgressRoot: FiberRoot | null = null;
 
 let focusedInstanceHandle: null | Fiber = null;
-let shouldFireAfterActiveInstanceBlur: boolean = false;
+export let shouldFireAfterActiveInstanceBlur: boolean = false;
 
 export function commitBeforeMutationEffects(
   root: FiberRoot,
   firstChild: Fiber,
-): boolean {
+): void {
   focusedInstanceHandle = prepareForCommit(root.containerInfo);
+  shouldFireAfterActiveInstanceBlur = false;
 
   nextEffect = firstChild;
   commitBeforeMutationEffects_begin();
 
   // We no longer need to track the active instance fiber
-  const shouldFire = shouldFireAfterActiveInstanceBlur;
-  shouldFireAfterActiveInstanceBlur = false;
   focusedInstanceHandle = null;
-
-  return shouldFire;
 }
 
 function commitBeforeMutationEffects_begin() {
