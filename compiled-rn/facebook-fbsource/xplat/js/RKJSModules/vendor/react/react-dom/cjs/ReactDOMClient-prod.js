@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<edd4d2374bbc8b75f540347e845bd122>>
+ * @generated SignedSource<<2dbf0d86a39afb44385e9b3c7fe0599b>>
  */
 
 /*
@@ -11611,7 +11611,7 @@ function renderRootConcurrent(root, lanes) {
             throw Error(formatProdErrorMessage(462));
         }
       }
-      workLoopConcurrent();
+      workLoopConcurrentByScheduler();
       break;
     } catch (thrownValue$179) {
       handleThrow(root, thrownValue$179);
@@ -11627,7 +11627,7 @@ function renderRootConcurrent(root, lanes) {
   finishQueueingConcurrentUpdates();
   return workInProgressRootExitStatus;
 }
-function workLoopConcurrent() {
+function workLoopConcurrentByScheduler() {
   for (; null !== workInProgress && !shouldYield(); )
     performUnitOfWork(workInProgress);
 }
@@ -15892,14 +15892,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1727 = React.version;
 if (
-  "19.1.0-native-fb-de82912e-20241220" !==
+  "19.1.0-native-fb-fe21c947-20250102" !==
   isomorphicReactPackageVersion$jscomp$inline_1727
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1727,
-      "19.1.0-native-fb-de82912e-20241220"
+      "19.1.0-native-fb-fe21c947-20250102"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -15921,10 +15921,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2185 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-de82912e-20241220",
+  version: "19.1.0-native-fb-fe21c947-20250102",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-de82912e-20241220"
+  reconcilerVersion: "19.1.0-native-fb-fe21c947-20250102"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2186 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16030,4 +16030,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.1.0-native-fb-de82912e-20241220";
+exports.version = "19.1.0-native-fb-fe21c947-20250102";

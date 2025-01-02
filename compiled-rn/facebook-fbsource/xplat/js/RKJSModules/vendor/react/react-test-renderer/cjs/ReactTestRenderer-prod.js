@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e32ee4507872d2b0559b3b3103c77f1b>>
+ * @generated SignedSource<<b95cce5ea3bdd0091b3e5c4c3b626bb4>>
  */
 
 "use strict";
@@ -8634,7 +8634,7 @@ function renderRootConcurrent(root, lanes) {
             throw Error("Unexpected SuspendedReason. This is a bug in React.");
         }
       }
-      workLoopConcurrent();
+      workLoopConcurrentByScheduler();
       break;
     } catch (thrownValue$130) {
       handleThrow(root, thrownValue$130);
@@ -8650,7 +8650,7 @@ function renderRootConcurrent(root, lanes) {
   finishQueueingConcurrentUpdates();
   return workInProgressRootExitStatus;
 }
-function workLoopConcurrent() {
+function workLoopConcurrentByScheduler() {
   for (; null !== workInProgress && !shouldYield(); )
     performUnitOfWork(workInProgress);
 }
@@ -9771,10 +9771,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1389 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-de82912e-20241220",
+  version: "19.1.0-native-fb-fe21c947-20250102",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-de82912e-20241220"
+  reconcilerVersion: "19.1.0-native-fb-fe21c947-20250102"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1390 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -9910,4 +9910,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.1.0-native-fb-de82912e-20241220";
+exports.version = "19.1.0-native-fb-fe21c947-20250102";

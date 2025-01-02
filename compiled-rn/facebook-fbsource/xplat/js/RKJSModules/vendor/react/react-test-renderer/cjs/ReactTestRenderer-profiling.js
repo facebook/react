@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7f086448a0dfc85923cd75de812bfc20>>
+ * @generated SignedSource<<20024896fbcf8ef081f0d4db3e1bb30c>>
  */
 
 "use strict";
@@ -9136,7 +9136,7 @@ function renderRootConcurrent(root, lanes) {
             throw Error("Unexpected SuspendedReason. This is a bug in React.");
         }
       }
-      workLoopConcurrent();
+      workLoopConcurrentByScheduler();
       break;
     } catch (thrownValue$143) {
       handleThrow(root, thrownValue$143);
@@ -9159,7 +9159,7 @@ function renderRootConcurrent(root, lanes) {
   finishQueueingConcurrentUpdates();
   return workInProgressRootExitStatus;
 }
-function workLoopConcurrent() {
+function workLoopConcurrentByScheduler() {
   for (; null !== workInProgress && !shouldYield(); )
     performUnitOfWork(workInProgress);
 }
@@ -10340,10 +10340,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1199 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-de82912e-20241220",
+  version: "19.1.0-native-fb-fe21c947-20250102",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-de82912e-20241220",
+  reconcilerVersion: "19.1.0-native-fb-fe21c947-20250102",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$147 = 0;
@@ -10494,4 +10494,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.1.0-native-fb-de82912e-20241220";
+exports.version = "19.1.0-native-fb-fe21c947-20250102";

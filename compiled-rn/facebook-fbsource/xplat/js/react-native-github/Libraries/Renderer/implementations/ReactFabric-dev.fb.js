@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2d53e3c791a6802387f6809bda75b0af>>
+ * @generated SignedSource<<dbc2c81ac1d7d782c6891f1c81cbcf8f>>
  */
 
 "use strict";
@@ -12813,7 +12813,7 @@ __DEV__ &&
             }
           null !== ReactSharedInternals.actQueue
             ? workLoopSync()
-            : workLoopConcurrent();
+            : workLoopConcurrentByScheduler();
           break;
         } catch (thrownValue$31) {
           handleThrow(root, thrownValue$31);
@@ -12836,7 +12836,7 @@ __DEV__ &&
       finishQueueingConcurrentUpdates();
       return workInProgressRootExitStatus;
     }
-    function workLoopConcurrent() {
+    function workLoopConcurrentByScheduler() {
       for (; null !== workInProgress && !shouldYield(); )
         performUnitOfWork(workInProgress);
     }
@@ -17454,10 +17454,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-de82912e-20241220",
+        version: "19.1.0-native-fb-fe21c947-20250102",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-de82912e-20241220"
+        reconcilerVersion: "19.1.0-native-fb-fe21c947-20250102"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

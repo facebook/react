@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<315c83b8a0f42ab407cb22d83a9f0354>>
+ * @generated SignedSource<<5a9efa6679c293785a4471b9e4b92995>>
  */
 
 "use strict";
@@ -10525,7 +10525,7 @@ function renderRootConcurrent(root, lanes) {
           default:
             throw Error("Unexpected SuspendedReason. This is a bug in React.");
         }
-      workLoopConcurrent();
+      workLoopConcurrentByScheduler();
       break;
     } catch (thrownValue$151) {
       handleThrow(root, thrownValue$151);
@@ -10548,7 +10548,7 @@ function renderRootConcurrent(root, lanes) {
   finishQueueingConcurrentUpdates();
   return workInProgressRootExitStatus;
 }
-function workLoopConcurrent() {
+function workLoopConcurrentByScheduler() {
   for (; null !== workInProgress && !shouldYield(); )
     performUnitOfWork(workInProgress);
 }
@@ -11774,10 +11774,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1303 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-de82912e-20241220",
+    version: "19.1.0-native-fb-fe21c947-20250102",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-de82912e-20241220"
+    reconcilerVersion: "19.1.0-native-fb-fe21c947-20250102"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1303.rendererConfig = extraDevToolsConfig);

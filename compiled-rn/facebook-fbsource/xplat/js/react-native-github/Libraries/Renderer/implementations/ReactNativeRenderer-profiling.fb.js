@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b18ff893e5d8d46e30d663f487c5f900>>
+ * @generated SignedSource<<8080a3f62bcd4c78a7b04ba11a1a7cb3>>
  */
 
 "use strict";
@@ -10958,7 +10958,7 @@ function renderRootConcurrent(root, lanes) {
           default:
             throw Error("Unexpected SuspendedReason. This is a bug in React.");
         }
-      workLoopConcurrent();
+      workLoopConcurrentByScheduler();
       break;
     } catch (thrownValue$155) {
       handleThrow(root, thrownValue$155);
@@ -10981,7 +10981,7 @@ function renderRootConcurrent(root, lanes) {
   finishQueueingConcurrentUpdates();
   return workInProgressRootExitStatus;
 }
-function workLoopConcurrent() {
+function workLoopConcurrentByScheduler() {
   for (; null !== workInProgress && !shouldYield(); )
     performUnitOfWork(workInProgress);
 }
@@ -11905,11 +11905,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.1.0-native-fb-de82912e-20241220" !== isomorphicReactPackageVersion)
+if ("19.1.0-native-fb-fe21c947-20250102" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.1.0-native-fb-de82912e-20241220\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.1.0-native-fb-fe21c947-20250102\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11958,10 +11958,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1369 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-de82912e-20241220",
+    version: "19.1.0-native-fb-fe21c947-20250102",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-de82912e-20241220"
+    reconcilerVersion: "19.1.0-native-fb-fe21c947-20250102"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1369.rendererConfig = extraDevToolsConfig);
