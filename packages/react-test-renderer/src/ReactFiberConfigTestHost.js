@@ -341,8 +341,7 @@ export function measureInstance(instance: Instance): InstanceMeasurement {
   return null;
 }
 
-export function isInstanceInViewport(
-  instance: Instance,
+export function wasInstanceInViewport(
   measurement: InstanceMeasurement,
 ): boolean {
   return true;

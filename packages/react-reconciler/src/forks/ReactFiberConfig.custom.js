@@ -137,7 +137,7 @@ export const cancelRootViewTransitionName =
 export const restoreRootViewTransitionName =
   $$$config.restoreRootViewTransitionName;
 export const measureInstance = $$$config.measureInstance;
-export const isInstanceInViewport = $$$config.isInstanceInViewport;
+export const wasInstanceInViewport = $$$config.wasInstanceInViewport;
 export const hasInstanceChanged = $$$config.hasInstanceChanged;
 export const hasInstanceAffectedParent = $$$config.hasInstanceAffectedParent;
 export const startViewTransition = $$$config.startViewTransition;

@@ -1098,14 +1098,17 @@ export type InstanceMeasurement = {
   rect: ClientRect | DOMRect,
   abs: boolean, // is absolutely positioned
   clip: boolean, // is a clipping parent
+  view: boolean, // is in viewport bounds
 };
 
 export function measureInstance(instance: Instance): InstanceMeasurement {
+  const ownerWindow = instance.ownerDocument.defaultView;
+  const rect = instance.getBoundingClientRect();
   const computedStyle = getComputedStyle(instance);
   return {
-    rect: instance.getBoundingClientRect(),
-    // Absolutely positioned instances don't contribute their size to the parent.
+    rect: rect,
     abs:
+      // Absolutely positioned instances don't contribute their size to the parent.
       computedStyle.position === 'absolute' ||
       computedStyle.position === 'fixed',
     clip:
@@ -1119,21 +1122,20 @@ export function measureInstance(instance: Instance): InstanceMeasurement {
       computedStyle.mask !== 'none' ||
       computedStyle.mask !== 'none' ||
       computedStyle.borderRadius !== '0px',
+    view:
+      // If the instance was within the bounds of the viewport. We don't care as
+      // much about if it was fully occluded because then it can still pop out.
+      rect.bottom >= 0 &&
+      rect.right >= 0 &&
+      rect.top <= ownerWindow.innerHeight &&
+      rect.left <= ownerWindow.innerWidth,
   };
 }
 
-export function isInstanceInViewport(
-  instance: Instance,
+export function wasInstanceInViewport(
   measurement: InstanceMeasurement,
 ): boolean {
-  const ownerWindow = instance.ownerDocument.defaultView;
-  const rect = measurement.rect;
-  return (
-    rect.bottom >= 0 &&
-    rect.right >= 0 &&
-    rect.top <= ownerWindow.innerHeight &&
-    rect.left <= ownerWindow.innerWidth
-  );
+  return measurement.view;
 }
 
 export function hasInstanceChanged(
