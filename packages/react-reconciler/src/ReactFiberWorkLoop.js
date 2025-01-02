@@ -41,6 +41,7 @@ import {
   enableSiblingPrerendering,
   enableComponentPerformanceTrack,
   enableYieldingBeforePassive,
+  enableThrottledScheduling,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import is from 'shared/objectIs';
@@ -2610,8 +2611,10 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
         // can't trust the result of `shouldYield`, because the host I/O is
         // likely mocked.
         workLoopSync();
+      } else if (enableThrottledScheduling) {
+        workLoopConcurrent(includesNonIdleWork(lanes));
       } else {
-        workLoopConcurrent();
+        workLoopConcurrentByScheduler();
       }
       break;
     } catch (thrownValue) {
@@ -2650,10 +2653,27 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
 }
 
 /** @noinline */
-function workLoopConcurrent() {
+function workLoopConcurrent(nonIdle: boolean) {
+  // We yield every other "frame" when rendering Transition or Retries. Those are blocking
+  // revealing new content. The purpose of this yield is not to avoid the overhead of yielding,
+  // which is very low, but rather to intentionally block any frequently occuring other main
+  // thread work like animations from starving our work. In other words, the purpose of this
+  // is to reduce the framerate of animations to 30 frames per second.
+  // For Idle work we yield every 5ms to keep animations going smooth.
+  if (workInProgress !== null) {
+    const yieldAfter = now() + (nonIdle ? 25 : 5);
+    do {
+      // $FlowFixMe[incompatible-call] flow doesn't know that now() is side-effect free
+      performUnitOfWork(workInProgress);
+    } while (workInProgress !== null && now() < yieldAfter);
+  }
+}
+
+/** @noinline */
+function workLoopConcurrentByScheduler() {
   // Perform work until Scheduler asks us to yield
   while (workInProgress !== null && !shouldYield()) {
-    // $FlowFixMe[incompatible-call] found when upgrading Flow
+    // $FlowFixMe[incompatible-call] flow doesn't know that shouldYield() is side-effect free
     performUnitOfWork(workInProgress);
   }
 }
