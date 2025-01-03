@@ -66,8 +66,8 @@ export const Forked = /*                       */ 0b0000000100000000000000000000
 // This enables us to defer more work in the unmount case,
 // since we can defer traversing the tree during layout to look for Passive effects,
 // and instead rely on the static flag as a signal that there may be cleanup work.
-export const RefStatic = /*                    */ 0b0000001000000000000000000000;
 export const LayoutStatic = /*                 */ 0b0000010000000000000000000000;
+export const RefStatic = LayoutStatic;
 export const PassiveStatic = /*                */ 0b0000100000000000000000000000;
 export const MaySuspendCommit = /*             */ 0b0001000000000000000000000000;
 
