@@ -59,7 +59,7 @@ function registerEvents() {
   registerTwoPhaseEvent('onBeforeInput', [
     'compositionend',
     'keypress',
-    'textInput',
+    'beforeinput',
     'paste',
   ]);
   registerTwoPhaseEvent('onCompositionEnd', [
@@ -281,7 +281,7 @@ function getNativeBeforeInputChars(
 
       hasSpaceKeypress = true;
       return SPACEBAR_CHAR;
-
+    case 'beforeinput': // ensure that before input event is listened to
     case 'textInput':
       // Record the characters to be added to the DOM.
       const chars = nativeEvent.data;
