@@ -5890,12 +5890,12 @@ function markRef(current, workInProgress) {
   if (null === ref)
     null !== current &&
       null !== current.ref &&
-      (workInProgress.flags |= 2097664);
+      (workInProgress.flags |= 4194816);
   else {
     if ("function" !== typeof ref && "object" !== typeof ref)
       throw Error(formatProdErrorMessage(284));
     if (null === current || current.ref !== ref)
-      workInProgress.flags |= 2097664;
+      workInProgress.flags |= 4194816;
   }
 }
 function updateFunctionComponent(
@@ -6531,7 +6531,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         children: nextProps.children
       })),
       (nextProps.subtreeFlags =
-        JSCompiler_temp$jscomp$0.subtreeFlags & 31457280),
+        JSCompiler_temp$jscomp$0.subtreeFlags & 29360128),
       null !== digest
         ? (showFallback = createWorkInProgress(digest, showFallback))
         : ((showFallback = createFiberFromFragment(
@@ -7596,8 +7596,8 @@ function bubbleProperties(completedWork) {
   if (didBailout)
     for (var child$126 = completedWork.child; null !== child$126; )
       (newChildLanes |= child$126.lanes | child$126.childLanes),
-        (subtreeFlags |= child$126.subtreeFlags & 31457280),
-        (subtreeFlags |= child$126.flags & 31457280),
+        (subtreeFlags |= child$126.subtreeFlags & 29360128),
+        (subtreeFlags |= child$126.flags & 29360128),
         (child$126.return = completedWork),
         (child$126 = child$126.sibling);
   else
@@ -12388,7 +12388,7 @@ function createWorkInProgress(current, pendingProps) {
       (workInProgress.flags = 0),
       (workInProgress.subtreeFlags = 0),
       (workInProgress.deletions = null));
-  workInProgress.flags = current.flags & 31457280;
+  workInProgress.flags = current.flags & 29360128;
   workInProgress.childLanes = current.childLanes;
   workInProgress.lanes = current.lanes;
   workInProgress.child = current.child;
@@ -12407,7 +12407,7 @@ function createWorkInProgress(current, pendingProps) {
   return workInProgress;
 }
 function resetWorkInProgress(workInProgress, renderLanes) {
-  workInProgress.flags &= 31457282;
+  workInProgress.flags &= 29360130;
   var current = workInProgress.alternate;
   null === current
     ? ((workInProgress.childLanes = 0),
@@ -17328,14 +17328,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1801 = React.version;
 if (
-  "19.1.0-www-modern-c81312e3-20250102" !==
+  "19.1.0-www-modern-3b009b4c-20250102" !==
   isomorphicReactPackageVersion$jscomp$inline_1801
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1801,
-      "19.1.0-www-modern-c81312e3-20250102"
+      "19.1.0-www-modern-3b009b4c-20250102"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17353,10 +17353,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2333 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-c81312e3-20250102",
+  version: "19.1.0-www-modern-3b009b4c-20250102",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-c81312e3-20250102"
+  reconcilerVersion: "19.1.0-www-modern-3b009b4c-20250102"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2334 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17872,4 +17872,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-modern-c81312e3-20250102";
+exports.version = "19.1.0-www-modern-3b009b4c-20250102";

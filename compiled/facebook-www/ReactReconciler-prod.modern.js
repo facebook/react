@@ -4542,12 +4542,12 @@ module.exports = function ($$$config) {
     if (null === ref)
       null !== current &&
         null !== current.ref &&
-        (workInProgress.flags |= 2097664);
+        (workInProgress.flags |= 4194816);
     else {
       if ("function" !== typeof ref && "object" !== typeof ref)
         throw Error(formatProdErrorMessage(284));
       if (null === current || current.ref !== ref)
-        workInProgress.flags |= 2097664;
+        workInProgress.flags |= 4194816;
     }
   }
   function updateFunctionComponent(
@@ -5169,7 +5169,7 @@ module.exports = function ($$$config) {
         mode: "hidden",
         children: nextProps.children
       });
-      nextProps.subtreeFlags = JSCompiler_temp$jscomp$0.subtreeFlags & 31457280;
+      nextProps.subtreeFlags = JSCompiler_temp$jscomp$0.subtreeFlags & 29360128;
       null !== didSuspend
         ? (showFallback = createWorkInProgress(didSuspend, showFallback))
         : ((showFallback = createFiberFromFragment(
@@ -6493,8 +6493,8 @@ module.exports = function ($$$config) {
     if (didBailout)
       for (var child$109 = completedWork.child; null !== child$109; )
         (newChildLanes |= child$109.lanes | child$109.childLanes),
-          (subtreeFlags |= child$109.subtreeFlags & 31457280),
-          (subtreeFlags |= child$109.flags & 31457280),
+          (subtreeFlags |= child$109.subtreeFlags & 29360128),
+          (subtreeFlags |= child$109.flags & 29360128),
           (child$109.return = completedWork),
           (child$109 = child$109.sibling);
     else
@@ -10989,7 +10989,7 @@ module.exports = function ($$$config) {
         (workInProgress.flags = 0),
         (workInProgress.subtreeFlags = 0),
         (workInProgress.deletions = null));
-    workInProgress.flags = current.flags & 31457280;
+    workInProgress.flags = current.flags & 29360128;
     workInProgress.childLanes = current.childLanes;
     workInProgress.lanes = current.lanes;
     workInProgress.child = current.child;
@@ -11011,7 +11011,7 @@ module.exports = function ($$$config) {
     return workInProgress;
   }
   function resetWorkInProgress(workInProgress, renderLanes) {
-    workInProgress.flags &= 31457282;
+    workInProgress.flags &= 29360130;
     var current = workInProgress.alternate;
     null === current
       ? ((workInProgress.childLanes = 0),
@@ -12555,7 +12555,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-modern-c81312e3-20250102"
+      reconcilerVersion: "19.1.0-www-modern-3b009b4c-20250102"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
