@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<4ed2f264bde385ff618b27f469c22dc6>>
+ * @generated SignedSource<<23e2e841a1b6664968af2b4e878e76b3>>
  */
 
 /*
@@ -8876,7 +8876,9 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
                         if (
                           ((currentResource = maybeNodes[i]),
                           currentResource.getAttribute("href") ===
-                            (null == current.href ? null : current.href) &&
+                            (null == current.href || "" === current.href
+                              ? null
+                              : current.href) &&
                             currentResource.getAttribute("rel") ===
                               (null == current.rel ? null : current.rel) &&
                             currentResource.getAttribute("title") ===
@@ -14258,7 +14260,9 @@ function canHydrateInstance(instance, type, props, inRootOrSingleton) {
           else if (
             name !== anyProps.rel ||
             instance.getAttribute("href") !==
-              (null == anyProps.href ? null : anyProps.href) ||
+              (null == anyProps.href || "" === anyProps.href
+                ? null
+                : anyProps.href) ||
             instance.getAttribute("crossorigin") !==
               (null == anyProps.crossOrigin ? null : anyProps.crossOrigin) ||
             instance.getAttribute("title") !==
@@ -15904,14 +15908,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1754 = React.version;
 if (
-  "19.1.0-native-fb-3b009b4c-20250102" !==
+  "19.1.0-native-fb-bf883beb-20250103" !==
   isomorphicReactPackageVersion$jscomp$inline_1754
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1754,
-      "19.1.0-native-fb-3b009b4c-20250102"
+      "19.1.0-native-fb-bf883beb-20250103"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -15933,10 +15937,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2202 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-3b009b4c-20250102",
+  version: "19.1.0-native-fb-bf883beb-20250103",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-3b009b4c-20250102"
+  reconcilerVersion: "19.1.0-native-fb-bf883beb-20250103"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2203 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16042,4 +16046,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.1.0-native-fb-3b009b4c-20250102";
+exports.version = "19.1.0-native-fb-bf883beb-20250103";

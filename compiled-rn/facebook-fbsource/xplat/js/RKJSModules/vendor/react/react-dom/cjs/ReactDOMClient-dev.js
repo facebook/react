@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<03613344aa6068afaba47c44eeaf2e5f>>
+ * @generated SignedSource<<78486249bde5c057c1694badd22987eb>>
  */
 
 /*
@@ -12713,7 +12713,9 @@ __DEV__ &&
                             if (
                               ((hoistableRoot = maybeNodes[i]),
                               hoistableRoot.getAttribute("href") ===
-                                (null == current.href ? null : current.href) &&
+                                (null == current.href || "" === current.href
+                                  ? null
+                                  : current.href) &&
                                 hoistableRoot.getAttribute("rel") ===
                                   (null == current.rel ? null : current.rel) &&
                                 hoistableRoot.getAttribute("title") ===
@@ -19702,36 +19704,34 @@ __DEV__ &&
                   }
                 case "src":
                 case "href":
-                  "" !== propKey ||
-                  ("a" === tag && "href" === value) ||
-                  ("object" === tag && "data" === value)
-                    ? hydrateSanitizedAttribute(
-                        domElement,
-                        value,
-                        value,
-                        propKey,
-                        extraAttributes,
-                        serverDifferences
-                      )
-                    : ("src" === value
-                        ? error$jscomp$0(
-                            'An empty string ("") was passed to the %s attribute. This may cause the browser to download the whole page again over the network. To fix this, either do not render the element at all or pass null to %s instead of an empty string.',
-                            value,
-                            value
-                          )
-                        : error$jscomp$0(
-                            'An empty string ("") was passed to the %s attribute. To fix this, either do not render the element at all or pass null to %s instead of an empty string.',
-                            value,
-                            value
-                          ),
-                      hydrateSanitizedAttribute(
-                        domElement,
-                        value,
-                        value,
-                        null,
-                        extraAttributes,
-                        serverDifferences
-                      ));
+                  if (
+                    !(
+                      "" !== propKey ||
+                      ("a" === tag && "href" === value) ||
+                      ("object" === tag && "data" === value)
+                    )
+                  ) {
+                    "src" === value
+                      ? error$jscomp$0(
+                          'An empty string ("") was passed to the %s attribute. This may cause the browser to download the whole page again over the network. To fix this, either do not render the element at all or pass null to %s instead of an empty string.',
+                          value,
+                          value
+                        )
+                      : error$jscomp$0(
+                          'An empty string ("") was passed to the %s attribute. To fix this, either do not render the element at all or pass null to %s instead of an empty string.',
+                          value,
+                          value
+                        );
+                    continue;
+                  }
+                  hydrateSanitizedAttribute(
+                    domElement,
+                    value,
+                    value,
+                    propKey,
+                    extraAttributes,
+                    serverDifferences
+                  );
                   continue;
                 case "action":
                 case "formAction":
@@ -20341,7 +20341,9 @@ __DEV__ &&
               else if (
                 name !== anyProps.rel ||
                 instance.getAttribute("href") !==
-                  (null == anyProps.href ? null : anyProps.href) ||
+                  (null == anyProps.href || "" === anyProps.href
+                    ? null
+                    : anyProps.href) ||
                 instance.getAttribute("crossorigin") !==
                   (null == anyProps.crossOrigin
                     ? null
@@ -25886,11 +25888,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.1.0-native-fb-3b009b4c-20250102" !== isomorphicReactPackageVersion)
+      if ("19.1.0-native-fb-bf883beb-20250103" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.1.0-native-fb-3b009b4c-20250102\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.1.0-native-fb-bf883beb-20250103\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -25927,10 +25929,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.1.0-native-fb-3b009b4c-20250102",
+          version: "19.1.0-native-fb-bf883beb-20250103",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.1.0-native-fb-3b009b4c-20250102"
+          reconcilerVersion: "19.1.0-native-fb-bf883beb-20250103"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -26076,5 +26078,5 @@ __DEV__ &&
       listenToAllSupportedEvents(container);
       return new ReactDOMHydrationRoot(initialChildren);
     };
-    exports.version = "19.1.0-native-fb-3b009b4c-20250102";
+    exports.version = "19.1.0-native-fb-bf883beb-20250103";
   })();
