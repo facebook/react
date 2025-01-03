@@ -1139,7 +1139,9 @@ export function canHydrateInstance(
           } else if (
             rel !== anyProps.rel ||
             element.getAttribute('href') !==
-              (anyProps.href == null ? null : anyProps.href) ||
+              (anyProps.href == null || anyProps.href === ''
+                ? null
+                : anyProps.href) ||
             element.getAttribute('crossorigin') !==
               (anyProps.crossOrigin == null ? null : anyProps.crossOrigin) ||
             element.getAttribute('title') !==
@@ -2984,7 +2986,7 @@ export function hydrateHoistable(
           const node = nodes[i];
           if (
             node.getAttribute('href') !==
-              (props.href == null ? null : props.href) ||
+              (props.href == null || props.href === '' ? null : props.href) ||
             node.getAttribute('rel') !==
               (props.rel == null ? null : props.rel) ||
             node.getAttribute('title') !==
