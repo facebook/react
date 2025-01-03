@@ -172,6 +172,10 @@ export type FunctionSignature = {
    * - Else uses the effects specified by this signature.
    */
   mutableOnlyIfOperandsAreMutable?: boolean;
+
+  impure?: boolean;
+
+  canonicalName?: string;
 };
 
 /*

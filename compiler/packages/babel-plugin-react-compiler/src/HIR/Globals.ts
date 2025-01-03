@@ -142,6 +142,44 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
     ]),
   ],
   [
+    'performance',
+    addObject(DEFAULT_SHAPES, 'performance', [
+      // Static methods (TODO)
+      [
+        'now',
+        // Date.now()
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [],
+          restParam: Effect.Read,
+          returnType: {kind: 'Poly'}, // TODO: could be Primitive, but that would change existing compilation
+          calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Mutable, // same here
+          impure: true,
+          canonicalName: 'performance.now',
+        }),
+      ],
+    ]),
+  ],
+  [
+    'Date',
+    addObject(DEFAULT_SHAPES, 'Date', [
+      // Static methods (TODO)
+      [
+        'now',
+        // Date.now()
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [],
+          restParam: Effect.Read,
+          returnType: {kind: 'Poly'}, // TODO: could be Primitive, but that would change existing compilation
+          calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Mutable, // same here
+          impure: true,
+          canonicalName: 'Date.now',
+        }),
+      ],
+    ]),
+  ],
+  [
     'Math',
     addObject(DEFAULT_SHAPES, 'Math', [
       // Static properties (TODO)
@@ -207,6 +245,18 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
           returnType: {kind: 'Primitive'},
           calleeEffect: Effect.Read,
           returnValueKind: ValueKind.Primitive,
+        }),
+      ],
+      [
+        'random',
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [],
+          restParam: Effect.Read,
+          returnType: {kind: 'Poly'}, // TODO: could be Primitive, but that would change existing compilation
+          calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Mutable, // same here
+          impure: true,
+          canonicalName: 'Math.random',
         }),
       ],
     ]),
