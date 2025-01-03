@@ -23,6 +23,7 @@ export type ViewTransitionProps = {
 
 export type ViewTransitionInstance = {
   autoName: null | string, // the view-transition-name to use when an explicit one is not specified
+  paired: null | ViewTransitionInstance, // a temporary state during the commit phase if we have paired this with another instance
 };
 
 let globalClientIdCounter: number = 0;

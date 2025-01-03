@@ -2272,6 +2272,10 @@ export function trackAppearingViewTransition(
     }
     workInProgressAppearingViewTransitions = new Map();
   }
+  // Reset the pair in case we didn't end up restoring the instance in previous commits.
+  // This could happen since we don't actually commit all tracked instances if they end
+  // up in a non-committed subtree.
+  instance.paired = null;
   workInProgressAppearingViewTransitions.set(name, instance);
 }
 

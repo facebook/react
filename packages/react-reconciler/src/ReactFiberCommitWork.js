@@ -41,7 +41,10 @@ import type {
   TracingMarkerInstance,
   TransitionAbort,
 } from './ReactFiberTracingMarkerComponent';
-import type {ViewTransitionInstance} from './ReactFiberViewTransitionComponent';
+import type {
+  ViewTransitionProps,
+  ViewTransitionInstance,
+} from './ReactFiberViewTransitionComponent';
 
 import {
   alwaysThrottleRetries,
@@ -111,6 +114,7 @@ import {
   DidCapture,
   ViewTransitionStatic,
   AffectedParentLayout,
+  ViewTransitionNamedStatic,
 } from './ReactFiberFlags';
 import {
   commitStartTime,
@@ -290,13 +294,19 @@ export function commitBeforeMutationEffects(
     includesOnlyViewTransitionEligibleLanes(committedLanes);
 
   nextEffect = firstChild;
-  commitBeforeMutationEffects_begin(isViewTransitionEligible);
+  commitBeforeMutationEffects_begin(
+    isViewTransitionEligible,
+    appearingViewTransitions,
+  );
 
   // We no longer need to track the active instance fiber
   focusedInstanceHandle = null;
 }
 
-function commitBeforeMutationEffects_begin(isViewTransitionEligible: boolean) {
+function commitBeforeMutationEffects_begin(
+  isViewTransitionEligible: boolean,
+  appearingViewTransitions: Map<string, ViewTransitionInstance> | null,
+) {
   // If this commit is eligible for a View Transition we look into all mutated subtrees.
   // TODO: We could optimize this by marking these with the Snapshot subtree flag in the render phase.
   const subtreeMask = isViewTransitionEligible
@@ -316,6 +326,7 @@ function commitBeforeMutationEffects_begin(isViewTransitionEligible: boolean) {
           commitBeforeMutationEffectsDeletion(
             deletion,
             isViewTransitionEligible,
+            appearingViewTransitions,
           );
         }
       }
@@ -348,7 +359,7 @@ function commitBeforeMutationEffects_begin(isViewTransitionEligible: boolean) {
             isViewTransitionEligible
           ) {
             // Was previously mounted as visible but is now hidden.
-            commitExitViewTransitions(current);
+            commitExitViewTransitions(current, appearingViewTransitions);
           }
           // Skip before mutation effects of the children because they're hidden.
           commitBeforeMutationEffects_complete(isViewTransitionEligible);
@@ -512,6 +523,7 @@ function commitBeforeMutationEffectsOnFiber(
 function commitBeforeMutationEffectsDeletion(
   deletion: Fiber,
   isViewTransitionEligible: boolean,
+  appearingViewTransitions: Map<string, ViewTransitionInstance> | null,
 ) {
   if (enableCreateEventHandleAPI) {
     // TODO (effects) It would be nice to avoid calling doesFiberContain()
@@ -524,7 +536,7 @@ function commitBeforeMutationEffectsDeletion(
     }
   }
   if (isViewTransitionEligible) {
-    commitExitViewTransitions(deletion);
+    commitExitViewTransitions(deletion, appearingViewTransitions);
   }
 }
 
@@ -627,19 +639,88 @@ function commitEnterViewTransitions(placement: Fiber): void {
   }
 }
 
-function commitExitViewTransitions(deletion: Fiber): void {
+function commitDeletedPairViewTransitions(
+  deletion: Fiber,
+  appearingViewTransitions: Map<string, ViewTransitionInstance>,
+): void {
+  if (appearingViewTransitions.size === 0) {
+    // We've found all.
+    return;
+  }
+  if ((deletion.subtreeFlags & ViewTransitionNamedStatic) === NoFlags) {
+    // This has no named view transitions in its subtree.
+    return;
+  }
+  let child = deletion.child;
+  while (child !== null) {
+    if (child.tag === OffscreenComponent && child.memoizedState === null) {
+      // This tree was already hidden so we skip it.
+    } else {
+      if (
+        child.tag === ViewTransitionComponent &&
+        (child.flags & ViewTransitionNamedStatic) !== NoFlags
+      ) {
+        const props: ViewTransitionProps = child.memoizedProps;
+        const name = props.name;
+        if (name != null && name !== 'auto') {
+          const pair = appearingViewTransitions.get(name);
+          if (pair !== undefined) {
+            const oldinstance: ViewTransitionInstance = child.stateNode;
+            const newInstance: ViewTransitionInstance = pair;
+            newInstance.paired = oldinstance;
+            // We found a new appearing view transition with the same name as this deletion.
+            // We'll transition between them.
+            viewTransitionHostInstanceIdx = 0;
+            applyViewTransitionToHostInstances(child.child, name, null, false);
+            // Delete the entry so that we know when we've found all of them
+            // and can stop searching (size reaches zero).
+            appearingViewTransitions.delete(name);
+            if (appearingViewTransitions.size === 0) {
+              break;
+            }
+          }
+        }
+      }
+      commitDeletedPairViewTransitions(child, appearingViewTransitions);
+    }
+    child = child.sibling;
+  }
+}
+
+function commitExitViewTransitions(
+  deletion: Fiber,
+  appearingViewTransitions: Map<string, ViewTransitionInstance> | null,
+): void {
   if (deletion.tag === ViewTransitionComponent) {
-    const name = getViewTransitionName(
-      deletion.memoizedProps,
-      deletion.stateNode,
-    );
+    const props: ViewTransitionProps = deletion.memoizedProps;
+    const name = getViewTransitionName(props, deletion.stateNode);
     viewTransitionHostInstanceIdx = 0;
     applyViewTransitionToHostInstances(deletion.child, name, null, false);
+
+    if (appearingViewTransitions !== null) {
+      const pair = appearingViewTransitions.get(name);
+      if (pair !== undefined) {
+        // We found a new appearing view transition with the same name as this deletion.
+        // We'll transition between them instead of running the normal exit.
+        const oldinstance: ViewTransitionInstance = deletion.stateNode;
+        const newInstance: ViewTransitionInstance = pair;
+        newInstance.paired = oldinstance;
+        // Delete the entry so that we know when we've found all of them
+        // and can stop searching (size reaches zero).
+        appearingViewTransitions.delete(name);
+      }
+      // Look for more pairs deeper in the tree.
+      commitDeletedPairViewTransitions(deletion, appearingViewTransitions);
+    }
   } else if ((deletion.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
     let child = deletion.child;
     while (child !== null) {
-      commitExitViewTransitions(child);
+      commitExitViewTransitions(child, appearingViewTransitions);
       child = child.sibling;
+    }
+  } else {
+    if (appearingViewTransitions !== null) {
+      commitDeletedPairViewTransitions(deletion, appearingViewTransitions);
     }
   }
 }
