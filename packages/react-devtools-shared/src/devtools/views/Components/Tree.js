@@ -49,17 +49,31 @@ export type ItemData = {
   treeFocused: boolean,
 };
 
-type Props = {};
+function calculateInitialScrollOffset(
+  inspectedElementIndex: number | null,
+  elementHeight: number,
+): number | void {
+  if (inspectedElementIndex === null) {
+    return undefined;
+  }
 
-export default function Tree(props: Props): React.Node {
+  if (inspectedElementIndex < 3) {
+    return undefined;
+  }
+
+  // Make 3 elements on top of the inspected one visible
+  return (inspectedElementIndex - 3) * elementHeight;
+}
+
+export default function Tree(): React.Node {
   const dispatch = useContext(TreeDispatcherContext);
   const {
     numElements,
     ownerID,
     searchIndex,
     searchResults,
-    selectedElementID,
-    selectedElementIndex,
+    inspectedElementID,
+    inspectedElementIndex,
   } = useContext(TreeStateContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
@@ -88,11 +102,11 @@ export default function Tree(props: Props): React.Node {
   // Using a callback ref accounts for this case...
   const listCallbackRef = useCallback(
     (list: $FlowFixMe) => {
-      if (list != null && selectedElementIndex !== null) {
-        list.scrollToItem(selectedElementIndex, 'smart');
+      if (list != null && inspectedElementIndex !== null) {
+        list.scrollToItem(inspectedElementIndex, 'smart');
       }
     },
-    [selectedElementIndex],
+    [inspectedElementIndex],
   );
 
   // Picking an element in the inspector should put focus into the tree.
@@ -141,8 +155,8 @@ export default function Tree(props: Props): React.Node {
         case 'ArrowLeft':
           event.preventDefault();
           element =
-            selectedElementID !== null
-              ? store.getElementByID(selectedElementID)
+            inspectedElementID !== null
+              ? store.getElementByID(inspectedElementID)
               : null;
           if (element !== null) {
             if (event.altKey) {
@@ -161,8 +175,8 @@ export default function Tree(props: Props): React.Node {
         case 'ArrowRight':
           event.preventDefault();
           element =
-            selectedElementID !== null
-              ? store.getElementByID(selectedElementID)
+            inspectedElementID !== null
+              ? store.getElementByID(inspectedElementID)
               : null;
           if (element !== null) {
             if (event.altKey) {
@@ -210,35 +224,35 @@ export default function Tree(props: Props): React.Node {
     return () => {
       container.removeEventListener('keydown', handleKeyDown);
     };
-  }, [dispatch, selectedElementID, store]);
+  }, [dispatch, inspectedElementID, store]);
 
   // Focus management.
   const handleBlur = useCallback(() => setTreeFocused(false), []);
   const handleFocus = useCallback(() => {
     setTreeFocused(true);
 
-    if (selectedElementIndex === null && numElements > 0) {
+    if (inspectedElementIndex === null && numElements > 0) {
       dispatch({
         type: 'SELECT_ELEMENT_AT_INDEX',
         payload: 0,
       });
     }
-  }, [dispatch, numElements, selectedElementIndex]);
+  }, [dispatch, numElements, inspectedElementIndex]);
 
   const handleKeyPress = useCallback(
     (event: $FlowFixMe) => {
       switch (event.key) {
         case 'Enter':
         case ' ':
-          if (selectedElementID !== null) {
-            dispatch({type: 'SELECT_OWNER', payload: selectedElementID});
+          if (inspectedElementID !== null) {
+            dispatch({type: 'SELECT_OWNER', payload: inspectedElementID});
           }
           break;
         default:
           break;
       }
     },
-    [dispatch, selectedElementID],
+    [dispatch, inspectedElementID],
   );
 
   // If we switch the selected element while using the keyboard,
@@ -255,8 +269,8 @@ export default function Tree(props: Props): React.Node {
       didSelectNewSearchResult = true;
     }
     if (isNavigatingWithKeyboard || didSelectNewSearchResult) {
-      if (selectedElementID !== null) {
-        highlightHostInstance(selectedElementID);
+      if (inspectedElementID !== null) {
+        highlightHostInstance(inspectedElementID);
       } else {
         clearHighlightHostInstance();
       }
@@ -267,7 +281,7 @@ export default function Tree(props: Props): React.Node {
     highlightHostInstance,
     searchIndex,
     searchResults,
-    selectedElementID,
+    inspectedElementID,
   ]);
 
   // Highlight last hovered element.
@@ -426,6 +440,10 @@ export default function Tree(props: Props): React.Node {
                 <FixedSizeList
                   className={styles.List}
                   height={height}
+                  initialScrollOffset={calculateInitialScrollOffset(
+                    inspectedElementIndex,
+                    lineHeight,
+                  )}
                   innerElementType={InnerElementType}
                   itemCount={numElements}
                   itemData={itemData}
