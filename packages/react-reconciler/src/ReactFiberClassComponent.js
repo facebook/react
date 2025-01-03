@@ -23,7 +23,6 @@ import {
   disableDefaultPropsExceptForClasses,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
-import {isMounted} from './ReactFiberTreeReflection';
 import {get as getInstance, set as setInstance} from 'shared/ReactInstanceMap';
 import shallowEqual from 'shared/shallowEqual';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
@@ -165,7 +164,6 @@ function applyDerivedStateFromProps(
 }
 
 const classComponentUpdater = {
-  isMounted,
   // $FlowFixMe[missing-local-annot]
   enqueueSetState(inst: any, payload: any, callback) {
     const fiber = getInstance(inst);
