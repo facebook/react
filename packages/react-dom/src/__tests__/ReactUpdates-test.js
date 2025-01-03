@@ -1777,6 +1777,34 @@ describe('ReactUpdates', () => {
     expect(subscribers.length).toBe(limit);
   });
 
+  it('does not cause maxiumum update error with UNSAFE_componentWillReceiveProps', async () => {
+    class App extends React.Component {
+      state = {
+        value: 0,
+      };
+
+      UNSAFE_componentWillReceiveProps(newProps) {
+        this.setState({value: newProps.value});
+      }
+
+      render() {
+        return (
+          <>
+            <div>this.state.value: {this.state.value}</div>
+            <div>this.props.value: {this.props.value}</div>
+          </>
+        );
+      }
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    for (let i = 0; i < 60; i++) {
+      await act(() => root.render(<App value={i} />));
+    }
+  });
+
   it("does not infinite loop if there's a synchronous render phase update on another component", async () => {
     if (gate(flags => !flags.enableInfiniteRenderLoopDetection)) {
       return;
