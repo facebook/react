@@ -232,7 +232,7 @@ export function closeWithError(destination: Destination, error: mixed): void {
 }
 
 export function createFastHash(input: string): string | number {
-  const hash = createHash('md5');
+  const hash = createHash('sha256');
   hash.update(input);
   return hash.digest('hex');
 }
