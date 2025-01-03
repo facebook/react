@@ -41,6 +41,7 @@ import type {
   TracingMarkerInstance,
   TransitionAbort,
 } from './ReactFiberTracingMarkerComponent';
+import type {ViewTransitionInstance} from './ReactFiberViewTransitionComponent';
 
 import {
   alwaysThrottleRetries,
@@ -278,6 +279,7 @@ export function commitBeforeMutationEffects(
   root: FiberRoot,
   firstChild: Fiber,
   committedLanes: Lanes,
+  appearingViewTransitions: Map<string, ViewTransitionInstance> | null,
 ): void {
   focusedInstanceHandle = prepareForCommit(root.containerInfo);
   shouldFireAfterActiveInstanceBlur = false;
