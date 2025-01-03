@@ -490,7 +490,7 @@ function commitBeforeMutationEffectsOnFiber(
             // We should just stash the parent ViewTransitionComponent and continue
             // walking the tree until we find HostComponent but to do that we need
             // to use a stack which requires refactoring this phase.
-            commitUpdateViewTransition(current);
+            commitBeforeUpdateViewTransition(current);
           }
         }
         break;
@@ -642,7 +642,7 @@ function commitExitViewTransitions(deletion: Fiber): void {
   }
 }
 
-function commitUpdateViewTransition(fiber: Fiber): void {
+function commitBeforeUpdateViewTransition(fiber: Fiber): void {
   // The way we deal with multiple HostInstances as children of a View Transition in an
   // update can get tricky. The important bit is that if you swap out n HostInstances
   // from n HostInstances then they match up in order. Similarly, if you don't swap
@@ -783,6 +783,21 @@ function measureViewTransitionHostInstances(
         // If there was an insertion of extra nodes, we have to assume they affected the parent.
         // It should have already been marked as an Update due to the mutation.
         parentViewTransition.flags |= AffectedParentLayout;
+      }
+      if ((parentViewTransition.flags & Update) !== NoFlags) {
+        // We might update this node so we need to apply its new name for the new state.
+        const newName = getViewTransitionName(
+          parentViewTransition.memoizedProps,
+          parentViewTransition.stateNode,
+        );
+        applyViewTransitionName(
+          instance,
+          viewTransitionHostInstanceIdx === 0
+            ? newName
+            : // If we have multiple Host Instances below, we add a suffix to the name to give
+              // each one a unique name.
+              newName + '_' + viewTransitionHostInstanceIdx,
+        );
       }
       if (!inViewport || (parentViewTransition.flags & Update) === NoFlags) {
         // It turns out that we had no other deeper mutations, the child transitions didn't
@@ -2606,30 +2621,12 @@ function commitMutationEffectsOnFiber(
           if (current === null) {
             // This is a new mount. We should have handled this as part of the
             // Placement effect or it is deeper inside a entering transition.
-          } else if (
-            (finishedWork.subtreeFlags &
-              (Placement |
-                Update |
-                ChildDeletion |
-                ContentReset |
-                Visibility)) !==
-            NoFlags
-          ) {
-            // Something might have mutationed within this subtree. This might need to
-            // cause a cross-fade of this parent. We have already applied names to
-            // the previous tree in the before mutation phase. We need to apply names
-            // to the new tree in the mutation phase.
-            // TODO: This walks the tree that we might continue walking anyway.
-            // This is just to align with the BeforeMutationPhase which isn't
-            // using a stack.
-            commitUpdateViewTransition(finishedWork);
-            if (viewTransitionMutationContext) {
-              // Something mutated in this tree so we need to animate this regardless
-              // what the measurements say. We use the Update flag to track this.
-              // If diffing was done in the render phase, like we used, this could have
-              // been done in the render already.
-              finishedWork.flags |= Update;
-            }
+          } else if (viewTransitionMutationContext) {
+            // Something mutated in this tree so we need to animate this regardless
+            // what the measurements say. We use the Update flag to track this.
+            // If diffing was done in the render phase, like we used, this could have
+            // been done in the render already.
+            finishedWork.flags |= Update;
           }
         }
         popMutationContext(prevMutationContext);
