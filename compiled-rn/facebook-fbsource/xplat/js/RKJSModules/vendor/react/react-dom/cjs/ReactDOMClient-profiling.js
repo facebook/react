@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<53e0e8022b3f83c6e0ef6bcd5ac4e7e1>>
+ * @generated SignedSource<<77dbda27b5049a4b3f2def588adb6ecc>>
  */
 
 /*
@@ -6547,12 +6547,12 @@ function markRef(current, workInProgress) {
   if (null === ref)
     null !== current &&
       null !== current.ref &&
-      (workInProgress.flags |= 2097664);
+      (workInProgress.flags |= 4194816);
   else {
     if ("function" !== typeof ref && "object" !== typeof ref)
       throw Error(formatProdErrorMessage(284));
     if (null === current || current.ref !== ref)
-      workInProgress.flags |= 2097664;
+      workInProgress.flags |= 4194816;
   }
 }
 function updateFunctionComponent(
@@ -7190,7 +7190,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
             didSuspend
           )),
           (nextProps.subtreeFlags =
-            JSCompiler_temp$jscomp$0.subtreeFlags & 31457280)),
+            JSCompiler_temp$jscomp$0.subtreeFlags & 29360128)),
       null !== digest
         ? (showFallback = createWorkInProgress(digest, showFallback))
         : ((showFallback = createFiberFromFragment(
@@ -10445,7 +10445,7 @@ function createWorkInProgress(current, pendingProps) {
       (workInProgress.deletions = null),
       (workInProgress.actualDuration = -0),
       (workInProgress.actualStartTime = -1.1));
-  workInProgress.flags = current.flags & 31457280;
+  workInProgress.flags = current.flags & 29360128;
   workInProgress.childLanes = current.childLanes;
   workInProgress.lanes = current.lanes;
   workInProgress.child = current.child;
@@ -10466,7 +10466,7 @@ function createWorkInProgress(current, pendingProps) {
   return workInProgress;
 }
 function resetWorkInProgress(workInProgress, renderLanes) {
-  workInProgress.flags &= 31457282;
+  workInProgress.flags &= 29360130;
   var current = workInProgress.alternate;
   null === current
     ? ((workInProgress.childLanes = 0),
@@ -10711,8 +10711,8 @@ function bubbleProperties(completedWork) {
 
       )
         (newChildLanes |= child$156.lanes | child$156.childLanes),
-          (subtreeFlags |= child$156.subtreeFlags & 31457280),
-          (subtreeFlags |= child$156.flags & 31457280),
+          (subtreeFlags |= child$156.subtreeFlags & 29360128),
+          (subtreeFlags |= child$156.flags & 29360128),
           (treeBaseDuration$155 += child$156.treeBaseDuration),
           (child$156 = child$156.sibling);
       completedWork.treeBaseDuration = treeBaseDuration$155;
@@ -10724,8 +10724,8 @@ function bubbleProperties(completedWork) {
       )
         (newChildLanes |=
           treeBaseDuration$155.lanes | treeBaseDuration$155.childLanes),
-          (subtreeFlags |= treeBaseDuration$155.subtreeFlags & 31457280),
-          (subtreeFlags |= treeBaseDuration$155.flags & 31457280),
+          (subtreeFlags |= treeBaseDuration$155.subtreeFlags & 29360128),
+          (subtreeFlags |= treeBaseDuration$155.flags & 29360128),
           (treeBaseDuration$155.return = completedWork),
           (treeBaseDuration$155 = treeBaseDuration$155.sibling);
   else if (0 !== (completedWork.mode & 2)) {
@@ -16551,14 +16551,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1849 = React.version;
 if (
-  "19.1.0-native-fb-c81312e3-20250102" !==
+  "19.1.0-native-fb-3b009b4c-20250102" !==
   isomorphicReactPackageVersion$jscomp$inline_1849
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1849,
-      "19.1.0-native-fb-c81312e3-20250102"
+      "19.1.0-native-fb-3b009b4c-20250102"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16580,10 +16580,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_1856 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-c81312e3-20250102",
+  version: "19.1.0-native-fb-3b009b4c-20250102",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-c81312e3-20250102",
+  reconcilerVersion: "19.1.0-native-fb-3b009b4c-20250102",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$294 = 0;
@@ -16704,4 +16704,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.1.0-native-fb-c81312e3-20250102";
+exports.version = "19.1.0-native-fb-3b009b4c-20250102";

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6a2d114a2a19f6e1efeaea363353cd3d>>
+ * @generated SignedSource<<23850c57a1718b4e53d81ec04788ce54>>
  */
 
 "use strict";
@@ -6232,14 +6232,14 @@ function markRef(current, workInProgress) {
   if (null === ref)
     null !== current &&
       null !== current.ref &&
-      (workInProgress.flags |= 2097664);
+      (workInProgress.flags |= 4194816);
   else {
     if ("function" !== typeof ref && "object" !== typeof ref)
       throw Error(
         "Expected ref to be a function, an object returned by React.createRef(), or undefined/null."
       );
     if (null === current || current.ref !== ref)
-      workInProgress.flags |= 2097664;
+      workInProgress.flags |= 4194816;
   }
 }
 function updateFunctionComponent(
@@ -6791,7 +6791,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         (nextProps.pendingProps = primaryChildProps),
         (workInProgress.deletions = null))
       : ((nextProps = createWorkInProgress(didSuspend, primaryChildProps)),
-        (nextProps.subtreeFlags = didSuspend.subtreeFlags & 31457280));
+        (nextProps.subtreeFlags = didSuspend.subtreeFlags & 29360128));
     null !== currentFallbackChildFragment
       ? (nextPrimaryChildren = createWorkInProgress(
           currentFallbackChildFragment,
@@ -7566,8 +7566,8 @@ function bubbleProperties(completedWork) {
   if (didBailout)
     for (var child$95 = completedWork.child; null !== child$95; )
       (newChildLanes |= child$95.lanes | child$95.childLanes),
-        (subtreeFlags |= child$95.subtreeFlags & 31457280),
-        (subtreeFlags |= child$95.flags & 31457280),
+        (subtreeFlags |= child$95.subtreeFlags & 29360128),
+        (subtreeFlags |= child$95.flags & 29360128),
         (child$95.return = completedWork),
         (child$95 = child$95.sibling);
   else
@@ -10947,7 +10947,7 @@ function createWorkInProgress(current, pendingProps) {
       (workInProgress.flags = 0),
       (workInProgress.subtreeFlags = 0),
       (workInProgress.deletions = null));
-  workInProgress.flags = current.flags & 31457280;
+  workInProgress.flags = current.flags & 29360128;
   workInProgress.childLanes = current.childLanes;
   workInProgress.lanes = current.lanes;
   workInProgress.child = current.child;
@@ -10966,7 +10966,7 @@ function createWorkInProgress(current, pendingProps) {
   return workInProgress;
 }
 function resetWorkInProgress(workInProgress, renderLanes) {
-  workInProgress.flags &= 31457282;
+  workInProgress.flags &= 29360130;
   var current = workInProgress.alternate;
   null === current
     ? ((workInProgress.childLanes = 0),
@@ -11269,11 +11269,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.1.0-native-fb-c81312e3-20250102" !== isomorphicReactPackageVersion)
+if ("19.1.0-native-fb-3b009b4c-20250102" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.1.0-native-fb-c81312e3-20250102\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.1.0-native-fb-3b009b4c-20250102\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11322,10 +11322,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1296 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-c81312e3-20250102",
+    version: "19.1.0-native-fb-3b009b4c-20250102",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-c81312e3-20250102"
+    reconcilerVersion: "19.1.0-native-fb-3b009b4c-20250102"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1296.rendererConfig = extraDevToolsConfig);
