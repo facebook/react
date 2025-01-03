@@ -49,9 +49,23 @@ export type ItemData = {
   treeFocused: boolean,
 };
 
-type Props = {};
+function calculateInitialScrollOffset(
+  inspectedElementIndex: number | null,
+  elementHeight: number,
+): number | void {
+  if (inspectedElementIndex === null) {
+    return undefined;
+  }
 
-export default function Tree(props: Props): React.Node {
+  if (inspectedElementIndex < 3) {
+    return undefined;
+  }
+
+  // Make 3 elements on top of the inspected one visible
+  return (inspectedElementIndex - 3) * elementHeight;
+}
+
+export default function Tree(): React.Node {
   const dispatch = useContext(TreeDispatcherContext);
   const {
     numElements,
@@ -426,6 +440,10 @@ export default function Tree(props: Props): React.Node {
                 <FixedSizeList
                   className={styles.List}
                   height={height}
+                  initialScrollOffset={calculateInitialScrollOffset(
+                    inspectedElementIndex,
+                    lineHeight,
+                  )}
                   innerElementType={InnerElementType}
                   itemCount={numElements}
                   itemData={itemData}
