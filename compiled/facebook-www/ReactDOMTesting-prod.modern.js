@@ -9452,7 +9452,9 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
                         if (
                           ((currentResource = maybeNodes[i]),
                           currentResource.getAttribute("href") ===
-                            (null == current.href ? null : current.href) &&
+                            (null == current.href || "" === current.href
+                              ? null
+                              : current.href) &&
                             currentResource.getAttribute("rel") ===
                               (null == current.rel ? null : current.rel) &&
                             currentResource.getAttribute("title") ===
@@ -15663,7 +15665,9 @@ function canHydrateInstance(instance, type, props, inRootOrSingleton) {
           else if (
             name !== anyProps.rel ||
             instance.getAttribute("href") !==
-              (null == anyProps.href ? null : anyProps.href) ||
+              (null == anyProps.href || "" === anyProps.href
+                ? null
+                : anyProps.href) ||
             instance.getAttribute("crossorigin") !==
               (null == anyProps.crossOrigin ? null : anyProps.crossOrigin) ||
             instance.getAttribute("title") !==
@@ -17328,14 +17332,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1801 = React.version;
 if (
-  "19.1.0-www-modern-3b009b4c-20250102" !==
+  "19.1.0-www-modern-bf883beb-20250103" !==
   isomorphicReactPackageVersion$jscomp$inline_1801
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1801,
-      "19.1.0-www-modern-3b009b4c-20250102"
+      "19.1.0-www-modern-bf883beb-20250103"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17353,10 +17357,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2333 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-3b009b4c-20250102",
+  version: "19.1.0-www-modern-bf883beb-20250103",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-3b009b4c-20250102"
+  reconcilerVersion: "19.1.0-www-modern-bf883beb-20250103"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2334 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17872,4 +17876,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-modern-3b009b4c-20250102";
+exports.version = "19.1.0-www-modern-bf883beb-20250103";
