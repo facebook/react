@@ -924,6 +924,7 @@ describe('ReactDOMLegacyFiber', () => {
 
   // @gate !disableLegacyMode
   it('should bubble events from the portal to the parent', () => {
+    expect(true).toBe(false);
     const portalContainer = document.createElement('div');
     document.body.appendChild(portalContainer);
     try {
