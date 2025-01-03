@@ -11,7 +11,6 @@
 'use strict';
 
 const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegrationTestUtils');
-const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 let React;
 let ReactDOM;
@@ -54,13 +53,8 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders('empty src on img', async render => {
-        const e = await render(
-          <img src="" />,
-          ReactFeatureFlags.enableFilterEmptyStringAttributesDOM ? 1 : 0,
-        );
-        expect(e.getAttribute('src')).toBe(
-          ReactFeatureFlags.enableFilterEmptyStringAttributesDOM ? null : '',
-        );
+        const e = await render(<img src="" />, 1);
+        expect(e.getAttribute('src')).toBe(null);
       });
 
       itRenders('empty href on anchor', async render => {
@@ -68,21 +62,24 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.getAttribute('href')).toBe('');
       });
 
-      itRenders('empty href on other tags', async render => {
+      itRenders('empty href on base tags as null', async render => {
+        const e = await render(<base href="" />, 1);
+        expect(e.getAttribute('href')).toBe(null);
+      });
+
+      itRenders('empty href on area tags as null', async render => {
         const e = await render(
-          // <link href="" /> would be more sensible.
-          // However, that results in a hydration warning as well.
-          // Our test helpers do not support different error counts for initial
-          // server render and hydration.
-          // The number of errors on the server need to be equal to the number of
-          // errors during hydration.
-          // So we use a <div> instead.
-          <div href="" />,
-          ReactFeatureFlags.enableFilterEmptyStringAttributesDOM ? 1 : 0,
+          <map>
+            <area alt="" href="" />
+          </map>,
+          1,
         );
-        expect(e.getAttribute('href')).toBe(
-          ReactFeatureFlags.enableFilterEmptyStringAttributesDOM ? null : '',
-        );
+        expect(e.firstChild.getAttribute('href')).toBe(null);
+      });
+
+      itRenders('empty href on link tags as null', async render => {
+        const e = await render(<link rel="stylesheet" href="" />, 1);
+        expect(e.getAttribute('href')).toBe(null);
       });
 
       itRenders('no string prop with true value', async render => {

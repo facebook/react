@@ -5,7 +5,7 @@
 function component(a, b) {
   let x = useMemo(() => {
     if (a) {
-      return { b };
+      return {b};
     }
   }, [a, b]);
   return x;
@@ -13,8 +13,8 @@ function component(a, b) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: component,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: ['TodoAdd'],
+  isComponent: 'TodoAdd',
 };
 
 ```

@@ -1,4 +1,4 @@
-import { makeArray } from "shared-runtime";
+import {makeArray} from 'shared-runtime';
 
 function Component(props) {
   let x = [];
@@ -16,18 +16,18 @@ export const FIXTURE_ENTRYPOINT = {
   params: [],
   sequentialRenders: [
     // pattern 1
-    { cond: true, a: 42 },
-    { cond: true, a: 42 },
+    {cond: true, a: 42},
+    {cond: true, a: 42},
     // pattern 2
-    { cond: false, b: 3.14 },
-    { cond: false, b: 3.14 },
+    {cond: false, b: 3.14},
+    {cond: false, b: 3.14},
     // pattern 1
-    { cond: true, a: 42 },
+    {cond: true, a: 42},
     // pattern 2
-    { cond: false, b: 3.14 },
+    {cond: false, b: 3.14},
     // pattern 1
-    { cond: true, a: 42 },
+    {cond: true, a: 42},
     // pattern 2
-    { cond: false, b: 3.14 },
+    {cond: false, b: 3.14},
   ],
 };

@@ -93,7 +93,7 @@ describe('ReactTestRenderer', () => {
         tag,
         null,
         expect.anything(),
-        null,
+        false,
         expect.anything(),
         expect.anything(),
         expect.anything(),
@@ -384,39 +384,6 @@ describe('ReactTestRenderer', () => {
       ReactTestRenderer.create(<div ref={r => log.push(r)} />);
     });
     expect(log).toEqual([null]);
-  });
-
-  // @gate !enableRefAsProp || !__DEV__
-  it('warns correctly for refs on SFCs', async () => {
-    function Bar() {
-      return <div>Hello, world</div>;
-    }
-    class Foo extends React.Component {
-      fooRef = React.createRef();
-      render() {
-        return <Bar ref={this.fooRef} />;
-      }
-    }
-    class Baz extends React.Component {
-      bazRef = React.createRef();
-      render() {
-        return <div ref={this.bazRef} />;
-      }
-    }
-    await act(() => {
-      ReactTestRenderer.create(<Baz />);
-    });
-    await expect(async () => {
-      await act(() => {
-        ReactTestRenderer.create(<Foo />);
-      });
-    }).toErrorDev(
-      'Function components cannot be given refs. Attempts ' +
-        'to access this ref will fail. ' +
-        'Did you mean to use React.forwardRef()?\n' +
-        '    in Bar (at **)\n' +
-        '    in Foo (at **)',
-    );
   });
 
   it('allows an optional createNodeMock function', async () => {
@@ -1226,11 +1193,9 @@ describe('ReactTestRenderer', () => {
             {
               instance: null,
               nodeType: 'host',
-              props: gate(flags => flags.enableRefAsProp)
-                ? {
-                    ref: refFn,
-                  }
-                : {},
+              props: {
+                ref: refFn,
+              },
               rendered: [],
               type: 'span',
             },

@@ -17,22 +17,16 @@ function RegressionTest() {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // Valid because the loop doesn't change the order of hooks calls.
+// Valid because the loop doesn't change the order of hooks calls.
 function RegressionTest() {
-  const $ = _c(1);
   const res = [];
   for (let i = 0; i !== 10 && true; ++i) {
     res.push(i);
   }
-  let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = () => {};
-    $[0] = t0;
-  } else {
-    t0 = $[0];
-  }
-  React.useLayoutEffect(t0);
+
+  React.useLayoutEffect(_temp);
 }
+function _temp() {}
 
 ```
       

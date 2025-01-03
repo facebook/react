@@ -3,11 +3,11 @@
 
 ```javascript
 // @validatePreserveExistingMemoizationGuarantees
-import { useCallback } from "react";
+import {useCallback} from 'react';
 
 // Compiler can produce any memoization it finds valid if the
 // source listed no memo deps
-function Component({ propA }) {
+function Component({propA}) {
   // @ts-ignore
   return useCallback(() => {
     return [propA];
@@ -16,7 +16,7 @@ function Component({ propA }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ propA: 2 }],
+  params: [{propA: 2}],
 };
 
 ```

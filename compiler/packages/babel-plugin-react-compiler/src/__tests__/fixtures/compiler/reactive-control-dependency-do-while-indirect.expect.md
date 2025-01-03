@@ -18,14 +18,14 @@ export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [],
   sequentialRenders: [
-    { limit: 10 },
-    { limit: 10 },
-    { limit: 1 },
-    { limit: 1 },
-    { limit: 10 },
-    { limit: 1 },
-    { limit: 10 },
-    { limit: 1 },
+    {limit: 10},
+    {limit: 10},
+    {limit: 1},
+    {limit: 1},
+    {limit: 10},
+    {limit: 1},
+    {limit: 10},
+    {limit: 1},
   ],
 };
 

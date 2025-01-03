@@ -1,5 +1,5 @@
-import fbt from "fbt";
-import { identity } from "shared-runtime";
+import fbt from 'fbt';
+import {identity} from 'shared-runtime';
 
 function Component(props) {
   return (
@@ -7,7 +7,7 @@ function Component(props) {
       <fbt desc="Title">
         <fbt:plural count={identity(props.count)} name="count" showCount="yes">
           vote
-        </fbt:plural>{" "}
+        </fbt:plural>{' '}
         for <fbt:param name="option"> {props.option}</fbt:param>
       </fbt>
       !
@@ -17,15 +17,15 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ count: 42, option: "thing" }],
+  params: [{count: 42, option: 'thing'}],
   sequentialRenders: [
-    { count: 42, option: "thing" },
-    { count: 42, option: "thing" },
-    { count: 1, option: "other" },
-    { count: 1, option: "other" },
-    { count: 42, option: "thing" },
-    { count: 1, option: "other" },
-    { count: 42, option: "thing" },
-    { count: 1, option: "other" },
+    {count: 42, option: 'thing'},
+    {count: 42, option: 'thing'},
+    {count: 1, option: 'other'},
+    {count: 1, option: 'other'},
+    {count: 42, option: 'thing'},
+    {count: 1, option: 'other'},
+    {count: 42, option: 'thing'},
+    {count: 1, option: 'other'},
   ],
 };

@@ -1,7 +1,7 @@
-import { StaticText1, Stringify, Text } from "shared-runtime";
+import {StaticText1, Stringify, Text} from 'shared-runtime';
 
 function Component(props) {
-  const { buttons } = props;
+  const {buttons} = props;
   const [primaryButton, ...nonPrimaryButtons] = buttons;
 
   const renderedNonPrimaryButtons = nonPrimaryButtons.map((buttonProps, i) => (
@@ -18,8 +18,8 @@ function Component(props) {
 }
 
 const styles = {
-  leftSecondaryButton: { left: true },
-  rightSecondaryButton: { right: true },
+  leftSecondaryButton: {left: true},
+  rightSecondaryButton: {right: true},
 };
 
 export const FIXTURE_ENTRYPOINT = {
@@ -28,8 +28,8 @@ export const FIXTURE_ENTRYPOINT = {
     {
       buttons: [
         {},
-        { type: "submit", children: ["Submit!"] },
-        { type: "button", children: ["Reset"] },
+        {type: 'submit', children: ['Submit!']},
+        {type: 'button', children: ['Reset']},
       ],
     },
   ],

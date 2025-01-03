@@ -1,12 +1,12 @@
 // @validateRefAccessDuringRender
-import { useEffect, useRef, useState } from "react";
+import {useEffect, useRef, useState} from 'react';
 
 function Component() {
   const ref = useRef(null);
   const [state, setState] = useState(false);
   useEffect(() => {
     const callback = () => {
-      ref.current = "Ok";
+      ref.current = 'Ok';
     };
   }, []);
 
@@ -20,7 +20,7 @@ function Component() {
   return <Child key={String(state)} ref={ref} />;
 }
 
-function Child({ ref }) {
+function Child({ref}) {
   // This violates the rules of React, so we access the ref in a child
   // component
   return ref.current;

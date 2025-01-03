@@ -1,6 +1,6 @@
-function useFoo(props: { value: { x: string; y: string } | null }) {
+function useFoo(props: {value: {x: string; y: string} | null}) {
   const value = props.value;
-  return createArray(value?.x, value?.y)?.join(", ");
+  return createArray(value?.x, value?.y)?.join(', ');
 }
 
 function createArray<T>(...args: Array<T>): Array<T> {
@@ -9,5 +9,5 @@ function createArray<T>(...args: Array<T>): Array<T> {
 
 export const FIXTURE_ENTRYPONT = {
   fn: useFoo,
-  props: [{ value: null }],
+  props: [{value: null}],
 };

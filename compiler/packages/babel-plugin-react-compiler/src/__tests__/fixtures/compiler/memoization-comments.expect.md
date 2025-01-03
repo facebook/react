@@ -3,7 +3,7 @@
 
 ```javascript
 // @enableMemoizationComments
-import { addOne, getNumber, identity } from "shared-runtime";
+import {addOne, getNumber, identity} from 'shared-runtime';
 
 function Component(props) {
   const x = identity(props.a);
@@ -14,7 +14,7 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ a: 1, b: 10 }],
+  params: [{a: 1, b: 10}],
 };
 
 ```

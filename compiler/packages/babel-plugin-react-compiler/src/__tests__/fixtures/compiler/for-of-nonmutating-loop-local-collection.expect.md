@@ -2,10 +2,10 @@
 ## Input
 
 ```javascript
-import { useMemo } from "react";
-import { ValidateMemoization } from "shared-runtime";
+import {useMemo} from 'react';
+import {ValidateMemoization} from 'shared-runtime';
 
-function Component({ a, b }) {
+function Component({a, b}) {
   const x = useMemo(() => {
     return [a];
   }, [a]);
@@ -26,11 +26,11 @@ function Component({ a, b }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ a: 0, b: 0 }],
+  params: [{a: 0, b: 0}],
   sequentialRenders: [
-    { a: 1, b: 0 },
-    { a: 1, b: 1 },
-    { a: 0, b: 1 },
+    {a: 1, b: 0},
+    {a: 1, b: 1},
+    {a: 0, b: 1},
   ],
 };
 
@@ -91,10 +91,10 @@ function Component(t0) {
     t5 = $[9];
   }
   let t6;
-  if ($[10] !== x || $[11] !== b) {
+  if ($[10] !== b || $[11] !== x) {
     t6 = [x, b];
-    $[10] = x;
-    $[11] = b;
+    $[10] = b;
+    $[11] = x;
     $[12] = t6;
   } else {
     t6 = $[12];

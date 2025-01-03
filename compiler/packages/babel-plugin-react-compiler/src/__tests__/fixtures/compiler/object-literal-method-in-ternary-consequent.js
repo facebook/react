@@ -1,6 +1,6 @@
-import { createHookWrapper } from "shared-runtime";
+import {createHookWrapper} from 'shared-runtime';
 
-function useHook({ isCond, value }) {
+function useHook({isCond, value}) {
   return isCond
     ? {
         getValue() {
@@ -12,5 +12,5 @@ function useHook({ isCond, value }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: createHookWrapper(useHook),
-  params: [{ isCond: true, value: 0 }],
+  params: [{isCond: true, value: 0}],
 };

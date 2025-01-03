@@ -10,12 +10,12 @@ import {
   ReactiveScopeBlock,
   ReactiveStatement,
   ReactiveTerminalStatement,
-} from "../HIR/HIR";
+} from '../HIR/HIR';
 import {
   ReactiveFunctionTransform,
   Transformed,
   visitReactiveFunction,
-} from "./visitors";
+} from './visitors';
 
 // Converts scopes without outputs into regular blocks.
 export function pruneUnusedScopes(fn: ReactiveFunction): void {
@@ -31,15 +31,15 @@ type State = {
 class Transform extends ReactiveFunctionTransform<State> {
   override visitTerminal(stmt: ReactiveTerminalStatement, state: State): void {
     this.traverseTerminal(stmt, state);
-    if (stmt.terminal.kind === "return") {
+    if (stmt.terminal.kind === 'return') {
       state.hasReturnStatement = true;
     }
   }
   override transformScope(
     scopeBlock: ReactiveScopeBlock,
-    _state: State
+    _state: State,
   ): Transformed<ReactiveStatement> {
-    const scopeState: State = { hasReturnStatement: false };
+    const scopeState: State = {hasReturnStatement: false};
     this.visitScope(scopeBlock, scopeState);
     if (
       !scopeState.hasReturnStatement &&
@@ -52,15 +52,15 @@ class Transform extends ReactiveFunctionTransform<State> {
         !hasOwnDeclaration(scopeBlock))
     ) {
       return {
-        kind: "replace",
+        kind: 'replace',
         value: {
-          kind: "pruned-scope",
+          kind: 'pruned-scope',
           scope: scopeBlock.scope,
           instructions: scopeBlock.instructions,
         },
       };
     } else {
-      return { kind: "keep" };
+      return {kind: 'keep'};
     }
   }
 }

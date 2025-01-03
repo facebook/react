@@ -11,19 +11,19 @@ function Component(props) {
   // later. however, our validation uses direct aliasing to track function
   // expressions which are invoked, and understands that this function isn't
   // called during render:
-  const onSubmit = (errorEvent) => {
+  const onSubmit = errorEvent => {
     logEvent(errorEvent);
     setCurrentStep(1);
   };
 
   switch (currentStep) {
     case 0:
-      return <OtherComponent data={{ foo: "bar" }} />;
+      return <OtherComponent data={{foo: 'bar'}} />;
     case 1:
-      return <OtherComponent data={{ foo: "joe" }} onSubmit={onSubmit} />;
+      return <OtherComponent data={{foo: 'joe'}} onSubmit={onSubmit} />;
     default:
       // 1. logEvent's mutable range is extended to this instruction
-      logEvent("Invalid step");
+      logEvent('Invalid step');
       return <OtherComponent data={null} />;
   }
 }

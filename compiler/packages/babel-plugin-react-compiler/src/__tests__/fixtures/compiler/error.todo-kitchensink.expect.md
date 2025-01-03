@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
+function foo([a, b], {c, d, e = 'e'}, f = 'f', ...args) {
   let i = 0;
   var x = [];
 
@@ -13,8 +13,8 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
     }
   }
 
-  const g = { b() {}, c: () => {} };
-  const { z, aa = "aa" } = useCustom();
+  const g = {b() {}, c: () => {}};
+  const {z, aa = 'aa'} = useCustom();
 
   <Button haha={1}></Button>;
   <Button>{/** empty */}</Button>;
@@ -41,10 +41,10 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   }
   for ([v] of [[1], [2]]) {
   }
-  for ({ v } of [{ v: 1 }, { v: 2 }]) {
+  for ({v} of [{v: 1}, {v: 2}]) {
   }
 
-  for (let x in { a: 1 }) {
+  for (let x in {a: 1}) {
   }
 
   let updateIdentifier = 0;
@@ -79,7 +79,7 @@ let moduleLocal = false;
 ## Error
 
 ```
-  1 | function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
+  1 | function foo([a, b], {c, d, e = 'e'}, f = 'f', ...args) {
   2 |   let i = 0;
 > 3 |   var x = [];
     |   ^^^^^^^^^^^ Todo: (BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration (3:3)
@@ -97,16 +97,6 @@ Todo: (BuildHIR::lowerStatement) Handle empty test in ForStatement (26:28)
 Todo: (BuildHIR::lowerExpression) Handle tagged template with interpolations (30:32)
 
 Todo: (BuildHIR::lowerExpression) Handle tagged template where cooked value is different from raw value (34:34)
-
-Todo: (BuildHIR::lowerStatement) Handle Identifier inits in ForOfStatement (36:36)
-
-Todo: (BuildHIR::lowerStatement) Handle ArrayPattern inits in ForOfStatement (38:38)
-
-Todo: (BuildHIR::lowerStatement) Handle ObjectPattern inits in ForOfStatement (40:40)
-
-Todo: (BuildHIR::lowerExpression) Handle UpdateExpression with MemberExpression argument (49:49)
-
-Todo: (BuildHIR::lowerExpression) Handle UpdateExpression with MemberExpression argument (50:50)
 
 Todo: (BuildHIR::node.lowerReorderableExpression) Expression type `MemberExpression` cannot be safely reordered (57:57)
 

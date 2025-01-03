@@ -12,7 +12,7 @@ import {AsyncLocalStorage} from 'async_hooks';
 import type {Request} from 'react-server/src/ReactFlightServer';
 import type {ReactComponentInfo} from 'shared/ReactTypes';
 
-export * from 'react-server-dom-turbopack/src/ReactFlightServerConfigTurbopackBundler';
+export * from 'react-server-dom-turbopack/src/server/ReactFlightServerConfigTurbopackBundler';
 export * from 'react-dom-bindings/src/server/ReactFlightServerConfigDOM';
 
 export const supportsRequestStorage = true;
@@ -24,4 +24,7 @@ export const componentStorage: AsyncLocalStorage<ReactComponentInfo | void> =
   supportsComponentStorage ? new AsyncLocalStorage() : (null: any);
 
 export {createHook as createAsyncHook, executionAsyncId} from 'async_hooks';
+
 export * from '../ReactFlightServerConfigDebugNode';
+
+export * from '../ReactFlightStackConfigV8';

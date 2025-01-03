@@ -3,16 +3,16 @@
 
 ```javascript
 // @enableAssumeHooksFollowRulesOfReact @enableTransitivelyFreezeFunctionExpressions
-import { useMemo, useState } from "react";
-import { ValidateMemoization, identity } from "shared-runtime";
+import {useMemo, useState} from 'react';
+import {ValidateMemoization, identity} from 'shared-runtime';
 
-function Component({ value }) {
+function Component({value}) {
   const result = useMemo(() => {
     if (value == null) {
       return null;
     }
     try {
-      return { value };
+      return {value};
     } catch (e) {
       return null;
     }
@@ -22,16 +22,16 @@ function Component({ value }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: null }],
+  params: [{value: null}],
   sequentialRenders: [
-    { value: null },
-    { value: null },
-    { value: 42 },
-    { value: 42 },
-    { value: null },
-    { value: 42 },
-    { value: null },
-    { value: 42 },
+    {value: null},
+    {value: null},
+    {value: 42},
+    {value: 42},
+    {value: null},
+    {value: 42},
+    {value: null},
+    {value: 42},
   ],
 };
 
@@ -77,10 +77,10 @@ function Component(t0) {
     t2 = $[3];
   }
   let t3;
-  if ($[4] !== t2 || $[5] !== result) {
+  if ($[4] !== result || $[5] !== t2) {
     t3 = <ValidateMemoization inputs={t2} output={result} />;
-    $[4] = t2;
-    $[5] = result;
+    $[4] = result;
+    $[5] = t2;
     $[6] = t3;
   } else {
     t3 = $[6];

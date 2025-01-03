@@ -5,34 +5,40 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import * as t from "@babel/types";
-import { ZodError, z } from "zod";
-import { fromZodError } from "zod-validation-error";
-import { CompilerError } from "../CompilerError";
-import { Logger } from "../Entrypoint";
-import { Err, Ok, Result } from "../Utils/Result";
+import * as t from '@babel/types';
+import {ZodError, z} from 'zod';
+import {fromZodError} from 'zod-validation-error';
+import {CompilerError} from '../CompilerError';
+import {Logger} from '../Entrypoint';
+import {Err, Ok, Result} from '../Utils/Result';
 import {
   DEFAULT_GLOBALS,
   DEFAULT_SHAPES,
   Global,
   GlobalRegistry,
-  installReAnimatedTypes,
-} from "./Globals";
+  getReanimatedModuleType,
+  installTypeConfig,
+} from './Globals';
 import {
   BlockId,
   BuiltInType,
   Effect,
   FunctionType,
+  HIRFunction,
   IdentifierId,
   NonLocalBinding,
   PolyType,
   ScopeId,
+  SourceLocation,
   Type,
+  ValidatedIdentifier,
   ValueKind,
+  getHookKindForType,
   makeBlockId,
   makeIdentifierId,
+  makeIdentifierName,
   makeScopeId,
-} from "./HIR";
+} from './HIR';
 import {
   BuiltInMixedReadonlyId,
   DefaultMutatingHook,
@@ -40,7 +46,17 @@ import {
   FunctionSignature,
   ShapeRegistry,
   addHook,
-} from "./ObjectShape";
+} from './ObjectShape';
+import {Scope as BabelScope} from '@babel/traverse';
+import {TypeSchema} from './TypeSchema';
+
+export const ReactElementSymbolSchema = z.object({
+  elementSymbol: z.union([
+    z.literal('react.element'),
+    z.literal('react.transitional.element'),
+  ]),
+  globalDevVar: z.string(),
+});
 
 export const ExternalFunctionSchema = z.object({
   // Source for the imported module that exports the `importSpecifierName` functions
@@ -53,15 +69,29 @@ export const ExternalFunctionSchema = z.object({
 export const InstrumentationSchema = z
   .object({
     fn: ExternalFunctionSchema,
-    gating: ExternalFunctionSchema.nullish(),
-    globalGating: z.string().nullish(),
+    gating: ExternalFunctionSchema.nullable(),
+    globalGating: z.string().nullable(),
   })
   .refine(
-    (opts) => opts.gating != null || opts.globalGating != null,
-    "Expected at least one of gating or globalGating"
+    opts => opts.gating != null || opts.globalGating != null,
+    'Expected at least one of gating or globalGating',
   );
 
 export type ExternalFunction = z.infer<typeof ExternalFunctionSchema>;
+
+export const MacroMethodSchema = z.union([
+  z.object({type: z.literal('wildcard')}),
+  z.object({type: z.literal('name'), name: z.string()}),
+]);
+
+// Would like to change this to drop the string option, but breaks compatibility with existing configs
+export const MacroSchema = z.union([
+  z.string(),
+  z.tuple([z.string(), z.array(MacroMethodSchema)]),
+]);
+
+export type Macro = z.infer<typeof MacroSchema>;
+export type MacroMethod = z.infer<typeof MacroMethodSchema>;
 
 const HookSchema = z.object({
   /*
@@ -117,7 +147,13 @@ export type Hook = z.infer<typeof HookSchema>;
  */
 
 const EnvironmentConfigSchema = z.object({
-  customHooks: z.map(z.string(), HookSchema).optional().default(new Map()),
+  customHooks: z.map(z.string(), HookSchema).default(new Map()),
+
+  /**
+   * A function that, given the name of a module, can optionally return a description
+   * of that module's type signature.
+   */
+  moduleTypeProvider: z.nullable(z.function().args(z.string())).default(null),
 
   /**
    * A list of functions which the application compiles as macros, where
@@ -129,14 +165,22 @@ const EnvironmentConfigSchema = z.object({
    * plugin since it looks specifically for the name of the function being invoked, not
    * following aliases.
    */
-  customMacros: z.nullable(z.array(z.string())).default(null),
+  customMacros: z.nullable(z.array(MacroSchema)).default(null),
 
   /**
-   * Enable a check that resets the memoization cache when the source code of the file changes.
-   * This is intended to support hot module reloading (HMR), where the same runtime component
-   * instance will be reused across different versions of the component source.
+   * Enable a check that resets the memoization cache when the source code of
+   * the file changes. This is intended to support hot module reloading (HMR),
+   * where the same runtime component instance will be reused across different
+   * versions of the component source.
+   *
+   * When set to
+   * - true:  code for HMR support is always generated, regardless of NODE_ENV
+   *          or `globalThis.__DEV__`
+   * - false: code for HMR support is not generated
+   * - null:  (default) code for HMR support is conditionally generated dependent
+   *          on `NODE_ENV` and `globalThis.__DEV__` at the time of compilation.
    */
-  enableResetCacheOnSourceFileChanges: z.boolean().default(false),
+  enableResetCacheOnSourceFileChanges: z.nullable(z.boolean()).default(null),
 
   /**
    * Enable using information from existing useMemo/useCallback to understand when a value is done
@@ -195,7 +239,62 @@ const EnvironmentConfigSchema = z.object({
    */
   enableUseTypeAnnotations: z.boolean().default(false),
 
-  enableReactiveScopesInHIR: z.boolean().default(true),
+  enableFunctionDependencyRewrite: z.boolean().default(true),
+
+  /**
+   * Enables inference of optional dependency chains. Without this flag
+   * a property chain such as `props?.items?.foo` will infer as a dep on
+   * just `props`. With this flag enabled, we'll infer that full path as
+   * the dependency.
+   */
+  enableOptionalDependencies: z.boolean().default(true),
+
+  enableFire: z.boolean().default(false),
+
+  /**
+   * Enables inference and auto-insertion of effect dependencies. Takes in an array of
+   * configurable module and import pairs to allow for user-land experimentation. For example,
+   * [
+   *   {
+   *     module: 'react',
+   *     imported: 'useEffect',
+   *     numRequiredArgs: 1,
+   *   },{
+   *     module: 'MyExperimentalEffectHooks',
+   *     imported: 'useExperimentalEffect',
+   *     numRequiredArgs: 2,
+   *   },
+   * ]
+   * would insert dependencies for calls of `useEffect` imported from `react` and calls of
+   * useExperimentalEffect` from `MyExperimentalEffectHooks`.
+   *
+   * `numRequiredArgs` tells the compiler the amount of arguments required to append a dependency
+   *  array to the end of the call. With the configuration above, we'd insert dependencies for
+   *  `useEffect` if it is only given a single argument and it would be appended to the argument list.
+   *
+   * numRequiredArgs must always be greater than 0, otherwise there is no function to analyze for dependencies
+   *
+   * Still experimental.
+   */
+  inferEffectDependencies: z
+    .nullable(
+      z.array(
+        z.object({
+          function: ExternalFunctionSchema,
+          numRequiredArgs: z.number(),
+        }),
+      ),
+    )
+    .default(null),
+
+  /**
+   * Enables inlining ReactElement object literals in place of JSX
+   * An alternative to the standard JSX transform which replaces JSX with React's jsxProd() runtime
+   * Currently a prod-only optimization, requiring Fast JSX dependencies
+   *
+   * The symbol configuration is set for backwards compatability with pre-React 19 transforms
+   */
+  inlineJsxTransform: ReactElementSymbolSchema.nullable().default(null),
 
   /*
    * Enable validation of hooks to partially check that the component honors the rules of hooks.
@@ -205,13 +304,25 @@ const EnvironmentConfigSchema = z.object({
   validateHooksUsage: z.boolean().default(true),
 
   // Validate that ref values (`ref.current`) are not accessed during render.
-  validateRefAccessDuringRender: z.boolean().default(false),
+  validateRefAccessDuringRender: z.boolean().default(true),
 
   /*
    * Validates that setState is not unconditionally called during render, as it can lead to
    * infinite loops.
    */
   validateNoSetStateInRender: z.boolean().default(true),
+
+  /**
+   * Validates that setState is not called directly within a passive effect (useEffect).
+   * Scheduling a setState (with an event listener, subscription, etc) is valid.
+   */
+  validateNoSetStateInPassiveEffects: z.boolean().default(false),
+
+  /**
+   * Validates against creating JSX within a try block and recommends using an error boundary
+   * instead.
+   */
+  validateNoJSXInTryStatements: z.boolean().default(false),
 
   /**
    * Validates that the dependencies of all effect hooks are memoized. This helps ensure
@@ -234,6 +345,7 @@ const EnvironmentConfigSchema = z.object({
    * this option to the empty array.
    */
   validateNoCapitalizedCalls: z.nullable(z.array(z.string())).default(null),
+  validateBlocklistedImports: z.nullable(z.array(z.string())).default(null),
 
   /*
    * When enabled, the compiler assumes that hooks follow the Rules of React:
@@ -273,15 +385,69 @@ const EnvironmentConfigSchema = z.object({
    *     }
    *   }
    */
-  enableEmitFreeze: ExternalFunctionSchema.nullish(),
+  enableEmitFreeze: ExternalFunctionSchema.nullable().default(null),
 
-  enableEmitHookGuards: ExternalFunctionSchema.nullish(),
+  enableEmitHookGuards: ExternalFunctionSchema.nullable().default(null),
 
   /**
    * Enable instruction reordering. See InstructionReordering.ts for the details
    * of the approach.
    */
   enableInstructionReordering: z.boolean().default(false),
+
+  /**
+   * Enables function outlinining, where anonymous functions that do not close over
+   * local variables can be extracted into top-level helper functions.
+   */
+  enableFunctionOutlining: z.boolean().default(true),
+
+  /**
+   * If enabled, this will outline nested JSX into a separate component.
+   *
+   * This will enable the compiler to memoize the separate component, giving us
+   * the same behavior as compiling _within_ the callback.
+   *
+   * ```
+   * function Component(countries, onDelete) {
+   *   const name = useFoo();
+   *   return countries.map(() => {
+   *     return (
+   *       <Foo>
+   *         <Bar>{name}</Bar>
+   *         <Button onclick={onDelete}>delete</Button>
+   *       </Foo>
+   *     );
+   *   });
+   * }
+   * ```
+   *
+   * will be transpiled to:
+   *
+   * ```
+   * function Component(countries, onDelete) {
+   *   const name = useFoo();
+   *   return countries.map(() => {
+   *     return (
+   *       <Temp name={name} onDelete={onDelete} />
+   *     );
+   *   });
+   * }
+   *
+   * function Temp({name, onDelete}) {
+   *   return (
+   *     <Foo>
+   *       <Bar>{name}</Bar>
+   *       <Button onclick={onDelete}>delete</Button>
+   *     </Foo>
+   *   );
+   * }
+   *
+   * Both, `Component` and `Temp` will then be memoized by the compiler.
+   *
+   * With this change, when `countries` is updated by adding one single value,
+   * only the newly added value is re-rendered and not the entire list.
+   */
+  enableJsxOutlining: z.boolean().default(false),
 
   /*
    * Enables instrumentation codegen. This emits a dev-mode only call to an
@@ -305,7 +471,7 @@ const EnvironmentConfigSchema = z.object({
    *   }
    *
    */
-  enableEmitInstrumentForget: InstrumentationSchema.nullish(),
+  enableEmitInstrumentForget: InstrumentationSchema.nullable().default(null),
 
   // Enable validation of mutable ranges
   assertValidMutableRanges: z.boolean().default(false),
@@ -344,8 +510,6 @@ const EnvironmentConfigSchema = z.object({
    */
   throwUnknownException__testonly: z.boolean().default(false),
 
-  enableSharedRuntime__testonly: z.boolean().default(false),
-
   /**
    * Enables deps of a function epxression to be treated as conditional. This
    * makes sure we don't load a dep when it's a property (to check if it has
@@ -383,7 +547,8 @@ const EnvironmentConfigSchema = z.object({
    * computed one. This detects cases where rules of react violations may cause the
    * compiled code to behave differently than the original.
    */
-  enableChangeDetectionForDebugging: ExternalFunctionSchema.nullish(),
+  enableChangeDetectionForDebugging:
+    ExternalFunctionSchema.nullable().default(null),
 
   /**
    * The react native re-animated library uses custom Babel transforms that
@@ -423,57 +588,162 @@ const EnvironmentConfigSchema = z.object({
    *
    * Here the variables `ref` and `myRef` will be typed as Refs.
    */
-  enableTreatRefLikeIdentifiersAsRefs: z.boolean().nullable().default(false),
+  enableTreatRefLikeIdentifiersAsRefs: z.boolean().default(false),
+
+  /*
+   * If specified a value, the compiler lowers any calls to `useContext` to use
+   * this value as the callee.
+   *
+   * A selector function is compiled and passed as an argument along with the
+   * context to this function call.
+   *
+   * The compiler automatically figures out the keys by looking for the immediate
+   * destructuring of the return value from the useContext call. In the future,
+   * this can be extended to different kinds of context access like property
+   * loads and accesses over multiple statements as well.
+   *
+   * ```
+   * // input
+   * const {foo, bar} = useContext(MyContext);
+   *
+   * // output
+   * const {foo, bar} = useCompiledContext(MyContext, (c) => [c.foo, c.bar]);
+   * ```
+   */
+  lowerContextAccess: ExternalFunctionSchema.nullable().default(null),
 });
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;
 
-export function parseConfigPragma(pragma: string): EnvironmentConfig {
+/**
+ * For test fixtures and playground only.
+ *
+ * Pragmas are straightforward to parse for boolean options (`:true` and
+ * `:false`). These are 'enabled' config values for non-boolean configs (i.e.
+ * what is used when parsing `:true`).
+ */
+const testComplexConfigDefaults: PartialEnvironmentConfig = {
+  validateNoCapitalizedCalls: [],
+  enableChangeDetectionForDebugging: {
+    source: 'react-compiler-runtime',
+    importSpecifierName: '$structuralCheck',
+  },
+  enableEmitFreeze: {
+    source: 'react-compiler-runtime',
+    importSpecifierName: 'makeReadOnly',
+  },
+  enableEmitInstrumentForget: {
+    fn: {
+      source: 'react-compiler-runtime',
+      importSpecifierName: 'useRenderCounter',
+    },
+    gating: {
+      source: 'react-compiler-runtime',
+      importSpecifierName: 'shouldInstrument',
+    },
+    globalGating: '__DEV__',
+  },
+  enableEmitHookGuards: {
+    source: 'react-compiler-runtime',
+    importSpecifierName: '$dispatcherGuard',
+  },
+  inlineJsxTransform: {
+    elementSymbol: 'react.transitional.element',
+    globalDevVar: 'DEV',
+  },
+  lowerContextAccess: {
+    source: 'react-compiler-runtime',
+    importSpecifierName: 'useContext_withSelector',
+  },
+  inferEffectDependencies: [
+    {
+      function: {
+        source: 'react',
+        importSpecifierName: 'useEffect',
+      },
+      numRequiredArgs: 1,
+    },
+    {
+      function: {
+        source: 'shared-runtime',
+        importSpecifierName: 'useSpecialEffect',
+      },
+      numRequiredArgs: 2,
+    },
+    {
+      function: {
+        source: 'useEffectWrapper',
+        importSpecifierName: 'default',
+      },
+      numRequiredArgs: 1,
+    },
+  ],
+};
+
+/**
+ * For snap test fixtures and playground only.
+ */
+export function parseConfigPragmaForTests(pragma: string): EnvironmentConfig {
   const maybeConfig: any = {};
   // Get the defaults to programmatically check for boolean properties
   const defaultConfig = EnvironmentConfigSchema.parse({});
 
-  for (const token of pragma.split(" ")) {
-    if (!token.startsWith("@")) {
+  for (const token of pragma.split(' ')) {
+    if (!token.startsWith('@')) {
       continue;
     }
     const keyVal = token.slice(1);
-    let [key, val]: any = keyVal.split(":");
+    let [key, val = undefined] = keyVal.split(':');
+    const isSet = val === undefined || val === 'true';
 
-    if (key === "validateNoCapitalizedCalls") {
-      maybeConfig[key] = [];
+    if (isSet && key in testComplexConfigDefaults) {
+      maybeConfig[key] =
+        testComplexConfigDefaults[key as keyof PartialEnvironmentConfig];
+      continue;
+    }
+
+    if (key === 'customMacros' && val) {
+      const valSplit = val.split('.');
+      if (valSplit.length > 0) {
+        const props = [];
+        for (const elt of valSplit.slice(1)) {
+          if (elt === '*') {
+            props.push({type: 'wildcard'});
+          } else if (elt.length > 0) {
+            props.push({type: 'name', name: elt});
+          }
+        }
+        maybeConfig[key] = [[valSplit[0], props]];
+      }
       continue;
     }
 
     if (
-      key === "enableChangeDetectionForDebugging" &&
-      (val === undefined || val === "true")
+      key !== 'enableResetCacheOnSourceFileChanges' &&
+      typeof defaultConfig[key as keyof EnvironmentConfig] !== 'boolean'
     ) {
-      maybeConfig[key] = {
-        source: "react-compiler-runtime",
-        importSpecifierName: "$structuralCheck",
-      };
-      continue;
-    }
-
-    if (typeof defaultConfig[key as keyof EnvironmentConfig] !== "boolean") {
       // skip parsing non-boolean properties
       continue;
     }
-    if (val === undefined || val === "true") {
-      val = true;
+    if (val === undefined || val === 'true') {
+      maybeConfig[key] = true;
     } else {
-      val = false;
+      maybeConfig[key] = false;
     }
-    maybeConfig[key] = val;
   }
-
   const config = EnvironmentConfigSchema.safeParse(maybeConfig);
   if (config.success) {
+    /**
+     * Unless explicitly enabled, do not insert HMR handling code
+     * in test fixtures or playground to reduce visual noise.
+     */
+    if (config.data.enableResetCacheOnSourceFileChanges == null) {
+      config.data.enableResetCacheOnSourceFileChanges = false;
+    }
     return config.data;
   }
   CompilerError.invariant(false, {
-    reason: "Internal error, could not parse config from pragma string",
+    reason: 'Internal error, could not parse config from pragma string',
     description: `${fromZodError(config.error)}`,
     loc: null,
     suggestions: null,
@@ -482,18 +752,18 @@ export function parseConfigPragma(pragma: string): EnvironmentConfig {
 
 export type PartialEnvironmentConfig = Partial<EnvironmentConfig>;
 
-export type ReactFunctionType = "Component" | "Hook" | "Other";
+export type ReactFunctionType = 'Component' | 'Hook' | 'Other';
 
 export function printFunctionType(type: ReactFunctionType): string {
   switch (type) {
-    case "Component": {
-      return "component";
+    case 'Component': {
+      return 'component';
     }
-    case "Hook": {
-      return "hook";
+    case 'Hook': {
+      return 'hook';
     }
     default: {
-      return "function";
+      return 'function';
     }
   }
 }
@@ -501,28 +771,38 @@ export function printFunctionType(type: ReactFunctionType): string {
 export class Environment {
   #globals: GlobalRegistry;
   #shapes: ShapeRegistry;
+  #moduleTypes: Map<string, Global | null> = new Map();
   #nextIdentifer: number = 0;
   #nextBlock: number = 0;
   #nextScope: number = 0;
+  #scope: BabelScope;
+  #outlinedFunctions: Array<{
+    fn: HIRFunction;
+    type: ReactFunctionType | null;
+  }> = [];
   logger: Logger | null;
   filename: string | null;
   code: string | null;
   config: EnvironmentConfig;
   fnType: ReactFunctionType;
   useMemoCacheIdentifier: string;
+  hasLoweredContextAccess: boolean;
+  hasFireRewrite: boolean;
 
   #contextIdentifiers: Set<t.Identifier>;
   #hoistedIdentifiers: Set<t.Identifier>;
 
   constructor(
+    scope: BabelScope,
     fnType: ReactFunctionType,
     config: EnvironmentConfig,
     contextIdentifiers: Set<t.Identifier>,
     logger: Logger | null,
     filename: string | null,
     code: string | null,
-    useMemoCacheIdentifier: string
+    useMemoCacheIdentifier: string,
   ) {
+    this.#scope = scope;
     this.fnType = fnType;
     this.config = config;
     this.filename = filename;
@@ -531,6 +811,8 @@ export class Environment {
     this.useMemoCacheIdentifier = useMemoCacheIdentifier;
     this.#shapes = new Map(DEFAULT_SHAPES);
     this.#globals = new Map(DEFAULT_GLOBALS);
+    this.hasLoweredContextAccess = false;
+    this.hasFireRewrite = false;
 
     if (
       config.disableMemoizationForDebugging &&
@@ -557,18 +839,19 @@ export class Environment {
           positionalParams: [],
           restParam: hook.effectKind,
           returnType: hook.transitiveMixedData
-            ? { kind: "Object", shapeId: BuiltInMixedReadonlyId }
-            : { kind: "Poly" },
+            ? {kind: 'Object', shapeId: BuiltInMixedReadonlyId}
+            : {kind: 'Poly'},
           returnValueKind: hook.valueKind,
           calleeEffect: Effect.Read,
-          hookKind: "Custom",
+          hookKind: 'Custom',
           noAlias: hook.noAlias,
-        })
+        }),
       );
     }
 
     if (config.enableCustomTypeDefinitionForReanimated) {
-      installReAnimatedTypes(this.#globals, this.#shapes);
+      const reanimatedModuleType = getReanimatedModuleType(this.#shapes);
+      this.#moduleTypes.set(REANIMATED_MODULE_NAME, reanimatedModuleType);
     }
 
     this.#contextIdentifiers = contextIdentifiers;
@@ -595,12 +878,65 @@ export class Environment {
     return this.#hoistedIdentifiers.has(node);
   }
 
-  getGlobalDeclaration(binding: NonLocalBinding): Global | null {
+  generateGloballyUniqueIdentifierName(
+    name: string | null,
+  ): ValidatedIdentifier {
+    const identifierNode = this.#scope.generateUidIdentifier(name ?? undefined);
+    return makeIdentifierName(identifierNode.name);
+  }
+
+  outlineFunction(fn: HIRFunction, type: ReactFunctionType | null): void {
+    this.#outlinedFunctions.push({fn, type});
+  }
+
+  getOutlinedFunctions(): Array<{
+    fn: HIRFunction;
+    type: ReactFunctionType | null;
+  }> {
+    return this.#outlinedFunctions;
+  }
+
+  #resolveModuleType(moduleName: string, loc: SourceLocation): Global | null {
+    let moduleType = this.#moduleTypes.get(moduleName);
+    if (moduleType === undefined) {
+      if (this.config.moduleTypeProvider == null) {
+        return null;
+      }
+      const unparsedModuleConfig = this.config.moduleTypeProvider(moduleName);
+      if (unparsedModuleConfig != null) {
+        const parsedModuleConfig = TypeSchema.safeParse(unparsedModuleConfig);
+        if (!parsedModuleConfig.success) {
+          CompilerError.throwInvalidConfig({
+            reason: `Could not parse module type, the configured \`moduleTypeProvider\` function returned an invalid module description`,
+            description: parsedModuleConfig.error.toString(),
+            loc,
+          });
+        }
+        const moduleConfig = parsedModuleConfig.data;
+        moduleType = installTypeConfig(
+          this.#globals,
+          this.#shapes,
+          moduleConfig,
+          moduleName,
+          loc,
+        );
+      } else {
+        moduleType = null;
+      }
+      this.#moduleTypes.set(moduleName, moduleType);
+    }
+    return moduleType;
+  }
+
+  getGlobalDeclaration(
+    binding: NonLocalBinding,
+    loc: SourceLocation,
+  ): Global | null {
     if (this.config.hookPattern != null) {
       const match = new RegExp(this.config.hookPattern).exec(binding.name);
       if (
         match != null &&
-        typeof match[1] === "string" &&
+        typeof match[1] === 'string' &&
         isHookName(match[1])
       ) {
         const resolvedName = match[1];
@@ -609,17 +945,17 @@ export class Environment {
     }
 
     switch (binding.kind) {
-      case "ModuleLocal": {
+      case 'ModuleLocal': {
         // don't resolve module locals
         return isHookName(binding.name) ? this.#getCustomHookType() : null;
       }
-      case "Global": {
+      case 'Global': {
         return (
           this.#globals.get(binding.name) ??
           (isHookName(binding.name) ? this.#getCustomHookType() : null)
         );
       }
-      case "ImportSpecifier": {
+      case 'ImportSpecifier': {
         if (this.#isKnownReactModule(binding.module)) {
           /**
            * For `import {imported as name} from "..."` form, we use the `imported`
@@ -630,9 +966,37 @@ export class Environment {
            */
           return (
             this.#globals.get(binding.imported) ??
-            (isHookName(binding.imported) ? this.#getCustomHookType() : null)
+            (isHookName(binding.imported) || isHookName(binding.name)
+              ? this.#getCustomHookType()
+              : null)
           );
         } else {
+          const moduleType = this.#resolveModuleType(binding.module, loc);
+          if (moduleType !== null) {
+            const importedType = this.getPropertyType(
+              moduleType,
+              binding.imported,
+            );
+            if (importedType != null) {
+              /*
+               * Check that hook-like export names are hook types, and non-hook names are non-hook types.
+               * The user-assigned alias isn't decidable by the type provider, so we ignore that for the check.
+               * Thus we allow `import {fooNonHook as useFoo} from ...` because the name and type both say
+               * that it's not a hook.
+               */
+              const expectHook = isHookName(binding.imported);
+              const isHook = getHookKindForType(this, importedType) != null;
+              if (expectHook !== isHook) {
+                CompilerError.throwInvalidConfig({
+                  reason: `Invalid type configuration for module`,
+                  description: `Expected type for \`import {${binding.imported}} from '${binding.module}'\` ${expectHook ? 'to be a hook' : 'not to be a hook'} based on the exported name`,
+                  loc,
+                });
+              }
+              return importedType;
+            }
+          }
+
           /**
            * For modules we don't own, we look at whether the original name or import alias
            * are hook-like. Both of the following are likely hooks so we would return a hook
@@ -646,8 +1010,8 @@ export class Environment {
             : null;
         }
       }
-      case "ImportDefault":
-      case "ImportNamespace": {
+      case 'ImportDefault':
+      case 'ImportNamespace': {
         if (this.#isKnownReactModule(binding.module)) {
           // only resolve imports to modules we know about
           return (
@@ -655,6 +1019,34 @@ export class Environment {
             (isHookName(binding.name) ? this.#getCustomHookType() : null)
           );
         } else {
+          const moduleType = this.#resolveModuleType(binding.module, loc);
+          if (moduleType !== null) {
+            let importedType: Type | null = null;
+            if (binding.kind === 'ImportDefault') {
+              const defaultType = this.getPropertyType(moduleType, 'default');
+              if (defaultType !== null) {
+                importedType = defaultType;
+              }
+            } else {
+              importedType = moduleType;
+            }
+            if (importedType !== null) {
+              /*
+               * Check that the hook-like modules are defined as types, and non hook-like modules are not typed as hooks.
+               * So `import Foo from 'useFoo'` is expected to be a hook based on the module name
+               */
+              const expectHook = isHookName(binding.module);
+              const isHook = getHookKindForType(this, importedType) != null;
+              if (expectHook !== isHook) {
+                CompilerError.throwInvalidConfig({
+                  reason: `Invalid type configuration for module`,
+                  description: `Expected type for \`import ... from '${binding.module}'\` ${expectHook ? 'to be a hook' : 'not to be a hook'} based on the module name`,
+                  loc,
+                });
+              }
+              return importedType;
+            }
+          }
           return isHookName(binding.name) ? this.#getCustomHookType() : null;
         }
       }
@@ -663,19 +1055,17 @@ export class Environment {
 
   #isKnownReactModule(moduleName: string): boolean {
     return (
-      moduleName.toLowerCase() === "react" ||
-      moduleName.toLowerCase() === "react-dom" ||
-      (this.config.enableSharedRuntime__testonly &&
-        moduleName === "shared-runtime")
+      moduleName.toLowerCase() === 'react' ||
+      moduleName.toLowerCase() === 'react-dom'
     );
   }
 
   getPropertyType(
     receiver: Type,
-    property: string
+    property: string,
   ): BuiltInType | PolyType | null {
     let shapeId = null;
-    if (receiver.kind === "Object" || receiver.kind === "Function") {
+    if (receiver.kind === 'Object' || receiver.kind === 'Function') {
       shapeId = receiver.shapeId;
     }
     if (shapeId !== null) {
@@ -691,7 +1081,7 @@ export class Environment {
         suggestions: null,
       });
       let value =
-        shape.properties.get(property) ?? shape.properties.get("*") ?? null;
+        shape.properties.get(property) ?? shape.properties.get('*') ?? null;
       if (value === null && isHookName(property)) {
         value = this.#getCustomHookType();
       }
@@ -704,7 +1094,7 @@ export class Environment {
   }
 
   getFunctionSignature(type: FunctionType): FunctionSignature | null {
-    const { shapeId } = type;
+    const {shapeId} = type;
     if (shapeId !== null) {
       const shape = this.#shapes.get(shapeId);
       CompilerError.invariant(shape !== undefined, {
@@ -732,13 +1122,15 @@ export class Environment {
   }
 }
 
+const REANIMATED_MODULE_NAME = 'react-native-reanimated';
+
 // From https://github.com/facebook/react/blob/main/packages/eslint-plugin-react-hooks/src/RulesOfHooks.js#LL18C1-L23C2
 export function isHookName(name: string): boolean {
   return /^use[A-Z0-9]/.test(name);
 }
 
 export function parseEnvironmentConfig(
-  partialConfig: PartialEnvironmentConfig
+  partialConfig: PartialEnvironmentConfig,
 ): Result<EnvironmentConfig, ZodError<PartialEnvironmentConfig>> {
   const config = EnvironmentConfigSchema.safeParse(partialConfig);
   if (config.success) {
@@ -749,7 +1141,7 @@ export function parseEnvironmentConfig(
 }
 
 export function validateEnvironmentConfig(
-  partialConfig: PartialEnvironmentConfig
+  partialConfig: PartialEnvironmentConfig,
 ): EnvironmentConfig {
   const config = EnvironmentConfigSchema.safeParse(partialConfig);
   if (config.success) {
@@ -758,7 +1150,7 @@ export function validateEnvironmentConfig(
 
   CompilerError.throwInvalidConfig({
     reason:
-      "Could not validate environment config. Update React Compiler config to fix the error",
+      'Could not validate environment config. Update React Compiler config to fix the error',
     description: `${fromZodError(config.error)}`,
     loc: null,
     suggestions: null,
@@ -766,10 +1158,10 @@ export function validateEnvironmentConfig(
 }
 
 export function tryParseExternalFunction(
-  maybeExternalFunction: any
+  maybeExternalFunction: any,
 ): ExternalFunction {
   const externalFunction = ExternalFunctionSchema.safeParse(
-    maybeExternalFunction
+    maybeExternalFunction,
   );
   if (externalFunction.success) {
     return externalFunction.data;
@@ -777,9 +1169,11 @@ export function tryParseExternalFunction(
 
   CompilerError.throwInvalidConfig({
     reason:
-      "Could not parse external function. Update React Compiler config to fix the error",
+      'Could not parse external function. Update React Compiler config to fix the error',
     description: `${fromZodError(externalFunction.error)}`,
     loc: null,
     suggestions: null,
   });
 }
+
+export const DEFAULT_EXPORT = 'default';

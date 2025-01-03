@@ -1,7 +1,7 @@
-import { identity } from "shared-runtime";
+import {identity} from 'shared-runtime';
 
 function Component(props) {
-  const key = "KeyName";
+  const key = 'KeyName';
   const context = {
     [key]: identity([props.value]),
   };
@@ -10,5 +10,5 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: 42 }],
+  params: [{value: 42}],
 };

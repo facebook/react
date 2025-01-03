@@ -9,14 +9,10 @@
 
 // Keep in sync with https://github.com/facebook/flow/blob/main/lib/react.js
 export type ComponentType<-P> = React$ComponentType<P>;
-export type AbstractComponent<
-  -Config,
-  +Instance = mixed,
-> = React$AbstractComponent<Config, Instance>;
+export type AbstractComponent<-Config> = React$AbstractComponent<Config>;
 export type ElementType = React$ElementType;
 export type Element<+C> = React$Element<C>;
 export type Key = React$Key;
-export type Ref<C> = React$Ref<C>;
 export type Node = React$Node;
 export type Context<T> = React$Context<T>;
 export type Portal = React$Portal;
@@ -30,6 +26,7 @@ export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
 // We can't use export * from in Flow for some reason.
 export {
   __CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
+  __COMPILER_RUNTIME,
   Children,
   Component,
   Fragment,
@@ -48,7 +45,6 @@ export {
   memo,
   cache,
   startTransition,
-  unstable_DebugTracingMode,
   unstable_LegacyHidden,
   unstable_Activity,
   unstable_Scope,
@@ -63,6 +59,7 @@ export {
   useDeferredValue,
   useEffect,
   experimental_useEffectEvent,
+  experimental_useResourceEffect,
   useImperativeHandle,
   useInsertionEffect,
   useLayoutEffect,

@@ -16,20 +16,11 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
 function Component(t0) {
-  const $ = _c(2);
-  let t1;
-  if ($[0] !== t0) {
-    t1 = t0 === undefined ? () => {} : t0;
-    $[0] = t0;
-    $[1] = t1;
-  } else {
-    t1 = $[1];
-  }
-  const x = t1;
+  const x = t0 === undefined ? _temp : t0;
   return x;
 }
+function _temp() {}
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,

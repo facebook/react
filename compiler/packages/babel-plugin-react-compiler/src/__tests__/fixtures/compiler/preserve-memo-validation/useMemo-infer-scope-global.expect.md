@@ -4,8 +4,8 @@
 ```javascript
 // @validatePreserveExistingMemoizationGuarantees
 
-import { useMemo } from "react";
-import { CONST_STRING0 } from "shared-runtime";
+import {useMemo} from 'react';
+import {CONST_STRING0} from 'shared-runtime';
 
 // It's correct to infer a useMemo block has no reactive dependencies
 function useFoo() {

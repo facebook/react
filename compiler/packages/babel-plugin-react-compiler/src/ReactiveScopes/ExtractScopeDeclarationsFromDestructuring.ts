@@ -6,6 +6,7 @@
  */
 
 import {
+  DeclarationId,
   Destructure,
   Environment,
   IdentifierId,
@@ -16,13 +17,14 @@ import {
   ReactiveScopeBlock,
   ReactiveStatement,
   promoteTemporary,
-} from "../HIR";
-import { eachPatternOperand, mapPatternOperands } from "../HIR/visitors";
+} from '../HIR';
+import {clonePlaceToTemporary} from '../HIR/HIRBuilder';
+import {eachPatternOperand, mapPatternOperands} from '../HIR/visitors';
 import {
   ReactiveFunctionTransform,
   Transformed,
   visitReactiveFunction,
-} from "./visitors";
+} from './visitors';
 
 /*
  * Destructuring statements may sometimes define some variables which are declared by the scope,
@@ -74,7 +76,7 @@ import {
  *
  */
 export function extractScopeDeclarationsFromDestructuring(
-  fn: ReactiveFunction
+  fn: ReactiveFunction,
 ): void {
   const state = new State(fn.env);
   visitReactiveFunction(fn, new Visitor(), state);
@@ -82,7 +84,11 @@ export function extractScopeDeclarationsFromDestructuring(
 
 class State {
   env: Environment;
-  declared: Set<IdentifierId> = new Set();
+  /**
+   * We need to track which program variables are already declared to convert
+   * declarations into reassignments, so we use DeclarationId
+   */
+  declared: Set<DeclarationId> = new Set();
 
   constructor(env: Environment) {
     this.env = env;
@@ -92,46 +98,46 @@ class State {
 class Visitor extends ReactiveFunctionTransform<State> {
   override visitScope(scope: ReactiveScopeBlock, state: State): void {
     for (const [, declaration] of scope.scope.declarations) {
-      state.declared.add(declaration.identifier.id);
+      state.declared.add(declaration.identifier.declarationId);
     }
     this.traverseScope(scope, state);
   }
 
   override transformInstruction(
     instruction: ReactiveInstruction,
-    state: State
+    state: State,
   ): Transformed<ReactiveStatement> {
     this.visitInstruction(instruction, state);
 
-    if (instruction.value.kind === "Destructure") {
+    if (instruction.value.kind === 'Destructure') {
       const transformed = transformDestructuring(
         state,
         instruction,
-        instruction.value
+        instruction.value,
       );
       if (transformed) {
         return {
-          kind: "replace-many",
-          value: transformed.map((instruction) => ({
-            kind: "instruction",
+          kind: 'replace-many',
+          value: transformed.map(instruction => ({
+            kind: 'instruction',
             instruction,
           })),
         };
       }
     }
-    return { kind: "keep" };
+    return {kind: 'keep'};
   }
 }
 
 function transformDestructuring(
   state: State,
   instr: ReactiveInstruction,
-  destructure: Destructure
+  destructure: Destructure,
 ): null | Array<ReactiveInstruction> {
   let reassigned: Set<IdentifierId> = new Set();
   let hasDeclaration = false;
   for (const place of eachPatternOperand(destructure.lvalue.pattern)) {
-    const isDeclared = state.declared.has(place.identifier.id);
+    const isDeclared = state.declared.has(place.identifier.declarationId);
     if (isDeclared) {
       reassigned.add(place.identifier.id);
     }
@@ -146,19 +152,11 @@ function transformDestructuring(
    */
   const instructions: Array<ReactiveInstruction> = [];
   const renamed: Map<Place, Place> = new Map();
-  mapPatternOperands(destructure.lvalue.pattern, (place) => {
+  mapPatternOperands(destructure.lvalue.pattern, place => {
     if (!reassigned.has(place.identifier.id)) {
       return place;
     }
-    const tempId = state.env.nextIdentifierId;
-    const temporary = {
-      ...place,
-      identifier: {
-        ...place.identifier,
-        id: tempId,
-        name: null, // overwritten below
-      },
-    };
+    const temporary = clonePlaceToTemporary(state.env, place);
     promoteTemporary(temporary.identifier);
     renamed.set(place, temporary);
     return temporary;
@@ -169,7 +167,7 @@ function transformDestructuring(
       id: instr.id,
       lvalue: null,
       value: {
-        kind: "StoreLocal",
+        kind: 'StoreLocal',
         lvalue: {
           kind: InstructionKind.Reassign,
           place: original,

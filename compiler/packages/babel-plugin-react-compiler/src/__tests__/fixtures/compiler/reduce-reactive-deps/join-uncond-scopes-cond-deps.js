@@ -15,7 +15,7 @@
 //    mutate2(y, props.a.b);
 //  }
 
-import { CONST_TRUE, setProperty } from "shared-runtime";
+import {CONST_TRUE, setProperty} from 'shared-runtime';
 
 function useJoinCondDepsInUncondScopes(props) {
   let y = {};
@@ -29,5 +29,5 @@ function useJoinCondDepsInUncondScopes(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useJoinCondDepsInUncondScopes,
-  params: [{ a: { b: 3 } }],
+  params: [{a: {b: 3}}],
 };

@@ -12,6 +12,7 @@ export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [{y: []}],
 };
+
 ```
 
 ## Code

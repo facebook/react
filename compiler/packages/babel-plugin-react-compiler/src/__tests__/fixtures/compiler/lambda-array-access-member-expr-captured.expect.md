@@ -2,10 +2,10 @@
 ## Input
 
 ```javascript
-import { CONST_NUMBER0, invoke } from "shared-runtime";
+import {CONST_NUMBER0, invoke} from 'shared-runtime';
 
 function Foo() {
-  const x = [{ value: 0 }, { value: 1 }, { value: 2 }];
+  const x = [{value: 0}, {value: 1}, {value: 2}];
   const param = CONST_NUMBER0;
   const foo = () => {
     return x[param].value;

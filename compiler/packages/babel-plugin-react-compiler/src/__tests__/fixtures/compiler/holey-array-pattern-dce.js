@@ -5,6 +5,6 @@ function t(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: t,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: ['TodoAdd'],
+  isComponent: 'TodoAdd',
 };

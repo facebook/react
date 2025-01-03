@@ -34,8 +34,7 @@ function initModules() {
   };
 }
 
-const {resetModules, itRenders, clientRenderOnBadMarkup} =
-  ReactDOMServerIntegrationUtils(initModules);
+const {resetModules, itRenders} = ReactDOMServerIntegrationUtils(initModules);
 
 function formatValue(val) {
   if (val === null) {
@@ -105,7 +104,7 @@ describe('ReactDOMServerIntegrationLegacyContextDisabled', () => {
           <RegularFn />
         </span>
       </LegacyProvider>,
-      render === clientRenderOnBadMarkup ? 4 : 3,
+      3,
     );
     expect(e.textContent).toBe('{}undefinedundefined');
     expect(lifecycleContextLog).toEqual([]);

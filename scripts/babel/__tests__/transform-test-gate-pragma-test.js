@@ -221,4 +221,8 @@ describe('dynamic gate method', () => {
   it('returns same conditions as pragma', () => {
     expect(gate(ctx => ctx.experimental && ctx.__DEV__)).toBe(true);
   });
+
+  it('converts string conditions to accessor function', () => {
+    expect(gate('experimental')).toBe(gate(flags => flags.experimental));
+  });
 });

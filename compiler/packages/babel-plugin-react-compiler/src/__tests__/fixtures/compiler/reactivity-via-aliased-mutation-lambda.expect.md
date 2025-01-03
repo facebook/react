@@ -4,7 +4,7 @@
 ```javascript
 function Component(props) {
   const x = [];
-  const f = (arg) => {
+  const f = arg => {
     const y = x;
     y.push(arg);
   };
@@ -17,14 +17,14 @@ export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [],
   sequentialRenders: [
-    { input: 42 },
-    { input: 42 },
-    { input: "sathya" },
-    { input: "sathya" },
-    { input: 42 },
-    { input: "sathya" },
-    { input: 42 },
-    { input: "sathya" },
+    {input: 42},
+    {input: 42},
+    {input: 'sathya'},
+    {input: 'sathya'},
+    {input: 42},
+    {input: 'sathya'},
+    {input: 42},
+    {input: 'sathya'},
   ],
 };
 

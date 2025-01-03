@@ -30,9 +30,7 @@ const run = async ({skipPackages}, versionsMap) => {
 
     let version = bestGuessVersion;
     if (
-      skipPackages.some(skipPackageName =>
-        packageNames.includes(skipPackageName)
-      )
+      skipPackages.some(skipPackageName => packages.includes(skipPackageName))
     ) {
       await confirm(
         theme`{spinnerSuccess ✓} Version for ${packageNames} will remain {version ${bestGuessVersion}}`

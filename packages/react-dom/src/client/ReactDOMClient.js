@@ -16,7 +16,6 @@ import {
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import ReactVersion from 'shared/ReactVersion';
 
-import {getClosestInstanceFromNode} from 'react-dom-bindings/src/client/ReactDOMComponentTree';
 import Internals from 'shared/ReactDOMSharedInternals';
 
 import {ensureCorrectIsomorphicReactVersion} from '../shared/ensureCorrectIsomorphicReactVersion';
@@ -52,12 +51,7 @@ Internals.findDOMNode = findDOMNode;
 
 export {ReactVersion as version, createRoot, hydrateRoot};
 
-const foundDevTools = injectIntoDevTools({
-  findFiberByHostInstance: getClosestInstanceFromNode,
-  bundleType: __DEV__ ? 1 : 0,
-  version: ReactVersion,
-  rendererPackageName: 'react-dom',
-});
+const foundDevTools = injectIntoDevTools();
 
 if (__DEV__) {
   if (!foundDevTools && canUseDOM && window.top === window.self) {

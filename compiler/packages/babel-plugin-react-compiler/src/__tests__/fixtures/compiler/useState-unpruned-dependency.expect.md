@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { useState } from "react"; // @enableChangeDetectionForDebugging
+import {useState} from 'react'; // @enableChangeDetectionForDebugging
 
 function Component(props) {
   const w = f(props.x);
@@ -21,7 +21,7 @@ function f(x) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ x: 42 }],
+  params: [{x: 42}],
   isComponent: true,
 };
 
@@ -62,13 +62,13 @@ function Component(props) {
         {w}
       </div>
     );
-    let condition = $[2] !== x || $[3] !== w;
+    let condition = $[2] !== w || $[3] !== x;
     if (!condition) {
       let old$t1 = $[4];
       $structuralCheck(old$t1, t1, "t1", "Component", "cached", "(7:10)");
     }
-    $[2] = x;
-    $[3] = w;
+    $[2] = w;
+    $[3] = x;
     $[4] = t1;
     if (condition) {
       t1 = (

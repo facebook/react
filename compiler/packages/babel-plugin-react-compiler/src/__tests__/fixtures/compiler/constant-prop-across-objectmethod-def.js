@@ -1,4 +1,4 @@
-import { identity } from "shared-runtime";
+import {identity} from 'shared-runtime';
 
 // repro for context identifier scoping bug, in which x was
 // inferred as a context variable.

@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { makeObject_Primitives, mutate } from "shared-runtime";
+import {makeObject_Primitives, mutate} from 'shared-runtime';
 
 function Component() {
   // a's mutable range should be the same as x's mutable range,
@@ -57,4 +57,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: ok) [[{"a":0,"b":"value1","c":true}],"[[ cyclic ref *2 ]]"]
+(kind: ok) [[{"a":0,"b":"value1","c":true},"joe"],"[[ cyclic ref *2 ]]"]

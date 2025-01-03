@@ -101,7 +101,7 @@ function describeFiberType(fiber: Fiber): null | string {
   }
 }
 
-const needsEscaping = /["'&<>\n\t]/;
+const needsEscaping = /["'&<>\n\t]|^\s|\s$/;
 
 function describeTextNode(content: string, maxLength: number): string {
   if (needsEscaping.test(content)) {
@@ -498,9 +498,15 @@ function describeElementDiff(
     typeof clientChildren === 'number' ||
     typeof clientChildren === 'bigint'
   ) {
-    // The client has children but it's not considered a difference from the server.
-    // $FlowFixMe[unsafe-addition]
-    content += describeTextDiff('' + clientChildren, undefined, indent + 1);
+    if (serverChildren == null) {
+      // This is a new string child.
+      // $FlowFixMe[unsafe-addition]
+      content += describeTextDiff('' + clientChildren, null, indent + 1);
+    } else {
+      // The client has children but it's not considered a difference from the server.
+      // $FlowFixMe[unsafe-addition]
+      content += describeTextDiff('' + clientChildren, undefined, indent + 1);
+    }
   }
   return content;
 }
@@ -554,6 +560,7 @@ function describeNode(node: HydrationDiffNode, indent: number): string {
   if (node.fiber.tag === HostText) {
     // Text Node
     selfContent = describeTextDiff(clientProps, node.serverProps, indent);
+    indent++;
   } else {
     const type = describeFiberType(node.fiber);
     if (type !== null) {
@@ -564,9 +571,7 @@ function describeNode(node: HydrationDiffNode, indent: number): string {
         indent++;
       } else if (node.serverProps === null) {
         selfContent = describeExpandedElement(type, clientProps, added(indent));
-        // If this was an insertion we won't step down further. Any tail
-        // are considered siblings so we don't indent.
-        // TODO: Model this a little better.
+        indent++;
       } else if (typeof node.serverProps === 'string') {
         if (__DEV__) {
           console.error(
@@ -611,6 +616,9 @@ function describeNode(node: HydrationDiffNode, indent: number): string {
 
   // Deleted tail nodes
   const serverTail = node.serverTail;
+  if (node.serverProps === null) {
+    indent--;
+  }
   for (let i = 0; i < serverTail.length; i++) {
     const tailNode = serverTail[i];
     if (typeof tailNode === 'string') {

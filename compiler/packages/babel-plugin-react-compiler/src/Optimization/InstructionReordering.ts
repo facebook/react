@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "..";
+import {CompilerError} from '..';
 import {
   BasicBlock,
   Environment,
@@ -18,15 +18,15 @@ import {
   isExpressionBlockKind,
   makeInstructionId,
   markInstructionIds,
-} from "../HIR";
-import { printInstruction } from "../HIR/PrintHIR";
+} from '../HIR';
+import {printInstruction} from '../HIR/PrintHIR';
 import {
   eachInstructionLValue,
   eachInstructionValueLValue,
   eachInstructionValueOperand,
   eachTerminalOperand,
-} from "../HIR/visitors";
-import { getOrInsertWith } from "../Utils/utils";
+} from '../HIR/visitors';
+import {getOrInsertWith} from '../Utils/utils';
 
 /**
  * This pass implements conservative instruction reordering to move instructions closer to
@@ -80,8 +80,8 @@ export function instructionReordering(fn: HIRFunction): void {
     reason: `InstructionReordering: expected all reorderable nodes to have been emitted`,
     loc:
       [...shared.values()]
-        .map((node) => node.instruction?.loc)
-        .filter((loc) => loc != null)[0] ?? GeneratedSource,
+        .map(node => node.instruction?.loc)
+        .filter(loc => loc != null)[0] ?? GeneratedSource,
   });
   markInstructionIds(fn.body);
 }
@@ -113,11 +113,11 @@ function findReferencedRangeOfTemporaries(fn: HIRFunction): References {
   function reference(
     instr: InstructionId,
     place: Place,
-    kind: ReferenceKind
+    kind: ReferenceKind,
   ): void {
     if (
       place.identifier.name !== null &&
-      place.identifier.name.kind === "named"
+      place.identifier.name.kind === 'named'
     ) {
       if (kind === ReferenceKind.Write) {
         const name = place.identifier.name.value;
@@ -127,7 +127,7 @@ function findReferencedRangeOfTemporaries(fn: HIRFunction): References {
         } else {
           lastAssignments.set(
             name,
-            makeInstructionId(Math.max(previous, instr))
+            makeInstructionId(Math.max(previous, instr)),
           );
         }
       }
@@ -154,7 +154,7 @@ function findReferencedRangeOfTemporaries(fn: HIRFunction): References {
     singleUseIdentifiers: new Set(
       [...singleUseIdentifiers]
         .filter(([, count]) => count === 1)
-        .map(([id]) => id)
+        .map(([id]) => id),
     ),
     lastAssignments,
   };
@@ -164,13 +164,13 @@ function reorderBlock(
   env: Environment,
   block: BasicBlock,
   shared: Nodes,
-  references: References
+  references: References,
 ): void {
   const locals: Nodes = new Map();
   const named: Map<string, IdentifierId> = new Map();
   let previous: IdentifierId | null = null;
   for (const instr of block.instructions) {
-    const { lvalue, value } = instr;
+    const {lvalue, value} = instr;
     // Get or create a node for this lvalue
     const reorderability = getReorderability(instr, references);
     const node = getOrInsertWith(
@@ -182,7 +182,7 @@ function reorderBlock(
           dependencies: new Set(),
           reorderability,
           depth: null,
-        }) as Node
+        }) as Node,
     );
     /**
      * Ensure non-reoderable instructions have their order retained by
@@ -198,8 +198,8 @@ function reorderBlock(
      * Establish dependencies on operands
      */
     for (const operand of eachInstructionValueOperand(value)) {
-      const { name, id } = operand.identifier;
-      if (name !== null && name.kind === "named") {
+      const {name, id} = operand.identifier;
+      if (name !== null && name.kind === 'named') {
         // Serialize all accesses to named variables
         const previous = named.get(name.value);
         if (previous !== undefined) {
@@ -225,11 +225,11 @@ function reorderBlock(
             instruction: null,
             dependencies: new Set(),
             depth: null,
-          }) as Node
+          }) as Node,
       );
       lvalueNode.dependencies.add(lvalue.identifier.id);
       const name = lvalueOperand.identifier.name;
-      if (name !== null && name.kind === "named") {
+      if (name !== null && name.kind === 'named') {
         const previous = named.get(name.value);
         if (previous !== undefined) {
           node.dependencies.add(previous);
@@ -272,14 +272,14 @@ function reorderBlock(
           locals,
           shared,
           seen,
-          block.instructions.at(-1)!.lvalue.identifier.id
+          block.instructions.at(-1)!.lvalue.identifier.id,
         );
       emit(
         env,
         locals,
         shared,
         nextInstructions,
-        block.instructions.at(-1)!.lvalue.identifier.id
+        block.instructions.at(-1)!.lvalue.identifier.id,
       );
     }
     /*
@@ -307,7 +307,7 @@ function reorderBlock(
             node.instruction != null
               ? `Instruction [${node.instruction.id}] was not emitted yet but is not reorderable`
               : `Lvalue $${id} was not emitted yet but is not reorderable`,
-        }
+        },
       );
 
       DEBUG && console.log(`save shared: $${id}`);
@@ -358,7 +358,7 @@ function reorderBlock(
         DEBUG && console.log(`save shared: $${id}`);
         shared.set(id, node);
       } else {
-        DEBUG && console.log("leftover");
+        DEBUG && console.log('leftover');
         DEBUG && print(env, locals, shared, seen, id);
         emit(env, locals, shared, nextInstructions, id);
       }
@@ -392,10 +392,10 @@ function print(
   shared: Nodes,
   seen: Set<IdentifierId>,
   id: IdentifierId,
-  depth: number = 0
+  depth: number = 0,
 ): void {
   if (seen.has(id)) {
-    DEBUG && console.log(`${"|   ".repeat(depth)}$${id} <skipped>`);
+    DEBUG && console.log(`${'|   '.repeat(depth)}$${id} <skipped>`);
     return;
   }
   seen.add(id);
@@ -414,20 +414,20 @@ function print(
   }
   DEBUG &&
     console.log(
-      `${"|   ".repeat(depth)}$${id} ${printNode(node)} deps=[${deps
-        .map((x) => `$${x}`)
-        .join(", ")}] depth=${node.depth}`
+      `${'|   '.repeat(depth)}$${id} ${printNode(node)} deps=[${deps
+        .map(x => `$${x}`)
+        .join(', ')}] depth=${node.depth}`,
     );
 }
 
 function printNode(node: Node): string {
-  const { instruction } = node;
+  const {instruction} = node;
   if (instruction === null) {
-    return "<lvalue-only>";
+    return '<lvalue-only>';
   }
   switch (instruction.value.kind) {
-    case "FunctionExpression":
-    case "ObjectMethod": {
+    case 'FunctionExpression':
+    case 'ObjectMethod': {
       return `[${instruction.id}] ${instruction.value.kind}`;
     }
     default: {
@@ -441,7 +441,7 @@ function emit(
   locals: Nodes,
   shared: Nodes,
   instructions: Array<Instruction>,
-  id: IdentifierId
+  id: IdentifierId,
 ): void {
   const node = locals.get(id) ?? shared.get(id);
   if (node == null) {
@@ -469,22 +469,22 @@ enum Reorderability {
 }
 function getReorderability(
   instr: Instruction,
-  references: References
+  references: References,
 ): Reorderability {
   switch (instr.value.kind) {
-    case "JsxExpression":
-    case "JsxFragment":
-    case "JSXText":
-    case "LoadGlobal":
-    case "Primitive":
-    case "TemplateLiteral":
-    case "BinaryExpression":
-    case "UnaryExpression": {
+    case 'JsxExpression':
+    case 'JsxFragment':
+    case 'JSXText':
+    case 'LoadGlobal':
+    case 'Primitive':
+    case 'TemplateLiteral':
+    case 'BinaryExpression':
+    case 'UnaryExpression': {
       return Reorderability.Reorderable;
     }
-    case "LoadLocal": {
+    case 'LoadLocal': {
       const name = instr.value.place.identifier.name;
-      if (name !== null && name.kind === "named") {
+      if (name !== null && name.kind === 'named') {
         const lastAssignment = references.lastAssignments.get(name.value);
         if (
           lastAssignment !== undefined &&

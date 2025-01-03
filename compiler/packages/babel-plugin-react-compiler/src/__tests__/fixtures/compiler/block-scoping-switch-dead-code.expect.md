@@ -19,7 +19,7 @@ function useHook(a, b) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useHook,
-  params: [1, "foo"],
+  params: [1, 'foo'],
 };
 
 ```

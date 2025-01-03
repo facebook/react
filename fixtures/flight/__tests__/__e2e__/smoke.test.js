@@ -16,6 +16,13 @@ test('smoke test', async ({page}) => {
   await expect(page.getByTestId('promise-as-a-child-test')).toHaveText(
     'Promise as a child hydrates without errors: deferred text'
   );
+  await expect(page.getByTestId('prerendered')).not.toBeAttached();
+
+  await expect(consoleErrors).toEqual([]);
+  await expect(pageErrors).toEqual([]);
+
+  await page.goto('/prerender');
+  await expect(page.getByTestId('prerendered')).toBeAttached();
 
   await expect(consoleErrors).toEqual([]);
   await expect(pageErrors).toEqual([]);

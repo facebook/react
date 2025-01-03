@@ -1,9 +1,9 @@
-const { throwErrorWithMessage } = require("shared-runtime");
+const {throwErrorWithMessage} = require('shared-runtime');
 
 function Component(props) {
   let x;
   try {
-    x = throwErrorWithMessage("oops");
+    x = throwErrorWithMessage('oops');
   } catch {
     x = null;
   }

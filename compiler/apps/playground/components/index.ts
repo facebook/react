@@ -5,6 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export { default as Editor } from "./Editor";
-export { default as Header } from "./Header";
-export { StoreProvider } from "./StoreContext";
+export {default as Editor} from './Editor';
+export {default as Header} from './Header';
+export {StoreProvider} from './StoreContext';

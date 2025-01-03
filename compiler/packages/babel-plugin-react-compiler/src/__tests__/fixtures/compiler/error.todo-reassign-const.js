@@ -1,6 +1,6 @@
-import { Stringify } from "shared-runtime";
+import {Stringify} from 'shared-runtime';
 
-function Component({ foo }) {
+function Component({foo}) {
   let bar = foo.bar;
   return (
     <Stringify

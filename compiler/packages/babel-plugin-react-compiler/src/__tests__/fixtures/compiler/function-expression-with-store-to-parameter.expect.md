@@ -19,28 +19,22 @@ function Component(props) {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = _c(3);
-  let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = (object, key, value) => {
-      object.updated = true;
-      object[key] = value;
-    };
-    $[0] = t0;
-  } else {
-    t0 = $[0];
-  }
-  const mutate = t0;
+  const $ = _c(2);
+  const mutate = _temp;
   let x;
-  if ($[1] !== props) {
+  if ($[0] !== props) {
     x = makeObject(props);
     mutate(x);
-    $[1] = props;
-    $[2] = x;
+    $[0] = props;
+    $[1] = x;
   } else {
-    x = $[2];
+    x = $[1];
   }
   return x;
+}
+function _temp(object, key, value) {
+  object.updated = true;
+  object[key] = value;
 }
 
 ```

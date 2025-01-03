@@ -14,7 +14,7 @@ function TestOverlappingTracked(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: TestOverlappingTracked,
-  params: [{ a: { c: 2 } }],
+  params: [{a: {c: 2}}],
 };
 
 ```

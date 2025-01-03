@@ -1,6 +1,6 @@
 function Component(props) {
   const wat = () => {
-    const pathname = "wat";
+    const pathname = 'wat';
     pathname;
   };
 
@@ -12,5 +12,5 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ wat: "/dev/null", itemID: 42 }],
+  params: [{wat: '/dev/null', itemID: 42}],
 };

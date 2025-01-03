@@ -1,6 +1,6 @@
 function useFoo() {
   const update = () => {
-    "worklet";
+    'worklet';
     return 1;
   };
   return update;

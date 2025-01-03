@@ -441,6 +441,7 @@ describe('ReactInteractionTracing', () => {
       await waitForAll([
         'Suspend [Page Two]',
         'Loading...',
+        ...(gate('enableSiblingPrerendering') ? ['Suspend [Page Two]'] : []),
         'onTransitionStart(page transition, 1000)',
         'onTransitionProgress(page transition, 1000, 2000, [suspense page])',
       ]);
@@ -531,6 +532,7 @@ describe('ReactInteractionTracing', () => {
       await waitForAll([
         'Suspend [Page Two]',
         'Loading...',
+        ...(gate('enableSiblingPrerendering') ? ['Suspend [Page Two]'] : []),
         'onTransitionStart(page transition, 1000)',
         'onTransitionProgress(page transition, 1000, 1000, [suspense page])',
       ]);
@@ -549,6 +551,7 @@ describe('ReactInteractionTracing', () => {
         'Suspend [Show Text]',
         'Show Text Loading...',
         'Page Two',
+        ...(gate('enableSiblingPrerendering') ? ['Suspend [Show Text]'] : []),
         'onTransitionStart(text transition, 2000)',
         'onTransitionProgress(text transition, 2000, 2000, [show text])',
       ]);
@@ -638,6 +641,7 @@ describe('ReactInteractionTracing', () => {
       await waitForAll([
         'Suspend [Page Two]',
         'Loading...',
+        ...(gate('enableSiblingPrerendering') ? ['Suspend [Page Two]'] : []),
         'onTransitionStart(page transition, 1000)',
         'onTransitionProgress(page transition, 1000, 2000, [suspense page])',
       ]);
@@ -651,6 +655,9 @@ describe('ReactInteractionTracing', () => {
         'Show Text Loading...',
         'Suspend [Page Two]',
         'Loading...',
+        ...(gate('enableSiblingPrerendering')
+          ? ['Suspend [Show Text]', 'Suspend [Page Two]']
+          : []),
         'onTransitionStart(show text, 2000)',
         'onTransitionProgress(show text, 2000, 2000, [show text])',
       ]);
@@ -753,6 +760,15 @@ describe('ReactInteractionTracing', () => {
       await waitForAll([
         'Suspend [Page Two]',
         'Loading...',
+        ...(gate('enableSiblingPrerendering')
+          ? [
+              'Suspend [Page Two]',
+              'Suspend [Show Text One]',
+              'Show Text One Loading...',
+              'Suspend [Show Text Two]',
+              'Show Text Two Loading...',
+            ]
+          : []),
         'onTransitionStart(page transition, 1000)',
         'onTransitionProgress(page transition, 1000, 2000, [suspense page])',
       ]);
@@ -767,6 +783,9 @@ describe('ReactInteractionTracing', () => {
         'Show Text One Loading...',
         'Suspend [Show Text Two]',
         'Show Text Two Loading...',
+        ...(gate('enableSiblingPrerendering')
+          ? ['Suspend [Show Text One]', 'Suspend [Show Text Two]']
+          : []),
         'onTransitionProgress(page transition, 1000, 3000, [show text one, show text two])',
       ]);
 
@@ -879,6 +898,15 @@ describe('ReactInteractionTracing', () => {
       await waitForAll([
         'Suspend [Page Two]',
         'Loading...',
+        ...(gate('enableSiblingPrerendering')
+          ? [
+              'Suspend [Page Two]',
+              'Suspend [Show Text One]',
+              'Show Text One Loading...',
+              'Suspend [Show Text]',
+              'Show Text Loading...',
+            ]
+          : []),
         'onTransitionStart(navigate, 1000)',
         'onTransitionStart(show text one, 1000)',
         'onTransitionProgress(navigate, 1000, 2000, [suspense page])',
@@ -894,6 +922,9 @@ describe('ReactInteractionTracing', () => {
         'Show Text One Loading...',
         'Suspend [Show Text]',
         'Show Text Loading...',
+        ...(gate('enableSiblingPrerendering')
+          ? ['Suspend [Show Text One]', 'Suspend [Show Text]']
+          : []),
         'onTransitionProgress(navigate, 1000, 3000, [show text one, <null>])',
         'onTransitionProgress(show text one, 1000, 3000, [show text one, <null>])',
       ]);
@@ -910,6 +941,13 @@ describe('ReactInteractionTracing', () => {
         'Show Text Loading...',
         'Suspend [Show Text Two]',
         'Show Text Two Loading...',
+        ...(gate('enableSiblingPrerendering')
+          ? [
+              'Suspend [Show Text One]',
+              'Suspend [Show Text]',
+              'Suspend [Show Text Two]',
+            ]
+          : []),
         'onTransitionStart(show text two, 3000)',
         'onTransitionProgress(show text two, 3000, 4000, [show text two])',
       ]);
@@ -1114,6 +1152,9 @@ describe('ReactInteractionTracing', () => {
       await waitForAll([
         'Suspend [Page Two]',
         'Loading...',
+        ...(gate('enableSiblingPrerendering')
+          ? ['Suspend [Page Two]', 'Suspend [Marker Text]', 'Loading...']
+          : []),
         'onTransitionStart(page transition, 1000)',
       ]);
 
@@ -1125,6 +1166,7 @@ describe('ReactInteractionTracing', () => {
         'Page Two',
         'Suspend [Marker Text]',
         'Loading...',
+        ...(gate('enableSiblingPrerendering') ? ['Suspend [Marker Text]'] : []),
         'onMarkerProgress(page transition, async marker, 1000, 3000, [marker suspense])',
         'onMarkerComplete(page transition, sync marker, 1000, 3000)',
       ]);
@@ -1230,6 +1272,15 @@ describe('ReactInteractionTracing', () => {
       await waitForAll([
         'Suspend [Outer Text]',
         'Outer...',
+        ...(gate('enableSiblingPrerendering')
+          ? [
+              'Suspend [Outer Text]',
+              'Suspend [Inner Text One]',
+              'Inner One...',
+              'Suspend [Inner Text Two]',
+              'Inner Two...',
+            ]
+          : []),
         'onTransitionStart(page transition, 1000)',
         'onMarkerProgress(page transition, outer marker, 1000, 2000, [outer])',
       ]);
@@ -1247,6 +1298,9 @@ describe('ReactInteractionTracing', () => {
         'Suspend [Inner Text One]',
         'Inner One...',
         'Inner Text Two',
+        ...(gate('enableSiblingPrerendering')
+          ? ['Suspend [Inner Text One]']
+          : []),
         'onMarkerProgress(page transition, outer marker, 1000, 4000, [inner one])',
         'onMarkerComplete(page transition, marker two, 1000, 4000)',
       ]);
@@ -1484,6 +1538,9 @@ describe('ReactInteractionTracing', () => {
         'Loading...',
         'Suspend [Sibling Text]',
         'Sibling Loading...',
+        ...(gate('enableSiblingPrerendering')
+          ? ['Suspend [Page Two]', 'Suspend [Sibling Text]']
+          : []),
         'onTransitionStart(transition one, 1000)',
         'onMarkerProgress(transition one, parent, 1000, 2000, [suspense page, suspense sibling])',
         'onMarkerProgress(transition one, marker one, 1000, 2000, [suspense page])',
@@ -1499,6 +1556,9 @@ describe('ReactInteractionTracing', () => {
         'Loading...',
         'Suspend [Sibling Text]',
         'Sibling Loading...',
+        ...(gate('enableSiblingPrerendering')
+          ? ['Suspend [Page Two]', 'Suspend [Sibling Text]']
+          : []),
         'onMarkerProgress(transition one, parent, 1000, 3000, [suspense sibling])',
         'onMarkerIncomplete(transition one, marker one, 1000, [{endTime: 3000, name: marker one, type: marker}, {endTime: 3000, name: suspense page, type: suspense}])',
         'onMarkerIncomplete(transition one, parent, 1000, [{endTime: 3000, name: marker one, type: marker}, {endTime: 3000, name: suspense page, type: suspense}])',
@@ -1512,6 +1572,9 @@ describe('ReactInteractionTracing', () => {
         'Loading...',
         'Suspend [Sibling Text]',
         'Sibling Loading...',
+        ...(gate('enableSiblingPrerendering')
+          ? ['Suspend [Page Two]', 'Suspend [Sibling Text]']
+          : []),
       ]);
     });
 
@@ -1633,6 +1696,9 @@ describe('ReactInteractionTracing', () => {
         'Loading One...',
         'Suspend [Page Two]',
         'Loading Two...',
+        ...(gate('enableSiblingPrerendering')
+          ? ['Suspend [Page One]', 'Suspend [Page Two]']
+          : []),
         'onTransitionStart(transition, 1000)',
         'onMarkerProgress(transition, parent, 1000, 2000, [suspense one, suspense two])',
         'onMarkerProgress(transition, one, 1000, 2000, [suspense one])',
@@ -1646,6 +1712,7 @@ describe('ReactInteractionTracing', () => {
       await waitForAll([
         'Suspend [Page Two]',
         'Loading Two...',
+        ...(gate('enableSiblingPrerendering') ? ['Suspend [Page Two]'] : []),
         'onMarkerProgress(transition, parent, 1000, 3000, [suspense two])',
         'onMarkerIncomplete(transition, one, 1000, [{endTime: 3000, name: one, type: marker}, {endTime: 3000, name: suspense one, type: suspense}])',
         'onMarkerIncomplete(transition, parent, 1000, [{endTime: 3000, name: one, type: marker}, {endTime: 3000, name: suspense one, type: suspense}])',
@@ -1772,6 +1839,14 @@ describe('ReactInteractionTracing', () => {
         'Loading One...',
         'Suspend [Page Two]',
         'Loading Two...',
+        ...(gate('enableSiblingPrerendering')
+          ? [
+              'Suspend [Page One]',
+              'Suspend [Child]',
+              'Loading Child...',
+              'Suspend [Page Two]',
+            ]
+          : []),
         'onTransitionStart(transition, 1000)',
         'onMarkerProgress(transition, parent, 1000, 2000, [suspense one, suspense two])',
         'onMarkerProgress(transition, one, 1000, 2000, [suspense one])',
@@ -1786,6 +1861,7 @@ describe('ReactInteractionTracing', () => {
         'Page One',
         'Suspend [Child]',
         'Loading Child...',
+        ...(gate('enableSiblingPrerendering') ? ['Suspend [Child]'] : []),
         'onMarkerProgress(transition, parent, 1000, 3000, [suspense two, suspense child])',
         'onMarkerProgress(transition, one, 1000, 3000, [suspense child])',
         'onMarkerComplete(transition, page one, 1000, 3000)',
@@ -1798,6 +1874,7 @@ describe('ReactInteractionTracing', () => {
       await waitForAll([
         'Suspend [Page Two]',
         'Loading Two...',
+        ...(gate('enableSiblingPrerendering') ? ['Suspend [Page Two]'] : []),
         // "suspense one" has unsuspended so shouldn't be included
         // tracing marker "page one" has completed so shouldn't be included
         // all children of "suspense child" haven't yet been rendered so shouldn't be included
@@ -1895,6 +1972,7 @@ describe('ReactInteractionTracing', () => {
 
       await waitForAll([
         'Suspend [Child]',
+        ...(gate('enableSiblingPrerendering') ? ['Suspend [Child]'] : []),
         'onTransitionStart(transition, 0)',
         'onMarkerProgress(transition, parent, 0, 1000, [child])',
         'onTransitionProgress(transition, 0, 1000, [child])',
@@ -1905,14 +1983,23 @@ describe('ReactInteractionTracing', () => {
       await advanceTimers(1000);
       // This appended child isn't part of the transition so we
       // don't call any callback
-      await waitForAll(['Suspend [Appended child]', 'Suspend [Child]']);
+      await waitForAll([
+        'Suspend [Appended child]',
+        'Suspend [Child]',
+        ...(gate('enableSiblingPrerendering')
+          ? ['Suspend [Appended child]', 'Suspend [Child]']
+          : []),
+      ]);
 
       // This deleted child isn't part of the transition so we
       // don't call any callbacks
       root.render(<App show={false} />);
       ReactNoop.expire(1000);
       await advanceTimers(1000);
-      await waitForAll(['Suspend [Child]']);
+      await waitForAll([
+        'Suspend [Child]',
+        ...(gate('enableSiblingPrerendering') ? ['Suspend [Child]'] : []),
+      ]);
 
       await resolveText('Child');
       ReactNoop.expire(1000);
@@ -2013,6 +2100,7 @@ describe('ReactInteractionTracing', () => {
 
     assertLog([
       'Suspend [Child]',
+      ...(gate('enableSiblingPrerendering') ? ['Suspend [Child]'] : []),
       'onTransitionStart(transition one, 0)',
       'onMarkerProgress(transition one, parent, 0, 1000, [child])',
       'onTransitionProgress(transition one, 0, 1000, [child])',
@@ -2033,6 +2121,9 @@ describe('ReactInteractionTracing', () => {
     assertLog([
       'Suspend [Appended child]',
       'Suspend [Child]',
+      ...(gate('enableSiblingPrerendering')
+        ? ['Suspend [Appended child]', 'Suspend [Child]']
+        : []),
       'onTransitionStart(transition two, 1000)',
       'onMarkerProgress(transition two, appended child, 1000, 2000, [appended child])',
       'onTransitionProgress(transition two, 1000, 2000, [appended child])',
@@ -2046,6 +2137,7 @@ describe('ReactInteractionTracing', () => {
 
     assertLog([
       'Suspend [Child]',
+      ...(gate('enableSiblingPrerendering') ? ['Suspend [Child]'] : []),
       'onMarkerProgress(transition two, appended child, 1000, 3000, [])',
       'onMarkerIncomplete(transition two, appended child, 1000, [{endTime: 3000, name: appended child, type: suspense}])',
     ]);
@@ -2201,9 +2293,20 @@ describe('ReactInteractionTracing', () => {
     assertLog([
       'Suspend [Text]',
       'Loading...',
-      'Suspend [Hidden Text]',
-      'Hidden Loading...',
-      'onTransitionStart(transition, 0)',
+
+      ...(gate('enableSiblingPrerendering')
+        ? [
+            'Suspend [Text]',
+            'onTransitionStart(transition, 0)',
+
+            'Suspend [Hidden Text]',
+            'Hidden Loading...',
+          ]
+        : [
+            'Suspend [Hidden Text]',
+            'Hidden Loading...',
+            'onTransitionStart(transition, 0)',
+          ]),
     ]);
 
     await act(() => {
@@ -2269,6 +2372,7 @@ describe('ReactInteractionTracing', () => {
     assertLog([
       'Suspend [Page Two]',
       'Loading...',
+      ...(gate('enableSiblingPrerendering') ? ['Suspend [Page Two]'] : []),
       'onTransitionStart(page transition, 0)',
       'onTransitionProgress(page transition, 0, 1000, [suspense page])',
     ]);
@@ -2342,8 +2446,10 @@ describe('ReactInteractionTracing', () => {
       'Text',
       'Suspend [Text Two]',
       'Loading Two...',
+      ...(gate('enableSiblingPrerendering') ? ['Suspend [Text Two]'] : []),
       'onTransitionStart(transition, 0)',
       'onTransitionProgress(transition, 0, 1000, [two])',
+      ...(gate('enableSiblingPrerendering') ? ['Suspend [Text Two]'] : []),
     ]);
 
     await act(() => {
@@ -2417,6 +2523,9 @@ describe('ReactInteractionTracing', () => {
       'Loading one...',
       'Suspend [Text two]',
       'Loading two...',
+      ...(gate('enableSiblingPrerendering')
+        ? ['Suspend [Text one]', 'Suspend [Text two]']
+        : []),
       'onTransitionStart(transition one, 0) /root one/',
       'onTransitionProgress(transition one, 0, 1000, [one]) /root one/',
       'onTransitionStart(transition two, 0) /root two/',

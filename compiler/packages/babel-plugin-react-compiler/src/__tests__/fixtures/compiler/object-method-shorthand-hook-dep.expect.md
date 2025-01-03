@@ -2,8 +2,8 @@
 ## Input
 
 ```javascript
-import { createHookWrapper } from "shared-runtime";
-import { useState } from "react";
+import {createHookWrapper} from 'shared-runtime';
+import {useState} from 'react';
 function useFoo() {
   const [state, _setState] = useState(false);
   return {

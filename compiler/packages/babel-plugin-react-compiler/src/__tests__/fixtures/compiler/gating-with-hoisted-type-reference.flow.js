@@ -1,5 +1,5 @@
 // @flow @gating
-import { memo } from "react";
+import {memo} from 'react';
 
 type Props = React.ElementConfig<typeof Component>;
 

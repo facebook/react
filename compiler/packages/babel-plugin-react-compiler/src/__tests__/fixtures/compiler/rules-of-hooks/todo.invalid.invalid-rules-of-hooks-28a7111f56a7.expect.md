@@ -13,9 +13,9 @@
 // the runtime error by accident.
 // So we prefer to disallow it despite the false positive.
 
-const { createHistory, useBasename } = require("history-2.1.2");
+const {createHistory, useBasename} = require('history-2.1.2');
 const browserHistory = useBasename(createHistory)({
-  basename: "/",
+  basename: '/',
 });
 
 ```

@@ -2,16 +2,16 @@
 ## Input
 
 ```javascript
-function component({ a, b }) {
-  let y = { a };
-  let z = { b };
-  return { y, z };
+function component({a, b}) {
+  let y = {a};
+  let z = {b};
+  return {y, z};
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: component,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: ['TodoAdd'],
+  isComponent: 'TodoAdd',
 };
 
 ```

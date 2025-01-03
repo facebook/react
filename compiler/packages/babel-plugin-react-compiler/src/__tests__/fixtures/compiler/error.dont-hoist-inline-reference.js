@@ -1,4 +1,4 @@
-import { identity } from "shared-runtime";
+import {identity} from 'shared-runtime';
 function useInvalid() {
   const x = identity(x);
   return x;

@@ -2,15 +2,15 @@
 ## Input
 
 ```javascript
-import { Stringify } from "shared-runtime";
+import {Stringify} from 'shared-runtime';
 
 function foo() {
   let _b;
   const b = true;
   if (!b) {
-    _b = "bar";
+    _b = 'bar';
   } else {
-    _b = "baz";
+    _b = 'baz';
   }
 
   return (
@@ -22,9 +22,9 @@ function foo() {
         n1: !1,
         n2: !2,
         n3: !-1,
-        s0: !"",
-        s1: !"a",
-        s2: !"ab",
+        s0: !'',
+        s1: !'a',
+        s2: !'ab',
         u: !undefined,
         n: !null,
       }}

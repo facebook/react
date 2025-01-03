@@ -1,4 +1,4 @@
-import type { ReactElement } from "react";
+import type {ReactElement} from 'react';
 
 function Component(_props: {}): ReactElement {
   return <div>hello world</div>;

@@ -5,11 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { NodePath } from "@babel/traverse";
-import type * as t from "@babel/types";
-import { CompilerError } from "../CompilerError";
-import { getOrInsertDefault } from "../Utils/utils";
-import { GeneratedSource } from "./HIR";
+import type {NodePath} from '@babel/traverse';
+import type * as t from '@babel/types';
+import {CompilerError} from '../CompilerError';
+import {getOrInsertDefault} from '../Utils/utils';
+import {GeneratedSource} from './HIR';
 
 type IdentifierInfo = {
   reassigned: boolean;
@@ -35,7 +35,7 @@ type FindContextIdentifierState = {
 const withFunctionScope = {
   enter: function (
     path: BabelFunction,
-    state: FindContextIdentifierState
+    state: FindContextIdentifierState,
   ): void {
     state.currentFn.push(path);
   },
@@ -45,7 +45,7 @@ const withFunctionScope = {
 };
 
 export function findContextIdentifiers(
-  func: NodePath<t.Function>
+  func: NodePath<t.Function>,
 ): Set<t.Identifier> {
   const state: FindContextIdentifierState = {
     currentFn: [],
@@ -60,17 +60,17 @@ export function findContextIdentifiers(
       ObjectMethod: withFunctionScope,
       AssignmentExpression(
         path: NodePath<t.AssignmentExpression>,
-        state: FindContextIdentifierState
+        state: FindContextIdentifierState,
       ): void {
-        const left = path.get("left");
+        const left = path.get('left');
         const currentFn = state.currentFn.at(-1) ?? null;
         handleAssignment(currentFn, state.identifiers, left);
       },
       UpdateExpression(
         path: NodePath<t.UpdateExpression>,
-        state: FindContextIdentifierState
+        state: FindContextIdentifierState,
       ): void {
-        const argument = path.get("argument");
+        const argument = path.get('argument');
         const currentFn = state.currentFn.at(-1) ?? null;
         if (argument.isLVal()) {
           handleAssignment(currentFn, state.identifiers, argument);
@@ -78,7 +78,7 @@ export function findContextIdentifiers(
       },
       Identifier(
         path: NodePath<t.Identifier>,
-        state: FindContextIdentifierState
+        state: FindContextIdentifierState,
       ): void {
         const currentFn = state.currentFn.at(-1) ?? null;
         if (path.isReferencedIdentifier()) {
@@ -86,7 +86,7 @@ export function findContextIdentifiers(
         }
       },
     },
-    state
+    state,
   );
 
   const result = new Set<t.Identifier>();
@@ -103,7 +103,7 @@ export function findContextIdentifiers(
 function handleIdentifier(
   currentFn: BabelFunction | null,
   identifiers: Map<t.Identifier, IdentifierInfo>,
-  path: NodePath<t.Identifier>
+  path: NodePath<t.Identifier>,
 ): void {
   const name = path.node.name;
   const binding = path.scope.getBinding(name);
@@ -126,7 +126,7 @@ function handleIdentifier(
 function handleAssignment(
   currentFn: BabelFunction | null,
   identifiers: Map<t.Identifier, IdentifierInfo>,
-  lvalPath: NodePath<t.LVal>
+  lvalPath: NodePath<t.LVal>,
 ): void {
   /*
    * Find all reassignments to identifiers declared outside of currentFn
@@ -134,7 +134,7 @@ function handleAssignment(
    */
   const lvalNode = lvalPath.node;
   switch (lvalNode.type) {
-    case "Identifier": {
+    case 'Identifier': {
       const path = lvalPath as NodePath<t.Identifier>;
       const name = path.node.name;
       const binding = path.scope.getBinding(name);
@@ -155,20 +155,20 @@ function handleAssignment(
       }
       break;
     }
-    case "ArrayPattern": {
+    case 'ArrayPattern': {
       const path = lvalPath as NodePath<t.ArrayPattern>;
-      for (const element of path.get("elements")) {
+      for (const element of path.get('elements')) {
         if (nonNull(element)) {
           handleAssignment(currentFn, identifiers, element);
         }
       }
       break;
     }
-    case "ObjectPattern": {
+    case 'ObjectPattern': {
       const path = lvalPath as NodePath<t.ObjectPattern>;
-      for (const property of path.get("properties")) {
+      for (const property of path.get('properties')) {
         if (property.isObjectProperty()) {
-          const valuePath = property.get("value");
+          const valuePath = property.get('value');
           CompilerError.invariant(valuePath.isLVal(), {
             reason: `[FindContextIdentifiers] Expected object property value to be an LVal, got: ${valuePath.type}`,
             description: null,
@@ -188,18 +188,18 @@ function handleAssignment(
       }
       break;
     }
-    case "AssignmentPattern": {
+    case 'AssignmentPattern': {
       const path = lvalPath as NodePath<t.AssignmentPattern>;
-      const left = path.get("left");
+      const left = path.get('left');
       handleAssignment(currentFn, identifiers, left);
       break;
     }
-    case "RestElement": {
+    case 'RestElement': {
       const path = lvalPath as NodePath<t.RestElement>;
-      handleAssignment(currentFn, identifiers, path.get("argument"));
+      handleAssignment(currentFn, identifiers, path.get('argument'));
       break;
     }
-    case "MemberExpression": {
+    case 'MemberExpression': {
       // Interior mutability (not a reassign)
       break;
     }
@@ -215,7 +215,7 @@ function handleAssignment(
 }
 
 function nonNull<T extends NonNullable<t.Node>>(
-  t: NodePath<T | null>
+  t: NodePath<T | null>,
 ): t is NodePath<T> {
   return t.node != null;
 }

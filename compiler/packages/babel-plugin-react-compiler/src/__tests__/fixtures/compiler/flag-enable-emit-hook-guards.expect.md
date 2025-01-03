@@ -3,17 +3,17 @@
 
 ```javascript
 // @enableEmitHookGuards
-import { createContext, useContext, useEffect, useState } from "react";
+import {createContext, useContext, useEffect, useState} from 'react';
 import {
   CONST_STRING0,
   ObjectWithHooks,
   getNumber,
   identity,
   print,
-} from "shared-runtime";
+} from 'shared-runtime';
 
-const MyContext = createContext("my context value");
-function Component({ value }) {
+const MyContext = createContext('my context value');
+function Component({value}) {
   print(identity(CONST_STRING0));
   const [state, setState] = useState(getNumber());
   print(value, state);
@@ -28,7 +28,7 @@ function Component({ value }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  args: [{ value: 0 }],
+  args: [{value: 0}],
 };
 
 ```

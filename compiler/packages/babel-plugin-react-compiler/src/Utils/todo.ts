@@ -6,14 +6,14 @@
  */
 
 export default function todo(message: string): never {
-  throw new Error("TODO: " + message);
+  throw new Error('TODO: ' + message);
 }
 
 export function todoInvariant(
   condition: unknown,
-  message: string
+  message: string,
 ): asserts condition {
   if (!condition) {
-    throw new Error("TODO: " + message);
+    throw new Error('TODO: ' + message);
   }
 }

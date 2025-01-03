@@ -42,6 +42,7 @@ function escape(key: string): string {
     ':': '=2',
   };
   const escapedString = key.replace(escapeRegex, function (match) {
+    // $FlowFixMe[invalid-computed-prop]
     return escaperLookup[match];
   });
 
@@ -127,7 +128,7 @@ function resolveThenable<T>(thenable: Thenable<T>): T {
       }
 
       // Check one more time in case the thenable resolved synchronously.
-      switch (thenable.status) {
+      switch ((thenable: Thenable<T>).status) {
         case 'fulfilled': {
           const fulfilledThenable: FulfilledThenable<T> = (thenable: any);
           return fulfilledThenable.value;

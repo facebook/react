@@ -1,4 +1,4 @@
-import { makeArray } from "shared-runtime";
+import {makeArray} from 'shared-runtime';
 
 /**
  * This fixture tests what happens when a reactive has no declarations (other than an early return),
@@ -21,7 +21,7 @@ function Component(props) {
     x.push(42);
     return x;
   } else {
-    console.log("fallthrough");
+    console.log('fallthrough');
   }
   return makeArray(props.a);
 }
@@ -30,13 +30,13 @@ export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [],
   sequentialRenders: [
-    { a: 42 },
-    { a: 42 },
-    { a: 3.14 },
-    { a: 3.14 },
-    { a: 42 },
-    { a: 3.14 },
-    { a: 42 },
-    { a: 3.14 },
+    {a: 42},
+    {a: 42},
+    {a: 3.14},
+    {a: 3.14},
+    {a: 42},
+    {a: 3.14},
+    {a: 42},
+    {a: 3.14},
   ],
 };

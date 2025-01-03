@@ -3,12 +3,12 @@
 
 ```javascript
 // @enableInstructionReordering
-import { useState } from "react";
+import {useState} from 'react';
 
 function Component() {
   const [state, setState] = useState(0);
   const onClick = () => {
-    setState((s) => s + 1);
+    setState(s => s + 1);
   };
   return (
     <>
@@ -32,7 +32,7 @@ function Component() {
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = () => {
-      setState((s) => s + 1);
+      setState(_temp);
     };
     $[0] = t0;
   } else {
@@ -60,6 +60,9 @@ function Component() {
     t2 = $[3];
   }
   return t2;
+}
+function _temp(s) {
+  return s + 1;
 }
 
 ```

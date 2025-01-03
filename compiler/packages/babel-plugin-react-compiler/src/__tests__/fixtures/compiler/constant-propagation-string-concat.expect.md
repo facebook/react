@@ -3,8 +3,8 @@
 
 ```javascript
 function foo() {
-  const a = "a" + "b";
-  const c = "c";
+  const a = 'a' + 'b';
+  const c = 'c';
   return a + c;
 }
 

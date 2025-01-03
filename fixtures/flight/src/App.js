@@ -20,12 +20,27 @@ import {like, greet, increment} from './actions.js';
 import {getServerState} from './ServerState.js';
 
 const promisedText = new Promise(resolve =>
-  setTimeout(() => resolve('deferred text'), 100)
+  setTimeout(() => resolve('deferred text'), 50)
 );
 
-export default async function App() {
+function Foo({children}) {
+  return <div>{children}</div>;
+}
+
+async function Bar({children}) {
+  await new Promise(resolve => setTimeout(() => resolve('deferred text'), 10));
+  return <div>{children}</div>;
+}
+
+async function ServerComponent() {
+  await new Promise(resolve => setTimeout(() => resolve('deferred text'), 50));
+}
+
+export default async function App({prerender}) {
   const res = await fetch('http://localhost:3001/todos');
   const todos = await res.json();
+
+  const dedupedChild = <ServerComponent />;
   return (
     <html lang="en">
       <head>
@@ -35,6 +50,11 @@ export default async function App() {
       </head>
       <body>
         <Container>
+          {prerender ? (
+            <meta data-testid="prerendered" name="prerendered" content="true" />
+          ) : (
+            <meta content="when not prerendering we render this meta tag. When prerendering you will expect to see this tag and the one with data-testid=prerendered because we SSR one and hydrate the other" />
+          )}
           <h1>{getServerState()}</h1>
           <React.Suspense fallback={null}>
             <div data-testid="promise-as-a-child-test">
@@ -61,6 +81,8 @@ export default async function App() {
           </div>
           <Client />
           <Note />
+          <Foo>{dedupedChild}</Foo>
+          <Bar>{Promise.resolve([dedupedChild])}</Bar>
         </Container>
       </body>
     </html>

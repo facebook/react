@@ -2,21 +2,21 @@
 ## Input
 
 ```javascript
-const { shallowCopy, throwErrorWithMessage } = require("shared-runtime");
+const {shallowCopy, throwErrorWithMessage} = require('shared-runtime');
 
 function Component(props) {
   const x = [];
   try {
-    x.push(throwErrorWithMessage("oops"));
+    x.push(throwErrorWithMessage('oops'));
   } catch {
-    x.push(shallowCopy({ a: props.a }));
+    x.push(shallowCopy({a: props.a}));
   }
   return x;
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ a: 1 }],
+  params: [{a: 1}],
 };
 
 ```
@@ -28,9 +28,9 @@ import { c as _c } from "react/compiler-runtime";
 const { shallowCopy, throwErrorWithMessage } = require("shared-runtime");
 
 function Component(props) {
-  const $ = _c(3);
+  const $ = _c(5);
   let x;
-  if ($[0] !== props.a) {
+  if ($[0] !== props) {
     x = [];
     try {
       let t0;
@@ -42,9 +42,17 @@ function Component(props) {
       }
       x.push(t0);
     } catch {
-      x.push(shallowCopy({ a: props.a }));
+      let t0;
+      if ($[3] !== props.a) {
+        t0 = shallowCopy({ a: props.a });
+        $[3] = props.a;
+        $[4] = t0;
+      } else {
+        t0 = $[4];
+      }
+      x.push(t0);
     }
-    $[0] = props.a;
+    $[0] = props;
     $[1] = x;
   } else {
     x = $[1];

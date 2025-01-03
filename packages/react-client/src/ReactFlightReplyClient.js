@@ -13,15 +13,12 @@ import type {
   FulfilledThenable,
   RejectedThenable,
   ReactCustomFormAction,
+  ReactCallSite,
 } from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
 import type {TemporaryReferenceSet} from './ReactFlightTemporaryReferences';
 
-import {
-  enableRenderableContext,
-  enableBinaryFlight,
-  enableFlightReadableStream,
-} from 'shared/ReactFeatureFlags';
+import {enableRenderableContext} from 'shared/ReactFeatureFlags';
 
 import {
   REACT_ELEMENT_TYPE,
@@ -184,7 +181,7 @@ export function processReply(
   temporaryReferences: void | TemporaryReferenceSet,
   resolve: (string | FormData) => void,
   reject: (error: mixed) => void,
-): void {
+): (reason: mixed) => void {
   let nextPartId = 1;
   let pendingParts = 0;
   let formData: null | FormData = null;
@@ -553,6 +550,7 @@ export function processReply(
         const prefix = formFieldPrefix + refId + '_';
         // $FlowFixMe[prop-missing]: FormData has forEach.
         value.forEach((originalValue: string | File, originalKey: string) => {
+          // $FlowFixMe[incompatible-call]
           data.append(prefix + originalKey, originalValue);
         });
         return serializeFormDataReference(refId);
@@ -576,73 +574,71 @@ export function processReply(
         return serializeSetID(setId);
       }
 
-      if (enableBinaryFlight) {
-        if (value instanceof ArrayBuffer) {
-          const blob = new Blob([value]);
-          const blobId = nextPartId++;
-          if (formData === null) {
-            formData = new FormData();
-          }
-          formData.append(formFieldPrefix + blobId, blob);
-          return '$' + 'A' + blobId.toString(16);
+      if (value instanceof ArrayBuffer) {
+        const blob = new Blob([value]);
+        const blobId = nextPartId++;
+        if (formData === null) {
+          formData = new FormData();
         }
-        if (value instanceof Int8Array) {
-          // char
-          return serializeTypedArray('O', value);
+        formData.append(formFieldPrefix + blobId, blob);
+        return '$' + 'A' + blobId.toString(16);
+      }
+      if (value instanceof Int8Array) {
+        // char
+        return serializeTypedArray('O', value);
+      }
+      if (value instanceof Uint8Array) {
+        // unsigned char
+        return serializeTypedArray('o', value);
+      }
+      if (value instanceof Uint8ClampedArray) {
+        // unsigned clamped char
+        return serializeTypedArray('U', value);
+      }
+      if (value instanceof Int16Array) {
+        // sort
+        return serializeTypedArray('S', value);
+      }
+      if (value instanceof Uint16Array) {
+        // unsigned short
+        return serializeTypedArray('s', value);
+      }
+      if (value instanceof Int32Array) {
+        // long
+        return serializeTypedArray('L', value);
+      }
+      if (value instanceof Uint32Array) {
+        // unsigned long
+        return serializeTypedArray('l', value);
+      }
+      if (value instanceof Float32Array) {
+        // float
+        return serializeTypedArray('G', value);
+      }
+      if (value instanceof Float64Array) {
+        // double
+        return serializeTypedArray('g', value);
+      }
+      if (value instanceof BigInt64Array) {
+        // number
+        return serializeTypedArray('M', value);
+      }
+      if (value instanceof BigUint64Array) {
+        // unsigned number
+        // We use "m" instead of "n" since JSON can start with "null"
+        return serializeTypedArray('m', value);
+      }
+      if (value instanceof DataView) {
+        return serializeTypedArray('V', value);
+      }
+      // TODO: Blob is not available in old Node/browsers. Remove the typeof check later.
+      if (typeof Blob === 'function' && value instanceof Blob) {
+        if (formData === null) {
+          formData = new FormData();
         }
-        if (value instanceof Uint8Array) {
-          // unsigned char
-          return serializeTypedArray('o', value);
-        }
-        if (value instanceof Uint8ClampedArray) {
-          // unsigned clamped char
-          return serializeTypedArray('U', value);
-        }
-        if (value instanceof Int16Array) {
-          // sort
-          return serializeTypedArray('S', value);
-        }
-        if (value instanceof Uint16Array) {
-          // unsigned short
-          return serializeTypedArray('s', value);
-        }
-        if (value instanceof Int32Array) {
-          // long
-          return serializeTypedArray('L', value);
-        }
-        if (value instanceof Uint32Array) {
-          // unsigned long
-          return serializeTypedArray('l', value);
-        }
-        if (value instanceof Float32Array) {
-          // float
-          return serializeTypedArray('G', value);
-        }
-        if (value instanceof Float64Array) {
-          // double
-          return serializeTypedArray('g', value);
-        }
-        if (value instanceof BigInt64Array) {
-          // number
-          return serializeTypedArray('M', value);
-        }
-        if (value instanceof BigUint64Array) {
-          // unsigned number
-          // We use "m" instead of "n" since JSON can start with "null"
-          return serializeTypedArray('m', value);
-        }
-        if (value instanceof DataView) {
-          return serializeTypedArray('V', value);
-        }
-        // TODO: Blob is not available in old Node/browsers. Remove the typeof check later.
-        if (typeof Blob === 'function' && value instanceof Blob) {
-          if (formData === null) {
-            formData = new FormData();
-          }
-          const blobId = nextPartId++;
-          formData.append(formFieldPrefix + blobId, value);
-          return serializeBlobID(blobId);
-        }
+        const blobId = nextPartId++;
+        formData.append(formFieldPrefix + blobId, value);
+        return serializeBlobID(blobId);
       }
 
       const iteratorFn = getIteratorFn(value);
@@ -664,23 +660,21 @@ export function processReply(
         return Array.from((iterator: any));
       }
 
-      if (enableFlightReadableStream) {
-        // TODO: ReadableStream is not available in old Node. Remove the typeof check later.
-        if (
-          typeof ReadableStream === 'function' &&
-          value instanceof ReadableStream
-        ) {
-          return serializeReadableStream(value);
-        }
-        const getAsyncIterator: void | (() => $AsyncIterator<any, any, any>) =
-          (value: any)[ASYNC_ITERATOR];
-        if (typeof getAsyncIterator === 'function') {
-          // We treat AsyncIterables as a Fragment and as such we might need to key them.
-          return serializeAsyncIterable(
-            (value: any),
-            getAsyncIterator.call((value: any)),
-          );
-        }
+      // TODO: ReadableStream is not available in old Node. Remove the typeof check later.
+      if (
+        typeof ReadableStream === 'function' &&
+        value instanceof ReadableStream
+      ) {
+        return serializeReadableStream(value);
+      }
+      const getAsyncIterator: void | (() => $AsyncIterator<any, any, any>) =
+        (value: any)[ASYNC_ITERATOR];
+      if (typeof getAsyncIterator === 'function') {
+        // We treat AsyncIterables as a Fragment and as such we might need to key them.
+        return serializeAsyncIterable(
+          (value: any),
+          getAsyncIterator.call((value: any)),
+        );
       }
 
       // Verify that this is a simple plain object.
@@ -691,8 +685,9 @@ export function processReply(
       ) {
         if (temporaryReferences === undefined) {
           throw new Error(
-            'Only plain objects, and a few built-ins, can be passed to Server Actions. ' +
-              'Classes or null prototypes are not supported.',
+            'Only plain objects, and a few built-ins, can be passed to Server Functions. ' +
+              'Classes or null prototypes are not supported.' +
+              (__DEV__ ? describeObjectForErrorMessage(parent, key) : ''),
           );
         }
         // We will have written this object to the temporary reference set above
@@ -838,6 +833,19 @@ export function processReply(
     return JSON.stringify(model, resolveToJSON);
   }
 
+  function abort(reason: mixed): void {
+    if (pendingParts > 0) {
+      pendingParts = 0; // Don't resolve again later.
+      // Resolve with what we have so far, which may have holes at this point.
+      // They'll error when the stream completes on the server.
+      if (formData === null) {
+        resolve(json);
+      } else {
+        resolve(formData);
+      }
+    }
+  }
+
   const json = serializeModel(root, 0);
 
   if (formData === null) {
@@ -851,6 +859,8 @@ export function processReply(
       resolve(formData);
     }
   }
+
+  return abort;
 }
 
 const boundCache: WeakMap<
@@ -923,6 +933,7 @@ function defaultEncodeFormAction(
     const prefixedData = new FormData();
     // $FlowFixMe[prop-missing]
     encodedFormData.forEach((value: string | File, key: string) => {
+      // $FlowFixMe[incompatible-call]
       prefixedData.append('$ACTION_' + identifierPrefix + ':' + key, value);
     });
     data = prefixedData;
@@ -1022,7 +1033,99 @@ function isSignatureEqual(
   }
 }
 
-export function registerServerReference(
+let fakeServerFunctionIdx = 0;
+
+function createFakeServerFunction<A: Iterable<any>, T>(
+  name: string,
+  filename: string,
+  sourceMap: null | string,
+  line: number,
+  col: number,
+  environmentName: string,
+  innerFunction: (...A) => Promise<T>,
+): (...A) => Promise<T> {
+  // This creates a fake copy of a Server Module. It represents the Server Action on the server.
+  // We use an eval so we can source map it to the original location.
+
+  const comment =
+    '/* This module is a proxy to a Server Action. Turn on Source Maps to see the server source. */';
+
+  if (!name) {
+    // An eval:ed function with no name gets the name "eval". We give it something more descriptive.
+    name = '<anonymous>';
+  }
+  const encodedName = JSON.stringify(name);
+  // We generate code where both the beginning of the function and its parenthesis is at the line
+  // and column of the server executed code. We use a method form since that lets us name it
+  // anything we want and because the beginning of the function and its parenthesis is the same
+  // column. Because Chrome inspects the location of the parenthesis and Firefox inspects the
+  // location of the beginning of the function. By not using a function expression we avoid the
+  // ambiguity.
+  let code;
+  if (line <= 1) {
+    const minSize = encodedName.length + 7;
+    code =
+      's=>({' +
+      encodedName +
+      ' '.repeat(col < minSize ? 0 : col - minSize) +
+      ':' +
+      '(...args) => s(...args)' +
+      '})\n' +
+      comment;
+  } else {
+    code =
+      comment +
+      '\n'.repeat(line - 2) +
+      'server=>({' +
+      encodedName +
+      ':\n' +
+      ' '.repeat(col < 1 ? 0 : col - 1) +
+      // The function body can get printed so we make it look nice.
+      // This "calls the server with the arguments".
+      '(...args) => server(...args)' +
+      '})';
+  }
+
+  if (filename.startsWith('/')) {
+    // If the filename starts with `/` we assume that it is a file system file
+    // rather than relative to the current host. Since on the server fully qualified
+    // stack traces use the file path.
+    // TODO: What does this look like on Windows?
+    filename = 'file://' + filename;
+  }
+
+  if (sourceMap) {
+    // We use the prefix rsc://React/ to separate these from other files listed in
+    // the Chrome DevTools. We need a "host name" and not just a protocol because
+    // otherwise the group name becomes the root folder. Ideally we don't want to
+    // show these at all but there's two reasons to assign a fake URL.
+    // 1) A printed stack trace string needs a unique URL to be able to source map it.
+    // 2) If source maps are disabled or fails, you should at least be able to tell
+    //    which file it was.
+    code +=
+      '\n//# sourceURL=rsc://React/' +
+      encodeURIComponent(environmentName) +
+      '/' +
+      filename +
+      '?s' + // We add an extra s here to distinguish from the fake stack frames
+      fakeServerFunctionIdx++;
+    code += '\n//# sourceMappingURL=' + sourceMap;
+  } else if (filename) {
+    code += '\n//# sourceURL=' + filename;
+  }
+
+  try {
+    // Eval a factory and then call it to create a closure over the inner function.
+    // eslint-disable-next-line no-eval
+    return (0, eval)(code)(innerFunction)[name];
+  } catch (x) {
+    // If eval fails, such as if in an environment that doesn't support it,
+    // we fallback to just returning the inner function.
+    return innerFunction;
+  }
+}
+
+function registerServerReference(
   proxy: any,
   reference: {id: ServerReferenceId, bound: null | Thenable<Array<any>>},
   encodeFormAction: void | EncodeFormActionCallback,
@@ -1059,6 +1162,7 @@ const FunctionBind = Function.prototype.bind;
 const ArraySlice = Array.prototype.slice;
 function bind(this: Function): Function {
   // $FlowFixMe[unsupported-syntax]
+  // $FlowFixMe[prop-missing]
   const newFn = FunctionBind.apply(this, arguments);
   const reference = knownServerReferences.get(this);
   if (reference) {
@@ -1097,16 +1201,163 @@ function bind(this: Function): Function {
   return newFn;
 }
 
+export type FindSourceMapURLCallback = (
+  fileName: string,
+  environmentName: string,
+) => null | string;
+
+export function createBoundServerReference<A: Iterable<any>, T>(
+  metaData: {
+    id: ServerReferenceId,
+    bound: null | Thenable<Array<any>>,
+    name?: string, // DEV-only
+    env?: string, // DEV-only
+    location?: ReactCallSite, // DEV-only
+  },
+  callServer: CallServerCallback,
+  encodeFormAction?: EncodeFormActionCallback,
+  findSourceMapURL?: FindSourceMapURLCallback, // DEV-only
+): (...A) => Promise<T> {
+  const id = metaData.id;
+  const bound = metaData.bound;
+  let action = function (): Promise<T> {
+    // $FlowFixMe[method-unbinding]
+    const args = Array.prototype.slice.call(arguments);
+    const p = bound;
+    if (!p) {
+      return callServer(id, args);
+    }
+    if (p.status === 'fulfilled') {
+      const boundArgs = p.value;
+      return callServer(id, boundArgs.concat(args));
+    }
+    // Since this is a fake Promise whose .then doesn't chain, we have to wrap it.
+    // TODO: Remove the wrapper once that's fixed.
+    return ((Promise.resolve(p): any): Promise<Array<any>>).then(
+      function (boundArgs) {
+        return callServer(id, boundArgs.concat(args));
+      },
+    );
+  };
+  if (__DEV__) {
+    const location = metaData.location;
+    if (location) {
+      const functionName = metaData.name || '';
+      const [, filename, line, col] = location;
+      const env = metaData.env || 'Server';
+      const sourceMap =
+        findSourceMapURL == null ? null : findSourceMapURL(filename, env);
+      action = createFakeServerFunction(
+        functionName,
+        filename,
+        sourceMap,
+        line,
+        col,
+        env,
+        action,
+      );
+    }
+  }
+  registerServerReference(action, {id, bound}, encodeFormAction);
+  return action;
+}
+
+// This matches either of these V8 formats.
+//     at name (filename:0:0)
+//     at filename:0:0
+//     at async filename:0:0
+const v8FrameRegExp =
+  /^ {3} at (?:(.+) \((.+):(\d+):(\d+)\)|(?:async )?(.+):(\d+):(\d+))$/;
+// This matches either of these JSC/SpiderMonkey formats.
+// name@filename:0:0
+// filename:0:0
+const jscSpiderMonkeyFrameRegExp = /(?:(.*)@)?(.*):(\d+):(\d+)/;
+
+function parseStackLocation(error: Error): null | ReactCallSite {
+  // This parsing is special in that we know that the calling function will always
+  // be a module that initializes the server action. We also need this part to work
+  // cross-browser so not worth a Config. It's DEV only so not super code size
+  // sensitive but also a non-essential feature.
+  let stack = error.stack;
+  if (stack.startsWith('Error: react-stack-top-frame\n')) {
+    // V8's default formatting prefixes with the error message which we
+    // don't want/need.
+    stack = stack.slice(29);
+  }
+  const endOfFirst = stack.indexOf('\n');
+  let secondFrame;
+  if (endOfFirst !== -1) {
+    // Skip the first frame.
+    const endOfSecond = stack.indexOf('\n', endOfFirst + 1);
+    if (endOfSecond === -1) {
+      secondFrame = stack.slice(endOfFirst + 1);
+    } else {
+      secondFrame = stack.slice(endOfFirst + 1, endOfSecond);
+    }
+  } else {
+    secondFrame = stack;
+  }
+
+  let parsed = v8FrameRegExp.exec(secondFrame);
+  if (!parsed) {
+    parsed = jscSpiderMonkeyFrameRegExp.exec(secondFrame);
+    if (!parsed) {
+      return null;
+    }
+  }
+
+  let name = parsed[1] || '';
+  if (name === '<anonymous>') {
+    name = '';
+  }
+  let filename = parsed[2] || parsed[5] || '';
+  if (filename === '<anonymous>') {
+    filename = '';
+  }
+  const line = +(parsed[3] || parsed[6]);
+  const col = +(parsed[4] || parsed[7]);
+
+  return [name, filename, line, col];
+}
+
 export function createServerReference<A: Iterable<any>, T>(
   id: ServerReferenceId,
   callServer: CallServerCallback,
   encodeFormAction?: EncodeFormActionCallback,
+  findSourceMapURL?: FindSourceMapURLCallback, // DEV-only
+  functionName?: string,
 ): (...A) => Promise<T> {
-  const proxy = function (): Promise<T> {
+  let action = function (): Promise<T> {
     // $FlowFixMe[method-unbinding]
     const args = Array.prototype.slice.call(arguments);
     return callServer(id, args);
   };
-  registerServerReference(proxy, {id, bound: null}, encodeFormAction);
-  return proxy;
+  if (__DEV__) {
+    // Let's see if we can find a source map for the file which contained the
+    // server action. We extract it from the runtime so that it's resilient to
+    // multiple passes of compilation as long as we can find the final source map.
+    const location = parseStackLocation(new Error('react-stack-top-frame'));
+    if (location !== null) {
+      const [, filename, line, col] = location;
+      // While the environment that the Server Reference points to can be
+      // in any environment, what matters here is where the compiled source
+      // is from and that's in the currently executing environment. We hard
+      // code that as the value "Client" in case the findSourceMapURL helper
+      // needs it.
+      const env = 'Client';
+      const sourceMap =
+        findSourceMapURL == null ? null : findSourceMapURL(filename, env);
+      action = createFakeServerFunction(
+        functionName || '',
+        filename,
+        sourceMap,
+        line,
+        col,
+        env,
+        action,
+      );
+    }
+  }
+  registerServerReference(action, {id, bound: null}, encodeFormAction);
+  return action;
 }

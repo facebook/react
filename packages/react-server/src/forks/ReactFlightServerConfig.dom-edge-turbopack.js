@@ -9,7 +9,7 @@
 import type {Request} from 'react-server/src/ReactFlightServer';
 import type {ReactComponentInfo} from 'shared/ReactTypes';
 
-export * from 'react-server-dom-turbopack/src/ReactFlightServerConfigTurbopackBundler';
+export * from 'react-server-dom-turbopack/src/server/ReactFlightServerConfigTurbopackBundler';
 export * from 'react-dom-bindings/src/server/ReactFlightServerConfigDOM';
 
 // For now, we get this from the global scope, but this will likely move to a module.
@@ -35,4 +35,7 @@ export const createAsyncHook: HookCallbacks => AsyncHook =
       };
 export const executionAsyncId: () => number =
   typeof async_hooks === 'object' ? async_hooks.executionAsyncId : (null: any);
+
 export * from '../ReactFlightServerConfigDebugNode';
+
+export * from '../ReactFlightStackConfigV8';

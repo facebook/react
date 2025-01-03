@@ -7,7 +7,7 @@ import {
   identity,
   makeObject_Primitives,
   useNoAlias,
-} from "shared-runtime";
+} from 'shared-runtime';
 
 /**
  * Here the scope for `obj` is pruned because it spans the `useNoAlias()` hook call.
@@ -29,7 +29,7 @@ function Foo() {
   useNoAlias(result, obj);
 
   if (shouldCaptureObj && result[0] !== obj) {
-    throw new Error("Unexpected");
+    throw new Error('Unexpected');
   }
   return result;
 }
@@ -71,10 +71,10 @@ function Foo() {
   const shouldCaptureObj = obj != null && CONST_TRUE;
   const t0 = shouldCaptureObj ? identity(obj) : null;
   let t1;
-  if ($[0] !== t0 || $[1] !== obj) {
+  if ($[0] !== obj || $[1] !== t0) {
     t1 = [t0, obj];
-    $[0] = t0;
-    $[1] = obj;
+    $[0] = obj;
+    $[1] = t0;
     $[2] = t1;
   } else {
     t1 = $[2];

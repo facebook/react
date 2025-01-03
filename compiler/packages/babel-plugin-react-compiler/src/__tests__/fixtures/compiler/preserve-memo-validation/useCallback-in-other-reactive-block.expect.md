@@ -3,8 +3,8 @@
 
 ```javascript
 // @validatePreserveExistingMemoizationGuarantees
-import { useCallback, useState } from "react";
-import { arrayPush } from "shared-runtime";
+import {useCallback, useState} from 'react';
+import {arrayPush} from 'shared-runtime';
 
 // useCallback-produced values can exist in nested reactive blocks, as long
 // as their reactive dependencies are a subset of depslist from source
@@ -22,7 +22,7 @@ function useFoo(minWidth, otherProp) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useFoo,
-  params: [2, "other"],
+  params: [2, 'other'],
 };
 
 ```
@@ -40,7 +40,7 @@ function useFoo(minWidth, otherProp) {
   const $ = _c(7);
   const [width] = useState(1);
   let t0;
-  if ($[0] !== width || $[1] !== minWidth || $[2] !== otherProp) {
+  if ($[0] !== minWidth || $[1] !== otherProp || $[2] !== width) {
     const x = [];
     let t1;
     if ($[4] !== minWidth || $[5] !== width) {
@@ -55,9 +55,9 @@ function useFoo(minWidth, otherProp) {
 
     arrayPush(x, otherProp);
     t0 = [style, x];
-    $[0] = width;
-    $[1] = minWidth;
-    $[2] = otherProp;
+    $[0] = minWidth;
+    $[1] = otherProp;
+    $[2] = width;
     $[3] = t0;
   } else {
     t0 = $[3];

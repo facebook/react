@@ -2,20 +2,16 @@
 ## Input
 
 ```javascript
-import * as sharedRuntime from "shared-runtime";
+import * as sharedRuntime from 'shared-runtime';
 
-function Component({
-  something,
-}: {
-  something: { StaticText1: React.ElementType };
-}) {
+function Component({something}: {something: {StaticText1: React.ElementType}}) {
   const Foo = something.StaticText1;
   return () => <Foo />;
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ something: sharedRuntime }],
+  params: [{something: sharedRuntime}],
 };
 
 ```
@@ -29,7 +25,6 @@ import * as sharedRuntime from "shared-runtime";
 function Component(t0) {
   const $ = _c(2);
   const { something } = t0;
-
   const Foo = something.StaticText1;
   let t1;
   if ($[0] !== Foo) {

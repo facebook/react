@@ -1,6 +1,6 @@
 // @compilationMode(infer)
-import { useEffect, useMemo, useState } from "react";
-import { ValidateMemoization } from "shared-runtime";
+import {useEffect, useMemo, useState} from 'react';
+import {ValidateMemoization} from 'shared-runtime';
 
 let pretendConst = 0;
 
@@ -23,7 +23,7 @@ function Component() {
 
   // In production mode (no @enableResetCacheOnSourceFileChanges) memo caches are not
   // reset unless the deps change
-  const value = useMemo(() => [{ pretendConst }], []);
+  const value = useMemo(() => [{pretendConst}], []);
 
   return <ValidateMemoization inputs={[]} output={value} />;
 }

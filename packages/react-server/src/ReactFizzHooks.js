@@ -31,15 +31,16 @@ import {
   readPreviousThenable,
 } from './ReactFizzThenable';
 
-import {makeId, NotPendingTransition} from './ReactFizzConfig';
+import {
+  makeId,
+  NotPendingTransition,
+  supportsClientAPIs,
+} from './ReactFizzConfig';
 import {createFastHash} from './ReactServerStreamConfig';
 
 import {
-  enableCache,
   enableUseEffectEventHook,
-  enableUseMemoCacheHook,
-  enableAsyncActions,
-  enableUseDeferredValueInitialArg,
+  enableUseResourceEffectHook,
 } from 'shared/ReactFeatureFlags';
 import is from 'shared/objectIs';
 import {
@@ -566,11 +567,7 @@ function useSyncExternalStore<T>(
 
 function useDeferredValue<T>(value: T, initialValue?: T): T {
   resolveCurrentlyRenderingComponent();
-  if (enableUseDeferredValueInitialArg) {
-    return initialValue !== undefined ? initialValue : value;
-  } else {
-    return value;
-  }
+  return initialValue !== undefined ? initialValue : value;
 }
 
 function unsupportedStartTransition() {
@@ -793,7 +790,7 @@ function useCacheRefresh(): <T>(?() => T, ?T) => void {
   return unsupportedRefresh;
 }
 
-function useMemoCache(size: number): Array<any> {
+function useMemoCache(size: number): Array<mixed> {
   const data = new Array<any>(size);
   for (let i = 0; i < size; i++) {
     data[i] = REACT_MEMO_CACHE_SENTINEL;
@@ -803,46 +800,74 @@ function useMemoCache(size: number): Array<any> {
 
 function noop(): void {}
 
-export const HooksDispatcher: Dispatcher = {
-  readContext,
-  use,
-  useContext,
-  useMemo,
-  useReducer,
-  useRef,
-  useState,
-  useInsertionEffect: noop,
-  useLayoutEffect: noop,
-  useCallback,
-  // useImperativeHandle is not run in the server environment
-  useImperativeHandle: noop,
-  // Effects are not run in the server environment.
-  useEffect: noop,
-  // Debugging effect
-  useDebugValue: noop,
-  useDeferredValue,
-  useTransition,
-  useId,
-  // Subscriptions are not setup in a server environment.
-  useSyncExternalStore,
-};
-
-if (enableCache) {
-  HooksDispatcher.useCacheRefresh = useCacheRefresh;
+function clientHookNotSupported() {
+  throw new Error(
+    'Cannot use state or effect Hooks in renderToHTML because ' +
+      'this component will never be hydrated.',
+  );
 }
+
+export const HooksDispatcher: Dispatcher = supportsClientAPIs
+  ? {
+      readContext,
+      use,
+      useContext,
+      useMemo,
+      useReducer,
+      useRef,
+      useState,
+      useInsertionEffect: noop,
+      useLayoutEffect: noop,
+      useCallback,
+      // useImperativeHandle is not run in the server environment
+      useImperativeHandle: noop,
+      // Effects are not run in the server environment.
+      useEffect: noop,
+      // Debugging effect
+      useDebugValue: noop,
+      useDeferredValue,
+      useTransition,
+      useId,
+      // Subscriptions are not setup in a server environment.
+      useSyncExternalStore,
+      useOptimistic,
+      useActionState,
+      useFormState: useActionState,
+      useHostTransitionStatus,
+    }
+  : {
+      readContext,
+      use,
+      useContext,
+      useMemo,
+      useReducer: clientHookNotSupported,
+      useRef: clientHookNotSupported,
+      useState: clientHookNotSupported,
+      useInsertionEffect: clientHookNotSupported,
+      useLayoutEffect: clientHookNotSupported,
+      useCallback,
+      useImperativeHandle: clientHookNotSupported,
+      useEffect: clientHookNotSupported,
+      useDebugValue: noop,
+      useDeferredValue: clientHookNotSupported,
+      useTransition: clientHookNotSupported,
+      useId,
+      useSyncExternalStore: clientHookNotSupported,
+      useOptimistic,
+      useActionState,
+      useFormState: useActionState,
+      useHostTransitionStatus,
+      useMemoCache,
+      useCacheRefresh,
+    };
+
 if (enableUseEffectEventHook) {
   HooksDispatcher.useEffectEvent = useEffectEvent;
 }
-if (enableUseMemoCacheHook) {
-  HooksDispatcher.useMemoCache = useMemoCache;
-}
-if (enableAsyncActions) {
-  HooksDispatcher.useHostTransitionStatus = useHostTransitionStatus;
-}
-if (enableAsyncActions) {
-  HooksDispatcher.useOptimistic = useOptimistic;
-  HooksDispatcher.useFormState = useActionState;
-  HooksDispatcher.useActionState = useActionState;
+if (enableUseResourceEffectHook) {
+  HooksDispatcher.useResourceEffect = supportsClientAPIs
+    ? noop
+    : clientHookNotSupported;
 }
 
 export let currentResumableState: null | ResumableState = (null: any);

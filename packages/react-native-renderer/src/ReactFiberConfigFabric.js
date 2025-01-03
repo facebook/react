@@ -48,7 +48,28 @@ const {
   unstable_getCurrentEventPriority: fabricGetCurrentEventPriority,
 } = nativeFabricUIManager;
 
-import {passChildrenWhenCloningPersistedNodes} from 'shared/ReactFeatureFlags';
+import {getClosestInstanceFromNode} from './ReactFabricComponentTree';
+
+import {
+  getInspectorDataForViewTag,
+  getInspectorDataForViewAtPoint,
+  getInspectorDataForInstance,
+} from './ReactNativeFiberInspector';
+
+import {
+  enableFabricCompleteRootInCommitPhase,
+  passChildrenWhenCloningPersistedNodes,
+} from 'shared/ReactFeatureFlags';
+import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
+import type {ReactContext} from 'shared/ReactTypes';
+
+export {default as rendererVersion} from 'shared/ReactVersion'; // TODO: Consider exporting the react-native version.
+export const rendererPackageName = 'react-native-renderer';
+export const extraDevToolsConfig = {
+  getInspectorDataForInstance,
+  getInspectorDataForViewTag,
+  getInspectorDataForViewAtPoint,
+};
 
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 
@@ -351,6 +372,16 @@ export function resolveUpdatePriority(): EventPriority {
   return DefaultEventPriority;
 }
 
+export function trackSchedulerEvent(): void {}
+
+export function resolveEventType(): null | string {
+  return null;
+}
+
+export function resolveEventTimeStamp(): number {
+  return -1.1;
+}
+
 export function shouldAttemptEagerTransition(): boolean {
   return false;
 }
@@ -469,7 +500,9 @@ export function finalizeContainerChildren(
   container: Container,
   newChildren: ChildSet,
 ): void {
-  completeRoot(container, newChildren);
+  if (!enableFabricCompleteRootInCommitPhase) {
+    completeRoot(container, newChildren);
+  }
 }
 
 export function replaceContainerChildren(
@@ -477,11 +510,12 @@ export function replaceContainerChildren(
   newChildren: ChildSet,
 ): void {
   // Noop - children will be replaced in finalizeContainerChildren
+  if (enableFabricCompleteRootInCommitPhase) {
+    completeRoot(container, newChildren);
+  }
 }
 
-export function getInstanceFromNode(node: any): empty {
-  throw new Error('Not yet implemented.');
-}
+export {getClosestInstanceFromNode as getInstanceFromNode};
 
 export function beforeActiveInstanceBlur(
   internalInstanceHandle: InternalInstanceHandle,
@@ -522,6 +556,14 @@ export function waitForCommitToBeReady(): null {
 }
 
 export const NotPendingTransition: TransitionStatus = null;
+export const HostTransitionContext: ReactContext<TransitionStatus> = {
+  $$typeof: REACT_CONTEXT_TYPE,
+  Provider: (null: any),
+  Consumer: (null: any),
+  _currentValue: NotPendingTransition,
+  _currentValue2: NotPendingTransition,
+  _threadCount: 0,
+};
 
 export type FormInstance = Instance;
 export function resetFormInstance(form: Instance): void {}

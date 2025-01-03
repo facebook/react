@@ -1,7 +1,7 @@
-import { createHookWrapper, mutate } from "shared-runtime";
+import {createHookWrapper, mutate} from 'shared-runtime';
 
 function useHook(a) {
-  const x = { a };
+  const x = {a};
   let obj = {
     method() {
       mutate(x);
@@ -13,5 +13,5 @@ function useHook(a) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: createHookWrapper(useHook),
-  params: [{ x: 1 }],
+  params: [{x: 1}],
 };

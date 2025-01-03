@@ -12,8 +12,10 @@ import {
   PrunedReactiveScopeBlock,
   ReactiveFunction,
   isPrimitiveType,
-} from "../HIR/HIR";
-import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
+  isUseRefType,
+  Identifier,
+} from '../HIR/HIR';
+import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
 
 class Visitor extends ReactiveFunctionVisitor<Set<IdentifierId>> {
   /*
@@ -23,7 +25,7 @@ class Visitor extends ReactiveFunctionVisitor<Set<IdentifierId>> {
   override visitLValue(
     id: InstructionId,
     lvalue: Place,
-    state: Set<IdentifierId>
+    state: Set<IdentifierId>,
   ): void {
     this.visitPlace(id, lvalue, state);
   }
@@ -36,7 +38,7 @@ class Visitor extends ReactiveFunctionVisitor<Set<IdentifierId>> {
   override visitPlace(
     _id: InstructionId,
     place: Place,
-    state: Set<IdentifierId>
+    state: Set<IdentifierId>,
   ): void {
     if (place.reactive) {
       state.add(place.identifier.id);
@@ -45,24 +47,32 @@ class Visitor extends ReactiveFunctionVisitor<Set<IdentifierId>> {
 
   override visitPrunedScope(
     scopeBlock: PrunedReactiveScopeBlock,
-    state: Set<IdentifierId>
+    state: Set<IdentifierId>,
   ): void {
     this.traversePrunedScope(scopeBlock, state);
 
     for (const [id, decl] of scopeBlock.scope.declarations) {
-      if (!isPrimitiveType(decl.identifier)) {
+      if (
+        !isPrimitiveType(decl.identifier) &&
+        !isStableRefType(decl.identifier, state)
+      ) {
         state.add(id);
       }
     }
   }
 }
-
+function isStableRefType(
+  identifier: Identifier,
+  reactiveIdentifiers: Set<IdentifierId>,
+): boolean {
+  return isUseRefType(identifier) && !reactiveIdentifiers.has(identifier.id);
+}
 /*
  * Computes a set of identifiers which are reactive, using the analysis previously performed
  * in `InferReactivePlaces`.
  */
 export function collectReactiveIdentifiers(
-  fn: ReactiveFunction
+  fn: ReactiveFunction,
 ): Set<IdentifierId> {
   const visitor = new Visitor();
   const state = new Set<IdentifierId>();

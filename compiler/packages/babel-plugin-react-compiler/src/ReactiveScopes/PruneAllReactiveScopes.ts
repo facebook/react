@@ -9,12 +9,12 @@ import {
   ReactiveFunction,
   ReactiveScopeBlock,
   ReactiveStatement,
-} from "../HIR/HIR";
+} from '../HIR/HIR';
 import {
   ReactiveFunctionTransform,
   Transformed,
   visitReactiveFunction,
-} from "./visitors";
+} from './visitors';
 
 /*
  * Removes *all* reactive scopes. Intended for experimentation only, to allow
@@ -28,9 +28,9 @@ export function pruneAllReactiveScopes(fn: ReactiveFunction): void {
 class Transform extends ReactiveFunctionTransform<void> {
   override transformScope(
     scopeBlock: ReactiveScopeBlock,
-    state: void
+    state: void,
   ): Transformed<ReactiveStatement> {
     this.visitScope(scopeBlock, state);
-    return { kind: "replace-many", value: scopeBlock.instructions };
+    return {kind: 'replace-many', value: scopeBlock.instructions};
   }
 }

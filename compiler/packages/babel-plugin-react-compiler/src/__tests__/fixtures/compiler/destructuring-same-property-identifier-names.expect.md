@@ -2,11 +2,11 @@
 ## Input
 
 ```javascript
-import { identity } from "shared-runtime";
+import {identity} from 'shared-runtime';
 
 function Component(props) {
   const {
-    x: { destructured },
+    x: {destructured},
     sameName: renamed,
   } = props;
   const sameName = identity(destructured);
@@ -16,7 +16,7 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ x: { destructured: 0 }, sameName: 2 }],
+  params: [{x: {destructured: 0}, sameName: 2}],
 };
 
 ```
@@ -41,10 +41,10 @@ function Component(props) {
   }
   const sameName = t1;
   let t2;
-  if ($[2] !== sameName || $[3] !== renamed) {
+  if ($[2] !== renamed || $[3] !== sameName) {
     t2 = [sameName, renamed];
-    $[2] = sameName;
-    $[3] = renamed;
+    $[2] = renamed;
+    $[3] = sameName;
     $[4] = t2;
   } else {
     t2 = $[4];

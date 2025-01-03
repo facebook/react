@@ -1,4 +1,4 @@
-import { makeObject_Primitives, mutateAndReturn, toJSON } from "shared-runtime";
+import {makeObject_Primitives, mutateAndReturn, toJSON} from 'shared-runtime';
 
 function Component(_props) {
   const collection = [makeObject_Primitives()];

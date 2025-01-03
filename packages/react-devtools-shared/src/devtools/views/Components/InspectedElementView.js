@@ -22,7 +22,7 @@ import InspectedElementStyleXPlugin from './InspectedElementStyleXPlugin';
 import InspectedElementSuspenseToggle from './InspectedElementSuspenseToggle';
 import NativeStyleEditor from './NativeStyleEditor';
 import ElementBadges from './ElementBadges';
-import {useHighlightNativeElement} from '../hooks';
+import {useHighlightHostInstance} from '../hooks';
 import {enableStyleXFeatures} from 'react-devtools-feature-flags';
 import {logEvent} from 'react-devtools-shared/src/Logger';
 import InspectedElementSourcePanel from './InspectedElementSourcePanel';
@@ -71,71 +71,87 @@ export default function InspectedElementView({
   return (
     <Fragment>
       <div className={styles.InspectedElement}>
-        <div className={styles.InspectedElementBadgesContainer}>
+        <div className={styles.InspectedElementSection}>
           <InspectedElementBadges
             hocDisplayNames={element.hocDisplayNames}
             compiledWithForget={element.compiledWithForget}
           />
         </div>
 
-        <InspectedElementPropsTree
-          bridge={bridge}
-          element={element}
-          inspectedElement={inspectedElement}
-          store={store}
-        />
-
-        <InspectedElementSuspenseToggle
-          bridge={bridge}
-          inspectedElement={inspectedElement}
-          store={store}
-        />
-
-        <InspectedElementStateTree
-          bridge={bridge}
-          element={element}
-          inspectedElement={inspectedElement}
-          store={store}
-        />
-
-        <InspectedElementHooksTree
-          bridge={bridge}
-          element={element}
-          hookNames={hookNames}
-          inspectedElement={inspectedElement}
-          parseHookNames={parseHookNames}
-          store={store}
-          toggleParseHookNames={toggleParseHookNames}
-        />
-
-        <InspectedElementContextTree
-          bridge={bridge}
-          element={element}
-          inspectedElement={inspectedElement}
-          store={store}
-        />
-
-        {enableStyleXFeatures && (
-          <InspectedElementStyleXPlugin
+        <div className={styles.InspectedElementSection}>
+          <InspectedElementPropsTree
             bridge={bridge}
             element={element}
             inspectedElement={inspectedElement}
             store={store}
           />
+        </div>
+
+        <div className={styles.InspectedElementSection}>
+          <InspectedElementSuspenseToggle
+            bridge={bridge}
+            inspectedElement={inspectedElement}
+            store={store}
+          />
+        </div>
+
+        <div className={styles.InspectedElementSection}>
+          <InspectedElementStateTree
+            bridge={bridge}
+            element={element}
+            inspectedElement={inspectedElement}
+            store={store}
+          />
+        </div>
+
+        <div className={styles.InspectedElementSection}>
+          <InspectedElementHooksTree
+            bridge={bridge}
+            element={element}
+            hookNames={hookNames}
+            inspectedElement={inspectedElement}
+            parseHookNames={parseHookNames}
+            store={store}
+            toggleParseHookNames={toggleParseHookNames}
+          />
+        </div>
+
+        <div className={styles.InspectedElementSection}>
+          <InspectedElementContextTree
+            bridge={bridge}
+            element={element}
+            inspectedElement={inspectedElement}
+            store={store}
+          />
+        </div>
+
+        {enableStyleXFeatures && (
+          <div className={styles.InspectedElementSection}>
+            <InspectedElementStyleXPlugin
+              bridge={bridge}
+              element={element}
+              inspectedElement={inspectedElement}
+              store={store}
+            />
+          </div>
         )}
 
-        <InspectedElementErrorsAndWarningsTree
-          bridge={bridge}
-          element={element}
-          inspectedElement={inspectedElement}
-          store={store}
-        />
+        <div className={styles.InspectedElementSection}>
+          <InspectedElementErrorsAndWarningsTree
+            bridge={bridge}
+            element={element}
+            inspectedElement={inspectedElement}
+            store={store}
+          />
+        </div>
 
-        <NativeStyleEditor />
+        <div className={styles.InspectedElementSection}>
+          <NativeStyleEditor />
+        </div>
 
         {showRenderedBy && (
           <div
-            className={styles.Owners}
+            className={styles.InspectedElementSection}
             data-testname="InspectedElementView-Owners">
             <div className={styles.OwnersHeader}>rendered by</div>
 
@@ -162,10 +178,12 @@ export default function InspectedElementView({
         )}
 
         {source != null && (
-          <InspectedElementSourcePanel
-            source={source}
-            symbolicatedSourcePromise={symbolicatedSourcePromise}
-          />
+          <div className={styles.InspectedElementSection}>
+            <InspectedElementSourcePanel
+              source={source}
+              symbolicatedSourcePromise={symbolicatedSourcePromise}
+            />
+          </div>
         )}
       </div>
     </Fragment>
@@ -188,8 +206,8 @@ function OwnerView({
   isInStore,
 }: OwnerViewProps) {
   const dispatch = useContext(TreeDispatcherContext);
-  const {highlightNativeElement, clearHighlightNativeElement} =
-    useHighlightNativeElement();
+  const {highlightHostInstance, clearHighlightHostInstance} =
+    useHighlightHostInstance();
 
   const handleClick = useCallback(() => {
     logEvent({
@@ -208,8 +226,8 @@ function OwnerView({
       className={styles.OwnerButton}
       disabled={!isInStore}
       onClick={handleClick}
-      onMouseEnter={() => highlightNativeElement(id)}
-      onMouseLeave={clearHighlightNativeElement}>
+      onMouseEnter={() => highlightHostInstance(id)}
+      onMouseLeave={clearHighlightHostInstance}>
       <span className={styles.OwnerContent}>
         <span
           className={`${styles.Owner} ${isInStore ? '' : styles.NotInStore}`}

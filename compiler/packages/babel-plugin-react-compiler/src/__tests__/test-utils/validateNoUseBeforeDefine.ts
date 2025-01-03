@@ -6,21 +6,21 @@
  */
 
 // @ts-ignore-line
-import { Linter } from "../../../node_modules/eslint/lib/linter";
+import {Linter} from '../../../node_modules/eslint/lib/linter';
 // @ts-ignore-line
-import * as HermesESLint from "hermes-eslint";
+import * as HermesESLint from 'hermes-eslint';
 // @ts-ignore-line
-import { NoUseBeforeDefineRule } from "../..";
+import {NoUseBeforeDefineRule} from '../..';
 
 const ESLINT_CONFIG: Linter.Config = {
-  parser: "hermes-eslint",
+  parser: 'hermes-eslint',
   parserOptions: {
-    sourceType: "module",
+    sourceType: 'module',
   },
   rules: {
-    "custom-no-use-before-define": [
-      "error",
-      { variables: false, functions: false },
+    'custom-no-use-before-define': [
+      'error',
+      {variables: false, functions: false},
     ],
   },
 };
@@ -32,10 +32,10 @@ const ESLINT_CONFIG: Linter.Config = {
  * setting.
  */
 export default function validateNoUseBeforeDefine(
-  source: string
-): Array<{ line: number; column: number; message: string }> | null {
+  source: string,
+): Array<{line: number; column: number; message: string}> | null {
   const linter = new Linter();
-  linter.defineParser("hermes-eslint", HermesESLint);
-  linter.defineRule("custom-no-use-before-define", NoUseBeforeDefineRule);
+  linter.defineParser('hermes-eslint', HermesESLint);
+  linter.defineRule('custom-no-use-before-define', NoUseBeforeDefineRule);
   return linter.verify(source, ESLINT_CONFIG);
 }

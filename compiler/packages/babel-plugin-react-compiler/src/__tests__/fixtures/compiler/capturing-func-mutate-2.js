@@ -1,6 +1,6 @@
 function component(a, b) {
-  let y = { b };
-  let z = { a };
+  let y = {b};
+  let z = {a};
   let x = function () {
     z.a = 2;
     y.b;
@@ -11,6 +11,6 @@ function component(a, b) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: component,
-  params: [{ a: "val1", b: "val2" }],
+  params: [{a: 'val1', b: 'val2'}],
   isComponent: false,
 };

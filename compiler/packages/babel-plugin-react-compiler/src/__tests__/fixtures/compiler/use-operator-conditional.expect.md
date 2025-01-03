@@ -2,8 +2,8 @@
 ## Input
 
 ```javascript
-import { ValidateMemoization } from "shared-runtime";
-import { use, useMemo } from "react";
+import {ValidateMemoization} from 'shared-runtime';
+import {use, useMemo} from 'react';
 
 const FooContext = React.createContext(null);
 function Component(props) {
@@ -25,23 +25,23 @@ function Inner(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ cond: true, value: 42 }],
+  params: [{cond: true, value: 42}],
   sequentialRenders: [
     // change cond true->false
-    { cond: true, value: 42 },
-    { cond: false, value: 42 },
+    {cond: true, value: 42},
+    {cond: false, value: 42},
 
     // change value
-    { cond: false, value: null },
-    { cond: false, value: 42 },
+    {cond: false, value: null},
+    {cond: false, value: 42},
 
     // change cond false->true
-    { cond: true, value: 42 },
+    {cond: true, value: 42},
 
     // change cond true->false, change unobserved value, change cond false->true
-    { cond: false, value: 42 },
-    { cond: false, value: null },
-    { cond: true, value: 42 },
+    {cond: false, value: 42},
+    {cond: false, value: null},
+    {cond: true, value: 42},
   ],
 };
 
@@ -88,36 +88,34 @@ function Inner(props) {
   input;
   input;
   let t0;
-  const t1 = input;
-  let t2;
-  if ($[0] !== t1) {
-    t2 = [t1];
-    $[0] = t1;
-    $[1] = t2;
+  let t1;
+  if ($[0] !== input) {
+    t1 = [input];
+    $[0] = input;
+    $[1] = t1;
   } else {
-    t2 = $[1];
+    t1 = $[1];
   }
-  t0 = t2;
+  t0 = t1;
   const output = t0;
-  const t3 = input;
-  let t4;
-  if ($[2] !== t3) {
-    t4 = [t3];
-    $[2] = t3;
-    $[3] = t4;
+  let t2;
+  if ($[2] !== input) {
+    t2 = [input];
+    $[2] = input;
+    $[3] = t2;
   } else {
-    t4 = $[3];
+    t2 = $[3];
   }
-  let t5;
-  if ($[4] !== t4 || $[5] !== output) {
-    t5 = <ValidateMemoization inputs={t4} output={output} />;
-    $[4] = t4;
-    $[5] = output;
-    $[6] = t5;
+  let t3;
+  if ($[4] !== output || $[5] !== t2) {
+    t3 = <ValidateMemoization inputs={t2} output={output} />;
+    $[4] = output;
+    $[5] = t2;
+    $[6] = t3;
   } else {
-    t5 = $[6];
+    t3 = $[6];
   }
-  return t5;
+  return t3;
 }
 
 export const FIXTURE_ENTRYPOINT = {

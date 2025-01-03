@@ -5,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { NodePath } from "@babel/core";
-import * as t from "@babel/types";
-import { PluginOptions } from "./Options";
+import {NodePath} from '@babel/core';
+import * as t from '@babel/types';
+import {PluginOptions} from './Options';
 
 export function insertGatedFunctionDeclaration(
   fnPath: NodePath<
@@ -17,12 +17,12 @@ export function insertGatedFunctionDeclaration(
     | t.FunctionDeclaration
     | t.ArrowFunctionExpression
     | t.FunctionExpression,
-  gating: NonNullable<PluginOptions["gating"]>
+  gating: NonNullable<PluginOptions['gating']>,
 ): void {
   const gatingExpression = t.conditionalExpression(
     t.callExpression(t.identifier(gating.importSpecifierName), []),
     buildFunctionExpression(compiled),
-    buildFunctionExpression(fnPath.node)
+    buildFunctionExpression(fnPath.node),
   );
 
   /*
@@ -32,30 +32,30 @@ export function insertGatedFunctionDeclaration(
    * conditional expression
    */
   if (
-    fnPath.parentPath.node.type !== "ExportDefaultDeclaration" &&
-    fnPath.node.type === "FunctionDeclaration" &&
+    fnPath.parentPath.node.type !== 'ExportDefaultDeclaration' &&
+    fnPath.node.type === 'FunctionDeclaration' &&
     fnPath.node.id != null
   ) {
     fnPath.replaceWith(
-      t.variableDeclaration("const", [
+      t.variableDeclaration('const', [
         t.variableDeclarator(fnPath.node.id, gatingExpression),
-      ])
+      ]),
     );
   } else if (
-    fnPath.parentPath.node.type === "ExportDefaultDeclaration" &&
-    fnPath.node.type !== "ArrowFunctionExpression" &&
+    fnPath.parentPath.node.type === 'ExportDefaultDeclaration' &&
+    fnPath.node.type !== 'ArrowFunctionExpression' &&
     fnPath.node.id != null
   ) {
     fnPath.insertAfter(
-      t.exportDefaultDeclaration(t.identifier(fnPath.node.id.name))
+      t.exportDefaultDeclaration(t.identifier(fnPath.node.id.name)),
     );
     fnPath.parentPath.replaceWith(
-      t.variableDeclaration("const", [
+      t.variableDeclaration('const', [
         t.variableDeclarator(
           t.identifier(fnPath.node.id.name),
-          gatingExpression
+          gatingExpression,
         ),
-      ])
+      ]),
     );
   } else {
     fnPath.replaceWith(gatingExpression);
@@ -63,16 +63,19 @@ export function insertGatedFunctionDeclaration(
 }
 
 function buildFunctionExpression(
-  node: t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
+  node:
+    | t.FunctionDeclaration
+    | t.ArrowFunctionExpression
+    | t.FunctionExpression,
 ): t.ArrowFunctionExpression | t.FunctionExpression {
   if (
-    node.type === "ArrowFunctionExpression" ||
-    node.type === "FunctionExpression"
+    node.type === 'ArrowFunctionExpression' ||
+    node.type === 'FunctionExpression'
   ) {
     return node;
   } else {
     const fn: t.FunctionExpression = {
-      type: "FunctionExpression",
+      type: 'FunctionExpression',
       async: node.async,
       generator: node.generator,
       loc: node.loc ?? null,

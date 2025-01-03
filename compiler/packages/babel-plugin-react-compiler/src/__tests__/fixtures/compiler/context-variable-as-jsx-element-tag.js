@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { Stringify } from "shared-runtime";
+import {useMemo} from 'react';
+import {Stringify} from 'shared-runtime';
 
 function Component(props) {
   let Component = Stringify;
@@ -13,5 +13,5 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ name: "Sathya" }],
+  params: [{name: 'Sathya'}],
 };

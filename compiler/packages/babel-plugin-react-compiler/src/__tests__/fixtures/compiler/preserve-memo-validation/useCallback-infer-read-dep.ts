@@ -1,6 +1,6 @@
 // @validatePreserveExistingMemoizationGuarantees
-import { useCallback } from "react";
-import { sum } from "shared-runtime";
+import {useCallback} from 'react';
+import {sum} from 'shared-runtime';
 
 function useFoo() {
   const val = [1, 2, 3];

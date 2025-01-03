@@ -1,9 +1,9 @@
-import { jsx as _jsx } from "react/jsx-runtime";
-import { shallowCopy } from "shared-runtime";
+import {jsx as _jsx} from 'react/jsx-runtime';
+import {shallowCopy} from 'shared-runtime';
 
 function Component(props) {
-  const childprops = { style: { width: props.width } };
-  const element = _jsx("div", {
+  const childprops = {style: {width: props.width}};
+  const element = _jsx('div', {
     childprops: childprops,
     children: '"hello world"',
   });

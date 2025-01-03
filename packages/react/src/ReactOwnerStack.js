@@ -20,5 +20,5 @@ export function captureOwnerStack(): null | string {
   }
   // The current stack will be the owner stack if enableOwnerStacks is true
   // which it is always here. Otherwise it's the parent stack.
-  return getCurrentStack(null);
+  return getCurrentStack();
 }

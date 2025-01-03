@@ -3,7 +3,7 @@ function foo(a, b, c) {
     d,
     [
       {
-        e: { f },
+        e: {f},
         ...g
       },
     ],
@@ -20,6 +20,6 @@ function foo(a, b, c) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: foo,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: ['TodoAdd'],
+  isComponent: 'TodoAdd',
 };

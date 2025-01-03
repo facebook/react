@@ -11,10 +11,10 @@ import {
   ReactiveInstruction,
   ReactiveScopeBlock,
   isStableType,
-} from "../HIR";
-import { eachPatternOperand } from "../HIR/visitors";
-import { collectReactiveIdentifiers } from "./CollectReactiveIdentifiers";
-import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
+} from '../HIR';
+import {eachPatternOperand} from '../HIR/visitors';
+import {collectReactiveIdentifiers} from './CollectReactiveIdentifiers';
+import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
 
 /*
  * PropagateScopeDependencies infers dependencies without considering whether dependencies
@@ -32,19 +32,19 @@ type ReactiveIdentifiers = Set<IdentifierId>;
 class Visitor extends ReactiveFunctionVisitor<ReactiveIdentifiers> {
   override visitInstruction(
     instruction: ReactiveInstruction,
-    state: ReactiveIdentifiers
+    state: ReactiveIdentifiers,
   ): void {
     this.traverseInstruction(instruction, state);
 
-    const { lvalue, value } = instruction;
+    const {lvalue, value} = instruction;
     switch (value.kind) {
-      case "LoadLocal": {
+      case 'LoadLocal': {
         if (lvalue !== null && state.has(value.place.identifier.id)) {
           state.add(lvalue.identifier.id);
         }
         break;
       }
-      case "StoreLocal": {
+      case 'StoreLocal': {
         if (state.has(value.value.identifier.id)) {
           state.add(value.lvalue.place.identifier.id);
           if (lvalue !== null) {
@@ -53,7 +53,7 @@ class Visitor extends ReactiveFunctionVisitor<ReactiveIdentifiers> {
         }
         break;
       }
-      case "Destructure": {
+      case 'Destructure': {
         if (state.has(value.value.identifier.id)) {
           for (const lvalue of eachPatternOperand(value.lvalue.pattern)) {
             if (isStableType(lvalue.identifier)) {
@@ -67,7 +67,7 @@ class Visitor extends ReactiveFunctionVisitor<ReactiveIdentifiers> {
         }
         break;
       }
-      case "PropertyLoad": {
+      case 'PropertyLoad': {
         if (
           lvalue !== null &&
           state.has(value.object.identifier.id) &&
@@ -77,7 +77,7 @@ class Visitor extends ReactiveFunctionVisitor<ReactiveIdentifiers> {
         }
         break;
       }
-      case "ComputedLoad": {
+      case 'ComputedLoad': {
         if (
           lvalue !== null &&
           (state.has(value.object.identifier.id) ||
@@ -92,7 +92,7 @@ class Visitor extends ReactiveFunctionVisitor<ReactiveIdentifiers> {
 
   override visitScope(
     scopeBlock: ReactiveScopeBlock,
-    state: ReactiveIdentifiers
+    state: ReactiveIdentifiers,
   ): void {
     this.traverseScope(scopeBlock, state);
     for (const dep of scopeBlock.scope.dependencies) {

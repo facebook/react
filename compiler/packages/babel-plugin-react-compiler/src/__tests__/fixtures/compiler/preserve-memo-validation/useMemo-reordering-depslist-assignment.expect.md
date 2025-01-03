@@ -2,14 +2,14 @@
 ## Input
 
 ```javascript
-import { useMemo } from "react";
+import {useMemo} from 'react';
 
 function useFoo(arr1, arr2) {
   const x = [arr1];
 
   let y;
   return useMemo(() => {
-    return { y };
+    return {y};
   }, [((y = x.concat(arr2)), y)]);
 }
 
@@ -44,16 +44,15 @@ function useFoo(arr1, arr2) {
     y = $[2];
   }
   let t0;
-  const t1 = y;
-  let t2;
-  if ($[3] !== t1) {
-    t2 = { y: t1 };
-    $[3] = t1;
-    $[4] = t2;
+  let t1;
+  if ($[3] !== y) {
+    t1 = { y };
+    $[3] = y;
+    $[4] = t1;
   } else {
-    t2 = $[4];
+    t1 = $[4];
   }
-  t0 = t2;
+  t0 = t1;
   return t0;
 }
 

@@ -5,9 +5,9 @@
 function useHook() {
   if (a) return;
   if (b) {
-    console.log("true");
+    console.log('true');
   } else {
-    console.log("false");
+    console.log('false');
   }
   useState();
 }

@@ -6,7 +6,7 @@
 
 /* eslint-disable my-app/react-rule */
 function lowercasecomponent() {
-  "use forget";
+  'use forget';
   const x = [];
   // eslint-disable-next-line my-app/react-rule
   return <div>{x}</div>;
@@ -26,7 +26,7 @@ function lowercasecomponent() {
 
 InvalidReact: React Compiler has skipped optimizing this component because one or more React ESLint rules were disabled. React Compiler only works when your components follow all the rules of React, disabling them may result in unexpected or incorrect behavior. eslint-disable-next-line my-app/react-rule (7:7)
   4 | function lowercasecomponent() {
-  5 |   "use forget";
+  5 |   'use forget';
   6 |   const x = [];
 ```
           

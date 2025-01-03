@@ -5,6 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-const makeE2EConfig = require("../jest/makeE2EConfig");
+const makeE2EConfig = require('../jest/makeE2EConfig');
 
-module.exports = makeE2EConfig("e2e no forget", false);
+module.exports = makeE2EConfig('e2e no forget', false);

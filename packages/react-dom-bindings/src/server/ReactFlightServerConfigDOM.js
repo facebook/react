@@ -20,10 +20,6 @@ import type {
 // but it does not have any exports
 import './ReactDOMFlightServerHostDispatcher';
 
-// Used to distinguish these contexts from ones used in other renderers.
-// E.g. this can be used to distinguish legacy renderers from this modern one.
-export const isPrimaryRenderer = true;
-
 // We use zero to represent the absence of an explicit precedence because it is
 // small, smaller than how we encode undefined, and is unambiguous. We could use
 // a different tuple structure to encode this instead but this makes the runtime

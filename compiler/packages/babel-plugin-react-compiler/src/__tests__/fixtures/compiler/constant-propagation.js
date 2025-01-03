@@ -8,7 +8,7 @@ function foo() {
   const g = f - e;
 
   if (g) {
-    console.log("foo");
+    console.log('foo');
   }
 
   const h = g;

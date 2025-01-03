@@ -24,9 +24,7 @@ module.exports = {
   },
   snapshotSerializers: [require.resolve('jest-snapshot-serializer-raw')],
 
-  testSequencer: require.resolve('./jestSequencer'),
-
-  testEnvironment: 'jsdom',
+  testEnvironment: '<rootDir>/scripts/jest/ReactJSDOMEnvironment',
 
   testRunner: 'jest-circus/runner',
 };

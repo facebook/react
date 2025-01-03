@@ -5,131 +5,135 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type * as BabelCore from "@babel/core";
-import { transformFromAstSync } from "@babel/core";
+import type * as BabelCore from '@babel/core';
+import {transformFromAstSync} from '@babel/core';
 
-import * as BabelParser from "@babel/parser";
-import { NodePath } from "@babel/traverse";
-import * as t from "@babel/types";
-import assert from "assert";
+import * as BabelParser from '@babel/parser';
+import {NodePath} from '@babel/traverse';
+import * as t from '@babel/types';
+import assert from 'assert';
 import type {
   CompilationMode,
   Logger,
   LoggerEvent,
   PanicThresholdOptions,
   PluginOptions,
-} from "babel-plugin-react-compiler/src/Entrypoint";
-import type { Effect, ValueKind } from "babel-plugin-react-compiler/src/HIR";
-import type { parseConfigPragma as ParseConfigPragma } from "babel-plugin-react-compiler/src/HIR/Environment";
-import * as HermesParser from "hermes-parser";
-import invariant from "invariant";
-import path from "path";
-import prettier from "prettier";
-import SproutTodoFilter from "./SproutTodoFilter";
-import { isExpectError } from "./fixture-utils";
-export function parseLanguage(source: string): "flow" | "typescript" {
-  return source.indexOf("@flow") !== -1 ? "flow" : "typescript";
+  CompilerReactTarget,
+  CompilerPipelineValue,
+} from 'babel-plugin-react-compiler/src/Entrypoint';
+import type {Effect, ValueKind} from 'babel-plugin-react-compiler/src/HIR';
+import type {
+  Macro,
+  MacroMethod,
+  parseConfigPragmaForTests as ParseConfigPragma,
+} from 'babel-plugin-react-compiler/src/HIR/Environment';
+import * as HermesParser from 'hermes-parser';
+import invariant from 'invariant';
+import path from 'path';
+import prettier from 'prettier';
+import SproutTodoFilter from './SproutTodoFilter';
+import {isExpectError} from './fixture-utils';
+import {makeSharedRuntimeTypeProvider} from './sprout/shared-runtime-type-provider';
+export function parseLanguage(source: string): 'flow' | 'typescript' {
+  return source.indexOf('@flow') !== -1 ? 'flow' : 'typescript';
 }
 
+/**
+ * Parse react compiler plugin + environment options from test fixture. Note
+ * that although this primarily uses `Environment:parseConfigPragma`, it also
+ * has test fixture specific (i.e. not applicable to playground) parsing logic.
+ */
 function makePluginOptions(
   firstLine: string,
-  parseConfigPragmaFn: typeof ParseConfigPragma
-): [PluginOptions, Array<{ filename: string | null; event: LoggerEvent }>] {
+  parseConfigPragmaFn: typeof ParseConfigPragma,
+  debugIRLogger: (value: CompilerPipelineValue) => void,
+  EffectEnum: typeof Effect,
+  ValueKindEnum: typeof ValueKind,
+): [PluginOptions, Array<{filename: string | null; event: LoggerEvent}>] {
   let gating = null;
-  let enableEmitInstrumentForget = null;
-  let enableEmitFreeze = null;
-  let enableEmitHookGuards = null;
-  let compilationMode: CompilationMode = "all";
-  let runtimeModule = null;
-  let panicThreshold: PanicThresholdOptions = "all_errors";
+  let compilationMode: CompilationMode = 'all';
+  let panicThreshold: PanicThresholdOptions = 'all_errors';
   let hookPattern: string | null = null;
   // TODO(@mofeiZ) rewrite snap fixtures to @validatePreserveExistingMemo:false
   let validatePreserveExistingMemoizationGuarantees = false;
-  let enableChangeDetectionForDebugging = null;
-  let customMacros = null;
+  let customMacros: null | Array<Macro> = null;
+  let validateBlocklistedImports = null;
+  let enableFire = false;
+  let target: CompilerReactTarget = '19';
 
-  if (firstLine.indexOf("@compilationMode(annotation)") !== -1) {
+  if (firstLine.indexOf('@compilationMode(annotation)') !== -1) {
     assert(
-      compilationMode === "all",
-      "Cannot set @compilationMode(..) more than once"
+      compilationMode === 'all',
+      'Cannot set @compilationMode(..) more than once',
     );
-    compilationMode = "annotation";
+    compilationMode = 'annotation';
   }
-  if (firstLine.indexOf("@compilationMode(infer)") !== -1) {
+  if (firstLine.indexOf('@compilationMode(infer)') !== -1) {
     assert(
-      compilationMode === "all",
-      "Cannot set @compilationMode(..) more than once"
+      compilationMode === 'all',
+      'Cannot set @compilationMode(..) more than once',
     );
-    compilationMode = "infer";
+    compilationMode = 'infer';
   }
 
-  if (firstLine.includes("@gating")) {
+  if (firstLine.includes('@gating')) {
     gating = {
-      source: "ReactForgetFeatureFlag",
-      importSpecifierName: "isForgetEnabled_Fixtures",
+      source: 'ReactForgetFeatureFlag',
+      importSpecifierName: 'isForgetEnabled_Fixtures',
     };
   }
-  if (firstLine.includes("@instrumentForget")) {
-    enableEmitInstrumentForget = {
-      fn: {
-        source: "react-compiler-runtime",
-        importSpecifierName: "useRenderCounter",
-      },
-      gating: {
-        source: "react-compiler-runtime",
-        importSpecifierName: "shouldInstrument",
-      },
-      globalGating: "__DEV__",
-    };
+
+  const targetMatch = /@target="([^"]+)"/.exec(firstLine);
+  if (targetMatch) {
+    if (targetMatch[1] === 'donotuse_meta_internal') {
+      target = {
+        kind: targetMatch[1],
+        runtimeModule: 'react',
+      };
+    } else {
+      // @ts-ignore
+      target = targetMatch[1];
+    }
   }
-  if (firstLine.includes("@enableEmitFreeze")) {
-    enableEmitFreeze = {
-      source: "react-compiler-runtime",
-      importSpecifierName: "makeReadOnly",
-    };
-  }
-  if (firstLine.includes("@enableEmitHookGuards")) {
-    enableEmitHookGuards = {
-      source: "react-compiler-runtime",
-      importSpecifierName: "$dispatcherGuard",
-    };
-  }
-  const runtimeModuleMatch = /@runtimeModule="([^"]+)"/.exec(firstLine);
-  if (runtimeModuleMatch) {
-    runtimeModule = runtimeModuleMatch[1];
-  }
-  if (firstLine.includes("@panicThreshold(none)")) {
-    panicThreshold = "none";
+
+  if (firstLine.includes('@panicThreshold(none)')) {
+    panicThreshold = 'none';
   }
 
   let eslintSuppressionRules: Array<string> | null = null;
   const eslintSuppressionMatch = /@eslintSuppressionRules\(([^)]+)\)/.exec(
-    firstLine
+    firstLine,
   );
   if (eslintSuppressionMatch != null) {
-    eslintSuppressionRules = eslintSuppressionMatch[1].split("|");
+    eslintSuppressionRules = eslintSuppressionMatch[1].split('|');
   }
 
   let flowSuppressions: boolean = false;
-  if (firstLine.includes("@enableFlowSuppressions")) {
+  if (firstLine.includes('@enableFlowSuppressions')) {
     flowSuppressions = true;
   }
 
   let ignoreUseNoForget: boolean = false;
-  if (firstLine.includes("@ignoreUseNoForget")) {
+  if (firstLine.includes('@ignoreUseNoForget')) {
     ignoreUseNoForget = true;
   }
 
-  if (firstLine.includes("@validatePreserveExistingMemoizationGuarantees")) {
+  /**
+   * Snap currently runs all fixtures without `validatePreserveExistingMemo` as
+   * most fixtures are interested in compilation output, not whether the
+   * compiler was able to preserve existing memo.
+   *
+   * TODO: flip the default. `useMemo` is rare in test fixtures -- fixtures that
+   * use useMemo should be explicit about whether this flag is enabled
+   */
+  if (firstLine.includes('@validatePreserveExistingMemoizationGuarantees')) {
     validatePreserveExistingMemoizationGuarantees = true;
   }
 
-  if (firstLine.includes("@enableChangeDetectionForDebugging")) {
-    enableChangeDetectionForDebugging = {
-      source: "react-compiler-runtime",
-      importSpecifierName: "$structuralCheck",
-    };
+  if (firstLine.includes('@enableFire')) {
+    enableFire = true;
   }
+
   const hookPatternMatch = /@hookPattern:"([^"]+)"/.exec(firstLine);
   if (
     hookPatternMatch &&
@@ -137,9 +141,9 @@ function makePluginOptions(
     hookPatternMatch[1].trim().length > 0
   ) {
     hookPattern = hookPatternMatch[1].trim();
-  } else if (firstLine.includes("@hookPattern")) {
+  } else if (firstLine.includes('@hookPattern')) {
     throw new Error(
-      'Invalid @hookPattern:"..." pragma, must contain the prefix between balanced double quotes eg @hookPattern:"pattern"'
+      'Invalid @hookPattern:"..." pragma, must contain the prefix between balanced double quotes eg @hookPattern:"pattern"',
     );
   }
 
@@ -149,75 +153,77 @@ function makePluginOptions(
     customMacrosMatch.length > 1 &&
     customMacrosMatch[1].trim().length > 0
   ) {
-    customMacros = customMacrosMatch[1]
-      .split(" ")
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0);
+    const customMacrosStrs = customMacrosMatch[1]
+      .split(' ')
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+    if (customMacrosStrs.length > 0) {
+      customMacros = [];
+      for (const customMacroStr of customMacrosStrs) {
+        const props: Array<MacroMethod> = [];
+        const customMacroSplit = customMacroStr.split('.');
+        if (customMacroSplit.length > 0) {
+          for (const elt of customMacroSplit.slice(1)) {
+            if (elt === '*') {
+              props.push({type: 'wildcard'});
+            } else if (elt.length > 0) {
+              props.push({type: 'name', name: elt});
+            }
+          }
+          customMacros.push([customMacroSplit[0], props]);
+        }
+      }
+    }
   }
 
-  let logs: Array<{ filename: string | null; event: LoggerEvent }> = [];
-  let logger: Logger | null = null;
-  if (firstLine.includes("@logger")) {
-    logger = {
-      logEvent(filename: string | null, event: LoggerEvent): void {
-        logs.push({ filename, event });
-      },
-    };
+  const validateBlocklistedImportsMatch =
+    /@validateBlocklistedImports\(([^)]+)\)/.exec(firstLine);
+  if (
+    validateBlocklistedImportsMatch &&
+    validateBlocklistedImportsMatch.length > 1 &&
+    validateBlocklistedImportsMatch[1].trim().length > 0
+  ) {
+    validateBlocklistedImports = validateBlocklistedImportsMatch[1]
+      .split(' ')
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
   }
+
+  const logs: Array<{filename: string | null; event: LoggerEvent}> = [];
+  const logger: Logger = {
+    logEvent: firstLine.includes('@logger')
+      ? (filename, event) => {
+          logs.push({filename, event});
+        }
+      : () => {},
+    debugLogIRs: debugIRLogger,
+  };
 
   const config = parseConfigPragmaFn(firstLine);
   const options = {
     environment: {
       ...config,
-      customHooks: new Map([
-        [
-          "useFreeze",
-          {
-            valueKind: "frozen" as ValueKind,
-            effectKind: "freeze" as Effect,
-            transitiveMixedData: false,
-            noAlias: false,
-          },
-        ],
-        [
-          "useFragment",
-          {
-            valueKind: "frozen" as ValueKind,
-            effectKind: "freeze" as Effect,
-            transitiveMixedData: true,
-            noAlias: true,
-          },
-        ],
-        [
-          "useNoAlias",
-          {
-            valueKind: "mutable" as ValueKind,
-            effectKind: "read" as Effect,
-            transitiveMixedData: false,
-            noAlias: true,
-          },
-        ],
-      ]),
+      moduleTypeProvider: makeSharedRuntimeTypeProvider({
+        EffectEnum,
+        ValueKindEnum,
+      }),
       customMacros,
-      enableEmitFreeze,
-      enableEmitInstrumentForget,
-      enableEmitHookGuards,
       assertValidMutableRanges: true,
-      enableSharedRuntime__testonly: true,
       hookPattern,
       validatePreserveExistingMemoizationGuarantees,
-      enableChangeDetectionForDebugging,
+      validateBlocklistedImports,
+      enableFire,
     },
     compilationMode,
     logger,
     gating,
     panicThreshold,
     noEmit: false,
-    runtimeModule,
     eslintSuppressionRules,
     flowSuppressions,
     ignoreUseNoForget,
     enableReanimatedCheck: false,
+    target,
   };
   return [options, logs];
 }
@@ -225,38 +231,42 @@ function makePluginOptions(
 export function parseInput(
   input: string,
   filename: string,
-  language: "flow" | "typescript"
+  language: 'flow' | 'typescript',
 ): BabelCore.types.File {
   // Extract the first line to quickly check for custom test directives
-  if (language === "flow") {
+  if (language === 'flow') {
     return HermesParser.parse(input, {
       babel: true,
-      flow: "all",
+      flow: 'all',
       sourceFilename: filename,
-      sourceType: "module",
+      sourceType: 'module',
       enableExperimentalComponentSyntax: true,
     });
   } else {
     return BabelParser.parse(input, {
       sourceFilename: filename,
-      plugins: ["typescript", "jsx"],
-      sourceType: "module",
+      plugins: ['typescript', 'jsx'],
+      sourceType: 'module',
     });
   }
 }
 
 function getEvaluatorPresets(
-  language: "typescript" | "flow"
+  language: 'typescript' | 'flow',
 ): Array<BabelCore.PluginItem> {
   const presets: Array<BabelCore.PluginItem> = [
     {
-      plugins: ["babel-plugin-fbt", "babel-plugin-fbt-runtime"],
+      plugins: [
+        'babel-plugin-fbt',
+        'babel-plugin-fbt-runtime',
+        'babel-plugin-idx',
+      ],
     },
   ];
   presets.push(
-    language === "typescript"
+    language === 'typescript'
       ? [
-          "@babel/preset-typescript",
+          '@babel/preset-typescript',
           {
             /**
              * onlyRemoveTypeImports needs to be set as fbt imports
@@ -268,16 +278,16 @@ function getEvaluatorPresets(
             onlyRemoveTypeImports: true,
           },
         ]
-      : "@babel/preset-flow"
+      : '@babel/preset-flow',
   );
 
   presets.push({
-    plugins: ["@babel/plugin-syntax-jsx"],
+    plugins: ['@babel/plugin-syntax-jsx'],
   });
   presets.push(
-    ["@babel/preset-react", { throwIfNamespace: false }],
+    ['@babel/preset-react', {throwIfNamespace: false}],
     {
-      plugins: ["@babel/plugin-transform-modules-commonjs"],
+      plugins: ['@babel/plugin-transform-modules-commonjs'],
     },
     {
       plugins: [
@@ -285,16 +295,18 @@ function getEvaluatorPresets(
           return {
             visitor: {
               CallExpression(path: NodePath<t.CallExpression>) {
-                const { callee } = path.node;
-                if (callee.type === "Identifier" && callee.name === "require") {
+                const {callee} = path.node;
+                if (callee.type === 'Identifier' && callee.name === 'require') {
                   const arg = path.node.arguments[0];
-                  if (arg.type === "StringLiteral") {
+                  if (arg.type === 'StringLiteral') {
                     // rewrite to use relative import as eval happens in
                     // sprout/evaluator.ts
-                    if (arg.value === "shared-runtime") {
-                      arg.value = "./shared-runtime";
-                    } else if (arg.value === "ReactForgetFeatureFlag") {
-                      arg.value = "./ReactForgetFeatureFlag";
+                    if (arg.value === 'shared-runtime') {
+                      arg.value = './shared-runtime';
+                    } else if (arg.value === 'ReactForgetFeatureFlag') {
+                      arg.value = './ReactForgetFeatureFlag';
+                    } else if (arg.value === 'useEffectWrapper') {
+                      arg.value = './useEffectWrapper';
                     }
                   }
                 }
@@ -303,21 +315,21 @@ function getEvaluatorPresets(
           };
         },
       ],
-    }
+    },
   );
   return presets;
 }
 async function format(
   inputCode: string,
-  language: "typescript" | "flow"
+  language: 'typescript' | 'flow',
 ): Promise<string> {
   return await prettier.format(inputCode, {
     semi: true,
-    parser: language === "typescript" ? "babel-ts" : "flow",
+    parser: language === 'typescript' ? 'babel-ts' : 'flow',
   });
 }
-const TypescriptEvaluatorPresets = getEvaluatorPresets("typescript");
-const FlowEvaluatorPresets = getEvaluatorPresets("flow");
+const TypescriptEvaluatorPresets = getEvaluatorPresets('typescript');
+const FlowEvaluatorPresets = getEvaluatorPresets('flow');
 
 export type TransformResult = {
   forgetOutput: string;
@@ -333,42 +345,50 @@ export async function transformFixtureInput(
   fixturePath: string,
   parseConfigPragmaFn: typeof ParseConfigPragma,
   plugin: BabelCore.PluginObj,
-  includeEvaluator: boolean
-): Promise<
-  { kind: "ok"; value: TransformResult } | { kind: "err"; msg: string }
-> {
+  includeEvaluator: boolean,
+  debugIRLogger: (value: CompilerPipelineValue) => void,
+  EffectEnum: typeof Effect,
+  ValueKindEnum: typeof ValueKind,
+): Promise<{kind: 'ok'; value: TransformResult} | {kind: 'err'; msg: string}> {
   // Extract the first line to quickly check for custom test directives
-  const firstLine = input.substring(0, input.indexOf("\n"));
+  const firstLine = input.substring(0, input.indexOf('\n'));
 
   const language = parseLanguage(firstLine);
   // Preserve file extension as it determines typescript's babel transform
   // mode (e.g. stripping types, parsing rules for brackets)
   const filename =
-    path.basename(fixturePath) + (language === "typescript" ? ".ts" : "");
+    path.basename(fixturePath) + (language === 'typescript' ? '.ts' : '');
   const inputAst = parseInput(input, filename, language);
   // Give babel transforms an absolute path as relative paths get prefixed
   // with `cwd`, which is different across machines
-  const virtualFilepath = "/" + filename;
+  const virtualFilepath = '/' + filename;
 
   const presets =
-    language === "typescript"
+    language === 'typescript'
       ? TypescriptEvaluatorPresets
       : FlowEvaluatorPresets;
 
   /**
    * Get Forget compiled code
    */
-  const [options, logs] = makePluginOptions(firstLine, parseConfigPragmaFn);
+  const [options, logs] = makePluginOptions(
+    firstLine,
+    parseConfigPragmaFn,
+    debugIRLogger,
+    EffectEnum,
+    ValueKindEnum,
+  );
   const forgetResult = transformFromAstSync(inputAst, input, {
     filename: virtualFilepath,
     highlightCode: false,
     retainLines: true,
     plugins: [
       [plugin, options],
-      "babel-plugin-fbt",
-      "babel-plugin-fbt-runtime",
+      'babel-plugin-fbt',
+      'babel-plugin-fbt-runtime',
+      'babel-plugin-idx',
     ],
-    sourceType: "module",
+    sourceType: 'module',
     ast: includeEvaluator,
     cloneInputAst: includeEvaluator,
     configFile: false,
@@ -376,7 +396,7 @@ export async function transformFixtureInput(
   });
   invariant(
     forgetResult?.code != null,
-    "Expected BabelPluginReactForget to codegen successfully."
+    'Expected BabelPluginReactForget to codegen successfully.',
   );
   const forgetCode = forgetResult.code;
   let evaluatorCode = null;
@@ -390,7 +410,7 @@ export async function transformFixtureInput(
     try {
       invariant(
         forgetResult?.ast != null,
-        "Expected BabelPluginReactForget ast."
+        'Expected BabelPluginReactForget ast.',
       );
       const result = transformFromAstSync(forgetResult.ast, forgetCode, {
         presets,
@@ -400,16 +420,16 @@ export async function transformFixtureInput(
       });
       if (result?.code == null) {
         return {
-          kind: "err",
-          msg: "Unexpected error in forget transform pipeline - no code emitted",
+          kind: 'err',
+          msg: 'Unexpected error in forget transform pipeline - no code emitted',
         };
       } else {
         forgetEval = result.code;
       }
     } catch (e) {
       return {
-        kind: "err",
-        msg: "Unexpected error in Forget transform pipeline: " + e.message,
+        kind: 'err',
+        msg: 'Unexpected error in Forget transform pipeline: ' + e.message,
       };
     }
 
@@ -427,16 +447,16 @@ export async function transformFixtureInput(
 
       if (result?.code == null) {
         return {
-          kind: "err",
-          msg: "Unexpected error in non-forget transform pipeline - no code emitted",
+          kind: 'err',
+          msg: 'Unexpected error in non-forget transform pipeline - no code emitted',
         };
       } else {
         originalEval = result.code;
       }
     } catch (e) {
       return {
-        kind: "err",
-        msg: "Unexpected error in non-forget transform pipeline: " + e.message,
+        kind: 'err',
+        msg: 'Unexpected error in non-forget transform pipeline: ' + e.message,
       };
     }
     evaluatorCode = {
@@ -448,13 +468,13 @@ export async function transformFixtureInput(
   let formattedLogs = null;
   if (logs.length !== 0) {
     formattedLogs = logs
-      .map(({ event }) => {
+      .map(({event}) => {
         return JSON.stringify(event);
       })
-      .join("\n");
+      .join('\n');
   }
   return {
-    kind: "ok",
+    kind: 'ok',
     value: {
       forgetOutput,
       logs: formattedLogs,

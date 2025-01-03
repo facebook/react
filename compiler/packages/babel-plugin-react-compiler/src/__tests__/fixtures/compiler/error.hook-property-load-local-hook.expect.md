@@ -4,7 +4,7 @@
 ```javascript
 function useFoo() {}
 useFoo.useBar = function () {
-  return "foo";
+  return 'foo';
 };
 
 function Foo() {

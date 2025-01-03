@@ -14,7 +14,7 @@ import type {
   IntersectionObserverOptions,
   ObserveVisibleRectsCallback,
 } from 'react-reconciler/src/ReactTestSelectors';
-import type {ReactScopeInstance} from 'shared/ReactTypes';
+import type {ReactContext, ReactScopeInstance} from 'shared/ReactTypes';
 import type {AncestorInfoDev} from './validateDOMNesting';
 import type {FormStatus} from 'react-dom-bindings/src/shared/ReactDOMFormActions';
 import type {
@@ -26,11 +26,13 @@ import type {
   PreinitModuleScriptOptions,
 } from 'react-dom/src/shared/ReactDOMTypes';
 
-import {NotPending} from 'react-dom-bindings/src/shared/ReactDOMFormActions';
+import {NotPending} from '../shared/ReactDOMFormActions';
+
 import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostContext';
 
 import hasOwnProperty from 'shared/hasOwnProperty';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
+import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 
 export {
   setCurrentUpdatePriority,
@@ -89,8 +91,8 @@ import {
   enableCreateEventHandleAPI,
   enableScopeAPI,
   enableTrustedTypesIntegration,
-  enableAsyncActions,
   disableLegacyMode,
+  enableMoveBefore,
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
@@ -105,6 +107,10 @@ import {flushSyncWork as flushSyncWorkOnAllRoots} from 'react-reconciler/src/Rea
 import {requestFormReset as requestFormResetOnFiber} from 'react-reconciler/src/ReactFiberHooks';
 
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
+
+export {default as rendererVersion} from 'shared/ReactVersion';
+export const rendererPackageName = 'react-dom';
+export const extraDevToolsConfig = null;
 
 export type Type = string;
 export type Props = {
@@ -186,6 +192,8 @@ const SUSPENSE_PENDING_START_DATA = '$?';
 const SUSPENSE_FALLBACK_START_DATA = '$!';
 const FORM_STATE_IS_MATCHING = 'F!';
 const FORM_STATE_IS_NOT_MATCHING = 'F';
+
+const DOCUMENT_READY_STATE_COMPLETE = 'complete';
 
 const STYLE = 'style';
 
@@ -319,7 +327,7 @@ export function getPublicInstance(instance: Instance): Instance {
 
 export function prepareForCommit(containerInfo: Container): Object | null {
   eventsEnabled = ReactBrowserEventEmitterIsEnabled();
-  selectionInformation = getSelectionInformation();
+  selectionInformation = getSelectionInformation(containerInfo);
   let activeInstance = null;
   if (enableCreateEventHandleAPI) {
     const focusedElem = selectionInformation.focusedElem;
@@ -351,7 +359,7 @@ export function afterActiveInstanceBlur(): void {
 }
 
 export function resetAfterCommit(containerInfo: Container): void {
-  restoreSelection(selectionInformation);
+  restoreSelection(selectionInformation, containerInfo);
   ReactBrowserEventEmitterSetEnabled(eventsEnabled);
   eventsEnabled = null;
   selectionInformation = null;
@@ -519,6 +527,7 @@ export function appendInitialChild(
   parentInstance: Instance,
   child: Instance | TextInstance,
 ): void {
+  // Note: This should not use moveBefore() because initial are appended while disconnected.
   parentInstance.appendChild(child);
 }
 
@@ -600,6 +609,21 @@ export function shouldAttemptEagerTransition(): boolean {
   return false;
 }
 
+let schedulerEvent: void | Event = undefined;
+export function trackSchedulerEvent(): void {
+  schedulerEvent = window.event;
+}
+
+export function resolveEventType(): null | string {
+  const event = window.event;
+  return event && event !== schedulerEvent ? event.type : null;
+}
+
+export function resolveEventTimeStamp(): number {
+  const event = window.event;
+  return event && event !== schedulerEvent ? event.timeStamp : -1.1;
+}
+
 export const isPrimaryRenderer = true;
 export const warnsIfNotActing = true;
 // This initialization code may run even on server environments
@@ -616,9 +640,7 @@ const localRequestAnimationFrame =
     ? requestAnimationFrame
     : scheduleTimeout;
 
-export function getInstanceFromNode(node: HTMLElement): null | Object {
-  return getClosestInstanceFromNode(node) || null;
-}
+export {getClosestInstanceFromNode as getInstanceFromNode};
 
 export function preparePortalMount(portalInstance: Instance): void {
   listenToAllSupportedEvents(portalInstance);
@@ -650,9 +672,9 @@ export const scheduleMicrotask: any =
   typeof queueMicrotask === 'function'
     ? queueMicrotask
     : typeof localPromise !== 'undefined'
-    ? callback =>
-        localPromise.resolve(null).then(callback).catch(handleErrorInNextTick)
-    : scheduleTimeout; // TODO: Determine the best fallback here.
+      ? callback =>
+          localPromise.resolve(null).then(callback).catch(handleErrorInNextTick)
+      : scheduleTimeout; // TODO: Determine the best fallback here.
 
 function handleErrorInNextTick(error: any) {
   setTimeout(() => {
@@ -692,8 +714,19 @@ export function commitMount(
       }
       return;
     case 'img': {
+      // The technique here is to assign the src or srcSet property to cause the browser
+      // to issue a new load event. If it hasn't loaded yet it'll fire whenever the load actually completes.
+      // If it has already loaded we missed it so the second load will still be the first one that executes
+      // any associated onLoad props.
+      // Even if we have srcSet we prefer to reassign src. The reason is that Firefox does not trigger a new
+      // load event when only srcSet is assigned. Chrome will trigger a load event if either is assigned so we
+      // only need to assign one. And Safari just never triggers a new load event which means this technique
+      // is already a noop regardless of which properties are assigned. We should revisit if browsers update
+      // this heuristic in the future.
       if ((newProps: any).src) {
         ((domElement: any): HTMLImageElement).src = (newProps: any).src;
+      } else if ((newProps: any).srcSet) {
+        ((domElement: any): HTMLImageElement).srcset = (newProps: any).srcSet;
       }
       return;
     }
@@ -727,11 +760,22 @@ export function commitTextUpdate(
   textInstance.nodeValue = newText;
 }
 
+const supportsMoveBefore =
+  // $FlowFixMe[prop-missing]: We're doing the feature detection here.
+  enableMoveBefore &&
+  typeof window !== 'undefined' &&
+  typeof window.Node.prototype.moveBefore === 'function';
+
 export function appendChild(
   parentInstance: Instance,
   child: Instance | TextInstance,
 ): void {
-  parentInstance.appendChild(child);
+  if (supportsMoveBefore) {
+    // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
+    parentInstance.moveBefore(child, null);
+  } else {
+    parentInstance.appendChild(child);
+  }
 }
 
 export function appendChildToContainer(
@@ -769,7 +813,12 @@ export function insertBefore(
   child: Instance | TextInstance,
   beforeChild: Instance | TextInstance | SuspenseInstance,
 ): void {
-  parentInstance.insertBefore(child, beforeChild);
+  if (supportsMoveBefore) {
+    // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
+    parentInstance.moveBefore(child, beforeChild);
+  } else {
+    parentInstance.insertBefore(child, beforeChild);
+  }
 }
 
 export function insertInContainerBefore(
@@ -1090,7 +1139,9 @@ export function canHydrateInstance(
           } else if (
             rel !== anyProps.rel ||
             element.getAttribute('href') !==
-              (anyProps.href == null ? null : anyProps.href) ||
+              (anyProps.href == null || anyProps.href === ''
+                ? null
+                : anyProps.href) ||
             element.getAttribute('crossorigin') !==
               (anyProps.crossOrigin == null ? null : anyProps.crossOrigin) ||
             element.getAttribute('title') !==
@@ -1214,7 +1265,11 @@ export function isSuspenseInstancePending(instance: SuspenseInstance): boolean {
 export function isSuspenseInstanceFallback(
   instance: SuspenseInstance,
 ): boolean {
-  return instance.data === SUSPENSE_FALLBACK_START_DATA;
+  return (
+    instance.data === SUSPENSE_FALLBACK_START_DATA ||
+    (instance.data === SUSPENSE_PENDING_START_DATA &&
+      instance.ownerDocument.readyState === DOCUMENT_READY_STATE_COMPLETE)
+  );
 }
 
 export function getSuspenseInstanceFallbackErrorDetails(
@@ -1255,7 +1310,29 @@ export function registerSuspenseInstanceRetry(
   instance: SuspenseInstance,
   callback: () => void,
 ) {
-  instance._reactRetry = callback;
+  const ownerDocument = instance.ownerDocument;
+  if (
+    // The Fizz runtime must have put this boundary into client render or complete
+    // state after the render finished but before it committed. We need to call the
+    // callback now rather than wait
+    instance.data !== SUSPENSE_PENDING_START_DATA ||
+    // The boundary is still in pending status but the document has finished loading
+    // before we could register the event handler that would have scheduled the retry
+    // on load so we call teh callback now.
+    ownerDocument.readyState === DOCUMENT_READY_STATE_COMPLETE
+  ) {
+    callback();
+  } else {
+    // We're still in pending status and the document is still loading so we attach
+    // a listener to the document load even and expose the retry on the instance for
+    // the Fizz runtime to trigger if it ends up resolving this boundary
+    const listener = () => {
+      callback();
+      ownerDocument.removeEventListener('DOMContentLoaded', listener);
+    };
+    ownerDocument.addEventListener('DOMContentLoaded', listener);
+    instance._reactRetry = listener;
+  }
 }
 
 export function canHydrateFormStateMarker(
@@ -1302,9 +1379,8 @@ function getNextHydratable(node: ?Node) {
         nodeData === SUSPENSE_START_DATA ||
         nodeData === SUSPENSE_FALLBACK_START_DATA ||
         nodeData === SUSPENSE_PENDING_START_DATA ||
-        (enableAsyncActions &&
-          (nodeData === FORM_STATE_IS_MATCHING ||
-            nodeData === FORM_STATE_IS_NOT_MATCHING))
+        nodeData === FORM_STATE_IS_MATCHING ||
+        nodeData === FORM_STATE_IS_NOT_MATCHING
       ) {
         break;
       }
@@ -2910,7 +2986,7 @@ export function hydrateHoistable(
           const node = nodes[i];
           if (
             node.getAttribute('href') !==
-              (props.href == null ? null : props.href) ||
+              (props.href == null || props.href === '' ? null : props.href) ||
             node.getAttribute('rel') !==
               (props.rel == null ? null : props.rel) ||
             node.getAttribute('title') !==
@@ -3112,10 +3188,9 @@ export function isHostHoistableType(
             console.error(
               'Cannot render a <style> outside the main document without knowing its precedence and a unique href key.' +
                 ' React can hoist and deduplicate <style> tags if you provide a `precedence` prop along with an `href` prop that' +
-                ' does not conflic with the `href` values used in any other hoisted <style> or <link rel="stylesheet" ...> tags. ' +
+                ' does not conflict with the `href` values used in any other hoisted <style> or <link rel="stylesheet" ...> tags. ' +
                 ' Note that hoisting <style> tags is considered an advanced feature that most will not use directly.' +
-                ' Consider moving the <style> tag to the <head> or consider adding a `precedence="default"` and `href="some unique resource identifier"`, or move the <style>' +
-                ' to the <style> tag.',
+                ' Consider moving the <style> tag to the <head> or consider adding a `precedence="default"` and `href="some unique resource identifier"`.',
             );
           }
         }
@@ -3376,7 +3451,7 @@ export function suspendResource(
   }
 }
 
-export function waitForCommitToBeReady(): null | (Function => Function) {
+export function waitForCommitToBeReady(): null | ((() => void) => () => void) {
   if (suspendedState === null) {
     throw new Error(
       'Internal React Error: suspendedState null when it was expected to exists. Please report this as a React bug.',
@@ -3505,7 +3580,7 @@ function insertStylesheetIntoRoot(
     for (let i = 0; i < nodes.length; i++) {
       const node = nodes[i];
       if (
-        node.nodeName === 'link' ||
+        node.nodeName === 'LINK' ||
         // We omit style tags with media="not all" because they are not in the right position
         // and will be hoisted by the Fizz runtime imminently.
         node.getAttribute('media') !== 'not all'
@@ -3550,6 +3625,14 @@ function insertStylesheetIntoRoot(
 }
 
 export const NotPendingTransition: TransitionStatus = NotPending;
+export const HostTransitionContext: ReactContext<TransitionStatus> = {
+  $$typeof: REACT_CONTEXT_TYPE,
+  Provider: (null: any),
+  Consumer: (null: any),
+  _currentValue: NotPendingTransition,
+  _currentValue2: NotPendingTransition,
+  _threadCount: 0,
+};
 
 export type FormInstance = HTMLFormElement;
 export function resetFormInstance(form: FormInstance): void {

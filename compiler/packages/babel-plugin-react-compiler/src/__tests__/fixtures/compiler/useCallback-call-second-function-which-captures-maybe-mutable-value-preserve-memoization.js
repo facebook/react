@@ -1,11 +1,11 @@
 // @enablePreserveExistingMemoizationGuarantees
-import { useCallback } from "react";
+import {useCallback} from 'react';
 import {
   identity,
   logValue,
   makeObject_Primitives,
   useHook,
-} from "shared-runtime";
+} from 'shared-runtime';
 
 function Component(props) {
   const object = makeObject_Primitives();

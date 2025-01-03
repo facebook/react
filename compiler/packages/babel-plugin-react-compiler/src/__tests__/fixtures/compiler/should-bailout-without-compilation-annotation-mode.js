@@ -1,9 +1,9 @@
 // @gating @panicThreshold(none) @compilationMode(annotation)
-let someGlobal = "joe";
+let someGlobal = 'joe';
 
 function Component() {
-  "use forget";
-  someGlobal = "wat";
+  'use forget';
+  someGlobal = 'wat';
   return null;
 }
 

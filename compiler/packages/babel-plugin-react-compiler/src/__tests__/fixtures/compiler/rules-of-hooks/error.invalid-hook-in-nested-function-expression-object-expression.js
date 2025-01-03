@@ -1,6 +1,6 @@
 // @compilationMode(infer)
 function Component() {
-  "use memo";
+  'use memo';
   const f = () => {
     const x = {
       outer() {

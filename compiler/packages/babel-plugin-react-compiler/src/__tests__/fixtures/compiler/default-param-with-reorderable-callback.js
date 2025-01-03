@@ -1,4 +1,4 @@
-function Component(x = () => [-1, true, 42.0, "hello"]) {
+function Component(x = () => [-1, true, 42.0, 'hello']) {
   return x;
 }
 

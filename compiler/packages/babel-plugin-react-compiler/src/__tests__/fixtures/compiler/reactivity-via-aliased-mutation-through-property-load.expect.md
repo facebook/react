@@ -20,14 +20,14 @@ export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [],
   sequentialRenders: [
-    { input: true },
-    { input: true },
-    { input: false },
-    { input: false },
-    { input: true },
-    { input: false },
-    { input: true },
-    { input: false },
+    {input: true},
+    {input: true},
+    {input: false},
+    {input: false},
+    {input: true},
+    {input: false},
+    {input: true},
+    {input: false},
   ],
 };
 

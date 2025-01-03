@@ -5,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { visitReactiveFunction } from ".";
-import { InstructionId, Place, ReactiveFunction, ReactiveValue } from "../HIR";
-import { ReactiveFunctionVisitor } from "./visitors";
+import {visitReactiveFunction} from '.';
+import {InstructionId, Place, ReactiveFunction, ReactiveValue} from '../HIR';
+import {ReactiveFunctionVisitor} from './visitors';
 
 /**
  * Returns a set of unique globals (by name) that are referenced transitively within the function.
@@ -22,12 +22,12 @@ class Visitor extends ReactiveFunctionVisitor<Set<string>> {
   override visitValue(
     id: InstructionId,
     value: ReactiveValue,
-    state: Set<string>
+    state: Set<string>,
   ): void {
     this.traverseValue(id, value, state);
-    if (value.kind === "FunctionExpression" || value.kind === "ObjectMethod") {
+    if (value.kind === 'FunctionExpression' || value.kind === 'ObjectMethod') {
       this.visitHirFunction(value.loweredFunc.func, state);
-    } else if (value.kind === "LoadGlobal") {
+    } else if (value.kind === 'LoadGlobal') {
       state.add(value.binding.name);
     }
   }
@@ -36,7 +36,7 @@ class Visitor extends ReactiveFunctionVisitor<Set<string>> {
     _id: InstructionId,
     _dependencies: Array<Place>,
     fn: ReactiveFunction,
-    state: Set<string>
+    state: Set<string>,
   ): void {
     visitReactiveFunction(fn, this, state);
   }

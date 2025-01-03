@@ -41,25 +41,21 @@ export const LOCAL_STORAGE_PARSE_HOOK_NAMES_KEY =
   'React::DevTools::parseHookNames';
 export const SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY =
   'React::DevTools::recordChangeDescriptions';
+export const SESSION_STORAGE_RECORD_TIMELINE_KEY =
+  'React::DevTools::recordTimeline';
 export const SESSION_STORAGE_RELOAD_AND_PROFILE_KEY =
   'React::DevTools::reloadAndProfile';
-export const LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS =
-  'React::DevTools::breakOnConsoleErrors';
 export const LOCAL_STORAGE_BROWSER_THEME = 'React::DevTools::theme';
-export const LOCAL_STORAGE_SHOULD_APPEND_COMPONENT_STACK_KEY =
-  'React::DevTools::appendComponentStack';
-export const LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY =
-  'React::DevTools::showInlineWarningsAndErrors';
 export const LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY =
   'React::DevTools::traceUpdatesEnabled';
-export const LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE =
-  'React::DevTools::hideConsoleLogsInStrictMode';
 export const LOCAL_STORAGE_SUPPORTS_PROFILING_KEY =
   'React::DevTools::supportsProfiling';
+export const LOCAL_STORAGE_SHOW_NAMES_WHEN_TRACING_KEY =
+  'React::DevTools::showNamesWhenTracing';
 
 export const PROFILER_EXPORT_VERSION = 5;
 
 export const FIREFOX_CONSOLE_DIMMING_COLOR = 'color: rgba(124, 124, 124, 0.75)';
 export const ANSI_STYLE_DIMMING_TEMPLATE = '\x1b[2;38;2;124;124;124m%s\x1b[0m';
 export const ANSI_STYLE_DIMMING_TEMPLATE_WITH_COMPONENT_STACK =
-  '\x1b[2;38;2;124;124;124m%s %s\x1b[0m';
+  '\x1b[2;38;2;124;124;124m%s %o\x1b[0m';

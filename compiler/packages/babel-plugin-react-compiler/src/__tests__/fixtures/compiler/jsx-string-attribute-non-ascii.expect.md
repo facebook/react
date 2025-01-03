@@ -11,7 +11,7 @@ function Component() {
   );
 }
 
-function Post({ author, text }) {
+function Post({author, text}) {
   return (
     <div>
       <h1>{author}</h1>

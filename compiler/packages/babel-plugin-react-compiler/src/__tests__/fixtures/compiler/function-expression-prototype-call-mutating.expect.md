@@ -2,8 +2,8 @@
 ## Input
 
 ```javascript
-import { useMemo } from "react";
-import { ValidateMemoization } from "shared-runtime";
+import {useMemo} from 'react';
+import {ValidateMemoization} from 'shared-runtime';
 
 function Component(props) {
   const a = useMemo(() => {
@@ -19,12 +19,8 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ name: "Jason" }],
-  sequentialRenders: [
-    { name: "Lauren" },
-    { name: "Lauren" },
-    { name: "Jason" },
-  ],
+  params: [{name: 'Jason'}],
+  sequentialRenders: [{name: 'Lauren'}, {name: 'Lauren'}, {name: 'Jason'}],
 };
 
 ```
@@ -63,10 +59,10 @@ function Component(props) {
     t1 = $[3];
   }
   let t2;
-  if ($[4] !== t1 || $[5] !== a_0) {
+  if ($[4] !== a_0 || $[5] !== t1) {
     t2 = <ValidateMemoization inputs={t1} output={a_0} />;
-    $[4] = t1;
-    $[5] = a_0;
+    $[4] = a_0;
+    $[5] = t1;
     $[6] = t2;
   } else {
     t2 = $[6];

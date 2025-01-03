@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "../CompilerError";
-import { Environment } from "../HIR/Environment";
+import {CompilerError} from '../CompilerError';
+import {Environment} from '../HIR/Environment';
 import {
   BasicBlock,
   BlockId,
@@ -17,18 +17,18 @@ import {
   makeType,
   Phi,
   Place,
-} from "../HIR/HIR";
-import { printIdentifier } from "../HIR/PrintHIR";
+} from '../HIR/HIR';
+import {printIdentifier, printPlace} from '../HIR/PrintHIR';
 import {
   eachTerminalSuccessor,
   mapInstructionLValues,
   mapInstructionOperands,
   mapTerminalOperands,
-} from "../HIR/visitors";
+} from '../HIR/visitors';
 
 type IncompletePhi = {
-  oldId: Identifier;
-  newId: Identifier;
+  oldPlace: Place;
+  newPlace: Place;
 };
 
 type State = {
@@ -68,7 +68,7 @@ class SSABuilder {
 
   state(): State {
     CompilerError.invariant(this.#current !== null, {
-      reason: "we need to be in a block to access state!",
+      reason: 'we need to be in a block to access state!',
       description: null,
       loc: null,
       suggestions: null,
@@ -79,6 +79,7 @@ class SSABuilder {
   makeId(oldId: Identifier): Identifier {
     return {
       id: this.nextSsaId,
+      declarationId: oldId.declarationId,
       name: oldId.name,
       mutableRange: {
         start: makeInstructionId(0),
@@ -121,33 +122,33 @@ class SSABuilder {
   }
 
   getPlace(oldPlace: Place): Place {
-    const newId = this.getIdAt(oldPlace.identifier, this.#current!.id);
+    const newId = this.getIdAt(oldPlace, this.#current!.id);
     return {
       ...oldPlace,
       identifier: newId,
     };
   }
 
-  getIdAt(oldId: Identifier, blockId: BlockId): Identifier {
+  getIdAt(oldPlace: Place, blockId: BlockId): Identifier {
     // check if Place is defined locally
     const block = this.#blocks.get(blockId)!;
     const state = this.#states.get(block)!;
 
-    if (state.defs.has(oldId)) {
-      return state.defs.get(oldId)!;
+    if (state.defs.has(oldPlace.identifier)) {
+      return state.defs.get(oldPlace.identifier)!;
     }
 
     if (block.preds.size == 0) {
       /*
        * We're at the entry block and haven't found our defintion yet.
        * console.log(
-       *   `Unable to find "${printIdentifier(
-       *     oldId
+       *   `Unable to find "${printPlace(
+       *     oldPlace
        *   )}" in bb${blockId}, assuming it's a global`
        * );
        */
-      this.#unknown.add(oldId);
-      return oldId;
+      this.#unknown.add(oldPlace.identifier);
+      return oldPlace.identifier;
     }
 
     if (this.unsealedPreds.get(block)! > 0) {
@@ -155,53 +156,55 @@ class SSABuilder {
        * We haven't visited all our predecessors, let's place an incomplete phi
        * for now.
        */
-      const newId = this.makeId(oldId);
-      state.incompletePhis.push({ oldId, newId });
-      state.defs.set(oldId, newId);
+      const newId = this.makeId(oldPlace.identifier);
+      state.incompletePhis.push({
+        oldPlace,
+        newPlace: {...oldPlace, identifier: newId},
+      });
+      state.defs.set(oldPlace.identifier, newId);
       return newId;
     }
 
     // Only one predecessor, let's check there
     if (block.preds.size == 1) {
       const [pred] = block.preds;
-      const newId = this.getIdAt(oldId, pred);
-      state.defs.set(oldId, newId);
+      const newId = this.getIdAt(oldPlace, pred);
+      state.defs.set(oldPlace.identifier, newId);
       return newId;
     }
 
     // There are multiple predecessors, we may need a phi.
-    const newId = this.makeId(oldId);
+    const newId = this.makeId(oldPlace.identifier);
     /*
      * Adding a phi may loop back to our block if there is a loop in the CFG.  We
      * update our defs before adding the phi to terminate the recursion rather than
      * looping infinitely.
      */
-    state.defs.set(oldId, newId);
-    return this.addPhi(block, oldId, newId);
+    state.defs.set(oldPlace.identifier, newId);
+    return this.addPhi(block, oldPlace, {...oldPlace, identifier: newId});
   }
 
-  addPhi(block: BasicBlock, oldId: Identifier, newId: Identifier): Identifier {
-    const predDefs: Map<BlockId, Identifier> = new Map();
+  addPhi(block: BasicBlock, oldPlace: Place, newPlace: Place): Identifier {
+    const predDefs: Map<BlockId, Place> = new Map();
     for (const predBlockId of block.preds) {
-      const predId = this.getIdAt(oldId, predBlockId);
-      predDefs.set(predBlockId, predId);
+      const predId = this.getIdAt(oldPlace, predBlockId);
+      predDefs.set(predBlockId, {...oldPlace, identifier: predId});
     }
 
     const phi: Phi = {
-      kind: "Phi",
-      id: newId,
+      kind: 'Phi',
+      place: newPlace,
       operands: predDefs,
-      type: makeType(),
     };
 
     block.phis.add(phi);
-    return newId;
+    return newPlace.identifier;
   }
 
   fixIncompletePhis(block: BasicBlock): void {
     const state = this.#states.get(block)!;
     for (const phi of state.incompletePhis) {
-      this.addPhi(block, phi.oldId, phi.newId);
+      this.addPhi(block, phi.oldPlace, phi.newPlace);
     }
   }
 
@@ -223,15 +226,15 @@ class SSABuilder {
 
       for (const incompletePhi of state.incompletePhis) {
         text.push(
-          `  iphi \$${printIdentifier(
-            incompletePhi.newId
-          )} = \$${printIdentifier(incompletePhi.oldId)}`
+          `  iphi \$${printPlace(
+            incompletePhi.newPlace,
+          )} = \$${printPlace(incompletePhi.oldPlace)}`,
         );
       }
     }
 
     text.push(`current block: bb${this.#current?.id}`);
-    console.log(text.join("\n"));
+    console.log(text.join('\n'));
   }
 }
 
@@ -243,7 +246,7 @@ export default function enterSSA(func: HIRFunction): void {
 function enterSSAImpl(
   func: HIRFunction,
   builder: SSABuilder,
-  rootEntry: BlockId
+  rootEntry: BlockId,
 ): void {
   const visitedBlocks: Set<BasicBlock> = new Set();
   for (const [blockId, block] of func.body.blocks) {
@@ -266,12 +269,12 @@ function enterSSAImpl(
         loc: func.loc,
         suggestions: null,
       });
-      func.params = func.params.map((param) => {
-        if (param.kind === "Identifier") {
+      func.params = func.params.map(param => {
+        if (param.kind === 'Identifier') {
           return builder.definePlace(param);
         } else {
           return {
-            kind: "Spread",
+            kind: 'Spread',
             place: builder.definePlace(param.place),
           };
         }
@@ -279,18 +282,18 @@ function enterSSAImpl(
     }
 
     for (const instr of block.instructions) {
-      mapInstructionOperands(instr, (place) => builder.getPlace(place));
-      mapInstructionLValues(instr, (lvalue) => builder.definePlace(lvalue));
+      mapInstructionOperands(instr, place => builder.getPlace(place));
+      mapInstructionLValues(instr, lvalue => builder.definePlace(lvalue));
 
       if (
-        instr.value.kind === "FunctionExpression" ||
-        instr.value.kind === "ObjectMethod"
+        instr.value.kind === 'FunctionExpression' ||
+        instr.value.kind === 'ObjectMethod'
       ) {
         const loweredFunc = instr.value.loweredFunc.func;
         const entry = loweredFunc.body.blocks.get(loweredFunc.body.entry)!;
         CompilerError.invariant(entry.preds.size === 0, {
           reason:
-            "Expected function expression entry block to have zero predecessors",
+            'Expected function expression entry block to have zero predecessors',
           description: null,
           loc: null,
           suggestions: null,
@@ -298,15 +301,15 @@ function enterSSAImpl(
         entry.preds.add(blockId);
         builder.defineFunction(loweredFunc);
         builder.enter(() => {
-          loweredFunc.context = loweredFunc.context.map((p) =>
-            builder.getPlace(p)
+          loweredFunc.context = loweredFunc.context.map(p =>
+            builder.getPlace(p),
           );
-          loweredFunc.params = loweredFunc.params.map((param) => {
-            if (param.kind === "Identifier") {
+          loweredFunc.params = loweredFunc.params.map(param => {
+            if (param.kind === 'Identifier') {
               return builder.definePlace(param);
             } else {
               return {
-                kind: "Spread",
+                kind: 'Spread',
                 place: builder.definePlace(param.place),
               };
             }
@@ -317,7 +320,7 @@ function enterSSAImpl(
       }
     }
 
-    mapTerminalOperands(block.terminal, (place) => builder.getPlace(place));
+    mapTerminalOperands(block.terminal, place => builder.getPlace(place));
     for (const outputId of eachTerminalSuccessor(block.terminal)) {
       const output = func.body.blocks.get(outputId)!;
       let count;

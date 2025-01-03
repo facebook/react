@@ -1,8 +1,8 @@
 // @validatePreserveExistingMemoizationGuarantees
-import { useCallback, useRef } from "react";
+import {useCallback, useRef} from 'react';
 
 function useCustomRef() {
-  return useRef({ click: () => {} });
+  return useRef({click: () => {}});
 }
 
 function Foo() {

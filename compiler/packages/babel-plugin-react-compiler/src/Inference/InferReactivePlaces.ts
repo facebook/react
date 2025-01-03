@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "..";
+import {CompilerError} from '..';
 import {
   BlockId,
   Effect,
@@ -17,19 +17,19 @@ import {
   getHookKind,
   isStableType,
   isUseOperator,
-} from "../HIR";
-import { PostDominator } from "../HIR/Dominator";
+} from '../HIR';
+import {PostDominator} from '../HIR/Dominator';
 import {
   eachInstructionLValue,
   eachInstructionValueOperand,
   eachTerminalOperand,
-} from "../HIR/visitors";
+} from '../HIR/visitors';
 import {
   findDisjointMutableValues,
   isMutable,
-} from "../ReactiveScopes/InferReactiveScopeVariables";
-import DisjointSet from "../Utils/DisjointSet";
-import { assertExhaustive } from "../Utils/utils";
+} from '../ReactiveScopes/InferReactiveScopeVariables';
+import DisjointSet from '../Utils/DisjointSet';
+import {assertExhaustive} from '../Utils/utils';
 
 /*
  * Infers which `Place`s are reactive, ie may *semantically* change
@@ -112,7 +112,7 @@ import { assertExhaustive } from "../Utils/utils";
 export function inferReactivePlaces(fn: HIRFunction): void {
   const reactiveIdentifiers = new ReactivityMap(findDisjointMutableValues(fn));
   for (const param of fn.params) {
-    const place = param.kind === "Identifier" ? param : param.place;
+    const place = param.kind === 'Identifier' ? param : param.place;
     reactiveIdentifiers.markReactive(place);
   }
 
@@ -130,14 +130,14 @@ export function inferReactivePlaces(fn: HIRFunction): void {
     for (const blockId of controlBlocks) {
       const controlBlock = fn.body.blocks.get(blockId)!;
       switch (controlBlock.terminal.kind) {
-        case "if":
-        case "branch": {
+        case 'if':
+        case 'branch': {
           if (reactiveIdentifiers.isReactive(controlBlock.terminal.test)) {
             return true;
           }
           break;
         }
-        case "switch": {
+        case 'switch': {
           if (reactiveIdentifiers.isReactive(controlBlock.terminal.test)) {
             return true;
           }
@@ -157,35 +157,34 @@ export function inferReactivePlaces(fn: HIRFunction): void {
   }
 
   do {
-    const identifierMapping = new Map<Identifier, Identifier>();
     for (const [, block] of fn.body.blocks) {
       let hasReactiveControl = isReactiveControlledBlock(block.id);
 
       for (const phi of block.phis) {
-        if (reactiveIdentifiers.isReactiveIdentifier(phi.id)) {
+        if (reactiveIdentifiers.isReactive(phi.place)) {
           // Already marked reactive on a previous pass
           continue;
         }
         let isPhiReactive = false;
         for (const [, operand] of phi.operands) {
-          if (reactiveIdentifiers.isReactiveIdentifier(operand)) {
+          if (reactiveIdentifiers.isReactive(operand)) {
             isPhiReactive = true;
             break;
           }
         }
         if (isPhiReactive) {
-          reactiveIdentifiers.markReactiveIdentifier(phi.id);
+          reactiveIdentifiers.markReactive(phi.place);
         } else {
           for (const [pred] of phi.operands) {
             if (isReactiveControlledBlock(pred)) {
-              reactiveIdentifiers.markReactiveIdentifier(phi.id);
+              reactiveIdentifiers.markReactive(phi.place);
               break;
             }
           }
         }
       }
       for (const instruction of block.instructions) {
-        const { value } = instruction;
+        const {value} = instruction;
         let hasReactiveInput = false;
         /*
          * NOTE: we want to mark all operands as reactive or not, so we
@@ -204,13 +203,13 @@ export function inferReactivePlaces(fn: HIRFunction): void {
          * but we are conservative and assume that the value could be reactive.
          */
         if (
-          value.kind === "CallExpression" &&
+          value.kind === 'CallExpression' &&
           (getHookKind(fn.env, value.callee.identifier) != null ||
             isUseOperator(value.callee.identifier))
         ) {
           hasReactiveInput = true;
         } else if (
-          value.kind === "MethodCall" &&
+          value.kind === 'MethodCall' &&
           (getHookKind(fn.env, value.property.identifier) != null ||
             isUseOperator(value.property.identifier))
         ) {
@@ -233,10 +232,6 @@ export function inferReactivePlaces(fn: HIRFunction): void {
               case Effect.ConditionallyMutate:
               case Effect.Mutate: {
                 if (isMutable(instruction, operand)) {
-                  const resolvedId = identifierMapping.get(operand.identifier);
-                  if (resolvedId !== undefined) {
-                    reactiveIdentifiers.markReactiveIdentifier(resolvedId);
-                  }
                   reactiveIdentifiers.markReactive(operand);
                 }
                 break;
@@ -248,7 +243,7 @@ export function inferReactivePlaces(fn: HIRFunction): void {
               }
               case Effect.Unknown: {
                 CompilerError.invariant(false, {
-                  reason: "Unexpected unknown effect",
+                  reason: 'Unexpected unknown effect',
                   description: null,
                   loc: operand.loc,
                   suggestions: null,
@@ -257,35 +252,10 @@ export function inferReactivePlaces(fn: HIRFunction): void {
               default: {
                 assertExhaustive(
                   operand.effect,
-                  `Unexpected effect kind \`${operand.effect}\``
+                  `Unexpected effect kind \`${operand.effect}\``,
                 );
               }
             }
-          }
-        }
-
-        switch (value.kind) {
-          case "LoadLocal": {
-            identifierMapping.set(
-              instruction.lvalue.identifier,
-              value.place.identifier
-            );
-            break;
-          }
-          case "PropertyLoad":
-          case "ComputedLoad": {
-            const resolvedId =
-              identifierMapping.get(value.object.identifier) ??
-              value.object.identifier;
-            identifierMapping.set(instruction.lvalue.identifier, resolvedId);
-            break;
-          }
-          case "LoadContext": {
-            identifierMapping.set(
-              instruction.lvalue.identifier,
-              value.place.identifier
-            );
-            break;
           }
         }
       }
@@ -304,7 +274,7 @@ export function inferReactivePlaces(fn: HIRFunction): void {
 function postDominatorFrontier(
   fn: HIRFunction,
   postDominators: PostDominator<BlockId>,
-  targetId: BlockId
+  targetId: BlockId,
 ): Set<BlockId> {
   const visited = new Set<BlockId>();
   const frontier = new Set<BlockId>();
@@ -328,7 +298,7 @@ function postDominatorFrontier(
 function postDominatorsOf(
   fn: HIRFunction,
   postDominators: PostDominator<BlockId>,
-  targetId: BlockId
+  targetId: BlockId,
 ): Set<BlockId> {
   const result = new Set<BlockId>();
   const visited = new Set<BlockId>();
@@ -372,27 +342,19 @@ class ReactivityMap {
   }
 
   isReactive(place: Place): boolean {
-    const reactive = this.isReactiveIdentifier(place.identifier);
+    const identifier =
+      this.aliasedIdentifiers.find(place.identifier) ?? place.identifier;
+    const reactive = this.reactive.has(identifier.id);
     if (reactive) {
       place.reactive = true;
     }
     return reactive;
   }
 
-  isReactiveIdentifier(inputIdentifier: Identifier): boolean {
-    const identifier =
-      this.aliasedIdentifiers.find(inputIdentifier) ?? inputIdentifier;
-    return this.reactive.has(identifier.id);
-  }
-
   markReactive(place: Place): void {
     place.reactive = true;
-    this.markReactiveIdentifier(place.identifier);
-  }
-
-  markReactiveIdentifier(inputIdentifier: Identifier): void {
     const identifier =
-      this.aliasedIdentifiers.find(inputIdentifier) ?? inputIdentifier;
+      this.aliasedIdentifiers.find(place.identifier) ?? place.identifier;
     if (!this.reactive.has(identifier.id)) {
       this.hasChanges = true;
       this.reactive.add(identifier.id);

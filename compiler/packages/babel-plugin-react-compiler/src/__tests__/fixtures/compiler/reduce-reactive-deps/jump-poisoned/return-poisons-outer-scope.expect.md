@@ -2,9 +2,9 @@
 ## Input
 
 ```javascript
-import { identity } from "shared-runtime";
+import {identity} from 'shared-runtime';
 
-function useFoo({ input, cond }) {
+function useFoo({input, cond}) {
   const x = [];
   if (cond) {
     return null;
@@ -15,16 +15,16 @@ function useFoo({ input, cond }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useFoo,
-  params: [{ input: { a: { b: 2 } }, cond: false }],
+  params: [{input: {a: {b: 2}}, cond: false}],
   sequentialRenders: [
-    { input: { a: { b: 2 } }, cond: false },
+    {input: {a: {b: 2}}, cond: false},
     // preserve nullthrows
-    { input: null, cond: false },
-    { input: null, cond: true },
-    { input: {}, cond: false },
-    { input: { a: { b: null } }, cond: false },
-    { input: { a: null }, cond: false },
-    { input: { a: { b: 3 } }, cond: false },
+    {input: null, cond: false},
+    {input: null, cond: true},
+    {input: {}, cond: false},
+    {input: {a: {b: null}}, cond: false},
+    {input: {a: null}, cond: false},
+    {input: {a: {b: 3}}, cond: false},
   ],
 };
 
@@ -39,8 +39,8 @@ import { identity } from "shared-runtime";
 function useFoo(t0) {
   const $ = _c(6);
   const { input, cond } = t0;
-  let x;
   let t1;
+  let x;
   if ($[0] !== cond || $[1] !== input) {
     t1 = Symbol.for("react.early_return_sentinel");
     bb0: {
@@ -61,11 +61,11 @@ function useFoo(t0) {
     }
     $[0] = cond;
     $[1] = input;
-    $[2] = x;
-    $[3] = t1;
+    $[2] = t1;
+    $[3] = x;
   } else {
-    x = $[2];
-    t1 = $[3];
+    t1 = $[2];
+    x = $[3];
   }
   if (t1 !== Symbol.for("react.early_return_sentinel")) {
     return t1;

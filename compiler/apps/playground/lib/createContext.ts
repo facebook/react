@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import React from "react";
+import React from 'react';
 
 /**
  * Replacement to React.createContext.
@@ -23,15 +23,18 @@ import React from "react";
  * Instead, it throws an error when `useContext` is not called within a
  * Provider with a value.
  */
-export default function createContext<T>() {
+export default function createContext<T>(): {
+  useContext: () => NonNullable<T>;
+  Provider: React.Provider<T | null>;
+} {
   const context = React.createContext<T | null>(null);
 
-  function useContext() {
+  function useContext(): NonNullable<T> {
     const c = React.useContext(context);
     if (!c)
-      throw new Error("useContext must be within a Provider with a value");
+      throw new Error('useContext must be within a Provider with a value');
     return c;
   }
 
-  return { useContext, Provider: context.Provider };
+  return {useContext, Provider: context.Provider};
 }

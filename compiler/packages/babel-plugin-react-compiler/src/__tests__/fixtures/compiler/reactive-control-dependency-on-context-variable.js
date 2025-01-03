@@ -1,4 +1,4 @@
-import { identity } from "shared-runtime";
+import {identity} from 'shared-runtime';
 
 function Component(props) {
   let x;
@@ -25,13 +25,13 @@ export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [],
   sequentialRenders: [
-    { cond: true },
-    { cond: true },
-    { cond: false },
-    { cond: false },
-    { cond: true },
-    { cond: false },
-    { cond: true },
-    { cond: false },
+    {cond: true},
+    {cond: true},
+    {cond: false},
+    {cond: false},
+    {cond: true},
+    {cond: false},
+    {cond: true},
+    {cond: false},
   ],
 };

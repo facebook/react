@@ -5,25 +5,25 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Worker } from "jest-worker";
-import { cpus } from "os";
-import process from "process";
-import * as readline from "readline";
-import ts from "typescript";
-import yargs from "yargs";
-import { hideBin } from "yargs/helpers";
-import { FILTER_PATH } from "./constants";
-import { TestFilter, getFixtures, readTestFilter } from "./fixture-utils";
-import { TestResult, TestResults, report, update } from "./reporter";
+import {Worker} from 'jest-worker';
+import {cpus} from 'os';
+import process from 'process';
+import * as readline from 'readline';
+import ts from 'typescript';
+import yargs from 'yargs';
+import {hideBin} from 'yargs/helpers';
+import {FILTER_PATH} from './constants';
+import {TestFilter, getFixtures, readTestFilter} from './fixture-utils';
+import {TestResult, TestResults, report, update} from './reporter';
 import {
   RunnerAction,
   RunnerState,
   makeWatchRunner,
   watchSrc,
-} from "./runner-watch";
-import * as runnerWorker from "./runner-worker";
+} from './runner-watch';
+import * as runnerWorker from './runner-worker';
 
-const WORKER_PATH = require.resolve("./runner-worker.js");
+const WORKER_PATH = require.resolve('./runner-worker.js');
 const NUM_WORKERS = cpus().length - 1;
 
 readline.emitKeypressEvents(process.stdin);
@@ -37,31 +37,31 @@ type RunnerOptions = {
 };
 
 const opts: RunnerOptions = yargs
-  .boolean("sync")
+  .boolean('sync')
   .describe(
-    "sync",
-    "Run compiler in main thread (instead of using worker threads or subprocesses). Defaults to false."
+    'sync',
+    'Run compiler in main thread (instead of using worker threads or subprocesses). Defaults to false.',
   )
-  .default("sync", false)
-  .boolean("worker-threads")
+  .default('sync', false)
+  .boolean('worker-threads')
   .describe(
-    "worker-threads",
-    "Run compiler in worker threads (instead of subprocesses). Defaults to true."
+    'worker-threads',
+    'Run compiler in worker threads (instead of subprocesses). Defaults to true.',
   )
-  .default("worker-threads", true)
-  .boolean("watch")
-  .describe("watch", "Run compiler in watch mode, re-running after changes")
-  .default("watch", false)
-  .boolean("update")
-  .describe("update", "Update fixtures")
-  .default("update", false)
-  .boolean("filter")
+  .default('worker-threads', true)
+  .boolean('watch')
+  .describe('watch', 'Run compiler in watch mode, re-running after changes')
+  .default('watch', false)
+  .boolean('update')
+  .describe('update', 'Update fixtures')
+  .default('update', false)
+  .boolean('filter')
   .describe(
-    "filter",
-    "Only run fixtures which match the contents of testfilter.txt"
+    'filter',
+    'Only run fixtures which match the contents of testfilter.txt',
   )
-  .default("filter", false)
-  .help("help")
+  .default('filter', false)
+  .help('help')
   .strict()
   .parseSync(hideBin(process.argv));
 
@@ -71,7 +71,7 @@ const opts: RunnerOptions = yargs
 async function runFixtures(
   worker: Worker & typeof runnerWorker,
   filter: TestFilter | null,
-  compilerVersion: number
+  compilerVersion: number,
 ): Promise<TestResults> {
   // We could in theory be fancy about tracking the contents of the fixtures
   // directory via our file subscription, but it's simpler to just re-read
@@ -90,9 +90,9 @@ async function runFixtures(
             fixture,
             compilerVersion,
             (filter?.debug ?? false) && isOnlyFixture,
-            true
+            true,
           )
-          .then((result) => [fixtureName, result])
+          .then(result => [fixtureName, result]),
       );
     }
 
@@ -104,7 +104,7 @@ async function runFixtures(
         fixture,
         compilerVersion,
         (filter?.debug ?? false) && isOnlyFixture,
-        true
+        true,
       );
       entries.push([fixtureName, output]);
     }
@@ -116,22 +116,22 @@ async function runFixtures(
 // Callback to re-run tests after some change
 async function onChange(
   worker: Worker & typeof runnerWorker,
-  state: RunnerState
+  state: RunnerState,
 ) {
-  const { compilerVersion, isCompilerBuildValid, mode, filter } = state;
+  const {compilerVersion, isCompilerBuildValid, mode, filter} = state;
   if (isCompilerBuildValid) {
     const start = performance.now();
 
     // console.clear() only works when stdout is connected to a TTY device.
     // we're currently piping stdout (see main.ts), so let's do a 'hack'
-    console.log("\u001Bc");
+    console.log('\u001Bc');
 
     // we don't clear console after this point, since
     // it may contain debug console logging
     const results = await runFixtures(
       worker,
       mode.filter ? filter : null,
-      compilerVersion
+      compilerVersion,
     );
     const end = performance.now();
     if (mode.action === RunnerAction.Update) {
@@ -143,19 +143,19 @@ async function onChange(
     console.log(`Completed in ${Math.floor(end - start)} ms`);
   } else {
     console.error(
-      `${mode}: Found errors in Forget source code, skipping test fixtures.`
+      `${mode}: Found errors in Forget source code, skipping test fixtures.`,
     );
   }
   console.log(
-    "\n" +
+    '\n' +
       (mode.filter
         ? `Current mode = FILTER, filter test fixtures by "${FILTER_PATH}".`
-        : "Current mode = NORMAL, run all test fixtures.") +
-      "\nWaiting for input or file changes...\n" +
-      "u     - update all fixtures\n" +
-      `f     - toggle (turn ${mode.filter ? "off" : "on"}) filter mode\n` +
-      "q     - quit\n" +
-      "[any] - rerun tests\n"
+        : 'Current mode = NORMAL, run all test fixtures.') +
+      '\nWaiting for input or file changes...\n' +
+      'u     - update all fixtures\n' +
+      `f     - toggle (turn ${mode.filter ? 'off' : 'on'}) filter mode\n` +
+      'q     - quit\n' +
+      '[any] - rerun tests\n',
   );
 }
 
@@ -171,7 +171,7 @@ export async function main(opts: RunnerOptions): Promise<void> {
   worker.getStdout().pipe(process.stdout);
 
   if (opts.watch) {
-    makeWatchRunner((state) => onChange(worker, state), opts.filter);
+    makeWatchRunner(state => onChange(worker, state), opts.filter);
     if (opts.filter) {
       /**
        * Warm up wormers when in watch mode. Loading the Forget babel plugin
@@ -183,9 +183,9 @@ export async function main(opts: RunnerOptions): Promise<void> {
       for (let i = 0; i < NUM_WORKERS - 1; i++) {
         worker.transformFixture(
           {
-            fixturePath: "tmp",
-            snapshotPath: "./tmp.expect.md",
-            inputPath: "./tmp.js",
+            fixturePath: 'tmp',
+            snapshotPath: './tmp.expect.md',
+            inputPath: './tmp.js',
             input: `
             function Foo(props) {
               return identity(props);
@@ -195,7 +195,7 @@ export async function main(opts: RunnerOptions): Promise<void> {
           },
           0,
           false,
-          false
+          false,
         );
       }
     }
@@ -218,15 +218,15 @@ export async function main(opts: RunnerOptions): Promise<void> {
             }
           } else {
             console.error(
-              "Found errors in Forget source code, skipping test fixtures."
+              'Found errors in Forget source code, skipping test fixtures.',
             );
           }
           tsWatch.close();
           await worker.end();
           process.exit(isSuccess ? 0 : 1);
-        }
+        },
       );
   }
 }
 
-main(opts).catch((error) => console.error(error));
+main(opts).catch(error => console.error(error));

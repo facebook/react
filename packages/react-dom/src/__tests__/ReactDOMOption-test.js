@@ -53,8 +53,15 @@ describe('ReactDOMOption', () => {
     }).toErrorDev(
       'In HTML, <div> cannot be a child of <option>.\n' +
         'This will cause a hydration error.\n' +
-        '    in div (at **)\n' +
-        '    in option (at **)',
+        '\n' +
+        '> <option value="12">\n' +
+        '>   <div>\n' +
+        '    ...\n' +
+        '\n' +
+        '    in div (at **)' +
+        (gate(flags => flags.enableOwnerStacks)
+          ? ''
+          : '\n    in option (at **)'),
     );
     expect(container.firstChild.innerHTML).toBe('1 <div></div> 2');
     await renderIntoDocument(el);
@@ -266,7 +273,20 @@ describe('ReactDOMOption', () => {
           onRecoverableError: () => {},
         });
       });
-    }).toErrorDev(['In HTML, <div> cannot be a child of <option>']);
+    }).toErrorDev(
+      'In HTML, <div> cannot be a child of <option>.\n' +
+        'This will cause a hydration error.\n' +
+        '\n' +
+        '  <select readOnly={true} value="bar">\n' +
+        '>   <option value="bar">\n' +
+        '>     <div ref={{current:null}}>\n' +
+        '      ...\n' +
+        '\n' +
+        '    in div (at **)' +
+        (gate(flags => flags.enableOwnerStacks)
+          ? ''
+          : '\n    in option (at **)'),
+    );
     option = container.firstChild.firstChild;
 
     expect(option.textContent).toBe('BarFooBaz');

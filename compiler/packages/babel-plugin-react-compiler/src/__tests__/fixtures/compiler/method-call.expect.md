@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { addOne, shallowCopy } from "shared-runtime";
+import {addOne, shallowCopy} from 'shared-runtime';
 
 function foo(a, b, c) {
   // Construct and freeze x
@@ -16,7 +16,7 @@ function foo(a, b, c) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: foo,
-  params: [{ foo: addOne }, 3],
+  params: [{foo: addOne}, 3],
   isComponent: false,
 };
 
@@ -40,10 +40,10 @@ function foo(a, b, c) {
   }
   const x = t0;
   let t1;
-  if ($[2] !== x || $[3] !== b) {
+  if ($[2] !== b || $[3] !== x) {
     t1 = x.foo(b);
-    $[2] = x;
-    $[3] = b;
+    $[2] = b;
+    $[3] = x;
     $[4] = t1;
   } else {
     t1 = $[4];

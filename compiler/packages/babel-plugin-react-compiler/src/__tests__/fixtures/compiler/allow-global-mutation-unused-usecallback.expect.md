@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { useCallback, useEffect, useState } from "react";
+import {useCallback, useEffect, useState} from 'react';
 
 function Component() {
   const callback = useCallback(() => {
@@ -35,6 +35,9 @@ function Component() {
     t0 = $[0];
   }
   return t0;
+}
+function _temp() {
+  window.foo = true;
 }
 
 export const FIXTURE_ENTRYPOINT = {

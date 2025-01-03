@@ -10,13 +10,13 @@ function component(props) {
   // but what's weird is that the end of a's range doesn't quite extend to the object.
   let a = props.a || (props.b && props.c && props.d);
   let b = (props.a && props.b && props.c) || props.d;
-  return { a, b };
+  return {a, b};
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: component,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: ['TodoAdd'],
+  isComponent: 'TodoAdd',
 };
 
 ```

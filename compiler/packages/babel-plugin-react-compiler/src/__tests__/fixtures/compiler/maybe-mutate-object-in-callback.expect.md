@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-const { mutate } = require("shared-runtime");
+const {mutate} = require('shared-runtime');
 
 function Component(props) {
   const object = {};
@@ -14,13 +14,13 @@ function Component(props) {
   return <Foo callback={onClick}>{props.children}</Foo>;
 }
 
-function Foo({ children }) {
+function Foo({children}) {
   return children;
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ children: <div>Hello</div> }],
+  params: [{children: <div>Hello</div>}],
 };
 
 ```

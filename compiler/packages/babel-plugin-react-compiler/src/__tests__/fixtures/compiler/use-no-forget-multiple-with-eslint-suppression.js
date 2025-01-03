@@ -1,13 +1,13 @@
-import { useRef } from "react";
+import {useRef} from 'react';
 
-const useControllableState = (options) => {};
+const useControllableState = options => {};
 function NoopComponent() {}
 
 function Component() {
-  "use no forget";
+  'use no forget';
   const ref = useRef(null);
   // eslint-disable-next-line react-hooks/rules-of-hooks
-  ref.current = "bad";
+  ref.current = 'bad';
   return <button ref={ref} />;
 }
 

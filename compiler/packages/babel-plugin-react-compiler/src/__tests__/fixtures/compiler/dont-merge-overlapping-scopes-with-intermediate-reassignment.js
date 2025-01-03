@@ -1,4 +1,4 @@
-import { Stringify } from "shared-runtime";
+import {Stringify} from 'shared-runtime';
 
 function Component(props) {
   let x;
@@ -15,5 +15,5 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ count: 42 }],
+  params: [{count: 42}],
 };

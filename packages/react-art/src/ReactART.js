@@ -155,12 +155,7 @@ class Text extends React.Component {
   }
 }
 
-injectIntoDevTools({
-  findFiberByHostInstance: () => null,
-  bundleType: __DEV__ ? 1 : 0,
-  version: ReactVersion,
-  rendererPackageName: 'react-art',
-});
+injectIntoDevTools();
 
 /** API */
 
@@ -169,3 +164,5 @@ export const Group = TYPES.GROUP;
 export const Shape = TYPES.SHAPE;
 export const Path = Mode.Path;
 export {LinearGradient, Pattern, RadialGradient, Surface, Text, Transform};
+
+export {ReactVersion as version};

@@ -16,10 +16,6 @@ import type {
 import {isValidContainer} from 'react-dom-bindings/src/client/ReactDOMContainer';
 import {queueExplicitHydrationTarget} from 'react-dom-bindings/src/events/ReactDOMEventReplaying';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
-import {
-  allowConcurrentByDefault,
-  enableAsyncActions,
-} from 'shared/ReactFeatureFlags';
 
 export type RootType = {
   render(children: ReactNodeList): void,
@@ -29,7 +25,6 @@ export type RootType = {
 
 export type CreateRootOptions = {
   unstable_strictMode?: boolean,
-  unstable_concurrentUpdatesByDefault?: boolean,
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
   identifierPrefix?: string,
   onUncaughtError?: (
@@ -55,7 +50,6 @@ export type HydrateRootOptions = {
   onDeleted?: (suspenseNode: Comment) => void,
   // Options for all roots
   unstable_strictMode?: boolean,
-  unstable_concurrentUpdatesByDefault?: boolean,
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
   identifierPrefix?: string,
   onUncaughtError?: (
@@ -112,17 +106,19 @@ ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render =
     }
 
     if (__DEV__) {
-      if (typeof arguments[1] === 'function') {
+      // using a reference to `arguments` bails out of GCC optimizations which affect function arity
+      const args = arguments;
+      if (typeof args[1] === 'function') {
         console.error(
           'does not support the second callback argument. ' +
             'To execute a side effect after rendering, declare it in a component body with useEffect().',
         );
-      } else if (isValidContainer(arguments[1])) {
+      } else if (isValidContainer(args[1])) {
         console.error(
           'You passed a container to the second argument of root.render(...). ' +
             "You don't need to pass it again since you already passed it to create the root.",
         );
-      } else if (typeof arguments[1] !== 'undefined') {
+      } else if (typeof args[1] !== 'undefined') {
         console.error(
           'You passed a second argument to root.render(...) but it only accepts ' +
             'one argument.',
@@ -137,7 +133,9 @@ ReactDOMHydrationRoot.prototype.unmount = ReactDOMRoot.prototype.unmount =
   // $FlowFixMe[missing-this-annot]
   function (): void {
     if (__DEV__) {
-      if (typeof arguments[0] === 'function') {
+      // using a reference to `arguments` bails out of GCC optimizations which affect function arity
+      const args = arguments;
+      if (typeof args[0] === 'function') {
         console.error(
           'does not support a callback argument. ' +
             'To execute a side effect after rendering, declare it in a component body with useEffect().',
@@ -173,8 +171,8 @@ export function createRoot(
 
   warnIfReactDOMContainerInDEV(container);
 
+  const concurrentUpdatesByDefaultOverride = false;
   let isStrictMode = false;
-  let concurrentUpdatesByDefaultOverride = false;
   let identifierPrefix = '';
   let onUncaughtError = defaultOnUncaughtError;
   let onCaughtError = defaultOnCaughtError;
@@ -205,12 +203,6 @@ export function createRoot(
     }
     if (options.unstable_strictMode === true) {
       isStrictMode = true;
-    }
-    if (
-      allowConcurrentByDefault &&
-      options.unstable_concurrentUpdatesByDefault === true
-    ) {
-      concurrentUpdatesByDefaultOverride = true;
     }
     if (options.identifierPrefix !== undefined) {
       identifierPrefix = options.identifierPrefix;
@@ -289,8 +281,8 @@ export function hydrateRoot(
   // the hydration callbacks.
   const hydrationCallbacks = options != null ? options : null;
 
+  const concurrentUpdatesByDefaultOverride = false;
   let isStrictMode = false;
-  let concurrentUpdatesByDefaultOverride = false;
   let identifierPrefix = '';
   let onUncaughtError = defaultOnUncaughtError;
   let onCaughtError = defaultOnCaughtError;
@@ -300,12 +292,6 @@ export function hydrateRoot(
   if (options !== null && options !== undefined) {
     if (options.unstable_strictMode === true) {
       isStrictMode = true;
-    }
-    if (
-      allowConcurrentByDefault &&
-      options.unstable_concurrentUpdatesByDefault === true
-    ) {
-      concurrentUpdatesByDefaultOverride = true;
     }
     if (options.identifierPrefix !== undefined) {
       identifierPrefix = options.identifierPrefix;
@@ -322,10 +308,8 @@ export function hydrateRoot(
     if (options.unstable_transitionCallbacks !== undefined) {
       transitionCallbacks = options.unstable_transitionCallbacks;
     }
-    if (enableAsyncActions) {
-      if (options.formState !== undefined) {
-        formState = options.formState;
-      }
+    if (options.formState !== undefined) {
+      formState = options.formState;
     }
   }
 

@@ -5,8 +5,17 @@ on:
     branches: [main]
   pull_request:
     paths:
-      - "compiler/**"
-      - .github/workflows/compiler-typescript.yml
+      - compiler/**
+      - .github/workflows/compiler_typescript.yml
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+env:
+  TZ: /usr/share/zoneinfo/America/Los_Angeles
+  # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#cache-segment-restore-timeout
+  SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
 
 defaults:
   run:
@@ -31,14 +40,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 18.x
-          cache: "yarn"
+          node-version-file: '.nvmrc'
+          cache: yarn
           cache-dependency-path: compiler/yarn.lock
       - name: Restore cached node_modules
         uses: actions/cache@v4
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('compiler/**/yarn.lock') }}
+          key: compiler-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('compiler/**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
       - run: yarn workspace babel-plugin-react-compiler lint
 
@@ -50,15 +59,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 18.x
-          cache: "yarn"
+          node-version-file: '.nvmrc'
+          cache: yarn
           cache-dependency-path: compiler/yarn.lock
       - name: Restore cached node_modules
         uses: actions/cache@v4
         id: node_modules
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('compiler/**/yarn.lock') }}
+          key: compiler-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('compiler/**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
       - run: yarn workspace babel-plugin-react-compiler jest
 
@@ -74,14 +83,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 18.x
-          cache: "yarn"
+          node-version-file: '.nvmrc'
+          cache: yarn
           cache-dependency-path: compiler/yarn.lock
       - name: Restore cached node_modules
         uses: actions/cache@v4
         id: node_modules
         with:
           path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('compiler/**/yarn.lock') }}
+          key: compiler-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('compiler/**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
       - run: yarn workspace ${{ matrix.workspace_name }} test

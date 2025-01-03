@@ -929,10 +929,10 @@ function TreeContextController({
 
   // Listen for host element selections.
   useEffect(() => {
-    const handleSelectFiber = (id: number) =>
+    const handleSelectElement = (id: number) =>
       dispatchWrapper({type: 'SELECT_ELEMENT_BY_ID', payload: id});
-    bridge.addListener('selectFiber', handleSelectFiber);
-    return () => bridge.removeListener('selectFiber', handleSelectFiber);
+    bridge.addListener('selectElement', handleSelectElement);
+    return () => bridge.removeListener('selectElement', handleSelectElement);
   }, [bridge, dispatchWrapper]);
 
   // If a newly-selected search result or inspection selection is inside of a collapsed subtree, auto expand it.

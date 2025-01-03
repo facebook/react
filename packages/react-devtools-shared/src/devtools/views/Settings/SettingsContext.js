@@ -20,11 +20,8 @@ import {
 import {
   LOCAL_STORAGE_BROWSER_THEME,
   LOCAL_STORAGE_PARSE_HOOK_NAMES_KEY,
-  LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
-  LOCAL_STORAGE_SHOULD_APPEND_COMPONENT_STACK_KEY,
   LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY,
-  LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
-  LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
+  LOCAL_STORAGE_SHOW_NAMES_WHEN_TRACING_KEY,
 } from 'react-devtools-shared/src/constants';
 import {
   COMFORTABLE_LINE_HEIGHT,
@@ -47,20 +44,8 @@ type Context = {
   // Specified as a separate prop so it can trigger a re-render of FixedSizeList.
   lineHeight: number,
 
-  appendComponentStack: boolean,
-  setAppendComponentStack: (value: boolean) => void,
-
-  breakOnConsoleErrors: boolean,
-  setBreakOnConsoleErrors: (value: boolean) => void,
-
   parseHookNames: boolean,
   setParseHookNames: (value: boolean) => void,
-
-  hideConsoleLogsInStrictMode: boolean,
-  setHideConsoleLogsInStrictMode: (value: boolean) => void,
-
-  showInlineWarningsAndErrors: boolean,
-  setShowInlineWarningsAndErrors: (value: boolean) => void,
 
   theme: Theme,
   setTheme(value: Theme): void,
@@ -69,6 +54,9 @@ type Context = {
 
   traceUpdatesEnabled: boolean,
   setTraceUpdatesEnabled: (value: boolean) => void,
+
+  showNamesWhenTracing: boolean,
+  setShowNamesWhenTracing: (showNames: boolean) => void,
 };
 
 const SettingsContext: ReactContext<Context> = createContext<Context>(
@@ -118,34 +106,19 @@ function SettingsContextController({
     LOCAL_STORAGE_BROWSER_THEME,
     'auto',
   );
-  const [appendComponentStack, setAppendComponentStack] =
-    useLocalStorageWithLog<boolean>(
-      LOCAL_STORAGE_SHOULD_APPEND_COMPONENT_STACK_KEY,
-      true,
-    );
-  const [breakOnConsoleErrors, setBreakOnConsoleErrors] =
-    useLocalStorageWithLog<boolean>(
-      LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
-      false,
-    );
   const [parseHookNames, setParseHookNames] = useLocalStorageWithLog<boolean>(
     LOCAL_STORAGE_PARSE_HOOK_NAMES_KEY,
     false,
   );
-  const [hideConsoleLogsInStrictMode, setHideConsoleLogsInStrictMode] =
-    useLocalStorageWithLog<boolean>(
-      LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
-      false,
-    );
-  const [showInlineWarningsAndErrors, setShowInlineWarningsAndErrors] =
-    useLocalStorageWithLog<boolean>(
-      LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
-      true,
-    );
   const [traceUpdatesEnabled, setTraceUpdatesEnabled] =
     useLocalStorageWithLog<boolean>(
       LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY,
       false,
+    );
+  const [showNamesWhenTracing, setShowNamesWhenTracing] =
+    useLocalStorageWithLog<boolean>(
+      LOCAL_STORAGE_SHOW_NAMES_WHEN_TRACING_KEY,
+      true,
     );
 
   const documentElements = useMemo<DocumentElements>(() => {
@@ -197,68 +170,42 @@ function SettingsContextController({
   }, [browserTheme, theme, documentElements]);
 
   useEffect(() => {
-    bridge.send('updateConsolePatchSettings', {
-      appendComponentStack,
-      breakOnConsoleErrors,
-      showInlineWarningsAndErrors,
-      hideConsoleLogsInStrictMode,
-      browserTheme,
-    });
-  }, [
-    bridge,
-    appendComponentStack,
-    breakOnConsoleErrors,
-    showInlineWarningsAndErrors,
-    hideConsoleLogsInStrictMode,
-    browserTheme,
-  ]);
-
-  useEffect(() => {
     bridge.send('setTraceUpdatesEnabled', traceUpdatesEnabled);
   }, [bridge, traceUpdatesEnabled]);
 
-  const value = useMemo(
+  useEffect(() => {
+    bridge.send('setShowNamesWhenTracing', showNamesWhenTracing);
+  }, [bridge, showNamesWhenTracing]);
+
+  const value: Context = useMemo(
     () => ({
-      appendComponentStack,
-      breakOnConsoleErrors,
       displayDensity,
       lineHeight:
         displayDensity === 'compact'
           ? COMPACT_LINE_HEIGHT
           : COMFORTABLE_LINE_HEIGHT,
       parseHookNames,
-      setAppendComponentStack,
-      setBreakOnConsoleErrors,
       setDisplayDensity,
       setParseHookNames,
       setTheme,
       setTraceUpdatesEnabled,
-      setShowInlineWarningsAndErrors,
-      showInlineWarningsAndErrors,
-      setHideConsoleLogsInStrictMode,
-      hideConsoleLogsInStrictMode,
       theme,
       browserTheme,
       traceUpdatesEnabled,
+      showNamesWhenTracing,
+      setShowNamesWhenTracing,
     }),
     [
-      appendComponentStack,
-      breakOnConsoleErrors,
       displayDensity,
       parseHookNames,
-      setAppendComponentStack,
-      setBreakOnConsoleErrors,
       setDisplayDensity,
       setParseHookNames,
       setTheme,
       setTraceUpdatesEnabled,
-      setShowInlineWarningsAndErrors,
-      showInlineWarningsAndErrors,
-      setHideConsoleLogsInStrictMode,
-      hideConsoleLogsInStrictMode,
       theme,
       browserTheme,
       traceUpdatesEnabled,
+      showNamesWhenTracing,
     ],
   );
 

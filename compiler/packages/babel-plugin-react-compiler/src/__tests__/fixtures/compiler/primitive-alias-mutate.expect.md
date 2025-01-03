@@ -3,11 +3,11 @@
 
 ```javascript
 function component(a) {
-  let x = "foo";
+  let x = 'foo';
   if (a) {
-    x = "bar";
+    x = 'bar';
   } else {
-    x = "baz";
+    x = 'baz';
   }
   let y = x;
   mutate(y);

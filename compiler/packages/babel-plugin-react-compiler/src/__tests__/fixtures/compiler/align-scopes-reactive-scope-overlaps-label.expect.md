@@ -2,9 +2,9 @@
 ## Input
 
 ```javascript
-import { arrayPush } from "shared-runtime";
+import {arrayPush} from 'shared-runtime';
 
-function useFoo({ cond, value }) {
+function useFoo({cond, value}) {
   let items;
   label: {
     items = [];
@@ -19,12 +19,12 @@ function useFoo({ cond, value }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useFoo,
-  params: [{ cond: true, value: 2 }],
+  params: [{cond: true, value: 2}],
   sequentialRenders: [
-    { cond: true, value: 2 },
-    { cond: true, value: 2 },
-    { cond: true, value: 3 },
-    { cond: false, value: 3 },
+    {cond: true, value: 2},
+    {cond: true, value: 2},
+    {cond: true, value: 3},
+    {cond: false, value: 3},
   ],
 };
 

@@ -5,7 +5,7 @@
 function getNativeLogFunction(level) {
   return function () {
     let str;
-    if (arguments.length === 1 && typeof arguments[0] === "string") {
+    if (arguments.length === 1 && typeof arguments[0] === 'string') {
       str = arguments[0];
     } else {
       str = Array.prototype.map
@@ -14,13 +14,13 @@ function getNativeLogFunction(level) {
             depth: 10,
           });
         })
-        .join(", ");
+        .join(', ');
     }
     const firstArg = arguments[0];
     let logLevel = level;
     if (
-      typeof firstArg === "string" &&
-      firstArg.slice(0, 9) === "Warning: " &&
+      typeof firstArg === 'string' &&
+      firstArg.slice(0, 9) === 'Warning: ' &&
       logLevel >= LOG_LEVELS.error
     ) {
       logLevel = LOG_LEVELS.warn;
@@ -34,7 +34,7 @@ function getNativeLogFunction(level) {
       );
     }
     if (groupStack.length) {
-      str = groupFormat("", str);
+      str = groupFormat('', str);
     }
     global.nativeLoggingHook(str, logLevel);
   };
@@ -55,11 +55,7 @@ function getNativeLogFunction(level) {
       if (arguments.length === 1 && typeof arguments[0] === "string") {
         str = arguments[0];
       } else {
-        str = Array.prototype.map
-          .call(arguments, function (arg) {
-            return inspect(arg, { depth: 10 });
-          })
-          .join(", ");
+        str = Array.prototype.map.call(arguments, _temp).join(", ");
       }
 
       const firstArg = arguments[0];
@@ -91,6 +87,9 @@ function getNativeLogFunction(level) {
     t0 = $[1];
   }
   return t0;
+}
+function _temp(arg) {
+  return inspect(arg, { depth: 10 });
 }
 
 ```

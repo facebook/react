@@ -5,6 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-const makeSnapshotResolver = require("./makeSnapshotResolver");
+const makeSnapshotResolver = require('./makeSnapshotResolver');
 
 module.exports = makeSnapshotResolver(false);

@@ -2,8 +2,8 @@
 ## Input
 
 ```javascript
-import { useMemo, useState } from "react";
-import { ValidateMemoization } from "shared-runtime";
+import {useMemo, useState} from 'react';
+import {ValidateMemoization} from 'shared-runtime';
 
 function Component(props) {
   const [state] = useState(0);
@@ -61,10 +61,10 @@ function Component(props) {
     t2 = $[3];
   }
   let t3;
-  if ($[4] !== t2 || $[5] !== array) {
+  if ($[4] !== array || $[5] !== t2) {
     t3 = <ValidateMemoization inputs={t2} output={array} />;
-    $[4] = t2;
-    $[5] = array;
+    $[4] = array;
+    $[5] = t2;
     $[6] = t3;
   } else {
     t3 = $[6];

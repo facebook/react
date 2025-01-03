@@ -3,13 +3,8 @@
 
 ```javascript
 // @enablePreserveExistingMemoizationGuarantees:false
-import { useMemo } from "react";
-import {
-  identity,
-  makeObject_Primitives,
-  mutate,
-  useHook,
-} from "shared-runtime";
+import {useMemo} from 'react';
+import {identity, makeObject_Primitives, mutate, useHook} from 'shared-runtime';
 
 function Component(props) {
   // With the feature disabled these variables are inferred as being mutated inside the useMemo block
@@ -33,7 +28,7 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: 42 }],
+  params: [{value: 42}],
 };
 
 ```

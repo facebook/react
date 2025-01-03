@@ -7,8 +7,6 @@
  * @flow
  */
 
-import {warn, error} from 'shared/consoleWithStackDev';
-
 // This flips color using ANSI, then sets a color styling, then resets.
 const badgeFormat = '\x1b[0m\x1b[7m%c%s\x1b[0m%c ';
 // Same badge styling as DevTools.
@@ -23,11 +21,13 @@ const badgeStyle =
 const resetStyle = '';
 const pad = ' ';
 
-export function printToConsole(
+const bind = Function.prototype.bind;
+
+export function bindToConsole(
   methodName: string,
   args: Array<any>,
   badgeName: string,
-): void {
+): () => any {
   let offset = 0;
   switch (methodName) {
     case 'dir':
@@ -35,9 +35,8 @@ export function printToConsole(
     case 'groupEnd':
     case 'table': {
       // These methods cannot be colorized because they don't take a formatting string.
-      // eslint-disable-next-line react-internal/no-production-logging
-      console[methodName].apply(console, args);
-      return;
+      // $FlowFixMe
+      return bind.apply(console[methodName], [console].concat(args)); // eslint-disable-line react-internal/no-production-logging
     }
     case 'assert': {
       // assert takes formatting options as the second argument.
@@ -66,12 +65,9 @@ export function printToConsole(
     );
   }
 
-  if (methodName === 'error') {
-    error.apply(console, newArgs);
-  } else if (methodName === 'warn') {
-    warn.apply(console, newArgs);
-  } else {
-    // eslint-disable-next-line react-internal/no-production-logging
-    console[methodName].apply(console, newArgs);
-  }
+  // The "this" binding in the "bind";
+  newArgs.unshift(console);
+
+  // $FlowFixMe
+  return bind.apply(console[methodName], newArgs); // eslint-disable-line react-internal/no-production-logging
 }

@@ -1,8 +1,8 @@
-import { useRef } from "react";
+import {useRef} from 'react';
 
 function Component() {
-  const ref = useRef({ text: { value: null } });
-  const inputChanged = (e) => {
+  const ref = useRef({text: {value: null}});
+  const inputChanged = e => {
     ref.current.text.value = e.target.value;
   };
 

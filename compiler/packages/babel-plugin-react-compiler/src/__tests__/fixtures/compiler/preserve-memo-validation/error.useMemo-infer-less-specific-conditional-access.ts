@@ -1,8 +1,8 @@
 // @validatePreserveExistingMemoizationGuarantees
-import { useMemo } from "react";
-import { mutate } from "shared-runtime";
+import {useMemo} from 'react';
+import {mutate} from 'shared-runtime';
 
-function Component({ propA, propB }) {
+function Component({propA, propB}) {
   return useMemo(() => {
     const x = {};
     if (propA?.a) {

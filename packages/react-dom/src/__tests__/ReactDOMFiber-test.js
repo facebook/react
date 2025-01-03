@@ -13,23 +13,36 @@ let React;
 let ReactDOM;
 let PropTypes;
 let ReactDOMClient;
-let root;
 let Scheduler;
+
 let act;
+let assertConsoleErrorDev;
 let assertLog;
+let root;
+let JSDOM;
 
 describe('ReactDOMFiber', () => {
   let container;
 
   beforeEach(() => {
     jest.resetModules();
+
+    // JSDOM needs to be setup with a TextEncoder and TextDecoder when used standalone
+    // https://github.com/jsdom/jsdom/issues/2524
+    (() => {
+      const {TextEncoder, TextDecoder} = require('util');
+      global.TextEncoder = TextEncoder;
+      global.TextDecoder = TextDecoder;
+      JSDOM = require('jsdom').JSDOM;
+    })();
+
     React = require('react');
     ReactDOM = require('react-dom');
     PropTypes = require('prop-types');
     ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
     act = require('internal-test-utils').act;
-    assertLog = require('internal-test-utils').assertLog;
+    ({assertConsoleErrorDev, assertLog} = require('internal-test-utils'));
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -732,6 +745,15 @@ describe('ReactDOMFiber', () => {
     await act(async () => {
       root.render(<Parent />);
     });
+    assertConsoleErrorDev([
+      'Parent uses the legacy childContextTypes API which will soon be removed. ' +
+        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in Parent (at **)',
+      'Component uses the legacy contextTypes API which will soon be removed. ' +
+        'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+        (gate('enableOwnerStacks') ? '' : '    in Component (at **)\n') +
+        '    in Parent (at **)',
+    ]);
     expect(container.innerHTML).toBe('');
     expect(portalContainer.innerHTML).toBe('<div>bar</div>');
   });
@@ -940,15 +962,14 @@ describe('ReactDOMFiber', () => {
         return <div onClick="woops" />;
       }
     }
-    expect(() => {
-      ReactDOM.flushSync(() => {
-        root.render(<Example />);
-      });
-    }).toErrorDev(
+    ReactDOM.flushSync(() => {
+      root.render(<Example />);
+    });
+    assertConsoleErrorDev([
       'Expected `onClick` listener to be a function, instead got a value of `string` type.\n' +
         '    in div (at **)\n' +
         '    in Example (at **)',
-    );
+    ]);
   });
 
   it('should warn with a special message for `false` event listeners', () => {
@@ -957,17 +978,16 @@ describe('ReactDOMFiber', () => {
         return <div onClick={false} />;
       }
     }
-    expect(() => {
-      ReactDOM.flushSync(() => {
-        root.render(<Example />);
-      });
-    }).toErrorDev(
+    ReactDOM.flushSync(() => {
+      root.render(<Example />);
+    });
+    assertConsoleErrorDev([
       'Expected `onClick` listener to be a function, instead got `false`.\n\n' +
         'If you used to conditionally omit it with onClick={condition && value}, ' +
         'pass onClick={condition ? value : undefined} instead.\n' +
         '    in div (at **)\n' +
         '    in Example (at **)',
-    );
+    ]);
   });
 
   it('should not update event handlers until commit', async () => {
@@ -1265,5 +1285,49 @@ describe('ReactDOMFiber', () => {
       );
     });
     expect(didCallOnChange).toBe(true);
+  });
+
+  it('should restore selection in the correct window', async () => {
+    // creating new JSDOM instance to get a second window as window.open is not implemented
+    // https://github.com/jsdom/jsdom/blob/c53efc81e75f38a0558fbf3ed75d30b78b4c4898/lib/jsdom/browser/Window.js#L987
+    const {window: newWindow} = new JSDOM('');
+    // creating a new container since the default cleanup expects the existing container to be in the document
+    const newContainer = newWindow.document.createElement('div');
+    newWindow.document.body.appendChild(newContainer);
+    root = ReactDOMClient.createRoot(newContainer);
+
+    const Test = () => {
+      const [reverse, setReverse] = React.useState(false);
+      const [items] = React.useState(() => ['a', 'b', 'c']);
+      const onClick = () => {
+        setReverse(true);
+      };
+
+      // shuffle the items so that the react commit needs to restore focus
+      // to the correct element after commit
+      const itemsToRender = reverse ? items.reverse() : items;
+
+      return (
+        <div>
+          {itemsToRender.map(item => (
+            <button onClick={onClick} key={item} id={item}>
+              {item}
+            </button>
+          ))}
+        </div>
+      );
+    };
+
+    await act(() => {
+      root.render(<Test />);
+    });
+
+    newWindow.document.getElementById('a').focus();
+    await act(() => {
+      newWindow.document.getElementById('a').click();
+    });
+
+    expect(newWindow.document.activeElement).not.toBe(newWindow.document.body);
+    expect(newWindow.document.activeElement.innerHTML).toBe('a');
   });
 });

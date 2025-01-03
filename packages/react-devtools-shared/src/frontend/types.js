@@ -48,11 +48,25 @@ export const ElementTypeRoot = 11;
 export const ElementTypeSuspense = 12;
 export const ElementTypeSuspenseList = 13;
 export const ElementTypeTracingMarker = 14;
+export const ElementTypeVirtual = 15;
 
 // Different types of elements displayed in the Elements tree.
 // These types may be used to visually distinguish types,
 // or to enable/disable certain functionality.
-export type ElementType = 1 | 2 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14;
+export type ElementType =
+  | 1
+  | 2
+  | 5
+  | 6
+  | 7
+  | 8
+  | 9
+  | 10
+  | 11
+  | 12
+  | 13
+  | 14
+  | 15;
 
 // WARNING
 // The values below are referenced by ComponentFilters (which are saved via localStorage).
@@ -62,8 +76,9 @@ export const ComponentFilterElementType = 1;
 export const ComponentFilterDisplayName = 2;
 export const ComponentFilterLocation = 3;
 export const ComponentFilterHOC = 4;
+export const ComponentFilterEnvironmentName = 5;
 
-export type ComponentFilterType = 1 | 2 | 3 | 4;
+export type ComponentFilterType = 1 | 2 | 3 | 4 | 5;
 
 // Hide all elements of types in this Set.
 // We hide host components only by default.
@@ -88,10 +103,18 @@ export type BooleanComponentFilter = {
   type: 4,
 };
 
+export type EnvironmentNameComponentFilter = {
+  isEnabled: boolean,
+  isValid: boolean,
+  type: 5,
+  value: string,
+};
+
 export type ComponentFilter =
   | BooleanComponentFilter
   | ElementTypeComponentFilter
-  | RegExpComponentFilter;
+  | RegExpComponentFilter
+  | EnvironmentNameComponentFilter;
 
 export type HookName = string | null;
 // Map of hook source ("<filename>:<line-number>:<column-number>") to name.
@@ -119,7 +142,7 @@ export type Plugins = {
 
 export const StrictMode = 1;
 
-// Each element on the frontend corresponds to a Fiber on the backend.
+// Each element on the frontend corresponds to an ElementID (e.g. a Fiber) on the backend.
 // Some of its information (e.g. id, type, displayName) come from the backend.
 // Other bits (e.g. weight and depth) are computed on the frontend for windowing and display purposes.
 // Elements are updated on a push basis– meaning the backend pushes updates to the frontend when needed.
@@ -196,7 +219,6 @@ export type InspectedElement = {
   // Is this Error, and can its value be overridden now?
   isErrored: boolean,
   canToggleError: boolean,
-  targetErrorBoundaryID: ?number,
 
   // Is this Suspense, and can its value be overridden now?
   canToggleSuspense: boolean,

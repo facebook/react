@@ -4,5 +4,5 @@ function Component(props) {
 
   const count = foo(items.length + 1);
 
-  return { items, count };
+  return {items, count};
 }

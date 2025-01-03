@@ -68,7 +68,6 @@ function transform(file, enc, cb) {
 gs([
   'packages/**/*.js',
   '!packages/*/npm/**/*.js',
-  '!packages/shared/consoleWithStackDev.js',
   '!packages/react-devtools*/**/*.js',
   '!**/__tests__/**/*.js',
   '!**/__mocks__/**/*.js',

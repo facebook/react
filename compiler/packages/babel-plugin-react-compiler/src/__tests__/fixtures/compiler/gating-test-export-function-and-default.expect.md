@@ -4,7 +4,7 @@
 ```javascript
 // @gating @compilationMode(annotation)
 export default function Bar(props) {
-  "use forget";
+  'use forget';
   return <div>{props.bar}</div>;
 }
 
@@ -13,7 +13,7 @@ function NoForget(props) {
 }
 
 export function Foo(props) {
-  "use forget";
+  'use forget';
   return <Foo>{props.bar}</Foo>;
 }
 

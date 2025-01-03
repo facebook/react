@@ -1,4 +1,4 @@
-import { print } from "shared-runtime";
+import {print} from 'shared-runtime';
 
 function hoisting(cond) {
   if (cond) {

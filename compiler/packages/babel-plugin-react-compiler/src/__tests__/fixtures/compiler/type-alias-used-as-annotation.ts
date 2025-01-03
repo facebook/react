@@ -5,7 +5,7 @@ function TypeAliasUsedAsParamAnnotation() {
   const fun = (f: Foo) => {
     console.log(f);
   };
-  fun("hello, world");
+  fun('hello, world');
 }
 
 export const FIXTURE_ENTRYPOINT = {

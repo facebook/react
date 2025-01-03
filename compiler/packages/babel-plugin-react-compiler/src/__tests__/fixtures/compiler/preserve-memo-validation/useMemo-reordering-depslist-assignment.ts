@@ -1,11 +1,11 @@
-import { useMemo } from "react";
+import {useMemo} from 'react';
 
 function useFoo(arr1, arr2) {
   const x = [arr1];
 
   let y;
   return useMemo(() => {
-    return { y };
+    return {y};
   }, [((y = x.concat(arr2)), y)]);
 }
 

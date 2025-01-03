@@ -8,27 +8,27 @@
 module.exports = function makeE2EConfig(displayName, useForget) {
   return {
     displayName,
-    testEnvironment: "jsdom",
-    rootDir: "../../src",
-    testMatch: ["**/*.e2e.(js|tsx)"],
+    testEnvironment: 'jsdom',
+    rootDir: '../../src',
+    testMatch: ['**/*.e2e.(js|tsx)'],
     modulePathIgnorePatterns: [
       // ignore snapshots from the opposite forget configuration
-      useForget ? ".*\\.no-forget\\.snap$" : ".*\\.with-forget\\.snap$",
+      useForget ? '.*\\.no-forget\\.snap$' : '.*\\.with-forget\\.snap$',
       // ignore snapshots from the main project
-      ".*\\.ts\\.snap$",
+      '.*\\.ts\\.snap$',
     ],
     globals: {
       __FORGET__: useForget,
     },
     snapshotResolver: useForget
-      ? "<rootDir>/../scripts/jest/snapshot-resolver-with-forget.js"
-      : "<rootDir>/../scripts/jest/snapshot-resolver-no-forget.js",
+      ? '<rootDir>/../scripts/jest/snapshot-resolver-with-forget.js'
+      : '<rootDir>/../scripts/jest/snapshot-resolver-no-forget.js',
 
     transform: {
-      "\\.[tj]sx?$": useForget
-        ? "<rootDir>/../scripts/jest/transform-with-forget"
-        : "<rootDir>/../scripts/jest/transform-no-forget",
+      '\\.[tj]sx?$': useForget
+        ? '<rootDir>/../scripts/jest/transform-with-forget'
+        : '<rootDir>/../scripts/jest/transform-no-forget',
     },
-    transformIgnorePatterns: ["/node_modules/"],
+    transformIgnorePatterns: ['/node_modules/'],
   };
 };

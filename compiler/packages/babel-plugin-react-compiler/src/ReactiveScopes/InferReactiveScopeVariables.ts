@@ -5,25 +5,27 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError, SourceLocation } from "..";
-import { Environment } from "../HIR";
+import {CompilerError, SourceLocation} from '..';
+import {Environment} from '../HIR';
 import {
+  DeclarationId,
   GeneratedSource,
   HIRFunction,
   Identifier,
   Instruction,
+  InstructionId,
+  MutableRange,
   Place,
   ReactiveScope,
   makeInstructionId,
-} from "../HIR/HIR";
+} from '../HIR/HIR';
 import {
   doesPatternContainSpreadElement,
   eachInstructionOperand,
   eachPatternOperand,
-} from "../HIR/visitors";
-import DisjointSet from "../Utils/DisjointSet";
-import { logHIRFunction } from "../Utils/logger";
-import { assertExhaustive } from "../Utils/utils";
+} from '../HIR/visitors';
+import DisjointSet from '../Utils/DisjointSet';
+import {assertExhaustive} from '../Utils/utils';
 
 /*
  * Note: this is the 1st of 4 passes that determine how to break a function into discrete
@@ -114,11 +116,15 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
       };
       scopes.set(groupIdentifier, scope);
     } else {
-      scope.range.start = makeInstructionId(
-        Math.min(scope.range.start, identifier.mutableRange.start)
-      );
+      if (scope.range.start === 0) {
+        scope.range.start = identifier.mutableRange.start;
+      } else if (identifier.mutableRange.start !== 0) {
+        scope.range.start = makeInstructionId(
+          Math.min(scope.range.start, identifier.mutableRange.start),
+        );
+      }
       scope.range.end = makeInstructionId(
-        Math.max(scope.range.end, identifier.mutableRange.end)
+        Math.max(scope.range.end, identifier.mutableRange.end),
       );
       scope.loc = mergeLocation(scope.loc, identifier.loc);
     }
@@ -132,7 +138,7 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
       maxInstruction = makeInstructionId(Math.max(maxInstruction, instr.id));
     }
     maxInstruction = makeInstructionId(
-      Math.max(maxInstruction, block.terminal.id)
+      Math.max(maxInstruction, block.terminal.id),
     );
   }
 
@@ -149,7 +155,11 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
       scope.range.end > maxInstruction + 1
     ) {
       // Make it easier to debug why the error occurred
-      logHIRFunction("InferReactiveScopeVariables (invalid scope)", fn);
+      fn.env.logger?.debugLogIRs?.({
+        kind: 'hir',
+        name: 'InferReactiveScopeVariables (invalid scope)',
+        value: fn,
+      });
       CompilerError.invariant(false, {
         reason: `Invalid mutable range for scope`,
         loc: GeneratedSource,
@@ -181,78 +191,92 @@ function mergeLocation(l: SourceLocation, r: SourceLocation): SourceLocation {
 }
 
 // Is the operand mutable at this given instruction
-export function isMutable({ id }: Instruction, place: Place): boolean {
-  const range = place.identifier.mutableRange;
+export function isMutable(instr: {id: InstructionId}, place: Place): boolean {
+  return inRange(instr, place.identifier.mutableRange);
+}
+
+export function inRange(
+  {id}: {id: InstructionId},
+  range: MutableRange,
+): boolean {
   return id >= range.start && id < range.end;
 }
 
 function mayAllocate(env: Environment, instruction: Instruction): boolean {
-  const { value } = instruction;
+  const {value} = instruction;
   switch (value.kind) {
-    case "Destructure": {
+    case 'Destructure': {
       return doesPatternContainSpreadElement(value.lvalue.pattern);
     }
-    case "PostfixUpdate":
-    case "PrefixUpdate":
-    case "Await":
-    case "DeclareLocal":
-    case "DeclareContext":
-    case "StoreLocal":
-    case "LoadGlobal":
-    case "MetaProperty":
-    case "TypeCastExpression":
-    case "LoadLocal":
-    case "LoadContext":
-    case "StoreContext":
-    case "PropertyDelete":
-    case "ComputedLoad":
-    case "ComputedDelete":
-    case "JSXText":
-    case "TemplateLiteral":
-    case "Primitive":
-    case "GetIterator":
-    case "IteratorNext":
-    case "NextPropertyOf":
-    case "Debugger":
-    case "StartMemoize":
-    case "FinishMemoize":
-    case "UnaryExpression":
-    case "BinaryExpression":
-    case "PropertyLoad":
-    case "StoreGlobal": {
+    case 'PostfixUpdate':
+    case 'PrefixUpdate':
+    case 'Await':
+    case 'DeclareLocal':
+    case 'DeclareContext':
+    case 'StoreLocal':
+    case 'LoadGlobal':
+    case 'MetaProperty':
+    case 'TypeCastExpression':
+    case 'LoadLocal':
+    case 'LoadContext':
+    case 'StoreContext':
+    case 'PropertyDelete':
+    case 'ComputedLoad':
+    case 'ComputedDelete':
+    case 'JSXText':
+    case 'TemplateLiteral':
+    case 'Primitive':
+    case 'GetIterator':
+    case 'IteratorNext':
+    case 'NextPropertyOf':
+    case 'Debugger':
+    case 'StartMemoize':
+    case 'FinishMemoize':
+    case 'UnaryExpression':
+    case 'BinaryExpression':
+    case 'PropertyLoad':
+    case 'StoreGlobal': {
       return false;
     }
-    case "CallExpression":
-    case "MethodCall": {
-      return instruction.lvalue.identifier.type.kind !== "Primitive";
+    case 'TaggedTemplateExpression':
+    case 'CallExpression':
+    case 'MethodCall': {
+      return instruction.lvalue.identifier.type.kind !== 'Primitive';
     }
-    case "RegExpLiteral":
-    case "PropertyStore":
-    case "ComputedStore":
-    case "ArrayExpression":
-    case "JsxExpression":
-    case "JsxFragment":
-    case "NewExpression":
-    case "ObjectExpression":
-    case "UnsupportedNode":
-    case "ObjectMethod":
-    case "FunctionExpression":
-    case "TaggedTemplateExpression": {
+    case 'RegExpLiteral':
+    case 'PropertyStore':
+    case 'ComputedStore':
+    case 'ArrayExpression':
+    case 'JsxExpression':
+    case 'JsxFragment':
+    case 'NewExpression':
+    case 'ObjectExpression':
+    case 'UnsupportedNode':
+    case 'ObjectMethod':
+    case 'FunctionExpression': {
       return true;
     }
     default: {
       assertExhaustive(
         value,
-        `Unexpected value kind \`${(value as any).kind}\``
+        `Unexpected value kind \`${(value as any).kind}\``,
       );
     }
   }
 }
 
 export function findDisjointMutableValues(
-  fn: HIRFunction
+  fn: HIRFunction,
 ): DisjointSet<Identifier> {
   const scopeIdentifiers = new DisjointSet<Identifier>();
+
+  const declarations = new Map<DeclarationId, Identifier>();
+  function declareIdentifier(lvalue: Place): void {
+    if (!declarations.has(lvalue.identifier.declarationId)) {
+      declarations.set(lvalue.identifier.declarationId, lvalue.identifier);
+    }
+  }
+
   for (const [_, block] of fn.body.blocks) {
     /*
      * If a phi is mutated after creation, then we need to alias all of its operands such that they
@@ -260,17 +284,25 @@ export function findDisjointMutableValues(
      */
     for (const phi of block.phis) {
       if (
-        // The phi was reset because it was not mutated after creation
-        phi.id.mutableRange.start + 1 !== phi.id.mutableRange.end &&
-        phi.id.mutableRange.end >
+        phi.place.identifier.mutableRange.start + 1 !==
+          phi.place.identifier.mutableRange.end &&
+        phi.place.identifier.mutableRange.end >
           (block.instructions.at(0)?.id ?? block.terminal.id)
       ) {
-        for (const [, phiId] of phi.operands) {
-          scopeIdentifiers.union([phi.id, phiId]);
+        const operands = [phi.place.identifier];
+        const declaration = declarations.get(
+          phi.place.identifier.declarationId,
+        );
+        if (declaration !== undefined) {
+          operands.push(declaration);
         }
+        for (const [_, phiId] of phi.operands) {
+          operands.push(phiId.identifier);
+        }
+        scopeIdentifiers.union(operands);
       } else if (fn.env.config.enableForest) {
         for (const [, phiId] of phi.operands) {
-          scopeIdentifiers.union([phi.id, phiId]);
+          scopeIdentifiers.union([phi.place.identifier, phiId.identifier]);
         }
       }
     }
@@ -282,9 +314,15 @@ export function findDisjointMutableValues(
         operands.push(instr.lvalue!.identifier);
       }
       if (
-        instr.value.kind === "StoreLocal" ||
-        instr.value.kind === "StoreContext"
+        instr.value.kind === 'DeclareLocal' ||
+        instr.value.kind === 'DeclareContext'
       ) {
+        declareIdentifier(instr.value.lvalue.place);
+      } else if (
+        instr.value.kind === 'StoreLocal' ||
+        instr.value.kind === 'StoreContext'
+      ) {
+        declareIdentifier(instr.value.lvalue.place);
         if (
           instr.value.lvalue.place.identifier.mutableRange.end >
           instr.value.lvalue.place.identifier.mutableRange.start + 1
@@ -297,8 +335,9 @@ export function findDisjointMutableValues(
         ) {
           operands.push(instr.value.value.identifier);
         }
-      } else if (instr.value.kind === "Destructure") {
+      } else if (instr.value.kind === 'Destructure') {
         for (const place of eachPatternOperand(instr.value.lvalue.pattern)) {
+          declareIdentifier(place);
           if (
             place.identifier.mutableRange.end >
             place.identifier.mutableRange.start + 1
@@ -312,7 +351,7 @@ export function findDisjointMutableValues(
         ) {
           operands.push(instr.value.value.identifier);
         }
-      } else if (instr.value.kind === "MethodCall") {
+      } else if (instr.value.kind === 'MethodCall') {
         for (const operand of eachInstructionOperand(instr)) {
           if (
             isMutable(instr, operand) &&

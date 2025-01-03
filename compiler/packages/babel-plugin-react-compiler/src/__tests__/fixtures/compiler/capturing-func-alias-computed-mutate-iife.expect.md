@@ -2,13 +2,13 @@
 ## Input
 
 ```javascript
-const { mutate } = require("shared-runtime");
+const {mutate} = require('shared-runtime');
 
 function component(a) {
-  let x = { a };
+  let x = {a};
   let y = {};
   (function () {
-    y["x"] = x;
+    y['x'] = x;
   })();
   mutate(y);
   return y;
@@ -16,7 +16,7 @@ function component(a) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: component,
-  params: ["foo"],
+  params: ['foo'],
 };
 
 ```

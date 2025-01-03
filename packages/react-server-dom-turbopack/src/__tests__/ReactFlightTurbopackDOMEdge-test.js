@@ -28,7 +28,7 @@ let ReactServerDOMServer;
 let ReactServerDOMClient;
 let use;
 
-describe('ReactFlightDOMEdge', () => {
+describe('ReactFlightTurbopackDOMEdge', () => {
   beforeEach(() => {
     jest.resetModules();
 
@@ -97,7 +97,7 @@ describe('ReactFlightDOMEdge', () => {
       turbopackMap,
     );
     const response = ReactServerDOMClient.createFromReadableStream(stream, {
-      ssrManifest: {
+      serverConsumerManifest: {
         moduleMap: translationMap,
         moduleLoading: null,
       },

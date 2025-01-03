@@ -77,7 +77,7 @@ describe('Activity StrictMode', () => {
     ]);
   });
 
-  // @gate __DEV__ && enableActivity && useModernStrictMode
+  // @gate __DEV__ && enableActivity
   it('should not trigger strict effects when offscreen is hidden', async () => {
     await act(() => {
       ReactNoop.render(
@@ -240,6 +240,11 @@ describe('Activity StrictMode', () => {
       'Parent mount',
       'Parent unmount',
       'Parent mount',
+
+      ...(gate('enableSiblingPrerendering')
+        ? ['Child rendered', 'Child suspended']
+        : []),
+
       '------------------------------',
       'Child rendered',
       'Child rendered',

@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { setProperty } from "shared-runtime";
+import {setProperty} from 'shared-runtime';
 
 function Component(props) {
   // start of scope for y, depend on props.a
@@ -22,7 +22,7 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ a: 42 }],
+  params: [{a: 42}],
 };
 
 ```

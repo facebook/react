@@ -48,7 +48,7 @@ export function clearErrorsForElement({
   id: number,
   rendererID: number,
 }): void {
-  bridge.send('clearErrorsForFiberID', {
+  bridge.send('clearErrorsForElementID', {
     rendererID,
     id,
   });
@@ -63,7 +63,7 @@ export function clearWarningsForElement({
   id: number,
   rendererID: number,
 }): void {
-  bridge.send('clearWarningsForFiberID', {
+  bridge.send('clearWarningsForElementID', {
     rendererID,
     id,
   });
@@ -221,7 +221,6 @@ export function convertInspectedElementBackendToFrontend(
     canEditHooksAndRenamePaths,
     canToggleError,
     isErrored,
-    targetErrorBoundaryID,
     canToggleSuspense,
     canViewSource,
     hasLegacyContext,
@@ -251,7 +250,6 @@ export function convertInspectedElementBackendToFrontend(
     canEditHooksAndRenamePaths,
     canToggleError,
     isErrored,
-    targetErrorBoundaryID,
     canToggleSuspense,
     canViewSource,
     hasLegacyContext,

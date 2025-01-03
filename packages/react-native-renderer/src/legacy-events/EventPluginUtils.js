@@ -45,15 +45,15 @@ function validateEventDispatches(event) {
     const listenersLen = listenersIsArr
       ? dispatchListeners.length
       : dispatchListeners
-      ? 1
-      : 0;
+        ? 1
+        : 0;
 
     const instancesIsArr = isArray(dispatchInstances);
     const instancesLen = instancesIsArr
       ? dispatchInstances.length
       : dispatchInstances
-      ? 1
-      : 0;
+        ? 1
+        : 0;
 
     if (instancesIsArr !== listenersIsArr || instancesLen !== listenersLen) {
       console.error('EventPluginUtils: Invalid `event`.');

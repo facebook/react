@@ -5,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { render, screen, fireEvent } from "@testing-library/react";
-import * as React from "react";
-import { expectLogsAndClear, log } from "./expectLogs";
+import {render, screen, fireEvent} from '@testing-library/react';
+import * as React from 'react';
+import {expectLogsAndClear, log} from './expectLogs';
 
 function Counter(props) {
   let value = props.value;
@@ -27,8 +27,8 @@ function Counter(props) {
   return <span>{value}</span>;
 }
 
-test("use-state", async () => {
-  const { asFragment, rerender } = render(<Counter value={0} />);
+test('use-state', async () => {
+  const {asFragment, rerender} = render(<Counter value={0} />);
   expect(asFragment()).toMatchInlineSnapshot(`
     <DocumentFragment>
       <span>
