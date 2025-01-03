@@ -1377,26 +1377,14 @@ describe('ReactFlight', () => {
         errors: [
           {
             message: 'This is an error',
-            stack: gate(
-              flags =>
-                flags.enableOwnerStacks || flags.enableServerComponentLogs,
-            )
-              ? expect.stringContaining(
-                  'Error: This is an error\n' +
-                    '    at eval (eval at testFunction (inspected-page.html:29:11),%20%3Canonymous%3E:1:35)\n' +
-                    '    at ServerComponentError (file://~/(some)(really)(exotic-directory)/ReactFlight-test.js:1166:19)\n' +
-                    '    at <anonymous> (file:///testing.js:42:3)\n' +
-                    '    at <anonymous> (file:///testing.js:42:3)\n' +
-                    '    at div (<anonymous>',
-                )
-              : expect.stringContaining(
-                  'Error: This is an error\n' +
-                    '    at eval (eval at testFunction (inspected-page.html:29:11),%20%3Canonymous%3E:1:10)\n' +
-                    '    at ServerComponentError (file://~/(some)(really)(exotic-directory)/ReactFlight-test.js:1166:19)\n' +
-                    '    at file:///testing.js:42:3\n' +
-                    '    at file:///testing.js:42:3\n' +
-                    '    at div (<anonymous>',
-                ),
+            stack: expect.stringContaining(
+              'Error: This is an error\n' +
+                '    at eval (eval at testFunction (inspected-page.html:29:11),%20%3Canonymous%3E:1:35)\n' +
+                '    at ServerComponentError (file://~/(some)(really)(exotic-directory)/ReactFlight-test.js:1166:19)\n' +
+                '    at <anonymous> (file:///testing.js:42:3)\n' +
+                '    at <anonymous> (file:///testing.js:42:3)\n' +
+                '    at div (<anonymous>',
+            ),
             digest: 'a dev digest',
             environmentName: 'Server',
           },
@@ -1415,18 +1403,16 @@ describe('ReactFlight', () => {
               ['', 'Server'],
               [__filename, 'Server'],
             ]
-          : gate(flags => flags.enableServerComponentLogs)
-            ? [
-                // TODO: What should we request here? The outer (<anonymous>) or the inner (inspected-page.html)?
-                ['inspected-page.html:29:11), <anonymous>', 'Server'],
-                [
-                  'file://~/(some)(really)(exotic-directory)/ReactFlight-test.js',
-                  'Server',
-                ],
-                ['file:///testing.js', 'Server'],
-                ['', 'Server'],
-              ]
-            : [],
+          : [
+              // TODO: What should we request here? The outer (<anonymous>) or the inner (inspected-page.html)?
+              ['inspected-page.html:29:11), <anonymous>', 'Server'],
+              [
+                'file://~/(some)(really)(exotic-directory)/ReactFlight-test.js',
+                'Server',
+              ],
+              ['file:///testing.js', 'Server'],
+              ['', 'Server'],
+            ],
       });
     } else {
       expect(errors.map(getErrorForJestMatcher)).toEqual([
@@ -3312,14 +3298,7 @@ describe('ReactFlight', () => {
       .split('\n')
       .slice(0, 4)
       .join('\n')
-      .replaceAll(
-        ' (/',
-        gate(
-          flags => flags.enableOwnerStacks || flags.enableServerComponentLogs,
-        )
-          ? ' (file:///'
-          : ' (/',
-      ); // The eval will end up normalizing these
+      .replaceAll(' (/', ' (file:///'); // The eval will end up normalizing these
 
     let sawReactPrefix = false;
     const environments = [];
@@ -3352,7 +3331,7 @@ describe('ReactFlight', () => {
         'third-party',
         'third-party',
       ]);
-    } else if (__DEV__ && gate(flags => flags.enableServerComponentLogs)) {
+    } else if (__DEV__) {
       expect(environments.slice(0, 3)).toEqual([
         'third-party',
         'third-party',
@@ -3412,7 +3391,7 @@ describe('ReactFlight', () => {
     expect(ReactNoop).toMatchRenderedOutput(<div>hi</div>);
   });
 
-  // @gate enableServerComponentLogs && __DEV__ && enableOwnerStacks
+  // @gate __DEV__ && enableOwnerStacks
   it('replays logs, but not onError logs', async () => {
     function foo() {
       return 'hello';
@@ -3493,7 +3472,7 @@ describe('ReactFlight', () => {
     expect(ownerStacks).toEqual(['\n    in App (at **)']);
   });
 
-  // @gate enableServerComponentLogs && __DEV__
+  // @gate __DEV__
   it('replays logs with cyclic objects', async () => {
     const cyclic = {cycle: null};
     cyclic.cycle = cyclic;
@@ -3764,7 +3743,7 @@ describe('ReactFlight', () => {
     );
   });
 
-  // @gate (enableOwnerStacks && enableServerComponentLogs) || !__DEV__
+  // @gate (enableOwnerStacks) || !__DEV__
   it('should include only one component stack in replayed logs (if DevTools or polyfill adds them)', () => {
     class MyError extends Error {
       toJSON() {

@@ -66,7 +66,6 @@ export const enableRetryLaneExpiration = false;
 export const enableSchedulingProfiler = __PROFILE__;
 export const enableComponentPerformanceTrack = false;
 export const enableScopeAPI = false;
-export const enableServerComponentLogs = true;
 export const enableSuspenseAvoidThisFallback = false;
 export const enableSuspenseCallback = true;
 export const enableTaint = true;
