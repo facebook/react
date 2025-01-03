@@ -14,12 +14,16 @@ import type {EventSystemFlags} from '../EventSystemFlags';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {FormStatus} from 'react-dom-bindings/src/shared/ReactDOMFormActions';
 
-import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
+import {
+  disableInputAttributeSyncing,
+  enableTrustedTypesIntegration,
+} from 'shared/ReactFeatureFlags';
 import {getFiberCurrentPropsFromNode} from '../../client/ReactDOMComponentTree';
 import {startHostTransition} from 'react-reconciler/src/ReactFiberReconciler';
 import {didCurrentEventScheduleTransition} from 'react-reconciler/src/ReactFiberRootScheduler';
 import sanitizeURL from 'react-dom-bindings/src/shared/sanitizeURL';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
+import {setDefaultValue} from '../../client/ReactDOMInput';
 
 import {SyntheticEvent} from '../SyntheticEvent';
 
@@ -92,6 +96,19 @@ function extractEvents(
   }
   const formInst = maybeTargetInst;
   const form: HTMLFormElement = (nativeEventTarget: any);
+
+  if (!disableInputAttributeSyncing) {
+    for (let i = 0; i < form.elements.length; i++) {
+      const input: HTMLInputElement = (form.elements.item(i): any);
+      if (
+        input.nodeName.toLowerCase() === 'input' &&
+        (input.type === 'number' || input.type === 'email')
+      ) {
+        setDefaultValue(input, input.type, input.value, true);
+      }
+    }
+  }
+
   let action = coerceFormActionProp(
     (getFiberCurrentPropsFromNode(form): any).action,
   );
