@@ -3,7 +3,14 @@
   "version": "0.0.0",
   "private": "true",
   "license": "MIT",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
+    "directory": "packages/react-devtools-fusebox"
+  },
   "scripts": {
     "build:frontend:copy-types": "cp src/*.d.ts dist/",
     "build:frontend:local": "cross-env NODE_ENV=development webpack --config webpack.config.frontend.js && yarn build:frontend:copy-types",

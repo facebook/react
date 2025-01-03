@@ -3,6 +3,11 @@
   "name": "react-devtools-timeline",
   "version": "6.0.1",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
+    "directory": "packages/react-devtools-timeline"
+  },
   "dependencies": {
     "@elg/speedscope": "1.9.0-a6f84db",
     "clipboard-js": "^0.3.6",

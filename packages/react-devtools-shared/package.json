@@ -2,6 +2,11 @@
   "private": true,
   "name": "react-devtools-shared",
   "version": "0.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
+    "directory": "packages/react-devtools-shared"
+  },
   "scripts": {
     "update-mock-source-maps": "babel-node --presets=@babel/preset-env,@babel/preset-flow ./src/hooks/__tests__/updateMockSourceMaps.js"
   },
