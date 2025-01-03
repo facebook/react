@@ -1798,6 +1798,7 @@ function getReactiveHookCallbackIndex(calleeNode, options) {
   switch (node.name) {
     case 'useEffect':
     case 'useLayoutEffect':
+    case 'useInsertionEffect':
     case 'useCallback':
     case 'useMemo':
       // useEffect(fn)

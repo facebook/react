@@ -190,6 +190,7 @@ const tests = {
         function MyComponent(props) {
           useEffect(() => {});
           useLayoutEffect(() => {});
+          useInsertionEffect(() => {});
           useImperativeHandle(props.innerRef, () => {});
         }
       `,
@@ -1031,6 +1032,9 @@ const tests = {
           useMemo(() => {
             return Store.subscribe(handleNext);
           }, []);
+          useInsertionEffect(() => {
+            return Store.subscribe(handleNext);
+          }, []);
         }
       `,
     },
@@ -1063,6 +1067,9 @@ const tests = {
           }, []);
           useMemo(() => {
             return Store.subscribe(handleNext3);
+          }, []);
+          useInsertionEffect(() => {
+            return Store.subscribe(handleNext2);
           }, []);
         }
       `,
@@ -1817,6 +1824,7 @@ const tests = {
           useLayoutEffect()
           useCallback()
           useMemo()
+          useInsertionEffect()
         }
       `,
       errors: [
@@ -1841,6 +1849,12 @@ const tests = {
         {
           message:
             'React Hook useMemo requires an effect callback. ' +
+            'Did you forget to pass a callback to the hook?',
+          suggestions: undefined,
+        },
+        {
+          message:
+            'React Hook useInsertionEffect requires an effect callback. ' +
             'Did you forget to pass a callback to the hook?',
           suggestions: undefined,
         },
@@ -5045,6 +5059,10 @@ const tests = {
             setTimeout(() => console.log(taint));
             dispatch({ type: 'x', value });
           };
+          let handleNext4 = function(value) {
+            setTimeout(() => console.log(taint));
+            dispatch({ type: 'y', value });
+          };
           useEffect(() => {
             return Store.subscribe(handleNext1);
           }, []);
@@ -5053,6 +5071,9 @@ const tests = {
           }, []);
           useMemo(() => {
             return Store.subscribe(handleNext3);
+          }, []);
+          useInsertionEffect(() => {
+            return Store.subscribe(handleNext4);
           }, []);
         }
       `,
@@ -5083,6 +5104,10 @@ const tests = {
                     setTimeout(() => console.log(taint));
                     dispatch({ type: 'x', value });
                   };
+                  let handleNext4 = function(value) {
+                    setTimeout(() => console.log(taint));
+                    dispatch({ type: 'y', value });
+                  };
                   useEffect(() => {
                     return Store.subscribe(handleNext1);
                   }, [handleNext1]);
@@ -5091,6 +5116,9 @@ const tests = {
                   }, []);
                   useMemo(() => {
                     return Store.subscribe(handleNext3);
+                  }, []);
+                  useInsertionEffect(() => {
+                    return Store.subscribe(handleNext4);
                   }, []);
                 }
               `,
@@ -5123,6 +5151,10 @@ const tests = {
                     setTimeout(() => console.log(taint));
                     dispatch({ type: 'x', value });
                   };
+                  let handleNext4 = function(value) {
+                    setTimeout(() => console.log(taint));
+                    dispatch({ type: 'y', value });
+                  };
                   useEffect(() => {
                     return Store.subscribe(handleNext1);
                   }, []);
@@ -5131,6 +5163,9 @@ const tests = {
                   }, [handleNext2]);
                   useMemo(() => {
                     return Store.subscribe(handleNext3);
+                  }, []);
+                  useInsertionEffect(() => {
+                    return Store.subscribe(handleNext4);
                   }, []);
                 }
               `,
@@ -5163,6 +5198,10 @@ const tests = {
                     setTimeout(() => console.log(taint));
                     dispatch({ type: 'x', value });
                   };
+                  let handleNext4 = function(value) {
+                    setTimeout(() => console.log(taint));
+                    dispatch({ type: 'y', value });
+                  };
                   useEffect(() => {
                     return Store.subscribe(handleNext1);
                   }, []);
@@ -5172,6 +5211,56 @@ const tests = {
                   useMemo(() => {
                     return Store.subscribe(handleNext3);
                   }, [handleNext3]);
+                  useInsertionEffect(() => {
+                    return Store.subscribe(handleNext4);
+                  }, []);
+                }
+              `,
+            },
+          ],
+        },
+        {
+          message:
+            "React Hook useInsertionEffect has a missing dependency: 'handleNext4'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [handleNext4]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  let [, setState] = useState();
+                  let [, dispatch] = React.useReducer();
+                  let taint = props.foo;
+
+                  function handleNext1(value) {
+                    let value2 = value * taint;
+                    setState(value2);
+                    console.log('hello');
+                  }
+                  const handleNext2 = (value) => {
+                    setState(taint(value));
+                    console.log('hello');
+                  };
+                  let handleNext3 = function(value) {
+                    setTimeout(() => console.log(taint));
+                    dispatch({ type: 'x', value });
+                  };
+                  let handleNext4 = function(value) {
+                    setTimeout(() => console.log(taint));
+                    dispatch({ type: 'y', value });
+                  };
+                  useEffect(() => {
+                    return Store.subscribe(handleNext1);
+                  }, []);
+                  useLayoutEffect(() => {
+                    return Store.subscribe(handleNext2);
+                  }, []);
+                  useMemo(() => {
+                    return Store.subscribe(handleNext3);
+                  }, []);
+                  useInsertionEffect(() => {
+                    return Store.subscribe(handleNext4);
+                  }, [handleNext4]);
                 }
               `,
             },
@@ -5203,6 +5292,10 @@ const tests = {
             console.log(taint);
             dispatch({ type: 'x', value });
           };
+          let handleNext4 = function(value) {
+            console.log(taint);
+            dispatch({ type: 'y', value });
+          };
           useEffect(() => {
             return Store.subscribe(handleNext1);
           }, []);
@@ -5211,6 +5304,9 @@ const tests = {
           }, []);
           useMemo(() => {
             return Store.subscribe(handleNext3);
+          }, []);
+          useInsertionEffect(() => {
+            return Store.subscribe(handleNext4);
           }, []);
         }
       `,
@@ -5244,6 +5340,10 @@ const tests = {
                     console.log(taint);
                     dispatch({ type: 'x', value });
                   };
+                  let handleNext4 = function(value) {
+                    console.log(taint);
+                    dispatch({ type: 'y', value });
+                  };
                   useEffect(() => {
                     return Store.subscribe(handleNext1);
                   }, [handleNext1]);
@@ -5252,6 +5352,9 @@ const tests = {
                   }, []);
                   useMemo(() => {
                     return Store.subscribe(handleNext3);
+                  }, []);
+                  useInsertionEffect(() => {
+                    return Store.subscribe(handleNext4);
                   }, []);
                 }
               `,
@@ -5287,6 +5390,10 @@ const tests = {
                     console.log(taint);
                     dispatch({ type: 'x', value });
                   };
+                  let handleNext4 = function(value) {
+                    console.log(taint);
+                    dispatch({ type: 'y', value });
+                  };
                   useEffect(() => {
                     return Store.subscribe(handleNext1);
                   }, []);
@@ -5295,6 +5402,9 @@ const tests = {
                   }, [handleNext2]);
                   useMemo(() => {
                     return Store.subscribe(handleNext3);
+                  }, []);
+                  useInsertionEffect(() => {
+                    return Store.subscribe(handleNext4);
                   }, []);
                 }
               `,
@@ -5330,6 +5440,10 @@ const tests = {
                     console.log(taint);
                     dispatch({ type: 'x', value });
                   };
+                  let handleNext4 = function(value) {
+                    console.log(taint);
+                    dispatch({ type: 'y', value });
+                  };
                   useEffect(() => {
                     return Store.subscribe(handleNext1);
                   }, []);
@@ -5339,6 +5453,59 @@ const tests = {
                   useMemo(() => {
                     return Store.subscribe(handleNext3);
                   }, [handleNext3]);
+                  useInsertionEffect(() => {
+                    return Store.subscribe(handleNext4);
+                  }, []);
+                }
+              `,
+            },
+          ],
+        },
+        {
+          message:
+            "React Hook useInsertionEffect has a missing dependency: 'handleNext4'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [handleNext4]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  let [, setState] = useState();
+                  let [, dispatch] = React.useReducer();
+                  let taint = props.foo;
+
+                  // Shouldn't affect anything
+                  function handleChange() {}
+
+                  function handleNext1(value) {
+                    let value2 = value * taint;
+                    setState(value2);
+                    console.log('hello');
+                  }
+                  const handleNext2 = (value) => {
+                    setState(taint(value));
+                    console.log('hello');
+                  };
+                  let handleNext3 = function(value) {
+                    console.log(taint);
+                    dispatch({ type: 'x', value });
+                  };
+                  let handleNext4 = function(value) {
+                    console.log(taint);
+                    dispatch({ type: 'y', value });
+                  };
+                  useEffect(() => {
+                    return Store.subscribe(handleNext1);
+                  }, []);
+                  useLayoutEffect(() => {
+                    return Store.subscribe(handleNext2);
+                  }, []);
+                  useMemo(() => {
+                    return Store.subscribe(handleNext3);
+                  }, []);
+                  useInsertionEffect(() => {
+                    return Store.subscribe(handleNext4);
+                  }, [handleNext4]);
                 }
               `,
             },
@@ -5370,6 +5537,10 @@ const tests = {
             console.log(taint);
             dispatch({ type: 'x', value });
           };
+          let handleNext4 = function(value) {
+            console.log(taint);
+            dispatch({ type: 'y', value });
+          };
           useEffect(() => {
             return Store.subscribe(handleNext1);
           }, []);
@@ -5378,6 +5549,9 @@ const tests = {
           }, []);
           useMemo(() => {
             return Store.subscribe(handleNext3);
+          }, []);
+          useInsertionEffect(() => {
+            return Store.subscribe(handleNext4);
           }, []);
         }
       `,
@@ -5411,6 +5585,10 @@ const tests = {
                     console.log(taint);
                     dispatch({ type: 'x', value });
                   };
+                  let handleNext4 = function(value) {
+                    console.log(taint);
+                    dispatch({ type: 'y', value });
+                  };
                   useEffect(() => {
                     return Store.subscribe(handleNext1);
                   }, [handleNext1]);
@@ -5419,6 +5597,9 @@ const tests = {
                   }, []);
                   useMemo(() => {
                     return Store.subscribe(handleNext3);
+                  }, []);
+                  useInsertionEffect(() => {
+                    return Store.subscribe(handleNext4);
                   }, []);
                 }
               `,
@@ -5454,6 +5635,10 @@ const tests = {
                     console.log(taint);
                     dispatch({ type: 'x', value });
                   };
+                  let handleNext4 = function(value) {
+                    console.log(taint);
+                    dispatch({ type: 'y', value });
+                  };
                   useEffect(() => {
                     return Store.subscribe(handleNext1);
                   }, []);
@@ -5462,6 +5647,9 @@ const tests = {
                   }, [handleNext2]);
                   useMemo(() => {
                     return Store.subscribe(handleNext3);
+                  }, []);
+                  useInsertionEffect(() => {
+                    return Store.subscribe(handleNext4);
                   }, []);
                 }
               `,
@@ -5497,6 +5685,10 @@ const tests = {
                     console.log(taint);
                     dispatch({ type: 'x', value });
                   };
+                  let handleNext4 = function(value) {
+                    console.log(taint);
+                    dispatch({ type: 'y', value });
+                  };
                   useEffect(() => {
                     return Store.subscribe(handleNext1);
                   }, []);
@@ -5506,6 +5698,59 @@ const tests = {
                   useMemo(() => {
                     return Store.subscribe(handleNext3);
                   }, [handleNext3]);
+                  useInsertionEffect(() => {
+                    return Store.subscribe(handleNext4);
+                  }, []);
+                }
+              `,
+            },
+          ],
+        },
+        {
+          message:
+            "React Hook useInsertionEffect has a missing dependency: 'handleNext4'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [handleNext4]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  let [, setState] = useState();
+                  let [, dispatch] = React.useReducer();
+                  let taint = props.foo;
+
+                  // Shouldn't affect anything
+                  const handleChange = () => {};
+
+                  function handleNext1(value) {
+                    let value2 = value * taint;
+                    setState(value2);
+                    console.log('hello');
+                  }
+                  const handleNext2 = (value) => {
+                    setState(taint(value));
+                    console.log('hello');
+                  };
+                  let handleNext3 = function(value) {
+                    console.log(taint);
+                    dispatch({ type: 'x', value });
+                  };
+                  let handleNext4 = function(value) {
+                    console.log(taint);
+                    dispatch({ type: 'y', value });
+                  };
+                  useEffect(() => {
+                    return Store.subscribe(handleNext1);
+                  }, []);
+                  useLayoutEffect(() => {
+                    return Store.subscribe(handleNext2);
+                  }, []);
+                  useMemo(() => {
+                    return Store.subscribe(handleNext3);
+                  }, []);
+                  useInsertionEffect(() => {
+                    return Store.subscribe(handleNext4);
+                  }, [handleNext4]);
                 }
               `,
             },
@@ -5633,6 +5878,9 @@ const tests = {
           let handleNext3 = function() {
             console.log('hello');
           };
+          let handleNext4 = function() {
+            console.log('hello');
+          };
           useEffect(() => {
             return Store.subscribe(handleNext1);
           }, [handleNext1]);
@@ -5642,28 +5890,38 @@ const tests = {
           useMemo(() => {
             return Store.subscribe(handleNext3);
           }, [handleNext3]);
+          useInsertionEffect(() => {
+            return Store.subscribe(handleNext4);
+          }, [handleNext4]);
         }
       `,
       errors: [
         {
           message:
             "The 'handleNext1' function makes the dependencies of useEffect Hook " +
-            '(at line 14) change on every render. Move it inside the useEffect callback. ' +
+            '(at line 17) change on every render. Move it inside the useEffect callback. ' +
             "Alternatively, wrap the definition of 'handleNext1' in its own useCallback() Hook.",
           suggestions: undefined,
         },
         {
           message:
             "The 'handleNext2' function makes the dependencies of useLayoutEffect Hook " +
-            '(at line 17) change on every render. Move it inside the useLayoutEffect callback. ' +
+            '(at line 20) change on every render. Move it inside the useLayoutEffect callback. ' +
             "Alternatively, wrap the definition of 'handleNext2' in its own useCallback() Hook.",
           suggestions: undefined,
         },
         {
           message:
             "The 'handleNext3' function makes the dependencies of useMemo Hook " +
-            '(at line 20) change on every render. Move it inside the useMemo callback. ' +
+            '(at line 23) change on every render. Move it inside the useMemo callback. ' +
             "Alternatively, wrap the definition of 'handleNext3' in its own useCallback() Hook.",
+          suggestions: undefined,
+        },
+        {
+          message:
+            "The 'handleNext4' function makes the dependencies of useInsertionEffect Hook " +
+            '(at line 26) change on every render. Move it inside the useInsertionEffect callback. ' +
+            "Alternatively, wrap the definition of 'handleNext4' in its own useCallback() Hook.",
           suggestions: undefined,
         },
       ],
@@ -5680,6 +5938,9 @@ const tests = {
           let handleNext3 = function() {
             console.log('hello');
           };
+          let handleNext4 = function() {
+            console.log('hello');
+          };
           useEffect(() => {
             handleNext1();
             return Store.subscribe(() => handleNext1());
@@ -5692,6 +5953,10 @@ const tests = {
             handleNext3();
             return Store.subscribe(() => handleNext3());
           }, [handleNext3]);
+          useInsertionEffect(() => {
+            handleNext4();
+            return Store.subscribe(() => handleNext4());
+          }, [handleNext4]);
         }
       `,
       // Suggestions don't wrap into useCallback here
@@ -5700,22 +5965,29 @@ const tests = {
         {
           message:
             "The 'handleNext1' function makes the dependencies of useEffect Hook " +
-            '(at line 15) change on every render. Move it inside the useEffect callback. ' +
+            '(at line 18) change on every render. Move it inside the useEffect callback. ' +
             "Alternatively, wrap the definition of 'handleNext1' in its own useCallback() Hook.",
           suggestions: undefined,
         },
         {
           message:
             "The 'handleNext2' function makes the dependencies of useLayoutEffect Hook " +
-            '(at line 19) change on every render. Move it inside the useLayoutEffect callback. ' +
+            '(at line 22) change on every render. Move it inside the useLayoutEffect callback. ' +
             "Alternatively, wrap the definition of 'handleNext2' in its own useCallback() Hook.",
           suggestions: undefined,
         },
         {
           message:
             "The 'handleNext3' function makes the dependencies of useMemo Hook " +
-            '(at line 23) change on every render. Move it inside the useMemo callback. ' +
+            '(at line 26) change on every render. Move it inside the useMemo callback. ' +
             "Alternatively, wrap the definition of 'handleNext3' in its own useCallback() Hook.",
+          suggestions: undefined,
+        },
+        {
+          message:
+            "The 'handleNext4' function makes the dependencies of useInsertionEffect Hook " +
+            '(at line 30) change on every render. Move it inside the useInsertionEffect callback. ' +
+            "Alternatively, wrap the definition of 'handleNext4' in its own useCallback() Hook.",
           suggestions: undefined,
         },
       ],
@@ -7448,6 +7720,25 @@ const tests = {
       code: normalizeIndent`
         function Component() {
           const foo = {};
+          useInsertionEffect(() => {
+            console.log(foo);
+          }, [foo]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "The 'foo' object makes the dependencies of useInsertionEffect Hook (at line 6) change on every render. " +
+            "Move it inside the useInsertionEffect callback. Alternatively, wrap the initialization of 'foo' in its own " +
+            'useMemo() Hook.',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Component() {
+          const foo = {};
           useImperativeHandle(
             ref,
             () => {
@@ -7642,6 +7933,9 @@ const tests = {
           useEffect(() => {
             console.log(foo);
           }, [foo]);
+          useInsertionEffect(() => {
+            console.log(foo);
+          }, [foo]);
         }
       `,
       errors: [
@@ -7654,6 +7948,12 @@ const tests = {
         {
           message:
             "The 'foo' object makes the dependencies of useEffect Hook (at line 9) change on every render. " +
+            "To fix this, wrap the initialization of 'foo' in its own useMemo() Hook.",
+          suggestions: undefined,
+        },
+        {
+          message:
+            "The 'foo' object makes the dependencies of useInsertionEffect Hook (at line 12) change on every render. " +
             "To fix this, wrap the initialization of 'foo' in its own useMemo() Hook.",
           suggestions: undefined,
         },
