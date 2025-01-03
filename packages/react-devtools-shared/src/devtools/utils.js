@@ -67,7 +67,7 @@ export function printStore(
     if (state === null) {
       return '';
     }
-    return state.selectedElementIndex === index ? `→` : ' ';
+    return state.inspectedElementIndex === index ? `→` : ' ';
   }
 
   function printErrorsAndWarnings(element: Element): string {
