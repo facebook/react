@@ -815,27 +815,63 @@ function commitNestedViewTransitions(changedParent: Fiber): void {
   }
 }
 
+function restorePairedViewTransitions(parent: Fiber): void {
+  if ((parent.subtreeFlags & ViewTransitionNamedStatic) === NoFlags) {
+    // This has no named view transitions in its subtree.
+    return;
+  }
+  let child = parent.child;
+  while (child !== null) {
+    if (child.tag === OffscreenComponent && child.memoizedState === null) {
+      // This tree was already hidden so we skip it.
+    } else {
+      if (
+        child.tag === ViewTransitionComponent &&
+        (child.flags & ViewTransitionNamedStatic) !== NoFlags
+      ) {
+        const instance: ViewTransitionInstance = child.stateNode;
+        if (instance.paired !== null) {
+          instance.paired = null;
+          restoreViewTransitionOnHostInstances(child.child, false);
+        }
+      }
+      restorePairedViewTransitions(child);
+    }
+    child = child.sibling;
+  }
+}
+
 function restoreEnterViewTransitions(placement: Fiber): void {
   if (placement.tag === ViewTransitionComponent) {
+    const instance: ViewTransitionInstance = placement.stateNode;
+    instance.paired = null;
     restoreViewTransitionOnHostInstances(placement.child, false);
+    restorePairedViewTransitions(placement);
   } else if ((placement.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
     let child = placement.child;
     while (child !== null) {
       restoreEnterViewTransitions(child);
       child = child.sibling;
     }
+  } else {
+    restorePairedViewTransitions(placement);
   }
 }
 
 function restoreExitViewTransitions(deletion: Fiber): void {
   if (deletion.tag === ViewTransitionComponent) {
+    const instance: ViewTransitionInstance = deletion.stateNode;
+    instance.paired = null;
     restoreViewTransitionOnHostInstances(deletion.child, false);
+    restorePairedViewTransitions(deletion);
   } else if ((deletion.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
     let child = deletion.child;
     while (child !== null) {
       restoreExitViewTransitions(child);
       child = child.sibling;
     }
+  } else {
+    restorePairedViewTransitions(deletion);
   }
 }
 
