@@ -396,6 +396,12 @@ const EnvironmentConfigSchema = z.object({
   enableInstructionReordering: z.boolean().default(false),
 
   /**
+   * Enables ReactiveGraph-based optimizations including reordering across terminal
+   * boundaries
+   */
+  enableReactiveGraph: z.boolean().default(false),
+
+  /**
    * Enables function outlinining, where anonymous functions that do not close over
    * local variables can be extracted into top-level helper functions.
    */
