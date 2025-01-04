@@ -989,10 +989,15 @@ mime-types@^2.1.12, mime-types@~2.1.7:
   dependencies:
     mime-db "~1.29.0"
 
-mime@^1.2.11, mime@^1.3.6:
+mime@^1.2.11:
   version "1.6.0"
   resolved "https://registry.yarnpkg.com/mime/-/mime-1.6.0.tgz#32cd9e5c64553bd58d19a568af452acff04981b1"
   integrity sha512-x0Vn8spI+wuJ1O6S7gnbaQg8Pxh4NNHb7KSINmEWKiPE4RKOplvijn+NkmYmmRgP68mc70j2EbeTFRsrswaQeg==
+
+mime@^4.0.6:
+  version "4.0.6"
+  resolved "https://registry.yarnpkg.com/mime/-/mime-4.0.6.tgz#ca83bec0bcf2a02353d0e02da99be05603d04839"
+  integrity sha512-4rGt7rvQHBbaSOF9POGkk1ocRP16Md1x36Xma8sz8h8/vfCUI2OtEIeCqe4Ofes853x4xDoPiFLIT47J5fI/7A==
 
 mimic-fn@^1.0.0:
   version "1.2.0"
