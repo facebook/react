@@ -547,16 +547,25 @@ function applyViewTransitionToHostInstances(
   name: string,
   collectMeasurements: null | Array<InstanceMeasurement>,
   stopAtNestedViewTransitions: boolean,
-): void {
+): boolean {
   if (!supportsMutation) {
-    return;
+    return false;
   }
+  let inViewport = false;
   while (child !== null) {
     if (child.tag === HostComponent) {
       shouldStartViewTransition = true;
       const instance: Instance = child.stateNode;
       if (collectMeasurements !== null) {
-        collectMeasurements.push(measureInstance(instance));
+        const measurement = measureInstance(instance);
+        collectMeasurements.push(measurement);
+        if (wasInstanceInViewport(measurement)) {
+          inViewport = true;
+        }
+      } else if (!inViewport) {
+        if (wasInstanceInViewport(measureInstance(instance))) {
+          inViewport = true;
+        }
       }
       applyViewTransitionName(
         instance,
@@ -579,15 +588,20 @@ function applyViewTransitionToHostInstances(
       // Skip any nested view transitions for updates since in that case the
       // inner most one is the one that handles the update.
     } else {
-      applyViewTransitionToHostInstances(
-        child.child,
-        name,
-        collectMeasurements,
-        stopAtNestedViewTransitions,
-      );
+      if (
+        applyViewTransitionToHostInstances(
+          child.child,
+          name,
+          collectMeasurements,
+          stopAtNestedViewTransitions,
+        )
+      ) {
+        inViewport = true;
+      }
     }
     child = child.sibling;
   }
+  return inViewport;
 }
 
 function restoreViewTransitionOnHostInstances(
@@ -668,8 +682,20 @@ function commitEnterViewTransitions(placement: Fiber): void {
       placement.stateNode,
     );
     viewTransitionHostInstanceIdx = 0;
-    applyViewTransitionToHostInstances(placement.child, name, null, false);
-    commitAppearingPairViewTransitions(placement);
+    const inViewport = applyViewTransitionToHostInstances(
+      placement.child,
+      name,
+      null,
+      false,
+    );
+    if (!inViewport) {
+      // Revert the transition names. This boundary is not in the viewport
+      // so we won't bother animating it.
+      restoreViewTransitionOnHostInstances(placement.child, false);
+      // TODO: Should we still visit the children in case a named one was in the viewport?
+    } else {
+      commitAppearingPairViewTransitions(placement);
+    }
   } else if ((placement.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
     let child = placement.child;
     while (child !== null) {
@@ -737,9 +763,18 @@ function commitExitViewTransitions(
     const props: ViewTransitionProps = deletion.memoizedProps;
     const name = getViewTransitionName(props, deletion.stateNode);
     viewTransitionHostInstanceIdx = 0;
-    applyViewTransitionToHostInstances(deletion.child, name, null, false);
-
-    if (appearingViewTransitions !== null) {
+    const inViewport = applyViewTransitionToHostInstances(
+      deletion.child,
+      name,
+      null,
+      false,
+    );
+    if (!inViewport) {
+      // Revert the transition names. This boundary is not in the viewport
+      // so we won't bother animating it.
+      restoreViewTransitionOnHostInstances(deletion.child, false);
+      // TODO: Should we still visit the children in case a named one was in the viewport?
+    } else if (appearingViewTransitions !== null) {
       const pair = appearingViewTransitions.get(name);
       if (pair !== undefined) {
         // We found a new appearing view transition with the same name as this deletion.
@@ -2999,9 +3034,9 @@ function commitAfterMutationEffectsOnFiber(
           finishedWork.flags |= Update;
         }
 
-        const inViewPort = measureUpdateViewTransition(current, finishedWork);
+        const inViewport = measureUpdateViewTransition(current, finishedWork);
 
-        if ((finishedWork.flags & Update) === NoFlags || !inViewPort) {
+        if ((finishedWork.flags & Update) === NoFlags || !inViewport) {
           // If this boundary didn't update, then we may be able to cancel its children.
           // We bubble them up to the parent set to be determined later if we can cancel.
           // Similarly, if old and new state was outside the viewport, we can skip it
