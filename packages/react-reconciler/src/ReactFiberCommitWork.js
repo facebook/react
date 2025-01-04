@@ -661,12 +661,21 @@ function commitAppearingPairViewTransitions(placement: Fiber): void {
           // We found a new appearing view transition with the same name as this deletion.
           // We'll transition between them.
           viewTransitionHostInstanceIdx = 0;
-          applyViewTransitionToHostInstances(
+          const inViewport = applyViewTransitionToHostInstances(
             child.child,
             props.name,
             null,
             false,
           );
+          if (!inViewport) {
+            // This boundary is exiting within the viewport but is going to leave the viewport.
+            // Instead, we treat this as an exit of the previous entry by reverting the new name.
+            // Ideally we could undo the old transition but it's now too late. It's also on its
+            // on snapshot. We have know was for it to paint onto the original group.
+            // TODO: This will lead to things unexpectedly having exit animations that normally
+            // wouldn't happen. Consider if we should just let this fly off the screen instead.
+            restoreViewTransitionOnHostInstances(child.child, false);
+          }
         }
       }
       commitAppearingPairViewTransitions(child);
@@ -733,13 +742,25 @@ function commitDeletedPairViewTransitions(
         if (name != null && name !== 'auto') {
           const pair = appearingViewTransitions.get(name);
           if (pair !== undefined) {
-            const oldinstance: ViewTransitionInstance = child.stateNode;
-            const newInstance: ViewTransitionInstance = pair;
-            newInstance.paired = oldinstance;
             // We found a new appearing view transition with the same name as this deletion.
-            // We'll transition between them.
             viewTransitionHostInstanceIdx = 0;
-            applyViewTransitionToHostInstances(child.child, name, null, false);
+            const inViewport = applyViewTransitionToHostInstances(
+              child.child,
+              name,
+              null,
+              false,
+            );
+            if (!inViewport) {
+              // This boundary is not in the viewport so we won't treat it as a matched pair.
+              // Revert the transition names. This avoids it flying onto the screen which can
+              // be disruptive and doesn't really preserve any continuity anyway.
+              restoreViewTransitionOnHostInstances(child.child, false);
+            } else {
+              // We'll transition between them.
+              const oldinstance: ViewTransitionInstance = child.stateNode;
+              const newInstance: ViewTransitionInstance = pair;
+              newInstance.paired = oldinstance;
+            }
             // Delete the entry so that we know when we've found all of them
             // and can stop searching (size reaches zero).
             appearingViewTransitions.delete(name);
