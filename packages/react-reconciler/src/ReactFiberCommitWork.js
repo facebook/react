@@ -622,6 +622,45 @@ function restoreViewTransitionOnHostInstances(
   }
 }
 
+function commitAppearingPairViewTransitions(placement: Fiber): void {
+  if ((placement.subtreeFlags & ViewTransitionNamedStatic) === NoFlags) {
+    // This has no named view transitions in its subtree.
+    return;
+  }
+  let child = placement.child;
+  while (child !== null) {
+    if (child.tag === OffscreenComponent && child.memoizedState === null) {
+      // This tree was already hidden so we skip it.
+    } else {
+      if (
+        child.tag === ViewTransitionComponent &&
+        (child.flags & ViewTransitionNamedStatic) !== NoFlags
+      ) {
+        const instance: ViewTransitionInstance = child.stateNode;
+        if (instance.paired) {
+          const props: ViewTransitionProps = child.memoizedProps;
+          if (props.name == null || props.name === 'auto') {
+            throw new Error(
+              'Found a pair with an auto name. This is a bug in React.',
+            );
+          }
+          // We found a new appearing view transition with the same name as this deletion.
+          // We'll transition between them.
+          viewTransitionHostInstanceIdx = 0;
+          applyViewTransitionToHostInstances(
+            child.child,
+            props.name,
+            null,
+            false,
+          );
+        }
+      }
+      commitAppearingPairViewTransitions(child);
+    }
+    child = child.sibling;
+  }
+}
+
 function commitEnterViewTransitions(placement: Fiber): void {
   if (placement.tag === ViewTransitionComponent) {
     const name = getViewTransitionName(
@@ -630,12 +669,15 @@ function commitEnterViewTransitions(placement: Fiber): void {
     );
     viewTransitionHostInstanceIdx = 0;
     applyViewTransitionToHostInstances(placement.child, name, null, false);
+    commitAppearingPairViewTransitions(placement);
   } else if ((placement.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
     let child = placement.child;
     while (child !== null) {
       commitEnterViewTransitions(child);
       child = child.sibling;
     }
+  } else {
+    commitAppearingPairViewTransitions(placement);
   }
 }
 
