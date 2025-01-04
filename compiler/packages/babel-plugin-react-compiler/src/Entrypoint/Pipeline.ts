@@ -99,6 +99,8 @@ import {propagateScopeDependenciesHIR} from '../HIR/PropagateScopeDependenciesHI
 import {outlineJSX} from '../Optimization/OutlineJsx';
 import {optimizePropsMethodCalls} from '../Optimization/OptimizePropsMethodCalls';
 import {transformFire} from '../Transform';
+import {buildReactiveGraph} from '../ReactiveIR/BuildReactiveGraph';
+import {printReactiveGraph} from '../ReactiveIR/ReactiveIR';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -370,6 +372,15 @@ function runWithEnvironment(
       kind: 'hir',
       name: 'inlineJsxTransform',
       value: hir,
+    });
+  }
+
+  if (env.config.enableReactiveGraph) {
+    const reactiveGraph = buildReactiveGraph(hir);
+    log({
+      kind: 'debug',
+      name: 'BuildReactiveGraph',
+      value: printReactiveGraph(reactiveGraph),
     });
   }
 
