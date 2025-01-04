@@ -2723,15 +2723,6 @@ function commitMutationEffectsOnFiber(
               recursivelyTraverseDisappearLayoutEffects(finishedWork);
             }
           }
-        } else {
-          if (wasHidden) {
-            const isViewTransitionEligible =
-              enableViewTransition &&
-              includesOnlyViewTransitionEligibleLanes(lanes);
-            if (isViewTransitionEligible) {
-              commitEnterViewTransitions(finishedWork);
-            }
-          }
         }
 
         // Offscreen with manual mode manages visibility manually.
@@ -2855,16 +2846,6 @@ function commitReconciliationEffects(
   // before the effects on this fiber have fired.
   const flags = finishedWork.flags;
   if (flags & Placement) {
-    const isViewTransitionEligible =
-      enableViewTransition &&
-      includesOnlyViewTransitionEligibleLanes(committedLanes);
-    if (isViewTransitionEligible) {
-      // The first ViewTransition inside the Placement runs an enter transition
-      // but other nested ones don't.
-      // TODO: This shares the same traveral as commitHostPlacement below so it
-      // could be optimized to share the same pass.
-      commitEnterViewTransitions(finishedWork);
-    }
     commitHostPlacement(finishedWork);
     // Clear the "placement" from effect tag so that we know that this is
     // inserted, before any life-cycles like componentDidMount gets called.
@@ -2937,6 +2918,19 @@ function commitAfterMutationEffectsOnFiber(
   root: FiberRoot,
   lanes: Lanes,
 ) {
+  const current = finishedWork.alternate;
+  if (current === null) {
+    // This is a newly inserted subtree. We can't use Placement flags to detect
+    // this since they get removed in the mutation phase. Usually it's not enough
+    // to just check current because that can also happen deeper in the same tree.
+    // However, since we don't need to visit newly inserted subtrees in AfterMutation
+    // we can just bail after we're done with the first one.
+    // The first ViewTransition inside a newly mounted tree runs an enter transition
+    // but other nested ones don't unless they have a named pair.
+    commitEnterViewTransitions(finishedWork);
+    return;
+  }
+
   switch (finishedWork.tag) {
     case HostRoot: {
       viewTransitionContextChanged = false;
@@ -2967,7 +2961,6 @@ function commitAfterMutationEffectsOnFiber(
       break;
     }
     case OffscreenComponent: {
-      const current = finishedWork.alternate;
       const isModernRoot =
         disableLegacyMode || (finishedWork.mode & ConcurrentMode) !== NoMode;
       if (isModernRoot) {
@@ -2976,8 +2969,9 @@ function commitAfterMutationEffectsOnFiber(
           // The Offscreen tree is hidden. Skip over its after mutation effects.
         } else {
           // The Offscreen tree is visible.
-          const wasHidden = current !== null && current.memoizedState !== null;
+          const wasHidden = current.memoizedState !== null;
           if (wasHidden) {
+            commitEnterViewTransitions(finishedWork);
             // If it was previous hidden then the children are treated as enter
             // not updates so we don't need to visit these children.
           } else {
@@ -2990,11 +2984,7 @@ function commitAfterMutationEffectsOnFiber(
       break;
     }
     case ViewTransitionComponent: {
-      const current = finishedWork.alternate;
-      if (current === null) {
-        // This is a new mount. We should have handled this as part of the
-        // Placement effect or it is deeper inside a entering transition.
-      } else if (
+      if (
         (finishedWork.subtreeFlags &
           (Placement | Update | ChildDeletion | ContentReset | Visibility)) !==
         NoFlags
