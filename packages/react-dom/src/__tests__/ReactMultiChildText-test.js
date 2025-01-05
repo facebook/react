@@ -83,98 +83,100 @@ describe('ReactMultiChildText', () => {
     spyOnDev(console, 'error').mockImplementation(() => {});
     // prettier-ignore
     await testAllPermutations([
-        // basic values
-        undefined, [],
-        null, [],
-        false, [],
-        true, [],
-        0, '0',
-        1.2, '1.2',
-        '', [],
-        'foo', 'foo',
-
-        [], [],
-        [undefined], [],
-        [null], [],
-        [false], [],
-        [true], [],
-        [0], ['0'],
-        [1.2], ['1.2'],
-        [''], [],
-        ['foo'], ['foo'],
-        [<div />], [<div />],
-
-        // two adjacent values
-        [true, 0], ['0'],
-        [0, 0], ['0', '0'],
-        [1.2, 0], ['1.2', '0'],
-        [0, ''], ['0', ''],
-        ['foo', 0], ['foo', '0'],
-        [0, <div />], ['0', <div />],
-
-        [true, 1.2], ['1.2'],
-        [1.2, 0], ['1.2', '0'],
-        [1.2, 1.2], ['1.2', '1.2'],
-        [1.2, ''], ['1.2', ''],
-        ['foo', 1.2], ['foo', '1.2'],
-        [1.2, <div />], ['1.2', <div />],
-
-        [true, ''], [''],
-        ['', 0], ['', '0'],
-        [1.2, ''], ['1.2', ''],
-        ['', ''], ['', ''],
-        ['foo', ''], ['foo', ''],
-        ['', <div />], ['', <div />],
-
-        [true, 'foo'], ['foo'],
-        ['foo', 0], ['foo', '0'],
-        [1.2, 'foo'], ['1.2', 'foo'],
-        ['foo', ''], ['foo', ''],
-        ['foo', 'foo'], ['foo', 'foo'],
-        ['foo', <div />], ['foo', <div />],
-
-        // values separated by an element
-        [true, <div />, true], [<div />],
-        [1.2, <div />, 1.2], ['1.2', <div />, '1.2'],
-        ['', <div />, ''], ['', <div />, ''],
-        ['foo', <div />, 'foo'], ['foo', <div />, 'foo'],
-
-        [true, 1.2, <div />, '', 'foo'], ['1.2', <div />, '', 'foo'],
-        [1.2, '', <div />, 'foo', true], ['1.2', '', <div />, 'foo'],
-        ['', 'foo', <div />, true, 1.2], ['', 'foo', <div />, '1.2'],
-
-        [true, 1.2, '', <div />, 'foo', true, 1.2], ['1.2', '', <div />, 'foo', '1.2'],
-        ['', 'foo', true, <div />, 1.2, '', 'foo'], ['', 'foo', <div />, '1.2', '', 'foo'],
-
-        // values inside arrays
-        [[true], [true]], [],
-        [[1.2], [1.2]], ['1.2', '1.2'],
-        [[''], ['']], ['', ''],
-        [['foo'], ['foo']], ['foo', 'foo'],
-        [[<div />], [<div />]], [<div />, <div />],
-
-        [[true, 1.2, <div />], '', 'foo'], ['1.2', <div />, '', 'foo'],
-        [1.2, '', [<div />, 'foo', true]], ['1.2', '', <div />, 'foo'],
-        ['', ['foo', <div />, true], 1.2], ['', 'foo', <div />, '1.2'],
-
-        [true, [1.2, '', <div />, 'foo'], true, 1.2], ['1.2', '', <div />, 'foo', '1.2'],
-        ['', 'foo', [true, <div />, 1.2, ''], 'foo'], ['', 'foo', <div />, '1.2', '', 'foo'],
-
-        // values inside elements
-        [<div>{true}{1.2}{<div />}</div>, '', 'foo'], [<div />, '', 'foo'],
-        [1.2, '', <div>{<div />}{'foo'}{true}</div>], ['1.2', '', <div />],
-        ['', <div>{'foo'}{<div />}{true}</div>, 1.2], ['', <div />, '1.2'],
-
-        [true, <div>{1.2}{''}{<div />}{'foo'}</div>, true, 1.2], [<div />, '1.2'],
-        ['', 'foo', <div>{true}{<div />}{1.2}{''}</div>, 'foo'], ['', 'foo', <div />, 'foo'],
-      ]);
-    expect(console.error).toHaveBeenCalledTimes(2);
-    expect(console.error.mock.calls[0][0]).toMatch(
-      'Each child in a list should have a unique "key" prop.',
-    );
-    expect(console.error.mock.calls[1][0]).toMatch(
-      'Each child in a list should have a unique "key" prop.',
-    );
+      // basic values
+      undefined, [],
+      null, [],
+      false, [],
+      true, [],
+      0, '0',
+      1.2, '1.2',
+      '', [],
+      'foo', 'foo',
+    
+      [], [],
+      [undefined], [],
+      [null], [],
+      [false], [],
+      [true], [],
+      [0], ['0'],
+      [1.2], ['1.2'],
+      [''], [],
+      ['foo'], ['foo'],
+      [<div />], [<div />],
+    
+      // two adjacent values
+      [true, 0], ['0'],
+      [0, 0], ['0', '0'],
+      [1.2, 0], ['1.2', '0'],
+      [0, ''], ['0', ''],
+      ['foo', 0], ['foo', '0'],
+      [0, <div />], ['0', <div />],
+    
+      [true, 1.2], ['1.2'],
+      [1.2, 0], ['1.2', '0'],
+      [1.2, 1.2], ['1.2', '1.2'],
+      [1.2, ''], ['1.2', ''],
+      ['foo', 1.2], ['foo', '1.2'],
+      [1.2, <div />], ['1.2', <div />],
+    
+      [true, ''], [''],
+      ['', 0], ['', '0'],
+      [1.2, ''], ['1.2', ''],
+      ['', ''], ['', ''],
+      ['foo', ''], ['foo', ''],
+      ['', <div />], ['', <div />],
+    
+      [true, 'foo'], ['foo'],
+      ['foo', 0], ['foo', '0'],
+      [1.2, 'foo'], ['1.2', 'foo'],
+      ['foo', ''], ['foo', ''],
+      ['foo', 'foo'], ['foo', 'foo'],
+      ['foo', <div />], ['foo', <div />],
+    
+      // values separated by an element
+      [true, <div />, true], [<div />],
+      [1.2, <div />, 1.2], ['1.2', <div />, '1.2'],
+      ['', <div />, ''], ['', <div />, ''],
+      ['foo', <div />, 'foo'], ['foo', <div />, 'foo'],
+    
+      [true, 1.2, <div />, '', 'foo'], ['1.2', <div />, '', 'foo'],
+      [1.2, '', <div />, 'foo', true], ['1.2', '', <div />, 'foo'],
+      ['', 'foo', <div />, true, 1.2], ['', 'foo', <div />, '1.2'],
+    
+      [true, 1.2, '', <div />, 'foo', true, 1.2], ['1.2', '', <div />, 'foo', '1.2'],
+      ['', 'foo', true, <div />, 1.2, '', 'foo'], ['', 'foo', <div />, '1.2', '', 'foo'],
+    
+      // values inside arrays
+      [[true], [true]], [],
+      [[1.2], [1.2]], ['1.2', '1.2'],
+      [[''], ['']], ['', ''],
+      [['foo'], ['foo']], ['foo', 'foo'],
+      [[<div />], [<div />]], [<div />, <div />],
+    
+      [[true, 1.2, <div />], '', 'foo'], ['1.2', <div />, '', 'foo'],
+      [1.2, '', [<div />, 'foo', true]], ['1.2', '', <div />, 'foo'],
+      ['', ['foo', <div />, true], 1.2], ['', 'foo', <div />, '1.2'],
+    
+      [true, [1.2, '', <div />, 'foo'], true, 1.2], ['1.2', '', <div />, 'foo', '1.2'],
+      ['', 'foo', [true, <div />, 1.2, ''], 'foo'], ['', 'foo', <div />, '1.2', '', 'foo'],
+    
+      // values inside elements
+      [<div>{true}{1.2}{<div />}</div>, '', 'foo'], [<div />, '', 'foo'],
+      [1.2, '', <div>{<div />}{'foo'}{true}</div>], ['1.2', '', <div />],
+      ['', <div>{'foo'}{<div />}{true}</div>, 1.2], ['', <div />, '1.2'],
+    
+      [true, <div>{1.2}{''}{<div />}{'foo'}</div>, true, 1.2], [<div />, '1.2'],
+      ['', 'foo', <div>{true}{<div />}{1.2}{''}</div>, 'foo'], ['', 'foo', <div />, 'foo'],
+    ]);
+    if (__DEV__) {
+      expect(console.error).toHaveBeenCalledTimes(2);
+      expect(console.error.mock.calls[0][0]).toMatch(
+        'Each child in a list should have a unique "key" prop.',
+      );
+      expect(console.error.mock.calls[1][0]).toMatch(
+        'Each child in a list should have a unique "key" prop.',
+      );
+    }
   });
 
   it('should correctly handle bigint children for render and update', async () => {
