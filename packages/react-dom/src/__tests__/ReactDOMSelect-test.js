@@ -22,6 +22,7 @@ describe('ReactDOMSelect', () => {
   let ReactDOMClient;
   let ReactDOMServer;
   let act;
+  let assertConsoleErrorDev;
 
   const noop = function () {};
 
@@ -32,6 +33,8 @@ describe('ReactDOMSelect', () => {
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
     act = require('internal-test-utils').act;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
   });
 
   it('should allow setting `defaultValue`', async () => {
@@ -749,19 +752,19 @@ describe('ReactDOMSelect', () => {
   it('should warn if value is null', async () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await expect(async () => {
-      await act(() => {
-        root.render(
-          <select value={null}>
-            <option value="test" />
-          </select>,
-        );
-      });
-    }).toErrorDev(
+    await act(() => {
+      root.render(
+        <select value={null}>
+          <option value="test" />
+        </select>,
+      );
+    });
+    assertConsoleErrorDev([
       '`value` prop on `select` should not be null. ' +
         'Consider using an empty string to clear the component or `undefined` ' +
-        'for uncontrolled components.',
-    );
+        'for uncontrolled components.\n' +
+        '    in select (at **)',
+    ]);
 
     await act(() => {
       root.render(
@@ -784,14 +787,16 @@ describe('ReactDOMSelect', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await expect(async () => {
-      await act(() => {
-        root.render(<App />);
-      });
-    }).toErrorDev(
+    await act(() => {
+      root.render(<App />);
+    });
+    assertConsoleErrorDev([
       'Use the `defaultValue` or `value` props on <select> instead of ' +
-        'setting `selected` on <option>.',
-    );
+        'setting `selected` on <option>.\n' +
+        '    in option (at **)\n' +
+        (gate('enableOwnerStacks') ? '' : '    in select (at **)\n') +
+        '    in App (at **)',
+    ]);
 
     await act(() => {
       root.render(<App />);
@@ -801,20 +806,20 @@ describe('ReactDOMSelect', () => {
   it('should warn if value is null and multiple is true', async () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await expect(async () => {
-      await act(() => {
-        root.render(
-          <select value={null} multiple={true}>
-            <option value="test" />
-          </select>,
-        );
-      });
-    }).toErrorDev(
+    await act(() => {
+      root.render(
+        <select value={null} multiple={true}>
+          <option value="test" />
+        </select>,
+      );
+    });
+    assertConsoleErrorDev([
       '`value` prop on `select` should not be null. ' +
         'Consider using an empty array when `multiple` is ' +
         'set to `true` to clear the component or `undefined` ' +
-        'for uncontrolled components.',
-    );
+        'for uncontrolled components.\n' +
+        '    in select (at **)',
+    ]);
 
     await act(() => {
       root.render(
@@ -860,23 +865,23 @@ describe('ReactDOMSelect', () => {
   it('should warn if value and defaultValue props are specified', async () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await expect(async () => {
-      await act(() => {
-        root.render(
-          <select value="giraffe" defaultValue="giraffe" readOnly={true}>
-            <option value="monkey">A monkey!</option>
-            <option value="giraffe">A giraffe!</option>
-            <option value="gorilla">A gorilla!</option>
-          </select>,
-        );
-      });
-    }).toErrorDev(
+    await act(() => {
+      root.render(
+        <select value="giraffe" defaultValue="giraffe" readOnly={true}>
+          <option value="monkey">A monkey!</option>
+          <option value="giraffe">A giraffe!</option>
+          <option value="gorilla">A gorilla!</option>
+        </select>,
+      );
+    });
+    assertConsoleErrorDev([
       'Select elements must be either controlled or uncontrolled ' +
         '(specify either the value prop, or the defaultValue prop, but not ' +
         'both). Decide between using a controlled or uncontrolled select ' +
         'element and remove one of these props. More info: ' +
-        'https://react.dev/link/controlled-components',
-    );
+        'https://react.dev/link/controlled-components\n' +
+        '    in select (at **)',
+    ]);
 
     await act(() => {
       root.render(
@@ -1054,17 +1059,22 @@ describe('ReactDOMSelect', () => {
     it('treats initial Symbol value as missing', async () => {
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
-      await expect(async () => {
-        await act(() => {
-          root.render(
-            <select onChange={noop} value={Symbol('foobar')}>
-              <option value={Symbol('foobar')}>A Symbol!</option>
-              <option value="monkey">A monkey!</option>
-              <option value="giraffe">A giraffe!</option>
-            </select>,
-          );
-        });
-      }).toErrorDev('Invalid value for prop `value`');
+      await act(() => {
+        root.render(
+          <select onChange={noop} value={Symbol('foobar')}>
+            <option value={Symbol('foobar')}>A Symbol!</option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      });
+      assertConsoleErrorDev([
+        'Invalid value for prop `value` on <option> tag. ' +
+          'Either remove it from the element, or pass a string or number value to keep it in the DOM. ' +
+          'For details, see https://react.dev/link/attribute-behavior \n' +
+          '    in option (at **)' +
+          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
+      ]);
 
       const node = container.firstChild;
       expect(node.value).toBe('A Symbol!');
@@ -1073,17 +1083,22 @@ describe('ReactDOMSelect', () => {
     it('treats updated Symbol value as missing', async () => {
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
-      await expect(async () => {
-        await act(() => {
-          root.render(
-            <select onChange={noop} value="monkey">
-              <option value={Symbol('foobar')}>A Symbol!</option>
-              <option value="monkey">A monkey!</option>
-              <option value="giraffe">A giraffe!</option>
-            </select>,
-          );
-        });
-      }).toErrorDev('Invalid value for prop `value`');
+      await act(() => {
+        root.render(
+          <select onChange={noop} value="monkey">
+            <option value={Symbol('foobar')}>A Symbol!</option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      });
+      assertConsoleErrorDev([
+        'Invalid value for prop `value` on <option> tag. ' +
+          'Either remove it from the element, or pass a string or number value to keep it in the DOM. ' +
+          'For details, see https://react.dev/link/attribute-behavior \n' +
+          '    in option (at **)' +
+          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
+      ]);
 
       let node = container.firstChild;
       expect(node.value).toBe('monkey');
@@ -1106,17 +1121,22 @@ describe('ReactDOMSelect', () => {
     it('treats initial Symbol defaultValue as an empty string', async () => {
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
-      await expect(async () => {
-        await act(() => {
-          root.render(
-            <select defaultValue={Symbol('foobar')}>
-              <option value={Symbol('foobar')}>A Symbol!</option>
-              <option value="monkey">A monkey!</option>
-              <option value="giraffe">A giraffe!</option>
-            </select>,
-          );
-        });
-      }).toErrorDev('Invalid value for prop `value`');
+      await act(() => {
+        root.render(
+          <select defaultValue={Symbol('foobar')}>
+            <option value={Symbol('foobar')}>A Symbol!</option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      });
+      assertConsoleErrorDev([
+        'Invalid value for prop `value` on <option> tag. ' +
+          'Either remove it from the element, or pass a string or number value to keep it in the DOM. ' +
+          'For details, see https://react.dev/link/attribute-behavior \n' +
+          '    in option (at **)' +
+          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
+      ]);
 
       const node = container.firstChild;
       expect(node.value).toBe('A Symbol!');
@@ -1125,17 +1145,22 @@ describe('ReactDOMSelect', () => {
     it('treats updated Symbol defaultValue as an empty string', async () => {
       let container = document.createElement('div');
       let root = ReactDOMClient.createRoot(container);
-      await expect(async () => {
-        await act(() => {
-          root.render(
-            <select defaultValue="monkey">
-              <option value={Symbol('foobar')}>A Symbol!</option>
-              <option value="monkey">A monkey!</option>
-              <option value="giraffe">A giraffe!</option>
-            </select>,
-          );
-        });
-      }).toErrorDev('Invalid value for prop `value`');
+      await act(() => {
+        root.render(
+          <select defaultValue="monkey">
+            <option value={Symbol('foobar')}>A Symbol!</option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      });
+      assertConsoleErrorDev([
+        'Invalid value for prop `value` on <option> tag. ' +
+          'Either remove it from the element, or pass a string or number value to keep it in the DOM. ' +
+          'For details, see https://react.dev/link/attribute-behavior \n' +
+          '    in option (at **)' +
+          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
+      ]);
 
       let node = container.firstChild;
       expect(node.value).toBe('monkey');
@@ -1161,17 +1186,22 @@ describe('ReactDOMSelect', () => {
     it('treats initial function value as missing', async () => {
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
-      await expect(async () => {
-        await act(() => {
-          root.render(
-            <select onChange={noop} value={() => {}}>
-              <option value={() => {}}>A function!</option>
-              <option value="monkey">A monkey!</option>
-              <option value="giraffe">A giraffe!</option>
-            </select>,
-          );
-        });
-      }).toErrorDev('Invalid value for prop `value`');
+      await act(() => {
+        root.render(
+          <select onChange={noop} value={() => {}}>
+            <option value={() => {}}>A function!</option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      });
+      assertConsoleErrorDev([
+        'Invalid value for prop `value` on <option> tag. ' +
+          'Either remove it from the element, or pass a string or number value to keep it in the DOM. ' +
+          'For details, see https://react.dev/link/attribute-behavior \n' +
+          '    in option (at **)' +
+          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
+      ]);
 
       const node = container.firstChild;
       expect(node.value).toBe('A function!');
@@ -1180,17 +1210,22 @@ describe('ReactDOMSelect', () => {
     it('treats initial function defaultValue as an empty string', async () => {
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
-      await expect(async () => {
-        await act(() => {
-          root.render(
-            <select defaultValue={() => {}}>
-              <option value={() => {}}>A function!</option>
-              <option value="monkey">A monkey!</option>
-              <option value="giraffe">A giraffe!</option>
-            </select>,
-          );
-        });
-      }).toErrorDev('Invalid value for prop `value`');
+      await act(() => {
+        root.render(
+          <select defaultValue={() => {}}>
+            <option value={() => {}}>A function!</option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      });
+      assertConsoleErrorDev([
+        'Invalid value for prop `value` on <option> tag. ' +
+          'Either remove it from the element, or pass a string or number value to keep it in the DOM. ' +
+          'For details, see https://react.dev/link/attribute-behavior \n' +
+          '    in option (at **)' +
+          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
+      ]);
 
       const node = container.firstChild;
       expect(node.value).toBe('A function!');
@@ -1199,17 +1234,22 @@ describe('ReactDOMSelect', () => {
     it('treats updated function value as an empty string', async () => {
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
-      await expect(async () => {
-        await act(() => {
-          root.render(
-            <select onChange={noop} value="monkey">
-              <option value={() => {}}>A function!</option>
-              <option value="monkey">A monkey!</option>
-              <option value="giraffe">A giraffe!</option>
-            </select>,
-          );
-        });
-      }).toErrorDev('Invalid value for prop `value`');
+      await act(() => {
+        root.render(
+          <select onChange={noop} value="monkey">
+            <option value={() => {}}>A function!</option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      });
+      assertConsoleErrorDev([
+        'Invalid value for prop `value` on <option> tag. ' +
+          'Either remove it from the element, or pass a string or number value to keep it in the DOM. ' +
+          'For details, see https://react.dev/link/attribute-behavior \n' +
+          '    in option (at **)' +
+          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
+      ]);
 
       let node = container.firstChild;
       expect(node.value).toBe('monkey');
@@ -1231,17 +1271,22 @@ describe('ReactDOMSelect', () => {
     it('treats updated function defaultValue as an empty string', async () => {
       let container = document.createElement('div');
       let root = ReactDOMClient.createRoot(container);
-      await expect(async () => {
-        await act(() => {
-          root.render(
-            <select defaultValue="monkey">
-              <option value={() => {}}>A function!</option>
-              <option value="monkey">A monkey!</option>
-              <option value="giraffe">A giraffe!</option>
-            </select>,
-          );
-        });
-      }).toErrorDev('Invalid value for prop `value`');
+      await act(() => {
+        root.render(
+          <select defaultValue="monkey">
+            <option value={() => {}}>A function!</option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      });
+      assertConsoleErrorDev([
+        'Invalid value for prop `value` on <option> tag. ' +
+          'Either remove it from the element, or pass a string or number value to keep it in the DOM. ' +
+          'For details, see https://react.dev/link/attribute-behavior \n' +
+          '    in option (at **)' +
+          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
+      ]);
 
       let node = container.firstChild;
       expect(node.value).toBe('monkey');
@@ -1279,50 +1324,54 @@ describe('ReactDOMSelect', () => {
     it('throws when given a Temporal.PlainDate-like value (select)', async () => {
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
-      await expect(async () => {
-        await expect(
-          act(() => {
-            root.render(
-              <select onChange={noop} value={new TemporalLike()}>
-                <option value="2020-01-01">like a Temporal.PlainDate</option>
-                <option value="monkey">A monkey!</option>
-                <option value="giraffe">A giraffe!</option>
-              </select>,
-            );
-          }),
-        ).rejects.toThrowError(new TypeError('prod message'));
-      }).toErrorDev([
+      await expect(
+        act(() => {
+          root.render(
+            <select onChange={noop} value={new TemporalLike()}>
+              <option value="2020-01-01">like a Temporal.PlainDate</option>
+              <option value="monkey">A monkey!</option>
+              <option value="giraffe">A giraffe!</option>
+            </select>,
+          );
+        }),
+      ).rejects.toThrowError(new TypeError('prod message'));
+      assertConsoleErrorDev([
         'Form field values (value, checked, defaultValue, or defaultChecked props)' +
           ' must be strings, not TemporalLike. ' +
-          'This value must be coerced to a string before using it here.',
+          'This value must be coerced to a string before using it here.\n' +
+          '    in select (at **)',
         'Form field values (value, checked, defaultValue, or defaultChecked props)' +
           ' must be strings, not TemporalLike. ' +
-          'This value must be coerced to a string before using it here.',
+          'This value must be coerced to a string before using it here.\n' +
+          '    in select (at **)',
       ]);
     });
 
     it('throws when given a Temporal.PlainDate-like value (option)', async () => {
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
-      await expect(async () => {
-        await expect(
-          act(() => {
-            root.render(
-              <select onChange={noop} value="2020-01-01">
-                <option value={new TemporalLike()}>
-                  like a Temporal.PlainDate
-                </option>
-                <option value="monkey">A monkey!</option>
-                <option value="giraffe">A giraffe!</option>
-              </select>,
-            );
-          }),
-        ).rejects.toThrowError(new TypeError('prod message'));
-      }).toErrorDev([
+      await expect(
+        act(() => {
+          root.render(
+            <select onChange={noop} value="2020-01-01">
+              <option value={new TemporalLike()}>
+                like a Temporal.PlainDate
+              </option>
+              <option value="monkey">A monkey!</option>
+              <option value="giraffe">A giraffe!</option>
+            </select>,
+          );
+        }),
+      ).rejects.toThrowError(new TypeError('prod message'));
+      assertConsoleErrorDev([
         'The provided `value` attribute is an unsupported type TemporalLike.' +
-          ' This value must be coerced to a string before using it here.',
+          ' This value must be coerced to a string before using it here.\n' +
+          '    in option (at **)' +
+          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
         'The provided `value` attribute is an unsupported type TemporalLike.' +
-          ' This value must be coerced to a string before using it here.',
+          ' This value must be coerced to a string before using it here.\n' +
+          '    in option (at **)' +
+          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
       ]);
     });
 
@@ -1330,25 +1379,28 @@ describe('ReactDOMSelect', () => {
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
 
-      await expect(async () => {
-        await expect(
-          act(() => {
-            root.render(
-              <select onChange={noop} value={new TemporalLike()}>
-                <option value={new TemporalLike()}>
-                  like a Temporal.PlainDate
-                </option>
-                <option value="monkey">A monkey!</option>
-                <option value="giraffe">A giraffe!</option>
-              </select>,
-            );
-          }),
-        ).rejects.toThrowError(new TypeError('prod message'));
-      }).toErrorDev([
+      await expect(
+        act(() => {
+          root.render(
+            <select onChange={noop} value={new TemporalLike()}>
+              <option value={new TemporalLike()}>
+                like a Temporal.PlainDate
+              </option>
+              <option value="monkey">A monkey!</option>
+              <option value="giraffe">A giraffe!</option>
+            </select>,
+          );
+        }),
+      ).rejects.toThrowError(new TypeError('prod message'));
+      assertConsoleErrorDev([
         'The provided `value` attribute is an unsupported type TemporalLike.' +
-          ' This value must be coerced to a string before using it here.',
+          ' This value must be coerced to a string before using it here.\n' +
+          '    in option (at **)' +
+          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
         'The provided `value` attribute is an unsupported type TemporalLike.' +
-          ' This value must be coerced to a string before using it here.',
+          ' This value must be coerced to a string before using it here.\n' +
+          '    in option (at **)' +
+          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
       ]);
     });
 
@@ -1366,23 +1418,23 @@ describe('ReactDOMSelect', () => {
         );
       });
 
-      await expect(async () => {
-        await expect(
-          act(() => {
-            root.render(
-              <select onChange={noop} value={new TemporalLike()}>
-                <option value="2020-01-01">like a Temporal.PlainDate</option>
-                <option value="monkey">A monkey!</option>
-                <option value="giraffe">A giraffe!</option>
-              </select>,
-            );
-          }),
-        ).rejects.toThrowError(new TypeError('prod message'));
-      }).toErrorDev(
+      await expect(
+        act(() => {
+          root.render(
+            <select onChange={noop} value={new TemporalLike()}>
+              <option value="2020-01-01">like a Temporal.PlainDate</option>
+              <option value="monkey">A monkey!</option>
+              <option value="giraffe">A giraffe!</option>
+            </select>,
+          );
+        }),
+      ).rejects.toThrowError(new TypeError('prod message'));
+      assertConsoleErrorDev([
         'Form field values (value, checked, defaultValue, or defaultChecked props)' +
           ' must be strings, not TemporalLike. ' +
-          'This value must be coerced to a string before using it here.',
-      );
+          'This value must be coerced to a string before using it here.\n' +
+          '    in select (at **)',
+      ]);
     });
 
     it('throws with updated Temporal.PlainDate-like value (option)', async () => {
@@ -1399,24 +1451,25 @@ describe('ReactDOMSelect', () => {
         );
       });
 
-      await expect(async () => {
-        await expect(
-          act(() => {
-            root.render(
-              <select onChange={noop} value="2020-01-01">
-                <option value={new TemporalLike()}>
-                  like a Temporal.PlainDate
-                </option>
-                <option value="monkey">A monkey!</option>
-                <option value="giraffe">A giraffe!</option>
-              </select>,
-            );
-          }),
-        ).rejects.toThrowError(new TypeError('prod message'));
-      }).toErrorDev(
+      await expect(
+        act(() => {
+          root.render(
+            <select onChange={noop} value="2020-01-01">
+              <option value={new TemporalLike()}>
+                like a Temporal.PlainDate
+              </option>
+              <option value="monkey">A monkey!</option>
+              <option value="giraffe">A giraffe!</option>
+            </select>,
+          );
+        }),
+      ).rejects.toThrowError(new TypeError('prod message'));
+      assertConsoleErrorDev([
         'The provided `value` attribute is an unsupported type TemporalLike.' +
-          ' This value must be coerced to a string before using it here.',
-      );
+          ' This value must be coerced to a string before using it here.\n' +
+          '    in option (at **)' +
+          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
+      ]);
     });
 
     it('throws with updated Temporal.PlainDate-like value (both)', async () => {
@@ -1433,57 +1486,60 @@ describe('ReactDOMSelect', () => {
         );
       });
 
-      await expect(async () => {
-        await expect(
-          act(() => {
-            root.render(
-              <select onChange={noop} value={new TemporalLike()}>
-                <option value={new TemporalLike()}>
-                  like a Temporal.PlainDate
-                </option>
-                <option value="monkey">A monkey!</option>
-                <option value="giraffe">A giraffe!</option>
-              </select>,
-            );
-          }),
-        ).rejects.toThrowError(
-          // eslint-disable-next-line no-undef
-          new AggregateError([
-            new TypeError('prod message'),
-            new TypeError('prod message'),
-          ]),
-        );
-      }).toErrorDev([
+      await expect(
+        act(() => {
+          root.render(
+            <select onChange={noop} value={new TemporalLike()}>
+              <option value={new TemporalLike()}>
+                like a Temporal.PlainDate
+              </option>
+              <option value="monkey">A monkey!</option>
+              <option value="giraffe">A giraffe!</option>
+            </select>,
+          );
+        }),
+      ).rejects.toThrowError(
+        // eslint-disable-next-line no-undef
+        new AggregateError([
+          new TypeError('prod message'),
+          new TypeError('prod message'),
+        ]),
+      );
+      assertConsoleErrorDev([
         'The provided `value` attribute is an unsupported type TemporalLike.' +
-          ' This value must be coerced to a string before using it here.',
+          ' This value must be coerced to a string before using it here.\n' +
+          '    in option (at **)' +
+          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
         'Form field values (value, checked, defaultValue, or defaultChecked props)' +
           ' must be strings, not TemporalLike. ' +
-          'This value must be coerced to a string before using it here.',
+          'This value must be coerced to a string before using it here.\n' +
+          '    in select (at **)',
       ]);
     });
 
     it('throws when given a Temporal.PlainDate-like defaultValue (select)', async () => {
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
-      await expect(async () => {
-        await expect(
-          act(() => {
-            root.render(
-              <select onChange={noop} defaultValue={new TemporalLike()}>
-                <option value="2020-01-01">like a Temporal.PlainDate</option>
-                <option value="monkey">A monkey!</option>
-                <option value="giraffe">A giraffe!</option>
-              </select>,
-            );
-          }),
-        ).rejects.toThrowError(new TypeError('prod message'));
-      }).toErrorDev([
+      await expect(
+        act(() => {
+          root.render(
+            <select onChange={noop} defaultValue={new TemporalLike()}>
+              <option value="2020-01-01">like a Temporal.PlainDate</option>
+              <option value="monkey">A monkey!</option>
+              <option value="giraffe">A giraffe!</option>
+            </select>,
+          );
+        }),
+      ).rejects.toThrowError(new TypeError('prod message'));
+      assertConsoleErrorDev([
         'Form field values (value, checked, defaultValue, or defaultChecked props)' +
           ' must be strings, not TemporalLike. ' +
-          'This value must be coerced to a string before using it here.',
+          'This value must be coerced to a string before using it here.\n' +
+          '    in select (at **)',
         'Form field values (value, checked, defaultValue, or defaultChecked props)' +
           ' must be strings, not TemporalLike. ' +
-          'This value must be coerced to a string before using it here.',
+          'This value must be coerced to a string before using it here.\n' +
+          '    in select (at **)',
       ]);
     });
 
@@ -1491,50 +1547,56 @@ describe('ReactDOMSelect', () => {
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
 
-      await expect(async () => {
-        await expect(
-          act(() => {
-            root.render(
-              <select onChange={noop} defaultValue="2020-01-01">
-                <option value={new TemporalLike()}>
-                  like a Temporal.PlainDate
-                </option>
-                <option value="monkey">A monkey!</option>
-                <option value="giraffe">A giraffe!</option>
-              </select>,
-            );
-          }),
-        ).rejects.toThrowError(new TypeError('prod message'));
-      }).toErrorDev([
+      await expect(
+        act(() => {
+          root.render(
+            <select onChange={noop} defaultValue="2020-01-01">
+              <option value={new TemporalLike()}>
+                like a Temporal.PlainDate
+              </option>
+              <option value="monkey">A monkey!</option>
+              <option value="giraffe">A giraffe!</option>
+            </select>,
+          );
+        }),
+      ).rejects.toThrowError(new TypeError('prod message'));
+      assertConsoleErrorDev([
         'The provided `value` attribute is an unsupported type TemporalLike.' +
-          ' This value must be coerced to a string before using it here.',
+          ' This value must be coerced to a string before using it here.\n' +
+          '    in option (at **)' +
+          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
         'The provided `value` attribute is an unsupported type TemporalLike.' +
-          ' This value must be coerced to a string before using it here.',
+          ' This value must be coerced to a string before using it here.\n' +
+          '    in option (at **)' +
+          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
       ]);
     });
 
     it('throws when given a Temporal.PlainDate-like defaultValue (both)', async () => {
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
-      await expect(async () => {
-        await expect(
-          act(() => {
-            root.render(
-              <select onChange={noop} defaultValue={new TemporalLike()}>
-                <option value={new TemporalLike()}>
-                  like a Temporal.PlainDate
-                </option>
-                <option value="monkey">A monkey!</option>
-                <option value="giraffe">A giraffe!</option>
-              </select>,
-            );
-          }),
-        ).rejects.toThrowError(new TypeError('prod message'));
-      }).toErrorDev([
+      await expect(
+        act(() => {
+          root.render(
+            <select onChange={noop} defaultValue={new TemporalLike()}>
+              <option value={new TemporalLike()}>
+                like a Temporal.PlainDate
+              </option>
+              <option value="monkey">A monkey!</option>
+              <option value="giraffe">A giraffe!</option>
+            </select>,
+          );
+        }),
+      ).rejects.toThrowError(new TypeError('prod message'));
+      assertConsoleErrorDev([
         'The provided `value` attribute is an unsupported type TemporalLike.' +
-          ' This value must be coerced to a string before using it here.',
+          ' This value must be coerced to a string before using it here.\n' +
+          '    in option (at **)' +
+          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
         'The provided `value` attribute is an unsupported type TemporalLike.' +
-          ' This value must be coerced to a string before using it here.',
+          ' This value must be coerced to a string before using it here.\n' +
+          '    in option (at **)' +
+          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
       ]);
     });
 
@@ -1553,25 +1615,26 @@ describe('ReactDOMSelect', () => {
 
       container = document.createElement('div');
       root = ReactDOMClient.createRoot(container);
-      await expect(async () => {
-        await expect(
-          act(() => {
-            root.render(
-              <select onChange={noop} defaultValue={new TemporalLike()}>
-                <option value="2020-01-01">like a Temporal.PlainDate</option>
-                <option value="monkey">A monkey!</option>
-                <option value="giraffe">A giraffe!</option>
-              </select>,
-            );
-          }),
-        ).rejects.toThrowError(new TypeError('prod message'));
-      }).toErrorDev([
+      await expect(
+        act(() => {
+          root.render(
+            <select onChange={noop} defaultValue={new TemporalLike()}>
+              <option value="2020-01-01">like a Temporal.PlainDate</option>
+              <option value="monkey">A monkey!</option>
+              <option value="giraffe">A giraffe!</option>
+            </select>,
+          );
+        }),
+      ).rejects.toThrowError(new TypeError('prod message'));
+      assertConsoleErrorDev([
         'Form field values (value, checked, defaultValue, or defaultChecked props)' +
           ' must be strings, not TemporalLike. ' +
-          'This value must be coerced to a string before using it here.',
+          'This value must be coerced to a string before using it here.\n' +
+          '    in select (at **)',
         'Form field values (value, checked, defaultValue, or defaultChecked props)' +
           ' must be strings, not TemporalLike. ' +
-          'This value must be coerced to a string before using it here.',
+          'This value must be coerced to a string before using it here.\n' +
+          '    in select (at **)',
       ]);
     });
 
@@ -1591,25 +1654,28 @@ describe('ReactDOMSelect', () => {
 
       container = document.createElement('div');
       root = ReactDOMClient.createRoot(container);
-      await expect(async () => {
-        await expect(
-          act(() => {
-            root.render(
-              <select onChange={noop} value={new TemporalLike()}>
-                <option value={new TemporalLike()}>
-                  like a Temporal.PlainDate
-                </option>
-                <option value="monkey">A monkey!</option>
-                <option value="giraffe">A giraffe!</option>
-              </select>,
-            );
-          }),
-        ).rejects.toThrowError(new TypeError('prod message'));
-      }).toErrorDev([
+      await expect(
+        act(() => {
+          root.render(
+            <select onChange={noop} value={new TemporalLike()}>
+              <option value={new TemporalLike()}>
+                like a Temporal.PlainDate
+              </option>
+              <option value="monkey">A monkey!</option>
+              <option value="giraffe">A giraffe!</option>
+            </select>,
+          );
+        }),
+      ).rejects.toThrowError(new TypeError('prod message'));
+      assertConsoleErrorDev([
         'The provided `value` attribute is an unsupported type TemporalLike.' +
-          ' This value must be coerced to a string before using it here.',
+          ' This value must be coerced to a string before using it here.\n' +
+          '    in option (at **)' +
+          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
         'The provided `value` attribute is an unsupported type TemporalLike.' +
-          ' This value must be coerced to a string before using it here.',
+          ' This value must be coerced to a string before using it here.\n' +
+          '    in option (at **)' +
+          (gate('enableOwnerStacks') ? '' : '\n    in select (at **)'),
       ]);
     });
 
@@ -1681,85 +1747,84 @@ describe('ReactDOMSelect', () => {
     it('should warn about missing onChange if value is false', async () => {
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
-      await expect(async () => {
-        await act(() => {
-          root.render(
-            <select value={false}>
-              <option value="monkey">A monkey!</option>
-              <option value="giraffe">A giraffe!</option>
-              <option value="gorilla">A gorilla!</option>
-            </select>,
-          );
-        });
-      }).toErrorDev(
+      await act(() => {
+        root.render(
+          <select value={false}>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+            <option value="gorilla">A gorilla!</option>
+          </select>,
+        );
+      });
+      assertConsoleErrorDev([
         'You provided a `value` prop to a form ' +
           'field without an `onChange` handler. This will render a read-only ' +
           'field. If the field should be mutable use `defaultValue`. ' +
-          'Otherwise, set `onChange`.',
-      );
+          'Otherwise, set `onChange`.\n    in select (at **)',
+      ]);
     });
 
     it('should warn about missing onChange if value is 0', async () => {
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
-      await expect(async () => {
-        await act(() => {
-          root.render(
-            <select value={0}>
-              <option value="monkey">A monkey!</option>
-              <option value="giraffe">A giraffe!</option>
-              <option value="gorilla">A gorilla!</option>
-            </select>,
-          );
-        });
-      }).toErrorDev(
+      await act(() => {
+        root.render(
+          <select value={0}>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+            <option value="gorilla">A gorilla!</option>
+          </select>,
+        );
+      });
+      assertConsoleErrorDev([
         'You provided a `value` prop to a form ' +
           'field without an `onChange` handler. This will render a read-only ' +
           'field. If the field should be mutable use `defaultValue`. ' +
-          'Otherwise, set `onChange`.',
-      );
+          'Otherwise, set `onChange`.\n' +
+          '    in select (at **)',
+      ]);
     });
 
     it('should warn about missing onChange if value is "0"', async () => {
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
-      await expect(async () => {
-        await act(() => {
-          root.render(
-            <select value="0">
-              <option value="monkey">A monkey!</option>
-              <option value="giraffe">A giraffe!</option>
-              <option value="gorilla">A gorilla!</option>
-            </select>,
-          );
-        });
-      }).toErrorDev(
+      await act(() => {
+        root.render(
+          <select value="0">
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+            <option value="gorilla">A gorilla!</option>
+          </select>,
+        );
+      });
+      assertConsoleErrorDev([
         'You provided a `value` prop to a form ' +
           'field without an `onChange` handler. This will render a read-only ' +
           'field. If the field should be mutable use `defaultValue`. ' +
-          'Otherwise, set `onChange`.',
-      );
+          'Otherwise, set `onChange`.\n' +
+          '    in select (at **)',
+      ]);
     });
 
     it('should warn about missing onChange if value is ""', async () => {
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
-      await expect(async () => {
-        await act(() => {
-          root.render(
-            <select value="">
-              <option value="monkey">A monkey!</option>
-              <option value="giraffe">A giraffe!</option>
-              <option value="gorilla">A gorilla!</option>
-            </select>,
-          );
-        });
-      }).toErrorDev(
+      await act(() => {
+        root.render(
+          <select value="">
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+            <option value="gorilla">A gorilla!</option>
+          </select>,
+        );
+      });
+      assertConsoleErrorDev([
         'You provided a `value` prop to a form ' +
           'field without an `onChange` handler. This will render a read-only ' +
           'field. If the field should be mutable use `defaultValue`. ' +
-          'Otherwise, set `onChange`.',
-      );
+          'Otherwise, set `onChange`.\n' +
+          '    in select (at **)',
+      ]);
     });
   });
 });

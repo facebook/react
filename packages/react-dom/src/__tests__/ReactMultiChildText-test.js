@@ -80,9 +80,9 @@ describe('ReactMultiChildText', () => {
   jest.setTimeout(30000);
 
   it('should correctly handle all possible children for render and update', async () => {
-    await expect(async () => {
-      // prettier-ignore
-      await testAllPermutations([
+    spyOnDev(console, 'error').mockImplementation(() => {});
+    // prettier-ignore
+    await testAllPermutations([
         // basic values
         undefined, [],
         null, [],
@@ -168,10 +168,13 @@ describe('ReactMultiChildText', () => {
         [true, <div>{1.2}{''}{<div />}{'foo'}</div>, true, 1.2], [<div />, '1.2'],
         ['', 'foo', <div>{true}{<div />}{1.2}{''}</div>, 'foo'], ['', 'foo', <div />, 'foo'],
       ]);
-    }).toErrorDev([
+    expect(console.error).toHaveBeenCalledTimes(2);
+    expect(console.error.mock.calls[0][0]).toMatch(
       'Each child in a list should have a unique "key" prop.',
+    );
+    expect(console.error.mock.calls[1][0]).toMatch(
       'Each child in a list should have a unique "key" prop.',
-    ]);
+    );
   });
 
   it('should correctly handle bigint children for render and update', async () => {
