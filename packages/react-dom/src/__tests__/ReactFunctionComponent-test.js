@@ -116,6 +116,7 @@ describe('ReactFunctionComponent', () => {
         '    in GrandParent (at **)',
       'Child uses the legacy contextTypes API which will soon be removed. ' +
         'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+        (gate('enableOwnerStacks') ? '' : '    in Child (at **)\n') +
         '    in Parent (at **)\n' +
         '    in GrandParent (at **)',
     ]);
@@ -254,8 +255,13 @@ describe('ReactFunctionComponent', () => {
       root.render(<Parent />);
     });
     assertConsoleErrorDev([
-      'Parent uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
-      'Child uses the legacy contextTypes API which will be removed soon. Use React.createContext() with React.useContext() instead.',
+      'Parent uses the legacy childContextTypes API which will soon be removed. ' +
+        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in Parent (at **)',
+      'Child uses the legacy contextTypes API which will be removed soon. ' +
+        'Use React.createContext() with React.useContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in Child (at **)\n' +
+        '    in Parent (at **)',
     ]);
     expect(el.textContent).toBe('en');
   });
