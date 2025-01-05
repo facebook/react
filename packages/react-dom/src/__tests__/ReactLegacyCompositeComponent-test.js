@@ -121,9 +121,13 @@ describe('ReactLegacyCompositeComponent', () => {
     assertConsoleErrorDev([
       'Child uses the legacy childContextTypes API which will soon be removed. ' +
         'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        (gate('enableOwnerStacks') ? '' : '    in Child (at **)\n') +
         '    in Parent (at **)',
       'Grandchild uses the legacy contextTypes API which will soon be removed. ' +
         'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+        (gate('enableOwnerStacks')
+          ? ''
+          : '    in Grandchild (at **)\n' + '    in Child (at **)\n') +
         '    in Parent (at **)',
     ]);
     expect(findDOMNode(component).innerHTML).toBe('bar');
@@ -196,7 +200,10 @@ describe('ReactLegacyCompositeComponent', () => {
         '    in Parent (at **)',
       'Child uses the legacy contextTypes API which will soon be removed. ' +
         'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
-        '    in Child (at **)',
+        '    in Child (at **)' +
+        (gate('enableOwnerStacks')
+          ? ''
+          : '\n    in Middle (at **)' + '\n    in Parent (at **)'),
     ]);
 
     await act(() => {
@@ -261,9 +268,15 @@ describe('ReactLegacyCompositeComponent', () => {
     assertConsoleErrorDev([
       'Parent uses the legacy childContextTypes API which will soon be removed. ' +
         'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        (gate('enableOwnerStacks') ? '' : '    in Parent (at **)\n') +
         '    in Wrapper (at **)',
       'Child uses the legacy contextTypes API which will soon be removed. ' +
         'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+        (gate('enableOwnerStacks')
+          ? ''
+          : '    in Child (at **)\n' +
+            '    in div (at **)\n' +
+            '    in Parent (at **)\n') +
         '    in Wrapper (at **)',
     ]);
 
@@ -348,12 +361,15 @@ describe('ReactLegacyCompositeComponent', () => {
         '    in Parent (at **)',
       'Child uses the legacy childContextTypes API which will soon be removed. ' +
         'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        (gate('enableOwnerStacks') ? '' : '    in Child (at **)\n') +
         '    in Parent (at **)',
       'Child uses the legacy contextTypes API which will soon be removed. ' +
         'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+        (gate('enableOwnerStacks') ? '' : '    in Child (at **)\n') +
         '    in Parent (at **)',
       'Grandchild uses the legacy contextTypes API which will soon be removed. ' +
         'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+        (gate('enableOwnerStacks') ? '' : '    in Grandchild (at **)\n') +
         '    in Child (at **)\n' +
         '    in Parent (at **)',
     ]);
@@ -425,6 +441,7 @@ describe('ReactLegacyCompositeComponent', () => {
     assertConsoleErrorDev([
       'Child uses the legacy contextTypes API which will soon be removed. ' +
         'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+        (gate('enableOwnerStacks') ? '' : '    in Child (at **)\n') +
         '    in Parent (at **)',
     ]);
 
