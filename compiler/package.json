@@ -30,6 +30,7 @@
     "concurrently": "^7.4.0",
     "esbuild": "^0.24.2",
     "folder-hash": "^4.0.4",
+    "npm-dts": "^1.3.13",
     "object-assign": "^4.1.1",
     "ora": "5.4.1",
     "prettier": "^3.3.3",
