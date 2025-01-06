@@ -41,6 +41,7 @@ import isArray from 'shared/isArray';
 import {
   enableSchedulingProfiler,
   enableHydrationLaneScheduling,
+  disableLegacyMode,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -364,7 +365,7 @@ export function updateContainerSync(
   parentComponent: ?React$Component<any, any>,
   callback: ?Function,
 ): Lane {
-  if (container.tag === LegacyRoot) {
+  if (!disableLegacyMode && container.tag === LegacyRoot) {
     flushPassiveEffects();
   }
   const current = container.current;
