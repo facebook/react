@@ -3373,6 +3373,9 @@ function commitRoot(
 }
 
 function flushMutationEffects(): void {
+  if (pendingEffectsStatus !== PENDING_MUTATION_PHASE) {
+    return;
+  }
   const root = pendingEffectsRoot;
   const finishedWork = pendingFinishedWork;
   const lanes = pendingEffectsLanes;
@@ -3414,6 +3417,9 @@ function flushMutationEffects(): void {
 }
 
 function flushLayoutEffects(): void {
+  if (pendingEffectsStatus !== PENDING_LAYOUT_PHASE) {
+    return;
+  }
   const root = pendingEffectsRoot;
   const finishedWork = pendingFinishedWork;
   const lanes = pendingEffectsLanes;
@@ -3688,20 +3694,15 @@ function releaseRootPooledCache(root: FiberRoot, remainingLanes: Lanes) {
 
 export function flushPendingEffects(wasDelayedCommit?: boolean): boolean {
   // Returns whether passive effects were flushed.
-  if (pendingEffectsStatus === PENDING_MUTATION_PHASE) {
-    flushMutationEffects();
-  }
-  if (pendingEffectsStatus === PENDING_LAYOUT_PHASE) {
-    flushLayoutEffects();
-  }
-  if (pendingEffectsStatus === PENDING_PASSIVE_PHASE) {
-    return flushPassiveEffects(wasDelayedCommit);
-  } else {
-    return false;
-  }
+  flushMutationEffects();
+  flushLayoutEffects();
+  return flushPassiveEffects(wasDelayedCommit);
 }
 
 function flushPassiveEffects(wasDelayedCommit?: boolean): boolean {
+  if (pendingEffectsStatus !== PENDING_PASSIVE_PHASE) {
+    return false;
+  }
   // TODO: Merge flushPassiveEffectsImpl into this function. I believe they were only separate
   // in the first place because we used to wrap it with
   // `Scheduler.runWithPriority`, which accepts a function. But now we track the
