@@ -10,6 +10,7 @@
 const esbuild = require('esbuild');
 const yargs = require('yargs');
 const path = require('path');
+const {Generator} = require('npm-dts');
 
 const argv = yargs(process.argv.slice(2))
   .options('p', {
@@ -61,6 +62,10 @@ async function main() {
       minify: false,
       ...config,
     });
+    await new Generator({
+      entry: 'src/index.ts',
+      output: 'dist/index.d.ts',
+    }).generate();
   }
 }
 

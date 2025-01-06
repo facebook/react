@@ -4,6 +4,7 @@
   "description": "Runtime for React Compiler",
   "license": "MIT",
   "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
   "files": [
     "dist",
     "src"
