@@ -7,6 +7,7 @@
 
 import {CompilerError} from '..';
 import {
+  DeclarationId,
   Environment,
   Instruction,
   Place,
@@ -50,10 +51,13 @@ export function makeReactiveId(id: number): ReactiveId {
 }
 
 export type ReactiveNode =
+  | EntryNode
   | LoadArgumentNode
+  | ConstNode
   | InstructionNode
-  | IfNode
-  | EmptyNode
+  | BranchNode
+  | JoinNode
+  | ControlNode
   | ReturnNode
   | ScopeNode;
 
@@ -66,12 +70,30 @@ export type NodeReference = {
 export type NodeDependencies = Map<ReactiveId, NodeDependency>;
 export type NodeDependency = {from: Place; as: Place};
 
+export type EntryNode = {
+  kind: 'Entry';
+  id: ReactiveId;
+  loc: SourceLocation;
+  outputs: Array<ReactiveId>;
+};
+
 export type LoadArgumentNode = {
   kind: 'LoadArgument';
   id: ReactiveId;
   loc: SourceLocation;
   outputs: Array<ReactiveId>;
   place: Place;
+  control: ReactiveId;
+};
+
+export type ConstNode = {
+  kind: 'Const';
+  id: ReactiveId;
+  loc: SourceLocation;
+  outputs: Array<ReactiveId>;
+  lvalue: Place;
+  value: NodeReference;
+  control: ReactiveId;
 };
 
 // An individual instruction
@@ -81,7 +103,7 @@ export type InstructionNode = {
   loc: SourceLocation;
   outputs: Array<ReactiveId>;
   dependencies: NodeDependencies;
-  controlDependency: ReactiveId | null;
+  control: ReactiveId;
   value: Instruction;
 };
 
@@ -91,23 +113,48 @@ export type ReturnNode = {
   loc: SourceLocation;
   value: NodeReference;
   outputs: Array<ReactiveId>;
+  control: ReactiveId;
 };
 
-export type IfNode = {
-  kind: 'If';
+export type BranchNode = {
+  kind: 'Branch';
   id: ReactiveId;
   loc: SourceLocation;
   outputs: Array<ReactiveId>;
+  dependencies: Array<ReactiveId>; // values/scopes depended on by more than one branch, or by the terminal
+  control: ReactiveId;
+};
+
+export type JoinNode = {
+  kind: 'Join';
+  id: ReactiveId;
+  loc: SourceLocation;
+  outputs: Array<ReactiveId>;
+  phis: Map<DeclarationId, PhiNode>;
+  terminal: NodeTerminal;
+  control: ReactiveId; // join node always has a control, which is the corresponding Branch node
+};
+
+export type PhiNode = {
+  place: Place;
+  operands: Map<ReactiveId, Place>;
+};
+
+export type NodeTerminal = IfBranch;
+
+export type IfBranch = {
+  kind: 'If';
   test: NodeReference;
   consequent: ReactiveId;
   alternate: ReactiveId;
 };
 
-export type EmptyNode = {
-  kind: 'Empty';
+export type ControlNode = {
+  kind: 'Control';
   id: ReactiveId;
   loc: SourceLocation;
   outputs: Array<ReactiveId>;
+  control: ReactiveId;
 };
 
 export type ScopeNode = {
@@ -127,13 +174,19 @@ export type ScopeNode = {
    */
   // declarations: NodeDependencies;
   body: ReactiveId;
+  control: ReactiveId;
 };
 
 function _staticInvariantReactiveNodeHasIdLocationAndOutputs(
   node: ReactiveNode,
-): [ReactiveId, SourceLocation, Array<ReactiveId>] {
+): [ReactiveId, SourceLocation, Array<ReactiveId>, ReactiveId | null] {
   // If this fails, it is because a variant of ReactiveNode is missing a .id and/or .loc - add it!
-  return [node.id, node.loc, node.outputs];
+  let control: ReactiveId | null = null;
+  if (node.kind !== 'Entry') {
+    const nonNullControl: ReactiveId = node.control;
+    control = nonNullControl;
+  }
+  return [node.id, node.loc, node.outputs, control];
 }
 
 /**
@@ -179,7 +232,7 @@ export function reversePostorderReactiveGraph(graph: ReactiveGraph): void {
     nodes.set(id, node);
   }
   for (const [_id, node] of graph.nodes) {
-    if (node.outputs.length === 0 && node.kind !== 'Empty') {
+    if (node.outputs.length === 0 && node.kind !== 'Control') {
       visit(node.id);
     }
   }
@@ -188,15 +241,32 @@ export function reversePostorderReactiveGraph(graph: ReactiveGraph): void {
 }
 
 export function* eachNodeDependency(node: ReactiveNode): Iterable<ReactiveId> {
+  if (node.kind !== 'Entry' && node.control != null) {
+    yield node.control;
+  }
   switch (node.kind) {
-    case 'LoadArgument':
-    case 'Empty': {
+    case 'Entry':
+    case 'Control':
+    case 'LoadArgument': {
       break;
     }
-    case 'If': {
-      yield node.test.node;
-      yield node.consequent;
-      yield node.alternate;
+    case 'Branch': {
+      yield* node.dependencies;
+      break;
+    }
+    case 'Join': {
+      for (const phi of node.phis.values()) {
+        for (const operand of phi.operands.keys()) {
+          yield operand;
+        }
+      }
+      yield node.terminal.test.node;
+      yield node.terminal.consequent;
+      yield node.terminal.alternate;
+      break;
+    }
+    case 'Const': {
+      yield node.value.node;
       break;
     }
     case 'Return': {
@@ -205,9 +275,6 @@ export function* eachNodeDependency(node: ReactiveNode): Iterable<ReactiveId> {
     }
     case 'Value': {
       yield* [...node.dependencies.keys()];
-      if (node.controlDependency != null) {
-        yield node.controlDependency;
-      }
       break;
     }
     case 'Scope': {
@@ -226,16 +293,33 @@ export function* eachNodeReference(
   node: ReactiveNode,
 ): Iterable<NodeReference> {
   switch (node.kind) {
-    case 'LoadArgument':
-    case 'Empty': {
+    case 'Entry':
+    case 'Control':
+    case 'LoadArgument': {
+      break;
+    }
+    case 'Const': {
+      yield node.value;
       break;
     }
     case 'Return': {
       yield node.value;
       break;
     }
-    case 'If': {
-      yield node.test;
+    case 'Branch': {
+      break;
+    }
+    case 'Join': {
+      for (const phi of node.phis.values()) {
+        for (const [pred, operand] of phi.operands) {
+          yield {
+            node: pred,
+            from: operand,
+            as: operand,
+          };
+        }
+      }
+      yield node.terminal.test;
       break;
     }
     case 'Value': {
@@ -313,34 +397,59 @@ function writeReactiveNodes(
     const deps = [...eachNodeReference(node)]
       .map(id => printNodeReference(id))
       .join(' ');
+    const control =
+      node.kind !== 'Entry' && node.control != null
+        ? ` control=£${node.control}`
+        : '';
     switch (node.kind) {
+      case 'Entry': {
+        buffer.push(`£${id} Entry`);
+        break;
+      }
       case 'LoadArgument': {
-        buffer.push(`£${id} LoadArgument ${printPlace(node.place)}`);
+        buffer.push(`£${id} LoadArgument ${printPlace(node.place)}${control}`);
         break;
       }
-      case 'Empty': {
-        buffer.push(`£${id} Empty deps=[${deps}]`);
+      case 'Control': {
+        buffer.push(`£${id} Control${control}`);
         break;
       }
-      case 'Return': {
-        buffer.push(`£${id} Return ${printNodeReference(node.value)}`);
-        break;
-      }
-      case 'If': {
+      case 'Const': {
         buffer.push(
-          `£${id} If test=${printNodeReference(node.test)} consequent=£${node.consequent} alternate=£${node.alternate}`,
+          `£${id} Const ${printPlace(node.lvalue)} = ${printNodeReference(node.value)}${control}`,
         );
         break;
       }
+      case 'Return': {
+        buffer.push(
+          `£${id} Return ${printNodeReference(node.value)}${control}`,
+        );
+        break;
+      }
+      case 'Branch': {
+        buffer.push(
+          `£${id} Branch deps=[${node.dependencies.map(id => `£${id}`).join(', ')}]${control}`,
+        );
+        break;
+      }
+      case 'Join': {
+        buffer.push(
+          `£${id} If test=${printNodeReference(node.terminal.test)} consequent=£${node.terminal.consequent} alternate=£${node.terminal.alternate}${control}`,
+        );
+        // for (const phi of node.phis.values()) {
+        //   buffer.push(`  ${printPlace(phi.place)}: `)
+        // }
+        break;
+      }
       case 'Value': {
-        buffer.push(`£${id} Intermediate deps=[${deps}]`);
+        buffer.push(`£${id} Intermediate deps=[${deps}]${control}`);
         buffer.push('  ' + printInstruction(node.value));
         break;
       }
       case 'Scope': {
         buffer.push(
           // `£${id} Scope @${node.scope.id} deps=[${printNodeDependencies(node.dependencies)}] declarations=[${printNodeDependencies(node.declarations)}]`,
-          `£${id} Scope @${node.scope.id} deps=[${printNodeDependencies(node.dependencies)}] body=£${node.body}`,
+          `£${id} Scope @${node.scope.id} deps=[${printNodeDependencies(node.dependencies)}] body=£${node.body}${control}`,
         );
         break;
       }

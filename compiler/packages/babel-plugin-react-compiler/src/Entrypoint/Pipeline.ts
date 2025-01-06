@@ -316,6 +316,15 @@ function runWithEnvironment(
     value: hir,
   });
 
+  if (env.config.enableReactiveGraph) {
+    const reactiveGraph = buildReactiveGraph(hir);
+    log({
+      kind: 'debug',
+      name: 'BuildReactiveGraph',
+      value: printReactiveGraph(reactiveGraph),
+    });
+  }
+
   alignReactiveScopesToBlockScopesHIR(hir);
   log({
     kind: 'hir',
@@ -372,15 +381,6 @@ function runWithEnvironment(
       kind: 'hir',
       name: 'inlineJsxTransform',
       value: hir,
-    });
-  }
-
-  if (env.config.enableReactiveGraph) {
-    const reactiveGraph = buildReactiveGraph(hir);
-    log({
-      kind: 'debug',
-      name: 'BuildReactiveGraph',
-      value: printReactiveGraph(reactiveGraph),
     });
   }
 
