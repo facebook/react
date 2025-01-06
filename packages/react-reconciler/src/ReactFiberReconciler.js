@@ -76,7 +76,7 @@ import {
   isAlreadyRendering,
   deferredUpdates,
   discreteUpdates,
-  flushPassiveEffects,
+  flushPendingEffects,
 } from './ReactFiberWorkLoop';
 import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates';
 import {
@@ -366,7 +366,7 @@ export function updateContainerSync(
   callback: ?Function,
 ): Lane {
   if (!disableLegacyMode && container.tag === LegacyRoot) {
-    flushPassiveEffects();
+    flushPendingEffects();
   }
   const current = container.current;
   updateContainerImpl(
@@ -454,7 +454,7 @@ export {
   flushSyncFromReconciler,
   flushSyncWork,
   isAlreadyRendering,
-  flushPassiveEffects,
+  flushPendingEffects as flushPassiveEffects,
 };
 
 export function getPublicRootInstance(

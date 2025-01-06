@@ -38,7 +38,7 @@ import {
   CommitContext,
   NoContext,
   RenderContext,
-  flushPassiveEffects,
+  flushPendingEffects,
   getExecutionContext,
   getWorkInProgressRoot,
   getWorkInProgressRootRenderLanes,
@@ -469,7 +469,7 @@ function performWorkOnRootViaSchedulerTask(
   // Flush any pending passive effects before deciding which lanes to work on,
   // in case they schedule additional work.
   const originalCallbackNode = root.callbackNode;
-  const didFlushPassiveEffects = flushPassiveEffects();
+  const didFlushPassiveEffects = flushPendingEffects();
   if (didFlushPassiveEffects) {
     // Something in the passive effect phase may have canceled the current task.
     // Check if the task node for this root was changed.
@@ -534,7 +534,7 @@ function performWorkOnRootViaSchedulerTask(
 function performSyncWorkOnRoot(root: FiberRoot, lanes: Lanes) {
   // This is the entry point for synchronous tasks that don't go
   // through Scheduler.
-  const didFlushPassiveEffects = flushPassiveEffects();
+  const didFlushPassiveEffects = flushPendingEffects();
   if (didFlushPassiveEffects) {
     // If passive effects were flushed, exit to the outer work loop in the root
     // scheduler, so we can recompute the priority.

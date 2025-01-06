@@ -1642,7 +1642,7 @@ export function flushSyncFromReconciler<R>(fn: (() => R) | void): R | void {
     pendingEffectsRoot.tag === LegacyRoot &&
     (executionContext & (RenderContext | CommitContext)) === NoContext
   ) {
-    flushPassiveEffects();
+    flushPendingEffects();
   }
 
   const prevExecutionContext = executionContext;
@@ -3159,7 +3159,7 @@ function commitRoot(
     // no more pending effects.
     // TODO: Might be better if `flushPassiveEffects` did not automatically
     // flush synchronous work at the end, to avoid factoring hazards like this.
-    flushPassiveEffects();
+    flushPendingEffects();
   } while (pendingEffectsStatus !== NO_PENDING_EFFECTS);
   flushRenderPhaseStrictModeWarningsInDEV();
 
@@ -3298,7 +3298,7 @@ function commitRoot(
           // event when logging events.
           trackSchedulerEvent();
         }
-        flushPassiveEffects(true);
+        flushPendingEffects(true);
         // This render triggered passive effects: release the root cache pool
         // *after* passive effects fire to avoid freeing a cache pool that may
         // be referenced by a node in the tree (HostRoot, Cache boundary etc)
@@ -3362,7 +3362,6 @@ function commitRoot(
   }
   pendingEffectsStatus = PENDING_MUTATION_PHASE;
   flushMutationEffects();
-  pendingEffectsStatus = PENDING_LAYOUT_PHASE;
   flushLayoutEffects();
 }
 
@@ -3404,6 +3403,7 @@ function flushMutationEffects(): void {
   // componentWillUnmount, but before the layout phase, so that the finished
   // work is current during componentDidMount/Update.
   root.current = finishedWork;
+  pendingEffectsStatus = PENDING_LAYOUT_PHASE;
 }
 
 function flushLayoutEffects(): void {
@@ -3562,7 +3562,7 @@ function flushLayoutEffects(): void {
     includesSyncLane(pendingEffectsLanes) &&
     (disableLegacyMode || root.tag !== LegacyRoot)
   ) {
-    flushPassiveEffects();
+    flushPendingEffects();
   }
 
   // Always call this before exiting `commitRoot`, to ensure that any
@@ -3679,43 +3679,53 @@ function releaseRootPooledCache(root: FiberRoot, remainingLanes: Lanes) {
   }
 }
 
-export function flushPassiveEffects(wasDelayedCommit?: boolean): boolean {
+export function flushPendingEffects(wasDelayedCommit?: boolean): boolean {
   // Returns whether passive effects were flushed.
-  // TODO: Combine this check with the one in flushPassiveEFfectsImpl. We should
-  // probably just combine the two functions. I believe they were only separate
+  if (pendingEffectsStatus === PENDING_MUTATION_PHASE) {
+    flushMutationEffects();
+  }
+  if (pendingEffectsStatus === PENDING_LAYOUT_PHASE) {
+    flushLayoutEffects();
+  }
+  if (pendingEffectsStatus === PENDING_PASSIVE_PHASE) {
+    return flushPassiveEffects(wasDelayedCommit);
+  } else {
+    return false;
+  }
+}
+
+function flushPassiveEffects(wasDelayedCommit?: boolean): boolean {
+  // TODO: Merge flushPassiveEffectsImpl into this function. I believe they were only separate
   // in the first place because we used to wrap it with
   // `Scheduler.runWithPriority`, which accepts a function. But now we track the
   // priority within React itself, so we can mutate the variable directly.
-  if (pendingEffectsStatus !== NO_PENDING_EFFECTS) {
-    // Cache the root since pendingEffectsRoot is cleared in
-    // flushPassiveEffectsImpl
-    const root = pendingEffectsRoot;
-    // Cache and clear the remaining lanes flag; it must be reset since this
-    // method can be called from various places, not always from commitRoot
-    // where the remaining lanes are known
-    const remainingLanes = pendingEffectsRemainingLanes;
-    pendingEffectsRemainingLanes = NoLanes;
+  // Cache the root since pendingEffectsRoot is cleared in
+  // flushPassiveEffectsImpl
+  const root = pendingEffectsRoot;
+  // Cache and clear the remaining lanes flag; it must be reset since this
+  // method can be called from various places, not always from commitRoot
+  // where the remaining lanes are known
+  const remainingLanes = pendingEffectsRemainingLanes;
+  pendingEffectsRemainingLanes = NoLanes;
 
-    const renderPriority = lanesToEventPriority(pendingEffectsLanes);
-    const priority = lowerEventPriority(DefaultEventPriority, renderPriority);
-    const prevTransition = ReactSharedInternals.T;
-    const previousPriority = getCurrentUpdatePriority();
+  const renderPriority = lanesToEventPriority(pendingEffectsLanes);
+  const priority = lowerEventPriority(DefaultEventPriority, renderPriority);
+  const prevTransition = ReactSharedInternals.T;
+  const previousPriority = getCurrentUpdatePriority();
 
-    try {
-      setCurrentUpdatePriority(priority);
-      ReactSharedInternals.T = null;
-      return flushPassiveEffectsImpl(wasDelayedCommit);
-    } finally {
-      setCurrentUpdatePriority(previousPriority);
-      ReactSharedInternals.T = prevTransition;
+  try {
+    setCurrentUpdatePriority(priority);
+    ReactSharedInternals.T = null;
+    return flushPassiveEffectsImpl(wasDelayedCommit);
+  } finally {
+    setCurrentUpdatePriority(previousPriority);
+    ReactSharedInternals.T = prevTransition;
 
-      // Once passive effects have run for the tree - giving components a
-      // chance to retain cache instances they use - release the pooled
-      // cache at the root (if there is one)
-      releaseRootPooledCache(root, remainingLanes);
-    }
+    // Once passive effects have run for the tree - giving components a
+    // chance to retain cache instances they use - release the pooled
+    // cache at the root (if there is one)
+    releaseRootPooledCache(root, remainingLanes);
   }
-  return false;
 }
 
 function flushPassiveEffectsImpl(wasDelayedCommit: void | boolean) {
