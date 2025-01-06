@@ -10,7 +10,7 @@ import './Page.css';
 
 const a = (
   <div key="a">
-    <ViewTransition>
+    <ViewTransition group="normal">
       <div>a</div>
     </ViewTransition>
   </div>
@@ -18,7 +18,7 @@ const a = (
 
 const b = (
   <div key="b">
-    <ViewTransition>
+    <ViewTransition group="normal">
       <div>b</div>
     </ViewTransition>
   </div>
@@ -32,7 +32,7 @@ export default function Page() {
     });
   }, []);
   const exclamation = (
-    <ViewTransition name="exclamation">
+    <ViewTransition name="exclamation" group="normal">
       <span>!</span>
     </ViewTransition>
   );
@@ -57,16 +57,16 @@ export default function Page() {
           {a}
         </div>
       )}
-      <ViewTransition>
+      <ViewTransition group="normal">
         {show ? <div>hello{exclamation}</div> : <section>Loading</section>}
       </ViewTransition>
       {show ? null : (
-        <ViewTransition>
+        <ViewTransition group="normal">
           <div>world{exclamation}</div>
         </ViewTransition>
       )}
       <Activity mode={show ? 'visible' : 'hidden'}>
-        <ViewTransition>
+        <ViewTransition group="normal">
           <div>!!</div>
         </ViewTransition>
       </Activity>

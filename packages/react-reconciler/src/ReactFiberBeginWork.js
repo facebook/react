@@ -3246,6 +3246,11 @@ function updateViewTransition(
   renderLanes: Lanes,
 ) {
   const pendingProps: ViewTransitionProps = workInProgress.pendingProps;
+  if (pendingProps.group !== 'normal') {
+    throw new Error(
+      'The ViewTransition component currently requires the group="normal" prop to be specified for future compatibility reasons.',
+    );
+  }
   const instance: ViewTransitionInstance = workInProgress.stateNode;
   if (pendingProps.name != null && pendingProps.name !== 'auto') {
     // Explicitly named boundary. We track it so that we can pair it up with another explicit
