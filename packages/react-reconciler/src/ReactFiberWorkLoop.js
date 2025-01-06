@@ -3481,14 +3481,12 @@ function flushLayoutEffects(): void {
     (finishedWork.flags & PassiveMask) !== NoFlags;
 
   if (rootDidHavePassiveEffects) {
-    // This commit has passive effects. Stash a reference to them. But don't
-    // schedule a callback until after flushing layout work.
     pendingEffectsStatus = PENDING_PASSIVE_PHASE;
   } else {
-    // There were no passive effects, so we can immediately release the cache
-    // pool for this render.
     pendingEffectsStatus = NO_PENDING_EFFECTS;
     pendingEffectsRoot = (null: any); // Clear for GC purposes.
+    // There were no passive effects, so we can immediately release the cache
+    // pool for this render.
     releaseRootPooledCache(root, root.pendingLanes);
     if (__DEV__) {
       nestedPassiveUpdateCount = 0;
