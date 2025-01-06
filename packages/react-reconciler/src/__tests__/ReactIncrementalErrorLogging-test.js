@@ -33,7 +33,7 @@ describe('ReactIncrementalErrorLogging', () => {
     waitForAll = InternalTestUtils.waitForAll;
   });
 
-  // Note: in this test file we won't be using toErrorDev() matchers
+  // Note: in this test file we won't be using assertConsoleDev() matchers
   // because they filter out precisely the messages we want to test for.
   let oldConsoleWarn;
   let oldConsoleError;
