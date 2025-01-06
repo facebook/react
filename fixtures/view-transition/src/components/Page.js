@@ -8,6 +8,8 @@ import React, {
 
 import './Page.css';
 
+import transitions from './Transitions.module.css';
+
 const a = (
   <div key="a">
     <ViewTransition>
@@ -23,6 +25,17 @@ const b = (
     </ViewTransition>
   </div>
 );
+
+function Component() {
+  return (
+    <ViewTransition
+      className={
+        transitions['enter-slide-right'] + ' ' + transitions['exit-slide-left']
+      }>
+      <p>Slide In from Left, Slide Out to Right</p>
+    </ViewTransition>
+  );
+}
 
 export default function Page() {
   const [show, setShow] = useState(false);
@@ -72,6 +85,7 @@ export default function Page() {
               <div>!!</div>
             </ViewTransition>
           </Activity>
+          {show ? <Component /> : <p>&nbsp;</p>}
         </div>
       </ViewTransition>
     </div>
