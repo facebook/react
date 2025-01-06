@@ -38,6 +38,14 @@ export default function Page() {
   );
   return (
     <div>
+      <button
+        onClick={() => {
+          startTransition(() => {
+            setShow(show => !show);
+          });
+        }}>
+        {show ? 'A' : 'B'}
+      </button>
       {show ? (
         <div>
           {a}
