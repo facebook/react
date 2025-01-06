@@ -50,7 +50,6 @@
     "pretty-format": "^24",
     "react": "0.0.0-experimental-4beb1fd8-20241118",
     "react-dom": "0.0.0-experimental-4beb1fd8-20241118",
-    "rimraf": "^3.0.2",
     "ts-jest": "^29.1.1",
     "ts-node": "^10.9.2",
     "zod": "^3.22.4",

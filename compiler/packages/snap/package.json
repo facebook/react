@@ -51,8 +51,7 @@
     "@types/node": "^18.7.18",
     "@typescript-eslint/eslint-plugin": "^7.4.0",
     "@typescript-eslint/parser": "^7.4.0",
-    "object-assign": "^4.1.1",
-    "rimraf": "^3.0.2"
+    "object-assign": "^4.1.1"
   },
   "resolutions": {
     "./**/@babel/parser": "7.7.4",
