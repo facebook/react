@@ -3305,7 +3305,7 @@ function commitRoot(
           // event when logging events.
           trackSchedulerEvent();
         }
-        flushPendingEffects(true);
+        flushPassiveEffects(true);
         // This render triggered passive effects: release the root cache pool
         // *after* passive effects fire to avoid freeing a cache pool that may
         // be referenced by a node in the tree (HostRoot, Cache boundary etc)
