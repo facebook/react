@@ -8,7 +8,7 @@ To reference a local build of React, first run `npm run build` at the root
 of the React project. Then:
 
 ```
-cd fixtures/ssr
+cd fixtures/view-transition
 yarn
 yarn start
 ```
