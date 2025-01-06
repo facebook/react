@@ -3376,6 +3376,8 @@ function flushMutationEffects(): void {
   if (pendingEffectsStatus !== PENDING_MUTATION_PHASE) {
     return;
   }
+  pendingEffectsStatus = NO_PENDING_EFFECTS;
+
   const root = pendingEffectsRoot;
   const finishedWork = pendingFinishedWork;
   const lanes = pendingEffectsLanes;
@@ -3420,6 +3422,8 @@ function flushLayoutEffects(): void {
   if (pendingEffectsStatus !== PENDING_LAYOUT_PHASE) {
     return;
   }
+  pendingEffectsStatus = NO_PENDING_EFFECTS;
+
   const root = pendingEffectsRoot;
   const finishedWork = pendingFinishedWork;
   const lanes = pendingEffectsLanes;
