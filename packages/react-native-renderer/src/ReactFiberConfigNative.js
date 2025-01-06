@@ -525,6 +525,7 @@ export function unhideInstance(instance: Instance, props: Props): void {
 export function applyViewTransitionName(
   instance: Instance,
   name: string,
+  className: ?string,
 ): void {
   // Not yet implemented
 }

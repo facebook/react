@@ -545,6 +545,7 @@ let viewTransitionHostInstanceIdx = 0;
 function applyViewTransitionToHostInstances(
   child: null | Fiber,
   name: string,
+  className: ?string,
   collectMeasurements: null | Array<InstanceMeasurement>,
   stopAtNestedViewTransitions: boolean,
 ): boolean {
@@ -574,6 +575,7 @@ function applyViewTransitionToHostInstances(
           : // If we have multiple Host Instances below, we add a suffix to the name to give
             // each one a unique name.
             name + '_' + viewTransitionHostInstanceIdx,
+        className,
       );
       viewTransitionHostInstanceIdx++;
     } else if (
@@ -592,6 +594,7 @@ function applyViewTransitionToHostInstances(
         applyViewTransitionToHostInstances(
           child.child,
           name,
+          className,
           collectMeasurements,
           stopAtNestedViewTransitions,
         )
@@ -664,6 +667,7 @@ function commitAppearingPairViewTransitions(placement: Fiber): void {
           const inViewport = applyViewTransitionToHostInstances(
             child.child,
             props.name,
+            props.className,
             null,
             false,
           );
@@ -686,14 +690,13 @@ function commitAppearingPairViewTransitions(placement: Fiber): void {
 
 function commitEnterViewTransitions(placement: Fiber): void {
   if (placement.tag === ViewTransitionComponent) {
-    const name = getViewTransitionName(
-      placement.memoizedProps,
-      placement.stateNode,
-    );
+    const props: ViewTransitionProps = placement.memoizedProps;
+    const name = getViewTransitionName(props, placement.stateNode);
     viewTransitionHostInstanceIdx = 0;
     const inViewport = applyViewTransitionToHostInstances(
       placement.child,
       name,
+      props.className,
       null,
       false,
     );
@@ -747,6 +750,7 @@ function commitDeletedPairViewTransitions(
             const inViewport = applyViewTransitionToHostInstances(
               child.child,
               name,
+              props.className,
               null,
               false,
             );
@@ -787,6 +791,7 @@ function commitExitViewTransitions(
     const inViewport = applyViewTransitionToHostInstances(
       deletion.child,
       name,
+      props.className,
       null,
       false,
     );
@@ -840,11 +845,13 @@ function commitBeforeUpdateViewTransition(current: Fiber): void {
   // be unexpected but it is in line with the semantics that the ViewTransition is its
   // own layer that cross-fades its content when it updates. If you want to reorder then
   // each child needs its own ViewTransition.
-  const name = getViewTransitionName(current.memoizedProps, current.stateNode);
+  const props: ViewTransitionProps = current.memoizedProps;
+  const name = getViewTransitionName(props, current.stateNode);
   viewTransitionHostInstanceIdx = 0;
   applyViewTransitionToHostInstances(
     current.child,
     name,
+    props.className,
     (current.memoizedState = []),
     true,
   );
@@ -856,11 +863,13 @@ function commitNestedViewTransitions(changedParent: Fiber): void {
     if (child.tag === ViewTransitionComponent) {
       // In this case the outer ViewTransition component wins but if there
       // was an update through this component then the inner one wins.
-      const name = getViewTransitionName(child.memoizedProps, child.stateNode);
+      const props: ViewTransitionProps = child.memoizedProps;
+      const name = getViewTransitionName(props, child.stateNode);
       viewTransitionHostInstanceIdx = 0;
       applyViewTransitionToHostInstances(
         child.child,
         name,
+        props.className,
         (child.memoizedState = []),
         false,
       );
@@ -1002,9 +1011,10 @@ function measureViewTransitionHostInstances(
         parentViewTransition.flags |= AffectedParentLayout;
       }
       if ((parentViewTransition.flags & Update) !== NoFlags) {
+        const props: ViewTransitionProps = parentViewTransition.memoizedProps;
         // We might update this node so we need to apply its new name for the new state.
         const newName = getViewTransitionName(
-          parentViewTransition.memoizedProps,
+          props,
           parentViewTransition.stateNode,
         );
         applyViewTransitionName(
@@ -1014,6 +1024,7 @@ function measureViewTransitionHostInstances(
             : // If we have multiple Host Instances below, we add a suffix to the name to give
               // each one a unique name.
               newName + '_' + viewTransitionHostInstanceIdx,
+          props.className,
         );
       }
       if (!inViewport || (parentViewTransition.flags & Update) === NoFlags) {

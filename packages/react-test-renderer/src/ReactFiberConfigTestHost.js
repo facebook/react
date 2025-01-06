@@ -308,6 +308,7 @@ export function unhideTextInstance(
 export function applyViewTransitionName(
   instance: Instance,
   name: string,
+  className: ?string,
 ): void {
   // Noop
 }
