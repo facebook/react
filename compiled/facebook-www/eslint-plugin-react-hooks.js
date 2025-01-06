@@ -874,7 +874,9 @@
                           } else if (
                             codePathNode.parent &&
                             ("MethodDefinition" === codePathNode.parent.type ||
-                              "ClassProperty" === codePathNode.parent.type) &&
+                              "ClassProperty" === codePathNode.parent.type ||
+                              "PropertyDefinition" ===
+                                codePathNode.parent.type) &&
                             codePathNode.parent.value === codePathNode
                           ) {
                             var _message =
