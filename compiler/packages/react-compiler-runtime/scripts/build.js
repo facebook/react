@@ -29,7 +29,7 @@ const config = {
   outfile: path.join(__dirname, '../dist/index.js'),
   bundle: true,
   external: ['react'],
-  format: argv.p === 'browser' ? 'esm' : 'cjs',
+  format: 'cjs',
   platform: argv.p,
   target: 'es6',
   banner: {
