@@ -469,7 +469,7 @@ function performWorkOnRootViaSchedulerTask(
   // Flush any pending passive effects before deciding which lanes to work on,
   // in case they schedule additional work.
   const originalCallbackNode = root.callbackNode;
-  const didFlushPassiveEffects = flushPendingEffects();
+  const didFlushPassiveEffects = flushPendingEffects(true);
   if (didFlushPassiveEffects) {
     // Something in the passive effect phase may have canceled the current task.
     // Check if the task node for this root was changed.
