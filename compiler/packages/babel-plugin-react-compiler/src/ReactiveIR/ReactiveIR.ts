@@ -442,7 +442,7 @@ function writeReactiveNodes(
         break;
       }
       case 'Value': {
-        buffer.push(`£${id} Intermediate deps=[${deps}]${control}`);
+        buffer.push(`£${id} Value deps=[${deps}]${control}`);
         buffer.push('  ' + printInstruction(node.value));
         break;
       }
