@@ -426,7 +426,6 @@ let workInProgressRootDidIncludeRecursiveRenderUpdate: boolean = false;
 // variable from the one for renders because the commit phase may run
 // concurrently to a render phase.
 let didIncludeCommitPhaseUpdate: boolean = false;
-
 // The most recent time we either committed a fallback, or when a fallback was
 // filled in with the resolved UI. This lets us throttle the appearance of new
 // content as it streams in, to minimize jank.
@@ -617,11 +616,25 @@ export function getRenderTargetTime(): number {
 
 let legacyErrorBoundariesThatAlreadyFailed: Set<mixed> | null = null;
 
+type SuspendedCommitReason = 0 | 1 | 2;
+const IMMEDIATE_COMMIT = 0;
+const SUSPENDED_COMMIT = 1;
+const THROTTLED_COMMIT = 2;
+
+const NO_PENDING_EFFECTS = 0;
+const PENDING_MUTATION_PHASE = 1;
+const PENDING_LAYOUT_PHASE = 2;
+const PENDING_PASSIVE_PHASE = 3;
 let rootWithPendingPassiveEffects: FiberRoot | null = null;
+let pendingEffectsStatus: 0 | 1 | 2 | 3 = 0;
+let pendingFinishedWork: Fiber = (null: any);
 let pendingPassiveEffectsLanes: Lanes = NoLanes;
 let pendingPassiveEffectsRemainingLanes: Lanes = NoLanes;
 let pendingPassiveEffectsRenderEndTime: number = -0; // Profiling-only
 let pendingPassiveTransitions: Array<Transition> | null = null;
+let pendingRecoverableErrors: null | Array<CapturedValue<mixed>> = null;
+let pendingDidIncludeRenderPhaseUpdate: boolean = false;
+let pendingSuspendedCommitReason: SuspendedCommitReason = IMMEDIATE_COMMIT; // Profiling-only
 
 // Use these to prevent an infinite loop of nested updates
 const NESTED_UPDATE_LIMIT = 50;
@@ -3120,11 +3133,6 @@ function unwindUnitOfWork(unitOfWork: Fiber, skipSiblings: boolean): void {
   workInProgress = null;
 }
 
-type SuspendedCommitReason = 0 | 1 | 2;
-const IMMEDIATE_COMMIT = 0;
-const SUSPENDED_COMMIT = 1;
-const THROTTLED_COMMIT = 2;
-
 function commitRoot(
   root: FiberRoot,
   finishedWork: null | Fiber,
@@ -3243,6 +3251,23 @@ function commitRoot(
     // times out.
   }
 
+  // workInProgressX might be overwritten, so we want
+  // to store it in pendingPassiveX until they get processed
+  // We need to pass this through as an argument to commitRoot
+  // because workInProgressX might have changed between
+  // the previous render and commit if we throttle the commit
+  // with setTimeout
+  pendingFinishedWork = finishedWork;
+  pendingPassiveEffectsLanes = lanes;
+  pendingPassiveEffectsRemainingLanes = remainingLanes;
+  pendingPassiveTransitions = transitions;
+  pendingRecoverableErrors = recoverableErrors;
+  pendingDidIncludeRenderPhaseUpdate = didIncludeRenderPhaseUpdate;
+  if (enableProfilerTimer) {
+    pendingPassiveEffectsRenderEndTime = completedRenderEndTime;
+    pendingSuspendedCommitReason = suspendedCommitReason;
+  }
+
   // If there are pending passive effects, schedule a callback to process them.
   // Do this as early as possible, so it is queued before anything else that
   // might get scheduled in the commit phase. (See #16714.)
@@ -3256,15 +3281,6 @@ function commitRoot(
     (finishedWork.subtreeFlags & PassiveMask) !== NoFlags ||
     (finishedWork.flags & PassiveMask) !== NoFlags
   ) {
-    pendingPassiveEffectsRemainingLanes = remainingLanes;
-    pendingPassiveEffectsRenderEndTime = completedRenderEndTime;
-    // workInProgressTransitions might be overwritten, so we want
-    // to store it in pendingPassiveTransitions until they get processed
-    // We need to pass this through as an argument to commitRoot
-    // because workInProgressTransitions might have changed between
-    // the previous render and commit if we throttle the commit
-    // with setTimeout
-    pendingPassiveTransitions = transitions;
     if (enableYieldingBeforePassive) {
       // We don't schedule a separate task for flushing passive effects.
       // Instead, we just rely on ensureRootIsScheduled below to schedule
@@ -3341,23 +3357,15 @@ function commitRoot(
       ReactSharedInternals.T = prevTransition;
     }
   }
-  flushMutationEffects(root, finishedWork, lanes);
-  flushLayoutEffects(
-    root,
-    finishedWork,
-    lanes,
-    recoverableErrors,
-    didIncludeRenderPhaseUpdate,
-    suspendedCommitReason,
-    completedRenderEndTime,
-  );
+  pendingEffectsStatus = PENDING_MUTATION_PHASE;
+  flushMutationEffects(root);
+  pendingEffectsStatus = PENDING_LAYOUT_PHASE;
+  flushLayoutEffects(root);
 }
 
-function flushMutationEffects(
-  root: FiberRoot,
-  finishedWork: Fiber,
-  lanes: Lanes,
-): void {
+function flushMutationEffects(root: FiberRoot): void {
+  const finishedWork = pendingFinishedWork;
+  const lanes = pendingPassiveEffectsLanes;
   const subtreeMutationHasEffects =
     (finishedWork.subtreeFlags & MutationMask) !== NoFlags;
   const rootMutationHasEffect = (finishedWork.flags & MutationMask) !== NoFlags;
@@ -3394,15 +3402,14 @@ function flushMutationEffects(
   root.current = finishedWork;
 }
 
-function flushLayoutEffects(
-  root: FiberRoot,
-  finishedWork: Fiber,
-  lanes: Lanes,
-  recoverableErrors: null | Array<CapturedValue<mixed>>,
-  didIncludeRenderPhaseUpdate: boolean,
-  suspendedCommitReason: SuspendedCommitReason, // Profiling-only
-  completedRenderEndTime: number, // Profiling-only
-): void {
+function flushLayoutEffects(root: FiberRoot): void {
+  const finishedWork = pendingFinishedWork;
+  const lanes = pendingPassiveEffectsLanes;
+  const completedRenderEndTime = pendingPassiveEffectsRenderEndTime;
+  const recoverableErrors = pendingRecoverableErrors;
+  const didIncludeRenderPhaseUpdate = pendingDidIncludeRenderPhaseUpdate;
+  const suspendedCommitReason = pendingSuspendedCommitReason;
+
   const subtreeHasLayoutEffects =
     (finishedWork.subtreeFlags & LayoutMask) !== NoFlags;
   const rootHasLayoutEffect = (finishedWork.flags & LayoutMask) !== NoFlags;
@@ -3458,11 +3465,13 @@ function flushLayoutEffects(
   if (rootDidHavePassiveEffects) {
     // This commit has passive effects. Stash a reference to them. But don't
     // schedule a callback until after flushing layout work.
+    pendingEffectsStatus = PENDING_PASSIVE_PHASE;
     rootWithPendingPassiveEffects = root;
     pendingPassiveEffectsLanes = lanes;
   } else {
     // There were no passive effects, so we can immediately release the cache
     // pool for this render.
+    pendingEffectsStatus = NO_PENDING_EFFECTS;
     releaseRootPooledCache(root, root.pendingLanes);
     if (__DEV__) {
       nestedPassiveUpdateCount = 0;
@@ -3716,6 +3725,7 @@ function flushPassiveEffectsImpl(wasDelayedCommit: void | boolean) {
 
   const root = rootWithPendingPassiveEffects;
   const lanes = pendingPassiveEffectsLanes;
+  pendingEffectsStatus = NO_PENDING_EFFECTS;
   rootWithPendingPassiveEffects = null;
   // TODO: This is sometimes out of sync with rootWithPendingPassiveEffects.
   // Figure out why and fix it. It's not causing any known issues (probably
