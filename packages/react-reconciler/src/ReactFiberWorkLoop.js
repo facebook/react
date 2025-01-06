@@ -3260,6 +3260,7 @@ function commitRoot(
   // the previous render and commit if we throttle the commit
   // with setTimeout
   pendingFinishedWork = finishedWork;
+  pendingEffectsRoot = root;
   pendingEffectsLanes = lanes;
   pendingEffectsRemainingLanes = remainingLanes;
   pendingPassiveTransitions = transitions;
@@ -3360,12 +3361,13 @@ function commitRoot(
     }
   }
   pendingEffectsStatus = PENDING_MUTATION_PHASE;
-  flushMutationEffects(root);
+  flushMutationEffects();
   pendingEffectsStatus = PENDING_LAYOUT_PHASE;
-  flushLayoutEffects(root);
+  flushLayoutEffects();
 }
 
-function flushMutationEffects(root: FiberRoot): void {
+function flushMutationEffects(): void {
+  const root = pendingEffectsRoot;
   const finishedWork = pendingFinishedWork;
   const lanes = pendingEffectsLanes;
   const subtreeMutationHasEffects =
@@ -3404,7 +3406,8 @@ function flushMutationEffects(root: FiberRoot): void {
   root.current = finishedWork;
 }
 
-function flushLayoutEffects(root: FiberRoot): void {
+function flushLayoutEffects(): void {
+  const root = pendingEffectsRoot;
   const finishedWork = pendingFinishedWork;
   const lanes = pendingEffectsLanes;
   const completedRenderEndTime = pendingEffectsRenderEndTime;
@@ -3468,12 +3471,11 @@ function flushLayoutEffects(root: FiberRoot): void {
     // This commit has passive effects. Stash a reference to them. But don't
     // schedule a callback until after flushing layout work.
     pendingEffectsStatus = PENDING_PASSIVE_PHASE;
-    pendingEffectsRoot = root;
-    pendingEffectsLanes = lanes;
   } else {
     // There were no passive effects, so we can immediately release the cache
     // pool for this render.
     pendingEffectsStatus = NO_PENDING_EFFECTS;
+    pendingEffectsRoot = (null: any); // Clear for GC purposes.
     releaseRootPooledCache(root, root.pendingLanes);
     if (__DEV__) {
       nestedPassiveUpdateCount = 0;
