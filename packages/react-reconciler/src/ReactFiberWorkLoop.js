@@ -426,7 +426,6 @@ let workInProgressRootDidIncludeRecursiveRenderUpdate: boolean = false;
 // variable from the one for renders because the commit phase may run
 // concurrently to a render phase.
 let didIncludeCommitPhaseUpdate: boolean = false;
-
 // The most recent time we either committed a fallback, or when a fallback was
 // filled in with the resolved UI. This lets us throttle the appearance of new
 // content as it streams in, to minimize jank.
@@ -617,11 +616,25 @@ export function getRenderTargetTime(): number {
 
 let legacyErrorBoundariesThatAlreadyFailed: Set<mixed> | null = null;
 
-let rootWithPendingPassiveEffects: FiberRoot | null = null;
-let pendingPassiveEffectsLanes: Lanes = NoLanes;
-let pendingPassiveEffectsRemainingLanes: Lanes = NoLanes;
-let pendingPassiveEffectsRenderEndTime: number = -0; // Profiling-only
+type SuspendedCommitReason = 0 | 1 | 2;
+const IMMEDIATE_COMMIT = 0;
+const SUSPENDED_COMMIT = 1;
+const THROTTLED_COMMIT = 2;
+
+const NO_PENDING_EFFECTS = 0;
+const PENDING_MUTATION_PHASE = 1;
+const PENDING_LAYOUT_PHASE = 2;
+const PENDING_PASSIVE_PHASE = 3;
+let pendingEffectsStatus: 0 | 1 | 2 | 3 = 0;
+let pendingEffectsRoot: FiberRoot = (null: any);
+let pendingFinishedWork: Fiber = (null: any);
+let pendingEffectsLanes: Lanes = NoLanes;
+let pendingEffectsRemainingLanes: Lanes = NoLanes;
+let pendingEffectsRenderEndTime: number = -0; // Profiling-only
 let pendingPassiveTransitions: Array<Transition> | null = null;
+let pendingRecoverableErrors: null | Array<CapturedValue<mixed>> = null;
+let pendingDidIncludeRenderPhaseUpdate: boolean = false;
+let pendingSuspendedCommitReason: SuspendedCommitReason = IMMEDIATE_COMMIT; // Profiling-only
 
 // Use these to prevent an infinite loop of nested updates
 const NESTED_UPDATE_LIMIT = 50;
@@ -644,12 +657,21 @@ export function getWorkInProgressRootRenderLanes(): Lanes {
   return workInProgressRootRenderLanes;
 }
 
+export function hasPendingCommitEffects(): boolean {
+  return (
+    pendingEffectsStatus !== NO_PENDING_EFFECTS &&
+    pendingEffectsStatus !== PENDING_PASSIVE_PHASE
+  );
+}
+
 export function getRootWithPendingPassiveEffects(): FiberRoot | null {
-  return rootWithPendingPassiveEffects;
+  return pendingEffectsStatus === PENDING_PASSIVE_PHASE
+    ? pendingEffectsRoot
+    : null;
 }
 
 export function getPendingPassiveEffectsLanes(): Lanes {
-  return pendingPassiveEffectsLanes;
+  return pendingEffectsLanes;
 }
 
 export function isWorkLoopSuspendedOnData(): boolean {
@@ -1622,12 +1644,12 @@ export function flushSyncFromReconciler<R>(fn: (() => R) | void): R | void {
   // In legacy mode, we flush pending passive effects at the beginning of the
   // next event, not at the end of the previous one.
   if (
-    rootWithPendingPassiveEffects !== null &&
+    pendingEffectsStatus !== NO_PENDING_EFFECTS &&
     !disableLegacyMode &&
-    rootWithPendingPassiveEffects.tag === LegacyRoot &&
+    pendingEffectsRoot.tag === LegacyRoot &&
     (executionContext & (RenderContext | CommitContext)) === NoContext
   ) {
-    flushPassiveEffects();
+    flushPendingEffects();
   }
 
   const prevExecutionContext = executionContext;
@@ -3120,11 +3142,6 @@ function unwindUnitOfWork(unitOfWork: Fiber, skipSiblings: boolean): void {
   workInProgress = null;
 }
 
-type SuspendedCommitReason = 0 | 1 | 2;
-const IMMEDIATE_COMMIT = 0;
-const SUSPENDED_COMMIT = 1;
-const THROTTLED_COMMIT = 2;
-
 function commitRoot(
   root: FiberRoot,
   finishedWork: null | Fiber,
@@ -3149,8 +3166,8 @@ function commitRoot(
     // no more pending effects.
     // TODO: Might be better if `flushPassiveEffects` did not automatically
     // flush synchronous work at the end, to avoid factoring hazards like this.
-    flushPassiveEffects();
-  } while (rootWithPendingPassiveEffects !== null);
+    flushPendingEffects();
+  } while (pendingEffectsStatus !== NO_PENDING_EFFECTS);
   flushRenderPhaseStrictModeWarningsInDEV();
 
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
@@ -3243,6 +3260,24 @@ function commitRoot(
     // times out.
   }
 
+  // workInProgressX might be overwritten, so we want
+  // to store it in pendingPassiveX until they get processed
+  // We need to pass this through as an argument to commitRoot
+  // because workInProgressX might have changed between
+  // the previous render and commit if we throttle the commit
+  // with setTimeout
+  pendingFinishedWork = finishedWork;
+  pendingEffectsRoot = root;
+  pendingEffectsLanes = lanes;
+  pendingEffectsRemainingLanes = remainingLanes;
+  pendingPassiveTransitions = transitions;
+  pendingRecoverableErrors = recoverableErrors;
+  pendingDidIncludeRenderPhaseUpdate = didIncludeRenderPhaseUpdate;
+  if (enableProfilerTimer) {
+    pendingEffectsRenderEndTime = completedRenderEndTime;
+    pendingSuspendedCommitReason = suspendedCommitReason;
+  }
+
   // If there are pending passive effects, schedule a callback to process them.
   // Do this as early as possible, so it is queued before anything else that
   // might get scheduled in the commit phase. (See #16714.)
@@ -3256,15 +3291,6 @@ function commitRoot(
     (finishedWork.subtreeFlags & PassiveMask) !== NoFlags ||
     (finishedWork.flags & PassiveMask) !== NoFlags
   ) {
-    pendingPassiveEffectsRemainingLanes = remainingLanes;
-    pendingPassiveEffectsRenderEndTime = completedRenderEndTime;
-    // workInProgressTransitions might be overwritten, so we want
-    // to store it in pendingPassiveTransitions until they get processed
-    // We need to pass this through as an argument to commitRoot
-    // because workInProgressTransitions might have changed between
-    // the previous render and commit if we throttle the commit
-    // with setTimeout
-    pendingPassiveTransitions = transitions;
     if (enableYieldingBeforePassive) {
       // We don't schedule a separate task for flushing passive effects.
       // Instead, we just rely on ensureRootIsScheduled below to schedule
@@ -3341,23 +3367,20 @@ function commitRoot(
       ReactSharedInternals.T = prevTransition;
     }
   }
-  flushMutationEffects(root, finishedWork, lanes);
-  flushLayoutEffects(
-    root,
-    finishedWork,
-    lanes,
-    recoverableErrors,
-    didIncludeRenderPhaseUpdate,
-    suspendedCommitReason,
-    completedRenderEndTime,
-  );
+  pendingEffectsStatus = PENDING_MUTATION_PHASE;
+  flushMutationEffects();
+  flushLayoutEffects();
 }
 
-function flushMutationEffects(
-  root: FiberRoot,
-  finishedWork: Fiber,
-  lanes: Lanes,
-): void {
+function flushMutationEffects(): void {
+  if (pendingEffectsStatus !== PENDING_MUTATION_PHASE) {
+    return;
+  }
+  pendingEffectsStatus = NO_PENDING_EFFECTS;
+
+  const root = pendingEffectsRoot;
+  const finishedWork = pendingFinishedWork;
+  const lanes = pendingEffectsLanes;
   const subtreeMutationHasEffects =
     (finishedWork.subtreeFlags & MutationMask) !== NoFlags;
   const rootMutationHasEffect = (finishedWork.flags & MutationMask) !== NoFlags;
@@ -3392,17 +3415,23 @@ function flushMutationEffects(
   // componentWillUnmount, but before the layout phase, so that the finished
   // work is current during componentDidMount/Update.
   root.current = finishedWork;
+  pendingEffectsStatus = PENDING_LAYOUT_PHASE;
 }
 
-function flushLayoutEffects(
-  root: FiberRoot,
-  finishedWork: Fiber,
-  lanes: Lanes,
-  recoverableErrors: null | Array<CapturedValue<mixed>>,
-  didIncludeRenderPhaseUpdate: boolean,
-  suspendedCommitReason: SuspendedCommitReason, // Profiling-only
-  completedRenderEndTime: number, // Profiling-only
-): void {
+function flushLayoutEffects(): void {
+  if (pendingEffectsStatus !== PENDING_LAYOUT_PHASE) {
+    return;
+  }
+  pendingEffectsStatus = NO_PENDING_EFFECTS;
+
+  const root = pendingEffectsRoot;
+  const finishedWork = pendingFinishedWork;
+  const lanes = pendingEffectsLanes;
+  const completedRenderEndTime = pendingEffectsRenderEndTime;
+  const recoverableErrors = pendingRecoverableErrors;
+  const didIncludeRenderPhaseUpdate = pendingDidIncludeRenderPhaseUpdate;
+  const suspendedCommitReason = pendingSuspendedCommitReason;
+
   const subtreeHasLayoutEffects =
     (finishedWork.subtreeFlags & LayoutMask) !== NoFlags;
   const rootHasLayoutEffect = (finishedWork.flags & LayoutMask) !== NoFlags;
@@ -3456,11 +3485,10 @@ function flushLayoutEffects(
     (finishedWork.flags & PassiveMask) !== NoFlags;
 
   if (rootDidHavePassiveEffects) {
-    // This commit has passive effects. Stash a reference to them. But don't
-    // schedule a callback until after flushing layout work.
-    rootWithPendingPassiveEffects = root;
-    pendingPassiveEffectsLanes = lanes;
+    pendingEffectsStatus = PENDING_PASSIVE_PHASE;
   } else {
+    pendingEffectsStatus = NO_PENDING_EFFECTS;
+    pendingEffectsRoot = (null: any); // Clear for GC purposes.
     // There were no passive effects, so we can immediately release the cache
     // pool for this render.
     releaseRootPooledCache(root, root.pendingLanes);
@@ -3546,10 +3574,10 @@ function flushLayoutEffects(
   // currently schedule the callback in multiple places, will wait until those
   // are consolidated.
   if (
-    includesSyncLane(pendingPassiveEffectsLanes) &&
+    includesSyncLane(pendingEffectsLanes) &&
     (disableLegacyMode || root.tag !== LegacyRoot)
   ) {
-    flushPassiveEffects();
+    flushPendingEffects();
   }
 
   // Always call this before exiting `commitRoot`, to ensure that any
@@ -3666,61 +3694,63 @@ function releaseRootPooledCache(root: FiberRoot, remainingLanes: Lanes) {
   }
 }
 
-export function flushPassiveEffects(wasDelayedCommit?: boolean): boolean {
+export function flushPendingEffects(wasDelayedCommit?: boolean): boolean {
   // Returns whether passive effects were flushed.
-  // TODO: Combine this check with the one in flushPassiveEFfectsImpl. We should
-  // probably just combine the two functions. I believe they were only separate
+  flushMutationEffects();
+  flushLayoutEffects();
+  return flushPassiveEffects(wasDelayedCommit);
+}
+
+function flushPassiveEffects(wasDelayedCommit?: boolean): boolean {
+  if (pendingEffectsStatus !== PENDING_PASSIVE_PHASE) {
+    return false;
+  }
+  // TODO: Merge flushPassiveEffectsImpl into this function. I believe they were only separate
   // in the first place because we used to wrap it with
   // `Scheduler.runWithPriority`, which accepts a function. But now we track the
   // priority within React itself, so we can mutate the variable directly.
-  if (rootWithPendingPassiveEffects !== null) {
-    // Cache the root since rootWithPendingPassiveEffects is cleared in
-    // flushPassiveEffectsImpl
-    const root = rootWithPendingPassiveEffects;
-    // Cache and clear the remaining lanes flag; it must be reset since this
-    // method can be called from various places, not always from commitRoot
-    // where the remaining lanes are known
-    const remainingLanes = pendingPassiveEffectsRemainingLanes;
-    pendingPassiveEffectsRemainingLanes = NoLanes;
+  // Cache the root since pendingEffectsRoot is cleared in
+  // flushPassiveEffectsImpl
+  const root = pendingEffectsRoot;
+  // Cache and clear the remaining lanes flag; it must be reset since this
+  // method can be called from various places, not always from commitRoot
+  // where the remaining lanes are known
+  const remainingLanes = pendingEffectsRemainingLanes;
+  pendingEffectsRemainingLanes = NoLanes;
 
-    const renderPriority = lanesToEventPriority(pendingPassiveEffectsLanes);
-    const priority = lowerEventPriority(DefaultEventPriority, renderPriority);
-    const prevTransition = ReactSharedInternals.T;
-    const previousPriority = getCurrentUpdatePriority();
+  const renderPriority = lanesToEventPriority(pendingEffectsLanes);
+  const priority = lowerEventPriority(DefaultEventPriority, renderPriority);
+  const prevTransition = ReactSharedInternals.T;
+  const previousPriority = getCurrentUpdatePriority();
 
-    try {
-      setCurrentUpdatePriority(priority);
-      ReactSharedInternals.T = null;
-      return flushPassiveEffectsImpl(wasDelayedCommit);
-    } finally {
-      setCurrentUpdatePriority(previousPriority);
-      ReactSharedInternals.T = prevTransition;
+  try {
+    setCurrentUpdatePriority(priority);
+    ReactSharedInternals.T = null;
+    return flushPassiveEffectsImpl(wasDelayedCommit);
+  } finally {
+    setCurrentUpdatePriority(previousPriority);
+    ReactSharedInternals.T = prevTransition;
 
-      // Once passive effects have run for the tree - giving components a
-      // chance to retain cache instances they use - release the pooled
-      // cache at the root (if there is one)
-      releaseRootPooledCache(root, remainingLanes);
-    }
+    // Once passive effects have run for the tree - giving components a
+    // chance to retain cache instances they use - release the pooled
+    // cache at the root (if there is one)
+    releaseRootPooledCache(root, remainingLanes);
   }
-  return false;
 }
 
 function flushPassiveEffectsImpl(wasDelayedCommit: void | boolean) {
-  if (rootWithPendingPassiveEffects === null) {
-    return false;
-  }
-
   // Cache and clear the transitions flag
   const transitions = pendingPassiveTransitions;
   pendingPassiveTransitions = null;
 
-  const root = rootWithPendingPassiveEffects;
-  const lanes = pendingPassiveEffectsLanes;
-  rootWithPendingPassiveEffects = null;
-  // TODO: This is sometimes out of sync with rootWithPendingPassiveEffects.
+  const root = pendingEffectsRoot;
+  const lanes = pendingEffectsLanes;
+  pendingEffectsStatus = NO_PENDING_EFFECTS;
+  pendingEffectsRoot = (null: any); // Clear for GC purposes.
+  // TODO: This is sometimes out of sync with pendingEffectsRoot.
   // Figure out why and fix it. It's not causing any known issues (probably
   // because it's only used for profiling), but it's a refactor hazard.
-  pendingPassiveEffectsLanes = NoLanes;
+  pendingEffectsLanes = NoLanes;
 
   if (enableYieldingBeforePassive) {
     // We've finished our work for this render pass.
@@ -3767,7 +3797,7 @@ function flushPassiveEffectsImpl(wasDelayedCommit: void | boolean) {
     root.current,
     lanes,
     transitions,
-    pendingPassiveEffectsRenderEndTime,
+    pendingEffectsRenderEndTime,
   );
 
   if (enableSchedulingProfiler) {
