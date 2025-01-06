@@ -657,6 +657,13 @@ export function getWorkInProgressRootRenderLanes(): Lanes {
   return workInProgressRootRenderLanes;
 }
 
+export function hasPendingCommitEffects(): boolean {
+  return (
+    pendingEffectsStatus !== NO_PENDING_EFFECTS &&
+    pendingEffectsStatus !== PENDING_PASSIVE_PHASE
+  );
+}
+
 export function getRootWithPendingPassiveEffects(): FiberRoot | null {
   return pendingEffectsStatus === PENDING_PASSIVE_PHASE
     ? pendingEffectsRoot

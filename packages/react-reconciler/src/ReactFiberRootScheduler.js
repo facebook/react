@@ -44,6 +44,7 @@ import {
   getWorkInProgressRootRenderLanes,
   getRootWithPendingPassiveEffects,
   getPendingPassiveEffectsLanes,
+  hasPendingCommitEffects,
   isWorkLoopSuspendedOnData,
   performWorkOnRoot,
 } from './ReactFiberWorkLoop';
@@ -464,6 +465,19 @@ function performWorkOnRootViaSchedulerTask(
     // Track the currently executing event if there is one so we can ignore this
     // event when logging events.
     trackSchedulerEvent();
+  }
+
+  if (hasPendingCommitEffects()) {
+    // We are currently in the middle of an async committing (such as a View Transition).
+    // We could force these to flush eagerly but it's better to defer any work until
+    // it finishes. This may not be the same root as we're waiting on.
+    // TODO: This relies on the commit eventually calling ensureRootIsScheduled which
+    // always calls processRootScheduleInMicrotask which in turn always loops through
+    // all the roots to figure out. This is all a bit inefficient and if optimized
+    // it'll need to consider rescheduling a task for any skipped roots.
+    root.callbackNode = null;
+    root.callbackPriority = NoLane;
+    return null;
   }
 
   // Flush any pending passive effects before deciding which lanes to work on,
