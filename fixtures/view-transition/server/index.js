@@ -1,9 +1,9 @@
 require('ignore-styles');
-const babelRegister = require('babel-register');
+const babelRegister = require('@babel/register');
 const proxy = require('http-proxy-middleware');
 
 babelRegister({
-  ignore: /\/(build|node_modules)\//,
+  ignore: [/\/(build|node_modules)\//],
   presets: ['react-app'],
 });
 
@@ -37,9 +37,10 @@ app.use(express.static(path.resolve(__dirname, '..', 'build')));
 if (process.env.NODE_ENV === 'development') {
   app.use(
     '/',
-    proxy({
+    proxy.createProxyMiddleware({
       ws: true,
-      target: 'http://localhost:3001',
+      changeOrigin: true,
+      target: 'http://127.0.0.1:3001',
     })
   );
 }

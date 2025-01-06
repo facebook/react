@@ -4,14 +4,22 @@
   "private": true,
   "devDependencies": {
     "concurrently": "3.1.0",
-    "http-proxy-middleware": "0.17.3",
-    "react-scripts": "0.9.5"
+    "http-proxy-middleware": "3.0.3",
+    "react-scripts": "5.0.1",
+    "@babel/plugin-proposal-private-property-in-object": "7.21.11"
   },
   "dependencies": {
+    "@babel/register": "^7.25.9",
     "express": "^4.14.0",
     "ignore-styles": "^5.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
   },
   "scripts": {
     "predev": "cp -r ../../build/oss-experimental/* ./node_modules/",
@@ -24,5 +32,17 @@
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }
