@@ -2,7 +2,7 @@
 
 const {getTestFlags} = require('./TestFlags');
 const {
-  flushAllUnexpectedConsoleCalls,
+  assertConsoleLogsCleared,
   resetAllUnexpectedConsoleCalls,
   patchConsoleMethods,
 } = require('internal-test-utils/consoleMock');
@@ -44,7 +44,6 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   expect.extend({
     ...require('./matchers/reactTestMatchers'),
     ...require('./matchers/toThrow'),
-    ...require('./matchers/toWarnDev'),
   });
 
   // We have a Babel transform that inserts guards against infinite loops.
@@ -66,7 +65,19 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   // Patch the console to assert that all console error/warn/log calls assert.
   patchConsoleMethods({includeLog: !!process.env.CI});
   beforeEach(resetAllUnexpectedConsoleCalls);
-  afterEach(flushAllUnexpectedConsoleCalls);
+  afterEach(assertConsoleLogsCleared);
+
+  // TODO: enable this check so we don't forget to reset spyOnX mocks.
+  // afterEach(() => {
+  //   if (
+  //       console[methodName] !== mockMethod &&
+  //       !jest.isMockFunction(console[methodName])
+  //   ) {
+  //     throw new Error(
+  //       `Test did not tear down console.${methodName} mock properly.`
+  //     );
+  //   }
+  // });
 
   if (process.env.NODE_ENV === 'production') {
     // In production, we strip error messages and turn them into codes.
@@ -187,7 +198,7 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
       // Flush unexpected console calls inside the test itself, instead of in
       // `afterEach` like we normally do. `afterEach` is too late because if it
       // throws, we won't have captured it.
-      flushAllUnexpectedConsoleCalls();
+      assertConsoleLogsCleared();
     } catch (testError) {
       didError = true;
     }

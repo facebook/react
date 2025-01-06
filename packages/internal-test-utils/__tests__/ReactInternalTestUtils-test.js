@@ -13,7 +13,6 @@
 const React = require('react');
 const stripAnsi = require('strip-ansi');
 const {startTransition, useDeferredValue} = React;
-const chalk = require('chalk');
 const ReactNoop = require('react-noop-renderer');
 const {
   waitFor,
@@ -25,7 +24,7 @@ const {
 const act = require('internal-test-utils').act;
 const Scheduler = require('scheduler/unstable_mock');
 const {
-  flushAllUnexpectedConsoleCalls,
+  assertConsoleLogsCleared,
   resetAllUnexpectedConsoleCalls,
   patchConsoleMethods,
 } = require('../consoleMock');
@@ -205,8 +204,8 @@ describe('ReactInternalTestUtils console mocks', () => {
     it('should fail if not asserted', () => {
       expect(() => {
         console.log('hit');
-        flushAllUnexpectedConsoleCalls();
-      }).toThrow(`Expected test not to call ${chalk.bold('console.log()')}.`);
+        assertConsoleLogsCleared();
+      }).toThrow(`console.log was called without assertConsoleLogDev`);
     });
 
     // @gate __DEV__
@@ -214,7 +213,7 @@ describe('ReactInternalTestUtils console mocks', () => {
       spyOnDev(console, 'log').mockImplementation(() => {});
       expect(() => {
         console.log('hit');
-        flushAllUnexpectedConsoleCalls();
+        assertConsoleLogsCleared();
       }).not.toThrow();
     });
 
@@ -223,7 +222,7 @@ describe('ReactInternalTestUtils console mocks', () => {
       spyOnProd(console, 'log').mockImplementation(() => {});
       expect(() => {
         console.log('hit');
-        flushAllUnexpectedConsoleCalls();
+        assertConsoleLogsCleared();
       }).not.toThrow();
     });
 
@@ -231,16 +230,8 @@ describe('ReactInternalTestUtils console mocks', () => {
       spyOnDevAndProd(console, 'log').mockImplementation(() => {});
       expect(() => {
         console.log('hit');
-        flushAllUnexpectedConsoleCalls();
+        assertConsoleLogsCleared();
       }).not.toThrow();
-    });
-
-    // @gate __DEV__
-    it('should not fail with toLogDev', () => {
-      expect(() => {
-        console.log('hit');
-        flushAllUnexpectedConsoleCalls();
-      }).toLogDev(['hit']);
     });
   });
 
@@ -248,8 +239,8 @@ describe('ReactInternalTestUtils console mocks', () => {
     it('should fail if not asserted', () => {
       expect(() => {
         console.warn('hit');
-        flushAllUnexpectedConsoleCalls();
-      }).toThrow(`Expected test not to call ${chalk.bold('console.warn()')}.`);
+        assertConsoleLogsCleared();
+      }).toThrow('console.warn was called without assertConsoleWarnDev');
     });
 
     // @gate __DEV__
@@ -257,7 +248,7 @@ describe('ReactInternalTestUtils console mocks', () => {
       spyOnDev(console, 'warn').mockImplementation(() => {});
       expect(() => {
         console.warn('hit');
-        flushAllUnexpectedConsoleCalls();
+        assertConsoleLogsCleared();
       }).not.toThrow();
     });
 
@@ -266,7 +257,7 @@ describe('ReactInternalTestUtils console mocks', () => {
       spyOnProd(console, 'warn').mockImplementation(() => {});
       expect(() => {
         console.warn('hit');
-        flushAllUnexpectedConsoleCalls();
+        assertConsoleLogsCleared();
       }).not.toThrow();
     });
 
@@ -274,16 +265,8 @@ describe('ReactInternalTestUtils console mocks', () => {
       spyOnDevAndProd(console, 'warn').mockImplementation(() => {});
       expect(() => {
         console.warn('hit');
-        flushAllUnexpectedConsoleCalls();
+        assertConsoleLogsCleared();
       }).not.toThrow();
-    });
-
-    // @gate __DEV__
-    it('should not fail with toWarnDev', () => {
-      expect(() => {
-        console.warn('hit');
-        flushAllUnexpectedConsoleCalls();
-      }).toWarnDev(['hit'], {withoutStack: true});
     });
   });
 
@@ -291,8 +274,8 @@ describe('ReactInternalTestUtils console mocks', () => {
     it('should fail if console.error is not asserted', () => {
       expect(() => {
         console.error('hit');
-        flushAllUnexpectedConsoleCalls();
-      }).toThrow(`Expected test not to call ${chalk.bold('console.error()')}.`);
+        assertConsoleLogsCleared();
+      }).toThrow('console.error was called without assertConsoleErrorDev');
     });
 
     // @gate __DEV__
@@ -300,7 +283,7 @@ describe('ReactInternalTestUtils console mocks', () => {
       spyOnDev(console, 'error').mockImplementation(() => {});
       expect(() => {
         console.error('hit');
-        flushAllUnexpectedConsoleCalls();
+        assertConsoleLogsCleared();
       }).not.toThrow();
     });
 
@@ -309,7 +292,7 @@ describe('ReactInternalTestUtils console mocks', () => {
       spyOnProd(console, 'error').mockImplementation(() => {});
       expect(() => {
         console.error('hit');
-        flushAllUnexpectedConsoleCalls();
+        assertConsoleLogsCleared();
       }).not.toThrow();
     });
 
@@ -317,16 +300,8 @@ describe('ReactInternalTestUtils console mocks', () => {
       spyOnDevAndProd(console, 'error').mockImplementation(() => {});
       expect(() => {
         console.error('hit');
-        flushAllUnexpectedConsoleCalls();
+        assertConsoleLogsCleared();
       }).not.toThrow();
-    });
-
-    // @gate __DEV__
-    it('should not fail with toErrorDev', () => {
-      expect(() => {
-        console.error('hit');
-        flushAllUnexpectedConsoleCalls();
-      }).toErrorDev(['hit'], {withoutStack: true});
     });
   });
 });
@@ -361,13 +336,11 @@ describe('ReactInternalTestUtils console assertions', () => {
   });
 
   describe('assertConsoleLogDev', () => {
-    // @gate __DEV__
     it('passes for a single log', () => {
       console.log('Hello');
       assertConsoleLogDev(['Hello']);
     });
 
-    // @gate __DEV__
     it('passes for multiple logs', () => {
       console.log('Hello');
       console.log('Good day');
@@ -906,13 +879,11 @@ describe('ReactInternalTestUtils console assertions', () => {
   });
 
   describe('assertConsoleWarnDev', () => {
-    // @gate __DEV__
     it('passes if an warning contains a stack', () => {
       console.warn('Hello\n    in div');
       assertConsoleWarnDev(['Hello']);
     });
 
-    // @gate __DEV__
     it('passes if all warnings contain a stack', () => {
       console.warn('Hello\n    in div');
       console.warn('Good day\n    in div');
@@ -1353,7 +1324,6 @@ describe('ReactInternalTestUtils console assertions', () => {
     });
 
     describe('global withoutStack', () => {
-      // @gate __DEV__
       it('passes if warnings without stack explicitly opt out', () => {
         console.warn('Hello');
         assertConsoleWarnDev(['Hello'], {withoutStack: true});
@@ -1460,7 +1430,6 @@ describe('ReactInternalTestUtils console assertions', () => {
       });
     });
     describe('local withoutStack', () => {
-      // @gate __DEV__
       it('passes when expected withoutStack logs matches the actual logs', () => {
         console.warn('Hello\n    in div');
         console.warn('Good day');
@@ -1981,13 +1950,11 @@ describe('ReactInternalTestUtils console assertions', () => {
   });
 
   describe('assertConsoleErrorDev', () => {
-    // @gate __DEV__
     it('passes if an error contains a stack', () => {
       console.error('Hello\n    in div');
       assertConsoleErrorDev(['Hello']);
     });
 
-    // @gate __DEV__
     it('passes if all errors contain a stack', () => {
       console.error('Hello\n    in div');
       console.error('Good day\n    in div');
@@ -2446,7 +2413,6 @@ describe('ReactInternalTestUtils console assertions', () => {
     });
 
     describe('global withoutStack', () => {
-      // @gate __DEV__
       it('passes if errors without stack explicitly opt out', () => {
         console.error('Hello');
         assertConsoleErrorDev(['Hello'], {withoutStack: true});
@@ -2553,7 +2519,6 @@ describe('ReactInternalTestUtils console assertions', () => {
       });
     });
     describe('local withoutStack', () => {
-      // @gate __DEV__
       it('passes when expected withoutStack logs matches the actual logs', () => {
         console.error('Hello\n    in div');
         console.error('Good day');
