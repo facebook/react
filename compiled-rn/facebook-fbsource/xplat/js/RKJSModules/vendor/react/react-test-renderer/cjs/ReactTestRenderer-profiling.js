@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1af7787f32a9a27a8299d8bfa7a2f645>>
+ * @generated SignedSource<<7da38d9b4480a073128a1306601cac4d>>
  */
 
 "use strict";
@@ -1403,8 +1403,10 @@ function scheduleTaskForRootDuringMicrotask(root, currentTime) {
 }
 function performWorkOnRootViaSchedulerTask(root, didTimeout) {
   nestedUpdateScheduled = currentUpdateIsNested = !1;
+  if (0 !== pendingEffectsStatus && 3 !== pendingEffectsStatus)
+    return (root.callbackNode = null), (root.callbackPriority = 0), null;
   var originalCallbackNode = root.callbackNode;
-  if (flushPassiveEffects() && root.callbackNode !== originalCallbackNode)
+  if (flushPendingEffects(!0) && root.callbackNode !== originalCallbackNode)
     return null;
   var workInProgressRootRenderLanes$jscomp$0 = workInProgressRootRenderLanes;
   workInProgressRootRenderLanes$jscomp$0 = getNextLanes(
@@ -1420,7 +1422,7 @@ function performWorkOnRootViaSchedulerTask(root, didTimeout) {
     : null;
 }
 function performSyncWorkOnRoot(root, lanes) {
-  if (flushPassiveEffects()) return null;
+  if (flushPendingEffects()) return null;
   currentUpdateIsNested = nestedUpdateScheduled;
   nestedUpdateScheduled = !1;
   performWorkOnRoot(root, lanes, !0);
@@ -8469,10 +8471,13 @@ var DefaultAsyncDispatcher = {
   workInProgressRootRenderTargetTime = Infinity,
   workInProgressTransitions = null,
   legacyErrorBoundariesThatAlreadyFailed = null,
-  rootWithPendingPassiveEffects = null,
-  pendingPassiveEffectsLanes = 0,
-  pendingPassiveEffectsRemainingLanes = 0,
+  pendingEffectsStatus = 0,
+  pendingEffectsRoot = null,
+  pendingFinishedWork = null,
+  pendingEffectsLanes = 0,
+  pendingEffectsRemainingLanes = 0,
   pendingPassiveTransitions = null,
+  pendingRecoverableErrors = null,
   nestedUpdateCount = 0,
   rootWithNestedUpdates = null;
 function requestUpdateLane(fiber) {
@@ -8770,10 +8775,10 @@ function markRootSuspended(
     markSpawnedDeferredLane(root, spawnedLane, suspendedLanes);
 }
 function flushSyncFromReconciler(fn) {
-  null !== rootWithPendingPassiveEffects &&
-    0 === rootWithPendingPassiveEffects.tag &&
+  0 !== pendingEffectsStatus &&
+    0 === pendingEffectsRoot.tag &&
     0 === (executionContext & 6) &&
-    flushPassiveEffects();
+    flushPendingEffects();
   var prevExecutionContext = executionContext;
   executionContext |= 1;
   var prevTransition = ReactSharedInternals.T,
@@ -9309,8 +9314,8 @@ function commitRoot(
   suspendedRetryLanes
 ) {
   root.cancelPendingCommit = null;
-  do flushPassiveEffects();
-  while (null !== rootWithPendingPassiveEffects);
+  do flushPendingEffects();
+  while (0 !== pendingEffectsStatus);
   if (0 !== (executionContext & 6))
     throw Error("Should not already be working.");
   null !== injectedProfilingHooks &&
@@ -9335,11 +9340,15 @@ function commitRoot(
     root === workInProgressRoot &&
       ((workInProgress = workInProgressRoot = null),
       (workInProgressRootRenderLanes = 0));
+    pendingFinishedWork = finishedWork;
+    pendingEffectsRoot = root;
+    pendingEffectsLanes = lanes;
+    pendingEffectsRemainingLanes = didIncludeRenderPhaseUpdate;
+    pendingPassiveTransitions = transitions;
+    pendingRecoverableErrors = recoverableErrors;
     0 !== (finishedWork.subtreeFlags & 10256) ||
     0 !== (finishedWork.flags & 10256)
-      ? ((pendingPassiveEffectsRemainingLanes = didIncludeRenderPhaseUpdate),
-        (pendingPassiveTransitions = transitions),
-        (root.callbackNode = null),
+      ? ((root.callbackNode = null),
         (root.callbackPriority = 0),
         scheduleCallback(NormalPriority$1, function () {
           flushPassiveEffects(!0);
@@ -9347,140 +9356,155 @@ function commitRoot(
         }))
       : ((root.callbackNode = null), (root.callbackPriority = 0));
     commitStartTime = now();
-    transitions = 0 !== (finishedWork.flags & 13878);
-    if (0 !== (finishedWork.subtreeFlags & 13878) || transitions) {
-      transitions = ReactSharedInternals.T;
+    lanes = 0 !== (finishedWork.flags & 13878);
+    if (0 !== (finishedWork.subtreeFlags & 13878) || lanes) {
+      lanes = ReactSharedInternals.T;
       ReactSharedInternals.T = null;
-      spawnedLane = currentUpdatePriority;
+      recoverableErrors = currentUpdatePriority;
       currentUpdatePriority = 2;
-      updatedLanes = executionContext;
+      transitions = executionContext;
       executionContext |= 4;
       try {
         commitBeforeMutationEffects(root, finishedWork);
       } finally {
-        (executionContext = updatedLanes),
-          (currentUpdatePriority = spawnedLane),
-          (ReactSharedInternals.T = transitions);
+        (executionContext = transitions),
+          (currentUpdatePriority = recoverableErrors),
+          (ReactSharedInternals.T = lanes);
       }
     }
-    flushMutationEffects(root, finishedWork, lanes);
-    flushLayoutEffects(root, finishedWork, lanes, recoverableErrors);
+    pendingEffectsStatus = 1;
+    flushMutationEffects();
+    flushLayoutEffects();
   }
 }
-function flushMutationEffects(root, finishedWork) {
-  var rootMutationHasEffect = 0 !== (finishedWork.flags & 13878);
-  if (0 !== (finishedWork.subtreeFlags & 13878) || rootMutationHasEffect) {
-    rootMutationHasEffect = ReactSharedInternals.T;
-    ReactSharedInternals.T = null;
-    var previousPriority = currentUpdatePriority;
-    currentUpdatePriority = 2;
-    var prevExecutionContext = executionContext;
-    executionContext |= 4;
-    try {
-      commitMutationEffectsOnFiber(finishedWork, root);
-    } finally {
-      (executionContext = prevExecutionContext),
-        (currentUpdatePriority = previousPriority),
-        (ReactSharedInternals.T = rootMutationHasEffect);
+function flushMutationEffects() {
+  if (1 === pendingEffectsStatus) {
+    pendingEffectsStatus = 0;
+    var root = pendingEffectsRoot,
+      finishedWork = pendingFinishedWork,
+      rootMutationHasEffect = 0 !== (finishedWork.flags & 13878);
+    if (0 !== (finishedWork.subtreeFlags & 13878) || rootMutationHasEffect) {
+      rootMutationHasEffect = ReactSharedInternals.T;
+      ReactSharedInternals.T = null;
+      var previousPriority = currentUpdatePriority;
+      currentUpdatePriority = 2;
+      var prevExecutionContext = executionContext;
+      executionContext |= 4;
+      try {
+        commitMutationEffectsOnFiber(finishedWork, root);
+      } finally {
+        (executionContext = prevExecutionContext),
+          (currentUpdatePriority = previousPriority),
+          (ReactSharedInternals.T = rootMutationHasEffect);
+      }
     }
+    root.current = finishedWork;
+    pendingEffectsStatus = 2;
   }
-  root.current = finishedWork;
 }
-function flushLayoutEffects(root, finishedWork, lanes, recoverableErrors) {
-  var rootHasLayoutEffect = 0 !== (finishedWork.flags & 8772);
-  if (0 !== (finishedWork.subtreeFlags & 8772) || rootHasLayoutEffect) {
-    rootHasLayoutEffect = ReactSharedInternals.T;
-    ReactSharedInternals.T = null;
-    var previousPriority = currentUpdatePriority;
-    currentUpdatePriority = 2;
-    var prevExecutionContext = executionContext;
-    executionContext |= 4;
-    try {
-      null !== injectedProfilingHooks &&
-        "function" === typeof injectedProfilingHooks.markLayoutEffectsStarted &&
-        injectedProfilingHooks.markLayoutEffectsStarted(lanes),
-        commitLayoutEffectOnFiber(root, finishedWork.alternate, finishedWork),
+function flushLayoutEffects() {
+  if (2 === pendingEffectsStatus) {
+    pendingEffectsStatus = 0;
+    var root = pendingEffectsRoot,
+      finishedWork = pendingFinishedWork,
+      lanes = pendingEffectsLanes,
+      recoverableErrors = pendingRecoverableErrors,
+      rootHasLayoutEffect = 0 !== (finishedWork.flags & 8772);
+    if (0 !== (finishedWork.subtreeFlags & 8772) || rootHasLayoutEffect) {
+      rootHasLayoutEffect = ReactSharedInternals.T;
+      ReactSharedInternals.T = null;
+      var previousPriority = currentUpdatePriority;
+      currentUpdatePriority = 2;
+      var prevExecutionContext = executionContext;
+      executionContext |= 4;
+      try {
         null !== injectedProfilingHooks &&
           "function" ===
-            typeof injectedProfilingHooks.markLayoutEffectsStopped &&
-          injectedProfilingHooks.markLayoutEffectsStopped();
-    } finally {
-      (executionContext = prevExecutionContext),
-        (currentUpdatePriority = previousPriority),
-        (ReactSharedInternals.T = rootHasLayoutEffect);
-    }
-  }
-  requestPaint();
-  0 !== (finishedWork.subtreeFlags & 10256) ||
-  0 !== (finishedWork.flags & 10256)
-    ? ((rootWithPendingPassiveEffects = root),
-      (pendingPassiveEffectsLanes = lanes))
-    : releaseRootPooledCache(root, root.pendingLanes);
-  rootHasLayoutEffect = root.pendingLanes;
-  0 === rootHasLayoutEffect && (legacyErrorBoundariesThatAlreadyFailed = null);
-  rootHasLayoutEffect = lanesToEventPriority(lanes);
-  finishedWork = finishedWork.stateNode;
-  if (injectedHook && "function" === typeof injectedHook.onCommitFiberRoot)
-    try {
-      var didError = 128 === (finishedWork.current.flags & 128);
-      switch (rootHasLayoutEffect) {
-        case 2:
-          var schedulerPriority = ImmediatePriority;
-          break;
-        case 8:
-          schedulerPriority = UserBlockingPriority;
-          break;
-        case 32:
-          schedulerPriority = NormalPriority$1;
-          break;
-        case 268435456:
-          schedulerPriority = IdlePriority;
-          break;
-        default:
-          schedulerPriority = NormalPriority$1;
+            typeof injectedProfilingHooks.markLayoutEffectsStarted &&
+          injectedProfilingHooks.markLayoutEffectsStarted(lanes),
+          commitLayoutEffectOnFiber(root, finishedWork.alternate, finishedWork),
+          null !== injectedProfilingHooks &&
+            "function" ===
+              typeof injectedProfilingHooks.markLayoutEffectsStopped &&
+            injectedProfilingHooks.markLayoutEffectsStopped();
+      } finally {
+        (executionContext = prevExecutionContext),
+          (currentUpdatePriority = previousPriority),
+          (ReactSharedInternals.T = rootHasLayoutEffect);
       }
-      injectedHook.onCommitFiberRoot(
-        rendererID,
-        finishedWork,
-        schedulerPriority,
-        didError
-      );
-    } catch (err) {}
-  if (null !== recoverableErrors) {
-    didError = ReactSharedInternals.T;
-    schedulerPriority = currentUpdatePriority;
-    currentUpdatePriority = 2;
-    ReactSharedInternals.T = null;
-    try {
-      var onRecoverableError = root.onRecoverableError;
-      for (
-        finishedWork = 0;
-        finishedWork < recoverableErrors.length;
-        finishedWork++
-      ) {
-        var recoverableError = recoverableErrors[finishedWork];
-        onRecoverableError(recoverableError.value, {
-          componentStack: recoverableError.stack
-        });
-      }
-    } finally {
-      (ReactSharedInternals.T = didError),
-        (currentUpdatePriority = schedulerPriority);
     }
+    requestPaint();
+    0 !== (finishedWork.subtreeFlags & 10256) ||
+    0 !== (finishedWork.flags & 10256)
+      ? (pendingEffectsStatus = 3)
+      : ((pendingEffectsStatus = 0),
+        (pendingEffectsRoot = null),
+        releaseRootPooledCache(root, root.pendingLanes));
+    rootHasLayoutEffect = root.pendingLanes;
+    0 === rootHasLayoutEffect &&
+      (legacyErrorBoundariesThatAlreadyFailed = null);
+    rootHasLayoutEffect = lanesToEventPriority(lanes);
+    finishedWork = finishedWork.stateNode;
+    if (injectedHook && "function" === typeof injectedHook.onCommitFiberRoot)
+      try {
+        var didError = 128 === (finishedWork.current.flags & 128);
+        switch (rootHasLayoutEffect) {
+          case 2:
+            var schedulerPriority = ImmediatePriority;
+            break;
+          case 8:
+            schedulerPriority = UserBlockingPriority;
+            break;
+          case 32:
+            schedulerPriority = NormalPriority$1;
+            break;
+          case 268435456:
+            schedulerPriority = IdlePriority;
+            break;
+          default:
+            schedulerPriority = NormalPriority$1;
+        }
+        injectedHook.onCommitFiberRoot(
+          rendererID,
+          finishedWork,
+          schedulerPriority,
+          didError
+        );
+      } catch (err) {}
+    if (null !== recoverableErrors) {
+      didError = ReactSharedInternals.T;
+      schedulerPriority = currentUpdatePriority;
+      currentUpdatePriority = 2;
+      ReactSharedInternals.T = null;
+      try {
+        var onRecoverableError = root.onRecoverableError;
+        for (
+          finishedWork = 0;
+          finishedWork < recoverableErrors.length;
+          finishedWork++
+        ) {
+          var recoverableError = recoverableErrors[finishedWork];
+          onRecoverableError(recoverableError.value, {
+            componentStack: recoverableError.stack
+          });
+        }
+      } finally {
+        (ReactSharedInternals.T = didError),
+          (currentUpdatePriority = schedulerPriority);
+      }
+    }
+    0 !== (pendingEffectsLanes & 3) && 0 !== root.tag && flushPendingEffects();
+    ensureRootIsScheduled(root);
+    rootHasLayoutEffect = root.pendingLanes;
+    0 !== (lanes & 4194218) && 0 !== (rootHasLayoutEffect & 42)
+      ? ((nestedUpdateScheduled = !0),
+        root === rootWithNestedUpdates
+          ? nestedUpdateCount++
+          : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root)))
+      : (nestedUpdateCount = 0);
+    flushSyncWorkAcrossRoots_impl(0, !1);
+    markCommitStopped();
   }
-  0 !== (pendingPassiveEffectsLanes & 3) &&
-    0 !== root.tag &&
-    flushPassiveEffects();
-  ensureRootIsScheduled(root);
-  rootHasLayoutEffect = root.pendingLanes;
-  0 !== (lanes & 4194218) && 0 !== (rootHasLayoutEffect & 42)
-    ? ((nestedUpdateScheduled = !0),
-      root === rootWithNestedUpdates
-        ? nestedUpdateCount++
-        : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root)))
-    : (nestedUpdateCount = 0);
-  flushSyncWorkAcrossRoots_impl(0, !1);
-  markCommitStopped();
 }
 function releaseRootPooledCache(root, remainingLanes) {
   0 === (root.pooledCacheLanes &= remainingLanes) &&
@@ -9488,67 +9512,64 @@ function releaseRootPooledCache(root, remainingLanes) {
     null != remainingLanes &&
       ((root.pooledCache = null), releaseCache(remainingLanes)));
 }
+function flushPendingEffects(wasDelayedCommit) {
+  flushMutationEffects();
+  flushLayoutEffects();
+  return flushPassiveEffects(wasDelayedCommit);
+}
 function flushPassiveEffects() {
-  if (null !== rootWithPendingPassiveEffects) {
-    var root = rootWithPendingPassiveEffects,
-      remainingLanes = pendingPassiveEffectsRemainingLanes;
-    pendingPassiveEffectsRemainingLanes = 0;
-    var renderPriority = lanesToEventPriority(pendingPassiveEffectsLanes),
-      prevTransition = ReactSharedInternals.T,
-      previousPriority = currentUpdatePriority;
-    try {
-      currentUpdatePriority = 32 > renderPriority ? 32 : renderPriority;
-      ReactSharedInternals.T = null;
-      if (null === rootWithPendingPassiveEffects)
-        var JSCompiler_inline_result = !1;
-      else {
-        renderPriority = pendingPassiveTransitions;
-        pendingPassiveTransitions = null;
-        var root$jscomp$0 = rootWithPendingPassiveEffects,
-          lanes = pendingPassiveEffectsLanes;
-        rootWithPendingPassiveEffects = null;
-        pendingPassiveEffectsLanes = 0;
-        if (0 !== (executionContext & 6))
-          throw Error("Cannot flush passive effects while already rendering.");
-        null !== injectedProfilingHooks &&
-          "function" ===
-            typeof injectedProfilingHooks.markPassiveEffectsStarted &&
-          injectedProfilingHooks.markPassiveEffectsStarted(lanes);
-        var prevExecutionContext = executionContext;
-        executionContext |= 4;
-        commitPassiveUnmountOnFiber(root$jscomp$0.current);
-        commitPassiveMountOnFiber(
-          root$jscomp$0,
-          root$jscomp$0.current,
-          lanes,
-          renderPriority
-        );
-        null !== injectedProfilingHooks &&
-          "function" ===
-            typeof injectedProfilingHooks.markPassiveEffectsStopped &&
-          injectedProfilingHooks.markPassiveEffectsStopped();
-        executionContext = prevExecutionContext;
-        flushSyncWorkAcrossRoots_impl(0, !1);
-        if (
-          injectedHook &&
-          "function" === typeof injectedHook.onPostCommitFiberRoot
-        )
-          try {
-            injectedHook.onPostCommitFiberRoot(rendererID, root$jscomp$0);
-          } catch (err) {}
-        var stateNode = root$jscomp$0.current.stateNode;
-        stateNode.effectDuration = 0;
-        stateNode.passiveEffectDuration = 0;
-        JSCompiler_inline_result = !0;
-      }
-      return JSCompiler_inline_result;
-    } finally {
-      (currentUpdatePriority = previousPriority),
-        (ReactSharedInternals.T = prevTransition),
-        releaseRootPooledCache(root, remainingLanes);
-    }
+  if (3 !== pendingEffectsStatus) return !1;
+  var root = pendingEffectsRoot,
+    remainingLanes = pendingEffectsRemainingLanes;
+  pendingEffectsRemainingLanes = 0;
+  var renderPriority = lanesToEventPriority(pendingEffectsLanes),
+    prevTransition = ReactSharedInternals.T,
+    previousPriority = currentUpdatePriority;
+  try {
+    currentUpdatePriority = 32 > renderPriority ? 32 : renderPriority;
+    ReactSharedInternals.T = null;
+    renderPriority = pendingPassiveTransitions;
+    pendingPassiveTransitions = null;
+    var root$jscomp$0 = pendingEffectsRoot,
+      lanes = pendingEffectsLanes;
+    pendingEffectsStatus = 0;
+    pendingEffectsRoot = null;
+    pendingEffectsLanes = 0;
+    if (0 !== (executionContext & 6))
+      throw Error("Cannot flush passive effects while already rendering.");
+    null !== injectedProfilingHooks &&
+      "function" === typeof injectedProfilingHooks.markPassiveEffectsStarted &&
+      injectedProfilingHooks.markPassiveEffectsStarted(lanes);
+    var prevExecutionContext = executionContext;
+    executionContext |= 4;
+    commitPassiveUnmountOnFiber(root$jscomp$0.current);
+    commitPassiveMountOnFiber(
+      root$jscomp$0,
+      root$jscomp$0.current,
+      lanes,
+      renderPriority
+    );
+    null !== injectedProfilingHooks &&
+      "function" === typeof injectedProfilingHooks.markPassiveEffectsStopped &&
+      injectedProfilingHooks.markPassiveEffectsStopped();
+    executionContext = prevExecutionContext;
+    flushSyncWorkAcrossRoots_impl(0, !1);
+    if (
+      injectedHook &&
+      "function" === typeof injectedHook.onPostCommitFiberRoot
+    )
+      try {
+        injectedHook.onPostCommitFiberRoot(rendererID, root$jscomp$0);
+      } catch (err) {}
+    var stateNode = root$jscomp$0.current.stateNode;
+    stateNode.effectDuration = 0;
+    stateNode.passiveEffectDuration = 0;
+    return !0;
+  } finally {
+    (currentUpdatePriority = previousPriority),
+      (ReactSharedInternals.T = prevTransition),
+      releaseRootPooledCache(root, remainingLanes);
   }
-  return !1;
 }
 function captureCommitPhaseErrorOnRoot(rootFiber, sourceFiber, error) {
   sourceFiber = createCapturedValueAtFiber(error, sourceFiber);
@@ -10363,10 +10384,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1215 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-bf883beb-20250103",
+  version: "19.1.0-native-fb-defffdbb-20250106",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-bf883beb-20250103",
+  reconcilerVersion: "19.1.0-native-fb-defffdbb-20250106",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$148 = 0;
@@ -10517,4 +10538,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.1.0-native-fb-bf883beb-20250103";
+exports.version = "19.1.0-native-fb-defffdbb-20250106";
