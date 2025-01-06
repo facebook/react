@@ -3527,7 +3527,7 @@ function mountId(): string {
     const treeId = getTreeId();
 
     // Use a captial R prefix for server-generated ids.
-    id = ':' + identifierPrefix + 'R' + treeId;
+    id = '\u00AB' + identifierPrefix + 'R' + treeId;
 
     // Unless this is the first id at this level, append a number at the end
     // that represents the position of this useId hook among all the useId
@@ -3537,11 +3537,16 @@ function mountId(): string {
       id += 'H' + localId.toString(32);
     }
 
-    id += ':';
+    id += '\u00BB';
   } else {
     // Use a lowercase r prefix for client-generated ids.
     const globalClientId = globalClientIdCounter++;
-    id = ':' + identifierPrefix + 'r' + globalClientId.toString(32) + ':';
+    id =
+      '\u00AB' +
+      identifierPrefix +
+      'r' +
+      globalClientId.toString(32) +
+      '\u00BB';
   }
 
   hook.memoizedState = id;

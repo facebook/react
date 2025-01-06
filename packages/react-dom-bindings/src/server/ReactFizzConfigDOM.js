@@ -820,7 +820,7 @@ export function makeId(
 ): string {
   const idPrefix = resumableState.idPrefix;
 
-  let id = ':' + idPrefix + 'R' + treeId;
+  let id = '\u00AB' + idPrefix + 'R' + treeId;
 
   // Unless this is the first id at this level, append a number at the end
   // that represents the position of this useId hook among all the useId
@@ -829,7 +829,7 @@ export function makeId(
     id += 'H' + localId.toString(32);
   }
 
-  return id + ':';
+  return id + '\u00BB';
 }
 
 function encodeHTMLTextNode(text: string): string {
