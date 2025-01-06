@@ -625,8 +625,8 @@ const NO_PENDING_EFFECTS = 0;
 const PENDING_MUTATION_PHASE = 1;
 const PENDING_LAYOUT_PHASE = 2;
 const PENDING_PASSIVE_PHASE = 3;
-let rootWithPendingPassiveEffects: FiberRoot | null = null;
 let pendingEffectsStatus: 0 | 1 | 2 | 3 = 0;
+let rootWithPendingPassiveEffects: FiberRoot = (null: any);
 let pendingFinishedWork: Fiber = (null: any);
 let pendingPassiveEffectsLanes: Lanes = NoLanes;
 let pendingPassiveEffectsRemainingLanes: Lanes = NoLanes;
@@ -658,7 +658,9 @@ export function getWorkInProgressRootRenderLanes(): Lanes {
 }
 
 export function getRootWithPendingPassiveEffects(): FiberRoot | null {
-  return rootWithPendingPassiveEffects;
+  return pendingEffectsStatus === PENDING_PASSIVE_PHASE
+    ? rootWithPendingPassiveEffects
+    : null;
 }
 
 export function getPendingPassiveEffectsLanes(): Lanes {
@@ -1635,7 +1637,7 @@ export function flushSyncFromReconciler<R>(fn: (() => R) | void): R | void {
   // In legacy mode, we flush pending passive effects at the beginning of the
   // next event, not at the end of the previous one.
   if (
-    rootWithPendingPassiveEffects !== null &&
+    pendingEffectsStatus !== NO_PENDING_EFFECTS &&
     !disableLegacyMode &&
     rootWithPendingPassiveEffects.tag === LegacyRoot &&
     (executionContext & (RenderContext | CommitContext)) === NoContext
@@ -3158,7 +3160,7 @@ function commitRoot(
     // TODO: Might be better if `flushPassiveEffects` did not automatically
     // flush synchronous work at the end, to avoid factoring hazards like this.
     flushPassiveEffects();
-  } while (rootWithPendingPassiveEffects !== null);
+  } while (pendingEffectsStatus !== NO_PENDING_EFFECTS);
   flushRenderPhaseStrictModeWarningsInDEV();
 
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
@@ -3682,7 +3684,7 @@ export function flushPassiveEffects(wasDelayedCommit?: boolean): boolean {
   // in the first place because we used to wrap it with
   // `Scheduler.runWithPriority`, which accepts a function. But now we track the
   // priority within React itself, so we can mutate the variable directly.
-  if (rootWithPendingPassiveEffects !== null) {
+  if (pendingEffectsStatus !== NO_PENDING_EFFECTS) {
     // Cache the root since rootWithPendingPassiveEffects is cleared in
     // flushPassiveEffectsImpl
     const root = rootWithPendingPassiveEffects;
@@ -3715,10 +3717,6 @@ export function flushPassiveEffects(wasDelayedCommit?: boolean): boolean {
 }
 
 function flushPassiveEffectsImpl(wasDelayedCommit: void | boolean) {
-  if (rootWithPendingPassiveEffects === null) {
-    return false;
-  }
-
   // Cache and clear the transitions flag
   const transitions = pendingPassiveTransitions;
   pendingPassiveTransitions = null;
@@ -3726,7 +3724,7 @@ function flushPassiveEffectsImpl(wasDelayedCommit: void | boolean) {
   const root = rootWithPendingPassiveEffects;
   const lanes = pendingPassiveEffectsLanes;
   pendingEffectsStatus = NO_PENDING_EFFECTS;
-  rootWithPendingPassiveEffects = null;
+  rootWithPendingPassiveEffects = (null: any); // Clear for GC purposes.
   // TODO: This is sometimes out of sync with rootWithPendingPassiveEffects.
   // Figure out why and fix it. It's not causing any known issues (probably
   // because it's only used for profiling), but it's a refactor hazard.
