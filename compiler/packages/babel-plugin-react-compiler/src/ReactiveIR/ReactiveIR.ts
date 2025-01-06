@@ -154,6 +154,7 @@ export type ControlNode = {
   id: ReactiveId;
   loc: SourceLocation;
   outputs: Array<ReactiveId>;
+  dependencies: Array<ReactiveId>;
   control: ReactiveId;
 };
 
@@ -241,15 +242,12 @@ export function reversePostorderReactiveGraph(graph: ReactiveGraph): void {
 }
 
 export function* eachNodeDependency(node: ReactiveNode): Iterable<ReactiveId> {
-  if (node.kind !== 'Entry' && node.control != null) {
-    yield node.control;
-  }
   switch (node.kind) {
     case 'Entry':
-    case 'Control':
     case 'LoadArgument': {
       break;
     }
+    case 'Control':
     case 'Branch': {
       yield* node.dependencies;
       break;
@@ -286,6 +284,9 @@ export function* eachNodeDependency(node: ReactiveNode): Iterable<ReactiveId> {
     default: {
       assertExhaustive(node, `Unexpected node kind '${(node as any).kind}'`);
     }
+  }
+  if (node.kind !== 'Entry' && node.control != null) {
+    yield node.control;
   }
 }
 
@@ -433,9 +434,21 @@ function writeReactiveNodes(
         break;
       }
       case 'Join': {
-        buffer.push(
-          `£${id} If test=${printNodeReference(node.terminal.test)} consequent=£${node.terminal.consequent} alternate=£${node.terminal.alternate}${control}`,
-        );
+        buffer.push(`£${id} Join${control}`);
+        switch (node.terminal.kind) {
+          case 'If': {
+            buffer.push(
+              `  If test=${printNodeReference(node.terminal.test)} consequent=£${node.terminal.consequent} alternate=£${node.terminal.alternate}${control}`,
+            );
+            break;
+          }
+          default: {
+            // assertExhaustive(
+            //   node.terminal,
+            //   `Unsupported terminal kind ${(node.terminal as any).kind}`,
+            // );
+          }
+        }
         // for (const phi of node.phis.values()) {
         //   buffer.push(`  ${printPlace(phi.place)}: `)
         // }

@@ -49,13 +49,13 @@ import {
 export function buildReactiveGraph(fn: HIRFunction): ReactiveGraph {
   const builder = new Builder();
   const context = new ControlContext();
-  const control: EntryNode = {
+  const entryNode: EntryNode = {
     kind: 'Entry',
     id: builder.nextReactiveId,
     loc: fn.loc,
     outputs: [],
   };
-  builder.nodes.set(control.id, control);
+  builder.nodes.set(entryNode.id, entryNode);
   for (const param of fn.params) {
     const place = param.kind === 'Identifier' ? param : param.place;
     const node: LoadArgumentNode = {
@@ -64,7 +64,7 @@ export function buildReactiveGraph(fn: HIRFunction): ReactiveGraph {
       loc: place.loc,
       outputs: [],
       place: {...place},
-      control: control.id,
+      control: entryNode.id,
     };
     builder.nodes.set(node.id, node);
     builder.declare(place, node.id);
@@ -76,7 +76,7 @@ export function buildReactiveGraph(fn: HIRFunction): ReactiveGraph {
     builder,
     context,
     fn.body.entry,
-    control.id,
+    entryNode.id,
   );
 
   const graph: ReactiveGraph = {
@@ -118,6 +118,7 @@ class Builder {
       loc,
       outputs: [],
       control,
+      dependencies: [],
     };
     this.nodes.set(node.id, node);
     return node.id;
@@ -147,12 +148,19 @@ class Builder {
 
 class ControlContext {
   constructor(
-    private declarations: Map<DeclarationId, ReactiveId> = new Map(),
-    private scopes: Map<ScopeId, ReactiveId> = new Map(),
+    public declarations: Map<DeclarationId, ReactiveId> = new Map(),
+    public scopes: Map<ScopeId, ReactiveId> = new Map(),
   ) {}
 
-  clone(): ControlContext {
-    return new ControlContext(new Map(this.declarations), new Map(this.scopes));
+  fork(): ControlContext {
+    return new ControlContext(
+      new Map(this.declarations),
+      /*
+       * we fork with empty scope context, because within the fork the first
+       * occurence of each scope must depend on the fork's control
+       */
+      new Map(),
+    );
   }
 
   recordScope(scope: ScopeId, node: ReactiveId): void {
@@ -194,6 +202,48 @@ function buildBlockScope(
     // iterate instructions of the block
     for (const instr of block.instructions) {
       const {lvalue, value} = instr;
+
+      const instructionNodeId = builder.nextReactiveId;
+
+      // Generic handling of scope and variable control dependencies
+      const instructionControls: Array<ReactiveId> = [];
+      if (value.kind !== 'LoadLocal') {
+        const instructionScope = getScopeForInstruction(instr);
+        if (instructionScope != null) {
+          const previousScopeNode = context.getScope(instructionScope.id);
+          if (previousScopeNode != null) {
+            instructionControls.push(previousScopeNode);
+          }
+          context.recordScope(instructionScope.id, instructionNodeId);
+        }
+      }
+      for (const lvalue of eachInstructionValueLValue(value)) {
+        const previousDeclarationNode = context.getDeclaration(
+          lvalue.identifier,
+        );
+        if (previousDeclarationNode != null) {
+          instructionControls.push(previousDeclarationNode);
+        }
+        context.recordDeclaration(lvalue.identifier, instructionNodeId);
+      }
+      let instructionControl: ReactiveId;
+      if (instructionControls.length === 0) {
+        instructionControl = control;
+      } else if (instructionControls.length === 1) {
+        instructionControl = instructionControls[0]!;
+      } else {
+        const node: ControlNode = {
+          kind: 'Control',
+          control,
+          id: builder.nextReactiveId,
+          loc: instr.loc,
+          outputs: [],
+          dependencies: instructionControls,
+        };
+        builder.nodes.set(node.id, node);
+        instructionControl = node.id;
+      }
+
       if (value.kind === 'LoadLocal') {
         const declaration = context.assertDeclaration(
           value.place.identifier,
@@ -207,7 +257,7 @@ function buildBlockScope(
         const dep = builder.lookup(value.value.identifier, value.value.loc);
         const node: ConstNode = {
           kind: 'Const',
-          id: builder.nextReactiveId,
+          id: instructionNodeId,
           loc: value.loc,
           lvalue: value.lvalue.place,
           outputs: [],
@@ -216,12 +266,11 @@ function buildBlockScope(
             from: dep.from,
             as: value.value,
           },
-          control,
+          control: instructionControl,
         };
         builder.nodes.set(node.id, node);
         builder.declare(lvalue, node.id);
         builder.declare(value.lvalue.place, node.id);
-        context.recordDeclaration(value.lvalue.place.identifier, node.id);
       } else if (
         value.kind === 'StoreLocal' &&
         value.lvalue.kind === InstructionKind.Let
@@ -267,24 +316,15 @@ function buildBlockScope(
             as: {...operand},
           });
         }
-        let scopeControl = control;
-        const affectedScope = getScopeForInstruction(instr);
-        if (affectedScope != null) {
-          const previousScopeNode = context.getScope(affectedScope.id);
-          scopeControl = previousScopeNode ?? scopeControl;
-        }
         const node: InstructionNode = {
           kind: 'Value',
-          control: scopeControl,
+          control: instructionControl,
           dependencies,
-          id: builder.nextReactiveId,
+          id: instructionNodeId,
           loc: instr.loc,
           outputs: [],
           value: instr,
         };
-        if (affectedScope != null) {
-          context.recordScope(affectedScope.id, node.id);
-        }
         builder.nodes.set(node.id, node);
         lastNode = node.id;
         for (const lvalue of eachInstructionLValue(instr)) {
@@ -326,7 +366,7 @@ function buildBlockScope(
           outputs: [],
         };
         builder.nodes.set(branch.id, branch);
-        const consequentContext = context.clone();
+        const consequentContext = context.fork();
         const consequentControl = builder.controlNode(branch.id, terminal.loc);
         const consequent = buildBlockScope(
           fn,
@@ -335,7 +375,7 @@ function buildBlockScope(
           terminal.consequent,
           consequentControl,
         );
-        const alternateContext = context.clone();
+        const alternateContext = context.fork();
         const alternateControl = builder.controlNode(branch.id, terminal.loc);
         const alternate =
           terminal.alternate !== terminal.fallthrough
@@ -361,6 +401,12 @@ function buildBlockScope(
             alternate,
           },
         };
+        for (const scope of consequentContext.scopes.keys()) {
+          context.recordScope(scope, ifNode.id);
+        }
+        for (const scope of alternateContext.scopes.keys()) {
+          context.recordScope(scope, ifNode.id);
+        }
         builder.nodes.set(ifNode.id, ifNode);
         lastNode = ifNode.id;
         break;
