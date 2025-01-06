@@ -9,9 +9,9 @@ jobs:
       if: ${{ github.event.label.name == 'React Core Team' }}
       runs-on: ubuntu-latest
       steps:
-        - name: Discord Message Notify
-          uses: appleboy/discord-action@v1.1.0
+        - name: Discord Webhook Action
+          uses: tsickert/discord-webhook@v6.0.0
           with:
-            webhook_id: ${{ secrets.DISCORD_WEBHOOK_ID }}
-            webhook_token: ${{ secrets.DISCORD_WEBHOOK_TOKEN }}
-            message: "New PR from ${{ github.event.author.login }}: [#${{ github.event.pull_request.title }}](${{ github.event.pull_request.permalink }})"
+              webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+              content: "New PR from ${{ github.event.author.login }}: [#${{ github.event.pull_request.title }}](${{ github.event.pull_request.permalink }})"
+            
