@@ -14,7 +14,6 @@ import type {BatchConfigTransition} from './ReactFiberTracingMarkerComponent';
 
 import {
   disableLegacyMode,
-  enableDeferRootSchedulingToMicrotask,
   disableSchedulerTimeoutInWorkLoop,
   enableProfilerTimer,
   enableProfilerNestedUpdatePhase,
@@ -137,14 +136,6 @@ export function ensureRootIsScheduled(root: FiberRoot): void {
       didScheduleMicrotask = true;
       scheduleImmediateRootScheduleTask();
     }
-  }
-
-  if (!enableDeferRootSchedulingToMicrotask) {
-    // While this flag is disabled, we schedule the render task immediately
-    // instead of waiting a microtask.
-    // TODO: We need to land enableDeferRootSchedulingToMicrotask ASAP to
-    // unblock additional features we have planned.
-    scheduleTaskForRootDuringMicrotask(root, now());
   }
 
   if (
@@ -325,10 +316,7 @@ function scheduleTaskForRootDuringMicrotask(
   // This function is always called inside a microtask, or at the very end of a
   // rendering task right before we yield to the main thread. It should never be
   // called synchronously.
-  //
-  // TODO: Unless enableDeferRootSchedulingToMicrotask is off. We need to land
-  // that ASAP to unblock additional features we have planned.
-  //
+
   // This function also never performs React work synchronously; it should
   // only schedule work to be performed later, in a separate task or microtask.
 
