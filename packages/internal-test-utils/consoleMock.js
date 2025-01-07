@@ -68,12 +68,10 @@ const patchConsoleMethod = (methodName, logged) => {
   return newMethod;
 };
 
-let errorMethod;
-let warnMethod;
 let logMethod;
 export function patchConsoleMethods({includeLog} = {includeLog: false}) {
-  errorMethod = patchConsoleMethod('error', loggedErrors);
-  warnMethod = patchConsoleMethod('warn', loggedWarns);
+  patchConsoleMethod('error', loggedErrors);
+  patchConsoleMethod('warn', loggedWarns);
 
   // Only assert console.log isn't called in CI so you can debug tests in DEV.
   // The matchers will still work in DEV, so you can assert locally.
