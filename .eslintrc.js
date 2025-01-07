@@ -303,7 +303,6 @@ module.exports = {
       ERROR,
       {isProductionUserAppCode: true},
     ],
-    'react-internal/no-to-warn-dev-within-to-throw': ERROR,
     'react-internal/warning-args': ERROR,
     'react-internal/no-production-logging': ERROR,
   },
