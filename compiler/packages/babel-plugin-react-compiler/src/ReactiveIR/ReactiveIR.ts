@@ -10,6 +10,7 @@ import {
   DeclarationId,
   Environment,
   Instruction,
+  InstructionKind,
   Place,
   ReactiveScope,
   SourceLocation,
@@ -54,6 +55,7 @@ export type ReactiveNode =
   | EntryNode
   | LoadArgumentNode
   | ConstNode
+  | AssignNode
   | InstructionNode
   | BranchNode
   | JoinNode
@@ -92,6 +94,17 @@ export type ConstNode = {
   loc: SourceLocation;
   outputs: Array<ReactiveId>;
   lvalue: Place;
+  value: NodeReference;
+  control: ReactiveId;
+};
+
+export type AssignNode = {
+  kind: 'Assign';
+  id: ReactiveId;
+  loc: SourceLocation;
+  outputs: Array<ReactiveId>;
+  lvalue: Place;
+  instructionKind: InstructionKind;
   value: NodeReference;
   control: ReactiveId;
 };
@@ -136,8 +149,7 @@ export type JoinNode = {
 };
 
 export type PhiNode = {
-  place: Place;
-  operands: Map<ReactiveId, Place>;
+  operands: Set<ReactiveId>;
 };
 
 export type NodeTerminal = IfBranch;
@@ -263,6 +275,10 @@ export function* eachNodeDependency(node: ReactiveNode): Iterable<ReactiveId> {
       yield node.terminal.alternate;
       break;
     }
+    case 'Assign': {
+      yield node.value.node;
+      break;
+    }
     case 'Const': {
       yield node.value.node;
       break;
@@ -299,6 +315,10 @@ export function* eachNodeReference(
     case 'LoadArgument': {
       break;
     }
+    case 'Assign': {
+      yield node.value;
+      break;
+    }
     case 'Const': {
       yield node.value;
       break;
@@ -311,15 +331,6 @@ export function* eachNodeReference(
       break;
     }
     case 'Join': {
-      for (const phi of node.phis.values()) {
-        for (const [pred, operand] of phi.operands) {
-          yield {
-            node: pred,
-            from: operand,
-            as: operand,
-          };
-        }
-      }
       yield node.terminal.test;
       break;
     }
@@ -413,6 +424,12 @@ function writeReactiveNodes(
       }
       case 'Control': {
         buffer.push(`£${id} Control${control}`);
+        break;
+      }
+      case 'Assign': {
+        buffer.push(
+          `£${id} Assign ${node.instructionKind} ${printPlace(node.lvalue)} = ${printNodeReference(node.value)}${control}`,
+        );
         break;
       }
       case 'Const': {

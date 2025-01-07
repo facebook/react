@@ -26,6 +26,7 @@ import {
   terminalFallthrough,
 } from '../HIR/visitors';
 import {
+  AssignNode,
   BranchNode,
   ConstNode,
   ControlNode,
@@ -36,6 +37,7 @@ import {
   makeReactiveId,
   NodeDependencies,
   NodeReference,
+  PhiNode,
   populateReactiveGraphNodeOutputs,
   printReactiveNodes,
   ReactiveGraph,
@@ -150,16 +152,19 @@ class ControlContext {
   constructor(
     public declarations: Map<DeclarationId, ReactiveId> = new Map(),
     public scopes: Map<ScopeId, ReactiveId> = new Map(),
+    public parent: ControlContext | null = null,
   ) {}
 
   fork(): ControlContext {
     return new ControlContext(
-      new Map(this.declarations),
       /*
-       * we fork with empty scope context, because within the fork the first
-       * occurence of each scope must depend on the fork's control
+       * We reset these maps so that the first reference of each declaration/scope within the branch
+       * will depend on the branch's control. subsequent references can then refer to branch-local
+       * instance
        */
       new Map(),
+      new Map(),
+      this,
     );
   }
 
@@ -269,24 +274,55 @@ function buildBlockScope(
           control: instructionControl,
         };
         builder.nodes.set(node.id, node);
+        lastNode = node.id;
         builder.declare(lvalue, node.id);
         builder.declare(value.lvalue.place, node.id);
       } else if (
         value.kind === 'StoreLocal' &&
         value.lvalue.kind === InstructionKind.Let
       ) {
-        CompilerError.throwTodo({
-          reason: `Handle StoreLocal kind ${value.lvalue.kind}`,
+        const dep = builder.lookup(value.value.identifier, value.value.loc);
+        const node: AssignNode = {
+          kind: 'Assign',
+          id: instructionNodeId,
           loc: value.loc,
-        });
+          lvalue: value.lvalue.place,
+          outputs: [],
+          value: {
+            node: dep.node,
+            from: dep.from,
+            as: value.value,
+          },
+          control: instructionControl,
+          instructionKind: InstructionKind.Let,
+        };
+        builder.nodes.set(node.id, node);
+        lastNode = node.id;
+        builder.declare(lvalue, node.id);
+        builder.declare(value.lvalue.place, node.id);
       } else if (
         value.kind === 'StoreLocal' &&
         value.lvalue.kind === InstructionKind.Reassign
       ) {
-        CompilerError.throwTodo({
-          reason: `Handle StoreLocal kind ${value.lvalue.kind}`,
+        const dep = builder.lookup(value.value.identifier, value.value.loc);
+        const node: AssignNode = {
+          kind: 'Assign',
+          id: instructionNodeId,
           loc: value.loc,
-        });
+          lvalue: value.lvalue.place,
+          outputs: [],
+          value: {
+            node: dep.node,
+            from: dep.from,
+            as: value.value,
+          },
+          control: instructionControl,
+          instructionKind: InstructionKind.Reassign,
+        };
+        builder.nodes.set(node.id, node);
+        lastNode = node.id;
+        builder.declare(lvalue, node.id);
+        builder.declare(value.lvalue.place, node.id);
       } else if (value.kind === 'StoreLocal') {
         CompilerError.throwTodo({
           reason: `Handle StoreLocal kind ${value.lvalue.kind}`,
@@ -407,6 +443,32 @@ function buildBlockScope(
         for (const scope of alternateContext.scopes.keys()) {
           context.recordScope(scope, ifNode.id);
         }
+
+        const redeclaredItems = new Set([
+          ...consequentContext.declarations.keys(),
+          ...alternateContext.declarations.keys(),
+        ]);
+        for (const redeclared of redeclaredItems) {
+          const phiNode: PhiNode = {
+            operands: new Set(),
+          };
+          if (consequentContext.declarations.has(redeclared)) {
+            phiNode.operands.add(consequent);
+          }
+          if (alternateContext.declarations.has(redeclared)) {
+            phiNode.operands.add(alternate);
+          }
+          if (phiNode.operands.size === 1) {
+            phiNode.operands.add(branch.id);
+          }
+          ifNode.phis.set(redeclared, phiNode);
+
+          const previousDeclaration = context.declarations.get(redeclared);
+          if (previousDeclaration != null) {
+            branch.dependencies.push(previousDeclaration);
+          }
+        }
+
         builder.nodes.set(ifNode.id, ifNode);
         lastNode = ifNode.id;
         break;
