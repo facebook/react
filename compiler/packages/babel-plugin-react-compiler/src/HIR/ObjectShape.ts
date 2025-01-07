@@ -213,6 +213,7 @@ export const BuiltInDispatchId = 'BuiltInDispatch';
 export const BuiltInUseContextHookId = 'BuiltInUseContextHook';
 export const BuiltInUseTransitionId = 'BuiltInUseTransition';
 export const BuiltInStartTransitionId = 'BuiltInStartTransition';
+export const BuiltInFireId = 'BuiltInFire';
 
 // ShapeRegistry with default definitions for built-ins.
 export const BUILTIN_SHAPES: ShapeRegistry = new Map();

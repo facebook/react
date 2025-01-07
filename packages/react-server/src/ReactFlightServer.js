@@ -17,7 +17,6 @@ import {
   enablePostpone,
   enableHalt,
   enableTaint,
-  enableServerComponentLogs,
   enableOwnerStacks,
   enableProfilerTimer,
   enableComponentPerformanceTrack,
@@ -234,12 +233,7 @@ function patchConsole(consoleInst: typeof console, methodName: string) {
   }
 }
 
-if (
-  enableServerComponentLogs &&
-  __DEV__ &&
-  typeof console === 'object' &&
-  console !== null
-) {
+if (__DEV__ && typeof console === 'object' && console !== null) {
   // Instrument console to capture logs for replaying on the client.
   patchConsole(console, 'assert');
   patchConsole(console, 'debug');
@@ -3810,11 +3804,11 @@ function forwardDebugInfo(
   debugInfo: ReactDebugInfo,
 ) {
   for (let i = 0; i < debugInfo.length; i++) {
-    request.pendingChunks++;
     if (typeof debugInfo[i].time === 'number') {
       // When forwarding time we need to ensure to convert it to the time space of the payload.
       emitTimingChunk(request, id, debugInfo[i].time);
     } else {
+      request.pendingChunks++;
       if (typeof debugInfo[i].name === 'string') {
         // We outline this model eagerly so that we can refer to by reference as an owner.
         // If we had a smarter way to dedupe we might not have to do this if there ends up

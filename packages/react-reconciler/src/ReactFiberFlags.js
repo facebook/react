@@ -7,7 +7,10 @@
  * @flow
  */
 
-import {enableCreateEventHandleAPI} from 'shared/ReactFeatureFlags';
+import {
+  enableCreateEventHandleAPI,
+  enableUseEffectEventHook,
+} from 'shared/ReactFeatureFlags';
 
 export type Flags = number;
 
@@ -63,8 +66,8 @@ export const Forked = /*                       */ 0b0000000100000000000000000000
 // This enables us to defer more work in the unmount case,
 // since we can defer traversing the tree during layout to look for Passive effects,
 // and instead rely on the static flag as a signal that there may be cleanup work.
-export const RefStatic = /*                    */ 0b0000001000000000000000000000;
 export const LayoutStatic = /*                 */ 0b0000010000000000000000000000;
+export const RefStatic = LayoutStatic;
 export const PassiveStatic = /*                */ 0b0000100000000000000000000000;
 export const MaySuspendCommit = /*             */ 0b0001000000000000000000000000;
 
@@ -77,17 +80,19 @@ export const MountPassiveDev = /*              */ 0b1000000000000000000000000000
 // don't contain effects, by checking subtreeFlags.
 
 export const BeforeMutationMask: number =
-  // TODO: Remove Update flag from before mutation phase by re-landing Visibility
-  // flag logic (see #20043)
-  Update |
   Snapshot |
   (enableCreateEventHandleAPI
     ? // createEventHandle needs to visit deleted and hidden trees to
       // fire beforeblur
       // TODO: Only need to visit Deletions during BeforeMutation phase if an
       // element is focused.
-      ChildDeletion | Visibility
-    : 0);
+      Update | ChildDeletion | Visibility
+    : enableUseEffectEventHook
+      ? // TODO: The useEffectEvent hook uses the snapshot phase for clean up but it
+        // really should use the mutation phase for this or at least schedule an
+        // explicit Snapshot phase flag for this.
+        Update
+      : 0);
 
 export const MutationMask =
   Placement |

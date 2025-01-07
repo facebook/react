@@ -6,6 +6,7 @@
  */
 
 import {parseConfigPragmaForTests, validateEnvironmentConfig} from '..';
+import {defaultOptions} from '../Entrypoint';
 
 describe('parseConfigPragmaForTests()', () => {
   it('parses flags in various forms', () => {
@@ -19,13 +20,17 @@ describe('parseConfigPragmaForTests()', () => {
 
     const config = parseConfigPragmaForTests(
       '@enableUseTypeAnnotations @validateNoSetStateInPassiveEffects:true @validateNoSetStateInRender:false',
+      {compilationMode: defaultOptions.compilationMode},
     );
     expect(config).toEqual({
-      ...defaultConfig,
-      enableUseTypeAnnotations: true,
-      validateNoSetStateInPassiveEffects: true,
-      validateNoSetStateInRender: false,
-      enableResetCacheOnSourceFileChanges: false,
+      ...defaultOptions,
+      environment: {
+        ...defaultOptions.environment,
+        enableUseTypeAnnotations: true,
+        validateNoSetStateInPassiveEffects: true,
+        validateNoSetStateInRender: false,
+        enableResetCacheOnSourceFileChanges: false,
+      },
     });
   });
 });

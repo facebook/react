@@ -16,6 +16,7 @@ let ReactDOMServer;
 let act;
 let Scheduler;
 let assertLog;
+let assertConsoleErrorDev;
 
 function getTestDocument(markup) {
   const doc = document.implementation.createHTMLDocument('');
@@ -48,6 +49,8 @@ describe('rendering React components at document', () => {
     act = require('internal-test-utils').act;
     assertLog = require('internal-test-utils').assertLog;
     Scheduler = require('scheduler');
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
   });
 
   describe('with new explicit hydration API', () => {
@@ -269,30 +272,46 @@ describe('rendering React components at document', () => {
       const favorSafetyOverHydrationPerf = gate(
         flags => flags.favorSafetyOverHydrationPerf,
       );
-      expect(() => {
-        ReactDOM.flushSync(() => {
-          ReactDOMClient.hydrateRoot(
-            testDocument,
-            <Component text="Hello world" />,
-            {
-              onRecoverableError: error => {
-                Scheduler.log(
-                  'onRecoverableError: ' + normalizeError(error.message),
-                );
-                if (error.cause) {
-                  Scheduler.log(
-                    'Cause: ' + normalizeError(error.cause.message),
-                  );
-                }
-              },
+      ReactDOM.flushSync(() => {
+        ReactDOMClient.hydrateRoot(
+          testDocument,
+          <Component text="Hello world" />,
+          {
+            onRecoverableError: error => {
+              Scheduler.log(
+                'onRecoverableError: ' + normalizeError(error.message),
+              );
+              if (error.cause) {
+                Scheduler.log('Cause: ' + normalizeError(error.cause.message));
+              }
             },
-          );
-        });
-      }).toErrorDev(
+          },
+        );
+      });
+      assertConsoleErrorDev(
         favorSafetyOverHydrationPerf
           ? []
           : [
-              "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
+              "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. " +
+                "This won't be patched up. This can happen if a SSR-ed Client Component used:\n" +
+                '\n' +
+                "- A server/client branch `if (typeof window !== 'undefined')`.\n" +
+                "- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n" +
+                "- Date formatting in a user's locale which doesn't match the server.\n" +
+                '- External changing data without sending a snapshot of it along with the HTML.\n' +
+                '- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension ' +
+                'installed which messes with the HTML before React loaded.\n' +
+                '\n' +
+                'https://react.dev/link/hydration-mismatch\n' +
+                '\n' +
+                '  <Component text="Hello world">\n' +
+                '    <html>\n' +
+                '      <head>\n' +
+                '      <body>\n' +
+                '+       Hello world\n' +
+                '-       Goodbye world\n' +
+                '+       Hello world\n' +
+                '-       Goodbye world\n',
             ],
         {withoutStack: true},
       );

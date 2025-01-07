@@ -14,6 +14,7 @@ describe('ReactDOMOption', () => {
   let ReactDOMClient;
   let ReactDOMServer;
   let act;
+  let assertConsoleErrorDev;
 
   beforeEach(() => {
     jest.resetModules();
@@ -21,6 +22,8 @@ describe('ReactDOMOption', () => {
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
     act = require('internal-test-utils').act;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
   });
 
   async function renderIntoDocument(children) {
@@ -47,10 +50,8 @@ describe('ReactDOMOption', () => {
         {1} <div /> {2}
       </option>
     );
-    let container;
-    await expect(async () => {
-      container = await renderIntoDocument(el);
-    }).toErrorDev(
+    const container = await renderIntoDocument(el);
+    assertConsoleErrorDev([
       'In HTML, <div> cannot be a child of <option>.\n' +
         'This will cause a hydration error.\n' +
         '\n' +
@@ -62,7 +63,7 @@ describe('ReactDOMOption', () => {
         (gate(flags => flags.enableOwnerStacks)
           ? ''
           : '\n    in option (at **)'),
-    );
+    ]);
     expect(container.firstChild.innerHTML).toBe('1 <div></div> 2');
     await renderIntoDocument(el);
   });
@@ -76,13 +77,12 @@ describe('ReactDOMOption', () => {
         {1} <Foo /> {3}
       </option>
     );
-    let container;
-    await expect(async () => {
-      container = await renderIntoDocument(el);
-    }).toErrorDev(
+    const container = await renderIntoDocument(el);
+    assertConsoleErrorDev([
       'Cannot infer the option value of complex children. ' +
-        'Pass a `value` prop or use a plain string as children to <option>.',
-    );
+        'Pass a `value` prop or use a plain string as children to <option>.\n' +
+        '    in option (at **)',
+    ]);
     expect(container.firstChild.innerHTML).toBe('1 2 3');
     await renderIntoDocument(el);
   });
@@ -187,13 +187,11 @@ describe('ReactDOMOption', () => {
 
   it('should be able to use dangerouslySetInnerHTML on option', async () => {
     const stub = <option dangerouslySetInnerHTML={{__html: 'foobar'}} />;
-    let container;
-    await expect(async () => {
-      container = await renderIntoDocument(stub);
-    }).toErrorDev(
+    const container = await renderIntoDocument(stub);
+    assertConsoleErrorDev([
       'Pass a `value` prop if you set dangerouslyInnerHTML so React knows which value should be selected.\n' +
         '    in option (at **)',
-    );
+    ]);
 
     expect(container.firstChild.innerHTML).toBe('foobar');
   });
@@ -267,13 +265,12 @@ describe('ReactDOMOption', () => {
     expect(option.textContent).toBe('BarFooBaz');
     expect(option.selected).toBe(true);
 
-    await expect(async () => {
-      await act(async () => {
-        ReactDOMClient.hydrateRoot(container, children, {
-          onRecoverableError: () => {},
-        });
+    await act(async () => {
+      ReactDOMClient.hydrateRoot(container, children, {
+        onRecoverableError: () => {},
       });
-    }).toErrorDev(
+    });
+    assertConsoleErrorDev([
       'In HTML, <div> cannot be a child of <option>.\n' +
         'This will cause a hydration error.\n' +
         '\n' +
@@ -285,8 +282,8 @@ describe('ReactDOMOption', () => {
         '    in div (at **)' +
         (gate(flags => flags.enableOwnerStacks)
           ? ''
-          : '\n    in option (at **)'),
-    );
+          : '\n    in option (at **)' + '\n    in select (at **)'),
+    ]);
     option = container.firstChild.firstChild;
 
     expect(option.textContent).toBe('BarFooBaz');

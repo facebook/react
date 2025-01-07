@@ -11,12 +11,9 @@ import {transformFromAstSync} from '@babel/core';
 import * as BabelParser from '@babel/parser';
 import {NodePath} from '@babel/traverse';
 import * as t from '@babel/types';
-import assert from 'assert';
 import type {
-  CompilationMode,
   Logger,
   LoggerEvent,
-  PanicThresholdOptions,
   PluginOptions,
   CompilerReactTarget,
   CompilerPipelineValue,
@@ -51,29 +48,12 @@ function makePluginOptions(
   ValueKindEnum: typeof ValueKind,
 ): [PluginOptions, Array<{filename: string | null; event: LoggerEvent}>] {
   let gating = null;
-  let compilationMode: CompilationMode = 'all';
-  let panicThreshold: PanicThresholdOptions = 'all_errors';
   let hookPattern: string | null = null;
   // TODO(@mofeiZ) rewrite snap fixtures to @validatePreserveExistingMemo:false
   let validatePreserveExistingMemoizationGuarantees = false;
   let customMacros: null | Array<Macro> = null;
   let validateBlocklistedImports = null;
   let target: CompilerReactTarget = '19';
-
-  if (firstLine.indexOf('@compilationMode(annotation)') !== -1) {
-    assert(
-      compilationMode === 'all',
-      'Cannot set @compilationMode(..) more than once',
-    );
-    compilationMode = 'annotation';
-  }
-  if (firstLine.indexOf('@compilationMode(infer)') !== -1) {
-    assert(
-      compilationMode === 'all',
-      'Cannot set @compilationMode(..) more than once',
-    );
-    compilationMode = 'infer';
-  }
 
   if (firstLine.includes('@gating')) {
     gating = {
@@ -93,10 +73,6 @@ function makePluginOptions(
       // @ts-ignore
       target = targetMatch[1];
     }
-  }
-
-  if (firstLine.includes('@panicThreshold(none)')) {
-    panicThreshold = 'none';
   }
 
   let eslintSuppressionRules: Array<string> | null = null;
@@ -194,10 +170,11 @@ function makePluginOptions(
     debugLogIRs: debugIRLogger,
   };
 
-  const config = parseConfigPragmaFn(firstLine);
+  const config = parseConfigPragmaFn(firstLine, {compilationMode: 'all'});
   const options = {
+    ...config,
     environment: {
-      ...config,
+      ...config.environment,
       moduleTypeProvider: makeSharedRuntimeTypeProvider({
         EffectEnum,
         ValueKindEnum,
@@ -208,10 +185,8 @@ function makePluginOptions(
       validatePreserveExistingMemoizationGuarantees,
       validateBlocklistedImports,
     },
-    compilationMode,
     logger,
     gating,
-    panicThreshold,
     noEmit: false,
     eslintSuppressionRules,
     flowSuppressions,

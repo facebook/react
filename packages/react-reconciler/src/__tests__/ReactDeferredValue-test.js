@@ -744,6 +744,7 @@ describe('ReactDeferredValue', () => {
         </Container>,
       );
       // We should switch to pre-rendering the new preview.
+      await waitForPaint([]);
       await waitForPaint(['Preview [B]']);
       expect(root).toMatchRenderedOutput(<div hidden={true}>Preview [B]</div>);
 
@@ -753,6 +754,10 @@ describe('ReactDeferredValue', () => {
       revealContent();
       // Because the preview state was already prerendered, we can reveal it
       // without any addditional work.
+      if (gate(flags => flags.enableYieldingBeforePassive)) {
+        // Passive effects.
+        await waitForPaint([]);
+      }
       await waitForPaint([]);
       expect(root).toMatchRenderedOutput(<div>Preview [B]</div>);
     });

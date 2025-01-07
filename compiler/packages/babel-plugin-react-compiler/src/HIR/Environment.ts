@@ -9,7 +9,13 @@ import * as t from '@babel/types';
 import {ZodError, z} from 'zod';
 import {fromZodError} from 'zod-validation-error';
 import {CompilerError} from '../CompilerError';
-import {Logger} from '../Entrypoint';
+import {
+  CompilationMode,
+  Logger,
+  PanicThresholdOptions,
+  parsePluginOptions,
+  PluginOptions,
+} from '../Entrypoint';
 import {Err, Ok, Result} from '../Utils/Result';
 import {
   DEFAULT_GLOBALS,
@@ -248,6 +254,8 @@ const EnvironmentConfigSchema = z.object({
    * the dependency.
    */
   enableOptionalDependencies: z.boolean().default(true),
+
+  enableFire: z.boolean().default(false),
 
   /**
    * Enables inference and auto-insertion of effect dependencies. Takes in an array of
@@ -681,7 +689,9 @@ const testComplexConfigDefaults: PartialEnvironmentConfig = {
 /**
  * For snap test fixtures and playground only.
  */
-export function parseConfigPragmaForTests(pragma: string): EnvironmentConfig {
+function parseConfigPragmaEnvironmentForTest(
+  pragma: string,
+): EnvironmentConfig {
   const maybeConfig: any = {};
   // Get the defaults to programmatically check for boolean properties
   const defaultConfig = EnvironmentConfigSchema.parse({});
@@ -747,6 +757,48 @@ export function parseConfigPragmaForTests(pragma: string): EnvironmentConfig {
     suggestions: null,
   });
 }
+export function parseConfigPragmaForTests(
+  pragma: string,
+  defaults: {
+    compilationMode: CompilationMode;
+  },
+): PluginOptions {
+  const environment = parseConfigPragmaEnvironmentForTest(pragma);
+  let compilationMode: CompilationMode = defaults.compilationMode;
+  let panicThreshold: PanicThresholdOptions = 'all_errors';
+  for (const token of pragma.split(' ')) {
+    if (!token.startsWith('@')) {
+      continue;
+    }
+    switch (token) {
+      case '@compilationMode(annotation)': {
+        compilationMode = 'annotation';
+        break;
+      }
+      case '@compilationMode(infer)': {
+        compilationMode = 'infer';
+        break;
+      }
+      case '@compilationMode(all)': {
+        compilationMode = 'all';
+        break;
+      }
+      case '@compilationMode(syntax)': {
+        compilationMode = 'syntax';
+        break;
+      }
+      case '@panicThreshold(none)': {
+        panicThreshold = 'none';
+        break;
+      }
+    }
+  }
+  return parsePluginOptions({
+    environment,
+    compilationMode,
+    panicThreshold,
+  });
+}
 
 export type PartialEnvironmentConfig = Partial<EnvironmentConfig>;
 
@@ -785,6 +837,7 @@ export class Environment {
   fnType: ReactFunctionType;
   useMemoCacheIdentifier: string;
   hasLoweredContextAccess: boolean;
+  hasFireRewrite: boolean;
 
   #contextIdentifiers: Set<t.Identifier>;
   #hoistedIdentifiers: Set<t.Identifier>;
@@ -809,6 +862,7 @@ export class Environment {
     this.#shapes = new Map(DEFAULT_SHAPES);
     this.#globals = new Map(DEFAULT_GLOBALS);
     this.hasLoweredContextAccess = false;
+    this.hasFireRewrite = false;
 
     if (
       config.disableMemoizationForDebugging &&

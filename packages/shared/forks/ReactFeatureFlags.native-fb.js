@@ -32,7 +32,6 @@ export const {
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
-export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 export const disableClientCache = true;
 export const disableCommentsAsDOMContainers = true;
 export const disableDefaultPropsExceptForClasses = true;
@@ -53,7 +52,6 @@ export const enableFizzExternalRuntime = true;
 export const enableGetInspectorDataForInstanceInProduction = true;
 export const enableHalt = false;
 export const enableInfiniteRenderLoopDetection = false;
-export const enableLazyContextPropagation = true;
 export const enableLegacyCache = false;
 export const enableLegacyFBSupport = false;
 export const enableLegacyHidden = false;
@@ -68,7 +66,6 @@ export const enableRetryLaneExpiration = false;
 export const enableSchedulingProfiler = __PROFILE__;
 export const enableComponentPerformanceTrack = false;
 export const enableScopeAPI = false;
-export const enableServerComponentLogs = true;
 export const enableSuspenseAvoidThisFallback = false;
 export const enableSuspenseCallback = true;
 export const enableTaint = true;
@@ -81,8 +78,9 @@ export const renameElementSymbol = false;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
-export const useModernStrictMode = true;
 export const enableHydrationLaneScheduling = true;
+export const enableYieldingBeforePassive = false;
+export const enableThrottledScheduling = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

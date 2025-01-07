@@ -10,7 +10,6 @@
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as ExportsType from './ReactFeatureFlags.test-renderer';
 
-export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableAsyncDebugInfo = false;
 export const enableSchedulingProfiler = false;
 export const enableProfilerTimer = __PROFILE__;
@@ -48,12 +47,10 @@ export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
 
 export const disableSchedulerTimeoutInWorkLoop = false;
-export const enableLazyContextPropagation = true;
 export const enableLegacyHidden = false;
 
 export const enableTransitionTracing = false;
 
-export const useModernStrictMode = false;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableFizzExternalRuntime = true;
 export const enableDeferRootSchedulingToMicrotask = true;
@@ -64,7 +61,6 @@ export const passChildrenWhenCloningPersistedNodes = false;
 export const enablePersistedModeClonedFlag = false;
 export const disableClientCache = true;
 
-export const enableServerComponentLogs = true;
 export const enableInfiniteRenderLoopDetection = false;
 
 export const renameElementSymbol = true;
@@ -72,6 +68,10 @@ export const enableShallowPropDiffing = false;
 export const enableSiblingPrerendering = true;
 
 export const enableUseResourceEffectHook = false;
+
+export const enableYieldingBeforePassive = true;
+
+export const enableThrottledScheduling = false;
 
 // TODO: This must be in sync with the main ReactFeatureFlags file because
 // the Test Renderer's value must be the same as the one used by the

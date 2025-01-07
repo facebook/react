@@ -16,7 +16,7 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 import {
   flushSyncWork,
   scheduleUpdateOnFiber,
-  flushPassiveEffects,
+  flushPendingEffects,
 } from './ReactFiberWorkLoop';
 import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates';
 import {updateContainerSync} from './ReactFiberReconciler';
@@ -229,7 +229,7 @@ export const scheduleRefresh: ScheduleRefresh = (
       return;
     }
     const {staleFamilies, updatedFamilies} = update;
-    flushPassiveEffects();
+    flushPendingEffects();
     scheduleFibersWithFamiliesRecursively(
       root.current,
       updatedFamilies,
