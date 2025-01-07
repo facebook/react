@@ -1345,6 +1345,20 @@ function commitLayoutEffectOnFiber(
       }
       break;
     }
+    case ViewTransitionComponent: {
+      if (enableViewTransition) {
+        recursivelyTraverseLayoutEffects(
+          finishedRoot,
+          finishedWork,
+          committedLanes,
+        );
+        if (flags & Ref) {
+          safelyAttachRef(finishedWork, finishedWork.return);
+        }
+        break;
+      }
+      // Fallthrough
+    }
     default: {
       recursivelyTraverseLayoutEffects(
         finishedRoot,
@@ -2830,6 +2844,11 @@ function commitMutationEffectsOnFiber(
     }
     case ViewTransitionComponent:
       if (enableViewTransition) {
+        if (flags & Ref) {
+          if (!offscreenSubtreeWasHidden && current !== null) {
+            safelyDetachRef(current, current.return);
+          }
+        }
         const prevMutationContext = pushMutationContext();
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
         commitReconciliationEffects(finishedWork, lanes);
@@ -3194,6 +3213,12 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
       }
       break;
     }
+    case ViewTransitionComponent: {
+      if (enableViewTransition) {
+        safelyDetachRef(finishedWork, finishedWork.return);
+      }
+      // Fallthrough
+    }
     default: {
       recursivelyTraverseDisappearLayoutEffects(finishedWork);
       break;
@@ -3367,6 +3392,18 @@ export function reappearLayoutEffects(
       // TODO: Check flags & Ref
       safelyAttachRef(finishedWork, finishedWork.return);
       break;
+    }
+    case ViewTransitionComponent: {
+      if (enableViewTransition) {
+        recursivelyTraverseReappearLayoutEffects(
+          finishedRoot,
+          finishedWork,
+          includeWorkInProgressEffects,
+        );
+        safelyAttachRef(finishedWork, finishedWork.return);
+        break;
+      }
+      // Fallthrough
     }
     default: {
       recursivelyTraverseReappearLayoutEffects(

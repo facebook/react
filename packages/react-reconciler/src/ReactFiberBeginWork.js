@@ -3265,6 +3265,7 @@ function updateViewTransition(
     assignViewTransitionAutoName(pendingProps, instance);
   }
   const nextChildren = pendingProps.children;
+  markRef(current, workInProgress);
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
 }
