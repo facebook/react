@@ -823,7 +823,7 @@ function commitExitViewTransitions(
   }
 }
 
-function commitBeforeUpdateViewTransition(fiber: Fiber): void {
+function commitBeforeUpdateViewTransition(current: Fiber): void {
   // The way we deal with multiple HostInstances as children of a View Transition in an
   // update can get tricky. The important bit is that if you swap out n HostInstances
   // from n HostInstances then they match up in order. Similarly, if you don't swap
@@ -840,12 +840,12 @@ function commitBeforeUpdateViewTransition(fiber: Fiber): void {
   // be unexpected but it is in line with the semantics that the ViewTransition is its
   // own layer that cross-fades its content when it updates. If you want to reorder then
   // each child needs its own ViewTransition.
-  const name = getViewTransitionName(fiber.memoizedProps, fiber.stateNode);
+  const name = getViewTransitionName(current.memoizedProps, current.stateNode);
   viewTransitionHostInstanceIdx = 0;
   applyViewTransitionToHostInstances(
-    fiber.child,
+    current.child,
     name,
-    (fiber.memoizedState = []),
+    (current.memoizedState = []),
     true,
   );
 }
@@ -1074,7 +1074,7 @@ function measureUpdateViewTransition(
   // If nothing changed due to a mutation, or children changing size
   // and the measurements end up unchanged, we should restore it to not animate.
   viewTransitionHostInstanceIdx = 0;
-  const previousMeasurements = finishedWork.memoizedState;
+  const previousMeasurements = current.memoizedState;
   const inViewport = measureViewTransitionHostInstances(
     current,
     finishedWork,

@@ -46,30 +46,34 @@ export default function Page() {
         }}>
         {show ? 'A' : 'B'}
       </button>
-      {show ? (
-        <div>
-          {a}
-          {b}
-        </div>
-      ) : (
-        <div>
-          {b}
-          {a}
-        </div>
-      )}
       <ViewTransition>
-        {show ? <div>hello{exclamation}</div> : <section>Loading</section>}
+        <div>
+          {show ? (
+            <div>
+              {a}
+              {b}
+            </div>
+          ) : (
+            <div>
+              {b}
+              {a}
+            </div>
+          )}
+          <ViewTransition>
+            {show ? <div>hello{exclamation}</div> : <section>Loading</section>}
+          </ViewTransition>
+          {show ? null : (
+            <ViewTransition>
+              <div>world{exclamation}</div>
+            </ViewTransition>
+          )}
+          <Activity mode={show ? 'visible' : 'hidden'}>
+            <ViewTransition>
+              <div>!!</div>
+            </ViewTransition>
+          </Activity>
+        </div>
       </ViewTransition>
-      {show ? null : (
-        <ViewTransition>
-          <div>world{exclamation}</div>
-        </ViewTransition>
-      )}
-      <Activity mode={show ? 'visible' : 'hidden'}>
-        <ViewTransition>
-          <div>!!</div>
-        </ViewTransition>
-      </Activity>
     </div>
   );
 }
