@@ -43,14 +43,14 @@ export function assignViewTransitionAutoName(
   if (getIsHydrating()) {
     const treeId = getTreeId();
     // Use a captial R prefix for server-generated ids.
-    name = '\u00AB' + identifierPrefix + 'R' + treeId + '\u00BB';
+    name = '\u00AB' + identifierPrefix + 'T' + treeId + '\u00BB';
   } else {
     // Use a lowercase r prefix for client-generated ids.
     const globalClientId = globalClientIdCounter++;
     name =
       '\u00AB' +
       identifierPrefix +
-      'r' +
+      't' +
       globalClientId.toString(32) +
       '\u00BB';
   }
