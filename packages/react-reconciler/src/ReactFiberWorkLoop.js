@@ -85,6 +85,7 @@ import {
   noTimeout,
   afterActiveInstanceBlur,
   startSuspendingCommit,
+  suspendOnActiveViewTransition,
   waitForCommitToBeReady,
   preloadInstance,
   preloadResource,
@@ -1393,11 +1394,13 @@ function commitRootWhenReady(
   // one after the other.
   const BothVisibilityAndMaySuspendCommit = Visibility | MaySuspendCommit;
   const subtreeFlags = finishedWork.subtreeFlags;
-  if (
+  const isViewTransitionEligible =
+    enableViewTransition && includesOnlyViewTransitionEligibleLanes(lanes); // TODO: Use a subtreeFlag to optimize.
+  const maySuspendCommit =
     subtreeFlags & ShouldSuspendCommit ||
     (subtreeFlags & BothVisibilityAndMaySuspendCommit) ===
-      BothVisibilityAndMaySuspendCommit
-  ) {
+      BothVisibilityAndMaySuspendCommit;
+  if (isViewTransitionEligible || maySuspendCommit) {
     // Before committing, ask the renderer whether the host tree is ready.
     // If it's not, we'll wait until it notifies us.
     startSuspendingCommit();
@@ -1405,7 +1408,12 @@ function commitRootWhenReady(
     // the suspensey resources. The renderer is responsible for accumulating
     // all the load events. This all happens in a single synchronous
     // transaction, so it track state in its own module scope.
-    accumulateSuspenseyCommit(finishedWork);
+    if (maySuspendCommit) {
+      accumulateSuspenseyCommit(finishedWork);
+    }
+    if (isViewTransitionEligible) {
+      suspendOnActiveViewTransition(root.containerInfo);
+    }
     // At the end, ask the renderer if it's ready to commit, or if we should
     // suspend. If it's not ready, it will return a callback to subscribe to
     // a ready event.

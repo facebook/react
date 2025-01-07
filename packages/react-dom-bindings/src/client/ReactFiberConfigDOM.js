@@ -3706,6 +3706,14 @@ export function suspendResource(
   }
 }
 
+export function suspendOnActiveViewTransition(rootContainer: Container): void {
+  if (suspendedState === null) {
+    throw new Error(
+      'Internal React Error: suspendedState null when it was expected to exists. Please report this as a React bug.',
+    );
+  }
+}
+
 export function waitForCommitToBeReady(): null | ((() => void) => () => void) {
   if (suspendedState === null) {
     throw new Error(

@@ -542,6 +542,8 @@ export function startSuspendingCommit() {}
 
 export function suspendInstance(type, props) {}
 
+export function suspendOnActiveViewTransition(container) {}
+
 export function waitForCommitToBeReady() {
   return null;
 }
