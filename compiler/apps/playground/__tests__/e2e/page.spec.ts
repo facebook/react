@@ -83,6 +83,24 @@ function useFoo(propVal: {+baz: number}) {
     `,
     noFormat: true,
   },
+  {
+    name: 'compilationMode-infer',
+    input: `// @compilationMode(infer)
+function nonReactFn() {
+  return {};
+}
+    `,
+    noFormat: true,
+  },
+  {
+    name: 'compilationMode-all',
+    input: `// @compilationMode(all)
+function nonReactFn() {
+  return {};
+}
+    `,
+    noFormat: true,
+  },
 ];
 
 test('editor should open successfully', async ({page}) => {
@@ -142,7 +160,7 @@ test('reset button works', async ({page}) => {
 });
 
 TEST_CASE_INPUTS.forEach((t, idx) =>
-  test(`playground compiles: ${t.name}`, async ({page}) => {
+  test.only(`playground compiles: ${t.name}`, async ({page}) => {
     const store: Store = {
       source: t.input,
     };
