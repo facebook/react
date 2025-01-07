@@ -1,8 +1,8 @@
-name: Discord Notify
+name: (Shared) Discord Notify
 
 on:
   pull_request_target:
-    types: [ labeled ]
+    types: [labeled]
 
 jobs:
   notify:
