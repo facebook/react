@@ -208,11 +208,12 @@ describe('ReactInternalTestUtils console mocks', () => {
       }).toThrow(`console.log was called without assertConsoleLogDev`);
     });
 
-    // @gate __DEV__
     it('should not fail if mocked with spyOnDev', () => {
       spyOnDev(console, 'log').mockImplementation(() => {});
       expect(() => {
-        console.log('hit');
+        if (__DEV__) {
+          console.log('hit');
+        }
         assertConsoleLogsCleared();
       }).not.toThrow();
     });
@@ -243,11 +244,12 @@ describe('ReactInternalTestUtils console mocks', () => {
       }).toThrow('console.warn was called without assertConsoleWarnDev');
     });
 
-    // @gate __DEV__
     it('should not fail if mocked with spyOnDev', () => {
       spyOnDev(console, 'warn').mockImplementation(() => {});
       expect(() => {
-        console.warn('hit');
+        if (__DEV__) {
+          console.warn('hit');
+        }
         assertConsoleLogsCleared();
       }).not.toThrow();
     });
@@ -278,11 +280,12 @@ describe('ReactInternalTestUtils console mocks', () => {
       }).toThrow('console.error was called without assertConsoleErrorDev');
     });
 
-    // @gate __DEV__
     it('should not fail if mocked with spyOnDev', () => {
       spyOnDev(console, 'error').mockImplementation(() => {});
       expect(() => {
-        console.error('hit');
+        if (__DEV__) {
+          console.error('hit');
+        }
         assertConsoleLogsCleared();
       }).not.toThrow();
     });
@@ -337,14 +340,18 @@ describe('ReactInternalTestUtils console assertions', () => {
 
   describe('assertConsoleLogDev', () => {
     it('passes for a single log', () => {
-      console.log('Hello');
+      if (__DEV__) {
+        console.log('Hello');
+      }
       assertConsoleLogDev(['Hello']);
     });
 
     it('passes for multiple logs', () => {
-      console.log('Hello');
-      console.log('Good day');
-      console.log('Bye');
+      if (__DEV__) {
+        console.log('Hello');
+        console.log('Good day');
+        console.log('Bye');
+      }
       assertConsoleLogDev(['Hello', 'Good day', 'Bye']);
     });
 
@@ -880,14 +887,18 @@ describe('ReactInternalTestUtils console assertions', () => {
 
   describe('assertConsoleWarnDev', () => {
     it('passes if an warning contains a stack', () => {
-      console.warn('Hello\n    in div');
+      if (__DEV__) {
+        console.warn('Hello\n    in div');
+      }
       assertConsoleWarnDev(['Hello']);
     });
 
     it('passes if all warnings contain a stack', () => {
-      console.warn('Hello\n    in div');
-      console.warn('Good day\n    in div');
-      console.warn('Bye\n    in div');
+      if (__DEV__) {
+        console.warn('Hello\n    in div');
+        console.warn('Good day\n    in div');
+        console.warn('Bye\n    in div');
+      }
       assertConsoleWarnDev(['Hello', 'Good day', 'Bye']);
     });
 
@@ -1325,12 +1336,16 @@ describe('ReactInternalTestUtils console assertions', () => {
 
     describe('global withoutStack', () => {
       it('passes if warnings without stack explicitly opt out', () => {
-        console.warn('Hello');
+        if (__DEV__) {
+          console.warn('Hello');
+        }
         assertConsoleWarnDev(['Hello'], {withoutStack: true});
 
-        console.warn('Hello');
-        console.warn('Good day');
-        console.warn('Bye');
+        if (__DEV__) {
+          console.warn('Hello');
+          console.warn('Good day');
+          console.warn('Bye');
+        }
 
         assertConsoleWarnDev(['Hello', 'Good day', 'Bye'], {
           withoutStack: true,
@@ -1431,9 +1446,11 @@ describe('ReactInternalTestUtils console assertions', () => {
     });
     describe('local withoutStack', () => {
       it('passes when expected withoutStack logs matches the actual logs', () => {
-        console.warn('Hello\n    in div');
-        console.warn('Good day');
-        console.warn('Bye\n    in div');
+        if (__DEV__) {
+          console.warn('Hello\n    in div');
+          console.warn('Good day');
+          console.warn('Bye\n    in div');
+        }
         assertConsoleWarnDev([
           'Hello',
           ['Good day', {withoutStack: true}],
@@ -1951,14 +1968,18 @@ describe('ReactInternalTestUtils console assertions', () => {
 
   describe('assertConsoleErrorDev', () => {
     it('passes if an error contains a stack', () => {
-      console.error('Hello\n    in div');
+      if (__DEV__) {
+        console.error('Hello\n    in div');
+      }
       assertConsoleErrorDev(['Hello']);
     });
 
     it('passes if all errors contain a stack', () => {
-      console.error('Hello\n    in div');
-      console.error('Good day\n    in div');
-      console.error('Bye\n    in div');
+      if (__DEV__) {
+        console.error('Hello\n    in div');
+        console.error('Good day\n    in div');
+        console.error('Bye\n    in div');
+      }
       assertConsoleErrorDev(['Hello', 'Good day', 'Bye']);
     });
 
@@ -2414,12 +2435,16 @@ describe('ReactInternalTestUtils console assertions', () => {
 
     describe('global withoutStack', () => {
       it('passes if errors without stack explicitly opt out', () => {
-        console.error('Hello');
+        if (__DEV__) {
+          console.error('Hello');
+        }
         assertConsoleErrorDev(['Hello'], {withoutStack: true});
 
-        console.error('Hello');
-        console.error('Good day');
-        console.error('Bye');
+        if (__DEV__) {
+          console.error('Hello');
+          console.error('Good day');
+          console.error('Bye');
+        }
 
         assertConsoleErrorDev(['Hello', 'Good day', 'Bye'], {
           withoutStack: true,
@@ -2520,9 +2545,11 @@ describe('ReactInternalTestUtils console assertions', () => {
     });
     describe('local withoutStack', () => {
       it('passes when expected withoutStack logs matches the actual logs', () => {
-        console.error('Hello\n    in div');
-        console.error('Good day');
-        console.error('Bye\n    in div');
+        if (__DEV__) {
+          console.error('Hello\n    in div');
+          console.error('Good day');
+          console.error('Bye\n    in div');
+        }
         assertConsoleErrorDev([
           'Hello',
           ['Good day', {withoutStack: true}],
