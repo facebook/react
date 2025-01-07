@@ -78,8 +78,6 @@ function invokeCompiler(
       logEvent: () => {},
     },
     environment,
-    compilationMode: 'all',
-    panicThreshold: 'all_errors',
   });
   const ast = parseInput(source, language);
   let result = transformFromAstSync(ast, source, {

@@ -16,6 +16,7 @@ let React;
 let ReactDOM;
 let ReactDOMClient;
 let ReactDOMServer;
+let assertConsoleErrorDev;
 
 function initModules() {
   // Reset warning cache.
@@ -24,6 +25,7 @@ function initModules() {
   ReactDOM = require('react-dom');
   ReactDOMClient = require('react-dom/client');
   ReactDOMServer = require('react-dom/server');
+  assertConsoleErrorDev = require('internal-test-utils').assertConsoleErrorDev;
 
   // Make them available to the helpers.
   return {
@@ -38,6 +40,13 @@ const {resetModules, itRenders, clientCleanRender} =
 describe('ReactDOMServerIntegration', () => {
   beforeEach(() => {
     resetModules();
+  });
+  afterEach(() => {
+    // TODO: This is a hack because expectErrors does not restore mock,
+    // however fixing it requires a major refactor to all these tests.
+    if (console.error.mockClear) {
+      console.error.mockRestore();
+    }
   });
 
   describe('property to attribute mapping', function () {
@@ -633,14 +642,15 @@ describe('ReactDOMServerIntegration', () => {
         // However this particular warning fires only when creating
         // DOM nodes on the client side. We force it to fire early
         // so that it gets deduplicated later, and doesn't fail the test.
-        expect(() => {
-          ReactDOM.flushSync(() => {
-            const root = ReactDOMClient.createRoot(
-              document.createElement('div'),
-            );
-            root.render(<nonstandard />);
-          });
-        }).toErrorDev('The tag <nonstandard> is unrecognized in this browser.');
+        ReactDOM.flushSync(() => {
+          const root = ReactDOMClient.createRoot(document.createElement('div'));
+          root.render(<nonstandard />);
+        });
+        assertConsoleErrorDev([
+          'The tag <nonstandard> is unrecognized in this browser. ' +
+            'If you meant to render a React component, start its name with an uppercase letter.\n' +
+            '    in nonstandard (at **)',
+        ]);
 
         const e = await render(<nonstandard foo="bar" />);
         expect(e.getAttribute('foo')).toBe('bar');
