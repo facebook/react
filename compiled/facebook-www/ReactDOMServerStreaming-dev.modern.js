@@ -8057,9 +8057,6 @@ __DEV__ &&
     var didWarnAboutInvalidateContextType = new Set();
     var didWarnOnInvalidCallback = new Set();
     var classComponentUpdater = {
-        isMounted: function () {
-          return !1;
-        },
         enqueueSetState: function (inst, payload, callback) {
           var internals = inst._reactInternals;
           null === internals.queue

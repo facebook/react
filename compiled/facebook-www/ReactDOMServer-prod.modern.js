@@ -2943,9 +2943,6 @@ function switchContext(newSnapshot) {
     (currentActiveSnapshot = newSnapshot));
 }
 var classComponentUpdater = {
-    isMounted: function () {
-      return !1;
-    },
     enqueueSetState: function (inst, payload) {
       inst = inst._reactInternals;
       null !== inst.queue && inst.queue.push(payload);
@@ -5810,4 +5807,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.1.0-www-modern-379089d2-20250108";
+exports.version = "19.1.0-www-modern-e30c6693-20250108";
