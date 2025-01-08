@@ -7,12 +7,10 @@
 
 import {CompilerError} from '..';
 import {
-  DeclarationId,
   Environment,
   Instruction,
   InstructionKind,
   Place,
-  ReactiveScope,
   SourceLocation,
   SpreadPattern,
 } from '../HIR';
@@ -53,16 +51,14 @@ export function makeReactiveId(id: number): ReactiveId {
 
 export type ReactiveNode =
   | EntryNode
-  | LoadLocalNode
+  | LoadNode
+  | StoreNode
   | LoadArgumentNode
-  | ConstNode
-  | AssignNode
   | InstructionNode
   | BranchNode
   | JoinNode
   | ControlNode
-  | ReturnNode
-  | ScopeNode;
+  | ReturnNode;
 
 export type NodeReference = {
   node: ReactiveId;
@@ -89,8 +85,8 @@ export type LoadArgumentNode = {
   control: ReactiveId;
 };
 
-export type LoadLocalNode = {
-  kind: 'LoadLocal';
+export type LoadNode = {
+  kind: 'Load';
   id: ReactiveId;
   loc: SourceLocation;
   outputs: Array<ReactiveId>;
@@ -98,18 +94,8 @@ export type LoadLocalNode = {
   control: ReactiveId;
 };
 
-export type ConstNode = {
-  kind: 'Const';
-  id: ReactiveId;
-  loc: SourceLocation;
-  outputs: Array<ReactiveId>;
-  lvalue: Place;
-  value: NodeReference;
-  control: ReactiveId;
-};
-
-export type AssignNode = {
-  kind: 'Assign';
+export type StoreNode = {
+  kind: 'Store';
   id: ReactiveId;
   loc: SourceLocation;
   outputs: Array<ReactiveId>;
@@ -153,13 +139,8 @@ export type JoinNode = {
   id: ReactiveId;
   loc: SourceLocation;
   outputs: Array<ReactiveId>;
-  phis: Map<DeclarationId, PhiNode>;
   terminal: NodeTerminal;
   control: ReactiveId; // join node always has a control, which is the corresponding Branch node
-};
-
-export type PhiNode = {
-  operands: Set<ReactiveId>;
 };
 
 export type NodeTerminal = IfBranch;
@@ -177,26 +158,6 @@ export type ControlNode = {
   loc: SourceLocation;
   outputs: Array<ReactiveId>;
   dependencies: Array<ReactiveId>;
-  control: ReactiveId;
-};
-
-export type ScopeNode = {
-  kind: 'Scope';
-  id: ReactiveId;
-  loc: SourceLocation;
-  outputs: Array<ReactiveId>;
-  scope: ReactiveScope;
-  /**
-   * The hoisted dependencies of the scope. Instructions "within" the scope
-   * (ie, the declarations or their deps) will also depend on these same values
-   * but we explicitly describe them here to ensure that all deps come before the scope
-   */
-  dependencies: NodeDependencies;
-  /**
-   * The nodes that produce the values declared by the scope
-   */
-  // declarations: NodeDependencies;
-  body: ReactiveId;
   control: ReactiveId;
 };
 
@@ -275,25 +236,16 @@ export function* eachNodeDependency(node: ReactiveNode): Iterable<ReactiveId> {
       break;
     }
     case 'Join': {
-      for (const phi of node.phis.values()) {
-        for (const operand of phi.operands.keys()) {
-          yield operand;
-        }
-      }
       yield node.terminal.test.node;
       yield node.terminal.consequent;
       yield node.terminal.alternate;
       break;
     }
-    case 'LoadLocal': {
+    case 'Load': {
       yield node.value.node;
       break;
     }
-    case 'Assign': {
-      yield node.value.node;
-      break;
-    }
-    case 'Const': {
+    case 'Store': {
       yield node.value.node;
       break;
     }
@@ -303,12 +255,6 @@ export function* eachNodeDependency(node: ReactiveNode): Iterable<ReactiveId> {
     }
     case 'Value': {
       yield* [...node.dependencies.keys()];
-      break;
-    }
-    case 'Scope': {
-      yield* [...node.dependencies.keys()];
-      // yield* [...node.declarations.keys()];
-      yield node.body;
       break;
     }
     default: {
@@ -329,15 +275,11 @@ export function* eachNodeReference(
     case 'LoadArgument': {
       break;
     }
-    case 'Assign': {
+    case 'Store': {
       yield node.value;
       break;
     }
-    case 'LoadLocal': {
-      yield node.value;
-      break;
-    }
-    case 'Const': {
+    case 'Load': {
       yield node.value;
       break;
     }
@@ -358,19 +300,6 @@ export function* eachNodeReference(
         from: dep.from,
         as: dep.as,
       }));
-      break;
-    }
-    case 'Scope': {
-      yield* [...node.dependencies].map(([node, dep]) => ({
-        node,
-        from: dep.from,
-        as: dep.as,
-      }));
-      // yield* [...node.declarations].map(([node, dep]) => ({
-      //   node,
-      //   from: dep.from,
-      //   as: dep.as,
-      // }));
       break;
     }
     default: {
@@ -444,21 +373,13 @@ function writeReactiveNodes(
         buffer.push(`£${id} Control${control}`);
         break;
       }
-      case 'LoadLocal': {
-        buffer.push(
-          `£${id} LoadLocal ${printNodeReference(node.value)}${control}`,
-        );
+      case 'Load': {
+        buffer.push(`£${id} Load ${printNodeReference(node.value)}${control}`);
         break;
       }
-      case 'Assign': {
+      case 'Store': {
         buffer.push(
-          `£${id} Assign ${node.instructionKind} ${printPlace(node.lvalue)} = ${printNodeReference(node.value)}${control}`,
-        );
-        break;
-      }
-      case 'Const': {
-        buffer.push(
-          `£${id} Const ${printPlace(node.lvalue)} = ${printNodeReference(node.value)}${control}`,
+          `£${id} Store ${node.instructionKind} ${printPlace(node.lvalue)} = ${printNodeReference(node.value)}${control}`,
         );
         break;
       }
@@ -484,27 +405,14 @@ function writeReactiveNodes(
             break;
           }
           default: {
-            // assertExhaustive(
-            //   node.terminal,
-            //   `Unsupported terminal kind ${(node.terminal as any).kind}`,
-            // );
+            // assertExhaustive(node.terminal, `Unsupported terminal kind ${(node.terminal as any).kind}`);
           }
         }
-        // for (const phi of node.phis.values()) {
-        //   buffer.push(`  ${printPlace(phi.place)}: `)
-        // }
         break;
       }
       case 'Value': {
         buffer.push(`£${id} Value deps=[${deps}]${control}`);
         buffer.push('  ' + printInstruction(node.value));
-        break;
-      }
-      case 'Scope': {
-        buffer.push(
-          // `£${id} Scope @${node.scope.id} deps=[${printNodeDependencies(node.dependencies)}] declarations=[${printNodeDependencies(node.declarations)}]`,
-          `£${id} Scope @${node.scope.id} deps=[${printNodeDependencies(node.dependencies)}] body=£${node.body}${control}`,
-        );
         break;
       }
       default: {

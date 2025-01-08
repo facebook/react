@@ -25,26 +25,23 @@ import {
 } from '../HIR/visitors';
 import {getOrInsertWith} from '../Utils/utils';
 import {
-  AssignNode,
   BranchNode,
   ControlNode,
   EntryNode,
   InstructionNode,
   JoinNode,
   LoadArgumentNode,
-  LoadLocalNode,
+  LoadNode,
   makeReactiveId,
   NodeDependencies,
   NodeReference,
-  PhiNode,
   populateReactiveGraphNodeOutputs,
-  printReactiveGraph,
   ReactiveGraph,
   ReactiveId,
   ReactiveNode,
   ReturnNode,
   reversePostorderReactiveGraph,
-  ScopeNode,
+  StoreNode,
 } from './ReactiveIR';
 
 export function buildReactiveGraph(fn: HIRFunction): ReactiveGraph {
@@ -81,39 +78,11 @@ export function buildReactiveGraph(fn: HIRFunction): ReactiveGraph {
 
   const graph = builder.build(fn, exitNode);
 
-  console.log();
-  console.log(printReactiveGraph(graph));
-
   populateReactiveGraphNodeOutputs(graph);
   reversePostorderReactiveGraph(graph);
   return graph;
 }
 
-/**
- * TODO:
- * The builder should store not all declarations, but a mapping of Instruction.lvalue to the node that produces
- * them. This means LoadLocal would populate this with a mapping of the loaded value to the node being loaded from.
- *
- * Then Context should store a parent pointer, and then store variable declarations from Declare/Store.
- *
- * In this model:
- *
- * - LoadLocal:
- *   - looks up the node to read from solely using context (potentially going to the parent)
- *   - stores that node into the builder's lvalue->node mapping
- *   - looks up the previous write in context, as a control (local context only)
- *   - stores the read into the context, to sequence reads/writes (in the local context)
- *   - emits no node
- *
- * - StoreLocal:
- *   - looks up the previous write/read in context, as a control (local context only)
- *   - stores the node into the builder's lvalue->node mapping
- *   - lookup the source node of the value from the builder's lvalue-node mapping
- *   - store the write into the current context
- *   - emit a Const/Let/Assign node
- *
- * Aside: collapse Const/Let/Assign to a single Node type with InstrKind variant.
- */
 class Builder {
   #nextNodeId: number = 0;
   #environment: Map<IdentifierId, ReactiveId> = new Map();
@@ -313,8 +282,21 @@ function buildBlockScope(
           context.loadDeclarationControlForRead(
             value.place.identifier.declarationId,
           ) ?? control;
-        const node: LoadLocalNode = {
-          kind: 'LoadLocal',
+
+        /*
+         * TODO: we need to create a LoadLocal node so that we have a node to record
+         * where the variable was read, to ensure subsequent writes are sequenced after
+         * this read.
+         * Instead, we could record the loadlocal in a mapping on the builder, and then
+         * for *every* other instructions operands, check if they access that local and
+         * if so record the read at that instruction.
+         *
+         * note that this would also have to use the above loadDeclarationControlForRead
+         * as part of the instruction's controls. so overall, maybe easier to keep loadlocal
+         * nodes
+         */
+        const node: LoadNode = {
+          kind: 'Load',
           control: instructionControl,
           id: builder.nextReactiveId,
           loc: value.loc,
@@ -350,8 +332,8 @@ function buildBlockScope(
           value.value.loc,
         );
 
-        const node: AssignNode = {
-          kind: 'Assign',
+        const node: StoreNode = {
+          kind: 'Store',
           control: instructionControl,
           id: builder.nextReactiveId,
           instructionKind: value.lvalue.kind,
@@ -490,7 +472,6 @@ function buildBlockScope(
           id: builder.nextReactiveId,
           loc: terminal.loc,
           outputs: [],
-          phis: new Map(),
           terminal: {
             kind: 'If',
             test,
@@ -498,50 +479,80 @@ function buildBlockScope(
             alternate,
           },
         };
-        for (const scope of consequentContext.scopes.keys()) {
-          context.recordScope(scope, ifNode.id);
+
+        const predecessors: Array<{
+          enter: ReactiveId;
+          exit: ReactiveId;
+          context: ControlContext;
+        }> = [
+          {
+            enter: consequentControl,
+            exit: consequent,
+            context: consequentContext,
+          },
+          {
+            enter: alternateControl,
+            exit: alternate,
+            context: alternateContext,
+          },
+        ];
+
+        const controlDependencies: Set<ReactiveId> = new Set();
+        const joinedDeclarations: Map<DeclarationId, 'write' | 'read'> =
+          new Map();
+        for (const predecessorBlock of predecessors) {
+          /*
+           * every scope mutated in any of the predecessors must take the
+           * join node as a control dep to sequence subsequent mutations
+           */
+          for (const scope of predecessorBlock.context.scopes.keys()) {
+            context.recordScope(scope, ifNode.id);
+          }
+          /*
+           * Track variables that were read/reassigned in any of the predecessors
+           * so that subsequent writes/reads can take the join node as a control
+           */
+          for (const [declarationId, {write, read}] of predecessorBlock.context
+            .declarations) {
+            if (write) {
+              joinedDeclarations.set(declarationId, 'write');
+            } else if (read && !joinedDeclarations.has(declarationId)) {
+              joinedDeclarations.set(declarationId, 'read');
+            }
+          }
         }
-        for (const scope of alternateContext.scopes.keys()) {
-          context.recordScope(scope, ifNode.id);
+        // Add control dependencies and record reads/writes accordingly.
+        for (const [declarationId, declType] of joinedDeclarations) {
+          if (declType === 'write') {
+            /*
+             * If there was a write in any of the branches, we take a write
+             * dependency (on the last read/write) and record the if as the
+             * last write
+             */
+            const writeControl = context.loadDeclarationControlForWrite(
+              declarationId,
+              terminal.loc,
+            );
+            if (writeControl != null) {
+              controlDependencies.add(writeControl);
+            }
+            context.recordDeclarationWrite(declarationId, ifNode.id);
+          } else {
+            /*
+             * If there were only reads in the branches, we take a read
+             * dependency (on the last write) and record the if as the
+             * last read
+             */
+            const readControl =
+              context.loadDeclarationControlForRead(declarationId);
+            if (readControl != null) {
+              controlDependencies.add(readControl);
+            }
+            context.recordDeclarationRead(declarationId, ifNode.id);
+          }
         }
 
-        // const redeclaredItems = new Set([
-        //   ...consequentContext.declarations.keys(),
-        //   ...alternateContext.declarations.keys(),
-        // ]);
-        // for (const redeclared of redeclaredItems) {
-        //   const phiNode: PhiNode = {
-        //     operands: new Set(),
-        //   };
-        //   const existingPhi = Array.from(
-        //     fn.body.blocks.get(terminal.fallthrough)!.phis,
-        //   ).find(phi => phi.place.identifier.declarationId === redeclared);
-        //   CompilerError.invariant(existingPhi != null, {
-        //     reason: `Could not find phi for declaration id '${redeclared}'`,
-        //     loc: terminal.loc,
-        //   });
-        //   if (consequentContext.declarations.has(redeclared)) {
-        //     phiNode.operands.add(consequent);
-        //   }
-        //   if (alternateContext.declarations.has(redeclared)) {
-        //     phiNode.operands.add(alternate);
-        //   }
-        //   if (phiNode.operands.size === 1) {
-        //     phiNode.operands.add(branch.id);
-        //   }
-        //   ifNode.phis.set(redeclared, phiNode);
-
-        //   const previousDeclaration = context.getDeclarationId(redeclared);
-        //   if (previousDeclaration != null) {
-        //     branch.dependencies.push(previousDeclaration);
-        //   }
-        //   context.recordDeclarationWrite(
-        //     existingPhi.place.identifier,
-        //     ifNode.id,
-        //   );
-        //   builder.storeTemporary(existingPhi.place, ifNode.id);
-        // }
-
+        branch.dependencies = Array.from(controlDependencies);
         builder.putNode(ifNode);
         lastNode = ifNode.id;
         break;
@@ -566,28 +577,6 @@ function buildBlockScope(
         };
         builder.putNode(returnNode);
         lastNode = returnNode.id;
-        break;
-      }
-      case 'scope': {
-        const body = buildBlockScope(
-          fn,
-          builder,
-          context,
-          terminal.block,
-          control,
-        );
-        const scopeNode: ScopeNode = {
-          kind: 'Scope',
-          body,
-          dependencies: new Map(),
-          id: builder.nextReactiveId,
-          loc: terminal.scope.loc,
-          outputs: [],
-          scope: terminal.scope,
-          control,
-        };
-        builder.putNode(scopeNode);
-        lastNode = scopeNode.id;
         break;
       }
       case 'goto': {
