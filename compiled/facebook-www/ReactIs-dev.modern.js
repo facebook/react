@@ -24,6 +24,7 @@ __DEV__ &&
               case REACT_STRICT_MODE_TYPE:
               case REACT_SUSPENSE_TYPE:
               case REACT_SUSPENSE_LIST_TYPE:
+              case REACT_VIEW_TRANSITION_TYPE:
                 return object;
               default:
                 switch (((object = object && object.$$typeof), object)) {
@@ -69,6 +70,7 @@ __DEV__ &&
       REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
       REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
       REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
+      REACT_VIEW_TRANSITION_TYPE = Symbol.for("react.view_transition"),
       REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
     exports.ContextConsumer = enableRenderableContext
       ? REACT_CONSUMER_TYPE
