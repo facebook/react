@@ -1,9 +1,0 @@
-.ContextMenu {
-  position: absolute;
-  background-color: var(--color-context-background);
-  box-shadow: 1px 1px 2px var(--color-shadow);
-  border-radius: 0.25rem;
-  overflow: hidden;
-  z-index: 10000002;
-  user-select: none;
-}
