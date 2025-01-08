@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<42e65ea24c953048e44dabb21b2880d8>>
+ * @generated SignedSource<<c79892102a3b0bfb5f5c1c64099a812b>>
  */
 
 /*
@@ -13083,20 +13083,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1619 = 0;
-  i$jscomp$inline_1619 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1619++
+  var i$jscomp$inline_1621 = 0;
+  i$jscomp$inline_1621 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1621++
 ) {
-  var eventName$jscomp$inline_1620 =
-      simpleEventPluginEvents[i$jscomp$inline_1619],
-    domEventName$jscomp$inline_1621 =
-      eventName$jscomp$inline_1620.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1622 =
-      eventName$jscomp$inline_1620[0].toUpperCase() +
-      eventName$jscomp$inline_1620.slice(1);
+  var eventName$jscomp$inline_1622 =
+      simpleEventPluginEvents[i$jscomp$inline_1621],
+    domEventName$jscomp$inline_1623 =
+      eventName$jscomp$inline_1622.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1624 =
+      eventName$jscomp$inline_1622[0].toUpperCase() +
+      eventName$jscomp$inline_1622.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1621,
-    "on" + capitalizedEvent$jscomp$inline_1622
+    domEventName$jscomp$inline_1623,
+    "on" + capitalizedEvent$jscomp$inline_1624
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -16589,16 +16589,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_1864 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1866 = React.version;
 if (
-  "19.1.0-native-fb-a4d122f2-20250108" !==
-  isomorphicReactPackageVersion$jscomp$inline_1864
+  "19.1.0-native-fb-3a5496b3-20250108" !==
+  isomorphicReactPackageVersion$jscomp$inline_1866
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1864,
-      "19.1.0-native-fb-a4d122f2-20250108"
+      isomorphicReactPackageVersion$jscomp$inline_1866,
+      "19.1.0-native-fb-3a5496b3-20250108"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16618,12 +16618,12 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_1871 = {
+var internals$jscomp$inline_1873 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-a4d122f2-20250108",
+  version: "19.1.0-native-fb-3a5496b3-20250108",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-a4d122f2-20250108",
+  reconcilerVersion: "19.1.0-native-fb-3a5496b3-20250108",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$293 = 0;
@@ -16641,16 +16641,16 @@ var internals$jscomp$inline_1871 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2277 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2279 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2277.isDisabled &&
-    hook$jscomp$inline_2277.supportsFiber
+    !hook$jscomp$inline_2279.isDisabled &&
+    hook$jscomp$inline_2279.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2277.inject(
-        internals$jscomp$inline_1871
+      (rendererID = hook$jscomp$inline_2279.inject(
+        internals$jscomp$inline_1873
       )),
-        (injectedHook = hook$jscomp$inline_2277);
+        (injectedHook = hook$jscomp$inline_2279);
     } catch (err) {}
 }
 exports.createRoot = function (container, options) {
@@ -16744,4 +16744,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.1.0-native-fb-a4d122f2-20250108";
+exports.version = "19.1.0-native-fb-3a5496b3-20250108";

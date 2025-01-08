@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<30085b348149e0aca2100e16545674e4>>
+ * @generated SignedSource<<a73292522056f0357f1c4c529130a185>>
  */
 
 /*
@@ -13087,20 +13087,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1620 = 0;
-  i$jscomp$inline_1620 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1620++
+  var i$jscomp$inline_1622 = 0;
+  i$jscomp$inline_1622 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1622++
 ) {
-  var eventName$jscomp$inline_1621 =
-      simpleEventPluginEvents[i$jscomp$inline_1620],
-    domEventName$jscomp$inline_1622 =
-      eventName$jscomp$inline_1621.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1623 =
-      eventName$jscomp$inline_1621[0].toUpperCase() +
-      eventName$jscomp$inline_1621.slice(1);
+  var eventName$jscomp$inline_1623 =
+      simpleEventPluginEvents[i$jscomp$inline_1622],
+    domEventName$jscomp$inline_1624 =
+      eventName$jscomp$inline_1623.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1625 =
+      eventName$jscomp$inline_1623[0].toUpperCase() +
+      eventName$jscomp$inline_1623.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1622,
-    "on" + capitalizedEvent$jscomp$inline_1623
+    domEventName$jscomp$inline_1624,
+    "on" + capitalizedEvent$jscomp$inline_1625
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -16604,16 +16604,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_1865 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1867 = React.version;
 if (
-  "19.1.0-native-fb-a4d122f2-20250108" !==
-  isomorphicReactPackageVersion$jscomp$inline_1865
+  "19.1.0-native-fb-3a5496b3-20250108" !==
+  isomorphicReactPackageVersion$jscomp$inline_1867
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1865,
-      "19.1.0-native-fb-a4d122f2-20250108"
+      isomorphicReactPackageVersion$jscomp$inline_1867,
+      "19.1.0-native-fb-3a5496b3-20250108"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16633,12 +16633,12 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_1872 = {
+var internals$jscomp$inline_1874 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-a4d122f2-20250108",
+  version: "19.1.0-native-fb-3a5496b3-20250108",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-a4d122f2-20250108",
+  reconcilerVersion: "19.1.0-native-fb-3a5496b3-20250108",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$293 = 0;
@@ -16656,16 +16656,16 @@ var internals$jscomp$inline_1872 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2280 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2282 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2280.isDisabled &&
-    hook$jscomp$inline_2280.supportsFiber
+    !hook$jscomp$inline_2282.isDisabled &&
+    hook$jscomp$inline_2282.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2280.inject(
-        internals$jscomp$inline_1872
+      (rendererID = hook$jscomp$inline_2282.inject(
+        internals$jscomp$inline_1874
       )),
-        (injectedHook = hook$jscomp$inline_2280);
+        (injectedHook = hook$jscomp$inline_2282);
     } catch (err) {}
 }
 function noop() {}
@@ -16913,7 +16913,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-native-fb-a4d122f2-20250108";
+exports.version = "19.1.0-native-fb-3a5496b3-20250108";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
