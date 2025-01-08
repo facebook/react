@@ -31,7 +31,6 @@ import {
   ControlNode,
   EntryNode,
   InstructionNode,
-  JoinNode,
   LoadArgumentNode,
   LoadNode,
   makeReactiveId,
@@ -45,6 +44,8 @@ import {
   reversePostorderReactiveGraph,
   StoreNode,
   eachNodeDependency,
+  FallthroughNode,
+  printReactiveGraph,
 } from './ReactiveIR';
 
 export function buildReactiveGraph(fn: HIRFunction): ReactiveGraph {
@@ -73,7 +74,10 @@ export function buildReactiveGraph(fn: HIRFunction): ReactiveGraph {
 
   const exitNode = buildBlockScope(fn, context, fn.body.entry, entryNode.id);
 
-  const graph = builder.build(fn, exitNode);
+  const graph = builder.build(fn, entryNode.id, exitNode);
+
+  console.log();
+  console.log(printReactiveGraph(graph));
 
   populateReactiveGraphNodeOutputs(graph);
   reversePostorderReactiveGraph(graph);
@@ -85,11 +89,12 @@ class Builder {
   #environment: Map<IdentifierId, ReactiveId> = new Map();
   #nodes: Map<ReactiveId, ReactiveNode> = new Map();
 
-  build(fn: HIRFunction, exit: ReactiveId): ReactiveGraph {
+  build(fn: HIRFunction, entry: ReactiveId, exit: ReactiveId): ReactiveGraph {
     const graph: ReactiveGraph = {
       async: fn.async,
       directives: fn.directives,
       env: fn.env,
+      entry,
       exit,
       fnType: fn.fnType,
       generator: fn.generator,
@@ -494,24 +499,16 @@ function buildBlockScope(
           from: {...terminal.test},
           as: {...terminal.test},
         };
-        const branch: BranchNode = {
-          kind: 'Branch',
-          control,
-          dependencies: [],
-          id: context.nextReactiveId,
-          loc: terminal.loc,
-          outputs: [],
-        };
-        context.putNode(branch);
-        const joinNodeId = context.nextReactiveId;
+        const branchNodeId = context.nextReactiveId;
+        const fallthroughNodeId = context.nextReactiveId;
         const joinFallthrough = {
           kind: 'If',
           block: terminal.fallthrough,
-          fallthrough: joinNodeId,
+          fallthrough: fallthroughNodeId,
         } as const;
         const consequentContext = context.fork(joinFallthrough);
         const consequentControl = consequentContext.controlNode(
-          branch.id,
+          branchNodeId,
           terminal.loc,
         );
         const consequent = buildBlockScope(
@@ -522,7 +519,7 @@ function buildBlockScope(
         );
         const alternateContext = context.fork(joinFallthrough);
         const alternateControl = alternateContext.controlNode(
-          branch.id,
+          branchNodeId,
           terminal.loc,
         );
         const alternate =
@@ -534,18 +531,36 @@ function buildBlockScope(
                 alternateControl,
               )
             : alternateControl;
-        const ifNode: JoinNode = {
-          kind: 'Join',
-          control: branch.id,
-          id: joinNodeId,
+
+        const branch: BranchNode = {
+          kind: 'Branch',
+          control,
+          dependencies: [],
+          id: branchNodeId,
           loc: terminal.loc,
           outputs: [],
+          fallthrough: fallthroughNodeId,
           terminal: {
             kind: 'If',
             test,
-            consequent,
-            alternate,
+            consequent: {
+              entry: consequentControl,
+              exit: consequent,
+            },
+            alternate: {
+              entry: alternateControl,
+              exit: alternate,
+            },
           },
+        };
+        context.putNode(branch);
+        const ifNode: FallthroughNode = {
+          kind: 'Fallthrough',
+          control: branch.id,
+          id: fallthroughNodeId,
+          loc: terminal.loc,
+          outputs: [],
+          branches: [consequent, alternate],
         };
 
         const predecessors: Array<{

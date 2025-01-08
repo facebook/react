@@ -22,6 +22,7 @@ import {assertExhaustive} from '../Utils/utils';
 export type ReactiveGraph = {
   nodes: Map<ReactiveId, ReactiveNode>;
   nextNodeId: number;
+  entry: ReactiveId;
   exit: ReactiveId;
   loc: SourceLocation;
   id: string | null;
@@ -57,7 +58,7 @@ export type ReactiveNode =
   | LoadArgumentNode
   | InstructionNode
   | BranchNode
-  | JoinNode
+  | FallthroughNode
   | ControlNode
   | ReturnNode
   | GotoNode;
@@ -146,24 +147,26 @@ export type BranchNode = {
   outputs: Array<ReactiveId>;
   dependencies: Array<ReactiveId>; // values/scopes depended on by more than one branch, or by the terminal
   control: ReactiveId;
+  fallthrough: ReactiveId;
+  terminal: BranchTerminal;
 };
 
-export type JoinNode = {
-  kind: 'Join';
-  id: ReactiveId;
-  loc: SourceLocation;
-  outputs: Array<ReactiveId>;
-  terminal: NodeTerminal;
-  control: ReactiveId; // join node always has a control, which is the corresponding Branch node
-};
-
-export type NodeTerminal = IfBranch;
+export type BranchTerminal = IfBranch;
 
 export type IfBranch = {
   kind: 'If';
   test: NodeReference;
-  consequent: ReactiveId;
-  alternate: ReactiveId;
+  consequent: {entry: ReactiveId; exit: ReactiveId};
+  alternate: {entry: ReactiveId; exit: ReactiveId};
+};
+
+export type FallthroughNode = {
+  kind: 'Fallthrough';
+  id: ReactiveId;
+  loc: SourceLocation;
+  outputs: Array<ReactiveId>;
+  control: ReactiveId; // always the corresponding branch node
+  branches: Array<ReactiveId>; // the other control-flow paths that reach the fallthrough
 };
 
 export type ControlNode = {
@@ -238,6 +241,16 @@ export function reversePostorderReactiveGraph(graph: ReactiveGraph): void {
   graph.nodes = nodes;
 }
 
+export function* eachBranchTerminalDependency(
+  terminal: BranchTerminal,
+): Iterable<ReactiveId> {
+  switch (terminal.kind) {
+    case 'If': {
+      yield terminal.test.node;
+    }
+  }
+}
+
 export function* eachNodeDependency(node: ReactiveNode): Iterable<ReactiveId> {
   switch (node.kind) {
     case 'Entry':
@@ -245,15 +258,17 @@ export function* eachNodeDependency(node: ReactiveNode): Iterable<ReactiveId> {
       break;
     }
     case 'Goto':
-    case 'Control':
-    case 'Branch': {
+    case 'Control': {
       yield* node.dependencies;
       break;
     }
-    case 'Join': {
-      yield node.terminal.test.node;
-      yield node.terminal.consequent;
-      yield node.terminal.alternate;
+    case 'Branch': {
+      yield* node.dependencies;
+      yield* eachBranchTerminalDependency(node.terminal);
+      break;
+    }
+    case 'Fallthrough': {
+      yield* node.branches;
       break;
     }
     case 'Load': {
@@ -282,6 +297,17 @@ export function* eachNodeDependency(node: ReactiveNode): Iterable<ReactiveId> {
   }
 }
 
+export function* eachBranchTerminalReference(
+  terminal: BranchTerminal,
+): Iterable<NodeReference> {
+  switch (terminal.kind) {
+    case 'If': {
+      yield terminal.test;
+      break;
+    }
+  }
+}
+
 export function* eachNodeReference(
   node: ReactiveNode,
 ): Iterable<NodeReference> {
@@ -305,10 +331,10 @@ export function* eachNodeReference(
       break;
     }
     case 'Branch': {
+      yield* eachBranchTerminalReference(node.terminal);
       break;
     }
-    case 'Join': {
-      yield node.terminal.test;
+    case 'Fallthrough': {
       break;
     }
     case 'Value': {
@@ -415,14 +441,12 @@ function writeReactiveNodes(
         buffer.push(
           `£${id} Branch deps=[${node.dependencies.map(id => `£${id}`).join(', ')}]${control}`,
         );
-        break;
-      }
-      case 'Join': {
-        buffer.push(`£${id} Join${control}`);
         switch (node.terminal.kind) {
           case 'If': {
             buffer.push(
-              `  If test=${printNodeReference(node.terminal.test)} consequent=£${node.terminal.consequent} alternate=£${node.terminal.alternate}${control}`,
+              `  If test=${printNodeReference(node.terminal.test)} ` +
+                `consequent=£${node.terminal.consequent.entry}:${node.terminal.consequent.exit} ` +
+                `alternate=£${node.terminal.alternate.entry}:${node.terminal.alternate.exit}`,
             );
             break;
           }
@@ -430,6 +454,12 @@ function writeReactiveNodes(
             // assertExhaustive(node.terminal, `Unsupported terminal kind ${(node.terminal as any).kind}`);
           }
         }
+        break;
+      }
+      case 'Fallthrough': {
+        buffer.push(
+          `£${id} Fallthrough${control} branches=[${node.branches.map(id => `£${id}`).join(', ')}]`,
+        );
         break;
       }
       case 'Value': {
