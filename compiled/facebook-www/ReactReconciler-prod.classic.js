@@ -10162,12 +10162,13 @@ module.exports = function ($$$config) {
     root.timeoutHandle = noTimeout;
     suspendedCommitReason = finishedWork.subtreeFlags;
     if (
-      suspendedCommitReason & 8192 ||
-      16785408 === (suspendedCommitReason & 16785408)
+      (suspendedCommitReason =
+        suspendedCommitReason & 8192 ||
+        16785408 === (suspendedCommitReason & 16785408))
     )
       if (
         (startSuspendingCommit(),
-        accumulateSuspenseyCommitOnFiber(finishedWork),
+        suspendedCommitReason && accumulateSuspenseyCommitOnFiber(finishedWork),
         (suspendedCommitReason = waitForCommitToBeReady()),
         null !== suspendedCommitReason)
       ) {
@@ -11798,8 +11799,9 @@ module.exports = function ($$$config) {
     maySuspendCommit = $$$config.maySuspendCommit,
     preloadInstance = $$$config.preloadInstance,
     startSuspendingCommit = $$$config.startSuspendingCommit,
-    suspendInstance = $$$config.suspendInstance,
-    waitForCommitToBeReady = $$$config.waitForCommitToBeReady,
+    suspendInstance = $$$config.suspendInstance;
+  $$$config.suspendOnActiveViewTransition;
+  var waitForCommitToBeReady = $$$config.waitForCommitToBeReady,
     NotPendingTransition = $$$config.NotPendingTransition,
     HostTransitionContext = $$$config.HostTransitionContext,
     resetFormInstance = $$$config.resetFormInstance;
@@ -12870,7 +12872,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-classic-38127b28-20250108"
+      reconcilerVersion: "19.1.0-www-classic-98418e89-20250108"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

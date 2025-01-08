@@ -9077,7 +9077,9 @@ function commitRootWhenReady(
 ) {
   root.timeoutHandle = -1;
   var subtreeFlags = finishedWork.subtreeFlags;
-  (subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408)) &&
+  (subtreeFlags =
+    subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408)) &&
+    subtreeFlags &&
     accumulateSuspenseyCommitOnFiber(finishedWork);
   commitRoot(
     root,
@@ -10545,10 +10547,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1490 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-38127b28-20250108",
+  version: "19.1.0-www-modern-98418e89-20250108",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-38127b28-20250108"
+  reconcilerVersion: "19.1.0-www-modern-98418e89-20250108"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1491 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -10574,4 +10576,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.1.0-www-modern-38127b28-20250108";
+exports.version = "19.1.0-www-modern-98418e89-20250108";

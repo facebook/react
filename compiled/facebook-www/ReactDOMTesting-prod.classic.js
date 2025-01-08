@@ -11495,12 +11495,13 @@ function commitRootWhenReady(
   root.timeoutHandle = -1;
   suspendedCommitReason = finishedWork.subtreeFlags;
   if (
-    suspendedCommitReason & 8192 ||
-    16785408 === (suspendedCommitReason & 16785408)
+    (suspendedCommitReason =
+      suspendedCommitReason & 8192 ||
+      16785408 === (suspendedCommitReason & 16785408))
   )
     if (
       ((suspendedState = { stylesheets: null, count: 0, unsuspend: noop }),
-      accumulateSuspenseyCommitOnFiber(finishedWork),
+      suspendedCommitReason && accumulateSuspenseyCommitOnFiber(finishedWork),
       (suspendedCommitReason = waitForCommitToBeReady()),
       null !== suspendedCommitReason)
     ) {
@@ -17634,14 +17635,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1825 = React.version;
 if (
-  "19.1.0-www-classic-38127b28-20250108" !==
+  "19.1.0-www-classic-98418e89-20250108" !==
   isomorphicReactPackageVersion$jscomp$inline_1825
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1825,
-      "19.1.0-www-classic-38127b28-20250108"
+      "19.1.0-www-classic-98418e89-20250108"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17659,10 +17660,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2367 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-38127b28-20250108",
+  version: "19.1.0-www-classic-98418e89-20250108",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-38127b28-20250108"
+  reconcilerVersion: "19.1.0-www-classic-98418e89-20250108"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2368 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -18177,4 +18178,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-classic-38127b28-20250108";
+exports.version = "19.1.0-www-classic-98418e89-20250108";
