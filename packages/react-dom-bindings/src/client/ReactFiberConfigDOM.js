@@ -1205,9 +1205,9 @@ export function startViewTransition(
   layoutCallback: () => void,
   passiveCallback: () => mixed,
 ): boolean {
-  const ownerDocument =
+  const ownerDocument: Document =
     rootContainer.nodeType === DOCUMENT_NODE
-      ? rootContainer
+      ? (rootContainer: any)
       : rootContainer.ownerDocument;
   try {
     // $FlowFixMe[prop-missing]
@@ -1215,7 +1215,17 @@ export function startViewTransition(
       update() {
         mutationCallback();
         // TODO: Wait for fonts.
-        afterMutationCallback();
+        const ownerWindow = ownerDocument.defaultView;
+        const pendingNavigation =
+          ownerWindow.navigation && ownerWindow.navigation.transition;
+        if (pendingNavigation) {
+          return pendingNavigation.finished.then(
+            afterMutationCallback,
+            afterMutationCallback,
+          );
+        } else {
+          afterMutationCallback();
+        }
       },
       types: null, // TODO: Provide types.
     });
