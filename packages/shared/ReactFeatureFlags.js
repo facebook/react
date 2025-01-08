@@ -37,10 +37,6 @@ export const favorSafetyOverHydrationPerf = true;
 // Need to remove didTimeout argument from Scheduler before landing
 export const disableSchedulerTimeoutInWorkLoop = false;
 
-// This will break some internal tests at Meta so we need to gate this until
-// those can be fixed.
-export const enableDeferRootSchedulingToMicrotask = true;
-
 // TODO: Land at Meta before removing.
 export const disableDefaultPropsExceptForClasses = true;
 

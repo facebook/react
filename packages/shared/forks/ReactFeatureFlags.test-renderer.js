@@ -53,7 +53,6 @@ export const enableTransitionTracing = false;
 
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableFizzExternalRuntime = true;
-export const enableDeferRootSchedulingToMicrotask = true;
 
 export const alwaysThrottleRetries = true;
 

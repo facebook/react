@@ -45,7 +45,6 @@ export const enableAsyncDebugInfo = false;
 export const enableAsyncIterableChildren = false;
 export const enableCPUSuspense = true;
 export const enableCreateEventHandleAPI = false;
-export const enableDeferRootSchedulingToMicrotask = true;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableMoveBefore = true;
 export const enableFizzExternalRuntime = true;
