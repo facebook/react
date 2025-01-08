@@ -42,16 +42,12 @@ import {logEvent} from 'react-devtools-shared/src/Logger';
 const DEFAULT_INDENTATION_SIZE = 12;
 
 export type ItemData = {
-  numElements: number,
   isNavigatingWithKeyboard: boolean,
-  lastScrolledIDRef: {current: number | null, ...},
   onElementMouseEnter: (id: number) => void,
   treeFocused: boolean,
 };
 
-type Props = {};
-
-export default function Tree(props: Props): React.Node {
+export default function Tree(): React.Node {
   const dispatch = useContext(TreeDispatcherContext);
   const {
     numElements,
@@ -96,7 +92,8 @@ export default function Tree(props: Props): React.Node {
   );
 
   // Picking an element in the inspector should put focus into the tree.
-  // This ensures that keyboard navigation works right after picking a node.
+  // If possible, navigation works right after picking a node.
+  // NOTE: This is not guaranteed to work, because browser extension panels are hosted inside an iframe.
   useEffect(() => {
     function handleStopInspectingHost(didSelectNode: boolean) {
       if (didSelectNode && focusTargetRef.current !== null) {
@@ -111,11 +108,6 @@ export default function Tree(props: Props): React.Node {
     return () =>
       bridge.removeListener('stopInspectingHost', handleStopInspectingHost);
   }, [bridge]);
-
-  // This ref is passed down the context to elements.
-  // It lets them avoid autoscrolling to the same item many times
-  // when a selected virtual row goes in and out of the viewport.
-  const lastScrolledIDRef = useRef<number | null>(null);
 
   // Navigate the tree with up/down arrow keys.
   useEffect(() => {
@@ -214,16 +206,7 @@ export default function Tree(props: Props): React.Node {
 
   // Focus management.
   const handleBlur = useCallback(() => setTreeFocused(false), []);
-  const handleFocus = useCallback(() => {
-    setTreeFocused(true);
-
-    if (selectedElementIndex === null && numElements > 0) {
-      dispatch({
-        type: 'SELECT_ELEMENT_AT_INDEX',
-        payload: 0,
-      });
-    }
-  }, [dispatch, numElements, selectedElementIndex]);
+  const handleFocus = useCallback(() => setTreeFocused(true), []);
 
   const handleKeyPress = useCallback(
     (event: $FlowFixMe) => {
@@ -294,19 +277,11 @@ export default function Tree(props: Props): React.Node {
   // This includes the owner context, since it controls a filtered view of the tree.
   const itemData = useMemo<ItemData>(
     () => ({
-      numElements,
       isNavigatingWithKeyboard,
       onElementMouseEnter: handleElementMouseEnter,
-      lastScrolledIDRef,
       treeFocused,
     }),
-    [
-      numElements,
-      isNavigatingWithKeyboard,
-      handleElementMouseEnter,
-      lastScrolledIDRef,
-      treeFocused,
-    ],
+    [isNavigatingWithKeyboard, handleElementMouseEnter, treeFocused],
   );
 
   const itemKey = useCallback(
