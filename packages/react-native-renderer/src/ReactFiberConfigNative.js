@@ -522,6 +522,73 @@ export function unhideInstance(instance: Instance, props: Props): void {
   );
 }
 
+export function applyViewTransitionName(
+  instance: Instance,
+  name: string,
+): void {
+  // Not yet implemented
+}
+
+export function restoreViewTransitionName(
+  instance: Instance,
+  props: Props,
+): void {
+  // Not yet implemented
+}
+
+export function cancelViewTransitionName(
+  instance: Instance,
+  name: string,
+  props: Props,
+): void {
+  // Not yet implemented
+}
+
+export function cancelRootViewTransitionName(rootContainer: Container): void {
+  // Not yet implemented
+}
+
+export function restoreRootViewTransitionName(rootContainer: Container): void {
+  // Not yet implemented
+}
+
+export type InstanceMeasurement = null;
+
+export function measureInstance(instance: Instance): InstanceMeasurement {
+  // This heuristic is better implemented at the native layer.
+  return null;
+}
+
+export function wasInstanceInViewport(
+  measurement: InstanceMeasurement,
+): boolean {
+  return true;
+}
+
+export function hasInstanceChanged(
+  oldMeasurement: InstanceMeasurement,
+  newMeasurement: InstanceMeasurement,
+): boolean {
+  return false;
+}
+
+export function hasInstanceAffectedParent(
+  oldMeasurement: InstanceMeasurement,
+  newMeasurement: InstanceMeasurement,
+): boolean {
+  return false;
+}
+
+export function startViewTransition(
+  rootContainer: Container,
+  mutationCallback: () => void,
+  afterMutationCallback: () => void,
+  layoutCallback: () => void,
+  passiveCallback: () => mixed,
+): boolean {
+  return false;
+}
+
 export function clearContainer(container: Container): void {
   // TODO Implement this for React Native
   // UIManager does not expose a "remove all" type method.

@@ -28,6 +28,10 @@ import type {
   OffscreenState,
   OffscreenQueue,
 } from './ReactFiberActivityComponent';
+import type {
+  ViewTransitionProps,
+  ViewTransitionInstance,
+} from './ReactFiberViewTransitionComponent';
 import {isOffscreenManual} from './ReactFiberActivityComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 import type {Cache} from './ReactFiberCacheComponent';
@@ -42,6 +46,7 @@ import {
   passChildrenWhenCloningPersistedNodes,
   disableLegacyMode,
   enableSiblingPrerendering,
+  enableViewTransition,
 } from 'shared/ReactFeatureFlags';
 
 import {now} from './Scheduler';
@@ -74,6 +79,7 @@ import {
   CacheComponent,
   TracingMarkerComponent,
   Throw,
+  ViewTransitionComponent,
 } from './ReactWorkTags';
 import {NoMode, ConcurrentMode, ProfileMode} from './ReactTypeOfMode';
 import {
@@ -92,6 +98,8 @@ import {
   ScheduleRetry,
   ShouldSuspendCommit,
   Cloned,
+  ViewTransitionStatic,
+  ViewTransitionNamedStatic,
 } from './ReactFiberFlags';
 
 import {
@@ -156,6 +164,7 @@ import {
   getWorkInProgressTransitions,
   shouldRemainOnPreviousScreen,
   markSpawnedRetryLane,
+  trackAppearingViewTransition,
 } from './ReactFiberWorkLoop';
 import {
   OffscreenLane,
@@ -938,6 +947,34 @@ function completeDehydratedSuspenseBoundary(
   }
 }
 
+function trackReappearingViewTransitions(workInProgress: Fiber): void {
+  if ((workInProgress.subtreeFlags & ViewTransitionNamedStatic) === NoFlags) {
+    // This has no named view transitions in its subtree.
+    return;
+  }
+  // This needs to search for any explicitly named reappearing View Transitions,
+  // whether they were updated in this transition or unchanged from before.
+  let child = workInProgress.child;
+  while (child !== null) {
+    if (child.tag === OffscreenComponent && child.memoizedState === null) {
+      // This tree is currently hidden so we skip it.
+    } else {
+      if (
+        child.tag === ViewTransitionComponent &&
+        (child.flags & ViewTransitionNamedStatic) !== NoFlags
+      ) {
+        const props: ViewTransitionProps = child.memoizedProps;
+        if (props.name != null && props.name !== 'auto') {
+          const instance: ViewTransitionInstance = child.stateNode;
+          trackAppearingViewTransition(instance, props.name);
+        }
+      }
+      trackReappearingViewTransitions(child);
+    }
+    child = child.sibling;
+  }
+}
+
 function completeWork(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -1185,6 +1222,11 @@ function completeWork(
 
             // This can happen when we abort work.
             bubbleProperties(workInProgress);
+            if (enableViewTransition) {
+              // Host Components act as their own View Transitions which doesn't run enter/exit animations.
+              // We clear any ViewTransitionStatic flag bubbled from inner View Transitions.
+              workInProgress.subtreeFlags &= ~ViewTransitionStatic;
+            }
             return null;
           }
 
@@ -1210,6 +1252,11 @@ function completeWork(
           }
         }
         bubbleProperties(workInProgress);
+        if (enableViewTransition) {
+          // Host Components act as their own View Transitions which doesn't run enter/exit animations.
+          // We clear any ViewTransitionStatic flag bubbled from inner View Transitions.
+          workInProgress.subtreeFlags &= ~ViewTransitionStatic;
+        }
         return null;
       }
       // Fall through
@@ -1236,6 +1283,11 @@ function completeWork(
 
           // This can happen when we abort work.
           bubbleProperties(workInProgress);
+          if (enableViewTransition) {
+            // Host Components act as their own View Transitions which doesn't run enter/exit animations.
+            // We clear any ViewTransitionStatic flag bubbled from inner View Transitions.
+            workInProgress.subtreeFlags &= ~ViewTransitionStatic;
+          }
           return null;
         }
 
@@ -1280,6 +1332,11 @@ function completeWork(
         }
       }
       bubbleProperties(workInProgress);
+      if (enableViewTransition) {
+        // Host Components act as their own View Transitions which doesn't run enter/exit animations.
+        // We clear any ViewTransitionStatic flag bubbled from inner View Transitions.
+        workInProgress.subtreeFlags &= ~ViewTransitionStatic;
+      }
 
       // This must come at the very end of the complete phase, because it might
       // throw to suspend, and if the resource immediately loads, the work loop
@@ -1739,6 +1796,14 @@ function completeWork(
           const prevIsHidden = prevState !== null;
           if (prevIsHidden !== nextIsHidden) {
             workInProgress.flags |= Visibility;
+            if (enableViewTransition && !nextIsHidden) {
+              // If we're revealing a new tree, we need to find any named
+              // ViewTransitions inside it that might have a deleted pair.
+              // We do this in the complete phase in case the tree has
+              // changed during the reveal but we have to do it before we
+              // find the first deleted pair in the before mutation phase.
+              trackReappearingViewTransitions(workInProgress);
+            }
           }
         } else {
           // On initial mount, we only need a Visibility effect if the tree
@@ -1828,6 +1893,16 @@ function completeWork(
         if (instance !== null) {
           popMarkerInstance(workInProgress);
         }
+        bubbleProperties(workInProgress);
+      }
+      return null;
+    }
+    case ViewTransitionComponent: {
+      if (enableViewTransition) {
+        // We're a component that might need an exit transition. This flag will
+        // bubble up to the parent tree to indicate that there's a child that
+        // might need an exit View Transition upon unmount.
+        workInProgress.flags |= ViewTransitionStatic;
         bubbleProperties(workInProgress);
       }
       return null;

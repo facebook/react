@@ -72,6 +72,7 @@ export const enableHydrationLaneScheduling = true;
 export const enableYieldingBeforePassive = false;
 
 export const enableThrottledScheduling = false;
+export const enableViewTransition = false;
 
 // Profiling Only
 export const enableProfilerTimer = __PROFILE__;

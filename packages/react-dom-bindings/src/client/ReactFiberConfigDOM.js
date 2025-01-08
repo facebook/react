@@ -120,7 +120,12 @@ export type Props = {
   hidden?: boolean,
   suppressHydrationWarning?: boolean,
   dangerouslySetInnerHTML?: mixed,
-  style?: {display?: string, ...},
+  style?: {
+    display?: string,
+    viewTransitionName?: string,
+    'view-transition-name'?: string,
+    ...
+  },
   bottom?: null | number,
   left?: null | number,
   right?: null | number,
@@ -149,6 +154,7 @@ export type EventTargetChildElement = {
   },
   ...
 };
+
 export type Container =
   | interface extends Element {_reactRootContainer?: FiberRoot}
   | interface extends Document {_reactRootContainer?: FiberRoot}
@@ -976,6 +982,224 @@ export function unhideTextInstance(
   text: string,
 ): void {
   textInstance.nodeValue = text;
+}
+
+export function applyViewTransitionName(
+  instance: Instance,
+  name: string,
+): void {
+  instance = ((instance: any): HTMLElement);
+  // $FlowFixMe[prop-missing]
+  instance.style.viewTransitionName = name;
+}
+
+export function restoreViewTransitionName(
+  instance: Instance,
+  props: Props,
+): void {
+  instance = ((instance: any): HTMLElement);
+  const styleProp = props[STYLE];
+  const viewTransitionName =
+    styleProp !== undefined && styleProp !== null
+      ? styleProp.hasOwnProperty('viewTransitionName')
+        ? styleProp.viewTransitionName
+        : styleProp.hasOwnProperty('view-transition-name')
+          ? styleProp['view-transition-name']
+          : null
+      : null;
+  // $FlowFixMe[prop-missing]
+  instance.style.viewTransitionName =
+    viewTransitionName == null || typeof viewTransitionName === 'boolean'
+      ? ''
+      : // The value would've errored already if it wasn't safe.
+        // eslint-disable-next-line react-internal/safe-string-coercion
+        ('' + viewTransitionName).trim();
+}
+
+export function cancelViewTransitionName(
+  instance: Instance,
+  oldName: string,
+  props: Props,
+): void {
+  // To cancel the "new" state and paint this instance as part of the parent, all we have to do
+  // is remove the view-transition-name before we exit startViewTransition.
+  restoreViewTransitionName(instance, props);
+  // There isn't a way to cancel an "old" state but what we can do is hide it by animating it.
+  // Since it is already removed from the old state of the parent, this technique only works
+  // if the parent also isn't transitioning. Therefore we should only cancel the root most
+  // ViewTransitions.
+  const documentElement = instance.ownerDocument.documentElement;
+  if (documentElement !== null) {
+    documentElement.animate(
+      {opacity: [0, 0], pointerEvents: ['none', 'none']},
+      {
+        duration: 0,
+        fill: 'forwards',
+        pseudoElement: '::view-transition-group(' + oldName + ')',
+      },
+    );
+  }
+}
+
+export function cancelRootViewTransitionName(rootContainer: Container): void {
+  const documentElement: null | HTMLElement =
+    rootContainer.nodeType === DOCUMENT_NODE
+      ? (rootContainer: any).documentElement
+      : rootContainer.ownerDocument.documentElement;
+  if (
+    documentElement !== null &&
+    // $FlowFixMe[prop-missing]
+    documentElement.style.viewTransitionName === ''
+  ) {
+    // $FlowFixMe[prop-missing]
+    documentElement.style.viewTransitionName = 'none';
+    documentElement.animate(
+      {opacity: [0, 0], pointerEvents: ['none', 'none']},
+      {
+        duration: 0,
+        fill: 'forwards',
+        pseudoElement: '::view-transition-group(root)',
+      },
+    );
+    // By default the root ::view-transition selector captures all pointer events,
+    // which means nothing gets interactive. We want to let whatever is not animating
+    // remain interactive during the transition. To do that, we set the size to nothing
+    // so that the transition doesn't capture any clicks. We don't set pointer-events
+    // on this one as that would apply to all running transitions. This lets animations
+    // that are running to block clicks so that they don't end up incorrectly hitting
+    // whatever is below the animation.
+    documentElement.animate(
+      {width: [0, 0], height: [0, 0]},
+      {
+        duration: 0,
+        fill: 'forwards',
+        pseudoElement: '::view-transition',
+      },
+    );
+  }
+}
+
+export function restoreRootViewTransitionName(rootContainer: Container): void {
+  const documentElement: null | HTMLElement =
+    rootContainer.nodeType === DOCUMENT_NODE
+      ? (rootContainer: any).documentElement
+      : rootContainer.ownerDocument.documentElement;
+  if (
+    documentElement !== null &&
+    // $FlowFixMe[prop-missing]
+    documentElement.style.viewTransitionName === 'none'
+  ) {
+    // $FlowFixMe[prop-missing]
+    documentElement.style.viewTransitionName = '';
+  }
+}
+
+export type InstanceMeasurement = {
+  rect: ClientRect | DOMRect,
+  abs: boolean, // is absolutely positioned
+  clip: boolean, // is a clipping parent
+  view: boolean, // is in viewport bounds
+};
+
+export function measureInstance(instance: Instance): InstanceMeasurement {
+  const ownerWindow = instance.ownerDocument.defaultView;
+  const rect = instance.getBoundingClientRect();
+  const computedStyle = getComputedStyle(instance);
+  return {
+    rect: rect,
+    abs:
+      // Absolutely positioned instances don't contribute their size to the parent.
+      computedStyle.position === 'absolute' ||
+      computedStyle.position === 'fixed',
+    clip:
+      // If a ViewTransition boundary acts as a clipping parent group we should
+      // always mark it to animate if its children do so that we can clip them.
+      // This doesn't actually have any effect yet until browsers implement
+      // layered capture and nested view transitions.
+      computedStyle.clipPath !== 'none' ||
+      computedStyle.overflow !== 'visible' ||
+      computedStyle.filter !== 'none' ||
+      computedStyle.mask !== 'none' ||
+      computedStyle.mask !== 'none' ||
+      computedStyle.borderRadius !== '0px',
+    view:
+      // If the instance was within the bounds of the viewport. We don't care as
+      // much about if it was fully occluded because then it can still pop out.
+      rect.bottom >= 0 &&
+      rect.right >= 0 &&
+      rect.top <= ownerWindow.innerHeight &&
+      rect.left <= ownerWindow.innerWidth,
+  };
+}
+
+export function wasInstanceInViewport(
+  measurement: InstanceMeasurement,
+): boolean {
+  return measurement.view;
+}
+
+export function hasInstanceChanged(
+  oldMeasurement: InstanceMeasurement,
+  newMeasurement: InstanceMeasurement,
+): boolean {
+  // Note: This is not guaranteed from the same instance in the case that the Instance of the
+  // ViewTransition swaps out but it's still the same ViewTransition instance.
+  if (newMeasurement.clip) {
+    // If we're a clipping parent, we always animate if any of our children do so that we can clip
+    // them. This doesn't yet until browsers implement layered capture and nested view transitions.
+    return true;
+  }
+  const oldRect = oldMeasurement.rect;
+  const newRect = newMeasurement.rect;
+  return (
+    oldRect.y !== newRect.y ||
+    oldRect.x !== newRect.x ||
+    oldRect.height !== newRect.height ||
+    oldRect.width !== newRect.width
+  );
+}
+
+export function hasInstanceAffectedParent(
+  oldMeasurement: InstanceMeasurement,
+  newMeasurement: InstanceMeasurement,
+): boolean {
+  // Note: This is not guaranteed from the same instance in the case that the Instance of the
+  // ViewTransition swaps out but it's still the same ViewTransition instance.
+  // If the instance has resized, it might have affected the parent layout.
+  if (newMeasurement.abs) {
+    // Absolutely positioned elements don't affect the parent layout, unless they
+    // previously were not absolutely positioned.
+    return !oldMeasurement.abs;
+  }
+  const oldRect = oldMeasurement.rect;
+  const newRect = newMeasurement.rect;
+  return oldRect.height !== newRect.height || oldRect.width !== newRect.width;
+}
+
+export function startViewTransition(
+  rootContainer: Container,
+  mutationCallback: () => void,
+  afterMutationCallback: () => void,
+  layoutCallback: () => void,
+  passiveCallback: () => mixed,
+): boolean {
+  const ownerDocument =
+    rootContainer.nodeType === DOCUMENT_NODE
+      ? rootContainer
+      : rootContainer.ownerDocument;
+  // $FlowFixMe[prop-missing]
+  if (typeof ownerDocument.startViewTransition !== 'function') {
+    return false;
+  }
+  // $FlowFixMe[incompatible-use]
+  const transition = ownerDocument.startViewTransition(() => {
+    mutationCallback();
+    // TODO: Wait for fonts.
+    afterMutationCallback();
+  });
+  transition.ready.then(layoutCallback, layoutCallback);
+  transition.finished.then(passiveCallback);
+  return true;
 }
 
 export function clearContainer(container: Container): void {

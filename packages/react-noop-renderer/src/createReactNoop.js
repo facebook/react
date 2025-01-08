@@ -81,6 +81,7 @@ type CreateRootOptions = {
   onCaughtError?: (error: mixed, errorInfo: {componentStack: string}) => void,
   ...
 };
+type InstanceMeasurement = null;
 
 type SuspenseyCommitSubscription = {
   pendingCount: number,
@@ -729,6 +730,52 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
         unhideTextInstance(textInstance: TextInstance, text: string): void {
           textInstance.hidden = false;
+        },
+
+        applyViewTransitionName(instance: Instance, name: string): void {},
+
+        restoreViewTransitionName(instance: Instance, props: Props): void {},
+
+        cancelViewTransitionName(
+          instance: Instance,
+          name: string,
+          props: Props,
+        ): void {},
+
+        cancelRootViewTransitionName(rootContainer: Container): void {},
+
+        restoreRootViewTransitionName(rootContainer: Container): void {},
+
+        measureInstance(instance: Instance): InstanceMeasurement {
+          return null;
+        },
+
+        wasInstanceInViewport(measurement: InstanceMeasurement): boolean {
+          return true;
+        },
+
+        hasInstanceChanged(
+          oldMeasurement: InstanceMeasurement,
+          newMeasurement: InstanceMeasurement,
+        ): boolean {
+          return false;
+        },
+
+        hasInstanceAffectedParent(
+          oldMeasurement: InstanceMeasurement,
+          newMeasurement: InstanceMeasurement,
+        ): boolean {
+          return false;
+        },
+
+        startViewTransition(
+          rootContainer: Container,
+          mutationCallback: () => void,
+          afterMutationCallback: () => void,
+          layoutCallback: () => void,
+          passiveCallback: () => mixed,
+        ): boolean {
+          return false;
         },
 
         resetTextContent(instance: Instance): void {
