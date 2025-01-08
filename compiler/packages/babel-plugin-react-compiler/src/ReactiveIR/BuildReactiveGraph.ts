@@ -13,33 +13,32 @@ import {
   Identifier,
   IdentifierId,
   Instruction,
-  InstructionKind,
   Place,
   ReactiveScope,
   ScopeId,
 } from '../HIR';
-import {printIdentifier, printInstruction, printPlace} from '../HIR/PrintHIR';
+import {printIdentifier, printInstruction} from '../HIR/PrintHIR';
 import {
-  eachInstructionLValue,
   eachInstructionValueLValue,
   eachInstructionValueOperand,
   terminalFallthrough,
 } from '../HIR/visitors';
+import {getOrInsertWith} from '../Utils/utils';
 import {
   AssignNode,
   BranchNode,
-  ConstNode,
   ControlNode,
   EntryNode,
   InstructionNode,
   JoinNode,
   LoadArgumentNode,
+  LoadLocalNode,
   makeReactiveId,
   NodeDependencies,
   NodeReference,
   PhiNode,
   populateReactiveGraphNodeOutputs,
-  printReactiveNodes,
+  printReactiveGraph,
   ReactiveGraph,
   ReactiveId,
   ReactiveNode,
@@ -57,7 +56,7 @@ export function buildReactiveGraph(fn: HIRFunction): ReactiveGraph {
     loc: fn.loc,
     outputs: [],
   };
-  builder.nodes.set(entryNode.id, entryNode);
+  builder.putNode(entryNode);
   for (const param of fn.params) {
     const place = param.kind === 'Identifier' ? param : param.place;
     const node: LoadArgumentNode = {
@@ -68,9 +67,8 @@ export function buildReactiveGraph(fn: HIRFunction): ReactiveGraph {
       place: {...place},
       control: entryNode.id,
     };
-    builder.nodes.set(node.id, node);
-    builder.declare(place, node.id);
-    context.recordDeclaration(place.identifier, node.id);
+    builder.putNode(node);
+    context.recordDeclarationWrite(place.identifier.declarationId, node.id);
   }
 
   const exitNode = buildBlockScope(
@@ -81,36 +79,65 @@ export function buildReactiveGraph(fn: HIRFunction): ReactiveGraph {
     entryNode.id,
   );
 
-  const graph: ReactiveGraph = {
-    async: fn.async,
-    directives: fn.directives,
-    env: fn.env,
-    exit: exitNode,
-    fnType: fn.fnType,
-    generator: fn.generator,
-    id: fn.id,
-    loc: fn.loc,
-    nextNodeId: builder._nextNodeId,
-    nodes: builder.nodes,
-    params: fn.params,
-  };
+  const graph = builder.build(fn, exitNode);
+
+  console.log();
+  console.log(printReactiveGraph(graph));
+
   populateReactiveGraphNodeOutputs(graph);
   reversePostorderReactiveGraph(graph);
   return graph;
 }
 
+/**
+ * TODO:
+ * The builder should store not all declarations, but a mapping of Instruction.lvalue to the node that produces
+ * them. This means LoadLocal would populate this with a mapping of the loaded value to the node being loaded from.
+ *
+ * Then Context should store a parent pointer, and then store variable declarations from Declare/Store.
+ *
+ * In this model:
+ *
+ * - LoadLocal:
+ *   - looks up the node to read from solely using context (potentially going to the parent)
+ *   - stores that node into the builder's lvalue->node mapping
+ *   - looks up the previous write in context, as a control (local context only)
+ *   - stores the read into the context, to sequence reads/writes (in the local context)
+ *   - emits no node
+ *
+ * - StoreLocal:
+ *   - looks up the previous write/read in context, as a control (local context only)
+ *   - stores the node into the builder's lvalue->node mapping
+ *   - lookup the source node of the value from the builder's lvalue-node mapping
+ *   - store the write into the current context
+ *   - emit a Const/Let/Assign node
+ *
+ * Aside: collapse Const/Let/Assign to a single Node type with InstrKind variant.
+ */
 class Builder {
-  _nextNodeId: number = 0;
-  #environment: Map<IdentifierId, {node: ReactiveId; from: Place}> = new Map();
-  nodes: Map<ReactiveId, ReactiveNode> = new Map();
-  args: Set<IdentifierId> = new Set();
+  #nextNodeId: number = 0;
+  #environment: Map<IdentifierId, ReactiveId> = new Map();
+  #nodes: Map<ReactiveId, ReactiveNode> = new Map();
 
-  get nextReactiveId(): ReactiveId {
-    return makeReactiveId(this._nextNodeId++);
+  build(fn: HIRFunction, exit: ReactiveId): ReactiveGraph {
+    const graph: ReactiveGraph = {
+      async: fn.async,
+      directives: fn.directives,
+      env: fn.env,
+      exit,
+      fnType: fn.fnType,
+      generator: fn.generator,
+      id: fn.id,
+      loc: fn.loc,
+      nextNodeId: this.#nextNodeId,
+      nodes: this.#nodes,
+      params: fn.params,
+    };
+    return graph;
   }
 
-  declare(place: Place, node: ReactiveId): void {
-    this.#environment.set(place.identifier.id, {node, from: place});
+  get nextReactiveId(): ReactiveId {
+    return makeReactiveId(this.#nextNodeId++);
   }
 
   controlNode(control: ReactiveId, loc: SourceLocation): ReactiveId {
@@ -122,24 +149,20 @@ class Builder {
       control,
       dependencies: [],
     };
-    this.nodes.set(node.id, node);
+    this.putNode(node);
     return node.id;
   }
 
-  lookup(
-    identifier: Identifier,
-    loc: SourceLocation,
-  ): {node: ReactiveId; from: Place} {
-    const dep = this.#environment.get(identifier.id);
-    if (dep == null) {
-      console.log(printReactiveNodes(this.nodes));
-      for (const [id, dep] of this.#environment) {
-        console.log(`t#${id} => £${dep.node} . ${printPlace(dep.from)}`);
-      }
+  putNode(node: ReactiveNode): void {
+    this.#nodes.set(node.id, node);
+  }
 
-      console.log();
-      console.log(`could not find ${printIdentifier(identifier)}`);
-    }
+  storeTemporary(place: Place, node: ReactiveId): void {
+    this.#environment.set(place.identifier.id, node);
+  }
+
+  lookupTemporary(identifier: Identifier, loc: SourceLocation): ReactiveId {
+    const dep = this.#environment.get(identifier.id);
     CompilerError.invariant(dep != null, {
       reason: `No source node for identifier ${printIdentifier(identifier)}`,
       loc,
@@ -150,7 +173,10 @@ class Builder {
 
 class ControlContext {
   constructor(
-    public declarations: Map<DeclarationId, ReactiveId> = new Map(),
+    public declarations: Map<
+      DeclarationId,
+      {write: ReactiveId | null; read: ReactiveId | null}
+    > = new Map(),
     public scopes: Map<ScopeId, ReactiveId> = new Map(),
     public parent: ControlContext | null = null,
   ) {}
@@ -168,29 +194,94 @@ class ControlContext {
     );
   }
 
+  // Scopes
+
   recordScope(scope: ScopeId, node: ReactiveId): void {
     this.scopes.set(scope, node);
   }
 
-  getScope(scope: ScopeId): ReactiveId | undefined {
-    return this.scopes.get(scope);
+  getScope(scope: ScopeId): ReactiveId | null {
+    return this.scopes.get(scope) ?? null;
   }
 
-  recordDeclaration(identifier: Identifier, node: ReactiveId): void {
-    this.declarations.set(identifier.declarationId, node);
+  // Declarations
+
+  // Loads the node that writes the value being read from
+  loadDeclarationForRead(
+    declarationId: DeclarationId,
+    loc: SourceLocation,
+  ): ReactiveId {
+    const declaration = this.declarations.get(declarationId);
+    if (declaration != null && declaration.write != null) {
+      return declaration.write;
+    }
+    if (this.parent == null) {
+      CompilerError.invariant(false, {
+        reason: `Cannot find declaration #${declarationId}`,
+        loc,
+      });
+    }
+    return this.parent.loadDeclarationForRead(declarationId, loc);
   }
 
-  getDeclaration(identifier: Identifier): ReactiveId | undefined {
-    return this.declarations.get(identifier.declarationId);
+  /**
+   * Determines the node that should be used as the *control* when reading,
+   * which will be the last write in the current context, or null if there are
+   * no writes in the current context
+   */
+  loadDeclarationControlForRead(
+    declarationId: DeclarationId,
+  ): ReactiveId | null {
+    const declaration = this.declarations.get(declarationId);
+    if (declaration == null || declaration.write == null) {
+      return null;
+    }
+    return declaration.write;
   }
 
-  assertDeclaration(identifier: Identifier, loc: SourceLocation): ReactiveId {
-    const id = this.declarations.get(identifier.declarationId);
-    CompilerError.invariant(id != null, {
-      reason: `Could not find declaration for ${printIdentifier(identifier)}`,
+  /**
+   * Determines the node that should be used as the control when writing,
+   * which will be the last write *or read* in the current context, or null
+   * if there are no reads/writes in the current context.
+   */
+  loadDeclarationControlForWrite(
+    declarationId: DeclarationId,
+    loc: SourceLocation,
+  ): ReactiveId | null {
+    const declaration = this.declarations.get(declarationId);
+    if (declaration == null) {
+      return null;
+    }
+    const source = declaration.read ?? declaration.write;
+    CompilerError.invariant(source != null, {
+      reason: `Expected declaration to have a write or read node`,
       loc,
     });
-    return id;
+    return source;
+  }
+
+  recordDeclarationWrite(declarationId: DeclarationId, node: ReactiveId): void {
+    const declaration = getOrInsertWith(
+      this.declarations,
+      declarationId,
+      () => ({
+        write: null,
+        read: null,
+      }),
+    );
+    declaration.write = node;
+  }
+
+  recordDeclarationRead(declarationId: DeclarationId, node: ReactiveId): void {
+    const declaration = getOrInsertWith(
+      this.declarations,
+      declarationId,
+      () => ({
+        write: null,
+        read: null,
+      }),
+    );
+    declaration.read = node;
   }
 }
 
@@ -208,133 +299,96 @@ function buildBlockScope(
     for (const instr of block.instructions) {
       const {lvalue, value} = instr;
 
-      const instructionNodeId = builder.nextReactiveId;
-
-      // Generic handling of scope and variable control dependencies
-      const instructionControls: Array<ReactiveId> = [];
-      if (value.kind !== 'LoadLocal') {
-        const instructionScope = getScopeForInstruction(instr);
-        if (instructionScope != null) {
-          const previousScopeNode = context.getScope(instructionScope.id);
-          if (previousScopeNode != null) {
-            instructionControls.push(previousScopeNode);
-          }
-          context.recordScope(instructionScope.id, instructionNodeId);
-        }
-      }
-      for (const lvalue of eachInstructionValueLValue(value)) {
-        const previousDeclarationNode = context.getDeclaration(
-          lvalue.identifier,
-        );
-        if (previousDeclarationNode != null) {
-          instructionControls.push(previousDeclarationNode);
-        }
-        context.recordDeclaration(lvalue.identifier, instructionNodeId);
-      }
-      let instructionControl: ReactiveId;
-      if (instructionControls.length === 0) {
-        instructionControl = control;
-      } else if (instructionControls.length === 1) {
-        instructionControl = instructionControls[0]!;
-      } else {
-        const node: ControlNode = {
-          kind: 'Control',
-          control,
-          id: builder.nextReactiveId,
-          loc: instr.loc,
-          outputs: [],
-          dependencies: instructionControls,
-        };
-        builder.nodes.set(node.id, node);
-        instructionControl = node.id;
-      }
-
       if (value.kind === 'LoadLocal') {
-        const declaration = context.assertDeclaration(
-          value.place.identifier,
+        // Find the node that defines the version of the value we are reading: the last write
+        const source = context.loadDeclarationForRead(
+          value.place.identifier.declarationId,
           value.place.loc,
         );
-        builder.declare(lvalue, declaration);
-      } else if (
-        value.kind === 'StoreLocal' &&
-        value.lvalue.kind === InstructionKind.Const
-      ) {
-        const dep = builder.lookup(value.value.identifier, value.value.loc);
-        const node: ConstNode = {
-          kind: 'Const',
-          id: instructionNodeId,
+        /*
+         * Determine the control, which is either the previous write in this context, or
+         * the context's control
+         */
+        const instructionControl =
+          context.loadDeclarationControlForRead(
+            value.place.identifier.declarationId,
+          ) ?? control;
+        const node: LoadLocalNode = {
+          kind: 'LoadLocal',
+          control: instructionControl,
+          id: builder.nextReactiveId,
           loc: value.loc,
-          lvalue: value.lvalue.place,
           outputs: [],
           value: {
-            node: dep.node,
-            from: dep.from,
-            as: value.value,
+            node: source,
+            from: value.place,
+            as: lvalue,
           },
-          control: instructionControl,
         };
-        builder.nodes.set(node.id, node);
+        builder.putNode(node);
         lastNode = node.id;
-        builder.declare(lvalue, node.id);
-        builder.declare(value.lvalue.place, node.id);
-      } else if (
-        value.kind === 'StoreLocal' &&
-        value.lvalue.kind === InstructionKind.Let
-      ) {
-        const dep = builder.lookup(value.value.identifier, value.value.loc);
-        const node: AssignNode = {
-          kind: 'Assign',
-          id: instructionNodeId,
-          loc: value.loc,
-          lvalue: value.lvalue.place,
-          outputs: [],
-          value: {
-            node: dep.node,
-            from: dep.from,
-            as: value.value,
-          },
-          control: instructionControl,
-          instructionKind: InstructionKind.Let,
-        };
-        builder.nodes.set(node.id, node);
-        lastNode = node.id;
-        builder.declare(lvalue, node.id);
-        builder.declare(value.lvalue.place, node.id);
-      } else if (
-        value.kind === 'StoreLocal' &&
-        value.lvalue.kind === InstructionKind.Reassign
-      ) {
-        const dep = builder.lookup(value.value.identifier, value.value.loc);
-        const node: AssignNode = {
-          kind: 'Assign',
-          id: instructionNodeId,
-          loc: value.loc,
-          lvalue: value.lvalue.place,
-          outputs: [],
-          value: {
-            node: dep.node,
-            from: dep.from,
-            as: value.value,
-          },
-          control: instructionControl,
-          instructionKind: InstructionKind.Reassign,
-        };
-        builder.nodes.set(node.id, node);
-        lastNode = node.id;
-        builder.declare(lvalue, node.id);
-        builder.declare(value.lvalue.place, node.id);
+        builder.storeTemporary(lvalue, node.id);
+        // Record that we read so that subsequent writes can be sequenced after
+        context.recordDeclarationRead(
+          value.place.identifier.declarationId,
+          node.id,
+        );
       } else if (value.kind === 'StoreLocal') {
-        CompilerError.throwTodo({
-          reason: `Handle StoreLocal kind ${value.lvalue.kind}`,
+        /*
+         * Determine the control, which is either the previous read/write in this context,
+         * or the context's control
+         */
+        const instructionControl =
+          context.loadDeclarationControlForWrite(
+            value.lvalue.place.identifier.declarationId,
+            value.lvalue.place.loc,
+          ) ?? control;
+
+        // Lookup the node that defines the temporary we're storing
+        const valueNode = builder.lookupTemporary(
+          value.value.identifier,
+          value.value.loc,
+        );
+
+        const node: AssignNode = {
+          kind: 'Assign',
+          control: instructionControl,
+          id: builder.nextReactiveId,
+          instructionKind: value.lvalue.kind,
           loc: value.loc,
-        });
+          lvalue: value.lvalue.place,
+          outputs: [],
+          value: {
+            node: valueNode,
+            from: value.value,
+            as: value.value,
+          },
+        };
+        builder.putNode(node);
+        lastNode = node.id;
+        builder.storeTemporary(lvalue, node.id);
+        // Record that the value was written so subsequent reads/writes can be sequenced after
+        context.recordDeclarationWrite(
+          value.lvalue.place.identifier.declarationId,
+          node.id,
+        );
       } else if (
+        value.kind === 'DeclareLocal' ||
         value.kind === 'Destructure' ||
         value.kind === 'PrefixUpdate' ||
         value.kind === 'PostfixUpdate'
       ) {
         CompilerError.throwTodo({
-          reason: `Handle ${value.kind}`,
+          reason: `Support ${value.kind} instructions similarly to StoreLocal`,
+          loc: value.loc,
+        });
+      } else if (
+        value.kind === 'DeclareContext' ||
+        value.kind === 'StoreContext' ||
+        value.kind === 'LoadContext'
+      ) {
+        CompilerError.throwTodo({
+          reason: `Support ${value.kind} instructions`,
           loc: value.loc,
         });
       } else {
@@ -344,11 +398,20 @@ function buildBlockScope(
             loc: value.loc,
           });
         }
+        const instructionScope = getScopeForInstruction(instr);
+        let instructionControl = control;
+        if (instructionScope != null) {
+          const previousScopeNode = context.getScope(instructionScope.id);
+          if (previousScopeNode != null) {
+            instructionControl = previousScopeNode;
+          }
+        }
+
         const dependencies: NodeDependencies = new Map();
         for (const operand of eachInstructionValueOperand(instr.value)) {
-          const dep = builder.lookup(operand.identifier, operand.loc);
-          dependencies.set(dep.node, {
-            from: {...dep.from},
+          const dep = builder.lookupTemporary(operand.identifier, operand.loc);
+          dependencies.set(dep, {
+            from: {...operand},
             as: {...operand},
           });
         }
@@ -356,16 +419,14 @@ function buildBlockScope(
           kind: 'Value',
           control: instructionControl,
           dependencies,
-          id: instructionNodeId,
+          id: builder.nextReactiveId,
           loc: instr.loc,
           outputs: [],
           value: instr,
         };
-        builder.nodes.set(node.id, node);
+        builder.putNode(node);
         lastNode = node.id;
-        for (const lvalue of eachInstructionLValue(instr)) {
-          builder.declare(lvalue, node.id);
-        }
+        builder.storeTemporary(lvalue, node.id);
       }
     }
 
@@ -384,13 +445,13 @@ function buildBlockScope(
          * during a call to buildBlockScope, and then look at that after processing
          * consequent/alternate
          */
-        const testDep = builder.lookup(
+        const testDep = builder.lookupTemporary(
           terminal.test.identifier,
           terminal.test.loc,
         );
         const test: NodeReference = {
-          node: testDep.node,
-          from: testDep.from,
+          node: testDep,
+          from: {...terminal.test},
           as: {...terminal.test},
         };
         const branch: BranchNode = {
@@ -401,7 +462,7 @@ function buildBlockScope(
           loc: terminal.loc,
           outputs: [],
         };
-        builder.nodes.set(branch.id, branch);
+        builder.putNode(branch);
         const consequentContext = context.fork();
         const consequentControl = builder.controlNode(branch.id, terminal.loc);
         const consequent = buildBlockScope(
@@ -444,43 +505,55 @@ function buildBlockScope(
           context.recordScope(scope, ifNode.id);
         }
 
-        const redeclaredItems = new Set([
-          ...consequentContext.declarations.keys(),
-          ...alternateContext.declarations.keys(),
-        ]);
-        for (const redeclared of redeclaredItems) {
-          const phiNode: PhiNode = {
-            operands: new Set(),
-          };
-          if (consequentContext.declarations.has(redeclared)) {
-            phiNode.operands.add(consequent);
-          }
-          if (alternateContext.declarations.has(redeclared)) {
-            phiNode.operands.add(alternate);
-          }
-          if (phiNode.operands.size === 1) {
-            phiNode.operands.add(branch.id);
-          }
-          ifNode.phis.set(redeclared, phiNode);
+        // const redeclaredItems = new Set([
+        //   ...consequentContext.declarations.keys(),
+        //   ...alternateContext.declarations.keys(),
+        // ]);
+        // for (const redeclared of redeclaredItems) {
+        //   const phiNode: PhiNode = {
+        //     operands: new Set(),
+        //   };
+        //   const existingPhi = Array.from(
+        //     fn.body.blocks.get(terminal.fallthrough)!.phis,
+        //   ).find(phi => phi.place.identifier.declarationId === redeclared);
+        //   CompilerError.invariant(existingPhi != null, {
+        //     reason: `Could not find phi for declaration id '${redeclared}'`,
+        //     loc: terminal.loc,
+        //   });
+        //   if (consequentContext.declarations.has(redeclared)) {
+        //     phiNode.operands.add(consequent);
+        //   }
+        //   if (alternateContext.declarations.has(redeclared)) {
+        //     phiNode.operands.add(alternate);
+        //   }
+        //   if (phiNode.operands.size === 1) {
+        //     phiNode.operands.add(branch.id);
+        //   }
+        //   ifNode.phis.set(redeclared, phiNode);
 
-          const previousDeclaration = context.declarations.get(redeclared);
-          if (previousDeclaration != null) {
-            branch.dependencies.push(previousDeclaration);
-          }
-        }
+        //   const previousDeclaration = context.getDeclarationId(redeclared);
+        //   if (previousDeclaration != null) {
+        //     branch.dependencies.push(previousDeclaration);
+        //   }
+        //   context.recordDeclarationWrite(
+        //     existingPhi.place.identifier,
+        //     ifNode.id,
+        //   );
+        //   builder.storeTemporary(existingPhi.place, ifNode.id);
+        // }
 
-        builder.nodes.set(ifNode.id, ifNode);
+        builder.putNode(ifNode);
         lastNode = ifNode.id;
         break;
       }
       case 'return': {
-        const valueDep = builder.lookup(
+        const valueDep = builder.lookupTemporary(
           terminal.value.identifier,
           terminal.value.loc,
         );
         const value: NodeReference = {
-          node: valueDep.node,
-          from: valueDep.from,
+          node: valueDep,
+          from: {...terminal.value},
           as: {...terminal.value},
         };
         const returnNode: ReturnNode = {
@@ -491,7 +564,7 @@ function buildBlockScope(
           value,
           control,
         };
-        builder.nodes.set(returnNode.id, returnNode);
+        builder.putNode(returnNode);
         lastNode = returnNode.id;
         break;
       }
@@ -513,7 +586,7 @@ function buildBlockScope(
           scope: terminal.scope,
           control,
         };
-        builder.nodes.set(scopeNode.id, scopeNode);
+        builder.putNode(scopeNode);
         lastNode = scopeNode.id;
         break;
       }

@@ -53,6 +53,7 @@ export function makeReactiveId(id: number): ReactiveId {
 
 export type ReactiveNode =
   | EntryNode
+  | LoadLocalNode
   | LoadArgumentNode
   | ConstNode
   | AssignNode
@@ -85,6 +86,15 @@ export type LoadArgumentNode = {
   loc: SourceLocation;
   outputs: Array<ReactiveId>;
   place: Place;
+  control: ReactiveId;
+};
+
+export type LoadLocalNode = {
+  kind: 'LoadLocal';
+  id: ReactiveId;
+  loc: SourceLocation;
+  outputs: Array<ReactiveId>;
+  value: NodeReference;
   control: ReactiveId;
 };
 
@@ -275,6 +285,10 @@ export function* eachNodeDependency(node: ReactiveNode): Iterable<ReactiveId> {
       yield node.terminal.alternate;
       break;
     }
+    case 'LoadLocal': {
+      yield node.value.node;
+      break;
+    }
     case 'Assign': {
       yield node.value.node;
       break;
@@ -316,6 +330,10 @@ export function* eachNodeReference(
       break;
     }
     case 'Assign': {
+      yield node.value;
+      break;
+    }
+    case 'LoadLocal': {
       yield node.value;
       break;
     }
@@ -424,6 +442,12 @@ function writeReactiveNodes(
       }
       case 'Control': {
         buffer.push(`£${id} Control${control}`);
+        break;
+      }
+      case 'LoadLocal': {
+        buffer.push(
+          `£${id} LoadLocal ${printNodeReference(node.value)}${control}`,
+        );
         break;
       }
       case 'Assign': {
