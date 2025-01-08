@@ -643,6 +643,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       );
     },
 
+    suspendOnActiveViewTransition(container: Container): void {
+      // Not implemented
+    },
+
     waitForCommitToBeReady,
 
     NotPendingTransition: (null: TransitionStatus),

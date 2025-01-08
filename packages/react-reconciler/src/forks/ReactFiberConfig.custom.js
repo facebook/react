@@ -85,6 +85,8 @@ export const maySuspendCommit = $$$config.maySuspendCommit;
 export const preloadInstance = $$$config.preloadInstance;
 export const startSuspendingCommit = $$$config.startSuspendingCommit;
 export const suspendInstance = $$$config.suspendInstance;
+export const suspendOnActiveViewTransition =
+  $$$config.suspendOnActiveViewTransition;
 export const waitForCommitToBeReady = $$$config.waitForCommitToBeReady;
 export const NotPendingTransition = $$$config.NotPendingTransition;
 export const HostTransitionContext = $$$config.HostTransitionContext;

@@ -1219,8 +1219,14 @@ export function startViewTransition(
       },
       types: null, // TODO: Provide types.
     });
+    // $FlowFixMe[prop-missing]
+    ownerDocument.__reactViewTransition = transition;
     transition.ready.then(layoutCallback, layoutCallback);
-    transition.finished.then(passiveCallback);
+    transition.finished.then(() => {
+      // $FlowFixMe[prop-missing]
+      ownerDocument.__reactViewTransition = null;
+      passiveCallback();
+    });
     return true;
   } catch (x) {
     // We use the error as feature detection.
@@ -3704,6 +3710,27 @@ export function suspendResource(
       }
     }
   }
+}
+
+export function suspendOnActiveViewTransition(rootContainer: Container): void {
+  if (suspendedState === null) {
+    throw new Error(
+      'Internal React Error: suspendedState null when it was expected to exists. Please report this as a React bug.',
+    );
+  }
+  const state = suspendedState;
+  const ownerDocument =
+    rootContainer.nodeType === DOCUMENT_NODE
+      ? rootContainer
+      : rootContainer.ownerDocument;
+  // $FlowFixMe[prop-missing]
+  const activeViewTransition = ownerDocument.__reactViewTransition;
+  if (activeViewTransition == null) {
+    return;
+  }
+  state.count++;
+  const ping = onUnsuspend.bind(state);
+  activeViewTransition.finished.then(ping, ping);
 }
 
 export function waitForCommitToBeReady(): null | ((() => void) => () => void) {
