@@ -1231,6 +1231,22 @@ export function startViewTransition(
     });
     // $FlowFixMe[prop-missing]
     ownerDocument.__reactViewTransition = transition;
+    if (__DEV__) {
+      transition.ready.then(undefined, (reason: mixed) => {
+        if (
+          typeof reason === 'object' &&
+          reason !== null &&
+          reason.name === 'TimeoutError'
+        ) {
+          console.error(
+            'A ViewTransition timed out because a Navigation stalled. ' +
+              'This can happen if a Navigation is blocked on React itself. ' +
+              "Such as if it's resolved inside useLayoutEffect. " +
+              'This can be solved by moving the resolution to useInsertionEffect.',
+          );
+        }
+      });
+    }
     transition.ready.then(layoutCallback, layoutCallback);
     transition.finished.then(() => {
       // $FlowFixMe[prop-missing]
