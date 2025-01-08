@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<20eb01a47430bf1e8451a1bc2830148b>>
+ * @generated SignedSource<<b891342285b66ec531710f78352f9223>>
  */
 
 "use strict";
@@ -17707,11 +17707,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.1.0-native-fb-3a5496b3-20250108" !== isomorphicReactPackageVersion)
+    if ("19.1.0-native-fb-38127b28-20250108" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.1.0-native-fb-3a5496b3-20250108\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.1.0-native-fb-38127b28-20250108\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17737,10 +17737,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-3a5496b3-20250108",
+        version: "19.1.0-native-fb-38127b28-20250108",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-3a5496b3-20250108"
+        reconcilerVersion: "19.1.0-native-fb-38127b28-20250108"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
