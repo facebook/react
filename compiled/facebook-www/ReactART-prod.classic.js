@@ -67,8 +67,6 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
     dynamicFeatureFlags.disableLegacyContextForFunctionComponents,
   disableSchedulerTimeoutInWorkLoop =
     dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
-  enableDeferRootSchedulingToMicrotask =
-    dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
   enableDO_NOT_USE_disableStrictPassiveEffect =
     dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect,
   enableHiddenSubtreeInsertionEffectCleanup =
@@ -1337,8 +1335,6 @@ function ensureRootIsScheduled(root) {
   didScheduleMicrotask ||
     ((didScheduleMicrotask = !0),
     scheduleCallback$3(ImmediatePriority, processRootScheduleInImmediateTask));
-  enableDeferRootSchedulingToMicrotask ||
-    scheduleTaskForRootDuringMicrotask(root, now());
 }
 function flushSyncWorkAcrossRoots_impl(syncTransitionLanes, onlyLegacy) {
   if (!isFlushingWork && mightHavePendingSyncWork) {
@@ -10831,10 +10827,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1510 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-defffdbb-20250106",
+  version: "19.1.0-www-classic-379089d2-20250108",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-defffdbb-20250106"
+  reconcilerVersion: "19.1.0-www-classic-379089d2-20250108"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1511 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -10860,4 +10856,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.1.0-www-classic-defffdbb-20250106";
+exports.version = "19.1.0-www-classic-379089d2-20250108";

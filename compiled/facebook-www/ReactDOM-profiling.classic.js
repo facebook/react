@@ -44,8 +44,6 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
     dynamicFeatureFlags.disableLegacyContextForFunctionComponents,
   disableSchedulerTimeoutInWorkLoop =
     dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
-  enableDeferRootSchedulingToMicrotask =
-    dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
   enableDO_NOT_USE_disableStrictPassiveEffect =
     dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect,
   enableHiddenSubtreeInsertionEffectCleanup =
@@ -2296,8 +2294,6 @@ function ensureRootIsScheduled(root) {
   mightHavePendingSyncWork = !0;
   didScheduleMicrotask ||
     ((didScheduleMicrotask = !0), scheduleImmediateRootScheduleTask());
-  enableDeferRootSchedulingToMicrotask ||
-    scheduleTaskForRootDuringMicrotask(root, now$1());
 }
 function flushSyncWorkAcrossRoots_impl(syncTransitionLanes, onlyLegacy) {
   if (!isFlushingWork && mightHavePendingSyncWork) {
@@ -17982,14 +17978,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1878 = React.version;
 if (
-  "19.1.0-www-classic-defffdbb-20250106" !==
+  "19.1.0-www-classic-379089d2-20250108" !==
   isomorphicReactPackageVersion$jscomp$inline_1878
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1878,
-      "19.1.0-www-classic-defffdbb-20250106"
+      "19.1.0-www-classic-379089d2-20250108"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -18007,10 +18003,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_1880 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-defffdbb-20250106",
+  version: "19.1.0-www-classic-379089d2-20250108",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-defffdbb-20250106"
+  reconcilerVersion: "19.1.0-www-classic-379089d2-20250108"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_1880.getLaneLabelMap = getLaneLabelMap),
@@ -18377,7 +18373,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-classic-defffdbb-20250106";
+exports.version = "19.1.0-www-classic-379089d2-20250108";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

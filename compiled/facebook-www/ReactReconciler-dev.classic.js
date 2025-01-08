@@ -2468,8 +2468,6 @@ __DEV__ &&
           ((didScheduleMicrotask_act = !0), scheduleImmediateRootScheduleTask())
         : didScheduleMicrotask ||
           ((didScheduleMicrotask = !0), scheduleImmediateRootScheduleTask());
-      enableDeferRootSchedulingToMicrotask ||
-        scheduleTaskForRootDuringMicrotask(root, now$1());
     }
     function flushSyncWorkAcrossRoots_impl(syncTransitionLanes, onlyLegacy) {
       if (!isFlushingWork && mightHavePendingSyncWork) {
@@ -16317,8 +16315,6 @@ __DEV__ &&
         dynamicFeatureFlags.disableLegacyContextForFunctionComponents,
       disableSchedulerTimeoutInWorkLoop =
         dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
-      enableDeferRootSchedulingToMicrotask =
-        dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
       enableDO_NOT_USE_disableStrictPassiveEffect =
         dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect,
       enableHiddenSubtreeInsertionEffectCleanup =
@@ -19106,7 +19102,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-classic-defffdbb-20250106"
+        reconcilerVersion: "19.1.0-www-classic-379089d2-20250108"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

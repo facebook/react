@@ -4123,8 +4123,6 @@ __DEV__ &&
           ((didScheduleMicrotask_act = !0), scheduleImmediateRootScheduleTask())
         : didScheduleMicrotask ||
           ((didScheduleMicrotask = !0), scheduleImmediateRootScheduleTask());
-      enableDeferRootSchedulingToMicrotask ||
-        scheduleTaskForRootDuringMicrotask(root, now$1());
     }
     function flushSyncWorkAcrossRoots_impl(syncTransitionLanes, onlyLegacy) {
       if (!isFlushingWork && mightHavePendingSyncWork) {
@@ -23899,8 +23897,6 @@ __DEV__ &&
         dynamicFeatureFlags.disableLegacyContextForFunctionComponents,
       disableSchedulerTimeoutInWorkLoop =
         dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
-      enableDeferRootSchedulingToMicrotask =
-        dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
       enableDO_NOT_USE_disableStrictPassiveEffect =
         dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect,
       enableHiddenSubtreeInsertionEffectCleanup =
@@ -27751,11 +27747,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.1.0-www-classic-defffdbb-20250106" !== isomorphicReactPackageVersion)
+      if ("19.1.0-www-classic-379089d2-20250108" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.1.0-www-classic-defffdbb-20250106\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.1.0-www-classic-379089d2-20250108\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -27798,10 +27794,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.1.0-www-classic-defffdbb-20250106",
+          version: "19.1.0-www-classic-379089d2-20250108",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.1.0-www-classic-defffdbb-20250106"
+          reconcilerVersion: "19.1.0-www-classic-379089d2-20250108"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -28565,5 +28561,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.1.0-www-classic-defffdbb-20250106";
+    exports.version = "19.1.0-www-classic-379089d2-20250108";
   })();
