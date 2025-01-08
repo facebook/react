@@ -365,8 +365,9 @@ export function hasInstanceAffectedParent(
 export function startViewTransition(
   rootContainer: Container,
   mutationCallback: () => void,
-  afterMutationCallback: () => void,
   layoutCallback: () => void,
+  afterMutationCallback: () => void,
+  spawnedWorkCallback: () => void,
   passiveCallback: () => mixed,
 ): boolean {
   return false;

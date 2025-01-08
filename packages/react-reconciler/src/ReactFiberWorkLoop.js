@@ -637,10 +637,11 @@ const THROTTLED_COMMIT = 2;
 
 const NO_PENDING_EFFECTS = 0;
 const PENDING_MUTATION_PHASE = 1;
-const PENDING_AFTER_MUTATION_PHASE = 2;
-const PENDING_LAYOUT_PHASE = 3;
-const PENDING_PASSIVE_PHASE = 4;
-let pendingEffectsStatus: 0 | 1 | 2 | 3 | 4 = 0;
+const PENDING_LAYOUT_PHASE = 2;
+const PENDING_AFTER_MUTATION_PHASE = 3;
+const PENDING_SPAWNED_WORK = 4;
+const PENDING_PASSIVE_PHASE = 5;
+let pendingEffectsStatus: 0 | 1 | 2 | 3 | 4 | 5 = 0;
 let pendingEffectsRoot: FiberRoot = (null: any);
 let pendingFinishedWork: Fiber = (null: any);
 let pendingEffectsLanes: Lanes = NoLanes;
@@ -3432,19 +3433,17 @@ function commitRoot(
     startViewTransition(
       root.containerInfo,
       flushMutationEffects,
-      flushAfterMutationEffects,
       flushLayoutEffects,
-      // TODO: This flushes passive effects at the end of the transition but
-      // we also schedule work to flush them separately which we really shouldn't.
-      // We use flushPendingEffects instead of
+      flushAfterMutationEffects,
+      flushSpawnedWork,
       flushPassiveEffects,
     );
   if (!startedViewTransition) {
     // Flush synchronously.
     flushMutationEffects();
-    // Skip flushAfterMutationEffects
-    pendingEffectsStatus = PENDING_LAYOUT_PHASE;
     flushLayoutEffects();
+    // Skip flushAfterMutationEffects
+    flushSpawnedWork();
   }
 }
 
@@ -3457,7 +3456,7 @@ function flushAfterMutationEffects(): void {
   const finishedWork = pendingFinishedWork;
   const lanes = pendingEffectsLanes;
   commitAfterMutationEffects(root, finishedWork, lanes);
-  pendingEffectsStatus = PENDING_LAYOUT_PHASE;
+  pendingEffectsStatus = PENDING_SPAWNED_WORK;
 }
 
 function flushMutationEffects(): void {
@@ -3503,16 +3502,11 @@ function flushMutationEffects(): void {
   // componentWillUnmount, but before the layout phase, so that the finished
   // work is current during componentDidMount/Update.
   root.current = finishedWork;
-  pendingEffectsStatus = PENDING_AFTER_MUTATION_PHASE;
+  pendingEffectsStatus = PENDING_LAYOUT_PHASE;
 }
 
 function flushLayoutEffects(): void {
-  if (
-    pendingEffectsStatus !== PENDING_LAYOUT_PHASE &&
-    // If a startViewTransition times out, we might flush this earlier than
-    // after mutation phase. In that case, we just skip the after mutation phase.
-    pendingEffectsStatus !== PENDING_AFTER_MUTATION_PHASE
-  ) {
+  if (pendingEffectsStatus !== PENDING_LAYOUT_PHASE) {
     return;
   }
   pendingEffectsStatus = NO_PENDING_EFFECTS;
@@ -3520,10 +3514,6 @@ function flushLayoutEffects(): void {
   const root = pendingEffectsRoot;
   const finishedWork = pendingFinishedWork;
   const lanes = pendingEffectsLanes;
-  const completedRenderEndTime = pendingEffectsRenderEndTime;
-  const recoverableErrors = pendingRecoverableErrors;
-  const didIncludeRenderPhaseUpdate = pendingDidIncludeRenderPhaseUpdate;
-  const suspendedCommitReason = pendingSuspendedCommitReason;
 
   const subtreeHasLayoutEffects =
     (finishedWork.subtreeFlags & LayoutMask) !== NoFlags;
@@ -3554,10 +3544,31 @@ function flushLayoutEffects(): void {
       ReactSharedInternals.T = prevTransition;
     }
   }
+  pendingEffectsStatus = PENDING_AFTER_MUTATION_PHASE;
+}
+
+function flushSpawnedWork(): void {
+  if (
+    pendingEffectsStatus !== PENDING_SPAWNED_WORK &&
+    // If a startViewTransition times out, we might flush this earlier than
+    // after mutation phase. In that case, we just skip the after mutation phase.
+    pendingEffectsStatus !== PENDING_AFTER_MUTATION_PHASE
+  ) {
+    return;
+  }
+  pendingEffectsStatus = NO_PENDING_EFFECTS;
 
   // Tell Scheduler to yield at the end of the frame, so the browser has an
   // opportunity to paint.
   requestPaint();
+
+  const root = pendingEffectsRoot;
+  const finishedWork = pendingFinishedWork;
+  const lanes = pendingEffectsLanes;
+  const completedRenderEndTime = pendingEffectsRenderEndTime;
+  const recoverableErrors = pendingRecoverableErrors;
+  const didIncludeRenderPhaseUpdate = pendingDidIncludeRenderPhaseUpdate;
+  const suspendedCommitReason = pendingSuspendedCommitReason;
 
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
     recordCommitEndTime();
@@ -3795,6 +3806,8 @@ export function flushPendingEffects(wasDelayedCommit?: boolean): boolean {
   // Returns whether passive effects were flushed.
   flushMutationEffects();
   flushLayoutEffects();
+  // Skip flushAfterMutation if we're forcing this early.
+  flushSpawnedWork();
   return flushPassiveEffects(wasDelayedCommit);
 }
 
