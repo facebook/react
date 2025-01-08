@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0fb5f765d0baaa048d5f6849772f9285>>
+ * @generated SignedSource<<3b5e6cb10df4cd162eb2f0893d99a212>>
  */
 
 "use strict";
@@ -14290,13 +14290,6 @@ __DEV__ &&
       a: if (parentComponent) {
         parentComponent = parentComponent._reactInternals;
         b: {
-          if (
-            getNearestMountedFiber(parentComponent) !== parentComponent ||
-            1 !== parentComponent.tag
-          )
-            throw Error(
-              "Expected subtree parent to be a mounted class component. This error is likely caused by a bug in React. Please file an issue."
-            );
           var parentContext = parentComponent;
           do {
             switch (parentContext.tag) {
@@ -16980,21 +16973,6 @@ __DEV__ &&
     var didWarnOnInvalidCallback = new Set();
     Object.freeze(fakeInternalInstance);
     var classComponentUpdater = {
-        isMounted: function (component) {
-          var owner = current;
-          if (null !== owner && isRendering && 1 === owner.tag) {
-            var instance = owner.stateNode;
-            instance._warnedAboutRefsInRender ||
-              error$jscomp$0(
-                "%s is accessing isMounted inside its render() function. render() should be a pure function of props and state. It should never access something that requires stale data from the previous render, such as refs. Move this logic to componentDidMount and componentDidUpdate instead.",
-                getComponentNameFromFiber(owner) || "A component"
-              );
-            instance._warnedAboutRefsInRender = !0;
-          }
-          return (component = component._reactInternals)
-            ? getNearestMountedFiber(component) === component
-            : !1;
-        },
         enqueueSetState: function (inst, payload, callback) {
           inst = inst._reactInternals;
           var lane = requestUpdateLane(inst),
@@ -17495,10 +17473,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-defffdbb-20250106",
+        version: "19.1.0-native-fb-e30c6693-20250108",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-defffdbb-20250106"
+        reconcilerVersion: "19.1.0-native-fb-e30c6693-20250108"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

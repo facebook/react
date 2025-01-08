@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bd0626fc25b8c546146c8cc847878478>>
+ * @generated SignedSource<<2af0bab6d044d960d05290d21ad4aace>>
  */
 
 "use strict";
@@ -5746,11 +5746,6 @@ function applyDerivedStateFromProps(
     (workInProgress.updateQueue.baseState = getDerivedStateFromProps);
 }
 var classComponentUpdater = {
-  isMounted: function (component) {
-    return (component = component._reactInternals)
-      ? getNearestMountedFiber(component) === component
-      : !1;
-  },
   enqueueSetState: function (inst, payload, callback) {
     inst = inst._reactInternals;
     var lane = requestUpdateLane(inst),
@@ -11886,13 +11881,6 @@ function updateContainer(element, container, parentComponent, callback) {
   a: if (parentComponent) {
     parentComponent = parentComponent._reactInternals;
     b: {
-      if (
-        getNearestMountedFiber(parentComponent) !== parentComponent ||
-        1 !== parentComponent.tag
-      )
-        throw Error(
-          "Expected subtree parent to be a mounted class component. This error is likely caused by a bug in React. Please file an issue."
-        );
       var JSCompiler_inline_result = parentComponent;
       do {
         switch (JSCompiler_inline_result.tag) {
@@ -11941,11 +11929,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.1.0-native-fb-defffdbb-20250106" !== isomorphicReactPackageVersion)
+if ("19.1.0-native-fb-e30c6693-20250108" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.1.0-native-fb-defffdbb-20250106\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.1.0-native-fb-e30c6693-20250108\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11994,10 +11982,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1389 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-defffdbb-20250106",
+    version: "19.1.0-native-fb-e30c6693-20250108",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-defffdbb-20250106"
+    reconcilerVersion: "19.1.0-native-fb-e30c6693-20250108"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1389.rendererConfig = extraDevToolsConfig);

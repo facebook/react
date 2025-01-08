@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b2e61cde6064e6f8b0fff946db2ed148>>
+ * @generated SignedSource<<501111352245598cb460c85cbf980d2f>>
  */
 
 "use strict";
@@ -5314,11 +5314,6 @@ function applyDerivedStateFromProps(
     (workInProgress.updateQueue.baseState = getDerivedStateFromProps);
 }
 var classComponentUpdater = {
-  isMounted: function (component) {
-    return (component = component._reactInternals)
-      ? getNearestMountedFiber(component) === component
-      : !1;
-  },
   enqueueSetState: function (inst, payload, callback) {
     inst = inst._reactInternals;
     var lane = requestUpdateLane(inst),
@@ -10807,13 +10802,6 @@ function updateContainer(element, container, parentComponent, callback) {
   a: if (parentComponent) {
     parentComponent = parentComponent._reactInternals;
     b: {
-      if (
-        getNearestMountedFiber(parentComponent) !== parentComponent ||
-        1 !== parentComponent.tag
-      )
-        throw Error(
-          "Expected subtree parent to be a mounted class component. This error is likely caused by a bug in React. Please file an issue."
-        );
       var JSCompiler_inline_result = parentComponent;
       do {
         switch (JSCompiler_inline_result.tag) {
@@ -11164,10 +11152,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1224 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-defffdbb-20250106",
+    version: "19.1.0-native-fb-e30c6693-20250108",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-defffdbb-20250106"
+    reconcilerVersion: "19.1.0-native-fb-e30c6693-20250108"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1224.rendererConfig = extraDevToolsConfig);
