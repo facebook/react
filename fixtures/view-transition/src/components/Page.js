@@ -1,8 +1,5 @@
 import React, {
   unstable_ViewTransition as ViewTransition,
-  startTransition,
-  useEffect,
-  useState,
   unstable_Activity as Activity,
 } from 'react';
 
@@ -37,13 +34,8 @@ function Component() {
   );
 }
 
-export default function Page() {
-  const [show, setShow] = useState(false);
-  useEffect(() => {
-    startTransition(() => {
-      setShow(true);
-    });
-  }, []);
+export default function Page({url, navigate}) {
+  const show = url === '/?b';
   const exclamation = (
     <ViewTransition name="exclamation">
       <span>!</span>
@@ -53,9 +45,7 @@ export default function Page() {
     <div>
       <button
         onClick={() => {
-          startTransition(() => {
-            setShow(show => !show);
-          });
+          navigate(show ? '/?a' : '/?b');
         }}>
         {show ? 'A' : 'B'}
       </button>
@@ -75,6 +65,15 @@ export default function Page() {
           <ViewTransition>
             {show ? <div>hello{exclamation}</div> : <section>Loading</section>}
           </ViewTransition>
+          <p>scroll me</p>
+          <p></p>
+          <p></p>
+          <p></p>
+          <p></p>
+          <p></p>
+          <p></p>
+          <p></p>
+          <p></p>
           {show ? null : (
             <ViewTransition>
               <div>world{exclamation}</div>
