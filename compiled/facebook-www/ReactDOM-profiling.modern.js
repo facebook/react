@@ -13806,14 +13806,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$371;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1667 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1667) {
-      var element$jscomp$inline_1668 = document.createElement("div");
-      element$jscomp$inline_1668.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1667 =
-        "function" === typeof element$jscomp$inline_1668.oninput;
+    var isSupported$jscomp$inline_1669 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1669) {
+      var element$jscomp$inline_1670 = document.createElement("div");
+      element$jscomp$inline_1670.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1669 =
+        "function" === typeof element$jscomp$inline_1670.oninput;
     }
-    JSCompiler_inline_result$jscomp$371 = isSupported$jscomp$inline_1667;
+    JSCompiler_inline_result$jscomp$371 = isSupported$jscomp$inline_1669;
   } else JSCompiler_inline_result$jscomp$371 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$371 &&
@@ -14136,20 +14136,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1708 = 0;
-  i$jscomp$inline_1708 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1708++
+  var i$jscomp$inline_1710 = 0;
+  i$jscomp$inline_1710 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1710++
 ) {
-  var eventName$jscomp$inline_1709 =
-      simpleEventPluginEvents[i$jscomp$inline_1708],
-    domEventName$jscomp$inline_1710 =
-      eventName$jscomp$inline_1709.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1711 =
-      eventName$jscomp$inline_1709[0].toUpperCase() +
-      eventName$jscomp$inline_1709.slice(1);
+  var eventName$jscomp$inline_1711 =
+      simpleEventPluginEvents[i$jscomp$inline_1710],
+    domEventName$jscomp$inline_1712 =
+      eventName$jscomp$inline_1711.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1713 =
+      eventName$jscomp$inline_1711[0].toUpperCase() +
+      eventName$jscomp$inline_1711.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1710,
-    "on" + capitalizedEvent$jscomp$inline_1711
+    domEventName$jscomp$inline_1712,
+    "on" + capitalizedEvent$jscomp$inline_1713
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17724,16 +17724,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_1881 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1883 = React.version;
 if (
-  "19.1.0-www-modern-a4d122f2-20250108" !==
-  isomorphicReactPackageVersion$jscomp$inline_1881
+  "19.1.0-www-modern-3a5496b3-20250108" !==
+  isomorphicReactPackageVersion$jscomp$inline_1883
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1881,
-      "19.1.0-www-modern-a4d122f2-20250108"
+      isomorphicReactPackageVersion$jscomp$inline_1883,
+      "19.1.0-www-modern-3a5496b3-20250108"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17749,27 +17749,27 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_1883 = {
+var internals$jscomp$inline_1885 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-a4d122f2-20250108",
+  version: "19.1.0-www-modern-3a5496b3-20250108",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-a4d122f2-20250108"
+  reconcilerVersion: "19.1.0-www-modern-3a5496b3-20250108"
 };
 enableSchedulingProfiler &&
-  ((internals$jscomp$inline_1883.getLaneLabelMap = getLaneLabelMap),
-  (internals$jscomp$inline_1883.injectProfilingHooks = injectProfilingHooks));
+  ((internals$jscomp$inline_1885.getLaneLabelMap = getLaneLabelMap),
+  (internals$jscomp$inline_1885.injectProfilingHooks = injectProfilingHooks));
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2371 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2373 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2371.isDisabled &&
-    hook$jscomp$inline_2371.supportsFiber
+    !hook$jscomp$inline_2373.isDisabled &&
+    hook$jscomp$inline_2373.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2371.inject(
-        internals$jscomp$inline_1883
+      (rendererID = hook$jscomp$inline_2373.inject(
+        internals$jscomp$inline_1885
       )),
-        (injectedHook = hook$jscomp$inline_2371);
+        (injectedHook = hook$jscomp$inline_2373);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -18121,7 +18121,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-modern-a4d122f2-20250108";
+exports.version = "19.1.0-www-modern-3a5496b3-20250108";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
