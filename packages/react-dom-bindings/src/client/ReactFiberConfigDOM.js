@@ -124,6 +124,8 @@ export type Props = {
     display?: string,
     viewTransitionName?: string,
     'view-transition-name'?: string,
+    viewTransitionClass?: string,
+    'view-transition-class'?: string,
     ...
   },
   bottom?: null | number,
@@ -987,10 +989,15 @@ export function unhideTextInstance(
 export function applyViewTransitionName(
   instance: Instance,
   name: string,
+  className: ?string,
 ): void {
   instance = ((instance: any): HTMLElement);
   // $FlowFixMe[prop-missing]
   instance.style.viewTransitionName = name;
+  if (className != null) {
+    // $FlowFixMe[prop-missing]
+    instance.style.viewTransitionClass = className;
+  }
 }
 
 export function restoreViewTransitionName(
@@ -1000,7 +1007,7 @@ export function restoreViewTransitionName(
   instance = ((instance: any): HTMLElement);
   const styleProp = props[STYLE];
   const viewTransitionName =
-    styleProp !== undefined && styleProp !== null
+    styleProp != null
       ? styleProp.hasOwnProperty('viewTransitionName')
         ? styleProp.viewTransitionName
         : styleProp.hasOwnProperty('view-transition-name')
@@ -1014,6 +1021,21 @@ export function restoreViewTransitionName(
       : // The value would've errored already if it wasn't safe.
         // eslint-disable-next-line react-internal/safe-string-coercion
         ('' + viewTransitionName).trim();
+  const viewTransitionClass =
+    styleProp != null
+      ? styleProp.hasOwnProperty('viewTransitionClass')
+        ? styleProp.viewTransitionClass
+        : styleProp.hasOwnProperty('view-transition-class')
+          ? styleProp['view-transition-class']
+          : null
+      : null;
+  // $FlowFixMe[prop-missing]
+  instance.style.viewTransitionClass =
+    viewTransitionClass == null || typeof viewTransitionClass === 'boolean'
+      ? ''
+      : // The value would've errored already if it wasn't safe.
+        // eslint-disable-next-line react-internal/safe-string-coercion
+        ('' + viewTransitionClass).trim();
 }
 
 export function cancelViewTransitionName(

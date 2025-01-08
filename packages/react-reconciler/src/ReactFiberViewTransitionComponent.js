@@ -18,6 +18,7 @@ import {getTreeId} from './ReactFiberTreeContext';
 
 export type ViewTransitionProps = {
   name?: string,
+  className?: string,
   children?: ReactNodeList,
 };
 

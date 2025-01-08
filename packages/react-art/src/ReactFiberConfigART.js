@@ -455,7 +455,7 @@ export function unhideTextInstance(textInstance, text): void {
   // Noop
 }
 
-export function applyViewTransitionName(instance, name) {
+export function applyViewTransitionName(instance, name, className) {
   // Noop
 }
 

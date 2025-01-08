@@ -732,7 +732,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           textInstance.hidden = false;
         },
 
-        applyViewTransitionName(instance: Instance, name: string): void {},
+        applyViewTransitionName(
+          instance: Instance,
+          name: string,
+          className: ?string,
+        ): void {},
 
         restoreViewTransitionName(instance: Instance, props: Props): void {},
 

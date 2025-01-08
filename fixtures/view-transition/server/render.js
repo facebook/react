@@ -11,7 +11,7 @@ if (process.env.NODE_ENV === 'development') {
     // 'main.css': '',
   };
 } else {
-  assets = require('../build/asset-manifest.json');
+  assets = require('../build/asset-manifest.json').files;
 }
 
 export default function render(url, res) {
