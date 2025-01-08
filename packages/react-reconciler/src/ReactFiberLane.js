@@ -350,6 +350,10 @@ export function getNextLanesToFlushSync(
   //
   // The main use case is updates scheduled by popstate events, which are
   // flushed synchronously even though they are transitions.
+  // Note that we intentionally treat this as a sync flush to include any
+  // sync updates in a single pass but also intentionally disables View Transitions
+  // inside popstate. Because they can start synchronously before scroll restoration
+  // happens.
   const lanesToFlush = SyncUpdateLanes | extraLanesToForceSync;
 
   // Early bailout if there's no pending work left.
