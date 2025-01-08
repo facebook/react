@@ -3507,7 +3507,12 @@ function flushMutationEffects(): void {
 }
 
 function flushLayoutEffects(): void {
-  if (pendingEffectsStatus !== PENDING_LAYOUT_PHASE) {
+  if (
+    pendingEffectsStatus !== PENDING_LAYOUT_PHASE &&
+    // If a startViewTransition times out, we might flush this earlier than
+    // after mutation phase. In that case, we just skip the after mutation phase.
+    pendingEffectsStatus !== PENDING_AFTER_MUTATION_PHASE
+  ) {
     return;
   }
   pendingEffectsStatus = NO_PENDING_EFFECTS;
@@ -3790,7 +3795,6 @@ export function flushPendingEffects(wasDelayedCommit?: boolean): boolean {
   // Returns whether passive effects were flushed.
   flushMutationEffects();
   flushLayoutEffects();
-  flushAfterMutationEffects();
   return flushPassiveEffects(wasDelayedCommit);
 }
 
