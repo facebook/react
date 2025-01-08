@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a796643e6dac8983d6dc3b2f6fadebc6>>
+ * @generated SignedSource<<0258d5fe094da7333a1e3f8ddb9b8fd3>>
  */
 
 "use strict";
@@ -8253,7 +8253,9 @@ function commitRootWhenReady(
 ) {
   root.timeoutHandle = -1;
   var subtreeFlags = finishedWork.subtreeFlags;
-  (subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408)) &&
+  (subtreeFlags =
+    subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408)) &&
+    subtreeFlags &&
     accumulateSuspenseyCommitOnFiber(finishedWork);
   commitRoot(
     root,
@@ -9820,10 +9822,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1405 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-38127b28-20250108",
+  version: "19.1.0-native-fb-98418e89-20250108",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-38127b28-20250108"
+  reconcilerVersion: "19.1.0-native-fb-98418e89-20250108"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1406 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -9959,4 +9961,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.1.0-native-fb-38127b28-20250108";
+exports.version = "19.1.0-native-fb-98418e89-20250108";

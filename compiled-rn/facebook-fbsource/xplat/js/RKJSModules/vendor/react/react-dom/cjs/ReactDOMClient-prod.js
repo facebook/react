@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0d9c07a289ec2ff1fb4891e7547371e2>>
+ * @generated SignedSource<<321229d77e42c9400f9fca595c8a186d>>
  */
 
 /*
@@ -11116,12 +11116,13 @@ function commitRootWhenReady(
   root.timeoutHandle = -1;
   suspendedCommitReason = finishedWork.subtreeFlags;
   if (
-    suspendedCommitReason & 8192 ||
-    16785408 === (suspendedCommitReason & 16785408)
+    (suspendedCommitReason =
+      suspendedCommitReason & 8192 ||
+      16785408 === (suspendedCommitReason & 16785408))
   )
     if (
       ((suspendedState = { stylesheets: null, count: 0, unsuspend: noop }),
-      accumulateSuspenseyCommitOnFiber(finishedWork),
+      suspendedCommitReason && accumulateSuspenseyCommitOnFiber(finishedWork),
       (suspendedCommitReason = waitForCommitToBeReady()),
       null !== suspendedCommitReason)
     ) {
@@ -15944,14 +15945,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1771 = React.version;
 if (
-  "19.1.0-native-fb-38127b28-20250108" !==
+  "19.1.0-native-fb-98418e89-20250108" !==
   isomorphicReactPackageVersion$jscomp$inline_1771
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1771,
-      "19.1.0-native-fb-38127b28-20250108"
+      "19.1.0-native-fb-98418e89-20250108"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -15973,10 +15974,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2219 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-38127b28-20250108",
+  version: "19.1.0-native-fb-98418e89-20250108",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-38127b28-20250108"
+  reconcilerVersion: "19.1.0-native-fb-98418e89-20250108"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2220 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16082,4 +16083,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.1.0-native-fb-38127b28-20250108";
+exports.version = "19.1.0-native-fb-98418e89-20250108";

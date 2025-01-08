@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d45a223de64e54094141beb164abdc78>>
+ * @generated SignedSource<<5ef187ebe006f552a2cbc57d17e40dff>>
  */
 
 "use strict";
@@ -10058,7 +10058,9 @@ function commitRootWhenReady(
 ) {
   root.timeoutHandle = -1;
   var subtreeFlags = finishedWork.subtreeFlags;
-  (subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408)) &&
+  (subtreeFlags =
+    subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408)) &&
+    subtreeFlags &&
     accumulateSuspenseyCommitOnFiber(finishedWork);
   commitRoot(
     root,
@@ -11819,10 +11821,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1345 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-38127b28-20250108",
+    version: "19.1.0-native-fb-98418e89-20250108",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-38127b28-20250108"
+    reconcilerVersion: "19.1.0-native-fb-98418e89-20250108"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1345.rendererConfig = extraDevToolsConfig);

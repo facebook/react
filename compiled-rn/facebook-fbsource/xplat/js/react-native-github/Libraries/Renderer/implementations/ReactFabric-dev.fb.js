@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8a7d79d5a6a23d472f59fb221fa7ffda>>
+ * @generated SignedSource<<92adc4a79f95a9b2c738598caddf6a5c>>
  */
 
 "use strict";
@@ -12278,7 +12278,9 @@ __DEV__ &&
     ) {
       root.timeoutHandle = noTimeout;
       var subtreeFlags = finishedWork.subtreeFlags;
-      (subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408)) &&
+      (subtreeFlags =
+        subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408)) &&
+        subtreeFlags &&
         accumulateSuspenseyCommitOnFiber(finishedWork);
       commitRoot(
         root,
@@ -17493,10 +17495,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-38127b28-20250108",
+        version: "19.1.0-native-fb-98418e89-20250108",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-38127b28-20250108"
+        reconcilerVersion: "19.1.0-native-fb-98418e89-20250108"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

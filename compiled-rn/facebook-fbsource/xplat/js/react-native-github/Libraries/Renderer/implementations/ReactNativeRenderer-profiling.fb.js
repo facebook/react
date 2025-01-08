@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<730af1e1bbcc2e769b4e70c5875dd7ff>>
+ * @generated SignedSource<<3e10b1b2fd264a74f8fdcd636e8ebfe4>>
  */
 
 "use strict";
@@ -10486,7 +10486,9 @@ function commitRootWhenReady(
 ) {
   root.timeoutHandle = -1;
   var subtreeFlags = finishedWork.subtreeFlags;
-  (subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408)) &&
+  (subtreeFlags =
+    subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408)) &&
+    subtreeFlags &&
     accumulateSuspenseyCommitOnFiber(finishedWork);
   commitRoot(
     root,
@@ -11945,11 +11947,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.1.0-native-fb-38127b28-20250108" !== isomorphicReactPackageVersion)
+if ("19.1.0-native-fb-98418e89-20250108" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.1.0-native-fb-38127b28-20250108\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.1.0-native-fb-98418e89-20250108\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11998,10 +12000,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1397 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-38127b28-20250108",
+    version: "19.1.0-native-fb-98418e89-20250108",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-38127b28-20250108"
+    reconcilerVersion: "19.1.0-native-fb-98418e89-20250108"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1397.rendererConfig = extraDevToolsConfig);
