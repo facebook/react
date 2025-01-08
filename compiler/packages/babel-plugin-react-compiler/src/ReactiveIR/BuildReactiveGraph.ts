@@ -142,12 +142,12 @@ class Builder {
 
 class ControlContext {
   constructor(
-    public declarations: Map<
+    private declarations: Map<
       DeclarationId,
       {write: ReactiveId | null; read: ReactiveId | null}
     > = new Map(),
-    public scopes: Map<ScopeId, ReactiveId> = new Map(),
-    public parent: ControlContext | null = null,
+    private scopes: Map<ScopeId, ReactiveId> = new Map(),
+    private parent: ControlContext | null = null,
   ) {}
 
   fork(): ControlContext {
@@ -165,15 +165,25 @@ class ControlContext {
 
   // Scopes
 
-  recordScope(scope: ScopeId, node: ReactiveId): void {
+  *eachScope(): Iterable<[ScopeId, ReactiveId]> {
+    yield* this.scopes;
+  }
+
+  recordScopeMutation(scope: ScopeId, node: ReactiveId): void {
     this.scopes.set(scope, node);
   }
 
-  getScope(scope: ScopeId): ReactiveId | null {
+  loadScopeControl(scope: ScopeId): ReactiveId | null {
     return this.scopes.get(scope) ?? null;
   }
 
   // Declarations
+
+  *eachDeclaration(): Iterable<
+    [DeclarationId, {write: ReactiveId | null; read: ReactiveId | null}]
+  > {
+    yield* this.declarations;
+  }
 
   // Loads the node that writes the value being read from
   loadDeclarationForRead(
@@ -383,7 +393,9 @@ function buildBlockScope(
         const instructionScope = getScopeForInstruction(instr);
         let instructionControl = control;
         if (instructionScope != null) {
-          const previousScopeNode = context.getScope(instructionScope.id);
+          const previousScopeNode = context.loadScopeControl(
+            instructionScope.id,
+          );
           if (previousScopeNode != null) {
             instructionControl = previousScopeNode;
           }
@@ -409,6 +421,9 @@ function buildBlockScope(
         builder.putNode(node);
         lastNode = node.id;
         builder.storeTemporary(lvalue, node.id);
+        if (instructionScope != null) {
+          context.recordScopeMutation(instructionScope.id, node.id);
+        }
       }
     }
 
@@ -416,17 +431,6 @@ function buildBlockScope(
     const terminal = block.terminal;
     switch (terminal.kind) {
       case 'if': {
-        /*
-         * TODO: we need to see what things the consequent/alternate depended on
-         * as mutation/reassignment deps, and then add those as control deps of
-         * the if. this ensures that anything depended on in the body will come
-         * first.
-         *
-         * Can likely have a cloneable mapping of the last node for each
-         * DeclarationId/ScopeId, and also record which DeclId/ScopeId was accessed
-         * during a call to buildBlockScope, and then look at that after processing
-         * consequent/alternate
-         */
         const testDep = builder.lookupTemporary(
           terminal.test.identifier,
           terminal.test.loc,
@@ -500,26 +504,37 @@ function buildBlockScope(
         const controlDependencies: Set<ReactiveId> = new Set();
         const joinedDeclarations: Map<DeclarationId, 'write' | 'read'> =
           new Map();
+        const joinedScopes: Set<ScopeId> = new Set();
         for (const predecessorBlock of predecessors) {
           /*
-           * every scope mutated in any of the predecessors must take the
-           * join node as a control dep to sequence subsequent mutations
+           * track scopes that were mutated in any of the branches so that we can
+           * establish control depends to order the branch/join relative to previous
+           * subsequent mutations of those scopes
            */
-          for (const scope of predecessorBlock.context.scopes.keys()) {
-            context.recordScope(scope, ifNode.id);
+          for (const [scope] of predecessorBlock.context.eachScope()) {
+            joinedScopes.add(scope);
           }
           /*
            * Track variables that were read/reassigned in any of the predecessors
            * so that subsequent writes/reads can take the join node as a control
            */
-          for (const [declarationId, {write, read}] of predecessorBlock.context
-            .declarations) {
+          for (const [
+            declarationId,
+            {write, read},
+          ] of predecessorBlock.context.eachDeclaration()) {
             if (write) {
               joinedDeclarations.set(declarationId, 'write');
             } else if (read && !joinedDeclarations.has(declarationId)) {
               joinedDeclarations.set(declarationId, 'read');
             }
           }
+        }
+        for (const scope of joinedScopes) {
+          const scopeControl = context.loadScopeControl(scope);
+          if (scopeControl != null) {
+            controlDependencies.add(scopeControl);
+          }
+          context.recordScopeMutation(scope, ifNode.id);
         }
         // Add control dependencies and record reads/writes accordingly.
         for (const [declarationId, declType] of joinedDeclarations) {
