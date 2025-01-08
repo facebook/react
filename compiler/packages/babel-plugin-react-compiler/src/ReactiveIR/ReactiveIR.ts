@@ -8,6 +8,7 @@
 import {CompilerError} from '..';
 import {
   Environment,
+  GotoVariant,
   Instruction,
   InstructionKind,
   Place,
@@ -58,7 +59,8 @@ export type ReactiveNode =
   | BranchNode
   | JoinNode
   | ControlNode
-  | ReturnNode;
+  | ReturnNode
+  | GotoNode;
 
 export type NodeReference = {
   node: ReactiveId;
@@ -122,7 +124,19 @@ export type ReturnNode = {
   loc: SourceLocation;
   value: NodeReference;
   outputs: Array<ReactiveId>;
+  dependencies: Array<ReactiveId>;
   control: ReactiveId;
+};
+
+export type GotoNode = {
+  kind: 'Goto';
+  id: ReactiveId;
+  loc: SourceLocation;
+  outputs: Array<ReactiveId>;
+  dependencies: Array<ReactiveId>;
+  control: ReactiveId;
+  target: ReactiveId;
+  variant: GotoVariant;
 };
 
 export type BranchNode = {
@@ -230,6 +244,7 @@ export function* eachNodeDependency(node: ReactiveNode): Iterable<ReactiveId> {
     case 'LoadArgument': {
       break;
     }
+    case 'Goto':
     case 'Control':
     case 'Branch': {
       yield* node.dependencies;
@@ -250,6 +265,7 @@ export function* eachNodeDependency(node: ReactiveNode): Iterable<ReactiveId> {
       break;
     }
     case 'Return': {
+      yield* node.dependencies;
       yield node.value.node;
       break;
     }
@@ -270,6 +286,7 @@ export function* eachNodeReference(
   node: ReactiveNode,
 ): Iterable<NodeReference> {
   switch (node.kind) {
+    case 'Goto':
     case 'Entry':
     case 'Control':
     case 'LoadArgument': {
@@ -353,9 +370,6 @@ function writeReactiveNodes(
   nodes: Map<ReactiveId, ReactiveNode>,
 ): void {
   for (const [id, node] of nodes) {
-    const deps = [...eachNodeReference(node)]
-      .map(id => printNodeReference(id))
-      .join(' ');
     const control =
       node.kind !== 'Entry' && node.control != null
         ? ` control=£${node.control}`
@@ -365,12 +379,20 @@ function writeReactiveNodes(
         buffer.push(`£${id} Entry`);
         break;
       }
+      case 'Goto': {
+        buffer.push(
+          `£${id} Goto(${node.variant}) target=£${node.target} deps=[${node.dependencies.map(id => `£${id}`).join(', ')}]${control}`,
+        );
+        break;
+      }
       case 'LoadArgument': {
         buffer.push(`£${id} LoadArgument ${printPlace(node.place)}${control}`);
         break;
       }
       case 'Control': {
-        buffer.push(`£${id} Control${control}`);
+        buffer.push(
+          `£${id} Control${control} deps=[${node.dependencies.map(id => `£${id}`).join(', ')}]`,
+        );
         break;
       }
       case 'Load': {
@@ -385,7 +407,7 @@ function writeReactiveNodes(
       }
       case 'Return': {
         buffer.push(
-          `£${id} Return ${printNodeReference(node.value)}${control}`,
+          `£${id} Return ${printNodeReference(node.value)} deps=[${node.dependencies.map(id => `£${id}`).join(', ')}]${control}`,
         );
         break;
       }
@@ -411,6 +433,9 @@ function writeReactiveNodes(
         break;
       }
       case 'Value': {
+        const deps = [...eachNodeReference(node)]
+          .map(id => printNodeReference(id))
+          .join(' ');
         buffer.push(`£${id} Value deps=[${deps}]${control}`);
         buffer.push('  ' + printInstruction(node.value));
         break;
