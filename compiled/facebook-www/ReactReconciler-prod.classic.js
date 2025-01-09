@@ -10892,7 +10892,7 @@ module.exports = function ($$$config) {
     }
   }
   function flushLayoutEffects() {
-    if (3 === pendingEffectsStatus) {
+    if (3 === pendingEffectsStatus || 2 === pendingEffectsStatus) {
       pendingEffectsStatus = 0;
       var root = pendingEffectsRoot,
         finishedWork = pendingFinishedWork,
@@ -10989,8 +10989,6 @@ module.exports = function ($$$config) {
   function flushPendingEffects(wasDelayedCommit) {
     flushMutationEffects();
     flushLayoutEffects();
-    2 === pendingEffectsStatus &&
-      ((pendingEffectsStatus = 0), (pendingEffectsStatus = 3));
     return flushPassiveEffects(wasDelayedCommit);
   }
   function flushPassiveEffects(wasDelayedCommit) {
@@ -12872,7 +12870,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-classic-98418e89-20250108"
+      reconcilerVersion: "19.1.0-www-classic-800c9db2-20250108"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

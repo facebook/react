@@ -13,7 +13,7 @@
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1124() {
+    function JSCompiler_object_inline_createNodeMock_1123() {
       return null;
     }
     function findHook(fiber, id) {
@@ -11701,7 +11701,10 @@ __DEV__ &&
       }
     }
     function flushLayoutEffects() {
-      if (pendingEffectsStatus === PENDING_LAYOUT_PHASE) {
+      if (
+        pendingEffectsStatus === PENDING_LAYOUT_PHASE ||
+        pendingEffectsStatus === PENDING_AFTER_MUTATION_PHASE
+      ) {
         pendingEffectsStatus = NO_PENDING_EFFECTS;
         var root = pendingEffectsRoot,
           finishedWork = pendingFinishedWork,
@@ -11837,9 +11840,6 @@ __DEV__ &&
     function flushPendingEffects(wasDelayedCommit) {
       flushMutationEffects();
       flushLayoutEffects();
-      pendingEffectsStatus === PENDING_AFTER_MUTATION_PHASE &&
-        ((pendingEffectsStatus = NO_PENDING_EFFECTS),
-        (pendingEffectsStatus = PENDING_LAYOUT_PHASE));
       return flushPassiveEffects(wasDelayedCommit);
     }
     function flushPassiveEffects() {
@@ -14996,10 +14996,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-modern-98418e89-20250108",
+        version: "19.1.0-www-modern-800c9db2-20250108",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-modern-98418e89-20250108"
+        reconcilerVersion: "19.1.0-www-modern-800c9db2-20250108"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15019,7 +15019,7 @@ __DEV__ &&
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1124,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1123,
         isConcurrentOnly = !0 !== global.IS_REACT_NATIVE_TEST_ENVIRONMENT,
         isConcurrent = isConcurrentOnly,
         isStrictMode = !1;
@@ -15134,5 +15134,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.1.0-www-modern-98418e89-20250108";
+    exports.version = "19.1.0-www-modern-800c9db2-20250108";
   })();

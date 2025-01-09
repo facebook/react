@@ -9758,7 +9758,7 @@ function flushMutationEffects() {
   }
 }
 function flushLayoutEffects() {
-  if (3 === pendingEffectsStatus) {
+  if (3 === pendingEffectsStatus || 2 === pendingEffectsStatus) {
     pendingEffectsStatus = 0;
     var root = pendingEffectsRoot,
       finishedWork = pendingFinishedWork,
@@ -9846,8 +9846,6 @@ function releaseRootPooledCache(root, remainingLanes) {
 function flushPendingEffects(wasDelayedCommit) {
   flushMutationEffects();
   flushLayoutEffects();
-  2 === pendingEffectsStatus &&
-    ((pendingEffectsStatus = 0), (pendingEffectsStatus = 3));
   return flushPassiveEffects(wasDelayedCommit);
 }
 function flushPassiveEffects(wasDelayedCommit) {
@@ -10545,24 +10543,24 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component);
-var internals$jscomp$inline_1490 = {
+var internals$jscomp$inline_1489 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-98418e89-20250108",
+  version: "19.1.0-www-modern-800c9db2-20250108",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-98418e89-20250108"
+  reconcilerVersion: "19.1.0-www-modern-800c9db2-20250108"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1491 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1490 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1491.isDisabled &&
-    hook$jscomp$inline_1491.supportsFiber
+    !hook$jscomp$inline_1490.isDisabled &&
+    hook$jscomp$inline_1490.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1491.inject(
-        internals$jscomp$inline_1490
+      (rendererID = hook$jscomp$inline_1490.inject(
+        internals$jscomp$inline_1489
       )),
-        (injectedHook = hook$jscomp$inline_1491);
+        (injectedHook = hook$jscomp$inline_1490);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
@@ -10576,4 +10574,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.1.0-www-modern-98418e89-20250108";
+exports.version = "19.1.0-www-modern-800c9db2-20250108";

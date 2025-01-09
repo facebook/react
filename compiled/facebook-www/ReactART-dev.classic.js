@@ -13424,7 +13424,10 @@ __DEV__ &&
       }
     }
     function flushLayoutEffects() {
-      if (pendingEffectsStatus === PENDING_LAYOUT_PHASE) {
+      if (
+        pendingEffectsStatus === PENDING_LAYOUT_PHASE ||
+        pendingEffectsStatus === PENDING_AFTER_MUTATION_PHASE
+      ) {
         pendingEffectsStatus = NO_PENDING_EFFECTS;
         var root = pendingEffectsRoot,
           finishedWork = pendingFinishedWork,
@@ -13580,9 +13583,6 @@ __DEV__ &&
     function flushPendingEffects(wasDelayedCommit) {
       flushMutationEffects();
       flushLayoutEffects();
-      pendingEffectsStatus === PENDING_AFTER_MUTATION_PHASE &&
-        ((pendingEffectsStatus = NO_PENDING_EFFECTS),
-        (pendingEffectsStatus = PENDING_LAYOUT_PHASE));
       return flushPassiveEffects(wasDelayedCommit);
     }
     function flushPassiveEffects(wasDelayedCommit) {
@@ -16935,10 +16935,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-classic-98418e89-20250108",
+        version: "19.1.0-www-classic-800c9db2-20250108",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-classic-98418e89-20250108"
+        reconcilerVersion: "19.1.0-www-classic-800c9db2-20250108"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -16972,7 +16972,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.1.0-www-classic-98418e89-20250108";
+    exports.version = "19.1.0-www-classic-800c9db2-20250108";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

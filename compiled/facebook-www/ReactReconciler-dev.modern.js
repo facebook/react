@@ -14836,7 +14836,10 @@ __DEV__ &&
       }
     }
     function flushLayoutEffects() {
-      if (pendingEffectsStatus === PENDING_LAYOUT_PHASE) {
+      if (
+        pendingEffectsStatus === PENDING_LAYOUT_PHASE ||
+        pendingEffectsStatus === PENDING_AFTER_MUTATION_PHASE
+      ) {
         pendingEffectsStatus = NO_PENDING_EFFECTS;
         var root = pendingEffectsRoot,
           finishedWork = pendingFinishedWork,
@@ -14968,9 +14971,6 @@ __DEV__ &&
     function flushPendingEffects(wasDelayedCommit) {
       flushMutationEffects();
       flushLayoutEffects();
-      pendingEffectsStatus === PENDING_AFTER_MUTATION_PHASE &&
-        ((pendingEffectsStatus = NO_PENDING_EFFECTS),
-        (pendingEffectsStatus = PENDING_LAYOUT_PHASE));
       return flushPassiveEffects(wasDelayedCommit);
     }
     function flushPassiveEffects(wasDelayedCommit) {
@@ -18897,7 +18897,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-modern-98418e89-20250108"
+        reconcilerVersion: "19.1.0-www-modern-800c9db2-20250108"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
