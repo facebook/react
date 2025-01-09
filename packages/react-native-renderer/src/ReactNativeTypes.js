@@ -250,7 +250,6 @@ export type ReactFabricType = {
     element: MixedElement,
     containerTag: number,
     callback: ?() => void,
-    concurrentRoot: ?boolean,
     options: ?RenderRootOptions,
   ): ?ElementRef<ElementType>,
   unmountComponentAtNode(containerTag: number): void,
