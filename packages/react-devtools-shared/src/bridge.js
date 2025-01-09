@@ -234,7 +234,6 @@ type FrontendEvents = {
   renamePath: [RenamePath],
   savedPreferences: [SavedPreferencesParams],
   setTraceUpdatesEnabled: [boolean],
-  setShowNamesWhenTracing: [boolean],
   shutdown: [],
   startInspectingHost: [],
   startProfiling: [StartProfilingParams],

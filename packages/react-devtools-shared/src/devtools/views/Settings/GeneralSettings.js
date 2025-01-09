@@ -34,10 +34,8 @@ export default function GeneralSettings(_: {}): React.Node {
     setDisplayDensity,
     setTheme,
     setTraceUpdatesEnabled,
-    setShowNamesWhenTracing,
     theme,
     traceUpdatesEnabled,
-    showNamesWhenTracing,
   } = useContext(SettingsContext);
 
   const {backendVersion, supportsTraceUpdates} = useContext(StoreContext);
@@ -85,19 +83,6 @@ export default function GeneralSettings(_: {}): React.Node {
             />{' '}
             Highlight updates when components render.
           </label>
-          <div className={styles.Setting}>
-            <label>
-              <input
-                type="checkbox"
-                checked={showNamesWhenTracing}
-                disabled={!traceUpdatesEnabled}
-                onChange={({currentTarget}) =>
-                  setShowNamesWhenTracing(currentTarget.checked)
-                }
-              />{' '}
-              Show component names while highlighting.
-            </label>
-          </div>
         </div>
       )}
 
