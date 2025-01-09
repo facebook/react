@@ -36,7 +36,7 @@ if (__DEV__) {
   const emptyObject = Object.freeze({});
 
   // $FlowFixMe[missing-local-annot]
-  const createHierarchy = function(fiberHierarchy) {
+  const createHierarchy = function (fiberHierarchy) {
     return fiberHierarchy.map(fiber => ({
       name: getComponentNameFromType(fiber.type),
       getInspectorData: () => {
@@ -59,9 +59,9 @@ if (__DEV__) {
         };
       },
     }));
-  }
+  };
 
-  const getHostNode = function(fiber: Fiber | null) {
+  const getHostNode = function (fiber: Fiber | null) {
     let hostNode;
     // look for children first for the hostNode
     // as composite fibers do not have a hostNode
@@ -75,15 +75,15 @@ if (__DEV__) {
       fiber = fiber.child;
     }
     return null;
-  }
+  };
 
-  const getHostProps = function(fiber: Fiber) {
+  const getHostProps = function (fiber: Fiber) {
     const host = findCurrentHostFiber(fiber);
     if (host) {
       return host.memoizedProps || emptyObject;
     }
     return emptyObject;
-  }
+  };
 
   getInspectorDataForInstance = function (
     closestInstance: Fiber | null,
@@ -124,14 +124,14 @@ if (__DEV__) {
     };
   };
 
-  const getOwnerHierarchy = function(instance: Fiber) {
+  const getOwnerHierarchy = function (instance: Fiber) {
     const hierarchy: Array<$FlowFixMe> = [];
     traverseOwnerTreeUp(hierarchy, instance);
     return hierarchy;
-  }
+  };
 
   // $FlowFixMe[missing-local-annot]
-  const lastNonHostInstance = function(hierarchy) {
+  const lastNonHostInstance = function (hierarchy) {
     for (let i = hierarchy.length - 1; i > 1; i--) {
       const instance = hierarchy[i];
 
@@ -140,9 +140,9 @@ if (__DEV__) {
       }
     }
     return hierarchy[0];
-  }
+  };
 
-  const traverseOwnerTreeUp = function(
+  const traverseOwnerTreeUp = function (
     hierarchy: Array<$FlowFixMe>,
     instance: Fiber,
   ): void {
@@ -153,7 +153,7 @@ if (__DEV__) {
     } else {
       // TODO: Traverse Server Components owners.
     }
-  }
+  };
 }
 
 function getInspectorDataForViewTag(viewTag: number): InspectorData {
