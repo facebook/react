@@ -11668,8 +11668,8 @@ __DEV__ &&
         }
         pendingEffectsStatus = PENDING_MUTATION_PHASE;
         flushMutationEffects();
-        pendingEffectsStatus = PENDING_LAYOUT_PHASE;
         flushLayoutEffects();
+        flushSpawnedWork();
       }
     }
     function flushMutationEffects() {
@@ -11697,19 +11697,14 @@ __DEV__ &&
           }
         }
         root.current = finishedWork;
-        pendingEffectsStatus = PENDING_AFTER_MUTATION_PHASE;
+        pendingEffectsStatus = PENDING_LAYOUT_PHASE;
       }
     }
     function flushLayoutEffects() {
-      if (
-        pendingEffectsStatus === PENDING_LAYOUT_PHASE ||
-        pendingEffectsStatus === PENDING_AFTER_MUTATION_PHASE
-      ) {
+      if (pendingEffectsStatus === PENDING_LAYOUT_PHASE) {
         pendingEffectsStatus = NO_PENDING_EFFECTS;
         var root = pendingEffectsRoot,
           finishedWork = pendingFinishedWork,
-          lanes = pendingEffectsLanes,
-          recoverableErrors = pendingRecoverableErrors,
           rootHasLayoutEffect = 0 !== (finishedWork.flags & 8772);
         if (0 !== (finishedWork.subtreeFlags & 8772) || rootHasLayoutEffect) {
           rootHasLayoutEffect = ReactSharedInternals.T;
@@ -11730,21 +11725,34 @@ __DEV__ &&
               (ReactSharedInternals.T = rootHasLayoutEffect);
           }
         }
+        pendingEffectsStatus = PENDING_AFTER_MUTATION_PHASE;
+      }
+    }
+    function flushSpawnedWork() {
+      if (
+        pendingEffectsStatus === PENDING_SPAWNED_WORK ||
+        pendingEffectsStatus === PENDING_AFTER_MUTATION_PHASE
+      ) {
+        pendingEffectsStatus = NO_PENDING_EFFECTS;
         requestPaint();
-        (rootHasLayoutEffect =
-          0 !== (finishedWork.subtreeFlags & 10256) ||
-          0 !== (finishedWork.flags & 10256))
+        var root = pendingEffectsRoot,
+          finishedWork = pendingFinishedWork,
+          lanes = pendingEffectsLanes,
+          recoverableErrors = pendingRecoverableErrors,
+          rootDidHavePassiveEffects =
+            0 !== (finishedWork.subtreeFlags & 10256) ||
+            0 !== (finishedWork.flags & 10256);
+        rootDidHavePassiveEffects
           ? (pendingEffectsStatus = PENDING_PASSIVE_PHASE)
           : ((pendingEffectsStatus = NO_PENDING_EFFECTS),
             (pendingEffectsRoot = null),
             releaseRootPooledCache(root, root.pendingLanes),
             (nestedPassiveUpdateCount = 0),
             (rootWithPassiveNestedUpdates = null));
-        previousPriority = root.pendingLanes;
-        0 === previousPriority &&
-          (legacyErrorBoundariesThatAlreadyFailed = null);
-        rootHasLayoutEffect || commitDoubleInvokeEffectsInDEV(root);
-        rootHasLayoutEffect = lanesToEventPriority(lanes);
+        var remainingLanes = root.pendingLanes;
+        0 === remainingLanes && (legacyErrorBoundariesThatAlreadyFailed = null);
+        rootDidHavePassiveEffects || commitDoubleInvokeEffectsInDEV(root);
+        rootDidHavePassiveEffects = lanesToEventPriority(lanes);
         finishedWork = finishedWork.stateNode;
         if (
           injectedHook &&
@@ -11752,7 +11760,7 @@ __DEV__ &&
         )
           try {
             var didError = 128 === (finishedWork.current.flags & 128);
-            switch (rootHasLayoutEffect) {
+            switch (rootDidHavePassiveEffects) {
               case DiscreteEventPriority:
                 var schedulerPriority = ImmediatePriority;
                 break;
@@ -11810,8 +11818,8 @@ __DEV__ &&
         }
         0 !== (pendingEffectsLanes & 3) && flushPendingEffects();
         ensureRootIsScheduled(root);
-        previousPriority = root.pendingLanes;
-        0 !== (lanes & 4194218) && 0 !== (previousPriority & 42)
+        remainingLanes = root.pendingLanes;
+        0 !== (lanes & 4194218) && 0 !== (remainingLanes & 42)
           ? ((nestedUpdateScheduled = !0),
             root === rootWithNestedUpdates
               ? nestedUpdateCount++
@@ -11840,6 +11848,7 @@ __DEV__ &&
     function flushPendingEffects(wasDelayedCommit) {
       flushMutationEffects();
       flushLayoutEffects();
+      flushSpawnedWork();
       return flushPassiveEffects(wasDelayedCommit);
     }
     function flushPassiveEffects() {
@@ -14760,9 +14769,10 @@ __DEV__ &&
       THROTTLED_COMMIT = 2,
       NO_PENDING_EFFECTS = 0,
       PENDING_MUTATION_PHASE = 1,
-      PENDING_AFTER_MUTATION_PHASE = 2,
-      PENDING_LAYOUT_PHASE = 3,
-      PENDING_PASSIVE_PHASE = 4,
+      PENDING_LAYOUT_PHASE = 2,
+      PENDING_AFTER_MUTATION_PHASE = 3,
+      PENDING_SPAWNED_WORK = 4,
+      PENDING_PASSIVE_PHASE = 5,
       pendingEffectsStatus = 0,
       pendingEffectsRoot = null,
       pendingFinishedWork = null,
@@ -14996,10 +15006,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-classic-800c9db2-20250108",
+        version: "19.1.0-www-classic-fd9cfa41-20250108",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-classic-800c9db2-20250108"
+        reconcilerVersion: "19.1.0-www-classic-fd9cfa41-20250108"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15134,5 +15144,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.1.0-www-classic-800c9db2-20250108";
+    exports.version = "19.1.0-www-classic-fd9cfa41-20250108";
   })();
