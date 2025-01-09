@@ -7,7 +7,10 @@
  * @flow
  */
 
-import {enableOwnerStacks} from 'shared/ReactFeatureFlags';
+import {
+  enableOwnerStacks,
+  enableViewTransition,
+} from 'shared/ReactFeatureFlags';
 import type {Fiber} from './ReactInternalTypes';
 import type {ReactComponentInfo} from 'shared/ReactTypes';
 
@@ -23,6 +26,7 @@ import {
   SimpleMemoComponent,
   ClassComponent,
   HostText,
+  ViewTransitionComponent,
 } from './ReactWorkTags';
 import {
   describeBuiltInComponentFrame,
@@ -52,6 +56,11 @@ function describeFiber(fiber: Fiber): string {
       return describeFunctionComponentFrame(fiber.type.render);
     case ClassComponent:
       return describeClassComponentFrame(fiber.type);
+    case ViewTransitionComponent:
+      if (enableViewTransition) {
+        return describeBuiltInComponentFrame('ViewTransition');
+      }
+    // Fallthrough
     default:
       return '';
   }
@@ -123,6 +132,12 @@ export function getOwnerStackByFiberInDev(workInProgress: Fiber): string {
       case SuspenseListComponent:
         info += describeBuiltInComponentFrame('SuspenseList');
         break;
+      case ViewTransitionComponent:
+        if (enableViewTransition) {
+          info += describeBuiltInComponentFrame('SuspenseList');
+          break;
+        }
+      // Fallthrough
       case FunctionComponent:
       case SimpleMemoComponent:
       case ClassComponent:

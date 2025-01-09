@@ -174,6 +174,9 @@ const appServer = new WebpackDevServer(
     port: 8080,
     client: {
       logging: 'warn',
+      overlay: {
+        warnings: false,
+      },
     },
     static: {
       directory: __dirname,
@@ -189,6 +192,9 @@ const e2eRegressionAppServer = new WebpackDevServer(
     port: 8181,
     client: {
       logging: 'warn',
+      overlay: {
+        warnings: false,
+      },
     },
     static: {
       publicPath: '/dist/',

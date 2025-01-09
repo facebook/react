@@ -23,9 +23,13 @@ import {
   REACT_LAZY_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
   REACT_SUSPENSE_TYPE,
+  REACT_VIEW_TRANSITION_TYPE,
 } from 'shared/ReactSymbols';
 
-import {enableOwnerStacks} from 'shared/ReactFeatureFlags';
+import {
+  enableOwnerStacks,
+  enableViewTransition,
+} from 'shared/ReactFeatureFlags';
 
 import {formatOwnerStack} from 'shared/ReactOwnerStackFrames';
 
@@ -95,6 +99,10 @@ function describeComponentStackByType(
     case REACT_SUSPENSE_TYPE: {
       return describeBuiltInComponentFrame('Suspense');
     }
+    case REACT_VIEW_TRANSITION_TYPE:
+      if (enableViewTransition) {
+        return describeBuiltInComponentFrame('ViewTransition');
+      }
   }
   return '';
 }

@@ -23,6 +23,7 @@ import {
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
+  REACT_VIEW_TRANSITION_TYPE,
 } from 'shared/ReactSymbols';
 import isValidElementType from 'shared/isValidElementType';
 import {enableRenderableContext} from 'shared/ReactFeatureFlags';
@@ -40,6 +41,7 @@ export function typeOf(object: any): mixed {
           case REACT_STRICT_MODE_TYPE:
           case REACT_SUSPENSE_TYPE:
           case REACT_SUSPENSE_LIST_TYPE:
+          case REACT_VIEW_TRANSITION_TYPE:
             return type;
           default:
             const $$typeofType = type && type.$$typeof;
