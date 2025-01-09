@@ -793,10 +793,20 @@ export function appendChildToContainer(
   let parentNode;
   if (container.nodeType === COMMENT_NODE) {
     parentNode = (container.parentNode: any);
-    parentNode.insertBefore(child, container);
+    if (supportsMoveBefore) {
+      // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
+      parentNode.moveBefore(child, container);
+    } else {
+      parentNode.insertBefore(child, container);
+    }
   } else {
     parentNode = container;
-    parentNode.appendChild(child);
+    if (supportsMoveBefore) {
+      // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
+      parentNode.moveBefore(child, null);
+    } else {
+      parentNode.appendChild(child);
+    }
   }
   // This container might be used for a portal.
   // If something inside a portal is clicked, that click should bubble
@@ -835,9 +845,19 @@ export function insertInContainerBefore(
   beforeChild: Instance | TextInstance | SuspenseInstance,
 ): void {
   if (container.nodeType === COMMENT_NODE) {
-    (container.parentNode: any).insertBefore(child, beforeChild);
+    if (supportsMoveBefore) {
+      // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
+      (container.parentNode: any).moveBefore(child, beforeChild);
+    } else {
+      (container.parentNode: any).insertBefore(child, beforeChild);
+    }
   } else {
-    container.insertBefore(child, beforeChild);
+    if (supportsMoveBefore) {
+      // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
+      container.moveBefore(child, beforeChild);
+    } else {
+      container.insertBefore(child, beforeChild);
+    }
   }
 }
 
