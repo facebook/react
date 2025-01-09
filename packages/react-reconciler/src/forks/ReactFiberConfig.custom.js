@@ -40,6 +40,7 @@ export opaque type NoTimeout = mixed;
 export opaque type RendererInspectionConfig = mixed;
 export opaque type TransitionStatus = mixed;
 export opaque type FormInstance = mixed;
+export opaque type InstanceMeasurement = mixed;
 export type EventResponder = any;
 
 export const rendererVersion = $$$config.rendererVersion;
@@ -84,6 +85,8 @@ export const maySuspendCommit = $$$config.maySuspendCommit;
 export const preloadInstance = $$$config.preloadInstance;
 export const startSuspendingCommit = $$$config.startSuspendingCommit;
 export const suspendInstance = $$$config.suspendInstance;
+export const suspendOnActiveViewTransition =
+  $$$config.suspendOnActiveViewTransition;
 export const waitForCommitToBeReady = $$$config.waitForCommitToBeReady;
 export const NotPendingTransition = $$$config.NotPendingTransition;
 export const HostTransitionContext = $$$config.HostTransitionContext;
@@ -128,6 +131,18 @@ export const hideInstance = $$$config.hideInstance;
 export const hideTextInstance = $$$config.hideTextInstance;
 export const unhideInstance = $$$config.unhideInstance;
 export const unhideTextInstance = $$$config.unhideTextInstance;
+export const applyViewTransitionName = $$$config.applyViewTransitionName;
+export const restoreViewTransitionName = $$$config.restoreViewTransitionName;
+export const cancelViewTransitionName = $$$config.cancelViewTransitionName;
+export const cancelRootViewTransitionName =
+  $$$config.cancelRootViewTransitionName;
+export const restoreRootViewTransitionName =
+  $$$config.restoreRootViewTransitionName;
+export const measureInstance = $$$config.measureInstance;
+export const wasInstanceInViewport = $$$config.wasInstanceInViewport;
+export const hasInstanceChanged = $$$config.hasInstanceChanged;
+export const hasInstanceAffectedParent = $$$config.hasInstanceAffectedParent;
+export const startViewTransition = $$$config.startViewTransition;
 export const clearContainer = $$$config.clearContainer;
 
 // -------------------

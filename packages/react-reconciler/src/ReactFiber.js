@@ -19,6 +19,10 @@ import type {
   OffscreenProps,
   OffscreenInstance,
 } from './ReactFiberActivityComponent';
+import type {
+  ViewTransitionProps,
+  ViewTransitionInstance,
+} from './ReactFiberViewTransitionComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 
 import {
@@ -37,6 +41,7 @@ import {
   disableLegacyMode,
   enableObjectFiber,
   enableOwnerStacks,
+  enableViewTransition,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot} from './ReactRootTags';
@@ -66,6 +71,7 @@ import {
   LegacyHiddenComponent,
   TracingMarkerComponent,
   Throw,
+  ViewTransitionComponent,
 } from './ReactWorkTags';
 import {OffscreenVisible} from './ReactFiberActivityComponent';
 import {getComponentNameFromOwner} from 'react-reconciler/src/getComponentNameFromFiber';
@@ -101,6 +107,7 @@ import {
   REACT_LEGACY_HIDDEN_TYPE,
   REACT_TRACING_MARKER_TYPE,
   REACT_ELEMENT_TYPE,
+  REACT_VIEW_TRANSITION_TYPE,
 } from 'shared/ReactSymbols';
 import {TransitionTracingMarker} from './ReactFiberTracingMarkerComponent';
 import {
@@ -617,6 +624,11 @@ export function createFiberFromTypeAndProps(
           return createFiberFromLegacyHidden(pendingProps, mode, lanes, key);
         }
       // Fall through
+      case REACT_VIEW_TRANSITION_TYPE:
+        if (enableViewTransition) {
+          return createFiberFromViewTransition(pendingProps, mode, lanes, key);
+        }
+      // Fall through
       case REACT_SCOPE_TYPE:
         if (enableScopeAPI) {
           return createFiberFromScope(type, pendingProps, mode, lanes, key);
@@ -860,6 +872,23 @@ export function createFiberFromOffscreen(
     attach: () => attachOffscreenInstance(primaryChildInstance),
   };
   fiber.stateNode = primaryChildInstance;
+  return fiber;
+}
+
+export function createFiberFromViewTransition(
+  pendingProps: ViewTransitionProps,
+  mode: TypeOfMode,
+  lanes: Lanes,
+  key: null | string,
+): Fiber {
+  const fiber = createFiber(ViewTransitionComponent, pendingProps, key, mode);
+  fiber.elementType = REACT_VIEW_TRANSITION_TYPE;
+  fiber.lanes = lanes;
+  const instance: ViewTransitionInstance = {
+    autoName: null,
+    paired: null,
+  };
+  fiber.stateNode = instance;
   return fiber;
 }
 

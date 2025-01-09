@@ -15,6 +15,8 @@ import {
   REACT_PROFILER_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
+  REACT_SUSPENSE_LIST_TYPE,
+  REACT_VIEW_TRANSITION_TYPE,
 } from 'shared/ReactSymbols';
 import {
   cloneElement,
@@ -69,7 +71,6 @@ export {
   memo,
   cache,
   startTransition,
-  REACT_SUSPENSE_TYPE as unstable_SuspenseList,
   getCacheForType as unstable_getCacheForType,
   postpone as unstable_postpone,
   useId,
@@ -78,4 +79,7 @@ export {
   useMemo,
   useActionState,
   version,
+  // Experimental
+  REACT_SUSPENSE_LIST_TYPE as unstable_SuspenseList,
+  REACT_VIEW_TRANSITION_TYPE as unstable_ViewTransition,
 };

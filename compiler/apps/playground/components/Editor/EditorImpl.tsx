@@ -77,6 +77,7 @@ function invokeCompiler(
       debugLogIRs: logIR,
       logEvent: () => {},
     },
+    panicThreshold: 'all_errors',
     environment,
   });
   const ast = parseInput(source, language);

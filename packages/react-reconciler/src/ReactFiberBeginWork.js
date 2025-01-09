@@ -28,6 +28,11 @@ import type {
   OffscreenQueue,
   OffscreenInstance,
 } from './ReactFiberActivityComponent';
+import type {
+  ViewTransitionProps,
+  ViewTransitionInstance,
+} from './ReactFiberViewTransitionComponent';
+import {assignViewTransitionAutoName} from './ReactFiberViewTransitionComponent';
 import {OffscreenDetached} from './ReactFiberActivityComponent';
 import type {
   Cache,
@@ -71,6 +76,7 @@ import {
   CacheComponent,
   TracingMarkerComponent,
   Throw,
+  ViewTransitionComponent,
 } from './ReactWorkTags';
 import {
   NoFlags,
@@ -90,6 +96,7 @@ import {
   ForceClientRender,
   Passive,
   DidDefer,
+  ViewTransitionNamedStatic,
 } from './ReactFiberFlags';
 import {
   disableLegacyContext,
@@ -107,6 +114,7 @@ import {
   disableDefaultPropsExceptForClasses,
   enableOwnerStacks,
   enableHydrationLaneScheduling,
+  enableViewTransition,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
@@ -257,6 +265,7 @@ import {
   markSkippedUpdateLanes,
   getWorkInProgressRoot,
   peekDeferredLane,
+  trackAppearingViewTransition,
 } from './ReactFiberWorkLoop';
 import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates';
 import {pushCacheProvider, CacheContext} from './ReactFiberCacheComponent';
@@ -3231,6 +3240,35 @@ function updateSuspenseListComponent(
   return workInProgress.child;
 }
 
+function updateViewTransition(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderLanes: Lanes,
+) {
+  const pendingProps: ViewTransitionProps = workInProgress.pendingProps;
+  const instance: ViewTransitionInstance = workInProgress.stateNode;
+  if (pendingProps.name != null && pendingProps.name !== 'auto') {
+    // Explicitly named boundary. We track it so that we can pair it up with another explicit
+    // boundary if we get deleted.
+    workInProgress.flags |= ViewTransitionNamedStatic;
+    if (current === null) {
+      // This is a new mount. We track it in case we end up having a deletion with the same name.
+      // TODO: A problem with this strategy is that this subtree might not actually end up mounted.
+      trackAppearingViewTransition(instance, pendingProps.name);
+    }
+  } else {
+    // Assign an auto generated name using the useId algorthim if an explicit one is not provided.
+    // We don't need the name yet but we do it here to allow hydration state to be used.
+    // We might end up needing these to line up if we want to Transition from dehydrated fallback
+    // to client rendered content. If we don't end up using that we could just assign an incremeting
+    // counter in the commit phase instead.
+    assignViewTransitionAutoName(pendingProps, instance);
+  }
+  const nextChildren = pendingProps.children;
+  reconcileChildren(current, workInProgress, nextChildren, renderLanes);
+  return workInProgress.child;
+}
+
 function updatePortalComponent(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -4012,6 +4050,12 @@ function beginWork(
           workInProgress,
           renderLanes,
         );
+      }
+      break;
+    }
+    case ViewTransitionComponent: {
+      if (enableViewTransition) {
+        return updateViewTransition(current, workInProgress, renderLanes);
       }
       break;
     }

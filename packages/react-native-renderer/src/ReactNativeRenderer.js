@@ -34,7 +34,6 @@ import {
 // Modules provided by RN:
 import {UIManager} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
-import {getInspectorDataForInstance} from './ReactNativeFiberInspector';
 import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import {
   findHostInstance_DEPRECATED,
@@ -206,9 +205,6 @@ export {
   unmountComponentAtNodeAndRemoveContainer,
   createPortal,
   batchedUpdates as unstable_batchedUpdates,
-  // This export is typically undefined in production builds.
-  // See the "enableGetInspectorDataForInstanceInProduction" flag.
-  getInspectorDataForInstance,
   // DEV-only:
   isChildPublicInstance,
 };

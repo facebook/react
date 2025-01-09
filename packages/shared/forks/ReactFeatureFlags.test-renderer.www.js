@@ -38,7 +38,6 @@ export const enableUseEffectEventHook = false;
 export const favorSafetyOverHydrationPerf = true;
 export const enableLegacyFBSupport = false;
 export const enableMoveBefore = false;
-export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableRenderableContext = false;
 export const enableFabricCompleteRootInCommitPhase = false;
 export const enableHiddenSubtreeInsertionEffectCleanup = true;
@@ -55,7 +54,6 @@ export const enableTransitionTracing = false;
 
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableFizzExternalRuntime = false;
-export const enableDeferRootSchedulingToMicrotask = true;
 
 export const alwaysThrottleRetries = true;
 
@@ -84,6 +82,7 @@ export const enableHydrationLaneScheduling = true;
 export const enableYieldingBeforePassive = false;
 
 export const enableThrottledScheduling = false;
+export const enableViewTransition = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);
