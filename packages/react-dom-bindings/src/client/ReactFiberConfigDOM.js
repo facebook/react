@@ -1201,8 +1201,9 @@ export function hasInstanceAffectedParent(
 export function startViewTransition(
   rootContainer: Container,
   mutationCallback: () => void,
-  afterMutationCallback: () => void,
   layoutCallback: () => void,
+  afterMutationCallback: () => void,
+  spawnedWorkCallback: () => void,
   passiveCallback: () => mixed,
 ): boolean {
   const ownerDocument: Document =
@@ -1213,11 +1214,15 @@ export function startViewTransition(
     // $FlowFixMe[prop-missing]
     const transition = ownerDocument.startViewTransition({
       update() {
-        mutationCallback();
-        // TODO: Wait for fonts.
+        // Note: We read the existence of a pending navigation before we apply the
+        // mutations. That way we're not waiting on a navigation that we spawned
+        // from this update. Only navigations that started before this commit.
         const ownerWindow = ownerDocument.defaultView;
         const pendingNavigation =
           ownerWindow.navigation && ownerWindow.navigation.transition;
+        mutationCallback();
+        // TODO: Wait for fonts.
+        layoutCallback();
         if (pendingNavigation) {
           return pendingNavigation.finished.then(
             afterMutationCallback,
@@ -1241,13 +1246,13 @@ export function startViewTransition(
           console.error(
             'A ViewTransition timed out because a Navigation stalled. ' +
               'This can happen if a Navigation is blocked on React itself. ' +
-              "Such as if it's resolved inside useLayoutEffect. " +
-              'This can be solved by moving the resolution to useInsertionEffect.',
+              "Such as if it's resolved inside useEffect. " +
+              'This can be solved by moving the resolution to useLayoutEffect.',
           );
         }
       });
     }
-    transition.ready.then(layoutCallback, layoutCallback);
+    transition.ready.then(spawnedWorkCallback, spawnedWorkCallback);
     transition.finished.then(() => {
       // $FlowFixMe[prop-missing]
       ownerDocument.__reactViewTransition = null;

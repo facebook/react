@@ -1,6 +1,6 @@
 import React, {
   startTransition,
-  useInsertionEffect,
+  useLayoutEffect,
   useEffect,
   useState,
 } from 'react';
@@ -68,7 +68,7 @@ export default function App({assets, initialURL}) {
     }
   }, []);
   const pendingNav = routerState.pendingNav;
-  useInsertionEffect(() => {
+  useLayoutEffect(() => {
     pendingNav();
   }, [pendingNav]);
   return (
