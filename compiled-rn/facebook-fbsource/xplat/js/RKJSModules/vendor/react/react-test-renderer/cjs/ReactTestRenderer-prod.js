@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<5081656bfc4d18d22597933837d57c45>>
+ * @generated SignedSource<<0bcc153fd4af112a8f7027bbfb76fb62>>
  */
 
 "use strict";
@@ -1301,7 +1301,7 @@ function scheduleTaskForRootDuringMicrotask(root, currentTime) {
   return currentTime;
 }
 function performWorkOnRootViaSchedulerTask(root, didTimeout) {
-  if (0 !== pendingEffectsStatus && 4 !== pendingEffectsStatus)
+  if (0 !== pendingEffectsStatus && 5 !== pendingEffectsStatus)
     return (root.callbackNode = null), (root.callbackPriority = 0), null;
   var originalCallbackNode = root.callbackNode;
   if (flushPendingEffects(!0) && root.callbackNode !== originalCallbackNode)
@@ -8869,8 +8869,8 @@ function commitRoot(
     }
     pendingEffectsStatus = 1;
     flushMutationEffects();
-    pendingEffectsStatus = 3;
     flushLayoutEffects();
+    flushSpawnedWork();
   }
 }
 function flushMutationEffects() {
@@ -8899,12 +8899,10 @@ function flushMutationEffects() {
   }
 }
 function flushLayoutEffects() {
-  if (3 === pendingEffectsStatus || 2 === pendingEffectsStatus) {
+  if (2 === pendingEffectsStatus) {
     pendingEffectsStatus = 0;
     var root = pendingEffectsRoot,
       finishedWork = pendingFinishedWork,
-      lanes = pendingEffectsLanes,
-      recoverableErrors = pendingRecoverableErrors,
       rootHasLayoutEffect = 0 !== (finishedWork.flags & 8772);
     if (0 !== (finishedWork.subtreeFlags & 8772) || rootHasLayoutEffect) {
       rootHasLayoutEffect = ReactSharedInternals.T;
@@ -8921,16 +8919,25 @@ function flushLayoutEffects() {
           (ReactSharedInternals.T = rootHasLayoutEffect);
       }
     }
+    pendingEffectsStatus = 3;
+  }
+}
+function flushSpawnedWork() {
+  if (4 === pendingEffectsStatus || 3 === pendingEffectsStatus) {
+    pendingEffectsStatus = 0;
     requestPaint();
+    var root = pendingEffectsRoot,
+      finishedWork = pendingFinishedWork,
+      lanes = pendingEffectsLanes,
+      recoverableErrors = pendingRecoverableErrors;
     0 !== (finishedWork.subtreeFlags & 10256) ||
     0 !== (finishedWork.flags & 10256)
-      ? (pendingEffectsStatus = 4)
+      ? (pendingEffectsStatus = 5)
       : ((pendingEffectsStatus = 0),
         (pendingEffectsRoot = null),
         releaseRootPooledCache(root, root.pendingLanes));
-    rootHasLayoutEffect = root.pendingLanes;
-    0 === rootHasLayoutEffect &&
-      (legacyErrorBoundariesThatAlreadyFailed = null);
+    var remainingLanes = root.pendingLanes;
+    0 === remainingLanes && (legacyErrorBoundariesThatAlreadyFailed = null);
     lanesToEventPriority(lanes);
     finishedWork = finishedWork.stateNode;
     if (injectedHook && "function" === typeof injectedHook.onCommitFiberRoot)
@@ -8944,30 +8951,29 @@ function flushLayoutEffects() {
       } catch (err) {}
     if (null !== recoverableErrors) {
       finishedWork = ReactSharedInternals.T;
-      rootHasLayoutEffect = currentUpdatePriority;
+      remainingLanes = currentUpdatePriority;
       currentUpdatePriority = 2;
       ReactSharedInternals.T = null;
       try {
-        var onRecoverableError = root.onRecoverableError;
         for (
-          previousPriority = 0;
-          previousPriority < recoverableErrors.length;
-          previousPriority++
+          var onRecoverableError = root.onRecoverableError, i = 0;
+          i < recoverableErrors.length;
+          i++
         ) {
-          var recoverableError = recoverableErrors[previousPriority];
+          var recoverableError = recoverableErrors[i];
           onRecoverableError(recoverableError.value, {
             componentStack: recoverableError.stack
           });
         }
       } finally {
         (ReactSharedInternals.T = finishedWork),
-          (currentUpdatePriority = rootHasLayoutEffect);
+          (currentUpdatePriority = remainingLanes);
       }
     }
     0 !== (pendingEffectsLanes & 3) && 0 !== root.tag && flushPendingEffects();
     ensureRootIsScheduled(root);
-    rootHasLayoutEffect = root.pendingLanes;
-    0 !== (lanes & 4194218) && 0 !== (rootHasLayoutEffect & 42)
+    remainingLanes = root.pendingLanes;
+    0 !== (lanes & 4194218) && 0 !== (remainingLanes & 42)
       ? root === rootWithNestedUpdates
         ? nestedUpdateCount++
         : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root))
@@ -8984,10 +8990,11 @@ function releaseRootPooledCache(root, remainingLanes) {
 function flushPendingEffects(wasDelayedCommit) {
   flushMutationEffects();
   flushLayoutEffects();
+  flushSpawnedWork();
   return flushPassiveEffects(wasDelayedCommit);
 }
 function flushPassiveEffects() {
-  if (4 !== pendingEffectsStatus) return !1;
+  if (5 !== pendingEffectsStatus) return !1;
   var root = pendingEffectsRoot,
     remainingLanes = pendingEffectsRemainingLanes;
   pendingEffectsRemainingLanes = 0;
@@ -9818,24 +9825,24 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var internals$jscomp$inline_1404 = {
+var internals$jscomp$inline_1403 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-800c9db2-20250108",
+  version: "19.1.0-native-fb-fd9cfa41-20250108",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-800c9db2-20250108"
+  reconcilerVersion: "19.1.0-native-fb-fd9cfa41-20250108"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1405 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1404 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1405.isDisabled &&
-    hook$jscomp$inline_1405.supportsFiber
+    !hook$jscomp$inline_1404.isDisabled &&
+    hook$jscomp$inline_1404.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1405.inject(
-        internals$jscomp$inline_1404
+      (rendererID = hook$jscomp$inline_1404.inject(
+        internals$jscomp$inline_1403
       )),
-        (injectedHook = hook$jscomp$inline_1405);
+        (injectedHook = hook$jscomp$inline_1404);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
@@ -9959,4 +9966,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.1.0-native-fb-800c9db2-20250108";
+exports.version = "19.1.0-native-fb-fd9cfa41-20250108";

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7f23db45c399987daa85456450784354>>
+ * @generated SignedSource<<d8ae65dc2da931f283351bd9228f4b3b>>
  */
 
 "use strict";
@@ -1231,7 +1231,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_284 = {
+var injectedNamesToPlugins$jscomp$inline_283 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -1277,32 +1277,32 @@ var injectedNamesToPlugins$jscomp$inline_284 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_285 = !1,
-  pluginName$jscomp$inline_286;
-for (pluginName$jscomp$inline_286 in injectedNamesToPlugins$jscomp$inline_284)
+  isOrderingDirty$jscomp$inline_284 = !1,
+  pluginName$jscomp$inline_285;
+for (pluginName$jscomp$inline_285 in injectedNamesToPlugins$jscomp$inline_283)
   if (
-    injectedNamesToPlugins$jscomp$inline_284.hasOwnProperty(
-      pluginName$jscomp$inline_286
+    injectedNamesToPlugins$jscomp$inline_283.hasOwnProperty(
+      pluginName$jscomp$inline_285
     )
   ) {
-    var pluginModule$jscomp$inline_287 =
-      injectedNamesToPlugins$jscomp$inline_284[pluginName$jscomp$inline_286];
+    var pluginModule$jscomp$inline_286 =
+      injectedNamesToPlugins$jscomp$inline_283[pluginName$jscomp$inline_285];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_286) ||
-      namesToPlugins[pluginName$jscomp$inline_286] !==
-        pluginModule$jscomp$inline_287
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_285) ||
+      namesToPlugins[pluginName$jscomp$inline_285] !==
+        pluginModule$jscomp$inline_286
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_286])
+      if (namesToPlugins[pluginName$jscomp$inline_285])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_286 + "`.")
+            (pluginName$jscomp$inline_285 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_286] =
-        pluginModule$jscomp$inline_287;
-      isOrderingDirty$jscomp$inline_285 = !0;
+      namesToPlugins[pluginName$jscomp$inline_285] =
+        pluginModule$jscomp$inline_286;
+      isOrderingDirty$jscomp$inline_284 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_285 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_284 && recomputePluginOrdering();
 var emptyObject$1 = {},
   removedKeys = null,
   removedKeyCount = 0,
@@ -2549,7 +2549,7 @@ function scheduleTaskForRootDuringMicrotask(root, currentTime) {
   return 2;
 }
 function performWorkOnRootViaSchedulerTask(root, didTimeout) {
-  if (0 !== pendingEffectsStatus && 4 !== pendingEffectsStatus)
+  if (0 !== pendingEffectsStatus && 5 !== pendingEffectsStatus)
     return (root.callbackNode = null), (root.callbackPriority = 0), null;
   var originalCallbackNode = root.callbackNode;
   if (flushPendingEffects(!0) && root.callbackNode !== originalCallbackNode)
@@ -10190,8 +10190,8 @@ function commitRoot(
     }
     pendingEffectsStatus = 1;
     flushMutationEffects();
-    pendingEffectsStatus = 3;
     flushLayoutEffects();
+    flushSpawnedWork();
   }
 }
 function flushMutationEffects() {
@@ -10220,12 +10220,10 @@ function flushMutationEffects() {
   }
 }
 function flushLayoutEffects() {
-  if (3 === pendingEffectsStatus || 2 === pendingEffectsStatus) {
+  if (2 === pendingEffectsStatus) {
     pendingEffectsStatus = 0;
     var root = pendingEffectsRoot,
       finishedWork = pendingFinishedWork,
-      lanes = pendingEffectsLanes,
-      recoverableErrors = pendingRecoverableErrors,
       rootHasLayoutEffect = 0 !== (finishedWork.flags & 8772);
     if (0 !== (finishedWork.subtreeFlags & 8772) || rootHasLayoutEffect) {
       rootHasLayoutEffect = ReactSharedInternals.T;
@@ -10242,16 +10240,25 @@ function flushLayoutEffects() {
           (ReactSharedInternals.T = rootHasLayoutEffect);
       }
     }
+    pendingEffectsStatus = 3;
+  }
+}
+function flushSpawnedWork() {
+  if (4 === pendingEffectsStatus || 3 === pendingEffectsStatus) {
+    pendingEffectsStatus = 0;
     requestPaint();
+    var root = pendingEffectsRoot,
+      finishedWork = pendingFinishedWork,
+      lanes = pendingEffectsLanes,
+      recoverableErrors = pendingRecoverableErrors;
     0 !== (finishedWork.subtreeFlags & 10256) ||
     0 !== (finishedWork.flags & 10256)
-      ? (pendingEffectsStatus = 4)
+      ? (pendingEffectsStatus = 5)
       : ((pendingEffectsStatus = 0),
         (pendingEffectsRoot = null),
         releaseRootPooledCache(root, root.pendingLanes));
-    rootHasLayoutEffect = root.pendingLanes;
-    0 === rootHasLayoutEffect &&
-      (legacyErrorBoundariesThatAlreadyFailed = null);
+    var remainingLanes = root.pendingLanes;
+    0 === remainingLanes && (legacyErrorBoundariesThatAlreadyFailed = null);
     lanesToEventPriority(lanes);
     finishedWork = finishedWork.stateNode;
     if (injectedHook && "function" === typeof injectedHook.onCommitFiberRoot)
@@ -10265,30 +10272,29 @@ function flushLayoutEffects() {
       } catch (err) {}
     if (null !== recoverableErrors) {
       finishedWork = ReactSharedInternals.T;
-      rootHasLayoutEffect = currentUpdatePriority;
+      remainingLanes = currentUpdatePriority;
       currentUpdatePriority = 2;
       ReactSharedInternals.T = null;
       try {
-        var onRecoverableError = root.onRecoverableError;
         for (
-          previousPriority = 0;
-          previousPriority < recoverableErrors.length;
-          previousPriority++
+          var onRecoverableError = root.onRecoverableError, i = 0;
+          i < recoverableErrors.length;
+          i++
         ) {
-          var recoverableError = recoverableErrors[previousPriority];
+          var recoverableError = recoverableErrors[i];
           onRecoverableError(recoverableError.value, {
             componentStack: recoverableError.stack
           });
         }
       } finally {
         (ReactSharedInternals.T = finishedWork),
-          (currentUpdatePriority = rootHasLayoutEffect);
+          (currentUpdatePriority = remainingLanes);
       }
     }
     0 !== (pendingEffectsLanes & 3) && 0 !== root.tag && flushPendingEffects();
     ensureRootIsScheduled(root);
-    rootHasLayoutEffect = root.pendingLanes;
-    0 !== (lanes & 4194218) && 0 !== (rootHasLayoutEffect & 42)
+    remainingLanes = root.pendingLanes;
+    0 !== (lanes & 4194218) && 0 !== (remainingLanes & 42)
       ? root === rootWithNestedUpdates
         ? nestedUpdateCount++
         : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root))
@@ -10305,10 +10311,11 @@ function releaseRootPooledCache(root, remainingLanes) {
 function flushPendingEffects(wasDelayedCommit) {
   flushMutationEffects();
   flushLayoutEffects();
+  flushSpawnedWork();
   return flushPassiveEffects(wasDelayedCommit);
 }
 function flushPassiveEffects() {
-  if (4 !== pendingEffectsStatus) return !1;
+  if (5 !== pendingEffectsStatus) return !1;
   var root = pendingEffectsRoot,
     remainingLanes = pendingEffectsRemainingLanes;
   pendingEffectsRemainingLanes = 0;
@@ -11166,26 +11173,26 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1251 = {
+  internals$jscomp$inline_1250 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-800c9db2-20250108",
+    version: "19.1.0-native-fb-fd9cfa41-20250108",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-800c9db2-20250108"
+    reconcilerVersion: "19.1.0-native-fb-fd9cfa41-20250108"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1251.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1250.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1563 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1562 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1563.isDisabled &&
-    hook$jscomp$inline_1563.supportsFiber
+    !hook$jscomp$inline_1562.isDisabled &&
+    hook$jscomp$inline_1562.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1563.inject(
-        internals$jscomp$inline_1251
+      (rendererID = hook$jscomp$inline_1562.inject(
+        internals$jscomp$inline_1250
       )),
-        (injectedHook = hook$jscomp$inline_1563);
+        (injectedHook = hook$jscomp$inline_1562);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

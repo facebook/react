@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<de729bf7b53cc1aa289faaa0801fca8e>>
+ * @generated SignedSource<<478cf56daf9ae72032baf2ff3f9d74a7>>
  */
 
 "use strict";
@@ -1404,7 +1404,7 @@ function scheduleTaskForRootDuringMicrotask(root, currentTime) {
 }
 function performWorkOnRootViaSchedulerTask(root, didTimeout) {
   nestedUpdateScheduled = currentUpdateIsNested = !1;
-  if (0 !== pendingEffectsStatus && 4 !== pendingEffectsStatus)
+  if (0 !== pendingEffectsStatus && 5 !== pendingEffectsStatus)
     return (root.callbackNode = null), (root.callbackPriority = 0), null;
   var originalCallbackNode = root.callbackNode;
   if (flushPendingEffects(!0) && root.callbackNode !== originalCallbackNode)
@@ -9384,8 +9384,8 @@ function commitRoot(
     }
     pendingEffectsStatus = 1;
     flushMutationEffects();
-    pendingEffectsStatus = 3;
     flushLayoutEffects();
+    flushSpawnedWork();
   }
 }
 function flushMutationEffects() {
@@ -9414,12 +9414,11 @@ function flushMutationEffects() {
   }
 }
 function flushLayoutEffects() {
-  if (3 === pendingEffectsStatus || 2 === pendingEffectsStatus) {
+  if (2 === pendingEffectsStatus) {
     pendingEffectsStatus = 0;
     var root = pendingEffectsRoot,
       finishedWork = pendingFinishedWork,
       lanes = pendingEffectsLanes,
-      recoverableErrors = pendingRecoverableErrors,
       rootHasLayoutEffect = 0 !== (finishedWork.flags & 8772);
     if (0 !== (finishedWork.subtreeFlags & 8772) || rootHasLayoutEffect) {
       rootHasLayoutEffect = ReactSharedInternals.T;
@@ -9444,22 +9443,31 @@ function flushLayoutEffects() {
           (ReactSharedInternals.T = rootHasLayoutEffect);
       }
     }
+    pendingEffectsStatus = 3;
+  }
+}
+function flushSpawnedWork() {
+  if (4 === pendingEffectsStatus || 3 === pendingEffectsStatus) {
+    pendingEffectsStatus = 0;
     requestPaint();
+    var root = pendingEffectsRoot,
+      finishedWork = pendingFinishedWork,
+      lanes = pendingEffectsLanes,
+      recoverableErrors = pendingRecoverableErrors;
     0 !== (finishedWork.subtreeFlags & 10256) ||
     0 !== (finishedWork.flags & 10256)
-      ? (pendingEffectsStatus = 4)
+      ? (pendingEffectsStatus = 5)
       : ((pendingEffectsStatus = 0),
         (pendingEffectsRoot = null),
         releaseRootPooledCache(root, root.pendingLanes));
-    rootHasLayoutEffect = root.pendingLanes;
-    0 === rootHasLayoutEffect &&
-      (legacyErrorBoundariesThatAlreadyFailed = null);
-    rootHasLayoutEffect = lanesToEventPriority(lanes);
+    var remainingLanes = root.pendingLanes;
+    0 === remainingLanes && (legacyErrorBoundariesThatAlreadyFailed = null);
+    remainingLanes = lanesToEventPriority(lanes);
     finishedWork = finishedWork.stateNode;
     if (injectedHook && "function" === typeof injectedHook.onCommitFiberRoot)
       try {
         var didError = 128 === (finishedWork.current.flags & 128);
-        switch (rootHasLayoutEffect) {
+        switch (remainingLanes) {
           case 2:
             var schedulerPriority = ImmediatePriority;
             break;
@@ -9506,8 +9514,8 @@ function flushLayoutEffects() {
     }
     0 !== (pendingEffectsLanes & 3) && 0 !== root.tag && flushPendingEffects();
     ensureRootIsScheduled(root);
-    rootHasLayoutEffect = root.pendingLanes;
-    0 !== (lanes & 4194218) && 0 !== (rootHasLayoutEffect & 42)
+    remainingLanes = root.pendingLanes;
+    0 !== (lanes & 4194218) && 0 !== (remainingLanes & 42)
       ? ((nestedUpdateScheduled = !0),
         root === rootWithNestedUpdates
           ? nestedUpdateCount++
@@ -9526,10 +9534,11 @@ function releaseRootPooledCache(root, remainingLanes) {
 function flushPendingEffects(wasDelayedCommit) {
   flushMutationEffects();
   flushLayoutEffects();
+  flushSpawnedWork();
   return flushPassiveEffects(wasDelayedCommit);
 }
 function flushPassiveEffects() {
-  if (4 !== pendingEffectsStatus) return !1;
+  if (5 !== pendingEffectsStatus) return !1;
   var root = pendingEffectsRoot,
     remainingLanes = pendingEffectsRemainingLanes;
   pendingEffectsRemainingLanes = 0;
@@ -10386,17 +10395,17 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var internals$jscomp$inline_1222 = {
+var internals$jscomp$inline_1221 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-800c9db2-20250108",
+  version: "19.1.0-native-fb-fd9cfa41-20250108",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-800c9db2-20250108",
+  reconcilerVersion: "19.1.0-native-fb-fd9cfa41-20250108",
   getLaneLabelMap: function () {
     for (
-      var map = new Map(), lane = 1, index$148 = 0;
-      31 > index$148;
-      index$148++
+      var map = new Map(), lane = 1, index$147 = 0;
+      31 > index$147;
+      index$147++
     ) {
       var label = getLabelForLane(lane);
       map.set(lane, label);
@@ -10409,16 +10418,16 @@ var internals$jscomp$inline_1222 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1462 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1461 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1462.isDisabled &&
-    hook$jscomp$inline_1462.supportsFiber
+    !hook$jscomp$inline_1461.isDisabled &&
+    hook$jscomp$inline_1461.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1462.inject(
-        internals$jscomp$inline_1222
+      (rendererID = hook$jscomp$inline_1461.inject(
+        internals$jscomp$inline_1221
       )),
-        (injectedHook = hook$jscomp$inline_1462);
+        (injectedHook = hook$jscomp$inline_1461);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
@@ -10542,4 +10551,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.1.0-native-fb-800c9db2-20250108";
+exports.version = "19.1.0-native-fb-fd9cfa41-20250108";

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3362e89497a7b5b2f9b77b0d0f0f5f6f>>
+ * @generated SignedSource<<c76ed7e2c73c14ce2da35356903e5ae9>>
  */
 
 "use strict";
@@ -1235,7 +1235,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_300 = {
+var injectedNamesToPlugins$jscomp$inline_299 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -1281,32 +1281,32 @@ var injectedNamesToPlugins$jscomp$inline_300 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_301 = !1,
-  pluginName$jscomp$inline_302;
-for (pluginName$jscomp$inline_302 in injectedNamesToPlugins$jscomp$inline_300)
+  isOrderingDirty$jscomp$inline_300 = !1,
+  pluginName$jscomp$inline_301;
+for (pluginName$jscomp$inline_301 in injectedNamesToPlugins$jscomp$inline_299)
   if (
-    injectedNamesToPlugins$jscomp$inline_300.hasOwnProperty(
-      pluginName$jscomp$inline_302
+    injectedNamesToPlugins$jscomp$inline_299.hasOwnProperty(
+      pluginName$jscomp$inline_301
     )
   ) {
-    var pluginModule$jscomp$inline_303 =
-      injectedNamesToPlugins$jscomp$inline_300[pluginName$jscomp$inline_302];
+    var pluginModule$jscomp$inline_302 =
+      injectedNamesToPlugins$jscomp$inline_299[pluginName$jscomp$inline_301];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_302) ||
-      namesToPlugins[pluginName$jscomp$inline_302] !==
-        pluginModule$jscomp$inline_303
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_301) ||
+      namesToPlugins[pluginName$jscomp$inline_301] !==
+        pluginModule$jscomp$inline_302
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_302])
+      if (namesToPlugins[pluginName$jscomp$inline_301])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_302 + "`.")
+            (pluginName$jscomp$inline_301 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_302] =
-        pluginModule$jscomp$inline_303;
-      isOrderingDirty$jscomp$inline_301 = !0;
+      namesToPlugins[pluginName$jscomp$inline_301] =
+        pluginModule$jscomp$inline_302;
+      isOrderingDirty$jscomp$inline_300 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_301 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_300 && recomputePluginOrdering();
 var emptyObject$1 = {},
   removedKeys = null,
   removedKeyCount = 0,
@@ -2686,7 +2686,7 @@ function scheduleTaskForRootDuringMicrotask(root, currentTime) {
 }
 function performWorkOnRootViaSchedulerTask(root, didTimeout) {
   nestedUpdateScheduled = currentUpdateIsNested = !1;
-  if (0 !== pendingEffectsStatus && 4 !== pendingEffectsStatus)
+  if (0 !== pendingEffectsStatus && 5 !== pendingEffectsStatus)
     return (root.callbackNode = null), (root.callbackPriority = 0), null;
   var originalCallbackNode = root.callbackNode;
   if (flushPendingEffects(!0) && root.callbackNode !== originalCallbackNode)
@@ -10767,8 +10767,8 @@ function commitRoot(
     }
     pendingEffectsStatus = 1;
     flushMutationEffects();
-    pendingEffectsStatus = 3;
     flushLayoutEffects();
+    flushSpawnedWork();
   }
 }
 function flushMutationEffects() {
@@ -10801,12 +10801,11 @@ function flushMutationEffects() {
   }
 }
 function flushLayoutEffects() {
-  if (3 === pendingEffectsStatus || 2 === pendingEffectsStatus) {
+  if (2 === pendingEffectsStatus) {
     pendingEffectsStatus = 0;
     var root = pendingEffectsRoot,
       finishedWork = pendingFinishedWork,
       lanes = pendingEffectsLanes,
-      recoverableErrors = pendingRecoverableErrors,
       rootHasLayoutEffect = 0 !== (finishedWork.flags & 8772);
     if (0 !== (finishedWork.subtreeFlags & 8772) || rootHasLayoutEffect) {
       rootHasLayoutEffect = ReactSharedInternals.T;
@@ -10834,22 +10833,31 @@ function flushLayoutEffects() {
           (ReactSharedInternals.T = rootHasLayoutEffect);
       }
     }
+    pendingEffectsStatus = 3;
+  }
+}
+function flushSpawnedWork() {
+  if (4 === pendingEffectsStatus || 3 === pendingEffectsStatus) {
+    pendingEffectsStatus = 0;
     requestPaint();
+    var root = pendingEffectsRoot,
+      finishedWork = pendingFinishedWork,
+      lanes = pendingEffectsLanes,
+      recoverableErrors = pendingRecoverableErrors;
     0 !== (finishedWork.subtreeFlags & 10256) ||
     0 !== (finishedWork.flags & 10256)
-      ? (pendingEffectsStatus = 4)
+      ? (pendingEffectsStatus = 5)
       : ((pendingEffectsStatus = 0),
         (pendingEffectsRoot = null),
         releaseRootPooledCache(root, root.pendingLanes));
-    rootHasLayoutEffect = root.pendingLanes;
-    0 === rootHasLayoutEffect &&
-      (legacyErrorBoundariesThatAlreadyFailed = null);
-    rootHasLayoutEffect = lanesToEventPriority(lanes);
+    var remainingLanes = root.pendingLanes;
+    0 === remainingLanes && (legacyErrorBoundariesThatAlreadyFailed = null);
+    remainingLanes = lanesToEventPriority(lanes);
     finishedWork = finishedWork.stateNode;
     if (injectedHook && "function" === typeof injectedHook.onCommitFiberRoot)
       try {
         var didError = 128 === (finishedWork.current.flags & 128);
-        switch (rootHasLayoutEffect) {
+        switch (remainingLanes) {
           case 2:
             var schedulerPriority = ImmediatePriority;
             break;
@@ -10897,8 +10905,8 @@ function flushLayoutEffects() {
     }
     0 !== (pendingEffectsLanes & 3) && 0 !== root.tag && flushPendingEffects();
     ensureRootIsScheduled(root);
-    rootHasLayoutEffect = root.pendingLanes;
-    0 !== (lanes & 4194218) && 0 !== (rootHasLayoutEffect & 42)
+    remainingLanes = root.pendingLanes;
+    0 !== (lanes & 4194218) && 0 !== (remainingLanes & 42)
       ? ((nestedUpdateScheduled = !0),
         root === rootWithNestedUpdates
           ? nestedUpdateCount++
@@ -10917,10 +10925,11 @@ function releaseRootPooledCache(root, remainingLanes) {
 function flushPendingEffects(wasDelayedCommit) {
   flushMutationEffects();
   flushLayoutEffects();
+  flushSpawnedWork();
   return flushPassiveEffects(wasDelayedCommit);
 }
 function flushPassiveEffects() {
-  if (4 !== pendingEffectsStatus) return !1;
+  if (5 !== pendingEffectsStatus) return !1;
   var root = pendingEffectsRoot,
     remainingLanes = pendingEffectsRemainingLanes;
   pendingEffectsRemainingLanes = 0;
@@ -11817,20 +11826,20 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1344 = {
+  internals$jscomp$inline_1343 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-800c9db2-20250108",
+    version: "19.1.0-native-fb-fd9cfa41-20250108",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-800c9db2-20250108"
+    reconcilerVersion: "19.1.0-native-fb-fd9cfa41-20250108"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1344.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1344.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1343.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1343.getLaneLabelMap = function () {
   for (
-    var map = new Map(), lane = 1, index$156 = 0;
-    31 > index$156;
-    index$156++
+    var map = new Map(), lane = 1, index$155 = 0;
+    31 > index$155;
+    index$155++
   ) {
     var label = getLabelForLane(lane);
     map.set(lane, label);
@@ -11838,20 +11847,20 @@ internals$jscomp$inline_1344.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1344.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1343.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1622 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1621 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1622.isDisabled &&
-    hook$jscomp$inline_1622.supportsFiber
+    !hook$jscomp$inline_1621.isDisabled &&
+    hook$jscomp$inline_1621.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1622.inject(
-        internals$jscomp$inline_1344
+      (rendererID = hook$jscomp$inline_1621.inject(
+        internals$jscomp$inline_1343
       )),
-        (injectedHook = hook$jscomp$inline_1622);
+        (injectedHook = hook$jscomp$inline_1621);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
