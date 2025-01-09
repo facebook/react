@@ -79,6 +79,7 @@ function invokeCompiler(
     },
     panicThreshold: 'all_errors',
     environment,
+    panicThreshold: 'all_errors',
   });
   const ast = parseInput(source, language);
   let result = transformFromAstSync(ast, source, {
