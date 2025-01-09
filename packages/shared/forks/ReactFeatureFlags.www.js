@@ -69,7 +69,6 @@ export const enableSchedulingProfiler: boolean =
   __PROFILE__ && dynamicFeatureFlags.enableSchedulingProfiler;
 
 export const disableLegacyContext = __EXPERIMENTAL__;
-export const enableGetInspectorDataForInstanceInProduction = false;
 
 export const enableLegacyCache = true;
 
