@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8d262dae0320f1bca6395bc63e568c97>>
+ * @generated SignedSource<<7f23db45c399987daa85456450784354>>
  */
 
 "use strict";
@@ -10220,7 +10220,7 @@ function flushMutationEffects() {
   }
 }
 function flushLayoutEffects() {
-  if (3 === pendingEffectsStatus) {
+  if (3 === pendingEffectsStatus || 2 === pendingEffectsStatus) {
     pendingEffectsStatus = 0;
     var root = pendingEffectsRoot,
       finishedWork = pendingFinishedWork,
@@ -10305,8 +10305,6 @@ function releaseRootPooledCache(root, remainingLanes) {
 function flushPendingEffects(wasDelayedCommit) {
   flushMutationEffects();
   flushLayoutEffects();
-  2 === pendingEffectsStatus &&
-    ((pendingEffectsStatus = 0), (pendingEffectsStatus = 3));
   return flushPassiveEffects(wasDelayedCommit);
 }
 function flushPassiveEffects() {
@@ -11168,26 +11166,26 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1252 = {
+  internals$jscomp$inline_1251 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-98418e89-20250108",
+    version: "19.1.0-native-fb-800c9db2-20250108",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-98418e89-20250108"
+    reconcilerVersion: "19.1.0-native-fb-800c9db2-20250108"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1252.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1251.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1564 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1563 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1564.isDisabled &&
-    hook$jscomp$inline_1564.supportsFiber
+    !hook$jscomp$inline_1563.isDisabled &&
+    hook$jscomp$inline_1563.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1564.inject(
-        internals$jscomp$inline_1252
+      (rendererID = hook$jscomp$inline_1563.inject(
+        internals$jscomp$inline_1251
       )),
-        (injectedHook = hook$jscomp$inline_1564);
+        (injectedHook = hook$jscomp$inline_1563);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

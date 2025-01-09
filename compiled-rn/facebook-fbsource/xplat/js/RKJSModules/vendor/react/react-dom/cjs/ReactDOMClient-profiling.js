@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<13fbbbc8aa85c15cc504fda0be239fb2>>
+ * @generated SignedSource<<794df230aaee7c95d81721417fb3b5ba>>
  */
 
 /*
@@ -12488,7 +12488,7 @@ function flushMutationEffects() {
   }
 }
 function flushLayoutEffects() {
-  if (3 === pendingEffectsStatus) {
+  if (3 === pendingEffectsStatus || 2 === pendingEffectsStatus) {
     pendingEffectsStatus = 0;
     var root = pendingEffectsRoot,
       finishedWork = pendingFinishedWork,
@@ -12604,8 +12604,6 @@ function releaseRootPooledCache(root, remainingLanes) {
 function flushPendingEffects(wasDelayedCommit) {
   flushMutationEffects();
   flushLayoutEffects();
-  2 === pendingEffectsStatus &&
-    ((pendingEffectsStatus = 0), (pendingEffectsStatus = 3));
   return flushPassiveEffects(wasDelayedCommit);
 }
 function flushPassiveEffects() {
@@ -13084,20 +13082,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1621 = 0;
-  i$jscomp$inline_1621 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1621++
+  var i$jscomp$inline_1620 = 0;
+  i$jscomp$inline_1620 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1620++
 ) {
-  var eventName$jscomp$inline_1622 =
-      simpleEventPluginEvents[i$jscomp$inline_1621],
-    domEventName$jscomp$inline_1623 =
-      eventName$jscomp$inline_1622.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1624 =
-      eventName$jscomp$inline_1622[0].toUpperCase() +
-      eventName$jscomp$inline_1622.slice(1);
+  var eventName$jscomp$inline_1621 =
+      simpleEventPluginEvents[i$jscomp$inline_1620],
+    domEventName$jscomp$inline_1622 =
+      eventName$jscomp$inline_1621.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1623 =
+      eventName$jscomp$inline_1621[0].toUpperCase() +
+      eventName$jscomp$inline_1621.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1623,
-    "on" + capitalizedEvent$jscomp$inline_1624
+    domEventName$jscomp$inline_1622,
+    "on" + capitalizedEvent$jscomp$inline_1623
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -16590,16 +16588,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_1866 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1865 = React.version;
 if (
-  "19.1.0-native-fb-98418e89-20250108" !==
-  isomorphicReactPackageVersion$jscomp$inline_1866
+  "19.1.0-native-fb-800c9db2-20250108" !==
+  isomorphicReactPackageVersion$jscomp$inline_1865
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1866,
-      "19.1.0-native-fb-98418e89-20250108"
+      isomorphicReactPackageVersion$jscomp$inline_1865,
+      "19.1.0-native-fb-800c9db2-20250108"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16619,12 +16617,12 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_1873 = {
+var internals$jscomp$inline_1872 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-98418e89-20250108",
+  version: "19.1.0-native-fb-800c9db2-20250108",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-98418e89-20250108",
+  reconcilerVersion: "19.1.0-native-fb-800c9db2-20250108",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$293 = 0;
@@ -16642,16 +16640,16 @@ var internals$jscomp$inline_1873 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2279 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2278 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2279.isDisabled &&
-    hook$jscomp$inline_2279.supportsFiber
+    !hook$jscomp$inline_2278.isDisabled &&
+    hook$jscomp$inline_2278.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2279.inject(
-        internals$jscomp$inline_1873
+      (rendererID = hook$jscomp$inline_2278.inject(
+        internals$jscomp$inline_1872
       )),
-        (injectedHook = hook$jscomp$inline_2279);
+        (injectedHook = hook$jscomp$inline_2278);
     } catch (err) {}
 }
 exports.createRoot = function (container, options) {
@@ -16745,4 +16743,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.1.0-native-fb-98418e89-20250108";
+exports.version = "19.1.0-native-fb-800c9db2-20250108";

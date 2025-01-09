@@ -7,13 +7,13 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bdc2e8022ffcb4d9fa33c277aeabf6dc>>
+ * @generated SignedSource<<1108269be49b4c8bb151e6094bf9e9ec>>
  */
 
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1175() {
+    function JSCompiler_object_inline_createNodeMock_1174() {
       return null;
     }
     function findHook(fiber, id) {
@@ -12111,7 +12111,10 @@ __DEV__ &&
       }
     }
     function flushLayoutEffects() {
-      if (pendingEffectsStatus === PENDING_LAYOUT_PHASE) {
+      if (
+        pendingEffectsStatus === PENDING_LAYOUT_PHASE ||
+        pendingEffectsStatus === PENDING_AFTER_MUTATION_PHASE
+      ) {
         pendingEffectsStatus = NO_PENDING_EFFECTS;
         var root = pendingEffectsRoot,
           finishedWork = pendingFinishedWork,
@@ -12258,9 +12261,6 @@ __DEV__ &&
     function flushPendingEffects(wasDelayedCommit) {
       flushMutationEffects();
       flushLayoutEffects();
-      pendingEffectsStatus === PENDING_AFTER_MUTATION_PHASE &&
-        ((pendingEffectsStatus = NO_PENDING_EFFECTS),
-        (pendingEffectsStatus = PENDING_LAYOUT_PHASE));
       return flushPassiveEffects(wasDelayedCommit);
     }
     function flushPassiveEffects() {
@@ -15622,10 +15622,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-98418e89-20250108",
+        version: "19.1.0-native-fb-800c9db2-20250108",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-98418e89-20250108"
+        reconcilerVersion: "19.1.0-native-fb-800c9db2-20250108"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15647,7 +15647,7 @@ __DEV__ &&
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1175,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1174,
         isConcurrent = !1,
         isStrictMode = !1;
       "object" === typeof options &&
@@ -15770,5 +15770,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.1.0-native-fb-98418e89-20250108";
+    exports.version = "19.1.0-native-fb-800c9db2-20250108";
   })();

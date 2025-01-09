@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2e71da37a0523389f593e5815daea14b>>
+ * @generated SignedSource<<194e0d69f35dbae661660549e8d765da>>
  */
 
 /*
@@ -12492,7 +12492,7 @@ function flushMutationEffects() {
   }
 }
 function flushLayoutEffects() {
-  if (3 === pendingEffectsStatus) {
+  if (3 === pendingEffectsStatus || 2 === pendingEffectsStatus) {
     pendingEffectsStatus = 0;
     var root = pendingEffectsRoot,
       finishedWork = pendingFinishedWork,
@@ -12608,8 +12608,6 @@ function releaseRootPooledCache(root, remainingLanes) {
 function flushPendingEffects(wasDelayedCommit) {
   flushMutationEffects();
   flushLayoutEffects();
-  2 === pendingEffectsStatus &&
-    ((pendingEffectsStatus = 0), (pendingEffectsStatus = 3));
   return flushPassiveEffects(wasDelayedCommit);
 }
 function flushPassiveEffects() {
@@ -13088,20 +13086,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1622 = 0;
-  i$jscomp$inline_1622 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1622++
+  var i$jscomp$inline_1621 = 0;
+  i$jscomp$inline_1621 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1621++
 ) {
-  var eventName$jscomp$inline_1623 =
-      simpleEventPluginEvents[i$jscomp$inline_1622],
-    domEventName$jscomp$inline_1624 =
-      eventName$jscomp$inline_1623.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1625 =
-      eventName$jscomp$inline_1623[0].toUpperCase() +
-      eventName$jscomp$inline_1623.slice(1);
+  var eventName$jscomp$inline_1622 =
+      simpleEventPluginEvents[i$jscomp$inline_1621],
+    domEventName$jscomp$inline_1623 =
+      eventName$jscomp$inline_1622.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1624 =
+      eventName$jscomp$inline_1622[0].toUpperCase() +
+      eventName$jscomp$inline_1622.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1624,
-    "on" + capitalizedEvent$jscomp$inline_1625
+    domEventName$jscomp$inline_1623,
+    "on" + capitalizedEvent$jscomp$inline_1624
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -16605,16 +16603,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_1867 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1866 = React.version;
 if (
-  "19.1.0-native-fb-98418e89-20250108" !==
-  isomorphicReactPackageVersion$jscomp$inline_1867
+  "19.1.0-native-fb-800c9db2-20250108" !==
+  isomorphicReactPackageVersion$jscomp$inline_1866
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1867,
-      "19.1.0-native-fb-98418e89-20250108"
+      isomorphicReactPackageVersion$jscomp$inline_1866,
+      "19.1.0-native-fb-800c9db2-20250108"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16634,12 +16632,12 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_1874 = {
+var internals$jscomp$inline_1873 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-98418e89-20250108",
+  version: "19.1.0-native-fb-800c9db2-20250108",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-98418e89-20250108",
+  reconcilerVersion: "19.1.0-native-fb-800c9db2-20250108",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$293 = 0;
@@ -16657,16 +16655,16 @@ var internals$jscomp$inline_1874 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2282 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2281 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2282.isDisabled &&
-    hook$jscomp$inline_2282.supportsFiber
+    !hook$jscomp$inline_2281.isDisabled &&
+    hook$jscomp$inline_2281.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2282.inject(
-        internals$jscomp$inline_1874
+      (rendererID = hook$jscomp$inline_2281.inject(
+        internals$jscomp$inline_1873
       )),
-        (injectedHook = hook$jscomp$inline_2282);
+        (injectedHook = hook$jscomp$inline_2281);
     } catch (err) {}
 }
 function noop() {}
@@ -16914,7 +16912,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-native-fb-98418e89-20250108";
+exports.version = "19.1.0-native-fb-800c9db2-20250108";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
