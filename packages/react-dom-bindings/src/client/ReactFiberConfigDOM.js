@@ -1198,6 +1198,13 @@ export function hasInstanceAffectedParent(
   return oldRect.height !== newRect.height || oldRect.width !== newRect.width;
 }
 
+// How long to wait for new fonts to load before just committing anyway.
+// This freezes the screen. It needs to be short enough that it doesn't cause too much of
+// an issue when it's a new load and slow, yet long enough that you have a chance to load
+// it. Otherwise we wait for no reason. The assumption here is that you likely have
+// either cached the font or preloaded it earlier.
+const SUSPENSEY_FONT_TIMEOUT = 500;
+
 export function startViewTransition(
   rootContainer: Container,
   mutationCallback: () => void,
@@ -1220,8 +1227,34 @@ export function startViewTransition(
         const ownerWindow = ownerDocument.defaultView;
         const pendingNavigation =
           ownerWindow.navigation && ownerWindow.navigation.transition;
+        // $FlowFixMe[prop-missing]
+        const previousFontLoadingStatus = ownerDocument.fonts.status;
         mutationCallback();
-        // TODO: Wait for fonts.
+        if (previousFontLoadingStatus === 'loaded') {
+          // Force layout calculation to trigger font loading.
+          // eslint-disable-next-line ft-flow/no-unused-expressions
+          (ownerDocument.documentElement: any).clientHeight;
+          if (
+            // $FlowFixMe[prop-missing]
+            ownerDocument.fonts.status === 'loading'
+          ) {
+            // The mutation lead to new fonts being loaded. We should wait on them before continuing.
+            // This avoids waiting for potentially unrelated fonts that were already loading before.
+            // Either in an earlier transition or as part of a sync optimistic state. This doesn't
+            // include preloads that happened earlier.
+            const fontsReady = Promise.race([
+              // $FlowFixMe[prop-missing]
+              ownerDocument.fonts.ready,
+              new Promise(resolve =>
+                setTimeout(resolve, SUSPENSEY_FONT_TIMEOUT),
+              ),
+            ]).then(layoutCallback, layoutCallback);
+            const allReady = pendingNavigation
+              ? Promise.allSettled([pendingNavigation.finished, fontsReady])
+              : fontsReady;
+            return allReady.then(afterMutationCallback, afterMutationCallback);
+          }
+        }
         layoutCallback();
         if (pendingNavigation) {
           return pendingNavigation.finished.then(

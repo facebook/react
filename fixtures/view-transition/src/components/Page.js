@@ -29,7 +29,7 @@ function Component() {
       className={
         transitions['enter-slide-right'] + ' ' + transitions['exit-slide-left']
       }>
-      <p>Slide In from Left, Slide Out to Right</p>
+      <p className="roboto-font">Slide In from Left, Slide Out to Right</p>
     </ViewTransition>
   );
 }
