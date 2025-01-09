@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c2ac8485b19cafb938d487c7b430ef22>>
+ * @generated SignedSource<<85872070324c1061a9d151d2ec3917e8>>
  */
 
 /*
@@ -385,6 +385,7 @@ __DEV__ &&
           return "SuspenseList";
         case 25:
           return "TracingMarker";
+        case 30:
         case 17:
         case 28:
         case 1:
@@ -1505,6 +1506,7 @@ __DEV__ &&
           case 19:
             info += describeBuiltInComponentFrame("SuspenseList");
             break;
+          case 30:
           case 0:
           case 15:
           case 1:
@@ -25992,11 +25994,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.1.0-native-fb-74ea0c73-20250109" !== isomorphicReactPackageVersion)
+      if ("19.1.0-native-fb-c4595ca4-20250109" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.1.0-native-fb-74ea0c73-20250109\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.1.0-native-fb-c4595ca4-20250109\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -26033,10 +26035,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.1.0-native-fb-74ea0c73-20250109",
+          version: "19.1.0-native-fb-c4595ca4-20250109",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.1.0-native-fb-74ea0c73-20250109"
+          reconcilerVersion: "19.1.0-native-fb-c4595ca4-20250109"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -26498,7 +26500,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.1.0-native-fb-74ea0c73-20250109";
+    exports.version = "19.1.0-native-fb-c4595ca4-20250109";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<753bc05f1753636b70fd320394b9ca9d>>
+ * @generated SignedSource<<c0ccf168e9d60cc37189f1dc5e1ea9d6>>
  */
 
 "use strict";
@@ -348,6 +348,7 @@ function getComponentNameFromFiber(fiber) {
       return "SuspenseList";
     case 25:
       return "TracingMarker";
+    case 30:
     case 17:
     case 28:
     case 1:
@@ -11700,10 +11701,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1332 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-74ea0c73-20250109",
+    version: "19.1.0-native-fb-c4595ca4-20250109",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-74ea0c73-20250109"
+    reconcilerVersion: "19.1.0-native-fb-c4595ca4-20250109"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1332.rendererConfig = extraDevToolsConfig);

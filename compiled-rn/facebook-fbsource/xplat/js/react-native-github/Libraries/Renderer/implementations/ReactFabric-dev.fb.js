@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<232b5577ca03565cb7911ed48fbdf4f0>>
+ * @generated SignedSource<<5944e31e37555c1034509c92906babb4>>
  */
 
 "use strict";
@@ -528,6 +528,7 @@ __DEV__ &&
           case 19:
             info += describeBuiltInComponentFrame("SuspenseList");
             break;
+          case 30:
           case 0:
           case 15:
           case 1:
@@ -667,6 +668,7 @@ __DEV__ &&
           return "SuspenseList";
         case 25:
           return "TracingMarker";
+        case 30:
         case 17:
         case 28:
         case 1:
@@ -17505,10 +17507,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-74ea0c73-20250109",
+        version: "19.1.0-native-fb-c4595ca4-20250109",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-74ea0c73-20250109"
+        reconcilerVersion: "19.1.0-native-fb-c4595ca4-20250109"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bcaee0198ffa318f634b9f93cd859f04>>
+ * @generated SignedSource<<a8f5a2bbc731c0456c4a6e808948c3ee>>
  */
 
 "use strict";
@@ -370,6 +370,7 @@ __DEV__ &&
           return "SuspenseList";
         case 25:
           return "TracingMarker";
+        case 30:
         case 17:
         case 28:
         case 1:
@@ -15633,10 +15634,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-74ea0c73-20250109",
+        version: "19.1.0-native-fb-c4595ca4-20250109",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-74ea0c73-20250109"
+        reconcilerVersion: "19.1.0-native-fb-c4595ca4-20250109"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15781,5 +15782,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.1.0-native-fb-74ea0c73-20250109";
+    exports.version = "19.1.0-native-fb-c4595ca4-20250109";
   })();
