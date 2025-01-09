@@ -20,7 +20,6 @@ import BabelPluginReactCompiler, {
   CompilerPipelineValue,
   parsePluginOptions,
 } from 'babel-plugin-react-compiler/src';
-import {type EnvironmentConfig} from 'babel-plugin-react-compiler/src/HIR/Environment';
 import clsx from 'clsx';
 import invariant from 'invariant';
 import {useSnackbar} from 'notistack';
@@ -69,23 +68,14 @@ function parseInput(
 function invokeCompiler(
   source: string,
   language: 'flow' | 'typescript',
-  environment: EnvironmentConfig,
-  logIR: (pipelineValue: CompilerPipelineValue) => void,
+  options: PluginOptions,
 ): CompilerTransformOutput {
-  const opts: PluginOptions = parsePluginOptions({
-    logger: {
-      debugLogIRs: logIR,
-      logEvent: () => {},
-    },
-    environment,
-    panicThreshold: 'all_errors',
-  });
   const ast = parseInput(source, language);
   let result = transformFromAstSync(ast, source, {
     filename: '_playgroundFile.js',
     highlightCode: false,
     retainLines: true,
-    plugins: [[BabelPluginReactCompiler, opts]],
+    plugins: [[BabelPluginReactCompiler, options]],
     ast: true,
     sourceType: 'module',
     configFile: false,
@@ -171,51 +161,59 @@ function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
   try {
     // Extract the first line to quickly check for custom test directives
     const pragma = source.substring(0, source.indexOf('\n'));
-    const config = parseConfigPragmaForTests(pragma);
-
-    transformOutput = invokeCompiler(
-      source,
-      language,
-      {...config, customHooks: new Map([...COMMON_HOOKS])},
-      result => {
-        switch (result.kind) {
-          case 'ast': {
-            break;
-          }
-          case 'hir': {
-            upsert({
-              kind: 'hir',
-              fnName: result.value.id,
-              name: result.name,
-              value: printFunctionWithOutlined(result.value),
-            });
-            break;
-          }
-          case 'reactive': {
-            upsert({
-              kind: 'reactive',
-              fnName: result.value.id,
-              name: result.name,
-              value: printReactiveFunctionWithOutlined(result.value),
-            });
-            break;
-          }
-          case 'debug': {
-            upsert({
-              kind: 'debug',
-              fnName: null,
-              name: result.name,
-              value: result.value,
-            });
-            break;
-          }
-          default: {
-            const _: never = result;
-            throw new Error(`Unhandled result ${result}`);
-          }
+    const logIR = (result: CompilerPipelineValue): void => {
+      switch (result.kind) {
+        case 'ast': {
+          break;
         }
+        case 'hir': {
+          upsert({
+            kind: 'hir',
+            fnName: result.value.id,
+            name: result.name,
+            value: printFunctionWithOutlined(result.value),
+          });
+          break;
+        }
+        case 'reactive': {
+          upsert({
+            kind: 'reactive',
+            fnName: result.value.id,
+            name: result.name,
+            value: printReactiveFunctionWithOutlined(result.value),
+          });
+          break;
+        }
+        case 'debug': {
+          upsert({
+            kind: 'debug',
+            fnName: null,
+            name: result.name,
+            value: result.value,
+          });
+          break;
+        }
+        default: {
+          const _: never = result;
+          throw new Error(`Unhandled result ${result}`);
+        }
+      }
+    };
+    const parsedOptions = parseConfigPragmaForTests(pragma, {
+      compilationMode: 'infer',
+    });
+    const opts: PluginOptions = parsePluginOptions({
+      ...parsedOptions,
+      environment: {
+        ...parsedOptions.environment,
+        customHooks: new Map([...COMMON_HOOKS]),
       },
-    );
+      logger: {
+        debugLogIRs: logIR,
+        logEvent: () => {},
+      },
+    });
+    transformOutput = invokeCompiler(source, language, opts);
   } catch (err) {
     /**
      * error might be an invariant violation or other runtime error
