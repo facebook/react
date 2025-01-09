@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d8ae65dc2da931f283351bd9228f4b3b>>
+ * @generated SignedSource<<e72f416f4d4586b93686f2e7ffd95c76>>
  */
 
 "use strict";
@@ -1231,7 +1231,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_283 = {
+var injectedNamesToPlugins$jscomp$inline_279 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -1277,33 +1277,33 @@ var injectedNamesToPlugins$jscomp$inline_283 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_284 = !1,
-  pluginName$jscomp$inline_285;
-for (pluginName$jscomp$inline_285 in injectedNamesToPlugins$jscomp$inline_283)
+  isOrderingDirty$jscomp$inline_280 = !1,
+  pluginName$jscomp$inline_281;
+for (pluginName$jscomp$inline_281 in injectedNamesToPlugins$jscomp$inline_279)
   if (
-    injectedNamesToPlugins$jscomp$inline_283.hasOwnProperty(
-      pluginName$jscomp$inline_285
+    injectedNamesToPlugins$jscomp$inline_279.hasOwnProperty(
+      pluginName$jscomp$inline_281
     )
   ) {
-    var pluginModule$jscomp$inline_286 =
-      injectedNamesToPlugins$jscomp$inline_283[pluginName$jscomp$inline_285];
+    var pluginModule$jscomp$inline_282 =
+      injectedNamesToPlugins$jscomp$inline_279[pluginName$jscomp$inline_281];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_285) ||
-      namesToPlugins[pluginName$jscomp$inline_285] !==
-        pluginModule$jscomp$inline_286
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_281) ||
+      namesToPlugins[pluginName$jscomp$inline_281] !==
+        pluginModule$jscomp$inline_282
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_285])
+      if (namesToPlugins[pluginName$jscomp$inline_281])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_285 + "`.")
+            (pluginName$jscomp$inline_281 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_285] =
-        pluginModule$jscomp$inline_286;
-      isOrderingDirty$jscomp$inline_284 = !0;
+      namesToPlugins[pluginName$jscomp$inline_281] =
+        pluginModule$jscomp$inline_282;
+      isOrderingDirty$jscomp$inline_280 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_284 && recomputePluginOrdering();
-var emptyObject$1 = {},
+isOrderingDirty$jscomp$inline_280 && recomputePluginOrdering();
+var emptyObject = {},
   removedKeys = null,
   removedKeyCount = 0,
   deepDifferOptions = { unsafelyIgnoreFunctions: !0 };
@@ -1413,7 +1413,7 @@ function addNestedProperty(updatePayload, nextProp, validAttributes) {
   if (!isArrayImpl(nextProp))
     return diffProperties(
       updatePayload,
-      emptyObject$1,
+      emptyObject,
       nextProp,
       validAttributes
     );
@@ -1431,7 +1431,7 @@ function clearNestedProperty(updatePayload, prevProp, validAttributes) {
     return diffProperties(
       updatePayload,
       prevProp,
-      emptyObject$1,
+      emptyObject,
       validAttributes
     );
   for (var i = 0; i < prevProp.length; i++)
@@ -1997,10 +1997,6 @@ function findCurrentFiberUsingSlowPath(fiber) {
   if (3 !== a.tag)
     throw Error("Unable to find node on an unmounted component.");
   return a.stateNode.current === a ? fiber : alternate;
-}
-function findCurrentHostFiber(parent) {
-  parent = findCurrentFiberUsingSlowPath(parent);
-  return null !== parent ? findCurrentHostFiberImpl(parent) : null;
 }
 function findCurrentHostFiberImpl(node) {
   var tag = node.tag;
@@ -10816,7 +10812,8 @@ function findHostInstance(component) {
       "Argument appears to not be a ReactComponent. Keys: " + component
     );
   }
-  component = findCurrentHostFiber(fiber);
+  component = findCurrentFiberUsingSlowPath(fiber);
+  component = null !== component ? findCurrentHostFiberImpl(component) : null;
   return null === component ? null : getPublicInstance(component.stateNode);
 }
 function updateContainer(element, container, parentComponent, callback) {
@@ -10872,131 +10869,6 @@ function updateContainer(element, container, parentComponent, callback) {
     entangleTransitions(element, current, lane));
   return lane;
 }
-function findNodeHandle(componentOrHandle) {
-  if (null == componentOrHandle) return null;
-  if ("number" === typeof componentOrHandle) return componentOrHandle;
-  if (componentOrHandle._nativeTag) return componentOrHandle._nativeTag;
-  if (
-    null != componentOrHandle.canonical &&
-    null != componentOrHandle.canonical.nativeTag
-  )
-    return componentOrHandle.canonical.nativeTag;
-  var nativeTag =
-    ReactNativePrivateInterface.getNativeTagFromPublicInstance(
-      componentOrHandle
-    );
-  if (nativeTag) return nativeTag;
-  componentOrHandle = findHostInstance(componentOrHandle);
-  return null == componentOrHandle
-    ? componentOrHandle
-    : null != componentOrHandle._nativeTag
-      ? componentOrHandle._nativeTag
-      : ReactNativePrivateInterface.getNativeTagFromPublicInstance(
-          componentOrHandle
-        );
-}
-var emptyObject = {};
-function createHierarchy(fiberHierarchy) {
-  return fiberHierarchy.map(function (fiber$jscomp$0) {
-    return {
-      name: getComponentNameFromType(fiber$jscomp$0.type),
-      getInspectorData: function () {
-        return {
-          props: getHostProps(fiber$jscomp$0),
-          measure: function (callback) {
-            var hostFiber = findCurrentHostFiber(fiber$jscomp$0);
-            if (
-              (hostFiber =
-                null != hostFiber &&
-                null !== hostFiber.stateNode &&
-                hostFiber.stateNode.node)
-            )
-              nativeFabricUIManager.measure(hostFiber, callback);
-            else {
-              hostFiber = ReactNativePrivateInterface.UIManager;
-              var JSCompiler_temp_const = hostFiber.measure,
-                JSCompiler_inline_result;
-              a: {
-                for (var fiber = fiber$jscomp$0; fiber; ) {
-                  null !== fiber.stateNode &&
-                    5 === fiber.tag &&
-                    (JSCompiler_inline_result = findNodeHandle(
-                      fiber.stateNode
-                    ));
-                  if (JSCompiler_inline_result) break a;
-                  fiber = fiber.child;
-                }
-                JSCompiler_inline_result = null;
-              }
-              return JSCompiler_temp_const.call(
-                hostFiber,
-                JSCompiler_inline_result,
-                callback
-              );
-            }
-          }
-        };
-      }
-    };
-  });
-}
-function getHostProps(fiber) {
-  return (fiber = findCurrentHostFiber(fiber))
-    ? fiber.memoizedProps || emptyObject
-    : emptyObject;
-}
-function getInspectorDataForInstance(closestInstance) {
-  if (!closestInstance)
-    return {
-      hierarchy: [],
-      props: emptyObject,
-      selectedIndex: null,
-      componentStack: ""
-    };
-  closestInstance = findCurrentFiberUsingSlowPath(closestInstance);
-  if (null === closestInstance)
-    return {
-      hierarchy: [],
-      props: emptyObject,
-      selectedIndex: null,
-      componentStack: ""
-    };
-  var hierarchy = [];
-  traverseOwnerTreeUp(hierarchy, closestInstance);
-  var JSCompiler_inline_result;
-  a: {
-    for (
-      JSCompiler_inline_result = hierarchy.length - 1;
-      1 < JSCompiler_inline_result;
-      JSCompiler_inline_result--
-    ) {
-      var instance = hierarchy[JSCompiler_inline_result];
-      if (5 !== instance.tag) {
-        JSCompiler_inline_result = instance;
-        break a;
-      }
-    }
-    JSCompiler_inline_result = hierarchy[0];
-  }
-  instance = createHierarchy(hierarchy);
-  var props = getHostProps(JSCompiler_inline_result);
-  hierarchy = hierarchy.indexOf(JSCompiler_inline_result);
-  closestInstance = getStackByFiberInDevAndProd(closestInstance);
-  return {
-    closestInstance: JSCompiler_inline_result,
-    hierarchy: instance,
-    props: props,
-    selectedIndex: hierarchy,
-    componentStack: closestInstance
-  };
-}
-function traverseOwnerTreeUp(hierarchy, instance) {
-  hierarchy.unshift(instance);
-  instance = instance._debugOwner;
-  null != instance &&
-    "number" === typeof instance.tag &&
-    traverseOwnerTreeUp(hierarchy, instance);
-}
 function shim$1() {
   throw Error(
     "The current renderer does not support hydration. This error is likely caused by a bug in React. Please file an issue."
@@ -11022,7 +10894,7 @@ var _nativeFabricUIManage = nativeFabricUIManager,
   fabricGetCurrentEventPriority =
     _nativeFabricUIManage.unstable_getCurrentEventPriority,
   extraDevToolsConfig = {
-    getInspectorDataForInstance: getInspectorDataForInstance,
+    getInspectorDataForInstance: void 0,
     getInspectorDataForViewTag: function () {
       throw Error(
         "getInspectorDataForViewTag() is not available in production"
@@ -11173,26 +11045,26 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1250 = {
+  internals$jscomp$inline_1239 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-fd9cfa41-20250108",
+    version: "19.1.0-native-fb-74ea0c73-20250109",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-fd9cfa41-20250108"
+    reconcilerVersion: "19.1.0-native-fb-74ea0c73-20250109"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1250.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1239.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1562 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1551 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1562.isDisabled &&
-    hook$jscomp$inline_1562.supportsFiber
+    !hook$jscomp$inline_1551.isDisabled &&
+    hook$jscomp$inline_1551.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1562.inject(
-        internals$jscomp$inline_1250
+      (rendererID = hook$jscomp$inline_1551.inject(
+        internals$jscomp$inline_1239
       )),
-        (injectedHook = hook$jscomp$inline_1562);
+        (injectedHook = hook$jscomp$inline_1551);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
@@ -11227,8 +11099,29 @@ exports.findHostInstance_DEPRECATED = function (componentOrHandle) {
         ? componentOrHandle
         : findHostInstance(componentOrHandle);
 };
-exports.findNodeHandle = findNodeHandle;
-exports.getInspectorDataForInstance = getInspectorDataForInstance;
+exports.findNodeHandle = function (componentOrHandle) {
+  if (null == componentOrHandle) return null;
+  if ("number" === typeof componentOrHandle) return componentOrHandle;
+  if (componentOrHandle._nativeTag) return componentOrHandle._nativeTag;
+  if (
+    null != componentOrHandle.canonical &&
+    null != componentOrHandle.canonical.nativeTag
+  )
+    return componentOrHandle.canonical.nativeTag;
+  var nativeTag =
+    ReactNativePrivateInterface.getNativeTagFromPublicInstance(
+      componentOrHandle
+    );
+  if (nativeTag) return nativeTag;
+  componentOrHandle = findHostInstance(componentOrHandle);
+  return null == componentOrHandle
+    ? componentOrHandle
+    : null != componentOrHandle._nativeTag
+      ? componentOrHandle._nativeTag
+      : ReactNativePrivateInterface.getNativeTagFromPublicInstance(
+          componentOrHandle
+        );
+};
 exports.getNodeFromInternalInstanceHandle = function (internalInstanceHandle) {
   return (
     internalInstanceHandle &&
