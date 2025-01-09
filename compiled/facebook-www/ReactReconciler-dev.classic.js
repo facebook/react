@@ -1337,6 +1337,7 @@ __DEV__ &&
           case 19:
             info += describeBuiltInComponentFrame("SuspenseList");
             break;
+          case 30:
           case 0:
           case 15:
           case 1:
@@ -19128,7 +19129,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-classic-fd9cfa41-20250108"
+        reconcilerVersion: "19.1.0-www-classic-c4595ca4-20250109"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
