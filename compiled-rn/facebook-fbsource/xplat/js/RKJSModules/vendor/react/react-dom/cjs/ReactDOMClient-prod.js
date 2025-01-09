@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<80e2bbadee3b4044cad487b63fd4201a>>
+ * @generated SignedSource<<6d0bb599e6dffc06990ad7b4086e34bb>>
  */
 
 /*
@@ -8158,11 +8158,21 @@ function insertOrAppendPlacementNodeIntoContainer(node, before, parent) {
     (node = node.stateNode),
       before
         ? 8 === parent.nodeType
-          ? parent.parentNode.insertBefore(node, before)
-          : parent.insertBefore(node, before)
+          ? supportsMoveBefore
+            ? parent.parentNode.moveBefore(node, before)
+            : parent.parentNode.insertBefore(node, before)
+          : supportsMoveBefore
+            ? parent.moveBefore(node, before)
+            : parent.insertBefore(node, before)
         : (8 === parent.nodeType
-            ? ((before = parent.parentNode), before.insertBefore(node, parent))
-            : ((before = parent), before.appendChild(node)),
+            ? ((before = parent.parentNode),
+              supportsMoveBefore
+                ? before.moveBefore(node, parent)
+                : before.insertBefore(node, parent))
+            : ((before = parent),
+              supportsMoveBefore
+                ? before.moveBefore(node, null)
+                : before.appendChild(node)),
           (parent = parent._reactRootContainer),
           (null !== parent && void 0 !== parent) ||
             null !== before.onclick ||
@@ -15951,14 +15961,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1769 = React.version;
 if (
-  "19.1.0-native-fb-c4595ca4-20250109" !==
+  "19.1.0-native-fb-056073de-20250109" !==
   isomorphicReactPackageVersion$jscomp$inline_1769
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1769,
-      "19.1.0-native-fb-c4595ca4-20250109"
+      "19.1.0-native-fb-056073de-20250109"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -15980,10 +15990,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2217 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-c4595ca4-20250109",
+  version: "19.1.0-native-fb-056073de-20250109",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-c4595ca4-20250109"
+  reconcilerVersion: "19.1.0-native-fb-056073de-20250109"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2218 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16089,4 +16099,4 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   listenToAllSupportedEvents(container);
   return new ReactDOMHydrationRoot(initialChildren);
 };
-exports.version = "19.1.0-native-fb-c4595ca4-20250109";
+exports.version = "19.1.0-native-fb-056073de-20250109";
