@@ -345,8 +345,6 @@ function mountReactDevTools() {
 
   createBridgeAndStore();
 
-  setReactSelectionFromBrowser(bridge);
-
   createComponentsPanel();
   createProfilerPanel();
 }
