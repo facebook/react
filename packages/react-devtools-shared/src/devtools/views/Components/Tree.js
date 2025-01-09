@@ -37,6 +37,7 @@ import styles from './Tree.css';
 import ButtonIcon from '../ButtonIcon';
 import Button from '../Button';
 import {logEvent} from 'react-devtools-shared/src/Logger';
+import {useExtensionComponentsPanelVisibility} from 'react-devtools-shared/src/frontend/hooks/useExtensionComponentsPanelVisibility';
 
 // Never indent more than this number of pixels (even if we have the room).
 const DEFAULT_INDENTATION_SIZE = 12;
@@ -76,36 +77,28 @@ export default function Tree(): React.Node {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
   const {hideSettings} = useContext(OptionsContext);
+  const {lineHeight} = useContext(SettingsContext);
+
   const [isNavigatingWithKeyboard, setIsNavigatingWithKeyboard] =
     useState(false);
   const {highlightHostInstance, clearHighlightHostInstance} =
     useHighlightHostInstance();
+  const [treeFocused, setTreeFocused] = useState<boolean>(false);
+  const componentsPanelVisible = useExtensionComponentsPanelVisibility(bridge);
+
   const treeRef = useRef<HTMLDivElement | null>(null);
   const focusTargetRef = useRef<HTMLDivElement | null>(null);
+  const listRef = useRef(null);
 
-  const [treeFocused, setTreeFocused] = useState<boolean>(false);
+  useEffect(() => {
+    if (!componentsPanelVisible) {
+      return;
+    }
 
-  const {lineHeight} = useContext(SettingsContext);
-
-  // Make sure a newly selected element is visible in the list.
-  // This is helpful for things like the owners list and search.
-  //
-  // TRICKY:
-  // It's important to use a callback ref for this, rather than a ref object and an effect.
-  // As an optimization, the AutoSizer component does not render children when their size would be 0.
-  // This means that in some cases (if the browser panel size is initially really small),
-  // the Tree component might render without rendering an inner List.
-  // In this case, the list ref would be null on mount (when the scroll effect runs),
-  // meaning the scroll action would be skipped (since ref updates don't re-run effects).
-  // Using a callback ref accounts for this case...
-  const listCallbackRef = useCallback(
-    (list: $FlowFixMe) => {
-      if (list != null && inspectedElementIndex !== null) {
-        list.scrollToItem(inspectedElementIndex, 'smart');
-      }
-    },
-    [inspectedElementIndex],
-  );
+    if (listRef.current != null && inspectedElementIndex !== null) {
+      listRef.current.scrollToItem(inspectedElementIndex, 'smart');
+    }
+  }, [inspectedElementIndex, componentsPanelVisible]);
 
   // Picking an element in the inspector should put focus into the tree.
   // If possible, navigation works right after picking a node.
@@ -426,7 +419,7 @@ export default function Tree(): React.Node {
                   itemData={itemData}
                   itemKey={itemKey}
                   itemSize={lineHeight}
-                  ref={listCallbackRef}
+                  ref={listRef}
                   width={width}>
                   {Element}
                 </FixedSizeList>
