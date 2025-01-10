@@ -30,7 +30,7 @@ import type {
 } from './ReactFiberActivityComponent';
 import type {
   ViewTransitionProps,
-  ViewTransitionInstance,
+  ViewTransitionState,
 } from './ReactFiberViewTransitionComponent';
 import {assignViewTransitionAutoName} from './ReactFiberViewTransitionComponent';
 import {OffscreenDetached} from './ReactFiberActivityComponent';
@@ -3246,7 +3246,7 @@ function updateViewTransition(
   renderLanes: Lanes,
 ) {
   const pendingProps: ViewTransitionProps = workInProgress.pendingProps;
-  const instance: ViewTransitionInstance = workInProgress.stateNode;
+  const instance: ViewTransitionState = workInProgress.stateNode;
   if (pendingProps.name != null && pendingProps.name !== 'auto') {
     // Explicitly named boundary. We track it so that we can pair it up with another explicit
     // boundary if we get deleted.

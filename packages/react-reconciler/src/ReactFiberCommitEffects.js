@@ -13,7 +13,7 @@ import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
 import type {HookFlags} from './ReactHookEffectTags';
 import {
   getViewTransitionName,
-  type ViewTransitionInstance,
+  type ViewTransitionState,
   type ViewTransitionProps,
 } from './ReactFiberViewTransitionComponent';
 
@@ -879,7 +879,7 @@ function commitAttachRef(finishedWork: Fiber) {
         break;
       case ViewTransitionComponent:
         if (enableViewTransition) {
-          const instance: ViewTransitionInstance = finishedWork.stateNode;
+          const instance: ViewTransitionState = finishedWork.stateNode;
           const props: ViewTransitionProps = finishedWork.memoizedProps;
           const name = getViewTransitionName(props, instance);
           if (instance.ref === null || instance.ref.name !== name) {

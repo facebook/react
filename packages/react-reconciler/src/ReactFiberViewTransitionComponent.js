@@ -23,9 +23,9 @@ export type ViewTransitionProps = {
   children?: ReactNodeList,
 };
 
-export type ViewTransitionInstance = {
+export type ViewTransitionState = {
   autoName: null | string, // the view-transition-name to use when an explicit one is not specified
-  paired: null | ViewTransitionInstance, // a temporary state during the commit phase if we have paired this with another instance
+  paired: null | ViewTransitionState, // a temporary state during the commit phase if we have paired this with another instance
   ref: null | ViewTransitionRef, // the current ref instance. This can change through the lifetime of the instance.
 };
 
@@ -33,7 +33,7 @@ let globalClientIdCounter: number = 0;
 
 export function assignViewTransitionAutoName(
   props: ViewTransitionProps,
-  instance: ViewTransitionInstance,
+  instance: ViewTransitionState,
 ): string {
   if (instance.autoName !== null) {
     return instance.autoName;
@@ -63,7 +63,7 @@ export function assignViewTransitionAutoName(
 
 export function getViewTransitionName(
   props: ViewTransitionProps,
-  instance: ViewTransitionInstance,
+  instance: ViewTransitionState,
 ): string {
   if (props.name != null && props.name !== 'auto') {
     return props.name;

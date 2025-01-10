@@ -23,7 +23,7 @@ import type {
 import type {OffscreenInstance} from './ReactFiberActivityComponent';
 import type {Resource} from './ReactFiberConfig';
 import type {RootState} from './ReactFiberRoot';
-import type {ViewTransitionInstance} from './ReactFiberViewTransitionComponent';
+import type {ViewTransitionState} from './ReactFiberViewTransitionComponent';
 
 import {
   enableCreateEventHandleAPI,
@@ -431,7 +431,7 @@ let workInProgressRootRecoverableErrors: Array<CapturedValue<mixed>> | null =
 // pairs in the snapshot phase.
 let workInProgressAppearingViewTransitions: Map<
   string,
-  ViewTransitionInstance,
+  ViewTransitionState,
 > | null = null;
 
 // Tracks when an update occurs during the render phase.
@@ -1377,7 +1377,7 @@ function commitRootWhenReady(
   finishedWork: Fiber,
   recoverableErrors: Array<CapturedValue<mixed>> | null,
   transitions: Array<Transition> | null,
-  appearingViewTransitions: Map<string, ViewTransitionInstance> | null,
+  appearingViewTransitions: Map<string, ViewTransitionState> | null,
   didIncludeRenderPhaseUpdate: boolean,
   lanes: Lanes,
   spawnedLane: Lane,
@@ -2270,7 +2270,7 @@ export function renderHasNotSuspendedYet(): boolean {
 }
 
 export function trackAppearingViewTransition(
-  instance: ViewTransitionInstance,
+  instance: ViewTransitionState,
   name: string,
 ): void {
   if (workInProgressAppearingViewTransitions === null) {
@@ -3197,7 +3197,7 @@ function commitRoot(
   lanes: Lanes,
   recoverableErrors: null | Array<CapturedValue<mixed>>,
   transitions: Array<Transition> | null,
-  appearingViewTransitions: Map<string, ViewTransitionInstance> | null,
+  appearingViewTransitions: Map<string, ViewTransitionState> | null,
   didIncludeRenderPhaseUpdate: boolean,
   spawnedLane: Lane,
   updatedLanes: Lanes,
