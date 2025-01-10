@@ -21,9 +21,12 @@ import type {
   TransitionAbort,
 } from './ReactFiberTracingMarkerComponent';
 import type {OffscreenInstance} from './ReactFiberActivityComponent';
-import type {Resource} from './ReactFiberConfig';
+import type {Resource, ViewTransitionInstance} from './ReactFiberConfig';
 import type {RootState} from './ReactFiberRoot';
-import type {ViewTransitionState} from './ReactFiberViewTransitionComponent';
+import {
+  getViewTransitionName,
+  type ViewTransitionState,
+} from './ReactFiberViewTransitionComponent';
 
 import {
   enableCreateEventHandleAPI,
@@ -95,6 +98,7 @@ import {
   resolveUpdatePriority,
   trackSchedulerEvent,
   startViewTransition,
+  createViewTransitionInstance,
 } from './ReactFiberConfig';
 
 import {createWorkInProgress, resetWorkInProgress} from './ReactFiber';
@@ -649,6 +653,7 @@ let pendingEffectsRemainingLanes: Lanes = NoLanes;
 let pendingEffectsRenderEndTime: number = -0; // Profiling-only
 let pendingPassiveTransitions: Array<Transition> | null = null;
 let pendingRecoverableErrors: null | Array<CapturedValue<mixed>> = null;
+let pendingViewTransitionEvents: Array<() => void> | null = null;
 let pendingDidIncludeRenderPhaseUpdate: boolean = false;
 let pendingSuspendedCommitReason: SuspendedCommitReason = IMMEDIATE_COMMIT; // Profiling-only
 
@@ -795,6 +800,27 @@ export function requestDeferredLane(): Lane {
   }
 
   return workInProgressDeferredLane;
+}
+
+export function scheduleViewTransitionEvent(
+  fiber: Fiber,
+  callback: ?(instance: ViewTransitionInstance) => void,
+): void {
+  if (enableViewTransition) {
+    if (callback != null) {
+      const state: ViewTransitionState = fiber.stateNode;
+      let instance = state.ref;
+      if (instance === null) {
+        instance = state.ref = createViewTransitionInstance(
+          getViewTransitionName(fiber.memoizedProps, state),
+        );
+      }
+      if (pendingViewTransitionEvents === null) {
+        pendingViewTransitionEvents = [];
+      }
+      pendingViewTransitionEvents.push(callback.bind(null, instance));
+    }
+  }
 }
 
 export function peekDeferredLane(): Lane {
@@ -3322,6 +3348,9 @@ function commitRoot(
   pendingEffectsRemainingLanes = remainingLanes;
   pendingPassiveTransitions = transitions;
   pendingRecoverableErrors = recoverableErrors;
+  if (enableViewTransition) {
+    pendingViewTransitionEvents = null;
+  }
   pendingDidIncludeRenderPhaseUpdate = didIncludeRenderPhaseUpdate;
   if (enableProfilerTimer) {
     pendingEffectsRenderEndTime = completedRenderEndTime;
@@ -3670,6 +3699,21 @@ function flushSpawnedWork(): void {
     } finally {
       ReactSharedInternals.T = prevTransition;
       setCurrentUpdatePriority(previousUpdateLanePriority);
+    }
+  }
+
+  if (enableViewTransition) {
+    // We should now be after the startViewTransition's .ready call which is late enough
+    // to start animating any pseudo-elements. We do this before flushing any passive
+    // effects or spawned sync work since this is still part of the previous commit.
+    // Even though conceptually it's like its own task between layout effets and passive.
+    const pendingEvents = pendingViewTransitionEvents;
+    if (pendingEvents !== null) {
+      pendingViewTransitionEvents = null;
+      for (let i = 0; i < pendingEvents.length; i++) {
+        const viewTransitionEvent = pendingEvents[i];
+        viewTransitionEvent();
+      }
     }
   }
 
