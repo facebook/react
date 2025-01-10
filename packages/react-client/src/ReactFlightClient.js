@@ -45,7 +45,6 @@ import type {TemporaryReferenceSet} from './ReactFlightTemporaryReferences';
 import {
   enablePostpone,
   enableOwnerStacks,
-  enableServerComponentLogs,
   enableProfilerTimer,
   enableComponentPerformanceTrack,
 } from 'shared/ReactFeatureFlags';
@@ -2139,34 +2138,22 @@ function resolveErrorDev(
   }
 
   let error;
-  if (!enableOwnerStacks && !enableServerComponentLogs) {
-    // Executing Error within a native stack isn't really limited to owner stacks
-    // but we gate it behind the same flag for now while iterating.
-    // eslint-disable-next-line react-internal/prod-error-codes
-    error = Error(
+  const callStack = buildFakeCallStack(
+    response,
+    stack,
+    env,
+    // $FlowFixMe[incompatible-use]
+    Error.bind(
+      null,
       message ||
         'An error occurred in the Server Components render but no message was provided',
-    );
-    // For backwards compat we use the V8 formatting when the flag is off.
-    error.stack = formatV8Stack(error.name, error.message, stack);
+    ),
+  );
+  const rootTask = getRootTask(response, env);
+  if (rootTask != null) {
+    error = rootTask.run(callStack);
   } else {
-    const callStack = buildFakeCallStack(
-      response,
-      stack,
-      env,
-      // $FlowFixMe[incompatible-use]
-      Error.bind(
-        null,
-        message ||
-          'An error occurred in the Server Components render but no message was provided',
-      ),
-    );
-    const rootTask = getRootTask(response, env);
-    if (rootTask != null) {
-      error = rootTask.run(callStack);
-    } else {
-      error = callStack();
-    }
+    error = callStack();
   }
 
   (error: any).environmentName = env;
@@ -2698,11 +2685,6 @@ function resolveConsoleEntry(
   const owner = payload[2];
   const env = payload[3];
   const args = payload.slice(4);
-
-  if (!enableOwnerStacks && !enableServerComponentLogs) {
-    bindToConsole(methodName, args, env)();
-    return;
-  }
 
   replayConsoleWithCallStackInDEV(
     response,

@@ -88,7 +88,7 @@ type Props = {
 
 function ProfilerContextController({children}: Props): React.Node {
   const store = useContext(StoreContext);
-  const {selectedElementID} = useContext(TreeStateContext);
+  const {inspectedElementID} = useContext(TreeStateContext);
   const dispatch = useContext(TreeDispatcherContext);
 
   const {profilerStore} = store;
@@ -176,9 +176,9 @@ function ProfilerContextController({children}: Props): React.Node {
 
         if (rootID === null || !dataForRoots.has(rootID)) {
           let selectedElementRootID = null;
-          if (selectedElementID !== null) {
+          if (inspectedElementID !== null) {
             selectedElementRootID =
-              store.getRootIDForElement(selectedElementID);
+              store.getRootIDForElement(inspectedElementID);
           }
           if (
             selectedElementRootID !== null &&
