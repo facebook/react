@@ -43,10 +43,8 @@ describe('useSyncExternalStoreWithSelector', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
     const internalAct = require('internal-test-utils').act;
-    assertLog = internalAct.assertLog;
 
     // The internal act implementation doesn't batch updates by default, since
     // it's mostly used to test concurrent mode. But since these tests run
