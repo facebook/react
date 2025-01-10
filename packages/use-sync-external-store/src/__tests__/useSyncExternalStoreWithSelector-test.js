@@ -15,6 +15,7 @@ let ReactDOM;
 let ReactDOMClient;
 let ReactFeatureFlags;
 let act;
+let assertLog;
 
 describe('useSyncExternalStoreWithSelector', () => {
   beforeEach(() => {
@@ -29,7 +30,9 @@ describe('useSyncExternalStoreWithSelector', () => {
       // of React 17.
       jest.mock('react', () => {
         const {
+          // eslint-disable-next-line no-unused-vars
           startTransition: _,
+          // eslint-disable-next-line no-unused-vars
           useSyncExternalStore: __,
           ...otherExports
         } = jest.requireActual('react');
@@ -43,6 +46,7 @@ describe('useSyncExternalStoreWithSelector', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
     const internalAct = require('internal-test-utils').act;
+    assertLog = internalAct.assertLog;
 
     // The internal act implementation doesn't batch updates by default, since
     // it's mostly used to test concurrent mode. But since these tests run
@@ -132,15 +136,9 @@ describe('useSyncExternalStoreWithSelector', () => {
 
     expect(selectorFn).toHaveBeenCalledTimes(1);
 
-    await expect(async () => {
-      await act(() => {
-        store.set({a: '2', b: '2'});
-      });
-    }).toWarnDev(
-      ReactFeatureFlags.enableUseRefAccessWarning
-        ? ['Warning: App: Unsafe read of a mutable value during render.']
-        : [],
-    );
+    await act(() => {
+      store.set({a: '2', b: '2'});
+    });
 
     expect(selectorFn).toHaveBeenCalledTimes(2);
   });
