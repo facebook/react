@@ -221,7 +221,11 @@ function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
   }
 }
 
-export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
+export function getNextLanes(
+  root: FiberRoot,
+  wipLanes: Lanes,
+  rootHasPendingCommit: boolean,
+): Lanes {
   // Early bailout if there's no pending work left.
   const pendingLanes = root.pendingLanes;
   if (pendingLanes === NoLanes) {
@@ -246,16 +250,6 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
   // a brief amount of time (i.e. below the "Just Noticeable Difference"
   // threshold).
   //
-  // TODO: finishedLanes is also set when a Suspensey resource, like CSS or
-  // images, suspends during the commit phase. (We could detect that here by
-  // checking for root.cancelPendingCommit.) These are also expected to resolve
-  // quickly, because of preloading, but theoretically they could block forever
-  // like in a normal "suspend indefinitely" scenario. In the future, we should
-  // consider only blocking for up to some time limit before discarding the
-  // commit in favor of prerendering. If we do discard a pending commit, then
-  // the commit phase callback should act as a ping to try the original
-  // render again.
-  const rootHasPendingCommit = root.finishedLanes !== NoLanes;
 
   // Do not work on any idle work until all the non-idle work has finished,
   // even if the work is suspended.
@@ -356,6 +350,10 @@ export function getNextLanesToFlushSync(
   //
   // The main use case is updates scheduled by popstate events, which are
   // flushed synchronously even though they are transitions.
+  // Note that we intentionally treat this as a sync flush to include any
+  // sync updates in a single pass but also intentionally disables View Transitions
+  // inside popstate. Because they can start synchronously before scroll restoration
+  // happens.
   const lanesToFlush = SyncUpdateLanes | extraLanesToForceSync;
 
   // Early bailout if there's no pending work left.
@@ -631,6 +629,10 @@ export function includesOnlyOffscreenLanes(lanes: Lanes): boolean {
 
 export function includesOnlyHydrationOrOffscreenLanes(lanes: Lanes): boolean {
   return (lanes & (HydrationLanes | OffscreenLane)) === lanes;
+}
+
+export function includesOnlyViewTransitionEligibleLanes(lanes: Lanes): boolean {
+  return (lanes & (TransitionLanes | RetryLanes | IdleLane)) === lanes;
 }
 
 export function includesBlockingLane(lanes: Lanes): boolean {

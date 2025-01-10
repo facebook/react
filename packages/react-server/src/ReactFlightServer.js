@@ -17,7 +17,6 @@ import {
   enablePostpone,
   enableHalt,
   enableTaint,
-  enableServerComponentLogs,
   enableOwnerStacks,
   enableProfilerTimer,
   enableComponentPerformanceTrack,
@@ -234,12 +233,7 @@ function patchConsole(consoleInst: typeof console, methodName: string) {
   }
 }
 
-if (
-  enableServerComponentLogs &&
-  __DEV__ &&
-  typeof console === 'object' &&
-  console !== null
-) {
+if (__DEV__ && typeof console === 'object' && console !== null) {
   // Instrument console to capture logs for replaying on the client.
   patchConsole(console, 'assert');
   patchConsole(console, 'debug');

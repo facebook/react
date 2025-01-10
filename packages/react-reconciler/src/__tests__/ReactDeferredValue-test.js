@@ -744,6 +744,7 @@ describe('ReactDeferredValue', () => {
         </Container>,
       );
       // We should switch to pre-rendering the new preview.
+      await waitForPaint([]);
       await waitForPaint(['Preview [B]']);
       expect(root).toMatchRenderedOutput(<div hidden={true}>Preview [B]</div>);
 

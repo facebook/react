@@ -1979,7 +1979,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       ReactNoop.render(<App />);
     });
 
-    // TODO: assert toErrorDev() when the warning is implemented again.
+    // TODO: assertConsoleErrorDev() when the warning is implemented again.
     await act(() => {
       ReactNoop.flushSync(() => _setShow(true));
     });
@@ -2006,7 +2006,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       ReactNoop.render(<App />);
     });
 
-    // TODO: assert toErrorDev() when the warning is implemented again.
+    // TODO: assertConsoleErrorDev() when the warning is implemented again.
     await act(() => {
       ReactNoop.flushSync(() => show());
     });
@@ -2076,7 +2076,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         ReactNoop.render(<App />);
       });
 
-      // TODO: assert toErrorDev() when the warning is implemented again.
+      // TODO: assertConsoleErrorDev() when the warning is implemented again.
       await act(() => {
         ReactNoop.flushSync(() => _setShow(true));
       });

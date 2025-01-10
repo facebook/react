@@ -19,7 +19,6 @@ export const {
   disableDefaultPropsExceptForClasses,
   disableLegacyContextForFunctionComponents,
   disableSchedulerTimeoutInWorkLoop,
-  enableDeferRootSchedulingToMicrotask,
   enableDO_NOT_USE_disableStrictPassiveEffect,
   enableHiddenSubtreeInsertionEffectCleanup,
   enableInfiniteRenderLoopDetection,
@@ -58,6 +57,9 @@ export const enableLegacyFBSupport = true;
 
 export const enableYieldingBeforePassive = false;
 
+export const enableThrottledScheduling = false;
+export const enableViewTransition = false;
+
 export const enableHydrationLaneScheduling = true;
 
 export const enableComponentPerformanceTrack = false;
@@ -67,7 +69,6 @@ export const enableSchedulingProfiler: boolean =
   __PROFILE__ && dynamicFeatureFlags.enableSchedulingProfiler;
 
 export const disableLegacyContext = __EXPERIMENTAL__;
-export const enableGetInspectorDataForInstanceInProduction = false;
 
 export const enableLegacyCache = true;
 
@@ -101,8 +102,6 @@ export const enablePersistedModeClonedFlag = false;
 
 export const enableAsyncDebugInfo = false;
 export const disableClientCache = true;
-
-export const enableServerComponentLogs = true;
 
 export const enableReactTestRendererWarning = false;
 

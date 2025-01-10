@@ -12,6 +12,8 @@
 const React = require('react');
 const ReactDOM = require('react-dom');
 const ReactDOMClient = require('react-dom/client');
+const assertConsoleErrorDev =
+  require('internal-test-utils').assertConsoleErrorDev;
 
 function expectWarnings(tags, warnings = [], withoutStack = 0) {
   tags = [...tags];
@@ -31,13 +33,13 @@ function expectWarnings(tags, warnings = [], withoutStack = 0) {
 
   const root = ReactDOMClient.createRoot(container);
   if (warnings.length) {
-    expect(() => {
-      ReactDOM.flushSync(() => {
-        root.render(element);
-      });
-    }).toErrorDev(warnings, {
-      withoutStack,
+    ReactDOM.flushSync(() => {
+      root.render(element);
     });
+    assertConsoleErrorDev(
+      warnings,
+      withoutStack > 0 ? {withoutStack} : undefined,
+    );
   }
 }
 
@@ -164,7 +166,8 @@ describe('validateDOMNesting', () => {
               '    in body (at **)\n' +
               '    in foreignObject (at **)',
             'You are mounting a new body component when a previous one has not first unmounted. It is an error to render more than one body component at a time and attributes and children of these components will likely fail in unpredictable ways. Please only render a single instance of <body> and if you need to mount a new one, ensure any previous ones have unmounted first.\n' +
-              '    in body (at **)',
+              '    in body (at **)\n' +
+              '    in foreignObject (at **)',
           ],
     );
   });

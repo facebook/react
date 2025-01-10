@@ -76,6 +76,7 @@ export type WorkTagMap = {
   TracingMarkerComponent: WorkTag,
   YieldComponent: WorkTag,
   Throw: WorkTag,
+  ViewTransitionComponent: WorkTag,
 };
 
 export type HostInstance = Object;
