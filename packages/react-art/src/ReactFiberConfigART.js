@@ -500,7 +500,7 @@ export function startViewTransition() {
   return false;
 }
 
-export type ViewTransitionRef = null;
+export type ViewTransitionRef = null | {name: string, ...};
 
 export function createViewTransitionRef(name: string): ViewTransitionRef {
   return null;

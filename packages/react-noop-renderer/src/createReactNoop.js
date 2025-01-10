@@ -92,7 +92,7 @@ export type TransitionStatus = mixed;
 
 export type FormInstance = Instance;
 
-export type ViewTransitionRef = null;
+export type ViewTransitionRef = null | {name: string, ...};
 
 const NO_CONTEXT = {};
 const UPPERCASE_CONTEXT = {};
