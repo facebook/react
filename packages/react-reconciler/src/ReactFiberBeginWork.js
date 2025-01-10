@@ -3264,8 +3264,13 @@ function updateViewTransition(
     // counter in the commit phase instead.
     assignViewTransitionAutoName(pendingProps, instance);
   }
+  if (current !== null && current.memoizedProps.name !== pendingProps.name) {
+    // If the name changes, we schedule a ref effect to create a new ref instance.
+    workInProgress.flags |= Ref | RefStatic;
+  } else {
+    markRef(current, workInProgress);
+  }
   const nextChildren = pendingProps.children;
-  markRef(current, workInProgress);
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
 }

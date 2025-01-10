@@ -880,14 +880,13 @@ function commitAttachRef(finishedWork: Fiber) {
       case ViewTransitionComponent:
         if (enableViewTransition) {
           const instance: ViewTransitionInstance = finishedWork.stateNode;
-          if (instance.ref === null) {
-            const viewTransitionName = getViewTransitionName(
-              finishedWork.memoizedProps,
-              instance,
-            );
-            instance.ref = createViewTransitionRef(viewTransitionName);
+          const props: ViewTransitionProps = finishedWork.memoizedProps;
+          const name = getViewTransitionName(props, instance);
+          if (instance.ref === null || instance.ref.name !== name) {
+            instance.ref = createViewTransitionRef(name);
           }
           instanceToUse = instance.ref;
+          break;
         }
       // Fallthrough
       default:
