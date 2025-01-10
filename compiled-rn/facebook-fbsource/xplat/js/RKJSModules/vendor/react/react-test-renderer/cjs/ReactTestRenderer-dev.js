@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<fc777b919a1258b491af947a9c79c861>>
+ * @generated SignedSource<<b0840fe90a995e83910bcbe7404c8057>>
  */
 
 "use strict";
@@ -9206,21 +9206,24 @@ __DEV__ &&
     function commitAttachRef(finishedWork) {
       var ref = finishedWork.ref;
       if (null !== ref) {
-        var instance = finishedWork.stateNode;
         switch (finishedWork.tag) {
           case 26:
           case 27:
           case 5:
-            instance = getPublicInstance(instance);
+            var instanceToUse = getPublicInstance(finishedWork.stateNode);
+            break;
+          default:
+            instanceToUse = finishedWork.stateNode;
         }
         if ("function" === typeof ref)
           if (shouldProfile(finishedWork))
             try {
-              startEffectTimer(), (finishedWork.refCleanup = ref(instance));
+              startEffectTimer(),
+                (finishedWork.refCleanup = ref(instanceToUse));
             } finally {
               recordEffectDuration();
             }
-          else finishedWork.refCleanup = ref(instance);
+          else finishedWork.refCleanup = ref(instanceToUse);
         else
           "string" === typeof ref
             ? error$jscomp$0("String refs are no longer supported.")
@@ -9229,7 +9232,7 @@ __DEV__ &&
                 "Unexpected ref object provided for %s. Use either a ref-setter function or React.createRef().",
                 getComponentNameFromFiber(finishedWork)
               ),
-            (ref.current = instance);
+            (ref.current = instanceToUse);
       }
     }
     function safelyAttachRef(current, nearestMountedAncestor) {
@@ -15634,10 +15637,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-056073de-20250109",
+        version: "19.1.0-native-fb-0bf1f39e-20250110",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-056073de-20250109"
+        reconcilerVersion: "19.1.0-native-fb-0bf1f39e-20250110"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15782,5 +15785,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.1.0-native-fb-056073de-20250109";
+    exports.version = "19.1.0-native-fb-0bf1f39e-20250110";
   })();

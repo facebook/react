@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c42c35813262e614dc50eb7a52c3b88c>>
+ * @generated SignedSource<<3a246e1e991beec6cf0f52a9fd852233>>
  */
 
 /*
@@ -8347,15 +8347,14 @@ function safelyAttachRef(current, nearestMountedAncestor) {
   try {
     var ref = current.ref;
     if (null !== ref) {
-      var instance = current.stateNode;
       switch (current.tag) {
         case 26:
         case 27:
         case 5:
-          var instanceToUse = instance;
+          var instanceToUse = current.stateNode;
           break;
         default:
-          instanceToUse = instance;
+          instanceToUse = current.stateNode;
       }
       if ("function" === typeof ref)
         if (shouldProfile(current))
@@ -13106,20 +13105,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1620 = 0;
-  i$jscomp$inline_1620 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1620++
+  var i$jscomp$inline_1619 = 0;
+  i$jscomp$inline_1619 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1619++
 ) {
-  var eventName$jscomp$inline_1621 =
-      simpleEventPluginEvents[i$jscomp$inline_1620],
-    domEventName$jscomp$inline_1622 =
-      eventName$jscomp$inline_1621.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1623 =
-      eventName$jscomp$inline_1621[0].toUpperCase() +
-      eventName$jscomp$inline_1621.slice(1);
+  var eventName$jscomp$inline_1620 =
+      simpleEventPluginEvents[i$jscomp$inline_1619],
+    domEventName$jscomp$inline_1621 =
+      eventName$jscomp$inline_1620.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1622 =
+      eventName$jscomp$inline_1620[0].toUpperCase() +
+      eventName$jscomp$inline_1620.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1622,
-    "on" + capitalizedEvent$jscomp$inline_1623
+    domEventName$jscomp$inline_1621,
+    "on" + capitalizedEvent$jscomp$inline_1622
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -16623,16 +16622,16 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
     0 === i && attemptExplicitHydrationTarget(target);
   }
 };
-var isomorphicReactPackageVersion$jscomp$inline_1865 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1864 = React.version;
 if (
-  "19.1.0-native-fb-056073de-20250109" !==
-  isomorphicReactPackageVersion$jscomp$inline_1865
+  "19.1.0-native-fb-0bf1f39e-20250110" !==
+  isomorphicReactPackageVersion$jscomp$inline_1864
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1865,
-      "19.1.0-native-fb-056073de-20250109"
+      isomorphicReactPackageVersion$jscomp$inline_1864,
+      "19.1.0-native-fb-0bf1f39e-20250110"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16652,12 +16651,12 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
     null === componentOrElement ? null : componentOrElement.stateNode;
   return componentOrElement;
 };
-var internals$jscomp$inline_1872 = {
+var internals$jscomp$inline_1871 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-056073de-20250109",
+  version: "19.1.0-native-fb-0bf1f39e-20250110",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-056073de-20250109",
+  reconcilerVersion: "19.1.0-native-fb-0bf1f39e-20250110",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$292 = 0;
@@ -16675,16 +16674,16 @@ var internals$jscomp$inline_1872 = {
   }
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2280 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2279 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2280.isDisabled &&
-    hook$jscomp$inline_2280.supportsFiber
+    !hook$jscomp$inline_2279.isDisabled &&
+    hook$jscomp$inline_2279.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2280.inject(
-        internals$jscomp$inline_1872
+      (rendererID = hook$jscomp$inline_2279.inject(
+        internals$jscomp$inline_1871
       )),
-        (injectedHook = hook$jscomp$inline_2280);
+        (injectedHook = hook$jscomp$inline_2279);
     } catch (err) {}
 }
 function noop() {}
@@ -16932,7 +16931,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-native-fb-056073de-20250109";
+exports.version = "19.1.0-native-fb-0bf1f39e-20250110";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

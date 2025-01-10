@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b997a03ad7a41b188606298c7dee64aa>>
+ * @generated SignedSource<<2749caf6b148ee8b1c5525431f101c3f>>
  */
 
 "use strict";
@@ -8056,15 +8056,14 @@ function safelyAttachRef(current, nearestMountedAncestor) {
   try {
     var ref = current.ref;
     if (null !== ref) {
-      var instance = current.stateNode;
       switch (current.tag) {
         case 26:
         case 27:
         case 5:
-          var instanceToUse = getPublicInstance(instance);
+          var instanceToUse = getPublicInstance(current.stateNode);
           break;
         default:
-          instanceToUse = instance;
+          instanceToUse = current.stateNode;
       }
       "function" === typeof ref
         ? (current.refCleanup = ref(instanceToUse))
@@ -11046,26 +11045,26 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1239 = {
+  internals$jscomp$inline_1238 = {
     bundleType: 0,
-    version: "19.1.0-native-fb-056073de-20250109",
+    version: "19.1.0-native-fb-0bf1f39e-20250110",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.1.0-native-fb-056073de-20250109"
+    reconcilerVersion: "19.1.0-native-fb-0bf1f39e-20250110"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1239.rendererConfig = extraDevToolsConfig);
+  (internals$jscomp$inline_1238.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1551 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1550 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1551.isDisabled &&
-    hook$jscomp$inline_1551.supportsFiber
+    !hook$jscomp$inline_1550.isDisabled &&
+    hook$jscomp$inline_1550.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1551.inject(
-        internals$jscomp$inline_1239
+      (rendererID = hook$jscomp$inline_1550.inject(
+        internals$jscomp$inline_1238
       )),
-        (injectedHook = hook$jscomp$inline_1551);
+        (injectedHook = hook$jscomp$inline_1550);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

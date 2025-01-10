@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<4b50fe15354fe11cbf9becdfc1e14b4e>>
+ * @generated SignedSource<<0b1ec551264c51e21d5e8444bf423bf3>>
  */
 
 "use strict";
@@ -10457,21 +10457,24 @@ __DEV__ &&
     function commitAttachRef(finishedWork) {
       var ref = finishedWork.ref;
       if (null !== ref) {
-        var instance = finishedWork.stateNode;
         switch (finishedWork.tag) {
           case 26:
           case 27:
           case 5:
-            instance = getPublicInstance(instance);
+            var instanceToUse = getPublicInstance(finishedWork.stateNode);
+            break;
+          default:
+            instanceToUse = finishedWork.stateNode;
         }
         if ("function" === typeof ref)
           if (shouldProfile(finishedWork))
             try {
-              startEffectTimer(), (finishedWork.refCleanup = ref(instance));
+              startEffectTimer(),
+                (finishedWork.refCleanup = ref(instanceToUse));
             } finally {
               recordEffectDuration();
             }
-          else finishedWork.refCleanup = ref(instance);
+          else finishedWork.refCleanup = ref(instanceToUse);
         else
           "string" === typeof ref
             ? error$jscomp$0("String refs are no longer supported.")
@@ -10480,7 +10483,7 @@ __DEV__ &&
                 "Unexpected ref object provided for %s. Use either a ref-setter function or React.createRef().",
                 getComponentNameFromFiber(finishedWork)
               ),
-            (ref.current = instance);
+            (ref.current = instanceToUse);
       }
     }
     function safelyAttachRef(current, nearestMountedAncestor) {
@@ -17507,10 +17510,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-056073de-20250109",
+        version: "19.1.0-native-fb-0bf1f39e-20250110",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-056073de-20250109"
+        reconcilerVersion: "19.1.0-native-fb-0bf1f39e-20250110"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

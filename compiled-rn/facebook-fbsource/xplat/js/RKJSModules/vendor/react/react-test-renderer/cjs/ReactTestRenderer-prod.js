@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<279dbea52c98b332810656e9fcd2ab4c>>
+ * @generated SignedSource<<b311a9f203156fc6c997ad8f20578f0e>>
  */
 
 "use strict";
@@ -6588,15 +6588,14 @@ function safelyAttachRef(current, nearestMountedAncestor) {
   try {
     var ref = current.ref;
     if (null !== ref) {
-      var instance = current.stateNode;
       switch (current.tag) {
         case 26:
         case 27:
         case 5:
-          var instanceToUse = getPublicInstance(instance);
+          var instanceToUse = getPublicInstance(current.stateNode);
           break;
         default:
-          instanceToUse = instance;
+          instanceToUse = current.stateNode;
       }
       "function" === typeof ref
         ? (current.refCleanup = ref(instanceToUse))
@@ -9826,24 +9825,24 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var internals$jscomp$inline_1403 = {
+var internals$jscomp$inline_1402 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-056073de-20250109",
+  version: "19.1.0-native-fb-0bf1f39e-20250110",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-056073de-20250109"
+  reconcilerVersion: "19.1.0-native-fb-0bf1f39e-20250110"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1404 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1403 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1404.isDisabled &&
-    hook$jscomp$inline_1404.supportsFiber
+    !hook$jscomp$inline_1403.isDisabled &&
+    hook$jscomp$inline_1403.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1404.inject(
-        internals$jscomp$inline_1403
+      (rendererID = hook$jscomp$inline_1403.inject(
+        internals$jscomp$inline_1402
       )),
-        (injectedHook = hook$jscomp$inline_1404);
+        (injectedHook = hook$jscomp$inline_1403);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
@@ -9967,4 +9966,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.1.0-native-fb-056073de-20250109";
+exports.version = "19.1.0-native-fb-0bf1f39e-20250110";
