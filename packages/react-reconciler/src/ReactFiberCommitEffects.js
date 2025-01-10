@@ -45,7 +45,10 @@ import {
   commitCallbacks,
   commitHiddenCallbacks,
 } from './ReactFiberClassUpdateQueue';
-import {getPublicInstance, createViewTransitionRef} from './ReactFiberConfig';
+import {
+  getPublicInstance,
+  createViewTransitionInstance,
+} from './ReactFiberConfig';
 import {
   captureCommitPhaseError,
   setIsRunningInsertionEffect,
@@ -883,7 +886,7 @@ function commitAttachRef(finishedWork: Fiber) {
           const props: ViewTransitionProps = finishedWork.memoizedProps;
           const name = getViewTransitionName(props, instance);
           if (instance.ref === null || instance.ref.name !== name) {
-            instance.ref = createViewTransitionRef(name);
+            instance.ref = createViewTransitionInstance(name);
           }
           instanceToUse = instance.ref;
           break;

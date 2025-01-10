@@ -92,7 +92,7 @@ export type TransitionStatus = mixed;
 
 export type FormInstance = Instance;
 
-export type ViewTransitionRef = null | {name: string, ...};
+export type ViewTransitionInstance = null | {name: string, ...};
 
 const NO_CONTEXT = {};
 const UPPERCASE_CONTEXT = {};
@@ -788,7 +788,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           return false;
         },
 
-        createViewTransitionRef(name: string): ViewTransitionRef {
+        createViewTransitionInstance(name: string): ViewTransitionInstance {
           return null;
         },
 

@@ -187,7 +187,7 @@ export type RendererInspectionConfig = $ReadOnly<{}>;
 
 export type TransitionStatus = FormStatus;
 
-export type ViewTransitionRef = {
+export type ViewTransitionInstance = {
   name: string,
   group: Animatable,
   imagePair: Animatable,
@@ -1388,7 +1388,9 @@ ViewTransitionPseudoElement.prototype.getAnimations = function (
   return result;
 };
 
-export function createViewTransitionRef(name: string): ViewTransitionRef {
+export function createViewTransitionInstance(
+  name: string,
+): ViewTransitionInstance {
   return {
     name: name,
     group: new (ViewTransitionPseudoElement: any)('group', name),
