@@ -13,9 +13,7 @@ let useSyncExternalStoreWithSelector;
 let React;
 let ReactDOM;
 let ReactDOMClient;
-let ReactFeatureFlags;
 let act;
-let assertLog;
 
 describe('useSyncExternalStoreWithSelector', () => {
   beforeEach(() => {
@@ -43,7 +41,6 @@ describe('useSyncExternalStoreWithSelector', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
-
     const internalAct = require('internal-test-utils').act;
 
     // The internal act implementation doesn't batch updates by default, since
