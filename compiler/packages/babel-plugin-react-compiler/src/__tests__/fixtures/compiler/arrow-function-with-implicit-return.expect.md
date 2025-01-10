@@ -5,6 +5,11 @@
 // @compilationMode(infer)
 const Test = () => <div />;
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: Test,
+  params: [{}],
+};
+
 ```
 
 ## Code
@@ -23,7 +28,12 @@ const Test = () => {
   return t0;
 };
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: Test,
+  params: [{}],
+};
+
 ```
       
 ### Eval output
-(kind: exception) Fixture not implemented
+(kind: ok) <div></div>
