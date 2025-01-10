@@ -43,7 +43,7 @@ import type {
 } from './ReactFiberTracingMarkerComponent';
 import type {
   ViewTransitionProps,
-  ViewTransitionInstance,
+  ViewTransitionState,
 } from './ReactFiberViewTransitionComponent';
 
 import {
@@ -283,7 +283,7 @@ export function commitBeforeMutationEffects(
   root: FiberRoot,
   firstChild: Fiber,
   committedLanes: Lanes,
-  appearingViewTransitions: Map<string, ViewTransitionInstance> | null,
+  appearingViewTransitions: Map<string, ViewTransitionState> | null,
 ): void {
   focusedInstanceHandle = prepareForCommit(root.containerInfo);
   shouldFireAfterActiveInstanceBlur = false;
@@ -305,7 +305,7 @@ export function commitBeforeMutationEffects(
 
 function commitBeforeMutationEffects_begin(
   isViewTransitionEligible: boolean,
-  appearingViewTransitions: Map<string, ViewTransitionInstance> | null,
+  appearingViewTransitions: Map<string, ViewTransitionState> | null,
 ) {
   // If this commit is eligible for a View Transition we look into all mutated subtrees.
   // TODO: We could optimize this by marking these with the Snapshot subtree flag in the render phase.
@@ -523,7 +523,7 @@ function commitBeforeMutationEffectsOnFiber(
 function commitBeforeMutationEffectsDeletion(
   deletion: Fiber,
   isViewTransitionEligible: boolean,
-  appearingViewTransitions: Map<string, ViewTransitionInstance> | null,
+  appearingViewTransitions: Map<string, ViewTransitionState> | null,
 ) {
   if (enableCreateEventHandleAPI) {
     // TODO (effects) It would be nice to avoid calling doesFiberContain()
@@ -653,7 +653,7 @@ function commitAppearingPairViewTransitions(placement: Fiber): void {
         child.tag === ViewTransitionComponent &&
         (child.flags & ViewTransitionNamedStatic) !== NoFlags
       ) {
-        const instance: ViewTransitionInstance = child.stateNode;
+        const instance: ViewTransitionState = child.stateNode;
         if (instance.paired) {
           const props: ViewTransitionProps = child.memoizedProps;
           if (props.name == null || props.name === 'auto') {
@@ -721,7 +721,7 @@ function commitEnterViewTransitions(placement: Fiber): void {
 
 function commitDeletedPairViewTransitions(
   deletion: Fiber,
-  appearingViewTransitions: Map<string, ViewTransitionInstance>,
+  appearingViewTransitions: Map<string, ViewTransitionState>,
 ): void {
   if (appearingViewTransitions.size === 0) {
     // We've found all.
@@ -761,8 +761,8 @@ function commitDeletedPairViewTransitions(
               restoreViewTransitionOnHostInstances(child.child, false);
             } else {
               // We'll transition between them.
-              const oldinstance: ViewTransitionInstance = child.stateNode;
-              const newInstance: ViewTransitionInstance = pair;
+              const oldinstance: ViewTransitionState = child.stateNode;
+              const newInstance: ViewTransitionState = pair;
               newInstance.paired = oldinstance;
             }
             // Delete the entry so that we know when we've found all of them
@@ -782,7 +782,7 @@ function commitDeletedPairViewTransitions(
 
 function commitExitViewTransitions(
   deletion: Fiber,
-  appearingViewTransitions: Map<string, ViewTransitionInstance> | null,
+  appearingViewTransitions: Map<string, ViewTransitionState> | null,
 ): void {
   if (deletion.tag === ViewTransitionComponent) {
     const props: ViewTransitionProps = deletion.memoizedProps;
@@ -805,8 +805,8 @@ function commitExitViewTransitions(
       if (pair !== undefined) {
         // We found a new appearing view transition with the same name as this deletion.
         // We'll transition between them instead of running the normal exit.
-        const oldinstance: ViewTransitionInstance = deletion.stateNode;
-        const newInstance: ViewTransitionInstance = pair;
+        const oldinstance: ViewTransitionState = deletion.stateNode;
+        const newInstance: ViewTransitionState = pair;
         newInstance.paired = oldinstance;
         // Delete the entry so that we know when we've found all of them
         // and can stop searching (size reaches zero).
@@ -894,7 +894,7 @@ function restorePairedViewTransitions(parent: Fiber): void {
         child.tag === ViewTransitionComponent &&
         (child.flags & ViewTransitionNamedStatic) !== NoFlags
       ) {
-        const instance: ViewTransitionInstance = child.stateNode;
+        const instance: ViewTransitionState = child.stateNode;
         if (instance.paired !== null) {
           instance.paired = null;
           restoreViewTransitionOnHostInstances(child.child, false);
@@ -908,7 +908,7 @@ function restorePairedViewTransitions(parent: Fiber): void {
 
 function restoreEnterViewTransitions(placement: Fiber): void {
   if (placement.tag === ViewTransitionComponent) {
-    const instance: ViewTransitionInstance = placement.stateNode;
+    const instance: ViewTransitionState = placement.stateNode;
     instance.paired = null;
     restoreViewTransitionOnHostInstances(placement.child, false);
     restorePairedViewTransitions(placement);
@@ -925,7 +925,7 @@ function restoreEnterViewTransitions(placement: Fiber): void {
 
 function restoreExitViewTransitions(deletion: Fiber): void {
   if (deletion.tag === ViewTransitionComponent) {
-    const instance: ViewTransitionInstance = deletion.stateNode;
+    const instance: ViewTransitionState = deletion.stateNode;
     instance.paired = null;
     restoreViewTransitionOnHostInstances(deletion.child, false);
     restorePairedViewTransitions(deletion);
@@ -1344,6 +1344,20 @@ function commitLayoutEffectOnFiber(
         }
       }
       break;
+    }
+    case ViewTransitionComponent: {
+      if (enableViewTransition) {
+        recursivelyTraverseLayoutEffects(
+          finishedRoot,
+          finishedWork,
+          committedLanes,
+        );
+        if (flags & Ref) {
+          safelyAttachRef(finishedWork, finishedWork.return);
+        }
+        break;
+      }
+      // Fallthrough
     }
     default: {
       recursivelyTraverseLayoutEffects(
@@ -2830,6 +2844,11 @@ function commitMutationEffectsOnFiber(
     }
     case ViewTransitionComponent:
       if (enableViewTransition) {
+        if (flags & Ref) {
+          if (!offscreenSubtreeWasHidden && current !== null) {
+            safelyDetachRef(current, current.return);
+          }
+        }
         const prevMutationContext = pushMutationContext();
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
         commitReconciliationEffects(finishedWork, lanes);
@@ -3194,6 +3213,12 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
       }
       break;
     }
+    case ViewTransitionComponent: {
+      if (enableViewTransition) {
+        safelyDetachRef(finishedWork, finishedWork.return);
+      }
+      // Fallthrough
+    }
     default: {
       recursivelyTraverseDisappearLayoutEffects(finishedWork);
       break;
@@ -3367,6 +3392,18 @@ export function reappearLayoutEffects(
       // TODO: Check flags & Ref
       safelyAttachRef(finishedWork, finishedWork.return);
       break;
+    }
+    case ViewTransitionComponent: {
+      if (enableViewTransition) {
+        recursivelyTraverseReappearLayoutEffects(
+          finishedRoot,
+          finishedWork,
+          includeWorkInProgressEffects,
+        );
+        safelyAttachRef(finishedWork, finishedWork.return);
+        break;
+      }
+      // Fallthrough
     }
     default: {
       recursivelyTraverseReappearLayoutEffects(

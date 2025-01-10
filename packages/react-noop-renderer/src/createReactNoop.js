@@ -92,6 +92,8 @@ export type TransitionStatus = mixed;
 
 export type FormInstance = Instance;
 
+export type ViewTransitionInstance = null | {name: string, ...};
+
 const NO_CONTEXT = {};
 const UPPERCASE_CONTEXT = {};
 if (__DEV__) {
@@ -784,6 +786,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           passiveCallback: () => mixed,
         ): boolean {
           return false;
+        },
+
+        createViewTransitionInstance(name: string): ViewTransitionInstance {
+          return null;
         },
 
         resetTextContent(instance: Instance): void {

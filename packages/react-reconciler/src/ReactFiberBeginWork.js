@@ -30,7 +30,7 @@ import type {
 } from './ReactFiberActivityComponent';
 import type {
   ViewTransitionProps,
-  ViewTransitionInstance,
+  ViewTransitionState,
 } from './ReactFiberViewTransitionComponent';
 import {assignViewTransitionAutoName} from './ReactFiberViewTransitionComponent';
 import {OffscreenDetached} from './ReactFiberActivityComponent';
@@ -3246,7 +3246,7 @@ function updateViewTransition(
   renderLanes: Lanes,
 ) {
   const pendingProps: ViewTransitionProps = workInProgress.pendingProps;
-  const instance: ViewTransitionInstance = workInProgress.stateNode;
+  const instance: ViewTransitionState = workInProgress.stateNode;
   if (pendingProps.name != null && pendingProps.name !== 'auto') {
     // Explicitly named boundary. We track it so that we can pair it up with another explicit
     // boundary if we get deleted.
@@ -3263,6 +3263,12 @@ function updateViewTransition(
     // to client rendered content. If we don't end up using that we could just assign an incremeting
     // counter in the commit phase instead.
     assignViewTransitionAutoName(pendingProps, instance);
+  }
+  if (current !== null && current.memoizedProps.name !== pendingProps.name) {
+    // If the name changes, we schedule a ref effect to create a new ref instance.
+    workInProgress.flags |= Ref | RefStatic;
+  } else {
+    markRef(current, workInProgress);
   }
   const nextChildren = pendingProps.children;
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
