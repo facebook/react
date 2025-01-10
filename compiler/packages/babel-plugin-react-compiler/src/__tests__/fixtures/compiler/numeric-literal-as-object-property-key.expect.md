@@ -9,6 +9,11 @@ function Test() {
   return <div>{obj[21]}</div>
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: Test,
+  params: [{}],
+};
+
 ```
 
 ## Code
@@ -29,7 +34,12 @@ function Test() {
   return t0;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: Test,
+  params: [{}],
+};
+
 ```
       
 ### Eval output
-(kind: exception) Fixture not implemented
+(kind: ok) <div>dimaMachina</div>

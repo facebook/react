@@ -4,3 +4,8 @@ function Test() {
   }
   return <div>{obj[21]}</div>
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Test,
+  params: [{}],
+};
