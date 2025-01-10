@@ -10948,17 +10948,15 @@ __DEV__ &&
     function commitAttachRef(finishedWork) {
       var ref = finishedWork.ref;
       if (null !== ref) {
-        var instance = finishedWork.stateNode;
         switch (finishedWork.tag) {
           case 26:
           case 27:
           case 5:
-            var instanceToUse = getPublicInstance(instance);
+            var instanceToUse = getPublicInstance(finishedWork.stateNode);
             break;
           default:
-            instanceToUse = instance;
+            instanceToUse = finishedWork.stateNode;
         }
-        21 === finishedWork.tag && (instanceToUse = instance);
         if ("function" === typeof ref)
           if (shouldProfile(finishedWork))
             try {
@@ -16472,6 +16470,7 @@ __DEV__ &&
     $$$config.hasInstanceChanged;
     $$$config.hasInstanceAffectedParent;
     $$$config.startViewTransition;
+    $$$config.createViewTransitionInstance;
     var clearContainer = $$$config.clearContainer,
       cloneInstance = $$$config.cloneInstance,
       createContainerChildSet = $$$config.createContainerChildSet,
@@ -19129,7 +19128,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-classic-c4595ca4-20250109"
+        reconcilerVersion: "19.1.0-www-classic-0bf1f39e-20250110"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

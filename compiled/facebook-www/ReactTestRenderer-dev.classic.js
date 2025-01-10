@@ -8867,17 +8867,15 @@ __DEV__ &&
     function commitAttachRef(finishedWork) {
       var ref = finishedWork.ref;
       if (null !== ref) {
-        var instance = finishedWork.stateNode;
         switch (finishedWork.tag) {
           case 26:
           case 27:
           case 5:
-            var instanceToUse = getPublicInstance(instance);
+            var instanceToUse = getPublicInstance(finishedWork.stateNode);
             break;
           default:
-            instanceToUse = instance;
+            instanceToUse = finishedWork.stateNode;
         }
-        21 === finishedWork.tag && (instanceToUse = instance);
         if ("function" === typeof ref)
           if (shouldProfile(finishedWork))
             try {
@@ -15006,10 +15004,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-classic-c4595ca4-20250109",
+        version: "19.1.0-www-classic-0bf1f39e-20250110",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-classic-c4595ca4-20250109"
+        reconcilerVersion: "19.1.0-www-classic-0bf1f39e-20250110"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15144,5 +15142,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.1.0-www-classic-c4595ca4-20250109";
+    exports.version = "19.1.0-www-classic-0bf1f39e-20250110";
   })();

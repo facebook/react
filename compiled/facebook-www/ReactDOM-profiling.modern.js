@@ -8664,17 +8664,15 @@ function safelyAttachRef(current, nearestMountedAncestor) {
   try {
     var ref = current.ref;
     if (null !== ref) {
-      var instance = current.stateNode;
       switch (current.tag) {
         case 26:
         case 27:
         case 5:
-          var instanceToUse = instance;
+          var instanceToUse = current.stateNode;
           break;
         default:
-          instanceToUse = instance;
+          instanceToUse = current.stateNode;
       }
-      21 === current.tag && (instanceToUse = instance);
       if ("function" === typeof ref)
         if (shouldProfile(current))
           try {
@@ -13812,14 +13810,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$370;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1672 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1672) {
-      var element$jscomp$inline_1673 = document.createElement("div");
-      element$jscomp$inline_1673.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1672 =
-        "function" === typeof element$jscomp$inline_1673.oninput;
+    var isSupported$jscomp$inline_1671 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1671) {
+      var element$jscomp$inline_1672 = document.createElement("div");
+      element$jscomp$inline_1672.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1671 =
+        "function" === typeof element$jscomp$inline_1672.oninput;
     }
-    JSCompiler_inline_result$jscomp$370 = isSupported$jscomp$inline_1672;
+    JSCompiler_inline_result$jscomp$370 = isSupported$jscomp$inline_1671;
   } else JSCompiler_inline_result$jscomp$370 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$370 &&
@@ -14142,20 +14140,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1713 = 0;
-  i$jscomp$inline_1713 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1713++
+  var i$jscomp$inline_1712 = 0;
+  i$jscomp$inline_1712 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1712++
 ) {
-  var eventName$jscomp$inline_1714 =
-      simpleEventPluginEvents[i$jscomp$inline_1713],
-    domEventName$jscomp$inline_1715 =
-      eventName$jscomp$inline_1714.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1716 =
-      eventName$jscomp$inline_1714[0].toUpperCase() +
-      eventName$jscomp$inline_1714.slice(1);
+  var eventName$jscomp$inline_1713 =
+      simpleEventPluginEvents[i$jscomp$inline_1712],
+    domEventName$jscomp$inline_1714 =
+      eventName$jscomp$inline_1713.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1715 =
+      eventName$jscomp$inline_1713[0].toUpperCase() +
+      eventName$jscomp$inline_1713.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1715,
-    "on" + capitalizedEvent$jscomp$inline_1716
+    domEventName$jscomp$inline_1714,
+    "on" + capitalizedEvent$jscomp$inline_1715
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17730,16 +17728,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_1886 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1885 = React.version;
 if (
-  "19.1.0-www-modern-c4595ca4-20250109" !==
-  isomorphicReactPackageVersion$jscomp$inline_1886
+  "19.1.0-www-modern-0bf1f39e-20250110" !==
+  isomorphicReactPackageVersion$jscomp$inline_1885
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1886,
-      "19.1.0-www-modern-c4595ca4-20250109"
+      isomorphicReactPackageVersion$jscomp$inline_1885,
+      "19.1.0-www-modern-0bf1f39e-20250110"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17755,27 +17753,27 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_1888 = {
+var internals$jscomp$inline_1887 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-c4595ca4-20250109",
+  version: "19.1.0-www-modern-0bf1f39e-20250110",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-c4595ca4-20250109"
+  reconcilerVersion: "19.1.0-www-modern-0bf1f39e-20250110"
 };
 enableSchedulingProfiler &&
-  ((internals$jscomp$inline_1888.getLaneLabelMap = getLaneLabelMap),
-  (internals$jscomp$inline_1888.injectProfilingHooks = injectProfilingHooks));
+  ((internals$jscomp$inline_1887.getLaneLabelMap = getLaneLabelMap),
+  (internals$jscomp$inline_1887.injectProfilingHooks = injectProfilingHooks));
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2372 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2371 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2372.isDisabled &&
-    hook$jscomp$inline_2372.supportsFiber
+    !hook$jscomp$inline_2371.isDisabled &&
+    hook$jscomp$inline_2371.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2372.inject(
-        internals$jscomp$inline_1888
+      (rendererID = hook$jscomp$inline_2371.inject(
+        internals$jscomp$inline_1887
       )),
-        (injectedHook = hook$jscomp$inline_2372);
+        (injectedHook = hook$jscomp$inline_2371);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -18127,7 +18125,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-modern-c4595ca4-20250109";
+exports.version = "19.1.0-www-modern-0bf1f39e-20250110";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

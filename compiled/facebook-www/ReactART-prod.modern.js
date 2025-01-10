@@ -6895,17 +6895,15 @@ function safelyAttachRef(current, nearestMountedAncestor) {
   try {
     var ref = current.ref;
     if (null !== ref) {
-      var instance = current.stateNode;
       switch (current.tag) {
         case 26:
         case 27:
         case 5:
-          var instanceToUse = instance;
+          var instanceToUse = current.stateNode;
           break;
         default:
-          instanceToUse = instance;
+          instanceToUse = current.stateNode;
       }
-      21 === current.tag && (instanceToUse = instance);
       "function" === typeof ref
         ? (current.refCleanup = ref(instanceToUse))
         : (ref.current = instanceToUse);
@@ -10550,24 +10548,24 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component);
-var internals$jscomp$inline_1488 = {
+var internals$jscomp$inline_1487 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-c4595ca4-20250109",
+  version: "19.1.0-www-modern-0bf1f39e-20250110",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-c4595ca4-20250109"
+  reconcilerVersion: "19.1.0-www-modern-0bf1f39e-20250110"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1489 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1488 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1489.isDisabled &&
-    hook$jscomp$inline_1489.supportsFiber
+    !hook$jscomp$inline_1488.isDisabled &&
+    hook$jscomp$inline_1488.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1489.inject(
-        internals$jscomp$inline_1488
+      (rendererID = hook$jscomp$inline_1488.inject(
+        internals$jscomp$inline_1487
       )),
-        (injectedHook = hook$jscomp$inline_1489);
+        (injectedHook = hook$jscomp$inline_1488);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
@@ -10581,4 +10579,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.1.0-www-modern-c4595ca4-20250109";
+exports.version = "19.1.0-www-modern-0bf1f39e-20250110";

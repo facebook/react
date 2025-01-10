@@ -12455,17 +12455,15 @@ __DEV__ &&
     function commitAttachRef(finishedWork) {
       var ref = finishedWork.ref;
       if (null !== ref) {
-        var instance = finishedWork.stateNode;
         switch (finishedWork.tag) {
           case 26:
           case 27:
           case 5:
-            var instanceToUse = instance;
+            var instanceToUse = finishedWork.stateNode;
             break;
           default:
-            instanceToUse = instance;
+            instanceToUse = finishedWork.stateNode;
         }
-        21 === finishedWork.tag && (instanceToUse = instance);
         if ("function" === typeof ref)
           if (shouldProfile(finishedWork))
             try {
@@ -27553,11 +27551,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.1.0-www-modern-c4595ca4-20250109" !== isomorphicReactPackageVersion)
+      if ("19.1.0-www-modern-0bf1f39e-20250110" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.1.0-www-modern-c4595ca4-20250109\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.1.0-www-modern-0bf1f39e-20250110\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -27600,10 +27598,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.1.0-www-modern-c4595ca4-20250109",
+          version: "19.1.0-www-modern-0bf1f39e-20250110",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.1.0-www-modern-c4595ca4-20250109"
+          reconcilerVersion: "19.1.0-www-modern-0bf1f39e-20250110"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -28367,5 +28365,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.1.0-www-modern-c4595ca4-20250109";
+    exports.version = "19.1.0-www-modern-0bf1f39e-20250110";
   })();

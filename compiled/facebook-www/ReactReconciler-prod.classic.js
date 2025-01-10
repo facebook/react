@@ -7496,17 +7496,15 @@ module.exports = function ($$$config) {
     try {
       var ref = current.ref;
       if (null !== ref) {
-        var instance = current.stateNode;
         switch (current.tag) {
           case 26:
           case 27:
           case 5:
-            var instanceToUse = getPublicInstance(instance);
+            var instanceToUse = getPublicInstance(current.stateNode);
             break;
           default:
-            instanceToUse = instance;
+            instanceToUse = current.stateNode;
         }
-        21 === current.tag && (instanceToUse = instance);
         "function" === typeof ref
           ? (current.refCleanup = ref(instanceToUse))
           : (ref.current = instanceToUse);
@@ -11841,6 +11839,7 @@ module.exports = function ($$$config) {
   $$$config.hasInstanceChanged;
   $$$config.hasInstanceAffectedParent;
   $$$config.startViewTransition;
+  $$$config.createViewTransitionInstance;
   var clearContainer = $$$config.clearContainer,
     cloneInstance = $$$config.cloneInstance,
     createContainerChildSet = $$$config.createContainerChildSet,
@@ -12877,7 +12876,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-classic-c4595ca4-20250109"
+      reconcilerVersion: "19.1.0-www-classic-0bf1f39e-20250110"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
