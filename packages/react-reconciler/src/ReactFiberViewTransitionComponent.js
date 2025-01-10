@@ -9,6 +9,7 @@
 
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {FiberRoot} from './ReactInternalTypes';
+import type {ViewTransitionRef} from './ReactFiberConfig';
 
 import {getWorkInProgressRoot} from './ReactFiberWorkLoop';
 
@@ -25,6 +26,7 @@ export type ViewTransitionProps = {
 export type ViewTransitionInstance = {
   autoName: null | string, // the view-transition-name to use when an explicit one is not specified
   paired: null | ViewTransitionInstance, // a temporary state during the commit phase if we have paired this with another instance
+  ref: null | ViewTransitionRef, // the current ref instance. This can change through the lifetime of the instance.
 };
 
 let globalClientIdCounter: number = 0;

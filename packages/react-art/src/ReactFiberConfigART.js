@@ -500,6 +500,12 @@ export function startViewTransition() {
   return false;
 }
 
+export type ViewTransitionRef = null;
+
+export function createViewTransitionRef(name: string): ViewTransitionRef {
+  return null;
+}
+
 export function clearContainer(container) {
   // TODO Implement this
 }

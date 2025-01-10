@@ -11,21 +11,26 @@ import type {Fiber} from './ReactInternalTypes';
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
 import type {HookFlags} from './ReactHookEffectTags';
+import {
+  getViewTransitionName,
+  type ViewTransitionInstance,
+  type ViewTransitionProps,
+} from './ReactFiberViewTransitionComponent';
 
 import {
   enableProfilerTimer,
   enableProfilerCommitHooks,
   enableProfilerNestedUpdatePhase,
   enableSchedulingProfiler,
-  enableScopeAPI,
   enableUseResourceEffectHook,
+  enableViewTransition,
 } from 'shared/ReactFeatureFlags';
 import {
   ClassComponent,
   HostComponent,
   HostHoistable,
   HostSingleton,
-  ScopeComponent,
+  ViewTransitionComponent,
 } from './ReactWorkTags';
 import {NoFlags} from './ReactFiberFlags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
@@ -40,7 +45,7 @@ import {
   commitCallbacks,
   commitHiddenCallbacks,
 } from './ReactFiberClassUpdateQueue';
-import {getPublicInstance} from './ReactFiberConfig';
+import {getPublicInstance, createViewTransitionRef} from './ReactFiberConfig';
 import {
   captureCommitPhaseError,
   setIsRunningInsertionEffect,
@@ -865,20 +870,28 @@ export function safelyCallComponentWillUnmount(
 function commitAttachRef(finishedWork: Fiber) {
   const ref = finishedWork.ref;
   if (ref !== null) {
-    const instance = finishedWork.stateNode;
     let instanceToUse;
     switch (finishedWork.tag) {
       case HostHoistable:
       case HostSingleton:
       case HostComponent:
-        instanceToUse = getPublicInstance(instance);
+        instanceToUse = getPublicInstance(finishedWork.stateNode);
         break;
+      case ViewTransitionComponent:
+        if (enableViewTransition) {
+          const instance: ViewTransitionInstance = finishedWork.stateNode;
+          if (instance.ref === null) {
+            const viewTransitionName = getViewTransitionName(
+              finishedWork.memoizedProps,
+              instance,
+            );
+            instance.ref = createViewTransitionRef(viewTransitionName);
+          }
+          instanceToUse = instance.ref;
+        }
+      // Fallthrough
       default:
-        instanceToUse = instance;
-    }
-    // Moved outside to ensure DCE works with this flag
-    if (enableScopeAPI && finishedWork.tag === ScopeComponent) {
-      instanceToUse = instance;
+        instanceToUse = finishedWork.stateNode;
     }
     if (typeof ref === 'function') {
       if (shouldProfile(finishedWork)) {

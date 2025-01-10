@@ -40,6 +40,7 @@ export opaque type NoTimeout = mixed;
 export opaque type RendererInspectionConfig = mixed;
 export opaque type TransitionStatus = mixed;
 export opaque type FormInstance = mixed;
+export opaque type ViewTransitionRef = mixed;
 export opaque type InstanceMeasurement = mixed;
 export type EventResponder = any;
 
@@ -143,6 +144,7 @@ export const wasInstanceInViewport = $$$config.wasInstanceInViewport;
 export const hasInstanceChanged = $$$config.hasInstanceChanged;
 export const hasInstanceAffectedParent = $$$config.hasInstanceAffectedParent;
 export const startViewTransition = $$$config.startViewTransition;
+export const createViewTransitionRef = $$$config.createViewTransitionRef;
 export const clearContainer = $$$config.clearContainer;
 
 // -------------------

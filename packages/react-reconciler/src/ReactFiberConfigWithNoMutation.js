@@ -46,3 +46,5 @@ export const wasInstanceInViewport = shim;
 export const hasInstanceChanged = shim;
 export const hasInstanceAffectedParent = shim;
 export const startViewTransition = shim;
+export type ViewTransitionRef = null;
+export const createViewTransitionRef = shim;
