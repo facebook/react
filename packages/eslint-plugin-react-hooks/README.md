@@ -18,7 +18,7 @@ npm install eslint-plugin-react-hooks --save-dev
 yarn add eslint-plugin-react-hooks --dev
 ```
 
-Then extend the recommended eslint config:
+Then extend the recommended ESLint config:
 
 ```js
 {
