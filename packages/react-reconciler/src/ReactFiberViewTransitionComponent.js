@@ -21,6 +21,11 @@ export type ViewTransitionProps = {
   name?: string,
   className?: string,
   children?: ReactNodeList,
+  onEnter?: (instance: ViewTransitionInstance) => void,
+  onExit?: (instance: ViewTransitionInstance) => void,
+  onLayout?: (instance: ViewTransitionInstance) => void,
+  onShare?: (instance: ViewTransitionInstance) => void,
+  onUpdate?: (instance: ViewTransitionInstance) => void,
 };
 
 export type ViewTransitionState = {
