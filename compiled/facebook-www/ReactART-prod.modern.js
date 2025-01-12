@@ -703,11 +703,7 @@ function push(cursor, value) {
   valueStack[index] = cursor.current;
   cursor.current = value;
 }
-var emptyContextObject = {};
-function is(x, y) {
-  return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
-}
-var objectIs = "function" === typeof Object.is ? Object.is : is,
+var emptyContextObject = {},
   prefix,
   suffix;
 function describeBuiltInComponentFrame(name) {
@@ -957,7 +953,11 @@ function upgradeHydrationErrorsToRecoverable() {
     (hydrationErrors = null));
   return queuedErrors;
 }
-var valueCursor = createCursor(null),
+function is(x, y) {
+  return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
+}
+var objectIs = "function" === typeof Object.is ? Object.is : is,
+  valueCursor = createCursor(null),
   currentlyRenderingFiber$1 = null,
   lastContextDependency = null;
 function pushProvider(providerFiber, context, nextValue) {
@@ -10550,10 +10550,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1487 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-0bf1f39e-20250110",
+  version: "19.1.0-www-modern-540efebc-20250112",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-0bf1f39e-20250110"
+  reconcilerVersion: "19.1.0-www-modern-540efebc-20250112"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1488 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -10579,4 +10579,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.1.0-www-modern-0bf1f39e-20250110";
+exports.version = "19.1.0-www-modern-540efebc-20250112";

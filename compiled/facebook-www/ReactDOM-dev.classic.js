@@ -3457,9 +3457,6 @@ __DEV__ &&
         : pop(didPerformWorkStackCursor, workInProgress);
       push(didPerformWorkStackCursor, didChange, workInProgress);
     }
-    function is(x, y) {
-      return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
-    }
     function createCapturedValueAtFiber(value, source) {
       if ("object" === typeof value && null !== value) {
         var existing = CapturedStacks.get(value);
@@ -3787,6 +3784,9 @@ __DEV__ &&
           "https://react.dev/link/hydration-mismatch",
           diffRoot
         ));
+    }
+    function is(x, y) {
+      return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
     }
     function resetContextDependencies() {
       lastContextDependency = currentlyRenderingFiber$1 = null;
@@ -24628,7 +24628,6 @@ __DEV__ &&
     var contextStackCursor = createCursor(emptyContextObject),
       didPerformWorkStackCursor = createCursor(!1),
       previousContext = emptyContextObject,
-      objectIs = "function" === typeof Object.is ? Object.is : is,
       CapturedStacks = new WeakMap(),
       forkStack = [],
       forkStackIndex = 0,
@@ -24649,6 +24648,7 @@ __DEV__ &&
       HydrationMismatchException = Error(
         "Hydration Mismatch Exception: This is not a real error, and should not leak into userspace. If you're seeing this, it's likely a bug in React."
       ),
+      objectIs = "function" === typeof Object.is ? Object.is : is,
       NoMode = 0,
       ConcurrentMode = 1,
       ProfileMode = 2,
@@ -27431,11 +27431,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.1.0-www-classic-0bf1f39e-20250110" !== isomorphicReactPackageVersion)
+      if ("19.1.0-www-classic-540efebc-20250112" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.1.0-www-classic-0bf1f39e-20250110\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.1.0-www-classic-540efebc-20250112\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -27478,10 +27478,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.1.0-www-classic-0bf1f39e-20250110",
+          version: "19.1.0-www-classic-540efebc-20250112",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.1.0-www-classic-0bf1f39e-20250110"
+          reconcilerVersion: "19.1.0-www-classic-540efebc-20250112"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -28079,7 +28079,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.1.0-www-classic-0bf1f39e-20250110";
+    exports.version = "19.1.0-www-classic-540efebc-20250112";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

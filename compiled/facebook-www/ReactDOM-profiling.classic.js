@@ -1765,11 +1765,7 @@ function invalidateContextProvider(workInProgress, type, didChange) {
     : pop(didPerformWorkStackCursor);
   push(didPerformWorkStackCursor, didChange);
 }
-function is(x, y) {
-  return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
-}
-var objectIs = "function" === typeof Object.is ? Object.is : is,
-  CapturedStacks = new WeakMap();
+var CapturedStacks = new WeakMap();
 function createCapturedValueAtFiber(value, source) {
   if ("object" === typeof value && null !== value) {
     var existing = CapturedStacks.get(value);
@@ -2015,7 +2011,11 @@ function queueHydrationError(error) {
     ? (hydrationErrors = [error])
     : hydrationErrors.push(error);
 }
-var valueCursor = createCursor(null),
+function is(x, y) {
+  return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
+}
+var objectIs = "function" === typeof Object.is ? Object.is : is,
+  valueCursor = createCursor(null),
   currentlyRenderingFiber$1 = null,
   lastContextDependency = null;
 function pushProvider(providerFiber, context, nextValue) {
@@ -17995,14 +17995,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1895 = React.version;
 if (
-  "19.1.0-www-classic-0bf1f39e-20250110" !==
+  "19.1.0-www-classic-540efebc-20250112" !==
   isomorphicReactPackageVersion$jscomp$inline_1895
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1895,
-      "19.1.0-www-classic-0bf1f39e-20250110"
+      "19.1.0-www-classic-540efebc-20250112"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -18020,10 +18020,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_1897 = {
   bundleType: 0,
-  version: "19.1.0-www-classic-0bf1f39e-20250110",
+  version: "19.1.0-www-classic-540efebc-20250112",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-classic-0bf1f39e-20250110"
+  reconcilerVersion: "19.1.0-www-classic-540efebc-20250112"
 };
 enableSchedulingProfiler &&
   ((internals$jscomp$inline_1897.getLaneLabelMap = getLaneLabelMap),
@@ -18390,7 +18390,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-classic-0bf1f39e-20250110";
+exports.version = "19.1.0-www-classic-540efebc-20250112";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

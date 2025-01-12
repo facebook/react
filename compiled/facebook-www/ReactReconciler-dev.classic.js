@@ -1024,9 +1024,6 @@ __DEV__ &&
         "function" === typeof injectedProfilingHooks.markStateUpdateScheduled &&
         injectedProfilingHooks.markStateUpdateScheduled(fiber, lane);
     }
-    function is(x, y) {
-      return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
-    }
     function disabledLog() {}
     function disableLogs() {
       if (0 === disabledDepth) {
@@ -2127,6 +2124,9 @@ __DEV__ &&
           "https://react.dev/link/hydration-mismatch",
           diffRoot
         ));
+    }
+    function is(x, y) {
+      return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
     }
     function resetContextDependencies() {
       lastContextDependency = currentlyRenderingFiber$1 = null;
@@ -16564,7 +16564,6 @@ __DEV__ &&
       injectedProfilingHooks = null,
       hasLoggedError = !1,
       isDevToolsPresent = "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__,
-      objectIs = "function" === typeof Object.is ? Object.is : is,
       disabledDepth = 0,
       prevLog,
       prevInfo,
@@ -16605,6 +16604,7 @@ __DEV__ &&
       HydrationMismatchException = Error(
         "Hydration Mismatch Exception: This is not a real error, and should not leak into userspace. If you're seeing this, it's likely a bug in React."
       ),
+      objectIs = "function" === typeof Object.is ? Object.is : is,
       NoMode = 0,
       valueCursor = createCursor(null);
     var rendererCursorDEV = createCursor(null);
@@ -19128,7 +19128,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-classic-0bf1f39e-20250110"
+        reconcilerVersion: "19.1.0-www-classic-540efebc-20250112"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

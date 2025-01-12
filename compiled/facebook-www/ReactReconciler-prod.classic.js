@@ -700,9 +700,6 @@ module.exports = function ($$$config) {
         injectedHook.setStrictMode(rendererID, newIsStrictMode);
       } catch (err) {}
   }
-  function is(x, y) {
-    return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
-  }
   function describeBuiltInComponentFrame(name) {
     if (void 0 === prefix)
       try {
@@ -1074,6 +1071,9 @@ module.exports = function ($$$config) {
     null === hydrationErrors
       ? (hydrationErrors = [error])
       : hydrationErrors.push(error);
+  }
+  function is(x, y) {
+    return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
   }
   function pushProvider(providerFiber, context, nextValue) {
     isPrimaryRenderer
@@ -11925,7 +11925,6 @@ module.exports = function ($$$config) {
     unstable_setDisableYieldValue = Scheduler.unstable_setDisableYieldValue,
     rendererID = null,
     injectedHook = null,
-    objectIs = "function" === typeof Object.is ? Object.is : is,
     prefix,
     suffix,
     reentry = !1,
@@ -11949,6 +11948,7 @@ module.exports = function ($$$config) {
     hydrationErrors = null,
     rootOrSingletonContext = !1,
     HydrationMismatchException = Error(formatProdErrorMessage(519)),
+    objectIs = "function" === typeof Object.is ? Object.is : is,
     valueCursor = createCursor(null),
     currentlyRenderingFiber$1 = null,
     lastContextDependency = null,
@@ -12876,7 +12876,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.1.0-www-classic-0bf1f39e-20250110"
+      reconcilerVersion: "19.1.0-www-classic-540efebc-20250112"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

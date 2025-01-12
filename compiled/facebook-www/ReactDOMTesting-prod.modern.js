@@ -1590,11 +1590,7 @@ function restoreStateIfNeeded() {
         restoreStateOfTarget(queuedTargets[target]);
   }
 }
-var emptyContextObject = {};
-function is(x, y) {
-  return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
-}
-var objectIs = "function" === typeof Object.is ? Object.is : is,
+var emptyContextObject = {},
   CapturedStacks = new WeakMap();
 function createCapturedValueAtFiber(value, source) {
   if ("object" === typeof value && null !== value) {
@@ -1841,7 +1837,11 @@ function queueHydrationError(error) {
     ? (hydrationErrors = [error])
     : hydrationErrors.push(error);
 }
-var valueCursor = createCursor(null),
+function is(x, y) {
+  return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
+}
+var objectIs = "function" === typeof Object.is ? Object.is : is,
+  valueCursor = createCursor(null),
   currentlyRenderingFiber$1 = null,
   lastContextDependency = null;
 function pushProvider(providerFiber, context, nextValue) {
@@ -17373,14 +17373,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1817 = React.version;
 if (
-  "19.1.0-www-modern-0bf1f39e-20250110" !==
+  "19.1.0-www-modern-540efebc-20250112" !==
   isomorphicReactPackageVersion$jscomp$inline_1817
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1817,
-      "19.1.0-www-modern-0bf1f39e-20250110"
+      "19.1.0-www-modern-540efebc-20250112"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17398,10 +17398,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2346 = {
   bundleType: 0,
-  version: "19.1.0-www-modern-0bf1f39e-20250110",
+  version: "19.1.0-www-modern-540efebc-20250112",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-www-modern-0bf1f39e-20250110"
+  reconcilerVersion: "19.1.0-www-modern-540efebc-20250112"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2347 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17916,4 +17916,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-www-modern-0bf1f39e-20250110";
+exports.version = "19.1.0-www-modern-540efebc-20250112";

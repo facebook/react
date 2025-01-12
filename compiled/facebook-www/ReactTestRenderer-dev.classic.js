@@ -887,9 +887,6 @@ __DEV__ &&
         : pop(didPerformWorkStackCursor, workInProgress);
       push(didPerformWorkStackCursor, didChange, workInProgress);
     }
-    function is(x, y) {
-      return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
-    }
     function disabledLog() {}
     function disableLogs() {
       if (0 === disabledDepth) {
@@ -1669,6 +1666,9 @@ __DEV__ &&
             ),
         (hydrationErrors = null));
       return queuedErrors;
+    }
+    function is(x, y) {
+      return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
     }
     function resetContextDependencies() {
       lastContextDependency = currentlyRenderingFiber$1 = null;
@@ -13099,7 +13099,6 @@ __DEV__ &&
     var contextStackCursor$1 = createCursor(emptyContextObject),
       didPerformWorkStackCursor = createCursor(!1),
       previousContext = emptyContextObject,
-      objectIs = "function" === typeof Object.is ? Object.is : is,
       disabledDepth = 0,
       prevLog,
       prevInfo,
@@ -13123,6 +13122,7 @@ __DEV__ &&
       needsEscaping = /["'&<>\n\t]|^\s|\s$/,
       hydrationDiffRootDEV = null,
       hydrationErrors = null,
+      objectIs = "function" === typeof Object.is ? Object.is : is,
       valueCursor = createCursor(null);
     var renderer2CursorDEV = createCursor(null);
     var rendererSigil = {};
@@ -15004,10 +15004,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-classic-0bf1f39e-20250110",
+        version: "19.1.0-www-classic-540efebc-20250112",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-classic-0bf1f39e-20250110"
+        reconcilerVersion: "19.1.0-www-classic-540efebc-20250112"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15142,5 +15142,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.1.0-www-classic-0bf1f39e-20250110";
+    exports.version = "19.1.0-www-classic-540efebc-20250112";
   })();
