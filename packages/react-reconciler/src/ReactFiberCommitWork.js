@@ -186,6 +186,7 @@ import {
   addMarkerIncompleteCallbackToPendingTransition,
   addMarkerCompleteCallbackToPendingTransition,
   retryDehydratedSuspenseBoundary,
+  scheduleViewTransitionEvent,
 } from './ReactFiberWorkLoop';
 import {
   HasEffect as HookHasEffect,
@@ -649,6 +650,7 @@ function commitAppearingPairViewTransitions(placement: Fiber): void {
     if (child.tag === OffscreenComponent && child.memoizedState === null) {
       // This tree was already hidden so we skip it.
     } else {
+      commitAppearingPairViewTransitions(child);
       if (
         child.tag === ViewTransitionComponent &&
         (child.flags & ViewTransitionNamedStatic) !== NoFlags
@@ -682,7 +684,6 @@ function commitAppearingPairViewTransitions(placement: Fiber): void {
           }
         }
       }
-      commitAppearingPairViewTransitions(child);
     }
     child = child.sibling;
   }
@@ -701,12 +702,18 @@ function commitEnterViewTransitions(placement: Fiber): void {
       false,
     );
     if (!inViewport) {
+      // TODO: If this was part of a pair we will still run the onShare callback.
       // Revert the transition names. This boundary is not in the viewport
       // so we won't bother animating it.
       restoreViewTransitionOnHostInstances(placement.child, false);
       // TODO: Should we still visit the children in case a named one was in the viewport?
     } else {
       commitAppearingPairViewTransitions(placement);
+
+      const state: ViewTransitionState = placement.stateNode;
+      if (!state.paired) {
+        scheduleViewTransitionEvent(placement, props.onEnter);
+      }
     }
   } else if ((placement.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
     let child = placement.child;
@@ -764,6 +771,9 @@ function commitDeletedPairViewTransitions(
               const oldinstance: ViewTransitionState = child.stateNode;
               const newInstance: ViewTransitionState = pair;
               newInstance.paired = oldinstance;
+              // Note: If the other side ends up outside the viewport, we'll still run this.
+              // Therefore it's possible for onShare to be called with only an old snapshot.
+              scheduleViewTransitionEvent(child, props.onShare);
             }
             // Delete the entry so that we know when we've found all of them
             // and can stop searching (size reaches zero).
@@ -811,9 +821,16 @@ function commitExitViewTransitions(
         // Delete the entry so that we know when we've found all of them
         // and can stop searching (size reaches zero).
         appearingViewTransitions.delete(name);
+        // Note: If the other side ends up outside the viewport, we'll still run this.
+        // Therefore it's possible for onShare to be called with only an old snapshot.
+        scheduleViewTransitionEvent(deletion, props.onShare);
+      } else {
+        scheduleViewTransitionEvent(deletion, props.onExit);
       }
       // Look for more pairs deeper in the tree.
       commitDeletedPairViewTransitions(deletion, appearingViewTransitions);
+    } else {
+      scheduleViewTransitionEvent(deletion, props.onExit);
     }
   } else if ((deletion.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
     let child = deletion.child;
@@ -1118,6 +1135,8 @@ function measureNestedViewTransitions(changedParent: Fiber): void {
           child.memoizedState,
           false,
         );
+        const props: ViewTransitionProps = child.memoizedProps;
+        scheduleViewTransitionEvent(child, props.onLayout);
       }
     } else if ((child.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
       measureNestedViewTransitions(child);
@@ -3075,6 +3094,8 @@ function commitAfterMutationEffectsOnFiber(
           (Placement | Update | ChildDeletion | ContentReset | Visibility)) !==
         NoFlags
       ) {
+        const wasMutated = (finishedWork.flags & Update) !== NoFlags;
+
         const prevContextChanged = viewTransitionContextChanged;
         const prevCancelableChildren = viewTransitionCancelableChildren;
         viewTransitionContextChanged = false;
@@ -3103,7 +3124,17 @@ function commitAfterMutationEffectsOnFiber(
             );
             viewTransitionCancelableChildren = prevCancelableChildren;
           }
+          // TODO: If this doesn't end up canceled, because a parent animates,
+          // then we should probably issue an event since this instance is part of it.
         } else {
+          const props: ViewTransitionProps = finishedWork.memoizedProps;
+          scheduleViewTransitionEvent(
+            finishedWork,
+            wasMutated || viewTransitionContextChanged
+              ? props.onUpdate
+              : props.onLayout,
+          );
+
           // If this boundary did update, we cannot cancel its children so those are dropped.
           viewTransitionCancelableChildren = prevCancelableChildren;
         }
