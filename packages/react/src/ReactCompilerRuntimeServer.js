@@ -9,6 +9,6 @@
 
 throw new Error(
   'The React Compiler is currently not supported in a React Server environment. ' +
-    'Ensure that files importable with a `react-server` condition are not compiled with the React Compiler. ' +
+    'Ensure that modules imported with a `react-server` condition are not compiled with the React Compiler. ' +
     "Libraries should provide a dedicated `react-server` entrypoint that wasn't compiled with the React Compiler.",
 );
