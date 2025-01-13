@@ -272,6 +272,47 @@ export function createContainer(
   );
 }
 
+// Import necessary utilities and modules
+import { preloadModules as preloadModulesUtil } from './utils'; // Preload utility
+export { preloadModulesUtil as preloadModules };
+
+export async function createInstance(type, props, rootContainer, hostContext, internalHandle) {
+  // Dynamically import the module based on the type
+  const Module = await import(`my-module-path/${type}`);
+  const instance = new Module.default(props);
+  return instance;
+}
+
+export function appendChild(parent, child) {
+  if (parent.appendChild) {
+    parent.appendChild(child);
+  }
+}
+
+// Traverses the React component tree and preloads components dynamically
+export async function preloadModules(tree) {
+  const components = new Set();
+  traverseTree(tree, (type) => components.add(type));
+  await Promise.all(
+    [...components].map((type) => import(`my-module-path/${type}`))
+  );
+}
+
+// Helper function for traversing the component tree
+function traverseTree(node, callback) {
+  if (!node) return;
+  if (typeof node.type === 'string') callback(node.type);
+  if (node.props && node.props.children) {
+    React.Children.forEach(node.props.children, (child) =>
+      traverseTree(child, callback)
+    );
+  }
+}
+
+// Ensure the rest of the file remains unchanged
+// (The remaining logic is retained as-is from your original implementation.)
+
+
 export function createHydrationContainer(
   initialChildren: ReactNodeList,
   // TODO: Remove `callback` when we delete legacy mode.
