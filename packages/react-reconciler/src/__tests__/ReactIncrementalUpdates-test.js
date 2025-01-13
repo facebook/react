@@ -18,6 +18,7 @@ let act;
 let waitForAll;
 let waitFor;
 let assertLog;
+let assertConsoleErrorDev;
 
 describe('ReactIncrementalUpdates', () => {
   beforeEach(() => {
@@ -34,6 +35,7 @@ describe('ReactIncrementalUpdates', () => {
     waitForAll = InternalTestUtils.waitForAll;
     waitFor = InternalTestUtils.waitFor;
     assertLog = InternalTestUtils.assertLog;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
   });
 
   function Text({text}) {
@@ -366,20 +368,21 @@ describe('ReactIncrementalUpdates', () => {
       return {a: 'a'};
     });
 
-    await expect(
-      async () =>
-        await waitForAll([
-          'setState updater',
-          // Updates in the render phase receive the currently rendering
-          // lane, so the update flushes immediately in the same render.
-          'render',
-        ]),
-    ).toErrorDev(
+    await waitForAll([
+      'setState updater',
+      // Updates in the render phase receive the currently rendering
+      // lane, so the update flushes immediately in the same render.
+      'render',
+    ]);
+    assertConsoleErrorDev([
       'An update (setState, replaceState, or forceUpdate) was scheduled ' +
         'from inside an update function. Update functions should be pure, ' +
         'with zero side-effects. Consider using componentDidUpdate or a ' +
-        'callback.\n\nPlease update the following component: Foo',
-    );
+        'callback.\n' +
+        '\n' +
+        'Please update the following component: Foo\n' +
+        '    in Foo (at **)',
+    ]);
     expect(instance.state).toEqual({a: 'a', b: 'b'});
 
     // Test deduplication (no additional warnings expected)

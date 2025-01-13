@@ -206,8 +206,12 @@ function createComponentsPanel() {
         }
       });
 
-      // TODO: we should listen to createdPanel.onHidden to unmount some listeners
-      // and potentially stop highlighting
+      createdPanel.onShown.addListener(() => {
+        bridge.emit('extensionComponentsPanelShown');
+      });
+      createdPanel.onHidden.addListener(() => {
+        bridge.emit('extensionComponentsPanelHidden');
+      });
     },
   );
 }
@@ -344,8 +348,6 @@ function mountReactDevTools() {
   registerEventsLogger();
 
   createBridgeAndStore();
-
-  setReactSelectionFromBrowser(bridge);
 
   createComponentsPanel();
   createProfilerPanel();

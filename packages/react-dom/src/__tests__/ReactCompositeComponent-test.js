@@ -18,6 +18,7 @@ let ReactSharedInternals;
 let Scheduler;
 let assertLog;
 let act;
+let assertConsoleErrorDev;
 
 describe('ReactCompositeComponent', () => {
   const hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -71,7 +72,7 @@ describe('ReactCompositeComponent', () => {
       require('react').__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
     Scheduler = require('scheduler');
     assertLog = require('internal-test-utils').assertLog;
-    act = require('internal-test-utils').act;
+    ({act, assertConsoleErrorDev} = require('internal-test-utils'));
   });
 
   describe('MorphingComponent', () => {
@@ -308,16 +309,16 @@ describe('ReactCompositeComponent', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    expect(() => {
-      ReactDOM.flushSync(() => {
-        root.render(<MyComponent />);
-      });
-    }).toErrorDev(
+    ReactDOM.flushSync(() => {
+      root.render(<MyComponent />);
+    });
+    assertConsoleErrorDev([
       "Can't call forceUpdate on a component that is not yet mounted. " +
         'This is a no-op, but it might indicate a bug in your application. ' +
         'Instead, assign to `this.state` directly or define a `state = {};` ' +
-        'class property with the desired state in the MyComponent component.',
-    );
+        'class property with the desired state in the MyComponent component.\n' +
+        '    in MyComponent (at **)',
+    ]);
 
     // No additional warning should be recorded
     const container2 = document.createElement('div');
@@ -342,16 +343,16 @@ describe('ReactCompositeComponent', () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
 
-    expect(() => {
-      ReactDOM.flushSync(() => {
-        root.render(<MyComponent />);
-      });
-    }).toErrorDev(
+    ReactDOM.flushSync(() => {
+      root.render(<MyComponent />);
+    });
+    assertConsoleErrorDev([
       "Can't call setState on a component that is not yet mounted. " +
         'This is a no-op, but it might indicate a bug in your application. ' +
         'Instead, assign to `this.state` directly or define a `state = {};` ' +
-        'class property with the desired state in the MyComponent component.',
-    );
+        'class property with the desired state in the MyComponent component.\n' +
+        '    in MyComponent (at **)',
+    ]);
 
     // No additional warning should be recorded
     const container2 = document.createElement('div');
@@ -478,16 +479,16 @@ describe('ReactCompositeComponent', () => {
     }
     const root = ReactDOMClient.createRoot(container);
     await expect(async () => {
-      await expect(async () => {
-        await act(() => {
-          root.render(<ClassWithRenderNotExtended />);
-        });
-      }).rejects.toThrow(TypeError);
-    }).toErrorDev(
+      await act(() => {
+        root.render(<ClassWithRenderNotExtended />);
+      });
+    }).rejects.toThrow(TypeError);
+    assertConsoleErrorDev([
       'The <ClassWithRenderNotExtended /> component appears to have a render method, ' +
         "but doesn't extend React.Component. This is likely to cause errors. " +
-        'Change ClassWithRenderNotExtended to extend React.Component instead.',
-    );
+        'Change ClassWithRenderNotExtended to extend React.Component instead.\n' +
+        '    in ClassWithRenderNotExtended (at **)',
+    ]);
 
     // Test deduplication
     await expect(async () => {
@@ -514,14 +515,14 @@ describe('ReactCompositeComponent', () => {
 
     let instance;
     const root = ReactDOMClient.createRoot(container);
-    expect(() => {
-      ReactDOM.flushSync(() => {
-        root.render(<Component ref={ref => (instance = ref)} />);
-      });
-    }).toErrorDev(
+    ReactDOM.flushSync(() => {
+      root.render(<Component ref={ref => (instance = ref)} />);
+    });
+    assertConsoleErrorDev([
       'Cannot update during an existing state transition (such as within ' +
-        '`render`). Render methods should be a pure function of props and state.',
-    );
+        '`render`). Render methods should be a pure function of props and state.\n' +
+        '    in Component (at **)',
+    ]);
 
     // The setState call is queued and then executed as a second pass. This
     // behavior is undefined though so we're free to change it to suit the
@@ -618,14 +619,14 @@ describe('ReactCompositeComponent', () => {
       root.render(<ClassComponent ref={ref => (instance = ref)} />);
     });
 
-    expect(() => {
-      ReactDOM.flushSync(() => {
-        instance.setState({bogus: true});
-      });
-    }).toErrorDev(
+    ReactDOM.flushSync(() => {
+      instance.setState({bogus: true});
+    });
+    assertConsoleErrorDev([
       'ClassComponent.shouldComponentUpdate(): Returned undefined instead of a ' +
-        'boolean value. Make sure to return true or false.',
-    );
+        'boolean value. Make sure to return true or false.\n' +
+        '    in ClassComponent (at **)',
+    ]);
   });
 
   it('should warn when componentDidUnmount method is defined', async () => {
@@ -638,15 +639,15 @@ describe('ReactCompositeComponent', () => {
     }
 
     const root = ReactDOMClient.createRoot(document.createElement('div'));
-    expect(() => {
-      ReactDOM.flushSync(() => {
-        root.render(<Component />);
-      });
-    }).toErrorDev(
+    ReactDOM.flushSync(() => {
+      root.render(<Component />);
+    });
+    assertConsoleErrorDev([
       'Component has a method called ' +
         'componentDidUnmount(). But there is no such lifecycle method. ' +
-        'Did you mean componentWillUnmount()?',
-    );
+        'Did you mean componentWillUnmount()?\n' +
+        '    in Component (at **)',
+    ]);
   });
 
   it('should warn when componentDidReceiveProps method is defined', () => {
@@ -660,17 +661,17 @@ describe('ReactCompositeComponent', () => {
 
     const root = ReactDOMClient.createRoot(document.createElement('div'));
 
-    expect(() => {
-      ReactDOM.flushSync(() => {
-        root.render(<Component />);
-      });
-    }).toErrorDev(
+    ReactDOM.flushSync(() => {
+      root.render(<Component />);
+    });
+    assertConsoleErrorDev([
       'Component has a method called ' +
         'componentDidReceiveProps(). But there is no such lifecycle method. ' +
         'If you meant to update the state in response to changing props, ' +
         'use componentWillReceiveProps(). If you meant to fetch data or ' +
-        'run side-effects or mutations after React has updated the UI, use componentDidUpdate().',
-    );
+        'run side-effects or mutations after React has updated the UI, use componentDidUpdate().\n' +
+        '    in Component (at **)',
+    ]);
   });
 
   it('should warn when defaultProps was defined as an instance property', () => {
@@ -686,14 +687,14 @@ describe('ReactCompositeComponent', () => {
     }
     const root = ReactDOMClient.createRoot(document.createElement('div'));
 
-    expect(() => {
-      ReactDOM.flushSync(() => {
-        root.render(<Component />);
-      });
-    }).toErrorDev(
+    ReactDOM.flushSync(() => {
+      root.render(<Component />);
+    });
+    assertConsoleErrorDev([
       'Setting defaultProps as an instance property on Component is not supported ' +
-        'and will be ignored. Instead, define defaultProps as a static property on Component.',
-    );
+        'and will be ignored. Instead, define defaultProps as a static property on Component.\n' +
+        '    in Component (at **)',
+    ]);
   });
 
   it('should skip update when rerendering element in container', async () => {
@@ -739,16 +740,16 @@ describe('ReactCompositeComponent', () => {
       }
     }
 
-    expect(() => {
-      ReactDOM.flushSync(() => {
-        root.render(<Outer />);
-      });
-    }).toErrorDev(
+    ReactDOM.flushSync(() => {
+      root.render(<Outer />);
+    });
+    assertConsoleErrorDev([
       'Render methods should be a pure function of props and state; ' +
         'triggering nested component updates from render is not allowed. If ' +
-        'necessary, trigger nested updates in componentDidUpdate.\n\nCheck the ' +
-        'render method of Outer.',
-    );
+        'necessary, trigger nested updates in componentDidUpdate.\n\n' +
+        'Check the render method of Outer.\n' +
+        '    in Outer (at **)',
+    ]);
   });
 
   it('only renders once if updated in componentWillReceiveProps', async () => {
@@ -836,14 +837,14 @@ describe('ReactCompositeComponent', () => {
     }
 
     const root = ReactDOMClient.createRoot(container);
-    expect(() => {
-      ReactDOM.flushSync(() => {
-        root.render(<Foo idx="qwe" />);
-      });
-    }).toErrorDev(
+    ReactDOM.flushSync(() => {
+      root.render(<Foo idx="qwe" />);
+    });
+    assertConsoleErrorDev([
       'When calling super() in `Foo`, make sure to pass ' +
-        "up the same props that your component's constructor was passed.",
-    );
+        "up the same props that your component's constructor was passed.\n" +
+        '    in Foo (at **)',
+    ]);
   });
 
   it('should only call componentWillUnmount once', async () => {
@@ -1185,16 +1186,17 @@ describe('ReactCompositeComponent', () => {
 
     const root = ReactDOMClient.createRoot(document.createElement('div'));
     await expect(async () => {
-      await expect(async () => {
-        await act(() => {
-          root.render(<RenderTextInvalidConstructor />);
-        });
-      }).rejects.toThrow();
-    }).toErrorDev([
+      await act(() => {
+        root.render(<RenderTextInvalidConstructor />);
+      });
+    }).rejects.toThrow();
+    assertConsoleErrorDev([
       'No `render` method found on the RenderTextInvalidConstructor instance: ' +
-        'did you accidentally return an object from the constructor?',
+        'did you accidentally return an object from the constructor?\n' +
+        '    in RenderTextInvalidConstructor (at **)',
       'No `render` method found on the RenderTextInvalidConstructor instance: ' +
-        'did you accidentally return an object from the constructor?',
+        'did you accidentally return an object from the constructor?\n' +
+        '    in RenderTextInvalidConstructor (at **)',
     ]);
   });
 
@@ -1210,14 +1212,14 @@ describe('ReactCompositeComponent', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    expect(() => {
-      ReactDOM.flushSync(() => {
-        root.render(<Bad />);
-      });
-    }).toErrorDev(
+    ReactDOM.flushSync(() => {
+      root.render(<Bad />);
+    });
+    assertConsoleErrorDev([
       'It looks like Bad is reassigning its own `this.props` while rendering. ' +
-        'This is not supported and can lead to confusing bugs.',
-    );
+        'This is not supported and can lead to confusing bugs.\n' +
+        '    in Bad (at **)',
+    ]);
   });
 
   it('should return error if render is not defined', async () => {
@@ -1225,16 +1227,17 @@ describe('ReactCompositeComponent', () => {
 
     const root = ReactDOMClient.createRoot(document.createElement('div'));
     await expect(async () => {
-      await expect(async () => {
-        await act(() => {
-          root.render(<RenderTestUndefinedRender />);
-        });
-      }).rejects.toThrow();
-    }).toErrorDev([
+      await act(() => {
+        root.render(<RenderTestUndefinedRender />);
+      });
+    }).rejects.toThrow();
+    assertConsoleErrorDev([
       'No `render` method found on the RenderTestUndefinedRender instance: ' +
-        'you may have forgotten to define `render`.',
+        'you may have forgotten to define `render`.\n' +
+        '    in RenderTestUndefinedRender (at **)',
       'No `render` method found on the RenderTestUndefinedRender instance: ' +
-        'you may have forgotten to define `render`.',
+        'you may have forgotten to define `render`.\n' +
+        '    in RenderTestUndefinedRender (at **)',
     ]);
   });
 
@@ -1386,13 +1389,18 @@ describe('ReactCompositeComponent', () => {
     }
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    expect(() => {
-      ReactDOM.flushSync(() => {
-        root.render(<Parent />);
-      });
-    }).toErrorDev(
-      'Cannot update a component (`A`) while rendering a different component (`B`)',
-    );
+    ReactDOM.flushSync(() => {
+      root.render(<Parent />);
+    });
+    assertConsoleErrorDev([
+      'Cannot update a component (`A`) while rendering a different component (`B`). ' +
+        'To locate the bad setState() call inside `B`, ' +
+        'follow the stack trace as described in https://react.dev/link/setstate-in-render\n' +
+        (gate('enableOwnerStacks')
+          ? ''
+          : '    in B (at **)\n' + '    in div (at **)\n') +
+        '    in Parent (at **)',
+    ]);
 
     // We error, but still update the state.
     expect(ref.textContent).toBe('1');

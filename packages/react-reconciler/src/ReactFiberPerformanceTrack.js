@@ -13,6 +13,8 @@ import type {Lanes} from './ReactFiberLane';
 
 import type {CapturedValue} from './ReactCapturedValue';
 
+import {SuspenseComponent} from './ReactWorkTags';
+
 import getComponentNameFromFiber from './getComponentNameFromFiber';
 
 import {
@@ -159,13 +161,18 @@ export function logComponentRender(
   }
 }
 
-export function logSuspenseBoundaryClientRendered(
+export function logComponentErrored(
   fiber: Fiber,
   startTime: number,
   endTime: number,
   errors: Array<CapturedValue<mixed>>,
 ): void {
   if (supportsUserTiming) {
+    const name = getComponentNameFromFiber(fiber);
+    if (name === null) {
+      // Skip
+      return;
+    }
     const properties = [];
     if (__DEV__) {
       for (let i = 0; i < errors.length; i++) {
@@ -182,14 +189,60 @@ export function logSuspenseBoundaryClientRendered(
         properties.push(['Error', message]);
       }
     }
-    performance.measure('Suspense', {
+    performance.measure(name, {
       start: startTime,
       end: endTime,
       detail: {
         devtools: {
           color: 'error',
           track: COMPONENTS_TRACK,
-          tooltipText: 'Hydration failed',
+          tooltipText:
+            fiber.tag === SuspenseComponent
+              ? 'Hydration failed'
+              : 'Error boundary caught an error',
+          properties,
+        },
+      },
+    });
+  }
+}
+
+function logComponentEffectErrored(
+  fiber: Fiber,
+  startTime: number,
+  endTime: number,
+  errors: Array<CapturedValue<mixed>>,
+): void {
+  if (supportsUserTiming) {
+    const name = getComponentNameFromFiber(fiber);
+    if (name === null) {
+      // Skip
+      return;
+    }
+    const properties = [];
+    if (__DEV__) {
+      for (let i = 0; i < errors.length; i++) {
+        const capturedValue = errors[i];
+        const error = capturedValue.value;
+        const message =
+          typeof error === 'object' &&
+          error !== null &&
+          typeof error.message === 'string'
+            ? // eslint-disable-next-line react-internal/safe-string-coercion
+              String(error.message)
+            : // eslint-disable-next-line react-internal/safe-string-coercion
+              String(error);
+        properties.push(['Error', message]);
+      }
+    }
+    performance.measure(name, {
+      start: startTime,
+      end: endTime,
+      detail: {
+        devtools: {
+          color: 'error',
+          track: COMPONENTS_TRACK,
+          tooltipText: 'A lifecycle or effect errored',
           properties,
         },
       },
@@ -202,7 +255,12 @@ export function logComponentEffect(
   startTime: number,
   endTime: number,
   selfTime: number,
+  errors: null | Array<CapturedValue<mixed>>,
 ): void {
+  if (errors !== null) {
+    logComponentEffectErrored(fiber, startTime, endTime, errors);
+    return;
+  }
   const name = getComponentNameFromFiber(fiber);
   if (name === null) {
     // Skip
@@ -276,11 +334,15 @@ export function logBlockingStart(
   eventTime: number,
   eventType: null | string,
   eventIsRepeat: boolean,
+  isSpawnedUpdate: boolean,
   renderStartTime: number,
   lanes: Lanes,
 ): void {
   if (supportsUserTiming) {
     reusableLaneDevToolDetails.track = 'Blocking';
+    // If a blocking update was spawned within render or an effect, that's considered a cascading render.
+    // If you have a second blocking update within the same event, that suggests multiple flushSync or
+    // setState in a microtask which is also considered a cascade.
     if (eventTime > 0 && eventType !== null) {
       // Log the time from the event timeStamp until we called setState.
       reusableLaneDevToolDetails.color = eventIsRepeat
@@ -295,14 +357,17 @@ export function logBlockingStart(
     }
     if (updateTime > 0) {
       // Log the time from when we called setState until we started rendering.
-      reusableLaneDevToolDetails.color = includesOnlyHydrationOrOffscreenLanes(
-        lanes,
-      )
-        ? 'tertiary-light'
-        : 'primary-light';
+      reusableLaneDevToolDetails.color = isSpawnedUpdate
+        ? 'error'
+        : includesOnlyHydrationOrOffscreenLanes(lanes)
+          ? 'tertiary-light'
+          : 'primary-light';
       reusableLaneOptions.start = updateTime;
       reusableLaneOptions.end = renderStartTime;
-      performance.measure('Blocked', reusableLaneOptions);
+      performance.measure(
+        isSpawnedUpdate ? 'Cascade' : 'Blocked',
+        reusableLaneOptions,
+      );
     }
   }
 }
@@ -527,7 +592,54 @@ export function logSuspendedCommitPhase(
   }
 }
 
-export function logCommitPhase(startTime: number, endTime: number): void {
+export function logCommitErrored(
+  startTime: number,
+  endTime: number,
+  errors: Array<CapturedValue<mixed>>,
+  passive: boolean,
+): void {
+  if (supportsUserTiming) {
+    const properties = [];
+    if (__DEV__) {
+      for (let i = 0; i < errors.length; i++) {
+        const capturedValue = errors[i];
+        const error = capturedValue.value;
+        const message =
+          typeof error === 'object' &&
+          error !== null &&
+          typeof error.message === 'string'
+            ? // eslint-disable-next-line react-internal/safe-string-coercion
+              String(error.message)
+            : // eslint-disable-next-line react-internal/safe-string-coercion
+              String(error);
+        properties.push(['Error', message]);
+      }
+    }
+    performance.measure('Errored', {
+      start: startTime,
+      end: endTime,
+      detail: {
+        devtools: {
+          color: 'error',
+          track: reusableLaneDevToolDetails.track,
+          trackGroup: LANES_TRACK_GROUP,
+          tooltipText: passive ? 'Remaining Effects Errored' : 'Commit Errored',
+          properties,
+        },
+      },
+    });
+  }
+}
+
+export function logCommitPhase(
+  startTime: number,
+  endTime: number,
+  errors: null | Array<CapturedValue<mixed>>,
+): void {
+  if (errors !== null) {
+    logCommitErrored(startTime, endTime, errors, false);
+    return;
+  }
   if (supportsUserTiming) {
     reusableLaneDevToolDetails.color = 'secondary-dark';
     reusableLaneOptions.start = startTime;
@@ -555,7 +667,12 @@ export function logPaintYieldPhase(
 export function logPassiveCommitPhase(
   startTime: number,
   endTime: number,
+  errors: null | Array<CapturedValue<mixed>>,
 ): void {
+  if (errors !== null) {
+    logCommitErrored(startTime, endTime, errors, true);
+    return;
+  }
   if (supportsUserTiming) {
     reusableLaneDevToolDetails.color = 'secondary-dark';
     reusableLaneOptions.start = startTime;

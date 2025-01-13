@@ -41,6 +41,7 @@ import isArray from 'shared/isArray';
 import {
   enableSchedulingProfiler,
   enableHydrationLaneScheduling,
+  disableLegacyMode,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -75,7 +76,7 @@ import {
   isAlreadyRendering,
   deferredUpdates,
   discreteUpdates,
-  flushPassiveEffects,
+  flushPendingEffects,
 } from './ReactFiberWorkLoop';
 import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates';
 import {
@@ -364,8 +365,8 @@ export function updateContainerSync(
   parentComponent: ?React$Component<any, any>,
   callback: ?Function,
 ): Lane {
-  if (container.tag === LegacyRoot) {
-    flushPassiveEffects();
+  if (!disableLegacyMode && container.tag === LegacyRoot) {
+    flushPendingEffects();
   }
   const current = container.current;
   updateContainerImpl(
@@ -453,7 +454,7 @@ export {
   flushSyncFromReconciler,
   flushSyncWork,
   isAlreadyRendering,
-  flushPassiveEffects,
+  flushPendingEffects as flushPassiveEffects,
 };
 
 export function getPublicRootInstance(

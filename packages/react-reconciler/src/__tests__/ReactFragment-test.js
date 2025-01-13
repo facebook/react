@@ -12,6 +12,7 @@
 let React;
 let ReactNoop;
 let waitForAll;
+let assertConsoleErrorDev;
 
 describe('ReactFragment', () => {
   beforeEach(function () {
@@ -22,6 +23,7 @@ describe('ReactFragment', () => {
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
   });
 
   it('should render a single child via noop renderer', async () => {
@@ -740,9 +742,22 @@ describe('ReactFragment', () => {
     await waitForAll([]);
 
     ReactNoop.render(<Foo condition={false} />);
-    await expect(async () => await waitForAll([])).toErrorDev(
-      'Each child in a list should have a unique "key" prop.',
-    );
+    await waitForAll([]);
+    assertConsoleErrorDev([
+      gate('enableOwnerStacks')
+        ? 'Each child in a list should have a unique "key" prop.\n' +
+          '\n' +
+          'Check the render method of `div`. ' +
+          'It was passed a child from Foo. ' +
+          'See https://react.dev/link/warning-keys for more information.\n' +
+          '    in Foo (at **)'
+        : 'Each child in a list should have a unique "key" prop.\n' +
+          '\n' +
+          'Check the render method of `Foo`. ' +
+          'See https://react.dev/link/warning-keys for more information.\n' +
+          '    in Stateful (at **)\n' +
+          '    in Foo (at **)',
+    ]);
 
     expect(ops).toEqual([]);
     expect(ReactNoop).toMatchRenderedOutput(
@@ -937,9 +952,16 @@ describe('ReactFragment', () => {
     }
 
     ReactNoop.render(<Foo condition={true} />);
-    await expect(async () => await waitForAll([])).toErrorDev(
-      'Each child in a list should have a unique "key" prop.',
-    );
+    await waitForAll([]);
+    assertConsoleErrorDev([
+      'Each child in a list should have a unique "key" prop.\n' +
+        '\n' +
+        'Check the top-level render call using <Foo>. ' +
+        'It was passed a child from Foo. ' +
+        'See https://react.dev/link/warning-keys for more information.\n' +
+        '    in span (at **)\n' +
+        '    in Foo (at **)',
+    ]);
 
     ReactNoop.render(<Foo condition={false} />);
     // The key warning gets deduped because it's in the same component.

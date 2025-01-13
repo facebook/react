@@ -28,7 +28,7 @@ function InspectedElementSourcePanel({
   symbolicatedSourcePromise,
 }: Props): React.Node {
   return (
-    <div data-testname="InspectedElementView-Source">
+    <div>
       <div className={styles.SourceHeaderRow}>
         <div className={styles.SourceHeader}>source</div>
 
@@ -84,7 +84,9 @@ function FormattedSourceString({source, symbolicatedSourcePromise}: Props) {
     const {sourceURL, line} = source;
 
     return (
-      <div className={styles.SourceOneLiner}>
+      <div
+        className={styles.SourceOneLiner}
+        data-testname="InspectedElementView-FormattedSourceString">
         {formatSourceForDisplay(sourceURL, line)}
       </div>
     );
@@ -93,7 +95,9 @@ function FormattedSourceString({source, symbolicatedSourcePromise}: Props) {
   const {sourceURL, line} = symbolicatedSource;
 
   return (
-    <div className={styles.SourceOneLiner}>
+    <div
+      className={styles.SourceOneLiner}
+      data-testname="InspectedElementView-FormattedSourceString">
       {formatSourceForDisplay(sourceURL, line)}
     </div>
   );

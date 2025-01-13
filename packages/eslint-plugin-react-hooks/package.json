@@ -35,7 +35,7 @@
     "@typescript-eslint/parser-v2": "npm:@typescript-eslint/parser@^2.26.0",
     "@typescript-eslint/parser-v3": "npm:@typescript-eslint/parser@^3.10.0",
     "@typescript-eslint/parser-v4": "npm:@typescript-eslint/parser@^4.1.0",
-    "@typescript-eslint/parser-v5": "npm:@typescript-eslint/parser@^5.0.0-0",
+    "@typescript-eslint/parser-v5": "npm:@typescript-eslint/parser@^5.62.0",
     "babel-eslint": "^10.0.3",
     "eslint-v7": "npm:eslint@^7.7.0",
     "eslint-v9": "npm:eslint@^9.0.0"
