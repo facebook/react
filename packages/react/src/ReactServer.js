@@ -28,6 +28,7 @@ import {lazy} from './ReactLazy';
 import {memo} from './ReactMemo';
 import {cache} from './ReactCacheServer';
 import version from 'shared/ReactVersion';
+import {captureOwnerStack} from './ReactOwnerStack';
 
 const Children = {
   map,
@@ -57,4 +58,5 @@ export {
   useDebugValue,
   useMemo,
   version,
+  captureOwnerStack, // DEV-only
 };
