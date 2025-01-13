@@ -63,7 +63,7 @@ import ReactSharedInternals from './ReactSharedInternalsClient';
 import {startTransition} from './ReactStartTransition';
 import {act} from './ReactAct';
 import {captureOwnerStack} from './ReactOwnerStack';
-import ReactCompilerRuntime from './ReactCompilerRuntime';
+import * as ReactCompilerRuntime from './ReactCompilerRuntime';
 import {enableUseResourceEffectHook} from 'shared/ReactFeatureFlags';
 
 const Children = {
