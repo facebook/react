@@ -12,6 +12,7 @@
 let act;
 let React;
 let ReactDOMClient;
+let assertConsoleErrorDev;
 
 describe('ReactElementClone', () => {
   let ComponentClass;
@@ -19,7 +20,7 @@ describe('ReactElementClone', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    act = require('internal-test-utils').act;
+    ({act, assertConsoleErrorDev} = require('internal-test-utils'));
 
     React = require('react');
     ReactDOMClient = require('react-dom/client');
@@ -314,11 +315,14 @@ describe('ReactElementClone', () => {
 
   it('warns for keys for arrays of elements in rest args', async () => {
     const root = ReactDOMClient.createRoot(document.createElement('div'));
-    await expect(async () => {
-      await act(() => {
-        root.render(React.cloneElement(<div />, null, [<div />, <div />]));
-      });
-    }).toErrorDev('Each child in a list should have a unique "key" prop.');
+    await act(() => {
+      root.render(React.cloneElement(<div />, null, [<div />, <div />]));
+    });
+    assertConsoleErrorDev([
+      'Each child in a list should have a unique "key" prop.\n\n' +
+        'Check the top-level render call using <div>. See https://react.dev/link/warning-keys for more information.\n' +
+        '    in div (at **)',
+    ]);
   });
 
   it('does not warns for arrays of elements with keys', async () => {
@@ -363,9 +367,16 @@ describe('ReactElementClone', () => {
     expect(clone.type).toBe(ComponentClass);
     expect(clone.key).toBe('12');
     expect(clone.props.ref).toBe('34');
-    expect(() => expect(clone.ref).toBe('34')).toErrorDev(
-      'Accessing element.ref was removed in React 19',
-      {withoutStack: true},
+    expect(clone.ref).toBe('34');
+    assertConsoleErrorDev(
+      [
+        'Accessing element.ref was removed in React 19. ref is now a ' +
+          'regular prop. It will be removed from the JSX Element ' +
+          'type in a future release.',
+      ],
+      {
+        withoutStack: true,
+      },
     );
     expect(clone.props).toEqual({foo: 'ef', ref: '34'});
     if (__DEV__) {

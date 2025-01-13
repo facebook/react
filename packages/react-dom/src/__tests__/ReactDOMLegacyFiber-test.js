@@ -13,11 +13,14 @@ const React = require('react');
 const ReactDOM = require('react-dom');
 const PropTypes = require('prop-types');
 let act;
+let assertConsoleErrorDev;
 describe('ReactDOMLegacyFiber', () => {
   let container;
 
   beforeEach(() => {
     act = require('internal-test-utils').act;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
     container = document.createElement('div');
     document.body.appendChild(container);
   });
@@ -786,9 +789,8 @@ describe('ReactDOMLegacyFiber', () => {
       }
     }
 
-    expect(() => {
-      ReactDOM.render(<Parent />, container);
-    }).toErrorDev([
+    ReactDOM.render(<Parent />, container);
+    assertConsoleErrorDev([
       'Parent uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
       'Component uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
     ]);
@@ -834,10 +836,8 @@ describe('ReactDOMLegacyFiber', () => {
       }
     }
 
-    let instance;
-    expect(() => {
-      instance = ReactDOM.render(<Parent />, container);
-    }).toErrorDev([
+    const instance = ReactDOM.render(<Parent />, container);
+    assertConsoleErrorDev([
       'Parent uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
       'Component uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
     ]);
@@ -882,9 +882,8 @@ describe('ReactDOMLegacyFiber', () => {
       }
     }
 
-    expect(() => {
-      ReactDOM.render(<Parent bar="initial" />, container);
-    }).toErrorDev([
+    ReactDOM.render(<Parent bar="initial" />, container);
+    assertConsoleErrorDev([
       'Parent uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
       'Component uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
     ]);
@@ -1117,11 +1116,12 @@ describe('ReactDOMLegacyFiber', () => {
         return <div onClick="woops" />;
       }
     }
-    expect(() => ReactDOM.render(<Example />, container)).toErrorDev(
+    ReactDOM.render(<Example />, container);
+    assertConsoleErrorDev([
       'Expected `onClick` listener to be a function, instead got a value of `string` type.\n' +
         '    in div (at **)\n' +
         '    in Example (at **)',
-    );
+    ]);
   });
 
   // @gate !disableLegacyMode
@@ -1131,13 +1131,14 @@ describe('ReactDOMLegacyFiber', () => {
         return <div onClick={false} />;
       }
     }
-    expect(() => ReactDOM.render(<Example />, container)).toErrorDev(
+    ReactDOM.render(<Example />, container);
+    assertConsoleErrorDev([
       'Expected `onClick` listener to be a function, instead got `false`.\n\n' +
         'If you used to conditionally omit it with onClick={condition && value}, ' +
         'pass onClick={condition ? value : undefined} instead.\n' +
         '    in div (at **)\n' +
         '    in Example (at **)',
-    );
+    ]);
   });
 
   // @gate !disableLegacyMode
@@ -1270,17 +1271,18 @@ describe('ReactDOMLegacyFiber', () => {
     container.innerHTML = '<div>MEOW.</div>';
 
     await expect(async () => {
-      await expect(async () => {
-        await act(() => {
-          ReactDOM.render(<div key="2">baz</div>, container);
-        });
-      }).rejects.toThrow('The node to be removed is not a child of this node.');
-    }).toErrorDev(
-      '' +
-        'It looks like the React-rendered content of this container was ' +
-        'removed without using React. This is not supported and will ' +
-        'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
-        'to empty a container.',
+      await act(() => {
+        ReactDOM.render(<div key="2">baz</div>, container);
+      });
+    }).rejects.toThrow('The node to be removed is not a child of this node.');
+    assertConsoleErrorDev(
+      [
+        '' +
+          'It looks like the React-rendered content of this container was ' +
+          'removed without using React. This is not supported and will ' +
+          'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
+          'to empty a container.',
+      ],
       {withoutStack: true},
     );
   });
@@ -1293,12 +1295,15 @@ describe('ReactDOMLegacyFiber', () => {
     expect(container.innerHTML).toBe('<div>bar</div>');
     // then we mess with the DOM before an update
     container.innerHTML = '<div>MEOW.</div>';
-    expect(() => ReactDOM.render(<div>baz</div>, container)).toErrorDev(
-      '' +
-        'It looks like the React-rendered content of this container was ' +
-        'removed without using React. This is not supported and will ' +
-        'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
-        'to empty a container.',
+    ReactDOM.render(<div>baz</div>, container);
+    assertConsoleErrorDev(
+      [
+        '' +
+          'It looks like the React-rendered content of this container was ' +
+          'removed without using React. This is not supported and will ' +
+          'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
+          'to empty a container.',
+      ],
       {withoutStack: true},
     );
   });
@@ -1311,12 +1316,15 @@ describe('ReactDOMLegacyFiber', () => {
     expect(container.innerHTML).toBe('<div>bar</div>');
     // then we mess with the DOM before an update
     container.innerHTML = '';
-    expect(() => ReactDOM.render(<div>baz</div>, container)).toErrorDev(
-      '' +
-        'It looks like the React-rendered content of this container was ' +
-        'removed without using React. This is not supported and will ' +
-        'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
-        'to empty a container.',
+    ReactDOM.render(<div>baz</div>, container);
+    assertConsoleErrorDev(
+      [
+        '' +
+          'It looks like the React-rendered content of this container was ' +
+          'removed without using React. This is not supported and will ' +
+          'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
+          'to empty a container.',
+      ],
       {withoutStack: true},
     );
   });

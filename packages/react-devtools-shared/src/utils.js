@@ -24,6 +24,7 @@ import {
   REACT_SUSPENSE_LIST_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_TRACING_MARKER_TYPE,
+  REACT_VIEW_TRANSITION_TYPE,
 } from 'shared/ReactSymbols';
 import {enableRenderableContext} from 'shared/ReactFeatureFlags';
 import {
@@ -678,6 +679,7 @@ function typeOfWithLegacyElementSymbol(object: any): mixed {
           case REACT_STRICT_MODE_TYPE:
           case REACT_SUSPENSE_TYPE:
           case REACT_SUSPENSE_LIST_TYPE:
+          case REACT_VIEW_TRANSITION_TYPE:
             return type;
           default:
             const $$typeofType = type && type.$$typeof;
@@ -739,6 +741,8 @@ export function getDisplayNameForReactElement(
       return 'Suspense';
     case REACT_SUSPENSE_LIST_TYPE:
       return 'SuspenseList';
+    case REACT_VIEW_TRANSITION_TYPE:
+      return 'ViewTransition';
     case REACT_TRACING_MARKER_TYPE:
       return 'TracingMarker';
     default:

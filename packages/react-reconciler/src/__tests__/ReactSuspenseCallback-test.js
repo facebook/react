@@ -13,6 +13,7 @@ let React;
 let ReactNoop;
 let waitForAll;
 let act;
+let assertConsoleErrorDev;
 
 describe('ReactSuspense', () => {
   beforeEach(() => {
@@ -24,6 +25,7 @@ describe('ReactSuspense', () => {
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
     act = InternalTestUtils.act;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
   });
 
   function createThenable() {
@@ -57,10 +59,10 @@ describe('ReactSuspense', () => {
     );
 
     ReactNoop.render(elementBadType);
-    await expect(async () => await waitForAll([])).toErrorDev(
-      ['Unexpected type for suspenseCallback.'],
-      {withoutStack: true},
-    );
+    await waitForAll([]);
+    assertConsoleErrorDev(['Unexpected type for suspenseCallback.'], {
+      withoutStack: true,
+    });
 
     const elementMissingCallback = (
       <React.Suspense fallback={'Waiting'}>
@@ -69,7 +71,8 @@ describe('ReactSuspense', () => {
     );
 
     ReactNoop.render(elementMissingCallback);
-    await expect(async () => await waitForAll([])).toErrorDev([]);
+    await waitForAll([]);
+    assertConsoleErrorDev([]);
   });
 
   // @gate enableSuspenseCallback

@@ -18,7 +18,7 @@
   "scripts": {
     "predev": "cp -r ../../build/oss-experimental/* ./node_modules/",
     "prebuild": "cp -r ../../build/oss-experimental/* ./node_modules/",
-    "dev": "concurrently \"npm run dev:watch\" \"npm run dev:start\"",
+    "dev": "concurrently \"npm run dev:watch\" \"sleep 2 && npm run dev:start\"",
     "dev:watch": "NODE_ENV=development parcel watch",
     "dev:start": "NODE_ENV=development node dist/server.js",
     "build": "parcel build",
@@ -28,8 +28,8 @@
     "packageExports": true
   },
   "dependencies": {
-    "@parcel/config-default": "2.0.0-dev.1789",
-    "@parcel/runtime-rsc": "2.13.3-dev.3412",
+    "@parcel/config-default": "2.0.0-dev.1795",
+    "@parcel/runtime-rsc": "2.13.3-dev.3418",
     "@types/parcel-env": "^0.0.6",
     "@types/express": "*",
     "@types/node": "^22.10.1",
@@ -37,7 +37,7 @@
     "@types/react-dom": "^19",
     "concurrently": "^7.3.0",
     "express": "^4.18.2",
-    "parcel": "2.0.0-dev.1787",
+    "parcel": "2.0.0-dev.1793",
     "process": "^0.11.10",
     "react": "experimental",
     "react-dom": "experimental",

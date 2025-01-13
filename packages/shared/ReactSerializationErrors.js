@@ -14,12 +14,15 @@ import {
   REACT_MEMO_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
+  REACT_VIEW_TRANSITION_TYPE,
 } from 'shared/ReactSymbols';
 
 import type {LazyComponent} from 'react/src/ReactLazy';
 
 import isArray from 'shared/isArray';
 import getPrototypeOf from 'shared/getPrototypeOf';
+
+import {enableViewTransition} from 'shared/ReactFeatureFlags';
 
 // Used for DEV messages to keep track of which parent rendered some props,
 // in case they error.
@@ -129,6 +132,10 @@ function describeElementType(type: any): string {
       return 'Suspense';
     case REACT_SUSPENSE_LIST_TYPE:
       return 'SuspenseList';
+    case REACT_VIEW_TRANSITION_TYPE:
+      if (enableViewTransition) {
+        return 'ViewTransition';
+      }
   }
   if (typeof type === 'object') {
     switch (type.$$typeof) {

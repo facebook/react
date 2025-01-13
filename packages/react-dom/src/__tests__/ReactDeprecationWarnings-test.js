@@ -12,6 +12,7 @@
 let React;
 let ReactNoop;
 let waitForAll;
+let assertConsoleErrorDev;
 
 describe('ReactDeprecationWarnings', () => {
   beforeEach(() => {
@@ -20,6 +21,7 @@ describe('ReactDeprecationWarnings', () => {
     ReactNoop = require('react-noop-renderer');
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
   });
 
   // @gate !disableDefaultPropsExceptForClasses || !__DEV__
@@ -33,11 +35,13 @@ describe('ReactDeprecationWarnings', () => {
     };
 
     ReactNoop.render(<FunctionalComponent />);
-    await expect(async () => await waitForAll([])).toErrorDev(
+    await waitForAll([]);
+    assertConsoleErrorDev([
       'FunctionalComponent: Support for defaultProps ' +
         'will be removed from function components in a future major ' +
-        'release. Use JavaScript default parameters instead.',
-    );
+        'release. Use JavaScript default parameters instead.\n' +
+        '    in FunctionalComponent (at **)',
+    ]);
   });
 
   // @gate !disableDefaultPropsExceptForClasses || !__DEV__
@@ -55,10 +59,12 @@ describe('ReactDeprecationWarnings', () => {
         <MemoComponent />
       </div>,
     );
-    await expect(async () => await waitForAll([])).toErrorDev(
+    await waitForAll([]);
+    assertConsoleErrorDev([
       'FunctionalComponent: Support for defaultProps ' +
         'will be removed from memo components in a future major ' +
-        'release. Use JavaScript default parameters instead.',
-    );
+        'release. Use JavaScript default parameters instead.\n' +
+        '    in div (at **)',
+    ]);
   });
 });

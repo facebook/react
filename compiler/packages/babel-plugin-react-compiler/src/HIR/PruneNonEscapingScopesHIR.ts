@@ -19,6 +19,7 @@ import {
 import {getFunctionCallSignature} from '../Inference/InferReferenceEffects';
 import {assertExhaustive, getOrInsertDefault} from '../Utils/utils';
 import {
+  DeclarationId,
   getPlaceScope,
   HIRFunction,
   IdentifierId,
@@ -474,8 +475,8 @@ function computeMemoizationInputs(
     case 'DeclareContext': {
       const lvalues = [
         {place: value.lvalue.place, level: MemoizationLevel.Memoized},
+        {place: lvalue, level: MemoizationLevel.Unmemoized},
       ];
-      lvalues.push({place: lvalue, level: MemoizationLevel.Unmemoized});
       return {
         lvalues,
         rvalues: [],
@@ -485,8 +486,8 @@ function computeMemoizationInputs(
     case 'DeclareLocal': {
       const lvalues = [
         {place: value.lvalue.place, level: MemoizationLevel.Unmemoized},
+        {place: lvalue, level: MemoizationLevel.Unmemoized},
       ];
-      lvalues.push({place: lvalue, level: MemoizationLevel.Unmemoized});
       return {
         lvalues,
         rvalues: [],
@@ -496,8 +497,8 @@ function computeMemoizationInputs(
     case 'PostfixUpdate': {
       const lvalues = [
         {place: value.lvalue, level: MemoizationLevel.Conditional},
+        {place: lvalue, level: MemoizationLevel.Conditional},
       ];
-      lvalues.push({place: lvalue, level: MemoizationLevel.Conditional});
       return {
         // Indirection for the inner value, memoized if the value is
         lvalues,
@@ -507,8 +508,8 @@ function computeMemoizationInputs(
     case 'StoreLocal': {
       const lvalues = [
         {place: value.lvalue.place, level: MemoizationLevel.Conditional},
+        {place: lvalue, level: MemoizationLevel.Conditional},
       ];
-      lvalues.push({place: lvalue, level: MemoizationLevel.Conditional});
       return {
         // Indirection for the inner value, memoized if the value is
         lvalues,
@@ -519,8 +520,8 @@ function computeMemoizationInputs(
       // Should never be pruned
       const lvalues = [
         {place: value.lvalue.place, level: MemoizationLevel.Memoized},
+        {place: lvalue, level: MemoizationLevel.Conditional},
       ];
-      lvalues.push({place: lvalue, level: MemoizationLevel.Conditional});
 
       return {
         lvalues,
@@ -528,8 +529,7 @@ function computeMemoizationInputs(
       };
     }
     case 'StoreGlobal': {
-      const lvalues = [];
-      lvalues.push({place: lvalue, level: MemoizationLevel.Unmemoized});
+      const lvalues = [{place: lvalue, level: MemoizationLevel.Unmemoized}];
 
       return {
         lvalues,
@@ -538,9 +538,10 @@ function computeMemoizationInputs(
     }
     case 'Destructure': {
       // Indirection for the inner value, memoized if the value is
-      const lvalues = [];
-      lvalues.push({place: lvalue, level: MemoizationLevel.Conditional});
-      lvalues.push(...computePatternLValues(value.lvalue.pattern));
+      const lvalues = [
+        {place: lvalue, level: MemoizationLevel.Conditional},
+        ...computePatternLValues(value.lvalue.pattern),
+      ];
       return {
         lvalues: lvalues,
         rvalues: [value.value],
@@ -568,8 +569,8 @@ function computeMemoizationInputs(
        */
       const lvalues = [
         {place: value.object, level: MemoizationLevel.Conditional},
+        {place: lvalue, level: MemoizationLevel.Conditional},
       ];
-      lvalues.push({place: lvalue, level: MemoizationLevel.Conditional});
       return {
         lvalues,
         rvalues: [value.value],
@@ -580,20 +581,19 @@ function computeMemoizationInputs(
         env,
         value.tag.identifier.type,
       );
-      let lvalues = [];
-      lvalues.push({place: lvalue, level: MemoizationLevel.Memoized});
       if (signature?.noAlias === true) {
         return {
-          lvalues,
+          lvalues: [{place: lvalue, level: MemoizationLevel.Memoized}],
           rvalues: [],
         };
       }
       const operands = [...eachInstructionValueOperand(value)];
-      lvalues.push(
+      const lvalues = [
+        {place: lvalue, level: MemoizationLevel.Memoized},
         ...operands
           .filter(operand => isMutableEffect(operand.effect, operand.loc))
           .map(place => ({place, level: MemoizationLevel.Memoized})),
-      );
+      ];
       return {
         lvalues,
         rvalues: operands,
@@ -604,20 +604,20 @@ function computeMemoizationInputs(
         env,
         value.callee.identifier.type,
       );
-      let lvalues = [];
-      lvalues.push({place: lvalue, level: MemoizationLevel.Memoized});
       if (signature?.noAlias === true) {
         return {
-          lvalues,
+          lvalues: [{place: lvalue, level: MemoizationLevel.Memoized}],
           rvalues: [],
         };
       }
       const operands = [...eachInstructionValueOperand(value)];
-      lvalues.push(
+      const lvalues = [
+        {place: lvalue, level: MemoizationLevel.Memoized},
         ...operands
           .filter(operand => isMutableEffect(operand.effect, operand.loc))
           .map(place => ({place, level: MemoizationLevel.Memoized})),
-      );
+      ];
+
       return {
         lvalues,
         rvalues: operands,
@@ -628,20 +628,19 @@ function computeMemoizationInputs(
         env,
         value.property.identifier.type,
       );
-      let lvalues = [];
-      lvalues.push({place: lvalue, level: MemoizationLevel.Memoized});
       if (signature?.noAlias === true) {
         return {
-          lvalues,
+          lvalues: [{place: lvalue, level: MemoizationLevel.Memoized}],
           rvalues: [],
         };
       }
       const operands = [...eachInstructionValueOperand(value)];
-      lvalues.push(
+      const lvalues = [
+        {place: lvalue, level: MemoizationLevel.Memoized},
         ...operands
           .filter(operand => isMutableEffect(operand.effect, operand.loc))
           .map(place => ({place, level: MemoizationLevel.Memoized})),
-      );
+      ];
       return {
         lvalues,
         rvalues: operands,
@@ -659,10 +658,12 @@ function computeMemoizationInputs(
        * reachable from a return value. Any mutable rvalue may alias any other rvalue
        */
       const operands = [...eachInstructionValueOperand(value)];
-      const lvalues = operands
-        .filter(operand => isMutableEffect(operand.effect, operand.loc))
-        .map(place => ({place, level: MemoizationLevel.Memoized}));
-      lvalues.push({place: lvalue, level: MemoizationLevel.Memoized});
+      const lvalues = [
+        {place: lvalue, level: MemoizationLevel.Memoized},
+        ...operands
+          .filter(operand => isMutableEffect(operand.effect, operand.loc))
+          .map(place => ({place, level: MemoizationLevel.Memoized})),
+      ];
       return {
         lvalues,
         rvalues: operands,
@@ -744,7 +745,7 @@ function collectDependencies(fn: HIRFunction, state: State): void {
         const rvalues = rvaluesUnfiltered.filter(
           place =>
             !state.inScope(
-              block.instructions[0]?.id ?? block.terminal,
+              block.instructions[0]?.id ?? block.terminal.id,
               place,
             ) || state.identifiers.has(place.identifier.id),
         );
@@ -758,10 +759,12 @@ function collectDependencies(fn: HIRFunction, state: State): void {
          * invariants are violated
          */
         if (rvalues.length !== rvaluesUnfiltered.length) {
-          undefinedIdentifiers = (): Array<Place> =>
-            (undefinedIdentifiers?.() ?? []).concat(
-              rvaluesUnfiltered.filter(v => new Set(rvalues).has(v)),
+          undefinedIdentifiers = (): Array<Place> => {
+            const rvalSet = new Set(rvalues);
+            return (undefinedIdentifiers?.() ?? []).concat(
+              rvaluesUnfiltered.filter(v => rvalSet.has(v)),
             );
+          };
         }
         changed =
           visitAliasing(
@@ -890,7 +893,7 @@ function collectDependencies(fn: HIRFunction, state: State): void {
 
 function pruneScopes(fn: HIRFunction, state: Set<IdentifierId>): void {
   const prunedScopes = new Set<ScopeId>();
-  const reassignments = new Map<IdentifierId, Set<Identifier>>();
+  const reassignments = new Map<DeclarationId, Set<Identifier>>();
 
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
@@ -898,7 +901,7 @@ function pruneScopes(fn: HIRFunction, state: Set<IdentifierId>): void {
       if (value.kind === 'StoreLocal' && value.lvalue.kind === 'Reassign') {
         const ids = getOrInsertDefault(
           reassignments,
-          value.lvalue.place.identifier.id,
+          value.lvalue.place.identifier.declarationId,
           new Set(),
         );
         ids.add(value.value.identifier);
@@ -909,7 +912,7 @@ function pruneScopes(fn: HIRFunction, state: Set<IdentifierId>): void {
            * If the manual memo was a useMemo that got inlined, iterate through
            * all reassignments to the iife temporary to ensure they're memoized.
            */
-          decls = reassignments.get(value.decl.identifier.id) ?? [
+          decls = reassignments.get(value.decl.identifier.declarationId) ?? [
             value.decl.identifier,
           ];
         } else {

@@ -19,6 +19,7 @@ let PropTypes;
 let React;
 let ReactDOMClient;
 let act;
+let assertConsoleErrorDev;
 
 describe('ReactContextValidator', () => {
   beforeEach(() => {
@@ -27,7 +28,7 @@ describe('ReactContextValidator', () => {
     PropTypes = require('prop-types');
     React = require('react');
     ReactDOMClient = require('react-dom/client');
-    act = require('internal-test-utils').act;
+    ({act, assertConsoleErrorDev} = require('internal-test-utils'));
   });
 
   // TODO: This behavior creates a runtime dependency on propTypes. We should
@@ -66,15 +67,20 @@ describe('ReactContextValidator', () => {
     let instance;
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await expect(async () => {
-      await act(() => {
-        root.render(
-          <ComponentInFooBarContext ref={current => (instance = current)} />,
-        );
-      });
-    }).toErrorDev([
-      'ComponentInFooBarContext uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
-      'Component uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+    await act(() => {
+      root.render(
+        <ComponentInFooBarContext ref={current => (instance = current)} />,
+      );
+    });
+    assertConsoleErrorDev([
+      'ComponentInFooBarContext uses the legacy childContextTypes API which will soon be removed. ' +
+        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in ComponentInFooBarContext (at **)',
+      'Component uses the legacy contextTypes API which will soon be removed. ' +
+        'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+        (gate(flags => flags.enableOwnerStacks)
+          ? '    in ComponentInFooBarContext (at **)'
+          : '    in Component (at **)'),
     ]);
     expect(instance.childRef.current.context).toEqual({foo: 'abc'});
   });
@@ -144,13 +150,18 @@ describe('ReactContextValidator', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await expect(async () => {
-      await act(() => {
-        root.render(<Parent foo="abc" />);
-      });
-    }).toErrorDev([
-      'Parent uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
-      'Component uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+    await act(() => {
+      root.render(<Parent foo="abc" />);
+    });
+    assertConsoleErrorDev([
+      'Parent uses the legacy childContextTypes API which will soon be removed. ' +
+        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in Parent (at **)',
+      'Component uses the legacy contextTypes API which will soon be removed. ' +
+        'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+        (gate(flags => flags.enableOwnerStacks)
+          ? '    in Parent (at **)'
+          : '    in Component (at **)'),
     ]);
 
     expect(constructorContext).toEqual({foo: 'abc'});
@@ -191,33 +202,33 @@ describe('ReactContextValidator', () => {
       }
     }
 
-    await expect(async () => {
-      const container = document.createElement('div');
-      const root = ReactDOMClient.createRoot(container);
-      await act(() => {
-        root.render(<ComponentA />);
-      });
-    }).toErrorDev([
-      'ComponentA uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
-      'ComponentA.childContextTypes is specified but there is no getChildContext() method on the instance. You can either define getChildContext() on ComponentA or remove childContextTypes from it.',
-    ]);
-
-    // Warnings should be deduped by component type
-    let container = document.createElement('div');
-    let root = ReactDOMClient.createRoot(container);
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
     await act(() => {
       root.render(<ComponentA />);
     });
+    assertConsoleErrorDev([
+      'ComponentA uses the legacy childContextTypes API which will soon be removed. ' +
+        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in ComponentA (at **)',
+      'ComponentA.childContextTypes is specified but there is no getChildContext() method on the instance. ' +
+        'You can either define getChildContext() on ComponentA or remove childContextTypes from it.\n' +
+        '    in ComponentA (at **)',
+    ]);
 
-    await expect(async () => {
-      container = document.createElement('div');
-      root = ReactDOMClient.createRoot(container);
-      await act(() => {
-        root.render(<ComponentB />);
-      });
-    }).toErrorDev([
-      'ComponentB uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
-      'ComponentB.childContextTypes is specified but there is no getChildContext() method on the instance. You can either define getChildContext() on ComponentB or remove childContextTypes from it.',
+    // Warnings should be deduped by component type
+    await act(() => {
+      root.render(<ComponentA />);
+    });
+    await act(() => {
+      root.render(<ComponentB />);
+    });
+    assertConsoleErrorDev([
+      'ComponentB uses the legacy childContextTypes API which will soon be removed. ' +
+        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in ComponentB (at **)',
+      'ComponentB.childContextTypes is specified but there is no getChildContext() method on the instance. ' +
+        'You can either define getChildContext() on ComponentB or remove childContextTypes from it.\n' +
+        '    in ComponentB (at **)',
     ]);
   });
 
@@ -260,17 +271,34 @@ describe('ReactContextValidator', () => {
       foo: PropTypes.string.isRequired,
     };
 
-    await expect(async () => {
-      const container = document.createElement('div');
-      const root = ReactDOMClient.createRoot(container);
-      await act(() => {
-        root.render(<ParentContextProvider />);
-      });
-    }).toErrorDev([
-      'ParentContextProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
-      'MiddleMissingContext uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
-      'MiddleMissingContext.childContextTypes is specified but there is no getChildContext() method on the instance. You can either define getChildContext() on MiddleMissingContext or remove childContextTypes from it.',
-      'ChildContextConsumer uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<ParentContextProvider />);
+    });
+    assertConsoleErrorDev([
+      'ParentContextProvider uses the legacy childContextTypes API which will soon be removed. ' +
+        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in ParentContextProvider (at **)',
+      'MiddleMissingContext uses the legacy childContextTypes API which will soon be removed. ' +
+        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        (gate(flags => flags.enableOwnerStacks)
+          ? ''
+          : '    in MiddleMissingContext (at **)\n') +
+        '    in ParentContextProvider (at **)',
+      'MiddleMissingContext.childContextTypes is specified but there is no getChildContext() method on the instance. ' +
+        'You can either define getChildContext() on MiddleMissingContext or remove childContextTypes from it.\n' +
+        (gate(flags => flags.enableOwnerStacks)
+          ? ''
+          : '    in MiddleMissingContext (at **)\n') +
+        '    in ParentContextProvider (at **)',
+      'ChildContextConsumer uses the legacy contextTypes API which will soon be removed. ' +
+        'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+        (gate(flags => flags.enableOwnerStacks)
+          ? ''
+          : '    in ChildContextConsumer (at **)\n') +
+        '    in MiddleMissingContext (at **)\n' +
+        '    in ParentContextProvider (at **)',
     ]);
     expect(childContext.bar).toBeUndefined();
     expect(childContext.foo).toBe('FOO');
@@ -428,25 +456,7 @@ describe('ReactContextValidator', () => {
       }
     }
 
-    await expect(async () => {
-      const container = document.createElement('div');
-      const root = ReactDOMClient.createRoot(container);
-      await act(() => {
-        root.render(
-          <ParentContextProvider>
-            <ComponentA />
-          </ParentContextProvider>,
-        );
-      });
-    }).toErrorDev([
-      'ParentContextProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead',
-      'ComponentA uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
-      'ComponentA declares both contextTypes and contextType static properties. The legacy contextTypes property will be ignored.',
-    ]);
-
-    // Warnings should be deduped by component type
-    let container = document.createElement('div');
-    let root = ReactDOMClient.createRoot(container);
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
     await act(() => {
       root.render(
         <ParentContextProvider>
@@ -455,19 +465,41 @@ describe('ReactContextValidator', () => {
       );
     });
 
-    await expect(async () => {
-      container = document.createElement('div');
-      root = ReactDOMClient.createRoot(container);
-      await act(() => {
-        root.render(
-          <ParentContextProvider>
-            <ComponentB />
-          </ParentContextProvider>,
-        );
-      });
-    }).toErrorDev([
-      'ComponentB declares both contextTypes and contextType static properties. The legacy contextTypes property will be ignored.',
-      'ComponentB uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+    assertConsoleErrorDev([
+      'ParentContextProvider uses the legacy childContextTypes API which will soon be removed. ' +
+        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in ParentContextProvider (at **)',
+      'ComponentA declares both contextTypes and contextType static properties. ' +
+        'The legacy contextTypes property will be ignored.\n' +
+        '    in ComponentA (at **)',
+      'ComponentA uses the legacy contextTypes API which will soon be removed. ' +
+        'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+        '    in ComponentA (at **)',
+    ]);
+
+    // Warnings should be deduped by component type
+    await act(() => {
+      root.render(
+        <ParentContextProvider>
+          <ComponentA />
+        </ParentContextProvider>,
+      );
+    });
+
+    await act(() => {
+      root.render(
+        <ParentContextProvider>
+          <ComponentB />
+        </ParentContextProvider>,
+      );
+    });
+    assertConsoleErrorDev([
+      'ComponentB declares both contextTypes and contextType static properties. ' +
+        'The legacy contextTypes property will be ignored.\n' +
+        '    in ComponentB (at **)',
+      'ComponentB uses the legacy contextTypes API which will soon be removed. ' +
+        'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+        '    in ComponentB (at **)',
     ]);
   });
 
@@ -481,20 +513,17 @@ describe('ReactContextValidator', () => {
       }
     }
 
-    await expect(async () => {
-      const container = document.createElement('div');
-      const root = ReactDOMClient.createRoot(container);
-      await act(() => {
-        root.render(<ComponentA />);
-      });
-    }).toErrorDev(
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    await act(() => {
+      root.render(<ComponentA />);
+    });
+    assertConsoleErrorDev([
       'ComponentA defines an invalid contextType. ' +
         'contextType should point to the Context object returned by React.createContext(). ' +
-        'Did you accidentally pass the Context.Consumer instead?',
-    );
+        'Did you accidentally pass the Context.Consumer instead?\n' +
+        '    in ComponentA (at **)',
+    ]);
 
-    let container = document.createElement('div');
-    let root = ReactDOMClient.createRoot(container);
     await act(() => {
       root.render(<ComponentA />);
     });
@@ -505,8 +534,6 @@ describe('ReactContextValidator', () => {
         return <div />;
       }
     }
-    container = document.createElement('div');
-    root = ReactDOMClient.createRoot(container);
     await act(() => {
       root.render(<ComponentB />);
     });
@@ -539,23 +566,22 @@ describe('ReactContextValidator', () => {
     }
 
     await expect(async () => {
-      await expect(async () => {
-        const container = document.createElement('div');
-        const root = ReactDOMClient.createRoot(container);
-        await act(() => {
-          root.render(<Foo />);
-        });
-      }).rejects.toThrow(
-        "Cannot read properties of undefined (reading 'world')",
-      );
-    }).toErrorDev(
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<Foo />);
+      });
+    }).rejects.toThrow("Cannot read properties of undefined (reading 'world')");
+
+    assertConsoleErrorDev([
       'Foo defines an invalid contextType. ' +
         'contextType should point to the Context object returned by React.createContext(). ' +
         'However, it is set to undefined. ' +
         'This can be caused by a typo or by mixing up named and default imports. ' +
         'This can also happen due to a circular dependency, ' +
-        'so try moving the createContext() call to a separate file.',
-    );
+        'so try moving the createContext() call to a separate file.\n' +
+        '    in Foo (at **)',
+    ]);
   });
 
   it('should warn when class contextType is an object', async () => {
@@ -571,20 +597,19 @@ describe('ReactContextValidator', () => {
     }
 
     await expect(async () => {
-      await expect(async () => {
-        const container = document.createElement('div');
-        const root = ReactDOMClient.createRoot(container);
-        await act(() => {
-          root.render(<Foo />);
-        });
-      }).rejects.toThrow(
-        "Cannot read properties of undefined (reading 'hello')",
-      );
-    }).toErrorDev(
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<Foo />);
+      });
+    }).rejects.toThrow("Cannot read properties of undefined (reading 'hello')");
+
+    assertConsoleErrorDev([
       'Foo defines an invalid contextType. ' +
         'contextType should point to the Context object returned by React.createContext(). ' +
-        'However, it is set to an object with keys {x, y}.',
-    );
+        'However, it is set to an object with keys {x, y}.\n' +
+        '    in Foo (at **)',
+    ]);
   });
 
   it('should warn when class contextType is a primitive', async () => {
@@ -596,20 +621,19 @@ describe('ReactContextValidator', () => {
     }
 
     await expect(async () => {
-      await expect(async () => {
-        const container = document.createElement('div');
-        const root = ReactDOMClient.createRoot(container);
-        await act(() => {
-          root.render(<Foo />);
-        });
-      }).rejects.toThrow(
-        "Cannot read properties of undefined (reading 'world')",
-      );
-    }).toErrorDev(
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<Foo />);
+      });
+    }).rejects.toThrow("Cannot read properties of undefined (reading 'world')");
+
+    assertConsoleErrorDev([
       'Foo defines an invalid contextType. ' +
         'contextType should point to the Context object returned by React.createContext(). ' +
-        'However, it is set to a string.',
-    );
+        'However, it is set to a string.\n' +
+        '    in Foo (at **)',
+    ]);
   });
 
   it('should warn if you define contextType on a function component', async () => {
@@ -625,31 +649,26 @@ describe('ReactContextValidator', () => {
     }
     ComponentB.contextType = Context;
 
-    await expect(async () => {
-      const container = document.createElement('div');
-      const root = ReactDOMClient.createRoot(container);
-      await act(() => {
-        root.render(<ComponentA />);
-      });
-    }).toErrorDev(
-      'ComponentA: Function components do not support contextType.',
-    );
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    await act(() => {
+      root.render(<ComponentA />);
+    });
+    assertConsoleErrorDev([
+      'ComponentA: Function components do not support contextType.\n' +
+        '    in ComponentA (at **)',
+    ]);
 
     // Warnings should be deduped by component type
-    let container = document.createElement('div');
-    let root = ReactDOMClient.createRoot(container);
     await act(() => {
       root.render(<ComponentA />);
     });
 
-    await expect(async () => {
-      container = document.createElement('div');
-      root = ReactDOMClient.createRoot(container);
-      await act(() => {
-        root.render(<ComponentB />);
-      });
-    }).toErrorDev(
-      'ComponentB: Function components do not support contextType.',
-    );
+    await act(() => {
+      root.render(<ComponentB />);
+    });
+    assertConsoleErrorDev([
+      'ComponentB: Function components do not support contextType.\n' +
+        '    in ComponentB (at **)',
+    ]);
   });
 });
