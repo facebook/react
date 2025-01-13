@@ -992,9 +992,11 @@ function returnsNonNode(
         }
       }
     },
+    // Skip traversing all nested functions and their return statements
     ArrowFunctionExpression: skipNestedFunctions(node),
     FunctionExpression: skipNestedFunctions(node),
     FunctionDeclaration: skipNestedFunctions(node),
+    ObjectMethod: node => node.skip(),
   });
 
   return !hasReturn || returnsNonNode;
