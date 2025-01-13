@@ -23,7 +23,7 @@ export function setSuppressWarning(newSuppressWarning) {
 export function warn(format, ...args) {
   if (enableRemoveConsolePatches) {
     if (__DEV__) {
-      console.warn(format, ...args);
+      console['warn'](format, ...args);
     }
   } else if (__DEV__) {
     if (!suppressWarning) {
@@ -35,7 +35,7 @@ export function warn(format, ...args) {
 export function error(format, ...args) {
   if (enableRemoveConsolePatches) {
     if (__DEV__) {
-      console.error(format, ...args);
+      console['error'](format, ...args);
     }
   } else if (__DEV__) {
     if (!suppressWarning) {
