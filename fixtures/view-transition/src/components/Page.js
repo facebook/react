@@ -57,7 +57,7 @@ export default function Page({url, navigate}) {
         }}>
         {show ? 'A' : 'B'}
       </button>
-      <ViewTransition>
+      <ViewTransition className="none">
         <div>
           {show ? (
             <div>
@@ -92,7 +92,7 @@ export default function Page({url, navigate}) {
               <div>!!</div>
             </ViewTransition>
           </Activity>
-          {show ? <Component /> : <p>&nbsp;</p>}
+          {show ? <Component /> : null}
         </div>
       </ViewTransition>
     </div>

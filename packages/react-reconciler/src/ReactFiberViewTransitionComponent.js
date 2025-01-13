@@ -19,8 +19,13 @@ import {getTreeId} from './ReactFiberTreeContext';
 
 export type ViewTransitionProps = {
   name?: string,
-  className?: string,
   children?: ReactNodeList,
+  className?: 'none' | string,
+  enter?: 'none' | string,
+  exit?: 'none' | string,
+  layout?: 'none' | string,
+  share?: 'none' | string,
+  update?: 'none' | string,
   onEnter?: (instance: ViewTransitionInstance) => void,
   onExit?: (instance: ViewTransitionInstance) => void,
   onLayout?: (instance: ViewTransitionInstance) => void,
@@ -75,4 +80,20 @@ export function getViewTransitionName(
   }
   // We should have assigned a name by now.
   return (instance.autoName: any);
+}
+
+export function getViewTransitionClassName(
+  className: ?string,
+  eventClassName: ?string,
+): ?string {
+  if (eventClassName == null) {
+    return className;
+  }
+  if (eventClassName === 'none') {
+    return eventClassName;
+  }
+  if (className != null) {
+    return className + ' ' + eventClassName;
+  }
+  return eventClassName;
 }
