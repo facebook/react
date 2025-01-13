@@ -589,6 +589,11 @@ module.exports = {
     WheelEventHandler: 'readonly',
     FinalizationRegistry: 'readonly',
     Omit: 'readonly',
+    Keyframe: 'readonly',
+    PropertyIndexedKeyframes: 'readonly',
+    KeyframeAnimationOptions: 'readonly',
+    GetAnimationsOptions: 'readonly',
+    Animatable: 'readonly',
 
     spyOnDev: 'readonly',
     spyOnDevAndProd: 'readonly',

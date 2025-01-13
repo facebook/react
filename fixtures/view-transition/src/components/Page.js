@@ -1,6 +1,8 @@
 import React, {
   unstable_ViewTransition as ViewTransition,
   unstable_Activity as Activity,
+  useRef,
+  useLayoutEffect,
 } from 'react';
 
 import './Page.css';
@@ -35,7 +37,19 @@ function Component() {
 }
 
 export default function Page({url, navigate}) {
+  const ref = useRef();
   const show = url === '/?b';
+  useLayoutEffect(() => {
+    const viewTransition = ref.current;
+    requestAnimationFrame(() => {
+      const keyframes = [
+        {rotate: '0deg', transformOrigin: '30px 8px'},
+        {rotate: '360deg', transformOrigin: '30px 8px'},
+      ];
+      viewTransition.old.animate(keyframes, 300);
+      viewTransition.new.animate(keyframes, 300);
+    });
+  }, [show]);
   const exclamation = (
     <ViewTransition name="exclamation">
       <span>!</span>
@@ -62,7 +76,7 @@ export default function Page({url, navigate}) {
               {a}
             </div>
           )}
-          <ViewTransition>
+          <ViewTransition ref={ref}>
             {show ? <div>hello{exclamation}</div> : <section>Loading</section>}
           </ViewTransition>
           <p>scroll me</p>

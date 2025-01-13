@@ -591,6 +591,14 @@ export function startViewTransition(
   return false;
 }
 
+export type ViewTransitionInstance = null | {name: string, ...};
+
+export function createViewTransitionInstance(
+  name: string,
+): ViewTransitionInstance {
+  return null;
+}
+
 export function clearContainer(container: Container): void {
   // TODO Implement this for React Native
   // UIManager does not expose a "remove all" type method.

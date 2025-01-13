@@ -30,7 +30,7 @@ import type {
 } from './ReactFiberActivityComponent';
 import type {
   ViewTransitionProps,
-  ViewTransitionInstance,
+  ViewTransitionState,
 } from './ReactFiberViewTransitionComponent';
 import {isOffscreenManual} from './ReactFiberActivityComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
@@ -965,7 +965,7 @@ function trackReappearingViewTransitions(workInProgress: Fiber): void {
       ) {
         const props: ViewTransitionProps = child.memoizedProps;
         if (props.name != null && props.name !== 'auto') {
-          const instance: ViewTransitionInstance = child.stateNode;
+          const instance: ViewTransitionState = child.stateNode;
           trackAppearingViewTransition(instance, props.name);
         }
       }

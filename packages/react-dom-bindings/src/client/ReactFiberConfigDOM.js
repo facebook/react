@@ -187,6 +187,14 @@ export type RendererInspectionConfig = $ReadOnly<{}>;
 
 export type TransitionStatus = FormStatus;
 
+export type ViewTransitionInstance = {
+  name: string,
+  group: Animatable,
+  imagePair: Animatable,
+  old: Animatable,
+  new: Animatable,
+};
+
 type SelectionInformation = {
   focusedElem: null | HTMLElement,
   selectionRange: mixed,
@@ -793,10 +801,20 @@ export function appendChildToContainer(
   let parentNode;
   if (container.nodeType === COMMENT_NODE) {
     parentNode = (container.parentNode: any);
-    parentNode.insertBefore(child, container);
+    if (supportsMoveBefore) {
+      // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
+      parentNode.moveBefore(child, container);
+    } else {
+      parentNode.insertBefore(child, container);
+    }
   } else {
     parentNode = container;
-    parentNode.appendChild(child);
+    if (supportsMoveBefore) {
+      // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
+      parentNode.moveBefore(child, null);
+    } else {
+      parentNode.appendChild(child);
+    }
   }
   // This container might be used for a portal.
   // If something inside a portal is clicked, that click should bubble
@@ -835,9 +853,19 @@ export function insertInContainerBefore(
   beforeChild: Instance | TextInstance | SuspenseInstance,
 ): void {
   if (container.nodeType === COMMENT_NODE) {
-    (container.parentNode: any).insertBefore(child, beforeChild);
+    if (supportsMoveBefore) {
+      // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
+      (container.parentNode: any).moveBefore(child, beforeChild);
+    } else {
+      (container.parentNode: any).insertBefore(child, beforeChild);
+    }
   } else {
-    container.insertBefore(child, beforeChild);
+    if (supportsMoveBefore) {
+      // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
+      container.moveBefore(child, beforeChild);
+    } else {
+      container.insertBefore(child, beforeChild);
+    }
   }
 }
 
@@ -1301,6 +1329,75 @@ export function startViewTransition(
     // we're not animating with the wrong animation mapped.
     return false;
   }
+}
+
+interface ViewTransitionPseudoElementType extends Animatable {
+  _scope: HTMLElement;
+  _selector: string;
+}
+
+function ViewTransitionPseudoElement(
+  this: ViewTransitionPseudoElementType,
+  pseudo: string,
+  name: string,
+) {
+  // TODO: Get the owner document from the root container.
+  this._scope = (document.documentElement: any);
+  this._selector = '::view-transition-' + pseudo + '(' + name + ')';
+}
+// $FlowFixMe[prop-missing]
+ViewTransitionPseudoElement.prototype.animate = function (
+  this: ViewTransitionPseudoElementType,
+  keyframes: Keyframe[] | PropertyIndexedKeyframes | null,
+  options?: number | KeyframeAnimationOptions,
+): Animation {
+  const opts: any =
+    typeof options === 'number'
+      ? {
+          duration: options,
+        }
+      : Object.assign(({}: KeyframeAnimationOptions), options);
+  opts.pseudoElement = this._selector;
+  // TODO: Handle multiple child instances.
+  return this._scope.animate(keyframes, opts);
+};
+// $FlowFixMe[prop-missing]
+ViewTransitionPseudoElement.prototype.getAnimations = function (
+  this: ViewTransitionPseudoElementType,
+  options?: GetAnimationsOptions,
+): Animation[] {
+  const scope = this._scope;
+  const selector = this._selector;
+  const animations = scope.getAnimations({subtree: true});
+  const result = [];
+  for (let i = 0; i < animations.length; i++) {
+    const effect: null | {
+      target?: Element,
+      pseudoElement?: string,
+      ...
+    } = (animations[i].effect: any);
+    // TODO: Handle multiple child instances.
+    if (
+      effect !== null &&
+      effect.target === scope &&
+      effect.pseudoElement === selector
+    ) {
+      result.push(animations[i]);
+    }
+  }
+  return result;
+};
+
+export function createViewTransitionInstance(
+  name: string,
+): ViewTransitionInstance {
+  return {
+    name: name,
+    group: new (ViewTransitionPseudoElement: any)('group', name),
+    imagePair: new (ViewTransitionPseudoElement: any)('image-pair', name),
+    old: new (ViewTransitionPseudoElement: any)('old', name),
+    new: new (ViewTransitionPseudoElement: any)('new', name),
+  };
 }
 
 export function clearContainer(container: Container): void {
