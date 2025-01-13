@@ -7,4 +7,4 @@
  * @flow
  */
 
-export {useMemoCache as c} from './src/ReactHooks';
+export * from './src/ReactCompilerRuntime';
