@@ -394,7 +394,9 @@ export type Dispatcher = {
     create: () => (() => void) | void,
     deps: Array<mixed> | void | null,
   ): void,
+  // TODO: Non-nullable once `enableUseEffectEventHook` is on everywhere.
   useEffectEvent?: <Args, F: (...Array<Args>) => mixed>(callback: F) => F,
+  // TODO: Non-nullable once `enableUseResourceEffectHook` is on everywhere.
   useResourceEffect?: (
     create: () => mixed,
     createDeps: Array<mixed> | void | null,
@@ -429,7 +431,7 @@ export type Dispatcher = {
     getServerSnapshot?: () => T,
   ): T,
   useId(): string,
-  useCacheRefresh?: () => <T>(?() => T, ?T) => void,
+  useCacheRefresh: () => <T>(?() => T, ?T) => void,
   useMemoCache: (size: number) => Array<any>,
   useHostTransitionStatus: () => TransitionStatus,
   useOptimistic: <S, A>(
