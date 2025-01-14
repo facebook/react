@@ -834,6 +834,7 @@ export const HooksDispatcher: Dispatcher = supportsClientAPIs
       useActionState,
       useFormState: useActionState,
       useHostTransitionStatus,
+      useMemoCache,
     }
   : {
       readContext,
