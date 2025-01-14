@@ -24,7 +24,8 @@ function Foo(props) {
 
 ```javascript
 import { useRenderCounter, shouldInstrument } from "react-compiler-runtime";
-import { c as _c } from "react/compiler-runtime"; // @enableEmitInstrumentForget @compilationMode(annotation)
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @enableEmitInstrumentForget @compilationMode(annotation)
 
 function Bar(props) {
   "use forget";

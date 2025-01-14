@@ -33,7 +33,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // props.a.b should be added as a unconditional dependency to the reactive
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // props.a.b should be added as a unconditional dependency to the reactive
 // scope that produces x, since it is accessed unconditionally in all cfg
 // paths
 

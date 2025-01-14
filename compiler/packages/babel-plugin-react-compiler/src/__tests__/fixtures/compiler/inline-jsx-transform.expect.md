@@ -80,7 +80,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c2 } from "react/compiler-runtime"; // @inlineJsxTransform
+import _r from "react/compiler-runtime";
+const { c: _c2 } = _r; // @inlineJsxTransform
 
 function Parent(t0) {
   const $ = _c2(2);

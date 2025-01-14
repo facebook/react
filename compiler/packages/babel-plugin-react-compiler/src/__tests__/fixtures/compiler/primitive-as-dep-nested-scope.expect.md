@@ -38,7 +38,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // props.b + 1 is an non-allocating expression, which means Forget can
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // props.b + 1 is an non-allocating expression, which means Forget can
 // emit it trivially and repeatedly (e.g. no need to memoize props.b + 1
 // separately from props.b)
 // Correctness:

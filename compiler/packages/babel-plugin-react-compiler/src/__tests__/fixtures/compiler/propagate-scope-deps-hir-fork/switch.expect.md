@@ -27,7 +27,8 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enablePropagateDepsInHIR
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @enablePropagateDepsInHIR
 function Component(props) {
   const $ = _c(8);
   let t0;

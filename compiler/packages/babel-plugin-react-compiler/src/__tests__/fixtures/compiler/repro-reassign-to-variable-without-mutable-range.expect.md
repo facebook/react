@@ -19,7 +19,8 @@ function Component(a, b) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @debug
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @debug
 function Component(a, b) {
   const $ = _c(11);
   let t0;

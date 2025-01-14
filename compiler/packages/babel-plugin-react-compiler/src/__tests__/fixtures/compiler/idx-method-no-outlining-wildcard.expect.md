@@ -31,7 +31,8 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @customMacros(idx.*.b)
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @customMacros(idx.*.b)
 
 function Component(props) {
   const $ = _c(16);

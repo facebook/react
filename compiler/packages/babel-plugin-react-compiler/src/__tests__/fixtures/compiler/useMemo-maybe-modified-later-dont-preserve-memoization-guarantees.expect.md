@@ -22,7 +22,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enablePreserveExistingMemoizationGuarantees:false
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @enablePreserveExistingMemoizationGuarantees:false
 import { useMemo } from "react";
 import { identity, makeObject_Primitives, mutate } from "shared-runtime";
 

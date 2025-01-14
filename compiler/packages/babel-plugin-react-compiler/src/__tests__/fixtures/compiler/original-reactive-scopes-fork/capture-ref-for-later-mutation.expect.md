@@ -32,7 +32,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enableReactiveScopesInHIR:false
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @enableReactiveScopesInHIR:false
 import { useRef } from "react";
 import { addOne } from "shared-runtime";
 

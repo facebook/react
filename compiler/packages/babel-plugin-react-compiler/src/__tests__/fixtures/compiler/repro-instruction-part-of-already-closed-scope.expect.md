@@ -31,7 +31,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enableAssumeHooksFollowRulesOfReact
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @enableAssumeHooksFollowRulesOfReact
 import { Stringify, identity, useHook } from "shared-runtime";
 
 function Component(t0) {

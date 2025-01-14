@@ -38,7 +38,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // x.a.b was accessed unconditionally within the mutable range of x.
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // x.a.b was accessed unconditionally within the mutable range of x.
 // As a result, we cannot infer anything about whether `x` or `x.a`
 // may be null. This means that it's not safe to hoist reads from x
 // (e.g. take `x.a` or `x.a.b` as a dependency).

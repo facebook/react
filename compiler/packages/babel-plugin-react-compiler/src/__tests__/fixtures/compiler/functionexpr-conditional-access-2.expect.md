@@ -20,7 +20,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enableTreatFunctionDepsAsConditional
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @enableTreatFunctionDepsAsConditional
 import { Stringify } from "shared-runtime";
 
 function Component(t0) {

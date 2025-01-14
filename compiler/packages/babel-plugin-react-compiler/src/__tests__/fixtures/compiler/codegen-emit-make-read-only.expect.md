@@ -20,7 +20,8 @@ function MyComponentName(props) {
 
 ```javascript
 import { makeReadOnly } from "react-compiler-runtime";
-import { c as _c } from "react/compiler-runtime"; // @enableEmitFreeze true
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @enableEmitFreeze true
 
 function MyComponentName(props) {
   const $ = _c(3);

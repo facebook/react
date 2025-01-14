@@ -14,7 +14,8 @@ function App() {
 
 ```javascript
 import { useContext_withSelector } from "react-compiler-runtime";
-import { c as _c } from "react/compiler-runtime"; // @lowerContextAccess
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @lowerContextAccess
 function App() {
   const $ = _c(3);
   const { foo, bar } = useContext_withSelector(MyContext, _temp);

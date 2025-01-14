@@ -12,7 +12,8 @@ function useDiv(props) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @compilationMode(infer)
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @compilationMode(infer)
 function useDiv(props) {
   const $ = _c(1);
   let t0;

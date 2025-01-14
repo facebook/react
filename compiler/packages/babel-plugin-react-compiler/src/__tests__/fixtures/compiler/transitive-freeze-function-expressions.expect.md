@@ -31,7 +31,8 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enableTransitivelyFreezeFunctionExpressions
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @enableTransitivelyFreezeFunctionExpressions
 function Component(props) {
   const $ = _c(9);
   const { data, loadNext, isLoadingNext } =

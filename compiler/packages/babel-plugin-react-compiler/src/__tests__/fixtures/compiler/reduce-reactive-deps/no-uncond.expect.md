@@ -35,7 +35,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // When an object's properties are only read conditionally, we should
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // When an object's properties are only read conditionally, we should
 
 import { identity } from "shared-runtime";
 

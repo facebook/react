@@ -18,7 +18,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enableChangeVariableCodegen
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @enableChangeVariableCodegen
 function Component(props) {
   const $ = _c(3);
   const c_00 = $[0] !== props.a;

@@ -37,7 +37,8 @@ function Component() {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enableAssumeHooksFollowRulesOfReact @enableTransitivelyFreezeFunctionExpressions
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @enableAssumeHooksFollowRulesOfReact @enableTransitivelyFreezeFunctionExpressions
 function Component() {
   const $ = _c(7);
   const items = useItems();

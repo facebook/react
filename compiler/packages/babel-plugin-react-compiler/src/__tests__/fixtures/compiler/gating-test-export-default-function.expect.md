@@ -23,7 +23,8 @@ function Foo(props) {
 
 ```javascript
 import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
-import { c as _c } from "react/compiler-runtime"; // @gating @compilationMode(annotation)
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @gating @compilationMode(annotation)
 const Bar = isForgetEnabled_Fixtures()
   ? function Bar(props) {
       "use forget";

@@ -21,7 +21,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import _r from "react/compiler-runtime";
+const { c: _c } = _r;
 function component(a, b) {
   const $ = _c(5);
   let t0;

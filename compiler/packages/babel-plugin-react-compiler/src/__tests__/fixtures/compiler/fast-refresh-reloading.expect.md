@@ -23,7 +23,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enableResetCacheOnSourceFileChanges
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @enableResetCacheOnSourceFileChanges
 import { useMemo, useState } from "react";
 import { ValidateMemoization } from "shared-runtime";
 

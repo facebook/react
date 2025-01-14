@@ -190,11 +190,25 @@ function addMemoCacheFunctionImportDeclaration(
   moduleName: string,
   localName: string,
 ): void {
-  program.unshiftContainer(
-    'body',
+  const importIdentifier = program.scope.generateUidIdentifier('r');
+
+  program.unshiftContainer('body', [
     t.importDeclaration(
-      [t.importSpecifier(t.identifier(localName), t.identifier('c'))],
+      [t.importDefaultSpecifier(t.identifier(importIdentifier.name))],
       t.stringLiteral(moduleName),
     ),
-  );
+    t.variableDeclaration('const', [
+      t.variableDeclarator(
+        t.objectPattern([
+          t.objectProperty(
+            t.identifier('c'),
+            t.identifier(localName),
+            false,
+            false,
+          ),
+        ]),
+        t.identifier(importIdentifier.name),
+      ),
+    ]),
+  ]);
 }

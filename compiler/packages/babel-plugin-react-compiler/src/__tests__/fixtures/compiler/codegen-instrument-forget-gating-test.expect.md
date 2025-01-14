@@ -25,7 +25,8 @@ function Foo(props) {
 ```javascript
 import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
 import { useRenderCounter, shouldInstrument } from "react-compiler-runtime";
-import { c as _c } from "react/compiler-runtime"; // @enableEmitInstrumentForget @compilationMode(annotation) @gating
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @enableEmitInstrumentForget @compilationMode(annotation) @gating
 const Bar = isForgetEnabled_Fixtures()
   ? function Bar(props) {
       "use forget";

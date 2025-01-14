@@ -30,7 +30,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // To preserve the nullthrows behavior and reactive deps of this code,
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // To preserve the nullthrows behavior and reactive deps of this code,
 // Forget needs to add `props.a.b` or a subpath as a dependency.
 //
 // (1) Since the reactive block producing x unconditionally read props.a.<...>,

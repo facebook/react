@@ -31,7 +31,8 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { $structuralCheck } from "react-compiler-runtime";
-import { c as _c } from "react/compiler-runtime";
+import _r from "react/compiler-runtime";
+const { c: _c } = _r;
 import { useState } from "react"; // @enableChangeDetectionForDebugging
 
 function useOther(x) {

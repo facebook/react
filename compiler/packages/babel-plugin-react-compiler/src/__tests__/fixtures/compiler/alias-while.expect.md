@@ -26,7 +26,8 @@ function mutate(x, y) {}
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import _r from "react/compiler-runtime";
+const { c: _c } = _r;
 function foo(cond) {
   const $ = _c(2);
   let a;

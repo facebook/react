@@ -30,7 +30,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enableTreatRefLikeIdentifiersAsRefs @validatePreserveExistingMemoizationGuarantees
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @enableTreatRefLikeIdentifiersAsRefs @validatePreserveExistingMemoizationGuarantees
 import { useRef, useCallback } from "react";
 
 function useCustomRef() {

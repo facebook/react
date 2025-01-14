@@ -27,7 +27,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @compilationMode(infer)
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @compilationMode(infer)
 
 import { Stringify } from "shared-runtime";
 

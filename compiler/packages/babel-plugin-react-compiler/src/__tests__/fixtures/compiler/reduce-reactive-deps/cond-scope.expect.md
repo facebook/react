@@ -41,7 +41,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // Some reactive scopes are created within a conditional. If a child scope
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // Some reactive scopes are created within a conditional. If a child scope
 // is within a conditional, its reactive dependencies should be propagated
 // as conditionals
 //

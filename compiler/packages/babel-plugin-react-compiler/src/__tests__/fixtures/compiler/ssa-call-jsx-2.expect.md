@@ -21,7 +21,8 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @Pass runMutableRangeAnalysis
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @Pass runMutableRangeAnalysis
 function foo() {}
 
 function Component(props) {

@@ -16,7 +16,8 @@ function Component(props) {
 
 ```javascript
 import { $structuralCheck } from "react-compiler-runtime";
-import { c as _c } from "react/compiler-runtime"; // @enableChangeDetectionForDebugging
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @enableChangeDetectionForDebugging
 import { useState } from "react";
 
 function Component(props) {

@@ -15,7 +15,8 @@ function component(a, b) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import _r from "react/compiler-runtime";
+const { c: _c } = _r;
 function component(a, b) {
   const $ = _c(3);
   let x;

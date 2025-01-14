@@ -26,7 +26,8 @@ function SomeComponent() {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enableCustomTypeDefinitionForReanimated
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @enableCustomTypeDefinitionForReanimated
 import { useSharedValue } from "react-native-reanimated";
 
 /**

@@ -18,7 +18,8 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // x's mutable range should extend to `mutate(y)`
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // x's mutable range should extend to `mutate(y)`
 
 function Component(props) {
   const $ = _c(2);

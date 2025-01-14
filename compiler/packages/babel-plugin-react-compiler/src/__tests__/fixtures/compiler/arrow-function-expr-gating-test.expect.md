@@ -13,7 +13,8 @@ export default ErrorView;
 
 ```javascript
 import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
-import { c as _c } from "react/compiler-runtime"; // @gating
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @gating
 const ErrorView = isForgetEnabled_Fixtures()
   ? (error, _retry) => {
       const $ = _c(2);

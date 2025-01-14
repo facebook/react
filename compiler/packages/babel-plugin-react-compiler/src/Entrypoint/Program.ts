@@ -703,7 +703,8 @@ function getReactFunctionType(
 }
 
 /**
- * Returns true if the program contains an `import {c} from "<moduleName>"` declaration,
+ * Returns true if the program contains an `import pkg from "<moduleName>"; const {c} = pkg` declaration,
+ * or an `import {c} from "<moduleName>".
  * regardless of the local name of the 'c' specifier and the presence of other specifiers
  * in the same declaration.
  */
@@ -711,7 +712,9 @@ function hasMemoCacheFunctionImport(
   program: NodePath<t.Program>,
   moduleName: string,
 ): boolean {
+  let defaultImportName: string | null = null;
   let hasUseMemoCache = false;
+
   program.traverse({
     ImportSpecifier(path) {
       const imported = path.get('imported');
@@ -729,7 +732,33 @@ function hasMemoCacheFunctionImport(
         hasUseMemoCache = true;
       }
     },
+    ImportDefaultSpecifier(path) {
+      if (
+        path.parentPath.isImportDeclaration() &&
+        path.parentPath.get('source').node.value === moduleName
+      ) {
+        defaultImportName = path.node.local.name;
+      }
+    },
+    VariableDeclarator(path) {
+      if (!defaultImportName) return;
+
+      if (
+        t.isIdentifier(path.node.init) &&
+        path.node.init.name === defaultImportName &&
+        t.isObjectPattern(path.node.id)
+      ) {
+        const properties = path.node.id.properties;
+        hasUseMemoCache = properties.some(
+          prop =>
+            t.isObjectProperty(prop) &&
+            t.isIdentifier(prop.key) &&
+            prop.key.name === 'c',
+        );
+      }
+    },
   });
+
   return hasUseMemoCache;
 }
 

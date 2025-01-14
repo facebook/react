@@ -17,7 +17,8 @@ function ArrayAtTest(props) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // arrayInstance.at should have the following effects:
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // arrayInstance.at should have the following effects:
 //  - read on arg0
 //  - read on receiver
 //  - mutate on lvalue

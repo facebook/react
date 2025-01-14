@@ -22,7 +22,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // Test that we can track non-overlapping dependencies separately.
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // Test that we can track non-overlapping dependencies separately.
 // (not needed for correctness but for dependency granularity)
 function TestNonOverlappingDescendantTracked(props) {
   const $ = _c(4);

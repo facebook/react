@@ -19,7 +19,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react"; // @target="donotuse_meta_internal"
+import _r from "react";
+const { c: _c } = _r; // @target="donotuse_meta_internal"
 
 function Component() {
   const $ = _c(1);

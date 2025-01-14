@@ -22,7 +22,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // Test that we correctly track a subpath if the subpath itself is accessed as
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // Test that we correctly track a subpath if the subpath itself is accessed as
 // a dependency
 function TestOverlappingDescendantTracked(props) {
   const $ = _c(2);

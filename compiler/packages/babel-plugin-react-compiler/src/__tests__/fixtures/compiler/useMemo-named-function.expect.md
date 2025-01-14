@@ -21,7 +21,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @validateNoSetStateInRender:false
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @validateNoSetStateInRender:false
 import { useMemo } from "react";
 import { makeArray } from "shared-runtime";
 

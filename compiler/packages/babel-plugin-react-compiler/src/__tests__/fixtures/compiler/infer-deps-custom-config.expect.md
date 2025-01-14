@@ -17,7 +17,8 @@ function CustomConfig({propVal}) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @inferEffectDependencies
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @inferEffectDependencies
 import { print, useSpecialEffect } from "shared-runtime";
 
 function CustomConfig(t0) {

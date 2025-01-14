@@ -18,7 +18,8 @@ import {
   shouldInstrument,
   makeReadOnly,
 } from "react-compiler-runtime";
-import { c as _c } from "react/compiler-runtime"; // @enableEmitFreeze @enableEmitInstrumentForget
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @enableEmitFreeze @enableEmitInstrumentForget
 
 function useFoo(props) {
   if (__DEV__ && shouldInstrument)

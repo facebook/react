@@ -14,7 +14,8 @@ function component() {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import _r from "react/compiler-runtime";
+const { c: _c } = _r;
 function component() {
   const $ = _c(4);
   const [count, setCount] = useState(0);

@@ -28,7 +28,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enablePropagateDepsInHIR
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @enablePropagateDepsInHIR
 // When a conditional dependency `props.a.b.c` has no unconditional dependency
 // in its subpath or superpath, we should find the nearest unconditional access
 

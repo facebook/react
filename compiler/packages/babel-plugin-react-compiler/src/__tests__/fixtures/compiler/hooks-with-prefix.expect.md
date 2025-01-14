@@ -36,7 +36,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @hookPattern:".*\b(use[^$]+)$"
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @hookPattern:".*\b(use[^$]+)$"
 
 import * as React from "react";
 import { makeArray, useHook } from "shared-runtime";

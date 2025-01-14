@@ -33,7 +33,8 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @validateNoSetStateInRender @enableAssumeHooksFollowRulesOfReact
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @validateNoSetStateInRender @enableAssumeHooksFollowRulesOfReact
 function Component(props) {
   const $ = _c(7);
   const logEvent = useLogging(props.appId);

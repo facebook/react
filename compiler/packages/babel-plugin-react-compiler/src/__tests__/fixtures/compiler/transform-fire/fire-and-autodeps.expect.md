@@ -22,7 +22,8 @@ function Component(props) {
 
 ```javascript
 import { useFire } from "react/compiler-runtime";
-import { c as _c } from "react/compiler-runtime"; // @enableFire @inferEffectDependencies
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @enableFire @inferEffectDependencies
 import { fire, useEffect } from "react";
 
 function Component(props) {

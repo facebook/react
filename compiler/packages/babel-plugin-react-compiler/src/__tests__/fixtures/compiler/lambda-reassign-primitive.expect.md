@@ -28,7 +28,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // writing to primitives is not a 'mutate' or 'store' to context references,
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // writing to primitives is not a 'mutate' or 'store' to context references,
 // under current analysis in AnalyzeFunctions.
 // <unknown> $23:TFunction = Function @deps[<unknown>
 //   $21:TPrimitive,<unknown> $22:TPrimitive]:

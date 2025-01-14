@@ -26,7 +26,8 @@ function CaptureNotMutate(props) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // Here, element should not be memoized independently of aliasedElement, since
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // Here, element should not be memoized independently of aliasedElement, since
 // it is captured by fn.
 // AnalyzeFunctions currently does not find captured objects.
 //  - mutated context refs are declared as `Capture` effect in `FunctionExpression.deps`

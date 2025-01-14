@@ -18,7 +18,8 @@ function NonReactiveDepInEffect() {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @inferEffectDependencies
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @inferEffectDependencies
 import * as React from "react";
 
 /**

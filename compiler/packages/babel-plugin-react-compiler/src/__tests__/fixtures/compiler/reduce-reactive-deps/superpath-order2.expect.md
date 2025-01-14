@@ -37,7 +37,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // When an unconditional dependency `props.a` is the subpath of a conditional
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // When an unconditional dependency `props.a` is the subpath of a conditional
 // dependency `props.a.b`, we can safely overestimate and only track `props.a`
 // as a dependency
 

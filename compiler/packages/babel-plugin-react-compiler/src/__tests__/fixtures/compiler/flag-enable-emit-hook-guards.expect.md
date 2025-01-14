@@ -37,7 +37,8 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { $dispatcherGuard } from "react-compiler-runtime";
-import { c as _c } from "react/compiler-runtime"; // @enableEmitHookGuards
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @enableEmitHookGuards
 import { createContext, useContext, useEffect, useState } from "react";
 import {
   CONST_STRING0,

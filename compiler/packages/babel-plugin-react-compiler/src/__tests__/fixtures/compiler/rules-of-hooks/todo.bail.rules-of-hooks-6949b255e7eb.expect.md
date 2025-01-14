@@ -78,7 +78,8 @@ const SomeName = () => {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @skip
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @skip
 // Unsupported input
 
 // Valid because the neither the conditions before or after the hook affect the hook call

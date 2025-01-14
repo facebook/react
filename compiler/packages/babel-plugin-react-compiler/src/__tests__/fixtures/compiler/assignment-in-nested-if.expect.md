@@ -19,7 +19,8 @@ function useBar(props) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import _r from "react/compiler-runtime";
+const { c: _c } = _r;
 function useBar(props) {
   const $ = _c(1);
   let z;

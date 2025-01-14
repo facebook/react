@@ -14,7 +14,8 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // We should codegen nested optional properties correctly
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // We should codegen nested optional properties correctly
 // (i.e. placing `?` in the correct PropertyLoad)
 function Component(props) {
   const $ = _c(2);

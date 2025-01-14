@@ -21,7 +21,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enableTreatFunctionDepsAsConditional
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @enableTreatFunctionDepsAsConditional
 function Component(props) {
   const $ = _c(5);
   let t0;

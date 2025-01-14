@@ -37,7 +37,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @validateNoSetStateInRender
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @validateNoSetStateInRender
 import { useState } from "react";
 
 function Component(props) {

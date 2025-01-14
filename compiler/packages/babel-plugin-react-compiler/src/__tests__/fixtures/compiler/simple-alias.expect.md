@@ -19,7 +19,8 @@ function foo() {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import _r from "react/compiler-runtime";
+const { c: _c } = _r;
 function mutate() {}
 function foo() {
   const $ = _c(2);

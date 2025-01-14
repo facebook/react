@@ -39,7 +39,8 @@ const styles = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import _r from "react/compiler-runtime";
+const { c: _c } = _r;
 import { identity } from "shared-runtime";
 
 const DISPLAY = true;

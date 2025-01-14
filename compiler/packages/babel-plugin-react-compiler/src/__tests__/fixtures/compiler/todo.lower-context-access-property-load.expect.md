@@ -15,7 +15,8 @@ function App() {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @lowerContextAccess
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @lowerContextAccess
 function App() {
   const $ = _c(3);
   const context = useContext(MyContext);

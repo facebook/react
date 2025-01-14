@@ -21,7 +21,8 @@ function ValidComponent(props) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @panicThreshold(none)
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // @panicThreshold(none)
 import { useHook } from "shared-runtime";
 
 function InvalidComponent(props) {

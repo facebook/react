@@ -14,7 +14,8 @@ const MemoizedFunction = memo(function (props) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // Valid because hooks can be used in anonymous function arguments to
+import _r from "react/compiler-runtime";
+const { c: _c } = _r; // Valid because hooks can be used in anonymous function arguments to
 // memo.
 const MemoizedFunction = memo(function (props) {
   const $ = _c(2);

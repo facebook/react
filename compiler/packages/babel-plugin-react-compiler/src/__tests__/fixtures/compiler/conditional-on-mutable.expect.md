@@ -34,7 +34,8 @@ function mayMutate() {}
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import _r from "react/compiler-runtime";
+const { c: _c } = _r;
 function ComponentA(props) {
   const $ = _c(4);
   let t0;
