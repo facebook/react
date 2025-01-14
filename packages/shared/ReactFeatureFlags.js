@@ -132,7 +132,7 @@ export const passChildrenWhenCloningPersistedNodes = false;
  */
 export const enablePersistedModeClonedFlag = false;
 
-export const enableOwnerStacks = __EXPERIMENTAL__;
+export const enableOwnerStacks = true;
 
 export const enableShallowPropDiffing = false;
 
