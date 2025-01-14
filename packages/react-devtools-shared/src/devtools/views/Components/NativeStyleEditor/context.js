@@ -18,7 +18,6 @@ import {
   useMemo,
   useState,
 } from 'react';
-import {unstable_batchedUpdates as batchedUpdates} from 'react-dom';
 import {createResource} from 'react-devtools-shared/src/devtools/cache';
 import {
   BridgeContext,
@@ -120,10 +119,8 @@ function NativeStyleContextController({children}: Props): React.Node {
         const request = inProgressRequests.get(element);
         if (request != null) {
           inProgressRequests.delete(element);
-          batchedUpdates(() => {
-            request.resolveFn(styleAndLayout);
-            setCurrentStyleAndLayout(styleAndLayout);
-          });
+          request.resolveFn(styleAndLayout);
+          setCurrentStyleAndLayout(styleAndLayout);
         } else {
           resource.write(element, styleAndLayout);
 
