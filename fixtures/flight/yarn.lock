@@ -7946,17 +7946,18 @@ react-refresh@^0.11.0:
   integrity sha512-F27qZr8uUqwhWZboondsPx8tnC3Ct3SxZA3V5WyEvujRyyNv0VYPhoBg1gZ8/MV5tubQp76Trw8lTv9hzRBa+A==
 
 react-server-dom-webpack@experimental:
-  version "0.0.0-experimental-6ebfd5b0-20240818"
-  resolved "https://registry.yarnpkg.com/react-server-dom-webpack/-/react-server-dom-webpack-0.0.0-experimental-6ebfd5b0-20240818.tgz#56df6a7a406a033897f9bdd33b649e6e956adcef"
-  integrity sha512-kDPLVKaSKwDpuxGKxWS4w0VEY1O0IUJVksfA39H7nENjmFCuHybZ6rvi+hlXgJcwV3TvVeISLSmf27yvZWUriQ==
+  version "0.0.0-experimental-b3a95caf-20250113"
+  resolved "https://registry.yarnpkg.com/react-server-dom-webpack/-/react-server-dom-webpack-0.0.0-experimental-b3a95caf-20250113.tgz#a2175829be7395acc4d25e0befbd92b233a764c6"
+  integrity sha512-/6/IP8sP/I1CKIBsXvuF3mQEO0Vw/Nu85QyNliCx+K6WT7plTbjpFlEnbJKWoZdh/9uQkG17IZZiGlOgExmjbA==
   dependencies:
     acorn-loose "^8.3.0"
     neo-async "^2.6.1"
+    webpack-sources "^3.2.0"
 
 react@experimental:
-  version "0.0.0-experimental-6ebfd5b0-20240818"
-  resolved "https://registry.yarnpkg.com/react/-/react-0.0.0-experimental-6ebfd5b0-20240818.tgz#80ed47abae164ace0006ef5e5931383ddb8964ae"
-  integrity sha512-Wkw/YNSnolRlb4q2IF738W9zDLATEDe0TLnFZJBFgb3bXLQomxChEqFG1Z2upuh0nhdnlJylCN2Q8ammQsbQLg==
+  version "0.0.0-experimental-b3a95caf-20250113"
+  resolved "https://registry.yarnpkg.com/react/-/react-0.0.0-experimental-b3a95caf-20250113.tgz#3603103432922765869f3a95c31ff5ebcf68a2cb"
+  integrity sha512-Sx4o/oQ4+cxn9fFgfvrknlR0QSXl3sNztFM8P+4aazqXtLc6JM2zcQh5EBeJN9rZMPS3cPX/2gnDCD+bgwHSYw==
 
 read-cache@^1.0.0:
   version "1.0.0"
@@ -9149,7 +9150,7 @@ webpack-sources@^2.2.0:
     source-list-map "^2.0.1"
     source-map "^0.6.1"
 
-webpack-sources@^3.2.3:
+webpack-sources@^3.2.0, webpack-sources@^3.2.3:
   version "3.2.3"
   resolved "https://registry.yarnpkg.com/webpack-sources/-/webpack-sources-3.2.3.tgz#2d4daab8451fd4b240cc27055ff6a0c2ccea0cde"
   integrity sha512-/DyMEOrDgLKKIG0fmvtz+4dUX/3Ghozwgm6iPp8KRhvn+eQf9+Q7GWxVNMk3+uCPWfdXYC4ExGBckIXdFEfH1w==
