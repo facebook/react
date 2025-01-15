@@ -9,7 +9,6 @@
 
 import * as React from 'react';
 import {useContext, useMemo, useRef, useState} from 'react';
-import {unstable_batchedUpdates as batchedUpdates} from 'react-dom';
 import {copy} from 'clipboard-js';
 import {
   BridgeContext,
@@ -178,10 +177,8 @@ function Row({
       validAttributes === null ||
       validAttributes.indexOf(newAttribute) >= 0;
 
-    batchedUpdates(() => {
-      setLocalAttribute(newAttribute);
-      setIsAttributeValid(isValid);
-    });
+    setLocalAttribute(newAttribute);
+    setIsAttributeValid(isValid);
   };
 
   // $FlowFixMe[missing-local-annot]
@@ -192,10 +189,8 @@ function Row({
       isValid = true;
     } catch (error) {}
 
-    batchedUpdates(() => {
-      setLocalValue(newValue);
-      setIsValueValid(isValid);
-    });
+    setLocalValue(newValue);
+    setIsValueValid(isValid);
   };
 
   const resetAttribute = () => {
