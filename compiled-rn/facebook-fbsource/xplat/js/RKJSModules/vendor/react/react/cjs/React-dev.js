@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8660afc09514c123ecbf5bb51910e653>>
+ * @generated SignedSource<<90fcdfda699abc2b540199060d5d65ae>>
  */
 
 "use strict";
@@ -41,7 +41,10 @@ __DEV__ &&
         _key++
       )
         args[_key - 1] = arguments[_key];
-      printWarning("warn", format, args);
+      if (enableRemoveConsolePatches) {
+        var _console;
+        (_console = console).warn.apply(_console, [format].concat(args));
+      } else printWarning("warn", format, args);
     }
     function error$jscomp$0(format) {
       for (
@@ -52,15 +55,20 @@ __DEV__ &&
         _key2++
       )
         args[_key2 - 1] = arguments[_key2];
-      printWarning("error", format, args);
+      if (enableRemoveConsolePatches) {
+        var _console2;
+        (_console2 = console).error.apply(_console2, [format].concat(args));
+      } else printWarning("error", format, args);
     }
     function printWarning(level, format, args) {
-      if (ReactSharedInternals.getCurrentStack) {
-        var stack = ReactSharedInternals.getCurrentStack();
-        "" !== stack && ((format += "%s"), (args = args.concat([stack])));
+      if (!enableRemoveConsolePatches) {
+        if (ReactSharedInternals.getCurrentStack) {
+          var stack = ReactSharedInternals.getCurrentStack();
+          "" !== stack && ((format += "%s"), (args = args.concat([stack])));
+        }
+        args.unshift(format);
+        Function.prototype.apply.call(console[level], console, args);
       }
-      args.unshift(format);
-      Function.prototype.apply.call(console[level], console, args);
     }
     function warnNoop(publicInstance, callerName) {
       publicInstance =
@@ -1083,9 +1091,10 @@ __DEV__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart &&
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
-    var dynamicFlags = require("ReactNativeInternalFeatureFlags"),
-      enableUseResourceEffectHook = dynamicFlags.enableUseResourceEffectHook,
-      enableOwnerStacks = dynamicFlags.enableOwnerStacks,
+    var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags"),
+      enableUseResourceEffectHook =
+        dynamicFlagsUntyped.enableUseResourceEffectHook,
+      enableOwnerStacks = dynamicFlagsUntyped.enableOwnerStacks,
       REACT_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -1116,6 +1125,8 @@ __DEV__ &&
         thrownErrors: [],
         getCurrentStack: null
       },
+      enableRemoveConsolePatches =
+        dynamicFlagsUntyped && dynamicFlagsUntyped.enableRemoveConsolePatches,
       didWarnStateUpdateForUnmountedComponent = {},
       ReactNoopUpdateQueue = {
         isMounted: function () {
@@ -1827,7 +1838,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.1.0-native-fb-6099351c-20250113";
+    exports.version = "19.1.0-native-fb-43d18bc2-20250115";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

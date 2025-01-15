@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<fb0e1def73a7a5917fe13a33d70e2a05>>
+ * @generated SignedSource<<82e10da35462be397957d7f7477c14e2>>
  */
 
 "use strict";
@@ -177,38 +177,42 @@ __DEV__ &&
       return fn(bookkeeping);
     }
     function warn(format) {
-      if (!suppressWarning) {
-        for (
-          var _len = arguments.length,
-            args = Array(1 < _len ? _len - 1 : 0),
-            _key = 1;
-          _key < _len;
-          _key++
-        )
-          args[_key - 1] = arguments[_key];
-        printWarning("warn", format, args);
-      }
+      for (
+        var _len = arguments.length,
+          args = Array(1 < _len ? _len - 1 : 0),
+          _key = 1;
+        _key < _len;
+        _key++
+      )
+        args[_key - 1] = arguments[_key];
+      if (enableRemoveConsolePatches) {
+        var _console;
+        (_console = console).warn.apply(_console, [format].concat(args));
+      } else suppressWarning || printWarning("warn", format, args);
     }
     function error$jscomp$0(format) {
-      if (!suppressWarning) {
-        for (
-          var _len2 = arguments.length,
-            args = Array(1 < _len2 ? _len2 - 1 : 0),
-            _key2 = 1;
-          _key2 < _len2;
-          _key2++
-        )
-          args[_key2 - 1] = arguments[_key2];
-        printWarning("error", format, args);
-      }
+      for (
+        var _len2 = arguments.length,
+          args = Array(1 < _len2 ? _len2 - 1 : 0),
+          _key2 = 1;
+        _key2 < _len2;
+        _key2++
+      )
+        args[_key2 - 1] = arguments[_key2];
+      if (enableRemoveConsolePatches) {
+        var _console2;
+        (_console2 = console).error.apply(_console2, [format].concat(args));
+      } else suppressWarning || printWarning("error", format, args);
     }
     function printWarning(level, format, args) {
-      if (ReactSharedInternals.getCurrentStack) {
-        var stack = ReactSharedInternals.getCurrentStack();
-        "" !== stack && ((format += "%s"), (args = args.concat([stack])));
+      if (!enableRemoveConsolePatches) {
+        if (ReactSharedInternals.getCurrentStack) {
+          var stack = ReactSharedInternals.getCurrentStack();
+          "" !== stack && ((format += "%s"), (args = args.concat([stack])));
+        }
+        args.unshift(format);
+        Function.prototype.apply.call(console[level], console, args);
       }
-      args.unshift(format);
-      Function.prototype.apply.call(console[level], console, args);
     }
     function getIteratorFn(maybeIterable) {
       if (null === maybeIterable || "object" !== typeof maybeIterable)
@@ -1591,7 +1595,7 @@ __DEV__ &&
     function setIsStrictModeForDevtools(newIsStrictMode) {
       "function" === typeof log$1 &&
         (unstable_setDisableYieldValue(newIsStrictMode),
-        (suppressWarning = newIsStrictMode));
+        enableRemoveConsolePatches || (suppressWarning = newIsStrictMode));
       if (injectedHook && "function" === typeof injectedHook.setStrictMode)
         try {
           injectedHook.setStrictMode(rendererID, newIsStrictMode);
@@ -14592,6 +14596,8 @@ __DEV__ &&
       Scheduler = require("scheduler"),
       ReactSharedInternals =
         React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
+      enableRemoveConsolePatches =
+        dynamicFlagsUntyped && dynamicFlagsUntyped.enableRemoveConsolePatches,
       suppressWarning = !1,
       isArrayImpl = Array.isArray,
       alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
@@ -17510,10 +17516,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-6099351c-20250113",
+        version: "19.1.0-native-fb-43d18bc2-20250115",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-6099351c-20250113"
+        reconcilerVersion: "19.1.0-native-fb-43d18bc2-20250115"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

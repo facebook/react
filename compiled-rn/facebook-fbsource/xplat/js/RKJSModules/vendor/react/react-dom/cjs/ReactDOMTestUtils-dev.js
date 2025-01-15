@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8d7dbef6746cd657d3a15950ccc1ee93>>
+ * @generated SignedSource<<3c95d29bbe505302903a6e0423e2fa77>>
  */
 
 "use strict";
@@ -22,16 +22,24 @@ __DEV__ &&
         _key2++
       )
         args[_key2 - 1] = arguments[_key2];
-      _len2 = format;
-      ReactSharedInternals.getCurrentStack &&
-        ((_key2 = ReactSharedInternals.getCurrentStack()),
-        "" !== _key2 && ((_len2 += "%s"), (args = args.concat([_key2]))));
-      args.unshift(_len2);
-      Function.prototype.apply.call(console.error, console, args);
+      if (enableRemoveConsolePatches) {
+        var _console2;
+        (_console2 = console).error.apply(_console2, [format].concat(args));
+      } else
+        (_len2 = format),
+          enableRemoveConsolePatches ||
+            (ReactSharedInternals.getCurrentStack &&
+              ((_key2 = ReactSharedInternals.getCurrentStack()),
+              "" !== _key2 && ((_len2 += "%s"), (args = args.concat([_key2])))),
+            args.unshift(_len2),
+            Function.prototype.apply.call(console.error, console, args));
     }
     var React = require("react"),
+      dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags"),
       ReactSharedInternals =
         React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
+      enableRemoveConsolePatches =
+        dynamicFlagsUntyped && dynamicFlagsUntyped.enableRemoveConsolePatches,
       didWarnAboutUsingAct = !1;
     exports.act = function (callback) {
       !1 === didWarnAboutUsingAct &&

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d247fa184b50a6fdad6c55b7bfdb1b64>>
+ * @generated SignedSource<<4b24c92afcdb25929254bfa3a9b0f8da>>
  */
 
 "use strict";
@@ -22,12 +22,17 @@ __DEV__ &&
         _key2++
       )
         args[_key2 - 1] = arguments[_key2];
-      _len2 = format;
-      ReactSharedInternals.getCurrentStack &&
-        ((_key2 = ReactSharedInternals.getCurrentStack()),
-        "" !== _key2 && ((_len2 += "%s"), (args = args.concat([_key2]))));
-      args.unshift(_len2);
-      Function.prototype.apply.call(console.error, console, args);
+      if (enableRemoveConsolePatches) {
+        var _console2;
+        (_console2 = console).error.apply(_console2, [format].concat(args));
+      } else
+        (_len2 = format),
+          enableRemoveConsolePatches ||
+            (ReactSharedInternals.getCurrentStack &&
+              ((_key2 = ReactSharedInternals.getCurrentStack()),
+              "" !== _key2 && ((_len2 += "%s"), (args = args.concat([_key2])))),
+            args.unshift(_len2),
+            Function.prototype.apply.call(console.error, console, args));
     }
     function getComponentNameFromType(type) {
       if (null == type) return null;
@@ -672,8 +677,8 @@ __DEV__ &&
       return info;
     }
     var React = require("react"),
-      enableOwnerStacks =
-        require("ReactNativeInternalFeatureFlags").enableOwnerStacks,
+      dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags"),
+      enableOwnerStacks = dynamicFlagsUntyped.enableOwnerStacks,
       REACT_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -691,6 +696,8 @@ __DEV__ &&
       MAYBE_ITERATOR_SYMBOL = Symbol.iterator,
       ReactSharedInternals =
         React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
+      enableRemoveConsolePatches =
+        dynamicFlagsUntyped && dynamicFlagsUntyped.enableRemoveConsolePatches,
       REACT_CLIENT_REFERENCE$2 = Symbol.for("react.client.reference"),
       hasOwnProperty = Object.prototype.hasOwnProperty,
       assign = Object.assign,

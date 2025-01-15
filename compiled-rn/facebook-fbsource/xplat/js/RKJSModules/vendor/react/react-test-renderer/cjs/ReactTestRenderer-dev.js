@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<594a205f07dc38b76e099a21a8cb3631>>
+ * @generated SignedSource<<d833fc43df33c5a122034e261bdfd62f>>
  */
 
 "use strict";
@@ -119,38 +119,42 @@ __DEV__ &&
       return array.sort().join(", ");
     }
     function warn(format) {
-      if (!suppressWarning) {
-        for (
-          var _len = arguments.length,
-            args = Array(1 < _len ? _len - 1 : 0),
-            _key = 1;
-          _key < _len;
-          _key++
-        )
-          args[_key - 1] = arguments[_key];
-        printWarning("warn", format, args);
-      }
+      for (
+        var _len = arguments.length,
+          args = Array(1 < _len ? _len - 1 : 0),
+          _key = 1;
+        _key < _len;
+        _key++
+      )
+        args[_key - 1] = arguments[_key];
+      if (enableRemoveConsolePatches) {
+        var _console;
+        (_console = console).warn.apply(_console, [format].concat(args));
+      } else suppressWarning || printWarning("warn", format, args);
     }
     function error$jscomp$0(format) {
-      if (!suppressWarning) {
-        for (
-          var _len2 = arguments.length,
-            args = Array(1 < _len2 ? _len2 - 1 : 0),
-            _key2 = 1;
-          _key2 < _len2;
-          _key2++
-        )
-          args[_key2 - 1] = arguments[_key2];
-        printWarning("error", format, args);
-      }
+      for (
+        var _len2 = arguments.length,
+          args = Array(1 < _len2 ? _len2 - 1 : 0),
+          _key2 = 1;
+        _key2 < _len2;
+        _key2++
+      )
+        args[_key2 - 1] = arguments[_key2];
+      if (enableRemoveConsolePatches) {
+        var _console2;
+        (_console2 = console).error.apply(_console2, [format].concat(args));
+      } else suppressWarning || printWarning("error", format, args);
     }
     function printWarning(level, format, args) {
-      if (ReactSharedInternals.getCurrentStack) {
-        var stack = ReactSharedInternals.getCurrentStack();
-        "" !== stack && ((format += "%s"), (args = args.concat([stack])));
+      if (!enableRemoveConsolePatches) {
+        if (ReactSharedInternals.getCurrentStack) {
+          var stack = ReactSharedInternals.getCurrentStack();
+          "" !== stack && ((format += "%s"), (args = args.concat([stack])));
+        }
+        args.unshift(format);
+        Function.prototype.apply.call(console[level], console, args);
       }
-      args.unshift(format);
-      Function.prototype.apply.call(console[level], console, args);
     }
     function _defineProperties(target, props) {
       for (var i = 0; i < props.length; i++) {
@@ -412,7 +416,7 @@ __DEV__ &&
     function setIsStrictModeForDevtools(newIsStrictMode) {
       "function" === typeof log$1 &&
         (unstable_setDisableYieldValue(newIsStrictMode),
-        (suppressWarning = newIsStrictMode));
+        enableRemoveConsolePatches || (suppressWarning = newIsStrictMode));
       if (injectedHook && "function" === typeof injectedHook.setStrictMode)
         try {
           injectedHook.setStrictMode(rendererID, newIsStrictMode);
@@ -13488,9 +13492,12 @@ __DEV__ &&
     }
     var React = require("react"),
       Scheduler = require("scheduler/unstable_mock"),
+      dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags"),
       Scheduler$1 = require("scheduler"),
       ReactSharedInternals =
         React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
+      enableRemoveConsolePatches =
+        dynamicFlagsUntyped && dynamicFlagsUntyped.enableRemoveConsolePatches,
       suppressWarning = !1,
       assign = Object.assign,
       REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
@@ -15637,10 +15644,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-6099351c-20250113",
+        version: "19.1.0-native-fb-43d18bc2-20250115",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-6099351c-20250113"
+        reconcilerVersion: "19.1.0-native-fb-43d18bc2-20250115"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15785,5 +15792,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.1.0-native-fb-6099351c-20250113";
+    exports.version = "19.1.0-native-fb-43d18bc2-20250115";
   })();

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8e09782c4bfff2cacd1dd4e64cb8b843>>
+ * @generated SignedSource<<95576c45965431f7898adb25c6f79666>>
  */
 
 /*
@@ -115,38 +115,42 @@ __DEV__ &&
       resolveFamily = handler;
     }
     function warn(format) {
-      if (!suppressWarning) {
-        for (
-          var _len = arguments.length,
-            args = Array(1 < _len ? _len - 1 : 0),
-            _key = 1;
-          _key < _len;
-          _key++
-        )
-          args[_key - 1] = arguments[_key];
-        printWarning("warn", format, args);
-      }
+      for (
+        var _len = arguments.length,
+          args = Array(1 < _len ? _len - 1 : 0),
+          _key = 1;
+        _key < _len;
+        _key++
+      )
+        args[_key - 1] = arguments[_key];
+      if (enableRemoveConsolePatches) {
+        var _console;
+        (_console = console).warn.apply(_console, [format].concat(args));
+      } else suppressWarning || printWarning("warn", format, args);
     }
     function error$jscomp$0(format) {
-      if (!suppressWarning) {
-        for (
-          var _len2 = arguments.length,
-            args = Array(1 < _len2 ? _len2 - 1 : 0),
-            _key2 = 1;
-          _key2 < _len2;
-          _key2++
-        )
-          args[_key2 - 1] = arguments[_key2];
-        printWarning("error", format, args);
-      }
+      for (
+        var _len2 = arguments.length,
+          args = Array(1 < _len2 ? _len2 - 1 : 0),
+          _key2 = 1;
+        _key2 < _len2;
+        _key2++
+      )
+        args[_key2 - 1] = arguments[_key2];
+      if (enableRemoveConsolePatches) {
+        var _console2;
+        (_console2 = console).error.apply(_console2, [format].concat(args));
+      } else suppressWarning || printWarning("error", format, args);
     }
     function printWarning(level, format, args) {
-      if (ReactSharedInternals.getCurrentStack) {
-        var stack = ReactSharedInternals.getCurrentStack();
-        "" !== stack && ((format += "%s"), (args = args.concat([stack])));
+      if (!enableRemoveConsolePatches) {
+        if (ReactSharedInternals.getCurrentStack) {
+          var stack = ReactSharedInternals.getCurrentStack();
+          "" !== stack && ((format += "%s"), (args = args.concat([stack])));
+        }
+        args.unshift(format);
+        Function.prototype.apply.call(console[level], console, args);
       }
-      args.unshift(format);
-      Function.prototype.apply.call(console[level], console, args);
     }
     function isValidContainer(node) {
       return !(
@@ -582,7 +586,7 @@ __DEV__ &&
     function setIsStrictModeForDevtools(newIsStrictMode) {
       "function" === typeof log$1 &&
         (unstable_setDisableYieldValue(newIsStrictMode),
-        (suppressWarning = newIsStrictMode));
+        enableRemoveConsolePatches || (suppressWarning = newIsStrictMode));
       if (injectedHook && "function" === typeof injectedHook.setStrictMode)
         try {
           injectedHook.setStrictMode(rendererID, newIsStrictMode);
@@ -22196,6 +22200,8 @@ __DEV__ &&
       ReactDOM = require("react-dom"),
       ReactSharedInternals =
         React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
+      enableRemoveConsolePatches =
+        dynamicFlagsUntyped && dynamicFlagsUntyped.enableRemoveConsolePatches,
       suppressWarning = !1,
       alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
       enableHiddenSubtreeInsertionEffectCleanup =
@@ -25951,11 +25957,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.1.0-native-fb-6099351c-20250113" !== isomorphicReactPackageVersion)
+      if ("19.1.0-native-fb-43d18bc2-20250115" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.1.0-native-fb-6099351c-20250113\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.1.0-native-fb-43d18bc2-20250115\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -25992,10 +25998,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.1.0-native-fb-6099351c-20250113",
+          version: "19.1.0-native-fb-43d18bc2-20250115",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.1.0-native-fb-6099351c-20250113"
+          reconcilerVersion: "19.1.0-native-fb-43d18bc2-20250115"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -26141,5 +26147,5 @@ __DEV__ &&
       listenToAllSupportedEvents(container);
       return new ReactDOMHydrationRoot(initialChildren);
     };
-    exports.version = "19.1.0-native-fb-6099351c-20250113";
+    exports.version = "19.1.0-native-fb-43d18bc2-20250115";
   })();
