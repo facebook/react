@@ -76,3 +76,14 @@ To help you get your feet wet and get you familiar with our contribution process
 ### License
 
 React is [MIT licensed](./LICENSE).
+
+## Translations
+
+* [Arabic / العربية](https://github.com/facebook/react/blob/main/README.md)
+* [Chinese / 中文](https://github.com/facebook/react/blob/main/README.md)
+* [English](https://github.com/facebook/react/blob/main/README.md)
+* [Hebrew / עברית](https://github.com/facebook/react/blob/main/README.md)
+* [Japanese / 日本語](https://github.com/facebook/react/blob/main/README.md)
+* [Portuguese / Português](https://github.com/facebook/react/blob/main/README.md)
+* [Russian / Русский](https://github.com/facebook/react/blob/main/README.md)
+* [Spanish / Español](https://github.com/facebook/react/blob/main/README.md)
