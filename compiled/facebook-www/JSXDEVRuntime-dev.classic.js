@@ -22,16 +22,21 @@ __DEV__ &&
         _key2++
       )
         args[_key2 - 1] = arguments[_key2];
-      _len2 = format;
-      _key2 =
-        require("react").__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
-      null != _key2 &&
-        _key2.getCurrentStack &&
-        ((_key2 = _key2.getCurrentStack()),
-        "" !== _key2 && ((_len2 += "%s"), args.push(_key2)));
-      args.unshift(_len2);
-      args.unshift(!1);
-      warningWWW.apply(null, args);
+      if (enableRemoveConsolePatches) {
+        var _console2;
+        (_console2 = console).error.apply(_console2, [format].concat(args));
+      } else
+        (_len2 = format),
+          enableRemoveConsolePatches ||
+            ((_key2 =
+              require("react").__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE),
+            null != _key2 &&
+              _key2.getCurrentStack &&
+              ((_key2 = _key2.getCurrentStack()),
+              "" !== _key2 && ((_len2 += "%s"), args.push(_key2))),
+            args.unshift(_len2),
+            args.unshift(!1),
+            warningWWW.apply(null, args));
     }
     function getComponentNameFromType(type) {
       if (null == type) return null;
@@ -727,6 +732,8 @@ __DEV__ &&
       REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
       REACT_VIEW_TRANSITION_TYPE = Symbol.for("react.view_transition"),
       MAYBE_ITERATOR_SYMBOL = Symbol.iterator,
+      enableRemoveConsolePatches =
+        require("shared/ReactFeatureFlags").enableRemoveConsolePatches,
       warningWWW = require("warning"),
       REACT_CLIENT_REFERENCE$2 = Symbol.for("react.client.reference"),
       ReactSharedInternals =

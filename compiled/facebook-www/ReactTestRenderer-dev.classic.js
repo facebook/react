@@ -118,41 +118,44 @@ __DEV__ &&
       return array.sort().join(", ");
     }
     function warn(format) {
-      if (!suppressWarning) {
-        for (
-          var _len = arguments.length,
-            args = Array(1 < _len ? _len - 1 : 0),
-            _key = 1;
-          _key < _len;
-          _key++
-        )
-          args[_key - 1] = arguments[_key];
-        printWarning("warn", format, args);
-      }
+      for (
+        var _len = arguments.length,
+          args = Array(1 < _len ? _len - 1 : 0),
+          _key = 1;
+        _key < _len;
+        _key++
+      )
+        args[_key - 1] = arguments[_key];
+      if (enableRemoveConsolePatches) {
+        var _console;
+        (_console = console).warn.apply(_console, [format].concat(args));
+      } else suppressWarning || printWarning("warn", format, args);
     }
     function error$jscomp$0(format) {
-      if (!suppressWarning) {
-        for (
-          var _len2 = arguments.length,
-            args = Array(1 < _len2 ? _len2 - 1 : 0),
-            _key2 = 1;
-          _key2 < _len2;
-          _key2++
-        )
-          args[_key2 - 1] = arguments[_key2];
-        printWarning("error", format, args);
-      }
+      for (
+        var _len2 = arguments.length,
+          args = Array(1 < _len2 ? _len2 - 1 : 0),
+          _key2 = 1;
+        _key2 < _len2;
+        _key2++
+      )
+        args[_key2 - 1] = arguments[_key2];
+      if (enableRemoveConsolePatches) {
+        var _console2;
+        (_console2 = console).error.apply(_console2, [format].concat(args));
+      } else suppressWarning || printWarning("error", format, args);
     }
     function printWarning(level, format, args) {
-      level =
-        require("react").__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
-      null != level &&
-        level.getCurrentStack &&
-        ((level = level.getCurrentStack()),
-        "" !== level && ((format += "%s"), args.push(level)));
-      args.unshift(format);
-      args.unshift(!1);
-      warningWWW.apply(null, args);
+      enableRemoveConsolePatches ||
+        ((level =
+          require("react").__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE),
+        null != level &&
+          level.getCurrentStack &&
+          ((level = level.getCurrentStack()),
+          "" !== level && ((format += "%s"), args.push(level))),
+        args.unshift(format),
+        args.unshift(!1),
+        warningWWW.apply(null, args));
     }
     function _defineProperties(target, props) {
       for (var i = 0; i < props.length; i++) {
@@ -419,7 +422,7 @@ __DEV__ &&
     function setIsStrictModeForDevtools(newIsStrictMode) {
       "function" === typeof log$1 &&
         (unstable_setDisableYieldValue(newIsStrictMode),
-        (suppressWarning = newIsStrictMode));
+        enableRemoveConsolePatches || (suppressWarning = newIsStrictMode));
       if (injectedHook && "function" === typeof injectedHook.setStrictMode)
         try {
           injectedHook.setStrictMode(rendererID, newIsStrictMode);
@@ -13012,6 +13015,8 @@ __DEV__ &&
     var React = require("react"),
       Scheduler = require("scheduler/unstable_mock"),
       Scheduler$1 = require("scheduler"),
+      enableRemoveConsolePatches =
+        require("shared/ReactFeatureFlags").enableRemoveConsolePatches,
       warningWWW = require("warning"),
       suppressWarning = !1,
       assign = Object.assign,
@@ -15004,10 +15009,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-classic-886c5ad9-20250115",
+        version: "19.1.0-www-classic-05976054-20250115",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-classic-886c5ad9-20250115"
+        reconcilerVersion: "19.1.0-www-classic-05976054-20250115"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15142,5 +15147,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.1.0-www-classic-886c5ad9-20250115";
+    exports.version = "19.1.0-www-classic-05976054-20250115";
   })();

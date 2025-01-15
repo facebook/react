@@ -12,7 +12,8 @@
 
 "use strict";
 __DEV__ &&
-  (require("warning"),
+  (require("shared/ReactFeatureFlags"),
+  require("warning"),
   require("ReactFeatureFlags"),
   (exports.ConcurrentRoot = 1),
   (exports.ContinuousEventPriority = 8),

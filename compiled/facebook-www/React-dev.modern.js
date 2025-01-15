@@ -41,7 +41,10 @@ __DEV__ &&
         _key++
       )
         args[_key - 1] = arguments[_key];
-      printWarning("warn", format, args);
+      if (enableRemoveConsolePatches) {
+        var _console;
+        (_console = console).warn.apply(_console, [format].concat(args));
+      } else printWarning("warn", format, args);
     }
     function error$jscomp$0(format) {
       for (
@@ -52,18 +55,22 @@ __DEV__ &&
         _key2++
       )
         args[_key2 - 1] = arguments[_key2];
-      printWarning("error", format, args);
+      if (enableRemoveConsolePatches) {
+        var _console2;
+        (_console2 = console).error.apply(_console2, [format].concat(args));
+      } else printWarning("error", format, args);
     }
     function printWarning(level, format, args) {
-      level =
-        require("react").__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
-      null != level &&
-        level.getCurrentStack &&
-        ((level = level.getCurrentStack()),
-        "" !== level && ((format += "%s"), args.push(level)));
-      args.unshift(format);
-      args.unshift(!1);
-      warningWWW.apply(null, args);
+      enableRemoveConsolePatches ||
+        ((level =
+          require("react").__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE),
+        null != level &&
+          level.getCurrentStack &&
+          ((level = level.getCurrentStack()),
+          "" !== level && ((format += "%s"), args.push(level))),
+        args.unshift(format),
+        args.unshift(!1),
+        warningWWW.apply(null, args));
     }
     function warnNoop(publicInstance, callerName) {
       publicInstance =
@@ -1139,6 +1146,8 @@ __DEV__ &&
       REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
       REACT_VIEW_TRANSITION_TYPE = Symbol.for("react.view_transition"),
       MAYBE_ITERATOR_SYMBOL = Symbol.iterator,
+      enableRemoveConsolePatches =
+        require("shared/ReactFeatureFlags").enableRemoveConsolePatches,
       warningWWW = require("warning"),
       didWarnStateUpdateForUnmountedComponent = {},
       ReactNoopUpdateQueue = {
@@ -1947,7 +1956,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.1.0-www-modern-886c5ad9-20250115";
+    exports.version = "19.1.0-www-modern-05976054-20250115";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

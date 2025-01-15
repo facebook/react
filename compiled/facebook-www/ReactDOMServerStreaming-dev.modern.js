@@ -52,7 +52,10 @@ __DEV__ &&
         _key++
       )
         args[_key - 1] = arguments[_key];
-      printWarning("warn", format, args);
+      if (enableRemoveConsolePatches) {
+        var _console;
+        (_console = console).warn.apply(_console, [format].concat(args));
+      } else printWarning("warn", format, args);
     }
     function error$jscomp$2(format) {
       for (
@@ -63,18 +66,22 @@ __DEV__ &&
         _key2++
       )
         args[_key2 - 1] = arguments[_key2];
-      printWarning("error", format, args);
+      if (enableRemoveConsolePatches) {
+        var _console2;
+        (_console2 = console).error.apply(_console2, [format].concat(args));
+      } else printWarning("error", format, args);
     }
     function printWarning(level, format, args) {
-      level =
-        require("react").__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
-      null != level &&
-        level.getCurrentStack &&
-        ((level = level.getCurrentStack()),
-        "" !== level && ((format += "%s"), args.push(level)));
-      args.unshift(format);
-      args.unshift(!1);
-      warningWWW.apply(null, args);
+      enableRemoveConsolePatches ||
+        ((level =
+          require("react").__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE),
+        null != level &&
+          level.getCurrentStack &&
+          ((level = level.getCurrentStack()),
+          "" !== level && ((format += "%s"), args.push(level))),
+        args.unshift(format),
+        args.unshift(!1),
+        warningWWW.apply(null, args));
     }
     function objectName(object) {
       return Object.prototype.toString
@@ -6919,6 +6926,8 @@ __DEV__ &&
     }
     var React = require("react"),
       ReactDOM = require("react-dom"),
+      enableRemoveConsolePatches =
+        require("shared/ReactFeatureFlags").enableRemoveConsolePatches,
       warningWWW = require("warning"),
       dynamicFeatureFlags = require("ReactFeatureFlags"),
       disableDefaultPropsExceptForClasses =
