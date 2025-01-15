@@ -819,7 +819,9 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-native-renderer/fabric',
     global: 'ReactFabric',
-    externals: ['react-native'],
+    // ReactNativeInternalFeatureFlags temporary until we land enableRemoveConsolePatches.
+    // Needs to be done before the next RN OSS release.
+    externals: ['react-native', 'ReactNativeInternalFeatureFlags'],
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: true,
     babel: opts =>
