@@ -79,11 +79,11 @@ React is [MIT licensed](./LICENSE).
 
 ## Translations
 
-* [Arabic / العربية](https://github.com/facebook/react/blob/main/README.md)
-* [Chinese / 中文](https://github.com/facebook/react/blob/main/README.md)
-* [English](https://github.com/facebook/react/blob/main/README.md)
-* [Hebrew / עברית](https://github.com/facebook/react/blob/main/README.md)
-* [Japanese / 日本語](https://github.com/facebook/react/blob/main/README.md)
-* [Portuguese / Português](https://github.com/facebook/react/blob/main/README.md)
-* [Russian / Русский](https://github.com/facebook/react/blob/main/README.md)
-* [Spanish / Español](https://github.com/facebook/react/blob/main/README.md)
+* [Arabic / العربية](https://github.com/iLihiS/react/blob/main/i18n/README.ar.md)
+* [Chinese / 中文](https://github.com/iLihiS/react/blob/main/i18n/README.zh.md)
+* [English](https://github.com/iLihiS/react/blob/main/i18n/README.en.md)
+* [Hebrew / עברית](https://github.com/iLihiS/react/blob/main/i18n/README.he.md)
+* [Japanese / 日本語](https://github.com/iLihiS/react/blob/main/i18n/README.ja.md)
+* [Portuguese / Português](https://github.com/iLihiS/react/blob/main/i18n/README.pt.md)
+* [Russian / Русский](https://github.com/iLihiS/react/blob/main/i18n/README.ru.md)
+* [Spanish / Español](https://github.com/iLihiS/react/blob/main/i18n/README.sp.md)
