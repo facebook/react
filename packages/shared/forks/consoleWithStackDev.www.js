@@ -5,18 +5,27 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+const {enableRemoveConsolePatches} = require('shared/ReactFeatureFlags');
+
 // This refers to a WWW module.
 const warningWWW = require('warning');
 
 let suppressWarning = false;
 export function setSuppressWarning(newSuppressWarning) {
+  if (enableRemoveConsolePatches) {
+    return;
+  }
   if (__DEV__) {
     suppressWarning = newSuppressWarning;
   }
 }
 
 export function warn(format, ...args) {
-  if (__DEV__) {
+  if (enableRemoveConsolePatches) {
+    if (__DEV__) {
+      console['warn'](format, ...args);
+    }
+  } else if (__DEV__) {
     if (!suppressWarning) {
       printWarning('warn', format, args);
     }
@@ -24,7 +33,11 @@ export function warn(format, ...args) {
 }
 
 export function error(format, ...args) {
-  if (__DEV__) {
+  if (enableRemoveConsolePatches) {
+    if (__DEV__) {
+      console['error'](format, ...args);
+    }
+  } else if (__DEV__) {
     if (!suppressWarning) {
       printWarning('error', format, args);
     }
@@ -32,6 +45,9 @@ export function error(format, ...args) {
 }
 
 function printWarning(level, format, args) {
+  if (enableRemoveConsolePatches) {
+    return;
+  }
   if (__DEV__) {
     const React = require('react');
     const ReactSharedInternals =
