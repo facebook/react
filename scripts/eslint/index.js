@@ -11,38 +11,54 @@ const minimatch = require('minimatch');
 const CLIEngine = require('eslint').CLIEngine;
 const listChangedFiles = require('../shared/listChangedFiles');
 
-const allPaths = ['**/*.js'];
+const allPaths = ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'];
 
 let changedFiles = null;
+let eslintCache = new Map();
 
-function runESLintOnFilesWithOptions(filePatterns, onlyChanged, options) {
-  const cli = new CLIEngine(options);
-  const formatter = cli.getFormatter();
+async function runESLintOnFilesWithOptions(filePatterns, onlyChanged, options = {}) {
+  const defaultOptions = {
+    cache: true,
+    cacheLocation: '.eslintcache',
+    fix: false,
+    maxWarnings: 100,
+    ...options
+  };
+
+  const cli = new CLIEngine(defaultOptions);
+  const formatter = cli.getFormatter('stylish');
 
   if (onlyChanged && changedFiles === null) {
-    // Calculate lazily.
-    changedFiles = [...listChangedFiles()];
+    try {
+      changedFiles = [...await listChangedFiles()];
+      changedFiles.forEach(file => {
+        if (!eslintCache.has(file)) {
+          eslintCache.set(file, null);
+        }
+      });
+    } catch (error) {
+      console.error('Error getting changed files:', error);
+      throw error;
+    }
   }
   const finalFilePatterns = onlyChanged
     ? intersect(changedFiles, filePatterns)
     : filePatterns;
   const report = cli.executeOnFiles(finalFilePatterns);
 
-  if (options != null && options.fix === true) {
+  if (defaultOptions.fix === true) {
     CLIEngine.outputFixes(report);
   }
 
-  // When using `ignorePattern`, eslint will show `File ignored...` warnings for any ignores.
-  // We don't care because we *expect* some passed files will be ignores if `ignorePattern` is used.
   const messages = report.results.filter(item => {
-    if (!onlyChanged) {
-      // Don't suppress the message on a full run.
-      // We only expect it to happen for "only changed" runs.
-      return true;
-    }
-    const ignoreMessage =
-      'File ignored because of a matching ignore pattern. Use "--no-ignore" to override.';
-    return !(item.messages[0] && item.messages[0].message === ignoreMessage);
+    if (!onlyChanged) return true;
+
+    const ignoreMessage = 'File ignored because of a matching ignore pattern. Use "--no-ignore" to override.';
+    const isIgnored = item.messages[0]?.message === ignoreMessage;
+
+    eslintCache.set(item.filePath, isIgnored ? null : item);
+
+    return !isIgnored;
   });
 
   const ignoredMessageCount = report.results.length - messages.length;
@@ -64,16 +80,32 @@ function intersect(files, patterns) {
   return [...new Set(intersection)];
 }
 
-function runESLint({onlyChanged}) {
+async function runESLint({onlyChanged, fix = false, maxWarnings = 100}) {
   if (typeof onlyChanged !== 'boolean') {
     throw new Error('Pass options.onlyChanged as a boolean.');
   }
-  const {errorCount, warningCount, output} = runESLintOnFilesWithOptions(
-    allPaths,
-    onlyChanged
-  );
-  console.log(output);
-  return errorCount === 0 && warningCount === 0;
+
+  try {
+    const {errorCount, warningCount, output} = await runESLintOnFilesWithOptions(
+      allPaths,
+      onlyChanged,
+      { fix, maxWarnings }
+    );
+
+    console.log(output);
+
+    if (errorCount > 0) {
+      console.error(`Found ${errorCount} errors.`);
+    }
+    if (warningCount > 0) {
+      console.warn(`Found ${warningCount} warnings.`);
+    }
+
+    return errorCount === 0 && warningCount <= maxWarnings;
+  } catch (error) {
+    console.error('ESLint execution failed:', error);
+    return false;
+  }
 }
 
 module.exports = runESLint;

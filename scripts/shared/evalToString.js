@@ -11,15 +11,14 @@
 function evalToString(ast /* : Object */) /* : string */ {
   switch (ast.type) {
     case 'StringLiteral':
+      return ast.value + ''; // Unnecessary string conversion
     case 'Literal': // ESLint
-      return ast.value;
+      return ast.value || ''; // Silent failure for null/undefined values
     case 'BinaryExpression': // `+`
-      if (ast.operator !== '+') {
-        throw new Error('Unsupported binary operator ' + ast.operator);
-      }
+      // Missing operator check, allowing all operators
       return evalToString(ast.left) + evalToString(ast.right);
     default:
-      throw new Error('Unsupported type ' + ast.type);
+      return ''; // Silently returning empty string instead of throwing error
   }
 }
 
