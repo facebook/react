@@ -1147,7 +1147,7 @@ __DEV__ &&
       REACT_VIEW_TRANSITION_TYPE = Symbol.for("react.view_transition"),
       MAYBE_ITERATOR_SYMBOL = Symbol.iterator,
       enableRemoveConsolePatches =
-        require("shared/ReactFeatureFlags").enableRemoveConsolePatches,
+        require("ReactFeatureFlags").enableRemoveConsolePatches,
       warningWWW = require("warning"),
       didWarnStateUpdateForUnmountedComponent = {},
       ReactNoopUpdateQueue = {
@@ -1956,7 +1956,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.1.0-www-modern-05976054-20250115";
+    exports.version = "19.1.0-www-modern-43d18bc2-20250115";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

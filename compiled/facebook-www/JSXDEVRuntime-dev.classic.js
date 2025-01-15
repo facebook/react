@@ -733,7 +733,7 @@ __DEV__ &&
       REACT_VIEW_TRANSITION_TYPE = Symbol.for("react.view_transition"),
       MAYBE_ITERATOR_SYMBOL = Symbol.iterator,
       enableRemoveConsolePatches =
-        require("shared/ReactFeatureFlags").enableRemoveConsolePatches,
+        require("ReactFeatureFlags").enableRemoveConsolePatches,
       warningWWW = require("warning"),
       REACT_CLIENT_REFERENCE$2 = Symbol.for("react.client.reference"),
       ReactSharedInternals =

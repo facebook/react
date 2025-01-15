@@ -6927,7 +6927,7 @@ __DEV__ &&
     var React = require("react"),
       ReactDOM = require("react-dom"),
       enableRemoveConsolePatches =
-        require("shared/ReactFeatureFlags").enableRemoveConsolePatches,
+        require("ReactFeatureFlags").enableRemoveConsolePatches,
       warningWWW = require("warning"),
       dynamicFeatureFlags = require("ReactFeatureFlags"),
       disableDefaultPropsExceptForClasses =

@@ -12,7 +12,7 @@
 
 "use strict";
 __DEV__ &&
-  (require("shared/ReactFeatureFlags"),
+  (require("ReactFeatureFlags"),
   require("warning"),
   require("ReactFeatureFlags"),
   (exports.ConcurrentRoot = 1),

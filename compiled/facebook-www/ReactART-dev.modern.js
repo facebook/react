@@ -14461,7 +14461,7 @@ __DEV__ &&
       Scheduler = require("scheduler"),
       FastNoSideEffects = require("art/modes/fast-noSideEffects"),
       enableRemoveConsolePatches =
-        require("shared/ReactFeatureFlags").enableRemoveConsolePatches,
+        require("ReactFeatureFlags").enableRemoveConsolePatches,
       warningWWW = require("warning"),
       suppressWarning = !1,
       assign = Object.assign,
@@ -16722,10 +16722,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-www-modern-05976054-20250115",
+        version: "19.1.0-www-modern-43d18bc2-20250115",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-modern-05976054-20250115"
+        reconcilerVersion: "19.1.0-www-modern-43d18bc2-20250115"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -16759,7 +16759,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.1.0-www-modern-05976054-20250115";
+    exports.version = "19.1.0-www-modern-43d18bc2-20250115";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

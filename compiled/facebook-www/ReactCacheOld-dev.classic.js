@@ -98,7 +98,7 @@ __DEV__ &&
     var React = require("react"),
       Scheduler = require("scheduler"),
       enableRemoveConsolePatches =
-        require("shared/ReactFeatureFlags").enableRemoveConsolePatches,
+        require("ReactFeatureFlags").enableRemoveConsolePatches,
       warningWWW = require("warning"),
       scheduleCallback = Scheduler.unstable_scheduleCallback,
       IdlePriority = Scheduler.unstable_IdlePriority,

@@ -16337,7 +16337,7 @@ __DEV__ &&
     var React = require("react"),
       Scheduler = require("scheduler"),
       enableRemoveConsolePatches =
-        require("shared/ReactFeatureFlags").enableRemoveConsolePatches,
+        require("ReactFeatureFlags").enableRemoveConsolePatches,
       warningWWW = require("warning"),
       suppressWarning = !1,
       assign = Object.assign,
@@ -19133,7 +19133,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-www-classic-05976054-20250115"
+        reconcilerVersion: "19.1.0-www-classic-43d18bc2-20250115"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
