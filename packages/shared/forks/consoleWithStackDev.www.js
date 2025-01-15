@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-const {enableRemoveConsolePatches} = require('shared/ReactFeatureFlags');
+const {enableRemoveConsolePatches} = require('ReactFeatureFlags');
 
 // This refers to a WWW module.
 const warningWWW = require('warning');
