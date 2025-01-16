@@ -55,32 +55,21 @@ import {IdentifierState} from './AnalyseFunctions';
  * fn();
  * ```
  */
-export function inferMutableContextVariables(fn: HIRFunction): void {
+export function inferMutableContextVariables(fn: HIRFunction): Set<Place> {
   const state = new IdentifierState();
   const knownMutatedIdentifiers = new Set<Identifier>();
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
       switch (instr.value.kind) {
-        case 'PropertyLoad': {
-          state.declareProperty(
-            instr.lvalue,
-            instr.value.object,
-            instr.value.property,
-          );
-          break;
-        }
+        case 'PropertyLoad':
         case 'ComputedLoad': {
-          /*
-           * The path is set to an empty string as the path doesn't really
-           * matter for a computed load.
-           */
-          state.declareProperty(instr.lvalue, instr.value.object, '');
+          state.alias(instr.lvalue.identifier, instr.value.object.identifier);
           break;
         }
         case 'LoadLocal':
         case 'LoadContext': {
           if (instr.lvalue.identifier.name === null) {
-            state.declareTemporary(instr.lvalue, instr.value.place);
+            state.alias(instr.lvalue.identifier, instr.value.place.identifier);
           }
           break;
         }
@@ -95,11 +84,13 @@ export function inferMutableContextVariables(fn: HIRFunction): void {
       visitOperand(state, knownMutatedIdentifiers, operand);
     }
   }
+  const results = new Set<Place>();
   for (const operand of fn.context) {
     if (knownMutatedIdentifiers.has(operand.identifier)) {
-      operand.effect = Effect.Mutate;
+      results.add(operand);
     }
   }
+  return results;
 }
 
 function visitOperand(
