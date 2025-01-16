@@ -571,1545 +571,1596 @@
         " received a function whose dependencies are unknown. Pass an inline function instead."
       );
     }
-    exports.configs = {
-      recommended: {
-        plugins: ["react-hooks"],
-        rules: {
-          "react-hooks/rules-of-hooks": "error",
-          "react-hooks/exhaustive-deps": "warn"
-        }
-      }
-    };
-    exports.rules = {
-      "rules-of-hooks": {
-        meta: {
-          type: "problem",
-          docs: {
-            description: "enforces the Rules of Hooks",
-            recommended: !0,
-            url: "https://reactjs.org/docs/hooks-rules.html"
+    var assign = Object.assign,
+      _require = require("../package.json"),
+      rules = {
+        "rules-of-hooks": {
+          meta: {
+            type: "problem",
+            docs: {
+              description: "enforces the Rules of Hooks",
+              recommended: !0,
+              url: "https://reactjs.org/docs/hooks-rules.html"
+            }
+          },
+          create: function (context) {
+            function recordAllUseEffectEventFunctions(scope) {
+              scope = _createForOfIteratorHelper(scope.references);
+              var _step;
+              try {
+                for (scope.s(); !(_step = scope.n()).done; ) {
+                  var reference = _step.value,
+                    parent = reference.identifier.parent;
+                  if (
+                    "VariableDeclarator" === parent.type &&
+                    parent.init &&
+                    "CallExpression" === parent.init.type &&
+                    parent.init.callee &&
+                    isUseEffectEventIdentifier$1(parent.init.callee)
+                  ) {
+                    var _iterator2 = _createForOfIteratorHelper(
+                        reference.resolved.references
+                      ),
+                      _step2;
+                    try {
+                      for (_iterator2.s(); !(_step2 = _iterator2.n()).done; ) {
+                        var ref = _step2.value;
+                        ref !== reference &&
+                          useEffectEventFunctions.add(ref.identifier);
+                      }
+                    } catch (err) {
+                      _iterator2.e(err);
+                    } finally {
+                      _iterator2.f();
+                    }
+                  }
+                }
+              } catch (err$0) {
+                scope.e(err$0);
+              } finally {
+                scope.f();
+              }
+            }
+            var lastEffect = null,
+              codePathReactHooksMapStack = [],
+              codePathSegmentStack = [],
+              useEffectEventFunctions = new WeakSet(),
+              getSource =
+                "function" === typeof context.getSource
+                  ? function (node) {
+                      return context.getSource(node);
+                    }
+                  : function (node) {
+                      return context.sourceCode.getText(node);
+                    },
+              getScope =
+                "function" === typeof context.getScope
+                  ? function () {
+                      return context.getScope();
+                    }
+                  : function (node) {
+                      return context.sourceCode.getScope(node);
+                    };
+            return {
+              onCodePathSegmentStart: function (segment) {
+                return codePathSegmentStack.push(segment);
+              },
+              onCodePathSegmentEnd: function () {
+                return codePathSegmentStack.pop();
+              },
+              onCodePathStart: function () {
+                return codePathReactHooksMapStack.push(new Map());
+              },
+              onCodePathEnd: function (codePath, codePathNode) {
+                function countPathsFromStart(segment, pathHistory) {
+                  var cache = countPathsFromStart.cache,
+                    paths = cache.get(segment.id);
+                  pathHistory = new Set(pathHistory);
+                  if (pathHistory.has(segment.id)) {
+                    cache = [].concat(pathHistory);
+                    segment = cache.slice(cache.indexOf(segment.id) + 1);
+                    segment = _createForOfIteratorHelper(segment);
+                    var _step3;
+                    try {
+                      for (segment.s(); !(_step3 = segment.n()).done; )
+                        cyclic.add(_step3.value);
+                    } catch (err) {
+                      segment.e(err);
+                    } finally {
+                      segment.f();
+                    }
+                    return BigInt("0");
+                  }
+                  pathHistory.add(segment.id);
+                  if (void 0 !== paths) return paths;
+                  if (codePath.thrownSegments.includes(segment))
+                    paths = BigInt("0");
+                  else if (0 === segment.prevSegments.length)
+                    paths = BigInt("1");
+                  else {
+                    paths = BigInt("0");
+                    _step3 = _createForOfIteratorHelper(segment.prevSegments);
+                    var _step4;
+                    try {
+                      for (_step3.s(); !(_step4 = _step3.n()).done; )
+                        paths += countPathsFromStart(_step4.value, pathHistory);
+                    } catch (err$1) {
+                      _step3.e(err$1);
+                    } finally {
+                      _step3.f();
+                    }
+                  }
+                  segment.reachable && paths === BigInt("0")
+                    ? cache.delete(segment.id)
+                    : cache.set(segment.id, paths);
+                  return paths;
+                }
+                function countPathsToEnd(segment, pathHistory) {
+                  var cache = countPathsToEnd.cache,
+                    paths = cache.get(segment.id);
+                  pathHistory = new Set(pathHistory);
+                  if (pathHistory.has(segment.id)) {
+                    cache = Array.from(pathHistory);
+                    segment = cache.slice(cache.indexOf(segment.id) + 1);
+                    segment = _createForOfIteratorHelper(segment);
+                    var _step5;
+                    try {
+                      for (segment.s(); !(_step5 = segment.n()).done; )
+                        cyclic.add(_step5.value);
+                    } catch (err) {
+                      segment.e(err);
+                    } finally {
+                      segment.f();
+                    }
+                    return BigInt("0");
+                  }
+                  pathHistory.add(segment.id);
+                  if (void 0 !== paths) return paths;
+                  if (codePath.thrownSegments.includes(segment))
+                    paths = BigInt("0");
+                  else if (0 === segment.nextSegments.length)
+                    paths = BigInt("1");
+                  else {
+                    paths = BigInt("0");
+                    _step5 = _createForOfIteratorHelper(segment.nextSegments);
+                    var _step6;
+                    try {
+                      for (_step5.s(); !(_step6 = _step5.n()).done; )
+                        paths += countPathsToEnd(_step6.value, pathHistory);
+                    } catch (err$2) {
+                      _step5.e(err$2);
+                    } finally {
+                      _step5.f();
+                    }
+                  }
+                  cache.set(segment.id, paths);
+                  return paths;
+                }
+                function shortestPathLengthToStart(segment) {
+                  var cache = shortestPathLengthToStart.cache,
+                    length = cache.get(segment.id);
+                  if (null === length) return Infinity;
+                  if (void 0 !== length) return length;
+                  cache.set(segment.id, null);
+                  if (0 === segment.prevSegments.length) length = 1;
+                  else {
+                    length = Infinity;
+                    var _iterator7 = _createForOfIteratorHelper(
+                        segment.prevSegments
+                      ),
+                      _step7;
+                    try {
+                      for (_iterator7.s(); !(_step7 = _iterator7.n()).done; ) {
+                        var prevLength = shortestPathLengthToStart(
+                          _step7.value
+                        );
+                        prevLength < length && (length = prevLength);
+                      }
+                    } catch (err) {
+                      _iterator7.e(err);
+                    } finally {
+                      _iterator7.f();
+                    }
+                    length += 1;
+                  }
+                  cache.set(segment.id, length);
+                  return length;
+                }
+                var reactHooksMap = codePathReactHooksMapStack.pop();
+                if (0 !== reactHooksMap.size) {
+                  var cyclic = new Set();
+                  countPathsFromStart.cache = new Map();
+                  countPathsToEnd.cache = new Map();
+                  shortestPathLengthToStart.cache = new Map();
+                  var allPathsFromStartToEnd = countPathsToEnd(
+                      codePath.initialSegment
+                    ),
+                    codePathFunctionName = getFunctionName(codePathNode),
+                    isSomewhereInsideComponentOrHook =
+                      isInsideComponentOrHook(codePathNode),
+                    isDirectlyInsideComponentOrHook = codePathFunctionName
+                      ? isComponentName(codePathFunctionName) ||
+                        isHook(codePathFunctionName)
+                      : isForwardRefCallback(codePathNode) ||
+                        isMemoCallback(codePathNode),
+                    shortestFinalPathLength = Infinity,
+                    _iterator8 = _createForOfIteratorHelper(
+                      codePath.finalSegments
+                    ),
+                    _step8;
+                  try {
+                    for (_iterator8.s(); !(_step8 = _iterator8.n()).done; ) {
+                      var finalSegment = _step8.value;
+                      if (finalSegment.reachable) {
+                        var length$jscomp$0 =
+                          shortestPathLengthToStart(finalSegment);
+                        length$jscomp$0 < shortestFinalPathLength &&
+                          (shortestFinalPathLength = length$jscomp$0);
+                      }
+                    }
+                  } catch (err) {
+                    _iterator8.e(err);
+                  } finally {
+                    _iterator8.f();
+                  }
+                  reactHooksMap = _createForOfIteratorHelper(reactHooksMap);
+                  var _step9;
+                  try {
+                    for (
+                      reactHooksMap.s();
+                      !(_step9 = reactHooksMap.n()).done;
+
+                    ) {
+                      var _step9$value = _step9.value,
+                        segment$jscomp$0 = _step9$value[0],
+                        reactHooks = _step9$value[1];
+                      if (segment$jscomp$0.reachable) {
+                        var possiblyHasEarlyReturn =
+                            0 === segment$jscomp$0.nextSegments.length
+                              ? shortestFinalPathLength <=
+                                shortestPathLengthToStart(segment$jscomp$0)
+                              : shortestFinalPathLength <
+                                shortestPathLengthToStart(segment$jscomp$0),
+                          pathsFromStartToEnd =
+                            countPathsFromStart(segment$jscomp$0) *
+                            countPathsToEnd(segment$jscomp$0),
+                          cycled = cyclic.has(segment$jscomp$0.id),
+                          _iterator10 = _createForOfIteratorHelper(reactHooks),
+                          _step10;
+                        try {
+                          for (
+                            _iterator10.s();
+                            !(_step10 = _iterator10.n()).done;
+
+                          ) {
+                            var hook = _step10.value;
+                            (!cycled && !isInsideDoWhileLoop(hook)) ||
+                              isReactFunction(hook, "use") ||
+                              context.report({
+                                node: hook,
+                                message:
+                                  'React Hook "' +
+                                  getSource(hook) +
+                                  '" may be executed more than once. Possibly because it is called in a loop. React Hooks must be called in the exact same order in every component render.'
+                              });
+                            if (isDirectlyInsideComponentOrHook) {
+                              if (
+                                (codePathNode.async &&
+                                  context.report({
+                                    node: hook,
+                                    message:
+                                      'React Hook "' +
+                                      getSource(hook) +
+                                      '" cannot be called in an async function.'
+                                  }),
+                                !cycled &&
+                                  pathsFromStartToEnd !==
+                                    allPathsFromStartToEnd &&
+                                  !isReactFunction(hook, "use") &&
+                                  !isInsideDoWhileLoop(hook))
+                              ) {
+                                var message =
+                                  'React Hook "' +
+                                  getSource(hook) +
+                                  '" is called conditionally. React Hooks must be called in the exact same order in every component render.' +
+                                  (possiblyHasEarlyReturn
+                                    ? " Did you accidentally call a React Hook after an early return?"
+                                    : "");
+                                context.report({
+                                  node: hook,
+                                  message: message
+                                });
+                              }
+                            } else if (
+                              codePathNode.parent &&
+                              ("MethodDefinition" ===
+                                codePathNode.parent.type ||
+                                "ClassProperty" === codePathNode.parent.type ||
+                                "PropertyDefinition" ===
+                                  codePathNode.parent.type) &&
+                              codePathNode.parent.value === codePathNode
+                            ) {
+                              var _message =
+                                'React Hook "' +
+                                getSource(hook) +
+                                '" cannot be called in a class component. React Hooks must be called in a React function component or a custom React Hook function.';
+                              context.report({ node: hook, message: _message });
+                            } else if (codePathFunctionName) {
+                              var _message2 =
+                                'React Hook "' +
+                                getSource(hook) +
+                                '" is called in function "' +
+                                (getSource(codePathFunctionName) +
+                                  '" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".');
+                              context.report({
+                                node: hook,
+                                message: _message2
+                              });
+                            } else if ("Program" === codePathNode.type) {
+                              var _message3 =
+                                'React Hook "' +
+                                getSource(hook) +
+                                '" cannot be called at the top level. React Hooks must be called in a React function component or a custom React Hook function.';
+                              context.report({
+                                node: hook,
+                                message: _message3
+                              });
+                            } else if (
+                              isSomewhereInsideComponentOrHook &&
+                              !isReactFunction(hook, "use")
+                            ) {
+                              var _message4 =
+                                'React Hook "' +
+                                getSource(hook) +
+                                '" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function.';
+                              context.report({
+                                node: hook,
+                                message: _message4
+                              });
+                            }
+                          }
+                        } catch (err$3) {
+                          _iterator10.e(err$3);
+                        } finally {
+                          _iterator10.f();
+                        }
+                      }
+                    }
+                  } catch (err$4) {
+                    reactHooksMap.e(err$4);
+                  } finally {
+                    reactHooksMap.f();
+                  }
+                }
+              },
+              CallExpression: function (node) {
+                if (isHook(node.callee)) {
+                  var reactHooksMap =
+                      codePathReactHooksMapStack[
+                        codePathReactHooksMapStack.length - 1
+                      ],
+                    codePathSegment =
+                      codePathSegmentStack[codePathSegmentStack.length - 1],
+                    reactHooks = reactHooksMap.get(codePathSegment);
+                  reactHooks ||
+                    ((reactHooks = []),
+                    reactHooksMap.set(codePathSegment, reactHooks));
+                  reactHooks.push(node.callee);
+                }
+                "Identifier" === node.callee.type &&
+                  ("useEffect" === node.callee.name ||
+                    isUseEffectEventIdentifier$1(node.callee)) &&
+                  0 < node.arguments.length &&
+                  (lastEffect = node);
+              },
+              Identifier: function (node) {
+                null == lastEffect &&
+                  useEffectEventFunctions.has(node) &&
+                  "CallExpression" !== node.parent.type &&
+                  context.report({
+                    node: node,
+                    message:
+                      "`" +
+                      getSource(node) +
+                      '` is a function created with React Hook "useEffectEvent", and can only be called from the same component. They cannot be assigned to variables or passed down.'
+                  });
+              },
+              "CallExpression:exit": function (node) {
+                node === lastEffect && (lastEffect = null);
+              },
+              FunctionDeclaration: function (node) {
+                isInsideComponentOrHook(node) &&
+                  recordAllUseEffectEventFunctions(getScope(node));
+              },
+              ArrowFunctionExpression: function (node) {
+                isInsideComponentOrHook(node) &&
+                  recordAllUseEffectEventFunctions(getScope(node));
+              }
+            };
           }
         },
-        create: function (context) {
-          function recordAllUseEffectEventFunctions(scope) {
-            scope = _createForOfIteratorHelper(scope.references);
-            var _step;
-            try {
-              for (scope.s(); !(_step = scope.n()).done; ) {
-                var reference = _step.value,
-                  parent = reference.identifier.parent;
-                if (
-                  "VariableDeclarator" === parent.type &&
-                  parent.init &&
-                  "CallExpression" === parent.init.type &&
-                  parent.init.callee &&
-                  isUseEffectEventIdentifier$1(parent.init.callee)
-                ) {
-                  var _iterator2 = _createForOfIteratorHelper(
-                      reference.resolved.references
-                    ),
-                    _step2;
-                  try {
-                    for (_iterator2.s(); !(_step2 = _iterator2.n()).done; ) {
-                      var ref = _step2.value;
-                      ref !== reference &&
-                        useEffectEventFunctions.add(ref.identifier);
-                    }
-                  } catch (err) {
-                    _iterator2.e(err);
-                  } finally {
-                    _iterator2.f();
+        "exhaustive-deps": {
+          meta: {
+            type: "suggestion",
+            docs: {
+              description:
+                "verifies the list of dependencies for Hooks like useEffect and similar",
+              recommended: !0,
+              url: "https://github.com/facebook/react/issues/14920"
+            },
+            fixable: "code",
+            hasSuggestions: !0,
+            schema: [
+              {
+                type: "object",
+                additionalProperties: !1,
+                enableDangerousAutofixThisMayCauseInfiniteLoops: !1,
+                properties: {
+                  additionalHooks: { type: "string" },
+                  enableDangerousAutofixThisMayCauseInfiniteLoops: {
+                    type: "boolean"
                   }
                 }
               }
-            } catch (err$0) {
-              scope.e(err$0);
-            } finally {
-              scope.f();
+            ]
+          },
+          create: function (context) {
+            function reportProblem(problem) {
+              enableDangerousAutofixThisMayCauseInfiniteLoops &&
+                Array.isArray(problem.suggest) &&
+                0 < problem.suggest.length &&
+                (problem.fix = problem.suggest[0].fix);
+              context.report(problem);
             }
-          }
-          var lastEffect = null,
-            codePathReactHooksMapStack = [],
-            codePathSegmentStack = [],
-            useEffectEventFunctions = new WeakSet(),
-            getSource =
-              "function" === typeof context.getSource
-                ? function (node) {
-                    return context.getSource(node);
-                  }
-                : function (node) {
-                    return context.sourceCode.getText(node);
-                  },
-            getScope =
-              "function" === typeof context.getScope
-                ? function () {
-                    return context.getScope();
-                  }
-                : function (node) {
-                    return context.sourceCode.getScope(node);
-                  };
-          return {
-            onCodePathSegmentStart: function (segment) {
-              return codePathSegmentStack.push(segment);
-            },
-            onCodePathSegmentEnd: function () {
-              return codePathSegmentStack.pop();
-            },
-            onCodePathStart: function () {
-              return codePathReactHooksMapStack.push(new Map());
-            },
-            onCodePathEnd: function (codePath, codePathNode) {
-              function countPathsFromStart(segment, pathHistory) {
-                var cache = countPathsFromStart.cache,
-                  paths = cache.get(segment.id);
-                pathHistory = new Set(pathHistory);
-                if (pathHistory.has(segment.id)) {
-                  cache = [].concat(pathHistory);
-                  segment = cache.slice(cache.indexOf(segment.id) + 1);
-                  segment = _createForOfIteratorHelper(segment);
-                  var _step3;
-                  try {
-                    for (segment.s(); !(_step3 = segment.n()).done; )
-                      cyclic.add(_step3.value);
-                  } catch (err) {
-                    segment.e(err);
-                  } finally {
-                    segment.f();
-                  }
-                  return BigInt("0");
-                }
-                pathHistory.add(segment.id);
-                if (void 0 !== paths) return paths;
-                if (codePath.thrownSegments.includes(segment))
-                  paths = BigInt("0");
-                else if (0 === segment.prevSegments.length) paths = BigInt("1");
-                else {
-                  paths = BigInt("0");
-                  _step3 = _createForOfIteratorHelper(segment.prevSegments);
-                  var _step4;
-                  try {
-                    for (_step3.s(); !(_step4 = _step3.n()).done; )
-                      paths += countPathsFromStart(_step4.value, pathHistory);
-                  } catch (err$1) {
-                    _step3.e(err$1);
-                  } finally {
-                    _step3.f();
-                  }
-                }
-                segment.reachable && paths === BigInt("0")
-                  ? cache.delete(segment.id)
-                  : cache.set(segment.id, paths);
-                return paths;
-              }
-              function countPathsToEnd(segment, pathHistory) {
-                var cache = countPathsToEnd.cache,
-                  paths = cache.get(segment.id);
-                pathHistory = new Set(pathHistory);
-                if (pathHistory.has(segment.id)) {
-                  cache = Array.from(pathHistory);
-                  segment = cache.slice(cache.indexOf(segment.id) + 1);
-                  segment = _createForOfIteratorHelper(segment);
-                  var _step5;
-                  try {
-                    for (segment.s(); !(_step5 = segment.n()).done; )
-                      cyclic.add(_step5.value);
-                  } catch (err) {
-                    segment.e(err);
-                  } finally {
-                    segment.f();
-                  }
-                  return BigInt("0");
-                }
-                pathHistory.add(segment.id);
-                if (void 0 !== paths) return paths;
-                if (codePath.thrownSegments.includes(segment))
-                  paths = BigInt("0");
-                else if (0 === segment.nextSegments.length) paths = BigInt("1");
-                else {
-                  paths = BigInt("0");
-                  _step5 = _createForOfIteratorHelper(segment.nextSegments);
-                  var _step6;
-                  try {
-                    for (_step5.s(); !(_step6 = _step5.n()).done; )
-                      paths += countPathsToEnd(_step6.value, pathHistory);
-                  } catch (err$2) {
-                    _step5.e(err$2);
-                  } finally {
-                    _step5.f();
-                  }
-                }
-                cache.set(segment.id, paths);
-                return paths;
-              }
-              function shortestPathLengthToStart(segment) {
-                var cache = shortestPathLengthToStart.cache,
-                  length = cache.get(segment.id);
-                if (null === length) return Infinity;
-                if (void 0 !== length) return length;
-                cache.set(segment.id, null);
-                if (0 === segment.prevSegments.length) length = 1;
-                else {
-                  length = Infinity;
-                  var _iterator7 = _createForOfIteratorHelper(
-                      segment.prevSegments
-                    ),
-                    _step7;
-                  try {
-                    for (_iterator7.s(); !(_step7 = _iterator7.n()).done; ) {
-                      var prevLength = shortestPathLengthToStart(_step7.value);
-                      prevLength < length && (length = prevLength);
-                    }
-                  } catch (err) {
-                    _iterator7.e(err);
-                  } finally {
-                    _iterator7.f();
-                  }
-                  length += 1;
-                }
-                cache.set(segment.id, length);
-                return length;
-              }
-              var reactHooksMap = codePathReactHooksMapStack.pop();
-              if (0 !== reactHooksMap.size) {
-                var cyclic = new Set();
-                countPathsFromStart.cache = new Map();
-                countPathsToEnd.cache = new Map();
-                shortestPathLengthToStart.cache = new Map();
-                var allPathsFromStartToEnd = countPathsToEnd(
-                    codePath.initialSegment
+            function memoizeWithWeakMap(fn, map) {
+              return function (arg) {
+                if (map.has(arg)) return map.get(arg);
+                var result = fn(arg);
+                map.set(arg, result);
+                return result;
+              };
+            }
+            function visitFunctionWithDependencies(
+              node,
+              declaredDependenciesNode,
+              reactiveHook,
+              reactiveHookName,
+              isEffect
+            ) {
+              function gatherDependenciesRecursively(currentScope) {
+                var _iterator2 = _createForOfIteratorHelper(
+                    currentScope.references
                   ),
-                  codePathFunctionName = getFunctionName(codePathNode),
-                  isSomewhereInsideComponentOrHook =
-                    isInsideComponentOrHook(codePathNode),
-                  isDirectlyInsideComponentOrHook = codePathFunctionName
-                    ? isComponentName(codePathFunctionName) ||
-                      isHook(codePathFunctionName)
-                    : isForwardRefCallback(codePathNode) ||
-                      isMemoCallback(codePathNode),
-                  shortestFinalPathLength = Infinity,
-                  _iterator8 = _createForOfIteratorHelper(
-                    codePath.finalSegments
-                  ),
-                  _step8;
+                  _step2;
                 try {
-                  for (_iterator8.s(); !(_step8 = _iterator8.n()).done; ) {
-                    var finalSegment = _step8.value;
-                    if (finalSegment.reachable) {
-                      var length$jscomp$0 =
-                        shortestPathLengthToStart(finalSegment);
-                      length$jscomp$0 < shortestFinalPathLength &&
-                        (shortestFinalPathLength = length$jscomp$0);
+                  for (_iterator2.s(); !(_step2 = _iterator2.n()).done; ) {
+                    var reference = _step2.value;
+                    if (
+                      reference.resolved &&
+                      pureScopes.has(reference.resolved.scope)
+                    ) {
+                      var referenceNode = fastFindReferenceWithParent(
+                          node,
+                          reference.identifier
+                        ),
+                        dependencyNode = getDependency(referenceNode),
+                        dependency = analyzePropertyChain(
+                          dependencyNode,
+                          optionalChains
+                        ),
+                        JSCompiler_temp;
+                      if (
+                        (JSCompiler_temp =
+                          isEffect &&
+                          "Identifier" === dependencyNode.type &&
+                          ("MemberExpression" === dependencyNode.parent.type ||
+                            "OptionalMemberExpression" ===
+                              dependencyNode.parent.type) &&
+                          !dependencyNode.parent.computed &&
+                          "Identifier" ===
+                            dependencyNode.parent.property.type &&
+                          "current" === dependencyNode.parent.property.name)
+                      ) {
+                        for (
+                          var curScope = reference.from,
+                            isInReturnedFunction = !1;
+                          curScope.block !== node;
+
+                        )
+                          "function" === curScope.type &&
+                            (isInReturnedFunction =
+                              null != curScope.block.parent &&
+                              "ReturnStatement" === curScope.block.parent.type),
+                            (curScope = curScope.upper);
+                        JSCompiler_temp = isInReturnedFunction;
+                      }
+                      JSCompiler_temp &&
+                        currentRefsInEffectCleanup.set(dependency, {
+                          reference: reference,
+                          dependencyNode: dependencyNode
+                        });
+                      if (
+                        "TSTypeQuery" !== dependencyNode.parent.type &&
+                        "TSTypeReference" !== dependencyNode.parent.type
+                      ) {
+                        var def = reference.resolved.defs[0];
+                        if (
+                          null != def &&
+                          (null == def.node || def.node.init !== node.parent) &&
+                          "TypeParameter" !== def.type
+                        )
+                          if (dependencies.has(dependency))
+                            dependencies
+                              .get(dependency)
+                              .references.push(reference);
+                          else {
+                            var resolved = reference.resolved,
+                              isStable =
+                                memoizedIsStableKnownHookValue(resolved) ||
+                                memoizedIsFunctionWithoutCapturedValues(
+                                  resolved
+                                );
+                            dependencies.set(dependency, {
+                              isStable: isStable,
+                              references: [reference]
+                            });
+                          }
+                      }
                     }
                   }
                 } catch (err) {
-                  _iterator8.e(err);
+                  _iterator2.e(err);
                 } finally {
-                  _iterator8.f();
+                  _iterator2.f();
                 }
-                reactHooksMap = _createForOfIteratorHelper(reactHooksMap);
-                var _step9;
+                currentScope = _createForOfIteratorHelper(
+                  currentScope.childScopes
+                );
+                var _step3;
                 try {
-                  for (
-                    reactHooksMap.s();
-                    !(_step9 = reactHooksMap.n()).done;
-
-                  ) {
-                    var _step9$value = _step9.value,
-                      segment$jscomp$0 = _step9$value[0],
-                      reactHooks = _step9$value[1];
-                    if (segment$jscomp$0.reachable) {
-                      var possiblyHasEarlyReturn =
-                          0 === segment$jscomp$0.nextSegments.length
-                            ? shortestFinalPathLength <=
-                              shortestPathLengthToStart(segment$jscomp$0)
-                            : shortestFinalPathLength <
-                              shortestPathLengthToStart(segment$jscomp$0),
-                        pathsFromStartToEnd =
-                          countPathsFromStart(segment$jscomp$0) *
-                          countPathsToEnd(segment$jscomp$0),
-                        cycled = cyclic.has(segment$jscomp$0.id),
-                        _iterator10 = _createForOfIteratorHelper(reactHooks),
-                        _step10;
-                      try {
-                        for (
-                          _iterator10.s();
-                          !(_step10 = _iterator10.n()).done;
-
-                        ) {
-                          var hook = _step10.value;
-                          (!cycled && !isInsideDoWhileLoop(hook)) ||
-                            isReactFunction(hook, "use") ||
-                            context.report({
-                              node: hook,
-                              message:
-                                'React Hook "' +
-                                getSource(hook) +
-                                '" may be executed more than once. Possibly because it is called in a loop. React Hooks must be called in the exact same order in every component render.'
-                            });
-                          if (isDirectlyInsideComponentOrHook) {
-                            if (
-                              (codePathNode.async &&
-                                context.report({
-                                  node: hook,
-                                  message:
-                                    'React Hook "' +
-                                    getSource(hook) +
-                                    '" cannot be called in an async function.'
-                                }),
-                              !cycled &&
-                                pathsFromStartToEnd !==
-                                  allPathsFromStartToEnd &&
-                                !isReactFunction(hook, "use") &&
-                                !isInsideDoWhileLoop(hook))
-                            ) {
-                              var message =
-                                'React Hook "' +
-                                getSource(hook) +
-                                '" is called conditionally. React Hooks must be called in the exact same order in every component render.' +
-                                (possiblyHasEarlyReturn
-                                  ? " Did you accidentally call a React Hook after an early return?"
-                                  : "");
-                              context.report({ node: hook, message: message });
-                            }
-                          } else if (
-                            codePathNode.parent &&
-                            ("MethodDefinition" === codePathNode.parent.type ||
-                              "ClassProperty" === codePathNode.parent.type ||
-                              "PropertyDefinition" ===
-                                codePathNode.parent.type) &&
-                            codePathNode.parent.value === codePathNode
-                          ) {
-                            var _message =
-                              'React Hook "' +
-                              getSource(hook) +
-                              '" cannot be called in a class component. React Hooks must be called in a React function component or a custom React Hook function.';
-                            context.report({ node: hook, message: _message });
-                          } else if (codePathFunctionName) {
-                            var _message2 =
-                              'React Hook "' +
-                              getSource(hook) +
-                              '" is called in function "' +
-                              (getSource(codePathFunctionName) +
-                                '" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".');
-                            context.report({ node: hook, message: _message2 });
-                          } else if ("Program" === codePathNode.type) {
-                            var _message3 =
-                              'React Hook "' +
-                              getSource(hook) +
-                              '" cannot be called at the top level. React Hooks must be called in a React function component or a custom React Hook function.';
-                            context.report({ node: hook, message: _message3 });
-                          } else if (
-                            isSomewhereInsideComponentOrHook &&
-                            !isReactFunction(hook, "use")
-                          ) {
-                            var _message4 =
-                              'React Hook "' +
-                              getSource(hook) +
-                              '" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function.';
-                            context.report({ node: hook, message: _message4 });
-                          }
-                        }
-                      } catch (err$3) {
-                        _iterator10.e(err$3);
-                      } finally {
-                        _iterator10.f();
-                      }
-                    }
-                  }
-                } catch (err$4) {
-                  reactHooksMap.e(err$4);
+                  for (currentScope.s(); !(_step3 = currentScope.n()).done; )
+                    gatherDependenciesRecursively(_step3.value);
+                } catch (err$5) {
+                  currentScope.e(err$5);
                 } finally {
-                  reactHooksMap.f();
+                  currentScope.f();
                 }
               }
-            },
-            CallExpression: function (node) {
-              if (isHook(node.callee)) {
-                var reactHooksMap =
-                    codePathReactHooksMapStack[
-                      codePathReactHooksMapStack.length - 1
-                    ],
-                  codePathSegment =
-                    codePathSegmentStack[codePathSegmentStack.length - 1],
-                  reactHooks = reactHooksMap.get(codePathSegment);
-                reactHooks ||
-                  ((reactHooks = []),
-                  reactHooksMap.set(codePathSegment, reactHooks));
-                reactHooks.push(node.callee);
+              function formatDependency(path) {
+                path = path.split(".");
+                for (var finalPath = "", i = 0; i < path.length; i++) {
+                  if (0 !== i) {
+                    var pathSoFar = path.slice(0, i + 1).join(".");
+                    pathSoFar = !0 === optionalChains.get(pathSoFar);
+                    finalPath += pathSoFar ? "?." : ".";
+                  }
+                  finalPath += path[i];
+                }
+                return finalPath;
               }
-              "Identifier" === node.callee.type &&
-                ("useEffect" === node.callee.name ||
-                  isUseEffectEventIdentifier$1(node.callee)) &&
-                0 < node.arguments.length &&
-                (lastEffect = node);
-            },
-            Identifier: function (node) {
-              null == lastEffect &&
-                useEffectEventFunctions.has(node) &&
-                "CallExpression" !== node.parent.type &&
-                context.report({
+              function getWarningMessage(deps, singlePrefix, label, fixVerb) {
+                return 0 === deps.size
+                  ? null
+                  : (1 < deps.size ? "" : singlePrefix + " ") +
+                      label +
+                      " " +
+                      (1 < deps.size ? "dependencies" : "dependency") +
+                      ": " +
+                      joinEnglish(
+                        Array.from(deps)
+                          .sort()
+                          .map(function (name) {
+                            return "'" + formatDependency(name) + "'";
+                          })
+                      ) +
+                      (". Either " +
+                        fixVerb +
+                        " " +
+                        (1 < deps.size ? "them" : "it") +
+                        " or remove the dependency array.");
+              }
+              isEffect &&
+                node.async &&
+                reportProblem({
                   node: node,
                   message:
-                    "`" +
-                    getSource(node) +
-                    '` is a function created with React Hook "useEffectEvent", and can only be called from the same component. They cannot be assigned to variables or passed down.'
+                    "Effect callbacks are synchronous to prevent race conditions. Put the async function inside:\n\nuseEffect(() => {\n  async function fetchData() {\n    // You can await here\n    const response = await MyAPI.getData(someId);\n    // ...\n  }\n  fetchData();\n}, [someId]); // Or [] if effect doesn't need props or state\n\nLearn more about data fetching with Hooks: https://react.dev/link/hooks-data-fetching"
                 });
-            },
-            "CallExpression:exit": function (node) {
-              node === lastEffect && (lastEffect = null);
-            },
-            FunctionDeclaration: function (node) {
-              isInsideComponentOrHook(node) &&
-                recordAllUseEffectEventFunctions(getScope(node));
-            },
-            ArrowFunctionExpression: function (node) {
-              isInsideComponentOrHook(node) &&
-                recordAllUseEffectEventFunctions(getScope(node));
-            }
-          };
-        }
-      },
-      "exhaustive-deps": {
-        meta: {
-          type: "suggestion",
-          docs: {
-            description:
-              "verifies the list of dependencies for Hooks like useEffect and similar",
-            recommended: !0,
-            url: "https://github.com/facebook/react/issues/14920"
-          },
-          fixable: "code",
-          hasSuggestions: !0,
-          schema: [
-            {
-              type: "object",
-              additionalProperties: !1,
-              enableDangerousAutofixThisMayCauseInfiniteLoops: !1,
-              properties: {
-                additionalHooks: { type: "string" },
-                enableDangerousAutofixThisMayCauseInfiniteLoops: {
-                  type: "boolean"
-                }
+              for (
+                var scope = scopeManager.acquire(node),
+                  pureScopes = new Set(),
+                  componentScope = null,
+                  currentScope = scope.upper;
+                currentScope;
+
+              ) {
+                pureScopes.add(currentScope);
+                if ("function" === currentScope.type) break;
+                currentScope = currentScope.upper;
               }
-            }
-          ]
-        },
-        create: function (context) {
-          function reportProblem(problem) {
-            enableDangerousAutofixThisMayCauseInfiniteLoops &&
-              Array.isArray(problem.suggest) &&
-              0 < problem.suggest.length &&
-              (problem.fix = problem.suggest[0].fix);
-            context.report(problem);
-          }
-          function memoizeWithWeakMap(fn, map) {
-            return function (arg) {
-              if (map.has(arg)) return map.get(arg);
-              var result = fn(arg);
-              map.set(arg, result);
-              return result;
-            };
-          }
-          function visitFunctionWithDependencies(
-            node,
-            declaredDependenciesNode,
-            reactiveHook,
-            reactiveHookName,
-            isEffect
-          ) {
-            function gatherDependenciesRecursively(currentScope) {
-              var _iterator2 = _createForOfIteratorHelper(
-                  currentScope.references
-                ),
-                _step2;
-              try {
-                for (_iterator2.s(); !(_step2 = _iterator2.n()).done; ) {
-                  var reference = _step2.value;
-                  if (
-                    reference.resolved &&
-                    pureScopes.has(reference.resolved.scope)
+              if (currentScope) {
+                componentScope = currentScope;
+                var isArray = Array.isArray,
+                  memoizedIsStableKnownHookValue = memoizeWithWeakMap(function (
+                    resolved
                   ) {
-                    var referenceNode = fastFindReferenceWithParent(
-                        node,
-                        reference.identifier
-                      ),
-                      dependencyNode = getDependency(referenceNode),
-                      dependency = analyzePropertyChain(
-                        dependencyNode,
-                        optionalChains
-                      ),
-                      JSCompiler_temp;
-                    if (
-                      (JSCompiler_temp =
-                        isEffect &&
-                        "Identifier" === dependencyNode.type &&
-                        ("MemberExpression" === dependencyNode.parent.type ||
-                          "OptionalMemberExpression" ===
-                            dependencyNode.parent.type) &&
-                        !dependencyNode.parent.computed &&
-                        "Identifier" === dependencyNode.parent.property.type &&
-                        "current" === dependencyNode.parent.property.name)
-                    ) {
-                      for (
-                        var curScope = reference.from,
-                          isInReturnedFunction = !1;
-                        curScope.block !== node;
-
-                      )
-                        "function" === curScope.type &&
-                          (isInReturnedFunction =
-                            null != curScope.block.parent &&
-                            "ReturnStatement" === curScope.block.parent.type),
-                          (curScope = curScope.upper);
-                      JSCompiler_temp = isInReturnedFunction;
-                    }
-                    JSCompiler_temp &&
-                      currentRefsInEffectCleanup.set(dependency, {
-                        reference: reference,
-                        dependencyNode: dependencyNode
-                      });
-                    if (
-                      "TSTypeQuery" !== dependencyNode.parent.type &&
-                      "TSTypeReference" !== dependencyNode.parent.type
-                    ) {
-                      var def = reference.resolved.defs[0];
-                      if (
-                        null != def &&
-                        (null == def.node || def.node.init !== node.parent) &&
-                        "TypeParameter" !== def.type
-                      )
-                        if (dependencies.has(dependency))
-                          dependencies
-                            .get(dependency)
-                            .references.push(reference);
-                        else {
-                          var resolved = reference.resolved,
-                            isStable =
-                              memoizedIsStableKnownHookValue(resolved) ||
-                              memoizedIsFunctionWithoutCapturedValues(resolved);
-                          dependencies.set(dependency, {
-                            isStable: isStable,
-                            references: [reference]
-                          });
-                        }
-                    }
-                  }
-                }
-              } catch (err) {
-                _iterator2.e(err);
-              } finally {
-                _iterator2.f();
-              }
-              currentScope = _createForOfIteratorHelper(
-                currentScope.childScopes
-              );
-              var _step3;
-              try {
-                for (currentScope.s(); !(_step3 = currentScope.n()).done; )
-                  gatherDependenciesRecursively(_step3.value);
-              } catch (err$5) {
-                currentScope.e(err$5);
-              } finally {
-                currentScope.f();
-              }
-            }
-            function formatDependency(path) {
-              path = path.split(".");
-              for (var finalPath = "", i = 0; i < path.length; i++) {
-                if (0 !== i) {
-                  var pathSoFar = path.slice(0, i + 1).join(".");
-                  pathSoFar = !0 === optionalChains.get(pathSoFar);
-                  finalPath += pathSoFar ? "?." : ".";
-                }
-                finalPath += path[i];
-              }
-              return finalPath;
-            }
-            function getWarningMessage(deps, singlePrefix, label, fixVerb) {
-              return 0 === deps.size
-                ? null
-                : (1 < deps.size ? "" : singlePrefix + " ") +
-                    label +
-                    " " +
-                    (1 < deps.size ? "dependencies" : "dependency") +
-                    ": " +
-                    joinEnglish(
-                      Array.from(deps)
-                        .sort()
-                        .map(function (name) {
-                          return "'" + formatDependency(name) + "'";
-                        })
-                    ) +
-                    (". Either " +
-                      fixVerb +
-                      " " +
-                      (1 < deps.size ? "them" : "it") +
-                      " or remove the dependency array.");
-            }
-            isEffect &&
-              node.async &&
-              reportProblem({
-                node: node,
-                message:
-                  "Effect callbacks are synchronous to prevent race conditions. Put the async function inside:\n\nuseEffect(() => {\n  async function fetchData() {\n    // You can await here\n    const response = await MyAPI.getData(someId);\n    // ...\n  }\n  fetchData();\n}, [someId]); // Or [] if effect doesn't need props or state\n\nLearn more about data fetching with Hooks: https://react.dev/link/hooks-data-fetching"
-              });
-            for (
-              var scope = scopeManager.acquire(node),
-                pureScopes = new Set(),
-                componentScope = null,
-                currentScope = scope.upper;
-              currentScope;
-
-            ) {
-              pureScopes.add(currentScope);
-              if ("function" === currentScope.type) break;
-              currentScope = currentScope.upper;
-            }
-            if (currentScope) {
-              componentScope = currentScope;
-              var isArray = Array.isArray,
-                memoizedIsStableKnownHookValue = memoizeWithWeakMap(function (
-                  resolved
-                ) {
-                  if (!isArray(resolved.defs)) return !1;
-                  var def = resolved.defs[0];
-                  if (null == def || "VariableDeclarator" !== def.node.type)
-                    return !1;
-                  var init = def.node.init;
-                  if (null == init) return !1;
-                  for (
-                    ;
-                    "TSAsExpression" === init.type ||
-                    "AsExpression" === init.type;
-
-                  )
-                    init = init.expression;
-                  var declaration = def.node.parent;
-                  if (
-                    null == declaration &&
-                    (fastFindReferenceWithParent(
-                      componentScope.block,
-                      def.node.id
-                    ),
-                    (declaration = def.node.parent),
-                    null == declaration)
-                  )
-                    return !1;
-                  if (
-                    "const" === declaration.kind &&
-                    "Literal" === init.type &&
-                    ("string" === typeof init.value ||
-                      "number" === typeof init.value ||
-                      null === init.value)
-                  )
-                    return !0;
-                  if ("CallExpression" !== init.type) return !1;
-                  init = init.callee;
-                  "MemberExpression" !== init.type ||
-                    "React" !== init.object.name ||
-                    null == init.property ||
-                    init.computed ||
-                    (init = init.property);
-                  if ("Identifier" !== init.type) return !1;
-                  def = def.node.id;
-                  declaration = init.name;
-                  if ("useRef" === declaration && "Identifier" === def.type)
-                    return !0;
-                  init =
-                    "Identifier" === init.type &&
-                    "useEffectEvent" === init.name;
-                  if (init && "Identifier" === def.type) {
-                    resolved = _createForOfIteratorHelper(resolved.references);
-                    var _step;
-                    try {
-                      for (resolved.s(); !(_step = resolved.n()).done; ) {
-                        var ref = _step.value;
-                        ref !== def &&
-                          useEffectEventVariables.add(ref.identifier);
-                      }
-                    } catch (err) {
-                      resolved.e(err);
-                    } finally {
-                      resolved.f();
-                    }
-                    return !0;
-                  }
-                  if (
-                    "useState" === declaration ||
-                    "useReducer" === declaration ||
-                    "useActionState" === declaration
-                  ) {
-                    if (
-                      "ArrayPattern" === def.type &&
-                      2 === def.elements.length &&
-                      isArray(resolved.identifiers)
-                    ) {
-                      if (def.elements[1] === resolved.identifiers[0]) {
-                        if ("useState" === declaration)
-                          for (
-                            _step = resolved.references, resolved = ref = 0;
-                            resolved < _step.length;
-                            resolved++
-                          ) {
-                            _step[resolved].isWrite() && ref++;
-                            if (1 < ref) return !1;
-                            setStateCallSites.set(
-                              _step[resolved].identifier,
-                              def.elements[0]
-                            );
-                          }
-                        return !0;
-                      }
-                      if (
-                        def.elements[0] === resolved.identifiers[0] &&
-                        "useState" === declaration
-                      )
-                        for (
-                          def = resolved.references, _step = 0;
-                          _step < def.length;
-                          _step++
-                        )
-                          stateVariables.add(def[_step].identifier);
-                    }
-                  } else if (
-                    "useTransition" === declaration &&
-                    "ArrayPattern" === def.type &&
-                    2 === def.elements.length &&
-                    Array.isArray(resolved.identifiers) &&
-                    def.elements[1] === resolved.identifiers[0]
-                  )
-                    return !0;
-                  return !1;
-                }, stableKnownValueCache),
-                memoizedIsFunctionWithoutCapturedValues = memoizeWithWeakMap(
-                  function (resolved) {
                     if (!isArray(resolved.defs)) return !1;
-                    resolved = resolved.defs[0];
+                    var def = resolved.defs[0];
+                    if (null == def || "VariableDeclarator" !== def.node.type)
+                      return !1;
+                    var init = def.node.init;
+                    if (null == init) return !1;
+                    for (
+                      ;
+                      "TSAsExpression" === init.type ||
+                      "AsExpression" === init.type;
+
+                    )
+                      init = init.expression;
+                    var declaration = def.node.parent;
                     if (
-                      null == resolved ||
-                      null == resolved.node ||
-                      null == resolved.node.id
+                      null == declaration &&
+                      (fastFindReferenceWithParent(
+                        componentScope.block,
+                        def.node.id
+                      ),
+                      (declaration = def.node.parent),
+                      null == declaration)
                     )
                       return !1;
-                    var fnNode = resolved.node,
-                      childScopes = componentScope.childScopes;
-                    resolved = null;
-                    var i;
-                    for (i = 0; i < childScopes.length; i++) {
-                      var childScope = childScopes[i],
-                        childScopeBlock = childScope.block;
-                      if (
-                        ("FunctionDeclaration" === fnNode.type &&
-                          childScopeBlock === fnNode) ||
-                        ("VariableDeclarator" === fnNode.type &&
-                          childScopeBlock.parent === fnNode)
-                      ) {
-                        resolved = childScope;
-                        break;
+                    if (
+                      "const" === declaration.kind &&
+                      "Literal" === init.type &&
+                      ("string" === typeof init.value ||
+                        "number" === typeof init.value ||
+                        null === init.value)
+                    )
+                      return !0;
+                    if ("CallExpression" !== init.type) return !1;
+                    init = init.callee;
+                    "MemberExpression" !== init.type ||
+                      "React" !== init.object.name ||
+                      null == init.property ||
+                      init.computed ||
+                      (init = init.property);
+                    if ("Identifier" !== init.type) return !1;
+                    def = def.node.id;
+                    declaration = init.name;
+                    if ("useRef" === declaration && "Identifier" === def.type)
+                      return !0;
+                    init =
+                      "Identifier" === init.type &&
+                      "useEffectEvent" === init.name;
+                    if (init && "Identifier" === def.type) {
+                      resolved = _createForOfIteratorHelper(
+                        resolved.references
+                      );
+                      var _step;
+                      try {
+                        for (resolved.s(); !(_step = resolved.n()).done; ) {
+                          var ref = _step.value;
+                          ref !== def &&
+                            useEffectEventVariables.add(ref.identifier);
+                        }
+                      } catch (err) {
+                        resolved.e(err);
+                      } finally {
+                        resolved.f();
                       }
+                      return !0;
                     }
-                    if (null == resolved) return !1;
-                    for (i = 0; i < resolved.through.length; i++)
+                    if (
+                      "useState" === declaration ||
+                      "useReducer" === declaration ||
+                      "useActionState" === declaration
+                    ) {
                       if (
-                        ((fnNode = resolved.through[i]),
-                        null != fnNode.resolved &&
-                          pureScopes.has(fnNode.resolved.scope) &&
-                          !memoizedIsStableKnownHookValue(fnNode.resolved))
+                        "ArrayPattern" === def.type &&
+                        2 === def.elements.length &&
+                        isArray(resolved.identifiers)
+                      ) {
+                        if (def.elements[1] === resolved.identifiers[0]) {
+                          if ("useState" === declaration)
+                            for (
+                              _step = resolved.references, resolved = ref = 0;
+                              resolved < _step.length;
+                              resolved++
+                            ) {
+                              _step[resolved].isWrite() && ref++;
+                              if (1 < ref) return !1;
+                              setStateCallSites.set(
+                                _step[resolved].identifier,
+                                def.elements[0]
+                              );
+                            }
+                          return !0;
+                        }
+                        if (
+                          def.elements[0] === resolved.identifiers[0] &&
+                          "useState" === declaration
+                        )
+                          for (
+                            def = resolved.references, _step = 0;
+                            _step < def.length;
+                            _step++
+                          )
+                            stateVariables.add(def[_step].identifier);
+                      }
+                    } else if (
+                      "useTransition" === declaration &&
+                      "ArrayPattern" === def.type &&
+                      2 === def.elements.length &&
+                      Array.isArray(resolved.identifiers) &&
+                      def.elements[1] === resolved.identifiers[0]
+                    )
+                      return !0;
+                    return !1;
+                  }, stableKnownValueCache),
+                  memoizedIsFunctionWithoutCapturedValues = memoizeWithWeakMap(
+                    function (resolved) {
+                      if (!isArray(resolved.defs)) return !1;
+                      resolved = resolved.defs[0];
+                      if (
+                        null == resolved ||
+                        null == resolved.node ||
+                        null == resolved.node.id
                       )
                         return !1;
-                    return !0;
-                  },
-                  functionWithoutCapturedValueCache
-                ),
-                currentRefsInEffectCleanup = new Map(),
-                dependencies = new Map(),
-                optionalChains = new Map();
-              gatherDependenciesRecursively(scope);
-              currentRefsInEffectCleanup.forEach(function (_ref, dependency) {
-                var dependencyNode = _ref.dependencyNode;
-                _ref = _ref.reference.resolved.references;
-                for (
-                  var foundCurrentAssignment = !1, i = 0;
-                  i < _ref.length;
-                  i++
-                ) {
-                  var parent = _ref[i].identifier.parent;
-                  if (
-                    null != parent &&
-                    "MemberExpression" === parent.type &&
-                    !parent.computed &&
-                    "Identifier" === parent.property.type &&
-                    "current" === parent.property.name &&
-                    "AssignmentExpression" === parent.parent.type &&
-                    parent.parent.left === parent
+                      var fnNode = resolved.node,
+                        childScopes = componentScope.childScopes;
+                      resolved = null;
+                      var i;
+                      for (i = 0; i < childScopes.length; i++) {
+                        var childScope = childScopes[i],
+                          childScopeBlock = childScope.block;
+                        if (
+                          ("FunctionDeclaration" === fnNode.type &&
+                            childScopeBlock === fnNode) ||
+                          ("VariableDeclarator" === fnNode.type &&
+                            childScopeBlock.parent === fnNode)
+                        ) {
+                          resolved = childScope;
+                          break;
+                        }
+                      }
+                      if (null == resolved) return !1;
+                      for (i = 0; i < resolved.through.length; i++)
+                        if (
+                          ((fnNode = resolved.through[i]),
+                          null != fnNode.resolved &&
+                            pureScopes.has(fnNode.resolved.scope) &&
+                            !memoizedIsStableKnownHookValue(fnNode.resolved))
+                        )
+                          return !1;
+                      return !0;
+                    },
+                    functionWithoutCapturedValueCache
+                  ),
+                  currentRefsInEffectCleanup = new Map(),
+                  dependencies = new Map(),
+                  optionalChains = new Map();
+                gatherDependenciesRecursively(scope);
+                currentRefsInEffectCleanup.forEach(function (_ref, dependency) {
+                  var dependencyNode = _ref.dependencyNode;
+                  _ref = _ref.reference.resolved.references;
+                  for (
+                    var foundCurrentAssignment = !1, i = 0;
+                    i < _ref.length;
+                    i++
                   ) {
-                    foundCurrentAssignment = !0;
-                    break;
+                    var parent = _ref[i].identifier.parent;
+                    if (
+                      null != parent &&
+                      "MemberExpression" === parent.type &&
+                      !parent.computed &&
+                      "Identifier" === parent.property.type &&
+                      "current" === parent.property.name &&
+                      "AssignmentExpression" === parent.parent.type &&
+                      parent.parent.left === parent
+                    ) {
+                      foundCurrentAssignment = !0;
+                      break;
+                    }
                   }
-                }
-                foundCurrentAssignment ||
-                  reportProblem({
-                    node: dependencyNode.parent.property,
-                    message:
-                      "The ref value '" +
-                      dependency +
-                      ".current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy '" +
-                      (dependency +
-                        ".current' to a variable inside the effect, and use that variable in the cleanup function.")
-                  });
-              });
-              var staleAssignments = new Set(),
-                stableDependencies = new Set();
-              dependencies.forEach(function (_ref2, key) {
-                var references = _ref2.references;
-                _ref2.isStable && stableDependencies.add(key);
-                references.forEach(function (reference) {
-                  reference.writeExpr &&
-                    ((reference = reference.writeExpr),
-                    staleAssignments.has(key) ||
-                      (staleAssignments.add(key),
-                      reportProblem({
-                        node: reference,
-                        message:
-                          "Assignments to the '" +
-                          key +
-                          "' variable from inside React Hook " +
-                          (getSource(reactiveHook) +
-                            " will be lost after each render. To preserve the value over time, store it in a useRef Hook and keep the mutable value in the '.current' property. Otherwise, you can move this variable directly inside ") +
-                          (getSource(reactiveHook) + ".")
-                      })));
+                  foundCurrentAssignment ||
+                    reportProblem({
+                      node: dependencyNode.parent.property,
+                      message:
+                        "The ref value '" +
+                        dependency +
+                        ".current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy '" +
+                        (dependency +
+                          ".current' to a variable inside the effect, and use that variable in the cleanup function.")
+                    });
                 });
-              });
-              if (!(0 < staleAssignments.size))
-                if (declaredDependenciesNode) {
-                  var declaredDependencies = [],
-                    externalDependencies = new Set();
-                  currentScope =
-                    "TSAsExpression" === declaredDependenciesNode.type &&
-                    "ArrayExpression" ===
-                      declaredDependenciesNode.expression.type;
-                  "ArrayExpression" === declaredDependenciesNode.type ||
-                  currentScope
-                    ? (currentScope
-                        ? declaredDependenciesNode.expression
-                        : declaredDependenciesNode
-                      ).elements.forEach(function (declaredDependencyNode) {
-                        if (null !== declaredDependencyNode)
-                          if ("SpreadElement" === declaredDependencyNode.type)
-                            reportProblem({
-                              node: declaredDependencyNode,
-                              message:
-                                "React Hook " +
-                                getSource(reactiveHook) +
-                                " has a spread element in its dependency array. This means we can't statically verify whether you've passed the correct dependencies."
-                            });
-                          else {
-                            useEffectEventVariables.has(
-                              declaredDependencyNode
-                            ) &&
+                var staleAssignments = new Set(),
+                  stableDependencies = new Set();
+                dependencies.forEach(function (_ref2, key) {
+                  var references = _ref2.references;
+                  _ref2.isStable && stableDependencies.add(key);
+                  references.forEach(function (reference) {
+                    reference.writeExpr &&
+                      ((reference = reference.writeExpr),
+                      staleAssignments.has(key) ||
+                        (staleAssignments.add(key),
+                        reportProblem({
+                          node: reference,
+                          message:
+                            "Assignments to the '" +
+                            key +
+                            "' variable from inside React Hook " +
+                            (getSource(reactiveHook) +
+                              " will be lost after each render. To preserve the value over time, store it in a useRef Hook and keep the mutable value in the '.current' property. Otherwise, you can move this variable directly inside ") +
+                            (getSource(reactiveHook) + ".")
+                        })));
+                  });
+                });
+                if (!(0 < staleAssignments.size))
+                  if (declaredDependenciesNode) {
+                    var declaredDependencies = [],
+                      externalDependencies = new Set();
+                    currentScope =
+                      "TSAsExpression" === declaredDependenciesNode.type &&
+                      "ArrayExpression" ===
+                        declaredDependenciesNode.expression.type;
+                    "ArrayExpression" === declaredDependenciesNode.type ||
+                    currentScope
+                      ? (currentScope
+                          ? declaredDependenciesNode.expression
+                          : declaredDependenciesNode
+                        ).elements.forEach(function (declaredDependencyNode) {
+                          if (null !== declaredDependencyNode)
+                            if ("SpreadElement" === declaredDependencyNode.type)
                               reportProblem({
                                 node: declaredDependencyNode,
                                 message:
-                                  "Functions returned from `useEffectEvent` must not be included in the dependency array. Remove `" +
-                                  (getSource(declaredDependencyNode) +
-                                    "` from the list."),
-                                suggest: [
-                                  {
-                                    desc:
-                                      "Remove the dependency `" +
-                                      getSource(declaredDependencyNode) +
-                                      "`",
-                                    fix: function (fixer) {
-                                      return fixer.removeRange(
-                                        declaredDependencyNode.range
-                                      );
-                                    }
-                                  }
-                                ]
+                                  "React Hook " +
+                                  getSource(reactiveHook) +
+                                  " has a spread element in its dependency array. This means we can't statically verify whether you've passed the correct dependencies."
                               });
-                            try {
-                              var declaredDependency = analyzePropertyChain(
-                                declaredDependencyNode,
-                                null
-                              );
-                            } catch (error) {
-                              if (/Unsupported node type/.test(error.message)) {
-                                "Literal" === declaredDependencyNode.type
-                                  ? dependencies.has(
-                                      declaredDependencyNode.value
-                                    )
-                                    ? reportProblem({
-                                        node: declaredDependencyNode,
-                                        message:
-                                          "The " +
-                                          declaredDependencyNode.raw +
-                                          " literal is not a valid dependency because it never changes. Did you mean to include " +
-                                          (declaredDependencyNode.value +
-                                            " in the array instead?")
-                                      })
+                            else {
+                              useEffectEventVariables.has(
+                                declaredDependencyNode
+                              ) &&
+                                reportProblem({
+                                  node: declaredDependencyNode,
+                                  message:
+                                    "Functions returned from `useEffectEvent` must not be included in the dependency array. Remove `" +
+                                    (getSource(declaredDependencyNode) +
+                                      "` from the list."),
+                                  suggest: [
+                                    {
+                                      desc:
+                                        "Remove the dependency `" +
+                                        getSource(declaredDependencyNode) +
+                                        "`",
+                                      fix: function (fixer) {
+                                        return fixer.removeRange(
+                                          declaredDependencyNode.range
+                                        );
+                                      }
+                                    }
+                                  ]
+                                });
+                              try {
+                                var declaredDependency = analyzePropertyChain(
+                                  declaredDependencyNode,
+                                  null
+                                );
+                              } catch (error) {
+                                if (
+                                  /Unsupported node type/.test(error.message)
+                                ) {
+                                  "Literal" === declaredDependencyNode.type
+                                    ? dependencies.has(
+                                        declaredDependencyNode.value
+                                      )
+                                      ? reportProblem({
+                                          node: declaredDependencyNode,
+                                          message:
+                                            "The " +
+                                            declaredDependencyNode.raw +
+                                            " literal is not a valid dependency because it never changes. Did you mean to include " +
+                                            (declaredDependencyNode.value +
+                                              " in the array instead?")
+                                        })
+                                      : reportProblem({
+                                          node: declaredDependencyNode,
+                                          message:
+                                            "The " +
+                                            declaredDependencyNode.raw +
+                                            " literal is not a valid dependency because it never changes. You can safely remove it."
+                                        })
                                     : reportProblem({
                                         node: declaredDependencyNode,
                                         message:
-                                          "The " +
-                                          declaredDependencyNode.raw +
-                                          " literal is not a valid dependency because it never changes. You can safely remove it."
-                                      })
-                                  : reportProblem({
-                                      node: declaredDependencyNode,
-                                      message:
-                                        "React Hook " +
-                                        getSource(reactiveHook) +
-                                        " has a complex expression in the dependency array. Extract it to a separate variable so it can be statically checked."
-                                    });
-                                return;
+                                          "React Hook " +
+                                          getSource(reactiveHook) +
+                                          " has a complex expression in the dependency array. Extract it to a separate variable so it can be statically checked."
+                                      });
+                                  return;
+                                }
+                                throw error;
                               }
-                              throw error;
-                            }
-                            for (
-                              var maybeID = declaredDependencyNode;
-                              "MemberExpression" === maybeID.type ||
-                              "OptionalMemberExpression" === maybeID.type ||
-                              "ChainExpression" === maybeID.type;
+                              for (
+                                var maybeID = declaredDependencyNode;
+                                "MemberExpression" === maybeID.type ||
+                                "OptionalMemberExpression" === maybeID.type ||
+                                "ChainExpression" === maybeID.type;
 
-                            )
-                              maybeID =
-                                maybeID.object || maybeID.expression.object;
-                            var isDeclaredInComponent =
-                              !componentScope.through.some(function (ref) {
-                                return ref.identifier === maybeID;
+                              )
+                                maybeID =
+                                  maybeID.object || maybeID.expression.object;
+                              var isDeclaredInComponent =
+                                !componentScope.through.some(function (ref) {
+                                  return ref.identifier === maybeID;
+                                });
+                              declaredDependencies.push({
+                                key: declaredDependency,
+                                node: declaredDependencyNode
                               });
-                            declaredDependencies.push({
-                              key: declaredDependency,
-                              node: declaredDependencyNode
-                            });
-                            isDeclaredInComponent ||
-                              externalDependencies.add(declaredDependency);
+                              isDeclaredInComponent ||
+                                externalDependencies.add(declaredDependency);
+                            }
+                        })
+                      : reportProblem({
+                          node: declaredDependenciesNode,
+                          message:
+                            "React Hook " +
+                            getSource(reactiveHook) +
+                            " was passed a dependency list that is not an array literal. This means we can't statically verify whether you've passed the correct dependencies."
+                        });
+                    var _collectRecommendatio2 = collectRecommendations({
+                      dependencies: dependencies,
+                      declaredDependencies: declaredDependencies,
+                      stableDependencies: stableDependencies,
+                      externalDependencies: externalDependencies,
+                      isEffect: isEffect
+                    });
+                    currentScope =
+                      _collectRecommendatio2.unnecessaryDependencies;
+                    var missingDependencies =
+                        _collectRecommendatio2.missingDependencies,
+                      duplicateDependencies =
+                        _collectRecommendatio2.duplicateDependencies,
+                      suggestedDeps =
+                        _collectRecommendatio2.suggestedDependencies;
+                    if (
+                      0 ===
+                      duplicateDependencies.size +
+                        missingDependencies.size +
+                        currentScope.size
+                    )
+                      scanForConstructions({
+                        declaredDependencies: declaredDependencies,
+                        declaredDependenciesNode: declaredDependenciesNode,
+                        componentScope: componentScope,
+                        scope: scope
+                      }).forEach(function (_ref4) {
+                        var construction = _ref4.construction,
+                          isUsedOutsideOfHook = _ref4.isUsedOutsideOfHook;
+                        _ref4 = _ref4.depType;
+                        var wrapperHook =
+                            "function" === _ref4 ? "useCallback" : "useMemo",
+                          constructionType =
+                            "function" === _ref4
+                              ? "definition"
+                              : "initialization",
+                          defaultAdvice =
+                            "wrap the " +
+                            constructionType +
+                            " of '" +
+                            construction.name.name +
+                            "' in its own " +
+                            wrapperHook +
+                            "() Hook.";
+                        defaultAdvice =
+                          "The '" +
+                          construction.name.name +
+                          "' " +
+                          _ref4 +
+                          " " +
+                          ("conditional" === _ref4 ||
+                          "logical expression" === _ref4
+                            ? "could make"
+                            : "makes") +
+                          " the dependencies of " +
+                          (reactiveHookName +
+                            " Hook (at line " +
+                            declaredDependenciesNode.loc.start.line +
+                            ") change on every render. ") +
+                          (isUsedOutsideOfHook
+                            ? "To fix this, " + defaultAdvice
+                            : "Move it inside the " +
+                              reactiveHookName +
+                              " callback. Alternatively, " +
+                              defaultAdvice);
+                        var suggest;
+                        isUsedOutsideOfHook &&
+                          "Variable" === construction.type &&
+                          "function" === _ref4 &&
+                          (suggest = [
+                            {
+                              desc:
+                                "Wrap the " +
+                                constructionType +
+                                " of '" +
+                                construction.name.name +
+                                "' in its own " +
+                                wrapperHook +
+                                "() Hook.",
+                              fix: function (fixer) {
+                                var _ref5 =
+                                    "useMemo" === wrapperHook
+                                      ? ["useMemo(() => { return ", "; })"]
+                                      : ["useCallback(", ")"],
+                                  after = _ref5[1];
+                                return [
+                                  fixer.insertTextBefore(
+                                    construction.node.init,
+                                    _ref5[0]
+                                  ),
+                                  fixer.insertTextAfter(
+                                    construction.node.init,
+                                    after
+                                  )
+                                ];
+                              }
+                            }
+                          ]);
+                        reportProblem({
+                          node: construction.node,
+                          message: defaultAdvice,
+                          suggest: suggest
+                        });
+                      });
+                    else {
+                      !isEffect &&
+                        0 < missingDependencies.size &&
+                        (suggestedDeps = collectRecommendations({
+                          dependencies: dependencies,
+                          declaredDependencies: [],
+                          stableDependencies: stableDependencies,
+                          externalDependencies: externalDependencies,
+                          isEffect: isEffect
+                        }).suggestedDependencies);
+                      (function () {
+                        if (0 === declaredDependencies.length) return !0;
+                        var declaredDepKeys = declaredDependencies.map(
+                            function (dep) {
+                              return dep.key;
+                            }
+                          ),
+                          sortedDeclaredDepKeys = declaredDepKeys
+                            .slice()
+                            .sort();
+                        return (
+                          declaredDepKeys.join(",") ===
+                          sortedDeclaredDepKeys.join(",")
+                        );
+                      })() && suggestedDeps.sort();
+                      _collectRecommendatio2 = "";
+                      if (0 < currentScope.size) {
+                        var badRef = null;
+                        Array.from(currentScope.keys()).forEach(function (key) {
+                          null === badRef &&
+                            key.endsWith(".current") &&
+                            (badRef = key);
+                        });
+                        if (null !== badRef)
+                          _collectRecommendatio2 =
+                            " Mutable values like '" +
+                            badRef +
+                            "' aren't valid dependencies because mutating them doesn't re-render the component.";
+                        else if (0 < externalDependencies.size) {
+                          var dep = Array.from(externalDependencies)[0];
+                          scope.set.has(dep) ||
+                            (_collectRecommendatio2 =
+                              " Outer scope values like '" +
+                              dep +
+                              "' aren't valid dependencies because mutating them doesn't re-render the component.");
+                        }
+                      }
+                      if (
+                        !_collectRecommendatio2 &&
+                        missingDependencies.has("props")
+                      ) {
+                        scope = dependencies.get("props");
+                        if (null == scope) return;
+                        scope = scope.references;
+                        if (!Array.isArray(scope)) return;
+                        dep = !0;
+                        for (
+                          var i$jscomp$0 = 0;
+                          i$jscomp$0 < scope.length;
+                          i$jscomp$0++
+                        ) {
+                          var id = fastFindReferenceWithParent(
+                            componentScope.block,
+                            scope[i$jscomp$0].identifier
+                          );
+                          if (!id) {
+                            dep = !1;
+                            break;
                           }
-                      })
-                    : reportProblem({
+                          id = id.parent;
+                          if (null == id) {
+                            dep = !1;
+                            break;
+                          }
+                          if (
+                            "MemberExpression" !== id.type &&
+                            "OptionalMemberExpression" !== id.type
+                          ) {
+                            dep = !1;
+                            break;
+                          }
+                        }
+                        dep &&
+                          (_collectRecommendatio2 =
+                            " However, 'props' will change when *any* prop changes, so the preferred fix is to destructure the 'props' object outside of the " +
+                            (reactiveHookName +
+                              " call and refer to those specific props inside ") +
+                            (getSource(reactiveHook) + "."));
+                      }
+                      if (
+                        !_collectRecommendatio2 &&
+                        0 < missingDependencies.size
+                      ) {
+                        var missingCallbackDep = null;
+                        missingDependencies.forEach(function (missingDep) {
+                          if (!missingCallbackDep) {
+                            var topScopeRef =
+                                componentScope.set.get(missingDep),
+                              usedDep = dependencies.get(missingDep);
+                            if (
+                              usedDep.references[0].resolved === topScopeRef &&
+                              ((topScopeRef = topScopeRef.defs[0]),
+                              null != topScopeRef &&
+                                null != topScopeRef.name &&
+                                "Parameter" === topScopeRef.type)
+                            ) {
+                              topScopeRef = !1;
+                              for (
+                                var id, _i2 = 0;
+                                _i2 < usedDep.references.length;
+                                _i2++
+                              )
+                                if (
+                                  ((id = usedDep.references[_i2].identifier),
+                                  null != id &&
+                                    null != id.parent &&
+                                    ("CallExpression" === id.parent.type ||
+                                      "OptionalCallExpression" ===
+                                        id.parent.type) &&
+                                    id.parent.callee === id)
+                                ) {
+                                  topScopeRef = !0;
+                                  break;
+                                }
+                              topScopeRef && (missingCallbackDep = missingDep);
+                            }
+                          }
+                        });
+                        null !== missingCallbackDep &&
+                          (_collectRecommendatio2 =
+                            " If '" +
+                            missingCallbackDep +
+                            "' changes too often, find the parent component that defines it and wrap that definition in useCallback.");
+                      }
+                      if (
+                        !_collectRecommendatio2 &&
+                        0 < missingDependencies.size
+                      ) {
+                        var setStateRecommendation = null;
+                        missingDependencies.forEach(function (missingDep) {
+                          if (null === setStateRecommendation)
+                            for (
+                              var references =
+                                  dependencies.get(missingDep).references,
+                                id,
+                                maybeCall,
+                                _i3 = 0;
+                              _i3 < references.length;
+                              _i3++
+                            ) {
+                              id = references[_i3].identifier;
+                              for (
+                                maybeCall = id.parent;
+                                null != maybeCall &&
+                                maybeCall !== componentScope.block;
+
+                              ) {
+                                if ("CallExpression" === maybeCall.type) {
+                                  var correspondingStateVariable =
+                                    setStateCallSites.get(maybeCall.callee);
+                                  if (null != correspondingStateVariable) {
+                                    correspondingStateVariable.name ===
+                                    missingDep
+                                      ? (setStateRecommendation = {
+                                          missingDep: missingDep,
+                                          setter: maybeCall.callee.name,
+                                          form: "updater"
+                                        })
+                                      : stateVariables.has(id)
+                                        ? (setStateRecommendation = {
+                                            missingDep: missingDep,
+                                            setter: maybeCall.callee.name,
+                                            form: "reducer"
+                                          })
+                                        : ((id = references[_i3].resolved),
+                                          null != id &&
+                                            ((id = id.defs[0]),
+                                            null != id &&
+                                              "Parameter" === id.type &&
+                                              (setStateRecommendation = {
+                                                missingDep: missingDep,
+                                                setter: maybeCall.callee.name,
+                                                form: "inlineReducer"
+                                              })));
+                                    break;
+                                  }
+                                }
+                                maybeCall = maybeCall.parent;
+                              }
+                              if (null !== setStateRecommendation) break;
+                            }
+                        });
+                        if (null !== setStateRecommendation)
+                          switch (setStateRecommendation.form) {
+                            case "reducer":
+                              _collectRecommendatio2 =
+                                " You can also replace multiple useState variables with useReducer if '" +
+                                (setStateRecommendation.setter +
+                                  "' needs the current value of '") +
+                                (setStateRecommendation.missingDep + "'.");
+                              break;
+                            case "inlineReducer":
+                              _collectRecommendatio2 =
+                                " If '" +
+                                setStateRecommendation.setter +
+                                "' needs the current value of '" +
+                                (setStateRecommendation.missingDep +
+                                  "', you can also switch to useReducer instead of useState and read '") +
+                                (setStateRecommendation.missingDep +
+                                  "' in the reducer.");
+                              break;
+                            case "updater":
+                              _collectRecommendatio2 =
+                                " You can also do a functional update '" +
+                                setStateRecommendation.setter +
+                                "(" +
+                                setStateRecommendation.missingDep.slice(0, 1) +
+                                " => ...)' if you only need '" +
+                                setStateRecommendation.missingDep +
+                                "' in the '" +
+                                (setStateRecommendation.setter + "' call.");
+                              break;
+                            default:
+                              throw Error("Unknown case.");
+                          }
+                      }
+                      reportProblem({
                         node: declaredDependenciesNode,
                         message:
                           "React Hook " +
                           getSource(reactiveHook) +
-                          " was passed a dependency list that is not an array literal. This means we can't statically verify whether you've passed the correct dependencies."
-                      });
-                  var _collectRecommendatio2 = collectRecommendations({
-                    dependencies: dependencies,
-                    declaredDependencies: declaredDependencies,
-                    stableDependencies: stableDependencies,
-                    externalDependencies: externalDependencies,
-                    isEffect: isEffect
-                  });
-                  currentScope = _collectRecommendatio2.unnecessaryDependencies;
-                  var missingDependencies =
-                      _collectRecommendatio2.missingDependencies,
-                    duplicateDependencies =
-                      _collectRecommendatio2.duplicateDependencies,
-                    suggestedDeps =
-                      _collectRecommendatio2.suggestedDependencies;
-                  if (
-                    0 ===
-                    duplicateDependencies.size +
-                      missingDependencies.size +
-                      currentScope.size
-                  )
-                    scanForConstructions({
-                      declaredDependencies: declaredDependencies,
-                      declaredDependenciesNode: declaredDependenciesNode,
-                      componentScope: componentScope,
-                      scope: scope
-                    }).forEach(function (_ref4) {
-                      var construction = _ref4.construction,
-                        isUsedOutsideOfHook = _ref4.isUsedOutsideOfHook;
-                      _ref4 = _ref4.depType;
-                      var wrapperHook =
-                          "function" === _ref4 ? "useCallback" : "useMemo",
-                        constructionType =
-                          "function" === _ref4
-                            ? "definition"
-                            : "initialization",
-                        defaultAdvice =
-                          "wrap the " +
-                          constructionType +
-                          " of '" +
-                          construction.name.name +
-                          "' in its own " +
-                          wrapperHook +
-                          "() Hook.";
-                      defaultAdvice =
-                        "The '" +
-                        construction.name.name +
-                        "' " +
-                        _ref4 +
-                        " " +
-                        ("conditional" === _ref4 ||
-                        "logical expression" === _ref4
-                          ? "could make"
-                          : "makes") +
-                        " the dependencies of " +
-                        (reactiveHookName +
-                          " Hook (at line " +
-                          declaredDependenciesNode.loc.start.line +
-                          ") change on every render. ") +
-                        (isUsedOutsideOfHook
-                          ? "To fix this, " + defaultAdvice
-                          : "Move it inside the " +
-                            reactiveHookName +
-                            " callback. Alternatively, " +
-                            defaultAdvice);
-                      var suggest;
-                      isUsedOutsideOfHook &&
-                        "Variable" === construction.type &&
-                        "function" === _ref4 &&
-                        (suggest = [
+                          " has " +
+                          (getWarningMessage(
+                            missingDependencies,
+                            "a",
+                            "missing",
+                            "include"
+                          ) ||
+                            getWarningMessage(
+                              currentScope,
+                              "an",
+                              "unnecessary",
+                              "exclude"
+                            ) ||
+                            getWarningMessage(
+                              duplicateDependencies,
+                              "a",
+                              "duplicate",
+                              "omit"
+                            )) +
+                          _collectRecommendatio2,
+                        suggest: [
                           {
                             desc:
-                              "Wrap the " +
-                              constructionType +
-                              " of '" +
-                              construction.name.name +
-                              "' in its own " +
-                              wrapperHook +
-                              "() Hook.",
+                              "Update the dependencies array to be: [" +
+                              suggestedDeps.map(formatDependency).join(", ") +
+                              "]",
                             fix: function (fixer) {
-                              var _ref5 =
-                                  "useMemo" === wrapperHook
-                                    ? ["useMemo(() => { return ", "; })"]
-                                    : ["useCallback(", ")"],
-                                after = _ref5[1];
-                              return [
-                                fixer.insertTextBefore(
-                                  construction.node.init,
-                                  _ref5[0]
-                                ),
-                                fixer.insertTextAfter(
-                                  construction.node.init,
-                                  after
-                                )
-                              ];
+                              return fixer.replaceText(
+                                declaredDependenciesNode,
+                                "[" +
+                                  suggestedDeps
+                                    .map(formatDependency)
+                                    .join(", ") +
+                                  "]"
+                              );
                             }
                           }
-                        ]);
-                      reportProblem({
-                        node: construction.node,
-                        message: defaultAdvice,
-                        suggest: suggest
+                        ]
                       });
+                    }
+                  } else {
+                    var setStateInsideEffectWithoutDeps = null;
+                    dependencies.forEach(function (_ref3, key) {
+                      setStateInsideEffectWithoutDeps ||
+                        _ref3.references.forEach(function (reference) {
+                          if (
+                            !setStateInsideEffectWithoutDeps &&
+                            setStateCallSites.has(reference.identifier)
+                          ) {
+                            for (
+                              reference = reference.from;
+                              "function" !== reference.type;
+
+                            )
+                              reference = reference.upper;
+                            reference.block === node &&
+                              (setStateInsideEffectWithoutDeps = key);
+                          }
+                        });
                     });
-                  else {
-                    !isEffect &&
-                      0 < missingDependencies.size &&
-                      (suggestedDeps = collectRecommendations({
+                    if (setStateInsideEffectWithoutDeps) {
+                      var _suggestedDependencies = collectRecommendations({
                         dependencies: dependencies,
                         declaredDependencies: [],
                         stableDependencies: stableDependencies,
-                        externalDependencies: externalDependencies,
-                        isEffect: isEffect
-                      }).suggestedDependencies);
-                    (function () {
-                      if (0 === declaredDependencies.length) return !0;
-                      var declaredDepKeys = declaredDependencies.map(
-                          function (dep) {
-                            return dep.key;
-                          }
-                        ),
-                        sortedDeclaredDepKeys = declaredDepKeys.slice().sort();
-                      return (
-                        declaredDepKeys.join(",") ===
-                        sortedDeclaredDepKeys.join(",")
-                      );
-                    })() && suggestedDeps.sort();
-                    _collectRecommendatio2 = "";
-                    if (0 < currentScope.size) {
-                      var badRef = null;
-                      Array.from(currentScope.keys()).forEach(function (key) {
-                        null === badRef &&
-                          key.endsWith(".current") &&
-                          (badRef = key);
-                      });
-                      if (null !== badRef)
-                        _collectRecommendatio2 =
-                          " Mutable values like '" +
-                          badRef +
-                          "' aren't valid dependencies because mutating them doesn't re-render the component.";
-                      else if (0 < externalDependencies.size) {
-                        var dep = Array.from(externalDependencies)[0];
-                        scope.set.has(dep) ||
-                          (_collectRecommendatio2 =
-                            " Outer scope values like '" +
-                            dep +
-                            "' aren't valid dependencies because mutating them doesn't re-render the component.");
-                      }
-                    }
-                    if (
-                      !_collectRecommendatio2 &&
-                      missingDependencies.has("props")
-                    ) {
-                      scope = dependencies.get("props");
-                      if (null == scope) return;
-                      scope = scope.references;
-                      if (!Array.isArray(scope)) return;
-                      dep = !0;
-                      for (
-                        var i$jscomp$0 = 0;
-                        i$jscomp$0 < scope.length;
-                        i$jscomp$0++
-                      ) {
-                        var id = fastFindReferenceWithParent(
-                          componentScope.block,
-                          scope[i$jscomp$0].identifier
-                        );
-                        if (!id) {
-                          dep = !1;
-                          break;
-                        }
-                        id = id.parent;
-                        if (null == id) {
-                          dep = !1;
-                          break;
-                        }
-                        if (
-                          "MemberExpression" !== id.type &&
-                          "OptionalMemberExpression" !== id.type
-                        ) {
-                          dep = !1;
-                          break;
-                        }
-                      }
-                      dep &&
-                        (_collectRecommendatio2 =
-                          " However, 'props' will change when *any* prop changes, so the preferred fix is to destructure the 'props' object outside of the " +
-                          (reactiveHookName +
-                            " call and refer to those specific props inside ") +
-                          (getSource(reactiveHook) + "."));
-                    }
-                    if (
-                      !_collectRecommendatio2 &&
-                      0 < missingDependencies.size
-                    ) {
-                      var missingCallbackDep = null;
-                      missingDependencies.forEach(function (missingDep) {
-                        if (!missingCallbackDep) {
-                          var topScopeRef = componentScope.set.get(missingDep),
-                            usedDep = dependencies.get(missingDep);
-                          if (
-                            usedDep.references[0].resolved === topScopeRef &&
-                            ((topScopeRef = topScopeRef.defs[0]),
-                            null != topScopeRef &&
-                              null != topScopeRef.name &&
-                              "Parameter" === topScopeRef.type)
-                          ) {
-                            topScopeRef = !1;
-                            for (
-                              var id, _i2 = 0;
-                              _i2 < usedDep.references.length;
-                              _i2++
-                            )
-                              if (
-                                ((id = usedDep.references[_i2].identifier),
-                                null != id &&
-                                  null != id.parent &&
-                                  ("CallExpression" === id.parent.type ||
-                                    "OptionalCallExpression" ===
-                                      id.parent.type) &&
-                                  id.parent.callee === id)
-                              ) {
-                                topScopeRef = !0;
-                                break;
-                              }
-                            topScopeRef && (missingCallbackDep = missingDep);
-                          }
-                        }
-                      });
-                      null !== missingCallbackDep &&
-                        (_collectRecommendatio2 =
-                          " If '" +
-                          missingCallbackDep +
-                          "' changes too often, find the parent component that defines it and wrap that definition in useCallback.");
-                    }
-                    if (
-                      !_collectRecommendatio2 &&
-                      0 < missingDependencies.size
-                    ) {
-                      var setStateRecommendation = null;
-                      missingDependencies.forEach(function (missingDep) {
-                        if (null === setStateRecommendation)
-                          for (
-                            var references =
-                                dependencies.get(missingDep).references,
-                              id,
-                              maybeCall,
-                              _i3 = 0;
-                            _i3 < references.length;
-                            _i3++
-                          ) {
-                            id = references[_i3].identifier;
-                            for (
-                              maybeCall = id.parent;
-                              null != maybeCall &&
-                              maybeCall !== componentScope.block;
-
-                            ) {
-                              if ("CallExpression" === maybeCall.type) {
-                                var correspondingStateVariable =
-                                  setStateCallSites.get(maybeCall.callee);
-                                if (null != correspondingStateVariable) {
-                                  correspondingStateVariable.name === missingDep
-                                    ? (setStateRecommendation = {
-                                        missingDep: missingDep,
-                                        setter: maybeCall.callee.name,
-                                        form: "updater"
-                                      })
-                                    : stateVariables.has(id)
-                                      ? (setStateRecommendation = {
-                                          missingDep: missingDep,
-                                          setter: maybeCall.callee.name,
-                                          form: "reducer"
-                                        })
-                                      : ((id = references[_i3].resolved),
-                                        null != id &&
-                                          ((id = id.defs[0]),
-                                          null != id &&
-                                            "Parameter" === id.type &&
-                                            (setStateRecommendation = {
-                                              missingDep: missingDep,
-                                              setter: maybeCall.callee.name,
-                                              form: "inlineReducer"
-                                            })));
-                                  break;
-                                }
-                              }
-                              maybeCall = maybeCall.parent;
-                            }
-                            if (null !== setStateRecommendation) break;
-                          }
-                      });
-                      if (null !== setStateRecommendation)
-                        switch (setStateRecommendation.form) {
-                          case "reducer":
-                            _collectRecommendatio2 =
-                              " You can also replace multiple useState variables with useReducer if '" +
-                              (setStateRecommendation.setter +
-                                "' needs the current value of '") +
-                              (setStateRecommendation.missingDep + "'.");
-                            break;
-                          case "inlineReducer":
-                            _collectRecommendatio2 =
-                              " If '" +
-                              setStateRecommendation.setter +
-                              "' needs the current value of '" +
-                              (setStateRecommendation.missingDep +
-                                "', you can also switch to useReducer instead of useState and read '") +
-                              (setStateRecommendation.missingDep +
-                                "' in the reducer.");
-                            break;
-                          case "updater":
-                            _collectRecommendatio2 =
-                              " You can also do a functional update '" +
-                              setStateRecommendation.setter +
-                              "(" +
-                              setStateRecommendation.missingDep.slice(0, 1) +
-                              " => ...)' if you only need '" +
-                              setStateRecommendation.missingDep +
-                              "' in the '" +
-                              (setStateRecommendation.setter + "' call.");
-                            break;
-                          default:
-                            throw Error("Unknown case.");
-                        }
-                    }
-                    reportProblem({
-                      node: declaredDependenciesNode,
-                      message:
-                        "React Hook " +
-                        getSource(reactiveHook) +
-                        " has " +
-                        (getWarningMessage(
-                          missingDependencies,
-                          "a",
-                          "missing",
-                          "include"
-                        ) ||
-                          getWarningMessage(
-                            currentScope,
-                            "an",
-                            "unnecessary",
-                            "exclude"
-                          ) ||
-                          getWarningMessage(
-                            duplicateDependencies,
-                            "a",
-                            "duplicate",
-                            "omit"
-                          )) +
-                        _collectRecommendatio2,
-                      suggest: [
-                        {
-                          desc:
-                            "Update the dependencies array to be: [" +
-                            suggestedDeps.map(formatDependency).join(", ") +
-                            "]",
-                          fix: function (fixer) {
-                            return fixer.replaceText(
-                              declaredDependenciesNode,
-                              "[" +
-                                suggestedDeps.map(formatDependency).join(", ") +
-                                "]"
-                            );
-                          }
-                        }
-                      ]
-                    });
-                  }
-                } else {
-                  var setStateInsideEffectWithoutDeps = null;
-                  dependencies.forEach(function (_ref3, key) {
-                    setStateInsideEffectWithoutDeps ||
-                      _ref3.references.forEach(function (reference) {
-                        if (
-                          !setStateInsideEffectWithoutDeps &&
-                          setStateCallSites.has(reference.identifier)
-                        ) {
-                          for (
-                            reference = reference.from;
-                            "function" !== reference.type;
-
-                          )
-                            reference = reference.upper;
-                          reference.block === node &&
-                            (setStateInsideEffectWithoutDeps = key);
-                        }
-                      });
-                  });
-                  if (setStateInsideEffectWithoutDeps) {
-                    var _suggestedDependencies = collectRecommendations({
-                      dependencies: dependencies,
-                      declaredDependencies: [],
-                      stableDependencies: stableDependencies,
-                      externalDependencies: new Set(),
-                      isEffect: !0
-                    }).suggestedDependencies;
-                    reportProblem({
-                      node: reactiveHook,
-                      message:
-                        "React Hook " +
-                        reactiveHookName +
-                        " contains a call to '" +
-                        setStateInsideEffectWithoutDeps +
-                        "'. Without a list of dependencies, this can lead to an infinite chain of updates. To fix this, pass [" +
-                        _suggestedDependencies.join(", ") +
-                        ("] as a second argument to the " +
+                        externalDependencies: new Set(),
+                        isEffect: !0
+                      }).suggestedDependencies;
+                      reportProblem({
+                        node: reactiveHook,
+                        message:
+                          "React Hook " +
                           reactiveHookName +
-                          " Hook."),
-                      suggest: [
-                        {
-                          desc:
-                            "Add dependencies array: [" +
-                            _suggestedDependencies.join(", ") +
-                            "]",
-                          fix: function (fixer) {
-                            return fixer.insertTextAfter(
-                              node,
-                              ", [" + _suggestedDependencies.join(", ") + "]"
-                            );
+                          " contains a call to '" +
+                          setStateInsideEffectWithoutDeps +
+                          "'. Without a list of dependencies, this can lead to an infinite chain of updates. To fix this, pass [" +
+                          _suggestedDependencies.join(", ") +
+                          ("] as a second argument to the " +
+                            reactiveHookName +
+                            " Hook."),
+                        suggest: [
+                          {
+                            desc:
+                              "Add dependencies array: [" +
+                              _suggestedDependencies.join(", ") +
+                              "]",
+                            fix: function (fixer) {
+                              return fixer.insertTextAfter(
+                                node,
+                                ", [" + _suggestedDependencies.join(", ") + "]"
+                              );
+                            }
                           }
-                        }
-                      ]
-                    });
+                        ]
+                      });
+                    }
                   }
-                }
+              }
             }
-          }
-          var enableDangerousAutofixThisMayCauseInfiniteLoops =
-              (context.options &&
-                context.options[0] &&
-                context.options[0]
-                  .enableDangerousAutofixThisMayCauseInfiniteLoops) ||
-              !1,
-            options = {
-              additionalHooks:
-                context.options &&
-                context.options[0] &&
-                context.options[0].additionalHooks
-                  ? new RegExp(context.options[0].additionalHooks)
-                  : void 0,
-              enableDangerousAutofixThisMayCauseInfiniteLoops:
-                enableDangerousAutofixThisMayCauseInfiniteLoops
-            },
-            getSource =
-              "function" === typeof context.getSource
-                ? function (node) {
-                    return context.getSource(node);
-                  }
-                : function (node) {
-                    return context.sourceCode.getText(node);
-                  },
-            getScope =
-              "function" === typeof context.getScope
-                ? function () {
-                    return context.getScope();
-                  }
-                : function (node) {
-                    return context.sourceCode.getScope(node);
-                  },
-            scopeManager = context.getSourceCode().scopeManager,
-            setStateCallSites = new WeakMap(),
-            stateVariables = new WeakSet(),
-            stableKnownValueCache = new WeakMap(),
-            functionWithoutCapturedValueCache = new WeakMap(),
-            useEffectEventVariables = new WeakSet();
-          return {
-            CallExpression: function (node) {
-              var callbackIndex = getReactiveHookCallbackIndex(
-                node.callee,
-                options
-              );
-              if (-1 !== callbackIndex) {
-                var callback = node.arguments[callbackIndex],
-                  reactiveHook = node.callee,
-                  reactiveHookName =
-                    getNodeWithoutReactNamespace(reactiveHook).name;
-                node = node.arguments[callbackIndex + 1];
-                var declaredDependenciesNode =
-                  !node ||
-                  ("Identifier" === node.type && "undefined" === node.name)
-                    ? void 0
-                    : node;
-                node = /Effect($|[^a-z])/g.test(reactiveHookName);
-                if (callback)
-                  if (declaredDependenciesNode || node) {
-                    for (
-                      ;
-                      "TSAsExpression" === callback.type ||
-                      "AsExpression" === callback.type;
+            var enableDangerousAutofixThisMayCauseInfiniteLoops =
+                (context.options &&
+                  context.options[0] &&
+                  context.options[0]
+                    .enableDangerousAutofixThisMayCauseInfiniteLoops) ||
+                !1,
+              options = {
+                additionalHooks:
+                  context.options &&
+                  context.options[0] &&
+                  context.options[0].additionalHooks
+                    ? new RegExp(context.options[0].additionalHooks)
+                    : void 0,
+                enableDangerousAutofixThisMayCauseInfiniteLoops:
+                  enableDangerousAutofixThisMayCauseInfiniteLoops
+              },
+              getSource =
+                "function" === typeof context.getSource
+                  ? function (node) {
+                      return context.getSource(node);
+                    }
+                  : function (node) {
+                      return context.sourceCode.getText(node);
+                    },
+              getScope =
+                "function" === typeof context.getScope
+                  ? function () {
+                      return context.getScope();
+                    }
+                  : function (node) {
+                      return context.sourceCode.getScope(node);
+                    },
+              scopeManager = context.getSourceCode().scopeManager,
+              setStateCallSites = new WeakMap(),
+              stateVariables = new WeakSet(),
+              stableKnownValueCache = new WeakMap(),
+              functionWithoutCapturedValueCache = new WeakMap(),
+              useEffectEventVariables = new WeakSet();
+            return {
+              CallExpression: function (node) {
+                var callbackIndex = getReactiveHookCallbackIndex(
+                  node.callee,
+                  options
+                );
+                if (-1 !== callbackIndex) {
+                  var callback = node.arguments[callbackIndex],
+                    reactiveHook = node.callee,
+                    reactiveHookName =
+                      getNodeWithoutReactNamespace(reactiveHook).name;
+                  node = node.arguments[callbackIndex + 1];
+                  var declaredDependenciesNode =
+                    !node ||
+                    ("Identifier" === node.type && "undefined" === node.name)
+                      ? void 0
+                      : node;
+                  node = /Effect($|[^a-z])/g.test(reactiveHookName);
+                  if (callback)
+                    if (declaredDependenciesNode || node) {
+                      for (
+                        ;
+                        "TSAsExpression" === callback.type ||
+                        "AsExpression" === callback.type;
 
-                    )
-                      callback = callback.expression;
-                    switch (callback.type) {
-                      case "FunctionExpression":
-                      case "ArrowFunctionExpression":
-                        visitFunctionWithDependencies(
-                          callback,
-                          declaredDependenciesNode,
-                          reactiveHook,
-                          reactiveHookName,
-                          node
-                        );
-                        return;
-                      case "Identifier":
-                        if (
-                          !declaredDependenciesNode ||
-                          (declaredDependenciesNode.elements &&
-                            declaredDependenciesNode.elements.some(
-                              function (el) {
-                                return (
-                                  el &&
-                                  "Identifier" === el.type &&
-                                  el.name === callback.name
-                                );
-                              }
-                            ))
-                        )
+                      )
+                        callback = callback.expression;
+                      switch (callback.type) {
+                        case "FunctionExpression":
+                        case "ArrowFunctionExpression":
+                          visitFunctionWithDependencies(
+                            callback,
+                            declaredDependenciesNode,
+                            reactiveHook,
+                            reactiveHookName,
+                            node
+                          );
                           return;
-                        callbackIndex = getScope(callback).set.get(
-                          callback.name
-                        );
-                        if (null == callbackIndex || null == callbackIndex.defs)
-                          return;
-                        callbackIndex = callbackIndex.defs[0];
-                        if (!callbackIndex || !callbackIndex.node) break;
-                        if ("Parameter" === callbackIndex.type) {
+                        case "Identifier":
+                          if (
+                            !declaredDependenciesNode ||
+                            (declaredDependenciesNode.elements &&
+                              declaredDependenciesNode.elements.some(
+                                function (el) {
+                                  return (
+                                    el &&
+                                    "Identifier" === el.type &&
+                                    el.name === callback.name
+                                  );
+                                }
+                              ))
+                          )
+                            return;
+                          callbackIndex = getScope(callback).set.get(
+                            callback.name
+                          );
+                          if (
+                            null == callbackIndex ||
+                            null == callbackIndex.defs
+                          )
+                            return;
+                          callbackIndex = callbackIndex.defs[0];
+                          if (!callbackIndex || !callbackIndex.node) break;
+                          if ("Parameter" === callbackIndex.type) {
+                            reportProblem({
+                              node: reactiveHook,
+                              message:
+                                getUnknownDependenciesMessage(reactiveHookName)
+                            });
+                            return;
+                          }
+                          if (
+                            "Variable" !== callbackIndex.type &&
+                            "FunctionName" !== callbackIndex.type
+                          )
+                            break;
+                          switch (callbackIndex.node.type) {
+                            case "FunctionDeclaration":
+                              visitFunctionWithDependencies(
+                                callbackIndex.node,
+                                declaredDependenciesNode,
+                                reactiveHook,
+                                reactiveHookName,
+                                node
+                              );
+                              return;
+                            case "VariableDeclarator":
+                              if ((callbackIndex = callbackIndex.node.init))
+                                switch (callbackIndex.type) {
+                                  case "ArrowFunctionExpression":
+                                  case "FunctionExpression":
+                                    visitFunctionWithDependencies(
+                                      callbackIndex,
+                                      declaredDependenciesNode,
+                                      reactiveHook,
+                                      reactiveHookName,
+                                      node
+                                    );
+                                    return;
+                                }
+                          }
+                          break;
+                        default:
                           reportProblem({
                             node: reactiveHook,
                             message:
                               getUnknownDependenciesMessage(reactiveHookName)
                           });
                           return;
-                        }
-                        if (
-                          "Variable" !== callbackIndex.type &&
-                          "FunctionName" !== callbackIndex.type
-                        )
-                          break;
-                        switch (callbackIndex.node.type) {
-                          case "FunctionDeclaration":
-                            visitFunctionWithDependencies(
-                              callbackIndex.node,
-                              declaredDependenciesNode,
-                              reactiveHook,
-                              reactiveHookName,
-                              node
-                            );
-                            return;
-                          case "VariableDeclarator":
-                            if ((callbackIndex = callbackIndex.node.init))
-                              switch (callbackIndex.type) {
-                                case "ArrowFunctionExpression":
-                                case "FunctionExpression":
-                                  visitFunctionWithDependencies(
-                                    callbackIndex,
-                                    declaredDependenciesNode,
-                                    reactiveHook,
-                                    reactiveHookName,
-                                    node
-                                  );
-                                  return;
-                              }
-                        }
-                        break;
-                      default:
-                        reportProblem({
-                          node: reactiveHook,
-                          message:
-                            getUnknownDependenciesMessage(reactiveHookName)
-                        });
-                        return;
-                    }
-                    reportProblem({
-                      node: reactiveHook,
-                      message:
-                        "React Hook " +
-                        reactiveHookName +
-                        " has a missing dependency: '" +
-                        callback.name +
-                        "'. Either include it or remove the dependency array.",
-                      suggest: [
-                        {
-                          desc:
-                            "Update the dependencies array to be: [" +
-                            callback.name +
-                            "]",
-                          fix: function (fixer) {
-                            return fixer.replaceText(
-                              declaredDependenciesNode,
-                              "[" + callback.name + "]"
-                            );
-                          }
-                        }
-                      ]
-                    });
-                  } else
-                    ("useMemo" !== reactiveHookName &&
-                      "useCallback" !== reactiveHookName) ||
+                      }
                       reportProblem({
                         node: reactiveHook,
                         message:
                           "React Hook " +
                           reactiveHookName +
-                          " does nothing when called with only one argument. Did you forget to pass an array of dependencies?"
+                          " has a missing dependency: '" +
+                          callback.name +
+                          "'. Either include it or remove the dependency array.",
+                        suggest: [
+                          {
+                            desc:
+                              "Update the dependencies array to be: [" +
+                              callback.name +
+                              "]",
+                            fix: function (fixer) {
+                              return fixer.replaceText(
+                                declaredDependenciesNode,
+                                "[" + callback.name + "]"
+                              );
+                            }
+                          }
+                        ]
                       });
-                else
-                  reportProblem({
-                    node: reactiveHook,
-                    message:
-                      "React Hook " +
-                      reactiveHookName +
-                      " requires an effect callback. Did you forget to pass a callback to the hook?"
-                  });
+                    } else
+                      ("useMemo" !== reactiveHookName &&
+                        "useCallback" !== reactiveHookName) ||
+                        reportProblem({
+                          node: reactiveHook,
+                          message:
+                            "React Hook " +
+                            reactiveHookName +
+                            " does nothing when called with only one argument. Did you forget to pass an array of dependencies?"
+                        });
+                  else
+                    reportProblem({
+                      node: reactiveHook,
+                      message:
+                        "React Hook " +
+                        reactiveHookName +
+                        " requires an effect callback. Did you forget to pass a callback to the hook?"
+                    });
+                }
               }
-            }
-          };
+            };
+          }
         }
-      }
+      },
+      configRules = {
+        "react-hooks/rules-of-hooks": "error",
+        "react-hooks/exhaustive-deps": "warn"
+      },
+      legacyRecommendedConfig = {
+        plugins: ["react-hooks"],
+        rules: configRules
+      };
+    _require = {
+      meta: { name: _require.name, version: _require.version },
+      rules: rules
     };
+    configRules = {
+      "recommended-legacy": legacyRecommendedConfig,
+      "recommended-latest": {
+        name: "react-hooks/recommended",
+        plugins: { "react-hooks": _require },
+        rules: configRules
+      },
+      recommended: legacyRecommendedConfig
+    };
+    assign({}, _require, { configs: configRules });
+    exports.configs = configRules;
+    exports.rules = rules;
   })();
