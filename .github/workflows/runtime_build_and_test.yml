@@ -416,7 +416,6 @@ jobs:
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
-      - run: yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
         working-directory: fixtures/dom
       - name: Restore archived build
         uses: actions/download-artifact@v4
