@@ -496,6 +496,7 @@ module.exports = {
     {
       files: [
         'packages/react-devtools-extensions/**/*.js',
+        'packages/react-devtools-shared/src/devtools/views/**/*.js',
         'packages/react-devtools-shared/src/hook.js',
         'packages/react-devtools-shared/src/backend/console.js',
         'packages/react-devtools-shared/src/backend/shared/DevToolsComponentStackFrame.js',
