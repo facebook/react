@@ -89,6 +89,7 @@ class Header extends React.Component {
                 <option value="/selection-events">Selection Events</option>
                 <option value="/suspense">Suspense</option>
                 <option value="/form-state">Form State</option>
+                <option value="/fragment-refs">Fragment Refs</option>
               </select>
             </label>
             <label htmlFor="global_version">

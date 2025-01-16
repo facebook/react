@@ -309,3 +309,16 @@ th {
 tbody tr:nth-child(even) {
   background: #f0f0f0;
 }
+
+.card-container {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.card {
+  background: white;
+  border-radius: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.24);
+  margin: 10px;
+  padding: 10px;
+}
