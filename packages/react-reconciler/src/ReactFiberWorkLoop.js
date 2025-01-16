@@ -698,6 +698,10 @@ export function getPendingPassiveEffectsLanes(): Lanes {
   return pendingEffectsLanes;
 }
 
+export function getPendingTransitionTypes(): null | TransitionTypes {
+  return pendingTransitionTypes;
+}
+
 export function isWorkLoopSuspendedOnData(): boolean {
   return (
     workInProgressSuspendedReason === SuspendedOnData ||

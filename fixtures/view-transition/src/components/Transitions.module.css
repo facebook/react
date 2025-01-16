@@ -42,6 +42,19 @@
   }
 }
 
+::view-transition-new(.slide-right) {
+  animation: enter-slide-right ease-in 0.25s;
+}
+::view-transition-old(.slide-right) {
+  animation: exit-slide-right ease-in 0.25s;
+}
+::view-transition-new(.slide-left) {
+  animation: enter-slide-left ease-in 0.25s;
+}
+::view-transition-old(.slide-left) {
+  animation: exit-slide-left ease-in 0.25s;
+}
+
 ::view-transition-new(.enter-slide-right):only-child {
   animation: enter-slide-right ease-in 0.25s;
 }

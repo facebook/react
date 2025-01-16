@@ -62,6 +62,13 @@ export default function Page({url, navigate}) {
           <ViewTransition className={transitions['slide-on-nav']}>
             <h1>{!show ? 'A' : 'B'}</h1>
           </ViewTransition>
+          <ViewTransition
+            className={{
+              'navigation-back': transitions['slide-right'],
+              'navigation-forward': transitions['slide-left'],
+            }}>
+            <h1>{!show ? 'A' : 'B'}</h1>
+          </ViewTransition>
           {show ? (
             <div>
               {a}
