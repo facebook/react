@@ -1,7 +1,10 @@
-name: (Shared) Core Label
+name: (Shared) Check maintainer
 
 on:
-  pull_request_target:
+  workflow_call:
+    outputs:
+      is_core_team:
+        value: ${{ jobs.check_maintainer.outputs.is_core_team }}
 
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
@@ -9,12 +12,14 @@ env:
   SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
 
 jobs:
-  core_label:
+  check_maintainer:
     runs-on: ubuntu-latest
+    outputs:
+      is_core_team: ${{ steps.check_if_actor_is_maintainer.outputs.result }}
     steps:
       - uses: actions/checkout@v4
       - name: Check if actor is maintainer
-        id: check_maintainer
+        id: check_if_actor_is_maintainer
         uses: actions/github-script@v7
         with:
           script: |
@@ -28,14 +33,3 @@ jobs:
             }
             console.log(`🔴 ${actor} is NOT a maintainer`);
             return null;
-      - name: Label PR as React Core Team
-        if: ${{ steps.check_maintainer.outputs.result }}
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.issues.addLabels({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: ${{ github.event.number }},
-              labels: ['React Core Team']
-            });
