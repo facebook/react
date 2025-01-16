@@ -56,6 +56,7 @@ class Transform extends ReactiveFunctionTransform<State> {
         value: {
           kind: 'pruned-scope',
           scope: scopeBlock.scope,
+          dependencyInstructions: scopeBlock.dependencyInstructions,
           instructions: scopeBlock.instructions,
         },
       };

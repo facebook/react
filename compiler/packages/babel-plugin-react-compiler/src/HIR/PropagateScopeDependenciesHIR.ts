@@ -22,6 +22,18 @@ import {
   TInstruction,
   FunctionExpression,
   ObjectMethod,
+  BlockId,
+  makeTemporaryIdentifier,
+  Effect,
+  OptionalTerminal,
+  TBasicBlock,
+  ReactiveScopeTerminal,
+  GotoVariant,
+  PrunedScopeTerminal,
+  ReactiveInstruction,
+  ReactiveValue,
+  ReactiveScopeBlock,
+  PrunedReactiveScopeBlock,
 } from './HIR';
 import {
   collectHoistablePropertyLoads,
@@ -38,7 +50,22 @@ import {Stack, empty} from '../Utils/Stack';
 import {CompilerError} from '../CompilerError';
 import {Iterable_some} from '../Utils/utils';
 import {ReactiveScopeDependencyTreeHIR} from './DeriveMinimalDependenciesHIR';
-import {collectOptionalChainSidemap} from './CollectOptionalChainDependencies';
+import {
+  collectOptionalChainSidemap,
+  OptionalTraversalContext,
+  traverseOptionalBlock,
+} from './CollectOptionalChainDependencies';
+import {Environment} from './Environment';
+import HIRBuilder, {
+  fixScopeAndIdentifierRanges,
+  markInstructionIds,
+  markPredecessors,
+  reversePostorderBlocks,
+} from './HIRBuilder';
+import {lowerValueToTemporary} from './BuildHIR';
+import {printDependency} from '../ReactiveScopes/PrintReactiveFunction';
+import {NodePath} from '@babel/core';
+import {printPlace} from './PrintHIR';
 
 export function propagateScopeDependenciesHIR(fn: HIRFunction): void {
   const usedOutsideDeclaringScope =
@@ -65,8 +92,10 @@ export function propagateScopeDependenciesHIR(fn: HIRFunction): void {
   /**
    * Derive the minimal set of hoistable dependencies for each scope.
    */
+  const minimalDeps = new Map<ReactiveScope, Set<ReactiveScopeDependency>>();
   for (const [scope, deps] of scopeDeps) {
     if (deps.length === 0) {
+      minimalDeps.set(scope, new Set());
       continue;
     }
 
@@ -93,19 +122,616 @@ export function propagateScopeDependenciesHIR(fn: HIRFunction): void {
      * Step 3: Reduce dependencies to a minimal set.
      */
     const candidates = tree.deriveMinimalDependencies();
+    const dependencies = new Set<ReactiveScopeDependency>();
     for (const candidateDep of candidates) {
       if (
         !Iterable_some(
-          scope.dependencies,
+          dependencies,
           existingDep =>
             existingDep.identifier.declarationId ===
               candidateDep.identifier.declarationId &&
             areEqualPaths(existingDep.path, candidateDep.path),
         )
       )
-        scope.dependencies.add(candidateDep);
+        dependencies.add(candidateDep);
+    }
+    minimalDeps.set(scope, dependencies);
+  }
+
+  let changed = false;
+  /**
+   * Step 4: inject dependencies
+   */
+  for (const [_, {terminal}] of fn.body.blocks) {
+    if (terminal.kind !== 'scope' && terminal.kind !== 'pruned-scope') {
+      continue;
+    }
+    const scope = terminal.scope;
+    const deps = minimalDeps.get(scope);
+    if (deps == null || deps.size === 0) {
+      continue;
+    }
+    writeScopeDependencies(terminal, deps, fn);
+    changed = true;
+  }
+
+  if (changed) {
+    /**
+     * Step 5:
+     * Fix scope and identifier ranges to account for renumbered instructions
+     */
+    reversePostorderBlocks(fn.body);
+    markPredecessors(fn.body);
+    markInstructionIds(fn.body);
+
+    fixScopeAndIdentifierRanges(fn.body);
+  }
+
+  // Sanity check
+  {
+    for (const [scope, deps] of minimalDeps) {
+      const checkedDeps = readScopeDependencies(fn, scope.id);
+      CompilerError.invariant(checkedDeps != null, {
+        reason: '[Rewrite] Cannot find scope dep when reading',
+        loc: scope.loc,
+      });
+      CompilerError.invariant(checkedDeps.size === deps.size, {
+        reason: '[Rewrite] non matching sizes when reading',
+        description: `scopeId=${scope.id} deps=${[...deps].map(printDependency)} checkedDeps=${[...checkedDeps].map(printDependency)}`,
+        loc: scope.loc,
+      });
+      label: for (const dep of deps) {
+        for (const checkedDep of checkedDeps) {
+          if (
+            dep.identifier === checkedDep.identifier &&
+            areEqualPaths(dep.path, checkedDep.path)
+          ) {
+            continue label;
+          }
+        }
+        CompilerError.invariant(false, {
+          reason:
+            '[Rewrite] could not find match for dependency when re-reading',
+          description: `${printDependency(dep)}`,
+          loc: scope.loc,
+        });
+      }
     }
   }
+}
+
+function writeNonOptionalDependency(
+  dep: ReactiveScopeDependency,
+  env: Environment,
+  builder: HIRBuilder,
+): Identifier {
+  const loc = dep.identifier.loc;
+  let last: Identifier = makeTemporaryIdentifier(env.nextIdentifierId, loc);
+  builder.push({
+    lvalue: {
+      identifier: last,
+      kind: 'Identifier',
+      effect: Effect.Mutate,
+      reactive: dep.reactive,
+      loc,
+    },
+    value: {
+      kind: 'LoadLocal',
+      place: {
+        identifier: dep.identifier,
+        kind: 'Identifier',
+        effect: Effect.Freeze,
+        reactive: dep.reactive,
+        loc,
+      },
+      loc,
+    },
+    id: makeInstructionId(1),
+    loc: loc,
+  });
+
+  for (const path of dep.path) {
+    const next = makeTemporaryIdentifier(env.nextIdentifierId, loc);
+    builder.push({
+      lvalue: {
+        identifier: next,
+        kind: 'Identifier',
+        effect: Effect.Mutate,
+        reactive: dep.reactive,
+        loc,
+      },
+      value: {
+        kind: 'PropertyLoad',
+        object: {
+          identifier: last,
+          kind: 'Identifier',
+          effect: Effect.Freeze,
+          reactive: dep.reactive,
+          loc,
+        },
+        property: path.property,
+        loc,
+      },
+      id: makeInstructionId(1),
+      loc: loc,
+    });
+    last = next;
+  }
+  return last;
+}
+
+function writeScopeDependencies(
+  terminal: ReactiveScopeTerminal | PrunedScopeTerminal,
+  deps: Set<ReactiveScopeDependency>,
+  fn: HIRFunction,
+): void {
+  const scopeDepBlock = fn.body.blocks.get(terminal.dependencies);
+
+  CompilerError.invariant(scopeDepBlock != null, {
+    reason: 'Expected nonnull scopeDepBlock',
+    loc: terminal.loc,
+  });
+  CompilerError.invariant(
+    scopeDepBlock.instructions.length === 0 &&
+      scopeDepBlock.terminal.kind === 'goto' &&
+      scopeDepBlock.terminal.block === terminal.block,
+    {
+      reason: 'Expected scope.dependencies to be a goto block',
+      loc: terminal.loc,
+    },
+  );
+  const builder = new HIRBuilder(fn.env, {
+    entryBlockKind: 'value',
+  });
+
+  for (const dep of deps) {
+    if (dep.path.every(path => !path.optional)) {
+      const last = writeNonOptionalDependency(dep, fn.env, builder);
+      terminal.scope.dependencies.push({
+        kind: 'Identifier',
+        identifier: last,
+        effect: Effect.Freeze,
+        reactive: dep.reactive,
+        loc: GeneratedSource,
+      });
+    }
+  }
+
+  // Write all optional chaining deps
+  for (const dep of deps) {
+    if (!dep.path.every(path => !path.optional)) {
+      const last = writeOptional(
+        dep.path.length - 1,
+        dep,
+        builder,
+        terminal,
+        null,
+      );
+      terminal.scope.dependencies.push({
+        kind: 'Identifier',
+        identifier: last,
+        effect: Effect.Freeze,
+        reactive: dep.reactive,
+        loc: GeneratedSource,
+      });
+    }
+  }
+
+  // Placeholder terminal for HIRBuilder (goto leads to block outside of that nested HIR)
+  const lastBlockId = builder.terminate(
+    {
+      kind: 'return',
+      value: {
+        kind: 'Identifier',
+        identifier: makeTemporaryIdentifier(
+          fn.env.nextIdentifierId,
+          GeneratedSource,
+        ),
+        effect: Effect.Freeze,
+        loc: GeneratedSource,
+        reactive: true,
+      },
+      loc: GeneratedSource,
+      id: makeInstructionId(0),
+    },
+    null,
+  );
+
+  const dependenciesHIR = builder.build();
+  for (const [id, block] of dependenciesHIR.blocks) {
+    fn.body.blocks.set(id, block);
+  }
+  // Shouldn't be needed with RPO / removeUnreachableBlocks
+  fn.body.blocks.delete(terminal.dependencies);
+  terminal.dependencies = dependenciesHIR.entry;
+  fn.body.blocks.get(lastBlockId)!.terminal = scopeDepBlock.terminal;
+}
+
+function writeOptional(
+  idx: number,
+  dep: ReactiveScopeDependency,
+  builder: HIRBuilder,
+  terminal: ReactiveScopeTerminal | PrunedScopeTerminal,
+  parentAlternate: BlockId | null,
+): Identifier {
+  const env = builder.environment;
+  CompilerError.invariant(
+    idx >= 0 && !dep.path.slice(0, idx + 1).every(path => !path.optional),
+    {
+      reason: '[WriteOptional] Expected optional path',
+      description: `${idx} ${printDependency(dep)}`,
+      loc: GeneratedSource,
+    },
+  );
+  const continuationBlock = builder.reserve(builder.currentBlockKind());
+  const consequent = builder.reserve('value');
+
+  const returnPlace: Place = {
+    kind: 'Identifier',
+    identifier: makeTemporaryIdentifier(env.nextIdentifierId, GeneratedSource),
+    effect: Effect.Mutate,
+    reactive: dep.reactive,
+    loc: GeneratedSource,
+  };
+
+  let alternate;
+  if (parentAlternate != null) {
+    alternate = parentAlternate;
+  } else {
+    /**
+     * Make outermost alternate block
+     * $N = Primitive undefined
+     * $M = StoreLocal $OptionalResult = $N
+     * goto fallthrough
+     */
+    alternate = builder.enter('value', () => {
+      const temp = lowerValueToTemporary(builder, {
+        kind: 'Primitive',
+        value: undefined,
+        loc: GeneratedSource,
+      });
+      lowerValueToTemporary(builder, {
+        kind: 'StoreLocal',
+        lvalue: {kind: InstructionKind.Const, place: {...returnPlace}},
+        value: {...temp},
+        type: null,
+        loc: GeneratedSource,
+      });
+      return {
+        kind: 'goto',
+        variant: GotoVariant.Break,
+        block: continuationBlock.id,
+        id: makeInstructionId(0),
+        loc: GeneratedSource,
+      };
+    });
+  }
+
+  let testIdentifier: Identifier | null = null;
+  const testBlock = builder.enter('value', () => {
+    const firstOptional = dep.path.findIndex(path => path.optional);
+    if (idx === firstOptional) {
+      // Lower test block
+      testIdentifier = writeNonOptionalDependency(
+        {
+          identifier: dep.identifier,
+          reactive: dep.reactive,
+          path: dep.path.slice(0, idx),
+        },
+        env,
+        builder,
+      );
+    } else {
+      testIdentifier = writeOptional(
+        idx - 1,
+        dep,
+        builder,
+        terminal,
+        alternate,
+      );
+    }
+
+    return {
+      kind: 'branch',
+      test: {
+        identifier: testIdentifier,
+        effect: Effect.Freeze,
+        kind: 'Identifier',
+        loc: GeneratedSource,
+        reactive: dep.reactive,
+      },
+      consequent: consequent.id,
+      alternate,
+      id: makeInstructionId(0),
+      loc: GeneratedSource,
+      fallthrough: continuationBlock.id,
+    };
+  });
+
+  CompilerError.invariant(testIdentifier !== null, {
+    reason: 'Satisfy type checker',
+    description: null,
+    loc: null,
+    suggestions: null,
+  });
+
+  builder.enterReserved(consequent, () => {
+    CompilerError.invariant(testIdentifier !== null, {
+      reason: 'Satisfy type checker',
+      description: null,
+      loc: null,
+      suggestions: null,
+    });
+
+    const tmpConsequent = lowerValueToTemporary(builder, {
+      kind: 'PropertyLoad',
+      object: {
+        identifier: testIdentifier,
+        kind: 'Identifier',
+        effect: Effect.Freeze,
+        reactive: dep.reactive,
+        loc: GeneratedSource,
+      },
+      property: dep.path[idx].property,
+      loc: GeneratedSource,
+    });
+    lowerValueToTemporary(builder, {
+      kind: 'StoreLocal',
+      lvalue: {kind: InstructionKind.Const, place: {...returnPlace}},
+      value: {...tmpConsequent},
+      type: null,
+      loc: GeneratedSource,
+    });
+    return {
+      kind: 'goto',
+      variant: GotoVariant.Break,
+      block: continuationBlock.id,
+      id: makeInstructionId(0),
+      loc: GeneratedSource,
+    };
+  });
+  builder.terminateWithContinuation(
+    {
+      kind: 'optional',
+      optional: dep.path[idx].optional,
+      test: testBlock,
+      fallthrough: continuationBlock.id,
+      id: makeInstructionId(0),
+      loc: GeneratedSource,
+    },
+    continuationBlock,
+  );
+
+  return returnPlace.identifier;
+}
+
+export function readScopeDependencies(
+  fn: HIRFunction,
+  scope: ScopeId,
+): Set<ReactiveScopeDependency> {
+  for (const [_, {terminal}] of fn.body.blocks) {
+    if (terminal.kind !== 'scope' && terminal.kind !== 'pruned-scope') {
+      continue;
+    }
+    if (terminal.scope.id !== scope) {
+      continue;
+    }
+    const temporaries = new Map<IdentifierId, ReactiveScopeDependency>();
+    const context: OptionalTraversalContext = {
+      currFn: fn,
+      blocks: fn.body.blocks,
+      seenOptionals: new Set(),
+      processedInstrsInOptional: new Set(),
+      temporariesReadInOptional: temporaries,
+      hoistableObjects: new Map(),
+    };
+    /**
+     * read all dependencies between scope and block
+     */
+    let work = terminal.dependencies;
+    while (true) {
+      const block = fn.body.blocks.get(work)!;
+      for (const {lvalue, value} of block.instructions) {
+        if (value.kind === 'LoadLocal') {
+          temporaries.set(lvalue.identifier.id, {
+            identifier: value.place.identifier,
+            reactive: value.place.reactive,
+            path: [],
+          });
+        } else if (value.kind === 'PropertyLoad') {
+          const source = temporaries.get(value.object.identifier.id)!;
+          temporaries.set(lvalue.identifier.id, {
+            identifier: source.identifier,
+            reactive: source.reactive,
+            path: [...source.path, {property: value.property, optional: false}],
+          });
+        }
+      }
+
+      if (block.terminal.kind === 'optional') {
+        traverseOptionalBlock(
+          block as TBasicBlock<OptionalTerminal>,
+          context,
+          null,
+        );
+        work = block.terminal.fallthrough;
+      } else {
+        CompilerError.invariant(
+          block.terminal.kind === 'goto' &&
+            block.terminal.block === terminal.block,
+          {
+            reason: 'unexpected terminal',
+            description: `kind: ${block.terminal.kind}`,
+            loc: block.terminal.loc,
+          },
+        );
+        break;
+      }
+    }
+
+    const scopeOwnDependencies = new Set<ReactiveScopeDependency>();
+    for (const dep of terminal.scope.dependencies) {
+      const reactiveScopeDependency = temporaries.get(dep.identifier.id)!;
+      CompilerError.invariant(reactiveScopeDependency != null, {
+        reason: 'Expected dependency to be found',
+        description: `${printPlace(dep)}`,
+        loc: terminal.scope.loc,
+      });
+      scopeOwnDependencies.add(reactiveScopeDependency);
+    }
+    return scopeOwnDependencies;
+  }
+  CompilerError.invariant(false, {
+    reason: 'Expected scope to be found',
+    loc: GeneratedSource,
+  });
+}
+
+function assertNonNull<T>(value: T | null | undefined): T {
+  if (value == null) {
+    throw new Error('Expected nonnull value');
+  }
+  return value;
+}
+
+function _helperInstr(
+  instr: ReactiveInstruction,
+  sidemap: Map<IdentifierId, ReactiveScopeDependency>,
+): void {
+  const value = _helperValue(instr.value, sidemap);
+  if (instr.lvalue != null) {
+    sidemap.set(instr.lvalue.identifier.id, value);
+  }
+}
+function _helperValue(
+  instr: ReactiveValue,
+  sidemap: Map<IdentifierId, ReactiveScopeDependency>,
+): ReactiveScopeDependency {
+  if (instr.kind === 'LoadLocal') {
+    const base = sidemap.get(instr.place.identifier.id);
+    if (base != null) {
+      return base;
+    } else {
+      return {
+        identifier: instr.place.identifier,
+        reactive: instr.place.reactive,
+        path: [],
+      };
+    }
+  } else if (instr.kind === 'PropertyLoad') {
+    const base = assertNonNull(sidemap.get(instr.object.identifier.id));
+    return {
+      identifier: base.identifier,
+      reactive: base.reactive,
+      path: [...base.path, {property: instr.property, optional: false}],
+    };
+  } else if (instr.kind === 'SequenceExpression') {
+    for (const inner of instr.instructions) {
+      _helperInstr(inner, sidemap);
+    }
+    return _helperValue(instr.value, sidemap);
+  } else if (instr.kind === 'OptionalExpression') {
+    const value = _helperValue(instr.value, sidemap);
+    CompilerError.invariant(
+      value.path.length > 0 && !value.path.at(-1)!.optional,
+      {
+        reason: 'Expected optional chain to be nonempty',
+        loc: instr.loc,
+      },
+    );
+    return {
+      ...value,
+      path: [
+        ...value.path.slice(0, -1),
+        {property: value.path.at(-1)!.property, optional: instr.optional},
+      ],
+    };
+  }
+  CompilerError.invariant(false, {
+    reason: 'Unexpected value kind',
+    description: instr.kind,
+    loc: instr.loc,
+  });
+}
+
+export function readScopeDependenciesRHIR(
+  scopeBlock: ReactiveScopeBlock | PrunedReactiveScopeBlock,
+): Map<Place, ReactiveScopeDependency> {
+  const sidemap = new Map<IdentifierId, ReactiveScopeDependency>();
+  for (const instr of scopeBlock.dependencyInstructions) {
+    _helperInstr(instr.instruction, sidemap);
+  }
+  return new Map<Place, ReactiveScopeDependency>(
+    scopeBlock.scope.dependencies.map(place => {
+      return [place, assertNonNull(sidemap.get(place.identifier.id))];
+    }),
+  );
+}
+
+/**
+ * Note: this only handles simple pruning i.e. deleting dependency entries,
+ * not more complex rewrites such as truncating property paths.
+ */
+export function scopeDependenciesDCE(
+  scopeBlock: ReactiveScopeBlock | PrunedReactiveScopeBlock,
+): void {
+  const usage = new Map<IdentifierId, IdentifierId | null>();
+  for (const {
+    instruction: {lvalue, value},
+  } of scopeBlock.dependencyInstructions) {
+    if (lvalue == null) {
+      continue;
+    }
+    switch (value.kind) {
+      case 'LoadLocal': {
+        usage.set(lvalue.identifier.id, null);
+        break;
+      }
+      case 'PropertyLoad': {
+        usage.set(lvalue.identifier.id, value.object.identifier.id);
+        break;
+      }
+      case 'OptionalExpression': {
+        usage.set(lvalue.identifier.id, null);
+        break;
+      }
+      default: {
+        CompilerError.invariant(false, {
+          reason: 'Unexpected value kind',
+          description: value.kind,
+          loc: value.loc,
+        });
+      }
+    }
+  }
+
+  const notUsed = new Set(usage.keys());
+  const seen = new Set();
+  for (const {identifier} of scopeBlock.scope.dependencies) {
+    let curr: IdentifierId | undefined | null = identifier.id;
+    while (curr != null) {
+      CompilerError.invariant(!seen.has(curr), {
+        reason: 'infinite loop',
+        loc: GeneratedSource,
+      });
+      notUsed.delete(curr);
+      seen.add(curr);
+      curr = usage.get(curr);
+    }
+  }
+  /**
+   * Remove unused instructions in place
+   */
+  let j = 0;
+  for (let i = 0; i < scopeBlock.dependencyInstructions.length; i++) {
+    const instr = scopeBlock.dependencyInstructions[i].instruction;
+    if (instr.lvalue != null && !notUsed.has(instr.lvalue.identifier.id)) {
+      scopeBlock.dependencyInstructions[j] =
+        scopeBlock.dependencyInstructions[i];
+      j++;
+    }
+  }
+  scopeBlock.dependencyInstructions.length = j;
 }
 
 function findTemporariesUsedOutsideDeclaringScope(
@@ -301,6 +927,7 @@ function collectTemporariesSidemapImpl(
         ) {
           temporaries.set(lvalue.identifier.id, {
             identifier: value.place.identifier,
+            reactive: value.place.reactive,
             path: [],
           });
         }
@@ -354,11 +981,13 @@ function getProperty(
   if (resolvedDependency == null) {
     property = {
       identifier: object.identifier,
+      reactive: object.reactive,
       path: [{property: propertyName, optional}],
     };
   } else {
     property = {
       identifier: resolvedDependency.identifier,
+      reactive: resolvedDependency.reactive,
       path: [...resolvedDependency.path, {property: propertyName, optional}],
     };
   }
@@ -514,6 +1143,7 @@ class Context {
     this.visitDependency(
       this.#temporaries.get(place.identifier.id) ?? {
         identifier: place.identifier,
+        reactive: place.reactive,
         path: [],
       },
     );
@@ -574,6 +1204,7 @@ class Context {
     ) {
       maybeDependency = {
         identifier: maybeDependency.identifier,
+        reactive: maybeDependency.reactive,
         path: [],
       };
     }
@@ -595,7 +1226,11 @@ class Context {
         identifier =>
           identifier.declarationId === place.identifier.declarationId,
       ) &&
-      this.#checkValidDependency({identifier: place.identifier, path: []})
+      this.#checkValidDependency({
+        identifier: place.identifier,
+        reactive: place.reactive,
+        path: [],
+      })
     ) {
       currentScope.reassignments.add(place.identifier);
     }

@@ -123,6 +123,7 @@ function run(
     fnType,
     config,
     contextIdentifiers,
+    func,
     logger,
     filename,
     code,

@@ -53,7 +53,7 @@ import {
   ShapeRegistry,
   addHook,
 } from './ObjectShape';
-import {Scope as BabelScope} from '@babel/traverse';
+import {Scope as BabelScope, NodePath} from '@babel/traverse';
 import {TypeSchema} from './TypeSchema';
 
 export const ReactElementSymbolSchema = z.object({
@@ -839,12 +839,14 @@ export class Environment {
 
   #contextIdentifiers: Set<t.Identifier>;
   #hoistedIdentifiers: Set<t.Identifier>;
+  parentFunction: NodePath<t.Function>;
 
   constructor(
     scope: BabelScope,
     fnType: ReactFunctionType,
     config: EnvironmentConfig,
     contextIdentifiers: Set<t.Identifier>,
+    parentFunction: NodePath<t.Function>, // the outermost function being compiled
     logger: Logger | null,
     filename: string | null,
     code: string | null,
@@ -902,6 +904,7 @@ export class Environment {
       this.#moduleTypes.set(REANIMATED_MODULE_NAME, reanimatedModuleType);
     }
 
+    this.parentFunction = parentFunction;
     this.#contextIdentifiers = contextIdentifiers;
     this.#hoistedIdentifiers = new Set();
   }
