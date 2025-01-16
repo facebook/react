@@ -13,11 +13,6 @@ const path = require('path');
 const {Generator} = require('npm-dts');
 
 const argv = yargs(process.argv.slice(2))
-  .options('p', {
-    alias: 'platform',
-    default: 'browser',
-    choices: ['browser', 'node'],
-  })
   .options('w', {
     alias: 'watch',
     default: false,
@@ -31,7 +26,7 @@ const config = {
   bundle: true,
   external: ['react'],
   format: 'cjs',
-  platform: argv.p,
+  platform: 'node',
   target: 'es6',
   banner: {
     js: `/**
