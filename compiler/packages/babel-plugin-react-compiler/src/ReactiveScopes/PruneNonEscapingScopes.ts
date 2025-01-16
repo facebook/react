@@ -772,14 +772,6 @@ function computeMemoizationInputs(
         rvalues: operands,
       };
     }
-    case 'ReactiveFunctionValue': {
-      CompilerError.invariant(false, {
-        reason: `Unexpected ReactiveFunctionValue node`,
-        description: null,
-        loc: value.loc,
-        suggestions: null,
-      });
-    }
     case 'UnsupportedNode': {
       CompilerError.invariant(false, {
         reason: `Unexpected unsupported node`,
