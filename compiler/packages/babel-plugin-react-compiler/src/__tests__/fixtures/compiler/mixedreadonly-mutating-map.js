@@ -32,6 +32,9 @@ import {
 function Component({extraJsx}) {
   const x = makeArray();
   const items = useFragment();
+  // This closure has the following effects that must be replayed:
+  //   - MaybeFreeze / Capture of `items`
+  //   - ConditionalMutate of x
   const jsx = items.a.map((item, i) => {
     arrayPush(x, 2);
     return <Stringify item={item} key={i} />;
