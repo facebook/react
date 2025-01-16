@@ -133,7 +133,7 @@ export const enableOwnerStacks = true;
 
 export const enableShallowPropDiffing = false;
 
-export const enableSiblingPrerendering = true;
+export const enableSiblingPrerendering = false;
 
 /**
  * Enables an expiration time for retry lanes to avoid starvation.
@@ -155,8 +155,9 @@ export const enableInfiniteRenderLoopDetection = false;
 export const enableUseEffectCRUDOverload = false;
 
 export const enableFastAddPropertiesInDiffing = true;
-
 export const enableLazyPublicInstanceInFabric = false;
+
+export const enableFragmentRefs = false;
 
 // -----------------------------------------------------------------------------
 // Ready for next major.
