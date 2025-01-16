@@ -25,6 +25,7 @@ import type {
   PreinitScriptOptions,
   PreinitModuleScriptOptions,
 } from 'react-dom/src/shared/ReactDOMTypes';
+import type {TransitionTypes} from 'react/src/ReactTransitionType.js';
 
 import {NotPending} from '../shared/ReactDOMFormActions';
 
@@ -1235,6 +1236,7 @@ const SUSPENSEY_FONT_TIMEOUT = 500;
 
 export function startViewTransition(
   rootContainer: Container,
+  transitionTypes: null | TransitionTypes,
   mutationCallback: () => void,
   layoutCallback: () => void,
   afterMutationCallback: () => void,
@@ -1293,7 +1295,7 @@ export function startViewTransition(
           afterMutationCallback();
         }
       },
-      types: null, // TODO: Provide types.
+      types: transitionTypes,
     });
     // $FlowFixMe[prop-missing]
     ownerDocument.__reactViewTransition = transition;

@@ -27,6 +27,7 @@ import {
   getViewTransitionName,
   type ViewTransitionState,
 } from './ReactFiberViewTransitionComponent';
+import type {TransitionTypes} from 'react/src/ReactTransitionType.js';
 
 import {
   enableCreateEventHandleAPI,
@@ -654,6 +655,7 @@ let pendingEffectsRenderEndTime: number = -0; // Profiling-only
 let pendingPassiveTransitions: Array<Transition> | null = null;
 let pendingRecoverableErrors: null | Array<CapturedValue<mixed>> = null;
 let pendingViewTransitionEvents: Array<() => void> | null = null;
+let pendingTransitionTypes: null | TransitionTypes = null;
 let pendingDidIncludeRenderPhaseUpdate: boolean = false;
 let pendingSuspendedCommitReason: SuspendedCommitReason = IMMEDIATE_COMMIT; // Profiling-only
 
@@ -3348,9 +3350,6 @@ function commitRoot(
   pendingEffectsRemainingLanes = remainingLanes;
   pendingPassiveTransitions = transitions;
   pendingRecoverableErrors = recoverableErrors;
-  if (enableViewTransition) {
-    pendingViewTransitionEvents = null;
-  }
   pendingDidIncludeRenderPhaseUpdate = didIncludeRenderPhaseUpdate;
   if (enableProfilerTimer) {
     pendingEffectsRenderEndTime = completedRenderEndTime;
@@ -3362,10 +3361,24 @@ function commitRoot(
   // might get scheduled in the commit phase. (See #16714.)
   // TODO: Delete all other places that schedule the passive effect callback
   // They're redundant.
-  const passiveSubtreeMask =
-    enableViewTransition && includesOnlyViewTransitionEligibleLanes(lanes)
-      ? PassiveTransitionMask
-      : PassiveMask;
+  let passiveSubtreeMask;
+  if (enableViewTransition) {
+    pendingViewTransitionEvents = null;
+    if (includesOnlyViewTransitionEligibleLanes(lanes)) {
+      // Claim any pending Transition Types for this commit.
+      // This means that multiple roots committing independent View Transitions
+      // 1) end up staggered because we can only have one at a time.
+      // 2) only the first one gets all the Transition Types.
+      pendingTransitionTypes = ReactSharedInternals.V;
+      ReactSharedInternals.V = null;
+      passiveSubtreeMask = PassiveTransitionMask;
+    } else {
+      pendingTransitionTypes = null;
+      passiveSubtreeMask = PassiveMask;
+    }
+  } else {
+    passiveSubtreeMask = PassiveMask;
+  }
   if (
     // If this subtree rendered with profiling this commit, we need to visit it to log it.
     (enableProfilerTimer &&
@@ -3461,6 +3474,7 @@ function commitRoot(
     shouldStartViewTransition &&
     startViewTransition(
       root.containerInfo,
+      pendingTransitionTypes,
       flushMutationEffects,
       flushLayoutEffects,
       flushAfterMutationEffects,

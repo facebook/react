@@ -8,6 +8,7 @@
  */
 
 import type {ReactContext} from 'shared/ReactTypes';
+import type {TransitionTypes} from 'react/src/ReactTransitionType.js';
 
 import isArray from 'shared/isArray';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
@@ -364,6 +365,7 @@ export function hasInstanceAffectedParent(
 
 export function startViewTransition(
   rootContainer: Container,
+  transitionTypes: null | TransitionTypes,
   mutationCallback: () => void,
   layoutCallback: () => void,
   afterMutationCallback: () => void,
