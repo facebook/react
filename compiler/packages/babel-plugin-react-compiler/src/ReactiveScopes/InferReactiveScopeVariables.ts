@@ -107,7 +107,7 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
       scope = {
         id: fn.env.nextScopeId,
         range: identifier.mutableRange,
-        dependencies: new Set(),
+        dependencies: [],
         declarations: new Map(),
         reassignments: new Set(),
         earlyReturnValue: null,

@@ -73,7 +73,10 @@ export function lower(
   // the outermost function being compiled, in case lower() is called recursively (for lambdas)
   parent: NodePath<t.Function> | null = null,
 ): Result<HIRFunction, CompilerError> {
-  const builder = new HIRBuilder(env, parent ?? func, bindings, capturedRefs);
+  const builder = new HIRBuilder(env, parent ?? func, {
+    bindings,
+    context: capturedRefs,
+  });
   const context: HIRFunction['context'] = [];
 
   for (const ref of capturedRefs ?? []) {
@@ -3414,7 +3417,7 @@ function lowerExpressionToTemporary(
   return lowerValueToTemporary(builder, value);
 }
 
-function lowerValueToTemporary(
+export function lowerValueToTemporary(
   builder: HIRBuilder,
   value: InstructionValue,
 ): Place {
