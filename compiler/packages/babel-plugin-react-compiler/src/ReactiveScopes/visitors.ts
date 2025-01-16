@@ -5,9 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import {CompilerError} from '..';
 import {
   HIRFunction,
   InstructionId,
+  makeInstructionId,
   Place,
   PrunedReactiveScopeBlock,
   ReactiveBlock,
@@ -71,15 +73,6 @@ export class ReactiveFunctionVisitor<TState = void> {
           this.visitInstruction(instr, state);
         }
         this.visitValue(value.id, value.value, state);
-        break;
-      }
-      case 'ReactiveFunctionValue': {
-        this.visitReactiveFunctionValue(
-          id,
-          value.dependencies,
-          value.fn,
-          state,
-        );
         break;
       }
       default: {
@@ -194,6 +187,20 @@ export class ReactiveFunctionVisitor<TState = void> {
     this.traverseScope(scope, state);
   }
   traverseScope(scope: ReactiveScopeBlock, state: TState): void {
+    this.visitBlock(scope.dependencyInstructions, state);
+    const lastDependencyInstruction = scope.dependencyInstructions.at(-1);
+    let lastInstructionId: InstructionId | null = null;
+    if (lastDependencyInstruction !== undefined) {
+      lastInstructionId = lastDependencyInstruction.instruction.id;
+    }
+    for (const dep of scope.scope.dependencies) {
+      CompilerError.invariant(lastInstructionId !== null, {
+        reason:
+          '[ReactiveFunction] Expected at least one dependency instruction.',
+        loc: scope.scope.loc,
+      });
+      this.visitPlace(lastInstructionId, dep, state);
+    }
     this.visitBlock(scope.instructions, state);
   }
 
@@ -434,18 +441,6 @@ export class ReactiveFunctionTransform<
         }
         break;
       }
-      case 'ReactiveFunctionValue': {
-        const nextValue = this.transformReactiveFunctionValue(
-          id,
-          value.dependencies,
-          value.fn,
-          state,
-        );
-        if (nextValue.kind === 'replace') {
-          value.fn = nextValue.value;
-        }
-        break;
-      }
       default: {
         for (const place of eachInstructionValueOperand(value)) {
           this.visitPlace(id, place, state);
@@ -617,10 +612,6 @@ export function* eachReactiveValueOperand(
       yield* eachReactiveValueOperand(instrValue.test);
       yield* eachReactiveValueOperand(instrValue.consequent);
       yield* eachReactiveValueOperand(instrValue.alternate);
-      break;
-    }
-    case 'ReactiveFunctionValue': {
-      yield* instrValue.dependencies;
       break;
     }
     default: {

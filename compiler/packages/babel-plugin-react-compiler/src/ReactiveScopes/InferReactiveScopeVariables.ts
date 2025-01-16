@@ -107,7 +107,7 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
       scope = {
         id: fn.env.nextScopeId,
         range: identifier.mutableRange,
-        dependencies: new Set(),
+        dependencies: [],
         declarations: new Map(),
         reassignments: new Set(),
         earlyReturnValue: null,
@@ -379,6 +379,14 @@ export function findDisjointMutableValues(
              */
             operand.identifier.mutableRange.start > 0
           ) {
+            if (
+              instr.value.kind === 'FunctionExpression' ||
+              instr.value.kind === 'ObjectMethod'
+            ) {
+              if (operand.identifier.type.kind === 'Primitive') {
+                continue;
+              }
+            }
             operands.push(operand.identifier);
           }
         }

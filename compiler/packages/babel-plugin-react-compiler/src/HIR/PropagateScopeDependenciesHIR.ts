@@ -22,6 +22,21 @@ import {
   TInstruction,
   FunctionExpression,
   ObjectMethod,
+  BlockId,
+  BasicBlock,
+  makeTemporaryIdentifier,
+  Effect,
+  OptionalTerminal,
+  TBasicBlock,
+  ReactiveScopeTerminal,
+  makeBlockId,
+  GotoVariant,
+  BlockKind,
+  PrunedScopeTerminal,
+  ReactiveInstructionStatement,
+  ReactiveInstruction,
+  ReactiveValue,
+  ReactiveStatement,
 } from './HIR';
 import {
   collectHoistablePropertyLoads,
@@ -38,7 +53,27 @@ import {Stack, empty} from '../Utils/Stack';
 import {CompilerError} from '../CompilerError';
 import {Iterable_some} from '../Utils/utils';
 import {ReactiveScopeDependencyTreeHIR} from './DeriveMinimalDependenciesHIR';
-import {collectOptionalChainSidemap} from './CollectOptionalChainDependencies';
+import {
+  collectOptionalChainSidemap,
+  OptionalTraversalContext,
+  traverseOptionalBlock,
+} from './CollectOptionalChainDependencies';
+import {Environment} from './Environment';
+import HIRBuilder, {
+  fixScopeAndIdentifierRanges,
+  markInstructionIds,
+  markPredecessors,
+  reversePostorderBlocks,
+} from './HIRBuilder';
+import {lowerValueToTemporary} from './BuildHIR';
+import {
+  printDependency,
+  printReactiveValue,
+} from '../ReactiveScopes/PrintReactiveFunction';
+import {NodePath} from '@babel/core';
+import {printFunction, printIdentifier, printPlace} from './PrintHIR';
+import {ReactiveFunctionTransform, Transformed} from '../ReactiveScopes';
+import {TransformedValue} from '../ReactiveScopes/visitors';
 
 export function propagateScopeDependenciesHIR(fn: HIRFunction): void {
   const usedOutsideDeclaringScope =
@@ -65,6 +100,7 @@ export function propagateScopeDependenciesHIR(fn: HIRFunction): void {
   /**
    * Derive the minimal set of hoistable dependencies for each scope.
    */
+  const minimalDeps = new Map<ReactiveScope, Set<ReactiveScopeDependency>>();
   for (const [scope, deps] of scopeDeps) {
     if (deps.length === 0) {
       continue;
@@ -93,20 +129,712 @@ export function propagateScopeDependenciesHIR(fn: HIRFunction): void {
      * Step 3: Reduce dependencies to a minimal set.
      */
     const candidates = tree.deriveMinimalDependencies();
+    const dependencies = new Set<ReactiveScopeDependency>();
     for (const candidateDep of candidates) {
       if (
         !Iterable_some(
-          scope.dependencies,
+          dependencies,
           existingDep =>
             existingDep.identifier.declarationId ===
               candidateDep.identifier.declarationId &&
             areEqualPaths(existingDep.path, candidateDep.path),
         )
       )
-        scope.dependencies.add(candidateDep);
+        dependencies.add(candidateDep);
+    }
+    minimalDeps.set(scope, dependencies);
+  }
+
+  let changed = false;
+  /**
+   * Step 4: inject dependencies
+   */
+  for (const [_, {terminal}] of fn.body.blocks) {
+    if (terminal.kind !== 'scope' && terminal.kind !== 'pruned-scope') {
+      continue;
+    }
+    const scope = terminal.scope;
+    const deps = minimalDeps.get(scope);
+    if (deps == null) {
+      // deps empty
+      // TODO: should we explicitly set zero-length dependencies?
+      continue;
+    }
+    // CompilerError.invariant(deps != null, {
+    //   reason: 'Expected nonnull deps1',
+    //   description: `scope=${scope.id} minimalDeps=${[...minimalDeps.keys()].map(dep => dep.id)}`,
+    //   loc: terminal.loc,
+    // });
+    writeScopeDependencies(terminal, deps, fn);
+    changed = true;
+  }
+
+  if (changed) {
+    /**
+     * Step 5:
+     * Fix scope and identifier ranges to account for renumbered instructions
+     */
+    reversePostorderBlocks(fn.body);
+    markPredecessors(fn.body);
+    markInstructionIds(fn.body);
+
+    fixScopeAndIdentifierRanges(fn.body);
+  }
+
+  // console.log(printFunction(fn));
+  // Sanity check
+  {
+    for (const [scope, deps] of minimalDeps) {
+      const checkedDeps = readScopeDependencies(fn, scope.id);
+      CompilerError.invariant(checkedDeps != null, {
+        reason: '[Rewrite] Cannot find scope dep when reading',
+        loc: scope.loc,
+      });
+      CompilerError.invariant(checkedDeps.size === deps.size, {
+        reason: '[Rewrite] non matching sizes when reading',
+        description: `scopeId=${scope.id} deps=${[...deps].map(printDependency)} checkedDeps=${[...checkedDeps].map(printDependency)}`,
+        loc: scope.loc,
+      });
+      label: for (const dep of deps) {
+        for (const checkedDep of checkedDeps) {
+          if (
+            dep.identifier === checkedDep.identifier &&
+            areEqualPaths(dep.path, checkedDep.path)
+          ) {
+            continue label;
+          }
+        }
+        CompilerError.invariant(false, {
+          reason:
+            '[Rewrite] could not find match for dependency when re-reading',
+          description: `${printDependency(dep)}`,
+          loc: scope.loc,
+        });
+      }
     }
   }
 }
+
+function writeNonOptionalDependency(
+  dep: ReactiveScopeDependency,
+  env: Environment,
+  builder: HIRBuilder,
+): Identifier {
+  const loc = dep.identifier.loc;
+  let last: Identifier = makeTemporaryIdentifier(env.nextIdentifierId, loc);
+  builder.push({
+    lvalue: {
+      identifier: last,
+      kind: 'Identifier',
+      effect: Effect.Mutate,
+      // TODO
+      reactive: dep.reactive,
+      loc,
+    },
+    value: {
+      kind: 'LoadLocal',
+      place: {
+        identifier: dep.identifier,
+        kind: 'Identifier',
+        effect: Effect.Freeze,
+        // TODO
+        reactive: dep.reactive,
+        loc,
+      },
+      loc,
+    },
+    id: makeInstructionId(1),
+    loc: loc,
+  });
+
+  for (const path of dep.path) {
+    const next = makeTemporaryIdentifier(env.nextIdentifierId, loc);
+    builder.push({
+      lvalue: {
+        identifier: next,
+        kind: 'Identifier',
+        effect: Effect.Mutate,
+        // TODO
+        reactive: dep.reactive,
+        loc,
+      },
+      value: {
+        kind: 'PropertyLoad',
+        object: {
+          identifier: last,
+          kind: 'Identifier',
+          effect: Effect.Freeze,
+          // TODO
+          reactive: dep.reactive,
+          loc,
+        },
+        property: path.property,
+        loc,
+      },
+      id: makeInstructionId(1),
+      loc: loc,
+    });
+    last = next;
+  }
+  return last;
+}
+
+function writeScopeDependencies(
+  terminal: ReactiveScopeTerminal | PrunedScopeTerminal,
+  deps: Set<ReactiveScopeDependency>,
+  fn: HIRFunction,
+) {
+  // const scope = terminal.scope;
+  // const deps = minimalDeps.get(scope);
+  // CompilerError.invariant(deps != null, {
+  //   reason: 'Expected nonnull deps',
+  //   loc: terminal.loc,
+  // });
+  // dependencyScopes.set(block.terminal.scope, fn.body);
+  const scopeDepBlock = fn.body.blocks.get(terminal.dependencies);
+
+  CompilerError.invariant(scopeDepBlock != null, {
+    reason: 'Expected nonnull scopeDepBlock',
+    loc: terminal.loc,
+  });
+  CompilerError.invariant(
+    scopeDepBlock.instructions.length === 0 &&
+      scopeDepBlock.terminal.kind === 'goto' &&
+      scopeDepBlock.terminal.block === terminal.block,
+    {
+      reason: 'Expected scope.dependencies to be a goto block',
+      loc: terminal.loc,
+    },
+  );
+  // First write non-value block dependencies
+  // @ts-expect-error
+  const builder = new HIRBuilder(fn.env, null as NodePath<Function>, {
+    entryBlockKind: 'value',
+  });
+  for (const dep of deps) {
+    /**
+     * Downside of this is that now it's an extra layer of indirection to
+     * track which other scopes produced a dependency
+     */
+    // if (dep.path.length === 0) {
+    //   scope.dependencies.push(dep.identifier);
+    if (dep.path.every(path => !path.optional)) {
+      const last = writeNonOptionalDependency(dep, fn.env, builder);
+      terminal.scope.dependencies.push({
+        kind: 'Identifier',
+        identifier: last,
+        effect: Effect.Freeze,
+        reactive: dep.reactive,
+        loc: GeneratedSource,
+      });
+      // } else {
+      // valueBlockDependencies.add(dep);
+    }
+  }
+
+  // let nextGotoTerminal = scopeDepBlock.terminal;
+  // const currRewrites: Array<BasicBlock> = [rewrite];
+  for (const dep of deps) {
+    if (!dep.path.every(path => !path.optional)) {
+      const last = writeOptional(
+        dep.path.length - 1,
+        dep,
+        builder,
+        terminal,
+        null,
+      );
+      terminal.scope.dependencies.push({
+        kind: 'Identifier',
+        identifier: last,
+        effect: Effect.Freeze,
+        reactive: dep.reactive,
+        loc: GeneratedSource,
+      });
+    }
+  }
+
+  const lastBlockId = builder.current;
+  // Fake return for HIRBuilder (goto leads to block outside of that nested HIR)
+  builder.terminate(
+    {
+      kind: 'return',
+      value: {
+        kind: 'Identifier',
+        identifier: makeTemporaryIdentifier(
+          fn.env.nextIdentifierId,
+          GeneratedSource,
+        ),
+        effect: Effect.Freeze,
+        loc: GeneratedSource,
+        reactive: true,
+      },
+      loc: GeneratedSource,
+      id: makeInstructionId(0),
+    },
+    null,
+  );
+
+  const dependenciesHIR = builder.build();
+  for (const [id, block] of dependenciesHIR.blocks) {
+    fn.body.blocks.set(id, block);
+  }
+  // Shouldn't be needed with RPO / removeUnreachableBlocks
+  fn.body.blocks.delete(terminal.dependencies);
+  terminal.dependencies = dependenciesHIR.entry;
+  fn.body.blocks.get(lastBlockId)!.terminal = scopeDepBlock.terminal;
+}
+
+/**
+ * Before:
+ * ```js
+ *
+ */
+function writeOptional(
+  idx: number,
+  dep: ReactiveScopeDependency,
+  builder: HIRBuilder,
+  terminal: ReactiveScopeTerminal | PrunedScopeTerminal,
+  parentAlternate: BlockId | null,
+): Identifier {
+  const env = builder.environment;
+  /**
+   * idx is either at or "after" an optional chain
+   */
+  CompilerError.invariant(
+    idx >= 0 && !dep.path.slice(0, idx + 1).every(path => !path.optional),
+    {
+      reason: 'oh no 3',
+      description: `${idx} ${printDependency(dep)}`,
+      loc: GeneratedSource,
+    },
+  );
+  // outermost
+  // outer continuation is scope block
+  const continuationBlock = builder.reserve(builder.currentBlockKind());
+  const consequent = builder.reserve('value');
+
+  const returnPlace: Place = {
+    kind: 'Identifier',
+    identifier: makeTemporaryIdentifier(env.nextIdentifierId, GeneratedSource),
+    effect: Effect.Mutate,
+    reactive: dep.reactive,
+    loc: GeneratedSource,
+  };
+
+  let alternate;
+  if (parentAlternate != null) {
+    alternate = parentAlternate;
+  } else {
+    /**
+     * Make outermost alternate block
+     * $N = Primitive undefined
+     * $M = StoreLocal $OptionalResult = $N
+     * goto fallthrough
+     */
+    alternate = builder.enter('value', () => {
+      // const temp = makeTemporaryIdentifier(
+      //   env.nextIdentifierId,
+      //   GeneratedSource,
+      // );
+      const temp = lowerValueToTemporary(builder, {
+        kind: 'Primitive',
+        value: undefined,
+        loc: GeneratedSource,
+      });
+      lowerValueToTemporary(builder, {
+        kind: 'StoreLocal',
+        lvalue: {kind: InstructionKind.Const, place: {...returnPlace}},
+        value: {...temp},
+        type: null,
+        loc: GeneratedSource,
+      });
+      return {
+        kind: 'goto',
+        variant: GotoVariant.Break,
+        block: continuationBlock.id,
+        id: makeInstructionId(0),
+        loc: GeneratedSource,
+      };
+    });
+  }
+
+  let testIdentifier: Identifier | null = null;
+  const testBlock = builder.enter('value', () => {
+    const firstOptional = dep.path.findIndex(path => path.optional);
+    if (idx === firstOptional) {
+      // Lower test block
+      testIdentifier = writeNonOptionalDependency(
+        {
+          identifier: dep.identifier,
+          reactive: dep.reactive,
+          path: dep.path.slice(0, idx),
+        },
+        env,
+        builder,
+      );
+    } else {
+      testIdentifier = writeOptional(
+        idx - 1,
+        dep,
+        builder,
+        terminal,
+        alternate,
+      );
+    }
+
+    return {
+      kind: 'branch',
+      test: {
+        identifier: testIdentifier,
+        effect: Effect.Freeze,
+        kind: 'Identifier',
+        loc: GeneratedSource,
+        // TODO
+        reactive: dep.reactive,
+      },
+      consequent: consequent.id,
+      alternate,
+      id: makeInstructionId(0),
+      loc: GeneratedSource,
+      fallthrough: continuationBlock.id,
+    };
+  });
+
+  CompilerError.invariant(testIdentifier !== null, {
+    reason: 'Satisfy type checker',
+    description: null,
+    loc: null,
+    suggestions: null,
+  });
+
+  // Write consequent block
+  builder.enterReserved(consequent, () => {
+    CompilerError.invariant(testIdentifier !== null, {
+      reason: 'Satisfy type checker',
+      description: null,
+      loc: null,
+      suggestions: null,
+    });
+
+    const tmpConsequent = lowerValueToTemporary(builder, {
+      kind: 'PropertyLoad',
+      object: {
+        identifier: testIdentifier,
+        kind: 'Identifier',
+        effect: Effect.Freeze,
+        reactive: dep.reactive,
+        loc: GeneratedSource,
+      },
+      property: dep.path[idx].property,
+      loc: GeneratedSource,
+    });
+    lowerValueToTemporary(builder, {
+      kind: 'StoreLocal',
+      lvalue: {kind: InstructionKind.Const, place: {...returnPlace}},
+      value: {...tmpConsequent},
+      type: null,
+      loc: GeneratedSource,
+    });
+    return {
+      kind: 'goto',
+      variant: GotoVariant.Break,
+      block: continuationBlock.id,
+      id: makeInstructionId(0),
+      loc: GeneratedSource,
+    };
+  });
+  builder.terminateWithContinuation(
+    {
+      kind: 'optional',
+      optional: dep.path[idx].optional,
+      test: testBlock,
+      fallthrough: continuationBlock.id,
+      id: makeInstructionId(0),
+      loc: GeneratedSource,
+    },
+    continuationBlock,
+  );
+
+  return returnPlace.identifier;
+}
+
+export function readScopeDependencies(
+  fn: HIRFunction,
+  scope: ScopeId,
+): Set<ReactiveScopeDependency> {
+  for (const [_, {terminal}] of fn.body.blocks) {
+    if (terminal.kind !== 'scope' && terminal.kind !== 'pruned-scope') {
+      continue;
+    }
+    if (terminal.scope.id !== scope) {
+      continue;
+    }
+    const temporaries = new Map<IdentifierId, ReactiveScopeDependency>();
+    const context: OptionalTraversalContext = {
+      currFn: fn,
+      blocks: fn.body.blocks,
+      seenOptionals: new Set(),
+      processedInstrsInOptional: new Set(),
+      temporariesReadInOptional: temporaries,
+      hoistableObjects: new Map(),
+    };
+    /**
+     * read all dependencies between scope and block
+     */
+    let work = terminal.dependencies;
+    while (true) {
+      const block = fn.body.blocks.get(work)!;
+      for (const {lvalue, value} of block.instructions) {
+        if (value.kind === 'LoadLocal') {
+          temporaries.set(lvalue.identifier.id, {
+            identifier: value.place.identifier,
+            reactive: value.place.reactive,
+            path: [],
+          });
+        } else if (value.kind === 'PropertyLoad') {
+          const source = temporaries.get(value.object.identifier.id)!;
+          temporaries.set(lvalue.identifier.id, {
+            identifier: source.identifier,
+            reactive: source.reactive,
+            path: [...source.path, {property: value.property, optional: false}],
+          });
+        }
+      }
+
+      if (block.terminal.kind === 'optional') {
+        traverseOptionalBlock(
+          block as TBasicBlock<OptionalTerminal>,
+          context,
+          null,
+        );
+        work = block.terminal.fallthrough;
+      } else {
+        CompilerError.invariant(
+          block.terminal.kind === 'goto' &&
+            block.terminal.block === terminal.block,
+          {
+            reason: 'unexpected terminal',
+            description: `kind: ${block.terminal.kind}`,
+            loc: block.terminal.loc,
+          },
+        );
+        break;
+      }
+    }
+
+    const scopeOwnDependencies = new Set<ReactiveScopeDependency>();
+    for (const dep of terminal.scope.dependencies) {
+      const reactiveScopeDependency = temporaries.get(dep.identifier.id)!;
+      CompilerError.invariant(reactiveScopeDependency != null, {
+        reason: 'Expected dependency to be found',
+        description: `${printPlace(dep)}`,
+        loc: terminal.scope.loc,
+      });
+      scopeOwnDependencies.add(reactiveScopeDependency);
+    }
+    return scopeOwnDependencies;
+  }
+  CompilerError.invariant(false, {
+    reason: 'Expected scope to be found',
+    loc: GeneratedSource,
+  });
+}
+
+function assertNonNull<T>(value: T | null | undefined): T {
+  if (value == null) {
+    throw new Error('Expected nonnull value');
+  }
+  return value;
+}
+type UsageMap_ = Map<
+  IdentifierId | ReactiveValue,
+  Array<IdentifierId | ReactiveValue>
+>;
+
+class UsageMap {
+  map: UsageMap_;
+  constructor() {
+    this.map = new Map();
+  }
+  set(key: IdentifierId | ReactiveValue, value: IdentifierId | ReactiveValue) {
+    let arr = this.map.get(key);
+    if (arr == null) {
+      arr = [];
+      this.map.set(key, arr);
+    }
+    arr.push(value);
+  }
+  get(key: IdentifierId | ReactiveValue): Array<IdentifierId | ReactiveValue> {
+    return this.map.get(key) ?? [];
+  }
+}
+
+function _helperInstr(
+  instr: ReactiveInstruction,
+  sidemap: Map<IdentifierId, ReactiveScopeDependency>,
+  usage: UsageMap,
+) {
+  const value = _helperValue(instr.value, sidemap, usage);
+  if (instr.lvalue != null) {
+    usage.set(instr.lvalue.identifier.id, instr.value);
+    sidemap.set(instr.lvalue.identifier.id, value);
+  }
+}
+function _helperValue(
+  instr: ReactiveValue,
+  sidemap: Map<IdentifierId, ReactiveScopeDependency>,
+  usage: UsageMap,
+): ReactiveScopeDependency {
+  if (instr.kind === 'LoadLocal') {
+    usage.set(instr, instr.place.identifier.id);
+    const base = sidemap.get(instr.place.identifier.id);
+    if (base != null) {
+      return base;
+    } else {
+      return {
+        identifier: instr.place.identifier,
+        reactive: instr.place.reactive,
+        path: [],
+      };
+    }
+  } else if (instr.kind === 'PropertyLoad') {
+    usage.set(instr, instr.object.identifier.id);
+    const base = assertNonNull(sidemap.get(instr.object.identifier.id));
+    return {
+      identifier: base.identifier,
+      reactive: base.reactive,
+      path: [...base.path, {property: instr.property, optional: false}],
+    };
+  } else if (instr.kind === 'SequenceExpression') {
+    for (const inner of instr.instructions) {
+      _helperInstr(inner, sidemap, usage);
+    }
+    usage.set(instr, instr.value);
+    return _helperValue(instr.value, sidemap, usage);
+  } else if (instr.kind === 'OptionalExpression') {
+    usage.set(instr, instr.value);
+    const value = _helperValue(instr.value, sidemap, usage);
+    CompilerError.invariant(
+      value.path.length > 0 && !value.path.at(-1)!.optional,
+      {
+        reason: 'Expected optional chain to be nonempty',
+        loc: instr.loc,
+      },
+    );
+    return {
+      ...value,
+      path: [
+        ...value.path.slice(0, -1),
+        {property: value.path.at(-1)!.property, optional: instr.optional},
+      ],
+    };
+  }
+  CompilerError.invariant(false, {
+    reason: 'Unexpected value kind',
+    description: instr.kind,
+    loc: instr.loc,
+  });
+}
+export function readScopeDependenciesRHIR(
+  instrs: Array<ReactiveInstructionStatement>,
+  deps: Array<Place>,
+): Array<ReactiveScopeDependency> {
+  const sidemap = new Map<IdentifierId, ReactiveScopeDependency>();
+  const usage = new UsageMap();
+  for (const instr of instrs) {
+    _helperInstr(instr.instruction, sidemap, usage);
+  }
+  const result: Array<ReactiveScopeDependency> = [];
+  for (const {identifier} of deps) {
+    const value = assertNonNull(sidemap.get(identifier.id));
+    result.push(value);
+  }
+  return result;
+}
+
+export function scopeDependenciesDCE(
+  instrs: Array<ReactiveInstructionStatement>,
+  deps: Array<Place>,
+): void {
+  const sidemap = new Map<IdentifierId, ReactiveScopeDependency>();
+  const usage = new UsageMap();
+  for (const instr of instrs) {
+    _helperInstr(instr.instruction, sidemap, usage);
+  }
+
+  const notUsed = new Set(usage.map.keys());
+  let x = 0;
+  const seen = new Set();
+
+  for (const {identifier} of deps) {
+    x = 0;
+    // assuming each instr / value is used exactly once
+    let work: Array<IdentifierId | ReactiveValue> = [identifier.id];
+    while (true) {
+      const curr = work.pop();
+      if (curr == null) {
+        break;
+      }
+      if (seen.has(curr)) {
+        continue;
+      }
+      // console.log(typeof curr === 'number' ? curr.toString() : curr.kind);
+      CompilerError.invariant(x++ < 100 /* && !seen.has(curr) */, {
+        reason: 'infinite loop1',
+        description: typeof curr === 'number' ? curr.toString() : curr.kind,
+        loc: GeneratedSource,
+      });
+      notUsed.delete(curr);
+      seen.add(curr);
+      for (const next of usage.get(curr)) {
+        work.push(next);
+      }
+    }
+  }
+  // TODO: can we just do something shallow
+  // const transform = new Transform(notUsed);
+  let j = 0;
+  for (let i = 0; i < instrs.length; i++) {
+    if (x++ > 100) {
+      CompilerError.invariant(false, {
+        reason: 'infinite loop2',
+        loc: GeneratedSource,
+      });
+    }
+    const instr = instrs[i].instruction;
+    // lvalue might have already been pruned
+    if (instr.lvalue == null || notUsed.has(instr.lvalue.identifier.id)) {
+      // delete
+    } else {
+      instrs[j] = instrs[i];
+      j++;
+    }
+    // console.log('-', i, j, instrs.length);
+  }
+  instrs.length = j;
+}
+
+// class Transform extends ReactiveFunctionTransform {
+//   notUsed: Set<IdentifierId | ReactiveValue>;
+//   constructor(notUsed: Set<IdentifierId | ReactiveValue>) {
+//     super();
+//     this.notUsed = notUsed;
+//   }
+//   override transformInstruction(
+//     instruction: ReactiveInstruction,
+//     state: void,
+//   ): Transformed<ReactiveStatement> {
+//     this.visitInstruction(instruction);
+//     if (
+//       instruction.lvalue &&
+//       this.notUsed.has(instruction.lvalue.identifier.id)
+//     ) {
+//       return {kind: 'remove'};
+//     } else {
+//       return {kind: 'keep'};
+//     }
+//   }
+// }
 
 function findTemporariesUsedOutsideDeclaringScope(
   fn: HIRFunction,
@@ -301,6 +1029,7 @@ function collectTemporariesSidemapImpl(
         ) {
           temporaries.set(lvalue.identifier.id, {
             identifier: value.place.identifier,
+            reactive: value.place.reactive,
             path: [],
           });
         }
@@ -354,11 +1083,13 @@ function getProperty(
   if (resolvedDependency == null) {
     property = {
       identifier: object.identifier,
+      reactive: object.reactive,
       path: [{property: propertyName, optional}],
     };
   } else {
     property = {
       identifier: resolvedDependency.identifier,
+      reactive: resolvedDependency.reactive,
       path: [...resolvedDependency.path, {property: propertyName, optional}],
     };
   }
@@ -514,6 +1245,7 @@ class Context {
     this.visitDependency(
       this.#temporaries.get(place.identifier.id) ?? {
         identifier: place.identifier,
+        reactive: place.reactive,
         path: [],
       },
     );
@@ -574,6 +1306,7 @@ class Context {
     ) {
       maybeDependency = {
         identifier: maybeDependency.identifier,
+        reactive: maybeDependency.reactive,
         path: [],
       };
     }
@@ -595,7 +1328,11 @@ class Context {
         identifier =>
           identifier.declarationId === place.identifier.declarationId,
       ) &&
-      this.#checkValidDependency({identifier: place.identifier, path: []})
+      this.#checkValidDependency({
+        identifier: place.identifier,
+        reactive: place.reactive,
+        path: [],
+      })
     ) {
       currentScope.reassignments.add(place.identifier);
     }
@@ -738,9 +1475,8 @@ function collectDependencies(
       }
       for (const instr of block.instructions) {
         if (
-          fn.env.config.enableFunctionDependencyRewrite &&
-          (instr.value.kind === 'FunctionExpression' ||
-            instr.value.kind === 'ObjectMethod')
+          instr.value.kind === 'FunctionExpression' ||
+          instr.value.kind === 'ObjectMethod'
         ) {
           context.declare(instr.lvalue.identifier, {
             id: instr.id,

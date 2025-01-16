@@ -62,6 +62,7 @@ export type ReactiveFunction = {
 
 export type ReactiveScopeBlock = {
   kind: 'scope';
+  dependencyInstructions: Array<ReactiveInstructionStatement>;
   scope: ReactiveScope;
   instructions: ReactiveBlock;
 };
@@ -108,16 +109,7 @@ export type ReactiveValue =
   | ReactiveLogicalValue
   | ReactiveSequenceValue
   | ReactiveTernaryValue
-  | ReactiveOptionalCallValue
-  | ReactiveFunctionValue;
-
-export type ReactiveFunctionValue = {
-  kind: 'ReactiveFunctionValue';
-  fn: ReactiveFunction;
-  dependencies: Array<Place>;
-  returnType: t.FlowType | t.TSType | null;
-  loc: SourceLocation;
-};
+  | ReactiveOptionalCallValue;
 
 export type ReactiveLogicalValue = {
   kind: 'LogicalExpression';
@@ -623,6 +615,7 @@ export type MaybeThrowTerminal = {
 export type ReactiveScopeTerminal = {
   kind: 'scope';
   fallthrough: BlockId;
+  dependencies: BlockId;
   block: BlockId;
   scope: ReactiveScope;
   id: InstructionId;
@@ -632,6 +625,7 @@ export type ReactiveScopeTerminal = {
 export type PrunedScopeTerminal = {
   kind: 'pruned-scope';
   fallthrough: BlockId;
+  dependencies: BlockId;
   block: BlockId;
   scope: ReactiveScope;
   id: InstructionId;
@@ -722,7 +716,6 @@ export type ObjectProperty = {
 };
 
 export type LoweredFunction = {
-  dependencies: Array<Place>;
   func: HIRFunction;
 };
 
@@ -1463,9 +1456,10 @@ export type ReactiveScope = {
   range: MutableRange;
 
   /**
-   * The inputs to this reactive scope
+   * Note the dependencies of a reactive scope are tracked in HIR and
+   * ReactiveFunction
    */
-  dependencies: ReactiveScopeDependencies;
+  dependencies: Array<Place>;
 
   /**
    * The set of values produced by this scope. This may be empty
@@ -1516,7 +1510,53 @@ export type DependencyPathEntry = {property: string; optional: boolean};
 export type DependencyPath = Array<DependencyPathEntry>;
 export type ReactiveScopeDependency = {
   identifier: Identifier;
+  reactive: boolean;
   path: DependencyPath;
+};
+
+/**
+ * TODO: ReactiveScopeDependency should be _
+ */
+
+type _ReactiveScopeDependency =
+  | DependencyIdentifier
+  | DependencyPropertyLoad
+  | DependencyLogicalExpression
+  | DependencyTernaryExpression
+  | DependencyBooleanExpression
+  | DependencyBinaryExpression;
+type DependencyIdentifier = {
+  kind: 'Identifier';
+  value: Identifier;
+};
+type DependencyPropertyLoad = {
+  kind: 'PropertyLoad';
+  source: DependencyIdentifier | _ReactiveScopeDependency;
+  property: string;
+  optional: boolean;
+};
+type DependencyLogicalExpression = {
+  kind: 'LogicalExpression';
+  operator: t.LogicalExpression['operator'];
+  left: _ReactiveScopeDependency;
+  right: _ReactiveScopeDependency;
+};
+type DependencyTernaryExpression = {
+  kind: 'TernaryExpression';
+  test: _ReactiveScopeDependency; // or DependencyBooleanExpression
+  consequent: _ReactiveScopeDependency;
+  alternate: _ReactiveScopeDependency;
+};
+type DependencyBooleanExpression = {
+  kind: 'BooleanExpression';
+  value: _ReactiveScopeDependency;
+};
+// TODO: this can be combined with DependencyLogicalExpression
+type DependencyBinaryExpression = {
+  kind: 'BinaryExpression';
+  operator: t.BinaryExpression['operator'];
+  left: _ReactiveScopeDependency;
+  right: _ReactiveScopeDependency;
 };
 
 export function areEqualPaths(a: DependencyPath, b: DependencyPath): boolean {

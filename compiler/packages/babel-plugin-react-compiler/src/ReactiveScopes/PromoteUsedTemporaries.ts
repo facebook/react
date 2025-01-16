@@ -26,18 +26,15 @@ import {
 } from '../HIR/HIR';
 import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
 import {eachInstructionValueLValue, eachPatternOperand} from '../HIR/visitors';
+import {scopeDependenciesDCE} from '../HIR/PropagateScopeDependenciesHIR';
+import {printInstruction} from '../HIR/PrintHIR';
+import {printReactiveInstructions} from './PrintReactiveFunction';
 
 /**
  * Phase 2: Promote identifiers which are used in a place that requires a named variable.
  */
 class PromoteTemporaries extends ReactiveFunctionVisitor<State> {
   override visitScope(scopeBlock: ReactiveScopeBlock, state: State): void {
-    for (const dep of scopeBlock.scope.dependencies) {
-      const {identifier} = dep;
-      if (identifier.name == null) {
-        promoteIdentifier(identifier, state);
-      }
-    }
     /*
      * This is technically optional. We could prune ReactiveScopes
      * whose outputs are not used in another computation or return
@@ -50,7 +47,20 @@ class PromoteTemporaries extends ReactiveFunctionVisitor<State> {
         promoteIdentifier(declaration.identifier, state);
       }
     }
-    this.traverseScope(scopeBlock, state);
+
+    CompilerError.invariant(state.scopeDepContext == null, {
+      reason: 'PromoteTemporaries: withinScopeDepBlock should be false',
+      loc: GeneratedSource,
+    });
+    state.scopeDepContext = {
+      declarations: new Set(),
+      dependencies: new Set(
+        scopeBlock.scope.dependencies.map(dep => dep.identifier),
+      ),
+    };
+    this.visitBlock(scopeBlock.dependencyInstructions, state);
+    state.scopeDepContext = null;
+    this.visitBlock(scopeBlock.instructions, state);
   }
 
   override visitPrunedScope(
@@ -75,11 +85,31 @@ class PromoteTemporaries extends ReactiveFunctionVisitor<State> {
     }
   }
 
+  override visitLValue(_id: InstructionId, lvalue: Place, state: State): void {
+    state.scopeDepContext?.declarations.add(lvalue.identifier.declarationId);
+  }
+  // override visitInstruction({lvalue,}: ReactiveInstruction, state: State): void {
+
+  // }
+
   override visitValue(
     id: InstructionId,
     value: ReactiveValue,
     state: State,
   ): void {
+    if (
+      state.scopeDepContext &&
+      (value.kind === 'LoadLocal' || value.kind === 'LoadContext')
+    ) {
+      const identifier = value.place.identifier;
+      // all LoadLocal sources should be promoted
+      if (
+        !state.scopeDepContext.declarations.has(identifier.declarationId) &&
+        identifier.name === null
+      ) {
+        promoteIdentifier(identifier, state);
+      }
+    }
     this.traverseValue(id, value, state);
     if (value.kind === 'FunctionExpression' || value.kind === 'ObjectMethod') {
       this.visitHirFunction(value.loweredFunc.func, state);
@@ -177,6 +207,10 @@ type State = {
     DeclarationId,
     {activeScopes: Array<ScopeId>; usedOutsideScope: boolean}
   >; // true if referenced within another scope, false if only accessed outside of scopes
+  scopeDepContext: {
+    declarations: Set<DeclarationId>;
+    dependencies: ReadonlySet<Identifier>;
+  } | null;
 };
 
 /**
@@ -223,6 +257,19 @@ class CollectPromotableTemporaries extends ReactiveFunctionVisitor<State> {
   }
 
   override visitScope(scopeBlock: ReactiveScopeBlock, state: State): void {
+    // console.log(
+    //   'before:\n' +
+    //     printReactiveInstructions(scopeBlock.dependencyInstructions),
+    //   scopeBlock.scope.dependencies.map(dep => dep.identifier.id),
+    // );
+
+    scopeDependenciesDCE(
+      scopeBlock.dependencyInstructions,
+      scopeBlock.scope.dependencies,
+    );
+    // console.log(
+    //   'after:\n' + printReactiveInstructions(scopeBlock.dependencyInstructions),
+    // );
     this.activeScopes.push(scopeBlock.scope.id);
     this.traverseScope(scopeBlock, state);
     this.activeScopes.pop();
@@ -427,6 +474,7 @@ export function promoteUsedTemporaries(fn: ReactiveFunction): void {
     tags: new Set(),
     promoted: new Set(),
     pruned: new Map(),
+    scopeDepContext: null,
   };
   visitReactiveFunction(fn, new CollectPromotableTemporaries(), state);
   for (const operand of fn.params) {

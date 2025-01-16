@@ -41,11 +41,15 @@ function inferOperandEffect(state: State, place: Place): null | FunctionEffect {
       if (isRefOrRefValue(place.identifier)) {
         break;
       } else if (value.kind === ValueKind.Context) {
+        CompilerError.invariant(value.context.size > 0, {
+          reason: 'Expected context value places',
+          loc: place.loc,
+        });
         return {
           kind: 'ContextMutation',
           loc: place.loc,
           effect: place.effect,
-          places: value.context.size === 0 ? new Set([place]) : value.context,
+          places: value.context,
         };
       } else if (
         value.kind !== ValueKind.Mutable &&
