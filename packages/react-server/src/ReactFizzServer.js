@@ -146,6 +146,7 @@ import {
   REACT_SCOPE_TYPE,
   REACT_OFFSCREEN_TYPE,
   REACT_POSTPONE_TYPE,
+  REACT_VIEW_TRANSITION_TYPE,
 } from 'shared/ReactSymbols';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -158,6 +159,7 @@ import {
   disableDefaultPropsExceptForClasses,
   enableAsyncIterableChildren,
   enableOwnerStacks,
+  enableViewTransition,
 } from 'shared/ReactFeatureFlags';
 
 import assign from 'shared/assign';
@@ -2154,6 +2156,16 @@ function renderElement(
       renderNodeDestructive(request, task, props.children, -1);
       task.keyPath = prevKeyPath;
       return;
+    }
+    case REACT_VIEW_TRANSITION_TYPE: {
+      if (enableViewTransition) {
+        const prevKeyPath = task.keyPath;
+        task.keyPath = keyPath;
+        renderNodeDestructive(request, task, props.children, -1);
+        task.keyPath = prevKeyPath;
+        return;
+      }
+      // Fallthrough
     }
     case REACT_SCOPE_TYPE: {
       if (enableScopeAPI) {

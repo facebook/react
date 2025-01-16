@@ -42,6 +42,7 @@ let waitForThrow;
 let waitForPaint;
 let assertLog;
 let useResourceEffect;
+let assertConsoleErrorDev;
 
 describe('ReactHooksWithNoopRenderer', () => {
   beforeEach(() => {
@@ -52,6 +53,8 @@ describe('ReactHooksWithNoopRenderer', () => {
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
     act = require('internal-test-utils').act;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
     useState = React.useState;
     useReducer = React.useReducer;
     useEffect = React.useEffect;
@@ -232,17 +235,18 @@ describe('ReactHooksWithNoopRenderer', () => {
   });
 
   it('throws when called outside the render phase', async () => {
-    expect(() => {
-      expect(() => useState(0)).toThrow(
-        "Cannot read property 'useState' of null",
-      );
-    }).toErrorDev(
-      'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
-        ' one of the following reasons:\n' +
-        '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
-        '2. You might be breaking the Rules of Hooks\n' +
-        '3. You might have more than one copy of React in the same app\n' +
-        'See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.',
+    expect(() => useState(0)).toThrow(
+      "Cannot read property 'useState' of null",
+    );
+    assertConsoleErrorDev(
+      [
+        'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
+          ' one of the following reasons:\n' +
+          '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
+          '2. You might be breaking the Rules of Hooks\n' +
+          '3. You might have more than one copy of React in the same app\n' +
+          'See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.',
+      ],
       {withoutStack: true},
     );
   });
@@ -459,11 +463,12 @@ describe('ReactHooksWithNoopRenderer', () => {
           <Bar triggerUpdate={true} />
         </>,
       );
-      await expect(
-        async () => await waitForAll(['Foo [0]', 'Bar', 'Foo [1]']),
-      ).toErrorDev([
-        'Cannot update a component (`Foo`) while rendering a ' +
-          'different component (`Bar`). To locate the bad setState() call inside `Bar`',
+      await waitForAll(['Foo [0]', 'Bar', 'Foo [1]']);
+      assertConsoleErrorDev([
+        'Cannot update a component (`Foo`) while rendering a different component (`Bar`). ' +
+          'To locate the bad setState() call inside `Bar`, ' +
+          'follow the stack trace as described in https://react.dev/link/setstate-in-render\n' +
+          '    in Bar (at **)',
       ]);
 
       // It should not warn again (deduplication).
@@ -1645,6 +1650,12 @@ describe('ReactHooksWithNoopRenderer', () => {
             updateCount(props.count);
           });
           assertLog([`Schedule update [${props.count}]`]);
+          assertConsoleErrorDev([
+            'flushSync was called from inside a lifecycle method. ' +
+              'React cannot flush when React is already rendering. ' +
+              'Consider moving this call to a scheduler task or micro task.\n' +
+              '    in Counter (at **)',
+          ]);
           // This shouldn't flush synchronously.
           expect(ReactNoop).not.toMatchRenderedOutput(
             <span prop={`Count: ${props.count}`} />,
@@ -1652,17 +1663,14 @@ describe('ReactHooksWithNoopRenderer', () => {
         }, [props.count]);
         return <Text text={'Count: ' + count} />;
       }
-      await expect(async () => {
-        await act(async () => {
-          ReactNoop.render(<Counter count={0} />, () =>
-            Scheduler.log('Sync effect'),
-          );
-          await waitFor(['Count: (empty)', 'Sync effect']);
-          expect(ReactNoop).toMatchRenderedOutput(
-            <span prop="Count: (empty)" />,
-          );
-        });
-      }).toErrorDev('flushSync was called from inside a lifecycle method');
+      await act(async () => {
+        ReactNoop.render(<Counter count={0} />, () =>
+          Scheduler.log('Sync effect'),
+        );
+        await waitFor(['Count: (empty)', 'Sync effect']);
+        expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: (empty)" />);
+      });
+
       assertLog([`Count: 0`]);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 0" />);
     });
@@ -2506,35 +2514,47 @@ describe('ReactHooksWithNoopRenderer', () => {
       }
 
       const root1 = ReactNoop.createRoot();
-      await expect(async () => {
-        await act(() => {
-          root1.render(<App return={17} />);
-        });
-      }).toErrorDev([
-        'useEffect must not return anything besides a ' +
-          'function, which is used for clean-up. You returned: 17',
+      await act(() => {
+        root1.render(<App return={17} />);
+      });
+      assertConsoleErrorDev([
+        'useEffect must not return anything besides a function, ' +
+          'which is used for clean-up. You returned: 17\n' +
+          '    in App (at **)',
       ]);
 
       const root2 = ReactNoop.createRoot();
-      await expect(async () => {
-        await act(() => {
-          root2.render(<App return={null} />);
-        });
-      }).toErrorDev([
-        'useEffect must not return anything besides a ' +
-          'function, which is used for clean-up. You returned null. If your ' +
-          'effect does not require clean up, return undefined (or nothing).',
+      await act(() => {
+        root2.render(<App return={null} />);
+      });
+      assertConsoleErrorDev([
+        'useEffect must not return anything besides a function, ' +
+          'which is used for clean-up. You returned null. ' +
+          'If your effect does not require clean up, return undefined (or nothing).\n' +
+          '    in App (at **)',
       ]);
 
       const root3 = ReactNoop.createRoot();
-      await expect(async () => {
-        await act(() => {
-          root3.render(<App return={Promise.resolve()} />);
-        });
-      }).toErrorDev([
-        'useEffect must not return anything besides a ' +
-          'function, which is used for clean-up.\n\n' +
-          'It looks like you wrote useEffect(async () => ...) or returned a Promise.',
+      await act(() => {
+        root3.render(<App return={Promise.resolve()} />);
+      });
+      assertConsoleErrorDev([
+        'useEffect must not return anything besides a function, which is used for clean-up.\n' +
+          '\n' +
+          'It looks like you wrote useEffect(async () => ...) or returned a Promise. ' +
+          'Instead, write the async function inside your effect and call it immediately:\n' +
+          '\n' +
+          'useEffect(() => {\n' +
+          '  async function fetchData() {\n' +
+          '    // You can await here\n' +
+          '    const response = await MyAPI.getData(someId);\n' +
+          '    // ...\n' +
+          '  }\n' +
+          '  fetchData();\n' +
+          "}, [someId]); // Or [] if effect doesn't need props or state\n" +
+          '\n' +
+          'Learn more about data fetching with Hooks: https://react.dev/link/hooks-data-fetching\n' +
+          '    in App (at **)',
       ]);
 
       // Error on unmount because React assumes the value is a function
@@ -2895,35 +2915,48 @@ describe('ReactHooksWithNoopRenderer', () => {
       }
 
       const root1 = ReactNoop.createRoot();
-      await expect(async () => {
-        await act(() => {
-          root1.render(<App return={17} />);
-        });
-      }).toErrorDev([
-        'useInsertionEffect must not return anything besides a ' +
-          'function, which is used for clean-up. You returned: 17',
+      await act(() => {
+        root1.render(<App return={17} />);
+      });
+      assertConsoleErrorDev([
+        'useInsertionEffect must not return anything besides a function, ' +
+          'which is used for clean-up. You returned: 17\n' +
+          '    in App (at **)',
       ]);
 
       const root2 = ReactNoop.createRoot();
-      await expect(async () => {
-        await act(() => {
-          root2.render(<App return={null} />);
-        });
-      }).toErrorDev([
-        'useInsertionEffect must not return anything besides a ' +
-          'function, which is used for clean-up. You returned null. If your ' +
-          'effect does not require clean up, return undefined (or nothing).',
+      await act(() => {
+        root2.render(<App return={null} />);
+      });
+      assertConsoleErrorDev([
+        'useInsertionEffect must not return anything besides a function, ' +
+          'which is used for clean-up. You returned null. ' +
+          'If your effect does not require clean up, return undefined (or nothing).\n' +
+          '    in App (at **)',
       ]);
 
       const root3 = ReactNoop.createRoot();
-      await expect(async () => {
-        await act(() => {
-          root3.render(<App return={Promise.resolve()} />);
-        });
-      }).toErrorDev([
+      await act(() => {
+        root3.render(<App return={Promise.resolve()} />);
+      });
+      assertConsoleErrorDev([
         'useInsertionEffect must not return anything besides a ' +
-          'function, which is used for clean-up.\n\n' +
-          'It looks like you wrote useInsertionEffect(async () => ...) or returned a Promise.',
+          'function, which is used for clean-up.\n' +
+          '\n' +
+          'It looks like you wrote useInsertionEffect(async () => ...) or returned a Promise. ' +
+          'Instead, write the async function inside your effect and call it immediately:\n' +
+          '\n' +
+          'useInsertionEffect(() => {\n' +
+          '  async function fetchData() {\n' +
+          '    // You can await here\n' +
+          '    const response = await MyAPI.getData(someId);\n' +
+          '    // ...\n' +
+          '  }\n' +
+          '  fetchData();\n' +
+          "}, [someId]); // Or [] if effect doesn't need props or state\n" +
+          '\n' +
+          'Learn more about data fetching with Hooks: https://react.dev/link/hooks-data-fetching\n' +
+          '    in App (at **)',
       ]);
 
       // Error on unmount because React assumes the value is a function
@@ -2946,11 +2979,13 @@ describe('ReactHooksWithNoopRenderer', () => {
       }
 
       const root = ReactNoop.createRoot();
-      await expect(async () => {
-        await act(() => {
-          root.render(<App />);
-        });
-      }).toErrorDev(['useInsertionEffect must not schedule updates.']);
+      await act(() => {
+        root.render(<App />);
+      });
+      assertConsoleErrorDev([
+        'useInsertionEffect must not schedule updates.\n' +
+          '    in App (at **)',
+      ]);
 
       await act(async () => {
         root.render(<App throw={true} />);
@@ -2988,11 +3023,13 @@ describe('ReactHooksWithNoopRenderer', () => {
       await act(() => {
         root.render(<App foo="hello" />);
       });
-      await expect(async () => {
-        await act(() => {
-          root.render(<App foo="goodbye" />);
-        });
-      }).toErrorDev(['useInsertionEffect must not schedule updates.']);
+      await act(() => {
+        root.render(<App foo="goodbye" />);
+      });
+      assertConsoleErrorDev([
+        'useInsertionEffect must not schedule updates.\n' +
+          '    in App (at **)',
+      ]);
 
       await act(async () => {
         root.render(<App throw={true} />);
@@ -3036,19 +3073,17 @@ describe('ReactHooksWithNoopRenderer', () => {
         );
       });
 
-      if (gate(flags => flags.enableHiddenSubtreeInsertionEffectCleanup)) {
-        await expect(async () => {
-          await act(() => {
-            root.render(<Activity mode="hidden" />);
-          });
-        }).toErrorDev(['useInsertionEffect must not schedule updates.']);
-      } else {
-        await expect(async () => {
-          await act(() => {
-            root.render(<Activity mode="hidden" />);
-          });
-        }).toErrorDev([]);
-      }
+      await act(() => {
+        root.render(<Activity mode="hidden" />);
+      });
+      assertConsoleErrorDev(
+        gate('enableHiddenSubtreeInsertionEffectCleanup')
+          ? [
+              'useInsertionEffect must not schedule updates.\n' +
+                '    in App (at **)',
+            ]
+          : [],
+      );
 
       // Should not warn for regular effects after throw.
       function NotInsertion() {
@@ -3225,35 +3260,47 @@ describe('ReactHooksWithNoopRenderer', () => {
       }
 
       const root1 = ReactNoop.createRoot();
-      await expect(async () => {
-        await act(() => {
-          root1.render(<App return={17} />);
-        });
-      }).toErrorDev([
+      await act(() => {
+        root1.render(<App return={17} />);
+      });
+      assertConsoleErrorDev([
         'useLayoutEffect must not return anything besides a ' +
-          'function, which is used for clean-up. You returned: 17',
+          'function, which is used for clean-up. You returned: 17\n' +
+          '    in App (at **)',
       ]);
 
       const root2 = ReactNoop.createRoot();
-      await expect(async () => {
-        await act(() => {
-          root2.render(<App return={null} />);
-        });
-      }).toErrorDev([
+      await act(() => {
+        root2.render(<App return={null} />);
+      });
+      assertConsoleErrorDev([
         'useLayoutEffect must not return anything besides a ' +
           'function, which is used for clean-up. You returned null. If your ' +
-          'effect does not require clean up, return undefined (or nothing).',
+          'effect does not require clean up, return undefined (or nothing).\n' +
+          '    in App (at **)',
       ]);
 
       const root3 = ReactNoop.createRoot();
-      await expect(async () => {
-        await act(() => {
-          root3.render(<App return={Promise.resolve()} />);
-        });
-      }).toErrorDev([
+      await act(() => {
+        root3.render(<App return={Promise.resolve()} />);
+      });
+      assertConsoleErrorDev([
         'useLayoutEffect must not return anything besides a ' +
           'function, which is used for clean-up.\n\n' +
-          'It looks like you wrote useLayoutEffect(async () => ...) or returned a Promise.',
+          'It looks like you wrote useLayoutEffect(async () => ...) or returned a Promise. ' +
+          'Instead, write the async function inside your effect and call it immediately:\n' +
+          '\n' +
+          'useLayoutEffect(() => {\n' +
+          '  async function fetchData() {\n' +
+          '    // You can await here\n' +
+          '    const response = await MyAPI.getData(someId);\n' +
+          '    // ...\n' +
+          '  }\n' +
+          '  fetchData();\n' +
+          "}, [someId]); // Or [] if effect doesn't need props or state\n" +
+          '\n' +
+          'Learn more about data fetching with Hooks: https://react.dev/link/hooks-data-fetching\n' +
+          '    in App (at **)',
       ]);
 
       // Error on unmount because React assumes the value is a function
@@ -3300,13 +3347,14 @@ describe('ReactHooksWithNoopRenderer', () => {
         return null;
       }
 
-      await expect(async () => {
-        await act(() => {
-          ReactNoop.render(<App id={1} />);
-        });
-      }).toErrorDev(
-        'useResourceEffect must provide a callback which returns a resource. ' +
-          'If a managed resource is not needed here, use useEffect. Received undefined',
+      await act(() => {
+        ReactNoop.render(<App id={1} />);
+      });
+      assertConsoleErrorDev(
+        [
+          'useResourceEffect must provide a callback which returns a resource. ' +
+            'If a managed resource is not needed here, use useEffect. Received undefined',
+        ],
         {withoutStack: true},
       );
     });
@@ -3328,14 +3376,14 @@ describe('ReactHooksWithNoopRenderer', () => {
         return null;
       }
 
-      await expect(async () => {
-        await act(() => {
-          ReactNoop.render(<App id={1} />);
-        });
-      }).toErrorDev(
+      await act(() => {
+        ReactNoop.render(<App id={1} />);
+      });
+      assertConsoleErrorDev([
         'useResourceEffect received a dependency array with no dependencies. ' +
-          'When specified, the dependency array must have at least one dependency.',
-      );
+          'When specified, the dependency array must have at least one dependency.\n' +
+          '    in App (at **)',
+      ]);
     });
 
     // @gate enableUseResourceEffectHook
@@ -4472,21 +4520,23 @@ describe('ReactHooksWithNoopRenderer', () => {
       );
 
       ReactNoop.render(<App loadC={true} />);
-      await expect(async () => {
-        await waitForThrow(
-          'Rendered more hooks than during the previous render.',
-        );
-        assertLog([]);
-      }).toErrorDev([
+      await waitForThrow(
+        'Rendered more hooks than during the previous render.',
+      );
+      assertLog([]);
+      assertConsoleErrorDev([
         'React has detected a change in the order of Hooks called by App. ' +
           'This will lead to bugs and errors if not fixed. For more information, ' +
-          'read the Rules of Hooks: https://react.dev/link/rules-of-hooks\n\n' +
+          'read the Rules of Hooks: https://react.dev/link/rules-of-hooks\n' +
+          '\n' +
           '   Previous render            Next render\n' +
           '   ------------------------------------------------------\n' +
           '1. useState                   useState\n' +
           '2. useState                   useState\n' +
           '3. undefined                  useState\n' +
-          '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n',
+          '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n' +
+          '\n' +
+          '    in App (at **)',
       ]);
 
       // Uncomment if/when we support this again
@@ -4569,20 +4619,22 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       await act(async () => {
         ReactNoop.render(<App showMore={true} />);
-        await expect(async () => {
-          await waitForThrow(
-            'Rendered more hooks than during the previous render.',
-          );
-          assertLog(['Unmount A']);
-        }).toErrorDev([
+        await waitForThrow(
+          'Rendered more hooks than during the previous render.',
+        );
+        assertLog(['Unmount A']);
+        assertConsoleErrorDev([
           'React has detected a change in the order of Hooks called by App. ' +
             'This will lead to bugs and errors if not fixed. For more information, ' +
-            'read the Rules of Hooks: https://react.dev/link/rules-of-hooks\n\n' +
+            'read the Rules of Hooks: https://react.dev/link/rules-of-hooks\n' +
+            '\n' +
             '   Previous render            Next render\n' +
             '   ------------------------------------------------------\n' +
             '1. useEffect                  useEffect\n' +
             '2. undefined                  useEffect\n' +
-            '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n',
+            '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n' +
+            '\n' +
+            '    in App (at **)',
         ]);
       });
 

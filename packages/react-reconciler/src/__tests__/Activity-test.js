@@ -14,6 +14,7 @@ let startTransition;
 let waitForPaint;
 let waitFor;
 let assertLog;
+let assertConsoleErrorDev;
 
 describe('Activity', () => {
   beforeEach(() => {
@@ -37,6 +38,7 @@ describe('Activity', () => {
     waitForPaint = InternalTestUtils.waitForPaint;
     waitFor = InternalTestUtils.waitFor;
     assertLog = InternalTestUtils.assertLog;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
   });
 
   function Text(props) {
@@ -784,11 +786,14 @@ describe('Activity', () => {
       // would be null because it was nulled out when it was deleted, but there
       // was no null check before we accessed it. A weird edge case but we must
       // account for it.
-      expect(() => {
-        setState('Updated');
-      }).toErrorDev(
-        "Can't perform a React state update on a component that hasn't mounted yet",
-      );
+      setState('Updated');
+      assertConsoleErrorDev([
+        "Can't perform a React state update on a component that hasn't mounted yet. " +
+          'This indicates that you have a side-effect in your render function that ' +
+          'asynchronously later calls tries to update the component. ' +
+          'Move this work to useEffect instead.\n' +
+          '    in Child (at **)',
+      ]);
     });
     expect(root).toMatchRenderedOutput(null);
   });

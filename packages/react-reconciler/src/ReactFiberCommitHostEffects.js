@@ -51,6 +51,7 @@ import {
   acquireSingletonInstance,
 } from './ReactFiberConfig';
 import {captureCommitPhaseError} from './ReactFiberWorkLoop';
+import {trackHostMutation} from './ReactFiberMutationTracking';
 
 import {runWithFiberInDEV} from './ReactCurrentFiber';
 
@@ -80,7 +81,7 @@ export function commitHostUpdate(
   finishedWork: Fiber,
   newProps: any,
   oldProps: any,
-) {
+): void {
   try {
     if (__DEV__) {
       runWithFiberInDEV(
@@ -101,6 +102,7 @@ export function commitHostUpdate(
         finishedWork,
       );
     }
+    // Mutations are tracked manually from within commitUpdate.
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }
@@ -124,6 +126,7 @@ export function commitHostTextUpdate(
     } else {
       commitTextUpdate(textInstance, oldText, newText);
     }
+    trackHostMutation();
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }
@@ -137,6 +140,7 @@ export function commitHostResetTextContent(finishedWork: Fiber) {
     } else {
       resetTextContent(instance);
     }
+    trackHostMutation();
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }
@@ -281,6 +285,7 @@ function insertOrAppendPlacementNodeIntoContainer(
     } else {
       appendChildToContainer(parent, stateNode);
     }
+    trackHostMutation();
   } else if (
     tag === HostPortal ||
     (supportsSingletons ? tag === HostSingleton : false)
@@ -316,6 +321,7 @@ function insertOrAppendPlacementNode(
     } else {
       appendChild(parent, stateNode);
     }
+    trackHostMutation();
   } else if (
     tag === HostPortal ||
     (supportsSingletons ? tag === HostSingleton : false)
@@ -424,6 +430,7 @@ export function commitHostRemoveChildFromContainer(
     } else {
       removeChildFromContainer(parentContainer, hostInstance);
     }
+    trackHostMutation();
   } catch (error) {
     captureCommitPhaseError(deletedFiber, nearestMountedAncestor, error);
   }
@@ -446,6 +453,7 @@ export function commitHostRemoveChild(
     } else {
       removeChild(parentInstance, hostInstance);
     }
+    trackHostMutation();
   } catch (error) {
     captureCommitPhaseError(deletedFiber, nearestMountedAncestor, error);
   }
@@ -468,6 +476,7 @@ export function commitHostRootContainerChildren(
     } else {
       replaceContainerChildren(containerInfo, pendingChildren);
     }
+    trackHostMutation();
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
   }

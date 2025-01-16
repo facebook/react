@@ -83,6 +83,24 @@ function useFoo(propVal: {+baz: number}) {
     `,
     noFormat: true,
   },
+  {
+    name: 'compilationMode-infer',
+    input: `// @compilationMode(infer)
+function nonReactFn() {
+  return {};
+}
+    `,
+    noFormat: true,
+  },
+  {
+    name: 'compilationMode-all',
+    input: `// @compilationMode(all)
+function nonReactFn() {
+  return {};
+}
+    `,
+    noFormat: true,
+  },
 ];
 
 test('editor should open successfully', async ({page}) => {

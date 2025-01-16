@@ -33,7 +33,7 @@ type Props = {
 
 export default function Element({data, index, style}: Props): React.Node {
   const store = useContext(StoreContext);
-  const {ownerFlatTree, ownerID, selectedElementID} =
+  const {ownerFlatTree, ownerID, inspectedElementID} =
     useContext(TreeStateContext);
   const dispatch = useContext(TreeDispatcherContext);
 
@@ -46,7 +46,7 @@ export default function Element({data, index, style}: Props): React.Node {
 
   const {isNavigatingWithKeyboard, onElementMouseEnter, treeFocused} = data;
   const id = element === null ? null : element.id;
-  const isSelected = selectedElementID === id;
+  const isSelected = inspectedElementID === id;
 
   const errorsAndWarningsSubscription = useMemo(
     () => ({

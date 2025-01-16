@@ -47,6 +47,10 @@ export const REACT_MEMO_CACHE_SENTINEL: symbol = Symbol.for(
 
 export const REACT_POSTPONE_TYPE: symbol = Symbol.for('react.postpone');
 
+export const REACT_VIEW_TRANSITION_TYPE: symbol = Symbol.for(
+  'react.view_transition',
+);
+
 const MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
 const FAUX_ITERATOR_SYMBOL = '@@iterator';
 

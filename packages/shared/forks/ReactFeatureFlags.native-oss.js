@@ -29,12 +29,10 @@ export const enableAsyncDebugInfo = false;
 export const enableAsyncIterableChildren = false;
 export const enableCPUSuspense = false;
 export const enableCreateEventHandleAPI = false;
-export const enableDeferRootSchedulingToMicrotask = true;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableFabricCompleteRootInCommitPhase = false;
 export const enableMoveBefore = true;
 export const enableFizzExternalRuntime = true;
-export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableHalt = false;
 export const enableHiddenSubtreeInsertionEffectCleanup = false;
 export const enableInfiniteRenderLoopDetection = false;
@@ -52,7 +50,6 @@ export const enableRetryLaneExpiration = false;
 export const enableSchedulingProfiler = __PROFILE__;
 export const enableComponentPerformanceTrack = false;
 export const enableScopeAPI = false;
-export const enableServerComponentLogs = true;
 export const enableShallowPropDiffing = false;
 export const enableSuspenseAvoidThisFallback = false;
 export const enableSuspenseCallback = false;
@@ -73,11 +70,15 @@ export const enableHydrationLaneScheduling = true;
 
 export const enableYieldingBeforePassive = false;
 
+export const enableThrottledScheduling = false;
+export const enableViewTransition = false;
+
 // Profiling Only
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableUpdaterTracking = __PROFILE__;
+export const enableRemoveConsolePatches = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

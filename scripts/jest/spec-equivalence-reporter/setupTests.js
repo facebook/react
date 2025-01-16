@@ -10,7 +10,7 @@
 const {
   patchConsoleMethods,
   resetAllUnexpectedConsoleCalls,
-  flushAllUnexpectedConsoleCalls,
+  assertConsoleLogsCleared,
 } = require('internal-test-utils/consoleMock');
 const spyOn = jest.spyOn;
 
@@ -44,10 +44,21 @@ global.spyOnProd = function (...args) {
 // Patch the console to assert that all console error/warn/log calls assert.
 patchConsoleMethods({includeLog: !!process.env.CI});
 beforeEach(resetAllUnexpectedConsoleCalls);
-afterEach(flushAllUnexpectedConsoleCalls);
+afterEach(assertConsoleLogsCleared);
+
+// TODO: enable this check so we don't forget to reset spyOnX mocks.
+// afterEach(() => {
+//   if (
+//       console[methodName] !== mockMethod &&
+//       !jest.isMockFunction(console[methodName])
+//   ) {
+//     throw new Error(
+//       `Test did not tear down console.${methodName} mock properly.`
+//     );
+//   }
+// });
 
 expect.extend({
   ...require('../matchers/reactTestMatchers'),
   ...require('../matchers/toThrow'),
-  ...require('../matchers/toWarnDev'),
 });

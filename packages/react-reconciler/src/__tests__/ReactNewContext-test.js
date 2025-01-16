@@ -861,8 +861,11 @@ describe('ReactNewContext', () => {
         <Context.Provider anyPropNameOtherThanValue="value could be anything" />,
       );
 
-      await expect(async () => await waitForAll([])).toErrorDev(
-        'The `value` prop is required for the `<Context.Provider>`. Did you misspell it or forget to pass it?',
+      await waitForAll([]);
+      assertConsoleErrorDev(
+        [
+          'The `value` prop is required for the `<Context.Provider>`. Did you misspell it or forget to pass it?',
+        ],
         {
           withoutStack: true,
         },
@@ -1036,7 +1039,9 @@ describe('ReactNewContext', () => {
       );
       await waitForAll(['LegacyProvider', 'App', 'Child']);
       assertConsoleErrorDev([
-        'LegacyProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+        'LegacyProvider uses the legacy childContextTypes API which will soon be removed. ' +
+          'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+          '    in LegacyProvider (at **)',
       ]);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Child" />);
 
@@ -1320,9 +1325,16 @@ describe('ReactNewContext', () => {
       }
 
       ReactNoop.render(<Cls />);
-      await expect(async () => await waitForAll([])).toErrorDev([
-        'Context can only be read while React is rendering',
-        'Cannot update during an existing state transition',
+      await waitForAll([]);
+      assertConsoleErrorDev([
+        'Cannot update during an existing state transition (such as within `render`). ' +
+          'Render methods should be a pure function of props and state.\n' +
+          '    in Cls (at **)',
+        'Context can only be read while React is rendering. ' +
+          'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
+          'In function components, you can read it directly in the function body, ' +
+          'but not inside Hooks like useReducer() or useMemo().\n' +
+          '    in Cls (at **)',
       ]);
     });
   });
@@ -1353,10 +1365,12 @@ describe('ReactNewContext', () => {
         return useContext(Context.Consumer);
       }
       ReactNoop.render(<Foo />);
-      await expect(async () => await waitForAll([])).toErrorDev(
+      await waitForAll([]);
+      assertConsoleErrorDev([
         'Calling useContext(Context.Consumer) is not supported and will cause bugs. ' +
-          'Did you mean to call useContext(Context) instead?',
-      );
+          'Did you mean to call useContext(Context) instead?\n' +
+          '    in Foo (at **)',
+      ]);
     });
 
     // Context consumer bails out on propagating "deep" updates when `value` hasn't changed.

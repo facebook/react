@@ -8300,6 +8300,7 @@ describe('rules-of-hooks/exhaustive-deps', () => {
     ecmaVersion: 6,
     sourceType: 'module',
   };
+
   const languageOptionsV9 = {
     ecmaVersion: 6,
     sourceType: 'module',
@@ -8442,7 +8443,7 @@ describe('rules-of-hooks/exhaustive-deps', () => {
       parser: require('@typescript-eslint/parser-v5'),
     },
   }).run(
-    'eslint: v9, parser: @typescript-eslint/parser@^5.0.0-0',
+    'eslint: v9, parser: @typescript-eslint/parser@^5.0.0',
     ReactHooksESLintRule,
     {
       valid: [

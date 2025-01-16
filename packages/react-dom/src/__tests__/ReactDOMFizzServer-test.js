@@ -1925,8 +1925,18 @@ describe('ReactDOMFizzServer', () => {
       pipe(writable);
     });
     assertConsoleErrorDev([
-      'TestProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
-      'TestConsumer uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+      'TestProvider uses the legacy childContextTypes API which will soon be removed. ' +
+        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in TestProvider (at **)',
+      'TestConsumer uses the legacy contextTypes API which will soon be removed. ' +
+        'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+        '    in TestConsumer (at **)' +
+        (gate('enableOwnerStacks')
+          ? ''
+          : '\n    in TestProvider (at **)' +
+            '\n    in Suspense (at **)' +
+            '\n    in div (at **)' +
+            '\n    in TestProvider (at **)'),
     ]);
     expect(getVisibleChildren(container)).toEqual(
       <div>
@@ -3506,13 +3516,14 @@ describe('ReactDOMFizzServer', () => {
       </div>,
       {
         onRecoverableError(error, errorInfo) {
-          expect(() => {
-            expect(error.digest).toBe('a digest');
-            expect(errorInfo.digest).toBe(undefined);
-          }).toErrorDev(
-            'You are accessing "digest" from the errorInfo object passed to onRecoverableError.' +
-              ' This property is no longer provided as part of errorInfo but can be accessed as a property' +
-              ' of the Error instance itself.',
+          expect(error.digest).toBe('a digest');
+          expect(errorInfo.digest).toBe(undefined);
+          assertConsoleErrorDev(
+            [
+              'You are accessing "digest" from the errorInfo object passed to onRecoverableError.' +
+                ' This property is no longer provided as part of errorInfo but can be accessed as a property' +
+                ' of the Error instance itself.',
+            ],
             {withoutStack: true},
           );
         },
@@ -5777,13 +5788,24 @@ describe('ReactDOMFizzServer', () => {
         );
       }
 
-      await expect(async () => {
-        await act(() => {
-          const {pipe} = renderToPipeableStream(<App />);
-          pipe(writable);
-        });
-      }).toErrorDev([
-        'React expects the `children` prop of <title> tags to be a string, number, bigint, or object with a novel `toString` method but found an Array with length 2 instead. Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert `children` of <title> tags to a single string value which is why Arrays of length greater than 1 are not supported. When using JSX it can be common to combine text nodes and value nodes. For example: <title>hello {nameOfUser}</title>. While not immediately apparent, `children` in this case is an Array with length 2. If your `children` prop is using this form try rewriting it using a template string: <title>{`hello ${nameOfUser}`}</title>.',
+      await act(() => {
+        const {pipe} = renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+      assertConsoleErrorDev([
+        'React expects the `children` prop of <title> tags to be a string, number, bigint, ' +
+          'or object with a novel `toString` method but found an Array with length 2 instead. ' +
+          'Browsers treat all child Nodes of <title> tags as Text content and React expects ' +
+          'to be able to convert `children` of <title> tags to a single string value which is why ' +
+          'Arrays of length greater than 1 are not supported. ' +
+          'When using JSX it can be common to combine text nodes and value nodes. ' +
+          'For example: <title>hello {nameOfUser}</title>. ' +
+          'While not immediately apparent, `children` in this case is an Array with length 2. ' +
+          'If your `children` prop is using this form try rewriting it using a template string: ' +
+          '<title>{`hello ${nameOfUser}`}</title>.\n' +
+          '    in title (at **)\n' +
+          (gate('enableOwnerStacks') ? '' : '    in head (at **)\n') +
+          '    in App (at **)',
       ]);
 
       expect(getVisibleChildren(document.head)).toEqual(<title />);
@@ -5814,13 +5836,22 @@ describe('ReactDOMFizzServer', () => {
         );
       }
 
-      await expect(async () => {
-        await act(() => {
-          const {pipe} = renderToPipeableStream(<App />);
-          pipe(writable);
-        });
-      }).toErrorDev([
-        'React expects the `children` prop of <title> tags to be a string, number, bigint, or object with a novel `toString` method but found an object that appears to be a React element which never implements a suitable `toString` method. Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert children of <title> tags to a single string value which is why rendering React elements is not supported. If the `children` of <title> is a React Component try moving the <title> tag into that component. If the `children` of <title> is some HTML markup change it to be Text only to be valid HTML.',
+      await act(() => {
+        const {pipe} = renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+      assertConsoleErrorDev([
+        'React expects the `children` prop of <title> tags to be a string, number, bigint, ' +
+          'or object with a novel `toString` method but found an object that appears to be a ' +
+          'React element which never implements a suitable `toString` method. ' +
+          'Browsers treat all child Nodes of <title> tags as Text content and React expects ' +
+          'to be able to convert children of <title> tags to a single string value which is ' +
+          'why rendering React elements is not supported. If the `children` of <title> is a ' +
+          'React Component try moving the <title> tag into that component. ' +
+          'If the `children` of <title> is some HTML markup change it to be Text only to be valid HTML.\n' +
+          '    in title (at **)\n' +
+          (gate('enableOwnerStacks') ? '' : '    in head (at **)\n') +
+          '    in App (at **)',
       ]);
       // object titles are toStringed when float is on
       expect(getVisibleChildren(document.head)).toEqual(
@@ -5849,13 +5880,22 @@ describe('ReactDOMFizzServer', () => {
         );
       }
 
-      await expect(async () => {
-        await act(() => {
-          const {pipe} = renderToPipeableStream(<App />);
-          pipe(writable);
-        });
-      }).toErrorDev([
-        'React expects the `children` prop of <title> tags to be a string, number, bigint, or object with a novel `toString` method but found an object that does not implement a suitable `toString` method. Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert children of <title> tags to a single string value. Using the default `toString` method available on every object is almost certainly an error. Consider whether the `children` of this <title> is an object in error and change it to a string or number value if so. Otherwise implement a `toString` method that React can use to produce a valid <title>.',
+      await act(() => {
+        const {pipe} = renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+      assertConsoleErrorDev([
+        'React expects the `children` prop of <title> tags to be a string, number, bigint, ' +
+          'or object with a novel `toString` method but found an object that does not implement a ' +
+          'suitable `toString` method. Browsers treat all child Nodes of <title> tags as Text ' +
+          'content and React expects to be able to convert children of <title> tags to a single string value. ' +
+          'Using the default `toString` method available on every object is almost certainly an error. ' +
+          'Consider whether the `children` of this <title> is an object in error and change it to a ' +
+          'string or number value if so. Otherwise implement a `toString` method that React can ' +
+          'use to produce a valid <title>.\n' +
+          '    in title (at **)\n' +
+          (gate('enableOwnerStacks') ? '' : '    in head (at **)\n') +
+          '    in App (at **)',
       ]);
       // object titles are toStringed when float is on
       expect(getVisibleChildren(document.head)).toEqual(
@@ -8381,12 +8421,11 @@ describe('ReactDOMFizzServer', () => {
       return <div>{children}</div>;
     }
 
-    await expect(async () => {
-      await act(() => {
-        const {pipe} = renderToPipeableStream(<Foo />);
-        pipe(writable);
-      });
-    }).toErrorDev(
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<Foo />);
+      pipe(writable);
+    });
+    assertConsoleErrorDev([
       'Using Iterators as children is unsupported and will likely yield ' +
         'unexpected results because enumerating a generator mutates it. ' +
         'You may convert it to an array with `Array.from()` or the ' +
@@ -8394,7 +8433,7 @@ describe('ReactDOMFizzServer', () => {
         'Iterable that can iterate multiple times over the same items.\n' +
         '    in div (at **)\n' +
         '    in Foo (at **)',
-    );
+    ]);
 
     expect(document.body.textContent).toBe('HelloWorld');
   });
@@ -8420,19 +8459,18 @@ describe('ReactDOMFizzServer', () => {
       return iterator;
     }
 
-    await expect(async () => {
-      await act(() => {
-        const {pipe} = renderToPipeableStream(<Foo />);
-        pipe(writable);
-      });
-    }).toErrorDev(
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<Foo />);
+      pipe(writable);
+    });
+    assertConsoleErrorDev([
       'Using Iterators as children is unsupported and will likely yield ' +
         'unexpected results because enumerating a generator mutates it. ' +
         'You may convert it to an array with `Array.from()` or the ' +
         '`[...spread]` operator before rendering. You can also use an ' +
         'Iterable that can iterate multiple times over the same items.\n' +
         '    in Foo (at **)',
-    );
+    ]);
 
     expect(document.body.textContent).toBe('HelloWorld');
   });
