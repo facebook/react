@@ -2,6 +2,7 @@ name: (Runtime) Discord Notify
 
 on:
   pull_request_target:
+    types: [labeled]
     paths-ignore:
       - compiler/**
       - .github/workflows/compiler_**.yml
