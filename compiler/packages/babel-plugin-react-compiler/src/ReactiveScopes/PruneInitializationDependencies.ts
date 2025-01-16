@@ -177,16 +177,17 @@ class Visitor extends ReactiveFunctionVisitor<CreateUpdate> {
       ].map(id => this.map.get(id) ?? 'Unknown'),
     );
     super.visitScope(scope, state);
-    [...scope.scope.dependencies].forEach(ident => {
-      let target: undefined | IdentifierId =
-        this.aliases.find(ident.identifier.id) ?? ident.identifier.id;
-      ident.path.forEach(token => {
-        target &&= this.paths.get(target)?.get(token.property);
-      });
-      if (target && this.map.get(target) === 'Create') {
-        scope.scope.dependencies.delete(ident);
-      }
-    });
+    // TODO
+    // [...scope.scope.dependencies].forEach(ident => {
+    //   let target: undefined | IdentifierId =
+    //     this.aliases.find(ident.identifier.id) ?? ident.identifier.id;
+    //   ident.path.forEach(token => {
+    //     target &&= this.paths.get(target)?.get(token.property);
+    //   });
+    //   if (target && this.map.get(target) === 'Create') {
+    //     scope.scope.dependencies.delete(ident);
+    //   }
+    // });
   }
 
   override visitTerminal(

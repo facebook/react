@@ -13,7 +13,8 @@ import {
   ReactiveScopeDependency,
 } from '../HIR';
 import {printIdentifier} from '../HIR/PrintHIR';
-import {ReactiveScopePropertyDependency} from '../ReactiveScopes/DeriveMinimalDependencies';
+
+export type ReactiveScopePropertyDependency = ReactiveScopeDependency;
 
 /**
  * Simpler fork of DeriveMinimalDependencies, see PropagateScopeDependenciesHIR
@@ -25,8 +26,9 @@ export class ReactiveScopeDependencyTreeHIR {
    * `identifier.path`, or `identifier?.path` is in this map, it is safe to
    * evaluate (non-optional) PropertyLoads from.
    */
-  #hoistableObjects: Map<Identifier, HoistableNode> = new Map();
-  #deps: Map<Identifier, DependencyNode> = new Map();
+  #hoistableObjects: Map<Identifier, HoistableNode & {reactive: boolean}> =
+    new Map();
+  #deps: Map<Identifier, DependencyNode & {reactive: boolean}> = new Map();
 
   /**
    * @param hoistableObjects a set of paths from which we can safely evaluate
@@ -35,9 +37,10 @@ export class ReactiveScopeDependencyTreeHIR {
    * duplicates when traversing the CFG.
    */
   constructor(hoistableObjects: Iterable<ReactiveScopeDependency>) {
-    for (const {path, identifier} of hoistableObjects) {
+    for (const {path, identifier, reactive} of hoistableObjects) {
       let currNode = ReactiveScopeDependencyTreeHIR.#getOrCreateRoot(
         identifier,
+        reactive,
         this.#hoistableObjects,
         path.length > 0 && path[0].optional ? 'Optional' : 'NonNull',
       );
@@ -70,7 +73,8 @@ export class ReactiveScopeDependencyTreeHIR {
 
   static #getOrCreateRoot<T extends string>(
     identifier: Identifier,
-    roots: Map<Identifier, TreeNode<T>>,
+    reactive: boolean,
+    roots: Map<Identifier, TreeNode<T> & {reactive: boolean}>,
     defaultAccessType: T,
   ): TreeNode<T> {
     // roots can always be accessed unconditionally in JS
@@ -79,9 +83,16 @@ export class ReactiveScopeDependencyTreeHIR {
     if (rootNode === undefined) {
       rootNode = {
         properties: new Map(),
+        reactive,
         accessType: defaultAccessType,
       };
       roots.set(identifier, rootNode);
+    } else {
+      CompilerError.invariant(reactive === rootNode.reactive, {
+        reason: 'Conflicting reactive status',
+        description: `Identifier ${printIdentifier(identifier)}`,
+        loc: GeneratedSource,
+      });
     }
     return rootNode;
   }
@@ -92,9 +103,10 @@ export class ReactiveScopeDependencyTreeHIR {
    * safe-to-evaluate subpath
    */
   addDependency(dep: ReactiveScopePropertyDependency): void {
-    const {identifier, path} = dep;
+    const {identifier, reactive, path} = dep;
     let depCursor = ReactiveScopeDependencyTreeHIR.#getOrCreateRoot(
       identifier,
+      reactive,
       this.#deps,
       PropertyAccessType.UnconditionalAccess,
     );
@@ -172,7 +184,13 @@ export class ReactiveScopeDependencyTreeHIR {
   deriveMinimalDependencies(): Set<ReactiveScopeDependency> {
     const results = new Set<ReactiveScopeDependency>();
     for (const [rootId, rootNode] of this.#deps.entries()) {
-      collectMinimalDependenciesInSubtree(rootNode, rootId, [], results);
+      collectMinimalDependenciesInSubtree(
+        rootNode,
+        rootNode.reactive,
+        rootId,
+        [],
+        results,
+      );
     }
 
     return results;
@@ -303,16 +321,18 @@ type DependencyNode = TreeNode<PropertyAccessType>;
  */
 function collectMinimalDependenciesInSubtree(
   node: DependencyNode,
+  reactive: boolean,
   rootIdentifier: Identifier,
   path: Array<DependencyPathEntry>,
   results: Set<ReactiveScopeDependency>,
 ): void {
   if (isDependency(node.accessType)) {
-    results.add({identifier: rootIdentifier, path});
+    results.add({identifier: rootIdentifier, reactive, path});
   } else {
     for (const [childName, childNode] of node.properties) {
       collectMinimalDependenciesInSubtree(
         childNode,
+        reactive,
         rootIdentifier,
         [
           ...path,

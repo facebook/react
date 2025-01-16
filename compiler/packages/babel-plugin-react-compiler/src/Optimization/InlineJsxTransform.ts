@@ -36,6 +36,7 @@ import {
 } from '../HIR/HIRBuilder';
 import {CompilerError, EnvironmentConfig} from '..';
 import {
+  eachTerminalSuccessor,
   mapInstructionLValues,
   mapInstructionOperands,
   mapInstructionValueOperands,
@@ -386,11 +387,21 @@ export function inlineJsxTransform(
 
     if (block.terminal.kind === 'scope') {
       const scope = block.terminal.scope;
-      for (const dep of scope.dependencies) {
-        dep.identifier = handleIdentifier(
-          dep.identifier,
-          inlinedJsxDeclarations,
-        );
+      // Traverse and rename scope dependencies
+      const scopeDepBlocks = [block.terminal.dependencies];
+
+      while (true) {
+        const topId = scopeDepBlocks.pop();
+        if (topId == null || topId === block.terminal.block) {
+          break;
+        }
+        const top = fn.body.blocks.get(topId)!;
+        for (const instr of top.instructions) {
+          mapInstructionOperands(instr, place =>
+            handlePlace(place, blockId, inlinedJsxDeclarations),
+          );
+        }
+        scopeDepBlocks.push(...eachTerminalSuccessor(top.terminal));
       }
 
       for (const [origId, decl] of [...scope.declarations]) {

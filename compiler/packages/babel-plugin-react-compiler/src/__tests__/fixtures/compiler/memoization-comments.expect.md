@@ -29,7 +29,7 @@ function Component(props) {
   const $ = _c(9);
   let t0;
   let x; // "useMemo" for t0 and x:
-  // check if props.a changed
+  // cache value with no dependencies
   if ($[0] !== props.a) {
     // Inputs changed, recompute
     x = identity(props.a);
@@ -44,7 +44,7 @@ function Component(props) {
   }
   const y = t0;
   let t1; // "useMemo" for t1:
-  // check if props.b changed
+  // cache value with no dependencies
   if ($[3] !== props.b) {
     // Inputs changed, recompute
     t1 = identity(props.b);
@@ -56,7 +56,7 @@ function Component(props) {
   }
   const z = t1;
   let t2; // "useMemo" for t2:
-  // check if x, y, or z changed
+  // cache value with no dependencies
   if ($[5] !== x || $[6] !== y || $[7] !== z) {
     // Inputs changed, recompute
     t2 = [x, y, z];

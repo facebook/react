@@ -963,6 +963,9 @@ class PruneScopesTransform extends ReactiveFunctionTransform<
     scopeBlock: ReactiveScopeBlock,
     state: Set<DeclarationId>,
   ): Transformed<ReactiveStatement> {
+    for (const instr of scopeBlock.dependencyInstructions) {
+      this.visitInstruction(instr.instruction, state);
+    }
     this.visitScope(scopeBlock, state);
 
     /**

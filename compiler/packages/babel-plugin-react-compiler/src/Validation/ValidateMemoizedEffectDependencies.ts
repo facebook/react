@@ -73,10 +73,11 @@ class Visitor extends ReactiveFunctionVisitor<CompilerError> {
      */
     let areDependenciesMemoized = true;
     for (const dep of scopeBlock.scope.dependencies) {
-      if (isUnmemoized(dep.identifier, this.scopes)) {
-        areDependenciesMemoized = false;
-        break;
-      }
+      // TODO
+      // if (isUnmemoized(dep.identifier, this.scopes)) {
+      //   areDependenciesMemoized = false;
+      //   break;
+      // }
     }
     if (areDependenciesMemoized) {
       this.scopes.add(scopeBlock.scope.id);

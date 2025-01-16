@@ -32,6 +32,7 @@ import {
   ReactiveBlock,
   ReactiveFunction,
   ReactiveInstruction,
+  ReactiveInstructionStatement,
   ReactiveScope,
   ReactiveScopeBlock,
   ReactiveScopeDeclaration,
@@ -53,6 +54,8 @@ import {buildReactiveFunction} from './BuildReactiveFunction';
 import {SINGLE_CHILD_FBT_TAGS} from './MemoizeFbtAndMacroOperandsInSameScope';
 import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
 import {ReactFunctionType} from '../HIR/Environment';
+import {readScopeDependencies} from '../HIR/PropagateScopeDependenciesHIR';
+import generate from '@babel/generator';
 
 export const MEMO_CACHE_SENTINEL = 'react.memo_cache_sentinel';
 export const EARLY_RETURN_SENTINEL = 'react.early_return_sentinel';
@@ -509,7 +512,13 @@ function codegenBlockNoReset(
       }
       case 'scope': {
         const temp = new Map(cx.temp);
-        codegenReactiveScope(cx, statements, item.scope, item.instructions);
+        codegenReactiveScope(
+          cx,
+          statements,
+          item.scope,
+          item.instructions,
+          item.dependencyInstructions,
+        );
         cx.temp = temp;
         break;
       }
@@ -568,6 +577,7 @@ function codegenReactiveScope(
   statements: Array<t.Statement>,
   scope: ReactiveScope,
   block: ReactiveBlock,
+  dependencyInstructions: Array<ReactiveInstructionStatement>,
 ): void {
   const cacheStoreStatements: Array<t.Statement> = [];
   const cacheLoadStatements: Array<t.Statement> = [];
@@ -580,9 +590,34 @@ function codegenReactiveScope(
   const changeExpressionComments: Array<string> = [];
   const outputComments: Array<string> = [];
 
-  for (const dep of [...scope.dependencies].sort(compareScopeDependency)) {
+  for (const instr of dependencyInstructions) {
+    const result = codegenInstructionNullable(cx, instr.instruction);
+    // Some dependencies may be pruned
+
+    // CompilerError.invariant(result == null, {
+    //   reason:
+    //     'Expected dependency instructions to be inlined instead of generating statements',
+    //   loc: instr.instruction.loc,
+    // });
+  }
+  const sortedDependencies: Array<[string, t.Expression]> =
+    scope.dependencies.map(dep => {
+      const dependency = codegenPlace(cx, dep);
+      CompilerError.invariant(dependency.type !== 'JSXText', {
+        reason: 'Expected dependency to not be JSXText',
+        loc: GeneratedSource,
+      });
+      return [generate(dependency).code, dependency];
+    });
+  sortedDependencies.sort(([aName], [bName]) => {
+    if (aName < bName) return -1;
+    else if (aName > bName) return 1;
+    else return 0;
+  });
+
+  for (const [, dependency] of sortedDependencies) {
     const index = cx.nextCacheIndex;
-    changeExpressionComments.push(printDependencyComment(dep));
+
     const comparison = t.binaryExpression(
       '!==',
       t.memberExpression(
@@ -590,7 +625,7 @@ function codegenReactiveScope(
         t.numericLiteral(index),
         true,
       ),
-      codegenDependency(cx, dep),
+      dependency,
     );
 
     if (cx.env.config.enableChangeVariableCodegen) {
@@ -617,11 +652,53 @@ function codegenReactiveScope(
             t.numericLiteral(index),
             true,
           ),
-          codegenDependency(cx, dep),
+          t.cloneNode(dependency, true),
         ),
       ),
     );
   }
+  // for (const dep of [...scope.dependencies].sort(compareScopeDependency)) {
+  //   const index = cx.nextCacheIndex;
+  //   changeExpressionComments.push(printDependencyComment(dep));
+  //   const comparison = t.binaryExpression(
+  //     '!==',
+  //     t.memberExpression(
+  //       t.identifier(cx.synthesizeName('$')),
+  //       t.numericLiteral(index),
+  //       true,
+  //     ),
+  //     codegenDependency(cx, dep),
+  //   );
+
+  //   if (cx.env.config.enableChangeVariableCodegen) {
+  //     const changeIdentifier = t.identifier(cx.synthesizeName(`c_${index}`));
+  //     statements.push(
+  //       t.variableDeclaration('const', [
+  //         t.variableDeclarator(changeIdentifier, comparison),
+  //       ]),
+  //     );
+  //     changeExpressions.push(changeIdentifier);
+  //   } else {
+  //     changeExpressions.push(comparison);
+  //   }
+  //   /*
+  //    * Adding directly to cacheStoreStatements rather than cacheLoads, because there
+  //    * is no corresponding cacheLoadStatement for dependencies
+  //    */
+  //   cacheStoreStatements.push(
+  //     t.expressionStatement(
+  //       t.assignmentExpression(
+  //         '=',
+  //         t.memberExpression(
+  //           t.identifier(cx.synthesizeName('$')),
+  //           t.numericLiteral(index),
+  //           true,
+  //         ),
+  //         codegenDependency(cx, dep),
+  //       ),
+  //     ),
+  //   );
+  // }
   let firstOutputIndex: number | null = null;
 
   for (const [, {identifier}] of [...scope.declarations].sort(([, a], [, b]) =>
@@ -1443,29 +1520,6 @@ function printDelimitedCommentList(
     }
   }
   return output.join('');
-}
-
-function codegenDependency(
-  cx: Context,
-  dependency: ReactiveScopeDependency,
-): t.Expression {
-  let object: t.Expression = convertIdentifier(dependency.identifier);
-  if (dependency.path.length !== 0) {
-    const hasOptional = dependency.path.some(path => path.optional);
-    for (const path of dependency.path) {
-      if (hasOptional) {
-        object = t.optionalMemberExpression(
-          object,
-          t.identifier(path.property),
-          false,
-          path.optional,
-        );
-      } else {
-        object = t.memberExpression(object, t.identifier(path.property));
-      }
-    }
-  }
-  return object;
 }
 
 function withLoc<T extends (...args: Array<any>) => t.Node>(

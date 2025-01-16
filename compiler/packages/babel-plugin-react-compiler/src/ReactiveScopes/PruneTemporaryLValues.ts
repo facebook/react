@@ -11,6 +11,7 @@ import {
   Place,
   ReactiveFunction,
   ReactiveInstruction,
+  ReactiveScopeBlock,
 } from '../HIR/HIR';
 import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
 
@@ -52,4 +53,11 @@ class Visitor extends ReactiveFunctionVisitor<LValues> {
       state.set(instruction.lvalue.identifier.declarationId, instruction);
     }
   }
+  // override visitScope(scope: ReactiveScopeBlock, state: LValues): void {
+  //   // this.visitBlock(scope.dependencyInstructions, state);
+  //   /**
+  //    *
+  //    */
+  //   this.visitBlock(scope.instructions, state);
+  // }
 }

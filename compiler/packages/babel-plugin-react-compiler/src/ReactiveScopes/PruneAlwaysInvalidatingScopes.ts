@@ -13,6 +13,7 @@ import {
   ReactiveScopeBlock,
   ReactiveStatement,
 } from '../HIR';
+import {readScopeDependenciesRHIR} from '../HIR/PropagateScopeDependenciesHIR';
 
 /**
  * Some instructions will *always* produce a new value, and unless memoized will *always*
@@ -87,7 +88,11 @@ class Transform extends ReactiveFunctionTransform<boolean> {
   ): Transformed<ReactiveStatement> {
     this.visitScope(scopeBlock, true);
 
-    for (const dep of scopeBlock.scope.dependencies) {
+    const scopeDeps = readScopeDependenciesRHIR(
+      scopeBlock.dependencyInstructions,
+      scopeBlock.scope.dependencies,
+    );
+    for (const dep of scopeDeps) {
       if (this.unmemoizedValues.has(dep.identifier)) {
         /*
          * This scope depends on an always-invalidating value so the scope will always invalidate:

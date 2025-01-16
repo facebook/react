@@ -95,13 +95,25 @@ class Visitor extends ReactiveFunctionVisitor<ReactiveIdentifiers> {
     state: ReactiveIdentifiers,
   ): void {
     this.traverseScope(scopeBlock, state);
-    for (const dep of scopeBlock.scope.dependencies) {
-      const isReactive = state.has(dep.identifier.id);
+    for (let i = 0; i < scopeBlock.scope.dependencies.length; ) {
+      const isReactive = state.has(
+        scopeBlock.scope.dependencies[i].identifier.id,
+      );
       if (!isReactive) {
-        scopeBlock.scope.dependencies.delete(dep);
+        // console.log('nonreactive!');
+        scopeBlock.scope.dependencies.splice(i, 1);
+      } else {
+        //   console.log('reactive!');
+        i++;
       }
     }
-    if (scopeBlock.scope.dependencies.size !== 0) {
+    // for (const dep of scopeBlock.scope.dependencies) {
+    //   const isReactive = state.has(dep.identifier.id);
+    //   if (!isReactive) {
+    //     scopeBlock.scope.dependencies.delete(dep);
+    //   }
+    // }
+    if (scopeBlock.scope.dependencies.length !== 0) {
       /**
        * If any of a scope's dependencies are reactive, then all of its
        * outputs will re-evaluate whenever those dependencies change.

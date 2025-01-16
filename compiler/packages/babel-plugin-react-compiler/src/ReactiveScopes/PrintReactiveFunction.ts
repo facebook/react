@@ -64,11 +64,13 @@ export function printReactiveScopeSummary(scope: ReactiveScope): string {
   items.push('scope');
   items.push(`@${scope.id}`);
   items.push(`[${scope.range.start}:${scope.range.end}]`);
-  items.push(
-    `dependencies=[${Array.from(scope.dependencies)
-      .map(dep => printDependency(dep))
-      .join(', ')}]`,
-  );
+  // TODO
+  // items.push(
+  //   `dependencies=[${Array.from(scope.dependencies)
+  //     .map(dep => printDependency(dep))
+  //     .join(', ')}]`,
+  // );
+  items.push(`dependencies=[${scope.dependencies.map(printPlace).join(',')}]`);
   items.push(
     `declarations=[${Array.from(scope.declarations)
       .map(([, decl]) =>
@@ -96,6 +98,8 @@ export function writeReactiveBlock(
   block: ReactiveScopeBlock,
 ): void {
   writer.writeLine(`${printReactiveScopeSummary(block.scope)} {`);
+  writeReactiveInstructions(writer, block.dependencyInstructions);
+  writer.writeLine('} /* - end dependencies - */ {');
   writeReactiveInstructions(writer, block.instructions);
   writer.writeLine('}');
 }

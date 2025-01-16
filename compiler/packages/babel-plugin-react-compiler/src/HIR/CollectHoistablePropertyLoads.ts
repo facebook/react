@@ -1,3 +1,4 @@
+import {react} from '@babel/types';
 import {CompilerError} from '../CompilerError';
 import {inRange} from '../ReactiveScopes/InferReactiveScopeVariables';
 import {printDependency} from '../ReactiveScopes/PrintReactiveFunction';
@@ -194,7 +195,10 @@ type PropertyPathNode =
 class PropertyPathRegistry {
   roots: Map<IdentifierId, RootNode> = new Map();
 
-  getOrCreateIdentifier(identifier: Identifier): PropertyPathNode {
+  getOrCreateIdentifier(
+    identifier: Identifier,
+    reactive: boolean,
+  ): PropertyPathNode {
     /**
      * Reads from a statically scoped variable are always safe in JS,
      * with the exception of TDZ (not addressed by this pass).
@@ -208,12 +212,18 @@ class PropertyPathRegistry {
         optionalProperties: new Map(),
         fullPath: {
           identifier,
+          reactive,
           path: [],
         },
         hasOptional: false,
         parent: null,
       };
       this.roots.set(identifier.id, rootNode);
+    } else {
+      CompilerError.invariant(reactive === rootNode.fullPath.reactive, {
+        reason: 'Inconsistent reactive flag',
+        loc: GeneratedSource,
+      });
     }
     return rootNode;
   }
@@ -231,6 +241,7 @@ class PropertyPathRegistry {
         parent: parent,
         fullPath: {
           identifier: parent.fullPath.identifier,
+          reactive: parent.fullPath.reactive,
           path: parent.fullPath.path.concat(entry),
         },
         hasOptional: parent.hasOptional || entry.optional,
@@ -246,7 +257,7 @@ class PropertyPathRegistry {
      * so all subpaths of a PropertyLoad should already exist
      * (e.g. a.b is added before a.b.c),
      */
-    let currNode = this.getOrCreateIdentifier(n.identifier);
+    let currNode = this.getOrCreateIdentifier(n.identifier, n.reactive);
     if (n.path.length === 0) {
       return currNode;
     }
@@ -268,10 +279,11 @@ function getMaybeNonNullInInstruction(
   instr: InstructionValue,
   context: CollectHoistablePropertyLoadsContext,
 ): PropertyPathNode | null {
-  let path = null;
+  let path: ReactiveScopeDependency | null = null;
   if (instr.kind === 'PropertyLoad') {
     path = context.temporaries.get(instr.object.identifier.id) ?? {
       identifier: instr.object.identifier,
+      reactive: instr.object.reactive,
       path: [],
     };
   } else if (instr.kind === 'Destructure') {
@@ -334,7 +346,7 @@ function collectNonNullsInBlocks(
   ) {
     const identifier = fn.params[0].identifier;
     knownNonNullIdentifiers.add(
-      context.registry.getOrCreateIdentifier(identifier),
+      context.registry.getOrCreateIdentifier(identifier, true),
     );
   }
   const nodes = new Map<BlockId, BlockInfo>();
@@ -565,9 +577,11 @@ function reduceMaybeOptionalChains(
     changed = false;
 
     for (const original of optionalChainNodes) {
-      let {identifier, path: origPath} = original.fullPath;
-      let currNode: PropertyPathNode =
-        registry.getOrCreateIdentifier(identifier);
+      let {identifier, path: origPath, reactive} = original.fullPath;
+      let currNode: PropertyPathNode = registry.getOrCreateIdentifier(
+        identifier,
+        reactive,
+      );
       for (let i = 0; i < origPath.length; i++) {
         const entry = origPath[i];
         // If the base is known to be non-null, replace with a non-optional load

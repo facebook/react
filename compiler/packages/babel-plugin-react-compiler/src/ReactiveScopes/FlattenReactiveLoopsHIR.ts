@@ -34,6 +34,7 @@ export function flattenReactiveLoopsHIR(fn: HIRFunction): void {
           block.terminal = {
             kind: 'pruned-scope',
             block: terminal.block,
+            dependencies: terminal.dependencies,
             fallthrough: terminal.fallthrough,
             id: terminal.id,
             loc: terminal.loc,

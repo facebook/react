@@ -2,14 +2,8 @@
 ## Input
 
 ```javascript
-function Component() {
-  let myObj = getObject();
-  useFoo();
-  // const cb = () => maybeMutate(myObj ?? []);
-  const cb = () => (myObj = other());
-  foo(cb);
-
-  return myObj;
+function Component({x}) {
+  return foo();
 }
 
 ```
@@ -17,14 +11,17 @@ function Component() {
 ## Code
 
 ```javascript
-function Component() {
-  let myObj;
-  myObj = getObject();
-  useFoo();
-
-  const cb = () => (myObj = other());
-  foo(cb);
-  return myObj;
+import { c as _c } from "react/compiler-runtime";
+function Component(t0) {
+  const $ = _c(1);
+  let t1;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = foo();
+    $[0] = t1;
+  } else {
+    t1 = $[0];
+  }
+  return t1;
 }
 
 ```

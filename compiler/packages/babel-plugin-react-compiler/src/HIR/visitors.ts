@@ -860,11 +860,13 @@ export function mapTerminalSuccessors(
     }
     case 'scope':
     case 'pruned-scope': {
+      const dependencies = fn(terminal.dependencies);
       const block = fn(terminal.block);
       const fallthrough = fn(terminal.fallthrough);
       return {
         kind: terminal.kind,
         scope: terminal.scope,
+        dependencies,
         block,
         fallthrough,
         id: makeInstructionId(0),
@@ -1017,7 +1019,7 @@ export function* eachTerminalSuccessor(terminal: Terminal): Iterable<BlockId> {
     }
     case 'scope':
     case 'pruned-scope': {
-      yield terminal.block;
+      yield terminal.dependencies;
       break;
     }
     case 'unreachable':
@@ -1068,6 +1070,13 @@ export function mapTerminalOperands(
       }
       break;
     }
+    case 'scope':
+    case 'pruned-scope': {
+      for (let i = 0; i < terminal.scope.dependencies.length; i++) {
+        terminal.scope.dependencies[i] = fn(terminal.scope.dependencies[i]);
+      }
+      break;
+    }
     case 'maybe-throw':
     case 'sequence':
     case 'label':
@@ -1081,9 +1090,7 @@ export function mapTerminalOperands(
     case 'for-in':
     case 'goto':
     case 'unreachable':
-    case 'unsupported':
-    case 'scope':
-    case 'pruned-scope': {
+    case 'unsupported': {
       // no-op
       break;
     }
@@ -1127,6 +1134,13 @@ export function* eachTerminalOperand(terminal: Terminal): Iterable<Place> {
       }
       break;
     }
+    case 'scope':
+    case 'pruned-scope': {
+      for (let i = 0; i < terminal.scope.dependencies.length; i++) {
+        yield terminal.scope.dependencies[i];
+      }
+      break;
+    }
     case 'maybe-throw':
     case 'sequence':
     case 'label':
@@ -1140,9 +1154,7 @@ export function* eachTerminalOperand(terminal: Terminal): Iterable<Place> {
     case 'for-in':
     case 'goto':
     case 'unreachable':
-    case 'unsupported':
-    case 'scope':
-    case 'pruned-scope': {
+    case 'unsupported': {
       // no-op
       break;
     }
