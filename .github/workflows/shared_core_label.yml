@@ -1,0 +1,37 @@
+name: (Shared) Core Label
+
+on:
+  pull_request:
+
+env:
+  TZ: /usr/share/zoneinfo/America/Los_Angeles
+  # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#cache-segment-restore-timeout
+  SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
+
+jobs:
+  core_label:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check if actor is maintainer
+        id: check_maintainer
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const data = await fs.readFileSync('./MAINTAINERS', { encoding: 'utf8' });
+            const maintainers = new Set(data.split('\n'));
+            if (maintainers.has('${{ github.actor }}')) {
+              return true;
+            }
+            return false;
+      - if: ${{ steps.check_maintainer.outputs.result == true }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: github.event.number,
+              labels: ['React Core Team']
+            });
