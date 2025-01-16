@@ -26,11 +26,11 @@ export type ViewTransitionProps = {
   layout?: 'none' | string,
   share?: 'none' | string,
   update?: 'none' | string,
-  onEnter?: (instance: ViewTransitionInstance) => void,
-  onExit?: (instance: ViewTransitionInstance) => void,
-  onLayout?: (instance: ViewTransitionInstance) => void,
-  onShare?: (instance: ViewTransitionInstance) => void,
-  onUpdate?: (instance: ViewTransitionInstance) => void,
+  onEnter?: (instance: ViewTransitionInstance, types: Array<string>) => void,
+  onExit?: (instance: ViewTransitionInstance, types: Array<string>) => void,
+  onLayout?: (instance: ViewTransitionInstance, types: Array<string>) => void,
+  onShare?: (instance: ViewTransitionInstance, types: Array<string>) => void,
+  onUpdate?: (instance: ViewTransitionInstance, types: Array<string>) => void,
 };
 
 export type ViewTransitionState = {

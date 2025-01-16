@@ -654,7 +654,8 @@ let pendingEffectsRemainingLanes: Lanes = NoLanes;
 let pendingEffectsRenderEndTime: number = -0; // Profiling-only
 let pendingPassiveTransitions: Array<Transition> | null = null;
 let pendingRecoverableErrors: null | Array<CapturedValue<mixed>> = null;
-let pendingViewTransitionEvents: Array<() => void> | null = null;
+let pendingViewTransitionEvents: Array<(types: Array<string>) => void> | null =
+  null;
 let pendingTransitionTypes: null | TransitionTypes = null;
 let pendingDidIncludeRenderPhaseUpdate: boolean = false;
 let pendingSuspendedCommitReason: SuspendedCommitReason = IMMEDIATE_COMMIT; // Profiling-only
@@ -806,7 +807,7 @@ export function requestDeferredLane(): Lane {
 
 export function scheduleViewTransitionEvent(
   fiber: Fiber,
-  callback: ?(instance: ViewTransitionInstance) => void,
+  callback: ?(instance: ViewTransitionInstance, types: Array<string>) => void,
 ): void {
   if (enableViewTransition) {
     if (callback != null) {
@@ -3722,11 +3723,17 @@ function flushSpawnedWork(): void {
     // effects or spawned sync work since this is still part of the previous commit.
     // Even though conceptually it's like its own task between layout effets and passive.
     const pendingEvents = pendingViewTransitionEvents;
+    let pendingTypes = pendingTransitionTypes;
+    pendingTransitionTypes = null;
     if (pendingEvents !== null) {
       pendingViewTransitionEvents = null;
+      if (pendingTypes === null) {
+        // Normalize the type. This is lazily created only for events.
+        pendingTypes = [];
+      }
       for (let i = 0; i < pendingEvents.length; i++) {
         const viewTransitionEvent = pendingEvents[i];
-        viewTransitionEvent();
+        viewTransitionEvent(pendingTypes);
       }
     }
   }
