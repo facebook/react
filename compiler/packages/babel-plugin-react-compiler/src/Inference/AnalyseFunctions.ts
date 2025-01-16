@@ -19,7 +19,6 @@ import {
 import {deadCodeElimination} from '../Optimization';
 import {inferReactiveScopeVariables} from '../ReactiveScopes';
 import {rewriteInstructionKindsBasedOnReassignment} from '../SSA';
-import {inferMutableContextVariables} from './InferMutableContextVariables';
 import {inferMutableRanges} from './InferMutableRanges';
 import inferReferenceEffects from './InferReferenceEffects';
 
@@ -79,7 +78,6 @@ function lower(func: HIRFunction): void {
 }
 
 function infer(loweredFunc: LoweredFunction): void {
-  const knownMutated = inferMutableContextVariables(loweredFunc.func);
   for (const operand of loweredFunc.func.context) {
     const identifier = operand.identifier;
     CompilerError.invariant(operand.effect === Effect.Unknown, {
@@ -95,10 +93,11 @@ function infer(loweredFunc: LoweredFunction): void {
        * render
        */
       operand.effect = Effect.Capture;
-    } else if (knownMutated.has(operand)) {
-      operand.effect = Effect.Mutate;
     } else if (isMutatedOrReassigned(identifier)) {
-      // Note that this also reflects if identifier is ConditionallyMutated
+      /**
+       * Reflects direct reassignments, PropertyStores, and ConditionallyMutate
+       * (directly or through maybe-aliases)
+       */
       operand.effect = Effect.Capture;
     } else {
       operand.effect = Effect.Read;
