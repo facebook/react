@@ -857,17 +857,19 @@ function inferBlock(
         break;
       }
       case 'ArrayExpression': {
-        const valueKind: AbstractValue = hasContextRefOperand(state, instrValue)
-          ? {
-              kind: ValueKind.Context,
-              reason: new Set([ValueReason.Other]),
-              context: new Set(),
-            }
-          : {
-              kind: ValueKind.Mutable,
-              reason: new Set([ValueReason.Other]),
-              context: new Set(),
-            };
+        const contextRefOperands = getContextRefOperand(state, instrValue);
+        const valueKind: AbstractValue =
+          contextRefOperands.length > 0
+            ? {
+                kind: ValueKind.Context,
+                reason: new Set([ValueReason.Other]),
+                context: new Set(contextRefOperands),
+              }
+            : {
+                kind: ValueKind.Mutable,
+                reason: new Set([ValueReason.Other]),
+                context: new Set(),
+              };
         continuation = {
           kind: 'initialize',
           valueKind,
@@ -918,17 +920,19 @@ function inferBlock(
         break;
       }
       case 'ObjectExpression': {
-        const valueKind: AbstractValue = hasContextRefOperand(state, instrValue)
-          ? {
-              kind: ValueKind.Context,
-              reason: new Set([ValueReason.Other]),
-              context: new Set(),
-            }
-          : {
-              kind: ValueKind.Mutable,
-              reason: new Set([ValueReason.Other]),
-              context: new Set(),
-            };
+        const contextRefOperands = getContextRefOperand(state, instrValue);
+        const valueKind: AbstractValue =
+          contextRefOperands.length > 0
+            ? {
+                kind: ValueKind.Context,
+                reason: new Set([ValueReason.Other]),
+                context: new Set(contextRefOperands),
+              }
+            : {
+                kind: ValueKind.Mutable,
+                reason: new Set([ValueReason.Other]),
+                context: new Set(),
+              };
 
         for (const property of instrValue.properties) {
           switch (property.kind) {
@@ -1593,15 +1597,21 @@ function inferBlock(
       }
       case 'LoadLocal': {
         const lvalue = instr.lvalue;
-        const effect =
-          state.isDefined(lvalue) &&
-          state.kind(lvalue).kind === ValueKind.Context
-            ? Effect.ConditionallyMutate
-            : Effect.Capture;
+        CompilerError.invariant(
+          !(
+            state.isDefined(lvalue) &&
+            state.kind(lvalue).kind === ValueKind.Context
+          ),
+          {
+            reason:
+              '[InferReferenceEffects] Unexpected LoadLocal with context kind',
+            loc: lvalue.loc,
+          },
+        );
         state.referenceAndRecordEffects(
           freezeActions,
           instrValue.place,
-          effect,
+          Effect.Capture,
           ValueReason.Other,
         );
         lvalue.effect = Effect.ConditionallyMutate;
@@ -1932,19 +1942,20 @@ function inferBlock(
   );
 }
 
-function hasContextRefOperand(
+function getContextRefOperand(
   state: InferenceState,
   instrValue: InstructionValue,
-): boolean {
+): Array<Place> {
+  const result = [];
   for (const place of eachInstructionValueOperand(instrValue)) {
     if (
       state.isDefined(place) &&
       state.kind(place).kind === ValueKind.Context
     ) {
-      return true;
+      result.push(place);
     }
   }
-  return false;
+  return result;
 }
 
 export function getFunctionCallSignature(
