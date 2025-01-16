@@ -1,0 +1,35 @@
+name: (Shared) Check maintainer
+
+on:
+  workflow_call:
+    outputs:
+      is_core_team:
+        value: ${{ jobs.check_maintainer.outputs.is_core_team }}
+
+env:
+  TZ: /usr/share/zoneinfo/America/Los_Angeles
+  # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#cache-segment-restore-timeout
+  SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
+
+jobs:
+  check_maintainer:
+    runs-on: ubuntu-latest
+    outputs:
+      is_core_team: ${{ steps.check_if_actor_is_maintainer.outputs.result }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check if actor is maintainer
+        id: check_if_actor_is_maintainer
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const actor = '${{ github.actor }}';
+            const data = await fs.readFileSync('./MAINTAINERS', { encoding: 'utf8' });
+            const maintainers = new Set(data.split('\n'));
+            if (maintainers.has(actor)) {
+              console.log(`🟢 ${actor} is a maintainer`);
+              return true;
+            }
+            console.log(`🔴 ${actor} is NOT a maintainer`);
+            return null;

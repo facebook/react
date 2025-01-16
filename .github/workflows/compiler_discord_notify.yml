@@ -2,14 +2,17 @@ name: (Compiler) Discord Notify
 
 on:
   pull_request_target:
-    types: [labeled]
     paths:
       - compiler/**
       - .github/workflows/compiler_**.yml
 
 jobs:
+  check_maintainer:
+    uses: facebook/react/.github/workflows/shared_check_maintainer.yml@main
+
   notify:
-    if: ${{ github.event.label.name == 'React Core Team' }}
+    if: ${{ needs.check_maintainer.outputs.is_core_team }}
+    needs: check_maintainer
     runs-on: ubuntu-latest
     steps:
       - name: Discord Webhook Action
