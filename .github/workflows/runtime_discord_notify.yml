@@ -1,0 +1,24 @@
+name: (Runtime) Discord Notify
+
+on:
+  pull_request_target:
+    types: [labeled]
+    paths-ignore:
+      - compiler/**
+      - .github/workflows/compiler_**.yml
+
+jobs:
+  notify:
+    if: ${{ github.event.label.name == 'React Core Team' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Discord Webhook Action
+        uses: tsickert/discord-webhook@v6.0.0
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          embed-author-name: ${{ github.event.pull_request.user.login }}
+          embed-author-url: ${{ github.event.pull_request.user.html_url }}
+          embed-author-icon-url: ${{ github.event.pull_request.user.avatar_url }}
+          embed-title: '#${{ github.event.number }} (+${{github.event.pull_request.additions}} -${{github.event.pull_request.deletions}}): ${{ github.event.pull_request.title }}'
+          embed-description: ${{ github.event.pull_request.body }}
+          embed-url: ${{ github.event.pull_request.html_url }}
