@@ -2,8 +2,8 @@ import cn from 'classnames';
 import semver from 'semver';
 import PropTypes from 'prop-types';
 import IssueList from './IssueList';
-import { parse } from 'query-string';
-import { semverString } from './propTypes';
+import {parse} from 'query-string';
+import {semverString} from './propTypes';
 
 const React = window.React;
 
@@ -16,8 +16,8 @@ const propTypes = {
 };
 
 class TestCase extends React.Component {
-  constructor(props, context) {
-    super(props, context);
+  constructor(props,context) {
+    super(props,context);
 
     this.state = {
       complete: false,
@@ -32,11 +32,11 @@ class TestCase extends React.Component {
 
   handleSubmit = (e) => {
     e.preventDefault(); // Prevent default form behavior
-    console.log('Form submitted with state:', this.state);
+    console.log('Form submitted with state:',this.state);
   };
 
   handleReset = () => {
-    this.setState({ complete: false }); // Explicitly reset the checkbox state
+    this.setState({complete:false}); // Explicitly reset the checkbox state
   };
 
   render() {
@@ -51,10 +51,10 @@ class TestCase extends React.Component {
       children,
     } = this.props;
 
-    let { complete } = this.state;
+    let {complete} = this.state;
 
-    const { version } = parse(window.location.search);
-    const isTestFixed = !version || !resolvedIn || semver.gte(version, resolvedIn);
+    const {version} = parse(window.location.search);
+    const isTestFixed = !version || !resolvedIn || semver.gte(version,resolvedIn);
 
     complete = !isTestFixed || complete;
 
@@ -96,7 +96,7 @@ class TestCase extends React.Component {
               </dd>
             )}
 
-            {resolvedBy && <dt>Fixed by: </dt>}
+            {resolvedBy && <dt>Fixed by:</dt>}
             {resolvedBy && (
               <dd>
                 <a
@@ -112,7 +112,7 @@ class TestCase extends React.Component {
             {affectedBrowsers && <dt>Affected browsers: </dt>}
             {affectedBrowsers && <dd>{affectedBrowsers}</dd>}
 
-            {relatedIssues && <dt>Related Issues: </dt>}
+            {relatedIssues && <dt>Related Issues:</dt>}
             {relatedIssues && (
               <dd>
                 <IssueList issues={relatedIssues} />
@@ -127,7 +127,7 @@ class TestCase extends React.Component {
               <p className="test-case__invalid-version">
                 <strong>Note:</strong> This test case was fixed in a later version
                 of React. This test is not expected to pass for the selected
-                version, and that's ok!
+                version,and that's ok!
               </p>
             )}
 
@@ -144,11 +144,11 @@ class TestCase extends React.Component {
   }
 }
 
-TestCase.propTypes = propTypes;
+TestCase.propTypes=propTypes;
 
 TestCase.Steps = class extends React.Component {
   render() {
-    const { children } = this.props;
+    const {children} = this.props;
     return (
       <div>
         <h3>Steps to reproduce:</h3>
@@ -160,7 +160,7 @@ TestCase.Steps = class extends React.Component {
 
 TestCase.ExpectedResult = class extends React.Component {
   render() {
-    const { children } = this.props;
+    const {children} = this.props;
     return (
       <div>
         <h3>Expected Result:</h3>
