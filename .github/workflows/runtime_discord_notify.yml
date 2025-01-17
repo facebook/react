@@ -10,6 +10,8 @@ on:
 jobs:
   check_maintainer:
     uses: facebook/react/.github/workflows/shared_check_maintainer.yml@main
+    with:
+      actor: ${{ github.event.pull_request.user.login }}
 
   notify:
     if: ${{ needs.check_maintainer.outputs.is_core_team == 'true' }}

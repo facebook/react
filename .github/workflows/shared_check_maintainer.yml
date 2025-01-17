@@ -2,6 +2,10 @@ name: (Shared) Check maintainer
 
 on:
   workflow_call:
+    inputs:
+      actor:
+        required: true
+        type: string
     outputs:
       is_core_team:
         value: ${{ jobs.check_maintainer.outputs.is_core_team }}
@@ -24,7 +28,7 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const actor = '${{ github.actor }}';
+            const actor = '${{ inputs.actor }}';
             const data = await fs.readFileSync('./MAINTAINERS', { encoding: 'utf8' });
             const maintainers = new Set(data.split('\n'));
             if (maintainers.has(actor)) {
