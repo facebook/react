@@ -572,7 +572,6 @@
       );
     }
     var assign = Object.assign,
-      _require = require("../package.json"),
       rules = {
         "rules-of-hooks": {
           meta: {
@@ -2146,21 +2145,21 @@
       legacyRecommendedConfig = {
         plugins: ["react-hooks"],
         rules: configRules
+      },
+      reactHooksPlugin = {
+        meta: { name: "eslint-plugin-react-hooks" },
+        rules: rules
       };
-    _require = {
-      meta: { name: _require.name, version: _require.version },
-      rules: rules
-    };
     configRules = {
       "recommended-legacy": legacyRecommendedConfig,
       "recommended-latest": {
         name: "react-hooks/recommended",
-        plugins: { "react-hooks": _require },
+        plugins: { "react-hooks": reactHooksPlugin },
         rules: configRules
       },
       recommended: legacyRecommendedConfig
     };
-    assign({}, _require, { configs: configRules });
+    assign({}, reactHooksPlugin, { configs: configRules });
     exports.configs = configRules;
     exports.rules = rules;
   })();
