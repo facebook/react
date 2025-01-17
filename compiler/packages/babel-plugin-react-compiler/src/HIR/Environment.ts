@@ -353,6 +353,11 @@ const EnvironmentConfigSchema = z.object({
   validateNoCapitalizedCalls: z.nullable(z.array(z.string())).default(null),
   validateBlocklistedImports: z.nullable(z.array(z.string())).default(null),
 
+  /**
+   * Validate against impure functions called during render
+   */
+  validateNoImpureFunctionsInRender: z.boolean().default(false),
+
   /*
    * When enabled, the compiler assumes that hooks follow the Rules of React:
    * - Hooks may memoize computation based on any of their parameters, thus
