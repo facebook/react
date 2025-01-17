@@ -10,8 +10,6 @@
 import RulesOfHooks from './RulesOfHooks';
 import ExhaustiveDeps from './ExhaustiveDeps';
 
-const {name, version} = require('../package.json');
-
 // All rules
 export const rules = {
   'rules-of-hooks': RulesOfHooks,
@@ -32,7 +30,7 @@ const legacyRecommendedConfig = {
 
 // Base plugin object
 const reactHooksPlugin = {
-  meta: {name, version},
+  meta: {name: 'eslint-plugin-react-hooks'},
   rules,
 };
 
