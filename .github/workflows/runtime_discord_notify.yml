@@ -12,7 +12,7 @@ jobs:
     uses: facebook/react/.github/workflows/shared_check_maintainer.yml@main
 
   notify:
-    if: ${{ needs.check_maintainer.outputs.is_core_team }}
+    if: ${{ needs.check_maintainer.outputs.is_core_team == 'true' }}
     needs: check_maintainer
     runs-on: ubuntu-latest
     steps:
