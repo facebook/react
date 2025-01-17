@@ -24,11 +24,14 @@ import {
   enableSchedulingProfiler,
   enableUseEffectCRUDOverload,
   enableViewTransition,
+  enableFragmentRefs,
 } from 'shared/ReactFeatureFlags';
 import {
   ClassComponent,
+  Fragment,
   HostComponent,
   HostHoistable,
+  HostRoot,
   HostSingleton,
   ViewTransitionComponent,
 } from './ReactWorkTags';
@@ -48,6 +51,7 @@ import {
 import {
   getPublicInstance,
   createViewTransitionInstance,
+  createFragmentInstance,
 } from './ReactFiberConfig';
 import {
   captureCommitPhaseError,
@@ -84,6 +88,11 @@ import {
   ResourceEffectIdentityKind,
   ResourceEffectUpdateKind,
 } from './ReactFiberHooks';
+import {
+  appendHostChildrenToFragmentInstance,
+  getHostParentFiber,
+} from './ReactFiberCommitHostEffects';
+import type {FragmentState} from './ReactFiberFragmentComponent';
 
 function shouldProfile(current: Fiber): boolean {
   return (
@@ -877,13 +886,37 @@ function commitAttachRef(finishedWork: Fiber) {
       case HostComponent:
         instanceToUse = getPublicInstance(finishedWork.stateNode);
         break;
-      case ViewTransitionComponent:
+      case ViewTransitionComponent: {
         if (enableViewTransition) {
           const instance: ViewTransitionState = finishedWork.stateNode;
           const props: ViewTransitionProps = finishedWork.memoizedProps;
           const name = getViewTransitionName(props, instance);
           if (instance.ref === null || instance.ref.name !== name) {
             instance.ref = createViewTransitionInstance(name);
+          }
+          instanceToUse = instance.ref;
+          break;
+        }
+        instanceToUse = finishedWork.stateNode;
+        break;
+      }
+      case Fragment:
+        if (enableFragmentRefs) {
+          const instance: FragmentState = finishedWork.stateNode;
+          const hostParentFiber = getHostParentFiber(finishedWork);
+          const hostParentInstance =
+            hostParentFiber.tag === HostRoot
+              ? hostParentFiber.stateNode.containerInfo
+              : hostParentFiber.stateNode;
+          if (
+            instance.ref === null ||
+            instance.ref.parentInstance !== hostParentInstance
+          ) {
+            instance.ref = createFragmentInstance(hostParentInstance);
+            appendHostChildrenToFragmentInstance(
+              finishedWork.child,
+              instance.ref,
+            );
           }
           instanceToUse = instance.ref;
           break;

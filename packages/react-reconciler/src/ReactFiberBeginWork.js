@@ -116,6 +116,7 @@ import {
   disableDefaultPropsExceptForClasses,
   enableHydrationLaneScheduling,
   enableViewTransition,
+  enableFragmentRefs,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
@@ -987,6 +988,9 @@ function updateFragment(
   renderLanes: Lanes,
 ) {
   const nextChildren = workInProgress.pendingProps;
+  if (enableFragmentRefs) {
+    markRef(current, workInProgress);
+  }
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
 }
@@ -2355,6 +2359,7 @@ function mountSuspenseFallbackChildren(
       mode,
       renderLanes,
       null,
+      false,
     );
   } else {
     primaryChildFragment = mountWorkInProgressOffscreenFiber(
@@ -2367,6 +2372,7 @@ function mountSuspenseFallbackChildren(
       mode,
       renderLanes,
       null,
+      false,
     );
   }
 
@@ -2509,6 +2515,7 @@ function updateSuspenseFallbackChildren(
       mode,
       renderLanes,
       null,
+      false,
     );
     // Needs a placement effect because the parent (the Suspense boundary) already
     // mounted but this is a new fiber.
@@ -2573,6 +2580,7 @@ function mountSuspenseFallbackAfterRetryWithoutHydrating(
     fiberMode,
     renderLanes,
     null,
+    false,
   );
   // Needs a placement effect because the parent (the Suspense
   // boundary) already mounted but this is a new fiber.

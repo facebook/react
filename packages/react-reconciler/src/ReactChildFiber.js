@@ -47,6 +47,7 @@ import isArray from 'shared/isArray';
 import {
   enableAsyncIterableChildren,
   disableLegacyMode,
+  enableFragmentRefs,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -214,10 +215,14 @@ function validateFragmentProps(
     const keys = Object.keys(element.props);
     for (let i = 0; i < keys.length; i++) {
       const key = keys[i];
-      if (key !== 'children' && key !== 'key') {
+      if (
+        key !== 'children' &&
+        key !== 'key' &&
+        (enableFragmentRefs ? key !== 'ref' : true)
+      ) {
         if (fiber === null) {
-          // For unkeyed root fragments there's no Fiber. We create a fake one just for
-          // error stack handling.
+          // For unkeyed root fragments without refs (enableFragmentRefs),
+          // there's no Fiber. We create a fake one just for error stack handling.
           fiber = createFiberFromElement(element, returnFiber.mode, 0);
           if (__DEV__) {
             fiber._debugInfo = currentDebugInfo;
@@ -227,11 +232,19 @@ function validateFragmentProps(
         runWithFiberInDEV(
           fiber,
           erroredKey => {
-            console.error(
-              'Invalid prop `%s` supplied to `React.Fragment`. ' +
-                'React.Fragment can only have `key` and `children` props.',
-              erroredKey,
-            );
+            if (enableFragmentRefs) {
+              console.error(
+                'Invalid prop `%s` supplied to `React.Fragment`. ' +
+                  'React.Fragment can only have `key`, `ref`, and `children` props.',
+                erroredKey,
+              );
+            } else {
+              console.error(
+                'Invalid prop `%s` supplied to `React.Fragment`. ' +
+                  'React.Fragment can only have `key` and `children` props.',
+                erroredKey,
+              );
+            }
           },
           key,
         );
@@ -517,6 +530,9 @@ function createChildReconciler(
         lanes,
         element.key,
       );
+      if (enableFragmentRefs) {
+        coerceRef(updated, element);
+      }
       validateFragmentProps(element, updated, returnFiber);
       return updated;
     }
@@ -601,6 +617,9 @@ function createChildReconciler(
         returnFiber.mode,
         lanes,
         key,
+        enableFragmentRefs &&
+          returnFiber.stateNode !== null &&
+          returnFiber.stateNode.ref !== undefined,
       );
       created.return = returnFiber;
       if (__DEV__) {
@@ -706,6 +725,7 @@ function createChildReconciler(
           returnFiber.mode,
           lanes,
           null,
+          false,
         );
         created.return = returnFiber;
         if (__DEV__) {
@@ -1619,6 +1639,9 @@ function createChildReconciler(
           if (child.tag === Fragment) {
             deleteRemainingChildren(returnFiber, child.sibling);
             const existing = useFiber(child, element.props.children);
+            if (enableFragmentRefs) {
+              coerceRef(existing, element);
+            }
             existing.return = returnFiber;
             if (__DEV__) {
               existing._debugOwner = element._owner;
@@ -1669,7 +1692,11 @@ function createChildReconciler(
         returnFiber.mode,
         lanes,
         element.key,
+        enableFragmentRefs && element.props.ref !== undefined,
       );
+      if (enableFragmentRefs) {
+        coerceRef(created, element);
+      }
       created.return = returnFiber;
       if (__DEV__) {
         // We treat the parent as the owner for stack purposes.
@@ -1742,17 +1769,19 @@ function createChildReconciler(
     // not as a fragment. Nested arrays on the other hand will be treated as
     // fragment nodes. Recursion happens at the normal flow.
 
-    // Handle top level unkeyed fragments as if they were arrays.
-    // This leads to an ambiguity between <>{[...]}</> and <>...</>.
+    // Handle top level unkeyed fragments without refs (enableFragmentRefs)
+    // as if they were arrays. This leads to an ambiguity between <>{[...]}</> and <>...</>.
     // We treat the ambiguous cases above the same.
     // We don't use recursion here because a fragment inside a fragment
     // is no longer considered "top level" for these purposes.
-    const isUnkeyedTopLevelFragment =
+    const isUnkeyedUnrefedTopLevelFragment =
       typeof newChild === 'object' &&
       newChild !== null &&
       newChild.type === REACT_FRAGMENT_TYPE &&
-      newChild.key === null;
-    if (isUnkeyedTopLevelFragment) {
+      newChild.key === null &&
+      (enableFragmentRefs ? newChild.props.ref === undefined : true);
+
+    if (isUnkeyedUnrefedTopLevelFragment) {
       validateFragmentProps(newChild, null, returnFiber);
       newChild = newChild.props.children;
     }

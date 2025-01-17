@@ -447,6 +447,32 @@ export function createViewTransitionInstance(
   return null;
 }
 
+export type FragmentInstance = null | {
+  appendChild: (child: Instance) => void,
+  parentInstance: Instance,
+  ...
+};
+
+export function createFragmentInstance(
+  parentInstance: Instance | Container,
+): FragmentInstance {
+  return null;
+}
+
+export function appendChildToFragmentInstance(
+  child: Instance,
+  fragmentInstance: FragmentInstance,
+): void {
+  // noop
+}
+
+export function removeChildFromFragmentInstance(
+  child: Instance,
+  fragmentInstance: FragmentInstance,
+): void {
+  // Noop
+}
+
 export function getInstanceFromNode(mockNode: Object): Object | null {
   const instance = nodeToInstanceMap.get(mockNode);
   if (instance !== undefined) {
