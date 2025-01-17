@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<459d2e101f76f4fd316aa429d387ad28>>
+ * @generated SignedSource<<ed6be6602fbeff1613925324886e3267>>
  */
 
 /*
@@ -14898,7 +14898,7 @@ function handleErrorInNextTick(error) {
 }
 var supportsMoveBefore =
   "undefined" !== typeof window &&
-  "function" === typeof window.Node.prototype.moveBefore;
+  "function" === typeof window.Element.prototype.moveBefore;
 function clearSuspenseBoundary(parentInstance, suspenseInstance) {
   var node = suspenseInstance,
     depth = 0;
@@ -16632,14 +16632,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_1881 = React.version;
 if (
-  "19.1.0-native-fb-43d18bc2-20250115" !==
+  "19.1.0-native-fb-313c8c55-20250117" !==
   isomorphicReactPackageVersion$jscomp$inline_1881
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1881,
-      "19.1.0-native-fb-43d18bc2-20250115"
+      "19.1.0-native-fb-313c8c55-20250117"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -16661,10 +16661,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_1888 = {
   bundleType: 0,
-  version: "19.1.0-native-fb-43d18bc2-20250115",
+  version: "19.1.0-native-fb-313c8c55-20250117",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.1.0-native-fb-43d18bc2-20250115",
+  reconcilerVersion: "19.1.0-native-fb-313c8c55-20250117",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$292 = 0;
@@ -16939,7 +16939,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.1.0-native-fb-43d18bc2-20250115";
+exports.version = "19.1.0-native-fb-313c8c55-20250117";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
