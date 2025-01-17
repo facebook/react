@@ -780,7 +780,7 @@ const supportsMoveBefore =
   // $FlowFixMe[prop-missing]: We're doing the feature detection here.
   enableMoveBefore &&
   typeof window !== 'undefined' &&
-  typeof window.Node.prototype.moveBefore === 'function';
+  typeof window.Element.prototype.moveBefore === 'function';
 
 export function appendChild(
   parentInstance: Instance,
