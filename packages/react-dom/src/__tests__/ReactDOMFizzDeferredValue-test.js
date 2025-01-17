@@ -114,9 +114,11 @@ describe('ReactDOMFizzForm', () => {
 
       function App() {
         return (
-          <Suspense fallback={<Text text="Loading..." />}>
-            <Content />
-          </Suspense>
+          <div>
+            <Suspense fallback={<Text text="Loading..." />}>
+              <Content />
+            </Suspense>
+          </div>
         );
       }
 

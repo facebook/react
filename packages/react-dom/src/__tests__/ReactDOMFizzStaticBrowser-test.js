@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment ./scripts/jest/ReactDOMServerIntegrationEnvironment
  */
 
 'use strict';
@@ -22,6 +23,7 @@ global.ReadableStream =
 global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
 
+let JSDOM;
 let React;
 let ReactDOM;
 let ReactDOMFizzServer;
@@ -34,6 +36,7 @@ let act;
 describe('ReactDOMFizzStaticBrowser', () => {
   beforeEach(() => {
     jest.resetModules();
+    JSDOM = require('jsdom').JSDOM;
 
     Scheduler = require('scheduler');
     patchMessageChannel(Scheduler);
@@ -49,6 +52,9 @@ describe('ReactDOMFizzStaticBrowser', () => {
   });
 
   afterEach(() => {
+    if (typeof global.window.__restoreGlobalScope === 'function') {
+      global.window.__restoreGlobalScope();
+    }
     document.body.removeChild(container);
   });
 
@@ -127,6 +133,40 @@ describe('ReactDOMFizzStaticBrowser', () => {
     const temp = document.createElement('div');
     temp.innerHTML = result;
     await insertNodesAndExecuteScripts(temp, container, null);
+  }
+
+  async function readIntoNewDocument(stream) {
+    const content = await readContent(stream);
+    const jsdom = new JSDOM(content, {
+      runScripts: 'dangerously',
+    });
+    const originalWindow = global.window;
+    const originalDocument = global.document;
+    const originalNavigator = global.navigator;
+    const originalNode = global.Node;
+    const originalAddEventListener = global.addEventListener;
+    const originalMutationObserver = global.MutationObserver;
+    global.window = jsdom.window;
+    global.document = global.window.document;
+    global.navigator = global.window.navigator;
+    global.Node = global.window.Node;
+    global.addEventListener = global.window.addEventListener;
+    global.MutationObserver = global.window.MutationObserver;
+    global.window.__restoreGlobalScope = () => {
+      global.window = originalWindow;
+      global.document = originalDocument;
+      global.navigator = originalNavigator;
+      global.Node = originalNode;
+      global.addEventListener = originalAddEventListener;
+      global.MutationObserver = originalMutationObserver;
+    };
+  }
+
+  async function readIntoCurrentDocument(stream) {
+    const content = await readContent(stream);
+    const temp = document.createElement('div');
+    temp.innerHTML = content;
+    await insertNodesAndExecuteScripts(temp, document.body, null);
   }
 
   it('should call prerender', async () => {
@@ -293,7 +333,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     const prelude = await readContent(result.prelude);
     expect(prelude).toContain('Loading');
 
-    expect(errors).toEqual(['The operation was aborted.']);
+    expect(errors).toEqual(['This operation was aborted']);
   });
 
   // @gate !enableHalt
@@ -393,7 +433,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     if (gate(flags => flags.enableHalt)) {
       const {prelude} = await streamPromise;
       const content = await readContent(prelude);
-      expect(errors).toEqual(['The operation was aborted.']);
+      expect(errors).toEqual(['This operation was aborted']);
       expect(content).toBe('');
     } else {
       let caughtError = null;
@@ -402,8 +442,8 @@ describe('ReactDOMFizzStaticBrowser', () => {
       } catch (error) {
         caughtError = error;
       }
-      expect(caughtError.message).toBe('The operation was aborted.');
-      expect(errors).toEqual(['The operation was aborted.']);
+      expect(caughtError.message).toBe('This operation was aborted');
+      expect(errors).toEqual(['This operation was aborted']);
     }
   });
 
@@ -1719,13 +1759,15 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     function App() {
       return (
-        <Suspense fallback="loading...">
-          <Outer>
-            <Middle>
-              <Inner />
-            </Middle>
-          </Outer>
-        </Suspense>
+        <div>
+          <Suspense fallback="loading...">
+            <Outer>
+              <Middle>
+                <Inner />
+              </Middle>
+            </Outer>
+          </Suspense>
+        </div>
       );
     }
 
@@ -1735,7 +1777,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     const postponedState = JSON.stringify(prerendered.postponed);
 
     await readIntoContainer(prerendered.prelude);
-    expect(getVisibleChildren(container)).toEqual('loading...');
+    expect(getVisibleChildren(container)).toEqual(<div>loading...</div>);
 
     isPrerendering = false;
 
@@ -1744,7 +1786,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     );
 
     await readIntoContainer(dynamic);
-    expect(getVisibleChildren(container)).toEqual('hello');
+    expect(getVisibleChildren(container)).toEqual(<div>hello</div>);
   });
 
   // @gate enableHalt
@@ -1772,9 +1814,11 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     function App() {
       return (
-        <Suspense fallback="Loading A">
-          <ComponentA />
-        </Suspense>
+        <div>
+          <Suspense fallback="Loading A">
+            <ComponentA />
+          </Suspense>
+        </div>
       );
     }
 
@@ -1790,12 +1834,11 @@ describe('ReactDOMFizzStaticBrowser', () => {
     });
 
     controller.abort();
-
     const prerendered = await pendingResult;
     const postponedState = JSON.stringify(prerendered.postponed);
 
     await readIntoContainer(prerendered.prelude);
-    expect(getVisibleChildren(container)).toEqual('Loading A');
+    expect(getVisibleChildren(container)).toEqual(<div>Loading A</div>);
 
     await resolveA();
 
@@ -1821,7 +1864,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     const postponedState2 = JSON.stringify(prerendered2.postponed);
 
     await readIntoContainer(prerendered2.prelude);
-    expect(getVisibleChildren(container)).toEqual('Loading B');
+    expect(getVisibleChildren(container)).toEqual(<div>Loading B</div>);
 
     await resolveB();
 
@@ -1830,6 +1873,344 @@ describe('ReactDOMFizzStaticBrowser', () => {
     );
 
     await readIntoContainer(dynamic);
-    expect(getVisibleChildren(container)).toEqual('Hello');
+    expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
+  });
+
+  // @gate enableHalt
+  it('can prerender a preamble', async () => {
+    const errors = [];
+
+    let resolveA;
+    const promiseA = new Promise(r => (resolveA = r));
+    let resolveB;
+    const promiseB = new Promise(r => (resolveB = r));
+
+    async function ComponentA() {
+      await promiseA;
+      return (
+        <Suspense fallback="Loading B">
+          <ComponentB />
+        </Suspense>
+      );
+    }
+
+    async function ComponentB() {
+      await promiseB;
+      return 'Hello';
+    }
+
+    function App() {
+      return (
+        <Suspense>
+          <html data-x="">
+            <body data-x="">
+              <Suspense fallback="Loading A">
+                <ComponentA />
+              </Suspense>
+            </body>
+          </html>
+        </Suspense>
+      );
+    }
+
+    const controller = new AbortController();
+    let pendingResult;
+    await serverAct(async () => {
+      pendingResult = ReactDOMFizzStatic.prerender(<App />, {
+        signal: controller.signal,
+        onError(x) {
+          errors.push(x.message);
+        },
+      });
+    });
+
+    controller.abort();
+
+    const prerendered = await pendingResult;
+    const postponedState = JSON.stringify(prerendered.postponed);
+
+    await readIntoNewDocument(prerendered.prelude);
+    expect(getVisibleChildren(document)).toEqual(
+      <html data-x="">
+        <head />
+        <body data-x="">Loading A</body>
+      </html>,
+    );
+
+    await resolveA();
+
+    expect(prerendered.postponed).not.toBe(null);
+
+    const controller2 = new AbortController();
+    await serverAct(async () => {
+      pendingResult = ReactDOMFizzStatic.resumeAndPrerender(
+        <App />,
+        JSON.parse(postponedState),
+        {
+          signal: controller2.signal,
+          onError(x) {
+            errors.push(x.message);
+          },
+        },
+      );
+    });
+
+    controller2.abort();
+
+    const prerendered2 = await pendingResult;
+    const postponedState2 = JSON.stringify(prerendered2.postponed);
+
+    await readIntoCurrentDocument(prerendered2.prelude);
+    expect(getVisibleChildren(document)).toEqual(
+      <html data-x="">
+        <head />
+        <body data-x="">Loading B</body>
+      </html>,
+    );
+
+    await resolveB();
+
+    const dynamic = await serverAct(() =>
+      ReactDOMFizzServer.resume(<App />, JSON.parse(postponedState2)),
+    );
+
+    await readIntoCurrentDocument(dynamic);
+    expect(getVisibleChildren(document)).toEqual(
+      <html data-x="">
+        <head />
+        <body data-x="">Hello</body>
+      </html>,
+    );
+  });
+
+  it('can suspend inside <head> tag', async () => {
+    const promise = new Promise(() => {});
+
+    function App() {
+      return (
+        <html>
+          <head>
+            <Suspense fallback={<meta itemProp="" content="fallback" />}>
+              <Metadata />
+            </Suspense>
+          </head>
+          <body>
+            <div>hello</div>
+          </body>
+        </html>
+      );
+    }
+
+    function Metadata() {
+      React.use(promise);
+      return <meta itemProp="" content="primary" />;
+    }
+
+    const controller = new AbortController();
+    let pendingResult;
+    const errors = [];
+    await serverAct(() => {
+      pendingResult = ReactDOMFizzStatic.prerender(<App />, {
+        signal: controller.signal,
+        onError: e => {
+          errors.push(e.message);
+        },
+      });
+    });
+
+    controller.abort(new Error('boom'));
+
+    const prerendered = await pendingResult;
+
+    await readIntoNewDocument(prerendered.prelude);
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head>
+          <meta itemprop="" content="fallback" />
+        </head>
+        <body>
+          <div>hello</div>
+        </body>
+      </html>,
+    );
+
+    expect(errors).toEqual(['boom']);
+  });
+
+  // @gate enableHalt
+  it('will render fallback Document when erroring a boundary above the body', async () => {
+    let isPrerendering = true;
+    const promise = new Promise(() => {});
+
+    function Boom() {
+      if (isPrerendering) {
+        React.use(promise);
+      }
+      throw new Error('Boom!');
+    }
+
+    function App() {
+      return (
+        <Suspense
+          fallback={
+            <html data-error-html="">
+              <body data-error-body="">
+                <span>hello error</span>
+              </body>
+            </html>
+          }>
+          <html data-content-html="">
+            <body data-content-body="">
+              <Boom />
+              <span>hello world</span>
+            </body>
+          </html>
+        </Suspense>
+      );
+    }
+
+    const controller = new AbortController();
+    let pendingResult;
+    const errors = [];
+    await serverAct(() => {
+      pendingResult = ReactDOMFizzStatic.prerender(<App />, {
+        signal: controller.signal,
+        onError: e => {
+          errors.push(e.message);
+        },
+      });
+    });
+
+    controller.abort();
+
+    const prerendered = await pendingResult;
+
+    expect(errors).toEqual(['This operation was aborted']);
+    const content = await readContent(prerendered.prelude);
+    expect(content).toBe('');
+
+    isPrerendering = false;
+    const postponedState = JSON.stringify(prerendered.postponed);
+
+    const resumeErrors = [];
+    const dynamic = await serverAct(() =>
+      ReactDOMFizzServer.resume(<App />, JSON.parse(postponedState), {
+        onError: e => {
+          resumeErrors.push(e.message);
+        },
+      }),
+    );
+
+    expect(resumeErrors).toEqual(['Boom!']);
+    await readIntoNewDocument(dynamic);
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html data-error-html="">
+        <head />
+        <body data-error-body="">
+          <span>hello error</span>
+        </body>
+      </html>,
+    );
+  });
+
+  // @gate enableHalt
+  it('can omit a preamble with an empty shell if no preamble is ready when prerendering finishes', async () => {
+    const errors = [];
+
+    let resolveA;
+    const promiseA = new Promise(r => (resolveA = r));
+    let resolveB;
+    const promiseB = new Promise(r => (resolveB = r));
+
+    async function ComponentA() {
+      await promiseA;
+      return (
+        <Suspense fallback="Loading B">
+          <ComponentB />
+        </Suspense>
+      );
+    }
+
+    async function ComponentB() {
+      await promiseB;
+      return 'Hello';
+    }
+
+    function App() {
+      return (
+        <Suspense>
+          <html data-x="">
+            <body data-x="">
+              <ComponentA />
+            </body>
+          </html>
+        </Suspense>
+      );
+    }
+
+    const controller = new AbortController();
+    let pendingResult;
+    await serverAct(async () => {
+      pendingResult = ReactDOMFizzStatic.prerender(<App />, {
+        signal: controller.signal,
+        onError(x) {
+          errors.push(x.message);
+        },
+      });
+    });
+
+    controller.abort();
+
+    const prerendered = await pendingResult;
+    const postponedState = JSON.stringify(prerendered.postponed);
+
+    const content = await readContent(prerendered.prelude);
+    expect(content).toBe('');
+
+    await resolveA();
+
+    expect(prerendered.postponed).not.toBe(null);
+
+    const controller2 = new AbortController();
+    await serverAct(async () => {
+      pendingResult = ReactDOMFizzStatic.resumeAndPrerender(
+        <App />,
+        JSON.parse(postponedState),
+        {
+          signal: controller2.signal,
+          onError(x) {
+            errors.push(x.message);
+          },
+        },
+      );
+    });
+
+    controller2.abort();
+
+    const prerendered2 = await pendingResult;
+    const postponedState2 = JSON.stringify(prerendered2.postponed);
+
+    await readIntoNewDocument(prerendered2.prelude);
+    expect(getVisibleChildren(document)).toEqual(
+      <html data-x="">
+        <head />
+        <body data-x="">Loading B</body>
+      </html>,
+    );
+
+    await resolveB();
+
+    const dynamic = await serverAct(() =>
+      ReactDOMFizzServer.resume(<App />, JSON.parse(postponedState2)),
+    );
+
+    await readIntoCurrentDocument(dynamic);
+    expect(getVisibleChildren(document)).toEqual(
+      <html data-x="">
+        <head />
+        <body data-x="">Hello</body>
+      </html>,
+    );
   });
 });

@@ -53,6 +53,7 @@ type Destination = {
 
 type RenderState = null;
 type HoistableState = null;
+type PreambleState = null;
 
 const POP = Buffer.from('/', 'utf8');
 
@@ -264,7 +265,8 @@ const ReactNoopServer = ReactFizzServer({
     boundary.status = 'client-render';
   },
 
-  writePreamble() {},
+  writePreambleStart() {},
+  writePreambleEnd() {},
   writeHoistables() {},
   writeHoistablesForBoundary() {},
   writePostamble() {},
@@ -273,6 +275,19 @@ const ReactNoopServer = ReactFizzServer({
     return null;
   },
   emitEarlyPreloads() {},
+  createPreambleState(): PreambleState {
+    return null;
+  },
+  canHavePreamble() {
+    return false;
+  },
+  hoistPreambleState() {},
+  isPreambleReady() {
+    return true;
+  },
+  isPreambleContext() {
+    return false;
+  },
 });
 
 type Options = {
