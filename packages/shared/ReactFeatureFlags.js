@@ -138,7 +138,7 @@ export const enableOwnerStacks = true;
 
 export const enableShallowPropDiffing = false;
 
-export const enableSiblingPrerendering = false;
+export const enableSiblingPrerendering = true;
 
 /**
  * Enables an expiration time for retry lanes to avoid starvation.

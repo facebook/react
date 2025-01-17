@@ -591,6 +591,32 @@ export function waitForCommitToBeReady(): null {
   return null;
 }
 
+export type FragmentInstance = null | {
+  appendChild: (child: Instance) => void,
+  parentInstance: Instance,
+  ...
+};
+
+export function createFragmentInstance(
+  parentInstance: Instance,
+): FragmentInstance {
+  return null;
+}
+
+export function appendChildToFragmentInstance(
+  child: Instance,
+  fragmentInstance: FragmentInstance,
+): void {
+  // Noop
+}
+
+export function removeChildFromFragmentInstance(
+  child: Instance,
+  fragmentInstance: FragmentInstance,
+): void {
+  // Noop
+}
+
 export const NotPendingTransition: TransitionStatus = null;
 export const HostTransitionContext: ReactContext<TransitionStatus> = {
   $$typeof: REACT_CONTEXT_TYPE,

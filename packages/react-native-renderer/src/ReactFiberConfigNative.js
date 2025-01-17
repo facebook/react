@@ -189,6 +189,32 @@ export function createTextInstance(
   return tag;
 }
 
+export type FragmentInstance = null | {
+  appendChild: (child: Instance) => void,
+  parentInstance: Instance,
+  ...
+};
+
+export function createFragmentInstance(
+  parentInstance: Instance,
+): FragmentInstance {
+  return null;
+}
+
+export function appendChildToFragmentInstance(
+  child: Instance,
+  fragmentInstance: FragmentInstance,
+): void {
+  // Noop
+}
+
+export function removeChildFromFragmentInstance(
+  child: Instance,
+  fragmentInstance: FragmentInstance,
+): void {
+  // Noop
+}
+
 export function finalizeInitialChildren(
   parentInstance: Instance,
   type: string,

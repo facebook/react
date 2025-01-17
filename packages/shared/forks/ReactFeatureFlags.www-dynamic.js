@@ -39,6 +39,7 @@ export const enableUseEffectCRUDOverload = __VARIANT__;
 export const enableFastAddPropertiesInDiffing = __VARIANT__;
 export const enableLazyPublicInstanceInFabric = false;
 export const enableViewTransition = __VARIANT__;
+export const enableFragmentRefs = __VARIANT__;
 
 // TODO: These flags are hard-coded to the default values used in open source.
 // Update the tests so that they pass in either mode, then set these
