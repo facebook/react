@@ -1282,15 +1282,17 @@ describe('ReactDOMFizzServer', () => {
 
     function App({showMore}) {
       return (
-        <SuspenseList revealOrder="forwards">
-          {a}
-          {b}
-          {showMore ? (
-            <Suspense fallback="Loading C">
-              <span>C</span>
-            </Suspense>
-          ) : null}
-        </SuspenseList>
+        <div>
+          <SuspenseList revealOrder="forwards">
+            {a}
+            {b}
+            {showMore ? (
+              <Suspense fallback="Loading C">
+                <span>C</span>
+              </Suspense>
+            ) : null}
+          </SuspenseList>
+        </div>
       );
     }
 
@@ -1308,12 +1310,14 @@ describe('ReactDOMFizzServer', () => {
 
     // We're not hydrated yet.
     expect(ref.current).toBe(null);
-    expect(getVisibleChildren(container)).toEqual([
-      'Loading A',
-      // TODO: This is incorrect. It should be "Loading B" but Fizz SuspenseList
-      // isn't implemented fully yet.
-      <span>B</span>,
-    ]);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        Loading A
+        {/* // TODO: This is incorrect. It should be "Loading B" but Fizz SuspenseList
+            // isn't implemented fully yet. */}
+        <span>B</span>
+      </div>,
+    );
 
     // Add more rows before we've hydrated the first two.
     root.render(<App showMore={true} />);
@@ -1323,13 +1327,15 @@ describe('ReactDOMFizzServer', () => {
     expect(ref.current).toBe(null);
 
     // We haven't resolved yet.
-    expect(getVisibleChildren(container)).toEqual([
-      'Loading A',
-      // TODO: This is incorrect. It should be "Loading B" but Fizz SuspenseList
-      // isn't implemented fully yet.
-      <span>B</span>,
-      'Loading C',
-    ]);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        Loading A
+        {/* // TODO: This is incorrect. It should be "Loading B" but Fizz SuspenseList
+            // isn't implemented fully yet. */}
+        <span>B</span>
+        Loading C
+      </div>,
+    );
 
     await act(async () => {
       await resolveText('A');
@@ -1337,11 +1343,13 @@ describe('ReactDOMFizzServer', () => {
 
     await waitForAll([]);
 
-    expect(getVisibleChildren(container)).toEqual([
-      <span>A</span>,
-      <span>B</span>,
-      <span>C</span>,
-    ]);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+      </div>,
+    );
 
     const span = container.getElementsByTagName('span')[0];
     expect(ref.current).toBe(span);
@@ -1470,16 +1478,18 @@ describe('ReactDOMFizzServer', () => {
     await act(() => {
       const {pipe} = renderToPipeableStream(
         // We use two nested boundaries to flush out coverage of an old reentrancy bug.
-        <Suspense fallback="Loading...">
-          <Suspense fallback={<Text text="Loading A..." />}>
-            <>
-              <Text text="This will show A: " />
-              <div>
-                <AsyncText text="A" />
-              </div>
-            </>
+        <div>
+          <Suspense fallback="Loading...">
+            <Suspense fallback={<Text text="Loading A..." />}>
+              <>
+                <Text text="This will show A: " />
+                <div>
+                  <AsyncText text="A" />
+                </div>
+              </>
+            </Suspense>
           </Suspense>
-        </Suspense>,
+        </div>,
         {
           identifierPrefix: 'A_',
           onShellReady() {
@@ -1493,12 +1503,14 @@ describe('ReactDOMFizzServer', () => {
 
     await act(() => {
       const {pipe} = renderToPipeableStream(
-        <Suspense fallback={<Text text="Loading B..." />}>
-          <Text text="This will show B: " />
-          <div>
-            <AsyncText text="B" />
-          </div>
-        </Suspense>,
+        <div>
+          <Suspense fallback={<Text text="Loading B..." />}>
+            <Text text="This will show B: " />
+            <div>
+              <AsyncText text="B" />
+            </div>
+          </Suspense>
+        </div>,
         {
           identifierPrefix: 'B_',
           onShellReady() {
@@ -1511,8 +1523,12 @@ describe('ReactDOMFizzServer', () => {
     });
 
     expect(getVisibleChildren(container)).toEqual([
-      <div id="container-A">Loading A...</div>,
-      <div id="container-B">Loading B...</div>,
+      <div id="container-A">
+        <div>Loading A...</div>
+      </div>,
+      <div id="container-B">
+        <div>Loading B...</div>
+      </div>,
     ]);
 
     await act(() => {
@@ -1520,9 +1536,13 @@ describe('ReactDOMFizzServer', () => {
     });
 
     expect(getVisibleChildren(container)).toEqual([
-      <div id="container-A">Loading A...</div>,
+      <div id="container-A">
+        <div>Loading A...</div>
+      </div>,
       <div id="container-B">
-        This will show B: <div>B</div>
+        <div>
+          This will show B: <div>B</div>
+        </div>
       </div>,
     ]);
 
@@ -1535,10 +1555,14 @@ describe('ReactDOMFizzServer', () => {
 
     expect(getVisibleChildren(container)).toEqual([
       <div id="container-A">
-        This will show A: <div>A</div>
+        <div>
+          This will show A: <div>A</div>
+        </div>
       </div>,
       <div id="container-B">
-        This will show B: <div>B</div>
+        <div>
+          This will show B: <div>B</div>
+        </div>
       </div>,
     ]);
   });
@@ -2087,15 +2111,21 @@ describe('ReactDOMFizzServer', () => {
   it('client renders a boundary if it errors before finishing the fallback', async () => {
     function App({isClient}) {
       return (
-        <Suspense fallback="Loading root...">
-          <div>
-            <Suspense fallback={<AsyncText text="Loading..." />}>
-              <h1>
-                {isClient ? <Text text="Hello" /> : <AsyncText text="Hello" />}
-              </h1>
-            </Suspense>
-          </div>
-        </Suspense>
+        <div>
+          <Suspense fallback="Loading root...">
+            <div>
+              <Suspense fallback={<AsyncText text="Loading..." />}>
+                <h1>
+                  {isClient ? (
+                    <Text text="Hello" />
+                  ) : (
+                    <AsyncText text="Hello" />
+                  )}
+                </h1>
+              </Suspense>
+            </div>
+          </Suspense>
+        </div>
       );
     }
 
@@ -2132,7 +2162,7 @@ describe('ReactDOMFizzServer', () => {
     await waitForAll([]);
 
     // We're still loading because we're waiting for the server to stream more content.
-    expect(getVisibleChildren(container)).toEqual('Loading root...');
+    expect(getVisibleChildren(container)).toEqual(<div>Loading root...</div>);
 
     expect(loggedErrors).toEqual([]);
 
@@ -2145,7 +2175,7 @@ describe('ReactDOMFizzServer', () => {
 
     // We still can't render it on the client because we haven't unblocked the parent.
     await waitForAll([]);
-    expect(getVisibleChildren(container)).toEqual('Loading root...');
+    expect(getVisibleChildren(container)).toEqual(<div>Loading root...</div>);
 
     // Unblock the loading state
     await act(() => {
@@ -2153,7 +2183,11 @@ describe('ReactDOMFizzServer', () => {
     });
 
     // Now we're able to show the inner boundary.
-    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <div>Loading...</div>
+      </div>,
+    );
 
     // That will let us client render it instead.
     await waitForAll([]);
@@ -2170,6 +2204,7 @@ describe('ReactDOMFizzServer', () => {
             'Suspense',
             'div',
             'Suspense',
+            'div',
             'App',
           ]),
         ],
@@ -2185,7 +2220,9 @@ describe('ReactDOMFizzServer', () => {
     // The client rendered HTML is now in place.
     expect(getVisibleChildren(container)).toEqual(
       <div>
-        <h1>Hello</h1>
+        <div>
+          <h1>Hello</h1>
+        </div>
       </div>,
     );
 
@@ -2195,30 +2232,36 @@ describe('ReactDOMFizzServer', () => {
   it('should be able to abort the fallback if the main content finishes first', async () => {
     await act(() => {
       const {pipe} = renderToPipeableStream(
-        <Suspense fallback={<Text text="Loading Outer" />}>
-          <div>
-            <Suspense
-              fallback={
-                <div>
-                  <AsyncText text="Loading" />
-                  Inner
-                </div>
-              }>
-              <AsyncText text="Hello" />
-            </Suspense>
-          </div>
-        </Suspense>,
+        <div>
+          <Suspense fallback={<Text text="Loading Outer" />}>
+            <div>
+              <Suspense
+                fallback={
+                  <div>
+                    <AsyncText text="Loading" />
+                    Inner
+                  </div>
+                }>
+                <AsyncText text="Hello" />
+              </Suspense>
+            </div>
+          </Suspense>
+        </div>,
       );
       pipe(writable);
     });
-    expect(getVisibleChildren(container)).toEqual('Loading Outer');
+    expect(getVisibleChildren(container)).toEqual(<div>Loading Outer</div>);
     // We should have received a partial segment containing the a partial of the fallback.
     expect(container.innerHTML).toContain('Inner');
     await act(() => {
       resolveText('Hello');
     });
     // We should've been able to display the content without waiting for the rest of the fallback.
-    expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <div>Hello</div>
+      </div>,
+    );
   });
 
   it('calls getServerSnapshot instead of getSnapshot', async () => {
@@ -5285,15 +5328,17 @@ describe('ReactDOMFizzServer', () => {
     it('does not insert text separators even when adjacent text is in a delayed segment', async () => {
       function App({name}) {
         return (
-          <Suspense fallback={'loading...'}>
-            <div id="app-div">
-              hello
-              <b>
-                world, <AsyncText text={name} />
-              </b>
-              !
-            </div>
-          </Suspense>
+          <div>
+            <Suspense fallback={'loading...'}>
+              <div id="app-div">
+                hello
+                <b>
+                  world, <AsyncText text={name} />
+                </b>
+                !
+              </div>
+            </Suspense>
+          </div>
         );
       }
 
@@ -5311,18 +5356,10 @@ describe('ReactDOMFizzServer', () => {
       const div = stripExternalRuntimeInNodes(
         container.children,
         renderOptions.unstable_externalRuntimeSrc,
-      )[0];
+      )[0].children[0];
       expect(div.outerHTML).toEqual(
         '<div id="app-div">hello<b>world, Foo</b>!</div>',
       );
-
-      // there may be either:
-      //  - an external runtime script and deleted nodes with data attributes
-      //  - extra script nodes containing fizz instructions at the end of container
-      expect(
-        Array.from(container.childNodes).filter(e => e.tagName !== 'SCRIPT')
-          .length,
-      ).toBe(3);
 
       expect(div.childNodes.length).toBe(3);
       const b = div.childNodes[1];
@@ -5339,8 +5376,10 @@ describe('ReactDOMFizzServer', () => {
       await waitForAll([]);
       expect(errors).toEqual([]);
       expect(getVisibleChildren(container)).toEqual(
-        <div id="app-div">
-          hello<b>world, {'Foo'}</b>!
+        <div>
+          <div id="app-div">
+            hello<b>world, {'Foo'}</b>!
+          </div>
         </div>,
       );
     });
@@ -5348,12 +5387,14 @@ describe('ReactDOMFizzServer', () => {
     it('works with multiple adjacent segments', async () => {
       function App() {
         return (
-          <Suspense fallback={'loading...'}>
-            <div id="app-div">
-              h<AsyncText text={'ello'} />
-              w<AsyncText text={'orld'} />
-            </div>
-          </Suspense>
+          <div>
+            <Suspense fallback={'loading...'}>
+              <div id="app-div">
+                h<AsyncText text={'ello'} />
+                w<AsyncText text={'orld'} />
+              </div>
+            </Suspense>
+          </div>
         );
       }
 
@@ -5377,7 +5418,7 @@ describe('ReactDOMFizzServer', () => {
         stripExternalRuntimeInNodes(
           container.children,
           renderOptions.unstable_externalRuntimeSrc,
-        )[0].outerHTML,
+        )[0].children[0].outerHTML,
       ).toEqual('<div id="app-div">helloworld</div>');
 
       const errors = [];
@@ -5389,19 +5430,23 @@ describe('ReactDOMFizzServer', () => {
       await waitForAll([]);
       expect(errors).toEqual([]);
       expect(getVisibleChildren(container)).toEqual(
-        <div id="app-div">{['h', 'ello', 'w', 'orld']}</div>,
+        <div>
+          <div id="app-div">{['h', 'ello', 'w', 'orld']}</div>
+        </div>,
       );
     });
 
     it('works when some segments are flushed and others are patched', async () => {
       function App() {
         return (
-          <Suspense fallback={'loading...'}>
-            <div id="app-div">
-              h<AsyncText text={'ello'} />
-              w<AsyncText text={'orld'} />
-            </div>
-          </Suspense>
+          <div>
+            <Suspense fallback={'loading...'}>
+              <div id="app-div">
+                h<AsyncText text={'ello'} />
+                w<AsyncText text={'orld'} />
+              </div>
+            </Suspense>
+          </div>
         );
       }
 
@@ -5422,7 +5467,7 @@ describe('ReactDOMFizzServer', () => {
         stripExternalRuntimeInNodes(
           container.children,
           renderOptions.unstable_externalRuntimeSrc,
-        )[0].outerHTML,
+        )[0].children[0].outerHTML,
       ).toEqual('<div id="app-div">h<!-- -->ello<!-- -->world</div>');
 
       const errors = [];
@@ -5437,7 +5482,9 @@ describe('ReactDOMFizzServer', () => {
       await waitForAll([]);
       expect(errors).toEqual([]);
       expect(getVisibleChildren(container)).toEqual(
-        <div id="app-div">{['h', 'ello', 'w', 'orld']}</div>,
+        <div>
+          <div id="app-div">{['h', 'ello', 'w', 'orld']}</div>
+        </div>,
       );
     });
 
@@ -6073,11 +6120,13 @@ describe('ReactDOMFizzServer', () => {
 
     function App() {
       return (
-        <Suspense fallback="Loading...">
-          <ErrorBoundary>
-            <Async />
-          </ErrorBoundary>
-        </Suspense>
+        <div>
+          <Suspense fallback="Loading...">
+            <ErrorBoundary>
+              <Async />
+            </ErrorBoundary>
+          </Suspense>
+        </div>
       );
     }
 
@@ -6107,7 +6156,7 @@ describe('ReactDOMFizzServer', () => {
       await promiseC;
     });
 
-    expect(getVisibleChildren(container)).toEqual('Loading...');
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
     expect(reportedServerErrors.length).toBe(1);
     expect(reportedServerErrors[0].message).toBe('Oops!');
 
@@ -6122,7 +6171,7 @@ describe('ReactDOMFizzServer', () => {
       },
     });
     await waitForAll([]);
-    expect(getVisibleChildren(container)).toEqual('Oops!');
+    expect(getVisibleChildren(container)).toEqual(<div>Oops!</div>);
     // Because this is rethrown on the client, it is not a recoverable error.
     expect(reportedClientErrors.length).toBe(0);
     // It is caught by the error boundary.
@@ -8791,5 +8840,905 @@ describe('ReactDOMFizzServer', () => {
         'The server could not finish this Suspense boundar',
       ),
     ]);
+  });
+
+  it('can suspend inside the <head /> tag', async () => {
+    function BlockedOn({value, children}) {
+      readText(value);
+      return children;
+    }
+
+    function App() {
+      return (
+        <html>
+          <head>
+            <Suspense fallback={<meta itemProp="head loading" />}>
+              <BlockedOn value="head">
+                <meta itemProp="" content="head" />
+              </BlockedOn>
+            </Suspense>
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head>
+          <meta itemprop="head loading" />
+        </head>
+        <body>
+          <div>hello world</div>
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('head');
+    });
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head>
+          <meta itemprop="" content="head" />
+        </head>
+        <body>
+          <div>hello world</div>
+        </body>
+      </html>,
+    );
+
+    const root = ReactDOMClient.hydrateRoot(document, <App />);
+    await waitForAll([]);
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head>
+          <meta itemprop="" content="head" />
+        </head>
+        <body>
+          <div>hello world</div>
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      root.unmount();
+    });
+    await waitForAll([]);
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body />
+      </html>,
+    );
+  });
+
+  it('can server render Suspense before, after, and around <html>', async () => {
+    function BlockedOn({value, children}) {
+      readText(value);
+      return children;
+    }
+
+    function App() {
+      return (
+        <>
+          <Suspense fallback="this fallback never renders">
+            <div>before</div>
+          </Suspense>
+          <Suspense fallback="this fallback never renders">
+            <BlockedOn value="html">
+              <html lang="en">
+                <head>
+                  <meta itemProp="" content="non-floaty meta" />
+                </head>
+                <body>
+                  <div>hello world</div>
+                </body>
+              </html>
+            </BlockedOn>
+          </Suspense>
+          <Suspense fallback="this fallback never renders">
+            <div>after</div>
+          </Suspense>
+        </>
+      );
+    }
+
+    let content = '';
+    writable.on('data', chunk => (content += chunk));
+
+    let shellReady = false;
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App />, {
+        onShellReady: () => {
+          shellReady = true;
+        },
+      });
+      pipe(writable);
+    });
+
+    // When we Suspend above the body we block the shell because the root HTML scope
+    // is considered "reconciliation" mode whereby we should stay on the prior view
+    // (the prior page for instance) rather than showing the fallback (semantically)
+    expect(shellReady).toBe(true);
+    expect(content).toBe('');
+
+    await act(() => {
+      resolveText('html');
+    });
+    expect(content).toMatch(/^<!DOCTYPE html>/);
+    expect(getVisibleChildren(document)).toEqual(
+      <html lang="en">
+        <head>
+          <meta itemprop="" content="non-floaty meta" />
+        </head>
+        <body>
+          <div>before</div>
+          <div>hello world</div>
+          <div>after</div>
+        </body>
+      </html>,
+    );
+  });
+
+  it('can server render Suspense before, after, and around <body>', async () => {
+    function BlockedOn({value, children}) {
+      readText(value);
+      return children;
+    }
+
+    function App() {
+      return (
+        <html>
+          <Suspense fallback="this fallback never renders">
+            <meta content="before" />
+            <meta itemProp="" content="before" />
+          </Suspense>
+          <Suspense fallback="this fallback never renders">
+            <BlockedOn value="body">
+              <body lang="en">
+                <div>hello world</div>
+              </body>
+            </BlockedOn>
+          </Suspense>
+          <Suspense fallback="this fallback never renders">
+            <meta content="after" />
+            <meta itemProp="" content="after" />
+          </Suspense>
+        </html>
+      );
+    }
+
+    let content = '';
+    writable.on('data', chunk => (content += chunk));
+
+    let shellReady = false;
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App />, {
+        onShellReady() {
+          shellReady = true;
+        },
+      });
+      pipe(writable);
+    });
+
+    expect(shellReady).toBe(true);
+    expect(content).toBe('');
+
+    await act(() => {
+      resolveText('body');
+    });
+    expect(content).toMatch(/^<!DOCTYPE html>/);
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head>
+          <meta content="before" />
+          <meta content="after" />
+        </head>
+        <body lang="en">
+          <meta itemprop="" content="before" />
+          <div>hello world</div>
+          <meta itemprop="" content="after" />
+        </body>
+      </html>,
+    );
+  });
+
+  it('can server render Suspense before, after, and around <head>', async () => {
+    function BlockedOn({value, children}) {
+      readText(value);
+      return children;
+    }
+
+    function App() {
+      return (
+        <html>
+          <Suspense fallback="this fallback never renders">
+            <meta content="before" />
+            <meta itemProp="" content="before" />
+          </Suspense>
+          <Suspense fallback="this fallback never renders">
+            <BlockedOn value="head">
+              <head lang="en">
+                <meta itemProp="" />
+              </head>
+            </BlockedOn>
+          </Suspense>
+          <Suspense fallback="this fallback never renders">
+            <meta content="after" />
+            <meta itemProp="" content="after" />
+          </Suspense>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>
+      );
+    }
+
+    let content = '';
+    writable.on('data', chunk => (content += chunk));
+
+    let shellReady = false;
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App />, {
+        onShellReady() {
+          shellReady = true;
+        },
+      });
+      pipe(writable);
+    });
+
+    expect(shellReady).toBe(true);
+    expect(content).toBe('');
+
+    await act(() => {
+      resolveText('head');
+    });
+    expect(content).toMatch(/^<!DOCTYPE html>/);
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head lang="en">
+          <meta content="before" />
+          <meta content="after" />
+          <meta itemprop="" />
+        </head>
+        <body>
+          <meta itemprop="" content="before" />
+          <meta itemprop="" content="after" />
+          <div>hello world</div>
+        </body>
+      </html>,
+    );
+  });
+
+  it('will render fallback Document when erroring a boundary above the body', async () => {
+    function Boom() {
+      throw new Error('Boom!');
+    }
+
+    function App() {
+      return (
+        <Suspense
+          fallback={
+            <html data-error-html="">
+              <body data-error-body="">
+                <span>hello error</span>
+              </body>
+            </html>
+          }>
+          <html data-content-html="">
+            <body data-content-body="">
+              <Boom />
+              <span>hello world</span>
+            </body>
+          </html>
+        </Suspense>
+      );
+    }
+
+    let content = '';
+    writable.on('data', chunk => (content += chunk));
+
+    let shellReady = false;
+    const errors = [];
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App />, {
+        onShellReady() {
+          shellReady = true;
+        },
+        onError(e) {
+          errors.push(e);
+        },
+      });
+      pipe(writable);
+    });
+
+    expect(shellReady).toBe(true);
+    expect(content).toMatch(/^<!DOCTYPE html>/);
+    expect(errors).toEqual([new Error('Boom!')]);
+    expect(getVisibleChildren(document)).toEqual(
+      <html data-error-html="">
+        <head />
+        <body data-error-body="">
+          <span>hello error</span>
+        </body>
+      </html>,
+    );
+  });
+
+  it('will hoist resources and hositables from a primary tree into the <head> of a client rendered fallback', async () => {
+    function Boom() {
+      throw new Error('Boom!');
+    }
+
+    function App() {
+      return (
+        <>
+          <meta content="hoistable before" />
+          <link rel="stylesheet" href="hoistable before" precedence="default" />
+          <Suspense
+            fallback={
+              <html data-error-html="">
+                <head data-error-head="">
+                  {/* we have to make this a non-hoistable because we don't current emit
+                      hoistables inside fallbacks because we have no way to clean them up
+                      on hydration */}
+                  <meta itemProp="" content="error document" />
+                </head>
+                <body data-error-body="">
+                  <span>hello error</span>
+                </body>
+              </html>
+            }>
+            <html data-content-html="">
+              <body data-content-body="">
+                <Boom />
+                <span>hello world</span>
+              </body>
+            </html>
+          </Suspense>
+          <meta content="hoistable after" />
+          <link rel="stylesheet" href="hoistable after" precedence="default" />
+        </>
+      );
+    }
+
+    let content = '';
+    writable.on('data', chunk => (content += chunk));
+
+    let shellReady = false;
+    const errors = [];
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App />, {
+        onShellReady() {
+          shellReady = true;
+        },
+        onError(e) {
+          errors.push(e);
+        },
+      });
+      pipe(writable);
+    });
+
+    expect(shellReady).toBe(true);
+    expect(content).toMatch(/^<!DOCTYPE html>/);
+    expect(errors).toEqual([new Error('Boom!')]);
+    expect(getVisibleChildren(document)).toEqual(
+      <html data-error-html="">
+        <head data-error-head="">
+          <link
+            rel="stylesheet"
+            href="hoistable before"
+            data-precedence="default"
+          />
+          <link
+            rel="stylesheet"
+            href="hoistable after"
+            data-precedence="default"
+          />
+          <meta content="hoistable before" />
+          <meta content="hoistable after" />
+          <meta itemprop="" content="error document" />
+        </head>
+        <body data-error-body="">
+          <span>hello error</span>
+        </body>
+      </html>,
+    );
+  });
+
+  it('Will wait to flush Document chunks until all boundaries which might contain a preamble are errored or resolved', async () => {
+    let rejectFirst;
+    const firstPromise = new Promise((_, reject) => {
+      rejectFirst = reject;
+    });
+    function First({children}) {
+      use(firstPromise);
+      return children;
+    }
+
+    let resolveSecond;
+    const secondPromise = new Promise(resolve => {
+      resolveSecond = resolve;
+    });
+    function Second({children}) {
+      use(secondPromise);
+      return children;
+    }
+
+    const hangingPromise = new Promise(() => {});
+    function Hanging({children}) {
+      use(hangingPromise);
+      return children;
+    }
+
+    function App() {
+      return (
+        <>
+          <Suspense fallback={<span>loading...</span>}>
+            <Suspense fallback={<span>inner loading...</span>}>
+              <First>
+                <span>first</span>
+              </First>
+            </Suspense>
+          </Suspense>
+          <Suspense fallback={<span>loading...</span>}>
+            <main>
+              <Second>
+                <span>second</span>
+              </Second>
+            </main>
+          </Suspense>
+          <div>
+            <Suspense fallback={<span>loading...</span>}>
+              <Hanging>
+                <span>third</span>
+              </Hanging>
+            </Suspense>
+          </div>
+        </>
+      );
+    }
+
+    let content = '';
+    writable.on('data', chunk => (content += chunk));
+
+    let shellReady = false;
+    const errors = [];
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App />, {
+        onShellReady() {
+          shellReady = true;
+        },
+        onError(e) {
+          errors.push(e);
+        },
+      });
+      pipe(writable);
+    });
+
+    expect(shellReady).toBe(true);
+    expect(content).toBe('');
+
+    await act(() => {
+      resolveSecond();
+    });
+    expect(content).toBe('');
+
+    await act(() => {
+      rejectFirst('Boom!');
+    });
+    expect(content.length).toBeGreaterThan(0);
+    expect(errors).toEqual(['Boom!']);
+
+    expect(getVisibleChildren(container)).toEqual([
+      <span>inner loading...</span>,
+      <main>
+        <span>second</span>
+      </main>,
+      <div>
+        <span>loading...</span>
+      </div>,
+    ]);
+  });
+
+  it('Can render a fallback <head> alongside a non-fallback body', async () => {
+    function Boom() {
+      throw new Error('Boom!');
+    }
+
+    function App() {
+      return (
+        <html>
+          <Suspense
+            fallback={
+              <head data-fallback="">
+                <meta itemProp="" content="fallback" />
+              </head>
+            }>
+            <Boom />
+            <head data-primary="">
+              <meta itemProp="" content="primary" />
+            </head>
+          </Suspense>
+          <Suspense
+            fallback={
+              <body data-fallback="">
+                <div>fallback body</div>
+              </body>
+            }>
+            <body data-primary="">
+              <div>primary body</div>
+            </body>
+          </Suspense>
+        </html>
+      );
+    }
+
+    let content = '';
+    writable.on('data', chunk => (content += chunk));
+
+    let shellReady = false;
+    const errors = [];
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App />, {
+        onShellReady() {
+          shellReady = true;
+        },
+        onError(e) {
+          errors.push(e);
+        },
+      });
+      pipe(writable);
+    });
+
+    expect(shellReady).toBe(true);
+    expect(content).toMatch(/^<!DOCTYPE html>/);
+    expect(errors).toEqual([new Error('Boom!')]);
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head data-fallback="">
+          <meta itemprop="" content="fallback" />
+        </head>
+        <body data-primary="">
+          <div>primary body</div>
+        </body>
+      </html>,
+    );
+  });
+
+  it('Can render a fallback <body> alongside a non-fallback head', async () => {
+    function Boom() {
+      throw new Error('Boom!');
+    }
+
+    function App() {
+      return (
+        <html>
+          <Suspense
+            fallback={
+              <head data-fallback="">
+                <meta itemProp="" content="fallback" />
+              </head>
+            }>
+            <head data-primary="">
+              <meta itemProp="" content="primary" />
+            </head>
+          </Suspense>
+          <Suspense
+            fallback={
+              <body data-fallback="">
+                <div>fallback body</div>
+              </body>
+            }>
+            <Boom />
+            <body data-primary="">
+              <div>primary body</div>
+            </body>
+          </Suspense>
+        </html>
+      );
+    }
+
+    let content = '';
+    writable.on('data', chunk => (content += chunk));
+
+    let shellReady = false;
+    const errors = [];
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App />, {
+        onShellReady() {
+          shellReady = true;
+        },
+        onError(e) {
+          errors.push(e);
+        },
+      });
+      pipe(writable);
+    });
+
+    expect(shellReady).toBe(true);
+    expect(content).toMatch(/^<!DOCTYPE html>/);
+    expect(errors).toEqual([new Error('Boom!')]);
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head data-primary="">
+          <meta itemprop="" content="primary" />
+        </head>
+        <body data-fallback="">
+          <div>fallback body</div>
+        </body>
+      </html>,
+    );
+  });
+
+  it('Can render a <head> outside of a containing <html>', async () => {
+    function App() {
+      return (
+        <>
+          <Suspense>
+            <html data-x="">
+              <body data-x="">
+                <span>hello world</span>
+              </body>
+            </html>
+          </Suspense>
+          <head data-y="">
+            <meta itemProp="" />
+          </head>
+        </>
+      );
+    }
+
+    let content = '';
+    writable.on('data', chunk => (content += chunk));
+
+    let shellReady = false;
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App />, {
+        onShellReady() {
+          shellReady = true;
+        },
+      });
+      pipe(writable);
+    });
+
+    expect(shellReady).toBe(true);
+    expect(content).toMatch(/^<!DOCTYPE html>/);
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html data-x="">
+        <head data-y="">
+          <meta itemprop="" />
+        </head>
+        <body data-x="">
+          <span>hello world</span>
+        </body>
+      </html>,
+    );
+  });
+
+  it('can render preamble tags in deeply nested indirect component trees', async () => {
+    function App() {
+      return (
+        <Html>
+          <DocumentMetadata />
+          <Main />
+        </Html>
+      );
+    }
+
+    let loadLanguage;
+    const langPromise = new Promise(r => {
+      loadLanguage = r;
+    });
+    function Html({children}) {
+      return (
+        <Suspense fallback={<FallbackHtml>{children}</FallbackHtml>}>
+          <MainHtml>{children}</MainHtml>
+        </Suspense>
+      );
+    }
+    function FallbackHtml({children}) {
+      return <html lang="default">{children}</html>;
+    }
+    function MainHtml({children}) {
+      const lang = use(langPromise);
+      return <html lang={lang}>{children}</html>;
+    }
+
+    let loadMetadata;
+    const metadataPromise = new Promise(r => {
+      loadMetadata = r;
+    });
+    function DocumentMetadata() {
+      return (
+        <Suspense fallback={<FallbackDocumentMetadata />}>
+          <MainDocumentMetadata />
+        </Suspense>
+      );
+    }
+    function FallbackDocumentMetadata() {
+      return (
+        <head data-fallback="">
+          <meta content="fallback metadata" />
+        </head>
+      );
+    }
+    function MainDocumentMetadata() {
+      const metadata = use(metadataPromise);
+      return (
+        <head data-main="">
+          {metadata.map(m => (
+            <meta content={m} key={m} />
+          ))}
+        </head>
+      );
+    }
+
+    let loadMainContent;
+    const mainContentPromise = new Promise(r => {
+      loadMainContent = r;
+    });
+    function Main() {
+      return (
+        <Suspense fallback={<Skeleton />}>
+          <PrimaryContent />
+        </Suspense>
+      );
+    }
+    function Skeleton() {
+      return (
+        <body data-fallback="">
+          <div>Skeleton UI</div>
+        </body>
+      );
+    }
+    function PrimaryContent() {
+      const content = use(mainContentPromise);
+      return (
+        <body data-main="">
+          <div>{content}</div>
+        </body>
+      );
+    }
+
+    let content = '';
+    writable.on('data', chunk => (content += chunk));
+
+    let shellReady = false;
+    const errors = [];
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App />, {
+        onShellReady() {
+          shellReady = true;
+        },
+        onError(e) {
+          errors.push(e);
+        },
+      });
+      pipe(writable);
+    });
+
+    expect(shellReady).toBe(true);
+    expect(content).toBe('');
+
+    await act(() => {
+      loadLanguage('es');
+    });
+    expect(content).toBe('');
+
+    await act(() => {
+      loadMainContent('This is soooo cool!');
+    });
+    expect(content).toBe('');
+
+    await act(() => {
+      loadMetadata(['author', 'published date']);
+    });
+    expect(content).toMatch(/^<!DOCTYPE html>/);
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html lang="es">
+        <head data-main="">
+          <meta content="author" />
+          <meta content="published date" />
+        </head>
+        <body data-main="">
+          <div>This is soooo cool!</div>
+        </body>
+      </html>,
+    );
+  });
+
+  it('will flush the preamble as soon as a complete preamble is available', async () => {
+    function BlockedOn({value, children}) {
+      readText(value);
+      return children;
+    }
+
+    function App() {
+      return (
+        <>
+          <Suspense fallback="loading before...">
+            <div>
+              <AsyncText text="before" />
+            </div>
+          </Suspense>
+          <Suspense fallback="loading document...">
+            <html>
+              <body>
+                <div>
+                  <AsyncText text="body" />
+                </div>
+              </body>
+            </html>
+          </Suspense>
+          <Suspense fallback="loading head...">
+            <head>
+              <BlockedOn value="head">
+                <meta content="head" />
+              </BlockedOn>
+            </head>
+          </Suspense>
+          <Suspense fallback="loading after...">
+            <div>
+              <AsyncText text="after" />
+            </div>
+          </Suspense>
+        </>
+      );
+    }
+
+    let content = '';
+    writable.on('data', chunk => (content += chunk));
+
+    let shellReady = false;
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App />, {
+        onShellReady() {
+          shellReady = true;
+        },
+      });
+      pipe(writable);
+    });
+
+    expect(shellReady).toBe(true);
+    expect(content).toBe('');
+
+    await act(() => {
+      resolveText('body');
+    });
+    expect(content).toBe('');
+
+    await act(() => {
+      resolveText('head');
+    });
+    expect(content).toMatch(/^<!DOCTYPE html>/);
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head>
+          <meta content="head" />
+        </head>
+        <body>
+          loading before...
+          <div>body</div>
+          loading after...
+        </body>
+      </html>,
+    );
   });
 });
