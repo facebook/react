@@ -5,6 +5,13 @@
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "react-server": "./dist/index.react-server.js",
+      "default": "./dist/index.js"
+    }
+  },
   "files": [
     "dist",
     "src"

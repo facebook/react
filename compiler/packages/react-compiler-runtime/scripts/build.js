@@ -21,8 +21,11 @@ const argv = yargs(process.argv.slice(2))
   .parse();
 
 const config = {
-  entryPoints: [path.join(__dirname, '../src/index.ts')],
-  outfile: path.join(__dirname, '../dist/index.js'),
+  entryPoints: [
+    path.join(__dirname, '../src/index.ts'),
+    path.join(__dirname, '../src/index.react-server.ts'),
+  ],
+  outdir: path.join(__dirname, '../dist'),
   bundle: true,
   external: ['react'],
   format: 'cjs',
