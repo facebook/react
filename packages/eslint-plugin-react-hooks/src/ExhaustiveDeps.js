@@ -304,6 +304,18 @@ export default {
               return false;
             }
           }
+          // Added logic to handle three-element tuples for useActionState
+          if (
+            name === 'useActionState' &&
+            id.type === 'ArrayPattern' &&
+            id.elements.length === 3 &&
+            isArray(resolved.identifiers)
+          ) {
+            // Is the third tuple value the same reference we're checking?
+            if (id.elements[2] === resolved.identifiers[0]) {
+              return false; // Third element (isPending) is dynamic
+            }
+          }
         } else if (name === 'useTransition') {
           // Only consider second value in initializing tuple stable.
           if (
@@ -320,7 +332,7 @@ export default {
         }
         // By default assume it's dynamic.
         return false;
-      }
+        
 
       // Some are just functions that don't reference anything dynamic.
       function isFunctionWithoutCapturedValues(resolved) {
