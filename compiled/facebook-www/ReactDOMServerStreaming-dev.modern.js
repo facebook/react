@@ -780,6 +780,9 @@ __DEV__ &&
       checkHtmlStringCoercion(scriptText);
       return ("" + scriptText).replace(scriptRegex, scriptReplacer);
     }
+    function createPreambleState() {
+      return { htmlChunks: null, headChunks: null, bodyChunks: null };
+    }
     function createFormatContext(insertionMode, selectedValue, tagScope) {
       return {
         insertionMode: insertionMode,
@@ -798,33 +801,34 @@ __DEV__ &&
             parentContext.tagScope
           );
         case "svg":
-          return createFormatContext(3, null, parentContext.tagScope);
+          return createFormatContext(4, null, parentContext.tagScope);
         case "picture":
           return createFormatContext(2, null, parentContext.tagScope | 2);
         case "math":
-          return createFormatContext(4, null, parentContext.tagScope);
+          return createFormatContext(5, null, parentContext.tagScope);
         case "foreignObject":
           return createFormatContext(2, null, parentContext.tagScope);
         case "table":
-          return createFormatContext(5, null, parentContext.tagScope);
+          return createFormatContext(6, null, parentContext.tagScope);
         case "thead":
         case "tbody":
         case "tfoot":
-          return createFormatContext(6, null, parentContext.tagScope);
-        case "colgroup":
-          return createFormatContext(8, null, parentContext.tagScope);
-        case "tr":
           return createFormatContext(7, null, parentContext.tagScope);
+        case "colgroup":
+          return createFormatContext(9, null, parentContext.tagScope);
+        case "tr":
+          return createFormatContext(8, null, parentContext.tagScope);
+        case "head":
+          if (2 > parentContext.insertionMode)
+            return createFormatContext(3, null, parentContext.tagScope);
+          break;
+        case "html":
+          if (0 === parentContext.insertionMode)
+            return createFormatContext(1, null, parentContext.tagScope);
       }
-      return 5 <= parentContext.insertionMode
+      return 6 <= parentContext.insertionMode || 2 > parentContext.insertionMode
         ? createFormatContext(2, null, parentContext.tagScope)
-        : 0 === parentContext.insertionMode
-          ? "html" === type
-            ? createFormatContext(1, null, parentContext.tagScope)
-            : createFormatContext(2, null, parentContext.tagScope)
-          : 1 === parentContext.insertionMode
-            ? createFormatContext(2, null, parentContext.tagScope)
-            : parentContext;
+        : parentContext;
     }
     function pushTextInstance(target, text, renderState, textEmbedded) {
       if ("" === text) return textEmbedded;
@@ -1499,6 +1503,7 @@ __DEV__ &&
       props,
       resumableState,
       renderState,
+      preambleState,
       hoistableState,
       formatContext,
       textEmbedded,
@@ -1544,8 +1549,8 @@ __DEV__ &&
         error$jscomp$2(
           "A component is `contentEditable` and contains `children` managed by React. It is now your responsibility to guarantee that none of those nodes are unexpectedly modified or duplicated. This is probably not intentional."
         );
-      3 !== formatContext.insertionMode &&
-        4 !== formatContext.insertionMode &&
+      4 !== formatContext.insertionMode &&
+        5 !== formatContext.insertionMode &&
         -1 === type.indexOf("-") &&
         type.toLowerCase() !== type &&
         error$jscomp$2(
@@ -2153,7 +2158,7 @@ __DEV__ &&
                       ));
           }
           if (
-            3 === insertionMode ||
+            4 === insertionMode ||
             noscriptTagInScope ||
             null != props.itemProp
           )
@@ -2172,7 +2177,7 @@ __DEV__ &&
             href = props.href,
             precedence = props.precedence;
           if (
-            3 === formatContext.insertionMode ||
+            4 === formatContext.insertionMode ||
             formatContext.tagScope & 1 ||
             null != props.itemProp ||
             "string" !== typeof rel ||
@@ -2288,7 +2293,7 @@ __DEV__ &&
             "symbol" === typeof asyncProp ||
             props.onLoad ||
             props.onError ||
-            3 === formatContext.insertionMode ||
+            4 === formatContext.insertionMode ||
             formatContext.tagScope & 1 ||
             null != props.itemProp
           )
@@ -2351,7 +2356,7 @@ __DEV__ &&
           var precedence$jscomp$0 = props.precedence,
             href$jscomp$0 = props.href;
           if (
-            3 === insertionMode$jscomp$0 ||
+            4 === insertionMode$jscomp$0 ||
             noscriptTagInScope$jscomp$0 ||
             null != props.itemProp ||
             "string" !== typeof precedence$jscomp$0 ||
@@ -2469,7 +2474,7 @@ __DEV__ &&
           return JSCompiler_inline_result$jscomp$7;
         case "meta":
           if (
-            3 === formatContext.insertionMode ||
+            4 === formatContext.insertionMode ||
             formatContext.tagScope & 1 ||
             null != props.itemProp
           )
@@ -2653,13 +2658,13 @@ __DEV__ &&
         case "missing-glyph":
           break;
         case "head":
-          if (
-            2 > formatContext.insertionMode &&
-            null === renderState.headChunks
-          ) {
-            renderState.headChunks = [];
+          if (2 > formatContext.insertionMode) {
+            var preamble = preambleState || renderState.preamble;
+            if (preamble.headChunks)
+              throw Error("The `<head>` tag may only be rendered once.");
+            preamble.headChunks = [];
             var JSCompiler_inline_result$jscomp$9 = pushStartGenericElement(
-              renderState.headChunks,
+              preamble.headChunks,
               props,
               "head"
             );
@@ -2670,24 +2675,42 @@ __DEV__ &&
               "head"
             );
           return JSCompiler_inline_result$jscomp$9;
-        case "html":
-          if (
-            0 === formatContext.insertionMode &&
-            null === renderState.htmlChunks
-          ) {
-            renderState.htmlChunks = [doctypeChunk];
+        case "body":
+          if (2 > formatContext.insertionMode) {
+            var preamble$jscomp$0 = preambleState || renderState.preamble;
+            if (preamble$jscomp$0.bodyChunks)
+              throw Error("The `<body>` tag may only be rendered once.");
+            preamble$jscomp$0.bodyChunks = [];
             var JSCompiler_inline_result$jscomp$10 = pushStartGenericElement(
-              renderState.htmlChunks,
+              preamble$jscomp$0.bodyChunks,
               props,
-              "html"
+              "body"
             );
           } else
             JSCompiler_inline_result$jscomp$10 = pushStartGenericElement(
               target$jscomp$0,
               props,
-              "html"
+              "body"
             );
           return JSCompiler_inline_result$jscomp$10;
+        case "html":
+          if (0 === formatContext.insertionMode) {
+            var preamble$jscomp$1 = preambleState || renderState.preamble;
+            if (preamble$jscomp$1.htmlChunks)
+              throw Error("The `<html>` tag may only be rendered once.");
+            preamble$jscomp$1.htmlChunks = [doctypeChunk];
+            var JSCompiler_inline_result$jscomp$11 = pushStartGenericElement(
+              preamble$jscomp$1.htmlChunks,
+              props,
+              "html"
+            );
+          } else
+            JSCompiler_inline_result$jscomp$11 = pushStartGenericElement(
+              target$jscomp$0,
+              props,
+              "html"
+            );
+          return JSCompiler_inline_result$jscomp$11;
         default:
           if (-1 !== type.indexOf("-")) {
             target$jscomp$0.push(startChunkForTag(type));
@@ -2754,6 +2777,15 @@ __DEV__ &&
         ((chunk = "</" + tag + ">"), endTagCache.set(tag, chunk));
       return chunk;
     }
+    function hoistPreambleState(renderState, preambleState) {
+      renderState = renderState.preamble;
+      null === renderState.htmlChunks &&
+        (renderState.htmlChunks = preambleState.htmlChunks);
+      null === renderState.headChunks &&
+        (renderState.headChunks = preambleState.headChunks);
+      null === renderState.bodyChunks &&
+        (renderState.bodyChunks = preambleState.bodyChunks);
+    }
     function writeBootstrap(destination, renderState) {
       renderState = renderState.bootstrapChunks;
       for (var i = 0; i < renderState.length - 1; i++)
@@ -2779,6 +2811,7 @@ __DEV__ &&
       switch (formatContext.insertionMode) {
         case 0:
         case 1:
+        case 3:
         case 2:
           return (
             (destination.buffer += '<div hidden id="'),
@@ -2787,7 +2820,7 @@ __DEV__ &&
             (destination.buffer += renderState),
             writeChunkAndReturn(destination, '">')
           );
-        case 3:
+        case 4:
           return (
             (destination.buffer +=
               '<svg aria-hidden="true" style="display:none" id="'),
@@ -2796,7 +2829,7 @@ __DEV__ &&
             (destination.buffer += renderState),
             writeChunkAndReturn(destination, '">')
           );
-        case 4:
+        case 5:
           return (
             (destination.buffer +=
               '<math aria-hidden="true" style="display:none" id="'),
@@ -2805,7 +2838,7 @@ __DEV__ &&
             (destination.buffer += renderState),
             writeChunkAndReturn(destination, '">')
           );
-        case 5:
+        case 6:
           return (
             (destination.buffer += '<table hidden id="'),
             (destination.buffer += renderState.segmentPrefix),
@@ -2813,7 +2846,7 @@ __DEV__ &&
             (destination.buffer += renderState),
             writeChunkAndReturn(destination, '">')
           );
-        case 6:
+        case 7:
           return (
             (destination.buffer += '<table hidden><tbody id="'),
             (destination.buffer += renderState.segmentPrefix),
@@ -2821,7 +2854,7 @@ __DEV__ &&
             (destination.buffer += renderState),
             writeChunkAndReturn(destination, '">')
           );
-        case 7:
+        case 8:
           return (
             (destination.buffer += '<table hidden><tr id="'),
             (destination.buffer += renderState.segmentPrefix),
@@ -2829,7 +2862,7 @@ __DEV__ &&
             (destination.buffer += renderState),
             writeChunkAndReturn(destination, '">')
           );
-        case 8:
+        case 9:
           return (
             (destination.buffer += '<table hidden><colgroup id="'),
             (destination.buffer += renderState.segmentPrefix),
@@ -2845,19 +2878,20 @@ __DEV__ &&
       switch (formatContext.insertionMode) {
         case 0:
         case 1:
+        case 3:
         case 2:
           return writeChunkAndReturn(destination, "</div>");
-        case 3:
-          return writeChunkAndReturn(destination, "</svg>");
         case 4:
-          return writeChunkAndReturn(destination, "</math>");
+          return writeChunkAndReturn(destination, "</svg>");
         case 5:
-          return writeChunkAndReturn(destination, "</table>");
+          return writeChunkAndReturn(destination, "</math>");
         case 6:
-          return writeChunkAndReturn(destination, "</tbody></table>");
+          return writeChunkAndReturn(destination, "</table>");
         case 7:
-          return writeChunkAndReturn(destination, "</tr></table>");
+          return writeChunkAndReturn(destination, "</tbody></table>");
         case 8:
+          return writeChunkAndReturn(destination, "</tr></table>");
+        case 9:
           return writeChunkAndReturn(destination, "</colgroup></table>");
         default:
           throw Error("Unknown insertion mode. This is a bug in React.");
@@ -4178,7 +4212,7 @@ __DEV__ &&
       this.status = 10;
       this.fatalError = null;
       this.pendingRootTasks = this.allPendingTasks = this.nextSegmentId = 0;
-      this.completedRootSegment = null;
+      this.completedPreambleSegments = this.completedRootSegment = null;
       this.abortableTasks = abortSet;
       this.pingedTasks = [];
       this.clientRenderedBoundaries = [];
@@ -4199,7 +4233,12 @@ __DEV__ &&
       1 === request.pingedTasks.length &&
         (request.flushScheduled = null !== request.destination);
     }
-    function createSuspenseBoundary(request, fallbackAbortableTasks) {
+    function createSuspenseBoundary(
+      request,
+      fallbackAbortableTasks,
+      contentPreamble,
+      fallbackPreamble
+    ) {
       return {
         status: 0,
         rootSegmentID: -1,
@@ -4211,6 +4250,8 @@ __DEV__ &&
         errorDigest: null,
         contentState: createHoistableState(),
         fallbackState: createHoistableState(),
+        contentPreamble: contentPreamble,
+        fallbackPreamble: fallbackPreamble,
         trackedContentKeyPath: null,
         trackedFallbackNode: null,
         errorMessage: null,
@@ -4225,6 +4266,7 @@ __DEV__ &&
       childIndex,
       blockedBoundary,
       blockedSegment,
+      blockedPreamble,
       hoistableState,
       abortSet,
       keyPath,
@@ -4249,6 +4291,7 @@ __DEV__ &&
         },
         blockedBoundary: blockedBoundary,
         blockedSegment: blockedSegment,
+        blockedPreamble: blockedPreamble,
         hoistableState: hoistableState,
         abortSet: abortSet,
         keyPath: keyPath,
@@ -4295,6 +4338,7 @@ __DEV__ &&
         },
         blockedBoundary: blockedBoundary,
         blockedSegment: null,
+        blockedPreamble: null,
         hoistableState: hoistableState,
         abortSet: abortSet,
         keyPath: keyPath,
@@ -4319,11 +4363,12 @@ __DEV__ &&
     ) {
       return {
         status: 0,
+        parentFlushed: !1,
         id: -1,
         index: index,
-        parentFlushed: !1,
         chunks: [],
         children: [],
+        preambleChildren: [],
         parentFormatContext: parentFormatContext,
         boundary: boundary,
         lastPushedText: lastPushedText,
@@ -5039,12 +5084,13 @@ __DEV__ &&
             (task.formatContext = defaultProps),
             (task.keyPath = addendum);
         else {
-          addendum = pushStartInstance(
+          ref = pushStartInstance(
             newProps.chunks,
             type,
             props,
             request.resumableState,
             request.renderState,
+            task.blockedPreamble,
             task.hoistableState,
             task.formatContext,
             newProps.lastPushedText,
@@ -5052,12 +5098,47 @@ __DEV__ &&
           );
           newProps.lastPushedText = !1;
           defaultProps = task.formatContext;
-          ref = task.keyPath;
-          task.formatContext = getChildFormatContext(defaultProps, type, props);
+          addendum = task.keyPath;
           task.keyPath = keyPath;
-          renderNode(request, task, addendum, -1);
+          3 ===
+          (task.formatContext = getChildFormatContext(
+            defaultProps,
+            type,
+            props
+          )).insertionMode
+            ? ((keyPath = createPendingSegment(
+                request,
+                0,
+                null,
+                task.formatContext,
+                !1,
+                !1
+              )),
+              newProps.preambleChildren.push(keyPath),
+              (keyPath = createRenderTask(
+                request,
+                null,
+                ref,
+                -1,
+                task.blockedBoundary,
+                keyPath,
+                task.blockedPreamble,
+                task.hoistableState,
+                request.abortableTasks,
+                task.keyPath,
+                task.formatContext,
+                task.context,
+                task.treeContext,
+                task.componentStack,
+                task.isFallback,
+                emptyContextObject,
+                enableOwnerStacks ? task.debugTask : null
+              )),
+              pushComponentStack(keyPath),
+              request.pingedTasks.push(keyPath))
+            : renderNode(request, task, ref, -1);
           task.formatContext = defaultProps;
-          task.keyPath = ref;
+          task.keyPath = addendum;
           a: {
             task = newProps.chunks;
             request = request.resumableState;
@@ -5092,6 +5173,9 @@ __DEV__ &&
                   request.hasHtml = !0;
                   break a;
                 }
+                break;
+              case "head":
+                if (1 >= defaultProps.insertionMode) break a;
             }
             task.push(endChunkForTag(type));
           }
@@ -5140,25 +5224,39 @@ __DEV__ &&
               }
             } else {
               type = task.keyPath;
-              var parentBoundary = task.blockedBoundary,
-                parentHoistableState = task.hoistableState;
-              ref = task.blockedSegment;
-              _propName = props.fallback;
+              var parentBoundary = task.blockedBoundary;
+              ref = task.blockedPreamble;
+              var parentHoistableState = task.hoistableState;
+              _propName = task.blockedSegment;
+              propName = props.fallback;
               props = props.children;
               var fallbackAbortSet = new Set();
-              propName = createSuspenseBoundary(request, fallbackAbortSet);
+              var newBoundary =
+                2 > task.formatContext.insertionMode
+                  ? createSuspenseBoundary(
+                      request,
+                      fallbackAbortSet,
+                      createPreambleState(),
+                      createPreambleState()
+                    )
+                  : createSuspenseBoundary(
+                      request,
+                      fallbackAbortSet,
+                      null,
+                      null
+                    );
               null !== request.trackedPostpones &&
-                (propName.trackedContentKeyPath = keyPath);
+                (newBoundary.trackedContentKeyPath = keyPath);
               var boundarySegment = createPendingSegment(
                 request,
-                ref.chunks.length,
-                propName,
+                _propName.chunks.length,
+                newBoundary,
                 task.formatContext,
                 !1,
                 !1
               );
-              ref.children.push(boundarySegment);
-              ref.lastPushedText = !1;
+              _propName.children.push(boundarySegment);
+              _propName.lastPushedText = !1;
               var contentRootSegment = createPendingSegment(
                 request,
                 0,
@@ -5172,12 +5270,13 @@ __DEV__ &&
                 newProps = [keyPath[0], "Suspense Fallback", keyPath[2]];
                 defaultProps = [newProps[1], newProps[2], [], null];
                 request.trackedPostpones.workingMap.set(newProps, defaultProps);
-                propName.trackedFallbackNode = defaultProps;
+                newBoundary.trackedFallbackNode = defaultProps;
                 task.blockedSegment = boundarySegment;
+                task.blockedPreamble = newBoundary.fallbackPreamble;
                 task.keyPath = newProps;
                 boundarySegment.status = 6;
                 try {
-                  renderNode(request, task, _propName, -1),
+                  renderNode(request, task, propName, -1),
                     boundarySegment.lastPushedText &&
                       boundarySegment.textEmbedded &&
                       boundarySegment.chunks.push("\x3c!-- --\x3e"),
@@ -5188,16 +5287,19 @@ __DEV__ &&
                     thrownValue)
                   );
                 } finally {
-                  (task.blockedSegment = ref), (task.keyPath = type);
+                  (task.blockedSegment = _propName),
+                    (task.blockedPreamble = ref),
+                    (task.keyPath = type);
                 }
                 task = createRenderTask(
                   request,
                   null,
                   props,
                   -1,
-                  propName,
+                  newBoundary,
                   contentRootSegment,
-                  propName.contentState,
+                  newBoundary.contentPreamble,
+                  newBoundary.contentState,
                   task.abortSet,
                   keyPath,
                   task.formatContext,
@@ -5211,8 +5313,9 @@ __DEV__ &&
                 pushComponentStack(task);
                 request.pingedTasks.push(task);
               } else {
-                task.blockedBoundary = propName;
-                task.hoistableState = propName.contentState;
+                task.blockedBoundary = newBoundary;
+                task.blockedPreamble = newBoundary.contentPreamble;
+                task.hoistableState = newBoundary.contentState;
                 task.blockedSegment = contentRootSegment;
                 task.keyPath = keyPath;
                 contentRootSegment.status = 6;
@@ -5223,14 +5326,17 @@ __DEV__ &&
                       contentRootSegment.textEmbedded &&
                       contentRootSegment.chunks.push("\x3c!-- --\x3e"),
                     (contentRootSegment.status = 1),
-                    queueCompletedSegment(propName, contentRootSegment),
-                    0 === propName.pendingTasks && 0 === propName.status)
+                    queueCompletedSegment(newBoundary, contentRootSegment),
+                    0 === newBoundary.pendingTasks && 0 === newBoundary.status)
                   ) {
-                    propName.status = 1;
+                    newBoundary.status = 1;
+                    0 === request.pendingRootTasks &&
+                      task.blockedPreamble &&
+                      preparePreamble(request);
                     break a;
                   }
                 } catch (thrownValue$2) {
-                  (propName.status = 4),
+                  (newBoundary.status = 4),
                     12 === request.status
                       ? ((contentRootSegment.status = 3),
                         (newProps = request.fatalError))
@@ -5244,27 +5350,29 @@ __DEV__ &&
                       enableOwnerStacks ? task.debugTask : null
                     )),
                     encodeErrorForBoundary(
-                      propName,
+                      newBoundary,
                       addendum,
                       newProps,
                       defaultProps,
                       !1
                     ),
-                    untrackBoundary(request, propName);
+                    untrackBoundary(request, newBoundary);
                 } finally {
                   (task.blockedBoundary = parentBoundary),
+                    (task.blockedPreamble = ref),
                     (task.hoistableState = parentHoistableState),
-                    (task.blockedSegment = ref),
+                    (task.blockedSegment = _propName),
                     (task.keyPath = type);
                 }
                 task = createRenderTask(
                   request,
                   null,
-                  _propName,
+                  propName,
                   -1,
                   parentBoundary,
                   boundarySegment,
-                  propName.fallbackState,
+                  newBoundary.fallbackPreamble,
+                  newBoundary.fallbackState,
                   fallbackAbortSet,
                   [keyPath[0], "Suspense Fallback", keyPath[2]],
                   task.formatContext,
@@ -5285,9 +5393,9 @@ __DEV__ &&
           switch (type.$$typeof) {
             case REACT_FORWARD_REF_TYPE:
               if ("ref" in props)
-                for (boundarySegment in ((newProps = {}), props))
-                  "ref" !== boundarySegment &&
-                    (newProps[boundarySegment] = props[boundarySegment]);
+                for (newBoundary in ((newProps = {}), props))
+                  "ref" !== newBoundary &&
+                    (newProps[newBoundary] = props[newBoundary]);
               else newProps = props;
               type = renderWithHooks(
                 request,
@@ -5477,17 +5585,27 @@ __DEV__ &&
                 previousReplaySet = task.replay,
                 parentBoundary = task.blockedBoundary,
                 parentHoistableState = task.hoistableState,
-                content = props.children;
-              props = props.fallback;
-              var fallbackAbortSet = new Set(),
-                resumedBoundary = createSuspenseBoundary(
-                  request,
-                  fallbackAbortSet
-                );
-              resumedBoundary.parentFlushed = !0;
-              resumedBoundary.rootSegmentID = type;
-              task.blockedBoundary = resumedBoundary;
-              task.hoistableState = resumedBoundary.contentState;
+                content = props.children,
+                fallback = props.fallback,
+                fallbackAbortSet = new Set();
+              props =
+                2 > task.formatContext.insertionMode
+                  ? createSuspenseBoundary(
+                      request,
+                      fallbackAbortSet,
+                      createPreambleState(),
+                      createPreambleState()
+                    )
+                  : createSuspenseBoundary(
+                      request,
+                      fallbackAbortSet,
+                      null,
+                      null
+                    );
+              props.parentFlushed = !0;
+              props.rootSegmentID = type;
+              task.blockedBoundary = props;
+              task.hoistableState = props.contentState;
               task.keyPath = keyPath;
               task.replay = { nodes: ref, slots: name, pendingTasks: 1 };
               try {
@@ -5500,16 +5618,13 @@ __DEV__ &&
                     "Couldn't find all resumable slots by key/index during replaying. The tree doesn't match so React will fallback to client rendering."
                   );
                 task.replay.pendingTasks--;
-                if (
-                  0 === resumedBoundary.pendingTasks &&
-                  0 === resumedBoundary.status
-                ) {
-                  resumedBoundary.status = 1;
-                  request.completedBoundaries.push(resumedBoundary);
+                if (0 === props.pendingTasks && 0 === props.status) {
+                  props.status = 1;
+                  request.completedBoundaries.push(props);
                   break a;
                 }
               } catch (error$3) {
-                (resumedBoundary.status = 4),
+                (props.status = 4),
                   (childNodes = getThrownInfo(task.componentStack)),
                   (replay = logRecoverableError(
                     request,
@@ -5518,14 +5633,14 @@ __DEV__ &&
                     enableOwnerStacks ? task.debugTask : null
                   )),
                   encodeErrorForBoundary(
-                    resumedBoundary,
+                    props,
                     replay,
                     error$3,
                     childNodes,
                     !1
                   ),
                   task.replay.pendingTasks--,
-                  request.clientRenderedBoundaries.push(resumedBoundary);
+                  request.clientRenderedBoundaries.push(props);
               } finally {
                 (task.blockedBoundary = parentBoundary),
                   (task.hoistableState = parentHoistableState),
@@ -5536,10 +5651,10 @@ __DEV__ &&
                 request,
                 null,
                 { nodes: keyOrIndex, slots: node, pendingTasks: 0 },
-                props,
+                fallback,
                 -1,
                 parentBoundary,
-                resumedBoundary.fallbackState,
+                props.fallbackState,
                 fallbackAbortSet,
                 [keyPath[0], "Suspense Fallback", keyPath[2]],
                 task.formatContext,
@@ -5956,6 +6071,7 @@ __DEV__ &&
         task.childIndex,
         task.blockedBoundary,
         newSegment,
+        task.blockedPreamble,
         task.hoistableState,
         task.abortSet,
         task.keyPath,
@@ -6111,7 +6227,12 @@ __DEV__ &&
             errorDigest = errorDigest$jscomp$0,
             errorInfo = errorInfo$jscomp$0,
             wasAborted = aborted,
-            resumedBoundary = createSuspenseBoundary(request, new Set());
+            resumedBoundary = createSuspenseBoundary(
+              request,
+              new Set(),
+              null,
+              null
+            );
           resumedBoundary.parentFlushed = !0;
           resumedBoundary.rootSegmentID = node;
           resumedBoundary.status = 4;
@@ -6264,6 +6385,7 @@ __DEV__ &&
     }
     function completeShell(request) {
       null === request.trackedPostpones && safelyEmitEarlyPreloads(request, !0);
+      null === request.trackedPostpones && preparePreamble(request);
       request.onShellError = noop;
       request = request.onShellReady;
       request();
@@ -6276,6 +6398,7 @@ __DEV__ &&
           : null === request.completedRootSegment ||
               5 !== request.completedRootSegment.status
       );
+      preparePreamble(request);
       request = request.onAllReady;
       request();
     }
@@ -6320,7 +6443,11 @@ __DEV__ &&
                     abortTaskSoft,
                     request
                   ),
-                  boundary.fallbackAbortableTasks.clear()))
+                  boundary.fallbackAbortableTasks.clear(),
+                  0 === request.pendingRootTasks &&
+                    null === request.trackedPostpones &&
+                    null !== boundary.contentPreamble &&
+                    preparePreamble(request)))
               : null !== segment &&
                 segment.parentFlushed &&
                 1 === segment.status &&
@@ -6330,6 +6457,85 @@ __DEV__ &&
                   request.partialBoundaries.push(boundary)));
       request.allPendingTasks--;
       0 === request.allPendingTasks && completeAll(request);
+    }
+    function preparePreambleFromSubtree(
+      request,
+      segment,
+      collectedPreambleSegments
+    ) {
+      segment.preambleChildren.length &&
+        collectedPreambleSegments.push(segment.preambleChildren);
+      for (var pendingPreambles = !1, i = 0; i < segment.children.length; i++)
+        pendingPreambles =
+          preparePreambleFromSegment(
+            request,
+            segment.children[i],
+            collectedPreambleSegments
+          ) || pendingPreambles;
+      return pendingPreambles;
+    }
+    function preparePreambleFromSegment(
+      request,
+      segment,
+      collectedPreambleSegments
+    ) {
+      var boundary = segment.boundary;
+      if (null === boundary)
+        return preparePreambleFromSubtree(
+          request,
+          segment,
+          collectedPreambleSegments
+        );
+      var preamble = boundary.contentPreamble,
+        fallbackPreamble = boundary.fallbackPreamble;
+      if (null === preamble || null === fallbackPreamble) return !1;
+      switch (boundary.status) {
+        case 1:
+          hoistPreambleState(request.renderState, preamble);
+          segment = boundary.completedSegments[0];
+          if (!segment)
+            throw Error(
+              "A previously unvisited boundary must have exactly one root segment. This is a bug in React."
+            );
+          return preparePreambleFromSubtree(
+            request,
+            segment,
+            collectedPreambleSegments
+          );
+        case 5:
+          if (null !== request.trackedPostpones) return !0;
+        case 4:
+          if (1 === segment.status)
+            return (
+              hoistPreambleState(request.renderState, fallbackPreamble),
+              preparePreambleFromSubtree(
+                request,
+                segment,
+                collectedPreambleSegments
+              )
+            );
+        default:
+          return !0;
+      }
+    }
+    function preparePreamble(request) {
+      if (
+        request.completedRootSegment &&
+        null === request.completedPreambleSegments
+      ) {
+        var collectedPreambleSegments = [],
+          hasPendingPreambles = preparePreambleFromSegment(
+            request,
+            request.completedRootSegment,
+            collectedPreambleSegments
+          ),
+          preamble = request.renderState.preamble;
+        if (
+          !1 === hasPendingPreambles ||
+          (preamble.headChunks && preamble.bodyChunks)
+        )
+          request.completedPreambleSegments = collectedPreambleSegments;
+      }
     }
     function flushSubtree(request, destination, segment, hoistableState) {
       segment.parentFlushed = !0;
@@ -6592,6 +6798,8 @@ __DEV__ &&
             completedRootSegment = request.completedRootSegment;
           if (null !== completedRootSegment) {
             if (5 === completedRootSegment.status) return;
+            var completedPreambleSegments = request.completedPreambleSegments;
+            if (null === completedPreambleSegments) return;
             var renderState = request.renderState;
             if (
               (0 !== request.allPendingTasks ||
@@ -6606,8 +6814,9 @@ __DEV__ &&
                 ((resumableState.scriptResources[src] = EXISTS),
                 renderState.scripts.add(chunks));
             }
-            var htmlChunks = renderState.htmlChunks,
-              headChunks = renderState.headChunks,
+            var preamble = renderState.preamble,
+              htmlChunks = preamble.htmlChunks,
+              headChunks = preamble.headChunks,
               i$jscomp$0;
             if (htmlChunks) {
               for (i$jscomp$0 = 0; i$jscomp$0 < htmlChunks.length; i$jscomp$0++)
@@ -6670,11 +6879,38 @@ __DEV__ &&
               i$jscomp$0++
             )
               destination.buffer += hoistableChunks[i$jscomp$0];
-            hoistableChunks.length = 0;
-            if (htmlChunks && null === headChunks) {
+            for (
+              renderState = hoistableChunks.length = 0;
+              renderState < completedPreambleSegments.length;
+              renderState++
+            ) {
+              var segments = completedPreambleSegments[renderState];
+              for (
+                _renderState$external = 0;
+                _renderState$external < segments.length;
+                _renderState$external++
+              )
+                flushSegment(
+                  request,
+                  destination,
+                  segments[_renderState$external],
+                  null
+                );
+            }
+            var preamble$jscomp$0 = request.renderState.preamble,
+              headChunks$jscomp$0 = preamble$jscomp$0.headChunks;
+            if (preamble$jscomp$0.htmlChunks || headChunks$jscomp$0) {
               var chunk$jscomp$0 = endChunkForTag("head");
               destination.buffer += chunk$jscomp$0;
             }
+            var bodyChunks = preamble$jscomp$0.bodyChunks;
+            if (bodyChunks)
+              for (
+                completedPreambleSegments = 0;
+                completedPreambleSegments < bodyChunks.length;
+                completedPreambleSegments++
+              )
+                destination.buffer += bodyChunks[completedPreambleSegments];
             flushSegment(request, destination, completedRootSegment, null);
             request.completedRootSegment = null;
             writeBootstrap(destination, request.renderState);
@@ -8487,7 +8723,11 @@ __DEV__ &&
                           boundary$jscomp$0.parentFlushed &&
                             request$jscomp$0.clientRenderedBoundaries.push(
                               boundary$jscomp$0
-                            )));
+                            ),
+                          0 === request$jscomp$0.pendingRootTasks &&
+                            null === request$jscomp$0.trackedPostpones &&
+                            null !== boundary$jscomp$0.contentPreamble &&
+                            preparePreamble(request$jscomp$0)));
                     request$jscomp$0.allPendingTasks--;
                     0 === request$jscomp$0.allPendingTasks &&
                       completeAll(request$jscomp$0);
@@ -8604,8 +8844,7 @@ __DEV__ &&
         segmentPrefix: idPrefix + "S:",
         boundaryPrefix: idPrefix + "B:",
         startInlineScript: "<script>",
-        htmlChunks: null,
-        headChunks: null,
+        preamble: createPreambleState(),
         externalRuntimeScript: externalRuntimeScript,
         bootstrapChunks: streamingFormat,
         importMapChunks: [],
@@ -8763,6 +9002,7 @@ __DEV__ &&
         -1,
         null,
         resumableState,
+        null,
         null,
         options.abortableTasks,
         null,
