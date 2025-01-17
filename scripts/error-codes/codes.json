@@ -533,5 +533,6 @@
   "545": "The %s tag may only be rendered once.",
   "546": "useEffect CRUD overload is not enabled in this build of React.",
   "547": "startGesture cannot be called during server rendering.",
-  "548": "Finished rendering the gesture lane but there were no pending gestures. React should not have started a render in this case. This is a bug in React."
+  "548": "Finished rendering the gesture lane but there were no pending gestures. React should not have started a render in this case. This is a bug in React.",
+  "549": "React expected a Fragment Ref to have a parent HTMLElement or to fallback to an <html> element (document.documentElement). But no parent or <html> element was found. React never removes the documentElement for any Document it renders into so the cause is likely in some other script running on this page."
 }
