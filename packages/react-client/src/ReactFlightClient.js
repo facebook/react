@@ -2123,8 +2123,15 @@ function resolveErrorProd(response: Response): Error {
 
 function resolveErrorDev(
   response: Response,
-  errorInfo: {message: string, stack: ReactStackTrace, env: string, ...},
+  errorInfo: {
+    name: string,
+    message: string,
+    stack: ReactStackTrace,
+    env: string,
+    ...
+  },
 ): Error {
+  const name: string = errorInfo.name;
   const message: string = errorInfo.message;
   const stack: ReactStackTrace = errorInfo.stack;
   const env: string = errorInfo.env;
@@ -2156,6 +2163,7 @@ function resolveErrorDev(
     error = callStack();
   }
 
+  (error: any).name = name;
   (error: any).environmentName = env;
   return error;
 }

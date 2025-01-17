@@ -3093,10 +3093,12 @@ function emitPostponeChunk(
 
 function serializeErrorValue(request: Request, error: Error): string {
   if (__DEV__) {
+    let name;
     let message;
     let stack: ReactStackTrace;
     let env = (0, request.environmentName)();
     try {
+      name = error.name;
       // eslint-disable-next-line react-internal/safe-string-coercion
       message = String(error.message);
       stack = filterStackTrace(request, error, 0);
@@ -3110,7 +3112,7 @@ function serializeErrorValue(request: Request, error: Error): string {
       message = 'An error occurred but serializing the error message failed.';
       stack = [];
     }
-    const errorInfo = {message, stack, env};
+    const errorInfo = {name, message, stack, env};
     const id = outlineModel(request, errorInfo);
     return '$Z' + id.toString(16);
   } else {

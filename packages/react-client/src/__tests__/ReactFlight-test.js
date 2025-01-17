@@ -694,9 +694,17 @@ describe('ReactFlight', () => {
   });
 
   it('can transport Error objects as values', async () => {
+    class CustomError extends Error {
+      constructor(message) {
+        super(message);
+        this.name = 'Custom';
+      }
+    }
+
     function ComponentClient({prop}) {
       return `
         is error: ${prop instanceof Error}
+        name: ${prop.name}
         message: ${prop.message}
         stack: ${normalizeCodeLocInfo(prop.stack).split('\n').slice(0, 2).join('\n')}
         environmentName: ${prop.environmentName}
@@ -705,7 +713,7 @@ describe('ReactFlight', () => {
     const Component = clientReference(ComponentClient);
 
     function ServerComponent() {
-      const error = new Error('hello');
+      const error = new CustomError('hello');
       return <Component prop={error} />;
     }
 
@@ -718,14 +726,16 @@ describe('ReactFlight', () => {
     if (__DEV__) {
       expect(ReactNoop).toMatchRenderedOutput(`
         is error: true
+        name: Custom
         message: hello
-        stack: Error: hello
+        stack: Custom: hello
     in ServerComponent (at **)
         environmentName: Server
       `);
     } else {
       expect(ReactNoop).toMatchRenderedOutput(`
         is error: true
+        name: Error
         message: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.
         stack: Error: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.
         environmentName: undefined
