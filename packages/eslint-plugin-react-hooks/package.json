@@ -10,8 +10,7 @@
   "files": [
     "LICENSE",
     "README.md",
-    "index.js",
-    "cjs"
+    "build"
   ],
   "keywords": [
     "eslint",
@@ -19,10 +18,17 @@
     "eslintplugin",
     "react"
   ],
+  "scripts": {
+    "build": "tsup",
+    "test": "tsup && jest",
+    "typecheck": "tsc"
+  },
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/facebook/react/issues"
   },
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
   "engines": {
     "node": ">=10"
   },
