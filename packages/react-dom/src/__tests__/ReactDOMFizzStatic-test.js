@@ -32,9 +32,7 @@ describe('ReactDOMFizzStatic', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
-    if (__EXPERIMENTAL__) {
-      ReactDOMFizzStatic = require('react-dom/static');
-    }
+    ReactDOMFizzStatic = require('react-dom/static');
     Stream = require('stream');
     Suspense = React.Suspense;
 
@@ -212,7 +210,6 @@ describe('ReactDOMFizzStatic', () => {
     return readText(text);
   }
 
-  // @gate experimental
   it('should render a fully static document, send it and then hydrate it', async () => {
     function App() {
       return (
@@ -230,7 +227,11 @@ describe('ReactDOMFizzStatic', () => {
 
     const result = await promise;
 
-    expect(result.postponed).toBe(null);
+    expect(result.postponed).toBe(
+      gate(flags => flags.enableHalt || flags.enablePostpone)
+        ? null
+        : undefined,
+    );
 
     await act(async () => {
       result.prelude.pipe(writable);
@@ -244,7 +245,6 @@ describe('ReactDOMFizzStatic', () => {
     expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
   });
 
-  // @gate experimental
   it('should support importMap option', async () => {
     const importMap = {
       foo: 'path/to/foo.js',
@@ -265,7 +265,6 @@ describe('ReactDOMFizzStatic', () => {
     ]);
   });
 
-  // @gate experimental
   it('supports onHeaders', async () => {
     let headers;
     function onHeaders(x) {
@@ -300,7 +299,7 @@ describe('ReactDOMFizzStatic', () => {
     expect(getVisibleChildren(container)).toEqual('hello');
   });
 
-  // @gate experimental && enablePostpone
+  // @gate enablePostpone
   it('includes stylesheet preloads in onHeaders when postponing in the Shell', async () => {
     let headers;
     function onHeaders(x) {
@@ -336,7 +335,6 @@ describe('ReactDOMFizzStatic', () => {
     expect(getVisibleChildren(container)).toEqual(undefined);
   });
 
-  // @gate experimental
   it('will prerender Suspense fallbacks before children', async () => {
     const values = [];
     function Indirection({children}) {

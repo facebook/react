@@ -71,10 +71,10 @@ function Foo() {
   const shouldCaptureObj = obj != null && CONST_TRUE;
   const t0 = shouldCaptureObj ? identity(obj) : null;
   let t1;
-  if ($[0] !== t0 || $[1] !== obj) {
+  if ($[0] !== obj || $[1] !== t0) {
     t1 = [t0, obj];
-    $[0] = t0;
-    $[1] = obj;
+    $[0] = obj;
+    $[1] = t0;
     $[2] = t1;
   } else {
     t1 = $[2];

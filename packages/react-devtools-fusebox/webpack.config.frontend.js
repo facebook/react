@@ -82,6 +82,7 @@ module.exports = {
       __EXTENSION__: false,
       __PROFILE__: false,
       __TEST__: NODE_ENV === 'test',
+      __IS_NATIVE__: true,
       'process.env.DEVTOOLS_PACKAGE': `"react-devtools-fusebox"`,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
       'process.env.EDITOR_URL': EDITOR_URL != null ? `"${EDITOR_URL}"` : null,

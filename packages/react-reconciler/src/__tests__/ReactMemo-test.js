@@ -19,6 +19,7 @@ let Scheduler;
 let act;
 let waitForAll;
 let assertLog;
+let assertConsoleErrorDev;
 
 describe('memo', () => {
   beforeEach(() => {
@@ -33,6 +34,7 @@ describe('memo', () => {
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
     assertLog = InternalTestUtils.assertLog;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
   });
 
   function Text(props) {
@@ -43,43 +45,6 @@ describe('memo', () => {
   async function fakeImport(result) {
     return {default: result};
   }
-
-  // @gate !enableRefAsProp || !__DEV__
-  it('warns when giving a ref (simple)', async () => {
-    // This test lives outside sharedTests because the wrappers don't forward
-    // refs properly, and they end up affecting the current owner which is used
-    // by the warning (making the messages not line up).
-    function App() {
-      return null;
-    }
-    App = React.memo(App);
-    function Outer() {
-      return <App ref={() => {}} />;
-    }
-    ReactNoop.render(<Outer />);
-    await expect(async () => await waitForAll([])).toErrorDev([
-      'Function components cannot be given refs. Attempts to access ' +
-        'this ref will fail.',
-    ]);
-  });
-
-  // @gate !enableRefAsProp || !__DEV__
-  it('warns when giving a ref (complex)', async () => {
-    function App() {
-      return null;
-    }
-    // A custom compare function means this won't use SimpleMemoComponent (as of this writing)
-    // SimpleMemoComponent is unobservable tho, so we can't check :)
-    App = React.memo(App, () => false);
-    function Outer() {
-      return <App ref={() => {}} />;
-    }
-    ReactNoop.render(<Outer />);
-    await expect(async () => await waitForAll([])).toErrorDev([
-      'Function components cannot be given refs. Attempts to access ' +
-        'this ref will fail.',
-    ]);
-  });
 
   // Tests should run against both the lazy and non-lazy versions of `memo`.
   // To make the tests work for both versions, we wrap the non-lazy version in
@@ -434,17 +399,19 @@ describe('memo', () => {
         // The final layer uses memo() from test fixture (which might be lazy).
         Counter = memo(Counter);
 
-        await expect(async () => {
-          await act(() => {
-            ReactNoop.render(
-              <Suspense fallback={<Text text="Loading..." />}>
-                <Counter e={5} />
-              </Suspense>,
-            );
-          });
-          assertLog(['Loading...', 15]);
-        }).toErrorDev([
-          'Counter: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
+        await act(() => {
+          ReactNoop.render(
+            <Suspense fallback={<Text text="Loading..." />}>
+              <Counter e={5} />
+            </Suspense>,
+          );
+        });
+        assertLog(['Loading...', 15]);
+        assertConsoleErrorDev([
+          'Counter: Support for defaultProps will be removed from memo components in a future major release. ' +
+            'Use JavaScript default parameters instead.\n' +
+            (label === 'lazy' ? '' : '    in Indirection (at **)\n') +
+            '    in Suspense (at **)',
         ]);
         expect(ReactNoop).toMatchRenderedOutput(<span prop={15} />);
 
@@ -468,17 +435,23 @@ describe('memo', () => {
       });
 
       it('warns if the first argument is undefined', () => {
-        expect(() => memo()).toErrorDev(
-          'memo: The first argument must be a component. Instead ' +
-            'received: undefined',
+        memo();
+        assertConsoleErrorDev(
+          [
+            'memo: The first argument must be a component. Instead ' +
+              'received: undefined',
+          ],
           {withoutStack: true},
         );
       });
 
       it('warns if the first argument is null', () => {
-        expect(() => memo(null)).toErrorDev(
-          'memo: The first argument must be a component. Instead ' +
-            'received: null',
+        memo(null);
+        assertConsoleErrorDev(
+          [
+            'memo: The first argument must be a component. Instead ' +
+              'received: null',
+          ],
           {withoutStack: true},
         );
       });
@@ -495,16 +468,18 @@ describe('memo', () => {
         Outer.defaultProps = {outer: 100};
 
         const root = ReactNoop.createRoot();
-        await expect(async () => {
-          await act(() => {
-            root.render(
-              <div>
-                <Outer />
-              </div>,
-            );
-          });
-        }).toErrorDev([
-          'Support for defaultProps will be removed from memo component',
+        await act(() => {
+          root.render(
+            <div>
+              <Outer />
+            </div>,
+          );
+        });
+        assertConsoleErrorDev([
+          'Inner: ' +
+            'Support for defaultProps will be removed from memo components in a future major release. ' +
+            'Use JavaScript default parameters instead.\n' +
+            '    in div (at **)',
         ]);
         expect(root).toMatchRenderedOutput(<div>111</div>);
 
@@ -596,14 +571,15 @@ describe('memo', () => {
           <MemoComponent />
         </p>,
       );
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev(
+      await waitForAll([]);
+      assertConsoleErrorDev([
         'Each child in a list should have a unique "key" prop. ' +
           'See https://react.dev/link/warning-keys for more information.\n' +
           '    in span (at **)\n' +
-          '    in ',
-      );
+          (gate('enableOwnerStacks')
+            ? '    in **/ReactMemo-test.js:**:** (at **)'
+            : '    in p (at **)'),
+      ]);
     });
 
     it('should use the inner function name for the stack', async () => {
@@ -615,16 +591,15 @@ describe('memo', () => {
           <MemoComponent />
         </p>,
       );
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev(
+      await waitForAll([]);
+      assertConsoleErrorDev([
         'Each child in a list should have a unique "key" prop.' +
           '\n\nCheck the top-level render call using <Inner>. It was passed a child from Inner. ' +
           'See https://react.dev/link/warning-keys for more information.\n' +
           '    in span (at **)\n' +
           '    in Inner (at **)' +
           (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in p (at **)'),
-      );
+      ]);
     });
 
     it('should use the inner name in the stack', async () => {
@@ -638,16 +613,15 @@ describe('memo', () => {
           <MemoComponent />
         </p>,
       );
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev(
+      await waitForAll([]);
+      assertConsoleErrorDev([
         'Each child in a list should have a unique "key" prop.' +
           '\n\nCheck the top-level render call using <Inner>. It was passed a child from Inner. ' +
           'See https://react.dev/link/warning-keys for more information.\n' +
           '    in span (at **)\n' +
           '    in Inner (at **)' +
           (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in p (at **)'),
-      );
+      ]);
     });
 
     it('can use the outer displayName in the stack', async () => {
@@ -660,16 +634,15 @@ describe('memo', () => {
           <MemoComponent />
         </p>,
       );
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev(
+      await waitForAll([]);
+      assertConsoleErrorDev([
         'Each child in a list should have a unique "key" prop.' +
           '\n\nCheck the top-level render call using <Outer>. It was passed a child from Outer. ' +
           'See https://react.dev/link/warning-keys for more information.\n' +
           '    in span (at **)\n' +
           '    in Outer (at **)' +
           (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in p (at **)'),
-      );
+      ]);
     });
 
     it('should prefer the inner to the outer displayName in the stack', async () => {
@@ -684,16 +657,15 @@ describe('memo', () => {
           <MemoComponent />
         </p>,
       );
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev(
+      await waitForAll([]);
+      assertConsoleErrorDev([
         'Each child in a list should have a unique "key" prop.' +
           '\n\nCheck the top-level render call using <Inner>. It was passed a child from Inner. ' +
           'See https://react.dev/link/warning-keys for more information.\n' +
           '    in span (at **)\n' +
           '    in Inner (at **)' +
           (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in p (at **)'),
-      );
+      ]);
     });
   }
 });

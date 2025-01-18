@@ -44,7 +44,7 @@ function Foo(t0) {
   const { arr1, arr2, foo } = t0;
   let t1;
   let val1;
-  if ($[0] !== arr1 || $[1] !== foo || $[2] !== arr2) {
+  if ($[0] !== arr1 || $[1] !== arr2 || $[2] !== foo) {
     const x = [arr1];
 
     let y;
@@ -63,8 +63,8 @@ function Foo(t0) {
     foo ? (y = x.concat(arr2)) : y;
     t1 = (() => [y])();
     $[0] = arr1;
-    $[1] = foo;
-    $[2] = arr2;
+    $[1] = arr2;
+    $[2] = foo;
     $[3] = t1;
     $[4] = val1;
   } else {

@@ -50,6 +50,7 @@ function createResponseFromOptions(options: void | Options) {
   return createResponse(
     null,
     null,
+    null,
     options && options.callServer ? options.callServer : undefined,
     undefined, // encodeFormAction
     undefined, // nonce

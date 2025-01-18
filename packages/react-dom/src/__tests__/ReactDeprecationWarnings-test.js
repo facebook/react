@@ -11,8 +11,8 @@
 
 let React;
 let ReactNoop;
-let JSXDEVRuntime;
 let waitForAll;
+let assertConsoleErrorDev;
 
 describe('ReactDeprecationWarnings', () => {
   beforeEach(() => {
@@ -21,9 +21,7 @@ describe('ReactDeprecationWarnings', () => {
     ReactNoop = require('react-noop-renderer');
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
-    if (__DEV__) {
-      JSXDEVRuntime = require('react/jsx-dev-runtime');
-    }
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
   });
 
   // @gate !disableDefaultPropsExceptForClasses || !__DEV__
@@ -37,11 +35,13 @@ describe('ReactDeprecationWarnings', () => {
     };
 
     ReactNoop.render(<FunctionalComponent />);
-    await expect(async () => await waitForAll([])).toErrorDev(
+    await waitForAll([]);
+    assertConsoleErrorDev([
       'FunctionalComponent: Support for defaultProps ' +
         'will be removed from function components in a future major ' +
-        'release. Use JavaScript default parameters instead.',
-    );
+        'release. Use JavaScript default parameters instead.\n' +
+        '    in FunctionalComponent (at **)',
+    ]);
   });
 
   // @gate !disableDefaultPropsExceptForClasses || !__DEV__
@@ -59,123 +59,12 @@ describe('ReactDeprecationWarnings', () => {
         <MemoComponent />
       </div>,
     );
-    await expect(async () => await waitForAll([])).toErrorDev(
+    await waitForAll([]);
+    assertConsoleErrorDev([
       'FunctionalComponent: Support for defaultProps ' +
         'will be removed from memo components in a future major ' +
-        'release. Use JavaScript default parameters instead.',
-    );
-  });
-
-  // @gate !disableStringRefs
-  it('should warn when given string refs', async () => {
-    class RefComponent extends React.Component {
-      render() {
-        return null;
-      }
-    }
-    class Component extends React.Component {
-      render() {
-        return <RefComponent ref="refComponent" />;
-      }
-    }
-
-    ReactNoop.render(<Component />);
-    await expect(async () => await waitForAll([])).toErrorDev(
-      'Component "Component" contains the string ref "refComponent". ' +
-        'Support for string refs will be removed in a future major release. ' +
-        'We recommend using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: ' +
-        'https://react.dev/link/strict-mode-string-ref' +
-        '\n    in RefComponent (at **)' +
-        '\n    in Component (at **)',
-    );
-  });
-
-  // Disabling this until #28732 lands so we can assert on the warning message.
-  // (It's already disabled in all but the Meta builds, anyway. Nbd.)
-  // @gate TODO || !__DEV__
-  // @gate !disableStringRefs
-  it('should warn when owner and self are the same for string refs', async () => {
-    class RefComponent extends React.Component {
-      render() {
-        return null;
-      }
-    }
-    class Component extends React.Component {
-      render() {
-        return React.createElement(RefComponent, {
-          ref: 'refComponent',
-          __self: this,
-        });
-      }
-    }
-
-    ReactNoop.render(<Component />);
-    await expect(async () => await waitForAll([])).toErrorDev([
-      'Component "Component" contains the string ref "refComponent". Support for string refs will be removed in a future major release.',
-    ]);
-    await waitForAll([]);
-  });
-
-  // Disabling this until #28732 lands so we can assert on the warning message.
-  // (It's already disabled in all but the Meta builds, anyway. Nbd.)
-  // @gate TODO || !__DEV__
-  // @gate !disableStringRefs
-  it('should warn when owner and self are different for string refs (createElement)', async () => {
-    class RefComponent extends React.Component {
-      render() {
-        return null;
-      }
-    }
-    class Component extends React.Component {
-      render() {
-        return React.createElement(RefComponent, {
-          ref: 'refComponent',
-          __self: {},
-        });
-      }
-    }
-
-    ReactNoop.render(<Component />);
-    await expect(async () => await waitForAll([])).toErrorDev([
-      'Component "Component" contains the string ref "refComponent". ' +
-        'Support for string refs will be removed in a future major release. ' +
-        'This case cannot be automatically converted to an arrow function. ' +
-        'We ask you to manually fix this case by using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: ' +
-        'https://react.dev/link/strict-mode-string-ref',
-    ]);
-  });
-
-  // @gate __DEV__
-  // @gate !disableStringRefs
-  it('should warn when owner and self are different for string refs (jsx)', async () => {
-    class RefComponent extends React.Component {
-      render() {
-        return null;
-      }
-    }
-    class Component extends React.Component {
-      render() {
-        return JSXDEVRuntime.jsxDEV(
-          RefComponent,
-          {ref: 'refComponent'},
-          null,
-          false,
-          {},
-          {},
-        );
-      }
-    }
-
-    ReactNoop.render(<Component />);
-    await expect(async () => await waitForAll([])).toErrorDev([
-      'Component "Component" contains the string ref "refComponent". ' +
-        'Support for string refs will be removed in a future major release. ' +
-        'This case cannot be automatically converted to an arrow function. ' +
-        'We ask you to manually fix this case by using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: ' +
-        'https://react.dev/link/strict-mode-string-ref',
+        'release. Use JavaScript default parameters instead.\n' +
+        '    in div (at **)',
     ]);
   });
 });

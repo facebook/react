@@ -233,8 +233,28 @@ describe('ReactLazy', () => {
     expect(error.message).toMatch('Element type is invalid');
     assertLog(['Loading...']);
     assertConsoleErrorDev([
-      'Expected the result of a dynamic import() call',
-      'Expected the result of a dynamic import() call',
+      'lazy: Expected the result of a dynamic import() call. ' +
+        'Instead received: function Text(props) {\n' +
+        '    Scheduler.log(props.text);\n' +
+        '    return props.text;\n' +
+        '  }\n\n' +
+        'Your code should look like: \n  ' +
+        "const MyComponent = lazy(() => import('./MyComponent'))\n" +
+        (gate('enableOwnerStacks')
+          ? ''
+          : '    in Lazy (at **)\n' + '    in Suspense (at **)\n') +
+        '    in App (at **)',
+      'lazy: Expected the result of a dynamic import() call. ' +
+        'Instead received: function Text(props) {\n' +
+        '    Scheduler.log(props.text);\n' +
+        '    return props.text;\n' +
+        '  }\n\n' +
+        'Your code should look like: \n  ' +
+        "const MyComponent = lazy(() => import('./MyComponent'))\n" +
+        (gate('enableOwnerStacks')
+          ? ''
+          : '    in Lazy (at **)\n' + '    in Suspense (at **)\n') +
+        '    in App (at **)',
     ]);
     expect(root).not.toMatchRenderedOutput('Hi');
   });
@@ -701,12 +721,13 @@ describe('ReactLazy', () => {
     }
     T.defaultProps = {inner: 'Hi'};
     const LazyText = lazy(() => fakeImport(T));
-    expect(() => {
-      LazyText.defaultProps = {outer: 'Bye'};
-    }).toErrorDev(
-      'It is not supported to assign `defaultProps` to ' +
-        'a lazy component import. Either specify them where the component ' +
-        'is defined, or create a wrapping component around it.',
+    LazyText.defaultProps = {outer: 'Bye'};
+    assertConsoleErrorDev(
+      [
+        'It is not supported to assign `defaultProps` to ' +
+          'a lazy component import. Either specify them where the component ' +
+          'is defined, or create a wrapping component around it.',
+      ],
       {withoutStack: true},
     );
 
@@ -722,14 +743,15 @@ describe('ReactLazy', () => {
     await waitForAll(['Loading...']);
     expect(root).not.toMatchRenderedOutput('Hi Bye');
 
-    await expect(async () => {
-      await act(() => resolveFakeImport(T));
-      assertLog(['Hi Bye']);
-    }).toErrorDev(
+    await act(() => resolveFakeImport(T));
+    assertLog(['Hi Bye']);
+    assertConsoleErrorDev([
       'T: Support for defaultProps ' +
         'will be removed from function components in a future major ' +
-        'release. Use JavaScript default parameters instead.',
-    );
+        'release. Use JavaScript default parameters instead.\n' +
+        '    in T (at **)\n' +
+        '    in Suspense (at **)',
+    ]);
 
     expect(root).toMatchRenderedOutput('Hi Bye');
 
@@ -852,19 +874,21 @@ describe('ReactLazy', () => {
     expect(root).not.toMatchRenderedOutput('22');
 
     // Mount
-    await expect(async () => {
-      await act(() => resolveFakeImport(Add));
-    }).toErrorDev(
-      shouldWarnAboutFunctionDefaultProps
-        ? [
-            'Add: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
-          ]
-        : shouldWarnAboutMemoDefaultProps
-          ? [
-              'Add: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
-            ]
-          : [],
-    );
+    await act(() => resolveFakeImport(Add));
+
+    if (shouldWarnAboutFunctionDefaultProps) {
+      assertConsoleErrorDev([
+        'Add: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.\n' +
+          '    in Add (at **)\n' +
+          '    in Suspense (at **)',
+      ]);
+    } else if (shouldWarnAboutMemoDefaultProps) {
+      assertConsoleErrorDev([
+        'Add: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.\n' +
+          '    in Suspense (at **)',
+      ]);
+    }
+
     expect(root).toMatchRenderedOutput('22');
 
     // Update
@@ -1004,11 +1028,13 @@ describe('ReactLazy', () => {
     expect(root).not.toMatchRenderedOutput('Inner default text');
 
     // Mount
-    await expect(async () => {
-      await act(() => resolveFakeImport(T));
-      assertLog(['Inner default text']);
-    }).toErrorDev([
-      'T: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
+    await act(() => resolveFakeImport(T));
+    assertLog(['Inner default text']);
+    assertConsoleErrorDev([
+      'T: Support for defaultProps will be removed from function components in a future major release. ' +
+        'Use JavaScript default parameters instead.\n' +
+        '    in T (at **)\n' +
+        '    in Suspense (at **)',
     ]);
     expect(root).toMatchRenderedOutput('Inner default text');
 
@@ -1041,13 +1067,19 @@ describe('ReactLazy', () => {
     await waitForAll(['Started loading', 'Loading...']);
     expect(root).not.toMatchRenderedOutput(<div>AB</div>);
 
-    await expect(async () => {
-      await act(() => resolveFakeImport(Foo));
-      assertLog(['A', 'B']);
-    }).toErrorDev(
-      (gate(flags => flags.enableOwnerStacks) ? '' : '    in Text (at **)\n') +
-        '    in Foo (at **)',
-    );
+    await act(() => resolveFakeImport(Foo));
+    assertLog(['A', 'B']);
+    assertConsoleErrorDev([
+      'Each child in a list should have a unique "key" prop.\n' +
+        '\n' +
+        'Check the render method of `Foo`. ' +
+        'See https://react.dev/link/warning-keys for more information.\n' +
+        (gate(flags => flags.enableOwnerStacks)
+          ? '    in Foo (at **)'
+          : '    in Text (at **)\n' +
+            '    in Foo (at **)\n' +
+            '    in Suspense (at **)'),
+    ]);
     expect(root).toMatchRenderedOutput(<div>AB</div>);
   });
 
@@ -1121,11 +1153,12 @@ describe('ReactLazy', () => {
     expect(root).not.toMatchRenderedOutput('4');
 
     // Mount
-    await expect(async () => {
-      await act(() => resolveFakeImport(Add));
-    }).toErrorDev(
-      'Unknown: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
-    );
+    await act(() => resolveFakeImport(Add));
+    assertConsoleErrorDev([
+      'Unknown: Support for defaultProps will be removed from memo components in a future major release. ' +
+        'Use JavaScript default parameters instead.\n' +
+        '    in Suspense (at **)',
+    ]);
     expect(root).toMatchRenderedOutput('4');
 
     // Update (shallowly equal)
@@ -1209,11 +1242,14 @@ describe('ReactLazy', () => {
     expect(root).not.toMatchRenderedOutput('4');
 
     // Mount
-    await expect(async () => {
-      await act(() => resolveFakeImport(Add));
-    }).toErrorDev([
-      'Memo: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
-      'Unknown: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
+    await act(() => resolveFakeImport(Add));
+    assertConsoleErrorDev([
+      'Memo: Support for defaultProps will be removed from memo components in a future major release. ' +
+        'Use JavaScript default parameters instead.\n' +
+        '    in Suspense (at **)',
+      'Unknown: Support for defaultProps will be removed from memo components in a future major release. ' +
+        'Use JavaScript default parameters instead.\n' +
+        '    in Suspense (at **)',
     ]);
     expect(root).toMatchRenderedOutput('4');
 
@@ -1234,30 +1270,6 @@ describe('ReactLazy', () => {
     );
     await waitForAll([]);
     expect(root).toMatchRenderedOutput('2');
-  });
-
-  // @gate !enableRefAsProp || !__DEV__
-  it('warns about ref on functions for lazy-loaded components', async () => {
-    const Foo = props => <div />;
-    const LazyFoo = lazy(() => {
-      return fakeImport(Foo);
-    });
-
-    const ref = React.createRef();
-    ReactTestRenderer.create(
-      <Suspense fallback={<Text text="Loading..." />}>
-        <LazyFoo ref={ref} />
-      </Suspense>,
-      {
-        unstable_isConcurrent: true,
-      },
-    );
-
-    await waitForAll(['Loading...']);
-    await resolveFakeImport(Foo);
-    await expect(async () => {
-      await waitForAll([]);
-    }).toErrorDev('Function components cannot be given refs');
   });
 
   it('should error with a component stack naming the resolved component', async () => {

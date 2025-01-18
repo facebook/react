@@ -91,8 +91,8 @@ import {
   enableCreateEventHandleAPI,
   enableScopeAPI,
   enableTrustedTypesIntegration,
-  enableAsyncActions,
   disableLegacyMode,
+  enableMoveBefore,
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
@@ -120,7 +120,14 @@ export type Props = {
   hidden?: boolean,
   suppressHydrationWarning?: boolean,
   dangerouslySetInnerHTML?: mixed,
-  style?: {display?: string, ...},
+  style?: {
+    display?: string,
+    viewTransitionName?: string,
+    'view-transition-name'?: string,
+    viewTransitionClass?: string,
+    'view-transition-class'?: string,
+    ...
+  },
   bottom?: null | number,
   left?: null | number,
   right?: null | number,
@@ -149,6 +156,7 @@ export type EventTargetChildElement = {
   },
   ...
 };
+
 export type Container =
   | interface extends Element {_reactRootContainer?: FiberRoot}
   | interface extends Document {_reactRootContainer?: FiberRoot}
@@ -179,6 +187,14 @@ export type RendererInspectionConfig = $ReadOnly<{}>;
 
 export type TransitionStatus = FormStatus;
 
+export type ViewTransitionInstance = {
+  name: string,
+  group: Animatable,
+  imagePair: Animatable,
+  old: Animatable,
+  new: Animatable,
+};
+
 type SelectionInformation = {
   focusedElem: null | HTMLElement,
   selectionRange: mixed,
@@ -192,6 +208,8 @@ const SUSPENSE_PENDING_START_DATA = '$?';
 const SUSPENSE_FALLBACK_START_DATA = '$!';
 const FORM_STATE_IS_MATCHING = 'F!';
 const FORM_STATE_IS_NOT_MATCHING = 'F';
+
+const DOCUMENT_READY_STATE_COMPLETE = 'complete';
 
 const STYLE = 'style';
 
@@ -525,6 +543,7 @@ export function appendInitialChild(
   parentInstance: Instance,
   child: Instance | TextInstance,
 ): void {
+  // Note: This should not use moveBefore() because initial are appended while disconnected.
   parentInstance.appendChild(child);
 }
 
@@ -606,14 +625,19 @@ export function shouldAttemptEagerTransition(): boolean {
   return false;
 }
 
+let schedulerEvent: void | Event = undefined;
+export function trackSchedulerEvent(): void {
+  schedulerEvent = window.event;
+}
+
 export function resolveEventType(): null | string {
   const event = window.event;
-  return event ? event.type : null;
+  return event && event !== schedulerEvent ? event.type : null;
 }
 
 export function resolveEventTimeStamp(): number {
   const event = window.event;
-  return event ? event.timeStamp : -1.1;
+  return event && event !== schedulerEvent ? event.timeStamp : -1.1;
 }
 
 export const isPrimaryRenderer = true;
@@ -752,11 +776,22 @@ export function commitTextUpdate(
   textInstance.nodeValue = newText;
 }
 
+const supportsMoveBefore =
+  // $FlowFixMe[prop-missing]: We're doing the feature detection here.
+  enableMoveBefore &&
+  typeof window !== 'undefined' &&
+  typeof window.Element.prototype.moveBefore === 'function';
+
 export function appendChild(
   parentInstance: Instance,
   child: Instance | TextInstance,
 ): void {
-  parentInstance.appendChild(child);
+  if (supportsMoveBefore) {
+    // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
+    parentInstance.moveBefore(child, null);
+  } else {
+    parentInstance.appendChild(child);
+  }
 }
 
 export function appendChildToContainer(
@@ -766,10 +801,20 @@ export function appendChildToContainer(
   let parentNode;
   if (container.nodeType === COMMENT_NODE) {
     parentNode = (container.parentNode: any);
-    parentNode.insertBefore(child, container);
+    if (supportsMoveBefore) {
+      // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
+      parentNode.moveBefore(child, container);
+    } else {
+      parentNode.insertBefore(child, container);
+    }
   } else {
     parentNode = container;
-    parentNode.appendChild(child);
+    if (supportsMoveBefore) {
+      // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
+      parentNode.moveBefore(child, null);
+    } else {
+      parentNode.appendChild(child);
+    }
   }
   // This container might be used for a portal.
   // If something inside a portal is clicked, that click should bubble
@@ -794,7 +839,12 @@ export function insertBefore(
   child: Instance | TextInstance,
   beforeChild: Instance | TextInstance | SuspenseInstance,
 ): void {
-  parentInstance.insertBefore(child, beforeChild);
+  if (supportsMoveBefore) {
+    // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
+    parentInstance.moveBefore(child, beforeChild);
+  } else {
+    parentInstance.insertBefore(child, beforeChild);
+  }
 }
 
 export function insertInContainerBefore(
@@ -803,9 +853,19 @@ export function insertInContainerBefore(
   beforeChild: Instance | TextInstance | SuspenseInstance,
 ): void {
   if (container.nodeType === COMMENT_NODE) {
-    (container.parentNode: any).insertBefore(child, beforeChild);
+    if (supportsMoveBefore) {
+      // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
+      (container.parentNode: any).moveBefore(child, beforeChild);
+    } else {
+      (container.parentNode: any).insertBefore(child, beforeChild);
+    }
   } else {
-    container.insertBefore(child, beforeChild);
+    if (supportsMoveBefore) {
+      // $FlowFixMe[prop-missing]: We've checked this with supportsMoveBefore.
+      container.moveBefore(child, beforeChild);
+    } else {
+      container.insertBefore(child, beforeChild);
+    }
   }
 }
 
@@ -952,6 +1012,392 @@ export function unhideTextInstance(
   text: string,
 ): void {
   textInstance.nodeValue = text;
+}
+
+export function applyViewTransitionName(
+  instance: Instance,
+  name: string,
+  className: ?string,
+): void {
+  instance = ((instance: any): HTMLElement);
+  // $FlowFixMe[prop-missing]
+  instance.style.viewTransitionName = name;
+  if (className != null) {
+    // $FlowFixMe[prop-missing]
+    instance.style.viewTransitionClass = className;
+  }
+}
+
+export function restoreViewTransitionName(
+  instance: Instance,
+  props: Props,
+): void {
+  instance = ((instance: any): HTMLElement);
+  const styleProp = props[STYLE];
+  const viewTransitionName =
+    styleProp != null
+      ? styleProp.hasOwnProperty('viewTransitionName')
+        ? styleProp.viewTransitionName
+        : styleProp.hasOwnProperty('view-transition-name')
+          ? styleProp['view-transition-name']
+          : null
+      : null;
+  // $FlowFixMe[prop-missing]
+  instance.style.viewTransitionName =
+    viewTransitionName == null || typeof viewTransitionName === 'boolean'
+      ? ''
+      : // The value would've errored already if it wasn't safe.
+        // eslint-disable-next-line react-internal/safe-string-coercion
+        ('' + viewTransitionName).trim();
+  const viewTransitionClass =
+    styleProp != null
+      ? styleProp.hasOwnProperty('viewTransitionClass')
+        ? styleProp.viewTransitionClass
+        : styleProp.hasOwnProperty('view-transition-class')
+          ? styleProp['view-transition-class']
+          : null
+      : null;
+  // $FlowFixMe[prop-missing]
+  instance.style.viewTransitionClass =
+    viewTransitionClass == null || typeof viewTransitionClass === 'boolean'
+      ? ''
+      : // The value would've errored already if it wasn't safe.
+        // eslint-disable-next-line react-internal/safe-string-coercion
+        ('' + viewTransitionClass).trim();
+}
+
+export function cancelViewTransitionName(
+  instance: Instance,
+  oldName: string,
+  props: Props,
+): void {
+  // To cancel the "new" state and paint this instance as part of the parent, all we have to do
+  // is remove the view-transition-name before we exit startViewTransition.
+  restoreViewTransitionName(instance, props);
+  // There isn't a way to cancel an "old" state but what we can do is hide it by animating it.
+  // Since it is already removed from the old state of the parent, this technique only works
+  // if the parent also isn't transitioning. Therefore we should only cancel the root most
+  // ViewTransitions.
+  const documentElement = instance.ownerDocument.documentElement;
+  if (documentElement !== null) {
+    documentElement.animate(
+      {opacity: [0, 0], pointerEvents: ['none', 'none']},
+      {
+        duration: 0,
+        fill: 'forwards',
+        pseudoElement: '::view-transition-group(' + oldName + ')',
+      },
+    );
+  }
+}
+
+export function cancelRootViewTransitionName(rootContainer: Container): void {
+  const documentElement: null | HTMLElement =
+    rootContainer.nodeType === DOCUMENT_NODE
+      ? (rootContainer: any).documentElement
+      : rootContainer.ownerDocument.documentElement;
+  if (
+    documentElement !== null &&
+    // $FlowFixMe[prop-missing]
+    documentElement.style.viewTransitionName === ''
+  ) {
+    // $FlowFixMe[prop-missing]
+    documentElement.style.viewTransitionName = 'none';
+    documentElement.animate(
+      {opacity: [0, 0], pointerEvents: ['none', 'none']},
+      {
+        duration: 0,
+        fill: 'forwards',
+        pseudoElement: '::view-transition-group(root)',
+      },
+    );
+    // By default the root ::view-transition selector captures all pointer events,
+    // which means nothing gets interactive. We want to let whatever is not animating
+    // remain interactive during the transition. To do that, we set the size to nothing
+    // so that the transition doesn't capture any clicks. We don't set pointer-events
+    // on this one as that would apply to all running transitions. This lets animations
+    // that are running to block clicks so that they don't end up incorrectly hitting
+    // whatever is below the animation.
+    documentElement.animate(
+      {width: [0, 0], height: [0, 0]},
+      {
+        duration: 0,
+        fill: 'forwards',
+        pseudoElement: '::view-transition',
+      },
+    );
+  }
+}
+
+export function restoreRootViewTransitionName(rootContainer: Container): void {
+  const documentElement: null | HTMLElement =
+    rootContainer.nodeType === DOCUMENT_NODE
+      ? (rootContainer: any).documentElement
+      : rootContainer.ownerDocument.documentElement;
+  if (
+    documentElement !== null &&
+    // $FlowFixMe[prop-missing]
+    documentElement.style.viewTransitionName === 'none'
+  ) {
+    // $FlowFixMe[prop-missing]
+    documentElement.style.viewTransitionName = '';
+  }
+}
+
+export type InstanceMeasurement = {
+  rect: ClientRect | DOMRect,
+  abs: boolean, // is absolutely positioned
+  clip: boolean, // is a clipping parent
+  view: boolean, // is in viewport bounds
+};
+
+export function measureInstance(instance: Instance): InstanceMeasurement {
+  const ownerWindow = instance.ownerDocument.defaultView;
+  const rect = instance.getBoundingClientRect();
+  const computedStyle = getComputedStyle(instance);
+  return {
+    rect: rect,
+    abs:
+      // Absolutely positioned instances don't contribute their size to the parent.
+      computedStyle.position === 'absolute' ||
+      computedStyle.position === 'fixed',
+    clip:
+      // If a ViewTransition boundary acts as a clipping parent group we should
+      // always mark it to animate if its children do so that we can clip them.
+      // This doesn't actually have any effect yet until browsers implement
+      // layered capture and nested view transitions.
+      computedStyle.clipPath !== 'none' ||
+      computedStyle.overflow !== 'visible' ||
+      computedStyle.filter !== 'none' ||
+      computedStyle.mask !== 'none' ||
+      computedStyle.mask !== 'none' ||
+      computedStyle.borderRadius !== '0px',
+    view:
+      // If the instance was within the bounds of the viewport. We don't care as
+      // much about if it was fully occluded because then it can still pop out.
+      rect.bottom >= 0 &&
+      rect.right >= 0 &&
+      rect.top <= ownerWindow.innerHeight &&
+      rect.left <= ownerWindow.innerWidth,
+  };
+}
+
+export function wasInstanceInViewport(
+  measurement: InstanceMeasurement,
+): boolean {
+  return measurement.view;
+}
+
+export function hasInstanceChanged(
+  oldMeasurement: InstanceMeasurement,
+  newMeasurement: InstanceMeasurement,
+): boolean {
+  // Note: This is not guaranteed from the same instance in the case that the Instance of the
+  // ViewTransition swaps out but it's still the same ViewTransition instance.
+  if (newMeasurement.clip) {
+    // If we're a clipping parent, we always animate if any of our children do so that we can clip
+    // them. This doesn't yet until browsers implement layered capture and nested view transitions.
+    return true;
+  }
+  const oldRect = oldMeasurement.rect;
+  const newRect = newMeasurement.rect;
+  return (
+    oldRect.y !== newRect.y ||
+    oldRect.x !== newRect.x ||
+    oldRect.height !== newRect.height ||
+    oldRect.width !== newRect.width
+  );
+}
+
+export function hasInstanceAffectedParent(
+  oldMeasurement: InstanceMeasurement,
+  newMeasurement: InstanceMeasurement,
+): boolean {
+  // Note: This is not guaranteed from the same instance in the case that the Instance of the
+  // ViewTransition swaps out but it's still the same ViewTransition instance.
+  // If the instance has resized, it might have affected the parent layout.
+  if (newMeasurement.abs) {
+    // Absolutely positioned elements don't affect the parent layout, unless they
+    // previously were not absolutely positioned.
+    return !oldMeasurement.abs;
+  }
+  const oldRect = oldMeasurement.rect;
+  const newRect = newMeasurement.rect;
+  return oldRect.height !== newRect.height || oldRect.width !== newRect.width;
+}
+
+// How long to wait for new fonts to load before just committing anyway.
+// This freezes the screen. It needs to be short enough that it doesn't cause too much of
+// an issue when it's a new load and slow, yet long enough that you have a chance to load
+// it. Otherwise we wait for no reason. The assumption here is that you likely have
+// either cached the font or preloaded it earlier.
+const SUSPENSEY_FONT_TIMEOUT = 500;
+
+export function startViewTransition(
+  rootContainer: Container,
+  mutationCallback: () => void,
+  layoutCallback: () => void,
+  afterMutationCallback: () => void,
+  spawnedWorkCallback: () => void,
+  passiveCallback: () => mixed,
+): boolean {
+  const ownerDocument: Document =
+    rootContainer.nodeType === DOCUMENT_NODE
+      ? (rootContainer: any)
+      : rootContainer.ownerDocument;
+  try {
+    // $FlowFixMe[prop-missing]
+    const transition = ownerDocument.startViewTransition({
+      update() {
+        // Note: We read the existence of a pending navigation before we apply the
+        // mutations. That way we're not waiting on a navigation that we spawned
+        // from this update. Only navigations that started before this commit.
+        const ownerWindow = ownerDocument.defaultView;
+        const pendingNavigation =
+          ownerWindow.navigation && ownerWindow.navigation.transition;
+        // $FlowFixMe[prop-missing]
+        const previousFontLoadingStatus = ownerDocument.fonts.status;
+        mutationCallback();
+        if (previousFontLoadingStatus === 'loaded') {
+          // Force layout calculation to trigger font loading.
+          // eslint-disable-next-line ft-flow/no-unused-expressions
+          (ownerDocument.documentElement: any).clientHeight;
+          if (
+            // $FlowFixMe[prop-missing]
+            ownerDocument.fonts.status === 'loading'
+          ) {
+            // The mutation lead to new fonts being loaded. We should wait on them before continuing.
+            // This avoids waiting for potentially unrelated fonts that were already loading before.
+            // Either in an earlier transition or as part of a sync optimistic state. This doesn't
+            // include preloads that happened earlier.
+            const fontsReady = Promise.race([
+              // $FlowFixMe[prop-missing]
+              ownerDocument.fonts.ready,
+              new Promise(resolve =>
+                setTimeout(resolve, SUSPENSEY_FONT_TIMEOUT),
+              ),
+            ]).then(layoutCallback, layoutCallback);
+            const allReady = pendingNavigation
+              ? Promise.allSettled([pendingNavigation.finished, fontsReady])
+              : fontsReady;
+            return allReady.then(afterMutationCallback, afterMutationCallback);
+          }
+        }
+        layoutCallback();
+        if (pendingNavigation) {
+          return pendingNavigation.finished.then(
+            afterMutationCallback,
+            afterMutationCallback,
+          );
+        } else {
+          afterMutationCallback();
+        }
+      },
+      types: null, // TODO: Provide types.
+    });
+    // $FlowFixMe[prop-missing]
+    ownerDocument.__reactViewTransition = transition;
+    if (__DEV__) {
+      transition.ready.then(undefined, (reason: mixed) => {
+        if (
+          typeof reason === 'object' &&
+          reason !== null &&
+          reason.name === 'TimeoutError'
+        ) {
+          console.error(
+            'A ViewTransition timed out because a Navigation stalled. ' +
+              'This can happen if a Navigation is blocked on React itself. ' +
+              "Such as if it's resolved inside useEffect. " +
+              'This can be solved by moving the resolution to useLayoutEffect.',
+          );
+        }
+      });
+    }
+    transition.ready.then(spawnedWorkCallback, spawnedWorkCallback);
+    transition.finished.then(() => {
+      // $FlowFixMe[prop-missing]
+      ownerDocument.__reactViewTransition = null;
+      passiveCallback();
+    });
+    return true;
+  } catch (x) {
+    // We use the error as feature detection.
+    // The only thing that should throw is if startViewTransition is missing
+    // or if it doesn't accept the object form. Other errors are async.
+    // I.e. it's before the View Transitions v2 spec. We only support View
+    // Transitions v2 otherwise we fallback to not animating to ensure that
+    // we're not animating with the wrong animation mapped.
+    return false;
+  }
+}
+
+interface ViewTransitionPseudoElementType extends Animatable {
+  _scope: HTMLElement;
+  _selector: string;
+}
+
+function ViewTransitionPseudoElement(
+  this: ViewTransitionPseudoElementType,
+  pseudo: string,
+  name: string,
+) {
+  // TODO: Get the owner document from the root container.
+  this._scope = (document.documentElement: any);
+  this._selector = '::view-transition-' + pseudo + '(' + name + ')';
+}
+// $FlowFixMe[prop-missing]
+ViewTransitionPseudoElement.prototype.animate = function (
+  this: ViewTransitionPseudoElementType,
+  keyframes: Keyframe[] | PropertyIndexedKeyframes | null,
+  options?: number | KeyframeAnimationOptions,
+): Animation {
+  const opts: any =
+    typeof options === 'number'
+      ? {
+          duration: options,
+        }
+      : Object.assign(({}: KeyframeAnimationOptions), options);
+  opts.pseudoElement = this._selector;
+  // TODO: Handle multiple child instances.
+  return this._scope.animate(keyframes, opts);
+};
+// $FlowFixMe[prop-missing]
+ViewTransitionPseudoElement.prototype.getAnimations = function (
+  this: ViewTransitionPseudoElementType,
+  options?: GetAnimationsOptions,
+): Animation[] {
+  const scope = this._scope;
+  const selector = this._selector;
+  const animations = scope.getAnimations({subtree: true});
+  const result = [];
+  for (let i = 0; i < animations.length; i++) {
+    const effect: null | {
+      target?: Element,
+      pseudoElement?: string,
+      ...
+    } = (animations[i].effect: any);
+    // TODO: Handle multiple child instances.
+    if (
+      effect !== null &&
+      effect.target === scope &&
+      effect.pseudoElement === selector
+    ) {
+      result.push(animations[i]);
+    }
+  }
+  return result;
+};
+
+export function createViewTransitionInstance(
+  name: string,
+): ViewTransitionInstance {
+  return {
+    name: name,
+    group: new (ViewTransitionPseudoElement: any)('group', name),
+    imagePair: new (ViewTransitionPseudoElement: any)('image-pair', name),
+    old: new (ViewTransitionPseudoElement: any)('old', name),
+    new: new (ViewTransitionPseudoElement: any)('new', name),
+  };
 }
 
 export function clearContainer(container: Container): void {
@@ -1115,7 +1561,9 @@ export function canHydrateInstance(
           } else if (
             rel !== anyProps.rel ||
             element.getAttribute('href') !==
-              (anyProps.href == null ? null : anyProps.href) ||
+              (anyProps.href == null || anyProps.href === ''
+                ? null
+                : anyProps.href) ||
             element.getAttribute('crossorigin') !==
               (anyProps.crossOrigin == null ? null : anyProps.crossOrigin) ||
             element.getAttribute('title') !==
@@ -1239,7 +1687,11 @@ export function isSuspenseInstancePending(instance: SuspenseInstance): boolean {
 export function isSuspenseInstanceFallback(
   instance: SuspenseInstance,
 ): boolean {
-  return instance.data === SUSPENSE_FALLBACK_START_DATA;
+  return (
+    instance.data === SUSPENSE_FALLBACK_START_DATA ||
+    (instance.data === SUSPENSE_PENDING_START_DATA &&
+      instance.ownerDocument.readyState === DOCUMENT_READY_STATE_COMPLETE)
+  );
 }
 
 export function getSuspenseInstanceFallbackErrorDetails(
@@ -1280,7 +1732,29 @@ export function registerSuspenseInstanceRetry(
   instance: SuspenseInstance,
   callback: () => void,
 ) {
-  instance._reactRetry = callback;
+  const ownerDocument = instance.ownerDocument;
+  if (
+    // The Fizz runtime must have put this boundary into client render or complete
+    // state after the render finished but before it committed. We need to call the
+    // callback now rather than wait
+    instance.data !== SUSPENSE_PENDING_START_DATA ||
+    // The boundary is still in pending status but the document has finished loading
+    // before we could register the event handler that would have scheduled the retry
+    // on load so we call teh callback now.
+    ownerDocument.readyState === DOCUMENT_READY_STATE_COMPLETE
+  ) {
+    callback();
+  } else {
+    // We're still in pending status and the document is still loading so we attach
+    // a listener to the document load even and expose the retry on the instance for
+    // the Fizz runtime to trigger if it ends up resolving this boundary
+    const listener = () => {
+      callback();
+      ownerDocument.removeEventListener('DOMContentLoaded', listener);
+    };
+    ownerDocument.addEventListener('DOMContentLoaded', listener);
+    instance._reactRetry = listener;
+  }
 }
 
 export function canHydrateFormStateMarker(
@@ -1327,9 +1801,8 @@ function getNextHydratable(node: ?Node) {
         nodeData === SUSPENSE_START_DATA ||
         nodeData === SUSPENSE_FALLBACK_START_DATA ||
         nodeData === SUSPENSE_PENDING_START_DATA ||
-        (enableAsyncActions &&
-          (nodeData === FORM_STATE_IS_MATCHING ||
-            nodeData === FORM_STATE_IS_NOT_MATCHING))
+        nodeData === FORM_STATE_IS_MATCHING ||
+        nodeData === FORM_STATE_IS_NOT_MATCHING
       ) {
         break;
       }
@@ -2935,7 +3408,7 @@ export function hydrateHoistable(
           const node = nodes[i];
           if (
             node.getAttribute('href') !==
-              (props.href == null ? null : props.href) ||
+              (props.href == null || props.href === '' ? null : props.href) ||
             node.getAttribute('rel') !==
               (props.rel == null ? null : props.rel) ||
             node.getAttribute('title') !==
@@ -3137,10 +3610,9 @@ export function isHostHoistableType(
             console.error(
               'Cannot render a <style> outside the main document without knowing its precedence and a unique href key.' +
                 ' React can hoist and deduplicate <style> tags if you provide a `precedence` prop along with an `href` prop that' +
-                ' does not conflic with the `href` values used in any other hoisted <style> or <link rel="stylesheet" ...> tags. ' +
+                ' does not conflict with the `href` values used in any other hoisted <style> or <link rel="stylesheet" ...> tags. ' +
                 ' Note that hoisting <style> tags is considered an advanced feature that most will not use directly.' +
-                ' Consider moving the <style> tag to the <head> or consider adding a `precedence="default"` and `href="some unique resource identifier"`, or move the <style>' +
-                ' to the <style> tag.',
+                ' Consider moving the <style> tag to the <head> or consider adding a `precedence="default"` and `href="some unique resource identifier"`.',
             );
           }
         }
@@ -3399,6 +3871,27 @@ export function suspendResource(
       }
     }
   }
+}
+
+export function suspendOnActiveViewTransition(rootContainer: Container): void {
+  if (suspendedState === null) {
+    throw new Error(
+      'Internal React Error: suspendedState null when it was expected to exists. Please report this as a React bug.',
+    );
+  }
+  const state = suspendedState;
+  const ownerDocument =
+    rootContainer.nodeType === DOCUMENT_NODE
+      ? rootContainer
+      : rootContainer.ownerDocument;
+  // $FlowFixMe[prop-missing]
+  const activeViewTransition = ownerDocument.__reactViewTransition;
+  if (activeViewTransition == null) {
+    return;
+  }
+  state.count++;
+  const ping = onUnsuspend.bind(state);
+  activeViewTransition.finished.then(ping, ping);
 }
 
 export function waitForCommitToBeReady(): null | ((() => void) => () => void) {

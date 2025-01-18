@@ -52,7 +52,7 @@ export function initialize(
     bridge?: FrontendBridge,
     store?: Store,
   } = {},
-): React.AbstractComponent<Props, mixed> {
+): React.ComponentType<Props> {
   if (bridge == null) {
     bridge = createBridge(contentWindow);
   }

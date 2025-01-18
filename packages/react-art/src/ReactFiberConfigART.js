@@ -363,6 +363,8 @@ export function resolveUpdatePriority(): EventPriority {
   return currentUpdatePriority || DefaultEventPriority;
 }
 
+export function trackSchedulerEvent(): void {}
+
 export function resolveEventType(): null | string {
   return null;
 }
@@ -453,6 +455,59 @@ export function unhideTextInstance(textInstance, text): void {
   // Noop
 }
 
+export function applyViewTransitionName(instance, name, className) {
+  // Noop
+}
+
+export function restoreViewTransitionName(instance, props) {
+  // Noop
+}
+
+export function cancelViewTransitionName(instance, name, props) {
+  // Noop
+}
+
+export function cancelRootViewTransitionName(rootContainer) {
+  // Noop
+}
+
+export function restoreRootViewTransitionName(rootContainer) {
+  // Noop
+}
+
+export type InstanceMeasurement = null;
+
+export function measureInstance(instance) {
+  return null;
+}
+
+export function wasInstanceInViewport(measurement): boolean {
+  return true;
+}
+
+export function hasInstanceChanged(oldMeasurement, newMeasurement): boolean {
+  return false;
+}
+
+export function hasInstanceAffectedParent(
+  oldMeasurement,
+  newMeasurement,
+): boolean {
+  return false;
+}
+
+export function startViewTransition() {
+  return false;
+}
+
+export type ViewTransitionInstance = null | {name: string, ...};
+
+export function createViewTransitionInstance(
+  name: string,
+): ViewTransitionInstance {
+  return null;
+}
+
 export function clearContainer(container) {
   // TODO Implement this
 }
@@ -494,6 +549,8 @@ export function preloadInstance(type, props) {
 export function startSuspendingCommit() {}
 
 export function suspendInstance(type, props) {}
+
+export function suspendOnActiveViewTransition(container) {}
 
 export function waitForCommitToBeReady() {
   return null;

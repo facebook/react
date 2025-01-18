@@ -100,6 +100,16 @@ function isInsideComponentOrHook(node) {
   return false;
 }
 
+function isInsideDoWhileLoop(node) {
+  while (node) {
+    if (node.type === 'DoWhileStatement') {
+      return true;
+    }
+    node = node.parent;
+  }
+  return false;
+}
+
 function isUseEffectEventIdentifier(node) {
   if (__EXPERIMENTAL__) {
     return node.type === 'Identifier' && node.name === 'useEffectEvent';
@@ -485,7 +495,10 @@ export default {
           for (const hook of reactHooks) {
             // Report an error if a hook may be called more then once.
             // `use(...)` can be called in loops.
-            if (cycled && !isUseIdentifier(hook)) {
+            if (
+              (cycled || isInsideDoWhileLoop(hook)) &&
+              !isUseIdentifier(hook)
+            ) {
               context.report({
                 node: hook,
                 message:
@@ -520,7 +533,8 @@ export default {
               if (
                 !cycled &&
                 pathsFromStartToEnd !== allPathsFromStartToEnd &&
-                !isUseIdentifier(hook) // `use(...)` can be called conditionally.
+                !isUseIdentifier(hook) && // `use(...)` can be called conditionally.
+                !isInsideDoWhileLoop(hook) // wrapping do/while loops are checked separately.
               ) {
                 const message =
                   `React Hook "${getSource(hook)}" is called ` +
@@ -535,7 +549,8 @@ export default {
             } else if (
               codePathNode.parent &&
               (codePathNode.parent.type === 'MethodDefinition' ||
-                codePathNode.parent.type === 'ClassProperty') &&
+                codePathNode.parent.type === 'ClassProperty' ||
+                codePathNode.parent.type === 'PropertyDefinition') &&
               codePathNode.parent.value === codePathNode
             ) {
               // Custom message for hooks inside a class

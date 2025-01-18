@@ -12,6 +12,8 @@ import type {Thenable} from 'shared/ReactTypes';
 import type {ClientManifest} from './ReactFlightServerConfigTurbopackBundler';
 import type {ServerManifest} from 'react-client/src/ReactFlightClientConfig';
 
+import {ASYNC_ITERATOR} from 'shared/ReactSymbols';
+
 import {
   createRequest,
   createPrerenderRequest,
@@ -25,6 +27,9 @@ import {
   createResponse,
   close,
   getRoot,
+  reportGlobalError,
+  resolveField,
+  resolveFile,
 } from 'react-server/src/ReactFlightReplyServer';
 
 import {
@@ -183,10 +188,56 @@ function decodeReply<T>(
   return root;
 }
 
+function decodeReplyFromAsyncIterable<T>(
+  iterable: AsyncIterable<[string, string | File]>,
+  turbopackMap: ServerManifest,
+  options?: {temporaryReferences?: TemporaryReferenceSet},
+): Thenable<T> {
+  const iterator: AsyncIterator<[string, string | File]> =
+    iterable[ASYNC_ITERATOR]();
+
+  const response = createResponse(
+    turbopackMap,
+    '',
+    options ? options.temporaryReferences : undefined,
+  );
+
+  function progress(
+    entry:
+      | {done: false, +value: [string, string | File], ...}
+      | {done: true, +value: void, ...},
+  ) {
+    if (entry.done) {
+      close(response);
+    } else {
+      const [name, value] = entry.value;
+      if (typeof value === 'string') {
+        resolveField(response, name, value);
+      } else {
+        resolveFile(response, name, value);
+      }
+      iterator.next().then(progress, error);
+    }
+  }
+  function error(reason: Error) {
+    reportGlobalError(response, reason);
+    if (typeof (iterator: any).throw === 'function') {
+      // The iterator protocol doesn't necessarily include this but a generator do.
+      // $FlowFixMe should be able to pass mixed
+      iterator.throw(reason).then(error, error);
+    }
+  }
+
+  iterator.next().then(progress, error);
+
+  return getRoot(response);
+}
+
 export {
   renderToReadableStream,
   prerender,
   decodeReply,
+  decodeReplyFromAsyncIterable,
   decodeAction,
   decodeFormState,
 };

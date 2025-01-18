@@ -1,5 +1,5 @@
 // @enableJsxOutlining
-function Component(arr) {
+function Component({arr}) {
   const x = useX();
   return arr.map(i => {
     <>

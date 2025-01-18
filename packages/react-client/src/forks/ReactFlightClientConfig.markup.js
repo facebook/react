@@ -16,7 +16,7 @@ export * from 'react-markup/src/ReactMarkupLegacyClientStreamConfig.js';
 export * from 'react-client/src/ReactClientConsoleConfigPlain';
 
 export type ModuleLoading = null;
-export type SSRModuleMap = null;
+export type ServerConsumerModuleMap = null;
 export opaque type ServerManifest = null;
 export opaque type ServerReferenceId = string;
 export opaque type ClientReferenceMetadata = null;
@@ -33,7 +33,7 @@ export function prepareDestinationForModule(
 }
 
 export function resolveClientReference<T>(
-  bundlerConfig: SSRModuleMap,
+  bundlerConfig: ServerConsumerModuleMap,
   metadata: ClientReferenceMetadata,
 ): ClientReference<T> {
   throw new Error(

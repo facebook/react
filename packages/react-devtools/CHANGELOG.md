@@ -4,6 +4,21 @@
 
 ---
 
+### 6.1.0
+January 16, 2025
+
+* fix[DevTools]: fix HostComponent naming in filters for Native ([hoxyq](https://github.com/hoxyq) in [#32086](https://github.com/facebook/react/pull/32086))
+* Fix copy functionality in Firefox ([V3RON](https://github.com/V3RON) in [#32077](https://github.com/facebook/react/pull/32077))
+* Prevent crash when starting consecutive profiling sessions ([V3RON](https://github.com/V3RON) in [#32066](https://github.com/facebook/react/pull/32066))
+* fix[DevTools/Tree]: only scroll to item when panel is visible ([hoxyq](https://github.com/hoxyq) in [#32018](https://github.com/facebook/react/pull/32018))
+* feat[Tree]: set initial scroll offset when inspected element index is set ([hoxyq](https://github.com/hoxyq) in [#31968](https://github.com/facebook/react/pull/31968))
+* DevTools: fix initial host instance selection ([hoxyq](https://github.com/hoxyq) in [#31892](https://github.com/facebook/react/pull/31892))
+* chore[DevTools/Tree]: don't pre-select root element ([hoxyq](https://github.com/hoxyq) in [#32015](https://github.com/facebook/react/pull/32015))
+* Show component names while highlighting renders ([piotrski](https://github.com/piotrski) in [#31577](https://github.com/facebook/react/pull/31577))
+* allow non-coercible objects in formatConsoleArgumentsToSingleString ([henryqdineen](https://github.com/henryqdineen) in [#31444](https://github.com/facebook/react/pull/31444))
+
+---
+
 ### 6.0.1
 October 15, 2024
 

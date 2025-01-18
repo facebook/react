@@ -16,13 +16,9 @@
 export const alwaysThrottleRetries = true;
 export const disableDefaultPropsExceptForClasses = __VARIANT__;
 export const disableLegacyContextForFunctionComponents = __VARIANT__;
-export const disableLegacyMode = __VARIANT__;
 export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;
-export const disableStringRefs = __VARIANT__;
-export const enableDeferRootSchedulingToMicrotask = __VARIANT__;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = __VARIANT__;
 export const enableHiddenSubtreeInsertionEffectCleanup = __VARIANT__;
-export const enableLogStringRefsProd: null | ((string, string) => void) = null;
 export const enableNoCloningMemoCache = __VARIANT__;
 export const enableObjectFiber = __VARIANT__;
 export const enableRenderableContext = __VARIANT__;
@@ -30,20 +26,18 @@ export const enableRetryLaneExpiration = __VARIANT__;
 export const enableTransitionTracing = __VARIANT__;
 export const favorSafetyOverHydrationPerf = __VARIANT__;
 export const renameElementSymbol = __VARIANT__;
+export const enableOwnerStacks = __VARIANT__;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
-
-// Enable this flag to help with concurrent mode debugging.
-// It logs information to the console about React scheduling, rendering, and commit phases.
-//
-// NOTE: This feature will only work in DEV mode; all callsites are wrapped with __DEV__.
-export const enableDebugTracing = __EXPERIMENTAL__;
 
 export const enableSchedulingProfiler = __VARIANT__;
 
 export const enableInfiniteRenderLoopDetection = __VARIANT__;
 export const enableSiblingPrerendering = __VARIANT__;
+
+export const enableUseResourceEffectHook = __VARIANT__;
+export const enableRemoveConsolePatches = __VARIANT__;
 
 // TODO: These flags are hard-coded to the default values used in open source.
 // Update the tests so that they pass in either mode, then set these

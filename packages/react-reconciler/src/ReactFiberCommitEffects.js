@@ -11,21 +11,26 @@ import type {Fiber} from './ReactInternalTypes';
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
 import type {HookFlags} from './ReactHookEffectTags';
+import {
+  getViewTransitionName,
+  type ViewTransitionState,
+  type ViewTransitionProps,
+} from './ReactFiberViewTransitionComponent';
 
 import {
   enableProfilerTimer,
   enableProfilerCommitHooks,
   enableProfilerNestedUpdatePhase,
   enableSchedulingProfiler,
-  enableScopeAPI,
-  disableStringRefs,
+  enableUseResourceEffectHook,
+  enableViewTransition,
 } from 'shared/ReactFeatureFlags';
 import {
   ClassComponent,
   HostComponent,
   HostHoistable,
   HostSingleton,
-  ScopeComponent,
+  ViewTransitionComponent,
 } from './ReactWorkTags';
 import {NoFlags} from './ReactFiberFlags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
@@ -40,7 +45,10 @@ import {
   commitCallbacks,
   commitHiddenCallbacks,
 } from './ReactFiberClassUpdateQueue';
-import {getPublicInstance} from './ReactFiberConfig';
+import {
+  getPublicInstance,
+  createViewTransitionInstance,
+} from './ReactFiberConfig';
 import {
   captureCommitPhaseError,
   setIsRunningInsertionEffect,
@@ -50,6 +58,7 @@ import {
   Layout as HookLayout,
   Insertion as HookInsertion,
   Passive as HookPassive,
+  HasEffect as HookHasEffect,
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork';
 import {
@@ -71,6 +80,10 @@ import {
 } from './ReactFiberCallUserSpace';
 
 import {runWithFiberInDEV} from './ReactCurrentFiber';
+import {
+  ResourceEffectIdentityKind,
+  ResourceEffectUpdateKind,
+} from './ReactFiberHooks';
 
 function shouldProfile(current: Fiber): boolean {
   return (
@@ -147,19 +160,90 @@ export function commitHookEffectListMount(
 
           // Mount
           let destroy;
+          if (enableUseResourceEffectHook) {
+            if (effect.resourceKind === ResourceEffectIdentityKind) {
+              if (__DEV__) {
+                effect.inst.resource = runWithFiberInDEV(
+                  finishedWork,
+                  callCreateInDEV,
+                  effect,
+                );
+                if (effect.inst.resource == null) {
+                  console.error(
+                    'useResourceEffect must provide a callback which returns a resource. ' +
+                      'If a managed resource is not needed here, use useEffect. Received %s',
+                    effect.inst.resource,
+                  );
+                }
+              } else {
+                effect.inst.resource = effect.create();
+              }
+              destroy = effect.inst.destroy;
+            }
+            if (effect.resourceKind === ResourceEffectUpdateKind) {
+              if (
+                // We don't want to fire updates on remount during Activity
+                (flags & HookHasEffect) > 0 &&
+                typeof effect.update === 'function' &&
+                effect.inst.resource != null
+              ) {
+                // TODO(@poteto) what about multiple updates?
+                if (__DEV__) {
+                  runWithFiberInDEV(finishedWork, callCreateInDEV, effect);
+                } else {
+                  effect.update(effect.inst.resource);
+                }
+              }
+            }
+          }
           if (__DEV__) {
             if ((flags & HookInsertion) !== NoHookEffect) {
               setIsRunningInsertionEffect(true);
             }
-            destroy = runWithFiberInDEV(finishedWork, callCreateInDEV, effect);
+            if (enableUseResourceEffectHook) {
+              if (effect.resourceKind == null) {
+                destroy = runWithFiberInDEV(
+                  finishedWork,
+                  callCreateInDEV,
+                  effect,
+                );
+              }
+            } else {
+              destroy = runWithFiberInDEV(
+                finishedWork,
+                callCreateInDEV,
+                effect,
+              );
+            }
             if ((flags & HookInsertion) !== NoHookEffect) {
               setIsRunningInsertionEffect(false);
             }
           } else {
-            const create = effect.create;
-            const inst = effect.inst;
-            destroy = create();
-            inst.destroy = destroy;
+            if (enableUseResourceEffectHook) {
+              if (effect.resourceKind == null) {
+                const create = effect.create;
+                const inst = effect.inst;
+                destroy = create();
+                inst.destroy = destroy;
+              }
+            } else {
+              if (effect.resourceKind != null) {
+                if (__DEV__) {
+                  console.error(
+                    'Expected only SimpleEffects when enableUseResourceEffectHook is disabled, ' +
+                      'got %s',
+                    effect.resourceKind,
+                  );
+                }
+              }
+              const create = effect.create;
+              const inst = effect.inst;
+              // $FlowFixMe[incompatible-type] (@poteto)
+              // $FlowFixMe[not-a-function] (@poteto)
+              destroy = create();
+              // $FlowFixMe[incompatible-type] (@poteto)
+              inst.destroy = destroy;
+            }
           }
 
           if (enableSchedulingProfiler) {
@@ -177,6 +261,11 @@ export function commitHookEffectListMount(
                 hookName = 'useLayoutEffect';
               } else if ((effect.tag & HookInsertion) !== NoFlags) {
                 hookName = 'useInsertionEffect';
+              } else if (
+                enableUseResourceEffectHook &&
+                effect.resourceKind != null
+              ) {
+                hookName = 'useResourceEffect';
               } else {
                 hookName = 'useEffect';
               }
@@ -203,6 +292,7 @@ export function commitHookEffectListMount(
                   `}, [someId]); // Or [] if effect doesn't need props or state\n\n` +
                   'Learn more about data fetching with Hooks: https://react.dev/link/hooks-data-fetching';
               } else {
+                // $FlowFixMe[unsafe-addition] (@poteto)
                 addendum = ' You returned: ' + destroy;
               }
               runWithFiberInDEV(
@@ -247,7 +337,13 @@ export function commitHookEffectListUnmount(
           const inst = effect.inst;
           const destroy = inst.destroy;
           if (destroy !== undefined) {
-            inst.destroy = undefined;
+            if (enableUseResourceEffectHook) {
+              if (effect.resourceKind == null) {
+                inst.destroy = undefined;
+              }
+            } else {
+              inst.destroy = undefined;
+            }
             if (enableSchedulingProfiler) {
               if ((flags & HookPassive) !== NoHookEffect) {
                 markComponentPassiveEffectUnmountStarted(finishedWork);
@@ -261,7 +357,41 @@ export function commitHookEffectListUnmount(
                 setIsRunningInsertionEffect(true);
               }
             }
-            safelyCallDestroy(finishedWork, nearestMountedAncestor, destroy);
+            if (enableUseResourceEffectHook) {
+              if (
+                effect.resourceKind === ResourceEffectIdentityKind &&
+                effect.inst.resource != null
+              ) {
+                safelyCallDestroyWithResource(
+                  finishedWork,
+                  nearestMountedAncestor,
+                  destroy,
+                  effect.inst.resource,
+                );
+                if (effect.next.resourceKind === ResourceEffectUpdateKind) {
+                  // $FlowFixMe[prop-missing] (@poteto)
+                  effect.next.update = undefined;
+                } else {
+                  if (__DEV__) {
+                    console.error(
+                      'Expected a ResourceEffectUpdateKind to follow ResourceEffectIdentityKind, ' +
+                        'got %s. This is a bug in React.',
+                      effect.next.resourceKind,
+                    );
+                  }
+                }
+                effect.inst.resource = null;
+              }
+              if (effect.resourceKind == null) {
+                safelyCallDestroy(
+                  finishedWork,
+                  nearestMountedAncestor,
+                  destroy,
+                );
+              }
+            } else {
+              safelyCallDestroy(finishedWork, nearestMountedAncestor, destroy);
+            }
             if (__DEV__) {
               if ((flags & HookInsertion) !== NoHookEffect) {
                 setIsRunningInsertionEffect(false);
@@ -743,20 +873,27 @@ export function safelyCallComponentWillUnmount(
 function commitAttachRef(finishedWork: Fiber) {
   const ref = finishedWork.ref;
   if (ref !== null) {
-    const instance = finishedWork.stateNode;
     let instanceToUse;
     switch (finishedWork.tag) {
       case HostHoistable:
       case HostSingleton:
       case HostComponent:
-        instanceToUse = getPublicInstance(instance);
+        instanceToUse = getPublicInstance(finishedWork.stateNode);
         break;
+      case ViewTransitionComponent:
+        if (enableViewTransition) {
+          const instance: ViewTransitionState = finishedWork.stateNode;
+          const props: ViewTransitionProps = finishedWork.memoizedProps;
+          const name = getViewTransitionName(props, instance);
+          if (instance.ref === null || instance.ref.name !== name) {
+            instance.ref = createViewTransitionInstance(name);
+          }
+          instanceToUse = instance.ref;
+          break;
+        }
+      // Fallthrough
       default:
-        instanceToUse = instance;
-    }
-    // Moved outside to ensure DCE works with this flag
-    if (enableScopeAPI && finishedWork.tag === ScopeComponent) {
-      instanceToUse = instance;
+        instanceToUse = finishedWork.stateNode;
     }
     if (typeof ref === 'function') {
       if (shouldProfile(finishedWork)) {
@@ -773,7 +910,7 @@ function commitAttachRef(finishedWork: Fiber) {
       if (__DEV__) {
         // TODO: We should move these warnings to happen during the render
         // phase (markRef).
-        if (disableStringRefs && typeof ref === 'string') {
+        if (typeof ref === 'string') {
           console.error('String refs are no longer supported.');
         } else if (!ref.hasOwnProperty('current')) {
           console.error(
@@ -890,6 +1027,30 @@ function safelyCallDestroy(
   } else {
     try {
       destroy();
+    } catch (error) {
+      captureCommitPhaseError(current, nearestMountedAncestor, error);
+    }
+  }
+}
+
+function safelyCallDestroyWithResource(
+  current: Fiber,
+  nearestMountedAncestor: Fiber | null,
+  destroy: mixed => void,
+  resource: mixed,
+) {
+  const destroy_ = resource == null ? destroy : destroy.bind(null, resource);
+  if (__DEV__) {
+    runWithFiberInDEV(
+      current,
+      callDestroyInDEV,
+      current,
+      nearestMountedAncestor,
+      destroy_,
+    );
+  } else {
+    try {
+      destroy_();
     } catch (error) {
       captureCommitPhaseError(current, nearestMountedAncestor, error);
     }

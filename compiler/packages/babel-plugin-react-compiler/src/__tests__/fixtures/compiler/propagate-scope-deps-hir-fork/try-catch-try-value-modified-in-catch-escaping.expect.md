@@ -34,7 +34,7 @@ const { throwInput } = require("shared-runtime");
 function Component(props) {
   const $ = _c(3);
   let x;
-  if ($[0] !== props.y || $[1] !== props.e) {
+  if ($[0] !== props.e || $[1] !== props.y) {
     try {
       const y = [];
       y.push(props.y);
@@ -44,8 +44,8 @@ function Component(props) {
       e.push(props.e);
       x = e;
     }
-    $[0] = props.y;
-    $[1] = props.e;
+    $[0] = props.e;
+    $[1] = props.y;
     $[2] = x;
   } else {
     x = $[2];

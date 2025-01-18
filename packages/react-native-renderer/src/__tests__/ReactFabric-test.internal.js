@@ -16,6 +16,7 @@ let ReactNativePrivateInterface;
 let createReactNativeComponentClass;
 let StrictMode;
 let act;
+let assertConsoleErrorDev;
 
 const DISPATCH_COMMAND_REQUIRES_HOST_COMPONENT =
   "dispatchCommand was called with a ref that isn't a " +
@@ -38,7 +39,7 @@ describe('ReactFabric', () => {
     createReactNativeComponentClass =
       require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
         .ReactNativeViewConfigRegistry.register;
-    act = require('internal-test-utils').act;
+    ({act, assertConsoleErrorDev} = require('internal-test-utils'));
   });
 
   it('should be able to create and render a native component', async () => {
@@ -459,9 +460,8 @@ describe('ReactFabric', () => {
     });
 
     expect(nativeFabricUIManager.dispatchCommand).not.toBeCalled();
-    expect(() => {
-      ReactFabric.dispatchCommand(viewRef, 'updateCommand', [10, 20]);
-    }).toErrorDev([DISPATCH_COMMAND_REQUIRES_HOST_COMPONENT], {
+    ReactFabric.dispatchCommand(viewRef, 'updateCommand', [10, 20]);
+    assertConsoleErrorDev([DISPATCH_COMMAND_REQUIRES_HOST_COMPONENT], {
       withoutStack: true,
     });
 
@@ -525,9 +525,8 @@ describe('ReactFabric', () => {
     });
 
     expect(nativeFabricUIManager.sendAccessibilityEvent).not.toBeCalled();
-    expect(() => {
-      ReactFabric.sendAccessibilityEvent(viewRef, 'eventTypeName');
-    }).toErrorDev([SEND_ACCESSIBILITY_EVENT_REQUIRES_HOST_COMPONENT], {
+    ReactFabric.sendAccessibilityEvent(viewRef, 'eventTypeName');
+    assertConsoleErrorDev([SEND_ACCESSIBILITY_EVENT_REQUIRES_HOST_COMPONENT], {
       withoutStack: true,
     });
 
@@ -856,24 +855,31 @@ describe('ReactFabric', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    await expect(async () => {
-      await act(() => {
-        ReactFabric.render(<View>this should warn</View>, 11, null, true);
-      });
-    }).toErrorDev(['Text strings must be rendered within a <Text> component.']);
+    await act(() => {
+      ReactFabric.render(<View>this should warn</View>, 11, null, true);
+    });
+    assertConsoleErrorDev([
+      'Text strings must be rendered within a <Text> component.\n' +
+        '    in RCTView (at **)',
+    ]);
 
-    await expect(async () => {
-      await act(() => {
-        ReactFabric.render(
-          <Text>
-            <ScrollView>hi hello hi</ScrollView>
-          </Text>,
-          11,
-          null,
-          true,
-        );
-      });
-    }).toErrorDev(['Text strings must be rendered within a <Text> component.']);
+    await act(() => {
+      ReactFabric.render(
+        <Text>
+          <ScrollView>hi hello hi</ScrollView>
+        </Text>,
+        11,
+        null,
+        true,
+      );
+    });
+    assertConsoleErrorDev([
+      'Text strings must be rendered within a <Text> component.\n' +
+        '    in RCTScrollView (at **)' +
+        (gate(flags => !flags.enableOwnerStacks)
+          ? '\n    in RCTText (at **)'
+          : ''),
+    ]);
   });
 
   it('should not throw for text inside of an indirect <Text> ancestor', async () => {
@@ -1166,10 +1172,8 @@ describe('ReactFabric', () => {
       );
     });
 
-    let match;
-    expect(
-      () => (match = ReactFabric.findHostInstance_DEPRECATED(parent)),
-    ).toErrorDev([
+    const match = ReactFabric.findHostInstance_DEPRECATED(parent);
+    assertConsoleErrorDev([
       'findHostInstance_DEPRECATED is deprecated in StrictMode. ' +
         'findHostInstance_DEPRECATED was passed an instance of ContainsStrictModeChild which renders StrictMode children. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
@@ -1207,10 +1211,8 @@ describe('ReactFabric', () => {
       );
     });
 
-    let match;
-    expect(
-      () => (match = ReactFabric.findHostInstance_DEPRECATED(parent)),
-    ).toErrorDev([
+    const match = ReactFabric.findHostInstance_DEPRECATED(parent);
+    assertConsoleErrorDev([
       'findHostInstance_DEPRECATED is deprecated in StrictMode. ' +
         'findHostInstance_DEPRECATED was passed an instance of IsInStrictMode which is inside StrictMode. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
@@ -1250,8 +1252,8 @@ describe('ReactFabric', () => {
       );
     });
 
-    let match;
-    expect(() => (match = ReactFabric.findNodeHandle(parent))).toErrorDev([
+    const match = ReactFabric.findNodeHandle(parent);
+    assertConsoleErrorDev([
       'findNodeHandle is deprecated in StrictMode. ' +
         'findNodeHandle was passed an instance of ContainsStrictModeChild which renders StrictMode children. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
@@ -1291,8 +1293,8 @@ describe('ReactFabric', () => {
       );
     });
 
-    let match;
-    expect(() => (match = ReactFabric.findNodeHandle(parent))).toErrorDev([
+    const match = ReactFabric.findNodeHandle(parent);
+    assertConsoleErrorDev([
       'findNodeHandle is deprecated in StrictMode. ' +
         'findNodeHandle was passed an instance of IsInStrictMode which is inside StrictMode. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
@@ -1313,16 +1315,16 @@ describe('ReactFabric', () => {
         return null;
       }
     }
-    await expect(async () => {
-      await act(() => {
-        ReactFabric.render(<TestComponent />, 11, null, true);
-      });
-    }).toErrorDev([
+    await act(() => {
+      ReactFabric.render(<TestComponent />, 11, null, true);
+    });
+    assertConsoleErrorDev([
       'TestComponent is accessing findNodeHandle inside its render(). ' +
         'render() should be a pure function of props and state. It should ' +
         'never access something that requires stale data from the previous ' +
         'render, such as refs. Move this logic to componentDidMount and ' +
-        'componentDidUpdate instead.',
+        'componentDidUpdate instead.\n' +
+        '    in TestComponent (at **)',
     ]);
   });
 

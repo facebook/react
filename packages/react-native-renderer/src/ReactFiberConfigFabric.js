@@ -372,6 +372,8 @@ export function resolveUpdatePriority(): EventPriority {
   return DefaultEventPriority;
 }
 
+export function trackSchedulerEvent(): void {}
+
 export function resolveEventType(): null | string {
   return null;
 }
@@ -548,6 +550,8 @@ export function preloadInstance(type: Type, props: Props): boolean {
 export function startSuspendingCommit(): void {}
 
 export function suspendInstance(type: Type, props: Props): void {}
+
+export function suspendOnActiveViewTransition(container: Container): void {}
 
 export function waitForCommitToBeReady(): null {
   return null;

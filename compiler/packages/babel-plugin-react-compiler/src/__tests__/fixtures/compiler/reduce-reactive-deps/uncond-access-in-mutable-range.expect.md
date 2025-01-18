@@ -49,15 +49,15 @@ function Component(t0) {
   const $ = _c(8);
   const { cond, other } = t0;
   let x;
-  if ($[0] !== other || $[1] !== cond) {
+  if ($[0] !== cond || $[1] !== other) {
     x = makeObject_Primitives();
     setProperty(x, { b: 3, other }, "a");
     identity(x.a.b);
     if (!cond) {
       x.a = null;
     }
-    $[0] = other;
-    $[1] = cond;
+    $[0] = cond;
+    $[1] = other;
     $[2] = x;
   } else {
     x = $[2];

@@ -195,14 +195,18 @@ const forks = Object.freeze({
     entry,
     dependencies
   ) => {
-    if (
-      bundleType === FB_WWW_DEV ||
-      bundleType === FB_WWW_PROD ||
-      bundleType === FB_WWW_PROFILING
-    ) {
-      return './packages/scheduler/src/forks/SchedulerFeatureFlags.www.js';
+    switch (bundleType) {
+      case FB_WWW_DEV:
+      case FB_WWW_PROD:
+      case FB_WWW_PROFILING:
+        return './packages/scheduler/src/forks/SchedulerFeatureFlags.www.js';
+      case RN_FB_DEV:
+      case RN_FB_PROD:
+      case RN_FB_PROFILING:
+        return './packages/scheduler/src/forks/SchedulerFeatureFlags.native-fb.js';
+      default:
+        return './packages/scheduler/src/SchedulerFeatureFlags.js';
     }
-    return './packages/scheduler/src/SchedulerFeatureFlags.js';
   },
 
   './packages/shared/consoleWithStackDev.js': (bundleType, entry) => {
@@ -215,6 +219,36 @@ const forks = Object.freeze({
       default:
         return null;
     }
+  },
+
+  './packages/shared/DefaultPrepareStackTrace.js': (
+    bundleType,
+    entry,
+    dependencies,
+    moduleType
+  ) => {
+    if (moduleType !== RENDERER && moduleType !== RECONCILER) {
+      return null;
+    }
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+    for (let rendererInfo of inlinedHostConfigs) {
+      if (rendererInfo.entryPoints.indexOf(entry) !== -1) {
+        if (!rendererInfo.isServerSupported) {
+          return null;
+        }
+        const foundFork = findNearestExistingForkFile(
+          './packages/shared/forks/DefaultPrepareStackTrace.',
+          rendererInfo.shortName,
+          '.js'
+        );
+        if (foundFork) {
+          return foundFork;
+        }
+        // fall through to error
+        break;
+      }
+    }
+    return null;
   },
 
   './packages/react-reconciler/src/ReactFiberConfig.js': (

@@ -9,47 +9,46 @@
 
 import type {LazyComponent} from 'react/src/ReactLazy';
 
-import {enableComponentStackLocations} from 'shared/ReactFeatureFlags';
-
 import {
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
   REACT_FORWARD_REF_TYPE,
   REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
+  REACT_VIEW_TRANSITION_TYPE,
 } from 'shared/ReactSymbols';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
+import DefaultPrepareStackTrace from 'shared/DefaultPrepareStackTrace';
+
+import {enableViewTransition} from 'shared/ReactFeatureFlags';
+
 let prefix;
 let suffix;
 export function describeBuiltInComponentFrame(name: string): string {
-  if (enableComponentStackLocations) {
-    if (prefix === undefined) {
-      // Extract the VM specific prefix used by each line.
-      try {
-        throw Error();
-      } catch (x) {
-        const match = x.stack.trim().match(/\n( *(at )?)/);
-        prefix = (match && match[1]) || '';
-        suffix =
-          x.stack.indexOf('\n    at') > -1
-            ? // V8
-              ' (<anonymous>)'
-            : // JSC/Spidermonkey
-              x.stack.indexOf('@') > -1
-              ? '@unknown:0:0'
-              : // Other
-                '';
-      }
+  if (prefix === undefined) {
+    // Extract the VM specific prefix used by each line.
+    try {
+      throw Error();
+    } catch (x) {
+      const match = x.stack.trim().match(/\n( *(at )?)/);
+      prefix = (match && match[1]) || '';
+      suffix =
+        x.stack.indexOf('\n    at') > -1
+          ? // V8
+            ' (<anonymous>)'
+          : // JSC/Spidermonkey
+            x.stack.indexOf('@') > -1
+            ? '@unknown:0:0'
+            : // Other
+              '';
     }
-    // We use the prefix to ensure our stacks line up with native stack frames.
-    return '\n' + prefix + name + suffix;
-  } else {
-    return describeComponentFrame(name);
   }
+  // We use the prefix to ensure our stacks line up with native stack frames.
+  return '\n' + prefix + name + suffix;
 }
 
 export function describeDebugInfoFrame(name: string, env: ?string): string {
@@ -92,8 +91,7 @@ export function describeNativeComponentFrame(
 
   reentry = true;
   const previousPrepareStackTrace = Error.prepareStackTrace;
-  // $FlowFixMe[incompatible-type] It does accept undefined.
-  Error.prepareStackTrace = undefined;
+  Error.prepareStackTrace = DefaultPrepareStackTrace;
   let previousDispatcher = null;
 
   if (__DEV__) {
@@ -295,28 +293,12 @@ export function describeNativeComponentFrame(
   return syntheticFrame;
 }
 
-function describeComponentFrame(name: null | string) {
-  return '\n    in ' + (name || 'Unknown');
-}
-
 export function describeClassComponentFrame(ctor: Function): string {
-  if (enableComponentStackLocations) {
-    return describeNativeComponentFrame(ctor, true);
-  } else {
-    return describeFunctionComponentFrame(ctor);
-  }
+  return describeNativeComponentFrame(ctor, true);
 }
 
 export function describeFunctionComponentFrame(fn: Function): string {
-  if (enableComponentStackLocations) {
-    return describeNativeComponentFrame(fn, false);
-  } else {
-    if (!fn) {
-      return '';
-    }
-    const name = fn.displayName || fn.name || null;
-    return describeComponentFrame(name);
-  }
+  return describeNativeComponentFrame(fn, false);
 }
 
 function shouldConstruct(Component: Function) {
@@ -333,11 +315,7 @@ export function describeUnknownElementTypeFrameInDEV(type: any): string {
     return '';
   }
   if (typeof type === 'function') {
-    if (enableComponentStackLocations) {
-      return describeNativeComponentFrame(type, shouldConstruct(type));
-    } else {
-      return describeFunctionComponentFrame(type);
-    }
+    return describeNativeComponentFrame(type, shouldConstruct(type));
   }
   if (typeof type === 'string') {
     return describeBuiltInComponentFrame(type);
@@ -347,6 +325,10 @@ export function describeUnknownElementTypeFrameInDEV(type: any): string {
       return describeBuiltInComponentFrame('Suspense');
     case REACT_SUSPENSE_LIST_TYPE:
       return describeBuiltInComponentFrame('SuspenseList');
+    case REACT_VIEW_TRANSITION_TYPE:
+      if (enableViewTransition) {
+        return describeBuiltInComponentFrame('ViewTransition');
+      }
   }
   if (typeof type === 'object') {
     switch (type.$$typeof) {
