@@ -1039,6 +1039,32 @@ describe('ReactChildren', () => {
     });
   });
 
+  // @gate __DEV__
+  it('does not throw on children without `_store`', async () => {
+    function ComponentRenderingFlattenedChildren({children}) {
+      return <div>{React.Children.toArray(children)}</div>;
+    }
+
+    const source = <div />;
+    const productionElement = {};
+    for (const [key, value] of Object.entries(source)) {
+      if (key !== '_owner' && key !== '_store') {
+        productionElement[key] = value;
+      }
+    }
+    Object.freeze(productionElement);
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <ComponentRenderingFlattenedChildren>
+          {productionElement}
+        </ComponentRenderingFlattenedChildren>,
+      );
+    });
+  });
+
   it('should escape keys', () => {
     const zero = <div key="1" />;
     const one = <div key="1=::=2" />;
