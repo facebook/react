@@ -478,15 +478,15 @@ function fastAddProperties(
       } else {
         continue;
       }
+    } else if (typeof attributeConfig.process === 'function') {
+      // An atomic prop with custom processing.
+      newValue = attributeConfig.process(prop);
     } else if (typeof prop === 'function') {
       // A function prop. It represents an event handler. Pass it to native as 'true'.
       newValue = true;
     } else if (typeof attributeConfig !== 'object') {
       // An atomic prop. Doesn't need to be flattened.
       newValue = prop;
-    } else if (typeof attributeConfig.process === 'function') {
-      // An atomic prop with custom processing.
-      newValue = attributeConfig.process(prop);
     } else if (typeof attributeConfig.diff === 'function') {
       // An atomic prop with custom diffing. We don't need to do diffing when adding props.
       newValue = prop;
