@@ -15,18 +15,31 @@ import type {Source} from 'react-devtools-shared/src/shared/types';
 
 type Props = {
   editorURL: string,
+  editorURLProtocolReplace?: string,
+  editorURLProtocolReplaceWith?: string,
   source: Source,
   symbolicatedSourcePromise: Promise<Source | null>,
 };
 
 function checkConditions(
   editorURL: string,
+  editorURLProtocolReplace?: string,
+  editorURLProtocolReplaceWith?: string,
   source: Source,
 ): {url: URL | null, shouldDisableButton: boolean} {
   try {
     const url = new URL(editorURL);
 
     let sourceURL = source.sourceURL;
+
+    if (editorURLProtocolReplace) {
+      sourceURL = sourceURL
+        .replace(
+          new RegExp(editorURLProtocolReplace),
+          editorURLProtocolReplaceWith ?? '',
+        )
+        .split('?')[0];
+    }
 
     // Check if sourceURL is a correct URL, which has a protocol specified
     if (sourceURL.includes('://')) {
@@ -67,6 +80,8 @@ function checkConditions(
 
 function OpenInEditorButton({
   editorURL,
+  editorURLProtocolReplace,
+  editorURLProtocolReplaceWith,
   source,
   symbolicatedSourcePromise,
 }: Props): React.Node {
@@ -74,6 +89,8 @@ function OpenInEditorButton({
 
   const {url, shouldDisableButton} = checkConditions(
     editorURL,
+    editorURLProtocolReplace,
+    editorURLProtocolReplaceWith,
     symbolicatedSource ? symbolicatedSource : source,
   );
 
