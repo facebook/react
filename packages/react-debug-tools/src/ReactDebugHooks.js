@@ -731,6 +731,24 @@ function useHostTransitionStatus(): TransitionStatus {
   return status;
 }
 
+function useResourceEffect(
+  create: () => mixed,
+  createDeps: Array<mixed> | void | null,
+  update: ((resource: mixed) => void) | void,
+  updateDeps: Array<mixed> | void | null,
+  destroy: ((resource: mixed) => void) | void,
+) {
+  nextHook();
+  hookLog.push({
+    displayName: null,
+    primitive: 'ResourceEffect',
+    stackError: new Error(),
+    value: create,
+    debugInfo: null,
+    dispatcherHookName: 'ResourceEffect',
+  });
+}
+
 const Dispatcher: DispatcherType = {
   use,
   readContext,
@@ -755,6 +773,7 @@ const Dispatcher: DispatcherType = {
   useFormState,
   useActionState,
   useHostTransitionStatus,
+  useResourceEffect,
 };
 
 // create a proxy to throw a custom error
@@ -941,6 +960,10 @@ function parseHookName(functionName: void | string): string {
 
   if (functionName.slice(startIndex).startsWith('unstable_')) {
     startIndex += 'unstable_'.length;
+  }
+
+  if (functionName.slice(startIndex).startsWith('unstable_')) {
+    startIndex += 'experimental_'.length;
   }
 
   if (functionName.slice(startIndex, startIndex + 3) === 'use') {

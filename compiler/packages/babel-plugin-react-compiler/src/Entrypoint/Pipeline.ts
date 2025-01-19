@@ -99,6 +99,7 @@ import {propagateScopeDependenciesHIR} from '../HIR/PropagateScopeDependenciesHI
 import {outlineJSX} from '../Optimization/OutlineJsx';
 import {optimizePropsMethodCalls} from '../Optimization/OptimizePropsMethodCalls';
 import {transformFire} from '../Transform';
+import {validateNoImpureFunctionsInRender} from '../Validation/ValiateNoImpureFunctionsInRender';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -255,6 +256,10 @@ function runWithEnvironment(
 
   if (env.config.validateNoJSXInTryStatements) {
     validateNoJSXInTryStatement(hir);
+  }
+
+  if (env.config.validateNoImpureFunctionsInRender) {
+    validateNoImpureFunctionsInRender(hir);
   }
 
   inferReactivePlaces(hir);

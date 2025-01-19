@@ -31,6 +31,7 @@ export opaque type Destination = mixed;
 export opaque type RenderState = mixed;
 export opaque type HoistableState = mixed;
 export opaque type ResumableState = mixed;
+export opaque type PreambleState = mixed;
 export opaque type FormatContext = mixed;
 export opaque type HeadersDescriptor = mixed;
 export type {TransitionStatus};
@@ -79,11 +80,17 @@ export const writeCompletedBoundaryInstruction =
 export const writeClientRenderBoundaryInstruction =
   $$$config.writeClientRenderBoundaryInstruction;
 export const NotPendingTransition = $$$config.NotPendingTransition;
+export const createPreambleState = $$$config.createPreambleState;
+export const canHavePreamble = $$$config.canHavePreamble;
+export const isPreambleContext = $$$config.isPreambleContext;
+export const isPreambleReady = $$$config.isPreambleReady;
+export const hoistPreambleState = $$$config.hoistPreambleState;
 
 // -------------------------
 //     Resources
 // -------------------------
-export const writePreamble = $$$config.writePreamble;
+export const writePreambleStart = $$$config.writePreambleStart;
+export const writePreambleEnd = $$$config.writePreambleEnd;
 export const writeHoistables = $$$config.writeHoistables;
 export const writeHoistablesForBoundary = $$$config.writeHoistablesForBoundary;
 export const writePostamble = $$$config.writePostamble;
