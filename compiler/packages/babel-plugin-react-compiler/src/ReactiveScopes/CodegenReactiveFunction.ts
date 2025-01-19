@@ -2269,7 +2269,7 @@ function codegenInstructionValue(
  * https://en.wikipedia.org/wiki/List_of_Unicode_characters#Control_codes
  */
 const STRING_REQUIRES_EXPR_CONTAINER_PATTERN =
-  /[\u{0000}-\u{001F}\u{007F}\u{0080}-\u{FFFF}]|"/u;
+  /[\u{0000}-\u{001F}\u{007F}\u{0080}-\u{FFFF}]|"|\\/u;
 function codegenJsxAttribute(
   cx: Context,
   attribute: JsxAttribute,
