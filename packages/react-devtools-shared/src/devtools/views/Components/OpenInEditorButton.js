@@ -32,12 +32,12 @@ function checkConditions(
 
     let sourceURL = source.sourceURL;
 
-    if (editorURLProtocolReplace) {
+    const replaceRegex = editorURLProtocolReplace
+      ? new RegExp(editorURLProtocolReplace)
+      : undefined;
+    if (replaceRegex?.test(sourceURL)) {
       sourceURL = sourceURL
-        .replace(
-          new RegExp(editorURLProtocolReplace),
-          editorURLProtocolReplaceWith ?? '',
-        )
+        .replace(replaceRegex, editorURLProtocolReplaceWith ?? '')
         .split('?')[0];
     }
 
