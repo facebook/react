@@ -30,14 +30,19 @@
     "concurrently": "^7.4.0",
     "esbuild": "^0.24.2",
     "folder-hash": "^4.0.4",
+    "npm-dts": "^1.3.13",
     "object-assign": "^4.1.1",
     "ora": "5.4.1",
     "prettier": "^3.3.3",
     "prettier-plugin-hermes-parser": "^0.26.0",
     "prompt-promise": "^1.0.3",
+    "rimraf": "^5.0.10",
     "typescript": "^5.4.3",
     "wait-on": "^7.2.0",
     "yargs": "^17.7.2"
+  },
+  "resolutions": {
+    "rimraf": "5.0.10"
   },
   "packageManager": "yarn@1.22.22"
 }

@@ -38,11 +38,7 @@ jobs:
         with:
           path: "**/node_modules"
           key: compiler-node_modules-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('compiler/**/yarn.lock') }}
-      - name: yarn install compiler
-        run: yarn install --frozen-lockfile
-        working-directory: compiler
-      - name: yarn install playground
-        run: yarn install --frozen-lockfile
+      - run: yarn install --frozen-lockfile
       - run: npx playwright install --with-deps chromium
       - run: CI=true yarn test
       - run: ls -R test-results

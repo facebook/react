@@ -11,4 +11,18 @@ module.exports = {
   rules: {
     'react-compiler': ReactCompilerRule,
   },
+  configs: {
+    recommended: {
+      plugins: {
+        'react-compiler': {
+          rules: {
+            'react-compiler': ReactCompilerRule,
+          },
+        },
+      },
+      rules: {
+        'react-compiler/react-compiler': 'error',
+      },
+    },
+  },
 };

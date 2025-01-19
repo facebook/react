@@ -13,6 +13,7 @@ import type {
   StyleQueue,
   Resource,
   HeadersDescriptor,
+  PreambleState,
 } from './ReactFizzConfigDOM';
 
 import {
@@ -43,8 +44,7 @@ export type RenderState = {
   segmentPrefix: PrecomputedChunk,
   boundaryPrefix: PrecomputedChunk,
   startInlineScript: PrecomputedChunk,
-  htmlChunks: null | Array<Chunk | PrecomputedChunk>,
-  headChunks: null | Array<Chunk | PrecomputedChunk>,
+  preamble: PreambleState,
   externalRuntimeScript: null | any,
   bootstrapChunks: Array<Chunk | PrecomputedChunk>,
   importMapChunks: Array<Chunk | PrecomputedChunk>,
@@ -96,8 +96,7 @@ export function createRenderState(
     segmentPrefix: renderState.segmentPrefix,
     boundaryPrefix: renderState.boundaryPrefix,
     startInlineScript: renderState.startInlineScript,
-    htmlChunks: renderState.htmlChunks,
-    headChunks: renderState.headChunks,
+    preamble: renderState.preamble,
     externalRuntimeScript: renderState.externalRuntimeScript,
     bootstrapChunks: renderState.bootstrapChunks,
     importMapChunks: renderState.importMapChunks,
@@ -134,6 +133,7 @@ export const doctypeChunk: PrecomputedChunk = stringToPrecomputedChunk('');
 export type {
   ResumableState,
   HoistableState,
+  PreambleState,
   FormatContext,
 } from './ReactFizzConfigDOM';
 
@@ -156,8 +156,10 @@ export {
   writeCompletedRoot,
   createRootFormatContext,
   createResumableState,
+  createPreambleState,
   createHoistableState,
-  writePreamble,
+  writePreambleStart,
+  writePreambleEnd,
   writeHoistables,
   writePostamble,
   hoistHoistables,
@@ -165,6 +167,10 @@ export {
   completeResumableState,
   emitEarlyPreloads,
   supportsClientAPIs,
+  canHavePreamble,
+  hoistPreambleState,
+  isPreambleReady,
+  isPreambleContext,
 } from './ReactFizzConfigDOM';
 
 import escapeTextForBrowser from './escapeTextForBrowser';

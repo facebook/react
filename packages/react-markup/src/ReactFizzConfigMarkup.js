@@ -12,6 +12,7 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 import type {
   RenderState,
   ResumableState,
+  PreambleState,
   HoistableState,
   FormatContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
@@ -42,6 +43,7 @@ export type {
   RenderState,
   ResumableState,
   HoistableState,
+  PreambleState,
   FormatContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
@@ -64,8 +66,10 @@ export {
   createRootFormatContext,
   createRenderState,
   createResumableState,
+  createPreambleState,
   createHoistableState,
-  writePreamble,
+  writePreambleStart,
+  writePreambleEnd,
   writeHoistables,
   writePostamble,
   hoistHoistables,
@@ -73,6 +77,10 @@ export {
   completeResumableState,
   emitEarlyPreloads,
   doctypeChunk,
+  canHavePreamble,
+  hoistPreambleState,
+  isPreambleReady,
+  isPreambleContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
 import escapeTextForBrowser from 'react-dom-bindings/src/server/escapeTextForBrowser';
@@ -83,6 +91,7 @@ export function pushStartInstance(
   props: Object,
   resumableState: ResumableState,
   renderState: RenderState,
+  preambleState: null | PreambleState,
   hoistableState: null | HoistableState,
   formatContext: FormatContext,
   textEmbedded: boolean,
@@ -113,6 +122,7 @@ export function pushStartInstance(
     props,
     resumableState,
     renderState,
+    preambleState,
     hoistableState,
     formatContext,
     textEmbedded,

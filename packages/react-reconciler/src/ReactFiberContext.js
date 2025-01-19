@@ -10,7 +10,6 @@
 import type {Fiber} from './ReactInternalTypes';
 import type {StackCursor} from './ReactFiberStack';
 
-import {isFiberMounted} from './ReactFiberTreeReflection';
 import {disableLegacyContext} from 'shared/ReactFeatureFlags';
 import {ClassComponent, HostRoot} from './ReactWorkTags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
@@ -285,13 +284,6 @@ function findCurrentUnmaskedContext(fiber: Fiber): Object {
   } else {
     // Currently this is only used with renderSubtreeIntoContainer; not sure if it
     // makes sense elsewhere
-    if (!isFiberMounted(fiber) || fiber.tag !== ClassComponent) {
-      throw new Error(
-        'Expected subtree parent to be a mounted class component. ' +
-          'This error is likely caused by a bug in React. Please file an issue.',
-      );
-    }
-
     let node: Fiber = fiber;
     do {
       switch (node.tag) {

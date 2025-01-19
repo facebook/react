@@ -36,7 +36,6 @@ export const enableUseEffectEventHook = false;
 export const favorSafetyOverHydrationPerf = true;
 export const enableLegacyFBSupport = false;
 export const enableMoveBefore = false;
-export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableFabricCompleteRootInCommitPhase = false;
 export const enableHiddenSubtreeInsertionEffectCleanup = false;
 export const enableHydrationLaneScheduling = true;
@@ -53,7 +52,6 @@ export const enableTransitionTracing = false;
 
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableFizzExternalRuntime = true;
-export const enableDeferRootSchedulingToMicrotask = true;
 
 export const alwaysThrottleRetries = true;
 
@@ -72,6 +70,7 @@ export const enableUseResourceEffectHook = false;
 export const enableYieldingBeforePassive = true;
 
 export const enableThrottledScheduling = false;
+export const enableViewTransition = false;
 
 // TODO: This must be in sync with the main ReactFeatureFlags file because
 // the Test Renderer's value must be the same as the one used by the
@@ -89,6 +88,7 @@ export const disableDefaultPropsExceptForClasses = true;
 
 export const enableObjectFiber = false;
 export const enableOwnerStacks = false;
+export const enableRemoveConsolePatches = true;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

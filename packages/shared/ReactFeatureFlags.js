@@ -37,10 +37,6 @@ export const favorSafetyOverHydrationPerf = true;
 // Need to remove didTimeout argument from Scheduler before landing
 export const disableSchedulerTimeoutInWorkLoop = false;
 
-// This will break some internal tests at Meta so we need to gate this until
-// those can be fixed.
-export const enableDeferRootSchedulingToMicrotask = true;
-
 // TODO: Land at Meta before removing.
 export const disableDefaultPropsExceptForClasses = true;
 
@@ -93,6 +89,8 @@ export const enableTaint = __EXPERIMENTAL__;
 export const enablePostpone = __EXPERIMENTAL__;
 
 export const enableHalt = __EXPERIMENTAL__;
+
+export const enableViewTransition = __EXPERIMENTAL__;
 
 /**
  * Switches the Fabric API from doing layout in commit work instead of complete work.
@@ -262,6 +260,6 @@ export const enableAsyncDebugInfo = __EXPERIMENTAL__;
 export const enableUpdaterTracking = __PROFILE__;
 
 // Internal only.
-export const enableGetInspectorDataForInstanceInProduction = false;
-
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
+
+export const enableRemoveConsolePatches = true;

@@ -12,6 +12,7 @@
 let React;
 let ReactDOMClient;
 let act;
+let assertConsoleErrorDev;
 
 describe('ReactIdentity', () => {
   beforeEach(() => {
@@ -19,6 +20,8 @@ describe('ReactIdentity', () => {
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     act = require('internal-test-utils').act;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
   });
 
   it('should allow key property to express identity', async () => {
@@ -313,17 +316,18 @@ describe('ReactIdentity', () => {
 
     const el = document.createElement('div');
     const root = ReactDOMClient.createRoot(el);
-    await expect(() =>
-      expect(() => {
-        root.render(
-          <div>
-            <span key={new TemporalLike()} />
-          </div>,
-        );
-      }).toThrowError(new TypeError('prod message')),
-    ).toErrorDev(
-      'The provided key is an unsupported type TemporalLike.' +
-        ' This value must be coerced to a string before using it here.',
+    await expect(() => {
+      root.render(
+        <div>
+          <span key={new TemporalLike()} />
+        </div>,
+      );
+    }).toThrowError(new TypeError('prod message'));
+    assertConsoleErrorDev(
+      [
+        'The provided key is an unsupported type TemporalLike.' +
+          ' This value must be coerced to a string before using it here.',
+      ],
       {withoutStack: true},
     );
   });

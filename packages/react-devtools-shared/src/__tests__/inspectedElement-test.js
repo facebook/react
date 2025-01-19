@@ -115,16 +115,15 @@ describe('InspectedElement', () => {
 
   const Contexts = ({
     children,
-    defaultSelectedElementID = null,
-    defaultSelectedElementIndex = null,
+    defaultInspectedElementID = null,
+    defaultInspectedElementIndex = null,
   }) => (
     <BridgeContext.Provider value={bridge}>
       <StoreContext.Provider value={store}>
         <SettingsContextController>
           <TreeContextController
-            defaultSelectedElementID={defaultSelectedElementID}
-            defaultSelectedElementIndex={defaultSelectedElementIndex}
-            defaultInspectedElementID={defaultSelectedElementID}>
+            defaultInspectedElementID={defaultInspectedElementID}
+            defaultInspectedElementIndex={defaultInspectedElementIndex}>
             <InspectedElementContextController>
               {children}
             </InspectedElementContextController>
@@ -167,8 +166,8 @@ describe('InspectedElement', () => {
       testRendererInstance.update(
         <ErrorBoundary>
           <Contexts
-            defaultSelectedElementID={id}
-            defaultSelectedElementIndex={index}>
+            defaultInspectedElementID={id}
+            defaultInspectedElementIndex={index}>
             <React.Suspense fallback={null}>
               <Suspender id={id} index={index} />
             </React.Suspense>
@@ -355,7 +354,7 @@ describe('InspectedElement', () => {
       const {index, shouldHaveLegacyContext} = cases[i];
 
       // HACK: Recreate TestRenderer instance because we rely on default state values
-      // from props like defaultSelectedElementID and it's easier to reset here than
+      // from props like defaultInspectedElementID and it's easier to reset here than
       // to read the TreeDispatcherContext and update the selected ID that way.
       // We're testing the inspected values here, not the context wiring, so that's ok.
       withErrorsOrWarningsIgnored(
@@ -2069,7 +2068,7 @@ describe('InspectedElement', () => {
     }, false);
 
     // HACK: Recreate TestRenderer instance because we rely on default state values
-    // from props like defaultSelectedElementID and it's easier to reset here than
+    // from props like defaultInspectedElementID and it's easier to reset here than
     // to read the TreeDispatcherContext and update the selected ID that way.
     // We're testing the inspected values here, not the context wiring, so that's ok.
     withErrorsOrWarningsIgnored(
@@ -2129,7 +2128,7 @@ describe('InspectedElement', () => {
     }, false);
 
     // HACK: Recreate TestRenderer instance because we rely on default state values
-    // from props like defaultSelectedElementID and it's easier to reset here than
+    // from props like defaultInspectedElementID and it's easier to reset here than
     // to read the TreeDispatcherContext and update the selected ID that way.
     // We're testing the inspected values here, not the context wiring, so that's ok.
     withErrorsOrWarningsIgnored(
@@ -2408,8 +2407,8 @@ describe('InspectedElement', () => {
       await utils.actAsync(() => {
         root = TestRenderer.create(
           <Contexts
-            defaultSelectedElementID={id}
-            defaultSelectedElementIndex={index}>
+            defaultInspectedElementID={id}
+            defaultInspectedElementIndex={index}>
             <React.Suspense fallback={null}>
               <Suspender target={id} />
             </React.Suspense>
@@ -3101,6 +3100,7 @@ describe('InspectedElement', () => {
 
     await utils.actAsync(() => {
       store.componentFilters = [utils.createDisplayNameFilter('Wrapper')];
+      jest.runOnlyPendingTimers();
     }, false);
 
     expect(state).toMatchInlineSnapshot(`
@@ -3120,6 +3120,7 @@ describe('InspectedElement', () => {
 
     await utils.actAsync(() => {
       store.componentFilters = [];
+      jest.runOnlyPendingTimers();
     }, false);
     expect(state).toMatchInlineSnapshot(`
       ✕ 0, ⚠ 2
