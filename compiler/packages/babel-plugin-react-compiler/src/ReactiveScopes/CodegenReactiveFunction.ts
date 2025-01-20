@@ -2327,7 +2327,7 @@ function codegenJsxAttribute(
   }
 }
 
-const JSX_TEXT_CHILD_REQUIRES_EXPR_CONTAINER_PATTERN = /[<>&]/;
+const JSX_TEXT_CHILD_REQUIRES_EXPR_CONTAINER_PATTERN = /[<>&{}]/;
 function codegenJsxElement(
   cx: Context,
   place: Place,
