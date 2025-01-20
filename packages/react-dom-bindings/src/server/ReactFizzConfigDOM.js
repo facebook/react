@@ -37,6 +37,8 @@ import type {
 
 import type {FormStatus} from '../shared/ReactDOMFormActions';
 
+import isCustomElement from '../shared/isCustomElement';
+
 import {
   writeChunk,
   writeChunkAndReturn,
@@ -1588,6 +1590,7 @@ function checkSelectProp(props: any, propName: string) {
 function pushStartAnchor(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
+  customElement: boolean,
 ): ReactNodeList {
   target.push(startChunkForTag('a'));
 
@@ -1616,7 +1619,11 @@ function pushStartAnchor(
           }
           break;
         default:
-          pushAttribute(target, propKey, propValue);
+          if (customElement) {
+            pushCustomElementAttribute(target, propKey, propValue);
+          } else {
+            pushAttribute(target, propKey, propValue);
+          }
           break;
       }
     }
@@ -1636,6 +1643,7 @@ function pushStartAnchor(
 function pushStartObject(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
+  customElement: boolean,
 ): ReactNodeList {
   target.push(startChunkForTag('object'));
 
@@ -1681,7 +1689,11 @@ function pushStartObject(
           break;
         }
         default:
-          pushAttribute(target, propKey, propValue);
+          if (customElement) {
+            pushCustomElementAttribute(target, propKey, propValue);
+          } else {
+            pushAttribute(target, propKey, propValue, customElement);
+          }
           break;
       }
     }
@@ -1701,6 +1713,7 @@ function pushStartObject(
 function pushStartSelect(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
+  customElement: boolean,
 ): ReactNodeList {
   if (__DEV__) {
     checkControlledValueProps('select', props);
@@ -1748,7 +1761,11 @@ function pushStartSelect(
           // These are set on the Context instead and applied to the nested options.
           break;
         default:
-          pushAttribute(target, propKey, propValue);
+          if (customElement) {
+            pushCustomElementAttribute(target, propKey, propValue);
+          } else {
+            pushAttribute(target, propKey, propValue, customElement);
+          }
           break;
       }
     }
@@ -1791,6 +1808,7 @@ const selectedMarkerAttribute = stringToPrecomputedChunk(' selected=""');
 function pushStartOption(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
+  customElement: boolean,
   formatContext: FormatContext,
 ): ReactNodeList {
   const selectedValue = formatContext.selectedValue;
@@ -1832,7 +1850,11 @@ function pushStartOption(
           value = propValue;
         // We intentionally fallthrough to also set the attribute on the node.
         default:
-          pushAttribute(target, propKey, propValue);
+          if (customElement) {
+            pushCustomElementAttribute(target, propKey, propValue);
+          } else {
+            pushAttribute(target, propKey, propValue, customElement);
+          }
           break;
       }
     }
@@ -1929,6 +1951,7 @@ export function pushFormStateMarkerIsNotMatching(
 function pushStartForm(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
+  customElement: boolean,
   resumableState: ResumableState,
   renderState: RenderState,
 ): ReactNodeList {
@@ -1967,7 +1990,11 @@ function pushStartForm(
           formTarget = propValue;
           break;
         default:
-          pushAttribute(target, propKey, propValue);
+          if (customElement) {
+            pushCustomElementAttribute(target, propKey, propValue);
+          } else {
+            pushAttribute(target, propKey, propValue, customElement);
+          }
           break;
       }
     }
@@ -2062,6 +2089,7 @@ function pushStartForm(
 function pushInput(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
+  customElement: boolean,
   resumableState: ResumableState,
   renderState: RenderState,
 ): ReactNodeList {
@@ -2122,7 +2150,11 @@ function pushInput(
           value = propValue;
           break;
         default:
-          pushAttribute(target, propKey, propValue);
+          if (customElement) {
+            pushCustomElementAttribute(target, propKey, propValue);
+          } else {
+            pushAttribute(target, propKey, propValue, customElement);
+          }
           break;
       }
     }
@@ -2204,6 +2236,7 @@ function pushInput(
 function pushStartButton(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
+  customElement: boolean,
   resumableState: ResumableState,
   renderState: RenderState,
 ): ReactNodeList {
@@ -2246,7 +2279,11 @@ function pushStartButton(
           formTarget = propValue;
           break;
         default:
-          pushAttribute(target, propKey, propValue);
+          if (customElement) {
+            pushCustomElementAttribute(target, propKey, propValue);
+          } else {
+            pushAttribute(target, propKey, propValue, customElement);
+          }
           break;
       }
     }
@@ -2296,6 +2333,7 @@ function pushStartButton(
 function pushStartTextArea(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
+  customElement: boolean,
 ): ReactNodeList {
   if (__DEV__) {
     checkControlledValueProps('textarea', props);
@@ -2341,7 +2379,11 @@ function pushStartTextArea(
             '`dangerouslySetInnerHTML` does not make sense on <textarea>.',
           );
         default:
-          pushAttribute(target, propKey, propValue);
+          if (customElement) {
+            pushCustomElementAttribute(target, propKey, propValue);
+          } else {
+            pushAttribute(target, propKey, propValue);
+          }
           break;
       }
     }
@@ -2888,6 +2930,7 @@ function pushStyleContents(
 function pushImg(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
+  customElement: boolean,
   resumableState: ResumableState,
   renderState: RenderState,
   pictureOrNoScriptTagInScope: boolean,
@@ -3026,12 +3069,13 @@ function pushImg(
       }
     }
   }
-  return pushSelfClosing(target, props, 'img');
+  return pushSelfClosing(target, props, customElement, 'img');
 }
 
 function pushSelfClosing(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
+  customElement: boolean,
   tag: string,
 ): null {
   target.push(startChunkForTag(tag));
@@ -3050,7 +3094,11 @@ function pushSelfClosing(
               'use `dangerouslySetInnerHTML`.',
           );
         default:
-          pushAttribute(target, propKey, propValue);
+          if (customElement) {
+            pushCustomElementAttribute(target, propKey, propValue);
+          } else {
+            pushAttribute(target, propKey, propValue);
+          }
           break;
       }
     }
@@ -3063,6 +3111,7 @@ function pushSelfClosing(
 function pushStartMenuItem(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
+  customElement: boolean,
 ): ReactNodeList {
   target.push(startChunkForTag('menuitem'));
 
@@ -3079,7 +3128,11 @@ function pushStartMenuItem(
             'menuitems cannot have `children` nor `dangerouslySetInnerHTML`.',
           );
         default:
-          pushAttribute(target, propKey, propValue);
+          if (customElement) {
+            pushCustomElementAttribute(target, propKey, propValue);
+          } else {
+            pushAttribute(target, propKey, propValue);
+          }
           break;
       }
     }
@@ -3419,6 +3472,7 @@ function pushScriptImpl(
 function pushStartGenericElement(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
+  customElement: boolean,
   tag: string,
 ): ReactNodeList {
   target.push(startChunkForTag(tag));
@@ -3439,7 +3493,11 @@ function pushStartGenericElement(
           innerHTML = propValue;
           break;
         default:
-          pushAttribute(target, propKey, propValue);
+          if (customElement) {
+            pushCustomElementAttribute(target, propKey, propValue);
+          } else {
+            pushAttribute(target, propKey, propValue, customElement);
+          }
           break;
       }
     }
@@ -3456,71 +3514,52 @@ function pushStartGenericElement(
   return children;
 }
 
-function pushStartCustomElement(
+function pushCustomElementAttribute(
   target: Array<Chunk | PrecomputedChunk>,
-  props: Object,
-  tag: string,
+  name: string,
+  value: string | boolean | number | Function | Object, // not null or undefined
 ): ReactNodeList {
-  target.push(startChunkForTag(tag));
-
-  let children = null;
-  let innerHTML = null;
-  for (const propKey in props) {
-    if (hasOwnProperty.call(props, propKey)) {
-      let propValue = props[propKey];
-      if (propValue == null) {
-        continue;
-      }
-      let attributeName = propKey;
-      switch (propKey) {
-        case 'children':
-          children = propValue;
-          break;
-        case 'dangerouslySetInnerHTML':
-          innerHTML = propValue;
-          break;
-        case 'style':
-          pushStyleAttribute(target, propValue);
-          break;
-        case 'suppressContentEditableWarning':
-        case 'suppressHydrationWarning':
-        case 'ref':
-          // Ignored. These are built-in to React on the client.
-          break;
-        case 'className':
-          // className gets rendered as class on the client, so it should be
-          // rendered as class on the server.
-          attributeName = 'class';
-        // intentional fallthrough
-        default:
-          if (
-            isAttributeNameSafe(propKey) &&
-            typeof propValue !== 'function' &&
-            typeof propValue !== 'symbol'
-          ) {
-            if (propValue === false) {
-              continue;
-            } else if (propValue === true) {
-              propValue = '';
-            } else if (typeof propValue === 'object') {
-              continue;
-            }
-            target.push(
-              attributeSeparator,
-              stringToChunk(attributeName),
-              attributeAssign,
-              stringToChunk(escapeTextForBrowser(propValue)),
-              attributeEnd,
-            );
-          }
-          break;
-      }
-    }
+  if (value == null) {
+    return;
   }
 
-  target.push(endOfStartTag);
-  pushInnerHTML(target, innerHTML, children);
-  return children;
+  switch (name) {
+    case 'style':
+      pushStyleAttribute(target, value);
+      break;
+    case 'suppressContentEditableWarning':
+    case 'suppressHydrationWarning':
+    case 'ref':
+      // Ignored. These are built-in to React on the client.
+      break;
+    case 'className':
+      // className gets rendered as class on the client, so it should be
+      // rendered as class on the server.
+      pushStringAttribute(target, 'class', value);
+      break;
+    default:
+      if (
+        isAttributeNameSafe(name) &&
+        typeof value !== 'function' &&
+        typeof value !== 'symbol'
+      ) {
+        if (value === false) {
+          return;
+        } else if (value === true) {
+          value = '';
+        } else if (typeof value === 'object') {
+          return;
+        }
+        target.push(
+          attributeSeparator,
+          stringToChunk(name),
+          attributeAssign,
+          stringToChunk(escapeTextForBrowser(value)),
+          attributeEnd,
+        );
+      }
+      break;
+  }
 }
 
 const leadingNewline = stringToPrecomputedChunk('\n');
@@ -3528,6 +3567,7 @@ const leadingNewline = stringToPrecomputedChunk('\n');
 function pushStartPreformattedElement(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
+  customElement: boolean,
   tag: string,
 ): ReactNodeList {
   target.push(startChunkForTag(tag));
@@ -3548,7 +3588,11 @@ function pushStartPreformattedElement(
           innerHTML = propValue;
           break;
         default:
-          pushAttribute(target, propKey, propValue);
+          if (customElement) {
+            pushCustomElementAttribute(target, propKey, propValue);
+          } else {
+            pushAttribute(target, propKey, propValue);
+          }
           break;
       }
     }
@@ -3669,6 +3713,8 @@ export function pushStartInstance(
     }
   }
 
+  const customElement = isCustomElement(type, props);
+
   switch (type) {
     case 'div':
     case 'span':
@@ -3677,7 +3723,7 @@ export function pushStartInstance(
       // Fast track very common tags
       break;
     case 'a':
-      return pushStartAnchor(target, props);
+      return pushStartAnchor(target, props, customElement);
     case 'g':
     case 'p':
     case 'li':
@@ -3685,21 +3731,21 @@ export function pushStartInstance(
       break;
     // Special tags
     case 'select':
-      return pushStartSelect(target, props);
+      return pushStartSelect(target, props, customElement);
     case 'option':
-      return pushStartOption(target, props, formatContext);
+      return pushStartOption(target, props, customElement, formatContext);
     case 'textarea':
-      return pushStartTextArea(target, props);
+      return pushStartTextArea(target, props, customElement);
     case 'input':
-      return pushInput(target, props, resumableState, renderState);
+      return pushInput(target, props, customElement, resumableState, renderState);
     case 'button':
-      return pushStartButton(target, props, resumableState, renderState);
+      return pushStartButton(target, props, customElement, resumableState, renderState);
     case 'form':
-      return pushStartForm(target, props, resumableState, renderState);
+      return pushStartForm(target, props, customElement, resumableState, renderState);
     case 'menuitem':
-      return pushStartMenuItem(target, props);
+      return pushStartMenuItem(target, props, customElement);
     case 'object':
-      return pushStartObject(target, props);
+      return pushStartObject(target, props, customElement);
     case 'title':
       return pushTitle(
         target,
@@ -3755,12 +3801,13 @@ export function pushStartInstance(
     // Newline eating tags
     case 'listing':
     case 'pre': {
-      return pushStartPreformattedElement(target, props, type);
+      return pushStartPreformattedElement(target, props, customElement, type);
     }
     case 'img': {
       return pushImg(
         target,
         props,
+        customElement,
         resumableState,
         renderState,
         !!(formatContext.tagScope & (PICTURE_SCOPE | NOSCRIPT_SCOPE)),
@@ -3778,7 +3825,7 @@ export function pushStartInstance(
     case 'source':
     case 'track':
     case 'wbr': {
-      return pushSelfClosing(target, props, type);
+      return pushSelfClosing(target, props, customElement, type);
     }
     // These are reserved SVG and MathML elements, that are never custom elements.
     // https://html.spec.whatwg.org/multipage/custom-elements.html#custom-elements-core-concepts
@@ -3818,15 +3865,10 @@ export function pushStartInstance(
         formatContext.insertionMode,
       );
     }
-    default: {
-      if (type.indexOf('-') !== -1) {
-        // Custom element
-        return pushStartCustomElement(target, props, type);
-      }
-    }
   }
+
   // Generic element
-  return pushStartGenericElement(target, props, type);
+  return pushStartGenericElement(target, props, customElement, type);
 }
 
 const endTagCache = new Map<string, PrecomputedChunk>();
