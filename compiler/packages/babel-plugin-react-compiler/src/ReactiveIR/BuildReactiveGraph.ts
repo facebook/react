@@ -5,18 +5,27 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import prettyFormat from 'pretty-format';
 import {CompilerError, SourceLocation} from '..';
 import {
   BlockId,
   DeclarationId,
+  DoWhileTerminal,
+  ForInTerminal,
+  ForOfTerminal,
+  ForTerminal,
   GotoVariant,
   HIRFunction,
   Identifier,
   IdentifierId,
+  IfTerminal,
   Instruction,
+  LabelTerminal,
   Place,
   ReactiveScope,
   ScopeId,
+  SwitchTerminal,
+  WhileTerminal,
 } from '../HIR';
 import {printIdentifier, printInstruction} from '../HIR/PrintHIR';
 import {
@@ -26,7 +35,6 @@ import {
 } from '../HIR/visitors';
 import {assertExhaustive, getOrInsertWith} from '../Utils/utils';
 import {
-  BranchNode,
   GotoNode,
   ControlNode,
   EntryNode,
@@ -40,12 +48,16 @@ import {
   ReactiveGraph,
   ReactiveId,
   ReactiveNode,
-  ReturnNode,
   reversePostorderReactiveGraph,
   StoreNode,
   eachNodeDependency,
   FallthroughNode,
   printReactiveGraph,
+  IfNode,
+  PhiNode,
+  ThrowNode,
+  ReturnNode,
+  LabelNode,
 } from './ReactiveIR';
 
 export function buildReactiveGraph(fn: HIRFunction): ReactiveGraph {
@@ -131,6 +143,7 @@ class Builder {
 
 type Fallthrough =
   | {kind: 'Function'}
+  | {kind: 'Label'; block: BlockId; fallthrough: ReactiveId}
   | {kind: 'If'; block: BlockId; fallthrough: ReactiveId};
 
 class ControlContext {
@@ -143,6 +156,7 @@ class ControlContext {
     > = new Map(),
     private scopes: Map<ScopeId, ReactiveId> = new Map(),
     private nodes: Set<ReactiveId> = new Set(),
+    private breakMapping: Map<BlockId, ReactiveId> = new Map(),
     private parent: ControlContext | null = null,
   ) {}
 
@@ -157,9 +171,42 @@ class ControlContext {
        */
       new Map(),
       new Map(),
+      // Track not-yet-depended on nodes in this context so the terminal node can depend on them
       new Set(),
+      this.breakMapping,
       this,
     );
+  }
+
+  forkValue(): ControlContext {
+    return new ControlContext(
+      this.builder,
+      this.fallthrough,
+      new Map(),
+      new Map(),
+      new Set(),
+      this.breakMapping,
+      this,
+    );
+  }
+
+  putBreakMapping(block: BlockId, node: ReactiveId): void {
+    this.breakMapping.set(block, node);
+  }
+
+  getBreakMapping(block: BlockId, loc: SourceLocation): ReactiveId {
+    const node = this.breakMapping.get(block);
+    if (node == null) {
+      console.log(
+        `No break mapping for bb${block}`,
+        prettyFormat(this.breakMapping),
+      );
+    }
+    CompilerError.invariant(node !== undefined, {
+      reason: `Unset break mapping for bb${block}`,
+      loc,
+    });
+    return node;
   }
 
   controlNode(control: ReactiveId, loc: SourceLocation): ReactiveId {
@@ -169,7 +216,6 @@ class ControlContext {
       loc,
       outputs: [],
       control,
-      dependencies: [],
     };
     this.putNode(node);
     return node.id;
@@ -204,7 +250,10 @@ class ControlContext {
   }
 
   loadBreakTarget(target: BlockId, loc: SourceLocation): ReactiveId {
-    if (this.fallthrough.kind === 'If' && this.fallthrough.block === target) {
+    if (
+      (this.fallthrough.kind === 'If' || this.fallthrough.kind === 'Label') &&
+      this.fallthrough.block === target
+    ) {
       return this.fallthrough.fallthrough;
     }
     if (this.parent != null) {
@@ -489,168 +538,6 @@ function buildBlockScope(
     // handle the terminal
     const terminal = block.terminal;
     switch (terminal.kind) {
-      case 'if': {
-        const testDep = context.lookupTemporary(
-          terminal.test.identifier,
-          terminal.test.loc,
-        );
-        const test: NodeReference = {
-          node: testDep,
-          from: {...terminal.test},
-          as: {...terminal.test},
-        };
-        const branchNodeId = context.nextReactiveId;
-        const fallthroughNodeId = context.nextReactiveId;
-        const joinFallthrough = {
-          kind: 'If',
-          block: terminal.fallthrough,
-          fallthrough: fallthroughNodeId,
-        } as const;
-        const consequentContext = context.fork(joinFallthrough);
-        const consequentControl = consequentContext.controlNode(
-          branchNodeId,
-          terminal.loc,
-        );
-        const consequent = buildBlockScope(
-          fn,
-          consequentContext,
-          terminal.consequent,
-          consequentControl,
-        );
-        const alternateContext = context.fork(joinFallthrough);
-        const alternateControl = alternateContext.controlNode(
-          branchNodeId,
-          terminal.loc,
-        );
-        const alternate =
-          terminal.alternate !== terminal.fallthrough
-            ? buildBlockScope(
-                fn,
-                alternateContext,
-                terminal.alternate,
-                alternateControl,
-              )
-            : alternateControl;
-
-        const branch: BranchNode = {
-          kind: 'Branch',
-          control,
-          dependencies: [],
-          id: branchNodeId,
-          loc: terminal.loc,
-          outputs: [],
-          fallthrough: fallthroughNodeId,
-          terminal: {
-            kind: 'If',
-            test,
-            consequent: {
-              entry: consequentControl,
-              exit: consequent,
-            },
-            alternate: {
-              entry: alternateControl,
-              exit: alternate,
-            },
-          },
-        };
-        context.putNode(branch);
-        const ifNode: FallthroughNode = {
-          kind: 'Fallthrough',
-          control: branch.id,
-          id: fallthroughNodeId,
-          loc: terminal.loc,
-          outputs: [],
-          branches: [consequent, alternate],
-        };
-
-        const predecessors: Array<{
-          enter: ReactiveId;
-          exit: ReactiveId;
-          context: ControlContext;
-        }> = [
-          {
-            enter: consequentControl,
-            exit: consequent,
-            context: consequentContext,
-          },
-          {
-            enter: alternateControl,
-            exit: alternate,
-            context: alternateContext,
-          },
-        ];
-
-        const controlDependencies: Set<ReactiveId> = new Set();
-        const joinedDeclarations: Map<DeclarationId, 'write' | 'read'> =
-          new Map();
-        const joinedScopes: Set<ScopeId> = new Set();
-        for (const predecessorBlock of predecessors) {
-          /*
-           * track scopes that were mutated in any of the branches so that we can
-           * establish control depends to order the branch/join relative to previous
-           * subsequent mutations of those scopes
-           */
-          for (const [scope] of predecessorBlock.context.eachScope()) {
-            joinedScopes.add(scope);
-          }
-          /*
-           * Track variables that were read/reassigned in any of the predecessors
-           * so that subsequent writes/reads can take the join node as a control
-           */
-          for (const [
-            declarationId,
-            {write, read},
-          ] of predecessorBlock.context.eachDeclaration()) {
-            if (write) {
-              joinedDeclarations.set(declarationId, 'write');
-            } else if (read && !joinedDeclarations.has(declarationId)) {
-              joinedDeclarations.set(declarationId, 'read');
-            }
-          }
-        }
-        for (const scope of joinedScopes) {
-          const scopeControl = context.loadScopeControl(scope);
-          if (scopeControl != null) {
-            controlDependencies.add(scopeControl);
-          }
-          context.recordScopeMutation(scope, ifNode.id);
-        }
-        // Add control dependencies and record reads/writes accordingly.
-        for (const [declarationId, declType] of joinedDeclarations) {
-          if (declType === 'write') {
-            /*
-             * If there was a write in any of the branches, we take a write
-             * dependency (on the last read/write) and record the if as the
-             * last write
-             */
-            const writeControl = context.loadDeclarationControlForWrite(
-              declarationId,
-              terminal.loc,
-            );
-            if (writeControl != null) {
-              controlDependencies.add(writeControl);
-            }
-            context.recordDeclarationWrite(declarationId, ifNode.id);
-          } else {
-            /*
-             * If there were only reads in the branches, we take a read
-             * dependency (on the last write) and record the if as the
-             * last read
-             */
-            const readControl =
-              context.loadDeclarationControlForRead(declarationId);
-            if (readControl != null) {
-              controlDependencies.add(readControl);
-            }
-            context.recordDeclarationRead(declarationId, ifNode.id);
-          }
-        }
-
-        branch.dependencies = Array.from(controlDependencies);
-        context.putNode(ifNode);
-        lastNode = ifNode.id;
-        break;
-      }
       case 'return': {
         const valueDep = context.lookupTemporary(
           terminal.value.identifier,
@@ -674,6 +561,31 @@ function buildBlockScope(
         };
         context.putNode(returnNode);
         lastNode = returnNode.id;
+        break;
+      }
+      case 'throw': {
+        const valueDep = context.lookupTemporary(
+          terminal.value.identifier,
+          terminal.value.loc,
+        );
+        const value: NodeReference = {
+          node: valueDep,
+          from: {...terminal.value},
+          as: {...terminal.value},
+        };
+        const throwNode: ThrowNode = {
+          kind: 'Throw',
+          id: context.nextReactiveId,
+          loc: terminal.loc,
+          outputs: [],
+          value,
+          dependencies: context
+            .uncontolledNodes()
+            .filter(id => id !== valueDep),
+          control,
+        };
+        context.putNode(throwNode);
+        lastNode = throwNode.id;
         break;
       }
       case 'goto': {
@@ -711,14 +623,49 @@ function buildBlockScope(
           control,
         };
         context.putNode(node);
+        context.putBreakMapping(block.id, node.id);
         lastNode = node.id;
         break;
       }
-      default: {
-        CompilerError.throwTodo({
-          reason: `Support ${terminal.kind} nodes`,
+      case 'unreachable': {
+        CompilerError.invariant(false, {
+          reason: `Found unreachable code`,
           loc: terminal.loc,
         });
+      }
+      case 'unsupported': {
+        CompilerError.invariant(false, {
+          reason: `Found unsupported terminal`,
+          loc: terminal.loc,
+        });
+      }
+      case 'scope':
+      case 'pruned-scope': {
+        CompilerError.throwTodo({
+          reason: `Support scopes`,
+          loc: terminal.loc,
+        });
+      }
+      case 'branch':
+      case 'logical':
+      case 'ternary':
+      case 'sequence':
+      case 'optional': {
+        CompilerError.throwTodo({
+          reason: `Support value blocks`,
+          loc: terminal.loc,
+        });
+      }
+      case 'try':
+      case 'maybe-throw': {
+        CompilerError.throwTodo({
+          reason: `Support try/catch`,
+          loc: terminal.loc,
+        });
+      }
+      default: {
+        lastNode = buildTerminal(fn, terminal, context, control);
+        break;
       }
     }
 
@@ -731,6 +678,231 @@ function buildBlockScope(
     }
   }
   return lastNode;
+}
+
+function buildTerminal(
+  fn: HIRFunction,
+  terminal:
+    | DoWhileTerminal
+    | ForInTerminal
+    | ForOfTerminal
+    | ForTerminal
+    | IfTerminal
+    | LabelTerminal
+    | SwitchTerminal
+    | WhileTerminal,
+  context: ControlContext,
+  control: ReactiveId,
+): ReactiveId {
+  let branches: Array<{
+    enter: ReactiveId;
+    exit: ReactiveId;
+    context: ControlContext;
+  }>;
+  const fallthroughNodeId = context.nextReactiveId;
+  let terminalNode: ReactiveNode;
+
+  switch (terminal.kind) {
+    case 'if': {
+      const testDep = context.lookupTemporary(
+        terminal.test.identifier,
+        terminal.test.loc,
+      );
+      const test: NodeReference = {
+        node: testDep,
+        from: {...terminal.test},
+        as: {...terminal.test},
+      };
+      const ifNodeId = context.nextReactiveId;
+      const joinFallthrough = {
+        kind: 'If',
+        block: terminal.fallthrough,
+        fallthrough: fallthroughNodeId,
+      } as const;
+      const consequentContext = context.fork(joinFallthrough);
+      const consequentControl = consequentContext.controlNode(
+        ifNodeId,
+        terminal.loc,
+      );
+      const consequent = buildBlockScope(
+        fn,
+        consequentContext,
+        terminal.consequent,
+        consequentControl,
+      );
+      const alternateContext = context.fork(joinFallthrough);
+      const alternateControl = alternateContext.controlNode(
+        ifNodeId,
+        terminal.loc,
+      );
+      const alternate =
+        terminal.alternate !== terminal.fallthrough
+          ? buildBlockScope(
+              fn,
+              alternateContext,
+              terminal.alternate,
+              alternateControl,
+            )
+          : alternateControl;
+
+      const node: IfNode = {
+        kind: 'If',
+        control,
+        dependencies: [],
+        id: ifNodeId,
+        loc: terminal.loc,
+        outputs: [],
+        fallthrough: fallthroughNodeId,
+        test,
+        consequent: {
+          entry: consequentControl,
+          exit: consequent,
+        },
+        alternate: {
+          entry: alternateControl,
+          exit: alternate,
+        },
+      };
+      context.putNode(node);
+      branches = [
+        {
+          enter: consequentControl,
+          exit: consequent,
+          context: consequentContext,
+        },
+        {
+          enter: alternateControl,
+          exit: alternate,
+          context: alternateContext,
+        },
+      ];
+      terminalNode = node;
+      break;
+    }
+    case 'label': {
+      const blockContext = context.fork({
+        kind: 'Label',
+        block: terminal.fallthrough,
+        fallthrough: fallthroughNodeId,
+      });
+      const labelNodeId = context.nextReactiveId;
+      const blockControl = blockContext.controlNode(labelNodeId, terminal.loc);
+      const block = buildBlockScope(
+        fn,
+        blockContext,
+        terminal.block,
+        blockControl,
+      );
+      const node: LabelNode = {
+        kind: 'Label',
+        block: {entry: blockControl, exit: block},
+        control,
+        id: labelNodeId,
+        loc: terminal.loc,
+        outputs: [],
+        dependencies: [],
+      };
+      context.putNode(node);
+      branches = [{enter: blockControl, exit: block, context: blockContext}];
+      terminalNode = node;
+      break;
+    }
+    default: {
+      assertExhaustive(
+        terminal /* TODO */ as never,
+        `Unexpected terminal kind '${(terminal as any).kind}'`,
+      );
+    }
+  }
+  const fallthrough = fn.body.blocks.get(terminal.fallthrough)!;
+  const phis: Array<PhiNode> = Array.from(fallthrough.phis).map(phi => {
+    return {
+      kind: 'Phi',
+      place: phi.place,
+      operands: new Map(
+        Array.from(phi.operands, ([blockId, operand]) => {
+          return [context.getBreakMapping(blockId, phi.place.loc), operand];
+        }),
+      ),
+    };
+  });
+  const fallthroughNode: FallthroughNode = {
+    kind: 'Fallthrough',
+    control: terminalNode.id,
+    id: fallthroughNodeId,
+    loc: terminal.loc,
+    outputs: [],
+    branches: branches.map(pred => pred.exit),
+    phis,
+  };
+  context.putNode(fallthroughNode);
+
+  const controlDependencies: Set<ReactiveId> = new Set();
+  const joinedDeclarations: Map<DeclarationId, 'write' | 'read'> = new Map();
+  const joinedScopes: Set<ScopeId> = new Set();
+  for (const predecessorBlock of branches) {
+    /*
+     * track scopes that were mutated in any of the branches so that we can
+     * establish control depends to order the branch/join relative to previous
+     * subsequent mutations of those scopes
+     */
+    for (const [scope] of predecessorBlock.context.eachScope()) {
+      joinedScopes.add(scope);
+    }
+    /*
+     * Track variables that were read/reassigned in any of the predecessors
+     * so that subsequent writes/reads can take the join node as a control
+     */
+    for (const [
+      declarationId,
+      {write, read},
+    ] of predecessorBlock.context.eachDeclaration()) {
+      if (write) {
+        joinedDeclarations.set(declarationId, 'write');
+      } else if (read && !joinedDeclarations.has(declarationId)) {
+        joinedDeclarations.set(declarationId, 'read');
+      }
+    }
+  }
+  for (const scope of joinedScopes) {
+    const scopeControl = context.loadScopeControl(scope);
+    if (scopeControl != null) {
+      controlDependencies.add(scopeControl);
+    }
+    context.recordScopeMutation(scope, fallthroughNode.id);
+  }
+  // Add control dependencies and record reads/writes accordingly.
+  for (const [declarationId, declType] of joinedDeclarations) {
+    if (declType === 'write') {
+      /*
+       * If there was a write in any of the branches, we take a write
+       * dependency (on the last read/write) and record the if as the
+       * last write
+       */
+      const writeControl = context.loadDeclarationControlForWrite(
+        declarationId,
+        terminal.loc,
+      );
+      if (writeControl != null) {
+        controlDependencies.add(writeControl);
+      }
+      context.recordDeclarationWrite(declarationId, fallthroughNode.id);
+    } else {
+      /*
+       * If there were only reads in the branches, we take a read
+       * dependency (on the last write) and record the if as the
+       * last read
+       */
+      const readControl = context.loadDeclarationControlForRead(declarationId);
+      if (readControl != null) {
+        controlDependencies.add(readControl);
+      }
+      context.recordDeclarationRead(declarationId, fallthroughNode.id);
+    }
+  }
+
+  terminalNode.dependencies = Array.from(controlDependencies);
+  return fallthroughNodeId;
 }
 
 function getScopeForInstruction(instr: Instruction): ReactiveScope | null {
