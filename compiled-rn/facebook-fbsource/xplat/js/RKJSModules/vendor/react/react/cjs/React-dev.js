@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<deec8b1d4b08aaddff0ef2466f9426b8>>
+ * @generated SignedSource<<cfb004104a28233cf016b7eb10092554>>
  */
 
 "use strict";
@@ -1118,6 +1118,7 @@ __DEV__ &&
         A: null,
         T: null,
         S: null,
+        V: null,
         actQueue: null,
         isBatchingLegacy: !1,
         didScheduleLegacyUpdate: !1,
@@ -1838,7 +1839,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.1.0-native-fb-313c8c55-20250117";
+    exports.version = "19.1.0-native-fb-028c8e6c-20250121";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
