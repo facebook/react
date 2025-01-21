@@ -1047,11 +1047,11 @@ describe('ReactChildren', () => {
 
     const source = <div />;
     const productionElement = {};
-    for (const [key, value] of Object.entries(source)) {
+    Object.entries(source).forEach(([key, value]) => {
       if (key !== '_owner' && key !== '_store') {
         productionElement[key] = value;
       }
-    }
+    });
     Object.freeze(productionElement);
 
     const container = document.createElement('div');
