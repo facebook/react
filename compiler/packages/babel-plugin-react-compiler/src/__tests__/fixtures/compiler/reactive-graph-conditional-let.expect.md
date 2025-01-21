@@ -6,8 +6,12 @@
 function Component(props) {
   let element = props.default;
   let other = element;
-  if (props.cond) {
-    element = <div></div>;
+  label: if (props.cond) {
+    if (props.ret) {
+      break label;
+    } else {
+      element = <div></div>;
+    }
   } else {
     element = <span></span>;
   }
@@ -24,15 +28,19 @@ function Component(props) {
   const $ = _c(5);
   let element = props.default;
   const other = element;
-  if (props.cond) {
-    let t0;
-    if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-      t0 = <div />;
-      $[0] = t0;
+  bb0: if (props.cond) {
+    if (props.ret) {
+      break bb0;
     } else {
-      t0 = $[0];
+      let t0;
+      if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+        t0 = <div />;
+        $[0] = t0;
+      } else {
+        t0 = $[0];
+      }
+      element = t0;
     }
-    element = t0;
   } else {
     let t0;
     if ($[1] === Symbol.for("react.memo_cache_sentinel")) {

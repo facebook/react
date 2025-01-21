@@ -52,16 +52,19 @@ export function makeReactiveId(id: number): ReactiveId {
 }
 
 export type ReactiveNode =
-  | EntryNode
-  | LoadNode
-  | StoreNode
-  | LoadArgumentNode
-  | InstructionNode
-  | BranchNode
-  | FallthroughNode
   | ControlNode
+  | EntryNode
+  | FallthroughNode
+  | GotoNode
+  | IfNode
+  | InstructionNode
+  | LabelNode
+  | LoadArgumentNode
+  | LoadNode
+  | OptionalNode
   | ReturnNode
-  | GotoNode;
+  | StoreNode
+  | ThrowNode;
 
 export type NodeReference = {
   node: ReactiveId;
@@ -129,6 +132,16 @@ export type ReturnNode = {
   control: ReactiveId;
 };
 
+export type ThrowNode = {
+  kind: 'Throw';
+  id: ReactiveId;
+  loc: SourceLocation;
+  value: NodeReference;
+  outputs: Array<ReactiveId>;
+  dependencies: Array<ReactiveId>;
+  control: ReactiveId;
+};
+
 export type GotoNode = {
   kind: 'Goto';
   id: ReactiveId;
@@ -140,24 +153,27 @@ export type GotoNode = {
   variant: GotoVariant;
 };
 
-export type BranchNode = {
-  kind: 'Branch';
+export type LabelNode = {
+  kind: 'Label';
+  id: ReactiveId;
+  loc: SourceLocation;
+  outputs: Array<ReactiveId>;
+  dependencies: Array<ReactiveId>;
+  control: ReactiveId;
+  block: {entry: ReactiveId; exit: ReactiveId};
+};
+
+export type IfNode = {
+  kind: 'If';
   id: ReactiveId;
   loc: SourceLocation;
   outputs: Array<ReactiveId>;
   dependencies: Array<ReactiveId>; // values/scopes depended on by more than one branch, or by the terminal
   control: ReactiveId;
-  fallthrough: ReactiveId;
-  terminal: BranchTerminal;
-};
-
-export type BranchTerminal = IfBranch;
-
-export type IfBranch = {
-  kind: 'If';
   test: NodeReference;
   consequent: {entry: ReactiveId; exit: ReactiveId};
   alternate: {entry: ReactiveId; exit: ReactiveId};
+  fallthrough: ReactiveId;
 };
 
 export type FallthroughNode = {
@@ -167,6 +183,13 @@ export type FallthroughNode = {
   outputs: Array<ReactiveId>;
   control: ReactiveId; // always the corresponding branch node
   branches: Array<ReactiveId>; // the other control-flow paths that reach the fallthrough
+  phis: Array<PhiNode>;
+};
+
+export type PhiNode = {
+  kind: 'Phi';
+  place: Place;
+  operands: Map<ReactiveId, Place>;
 };
 
 export type ControlNode = {
@@ -174,7 +197,17 @@ export type ControlNode = {
   id: ReactiveId;
   loc: SourceLocation;
   outputs: Array<ReactiveId>;
-  dependencies: Array<ReactiveId>;
+  control: ReactiveId;
+};
+
+export type OptionalNode = {
+  kind: 'Optional';
+  id: ReactiveId;
+  loc: SourceLocation;
+  outputs: Array<ReactiveId>;
+  object: NodeReference;
+  continuation: NodeReference;
+  optional: boolean;
   control: ReactiveId;
 };
 
@@ -241,30 +274,21 @@ export function reversePostorderReactiveGraph(graph: ReactiveGraph): void {
   graph.nodes = nodes;
 }
 
-export function* eachBranchTerminalDependency(
-  terminal: BranchTerminal,
-): Iterable<ReactiveId> {
-  switch (terminal.kind) {
-    case 'If': {
-      yield terminal.test.node;
-    }
-  }
-}
-
 export function* eachNodeDependency(node: ReactiveNode): Iterable<ReactiveId> {
   switch (node.kind) {
+    case 'Control':
     case 'Entry':
     case 'LoadArgument': {
       break;
     }
-    case 'Goto':
-    case 'Control': {
+    case 'Label':
+    case 'Goto': {
       yield* node.dependencies;
       break;
     }
-    case 'Branch': {
+    case 'If': {
       yield* node.dependencies;
-      yield* eachBranchTerminalDependency(node.terminal);
+      yield node.test.node;
       break;
     }
     case 'Fallthrough': {
@@ -279,13 +303,19 @@ export function* eachNodeDependency(node: ReactiveNode): Iterable<ReactiveId> {
       yield node.value.node;
       break;
     }
+    case 'Throw':
     case 'Return': {
       yield* node.dependencies;
       yield node.value.node;
       break;
     }
     case 'Value': {
-      yield* [...node.dependencies.keys()];
+      yield* node.dependencies.keys();
+      break;
+    }
+    case 'Optional': {
+      yield node.object.node;
+      yield node.continuation.node;
       break;
     }
     default: {
@@ -297,21 +327,11 @@ export function* eachNodeDependency(node: ReactiveNode): Iterable<ReactiveId> {
   }
 }
 
-export function* eachBranchTerminalReference(
-  terminal: BranchTerminal,
-): Iterable<NodeReference> {
-  switch (terminal.kind) {
-    case 'If': {
-      yield terminal.test;
-      break;
-    }
-  }
-}
-
 export function* eachNodeReference(
   node: ReactiveNode,
 ): Iterable<NodeReference> {
   switch (node.kind) {
+    case 'Label':
     case 'Goto':
     case 'Entry':
     case 'Control':
@@ -326,12 +346,13 @@ export function* eachNodeReference(
       yield node.value;
       break;
     }
+    case 'Throw':
     case 'Return': {
       yield node.value;
       break;
     }
-    case 'Branch': {
-      yield* eachBranchTerminalReference(node.terminal);
+    case 'If': {
+      yield node.test;
       break;
     }
     case 'Fallthrough': {
@@ -343,6 +364,11 @@ export function* eachNodeReference(
         from: dep.from,
         as: dep.as,
       }));
+      break;
+    }
+    case 'Optional': {
+      yield node.object;
+      yield node.continuation;
       break;
     }
     default: {
@@ -416,9 +442,7 @@ function writeReactiveNodes(
         break;
       }
       case 'Control': {
-        buffer.push(
-          `£${id} Control${control} deps=[${node.dependencies.map(id => `£${id}`).join(', ')}]`,
-        );
+        buffer.push(`£${id} Control${control}`);
         break;
       }
       case 'Load': {
@@ -431,35 +455,48 @@ function writeReactiveNodes(
         );
         break;
       }
+      case 'Throw': {
+        buffer.push(
+          `£${id} Throw ${printNodeReference(node.value)} deps=[${node.dependencies.map(id => `£${id}`).join(', ')}]${control}`,
+        );
+        break;
+      }
       case 'Return': {
         buffer.push(
           `£${id} Return ${printNodeReference(node.value)} deps=[${node.dependencies.map(id => `£${id}`).join(', ')}]${control}`,
         );
         break;
       }
-      case 'Branch': {
+      case 'Label': {
         buffer.push(
-          `£${id} Branch deps=[${node.dependencies.map(id => `£${id}`).join(', ')}]${control}`,
+          `£${id} Label block=£${node.block.entry}:${node.block.exit} deps=[${node.dependencies.map(id => `£${id}`).join(', ')}]${control}`,
         );
-        switch (node.terminal.kind) {
-          case 'If': {
-            buffer.push(
-              `  If test=${printNodeReference(node.terminal.test)} ` +
-                `consequent=£${node.terminal.consequent.entry}:${node.terminal.consequent.exit} ` +
-                `alternate=£${node.terminal.alternate.entry}:${node.terminal.alternate.exit}`,
-            );
-            break;
-          }
-          default: {
-            // assertExhaustive(node.terminal, `Unsupported terminal kind ${(node.terminal as any).kind}`);
-          }
-        }
+        break;
+      }
+      case 'If': {
+        buffer.push(`£${id} If test=${printNodeReference(node.test)}`);
+        buffer.push(
+          `  consequent=£${node.consequent.entry}:${node.consequent.exit} `,
+        );
+        buffer.push(
+          `  alternate=£${node.alternate.entry}:${node.alternate.exit} `,
+        );
+        buffer.push(
+          `  deps=[${node.dependencies.map(id => `£${id}`).join(', ')}]${control}`,
+        );
         break;
       }
       case 'Fallthrough': {
         buffer.push(
           `£${id} Fallthrough${control} branches=[${node.branches.map(id => `£${id}`).join(', ')}]`,
         );
+        for (const phi of node.phis) {
+          const operands = [];
+          for (const [pred, operand] of phi.operands) {
+            operands.push(`£${pred} => ${printPlace(operand)}`);
+          }
+          buffer.push(`  ${printPlace(phi.place)} => [${operands.join(', ')}]`);
+        }
         break;
       }
       case 'Value': {
@@ -468,6 +505,13 @@ function writeReactiveNodes(
           .join(' ');
         buffer.push(`£${id} Value deps=[${deps}]${control}`);
         buffer.push('  ' + printInstruction(node.value));
+        break;
+      }
+      case 'Optional': {
+        buffer.push(
+          `£${id} Optional ${printNodeReference(node.object)} ` +
+            `${node.optional ? '?.' : '.'} ${printNodeReference(node.continuation)} ${control}`,
+        );
         break;
       }
       default: {
