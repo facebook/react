@@ -1209,6 +1209,7 @@ __DEV__ &&
         A: null,
         T: null,
         S: null,
+        V: null,
         actQueue: null,
         isBatchingLegacy: !1,
         didScheduleLegacyUpdate: !1,
@@ -1956,7 +1957,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.1.0-www-modern-fd2d2799-20250117";
+    exports.version = "19.1.0-www-modern-028c8e6c-20250121";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
