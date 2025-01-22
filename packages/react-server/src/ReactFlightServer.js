@@ -64,6 +64,8 @@ import type {
   ReactTimeInfo,
   ReactStackTrace,
   ReactCallSite,
+  ReactErrorInfo,
+  ReactErrorInfoDev,
 } from 'shared/ReactTypes';
 import type {ReactElement} from 'shared/ReactElementType';
 import type {LazyComponent} from 'react/src/ReactLazy';
@@ -3093,8 +3095,8 @@ function emitPostponeChunk(
 
 function serializeErrorValue(request: Request, error: Error): string {
   if (__DEV__) {
-    let name;
-    let message;
+    let name: string = 'Error';
+    let message: string;
     let stack: ReactStackTrace;
     let env = (0, request.environmentName)();
     try {
@@ -3112,7 +3114,7 @@ function serializeErrorValue(request: Request, error: Error): string {
       message = 'An error occurred but serializing the error message failed.';
       stack = [];
     }
-    const errorInfo = {name, message, stack, env};
+    const errorInfo: ReactErrorInfoDev = {name, message, stack, env};
     const id = outlineModel(request, errorInfo);
     return '$Z' + id.toString(16);
   } else {
@@ -3129,13 +3131,15 @@ function emitErrorChunk(
   digest: string,
   error: mixed,
 ): void {
-  let errorInfo: any;
+  let errorInfo: ReactErrorInfo;
   if (__DEV__) {
-    let message;
+    let name: string = 'Error';
+    let message: string;
     let stack: ReactStackTrace;
     let env = (0, request.environmentName)();
     try {
       if (error instanceof Error) {
+        name = error.name;
         // eslint-disable-next-line react-internal/safe-string-coercion
         message = String(error.message);
         stack = filterStackTrace(request, error, 0);
@@ -3157,7 +3161,7 @@ function emitErrorChunk(
       message = 'An error occurred but serializing the error message failed.';
       stack = [];
     }
-    errorInfo = {digest, message, stack, env};
+    errorInfo = {digest, name, message, stack, env};
   } else {
     errorInfo = {digest};
   }
