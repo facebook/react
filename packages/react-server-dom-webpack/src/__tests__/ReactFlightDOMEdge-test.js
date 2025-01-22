@@ -37,6 +37,7 @@ let ReactServerDOMStaticServer;
 let ReactServerDOMClient;
 let use;
 let reactServerAct;
+let assertConsoleErrorDev;
 
 function normalizeCodeLocInfo(str) {
   return (
@@ -66,6 +67,8 @@ describe('ReactFlightDOMEdge', () => {
     jest.resetModules();
 
     reactServerAct = require('internal-test-utils').serverAct;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
 
     // Simulate the condition resolution
     jest.mock('react', () => require('react/react.react-server'));
@@ -524,7 +527,6 @@ describe('ReactFlightDOMEdge', () => {
     expect(serializedContent.length).toBeLessThan(150 + expectedDebugInfoSize);
   });
 
-  // @gate enableBinaryFlight
   it('should be able to serialize any kind of typed array', async () => {
     const buffer = new Uint8Array([
       123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
@@ -556,7 +558,6 @@ describe('ReactFlightDOMEdge', () => {
     expect(result).toEqual(buffers);
   });
 
-  // @gate enableBinaryFlight
   it('should be able to serialize a blob', async () => {
     const bytes = new Uint8Array([
       123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
@@ -578,7 +579,6 @@ describe('ReactFlightDOMEdge', () => {
     expect(await result.arrayBuffer()).toEqual(await blob.arrayBuffer());
   });
 
-  // @gate enableBinaryFlight
   it('can transport FormData (blobs)', async () => {
     const bytes = new Uint8Array([
       123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
@@ -648,7 +648,6 @@ describe('ReactFlightDOMEdge', () => {
     expect(result.get('value')).toBe('hello');
   });
 
-  // @gate enableFlightReadableStream
   it('can pass an async import to a ReadableStream while enqueuing in order', async () => {
     let resolve;
     const promise = new Promise(r => (resolve = r));
@@ -693,7 +692,6 @@ describe('ReactFlightDOMEdge', () => {
     expect(await reader.read()).toEqual({value: undefined, done: true});
   });
 
-  // @gate enableFlightReadableStream
   it('can pass an async import a AsyncIterable while allowing peaking at future values', async () => {
     let resolve;
     const promise = new Promise(r => (resolve = r));
@@ -745,7 +743,6 @@ describe('ReactFlightDOMEdge', () => {
     expect(await iterator.next()).toEqual({value: undefined, done: true});
   });
 
-  // @gate enableFlightReadableStream
   it('should ideally dedupe objects inside async iterables but does not yet', async () => {
     const obj = {
       this: {is: 'a large objected'},
@@ -808,22 +805,23 @@ describe('ReactFlightDOMEdge', () => {
       ),
     };
 
-    expect(() => {
-      ServerModule.greet.bind({}, 'hi');
-    }).toErrorDev(
-      'Cannot bind "this" of a Server Action. Pass null or undefined as the first argument to .bind().',
+    ServerModule.greet.bind({}, 'hi');
+    assertConsoleErrorDev(
+      [
+        'Cannot bind "this" of a Server Action. Pass null or undefined as the first argument to .bind().',
+      ],
       {withoutStack: true},
     );
 
-    expect(() => {
-      ServerModuleImportedOnClient.greet.bind({}, 'hi');
-    }).toErrorDev(
-      'Cannot bind "this" of a Server Action. Pass null or undefined as the first argument to .bind().',
+    ServerModuleImportedOnClient.greet.bind({}, 'hi');
+    assertConsoleErrorDev(
+      [
+        'Cannot bind "this" of a Server Action. Pass null or undefined as the first argument to .bind().',
+      ],
       {withoutStack: true},
     );
   });
 
-  // @gate enableFlightReadableStream && enableBinaryFlight
   it('should supports ReadableStreams with typed arrays', async () => {
     const buffer = new Uint8Array([
       123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
@@ -882,7 +880,6 @@ describe('ReactFlightDOMEdge', () => {
     expect(streamedBuffers).toEqual(buffers);
   });
 
-  // @gate enableFlightReadableStream && enableBinaryFlight
   it('should support BYOB binary ReadableStreams', async () => {
     const buffer = new Uint8Array([
       123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
@@ -1253,20 +1250,59 @@ describe('ReactFlightDOMEdge', () => {
       ),
     );
     fizzController.abort('bam');
-    if (__DEV__) {
-      expect(errors).toEqual([new Error('Connection closed.')]);
-    } else {
-      // This is likely a bug. In Dev we get a connection closed error
-      // because the debug info creates a chunk that has a pending status
-      // and when the stream finishes we error if any chunks are still pending.
-      // In production there is no debug info so the missing chunk is never instantiated
-      // because nothing triggers model evaluation before the stream completes
-      expect(errors).toEqual(['bam']);
-    }
+    expect(errors).toEqual([new Error('Connection closed.')]);
     // Should still match the result when parsed
     const result = await readResult(ssrStream);
     const div = document.createElement('div');
     div.innerHTML = result;
     expect(div.textContent).toBe('loading...');
+  });
+
+  // @gate enableHalt
+  it('should abort parsing an incomplete prerender payload', async () => {
+    const infinitePromise = new Promise(() => {});
+    const controller = new AbortController();
+    const errors = [];
+    const {pendingResult} = await serverAct(async () => {
+      // destructure trick to avoid the act scope from awaiting the returned value
+      return {
+        pendingResult: ReactServerDOMStaticServer.unstable_prerender(
+          {promise: infinitePromise},
+          webpackMap,
+          {
+            signal: controller.signal,
+            onError(err) {
+              errors.push(err);
+            },
+          },
+        ),
+      };
+    });
+
+    controller.abort();
+    const {prelude} = await pendingResult;
+
+    expect(errors).toEqual([]);
+
+    const response = ReactServerDOMClient.createFromReadableStream(prelude, {
+      serverConsumerManifest: {
+        moduleMap: {},
+        moduleLoading: {},
+      },
+    });
+
+    // Wait for the stream to finish and therefore abort before we try to .then the response.
+    await 0;
+
+    const result = await response;
+
+    let error = null;
+    try {
+      await result.promise;
+    } catch (x) {
+      error = x;
+    }
+    expect(error).not.toBe(null);
+    expect(error.message).toBe('Connection closed.');
   });
 });

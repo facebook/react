@@ -18,15 +18,11 @@ import {
   MountLayoutDev,
 } from './ReactFiberFlags';
 import {
-  debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
-  enableDebugTracing,
   enableSchedulingProfiler,
-  enableLazyContextPropagation,
   disableDefaultPropsExceptForClasses,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
-import {isMounted} from './ReactFiberTreeReflection';
 import {get as getInstance, set as setInstance} from 'shared/ReactInstanceMap';
 import shallowEqual from 'shared/shallowEqual';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
@@ -35,12 +31,7 @@ import assign from 'shared/assign';
 import isArray from 'shared/isArray';
 import {REACT_CONTEXT_TYPE, REACT_CONSUMER_TYPE} from 'shared/ReactSymbols';
 
-import {
-  DebugTracingMode,
-  NoMode,
-  StrictLegacyMode,
-  StrictEffectsMode,
-} from './ReactTypeOfMode';
+import {NoMode, StrictLegacyMode, StrictEffectsMode} from './ReactTypeOfMode';
 
 import {
   enqueueUpdate,
@@ -65,7 +56,6 @@ import {
 } from './ReactFiberContext';
 import {readContext, checkIfContextChanged} from './ReactFiberNewContext';
 import {requestUpdateLane, scheduleUpdateOnFiber} from './ReactFiberWorkLoop';
-import {logForceUpdateScheduled, logStateUpdateScheduled} from './DebugTracing';
 import {
   markForceUpdateScheduled,
   markStateUpdateScheduled,
@@ -146,10 +136,7 @@ function applyDerivedStateFromProps(
   const prevState = workInProgress.memoizedState;
   let partialState = getDerivedStateFromProps(nextProps, prevState);
   if (__DEV__) {
-    if (
-      debugRenderPhaseSideEffectsForStrictMode &&
-      workInProgress.mode & StrictLegacyMode
-    ) {
+    if (workInProgress.mode & StrictLegacyMode) {
       setIsStrictModeForDevtools(true);
       try {
         // Invoke the function an extra time to help detect side-effects.
@@ -177,7 +164,6 @@ function applyDerivedStateFromProps(
 }
 
 const classComponentUpdater = {
-  isMounted,
   // $FlowFixMe[missing-local-annot]
   enqueueSetState(inst: any, payload: any, callback) {
     const fiber = getInstance(inst);
@@ -197,15 +183,6 @@ const classComponentUpdater = {
       startUpdateTimerByLane(lane);
       scheduleUpdateOnFiber(root, fiber, lane);
       entangleTransitions(root, fiber, lane);
-    }
-
-    if (__DEV__) {
-      if (enableDebugTracing) {
-        if (fiber.mode & DebugTracingMode) {
-          const name = getComponentNameFromFiber(fiber) || 'Unknown';
-          logStateUpdateScheduled(name, lane, payload);
-        }
-      }
     }
 
     if (enableSchedulingProfiler) {
@@ -234,15 +211,6 @@ const classComponentUpdater = {
       entangleTransitions(root, fiber, lane);
     }
 
-    if (__DEV__) {
-      if (enableDebugTracing) {
-        if (fiber.mode & DebugTracingMode) {
-          const name = getComponentNameFromFiber(fiber) || 'Unknown';
-          logStateUpdateScheduled(name, lane, payload);
-        }
-      }
-    }
-
     if (enableSchedulingProfiler) {
       markStateUpdateScheduled(fiber, lane);
     }
@@ -269,15 +237,6 @@ const classComponentUpdater = {
       entangleTransitions(root, fiber, lane);
     }
 
-    if (__DEV__) {
-      if (enableDebugTracing) {
-        if (fiber.mode & DebugTracingMode) {
-          const name = getComponentNameFromFiber(fiber) || 'Unknown';
-          logForceUpdateScheduled(name, lane);
-        }
-      }
-    }
-
     if (enableSchedulingProfiler) {
       markForceUpdateScheduled(fiber, lane);
     }
@@ -301,10 +260,7 @@ function checkShouldComponentUpdate(
       nextContext,
     );
     if (__DEV__) {
-      if (
-        debugRenderPhaseSideEffectsForStrictMode &&
-        workInProgress.mode & StrictLegacyMode
-      ) {
+      if (workInProgress.mode & StrictLegacyMode) {
         setIsStrictModeForDevtools(true);
         try {
           // Invoke the function an extra time to help detect side-effects.
@@ -633,10 +589,7 @@ function constructClassInstance(
   let instance = new ctor(props, context);
   // Instantiate twice to help detect side-effects.
   if (__DEV__) {
-    if (
-      debugRenderPhaseSideEffectsForStrictMode &&
-      workInProgress.mode & StrictLegacyMode
-    ) {
+    if (workInProgress.mode & StrictLegacyMode) {
       setIsStrictModeForDevtools(true);
       try {
         instance = new ctor(props, context);
@@ -1126,7 +1079,6 @@ function updateClassInstance(
     !hasContextChanged() &&
     !checkHasForceUpdateAfterProcessing() &&
     !(
-      enableLazyContextPropagation &&
       current !== null &&
       current.dependencies !== null &&
       checkIfContextChanged(current.dependencies)
@@ -1178,8 +1130,7 @@ function updateClassInstance(
     // both before and after `shouldComponentUpdate` has been called. Not ideal,
     // but I'm loath to refactor this function. This only happens for memoized
     // components so it's not that common.
-    (enableLazyContextPropagation &&
-      current !== null &&
+    (current !== null &&
       current.dependencies !== null &&
       checkIfContextChanged(current.dependencies));
 

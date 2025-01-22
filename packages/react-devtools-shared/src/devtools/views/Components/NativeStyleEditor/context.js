@@ -18,7 +18,6 @@ import {
   useMemo,
   useState,
 } from 'react';
-import {unstable_batchedUpdates as batchedUpdates} from 'react-dom';
 import {createResource} from 'react-devtools-shared/src/devtools/cache';
 import {
   BridgeContext,
@@ -100,10 +99,10 @@ function NativeStyleContextController({children}: Props): React.Node {
     [store],
   );
 
-  // It's very important that this context consumes selectedElementID and not NativeStyleID.
+  // It's very important that this context consumes inspectedElementID and not NativeStyleID.
   // Otherwise the effect that sends the "inspect" message across the bridge-
   // would itself be blocked by the same render that suspends (waiting for the data).
-  const {selectedElementID} = useContext<StateContext>(TreeStateContext);
+  const {inspectedElementID} = useContext<StateContext>(TreeStateContext);
 
   const [currentStyleAndLayout, setCurrentStyleAndLayout] =
     useState<StyleAndLayoutFrontend | null>(null);
@@ -120,15 +119,13 @@ function NativeStyleContextController({children}: Props): React.Node {
         const request = inProgressRequests.get(element);
         if (request != null) {
           inProgressRequests.delete(element);
-          batchedUpdates(() => {
-            request.resolveFn(styleAndLayout);
-            setCurrentStyleAndLayout(styleAndLayout);
-          });
+          request.resolveFn(styleAndLayout);
+          setCurrentStyleAndLayout(styleAndLayout);
         } else {
           resource.write(element, styleAndLayout);
 
           // Schedule update with React if the currently-selected element has been invalidated.
-          if (id === selectedElementID) {
+          if (id === inspectedElementID) {
             setCurrentStyleAndLayout(styleAndLayout);
           }
         }
@@ -141,15 +138,15 @@ function NativeStyleContextController({children}: Props): React.Node {
         'NativeStyleEditor_styleAndLayout',
         onStyleAndLayout,
       );
-  }, [bridge, currentStyleAndLayout, selectedElementID, store]);
+  }, [bridge, currentStyleAndLayout, inspectedElementID, store]);
 
   // This effect handler polls for updates on the currently selected element.
   useEffect(() => {
-    if (selectedElementID === null) {
+    if (inspectedElementID === null) {
       return () => {};
     }
 
-    const rendererID = store.getRendererIDForElement(selectedElementID);
+    const rendererID = store.getRendererIDForElement(inspectedElementID);
 
     let timeoutID: TimeoutID | null = null;
 
@@ -158,7 +155,7 @@ function NativeStyleContextController({children}: Props): React.Node {
 
       if (rendererID !== null) {
         bridge.send('NativeStyleEditor_measure', {
-          id: selectedElementID,
+          id: inspectedElementID,
           rendererID,
         });
       }
@@ -170,7 +167,7 @@ function NativeStyleContextController({children}: Props): React.Node {
 
     const onStyleAndLayout = ({id}: StyleAndLayoutBackend) => {
       // If this is the element we requested, wait a little bit and then ask for another update.
-      if (id === selectedElementID) {
+      if (id === inspectedElementID) {
         if (timeoutID !== null) {
           clearTimeout(timeoutID);
         }
@@ -190,7 +187,7 @@ function NativeStyleContextController({children}: Props): React.Node {
         clearTimeout(timeoutID);
       }
     };
-  }, [bridge, selectedElementID, store]);
+  }, [bridge, inspectedElementID, store]);
 
   const value = useMemo(
     () => ({getStyleAndLayout}),

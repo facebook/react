@@ -564,6 +564,14 @@ export function compileProgram(
     if (environment.enableChangeDetectionForDebugging != null) {
       externalFunctions.push(environment.enableChangeDetectionForDebugging);
     }
+
+    const hasFireRewrite = compiledFns.some(c => c.compiledFn.hasFireRewrite);
+    if (environment.enableFire && hasFireRewrite) {
+      externalFunctions.push({
+        source: getReactCompilerRuntimeModule(pass.opts),
+        importSpecifierName: 'useFire',
+      });
+    }
   } catch (err) {
     handleError(err, pass, null);
     return;
@@ -984,9 +992,11 @@ function returnsNonNode(
         }
       }
     },
+    // Skip traversing all nested functions and their return statements
     ArrowFunctionExpression: skipNestedFunctions(node),
     FunctionExpression: skipNestedFunctions(node),
     FunctionDeclaration: skipNestedFunctions(node),
+    ObjectMethod: node => node.skip(),
   });
 
   return !hasReturn || returnsNonNode;

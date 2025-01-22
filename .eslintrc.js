@@ -303,7 +303,6 @@ module.exports = {
       ERROR,
       {isProductionUserAppCode: true},
     ],
-    'react-internal/no-to-warn-dev-within-to-throw': ERROR,
     'react-internal/warning-args': ERROR,
     'react-internal/no-production-logging': ERROR,
   },
@@ -330,6 +329,7 @@ module.exports = {
         'packages/react-server-dom-esm/**/*.js',
         'packages/react-server-dom-webpack/**/*.js',
         'packages/react-server-dom-turbopack/**/*.js',
+        'packages/react-server-dom-parcel/**/*.js',
         'packages/react-server-dom-fb/**/*.js',
         'packages/react-test-renderer/**/*.js',
         'packages/react-debug-tools/**/*.js',
@@ -482,6 +482,12 @@ module.exports = {
       },
     },
     {
+      files: ['packages/react-server-dom-parcel/**/*.js'],
+      globals: {
+        parcelRequire: 'readonly',
+      },
+    },
+    {
       files: ['packages/scheduler/**/*.js'],
       globals: {
         TaskController: 'readonly',
@@ -490,6 +496,7 @@ module.exports = {
     {
       files: [
         'packages/react-devtools-extensions/**/*.js',
+        'packages/react-devtools-shared/src/devtools/views/**/*.js',
         'packages/react-devtools-shared/src/hook.js',
         'packages/react-devtools-shared/src/backend/console.js',
         'packages/react-devtools-shared/src/backend/shared/DevToolsComponentStackFrame.js',
@@ -583,6 +590,11 @@ module.exports = {
     WheelEventHandler: 'readonly',
     FinalizationRegistry: 'readonly',
     Omit: 'readonly',
+    Keyframe: 'readonly',
+    PropertyIndexedKeyframes: 'readonly',
+    KeyframeAnimationOptions: 'readonly',
+    GetAnimationsOptions: 'readonly',
+    Animatable: 'readonly',
 
     spyOnDev: 'readonly',
     spyOnDevAndProd: 'readonly',

@@ -18,14 +18,7 @@ import {REACT_CONSUMER_TYPE} from 'shared/ReactSymbols';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
-import {
-  enableAsyncActions,
-  enableUseResourceEffectHook,
-} from 'shared/ReactFeatureFlags';
-import {
-  enableContextProfiling,
-  enableLazyContextPropagation,
-} from '../../shared/ReactFeatureFlags';
+import {enableUseResourceEffectHook} from 'shared/ReactFeatureFlags';
 
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
@@ -70,27 +63,6 @@ export function useContext<T>(Context: ReactContext<T>): T {
     }
   }
   return dispatcher.useContext(Context);
-}
-
-export function unstable_useContextWithBailout<T>(
-  context: ReactContext<T>,
-  select: (T => Array<mixed>) | null,
-): T {
-  if (!(enableLazyContextPropagation && enableContextProfiling)) {
-    throw new Error('Not implemented.');
-  }
-
-  const dispatcher = resolveDispatcher();
-  if (__DEV__) {
-    if (context.$$typeof === REACT_CONSUMER_TYPE) {
-      console.error(
-        'Calling useContext(Context.Consumer) is not supported and will cause bugs. ' +
-          'Did you mean to call useContext(Context) instead?',
-      );
-    }
-  }
-  // $FlowFixMe[not-a-function] This is unstable, thus optional
-  return dispatcher.unstable_useContextWithBailout(context, select);
 }
 
 export function useState<S>(
@@ -255,7 +227,6 @@ export function useOptimistic<S, A>(
   reducer: ?(S, A) => S,
 ): [S, (A) => void] {
   const dispatcher = resolveDispatcher();
-  // $FlowFixMe[not-a-function] This is unstable, thus optional
   return dispatcher.useOptimistic(passthrough, reducer);
 }
 
@@ -264,11 +235,6 @@ export function useActionState<S, P>(
   initialState: Awaited<S>,
   permalink?: string,
 ): [Awaited<S>, (P) => void, boolean] {
-  if (!enableAsyncActions) {
-    throw new Error('Not implemented.');
-  } else {
-    const dispatcher = resolveDispatcher();
-    // $FlowFixMe[not-a-function] This is unstable, thus optional
-    return dispatcher.useActionState(action, initialState, permalink);
-  }
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useActionState(action, initialState, permalink);
 }

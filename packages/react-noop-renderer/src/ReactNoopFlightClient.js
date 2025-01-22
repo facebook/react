@@ -24,7 +24,7 @@ type Source = Array<Uint8Array>;
 
 const decoderOptions = {stream: true};
 
-const {createResponse, processBinaryChunk, getRoot, close} = ReactFlightClient({
+const {createResponse, processBinaryChunk, getRoot} = ReactFlightClient({
   createStringDecoder() {
     return new TextDecoder();
   },
@@ -74,7 +74,6 @@ function read<T>(source: Source, options: ReadOptions): Thenable<T> {
   for (let i = 0; i < source.length; i++) {
     processBinaryChunk(response, source[i], 0);
   }
-  close(response);
   return getRoot(response);
 }
 

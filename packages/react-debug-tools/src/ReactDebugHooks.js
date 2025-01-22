@@ -20,7 +20,6 @@ import type {
   Dependencies,
   Fiber,
   Dispatcher as DispatcherType,
-  ContextDependencyWithSelect,
 } from 'react-reconciler/src/ReactInternalTypes';
 import type {TransitionStatus} from 'react-reconciler/src/ReactFiberConfig';
 
@@ -76,13 +75,6 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
     try {
       // Use all hooks here to add them to the hook log.
       Dispatcher.useContext(({_currentValue: null}: any));
-      if (typeof Dispatcher.unstable_useContextWithBailout === 'function') {
-        // This type check is for Flow only.
-        Dispatcher.unstable_useContextWithBailout(
-          ({_currentValue: null}: any),
-          null,
-        );
-      }
       Dispatcher.useState(null);
       Dispatcher.useReducer((s: mixed, a: mixed) => s, null);
       Dispatcher.useRef(null);
@@ -104,21 +96,13 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
       );
       Dispatcher.useDeferredValue(null);
       Dispatcher.useMemo(() => null);
+      Dispatcher.useOptimistic(null, (s: mixed, a: mixed) => s);
+      Dispatcher.useFormState((s: mixed, p: mixed) => s, null);
+      Dispatcher.useActionState((s: mixed, p: mixed) => s, null);
+      Dispatcher.useHostTransitionStatus();
       if (typeof Dispatcher.useMemoCache === 'function') {
         // This type check is for Flow only.
         Dispatcher.useMemoCache(0);
-      }
-      if (typeof Dispatcher.useOptimistic === 'function') {
-        // This type check is for Flow only.
-        Dispatcher.useOptimistic(null, (s: mixed, a: mixed) => s);
-      }
-      if (typeof Dispatcher.useFormState === 'function') {
-        // This type check is for Flow only.
-        Dispatcher.useFormState((s: mixed, p: mixed) => s, null);
-      }
-      if (typeof Dispatcher.useActionState === 'function') {
-        // This type check is for Flow only.
-        Dispatcher.useActionState((s: mixed, p: mixed) => s, null);
       }
       if (typeof Dispatcher.use === 'function') {
         // This type check is for Flow only.
@@ -144,9 +128,11 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
 
       Dispatcher.useId();
 
-      if (typeof Dispatcher.useHostTransitionStatus === 'function') {
-        // This type check is for Flow only.
-        Dispatcher.useHostTransitionStatus();
+      if (typeof Dispatcher.useResourceEffect === 'function') {
+        Dispatcher.useResourceEffect(() => ({}), []);
+      }
+      if (typeof Dispatcher.useEffectEvent === 'function') {
+        Dispatcher.useEffectEvent((args: empty) => {});
       }
     } finally {
       readHookLog = hookLog;
@@ -163,10 +149,7 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
 
 let currentFiber: null | Fiber = null;
 let currentHook: null | Hook = null;
-let currentContextDependency:
-  | null
-  | ContextDependency<mixed>
-  | ContextDependencyWithSelect<mixed> = null;
+let currentContextDependency: null | ContextDependency<mixed> = null;
 
 function nextHook(): null | Hook {
   const hook = currentHook;
@@ -283,22 +266,6 @@ function useContext<T>(context: ReactContext<T>): T {
     value: value,
     debugInfo: null,
     dispatcherHookName: 'Context',
-  });
-  return value;
-}
-
-function unstable_useContextWithBailout<T>(
-  context: ReactContext<T>,
-  select: (T => Array<mixed>) | null,
-): T {
-  const value = readContext(context);
-  hookLog.push({
-    displayName: context.displayName || null,
-    primitive: 'ContextWithBailout',
-    stackError: new Error(),
-    value: value,
-    debugInfo: null,
-    dispatcherHookName: 'ContextWithBailout',
   });
   return value;
 }
@@ -771,13 +738,44 @@ function useHostTransitionStatus(): TransitionStatus {
   return status;
 }
 
+function useResourceEffect(
+  create: () => mixed,
+  createDeps: Array<mixed> | void | null,
+  update: ((resource: mixed) => void) | void,
+  updateDeps: Array<mixed> | void | null,
+  destroy: ((resource: mixed) => void) | void,
+) {
+  nextHook();
+  hookLog.push({
+    displayName: null,
+    primitive: 'ResourceEffect',
+    stackError: new Error(),
+    value: create,
+    debugInfo: null,
+    dispatcherHookName: 'ResourceEffect',
+  });
+}
+
+function useEffectEvent<Args, F: (...Array<Args>) => mixed>(callback: F): F {
+  nextHook();
+  hookLog.push({
+    displayName: null,
+    primitive: 'EffectEvent',
+    stackError: new Error(),
+    value: callback,
+    debugInfo: null,
+    dispatcherHookName: 'EffectEvent',
+  });
+
+  return callback;
+}
+
 const Dispatcher: DispatcherType = {
   use,
   readContext,
   useCacheRefresh,
   useCallback,
   useContext,
-  unstable_useContextWithBailout,
   useEffect,
   useImperativeHandle,
   useDebugValue,
@@ -796,6 +794,8 @@ const Dispatcher: DispatcherType = {
   useFormState,
   useActionState,
   useHostTransitionStatus,
+  useEffectEvent,
+  useResourceEffect,
 };
 
 // create a proxy to throw a custom error
@@ -982,6 +982,10 @@ function parseHookName(functionName: void | string): string {
 
   if (functionName.slice(startIndex).startsWith('unstable_')) {
     startIndex += 'unstable_'.length;
+  }
+
+  if (functionName.slice(startIndex).startsWith('experimental_')) {
+    startIndex += 'experimental_'.length;
   }
 
   if (functionName.slice(startIndex, startIndex + 3) === 'use') {

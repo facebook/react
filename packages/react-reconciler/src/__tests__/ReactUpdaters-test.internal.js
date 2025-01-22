@@ -34,7 +34,6 @@ describe('updaters', () => {
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableUpdaterTracking = true;
-    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
 
     mockDevToolsHook = {
       injectInternals: jest.fn(() => {}),

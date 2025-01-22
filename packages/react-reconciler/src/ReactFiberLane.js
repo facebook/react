@@ -221,7 +221,11 @@ function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
   }
 }
 
-export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
+export function getNextLanes(
+  root: FiberRoot,
+  wipLanes: Lanes,
+  rootHasPendingCommit: boolean,
+): Lanes {
   // Early bailout if there's no pending work left.
   const pendingLanes = root.pendingLanes;
   if (pendingLanes === NoLanes) {
@@ -246,16 +250,6 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
   // a brief amount of time (i.e. below the "Just Noticeable Difference"
   // threshold).
   //
-  // TODO: finishedLanes is also set when a Suspensey resource, like CSS or
-  // images, suspends during the commit phase. (We could detect that here by
-  // checking for root.cancelPendingCommit.) These are also expected to resolve
-  // quickly, because of preloading, but theoretically they could block forever
-  // like in a normal "suspend indefinitely" scenario. In the future, we should
-  // consider only blocking for up to some time limit before discarding the
-  // commit in favor of prerendering. If we do discard a pending commit, then
-  // the commit phase callback should act as a ping to try the original
-  // render again.
-  const rootHasPendingCommit = root.finishedLanes !== NoLanes;
 
   // Do not work on any idle work until all the non-idle work has finished,
   // even if the work is suspended.
@@ -356,6 +350,10 @@ export function getNextLanesToFlushSync(
   //
   // The main use case is updates scheduled by popstate events, which are
   // flushed synchronously even though they are transitions.
+  // Note that we intentionally treat this as a sync flush to include any
+  // sync updates in a single pass but also intentionally disables View Transitions
+  // inside popstate. Because they can start synchronously before scroll restoration
+  // happens.
   const lanesToFlush = SyncUpdateLanes | extraLanesToForceSync;
 
   // Early bailout if there's no pending work left.
@@ -619,6 +617,22 @@ export function includesOnlyTransitions(lanes: Lanes): boolean {
 
 export function includesTransitionLane(lanes: Lanes): boolean {
   return (lanes & TransitionLanes) !== NoLanes;
+}
+
+export function includesOnlyHydrationLanes(lanes: Lanes): boolean {
+  return (lanes & HydrationLanes) === lanes;
+}
+
+export function includesOnlyOffscreenLanes(lanes: Lanes): boolean {
+  return (lanes & OffscreenLane) === lanes;
+}
+
+export function includesOnlyHydrationOrOffscreenLanes(lanes: Lanes): boolean {
+  return (lanes & (HydrationLanes | OffscreenLane)) === lanes;
+}
+
+export function includesOnlyViewTransitionEligibleLanes(lanes: Lanes): boolean {
+  return (lanes & (TransitionLanes | RetryLanes | IdleLane)) === lanes;
 }
 
 export function includesBlockingLane(lanes: Lanes): boolean {
@@ -995,61 +1009,66 @@ export function getBumpedLaneForHydration(
   renderLanes: Lanes,
 ): Lane {
   const renderLane = getHighestPriorityLane(renderLanes);
-
-  let lane;
-  if ((renderLane & SyncUpdateLanes) !== NoLane) {
-    lane = SyncHydrationLane;
-  } else {
-    switch (renderLane) {
-      case SyncLane:
-        lane = SyncHydrationLane;
-        break;
-      case InputContinuousLane:
-        lane = InputContinuousHydrationLane;
-        break;
-      case DefaultLane:
-        lane = DefaultHydrationLane;
-        break;
-      case TransitionLane1:
-      case TransitionLane2:
-      case TransitionLane3:
-      case TransitionLane4:
-      case TransitionLane5:
-      case TransitionLane6:
-      case TransitionLane7:
-      case TransitionLane8:
-      case TransitionLane9:
-      case TransitionLane10:
-      case TransitionLane11:
-      case TransitionLane12:
-      case TransitionLane13:
-      case TransitionLane14:
-      case TransitionLane15:
-      case RetryLane1:
-      case RetryLane2:
-      case RetryLane3:
-      case RetryLane4:
-        lane = TransitionHydrationLane;
-        break;
-      case IdleLane:
-        lane = IdleHydrationLane;
-        break;
-      default:
-        // Everything else is already either a hydration lane, or shouldn't
-        // be retried at a hydration lane.
-        lane = NoLane;
-        break;
-    }
-  }
-
+  const bumpedLane =
+    (renderLane & SyncUpdateLanes) !== NoLane
+      ? // Unify sync lanes. We don't do this inside getBumpedLaneForHydrationByLane
+        // because that causes things to flush synchronously when they shouldn't.
+        // TODO: This is not coherent but that's beacuse the unification is not coherent.
+        // We need to get merge these into an actual single lane.
+        SyncHydrationLane
+      : getBumpedLaneForHydrationByLane(renderLane);
   // Check if the lane we chose is suspended. If so, that indicates that we
   // already attempted and failed to hydrate at that level. Also check if we're
   // already rendering that lane, which is rare but could happen.
-  if ((lane & (root.suspendedLanes | renderLanes)) !== NoLane) {
+  // TODO: This should move into the caller to decide whether giving up is valid.
+  if ((bumpedLane & (root.suspendedLanes | renderLanes)) !== NoLane) {
     // Give up trying to hydrate and fall back to client render.
     return NoLane;
   }
+  return bumpedLane;
+}
 
+export function getBumpedLaneForHydrationByLane(lane: Lane): Lane {
+  switch (lane) {
+    case SyncLane:
+      lane = SyncHydrationLane;
+      break;
+    case InputContinuousLane:
+      lane = InputContinuousHydrationLane;
+      break;
+    case DefaultLane:
+      lane = DefaultHydrationLane;
+      break;
+    case TransitionLane1:
+    case TransitionLane2:
+    case TransitionLane3:
+    case TransitionLane4:
+    case TransitionLane5:
+    case TransitionLane6:
+    case TransitionLane7:
+    case TransitionLane8:
+    case TransitionLane9:
+    case TransitionLane10:
+    case TransitionLane11:
+    case TransitionLane12:
+    case TransitionLane13:
+    case TransitionLane14:
+    case TransitionLane15:
+    case RetryLane1:
+    case RetryLane2:
+    case RetryLane3:
+    case RetryLane4:
+      lane = TransitionHydrationLane;
+      break;
+    case IdleLane:
+      lane = IdleHydrationLane;
+      break;
+    default:
+      // Everything else is already either a hydration lane, or shouldn't
+      // be retried at a hydration lane.
+      lane = NoLane;
+      break;
+  }
   return lane;
 }
 

@@ -14,6 +14,7 @@ let ReactDOMClient;
 let ReactDOMServer;
 let ReactFeatureFlags;
 let act;
+let assertConsoleErrorDev;
 
 describe('ReactLegacyContextDisabled', () => {
   beforeEach(() => {
@@ -25,6 +26,8 @@ describe('ReactLegacyContextDisabled', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.disableLegacyContext = true;
     act = require('internal-test-utils').act;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
   });
 
   function formatValue(val) {
@@ -84,25 +87,33 @@ describe('ReactLegacyContextDisabled', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await expect(async () => {
-      await act(() => {
-        root.render(
-          <LegacyProvider>
-            <span>
-              <LegacyClsConsumer />
-              <LegacyFnConsumer />
-              <RegularFn />
-            </span>
-          </LegacyProvider>,
-        );
-      });
-    }).toErrorDev([
+    await act(() => {
+      root.render(
+        <LegacyProvider>
+          <span>
+            <LegacyClsConsumer />
+            <LegacyFnConsumer />
+            <RegularFn />
+          </span>
+        </LegacyProvider>,
+      );
+    });
+    assertConsoleErrorDev([
       'LegacyProvider uses the legacy childContextTypes API which was removed in React 19. ' +
-        'Use React.createContext() instead.',
+        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in LegacyProvider (at **)',
       'LegacyClsConsumer uses the legacy contextTypes API which was removed in React 19. ' +
-        'Use React.createContext() with static contextType instead.',
+        'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+        '    in LegacyClsConsumer (at **)' +
+        (gate('enableOwnerStacks')
+          ? ''
+          : '\n' + '    in span (at **)\n' + '    in LegacyProvider (at **)'),
       'LegacyFnConsumer uses the legacy contextTypes API which was removed in React 19. ' +
-        'Use React.createContext() with React.useContext() instead.',
+        'Use React.createContext() with React.useContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in LegacyFnConsumer (at **)' +
+        (gate('enableOwnerStacks')
+          ? ''
+          : '\n' + '    in span (at **)\n' + '    in LegacyProvider (at **)'),
     ]);
     expect(container.textContent).toBe('{}undefinedundefined');
     expect(lifecycleContextLog).toEqual([]);
@@ -124,25 +135,32 @@ describe('ReactLegacyContextDisabled', () => {
     root.unmount();
 
     // test server path.
-    let text;
-    expect(() => {
-      text = ReactDOMServer.renderToString(
-        <LegacyProvider>
-          <span>
-            <LegacyClsConsumer />
-            <LegacyFnConsumer />
-            <RegularFn />
-          </span>
-        </LegacyProvider>,
-        container,
-      );
-    }).toErrorDev([
+    const text = ReactDOMServer.renderToString(
+      <LegacyProvider>
+        <span>
+          <LegacyClsConsumer />
+          <LegacyFnConsumer />
+          <RegularFn />
+        </span>
+      </LegacyProvider>,
+      container,
+    );
+    assertConsoleErrorDev([
       'LegacyProvider uses the legacy childContextTypes API which was removed in React 19. ' +
-        'Use React.createContext() instead.',
+        'Use React.createContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in LegacyProvider (at **)',
       'LegacyClsConsumer uses the legacy contextTypes API which was removed in React 19. ' +
-        'Use React.createContext() with static contextType instead.',
+        'Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)\n' +
+        '    in LegacyClsConsumer (at **)' +
+        (gate('enableOwnerStacks')
+          ? ''
+          : '\n' + '    in span (at **)\n' + '    in LegacyProvider (at **)'),
       'LegacyFnConsumer uses the legacy contextTypes API which was removed in React 19. ' +
-        'Use React.createContext() with React.useContext() instead.',
+        'Use React.createContext() with React.useContext() instead. (https://react.dev/link/legacy-context)\n' +
+        '    in LegacyFnConsumer (at **)' +
+        (gate('enableOwnerStacks')
+          ? ''
+          : '\n' + '    in span (at **)\n' + '    in LegacyProvider (at **)'),
     ]);
     expect(text).toBe('<span>{}<!-- -->undefined<!-- -->undefined</span>');
     expect(lifecycleContextLog).toEqual([{}, {}, {}]);
@@ -233,15 +251,7 @@ describe('ReactLegacyContextDisabled', () => {
       );
     });
     expect(container.textContent).toBe('bbb');
-    if (gate(flags => flags.enableLazyContextPropagation)) {
-      // In the lazy propagation implementation, we don't check if context
-      // changed until after shouldComponentUpdate is run.
-      expect(lifecycleContextLog).toEqual(['b', 'b', 'b']);
-    } else {
-      // In the eager implementation, a dirty flag was set when the parent
-      // changed, so we skipped sCU.
-      expect(lifecycleContextLog).toEqual(['b', 'b']);
-    }
+    expect(lifecycleContextLog).toEqual(['b', 'b', 'b']);
     root.unmount();
   });
 });

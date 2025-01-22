@@ -11,14 +11,12 @@ import {transformFromAstSync} from '@babel/core';
 import * as BabelParser from '@babel/parser';
 import {NodePath} from '@babel/traverse';
 import * as t from '@babel/types';
-import assert from 'assert';
 import type {
-  CompilationMode,
   Logger,
   LoggerEvent,
-  PanicThresholdOptions,
   PluginOptions,
   CompilerReactTarget,
+  CompilerPipelineValue,
 } from 'babel-plugin-react-compiler/src/Entrypoint';
 import type {Effect, ValueKind} from 'babel-plugin-react-compiler/src/HIR';
 import type {
@@ -45,33 +43,17 @@ export function parseLanguage(source: string): 'flow' | 'typescript' {
 function makePluginOptions(
   firstLine: string,
   parseConfigPragmaFn: typeof ParseConfigPragma,
+  debugIRLogger: (value: CompilerPipelineValue) => void,
   EffectEnum: typeof Effect,
   ValueKindEnum: typeof ValueKind,
 ): [PluginOptions, Array<{filename: string | null; event: LoggerEvent}>] {
   let gating = null;
-  let compilationMode: CompilationMode = 'all';
-  let panicThreshold: PanicThresholdOptions = 'all_errors';
   let hookPattern: string | null = null;
   // TODO(@mofeiZ) rewrite snap fixtures to @validatePreserveExistingMemo:false
   let validatePreserveExistingMemoizationGuarantees = false;
   let customMacros: null | Array<Macro> = null;
   let validateBlocklistedImports = null;
   let target: CompilerReactTarget = '19';
-
-  if (firstLine.indexOf('@compilationMode(annotation)') !== -1) {
-    assert(
-      compilationMode === 'all',
-      'Cannot set @compilationMode(..) more than once',
-    );
-    compilationMode = 'annotation';
-  }
-  if (firstLine.indexOf('@compilationMode(infer)') !== -1) {
-    assert(
-      compilationMode === 'all',
-      'Cannot set @compilationMode(..) more than once',
-    );
-    compilationMode = 'infer';
-  }
 
   if (firstLine.includes('@gating')) {
     gating = {
@@ -91,10 +73,6 @@ function makePluginOptions(
       // @ts-ignore
       target = targetMatch[1];
     }
-  }
-
-  if (firstLine.includes('@panicThreshold(none)')) {
-    panicThreshold = 'none';
   }
 
   let eslintSuppressionRules: Array<string> | null = null;
@@ -182,20 +160,21 @@ function makePluginOptions(
       .filter(s => s.length > 0);
   }
 
-  let logs: Array<{filename: string | null; event: LoggerEvent}> = [];
-  let logger: Logger | null = null;
-  if (firstLine.includes('@logger')) {
-    logger = {
-      logEvent(filename: string | null, event: LoggerEvent): void {
-        logs.push({filename, event});
-      },
-    };
-  }
+  const logs: Array<{filename: string | null; event: LoggerEvent}> = [];
+  const logger: Logger = {
+    logEvent: firstLine.includes('@logger')
+      ? (filename, event) => {
+          logs.push({filename, event});
+        }
+      : () => {},
+    debugLogIRs: debugIRLogger,
+  };
 
-  const config = parseConfigPragmaFn(firstLine);
+  const config = parseConfigPragmaFn(firstLine, {compilationMode: 'all'});
   const options = {
+    ...config,
     environment: {
-      ...config,
+      ...config.environment,
       moduleTypeProvider: makeSharedRuntimeTypeProvider({
         EffectEnum,
         ValueKindEnum,
@@ -206,10 +185,8 @@ function makePluginOptions(
       validatePreserveExistingMemoizationGuarantees,
       validateBlocklistedImports,
     },
-    compilationMode,
     logger,
     gating,
-    panicThreshold,
     noEmit: false,
     eslintSuppressionRules,
     flowSuppressions,
@@ -338,6 +315,7 @@ export async function transformFixtureInput(
   parseConfigPragmaFn: typeof ParseConfigPragma,
   plugin: BabelCore.PluginObj,
   includeEvaluator: boolean,
+  debugIRLogger: (value: CompilerPipelineValue) => void,
   EffectEnum: typeof Effect,
   ValueKindEnum: typeof ValueKind,
 ): Promise<{kind: 'ok'; value: TransformResult} | {kind: 'err'; msg: string}> {
@@ -365,6 +343,7 @@ export async function transformFixtureInput(
   const [options, logs] = makePluginOptions(
     firstLine,
     parseConfigPragmaFn,
+    debugIRLogger,
     EffectEnum,
     ValueKindEnum,
   );

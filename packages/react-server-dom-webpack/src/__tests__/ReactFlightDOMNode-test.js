@@ -197,7 +197,6 @@ describe('ReactFlightDOMNode', () => {
     expect(result.text).toBe(testString);
   });
 
-  // @gate enableBinaryFlight
   it('should be able to serialize any kind of typed array', async () => {
     const buffer = new Uint8Array([
       123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
@@ -293,7 +292,6 @@ describe('ReactFlightDOMNode', () => {
     );
   });
 
-  // @gate enableFlightReadableStream
   it('should cancels the underlying ReadableStream when we are cancelled', async () => {
     let controller;
     let cancelReason;
@@ -337,7 +335,6 @@ describe('ReactFlightDOMNode', () => {
     );
   });
 
-  // @gate enableFlightReadableStream
   it('should cancels the underlying ReadableStream when we abort', async () => {
     const errors = [];
     let controller;
@@ -511,16 +508,7 @@ describe('ReactFlightDOMNode', () => {
       ),
     );
     ssrStream.abort('bam');
-    if (__DEV__) {
-      expect(errors).toEqual([new Error('Connection closed.')]);
-    } else {
-      // This is likely a bug. In Dev we get a connection closed error
-      // because the debug info creates a chunk that has a pending status
-      // and when the stream finishes we error if any chunks are still pending.
-      // In production there is no debug info so the missing chunk is never instantiated
-      // because nothing triggers model evaluation before the stream completes
-      expect(errors).toEqual(['bam']);
-    }
+    expect(errors).toEqual([new Error('Connection closed.')]);
     // Should still match the result when parsed
     const result = await readResult(ssrStream);
     const div = document.createElement('div');
