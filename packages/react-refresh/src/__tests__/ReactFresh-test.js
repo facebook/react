@@ -856,6 +856,71 @@ describe('ReactFresh', () => {
     }
   });
 
+  it('resets state when switching between different component types', async () => {
+    if (__DEV__) {
+      await act(async () => {
+        await render(() => {
+          function Test() {
+            const [count, setCount] = React.useState(0);
+            return (
+              <div onClick={() => setCount(c => c + 1)}>count: {count}</div>
+            );
+          }
+          $RefreshReg$(Test, 'Test');
+          return Test;
+        });
+      });
+
+      expect(container.firstChild.textContent).toBe('count: 0');
+      await act(async () => {
+        container.firstChild.click();
+      });
+      expect(container.firstChild.textContent).toBe('count: 1');
+
+      await act(async () => {
+        await patch(() => {
+          function Test2() {
+            const [count, setCount] = React.useState(0);
+            return (
+              <div onClick={() => setCount(c => c + 1)}>count: {count}</div>
+            );
+          }
+          const Test = React.memo(Test2);
+          $RefreshReg$(Test2, 'Test2');
+          $RefreshReg$(Test, 'Test');
+          return Test;
+        });
+      });
+
+      expect(container.firstChild.textContent).toBe('count: 0');
+      await act(async () => {
+        container.firstChild.click();
+      });
+      expect(container.firstChild.textContent).toBe('count: 1');
+
+      await act(async () => {
+        await patch(() => {
+          const Test = React.forwardRef((props, ref) => {
+            const [count, setCount] = React.useState(0);
+            return (
+              <div ref={ref} onClick={() => setCount(c => c + 1)}>
+                count: {count}
+              </div>
+            );
+          });
+          $RefreshReg$(Test, 'Test');
+          return Test;
+        });
+      });
+
+      expect(container.firstChild.textContent).toBe('count: 0');
+      await act(async () => {
+        container.firstChild.click();
+      });
+      expect(container.firstChild.textContent).toBe('count: 1');
+    }
+  });
+
   it('can update simple memo function in isolation', async () => {
     if (__DEV__) {
       await render(() => {
