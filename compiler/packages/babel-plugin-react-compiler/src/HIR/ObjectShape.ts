@@ -549,8 +549,16 @@ addObject(BUILTIN_SHAPES, BuiltInMixedReadonlyId, [
   [
     'map',
     addFunction(BUILTIN_SHAPES, [], {
+      /**
+       * Note `map`'s arguments are annotated as Effect.ConditionallyMutate as
+       * calling `<array>.map(fn)` might invoke `fn`, which means replaying its
+       * effects.
+       *
+       * (Note that Effect.Read / Effect.Capture on a function type means
+       * potential data dependency or aliasing respectively.)
+       */
       positionalParams: [],
-      restParam: Effect.Read,
+      restParam: Effect.ConditionallyMutate,
       returnType: {kind: 'Object', shapeId: BuiltInArrayId},
       calleeEffect: Effect.ConditionallyMutate,
       returnValueKind: ValueKind.Mutable,
