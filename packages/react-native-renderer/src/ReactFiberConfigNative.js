@@ -8,6 +8,7 @@
  */
 
 import type {InspectorData, TouchedViewDataAtPoint} from './ReactNativeTypes';
+import type {TransitionTypes} from 'react/src/ReactTransitionType.js';
 
 // Modules provided by RN:
 import {
@@ -582,6 +583,7 @@ export function hasInstanceAffectedParent(
 
 export function startViewTransition(
   rootContainer: Container,
+  transitionTypes: null | TransitionTypes,
   mutationCallback: () => void,
   layoutCallback: () => void,
   afterMutationCallback: () => void,
