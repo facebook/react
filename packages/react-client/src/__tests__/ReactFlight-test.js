@@ -1387,6 +1387,7 @@ describe('ReactFlight', () => {
         errors: [
           {
             message: 'This is an error',
+            name: 'Error',
             stack: expect.stringContaining(
               'Error: This is an error\n' +
                 '    at eval (eval at testFunction (inspected-page.html:29:11),%20%3Canonymous%3E:1:35)\n' +
