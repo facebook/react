@@ -722,7 +722,6 @@ export type ObjectProperty = {
 };
 
 export type LoweredFunction = {
-  dependencies: Array<Place>;
   func: HIRFunction;
 };
 
