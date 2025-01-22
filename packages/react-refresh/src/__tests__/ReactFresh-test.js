@@ -902,8 +902,22 @@ describe('ReactFresh', () => {
         await patch(() => {
           const Test = React.forwardRef((props, ref) => {
             const [count, setCount] = React.useState(0);
+            const handleClick = () => setCount(c => c + 1);
+
+            // Ensure ref is extensible
+            const divRef = React.useRef(null);
+            React.useEffect(() => {
+              if (ref) {
+                if (typeof ref === 'function') {
+                  ref(divRef.current);
+                } else if (Object.isExtensible(ref)) {
+                  ref.current = divRef.current;
+                }
+              }
+            }, [ref]);
+
             return (
-              <div ref={ref} onClick={() => setCount(c => c + 1)}>
+              <div ref={divRef} onClick={handleClick}>
                 count: {count}
               </div>
             );
