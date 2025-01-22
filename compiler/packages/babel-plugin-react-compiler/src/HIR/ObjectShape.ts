@@ -569,7 +569,7 @@ addObject(BUILTIN_SHAPES, BuiltInMixedReadonlyId, [
     'flatMap',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
-      restParam: Effect.Read,
+      restParam: Effect.ConditionallyMutate,
       returnType: {kind: 'Object', shapeId: BuiltInArrayId},
       calleeEffect: Effect.ConditionallyMutate,
       returnValueKind: ValueKind.Mutable,
@@ -580,7 +580,7 @@ addObject(BUILTIN_SHAPES, BuiltInMixedReadonlyId, [
     'filter',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
-      restParam: Effect.Read,
+      restParam: Effect.ConditionallyMutate,
       returnType: {kind: 'Object', shapeId: BuiltInArrayId},
       calleeEffect: Effect.ConditionallyMutate,
       returnValueKind: ValueKind.Mutable,
