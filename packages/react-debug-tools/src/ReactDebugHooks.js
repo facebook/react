@@ -127,6 +127,13 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
       }
 
       Dispatcher.useId();
+
+      if (typeof Dispatcher.useResourceEffect === 'function') {
+        Dispatcher.useResourceEffect(() => ({}), []);
+      }
+      if (typeof Dispatcher.useEffectEvent === 'function') {
+        Dispatcher.useEffectEvent((args: empty) => {});
+      }
     } finally {
       readHookLog = hookLog;
       hookLog = [];
@@ -749,6 +756,20 @@ function useResourceEffect(
   });
 }
 
+function useEffectEvent<Args, F: (...Array<Args>) => mixed>(callback: F): F {
+  nextHook();
+  hookLog.push({
+    displayName: null,
+    primitive: 'EffectEvent',
+    stackError: new Error(),
+    value: callback,
+    debugInfo: null,
+    dispatcherHookName: 'EffectEvent',
+  });
+
+  return callback;
+}
+
 const Dispatcher: DispatcherType = {
   use,
   readContext,
@@ -773,6 +794,7 @@ const Dispatcher: DispatcherType = {
   useFormState,
   useActionState,
   useHostTransitionStatus,
+  useEffectEvent,
   useResourceEffect,
 };
 
@@ -962,7 +984,7 @@ function parseHookName(functionName: void | string): string {
     startIndex += 'unstable_'.length;
   }
 
-  if (functionName.slice(startIndex).startsWith('unstable_')) {
+  if (functionName.slice(startIndex).startsWith('experimental_')) {
     startIndex += 'experimental_'.length;
   }
 
