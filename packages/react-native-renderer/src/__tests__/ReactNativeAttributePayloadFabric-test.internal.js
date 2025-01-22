@@ -102,6 +102,12 @@ describe('ReactNativeAttributePayloadFabric.create', () => {
     expect(processA).toBeCalledWith(2);
   });
 
+  it('should use the process attribute for functions as well', () => {
+    const process = (x) => x;
+    const nextFunction = () => {}
+    expect(create({a: nextFunction}, {a: {process}})).toEqual({a: nextFunction});
+  })
+
   it('should work with undefined styles', () => {
     expect(create({style: undefined}, {style: {b: true}})).toEqual(null);
     expect(create({style: {a: '#ffffff', b: 1}}, {style: {b: true}})).toEqual({
