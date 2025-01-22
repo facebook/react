@@ -487,7 +487,10 @@ function fastAddProperties(
       } else {
         continue;
       }
-    } else if (typeof attributeConfig === 'object' && typeof attributeConfig.process === 'function') {
+    } else if (
+      typeof attributeConfig === 'object' &&
+      typeof attributeConfig.process === 'function'
+    ) {
       // An atomic prop with custom processing.
       newValue = attributeConfig.process(prop);
     } else if (typeof prop === 'function') {
