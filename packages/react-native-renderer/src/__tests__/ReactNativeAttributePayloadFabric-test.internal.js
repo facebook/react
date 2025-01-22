@@ -461,4 +461,21 @@ describe('ReactNativeAttributePayloadFabric.diff', () => {
       ),
     ).toEqual(null);
   });
+
+  it('should use the process function config when prop is a function', () => {
+    const process = jest.fn(a => a);
+    const nextFunction = function () {}
+    expect(
+      diff(
+        {
+          a: function () {},
+        },
+        {
+          a: nextFunction,
+        },
+        {a: {process}},
+      ),
+    ).toEqual({a: nextFunction});
+    expect(process).toBeCalled()
+  })
 });
