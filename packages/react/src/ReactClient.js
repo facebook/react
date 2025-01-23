@@ -41,7 +41,6 @@ import {
   useContext,
   useEffect,
   useEffectEvent,
-  useResourceEffect,
   useImperativeHandle,
   useDebugValue,
   useInsertionEffect,
@@ -61,10 +60,10 @@ import {
 } from './ReactHooks';
 import ReactSharedInternals from './ReactSharedInternalsClient';
 import {startTransition} from './ReactStartTransition';
+import {addTransitionType} from './ReactTransitionType';
 import {act} from './ReactAct';
 import {captureOwnerStack} from './ReactOwnerStack';
 import * as ReactCompilerRuntime from './ReactCompilerRuntime';
-import {enableUseResourceEffectHook} from 'shared/ReactFeatureFlags';
 
 const Children = {
   map,
@@ -126,10 +125,8 @@ export {
   REACT_TRACING_MARKER_TYPE as unstable_TracingMarker,
   // enableViewTransition
   REACT_VIEW_TRANSITION_TYPE as unstable_ViewTransition,
+  addTransitionType as unstable_addTransitionType,
   useId,
   act, // DEV-only
   captureOwnerStack, // DEV-only
 };
-
-export const experimental_useResourceEffect: typeof useResourceEffect | void =
-  enableUseResourceEffectHook ? useResourceEffect : undefined;

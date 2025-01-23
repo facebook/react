@@ -16,6 +16,7 @@ import type {
   ReactTimeInfo,
   ReactStackTrace,
   ReactCallSite,
+  ReactErrorInfoDev,
 } from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
 
@@ -2123,11 +2124,12 @@ function resolveErrorProd(response: Response): Error {
 
 function resolveErrorDev(
   response: Response,
-  errorInfo: {message: string, stack: ReactStackTrace, env: string, ...},
+  errorInfo: ReactErrorInfoDev,
 ): Error {
-  const message: string = errorInfo.message;
-  const stack: ReactStackTrace = errorInfo.stack;
-  const env: string = errorInfo.env;
+  const name = errorInfo.name;
+  const message = errorInfo.message;
+  const stack = errorInfo.stack;
+  const env = errorInfo.env;
 
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
@@ -2156,6 +2158,7 @@ function resolveErrorDev(
     error = callStack();
   }
 
+  (error: any).name = name;
   (error: any).environmentName = env;
   return error;
 }

@@ -127,6 +127,10 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
       }
 
       Dispatcher.useId();
+
+      if (typeof Dispatcher.useEffectEvent === 'function') {
+        Dispatcher.useEffectEvent((args: empty) => {});
+      }
     } finally {
       readHookLog = hookLog;
       hookLog = [];
@@ -366,8 +370,11 @@ function useInsertionEffect(
 }
 
 function useEffect(
-  create: () => (() => void) | void,
-  inputs: Array<mixed> | void | null,
+  create: (() => (() => void) | void) | (() => {...} | void | null),
+  createDeps: Array<mixed> | void | null,
+  update?: ((resource: {...} | void | null) => void) | void,
+  updateDeps?: Array<mixed> | void | null,
+  destroy?: ((resource: {...} | void | null) => void) | void,
 ): void {
   nextHook();
   hookLog.push({
@@ -731,22 +738,18 @@ function useHostTransitionStatus(): TransitionStatus {
   return status;
 }
 
-function useResourceEffect(
-  create: () => mixed,
-  createDeps: Array<mixed> | void | null,
-  update: ((resource: mixed) => void) | void,
-  updateDeps: Array<mixed> | void | null,
-  destroy: ((resource: mixed) => void) | void,
-) {
+function useEffectEvent<Args, F: (...Array<Args>) => mixed>(callback: F): F {
   nextHook();
   hookLog.push({
     displayName: null,
-    primitive: 'ResourceEffect',
+    primitive: 'EffectEvent',
     stackError: new Error(),
-    value: create,
+    value: callback,
     debugInfo: null,
-    dispatcherHookName: 'ResourceEffect',
+    dispatcherHookName: 'EffectEvent',
   });
+
+  return callback;
 }
 
 const Dispatcher: DispatcherType = {
@@ -773,7 +776,7 @@ const Dispatcher: DispatcherType = {
   useFormState,
   useActionState,
   useHostTransitionStatus,
-  useResourceEffect,
+  useEffectEvent,
 };
 
 // create a proxy to throw a custom error
@@ -962,7 +965,7 @@ function parseHookName(functionName: void | string): string {
     startIndex += 'unstable_'.length;
   }
 
-  if (functionName.slice(startIndex).startsWith('unstable_')) {
+  if (functionName.slice(startIndex).startsWith('experimental_')) {
     startIndex += 'experimental_'.length;
   }
 
