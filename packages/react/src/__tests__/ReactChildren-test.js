@@ -1039,7 +1039,6 @@ describe('ReactChildren', () => {
     });
   });
 
-  // @gate __DEV__
   it('does not throw on children without `_store`', async () => {
     function ComponentRenderingFlattenedChildren({children}) {
       return <div>{React.Children.toArray(children)}</div>;
