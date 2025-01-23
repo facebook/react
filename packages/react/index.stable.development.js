@@ -47,4 +47,5 @@ export {
   useTransition,
   useActionState,
   version,
+  act, // DEV-only
 } from './src/ReactClient';
