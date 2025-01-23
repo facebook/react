@@ -571,7 +571,7 @@ function shouldSkipBundle(bundle, bundleType) {
   return false;
 }
 
-function resolveEntryFork(resolvedEntry, isFBBundle) {
+function resolveEntryFork(resolvedEntry, isFBBundle, isDev) {
   // Pick which entry point fork to use:
   // .modern.fb.js
   // .classic.fb.js
@@ -586,23 +586,20 @@ function resolveEntryFork(resolvedEntry, isFBBundle) {
       '.js',
       __EXPERIMENTAL__ ? '.modern.fb.js' : '.classic.fb.js'
     );
-    const developmentFBEntry = resolvedFBEntry.replace(
-      '.js',
-      '.development.js'
-    );
-    if (fs.existsSync(developmentFBEntry)) {
-      return developmentFBEntry;
+    const devFBEntry = resolvedFBEntry.replace('.js', '.development.js');
+    if (isDev && fs.existsSync(devFBEntry)) {
+      return devFBEntry;
     }
     if (fs.existsSync(resolvedFBEntry)) {
       return resolvedFBEntry;
     }
     const resolvedGenericFBEntry = resolvedEntry.replace('.js', '.fb.js');
-    const developmentGenericFBEntry = resolvedGenericFBEntry.replace(
+    const devGenericFBEntry = resolvedGenericFBEntry.replace(
       '.js',
       '.development.js'
     );
-    if (fs.existsSync(developmentGenericFBEntry)) {
-      return developmentGenericFBEntry;
+    if (isDev && fs.existsSync(devGenericFBEntry)) {
+      return devGenericFBEntry;
     }
     if (fs.existsSync(resolvedGenericFBEntry)) {
       return resolvedGenericFBEntry;
@@ -614,7 +611,7 @@ function resolveEntryFork(resolvedEntry, isFBBundle) {
     __EXPERIMENTAL__ ? '.experimental.js' : '.stable.js'
   );
   const devForkedEntry = resolvedForkedEntry.replace('.js', '.development.js');
-  if (fs.existsSync(devForkedEntry)) {
+  if (isDev && fs.existsSync(devForkedEntry)) {
     return devForkedEntry;
   }
   if (fs.existsSync(resolvedForkedEntry)) {
@@ -633,7 +630,7 @@ async function createBundle(bundle, bundleType) {
 
   const {isFBWWWBundle, isFBRNBundle} = getBundleTypeFlags(bundleType);
 
-  let resolvedEntry = resolveEntryFork(
+  const resolvedEntry = resolveEntryFork(
     require.resolve(bundle.entry),
     isFBWWWBundle || isFBRNBundle,
     !isProductionBundleType(bundleType)
