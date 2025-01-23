@@ -87,11 +87,31 @@ export function useRef<T>(initialValue: T): {current: T} {
 }
 
 export function useEffect(
-  create: () => (() => void) | void,
-  deps: Array<mixed> | void | null,
+  create: (() => (() => void) | void) | (() => {...} | void | null),
+  createDeps: Array<mixed> | void | null,
+  update?: ((resource: {...} | void | null) => void) | void,
+  updateDeps?: Array<mixed> | void | null,
+  destroy?: ((resource: {...} | void | null) => void) | void,
 ): void {
   const dispatcher = resolveDispatcher();
-  return dispatcher.useEffect(create, deps);
+  if (
+    enableUseEffectCRUDOverload &&
+    (typeof update === 'function' || typeof destroy === 'function')
+  ) {
+    // $FlowFixMe[not-a-function] This is unstable, thus optional
+    return dispatcher.useEffect(
+      create,
+      createDeps,
+      update,
+      updateDeps,
+      destroy,
+    );
+  } else if (typeof update === 'function') {
+    throw new Error(
+      'useEffect CRUD overload is not enabled in this build of React.',
+    );
+  }
+  return dispatcher.useEffect(create, createDeps);
 }
 
 export function useInsertionEffect(

@@ -391,8 +391,11 @@ export type Dispatcher = {
   useContext<T>(context: ReactContext<T>): T,
   useRef<T>(initialValue: T): {current: T},
   useEffect(
-    create: () => (() => void) | void,
-    deps: Array<mixed> | void | null,
+    create: (() => (() => void) | void) | (() => {...} | void | null),
+    createDeps: Array<mixed> | void | null,
+    update?: ((resource: {...} | void | null) => void) | void,
+    updateDeps?: Array<mixed> | void | null,
+    destroy?: ((resource: {...} | void | null) => void) | void,
   ): void,
   // TODO: Non-nullable once `enableUseEffectEventHook` is on everywhere.
   useEffectEvent?: <Args, F: (...Array<Args>) => mixed>(callback: F) => F,
