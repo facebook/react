@@ -29,7 +29,17 @@ jobs:
           script: |
             const fs = require('fs');
             const actor = '${{ inputs.actor }}';
-            const data = await fs.readFileSync('./MAINTAINERS', { encoding: 'utf8' });
+            const data = octokit.rest.repos.getContent({
+              owner: 'facebook',
+              repo: 'react',
+              path: 'MAINTAINERS.md',
+              ref: 'main',
+              headers: {
+                Accept: 'application/vnd.github+json'
+              }
+            });
+            console.log(data);
+            // const data = await fs.readFileSync('./MAINTAINERS', { encoding: 'utf8' });
             const maintainers = new Set(data.split('\n'));
             if (maintainers.has(actor)) {
               console.log(`🟢 ${actor} is a maintainer`);
