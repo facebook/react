@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2d8cd148450da6868c62026b7639f3d4>>
+ * @generated SignedSource<<c5ca48df42c7919ea3fa5e57845e79d9>>
  */
 
 "use strict";
@@ -3691,7 +3691,7 @@ __DEV__ &&
           ),
           node.isTransition ||
             error$jscomp$0(
-              "An async function was passed to useActionState, but it was dispatched outside of an action context. This is likely not what you intended. Either pass the dispatch function to an `action` prop, or dispatch manually inside `startTransition`"
+              "An async function with useActionState was called outside of a transition. This is likely not what you intended (for example, isPending will not update correctly). Either call the returned function inside startTransition, or pass it to an `action` or `formAction` prop."
             ))
         : onActionSuccess(actionQueue, node, returnValue);
     }
@@ -15644,10 +15644,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.1.0-native-fb-028c8e6c-20250121",
+        version: "19.1.0-native-fb-b65afdd0-20250124",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.1.0-native-fb-028c8e6c-20250121"
+        reconcilerVersion: "19.1.0-native-fb-b65afdd0-20250124"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15792,5 +15792,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.1.0-native-fb-028c8e6c-20250121";
+    exports.version = "19.1.0-native-fb-b65afdd0-20250124";
   })();
