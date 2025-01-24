@@ -127,6 +127,13 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
       }
 
       Dispatcher.useId();
+
+      if (typeof Dispatcher.useResourceEffect === 'function') {
+        Dispatcher.useResourceEffect(() => ({}), []);
+      }
+      if (typeof Dispatcher.useEffectEvent === 'function') {
+        Dispatcher.useEffectEvent((args: empty) => {});
+      }
     } finally {
       readHookLog = hookLog;
       hookLog = [];
@@ -731,6 +738,38 @@ function useHostTransitionStatus(): TransitionStatus {
   return status;
 }
 
+function useResourceEffect(
+  create: () => mixed,
+  createDeps: Array<mixed> | void | null,
+  update: ((resource: mixed) => void) | void,
+  updateDeps: Array<mixed> | void | null,
+  destroy: ((resource: mixed) => void) | void,
+) {
+  nextHook();
+  hookLog.push({
+    displayName: null,
+    primitive: 'ResourceEffect',
+    stackError: new Error(),
+    value: create,
+    debugInfo: null,
+    dispatcherHookName: 'ResourceEffect',
+  });
+}
+
+function useEffectEvent<Args, F: (...Array<Args>) => mixed>(callback: F): F {
+  nextHook();
+  hookLog.push({
+    displayName: null,
+    primitive: 'EffectEvent',
+    stackError: new Error(),
+    value: callback,
+    debugInfo: null,
+    dispatcherHookName: 'EffectEvent',
+  });
+
+  return callback;
+}
+
 const Dispatcher: DispatcherType = {
   use,
   readContext,
@@ -755,6 +794,8 @@ const Dispatcher: DispatcherType = {
   useFormState,
   useActionState,
   useHostTransitionStatus,
+  useEffectEvent,
+  useResourceEffect,
 };
 
 // create a proxy to throw a custom error
@@ -941,6 +982,10 @@ function parseHookName(functionName: void | string): string {
 
   if (functionName.slice(startIndex).startsWith('unstable_')) {
     startIndex += 'unstable_'.length;
+  }
+
+  if (functionName.slice(startIndex).startsWith('experimental_')) {
+    startIndex += 'experimental_'.length;
   }
 
   if (functionName.slice(startIndex, startIndex + 3) === 'use') {

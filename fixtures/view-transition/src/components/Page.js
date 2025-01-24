@@ -36,7 +36,7 @@ function Component() {
 
 export default function Page({url, navigate}) {
   const show = url === '/?b';
-  function onTransition(viewTransition) {
+  function onTransition(viewTransition, types) {
     const keyframes = [
       {rotate: '0deg', transformOrigin: '30px 8px'},
       {rotate: '360deg', transformOrigin: '30px 8px'},
@@ -59,6 +59,16 @@ export default function Page({url, navigate}) {
       </button>
       <ViewTransition className="none">
         <div>
+          <ViewTransition className={transitions['slide-on-nav']}>
+            <h1>{!show ? 'A' : 'B'}</h1>
+          </ViewTransition>
+          <ViewTransition
+            className={{
+              'navigation-back': transitions['slide-right'],
+              'navigation-forward': transitions['slide-left'],
+            }}>
+            <h1>{!show ? 'A' : 'B'}</h1>
+          </ViewTransition>
           {show ? (
             <div>
               {a}

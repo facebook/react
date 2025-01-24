@@ -442,9 +442,11 @@ describe('ReactDOMFizzServerNode', () => {
     await act(() => {
       ReactDOMFizzServer.renderToPipeableStream(
         <DelayContext.Provider value={client}>
-          <Suspense fallback="loading">
-            <Component />
-          </Suspense>
+          <div>
+            <Suspense fallback="loading">
+              <Component />
+            </Suspense>
+          </div>
         </DelayContext.Provider>,
       ).pipe(writable);
     });
@@ -501,16 +503,20 @@ describe('ReactDOMFizzServerNode', () => {
     await act(() => {
       ReactDOMFizzServer.renderToPipeableStream(
         <DelayContext.Provider value={client0}>
-          <Suspense fallback="loading">
-            <Component />
-          </Suspense>
+          <div>
+            <Suspense fallback="loading">
+              <Component />
+            </Suspense>
+          </div>
         </DelayContext.Provider>,
       ).pipe(writable0);
       ReactDOMFizzServer.renderToPipeableStream(
         <DelayContext.Provider value={client1}>
-          <Suspense fallback="loading">
-            <Component />
-          </Suspense>
+          <div>
+            <Suspense fallback="loading">
+              <Component />
+            </Suspense>
+          </div>
         </DelayContext.Provider>,
       ).pipe(writable1);
     });
@@ -564,7 +570,7 @@ describe('ReactDOMFizzServerNode', () => {
     const {writable, output, completed} = getTestWritable();
     await act(() => {
       ReactDOMFizzServer.renderToPipeableStream(
-        <>
+        <div>
           <DelayContext.Provider value={client}>
             <Suspense fallback="loading">
               <Component />
@@ -575,7 +581,7 @@ describe('ReactDOMFizzServerNode', () => {
               <Component />
             </Suspense>
           </DelayContext.Provider>
-        </>,
+        </div>,
       ).pipe(writable);
     });
 

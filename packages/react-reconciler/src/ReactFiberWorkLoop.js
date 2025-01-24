@@ -27,6 +27,7 @@ import {
   getViewTransitionName,
   type ViewTransitionState,
 } from './ReactFiberViewTransitionComponent';
+import type {TransitionTypes} from 'react/src/ReactTransitionType.js';
 
 import {
   enableCreateEventHandleAPI,
@@ -653,7 +654,9 @@ let pendingEffectsRemainingLanes: Lanes = NoLanes;
 let pendingEffectsRenderEndTime: number = -0; // Profiling-only
 let pendingPassiveTransitions: Array<Transition> | null = null;
 let pendingRecoverableErrors: null | Array<CapturedValue<mixed>> = null;
-let pendingViewTransitionEvents: Array<() => void> | null = null;
+let pendingViewTransitionEvents: Array<(types: Array<string>) => void> | null =
+  null;
+let pendingTransitionTypes: null | TransitionTypes = null;
 let pendingDidIncludeRenderPhaseUpdate: boolean = false;
 let pendingSuspendedCommitReason: SuspendedCommitReason = IMMEDIATE_COMMIT; // Profiling-only
 
@@ -693,6 +696,10 @@ export function getRootWithPendingPassiveEffects(): FiberRoot | null {
 
 export function getPendingPassiveEffectsLanes(): Lanes {
   return pendingEffectsLanes;
+}
+
+export function getPendingTransitionTypes(): null | TransitionTypes {
+  return pendingTransitionTypes;
 }
 
 export function isWorkLoopSuspendedOnData(): boolean {
@@ -804,7 +811,7 @@ export function requestDeferredLane(): Lane {
 
 export function scheduleViewTransitionEvent(
   fiber: Fiber,
-  callback: ?(instance: ViewTransitionInstance) => void,
+  callback: ?(instance: ViewTransitionInstance, types: Array<string>) => void,
 ): void {
   if (enableViewTransition) {
     if (callback != null) {
@@ -3348,9 +3355,6 @@ function commitRoot(
   pendingEffectsRemainingLanes = remainingLanes;
   pendingPassiveTransitions = transitions;
   pendingRecoverableErrors = recoverableErrors;
-  if (enableViewTransition) {
-    pendingViewTransitionEvents = null;
-  }
   pendingDidIncludeRenderPhaseUpdate = didIncludeRenderPhaseUpdate;
   if (enableProfilerTimer) {
     pendingEffectsRenderEndTime = completedRenderEndTime;
@@ -3362,10 +3366,24 @@ function commitRoot(
   // might get scheduled in the commit phase. (See #16714.)
   // TODO: Delete all other places that schedule the passive effect callback
   // They're redundant.
-  const passiveSubtreeMask =
-    enableViewTransition && includesOnlyViewTransitionEligibleLanes(lanes)
-      ? PassiveTransitionMask
-      : PassiveMask;
+  let passiveSubtreeMask;
+  if (enableViewTransition) {
+    pendingViewTransitionEvents = null;
+    if (includesOnlyViewTransitionEligibleLanes(lanes)) {
+      // Claim any pending Transition Types for this commit.
+      // This means that multiple roots committing independent View Transitions
+      // 1) end up staggered because we can only have one at a time.
+      // 2) only the first one gets all the Transition Types.
+      pendingTransitionTypes = ReactSharedInternals.V;
+      ReactSharedInternals.V = null;
+      passiveSubtreeMask = PassiveTransitionMask;
+    } else {
+      pendingTransitionTypes = null;
+      passiveSubtreeMask = PassiveMask;
+    }
+  } else {
+    passiveSubtreeMask = PassiveMask;
+  }
   if (
     // If this subtree rendered with profiling this commit, we need to visit it to log it.
     (enableProfilerTimer &&
@@ -3461,6 +3479,7 @@ function commitRoot(
     shouldStartViewTransition &&
     startViewTransition(
       root.containerInfo,
+      pendingTransitionTypes,
       flushMutationEffects,
       flushLayoutEffects,
       flushAfterMutationEffects,
@@ -3708,11 +3727,17 @@ function flushSpawnedWork(): void {
     // effects or spawned sync work since this is still part of the previous commit.
     // Even though conceptually it's like its own task between layout effets and passive.
     const pendingEvents = pendingViewTransitionEvents;
+    let pendingTypes = pendingTransitionTypes;
+    pendingTransitionTypes = null;
     if (pendingEvents !== null) {
       pendingViewTransitionEvents = null;
+      if (pendingTypes === null) {
+        // Normalize the type. This is lazily created only for events.
+        pendingTypes = [];
+      }
       for (let i = 0; i < pendingEvents.length; i++) {
         const viewTransitionEvent = pendingEvents[i];
-        viewTransitionEvent();
+        viewTransitionEvent(pendingTypes);
       }
     }
   }
