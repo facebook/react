@@ -207,6 +207,9 @@ const SUSPENSE_START_DATA = '$';
 const SUSPENSE_END_DATA = '/$';
 const SUSPENSE_PENDING_START_DATA = '$?';
 const SUSPENSE_FALLBACK_START_DATA = '$!';
+const PREAMBLE_CONTRIBUTION_HTML = 0b001;
+const PREAMBLE_CONTRIBUTION_BODY = 0b010;
+const PREAMBLE_CONTRIBUTION_HEAD = 0b100;
 const FORM_STATE_IS_MATCHING = 'F!';
 const FORM_STATE_IS_NOT_MATCHING = 'F';
 
@@ -963,6 +966,7 @@ export function clearSuspenseBoundary(
   suspenseInstance: SuspenseInstance,
 ): void {
   let node: Node = suspenseInstance;
+  let possiblePreambleContribution: number = 0;
   // Delete all nodes within this suspense boundary.
   // There might be nested nodes so we need to keep track of how
   // deep we are and only break out when we're back on top.
@@ -973,6 +977,36 @@ export function clearSuspenseBoundary(
     if (nextNode && nextNode.nodeType === COMMENT_NODE) {
       const data = ((nextNode: any).data: string);
       if (data === SUSPENSE_END_DATA) {
+        if (
+          // represents 3 bits where at least one bit is set (1-7)
+          possiblePreambleContribution > 0 &&
+          possiblePreambleContribution < 8
+        ) {
+          const code = possiblePreambleContribution;
+          // It's not normally possible to insert a comment immediately preceding Suspense boundary
+          // closing comment marker so we can infer that if the comment preceding starts with "1" through "7"
+          // then it is in fact a preamble contribution marker comment. We do this value test to avoid the case
+          // where the Suspense boundary is empty and the preceding comment marker is the Suspense boundary
+          // opening marker or the closing marker of an inner boundary. In those cases the first character won't
+          // have the requisite value to be interpreted as a Preamble contribution
+          const ownerDocument = parentInstance.ownerDocument;
+          if (code & PREAMBLE_CONTRIBUTION_HTML) {
+            const documentElement: Element =
+              (ownerDocument.documentElement: any);
+            releaseSingletonInstance(documentElement);
+          }
+          if (code & PREAMBLE_CONTRIBUTION_BODY) {
+            const body: Element = (ownerDocument.body: any);
+            releaseSingletonInstance(body);
+          }
+          if (code & PREAMBLE_CONTRIBUTION_HEAD) {
+            const head: Element = (ownerDocument.head: any);
+            releaseSingletonInstance(head);
+            // We need to clear the head because this is the only singleton that can have children that
+            // were part of this boundary but are not inside this boundary.
+            clearHead(head);
+          }
+        }
         if (depth === 0) {
           parentInstance.removeChild(nextNode);
           // Retry if any event replaying was blocked on this.
@@ -987,7 +1021,11 @@ export function clearSuspenseBoundary(
         data === SUSPENSE_FALLBACK_START_DATA
       ) {
         depth++;
+      } else {
+        possiblePreambleContribution = data.charCodeAt(0) - 48;
       }
+    } else {
+      possiblePreambleContribution = 0;
     }
     // $FlowFixMe[incompatible-type] we bail out when we get a null
     node = nextNode;
@@ -1501,7 +1539,7 @@ function clearContainerSparingly(container: Node) {
       case 'STYLE': {
         continue;
       }
-      // Stylesheet tags are retained because tehy may likely come from 3rd party scripts and extensions
+      // Stylesheet tags are retained because they may likely come from 3rd party scripts and extensions
       case 'LINK': {
         if (((node: any): HTMLLinkElement).rel.toLowerCase() === 'stylesheet') {
           continue;
@@ -1509,6 +1547,27 @@ function clearContainerSparingly(container: Node) {
       }
     }
     container.removeChild(node);
+  }
+  return;
+}
+
+function clearHead(head: Element): void {
+  let node = head.firstChild;
+  while (node) {
+    const nextNode = node.nextSibling;
+    const nodeName = node.nodeName;
+    if (
+      isMarkedHoistable(node) ||
+      nodeName === 'SCRIPT' ||
+      nodeName === 'STYLE' ||
+      (nodeName === 'LINK' &&
+        ((node: any): HTMLLinkElement).rel.toLowerCase() === 'stylesheet')
+    ) {
+      // retain these nodes
+    } else {
+      head.removeChild(node);
+    }
+    node = nextNode;
   }
   return;
 }
@@ -1874,13 +1933,60 @@ export function getFirstHydratableChild(
 export function getFirstHydratableChildWithinContainer(
   parentContainer: Container,
 ): null | HydratableInstance {
-  return getNextHydratable(parentContainer.firstChild);
+  let parentElement: Element;
+  switch (parentContainer.nodeType) {
+    case DOCUMENT_NODE:
+      parentElement = (parentContainer: any).body;
+      break;
+    default: {
+      if (parentContainer.nodeName === 'HTML') {
+        parentElement = (parentContainer: any).ownerDocument.body;
+      } else {
+        parentElement = (parentContainer: any);
+      }
+    }
+  }
+  return getNextHydratable(parentElement.firstChild);
 }
 
 export function getFirstHydratableChildWithinSuspenseInstance(
   parentInstance: SuspenseInstance,
 ): null | HydratableInstance {
   return getNextHydratable(parentInstance.nextSibling);
+}
+
+// If it were possible to have more than one scope singleton in a DOM tree
+// we would need to model this as a stack but since you can only have one <head>
+// and head is the only singleton that is a scope in DOM we can get away with
+// tracking this as a single value.
+let previousHydratableOnEnteringScopedSingleton: null | HydratableInstance =
+  null;
+
+export function getFirstHydratableChildWithinSingleton(
+  type: string,
+  singletonInstance: Instance,
+  currentHydratableInstance: null | HydratableInstance,
+): null | HydratableInstance {
+  if (isSingletonScope(type)) {
+    previousHydratableOnEnteringScopedSingleton = currentHydratableInstance;
+    return getNextHydratable(singletonInstance.firstChild);
+  } else {
+    return currentHydratableInstance;
+  }
+}
+
+export function getNextHydratableSiblingAfterSingleton(
+  type: string,
+  currentHydratableInstance: null | HydratableInstance,
+): null | HydratableInstance {
+  if (isSingletonScope(type)) {
+    const previousHydratableInstance =
+      previousHydratableOnEnteringScopedSingleton;
+    previousHydratableOnEnteringScopedSingleton = null;
+    return previousHydratableInstance;
+  } else {
+    return currentHydratableInstance;
+  }
 }
 
 export function describeHydratableInstanceForDevWarnings(

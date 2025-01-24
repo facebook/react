@@ -4865,6 +4865,7 @@ function flushSegment(
     return writeEndClientRenderedSuspenseBoundary(
       destination,
       request.renderState,
+      boundary.fallbackPreamble,
     );
   } else if (boundary.status !== COMPLETED) {
     if (boundary.status === PENDING) {
@@ -4935,7 +4936,11 @@ function flushSegment(
     const contentSegment = completedSegments[0];
     flushSegment(request, destination, contentSegment, hoistableState);
 
-    return writeEndCompletedSuspenseBoundary(destination, request.renderState);
+    return writeEndCompletedSuspenseBoundary(
+      destination,
+      request.renderState,
+      boundary.contentPreamble,
+    );
   }
 }
 
