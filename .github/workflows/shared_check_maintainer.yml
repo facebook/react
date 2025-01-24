@@ -38,7 +38,7 @@ jobs:
               isRemote = isRemote === 'true';
             }
             if (typeof isRemote !== 'boolean') {
-              throw new Error(`Invalid `isRemote` input. Expected a boolean, got: ${isRemote}`);
+              throw new Error(`Invalid \`isRemote\` input. Expected a boolean, got: ${isRemote}`);
             }
 
             let content = null;
