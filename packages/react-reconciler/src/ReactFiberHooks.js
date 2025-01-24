@@ -2231,10 +2231,10 @@ function handleActionReturnValue<S, P>(
     if (__DEV__) {
       if (!node.isTransition) {
         console.error(
-          'An async function was passed to useActionState, but it was ' +
-            'dispatched outside of an action context. This is likely not ' +
-            'what you intended. Either pass the dispatch function to an ' +
-            '`action` prop, or dispatch manually inside `startTransition`',
+          'An async function with useActionState was called outside of a transition. ' +
+            'This is likely not what you intended (for example, isPending will not update ' +
+            'correctly). Either call the returned function inside startTransition, or pass it ' +
+            'to an `action` or `formAction` prop.',
         );
       }
     }
