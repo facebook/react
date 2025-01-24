@@ -33,7 +33,13 @@ jobs:
           script: |
             const fs = require('fs');
             const actor = '${{ inputs.actor }}';
-            const isRemote = ${{ inputs.is_remote }};
+            let isRemote = ${{ inputs.is_remote }};
+            if (typeof isRemote === 'string') {
+              isRemote = isRemote === 'true';
+            }
+            if (typeof isRemote !== 'boolean') {
+              throw new Error(`Invalid `isRemote` input. Expected a boolean, got: ${isRemote}`);
+            }
 
             let content = null;
             if (isRemote === true) {
