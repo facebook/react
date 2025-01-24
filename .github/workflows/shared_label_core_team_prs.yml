@@ -10,7 +10,7 @@ env:
 
 jobs:
   check_maintainer:
-    uses: facebook/react/.github/workflows/shared_check_maintainer.yml@main
+    uses: facebook/react/.github/workflows/shared_check_maintainer.yml@pr32215
     with:
       actor: ${{ github.event.pull_request.user.login }}
 
