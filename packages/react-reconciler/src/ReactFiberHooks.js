@@ -38,7 +38,7 @@ import {
   enableSchedulingProfiler,
   enableTransitionTracing,
   enableUseEffectEventHook,
-  enableUseResourceEffectHook,
+  enableUseEffectCRUDOverload,
   enableLegacyCache,
   disableLegacyMode,
   enableNoCloningMemoCache,
@@ -3938,7 +3938,7 @@ export const ContextOnlyDispatcher: Dispatcher = {
 if (enableUseEffectEventHook) {
   (ContextOnlyDispatcher: Dispatcher).useEffectEvent = throwInvalidHookError;
 }
-if (enableUseResourceEffectHook) {
+if (enableUseEffectCRUDOverload) {
   (ContextOnlyDispatcher: Dispatcher).useResourceEffect = throwInvalidHookError;
 }
 
@@ -3971,7 +3971,7 @@ const HooksDispatcherOnMount: Dispatcher = {
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnMount: Dispatcher).useEffectEvent = mountEvent;
 }
-if (enableUseResourceEffectHook) {
+if (enableUseEffectCRUDOverload) {
   (HooksDispatcherOnMount: Dispatcher).useResourceEffect = mountResourceEffect;
 }
 
@@ -4004,7 +4004,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnUpdate: Dispatcher).useEffectEvent = updateEvent;
 }
-if (enableUseResourceEffectHook) {
+if (enableUseEffectCRUDOverload) {
   (HooksDispatcherOnUpdate: Dispatcher).useResourceEffect =
     updateResourceEffect;
 }
@@ -4038,7 +4038,7 @@ const HooksDispatcherOnRerender: Dispatcher = {
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnRerender: Dispatcher).useEffectEvent = updateEvent;
 }
-if (enableUseResourceEffectHook) {
+if (enableUseEffectCRUDOverload) {
   (HooksDispatcherOnRerender: Dispatcher).useResourceEffect =
     updateResourceEffect;
 }
@@ -4242,7 +4242,7 @@ if (__DEV__) {
         return mountEvent(callback);
       };
   }
-  if (enableUseResourceEffectHook) {
+  if (enableUseEffectCRUDOverload) {
     (HooksDispatcherOnMountInDEV: Dispatcher).useResourceEffect =
       function useResourceEffect(
         create: () => {...} | void | null,
@@ -4430,7 +4430,7 @@ if (__DEV__) {
         return mountEvent(callback);
       };
   }
-  if (enableUseResourceEffectHook) {
+  if (enableUseEffectCRUDOverload) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useResourceEffect =
       function useResourceEffect(
         create: () => {...} | void | null,
@@ -4617,7 +4617,7 @@ if (__DEV__) {
         return updateEvent(callback);
       };
   }
-  if (enableUseResourceEffectHook) {
+  if (enableUseEffectCRUDOverload) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useResourceEffect =
       function useResourceEffect(
         create: () => {...} | void | null,
@@ -4804,7 +4804,7 @@ if (__DEV__) {
         return updateEvent(callback);
       };
   }
-  if (enableUseResourceEffectHook) {
+  if (enableUseEffectCRUDOverload) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useResourceEffect =
       function useResourceEffect(
         create: () => {...} | void | null,
@@ -5016,7 +5016,7 @@ if (__DEV__) {
         return mountEvent(callback);
       };
   }
-  if (enableUseResourceEffectHook) {
+  if (enableUseEffectCRUDOverload) {
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useResourceEffect =
       function useResourceEffect(
         create: () => {...} | void | null,
@@ -5229,7 +5229,7 @@ if (__DEV__) {
         return updateEvent(callback);
       };
   }
-  if (enableUseResourceEffectHook) {
+  if (enableUseEffectCRUDOverload) {
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useResourceEffect =
       function useResourceEffect(
         create: () => {...} | void | null,
@@ -5442,7 +5442,7 @@ if (__DEV__) {
         return updateEvent(callback);
       };
   }
-  if (enableUseResourceEffectHook) {
+  if (enableUseEffectCRUDOverload) {
     (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useResourceEffect =
       function useResourceEffect(
         create: () => {...} | void | null,
