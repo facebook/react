@@ -33,7 +33,7 @@ jobs:
           script: |
             const fs = require('fs');
             const actor = '${{ inputs.actor }}';
-            const isRemote = ${{ inputs.is_remote }};
+            const isRemote = ${{ fromJson(inputs.is_remote) }});
 
             let content = null;
             if (isRemote === true) {
