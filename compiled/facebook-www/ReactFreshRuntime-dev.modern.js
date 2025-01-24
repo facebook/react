@@ -264,35 +264,68 @@ __DEV__ &&
       isPerformingRefresh = !0;
       try {
         var staleFamilies = new Set(),
-          updatedFamilies = new Set(),
-          updates = pendingUpdates;
+          update = { updatedFamilies: new Set(), staleFamilies: staleFamilies };
+        staleFamilies = pendingUpdates;
         pendingUpdates = [];
-        updates.forEach(function (_ref) {
-          var family = _ref[0];
-          _ref = _ref[1];
-          var prevType = family.current;
-          updatedFamiliesByType.set(prevType, family);
+        staleFamilies.forEach(function (_ref) {
+          var family = _ref[0],
+            nextType = _ref[1];
+          _ref = family.current;
           updatedFamiliesByType.set(_ref, family);
-          family.current = _ref;
-          (prevType.prototype && prevType.prototype.isReactComponent) ||
-          (_ref.prototype && _ref.prototype.isReactComponent)
-            ? (_ref = !1)
-            : ((prevType = allSignaturesByType.get(prevType)),
-              (_ref = allSignaturesByType.get(_ref)),
-              (_ref =
-                (void 0 === prevType && void 0 === _ref) ||
-                (void 0 !== prevType &&
-                  void 0 !== _ref &&
-                  computeFullKey(prevType) === computeFullKey(_ref) &&
-                  !_ref.forceReset)
-                  ? !0
-                  : !1));
-          _ref ? updatedFamilies.add(family) : staleFamilies.add(family);
+          updatedFamiliesByType.set(nextType, family);
+          family.current = nextType;
+          if (
+            (_ref.prototype && _ref.prototype.isReactComponent) ||
+            (nextType.prototype && nextType.prototype.isReactComponent) ||
+            typeof _ref !== typeof nextType ||
+            ("object" === typeof _ref &&
+              null !== _ref &&
+              null !== nextType &&
+              getProperty(_ref, "$$typeof") !==
+                getProperty(nextType, "$$typeof"))
+          )
+            var shouldPreserveState = !1;
+          else {
+            shouldPreserveState = allSignaturesByType.get(_ref);
+            var nextSignature = allSignaturesByType.get(nextType);
+            shouldPreserveState =
+              (void 0 === shouldPreserveState && void 0 === nextSignature) ||
+              (void 0 !== shouldPreserveState &&
+                void 0 !== nextSignature &&
+                computeFullKey(shouldPreserveState) ===
+                  computeFullKey(nextSignature) &&
+                !nextSignature.forceReset)
+                ? !0
+                : !1;
+          }
+          if ("object" === typeof _ref && null !== _ref)
+            switch (
+              ((nextType = {
+                current:
+                  getProperty(nextType, "$$typeof") === REACT_FORWARD_REF_TYPE
+                    ? nextType.render
+                    : getProperty(nextType, "$$typeof") === REACT_MEMO_TYPE
+                      ? nextType.type
+                      : nextType
+              }),
+              getProperty(_ref, "$$typeof"))
+            ) {
+              case REACT_FORWARD_REF_TYPE:
+                updatedFamiliesByType.set(_ref.render, nextType);
+                shouldPreserveState
+                  ? update.updatedFamilies.add(nextType)
+                  : update.staleFamilies.add(nextType);
+                break;
+              case REACT_MEMO_TYPE:
+                updatedFamiliesByType.set(_ref.type, nextType),
+                  shouldPreserveState
+                    ? update.updatedFamilies.add(nextType)
+                    : update.staleFamilies.add(nextType);
+            }
+          shouldPreserveState
+            ? update.updatedFamilies.add(family)
+            : update.staleFamilies.add(family);
         });
-        var update = {
-          updatedFamilies: updatedFamilies,
-          staleFamilies: staleFamilies
-        };
         helpersByRendererID.forEach(function (helpers) {
           helpers.setRefreshHandler(resolveFamily);
         });
