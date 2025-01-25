@@ -106,7 +106,6 @@ function applyConstantPropagation(
   fn: HIRFunction,
   constants: Constants,
 ): boolean {
-  let hasChanges = false;
   for (const [, block] of fn.body.blocks) {
     /*
      * Initialize phi values if all operands have the same known constant value.
@@ -134,7 +133,10 @@ function applyConstantPropagation(
         constants.set(instr.lvalue.identifier.id, value);
       }
     }
+  }
 
+  let hasChanges = false;
+  for (const [, block] of fn.body.blocks) {
     const terminal = block.terminal;
     switch (terminal.kind) {
       case 'if': {
@@ -152,6 +154,41 @@ function applyConstantPropagation(
             loc: terminal.loc,
           };
         }
+        break;
+      }
+      case 'ternary': {
+        const branchBlock = fn.body.blocks.get(terminal.test);
+        if (branchBlock === undefined) {
+          break;
+        }
+
+        CompilerError.invariant(branchBlock.terminal.kind === 'branch', {
+          reason: 'value kind expected to be LoadGlobal',
+          loc: null,
+          suggestions: null,
+        });
+
+        const testValue = read(constants, branchBlock.terminal.test);
+
+        if (testValue !== null && testValue.kind === 'Primitive') {
+          hasChanges = true;
+          const targetBlockId = testValue.value
+            ? /*
+               * Do I need to change these from being value blocks?
+               * Currently getting
+               * Invariant: Expected a fallthrough for value block (6:6)
+               */
+              branchBlock.terminal.consequent
+            : branchBlock.terminal.alternate;
+          block.terminal = {
+            kind: 'goto',
+            variant: GotoVariant.Break,
+            block: targetBlockId,
+            id: terminal.id,
+            loc: terminal.loc,
+          };
+        }
+
         break;
       }
       default: {
