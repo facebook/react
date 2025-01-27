@@ -11,7 +11,12 @@ import type {Thenable} from 'shared/ReactTypes';
 
 import type {ImportMetadata} from '../shared/ReactFlightImportMetadata';
 
-import {ID, NAME, BUNDLES} from '../shared/ReactFlightImportMetadata';
+import {
+  ID,
+  NAME,
+  BUNDLES,
+  IMPORT_MAP,
+} from '../shared/ReactFlightImportMetadata';
 import {prepareDestinationWithChunks} from 'react-client/src/ReactFlightClientConfig';
 
 export type ServerManifest = {
@@ -60,9 +65,14 @@ export function resolveServerReference<T>(
 export function preloadModule<T>(
   metadata: ClientReference<T>,
 ): null | Thenable<any> {
+  if (metadata[IMPORT_MAP]) {
+    parcelRequire.extendImportMap(metadata[IMPORT_MAP]);
+  }
+
   if (metadata[BUNDLES].length === 0) {
     return null;
   }
+
   return Promise.all(metadata[BUNDLES].map(url => parcelRequire.load(url)));
 }
 
