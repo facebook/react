@@ -34,6 +34,13 @@ export type ConcurrentUpdate = {
   lane: Lane,
 };
 
+type QueueUpdate = {
+  fiber: Fiber,
+  queue: ConcurrentQueue | null,
+  update: ConcurrentUpdate | null,
+  lane: Lane,
+};
+
 type ConcurrentQueue = {
   pending: ConcurrentUpdate | null,
 };
@@ -44,25 +51,19 @@ type ConcurrentQueue = {
 // access the queue, fiber, update, et al later.
 const concurrentQueues: Array<any> = [];
 let concurrentQueuesIndex = 0;
+let dequeuesIndex = 0;
 
 let concurrentlyUpdatedLanes: Lanes = NoLanes;
 
 export function finishQueueingConcurrentUpdates(): void {
   const endIndex = concurrentQueuesIndex;
   concurrentQueuesIndex = 0;
+  dequeuesIndex = 0;
 
   concurrentlyUpdatedLanes = NoLanes;
 
-  let i = 0;
-  while (i < endIndex) {
-    const fiber: Fiber = concurrentQueues[i];
-    concurrentQueues[i++] = null;
-    const queue: ConcurrentQueue = concurrentQueues[i];
-    concurrentQueues[i++] = null;
-    const update: ConcurrentUpdate = concurrentQueues[i];
-    concurrentQueues[i++] = null;
-    const lane: Lane = concurrentQueues[i];
-    concurrentQueues[i++] = null;
+  while (dequeuesIndex < endIndex) {
+    const {fiber, queue, update, lane} = dequeueUpdate();
 
     if (queue !== null && update !== null) {
       const pending = queue.pending;
@@ -109,6 +110,24 @@ function enqueueUpdate(
   if (alternate !== null) {
     alternate.lanes = mergeLanes(alternate.lanes, lane);
   }
+}
+
+export function dequeueUpdate(): QueueUpdate {
+  const fiber: Fiber = concurrentQueues[dequeuesIndex];
+  concurrentQueues[dequeuesIndex++] = null;
+  const queue: ConcurrentQueue = concurrentQueues[dequeuesIndex];
+  concurrentQueues[dequeuesIndex++] = null;
+  const update: ConcurrentUpdate = concurrentQueues[dequeuesIndex];
+  concurrentQueues[dequeuesIndex++] = null;
+  const lane: Lane = concurrentQueues[dequeuesIndex];
+  concurrentQueues[dequeuesIndex++] = null;
+
+  return {
+    fiber,
+    queue,
+    update,
+    lane,
+  };
 }
 
 export function enqueueConcurrentHookUpdate<S, A>(
