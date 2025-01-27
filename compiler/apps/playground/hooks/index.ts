@@ -6,3 +6,4 @@
  */
 
 export {default as useMountEffect} from './useMountEffect';
+export {default as useEmailValidator} from './useEmailValidator.ts'
