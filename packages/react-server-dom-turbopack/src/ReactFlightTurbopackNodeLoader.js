@@ -44,7 +44,7 @@ type TransformSourceFunction = (
 type LoadContext = {
   conditions: Array<string>,
   format: string | null | void,
-  importAttributes: Object,
+  importAssertions: Object,
 };
 
 type LoadFunction = (
@@ -261,7 +261,7 @@ async function parseExportNamesInto(
           const {url} = await resolveClientImport(node.source.value, parentURL);
           const {source} = await loader(
             url,
-            {format: 'module', conditions: [], importAttributes: {}},
+            {format: 'module', conditions: [], importAssertions: {}},
             loader,
           );
           if (typeof source !== 'string') {
